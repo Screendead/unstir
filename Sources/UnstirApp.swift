@@ -106,7 +106,8 @@ final class Bench: NSObject {
         let s = intervals.sorted()
         func p(_ q: Double) -> Int { Int(s[min(Int(Double(s.count) * q), s.count - 1)]) }
         let worst = intervals.indices.max { intervals[$0] < intervals[$1] }!
-        print("BENCH \(drive == nil ? "still " : "")n=\(s.count) p50=\(p(0.5))us p95=\(p(0.95))us p99=\(p(0.99))us max=\(Int(s.last!))us at frame \(worst)")
+        let heat = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
+        print("BENCH \(drive == nil ? "still " : "")n=\(s.count) p50=\(p(0.5))us p95=\(p(0.95))us p99=\(p(0.99))us max=\(Int(s.last!))us at frame \(worst) \(heat)")
         guard drive != nil, let still else { link.invalidate(); exit(0) }
         still()
         drive = nil
