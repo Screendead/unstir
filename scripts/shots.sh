@@ -109,3 +109,28 @@ for level in 26:glass 24:chainmail 16:coral 20:neurons 25:marbling; do
   n=${level%:*} picture=${level#*:}
   shot "nightmare-plus$n-$picture" "Nightmare+ level $n ($picture+) with its full scramble." PLUS=1 LEVEL=$n CLOCK=3
 done
+# The turning tank: Nightmare+ scrambles on their twins with seized knobs, at home and turned one step, where every seam
+# should sit concentric on the knob it lands under.
+shot seized-n01-home "Nightmare+ 01 (tri) with knob 0 seized, tank at home." PLUS=1 LEVEL=1 SEIZED=0 CLOCK=3
+shot seized-n01-turned "Nightmare+ 01 (tri) with knob 0 seized, tank turned one step (120 degrees clockwise): the seams around knob 0 now ring knob 1." \
+  PLUS=1 LEVEL=1 SEIZED=0 TANK=1 CLOCK=3
+shot seized-n09-home "Nightmare+ 09 (square) with knob 1 seized, tank at home." PLUS=1 LEVEL=9 SEIZED=1 CLOCK=3
+shot seized-n09-turned "Nightmare+ 09 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2." \
+  PLUS=1 LEVEL=9 SEIZED=1 TANK=1 CLOCK=3
+shot seized-n23-home "Nightmare+ 23 (hex) with knobs 2 and 5 seized, tank at home." PLUS=1 LEVEL=23 SEIZED=2,5 CLOCK=3
+shot seized-n23-turned "Nightmare+ 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays." \
+  PLUS=1 LEVEL=23 SEIZED=2,5 TANK=1 CLOCK=3
+shot seized-n23-half "Nightmare+ 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round." \
+  PLUS=1 LEVEL=23 SEIZED=2,5 TANKLIVE=30 CLOCK=3
+# Can a finished ring be read on hex glass? 14 entries, as Nightmare 23 has, with one ring left without any, and the same
+# stack with a 2-step twist on that ring buried under its neighbours.
+ring3="1:+4,0:-3,2:+5,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3"
+ring3buried="1:+4,0:-3,2:+5,3:+2,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3"
+hub="2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4"
+hubburied="2:+4,3:-3,0:+2,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4"
+shot seized-ring3-finished "Hex twin glass, 14 entries ($ring3), none on rod 3: its ring is finished." PLUS=1 LEVEL=23 SEIZED=2,5 STACK="$ring3" CLOCK=3
+shot seized-ring3-buried "The same with 3:+2 buried fourth from the bottom ($ring3buried): rod 3's ring is not finished." \
+  PLUS=1 LEVEL=23 SEIZED=2,5 STACK="$ring3buried" CLOCK=3
+shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." PLUS=1 LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
+shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubburied): the hub's ring is not finished." \
+  PLUS=1 LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3

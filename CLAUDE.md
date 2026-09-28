@@ -75,17 +75,21 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 
 ## Architecture
 
-- **Twist.swift** holds the core model and has no UI. A scramble is a stack of `Twist(rod, steps)` entries (30° per step),
-  applied bottom first. `Tank.twist`/`Tank.profile` is the point map: a rigid disc core out to `plateau` (0.6), then a
-  smoothstep shear ring. `Array<Twist>.commit` is the one rule for every move. A turn merges into the rod's newest entry
-  when everything above that entry commutes with the turn, and pushes a new entry otherwise. Commutation is decided
-  geometrically (non-overlapping discs), or by sampling the maps on `Tank.samples` when the discs overlap. An entry that
-  merges to 0 steps pops. `Layout.looksSolved` checks the stack against the identity to half a pixel.
-- **Unstir.metal** is the GPU copy of the same map. It applies the stack's inverses to sample the picture. The tests
-  only reach the Swift copy (`Tank.profile`/`Tank.twist`), so change the two together. The shader's tap count and the
-  `Tank.maxStack` (36) and four-tap limits in `Unstirred` are tuned against 120 Hz on an iPhone 13 Pro Max. A live
-  picture's own cost comes off the four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed
-  on the phone.
+- **Twist.swift** holds the core model and has no UI. A scramble is a stack of `Twist(rod, steps)` entries (30° per
+  step), applied bottom first. `Tank.twist`/`Tank.profile` is the point map: a rigid disc core out to `plateau` (0.6),
+  then a smoothstep shear ring. `Array<Twist>.commit` is the one rule for every rod stir. A turn merges into the rod's
+  newest entry when everything above that entry commutes with the turn, and pushes a new entry otherwise. Commutation is
+  decided geometrically (non-overlapping discs), or by sampling the maps on `Tank.samples` when the discs overlap. An
+  entry that merges to 0 steps pops. `Layout.looksSolved` checks the stack against the identity to half a pixel. The
+  stack names the glass's own rods (slots), so a turn of the tank never touches it: `Layout.order`/`tankStep` are the
+  layout's rotational symmetry (hex's hub held still), which sets each rod's twist exactly on a rod of the same size,
+  and `slot(of:at:)`/`knob(over:at:)` map a physical knob to the slot under it at a tank position.
+- **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
+  the stack's inverses to sample the picture. The tests only reach the Swift copy (`Tank.profile`/`Tank.twist`), so
+  change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
+  The shader's tap count and the `Tank.maxStack` (36) and four-tap limits in `Unstirred` are tuned against 120 Hz on an
+  iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
+  four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone.
 - **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw Nightmare's live
   pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassPlus`, ...), the
   Nightmare+ twin being the same body with `plus` set. Each file stands alone. Nightmare+'s heartbeat lives in the twins'
@@ -95,21 +99,28 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   checks its search against a brute force, the twin at the beat's peak; nothing else tests the shaders.
 - **Levels.swift** has the 27 hand-written campaign levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so
   they merge exactly as play would), nightmare / Nightmare+ variants (ids prefixed `N` / `N+`; Nightmare's pictures
-  follow a table, and N+k shows the twin of Nk's), daily and endless
-  (`SplitMix64`-seeded generator). The generator is ported draw for draw from an earlier prototype, and
-  `testDailyAndEndlessVectors` pins its output. Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`.
+  follow a table, and N+k shows the twin of Nk's), daily and endless (`SplitMix64`-seeded generator). The generator is
+  ported draw for draw from an earlier prototype, and `testDailyAndEndlessVectors` pins its output. Progress (`Best`,
+  started flags, undo bank) is kept in `UserDefaults`. A `Level` may have `seized` knobs, which ignore touch; the tank
+  turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, hints, clean-solve rules and the
-  endless spill. It also holds `LevelView` (drag gesture → live twist → `Game.commit` on lift), the `Unstirred` shader
-  modifier and the result card. Wins run the coarse `looksSolved` pass on the main actor and the fine pass off it.
+  endless spill. `Game.commit` takes a physical knob and commits to the slot under it. `Game.turnTank` is a move that
+  pushes no entry: turns in a row join, and one netting a whole turn drops. `Game.history` holds rod stirs by slot and
+  tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
+  live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
+  `Game.turnTank`), the `Unstirred` shader modifier and the result card. Wins run the coarse `looksSolved` pass on the
+  main actor and the fine pass off it.
 - **Pictures.swift** bakes the campaign's neon pictures once per size. Campaign pictures are designed so that "up" is
   readable inside every rigid core. Nightmare's five (glass, chainmail, coral, neurons, marbling) and their Nightmare+
   twins withhold it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period`
   (a minute for a twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's
   cells take the raw clock; the neural web is static per seed, built once off the main actor.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
-  (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, level, mode or stack, and can hold a
-  mid-drag turn, a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). This is how screenshots and
-  films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
+  (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, level, mode, stack, seized knobs
+  (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank
+  (`UNSTIR_TANKLIVE`), a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). This is how screenshots
+  and films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line
+  there.
 
 Many tests are regressions from real play (e.g. `testNightmare11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, Nightmare's pictures).

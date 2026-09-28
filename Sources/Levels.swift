@@ -20,6 +20,11 @@ struct Level: Hashable, Sendable {
     /// Applied bottom first; the player unwinds from the top.
     var scramble: [Twist]
     var run: Run?
+    /// Knobs that ignore touch. The tank turns only on a level that has some, to carry their fluid to a working knob.
+    var seized: Set<Int> = []
+    /// Nil is one move per entry. A level with seized knobs also counts its turns of the tank.
+    var fixedPar: Int?
+    var par: Int { fixedPar ?? scramble.count }
 
     var nightmare: Bool { id.hasPrefix("N") }
     var plus: Bool { id.hasPrefix("N+") }
