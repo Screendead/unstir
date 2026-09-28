@@ -1,0 +1,52 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+Unstir is an iPhone puzzle game (SwiftUI + Metal, iOS 17, Swift 6, portrait only). Rods under a tank of picture twist
+it; the player unwinds the scramble by turning rods back in the right order.
+
+## Commands
+
+`project.yml` is the source of truth for the Xcode project; the scripts run `xcodegen generate` before building, so
+edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitignored).
+
+- Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result)
+- Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (`UNSTIR_DEVICE` overrides the device UDID)
+- Tests (XCTest, on a simulator):
+  ```
+  xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
+    -destination 'platform=iOS Simulator,name=Unstir iPhone 17 Pro Max' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+  ```
+  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`.
+- Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
+  `shots/<name>.png`, with a description of each in `shots/index.txt`.
+- Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
+- Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
+
+## Architecture
+
+- **Twist.swift** holds the core model and has no UI. A scramble is a stack of `Twist(rod, steps)` entries (30° per step),
+  applied bottom first. `Tank.twist`/`Tank.profile` is the point map: a rigid disc core out to `plateau` (0.6), then a
+  smoothstep shear ring. `Array<Twist>.commit` is the one rule for every move. A turn merges into the rod's newest entry
+  when everything above that entry commutes with the turn, and pushes a new entry otherwise. Commutation is decided
+  geometrically (non-overlapping discs), or by sampling the maps on `Tank.samples` when the discs overlap. An entry that
+  merges to 0 steps pops. `Layout.looksSolved` checks the stack against the identity to half a pixel.
+- **Unstir.metal** is the GPU copy of the same map. It applies the stack's inverses to sample the picture. The tests
+  only reach the Swift copy (`Tank.profile`/`Tank.twist`), so change the two together. The shader's tap count and the
+  `Tank.maxStack` (36) and four-tap limits in `Unstirred` are tuned against 120 Hz on an iPhone 13 Pro Max.
+- **Levels.swift** has the 27 hand-written campaign levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so
+  they merge exactly as play would), nightmare / Nightmare+ variants (ids prefixed `N` / `N+`), daily and endless
+  (`SplitMix64`-seeded generator). The generator is ported draw for draw from an earlier prototype, and
+  `testDailyAndEndlessVectors` pins its output. Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`.
+- **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, hints, clean-solve rules and the
+  endless spill. It also holds `LevelView` (drag gesture → live twist → `Game.commit` on lift), the `Unstirred` shader
+  modifier and the result card. Wins run the coarse `looksSolved` pass on the main actor and the fine pass off it.
+- **Pictures.swift** bakes the neon pictures once per size. Nightmare+ is drawn live by its own shader instead.
+  Campaign pictures are designed so that "up" is readable inside every rigid core.
+- **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
+  (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, level, mode or stack, and can hold a
+  mid-drag turn, a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). This is how screenshots and
+  films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
+
+Many tests are regressions from real play (e.g. `testNightmare11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
+Others check the level tables against the design tables (par, inversion counts).
