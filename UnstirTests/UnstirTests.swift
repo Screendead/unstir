@@ -336,6 +336,100 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(MenuView.isSideways(CGSize(width: 0, height: -15)))
     }
 
+    private let slop = 0.04
+    private func centre(_ layout: Layout, _ k: Int) -> SIMD2<Double> { SIMD2(layout.rods[k].x, layout.rods[k].y) }
+    /// Where a finger at p lands after turning `length` round c, either way.
+    private func carried(_ p: SIMD2<Double>, about c: SIMD2<Double>, _ length: Double) -> SIMD2<Double> {
+        let d = p - c, a = length / simd_length(d)
+        return c + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a))
+    }
+
+    /// Deep in one disc a finger holds that rod the moment it lands.
+    func testGrabInOneDiscIsImmediate() {
+        for layout in Layout.allCases {
+            for k in layout.rods.indices {
+                let p = centre(layout, k) + SIMD2(0.05, 0.03)
+                XCTAssertEqual(LevelView.grab(layout, seized: [], from: p, to: p, slop: slop), .rod(k), "\(layout) \(k)")
+            }
+        }
+    }
+
+    /// Near both tips of every lens, a turn about either centre holds that rod, whichever way it runs, once the finger
+    /// has moved the slop; before that the finger holds every disc it is in, undecided.
+    func testGrabNearLensTipsFollowsTheMotion() {
+        for layout in Layout.allCases {
+            let rods = layout.rods
+            for i in rods.indices {
+                for j in rods.indices where i < j && layout.overlaps(i, j) {
+                    let a = centre(layout, i), b = centre(layout, j), d = simd_distance(a, b)
+                    let x = (d * d + rods[i].z * rods[i].z - rods[j].z * rods[j].z) / (2 * d), h = sqrt(rods[i].z * rods[i].z - x * x)
+                    let u = (b - a) / d, n = SIMD2(-u.y, u.x)
+                    for tip in [a + u * x + n * h, a + u * x - n * h] {
+                        let p = tip + simd_normalize(a + u * x - tip) * 0.03
+                        let under = rods.indices.filter { simd_distance(p, centre(layout, $0)) < rods[$0].z }
+                        XCTAssertEqual(LevelView.grab(layout, seized: [], from: p, to: p + SIMD2(0.02, 0), slop: slop), .undecided(under))
+                        for k in [i, j] {
+                            for length in [-1.5 * slop, 1.5 * slop] {
+                                let q = carried(p, about: centre(layout, k), length)
+                                XCTAssertEqual(LevelView.grab(layout, seized: [], from: p, to: q, slop: slop), .rod(k),
+                                               "\(layout) lens \(i)-\(j) at \(p), turning \(k) by \(length)")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// On the line between two centres their tangents agree, so any motion falls back to the nearer centre in its own
+    /// disc's radius. On the eye, a point nearer the small rod's centre is still nearer the big rod in radii.
+    func testGrabOnTheCentreLineFallsBackToTheNearest() {
+        func check(_ layout: Layout, _ i: Int, _ j: Int, at t: Double, _ want: Int) {
+            let a = centre(layout, i), b = centre(layout, j), p = a + (b - a) * t, u = simd_normalize(b - a)
+            for move in [SIMD2(-u.y, u.x), u, simd_normalize(u + SIMD2(-u.y, u.x))] {
+                XCTAssertEqual(LevelView.grab(layout, seized: [], from: p, to: p + move * 1.5 * slop, slop: slop), .rod(want),
+                               "\(layout) \(i)-\(j) at \(t), moving \(move)")
+            }
+        }
+        check(.quad, 0, 1, at: 0.4, 0)
+        check(.quad, 0, 1, at: 0.6, 1)
+        check(.hex, 0, 3, at: 0.45, 0)
+        let a = centre(.eye, 0), b = centre(.eye, 2), t = 0.37 / simd_distance(a, b), p = a + (b - a) * t
+        XCTAssertLessThan(simd_distance(p, b), simd_distance(p, a))
+        check(.eye, 0, 2, at: t, 0)
+    }
+
+    /// A seized knob is never held: alone under the finger it holds nothing, and in an overlap the finger holds a
+    /// working neighbour only when the motion picks that one, rather than being passed to it. Where knobs are seized the
+    /// rim wins over the discs that reach it.
+    func testGrabNeverHoldsASeizedKnob() {
+        let a = centre(.quad, 0), b = centre(.quad, 1), p = (a + b) / 2 + SIMD2(0.25, 0)
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: p, slop: slop), .undecided([1]))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: carried(p, about: b, slop * 1.5), slop: slop), .rod(1))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: carried(p, about: a, slop * 1.5), slop: slop), .nothing)
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0, 1], from: p, to: p, slop: slop), .nothing)
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: a, to: a, slop: slop), .nothing)
+        let rim = SIMD2(0.0, -0.95)
+        XCTAssertEqual(LevelView.grab(.tri, seized: [1], from: rim, to: rim, slop: slop), .rim)
+        XCTAssertEqual(LevelView.grab(.tri, seized: [], from: rim, to: rim, slop: slop), .rod(0))
+        var rng = SplitMix64(state: 5)
+        for _ in 0..<20000 {
+            let layout = Layout.allCases[rng.below(Layout.allCases.count)]
+            let seized = Set(layout.rods.indices.filter { _ in rng.below(3) == 0 })
+            let start = SIMD2(Double.random(in: -1...1, using: &rng), Double.random(in: -1...1, using: &rng))
+            let point = start + SIMD2(Double.random(in: -0.1...0.1, using: &rng), Double.random(in: -0.1...0.1, using: &rng))
+            switch LevelView.grab(layout, seized: seized, from: start, to: point, slop: slop) {
+            case .rod(let k):
+                XCTAssertFalse(seized.contains(k))
+                XCTAssertLessThan(simd_distance(start, centre(layout, k)), layout.rods[k].z)
+            case .undecided(let ks):
+                XCTAssertGreaterThan(ks.count, 0)
+                XCTAssertTrue(ks.allSatisfy { !seized.contains($0) })
+            case .rim, .nothing: break
+            }
+        }
+    }
+
     /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one. The
     /// prefixes predate the tiers' names and stay, so a rename keeps what was played.
     func testLevelIdsMatchTheirTier() {
@@ -577,6 +671,42 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.moves, 2)
         XCTAssertEqual(game.par, 2)
         XCTAssertEqual(game.over, 0)
+    }
+
+    /// A drag of the rim counts the stir letting go would leave, so a turn that nets a whole one with the open stir
+    /// counts nothing, and one past half a turn counts the short way round.
+    @MainActor func testTankCountIsWhatLettingGoLeaves() {
+        func game(_ layout: Layout, open: Int) -> Game {
+            let game = Game(level: Level(id: "test-count", label: "", title: "", layout: layout, scramble: [Twist(rod: 0, steps: 4)]))
+            game.turnTank(open)
+            return game
+        }
+        XCTAssertEqual(game(.tri, open: 1).tankStir(after: 2), 0)
+        XCTAssertEqual(game(.tri, open: 0).tankStir(after: 3), 0)
+        XCTAssertEqual(game(.hex, open: 2).tankStir(after: 4), 0)
+        XCTAssertEqual(game(.eye, open: 1).tankStir(after: 1), 0)
+        XCTAssertEqual(game(.hex, open: 0).tankStir(after: 4), -2)
+        for layout in Layout.allCases {
+            for open in -layout.order...layout.order {
+                for steps in -2 * layout.order...2 * layout.order {
+                    let g = game(layout, open: open), counted = g.tankStir(after: steps)
+                    g.turnTank(steps)
+                    XCTAssertEqual(g.openStir?.steps ?? 0, counted, "\(layout) open \(open), turned \(steps)")
+                }
+            }
+        }
+    }
+
+    /// A rod picked by motion catches up with the finger by under half a step, either way and across the wrap.
+    func testAPickCatchesUpUnderHalfAStep() {
+        XCTAssertLessThan(LevelView.catchUp, Tank.step / 2)
+        for down in stride(from: -3.0, through: 3.0, by: 0.75) {
+            for travel in stride(from: -0.6, through: 0.6, by: 0.05) {
+                let now = atan2(sin(down + travel), cos(down + travel))
+                XCTAssertEqual(now - LevelView.pickedFrom(down, now: now), min(max(travel, -LevelView.catchUp), LevelView.catchUp),
+                               accuracy: 1e-9)
+            }
+        }
     }
 
     /// A seized knob refuses a turn even over fluid a working knob could take off; no level seizes the hub, which no turn

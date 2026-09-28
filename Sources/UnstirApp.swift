@@ -20,6 +20,11 @@ struct Harness {
     let tank: Int
     /// UNSTIR_TANKLIVE=degrees: a turn of the tank held mid-drag, on top of UNSTIR_TANK.
     let tankLive: Double?
+    /// UNSTIR_TOUCH=x,y: a finger down at that point of the tank (tank units, y down), not yet moved; with UNSTIR_LIVE or
+    /// UNSTIR_TANKLIVE, where it went down before carrying the turn round.
+    let touch: SIMD2<Double>?
+    /// UNSTIR_TURNED=rod:steps: a turn committed through the real path and left open, as a finger has just let it go.
+    let turned: Twist?
     let hint: Bool
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
@@ -94,6 +99,10 @@ struct Harness {
         self.level = level
         tank = env["UNSTIR_TANK"].flatMap(Int.init) ?? 0
         tankLive = env["UNSTIR_TANKLIVE"].flatMap(Double.init)
+        let xy = env["UNSTIR_TOUCH"]?.split(separator: ",").compactMap { Double($0) } ?? []
+        touch = xy.count == 2 ? SIMD2(xy[0], xy[1]) : nil
+        let t = env["UNSTIR_TURNED"]?.split(separator: ":").compactMap { Int($0) } ?? []
+        turned = t.count == 2 && level.layout.rods.indices.contains(t[0]) ? Twist(rod: t[0], steps: t[1]) : nil
         let f = env["UNSTIR_LIVE"]?.split(separator: ":") ?? []
         if f.count == 2, let rod = Int(f[0]), level.layout.rods.indices.contains(rod), let steps = Double(f[1]) {
             live = (rod, steps)

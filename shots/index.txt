@@ -16,6 +16,12 @@ grid-d2-probe.png  grid depth 2 (1:+5,2:-4), mid-drag: rod 2 turned +0.4 steps. 
 grid-d2-wrong-rod.png  grid depth 2 (1:+5,2:-4), mid-drag: rod 1 turned -2.5 steps out of order (its undo is right, but only after rod 2).
 quad-probe.png  Level 12 (square), mid-drag: rod 1 turned +0.3 steps. Dashed ring and start tick: letting go here commits nothing.
 quad-commit.png  Level 12 (square), mid-drag: rod 1 turned +2 steps. Solid ring: letting go here commits.
+count-tri-plus3.png  Level 01 (tri), finger down at the top of rod 0 and carried +3 steps round to its right: three segments clockwise from the notch, +3 to the left.
+count-quad-minus2.png  Level 12 (square), finger down below rod 1 and carried -2 steps round: two segments anticlockwise from the notch, -2 up and left, off the finger.
+count-let-go.png  Level 12 (square), rod 1 just let go at -2: its stir is still open, so the arc and count stay, faint.
+count-regrab.png  Level 12 (square), rod 1 let go at -2, grabbed again and turned -1 more: the count carries on to -3, the notch where this drag began.
+grab-grid.png  Level 12 (square), a finger just down deep in rod 0, not yet moved: its disc and knob lit.
+grab-overlap-grid.png  Level 12 (square), a finger just down where rods 0 and 1 overlap, not yet moved: both lit dimly until the motion picks one.
 level01.png  Level 01 with its full scramble and its note.
 level04.png  Level 04 with its full scramble and its note.
 level07.png  Level 07 with its full scramble and its note.
@@ -62,6 +68,12 @@ whirlpool-probe-over.png  Whirlpool level 12 (square) on the glass, mid-drag: to
 whirlpool27-probe-1.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 1 steps; it heals at 2.
 whirlpool27-probe-2.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 2 steps; it heals at 2.
 whirlpool27-probe-3.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 3 steps; it heals at 2.
+whirlpool-grab-neurons.png  Whirlpool 20 (pentagon, neurons), a finger just down deep in rod 0: its disc and knob lit over the web.
+whirlpool-grab-overlap-neurons.png  Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap: both lit dimly.
+whirlpool-grab-marbling.png  Whirlpool 25 (hex, marbling), a finger just down deep in rod 1: its disc and knob lit.
+whirlpool-grab-overlap-marbling.png  Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub: both lit dimly.
+whirlpool-count-marbling.png  Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four segments, +4 off the finger.
+whirlpool-count-hex-below.png  Whirlpool 25 (hex, marbling), finger down to the lower right of rod 4 and carried +2 steps round to just under it: +2 swung off the hub's knob straight above.
 whirlpool-result.png  Whirlpool level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par).
 whirlpool24-chainmail.png  Whirlpool level 24 (chainmail) with its full scramble.
 whirlpool16-coral.png  Whirlpool level 16 (coral) with its full scramble.
@@ -79,6 +91,7 @@ seized-m09-turned.png  Maelstrom 09 (square) with knob 1 seized, tank turned one
 seized-m23-home.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, tank at home.
 seized-m23-turned.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays.
 seized-m23-half.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round.
+seized-m23-count.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, finger down on the rim at lower left and carried two tank steps (120 degrees) round: two segments round the rim, +2 off the finger.
 seized-ring3-finished.png  Hex twin glass, 14 entries (1:+4,0:-3,2:+5,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3), none on rod 3: its ring is finished.
 seized-ring3-buried.png  The same with 3:+2 buried fourth from the bottom (1:+4,0:-3,2:+5,3:+2,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3): rod 3's ring is not finished.
 seized-hub-finished.png  Hex twin glass, 14 entries (2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4), none on the hub: its ring is finished.

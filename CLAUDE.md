@@ -119,8 +119,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   pushes no entry: turns in a row join, and one netting a whole turn drops. `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
-  `Game.turnTank`), the `Unstirred` shader modifier and the result card. Wins run the coarse `looksSolved` pass on the
-  main actor and the fine pass off it.
+  `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
+  a finger holds: the rim first where knobs are seized, a lone disc at once, and where discs overlap nothing until the
+  finger has moved 8 pt, then the rod whose tangent at the touch lies nearest the motion's line, falling back to the
+  nearest centre in its own disc's radius among those within `tie` (15°) of the best; a seized winner holds nothing. A
+  held rod lights its disc and knob with a light tap; overlap candidates light dimly. A drag shows its own count: a
+  segment per step round the disc (the rim, for the tank) from where its stir began, and a signed count off the finger,
+  both following what letting go would commit. While `Game.openStir` is the rod's, they stay faint after lift, until
+  another rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved`
+  pass on the main actor and the fine pass off it.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
@@ -139,8 +146,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a
-  mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a hint, the solve wave, autoplay or a
-  frame-time bench (`UNSTIR_BENCH`). For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
+  mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
+  units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
+  (`UNSTIR_TURNED=rod:steps`), a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
   (a digit per level, that many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and
   `UNSTIR_TIERDEMO` switches tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock
   above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. This
