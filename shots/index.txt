@@ -34,7 +34,7 @@ inversion-L27.png  Level 27 part-solved at its first inversion: 4:+3 sits on 5:+
 daily.png  Today's daily.
 endless.png  Endless, first tank of the run seeded 7.
 hint-hex.png  Level 27 (hex, par 14) with a hint: the newest twist that can come off now, ringed, with its arrow.
-result.png  Level 05 result card after a harness solve through the real commit path: one wasted twist and its reversal, then the inverse word.
+result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
 wave-0.8.png  Level 13 solved through the real commit path, solve wave held at radius 0.8 from the last-turned rod.
@@ -57,4 +57,4 @@ nightmare-probe-over.png  Nightmare level 12 (square), mid-drag: top rod 3 turne
 nightmare27-probe-1.png  Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back 1 steps; it heals at 2.
 nightmare27-probe-2.png  Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back 2 steps; it heals at 2.
 nightmare27-probe-3.png  Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back 3 steps; it heals at 2.
-nightmare-result.png  Nightmare level 05 result card after a harness solve: one wasted twist and its reversal, then the inverse word.
+nightmare-result.png  Nightmare level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par).
