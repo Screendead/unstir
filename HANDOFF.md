@@ -18,11 +18,12 @@ this is analysis. No code has changed for it.
 | Monetisation code | None. No StoreKit, ads or sharing in `Sources/` |
 | Undo bank | Starts at 10 and nothing refills it (`Sources/Levels.swift:210`). This is the pricing hook, and it is still open |
 | TestFlight | Not started |
-| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend |
+| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans Swift and the workflows on every PR and every push to `master`; its Swift job takes about 6.5 min, beside the tests |
+| `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: turn code scanning back on once PR #2 has merged and `master` has its first scan, since accounts and server-side undo balances are coming; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
 | Difficulty tiers | In progress on branch `difficulty`; see "Side task" below |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
 | Architecture pass | Queued after the performance pass (Jack, 2026-09-28); see below |
-| Media out of git | Decided (Jack, 2026-09-28); runs after the heartbeat is committed, before `difficulty` is pushed; see below |
+| Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB. `difficulty` is PR #2; see below |
 | README | Asked for (Jack, 2026-09-28); written after the media clean-up; see below |
 | Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain); see below |
 | Apple Developer membership | See `HANDOFF.private.md` |
@@ -225,9 +226,14 @@ compress, so every re-render added its full size for good, and every clone and C
   (the mechanic, mid-drag), `level05` (sunset), `level27` (deep hex) and `nightmare24-chainmail`. **Jack has not
   picked.** There is no README yet.
 - Pictures for a PR get attached to its description or comments, not committed. GitHub has no API for those
-  attachments, so it takes the browser.
+  attachments, so it takes the browser: Chrome's file upload into the comment box works (PR #2), with Jack signed in
+  to GitHub there. Videos must stay under 10 MB; crop films to the tank and re-encode.
 
-**Order.** Jack reviews the heartbeat; commit the difficulty work without its media; untrack the media; rewrite and
+**For the next rewrite.** `filter-repo` strips commit signatures, and the `master` ruleset requires signed commits and
+blocks force-pushes with no bypass. So re-sign every rewritten commit (`git commit-tree -S` per commit, keeping authors
+and dates), have Jack pause the ruleset, and expect Jack to run the force-push himself: auto mode refuses it.
+
+**Order (done).** Jack reviews the heartbeat; commit the difficulty work without its media; untrack the media; rewrite and
 force-push `master`; push `difficulty` and open its PR. After that merges, one `housekeeping` branch carries the
 copyright headers and the README, so the new files get headers too.
 
