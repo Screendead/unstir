@@ -22,7 +22,7 @@ struct Harness {
     let bench: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
-    /// UNSTIR_CLOCK=s: hold the Nightmare+ background s seconds in.
+    /// UNSTIR_CLOCK=s: hold the nightmare background s seconds in.
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
@@ -48,14 +48,17 @@ struct Harness {
         case "sandbox": Level.sandbox
         default: (plus ? Level.nightmarePlus : nightmare ? Level.nightmare : Level.all)[n - 1]
         }
+        let picture = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:))
         if bench {
-            // UNSTIR_DEPTH overrides. Nightmare+'s heaviest frame is 26 entries and the drag, the most that keep four taps.
-            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (plus ? 26 : 24)
+            // UNSTIR_DEPTH overrides. A live picture's heaviest frame is the most entries that keep four taps, and the drag.
+            let p = picture ?? (plus ? .glassPlus : nightmare ? .glass : .grid)
+            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? 30 - p.fillEntries : 24)
             var rng = SplitMix64(state: 24)
-            level = Level(id: "bench", label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: plus ? .nightmarePlus : .grid,
+            // UNSTIR_PLUS: an N+ id, like the twin's own levels.
+            level = Level(id: plus ? "N+bench" : "bench", label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: p,
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))
         }
-        if let p = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:)) { level.picture = p }
+        if let picture { level.picture = picture }
         if let s = env["UNSTIR_STACK"] {
             level.layout = env["UNSTIR_LAYOUT"].flatMap(Layout.init(rawValue:)) ?? level.layout
             level.scramble = .parse(s, in: level.layout)
@@ -79,7 +82,7 @@ struct Harness {
 @MainActor
 final class Bench: NSObject {
     private var drive: ((Double) -> Void)?
-    /// Nightmare+: lets go after the drag, then times 20 s more with nothing driven but the background's clock.
+    /// A live picture: lets go after the drag, then times 20 s more with nothing driven but the background's clock.
     private let still: (() -> Void)?
     private var first = 0.0, last = 0.0
     private var intervals: [Double] = []
@@ -103,7 +106,8 @@ final class Bench: NSObject {
         let s = intervals.sorted()
         func p(_ q: Double) -> Int { Int(s[min(Int(Double(s.count) * q), s.count - 1)]) }
         let worst = intervals.indices.max { intervals[$0] < intervals[$1] }!
-        print("BENCH \(drive == nil ? "still " : "")n=\(s.count) p50=\(p(0.5))us p95=\(p(0.95))us p99=\(p(0.99))us max=\(Int(s.last!))us at frame \(worst)")
+        let heat = ["nominal", "fair", "serious", "critical"][ProcessInfo.processInfo.thermalState.rawValue]
+        print("BENCH \(drive == nil ? "still " : "")n=\(s.count) p50=\(p(0.5))us p95=\(p(0.95))us p99=\(p(0.99))us max=\(Int(s.last!))us at frame \(worst) \(heat)")
         guard drive != nil, let still else { link.invalidate(); exit(0) }
         still()
         drive = nil

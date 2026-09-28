@@ -2,11 +2,81 @@ import SwiftUI
 
 /// Neon on black. The campaign pictures show which way is up inside every rigid core, or a turned disc looks as
 /// plausible as the original: the grid by its colour field, the sunset by its stripes and floor, the city by its rain.
-/// Nightmare withholds that on purpose: a turn shows only where its seam shears the cracks.
+/// Nightmare withholds that on purpose: a turn shows only where its seam shears the picture.
 enum Picture: String, CaseIterable {
-    case grid, sunset, city, nightmare
-    /// Drawn live by the nightmarePlus shader in PictureLayer, never baked.
-    case nightmarePlus = "nightmare+"
+    case grid, sunset, city
+    /// Nightmare's, drawn live in PictureLayer by the stitchable named after the case, never baked.
+    case glass, chainmail, coral, neurons, marbling
+    /// Nightmare+'s twins of those, on the same data.
+    case glassPlus = "glass+", chainmailPlus = "chainmail+", coralPlus = "coral+", neuronsPlus = "neurons+",
+         marblingPlus = "marbling+"
+
+    var isLive: Bool { ![.grid, .sunset, .city].contains(self) }
+
+    /// Nightmare+'s picture where Nightmare shows this one.
+    var twin: Picture {
+        switch self {
+        case .glass: .glassPlus
+        case .chainmail: .chainmailPlus
+        case .coral: .coralPlus
+        case .neurons: .neuronsPlus
+        case .marbling: .marblingPlus
+        default: self
+        }
+    }
+
+    /// The Nightmare picture whose data a twin shares.
+    private var sibling: Picture { Self.allCases.first { $0 != self && $0.twin == self } ?? self }
+
+    /// Seconds after which a live picture repeats. Its shader gets the clock mod this, so float32 keeps its precision.
+    var period: Double {
+        switch self {
+        case .chainmail, .coral: 20
+        case .neurons: 12
+        // A twin's heartbeat delays loop once a minute, and every sibling's period divides that.
+        case .glassPlus, .chainmailPlus, .coralPlus, .neuronsPlus, .marblingPlus: 60
+        default: 10
+        }
+    }
+
+    /// A live picture's own cost per frame, in stack entries of four-tap unstir work. The glass's is about four (Mac GPU
+    /// microbench); the others are the glass's scaled by their Mac GPU cost against it, not yet confirmed on the phone.
+    var fillEntries: Int {
+        switch self {
+        case .grid, .sunset, .city: 0
+        case .marbling: 3
+        case .glass, .chainmail, .coral, .marblingPlus: 4
+        case .neurons, .glassPlus, .chainmailPlus, .coralPlus: 5
+        case .neuronsPlus: 6
+        }
+    }
+
+    /// The sandbox's: the campaign's pictures and Nightmare's, not the twins.
+    var next: Picture {
+        let all = Self.allCases.filter { !$0.isLive || $0.twin != $0 }
+        return all[(all.firstIndex(of: sibling)! + 1) % all.count]
+    }
+
+    /// A live picture's floats for its shader, `clock` seconds in; nil until `prepare` has built them. A twin's are its
+    /// sibling's, then its heartbeat's delays.
+    func data(seed: Int, clock: Double) -> [Float]? {
+        let t = clock.truncatingRemainder(dividingBy: period)
+        let data: [Float]? = switch sibling {
+        // Its seeds wander on 7-13 s circles that never line up, so the glass takes the raw clock.
+        case .glass: Self.cells(seed: seed, t: clock)
+        case .chainmail: Self.links(seed: seed, t: t)
+        case .coral: Self.kernels(seed: seed, t: t)
+        case .neurons: Self.web(seed: seed)
+        case .marbling: Self.drops(seed: seed, t: t)
+        default: nil
+        }
+        return sibling == self ? data : data.map { $0 + Self.delays(t: t) }
+    }
+
+    /// Builds what a live picture's data needs once per seed, off the main actor.
+    func prepare(seed: Int) async {
+        if sibling == .neurons { await Self.buildWeb(seed: seed) }
+    }
 
     @MainActor
     func render(side: CGFloat, scale: CGFloat) -> UIImage? {
@@ -175,85 +245,9 @@ enum Picture: String, CaseIterable {
                 city(g, lit: true)
             }
 
-        case .nightmare:
-            var rng = SplitMix64(state: 22)
-            let pitch = 0.11, n = 26, h = 3 * pitch
-            let seeds = (0..<n * n).map { k in
-                SIMD2(-1.1 + (Double(k % n - 3) + .random(in: 0..<1, using: &rng)) * pitch,
-                      -1.1 + (Double(k / n - 3) + .random(in: 0..<1, using: &rng)) * pitch)
-            }
-            var cracks = Path(), scans: [(cell: Path, lines: Path, angle: Double)] = []
-            for j in 3..<n - 3 {
-                for i in 3..<n - 3 {
-                    // Voronoi cell: a square cut by the bisector with every seed in the 7 x 7 block. A cell reaches at most
-                    // sqrt(2) pitch from its seed, so a neighbour sits within 2 sqrt(2) pitch: three columns. 5 x 5 overlaps.
-                    let a = seeds[j * n + i]
-                    var cell = [a + SIMD2(-h, -h), a + SIMD2(h, -h), a + SIMD2(h, h), a + SIMD2(-h, h)]
-                    for dj in -3...3 {
-                        for di in -3...3 where di != 0 || dj != 0 {
-                            let b = seeds[(j + dj) * n + i + di], normal = b - a, c = ((b * b).sum() - (a * a).sum()) / 2
-                            var clipped: [SIMD2<Double>] = []
-                            for k in cell.indices {
-                                let u = cell[k], v = cell[(k + 1) % cell.count]
-                                let du = (normal * u).sum() - c, dv = (normal * v).sum() - c
-                                if du <= 0 { clipped.append(u) }
-                                if (du < 0) != (dv < 0) && du != dv { clipped.append(u + du / (du - dv) * (v - u)) }
-                            }
-                            cell = clipped
-                        }
-                    }
-                    var outline = Path()
-                    outline.addLines(cell.map { p($0.x, $0.y) })
-                    outline.closeSubpath()
-                    cracks.addPath(outline)
-                    let kind = Double.random(in: 0..<1, using: &rng), angle = Double.random(in: 0..<Double.pi, using: &rng)
-                    if kind < 0.12 {
-                        // Scan lines at the cell's own angle, so no direction repeats across the tank.
-                        var lines = Path()
-                        let d = SIMD2(cos(angle), sin(angle))
-                        for t in stride(from: -h, to: h, by: 0.02) {
-                            let m = a + t * SIMD2(-d.y, d.x)
-                            lines.addPath(segment(m.x - h * d.x, m.y - h * d.y, m.x + h * d.x, m.y + h * d.y))
-                        }
-                        scans.append((outline, lines, angle))
-                    }
-                }
-            }
-            // A tight bloom, so the cells stay black between the cracks.
-            neon(ctx, r: r, glows: [(0.012, 0.25), (0.004, 0.8)]) { g in
-                for scan in scans {
-                    var s = g
-                    s.clip(to: scan.cell)
-                    // Dashes restart on every line, so a pane's rows line up into broken data columns.
-                    s.stroke(scan.lines, with: .color(.violet), style: StrokeStyle(lineWidth: 0.003 * r, dash: [0.03, 0.008, 0.012, 0.02].map { $0 * r },
-                                                                                   dashPhase: scan.angle / .pi * 0.07 * r))
-                }
-                g.stroke(cracks, with: .color(.blood), style: StrokeStyle(lineWidth: 0.0042 * r, lineJoin: .round))
-            }
-
-        case .nightmarePlus:
+        default:
             break
         }
-    }
-}
-
-extension Picture {
-    /// Nightmare+'s cells for the nightmarePlus shader: 22 x 22 cells 0.11 across from (-1.21, -1.21), each a seed wandering
-    /// its own circle inside its cell, a breath phase, and a scan pane's angle signed by which way it sweeps, or 0. The
-    /// shader searches the 3 x 3 cells around a point, so offsets stay under half a cell: 0.3 of jitter, 0.15 of wander.
-    static func cells(seed: Int, t: Double) -> [Float] {
-        var rng = SplitMix64(state: UInt64(seed))
-        func random(_ a: Double, _ b: Double) -> Double { .random(in: a..<b, using: &rng) }
-        let pitch = 0.11, n = 22
-        var f: [Float] = []
-        f.reserveCapacity(4 * n * n)
-        for k in 0..<n * n {
-            let jitter = SIMD2(random(-0.3, 0.3), random(-0.3, 0.3)), w = 2 * Double.pi * (random(0, 1) + t / random(7, 13))
-            let at = (SIMD2(Double(k % n), Double(k / n)) + 0.5 + jitter + 0.15 * SIMD2(cos(w), sin(w))) * pitch - 1.21
-            let pane = random(0, 1) < 0.12 ? random(0.001, .pi) * (random(0, 1) < 0.5 ? 1 : -1) : 0
-            f += [Float(at.x), Float(at.y), Float(random(0, 1)), Float(pane)]
-        }
-        return f
     }
 }
 

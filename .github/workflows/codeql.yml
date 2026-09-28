@@ -1,0 +1,48 @@
+name: CodeQL
+
+# Swift takes about 18 minutes under CodeQL, so it is scanned on merges to master and weekly; pull requests get the
+# workflow scan alone. No paths-ignore: a master ruleset that requires code scanning can't merge a PR it skipped.
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  schedule:
+    - cron: '0 6 * * 1'
+
+concurrency:
+  group: codeql-${{ github.head_ref || github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ${{ matrix.language == 'swift' && 'macos-26' || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ${{ fromJSON(github.event_name == 'pull_request' && '["actions"]' || '["actions", "swift"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.language == 'swift' && 'manual' || 'none' }}
+      # Under CodeQL's build tracing, Xcode reports the Metal toolchain missing, though the Test job compiles the same
+      # shaders. CodeQL doesn't read Metal, and Swift finds the shaders by name at run time, so the build leaves them out.
+      - name: Build
+        if: matrix.language == 'swift'
+        run: |
+          curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/xcodegen/bin/xcodegen" generate --quiet
+          xcodebuild build -project Unstir.xcodeproj -scheme Unstir -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO EXCLUDED_SOURCE_FILE_NAMES='*.metal' -quiet
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
