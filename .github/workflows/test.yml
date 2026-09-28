@@ -1,0 +1,28 @@
+name: Test
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths-ignore: ['**.md']
+
+concurrency:
+  group: test-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: |
+          curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+      - name: Test
+        run: |
+          xcodegen generate --quiet
+          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
+          xcodebuild test -project Unstir.xcodeproj -scheme Unstir -destination "id=$udid" \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO -quiet

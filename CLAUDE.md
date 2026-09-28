@@ -5,6 +5,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Unstir is an iPhone puzzle game (SwiftUI + Metal, iOS 17, Swift 6, portrait only). Rods under a tank of picture twist
 it; the player unwinds the scramble by turning rods back in the right order.
 
+## Git, pull requests and CI
+
+- **Branch and PR for every change.** Never commit to `master`. Jack has given standing permission to create branches
+  and open PRs without asking.
+- **Commit only after Jack reviews.** When a feature or a round of ideation is finished, stage it and ask Jack to review
+  the staged diff. Commit once he's reviewed it, not before, and not partway through the work.
+- **Atomic commits.** Changes that belong together go in one commit. Separate changes go in separate commits, even when
+  that means splitting one file's diff line by line (`git add -p` is interactive, so build the partial patch and use
+  `git apply --cached`).
+- **Merging.** Jack holds merge authority. Once he has seen the diff, a spoken OK from him is enough approval for Claude
+  to merge the PR.
+- **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
+  is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
+  Pushing to a branch with no open PR builds nothing. Never add a `push:` trigger: it builds every push to every
+  branch, PR or not. Keep commits local until the next build is worth paying for. If a build takes more than
+  5 minutes, raise it with Jack: the approach to builds needs rethinking.
+- **Watch CI spend.** Before each push that builds, run `scripts/ci-usage.sh`, which prints this month's GitHub Actions
+  allowance left. Tell Jack when 50% is left, and warn him urgently at 25%. Public repos, this one included, don't
+  use the allowance. macOS minutes in private repos count 10×.
+
 ## Keep the repo free of personal details
 
 The repo is public. Nothing personal or confidential goes into a tracked file, a commit message or a PR: no device
