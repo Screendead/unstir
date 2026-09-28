@@ -25,8 +25,10 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   to merge the PR.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
-  Pushing to a branch with no open PR builds nothing. Never add a `push:` trigger: it builds every push to every
-  branch, PR or not. Keep commits local until the next build is worth paying for. If a build takes more than
+  Pushing to a branch with no open PR builds nothing. `.github/workflows/codeql.yml` scans every PR to `master`,
+  `*.md`-only ones too, since the `master` ruleset won't merge a PR without its result, and every push to `master`,
+  which only merges make. Never add a `push:` trigger for any other branch: it builds every push, PR or not. Keep
+  commits local until the next build is worth paying for. If a build takes more than
   5 minutes, raise it with Jack: the approach to builds needs rethinking.
 - **Watch CI spend.** Before each push that builds, run `scripts/ci-usage.sh`, which prints this month's GitHub Actions
   allowance left. Tell Jack when 50% is left, and warn him urgently at 25%. Public repos, this one included, don't
