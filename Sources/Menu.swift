@@ -103,6 +103,7 @@ struct MenuView: View {
     @State private var list = CGRect.zero
     @Namespace private var strip
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage("soundSet") private var sound = SoundSet.glass
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -144,6 +145,7 @@ struct MenuView: View {
                     TierList(tier: listed, pick: pick).equatable()
                         .opacity(twisting ? 0 : 1)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { list = $0 }
+                    sounds.padding(.top, 18)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 28)
@@ -169,6 +171,27 @@ struct MenuView: View {
             }
         }
         .task { if demo { await tour() } }
+    }
+
+    private var sounds: some View {
+        HStack(spacing: 0) {
+            Text("sound:").opacity(0.55)
+            ForEach(SoundSet.allCases, id: \.self) { set in
+                if set != SoundSet.allCases[0] { Text("\u{00B7}").opacity(0.35) }
+                Button {
+                    guard !twisting else { return }
+                    Sound.shared.play(.tap)
+                    sound = set
+                } label: {
+                    Text(set.rawValue).foregroundStyle(sound == set ? Color.text : .white.opacity(0.35))
+                        .padding(.horizontal, 8).frame(minHeight: 44).contentShape(Rectangle())
+                }
+                // Plain and guarded, as a row is: a tier swipe can lift over it.
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(sound == set ? .isSelected : [])
+            }
+        }
+        .font(.mono(12))
     }
 
     /// While it turns, the list is drawn again, cut to the part on screen, over the scroll view, and that is what
@@ -223,6 +246,7 @@ struct MenuView: View {
                         if t != Tier.allCases.first {
                             Text("\u{00B7}").font(.mono(15)).opacity(0.3).padding(.horizontal, 7).frame(height: 36)
                         }
+                        // Silent itself: `go` sounds a switch as it starts, however it starts.
                         Button { select(t) } label: { name(t) }
                             .buttonStyle(.plain)
                             .id(t)
@@ -287,6 +311,7 @@ struct MenuView: View {
     private func go(to t: Tier, turning dir: Double) {
         guard t != shown, !busy else { return }
         busy = true
+        Sound.shared.play(.tier)
         Tier.store(t)
         withAnimation(.snappy(duration: 0.35)) { picked = t }
         withAnimation(.easeIn(duration: 0.32)) {
@@ -373,8 +398,12 @@ struct MenuView: View {
         select(.plughole)
     }
 
-    /// A touch that ends a stir must not open the row it lifted over.
-    private func pick(_ level: Level) { if !twisting { onPick(level) } }
+    /// A touch that ends a stir must not open the row it lifted over, nor tap.
+    private func pick(_ level: Level) {
+        guard !twisting else { return }
+        Sound.shared.play(.tap)
+        onPick(level)
+    }
 }
 
 /// A tier's rule and rows, and a locked tier's gate. Compared by tier alone, so a frame of a drag or a stir doesn't
@@ -473,6 +502,7 @@ private struct LevelRow: View {
             .padding(.vertical, 11)
             .contentShape(Rectangle())
         }
+        // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .disabled(!enabled)
     }

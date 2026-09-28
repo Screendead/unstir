@@ -12,7 +12,12 @@ targets:
   Unstir:
     type: application
     platform: iOS
-    sources: [Sources]
+    sources:
+      - Sources
+      # A folder reference keeps each set's directory, Sounds/<set>/, in the bundle, where `Sound.use` looks for it.
+      - path: Sounds
+        type: folder
+        buildPhase: resources
     settings:
       base:
         TARGETED_DEVICE_FAMILY: 1

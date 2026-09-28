@@ -107,6 +107,14 @@ final class Game {
     private(set) var hint: Twist?
     private(set) var cancels = 0
     private(set) var cancelledRod = 0
+    /// Heals since the level opened or was reset, for the heal's rising note: cancels less a wrong stir turned straight
+    /// back. The heal that solves sounds as the solve, and one that spills a run as the spill, so a heal counts only once
+    /// the win check has had its say.
+    private(set) var heals = 0
+    private var healing = false
+    /// Set once a finished level's win check has had its say, so a win the fine pass confirms is not first sounded as a
+    /// spill.
+    private(set) var ended = false
     /// The rod and outcome of the newest commit or undo, for the commit flash.
     private(set) var lastCommit: (rod: Int, result: Commit)?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it.
@@ -148,9 +156,10 @@ final class Game {
         let result = level.seized.contains(rod) ? .refused : stack.commit(rod: slot, steps: steps, in: level.layout)
         guard result != .refused else { Log.write("commit \(Twist(rod: rod, steps: steps)) refused"); return }
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
+        var takenBack = false
         if open, history.last?.rod == slot {
             history[history.count - 1].steps += steps
-            if history.last!.steps == 0 { history.removeLast(); open = false }
+            if history.last!.steps == 0 { history.removeLast(); open = false; takenBack = true }
         } else {
             history.append(Twist(rod: slot, steps: steps))
             open = true
@@ -159,6 +168,8 @@ final class Game {
         turns += 1
         if result == .pushed { pushes += 1 }
         if result == .cancelled { cancels += 1; cancelledRod = rod }
+        // A stir joined back to nothing that cancels took off the player's own wrong turn.
+        healing = result == .cancelled && !takenBack
         hint = nil
         Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
                   + "stack=\(stack.count) \(stack)")
@@ -220,6 +231,8 @@ final class Game {
         history = []
         open = false
         hint = nil
+        heals = 0
+        healing = false
         resets += 1
         Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
         return true
@@ -283,7 +296,10 @@ final class Game {
     }
 
     private func finish() {
+        if healing && !finished { heals += 1 }
+        healing = false
         guard finished else { return }
+        ended = true
         hint = nil
         seconds = Int(Date.now.timeIntervalSince(start ?? .now))
         Log.write("\(solved ? "solved" : "spilled") \(level.id) moves=\(moves) par=\(par) hints=\(hints) seconds=\(seconds) counts=\(counts)")
@@ -328,7 +344,7 @@ struct LevelView: View {
     /// The knob, or `Game.tank`, touched last: its open stir's count stays up, faint, after letting go.
     @State private var counted: Int?
     @State private var grabs = 0
-    /// The seized knob touched last, and every such touch: it shakes, the rim pulses and a thud plays.
+    /// The seized knob touched last, and every such touch: it shakes, the rim pulses, and a thud plays and sounds.
     @State private var jammed: Int?
     @State private var jams = 0
     @State private var tick = 0
@@ -481,6 +497,8 @@ struct LevelView: View {
                     control(game.level.sandbox ? "undo" : "undo \u{00B7} \(game.bank)") {
                         withAnimation(game.history.last?.rod == Game.tank ? .snappy(duration: 0.3) : nil) { game.undo() }
                     }
+                        // With nothing to take back it does nothing, so it only taps.
+                        .buttonStyle(Sounding(effect: game.history.isEmpty ? .tap : .undo))
                         // The plain button style does not grey a disabled label.
                         .disabled(!game.level.sandbox && game.bank == 0)
                         .opacity(!game.level.sandbox && game.bank == 0 ? 0.35 : 1)
@@ -488,6 +506,7 @@ struct LevelView: View {
                     // Endless: a reset would refill the moves, and a hint would spill the run. Undo spends the bank.
                     if game.level.run == nil {
                         control("reset") { if game.reset() { replays += 1 } }
+                            .buttonStyle(Sounding(effect: .reset))
                         // No hints yet where knobs are seized.
                         if !game.level.sandbox && game.level.seized.isEmpty {
                             Spacer()
@@ -607,7 +626,6 @@ struct LevelView: View {
                 .background(Capsule().fill(Color.white.opacity(0.05)))
                 .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
         }
-        .buttonStyle(.plain)
     }
 
     /// The knob shows only the player's own turning, so it can neither give away nor misstate the scramble.
@@ -810,10 +828,17 @@ struct LevelView: View {
         .simultaneousGesture(spinGesture, including: game.level.seized.isEmpty ? .subviews : .all)
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .sensoryFeedback(.selection, trigger: ticks)
-        .onChange(of: tankTicks) { Knock.clunk.play() }
+        .onChange(of: ticks) { Sound.shared.play(.tick) }
+        .onChange(of: tankTicks) { Knock.clunk.play(); Sound.shared.play(.tank) }
         .sensoryFeedback(.impact(weight: .heavy), trigger: game.cancels)
+        // Not on a reset's return to 0.
+        .onChange(of: game.heals) { if game.heals > 0 { Sound.shared.play(.heal(game.heals)) } }
         .sensoryFeedback(.warning, trigger: game.pushes)
+        // A push that spills a run sounds only as the spill, as a heal does.
+        .onChange(of: game.pushes) { if !game.runOver { Sound.shared.play(.push) } }
         .sensoryFeedback(.success, trigger: game.solved) { _, solved in solved }
+        // One sound for the end: a run's tank solved one over par sounds as the solve its card shows.
+        .onChange(of: game.ended) { if game.ended { Sound.shared.play(game.solved ? .solve : .spilled) } }
         // Keeps texture pixels on device pixels, so the untwisted picture is not blurred by half a pixel.
         .offset(snap)
         .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { o in
@@ -958,6 +983,7 @@ struct LevelView: View {
             jammed = k
             jams += 1
             Knock.thud.play()
+            Sound.shared.play(.seized)
         }
         guard let g = drag, let pivot = pivot(g.grab) else { return }
         let d = g.from - pivot

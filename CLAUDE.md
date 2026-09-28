@@ -72,6 +72,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
   Git ignores `shots/` apart from `index.txt`: show pictures and films in a PR by attaching them to a comment through
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
+- Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` and prints each file's
+  loudness, peaks, onset, phone-speaker loss and size, and each bed's seam (needs Homebrew's `csound` and `ffmpeg`).
+  Every source is seeded, so a rerun writes the same bytes.
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
 
@@ -148,6 +151,17 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
   twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's cells take the
   raw clock; the neural web is static per seed, built once off the main actor.
+- **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
+  twelve players, so quick ones overlap; a heal climbs a note for each since the level opened or was reset, and the
+  `seized` sound plays with `Knock.thud` whenever a finger comes to hold a seized knob (`LevelView.hold`): on
+  touch-down, or when motion settles an overlap on one. Beds loop under the menu and each tier (`Level.bed`; daily,
+  endless and the sandbox take plughole's), and a new one crossfades in over the old at equal power across two decks.
+  Only a bed that is playing stays decoded, and none in the background. `Sounding`, set on `RootView`, is the app's
+  button style: a button taps as it acts, and undo and reset have sounds of their own. The menu's tier names, rows and
+  `sound:` switch stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it
+  opens, the switch only when it picks, neither as a tier swipe lifts over it. The session is ambient, and while
+  another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
+  unless `UNSTIR_SOUND=1`; the menu's `sound:` switch turns the set off.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a
@@ -160,9 +174,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
   (a digit per level, that many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and
   `UNSTIR_TIERDEMO` switches tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock
-  above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. This
-  is how screenshots and films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change,
-  add a `shot` line there.
+  above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. Any
+  other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless `UNSTIR_SOUND=1`; the stored
+  sound setting is left alone. This is how screenshots and films are taken without touch; see `scripts/shots.sh` for
+  examples. To show a visual change, add a `shot` line there.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's pictures).

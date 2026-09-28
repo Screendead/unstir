@@ -49,6 +49,9 @@ struct Harness {
     let tierDemo: Bool
     /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
     let tierSpin: (spin: Double, fade: Double)?
+    /// Shots, films, the bench and the test host play no sound unless UNSTIR_SOUND=1. Not stored, so the next launch on
+    /// the phone sounds; UNSTIR_UNLOCK alone is a phone launch.
+    let mute: Bool
 
     init(_ env: [String: String]) {
         // UNSTIR_LEVEL counts in UNSTIR_TIER too.
@@ -120,6 +123,7 @@ struct Harness {
         hint = env["UNSTIR_HINT"] == "1"
         still = harnessed && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
+        mute = (harnessed || env.keys.contains { $0.hasPrefix("XCTest") }) && env["UNSTIR_SOUND"] != "1"
     }
 }
 
@@ -166,11 +170,14 @@ struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
     @Environment(\.scenePhase) private var phase
+    @AppStorage("soundSet") private var sound = SoundSet.glass
+    private let mute: Bool
 
     init() {
         let h = Harness(ProcessInfo.processInfo.environment)
         _level = State(initialValue: h.screen == "menu" ? nil : h.level)
         _harness = State(initialValue: h)
+        mute = h.mute
     }
 
     var body: some View {
@@ -192,7 +199,15 @@ struct RootView: View {
             }
         }
         .background(Color.black)
-        .onChange(of: phase) { Log.write("phase \(phase)") }
+        .buttonStyle(Sounding())
+        .onChange(of: phase) {
+            Log.write("phase \(phase)")
+            // Not on inactive: Control Center and the app switcher pass through it.
+            Sound.shared.foreground(phase != .background)
+        }
+        .onChange(of: sound, initial: true) { Sound.shared.use(mute ? .off : sound) }
+        // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
+        .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
         .task {
             guard harness?.tour == true else { return }
             try? await Task.sleep(for: .seconds(1.5))

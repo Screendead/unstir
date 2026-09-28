@@ -130,6 +130,83 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.history, [Twist(rod: 0, steps: 2), Twist(rod: 0, steps: -2)])
     }
 
+    /// A heal climbs the scale: a wrong stir turned straight back cancels but is no heal, and the heal that solves sounds
+    /// as the solve instead.
+    @MainActor func testHealsCountTheScrambleTakenOff() {
+        let scramble = [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)]
+        let game = Game(level: Level(id: "test-heals", label: "", title: "", layout: .tri, scramble: scramble))
+        game.commit(rod: 0, steps: 2)
+        XCTAssertEqual(game.pushes, 1)
+        game.commit(rod: 0, steps: -2)
+        XCTAssertEqual(game.cancels, 1)
+        XCTAssertEqual(game.heals, 0)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 1)
+        game.commit(rod: 0, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertEqual(game.cancels, 3)
+        XCTAssertEqual(game.heals, 1)
+    }
+
+    /// A reset starts the heals' climb again from the bottom note.
+    @MainActor func testResetRestartsTheHeals() {
+        let scramble = [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)]
+        let game = Game(level: Level(id: "test-heals-reset", label: "", title: "", layout: .tri, scramble: scramble))
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 1)
+        XCTAssertTrue(game.reset())
+        XCTAssertEqual(game.heals, 0)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 1)
+    }
+
+    /// A heal that spills an endless run sounds only as the spill.
+    @MainActor func testAHealThatSpillsIsNoHeal() {
+        let scramble = [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3), Twist(rod: 2, steps: 2)]
+        let game = Game(level: Level(id: "test-heals-spill", label: "", title: "", layout: .tri, scramble: scramble,
+                                     run: Run(seed: 0), fixedPar: 1))
+        game.commit(rod: 2, steps: -2)
+        XCTAssertEqual(game.heals, 1)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.cancels, 2)
+        XCTAssertTrue(game.runOver)
+        XCTAssertEqual(game.heals, 1)
+    }
+
+    /// The move that ends a level ends it once: a run's tank solved one over par is solved as well as over, and a push
+    /// past par spills.
+    @MainActor func testTheLastMoveEndsTheLevelOnce() {
+        XCTAssertFalse(Layout.quad.overlaps(0, 2))
+        let solving = Game(level: Level(id: "test-ends-solved", label: "", title: "", layout: .quad,
+                                        scramble: [Twist(rod: 0, steps: 4), Twist(rod: 2, steps: 3)], run: Run(seed: 0),
+                                        fixedPar: 2))
+        solving.commit(rod: 0, steps: -2)
+        solving.commit(rod: 2, steps: -3)
+        XCTAssertFalse(solving.ended)
+        solving.commit(rod: 0, steps: -2)
+        XCTAssertTrue(solving.solved)
+        XCTAssertTrue(solving.runOver)
+        XCTAssertTrue(solving.ended)
+        let spilling = Game(level: Level(id: "test-ends-spilled", label: "", title: "", layout: .tri,
+                                         scramble: [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)],
+                                         run: Run(seed: 0), fixedPar: 1))
+        spilling.commit(rod: 1, steps: -3)
+        XCTAssertFalse(spilling.ended)
+        spilling.commit(rod: 2, steps: 2)
+        XCTAssertEqual(spilling.pushes, 1)
+        XCTAssertTrue(spilling.runOver)
+        XCTAssertFalse(spilling.solved)
+        XCTAssertTrue(spilling.ended)
+    }
+
+    /// Each tier has its own bed, and the modes outside the tiers take plughole's.
+    func testBedsFollowTheTier() {
+        XCTAssertEqual(Level.plughole.map(\.bed), Array(repeating: .plughole, count: Level.plughole.count))
+        XCTAssertEqual(Level.whirlpool.map(\.bed), Array(repeating: .whirlpool, count: Level.whirlpool.count))
+        XCTAssertEqual(Level.maelstrom.map(\.bed), Array(repeating: .maelstrom, count: Level.maelstrom.count))
+        XCTAssertEqual([Level.daily(), .endless(Run(seed: 7)), .sandbox].map(\.bed), [.plughole, .plughole, .plughole])
+    }
+
     /// An undo takes back a whole stir, gives its move back and costs the clean; the stir before stays shut, and an
     /// empty bank refuses.
     @MainActor func testUndoSpendsTheBank() {
