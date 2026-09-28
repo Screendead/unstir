@@ -92,12 +92,11 @@ struct Level: Hashable, Sendable {
               layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
-    /// Nightmare's scrambles over a live background seeded by the level's number. Ids of their own, so a nightmare
-    /// best or start never opens a level here or spends its first try.
+    /// Nightmare's scrambles under ids of their own, so a nightmare best or start never opens a level here or spends
+    /// its first try.
     static let nightmarePlus: [Level] = nightmare.map { level in
         var level = level
         level.id = "N+" + level.id.dropFirst()
-        level.picture = .nightmarePlus
         return level
     }
 

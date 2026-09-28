@@ -22,7 +22,7 @@ struct Harness {
     let bench: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
-    /// UNSTIR_CLOCK=s: hold the Nightmare+ background s seconds in.
+    /// UNSTIR_CLOCK=s: hold the nightmare background s seconds in.
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
@@ -49,10 +49,10 @@ struct Harness {
         default: (plus ? Level.nightmarePlus : nightmare ? Level.nightmare : Level.all)[n - 1]
         }
         if bench {
-            // UNSTIR_DEPTH overrides. Nightmare+'s heaviest frame is 26 entries and the drag, the most that keep four taps.
-            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (plus ? 26 : 24)
+            // UNSTIR_DEPTH overrides. Nightmare's heaviest frame is 26 entries and the drag, the most that keep four taps.
+            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (nightmare ? 26 : 24)
             var rng = SplitMix64(state: 24)
-            level = Level(id: "bench", label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: plus ? .nightmarePlus : .grid,
+            level = Level(id: "bench", label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: nightmare ? .nightmare : .grid,
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))
         }
         if let p = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:)) { level.picture = p }
@@ -79,7 +79,7 @@ struct Harness {
 @MainActor
 final class Bench: NSObject {
     private var drive: ((Double) -> Void)?
-    /// Nightmare+: lets go after the drag, then times 20 s more with nothing driven but the background's clock.
+    /// Nightmare: lets go after the drag, then times 20 s more with nothing driven but the background's clock.
     private let still: (() -> Void)?
     private var first = 0.0, last = 0.0
     private var intervals: [Double] = []

@@ -265,7 +265,8 @@ final class UnstirTests: XCTestCase {
     func testNightmarePlusKeepsItsOwnProgress() {
         XCTAssertEqual(Level.nightmarePlus.map(\.scramble), Level.nightmare.map(\.scramble))
         XCTAssertTrue(Set(Level.nightmarePlus.map(\.id)).isDisjoint(with: (Level.all + Level.nightmare).map(\.id)))
-        XCTAssertTrue(Level.nightmarePlus.allSatisfy { $0.nightmare && $0.plus && $0.picture == .nightmarePlus })
+        XCTAssertTrue((Level.nightmare + Level.nightmarePlus).allSatisfy { $0.nightmare && $0.picture == .nightmare })
+        XCTAssertTrue(Level.nightmarePlus.allSatisfy(\.plus))
         XCTAssertFalse((Level.all + Level.nightmare).contains(where: \.plus))
     }
 

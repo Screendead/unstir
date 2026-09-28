@@ -82,7 +82,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, hints, clean-solve rules and the
   endless spill. It also holds `LevelView` (drag gesture → live twist → `Game.commit` on lift), the `Unstirred` shader
   modifier and the result card. Wins run the coarse `looksSolved` pass on the main actor and the fine pass off it.
-- **Pictures.swift** bakes the neon pictures once per size. Nightmare+ is drawn live by its own shader instead.
+- **Pictures.swift** bakes the neon pictures once per size. Nightmare is drawn live by its own shader instead.
   Campaign pictures are designed so that "up" is readable inside every rigid core.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, level, mode or stack, and can hold a

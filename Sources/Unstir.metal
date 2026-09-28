@@ -38,10 +38,10 @@ using namespace metal;
     return half4(half3(mix(c, float3(dot(c, float3(0.299, 0.587, 0.114))), haze)), 1.0h);
 }
 
-// Nightmare+: the nightmare picture's cracked glass, alive, in linear light at p (tank units, y down); px is a device
-// pixel in tank units. cells is Picture.cells: 22 x 22 cells 0.11 across from (-1.21, -1.21), each (seed x, y, breath
-// phase, pane). Crack and pane glow breathe each on their own phase: a wave shared across the tank would show a turned
-// disc which way it turned. The fastest thing at any point is a scan line sweeping past every 2 s.
+// Nightmare's cracked glass, alive, in linear light at p (tank units, y down); px is a device pixel in tank units.
+// cells is Picture.cells: 22 x 22 cells 0.11 across from (-1.21, -1.21), each (seed x, y, breath phase, pane). Crack
+// and pane glow breathe each on their own phase: a wave shared across the tank would show a turned disc which way it
+// turned. The fastest thing at any point is a scan line sweeping past every 2 s.
 static float3 cracks(float2 p, float px, device const packed_float4 *cells, float t) {
     const float pitch = 0.11;
     int2 g = int2(floor((p + 1.21) / pitch));
@@ -91,7 +91,7 @@ static float3 cracks(float2 p, float px, device const packed_float4 *cells, floa
 }
 
 // The layer is gamma-encoded like the baked pictures, so the square root takes the field back out of linear light.
-[[ stitchable ]] half4 nightmarePlus(float2 pos, float radius, float px, device const float *cells, int count, float t) {
+[[ stitchable ]] half4 nightmare(float2 pos, float radius, float px, device const float *cells, int count, float t) {
     float2 p = pos / radius - 1.0;
     // The corners are clipped away: past the glass and the taps' reach, skip a fifth of the square.
     if (length_squared(p) > 1.01) return half4(0.0h, 0.0h, 0.0h, 1.0h);

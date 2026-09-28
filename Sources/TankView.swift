@@ -242,9 +242,9 @@ struct LevelView: View {
     private let bench: Bool
     /// UNSTIR_WAVE: the solve wave held at this radius.
     private let frozenWave: Double?
-    /// UNSTIR_CLOCK: the Nightmare+ background held at this many seconds.
+    /// UNSTIR_CLOCK: the nightmare background held at this many seconds.
     private let frozenClock: Double?
-    /// Nightmare+: its background's clock starts at zero on every visit.
+    /// Nightmare: its background's clock starts at zero on every visit.
     @State private var opened = Date.now
     let onExit: () -> Void
     let onNext: (Level) -> Void
@@ -373,7 +373,7 @@ struct LevelView: View {
             // Past the picture's first render, so the bake does not land in the numbers.
             guard bench, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
             Bench(drive: { liveRod = 0; liveAngle = 3 * sin(2 * $0) },
-                  still: game.level.picture == .nightmarePlus ? { liveRod = nil; liveAngle = 0 } : nil).start()
+                  still: game.level.picture == .nightmare ? { liveRod = nil; liveAngle = 0 } : nil).start()
         }
         .onChange(of: shown == nil, initial: true) { if shown == nil { game.startClock() } }
         .onChange(of: game.finished) {
@@ -471,14 +471,14 @@ struct LevelView: View {
             Int((liveAngle / Tank.step).rounded()) != 0 && (game.stack.count < Tank.maxStack
                 || game.stack.last { game.level.layout.overlaps($0.rod, k) }?.rod == k)
         } ?? false
-        let animated = game.level.picture == .nightmarePlus
+        let animated = game.level.picture == .nightmare
         let unstirred = Unstirred(stack: stack, layout: game.level.layout, liveRod: liveRod, liveAngle: liveAngle, wind: wind, side: side,
                                   haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, animated: animated)
         let source = rods[game.history.last?.rod ?? 0]
         let frozenWave = frozenWave
         let flash = game.lastCommit
         return ZStack {
-            // Nightmare+ is the one tank that redraws while the player is still; 60 Hz is plenty for motion this slow.
+            // Nightmare is the one tank that redraws while the player is still; 60 Hz is plenty for motion this slow.
             // Every other picture pauses the timeline, so nothing ticks.
             TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !animated || frozenClock != nil)) { timeline in
                 PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
@@ -663,7 +663,7 @@ struct Unstirred: ViewModifier, Animatable {
     var haze = 0.0
     /// (x, y, radius) in tank units; a negative radius is off.
     var wave = SIMD3<Float>(0, 0, -1)
-    /// Nightmare+: the picture under the shader is redrawn every frame too.
+    /// Nightmare: the picture under the shader is redrawn every frame too.
     var animated = false
     @Environment(\.displayScale) private var scale
 
@@ -685,7 +685,7 @@ struct Unstirred: ViewModifier, Animatable {
         let n = floats.count / 4
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
-        // Nightmare+'s fill costs about four entries of four-tap work (Mac GPU microbench), so it keeps four taps only to
+        // Nightmare's fill costs about four entries of four-tap work (Mac GPU microbench), so it keeps four taps only to
         // 26 entries: the same budget as 30 without it. Counted in committed entries, so a touch never changes the taps;
         // the drag rides one over, within the 31 the shader's comment measured.
         let fourTaps: Float = (animated ? 26 : 30) + (liveRod == nil ? 0 : 1)
@@ -699,7 +699,7 @@ struct Unstirred: ViewModifier, Animatable {
 struct PictureLayer: View {
     let picture: Picture
     let side: CGFloat
-    /// Nightmare+: the level's seed and the background's clock in seconds.
+    /// Nightmare: the level's seed and the background's clock in seconds.
     var seed = 0
     var clock = 0.0
     @Environment(\.displayScale) private var scale
@@ -707,9 +707,9 @@ struct PictureLayer: View {
 
     var body: some View {
         ZStack {
-            if picture == .nightmarePlus {
+            if picture == .nightmare {
                 // The shader's time terms repeat every 5 s and 2 s, so it gets the clock mod 10 and float32 keeps its precision.
-                Rectangle().fill(ShaderLibrary.nightmarePlus(.float(side / 2), .float(2 / (side * scale)),
+                Rectangle().fill(ShaderLibrary.nightmare(.float(side / 2), .float(2 / (side * scale)),
                                                              .floatArray(Picture.cells(seed: seed, t: clock)),
                                                              .float(Float(clock.truncatingRemainder(dividingBy: 10)))))
             } else if let image {
@@ -720,7 +720,7 @@ struct PictureLayer: View {
         }
         .frame(width: side, height: side)
         // Flickers on like a neon tube when the texture lands. Over black, opacity is a colour multiply the shader samples for free.
-        // Transparent until then, which over black matches the placeholder and keeps Nightmare+ from showing before the strike.
+        // Transparent until then, which over black matches the placeholder and keeps nightmare from showing before the strike.
         .keyframeAnimator(initialValue: 0.0, trigger: image != nil) { picture, o in picture.opacity(o) } keyframes: { _ in
             // Black until the screen's 0.27 s dip in has landed, or the fade swallows the strike.
             MoveKeyframe(0.0)
@@ -735,9 +735,9 @@ struct PictureLayer: View {
             LinearKeyframe(0.35, duration: 0.05)
             LinearKeyframe(1.0, duration: 0.16, timingCurve: .easeOut)
         }
-        // Nightmare+ bakes nothing: the empty image only strikes the tube.
+        // Nightmare bakes nothing: the empty image only strikes the tube.
         .task(id: [picture.rawValue, "\(side)", "\(scale)"]) {
-            image = picture == .nightmarePlus ? UIImage() : picture.render(side: side, scale: scale)
+            image = picture == .nightmare ? UIImage() : picture.render(side: side, scale: scale)
         }
     }
 }
