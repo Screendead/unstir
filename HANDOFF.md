@@ -16,16 +16,16 @@ this is analysis. No code has changed for it.
 | Competitor scan | Done 2026-09-28, quick pass (see below) |
 | Business-model recommendation | Proposed 2026-09-28; **Jack has not decided** |
 | Monetisation code | None. No StoreKit, ads or sharing in `Sources/` |
-| Undo bank | Starts at 10 and nothing refills it (`Sources/Levels.swift:210`). This is the pricing hook, and it is still open |
+| Undo bank | Starts at 10 and nothing refills it (`Best.undos` in `Sources/Levels.swift`). This is the pricing hook, and it is still open |
 | TestFlight | Not started |
 | CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
-| Difficulty tiers | In progress on branch `difficulty`; see "Side task" below |
+| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). The Nightmare+ design and the way in wait on Jack; see "Side task" below |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
 | Architecture pass | Queued after the performance pass (Jack, 2026-09-28); see below |
-| Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB. `difficulty` is PR #2; see below |
-| README | Asked for (Jack, 2026-09-28); written after the media clean-up; see below |
-| Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain); see below |
+| Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
+| README | Asked for (Jack, 2026-09-28); on branch `housekeeping`, with the four suggested images (Jack's pick); see below |
+| Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). On branch `housekeeping`; see below |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 ### The plan
@@ -51,8 +51,8 @@ from Nightmare to Nightmare+ is easy to miss.
 
 | Item | State |
 |---|---|
-| Nightmare on the live background | Done and reviewed; committed on `difficulty`, not pushed. The baked cracked glass is deleted |
-| More live backgrounds | Set, palettes, twins and level table decided (below); all ten ported with the heartbeat in the twins' lines, tests passing; Jack approved the films and the cost. Staged for review. `fillEntries` stay Mac-measured: no phone benches until the performance pass (Jack) |
+| Nightmare on the live background | Merged 2026-09-28 (PR #2). The baked cracked glass is deleted |
+| More live backgrounds | Set, palettes, twins and level table decided (below); all ten ported with the heartbeat in the twins' lines, tests passing; Jack approved the films and the cost. Merged 2026-09-28 (PR #2). `fillEntries` stay Mac-measured: no phone benches until the performance pass (Jack) |
 | Nightmare+ design | Recommended below; **Jack has not decided** |
 | The way in | Recommended below; **Jack has not decided** |
 
@@ -222,9 +222,9 @@ compress, so every re-render added its full size for good, and every clone and C
 - Order: untrack the media in a commit before the rewrite, so the rewrite's reset leaves the files on disk. Keep a
   throwaway bundle in the scratchpad until the push is checked.
 - GitHub keeps PR #1's own ref to the old commits, so their media stays on that PR page; clones and CI don't fetch it.
-- Kept in git: a few README images at 440 px wide as WebP, 40–50 KB each. Claude's suggested set: `grid-d2-right-half`
-  (the mechanic, mid-drag), `level05` (sunset), `level27` (deep hex) and `nightmare24-chainmail`. **Jack has not
-  picked.** There is no README yet.
+- Kept in git: four README images in `docs/images/`, 440 px wide as WebP, 40–55 KB each: `grid-d2-right-half`
+  (the mechanic, mid-drag), `level05` (sunset), `level27` (deep hex) and `nightmare24-chainmail`, Claude's suggestion,
+  which Jack kept.
 - Pictures for a PR get attached to its description or comments, not committed. GitHub has no API for those
   attachments, so it takes the browser: Chrome's file upload into the comment box works (PR #2), with Jack signed in
   to GitHub there. Videos must stay under 10 MB; crop films to the tank and re-encode.
