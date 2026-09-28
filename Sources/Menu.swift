@@ -3,15 +3,15 @@
 import SwiftUI
 
 private let neonSweep = LinearGradient(colors: [.neonCyan, .magenta, .amber], startPoint: .leading, endPoint: .trailing)
-private let nightmareSweep = LinearGradient(colors: [.blood, .magenta, .violet], startPoint: .leading, endPoint: .trailing)
+private let bloodSweep = LinearGradient(colors: [.blood, .magenta, .violet], startPoint: .leading, endPoint: .trailing)
 
 extension Level {
-    /// Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; nightmare walks blood red
-    /// through magenta to violet. The daily is amber, endless cyan, the sandbox magenta.
+    /// Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; past plughole they
+    /// walk blood red through magenta to violet. The daily is amber, endless cyan, the sandbox magenta.
     var colour: Color {
-        guard id.hasPrefix("L") || nightmare, let n = Int(id.dropFirst()) else { return sandbox ? .magenta : run == nil ? .amber : .neonCyan }
+        guard let n = Int(label) else { return sandbox ? .magenta : run == nil ? .amber : .neonCyan }
         let t = Double((n - 1) % 12) / 11
-        return nightmare ? oklch(0.62, 0.3, 23 - 82 * t) : oklch(0.639, 0.34, 190 + 240 * t)
+        return tier == .plughole ? oklch(0.639, 0.34, 190 + 240 * t) : oklch(0.62, 0.3, 23 - 82 * t)
     }
 }
 
@@ -19,26 +19,25 @@ struct MenuView: View {
     /// UNSTIR_UNLOCK: every row open, for screenshots.
     let unlock: Bool
     let onPick: (Level) -> Void
-    @AppStorage("nightmare") private var nightmare = false
-    @AppStorage("nightmarePlus") private var plus = false
+    @AppStorage("tier") private var tier = Tier.plughole
 
     var body: some View {
         // Daily and endless draw on every layout, so they open after the first hex level.
-        let modes = unlock || Best.load(Level.all[22].id) != nil
-        let sweep = nightmare ? nightmareSweep : neonSweep
-        let levels = nightmare ? plus ? Level.nightmarePlus : Level.nightmare : Level.all
+        let modes = unlock || Best.load(Level.plughole[22].id) != nil
+        let plughole = tier == .plughole, levels = tier.levels
+        let sweep = plughole ? neonSweep : bloodSweep
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
-                        .foregroundStyle(sweep).shadow(color: (nightmare ? Color.blood : .magenta).opacity(0.6), radius: 12)
+                        .foregroundStyle(sweep).shadow(color: (plughole ? Color.magenta : .blood).opacity(0.6), radius: 12)
                     Spacer()
-                    HStack(spacing: 0) {
-                        toggle("nightmare", $nightmare)
-                        // Flush against the word, so both on reads nightmare+. Laid out even while nightmare is off, so
-                        // turning it on doesn't slide the word out from under a second tap.
-                        toggle("+", $plus).accessibilityLabel("nightmare plus")
-                            .opacity(nightmare ? 1 : 0).disabled(!nightmare).accessibilityHidden(!nightmare)
+                    HStack(spacing: 10) {
+                        // Whirlpool stays lit under maelstrom. Maelstrom is laid out even on plughole, so turning
+                        // whirlpool on doesn't slide it out from under a second tap.
+                        toggle(.whirlpool, on: !plughole)
+                        toggle(.maelstrom, on: tier == .maelstrom)
+                            .opacity(plughole ? 0 : 1).disabled(plughole).accessibilityHidden(plughole)
                     }
                 }
                 Text("Every stir in this tank has an exact inverse.")
@@ -59,14 +58,15 @@ struct MenuView: View {
         .background(Color.black)
     }
 
-    private func toggle(_ word: String, _ on: Binding<Bool>) -> some View {
-        Button { on.wrappedValue.toggle() } label: {
-            Text(word).font(.mono(12)).foregroundStyle(on.wrappedValue ? Color.blood : .white.opacity(0.35))
-                .shadow(color: .blood.opacity(on.wrappedValue ? 0.6 : 0), radius: 8)
+    /// Off, it picks its tier; on, it drops to the tier below.
+    private func toggle(_ tier: Tier, on: Bool) -> some View {
+        Button { self.tier = on ? tier.below ?? .plughole : tier } label: {
+            Text(tier.name.lowercased()).font(.mono(12)).foregroundStyle(on ? Color.blood : .white.opacity(0.35))
+                .shadow(color: .blood.opacity(on ? 0.6 : 0), radius: 8)
                 .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(on.wrappedValue ? [.isToggle, .isSelected] : .isToggle)
+        .accessibilityAddTraits(on ? [.isToggle, .isSelected] : .isToggle)
     }
 
     private func row(_ level: Level, detail: String? = nil, best: Text? = nil, enabled: Bool) -> some View {

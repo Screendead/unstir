@@ -294,7 +294,7 @@ struct LevelView: View {
     private let frozenWave: Double?
     /// UNSTIR_CLOCK: a live background held at this many seconds.
     private let frozenClock: Double?
-    /// Nightmare: its background's clock starts at zero on every visit.
+    /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
     let onExit: () -> Void
     let onNext: (Level) -> Void
@@ -998,12 +998,11 @@ struct ResultCard: View {
 
     var body: some View {
         let run = game.level.run
-        let accent = game.level.nightmare ? Color.blood : .neonCyan
+        let accent = game.level.tier == .plughole ? Color.neonCyan : .blood
         let next: Level? = if let run {
             .endless(game.runOver ? Run(seed: .random(in: .min ... .max)) : Run(seed: run.seed, tank: run.tank + 1))
         } else {
-            (game.level.plus ? Level.nightmarePlus : game.level.nightmare ? Level.nightmare : Level.all)
-                .drop(while: { $0.id != game.level.id }).dropFirst().first
+            game.level.tier.levels.drop(while: { $0.id != game.level.id }).dropFirst().first
         }
         VStack(spacing: 26) {
             VStack(spacing: 8) {

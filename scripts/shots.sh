@@ -82,55 +82,55 @@ for h in 0.9 1.6 2.0 3.2; do
   i=$((i + 1))
   hold=$h shot "open-L12-$i" "Level 12 opening, ${h}s after launch: clean picture, then every twist growing together." LEVEL=12 OPEN=1
 done
-# Nightmare: the menu, each layout's first level and the last (all glass), probes on level 12's and level 27's top rods, a
-# result card, then each other picture at its deepest level and each Nightmare+ twin. The live background is held 3 s in,
-# so the probes compare; level 12 is marbling, so its probes are pinned to the glass.
-shot menu-nightmare "Menu with nightmare on and every row unlocked." NIGHTMARE=1 UNLOCK=1
+# Whirlpool: the menu, each layout's first level and the last (all glass), probes on level 12's and level 27's top rods,
+# a result card, then each other picture at its deepest level and, on maelstrom, each twin. The live background is held
+# 3 s in, so the probes compare; level 12 is marbling, so its probes are pinned to the glass.
+shot menu-whirlpool "Menu on whirlpool with every row unlocked." TIER=whirlpool UNLOCK=1
 for n in 01 09 14 19 23 27; do
-  shot "nightmare$n" "Nightmare level $n with its full scramble." NIGHTMARE=1 LEVEL=$n CLOCK=3
+  shot "whirlpool$n" "Whirlpool level $n with its full scramble." TIER=whirlpool LEVEL=$n CLOCK=3
 done
-shot nightmare-probe-short "Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal." \
-  NIGHTMARE=1 LEVEL=12 PICTURE=glass LIVE=3:+3 CLOCK=3
-shot nightmare-probe-heal "Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back all 4 steps, so its seam heals." \
-  NIGHTMARE=1 LEVEL=12 PICTURE=glass LIVE=3:+4 CLOCK=3
-shot nightmare-probe-over "Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back 5 steps, one detent past the heal." \
-  NIGHTMARE=1 LEVEL=12 PICTURE=glass LIVE=3:+5 CLOCK=3
+shot whirlpool-probe-short "Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal." \
+  TIER=whirlpool LEVEL=12 PICTURE=glass LIVE=3:+3 CLOCK=3
+shot whirlpool-probe-heal "Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back all 4 steps, so its seam heals." \
+  TIER=whirlpool LEVEL=12 PICTURE=glass LIVE=3:+4 CLOCK=3
+shot whirlpool-probe-over "Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back 5 steps, one detent past the heal." \
+  TIER=whirlpool LEVEL=12 PICTURE=glass LIVE=3:+5 CLOCK=3
 # The deepest level's top twist is 2:+2: short, heal and over.
 for s in 1 2 3; do
-  shot "nightmare27-probe-$s" "Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back $s steps; it heals at 2." NIGHTMARE=1 LEVEL=27 LIVE=2:-$s CLOCK=3
+  shot "whirlpool27-probe-$s" "Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back $s steps; it heals at 2." TIER=whirlpool LEVEL=27 LIVE=2:-$s CLOCK=3
 done
-shot nightmare-result "Nightmare level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par)." \
-  NIGHTMARE=1 SCREEN=result LEVEL=5 CLOCK=3
+shot whirlpool-result "Whirlpool level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par)." \
+  TIER=whirlpool SCREEN=result LEVEL=5 CLOCK=3
 for level in 24:chainmail 16:coral 20:neurons 25:marbling; do
   n=${level%:*} picture=${level#*:}
-  shot "nightmare$n-$picture" "Nightmare level $n ($picture) with its full scramble." NIGHTMARE=1 LEVEL=$n CLOCK=3
+  shot "whirlpool$n-$picture" "Whirlpool level $n ($picture) with its full scramble." TIER=whirlpool LEVEL=$n CLOCK=3
 done
 for level in 26:glass 24:chainmail 16:coral 20:neurons 25:marbling; do
   n=${level%:*} picture=${level#*:}
-  shot "nightmare-plus$n-$picture" "Nightmare+ level $n ($picture+) with its full scramble." PLUS=1 LEVEL=$n CLOCK=3
+  shot "maelstrom$n-$picture" "Maelstrom level $n ($picture twin) with its full scramble." TIER=maelstrom LEVEL=$n CLOCK=3
 done
-# The turning tank: Nightmare+ scrambles on their twins with seized knobs, at home and turned one step, where every seam
+# The turning tank: maelstrom scrambles on their twins with seized knobs, at home and turned one step, where every seam
 # should sit concentric on the knob it lands under.
-shot seized-n01-home "Nightmare+ 01 (tri) with knob 0 seized, tank at home." PLUS=1 LEVEL=1 SEIZED=0 CLOCK=3
-shot seized-n01-turned "Nightmare+ 01 (tri) with knob 0 seized, tank turned one step (120 degrees clockwise): the seams around knob 0 now ring knob 1." \
-  PLUS=1 LEVEL=1 SEIZED=0 TANK=1 CLOCK=3
-shot seized-n09-home "Nightmare+ 09 (square) with knob 1 seized, tank at home." PLUS=1 LEVEL=9 SEIZED=1 CLOCK=3
-shot seized-n09-turned "Nightmare+ 09 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2." \
-  PLUS=1 LEVEL=9 SEIZED=1 TANK=1 CLOCK=3
-shot seized-n23-home "Nightmare+ 23 (hex) with knobs 2 and 5 seized, tank at home." PLUS=1 LEVEL=23 SEIZED=2,5 CLOCK=3
-shot seized-n23-turned "Nightmare+ 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays." \
-  PLUS=1 LEVEL=23 SEIZED=2,5 TANK=1 CLOCK=3
-shot seized-n23-half "Nightmare+ 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round." \
-  PLUS=1 LEVEL=23 SEIZED=2,5 TANKLIVE=30 CLOCK=3
-# Can a finished ring be read on hex glass? 14 entries, as Nightmare 23 has, with one ring left without any, and the same
+shot seized-m01-home "Maelstrom 01 (tri) with knob 0 seized, tank at home." TIER=maelstrom LEVEL=1 SEIZED=0 CLOCK=3
+shot seized-m01-turned "Maelstrom 01 (tri) with knob 0 seized, tank turned one step (120 degrees clockwise): the seams around knob 0 now ring knob 1." \
+  TIER=maelstrom LEVEL=1 SEIZED=0 TANK=1 CLOCK=3
+shot seized-m09-home "Maelstrom 09 (square) with knob 1 seized, tank at home." TIER=maelstrom LEVEL=9 SEIZED=1 CLOCK=3
+shot seized-m09-turned "Maelstrom 09 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2." \
+  TIER=maelstrom LEVEL=9 SEIZED=1 TANK=1 CLOCK=3
+shot seized-m23-home "Maelstrom 23 (hex) with knobs 2 and 5 seized, tank at home." TIER=maelstrom LEVEL=23 SEIZED=2,5 CLOCK=3
+shot seized-m23-turned "Maelstrom 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays." \
+  TIER=maelstrom LEVEL=23 SEIZED=2,5 TANK=1 CLOCK=3
+shot seized-m23-half "Maelstrom 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round." \
+  TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=30 CLOCK=3
+# Can a finished ring be read on hex glass? 14 entries, as whirlpool 23 has, with one ring left without any, and the same
 # stack with a 2-step twist on that ring buried under its neighbours.
 ring3="1:+4,0:-3,2:+5,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3"
 ring3buried="1:+4,0:-3,2:+5,3:+2,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3"
 hub="2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4"
 hubburied="2:+4,3:-3,0:+2,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4"
-shot seized-ring3-finished "Hex twin glass, 14 entries ($ring3), none on rod 3: its ring is finished." PLUS=1 LEVEL=23 SEIZED=2,5 STACK="$ring3" CLOCK=3
+shot seized-ring3-finished "Hex twin glass, 14 entries ($ring3), none on rod 3: its ring is finished." TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$ring3" CLOCK=3
 shot seized-ring3-buried "The same with 3:+2 buried fourth from the bottom ($ring3buried): rod 3's ring is not finished." \
-  PLUS=1 LEVEL=23 SEIZED=2,5 STACK="$ring3buried" CLOCK=3
-shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." PLUS=1 LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
+  TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$ring3buried" CLOCK=3
+shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
 shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubburied): the hub's ring is not finished." \
-  PLUS=1 LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3
+  TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3

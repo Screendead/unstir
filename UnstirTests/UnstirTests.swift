@@ -51,8 +51,8 @@ final class UnstirTests: XCTestCase {
         for steps in [1, -5, 11] { XCTAssertTrue(Layout.quad.commutes(stack, above: 0, rod: 0, steps: steps)) }
     }
 
-    /// Nightmare 11 as the player unstirred it: the picture came back while the old rule still held 21 entries.
-    func testNightmare11UnstirsToEmpty() {
+    /// Whirlpool 11 as the player unstirred it: the picture came back while the old rule still held 21 entries.
+    func testWhirlpool11UnstirsToEmpty() {
         var s = [Twist].parse("0:+4,1:-4,3:+2,0:-6,3:+7,0:-5,2:+2,1:+4,2:-6,1:-6", in: .quad)
         let moves = [(1, 2), (0, 11), (1, 4), (2, 6), (1, -4), (2, -2), (1, 4), (0, -6), (3, -7), (0, 6), (3, -2), (0, -4)]
         XCTAssertFalse(moves.map { s.commit(rod: $0.0, steps: $0.1, in: .quad) }.contains(.pushed))
@@ -67,7 +67,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(s.commit(rod: 1, steps: 2, in: .quad), .cancelled)
     }
 
-    /// The old rule's stack on nightmare 11, captured by debugger, less its bottom 0:+4: the identity. Taking a twist off the
+    /// The old rule's stack on whirlpool 11, captured by debugger, less its bottom 0:+4: the identity. Taking a twist off the
     /// top leaves it standing, so only the fine pass can call the win.
     @MainActor func testIdentityStackIsSolved() async throws {
         let captured = "1:-4 3:+2 0:-6 3:+7 0:-5 2:+2 1:+4 2:-6 1:-4 0:+11 1:+4 2:+6 1:-4 2:-2 1:+4 0:-6 3:-7 0:+6 3:-2 0:+1"
@@ -242,51 +242,67 @@ final class UnstirTests: XCTestCase {
 
     func testLevelsNeverMerge() {
         let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 6, 7, 8, 9, 7, 8, 10, 12, 14]
-        XCTAssertEqual(Level.all.map(\.scramble.count), par)
-        XCTAssertEqual(Level.all.filter(\.replay).count, 3)
+        XCTAssertEqual(Level.plughole.map(\.scramble.count), par)
+        XCTAssertEqual(Level.plughole.filter(\.replay).count, 3)
     }
 
     /// Against the design table's inversion column.
     func testInversions() {
-        XCTAssertEqual(Level.all.map { $0.layout.inversions($0.scramble) },
+        XCTAssertEqual(Level.plughole.map { $0.layout.inversions($0.scramble) },
                        [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4])
     }
 
-    /// Twice each level's par, strictly more inversions (against the nightmare design table), and room to stir on top.
-    func testNightmare() {
-        let nightmare = Level.nightmare
-        XCTAssertEqual(nightmare.map(\.layout), Level.all.map(\.layout))
-        XCTAssertEqual(nightmare.map(\.scramble.count), Level.all.map { 2 * $0.scramble.count })
-        let inversions = nightmare.map { $0.layout.inversions($0.scramble) }
+    /// Twice each level's par, strictly more inversions (against the whirlpool design table), and room to stir on top.
+    func testWhirlpool() {
+        let whirlpool = Level.whirlpool
+        XCTAssertEqual(whirlpool.map(\.layout), Level.plughole.map(\.layout))
+        XCTAssertEqual(whirlpool.map(\.scramble.count), Level.plughole.map { 2 * $0.scramble.count })
+        let inversions = whirlpool.map { $0.layout.inversions($0.scramble) }
         XCTAssertEqual(inversions, [1, 1, 2, 2, 3, 3, 4, 4, 2, 3, 4, 5, 6, 3, 4, 3, 6, 7, 4, 5, 6, 8, 5, 6, 8, 10, 12])
-        for (n, level) in zip(inversions, Level.all) { XCTAssertGreaterThan(n, level.layout.inversions(level.scramble), level.id) }
-        XCTAssertFalse(nightmare.contains(where: \.replay))
-        XCTAssertGreaterThanOrEqual(Tank.maxStack - nightmare.map(\.scramble.count).max()!, 8)
+        for (n, level) in zip(inversions, Level.plughole) { XCTAssertGreaterThan(n, level.layout.inversions(level.scramble), level.id) }
+        XCTAssertFalse(whirlpool.contains(where: \.replay))
+        XCTAssertGreaterThanOrEqual(Tank.maxStack - whirlpool.map(\.scramble.count).max()!, 8)
     }
 
-    /// Nightmare's scrambles under ids of their own: a nightmare best or start must never open a Nightmare+ level or spend
-    /// its first try.
-    func testNightmarePlusKeepsItsOwnProgress() {
-        XCTAssertEqual(Level.nightmarePlus.map(\.scramble), Level.nightmare.map(\.scramble))
-        XCTAssertTrue(Set(Level.nightmarePlus.map(\.id)).isDisjoint(with: (Level.all + Level.nightmare).map(\.id)))
-        XCTAssertTrue((Level.nightmare + Level.nightmarePlus).allSatisfy { $0.nightmare && $0.picture.isLive })
-        XCTAssertTrue(Level.nightmarePlus.allSatisfy(\.plus))
-        XCTAssertFalse((Level.all + Level.nightmare).contains(where: \.plus))
+    /// The menu stores the raw value, and declaration order is the ladder.
+    func testTiers() {
+        XCTAssertEqual(Tier.allCases.map(\.rawValue), ["plughole", "whirlpool", "maelstrom"])
+        XCTAssertEqual(Tier.allCases.map(\.below), [nil, .plughole, .whirlpool])
     }
 
-    /// Against the design table. Coral reads only to 6 stirs and neurons to 14; each Nightmare+ level shows the twin of
-    /// its Nightmare level's picture. The sandbox cycles every picture but the twins.
-    func testNightmarePictures() {
+    /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one. The
+    /// prefixes predate the tiers' names and stay, so a rename keeps what was played.
+    func testLevelIdsMatchTheirTier() {
+        XCTAssertEqual(Tier.allCases.map(\.prefix), ["L", "N", "N+"])
+        for tier in Tier.allCases {
+            XCTAssertEqual(tier.levels.map(\.id), tier.levels.indices.map { "\(tier.prefix)\($0 + 1)" })
+            XCTAssertTrue(tier.levels.allSatisfy { $0.tier == tier }, tier.rawValue)
+        }
+        let ids = Tier.allCases.flatMap(\.levels).map(\.id)
+        XCTAssertEqual(Set(ids).count, ids.count)
+    }
+
+    /// Until maelstrom has levels of its own, whirlpool's scrambles on live pictures, under ids of their own so a
+    /// whirlpool best or start never opens a maelstrom level or spends its first try.
+    func testMaelstromKeepsItsOwnProgress() {
+        XCTAssertEqual(Level.maelstrom.map(\.scramble), Level.whirlpool.map(\.scramble))
+        XCTAssertTrue(Set(Level.maelstrom.map(\.id)).isDisjoint(with: (Level.plughole + Level.whirlpool).map(\.id)))
+        XCTAssertTrue((Level.whirlpool + Level.maelstrom).allSatisfy(\.picture.isLive))
+    }
+
+    /// Against the design table. Coral reads only to 6 stirs and neurons to 14; each maelstrom level shows the twin of
+    /// its whirlpool level's picture. The sandbox cycles every picture but the twins.
+    func testWhirlpoolPictures() {
         XCTAssertEqual(Array(sequence(first: Picture.grid, next: \.next).prefix(9)),
                        [.grid, .sunset, .city, .glass, .chainmail, .coral, .neurons, .marbling, .grid])
         let table: [(Picture, [Int])] = [(.glass, [1, 9, 14, 19, 23, 26, 27]), (.chainmail, [3, 10, 13, 18, 21, 24]),
                                          (.coral, [2, 5, 8, 16]), (.neurons, [4, 7, 11, 17, 20]), (.marbling, [6, 12, 15, 22, 25])]
         var want = [Picture?](repeating: nil, count: 27)
         for (picture, levels) in table { for n in levels { want[n - 1] = picture } }
-        XCTAssertEqual(Level.nightmare.map(\.picture), want)
-        XCTAssertLessThanOrEqual(Level.nightmare.filter { $0.picture == .coral }.map(\.scramble.count).max()!, 6)
-        XCTAssertLessThanOrEqual(Level.nightmare.filter { $0.picture == .neurons }.map(\.scramble.count).max()!, 14)
-        XCTAssertEqual(Level.nightmarePlus.map(\.picture), Level.nightmare.map(\.picture.twin))
+        XCTAssertEqual(Level.whirlpool.map(\.picture), want)
+        XCTAssertLessThanOrEqual(Level.whirlpool.filter { $0.picture == .coral }.map(\.scramble.count).max()!, 6)
+        XCTAssertLessThanOrEqual(Level.whirlpool.filter { $0.picture == .neurons }.map(\.scramble.count).max()!, 14)
+        XCTAssertEqual(Level.maelstrom.map(\.picture), Level.whirlpool.map(\.picture.twin))
         let twins = Set(table.map(\.0.twin))
         XCTAssertEqual(twins.count, 5)
         XCTAssertTrue(twins.isDisjoint(with: table.map(\.0)))
@@ -300,7 +316,7 @@ final class UnstirTests: XCTestCase {
         let builders: [(Picture, Builder)] = [(.chainmail, Picture.links), (.coral, Picture.kernels), (.marbling, Picture.drops)]
         let delays: Builder = { Picture.delays(t: $1) }
         let twins: [(Picture, Builder)] = builders.map { picture, data in (picture.twin, { data($0, $1) + delays($0, $1) }) }
-            + [(.glassPlus, delays), (.neuronsPlus, delays)]
+            + [(.glassTwin, delays), (.neuronsTwin, delays)]
         for (picture, data) in builders + twins {
             for seed in [0, 12, 27] {
                 for t in [0.0, 1.7, 0.5 * picture.period, picture.period - 0.01] {
@@ -325,13 +341,13 @@ final class UnstirTests: XCTestCase {
             .replacingOccurrences(of: "[[ stitchable ]]", with: "") + """
 
             // x the line, y the glow, z the soma's reach at p: as the shader draws them, or over every node near p.
-            static float3 probe(float2 p, float ipx, device const packed_float3 *cells, bool brute, bool plus) {
+            static float3 probe(float2 p, float ipx, device const packed_float3 *cells, bool brute, bool twin) {
                 const float wide = 0.1, high = 0.0866025, left = -1.2, top = -1.1258;
                 const int n = 24, rows = 26;
                 // A soma and its glow end within 0.0225 of its node (0.0262 in the twin), a knob within 0.0055 (0.0065 in
                 // the twin, swollen by the beat).
-                float hot = plus ? 1.0 : 0.0, grow = plus ? throb(1.0).x : 1.0;
-                float rs = plus ? 0.0262 : 0.0225, rk = plus ? 0.0065 * grow : 0.0055, soma = 0;
+                float hot = twin ? 1.0 : 0.0, grow = twin ? throb(1.0).x : 1.0;
+                float rs = twin ? 0.0262 : 0.0225, rk = twin ? 0.0065 * grow : 0.0055, soma = 0;
                 float2 ink = 0;
                 if (!brute) {
                     float2 a;
@@ -341,7 +357,7 @@ final class UnstirTests: XCTestCase {
                     float d = sqrt(da);
                     if (flags & 64u) soma = d < rs ? 1.0 - d / rs : 0.0;
                     else if (flags & 128u) ink = float2(saturate((rk - d) * ipx + 0.5), glow(d));
-                    dendrites(p, cells, at, a, flags, hot, grow, plus, ipx, ink);
+                    dendrites(p, cells, at, a, flags, hot, grow, twin, ipx, ink);
                     return float3(ink, soma);
                 }
                 int jc = int(floor((p.y - top) / high));
@@ -358,7 +374,7 @@ final class UnstirTests: XCTestCase {
                         for (int dir = 0; dir < 3; dir++) {
                             if ((flags & (1u << dir)) == 0u) continue;
                             float2 b = float3(cells[(j + step[dir].y) * n + i + step[dir].x]).xy;
-                            edge(p, cell.xy, b, (flags >> (8u + 5u * uint(dir))) & 31u, hot, grow, plus, ipx, ink);
+                            edge(p, cell.xy, b, (flags >> (8u + 5u * uint(dir))) & 31u, hot, grow, twin, ipx, ink);
                         }
                     }
                 }
@@ -367,12 +383,12 @@ final class UnstirTests: XCTestCase {
 
             // Counts the pixels whose line, glow or soma differ.
             kernel void scan(device const float *data [[buffer(0)]], device atomic_uint *bad [[buffer(1)]],
-                             constant float &side [[buffer(2)]], constant uint &plus [[buffer(3)]],
+                             constant float &side [[buffer(2)]], constant uint &twin [[buffer(3)]],
                              uint2 gid [[thread_position_in_grid]]) {
                 float2 p = (float2(gid) + 0.5) / side * 2.0 - 1.0;
                 if (length_squared(p) > 1.0) return;
                 device const packed_float3 *cells = (device const packed_float3 *)data;
-                float3 s = probe(p, side / 2.0, cells, false, plus != 0u), b = probe(p, side / 2.0, cells, true, plus != 0u);
+                float3 s = probe(p, side / 2.0, cells, false, twin != 0u), b = probe(p, side / 2.0, cells, true, twin != 0u);
                 if (abs(s.x - b.x) > 0.05) atomic_fetch_add_explicit(&bad[0], 1u, memory_order_relaxed);
                 if (abs(s.y - b.y) > 0.01) atomic_fetch_add_explicit(&bad[1], 1u, memory_order_relaxed);
                 if (abs(s.z - b.z) > 0.01) atomic_fetch_add_explicit(&bad[2], 1u, memory_order_relaxed);
@@ -391,7 +407,7 @@ final class UnstirTests: XCTestCase {
         for seed in seeds {
             let data = webs.withLock { $0[seed]! }
             let cells = try XCTUnwrap(device.makeBuffer(bytes: data, length: 4 * data.count))
-            for var plus: UInt32 in [0, 1] {
+            for var twin: UInt32 in [0, 1] {
                 let bad = try XCTUnwrap(device.makeBuffer(length: 12))
                 memset(bad.contents(), 0, 12)
                 let cb = try XCTUnwrap(queue.makeCommandBuffer()), enc = try XCTUnwrap(cb.makeComputeCommandEncoder())
@@ -399,7 +415,7 @@ final class UnstirTests: XCTestCase {
                 enc.setBuffer(cells, offset: 0, index: 0)
                 enc.setBuffer(bad, offset: 0, index: 1)
                 enc.setBytes(&side, length: 4, index: 2)
-                enc.setBytes(&plus, length: 4, index: 3)
+                enc.setBytes(&twin, length: 4, index: 3)
                 enc.dispatchThreads(MTLSize(width: Int(side), height: Int(side), depth: 1),
                                     threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1))
                 enc.endEncoding()
@@ -407,7 +423,7 @@ final class UnstirTests: XCTestCase {
                 cb.waitUntilCompleted()
                 XCTAssertNil(cb.error)
                 let n = bad.contents().bindMemory(to: UInt32.self, capacity: 3)
-                XCTAssertEqual([n[0], n[1], n[2]], [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(plus == 1 ? " twin" : "")")
+                XCTAssertEqual([n[0], n[1], n[2]], [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(twin == 1 ? " twin" : "")")
             }
         }
     }
@@ -507,7 +523,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(game.reachable)
         game.turnTank(1)
         XCTAssertEqual(game.reachable, Twist(rod: 1, steps: -4))
-        for level in Level.all + Level.nightmare + Level.nightmarePlus {
+        for level in Tier.allCases.flatMap(\.levels) {
             XCTAssertTrue(level.seized.isSubset(of: level.layout.rods.indices), level.id)
             XCTAssertLessThanOrEqual(level.seized.count, 2, level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }
@@ -516,7 +532,7 @@ final class UnstirTests: XCTestCase {
 
     /// Until the seized levels set their own, par is one move per entry everywhere.
     func testParIsTheScrambleUnlessSet() {
-        for level in Level.all + Level.nightmare + Level.nightmarePlus { XCTAssertEqual(level.par, level.scramble.count, level.id) }
+        for level in Tier.allCases.flatMap(\.levels) { XCTAssertEqual(level.par, level.scramble.count, level.id) }
     }
 
     /// From the prototype, so the Swift generator draws exactly as it does.

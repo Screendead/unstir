@@ -28,18 +28,17 @@ struct Harness {
     let bench: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
-    /// UNSTIR_CLOCK=s: hold the nightmare background s seconds in.
+    /// UNSTIR_CLOCK=s: hold a live picture s seconds in.
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
 
     init(_ env: [String: String]) {
-        // UNSTIR_PLUS: Nightmare+, which is nightmare with its second toggle on.
-        let plus = env["UNSTIR_PLUS"] == "1", nightmare = plus || env["UNSTIR_NIGHTMARE"] == "1"
-        // Written whenever the harness runs, so a nightmare shot does not leave the next menu shot in nightmare.
+        // UNSTIR_TIER=whirlpool: the tier the menu shows and UNSTIR_LEVEL counts in; plughole when unset.
+        let tier = env["UNSTIR_TIER"].flatMap(Tier.init(rawValue:)) ?? .plughole
+        // Written whenever the harness runs, so a whirlpool shot does not leave the next menu shot in whirlpool.
         if env.keys.contains(where: { $0.hasPrefix("UNSTIR_") }) {
-            UserDefaults.standard.set(nightmare, forKey: "nightmare")
-            UserDefaults.standard.set(plus, forKey: "nightmarePlus")
+            UserDefaults.standard.set(tier.rawValue, forKey: "tier")
         }
         bench = env["UNSTIR_BENCH"] == "1"
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
@@ -47,21 +46,20 @@ struct Harness {
         tour = env["UNSTIR_TOUR"] == "1"
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
-        let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), Level.all.count)
+        let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
         var level = switch env["UNSTIR_MODE"] ?? env["UNSTIR_LEVEL"] {
         case "daily": Level.daily()
         case "endless": Level.endless(Run(seed: 7))
         case "sandbox": Level.sandbox
-        default: (plus ? Level.nightmarePlus : nightmare ? Level.nightmare : Level.all)[n - 1]
+        default: tier.levels[n - 1]
         }
         let picture = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:))
         if bench {
             // UNSTIR_DEPTH overrides. A live picture's heaviest frame is the most entries that keep four taps, and the drag.
-            let p = picture ?? (plus ? .glassPlus : nightmare ? .glass : .grid)
+            let p = picture ?? tier.levels[0].picture
             let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? 30 - p.fillEntries : 24)
             var rng = SplitMix64(state: 24)
-            // UNSTIR_PLUS: an N+ id, like the twin's own levels.
-            level = Level(id: plus ? "N+bench" : "bench", label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: p,
+            level = Level(id: "bench", tier: tier, label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: p,
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))
         }
         if let picture { level.picture = picture }
@@ -162,7 +160,7 @@ struct RootView: View {
         .task {
             guard harness?.tour == true else { return }
             try? await Task.sleep(for: .seconds(1.5))
-            show(Level.all[0], keep: true)
+            show(Level.plughole[0], keep: true)
             try? await Task.sleep(for: .seconds(4))
             show(nil)
         }

@@ -26,9 +26,9 @@ static float line(float d, float px, float hw) { return saturate((hw - d) / px +
 // no line ever ends. cells is Picture.kernels: one kernel per cell of a 15 x 15 grid 0.16 across from (-1.2, -1.2), 6
 // floats each. A kernel reaches 1.1 cells and its centre stays 0.15 cells inside its own cell, so the 3 x 3 search sees
 // every kernel that touches p.
-// plus draws the twin, diseased: bled to raspberry, with ochre lesions in inflamed blood halos and grooves gone dull,
+// The twin, diseased: bled to raspberry, with ochre lesions in inflamed blood halos and grooves gone dull,
 // its lines swelling by pulse.x and all of it brightening by pulse.y.
-template <bool plus>
+template <bool twin>
 static float3 field(float2 p, float px, device const float *cells, float t, float2 pulse) {
     const float pitch = 0.16, origin = -1.2, r2 = (1.1 * 0.16) * (1.1 * 0.16);
     int2 g = int2(floor((p - origin) / pitch));
@@ -50,13 +50,13 @@ static float3 field(float2 p, float px, device const float *cells, float t, floa
         wsum += w;
         glow += w * e[5];
         // The twin's lesions: one kernel in six, chosen by hashing its fixed centre, so a lesion never pops.
-        if (plus) sick += fract(e[0] * 97.3) < 0.167 ? w : 0.0;
+        if (twin) sick += fract(e[0] * 97.3) < 0.167 ? w : 0.0;
     }
     float fade = smoothstep(0.02, 0.12, wsum), inv = 1.0 / max(wsum, 1e-4);
     float breath = glow * inv;
     float d = abs(re) / (length(gre) + 1e-6), d2 = d * d;
     float di = abs(im) / (length(gim) + 1e-6), di2 = di * di;
-    if (!plus) {
+    if (!twin) {
         // Walls hot pink, #FF2BD6 dim to #FF4FA0 bright; violet only in the wide bloom. Every term is low in green, so
         // summed glows stay pink and never reach white.
         const float3 magenta = float3(1.0, 0.024, 0.672), hot = float3(1.0, 0.078, 0.352), violet = float3(0.365, 0.030, 1.0);
@@ -84,7 +84,7 @@ static float3 field(float2 p, float px, device const float *cells, float t, floa
     return half4(half3(sqrt(field<false>(p, px, data, t, 1.0))), 1.0h);
 }
 
-[[ stitchable ]] half4 coralPlus(float2 pos, float radius, float px, device const float *data, int count, float t) {
+[[ stitchable ]] half4 coralTwin(float2 pos, float radius, float px, device const float *data, int count, float t) {
     float2 p = pos / radius - 1.0;
     if (length_squared(p) > 1.01) return half4(0.0h, 0.0h, 0.0h, 1.0h);
     float2 pulse = throb(heartbeat(p, t, data + count - 33 * 33));

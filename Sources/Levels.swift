@@ -7,8 +7,48 @@ struct Run: Hashable, Sendable {
     var tank = 0
 }
 
+/// The difficulty ladder, easiest first: declaration order is the ladder, so a new tier goes in where it belongs. The
+/// raw value is stored as the menu's choice, so it never changes.
+enum Tier: String, CaseIterable {
+    case plughole, whirlpool, maelstrom
+
+    var name: String {
+        switch self {
+        case .plughole: "Plughole"
+        case .whirlpool: "Whirlpool"
+        case .maelstrom: "Maelstrom"
+        }
+    }
+
+    /// Starts each of the tier's level ids. Whirlpool's and maelstrom's are from their old names, nightmare and
+    /// nightmare+: progress is stored by id, so changing a prefix loses it unless the stored keys are remapped.
+    var prefix: String {
+        switch self {
+        case .plughole: "L"
+        case .whirlpool: "N"
+        case .maelstrom: "N+"
+        }
+    }
+
+    /// Nil for plughole.
+    var below: Tier? {
+        let i = Self.allCases.firstIndex(of: self)!
+        return i == 0 ? nil : Self.allCases[i - 1]
+    }
+
+    var levels: [Level] {
+        switch self {
+        case .plughole: Level.plughole
+        case .whirlpool: Level.whirlpool
+        case .maelstrom: Level.maelstrom
+        }
+    }
+}
+
 struct Level: Hashable, Sendable {
     var id: String
+    /// Daily, endless and the sandbox are plughole's.
+    var tier = Tier.plughole
     var label: String
     var title: String
     /// One line under the tank, for levels that teach something the title cannot.
@@ -26,11 +66,9 @@ struct Level: Hashable, Sendable {
     var fixedPar: Int?
     var par: Int { fixedPar ?? scramble.count }
 
-    var nightmare: Bool { id.hasPrefix("N") }
-    var plus: Bool { id.hasPrefix("N+") }
     var sandbox: Bool { id == "sandbox" }
 
-    static let all: [Level] = ([
+    static let plughole: [Level] = ([
         (.tri, "0:+4", "Turn it back.", "Turn a rod to look. Let go where you started and nothing happens."),
         (.tri, "1:-7", "Further than it looks.", ""),
         (.tri, "2:+3,0:-5", "Two stirs. Undo the second one first.", "The last rod you saw turn is on top."),
@@ -60,13 +98,13 @@ struct Level: Hashable, Sendable {
         (.hex, "2:+3,0:-5,5:+6,4:+3,0:+4,6:-7,0:+5,5:-6,6:-6,2:+4,5:+3,1:+5,3:+2,0:+6", "Unstirred, by hand.", ""),
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
         // The city only where par is 4 or less: deeper, it goes murky.
-        Level(id: "L\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
+        Level(id: Tier.plughole.prefix + "\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
               picture: [5: .sunset, 11: .sunset, 15: .sunset, 6: .city, 10: .city, 14: .city, 16: .city][i + 1] ?? .grid,
               layout: l.0, replay: i < 3, scramble: .parse(l.1, in: l.0))
     }
 
     /// Twice the stirs of the same-numbered level, more of them hidden under louder ones, live pictures, nothing replayed.
-    static let nightmare: [Level] = ([
+    static let whirlpool: [Level] = ([
         (.tri, "0:-5,1:+3", "Turn them back.", "Same rules, twice the stirs, no replays. This is the last note."),
         (.tri, "2:+7,0:-7", "Both went further than they look.", ""),
         (.tri, "1:-6,2:+3,0:-4,1:+4", "Four stirs. Undo the fourth one first.", ""),
@@ -97,18 +135,20 @@ struct Level: Hashable, Sendable {
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
         // The glass opens each layout and takes the deepest levels. Coral reads only to 6 stirs, and neurons, the dearest
         // to draw, to 14.
-        Level(id: "N\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
+        Level(id: Tier.whirlpool.prefix + "\(i + 1)", tier: .whirlpool, label: String(format: "%02d", i + 1),
+              title: l.2, note: l.3,
               picture: [3: .chainmail, 10: .chainmail, 13: .chainmail, 18: .chainmail, 21: .chainmail, 24: .chainmail,
                         2: .coral, 5: .coral, 8: .coral, 16: .coral, 4: .neurons, 7: .neurons, 11: .neurons, 17: .neurons,
                         20: .neurons, 6: .marbling, 12: .marbling, 15: .marbling, 22: .marbling, 25: .marbling][i + 1] ?? .glass,
               layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
-    /// Nightmare's scrambles under ids of their own, so a nightmare best or start never opens a level here or spends
-    /// its first try, each on its Nightmare picture's twin.
-    static let nightmarePlus: [Level] = nightmare.map { level in
+    /// Until maelstrom has levels of its own: whirlpool's scrambles under ids of their own, so a whirlpool best or
+    /// start never opens a level here or spends its first try, each on its whirlpool picture's twin.
+    static let maelstrom: [Level] = whirlpool.enumerated().map { i, level in
         var level = level
-        level.id = "N+" + level.id.dropFirst()
+        level.id = Tier.maelstrom.prefix + "\(i + 1)"
+        level.tier = .maelstrom
         level.picture = level.picture.twin
         return level
     }

@@ -2,32 +2,31 @@
 
 import SwiftUI
 
-/// Neon on black. The campaign pictures show which way is up inside every rigid core, or a turned disc looks as
+/// Neon on black. Plughole's pictures show which way is up inside every rigid core, or a turned disc looks as
 /// plausible as the original: the grid by its colour field, the sunset by its stripes and floor, the city by its rain.
-/// Nightmare withholds that on purpose: a turn shows only where its seam shears the picture.
+/// The live pictures withhold that on purpose: a turn shows only where its seam shears the picture.
 enum Picture: String, CaseIterable {
     case grid, sunset, city
-    /// Nightmare's, drawn live in PictureLayer by the stitchable named after the case, never baked.
+    /// Whirlpool's, drawn live in PictureLayer by the stitchable named after the case, never baked.
     case glass, chainmail, coral, neurons, marbling
-    /// Nightmare+'s twins of those, on the same data.
-    case glassPlus = "glass+", chainmailPlus = "chainmail+", coralPlus = "coral+", neuronsPlus = "neurons+",
-         marblingPlus = "marbling+"
+    /// Maelstrom's twins of those, on the same data.
+    case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
 
     var isLive: Bool { ![.grid, .sunset, .city].contains(self) }
 
-    /// Nightmare+'s picture where Nightmare shows this one.
+    /// Maelstrom's picture where whirlpool shows this one.
     var twin: Picture {
         switch self {
-        case .glass: .glassPlus
-        case .chainmail: .chainmailPlus
-        case .coral: .coralPlus
-        case .neurons: .neuronsPlus
-        case .marbling: .marblingPlus
+        case .glass: .glassTwin
+        case .chainmail: .chainmailTwin
+        case .coral: .coralTwin
+        case .neurons: .neuronsTwin
+        case .marbling: .marblingTwin
         default: self
         }
     }
 
-    /// The Nightmare picture whose data a twin shares.
+    /// The whirlpool picture whose data a twin shares.
     private var sibling: Picture { Self.allCases.first { $0 != self && $0.twin == self } ?? self }
 
     /// Seconds after which a live picture repeats. Its shader gets the clock mod this, so float32 keeps its precision.
@@ -36,7 +35,7 @@ enum Picture: String, CaseIterable {
         case .chainmail, .coral: 20
         case .neurons: 12
         // A twin's heartbeat delays loop once a minute, and every sibling's period divides that.
-        case .glassPlus, .chainmailPlus, .coralPlus, .neuronsPlus, .marblingPlus: 60
+        case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: 60
         default: 10
         }
     }
@@ -47,13 +46,13 @@ enum Picture: String, CaseIterable {
         switch self {
         case .grid, .sunset, .city: 0
         case .marbling: 3
-        case .glass, .chainmail, .coral, .marblingPlus: 4
-        case .neurons, .glassPlus, .chainmailPlus, .coralPlus: 5
-        case .neuronsPlus: 6
+        case .glass, .chainmail, .coral, .marblingTwin: 4
+        case .neurons, .glassTwin, .chainmailTwin, .coralTwin: 5
+        case .neuronsTwin: 6
         }
     }
 
-    /// The sandbox's: the campaign's pictures and Nightmare's, not the twins.
+    /// The sandbox's: plughole's pictures and whirlpool's, not the twins.
     var next: Picture {
         let all = Self.allCases.filter { !$0.isLive || $0.twin != $0 }
         return all[(all.firstIndex(of: sibling)! + 1) % all.count]

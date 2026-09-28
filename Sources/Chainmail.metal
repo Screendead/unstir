@@ -85,9 +85,9 @@ static float3 rust(float4 cell, float a, float ipx, float2 w, float fade, float2
 // crossing links, the one whose crossing lies to the left of the line from its centre to the other's passes over, so at
 // a pair's two crossings the links take turns (a rule a rotation keeps, so a turned core shows nothing). cells is
 // Picture.links: 18 x 18 cells 0.14 across from (-1.26, -1.26), each (centre x, y, radius, code).
-// plus draws the twin: most links corroded to thick, pitted, barbed rust, a scattered few still burning crimson, all
+// The twin: most links corroded to thick, pitted, barbed rust, a scattered few still burning crimson, all
 // swelling by pulse.x and brightening by pulse.y. Its glow never widens, so the 0.045 below holds.
-template <bool plus>
+template <bool twin>
 static float3 links(float2 p, float px, device const packed_float4 *cells, float t, float2 pulse) {
     const float pitch = 0.14, origin = -1.26;
     const int n = 18;
@@ -109,22 +109,22 @@ static float3 links(float2 p, float px, device const packed_float4 *cells, float
     float4 e1 = cells[i1];
     // The twin works out each wire before the crossing, so the pass-under gap clears a swollen wire.
     float ipx = 1.0 / px;
-    float2 w1 = plus ? wire(e1, atan2(p.y - e1.y, p.x - e1.x) * 0.15915, pulse.x) : 0.0;
-    float3 c = plus ? rust(e1, a1, ipx, w1, 1.0, pulse) : link(e1, p, a1, px, t);
+    float2 w1 = twin ? wire(e1, atan2(p.y - e1.y, p.x - e1.x) * 0.15915, pulse.x) : 0.0;
+    float3 c = twin ? rust(e1, a1, ipx, w1, 1.0, pulse) : link(e1, p, a1, px, t);
     if (a2 > 0.045) return c;
     // Near the line between the centres (links almost tangent) neither is cut, so which passes over never jumps.
     float4 e2 = cells[i2];
-    float2 w2 = plus ? wire(e2, atan2(p.y - e2.y, p.x - e2.x) * 0.15915, pulse.x) : 0.0;
+    float2 w2 = twin ? wire(e2, atan2(p.y - e2.y, p.x - e2.x) * 0.15915, pulse.x) : 0.0;
     float2 m = e2.xy - e1.xy;
     float side = (m.x * (p.y - e1.y) - m.y * (p.x - e1.x)) / max(length(m), 1e-5);
     bool oneOver = side > 0.0;
     float aTop = oneOver ? a1 : a2;
-    float hwTop = plus ? (oneOver ? w1.x : w2.x) : weight(uint(oneOver ? e1.w : e2.w));
+    float hwTop = twin ? (oneOver ? w1.x : w2.x) : weight(uint(oneOver ? e1.w : e2.w));
     // The low link fades out over 0.01 as it nears the top one, so it passes under rather than being cut. The pair
     // drawn changes where a third link is as near as the second, so the gap fades out there instead of snapping.
     float third = smoothstep(0.0, 0.006, a3 - a2);
     float keep = 1.0 - smoothstep(0.004, 0.012, abs(side)) * (1.0 - smoothstep(hwTop + 0.003, hwTop + 0.013, aTop)) * third;
-    float3 d = plus ? rust(e2, a2, ipx, w2, third, pulse) : link(e2, p, a2, px, t);
+    float3 d = twin ? rust(e2, a2, ipx, w2, third, pulse) : link(e2, p, a2, px, t);
     return oneOver ? c + keep * d : keep * c + d;
 }
 
@@ -134,7 +134,7 @@ static float3 links(float2 p, float px, device const packed_float4 *cells, float
     return half4(half3(sqrt(links<false>(p, px, (device const packed_float4 *)data, t, 1.0))), 1.0h);
 }
 
-[[ stitchable ]] half4 chainmailPlus(float2 pos, float radius, float px, device const float *data, int count, float t) {
+[[ stitchable ]] half4 chainmailTwin(float2 pos, float radius, float px, device const float *data, int count, float t) {
     float2 p = pos / radius - 1.0;
     if (length_squared(p) > 1.01) return half4(0.0h, 0.0h, 0.0h, 1.0h);
     float2 pulse = throb(heartbeat(p, t, data + count - 33 * 33));

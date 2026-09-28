@@ -42,7 +42,7 @@ static float glow(float d) {
 // One dendrite from a to b, bowed to one side, whole or a spur that stops partway in a knob. Adds its line (max) and
 // glow (sum) to ink; ipx is one over a pixel. The twin's swell by up to 1.6 where inflamed (hot), and its spurs' knobs
 // are 0.013 across, not 0.011; the heartbeat swells both by grow.
-static void edge(float2 p, float2 a, float2 b, uint code, float hot, float grow, bool plus, float ipx,
+static void edge(float2 p, float2 a, float2 b, uint code, float hot, float grow, bool twin, float ipx,
                  thread float2 &ink) {
     float level = float(code & 7u), bow = (level - 3.0) * 0.06;
     float2 ab = b - a, r = p - a;
@@ -60,8 +60,8 @@ static void edge(float2 p, float2 a, float2 b, uint code, float hot, float grow,
     float d = length(float2((u - uc) * len, s - bow * len * mid));
     // Thicker at the nodes, thinner midway. A spur narrows to a neck and ends in a knob at its tip.
     float x = (uc - tu) * len, w = (0.0029 - 0.0011 * mid) * (0.65 + 0.35 * saturate(abs(x) * 70.0));
-    if (plus) w *= 1.0 + 0.6 * hot;
-    w = max(w * grow, sqrt(max((plus ? 4.2e-5 : 3.0e-5) * grow * grow - x * x, 0.0)));
+    if (twin) w *= 1.0 + 0.6 * hot;
+    w = max(w * grow, sqrt(max((twin ? 4.2e-5 : 3.0e-5) * grow * grow - x * x, 0.0)));
     ink = float2(max(ink.x, saturate((w - d) * ipx + 0.5)), ink.y + glow(d));
 }
 
@@ -103,7 +103,7 @@ static int2 nearest(float2 p, device const packed_float3 *cells, thread float2 &
 // The dendrites of the node at lattice place at and position a, at p, added to ink. All six neighbours' loads go out
 // together, edge or not (cheaper than branching); the edges run after.
 static void dendrites(float2 p, device const packed_float3 *cells, int2 at, float2 a, uint flags, float hot, float grow,
-                      bool plus, float ipx, thread float2 &ink) {
+                      bool twin, float ipx, thread float2 &ink) {
     const int n = 24, rows = 26;
     int odd = at.y & 1;
     const int2 step[6] = {int2(1, 0), int2(odd, 1), int2(odd - 1, 1), int2(-1, 0), int2(odd - 1, -1), int2(odd, -1)};
@@ -116,7 +116,7 @@ static void dendrites(float2 p, device const packed_float3 *cells, int2 at, floa
         if ((flags & (1u << dir)) == 0u) continue;
         bool own = dir < 3;
         uint code = ((own ? flags : uint(nb[dir].z)) >> (8u + 5u * uint(own ? dir : dir - 3))) & 31u;
-        edge(p, own ? a : nb[dir].xy, own ? nb[dir].xy : a, code, hot, grow, plus, ipx, ink);
+        edge(p, own ? a : nb[dir].xy, own ? nb[dir].xy : a, code, hot, grow, twin, ipx, ink);
     }
 }
 
@@ -129,11 +129,11 @@ static void dendrites(float2 p, device const packed_float3 *cells, int2 at, floa
 // p draws only its nearest node (among the 9 it searches) and that node's edges: the data keeps every edge's line and
 // glow (0.0125) inside the region where that search finds one of its ends, and every soma (0.0225; 0.026 in the twin)
 // inside its own.
-// plus draws the twin, mostly dead: a sallow dun web where over a quarter of the nodes are inflamed, burning scarlet
+// The twin, mostly dead: a sallow dun web where over a quarter of the nodes are inflamed, burning scarlet
 // along swollen dendrites that fade into the dead web by their regions' borders; somas dark blisters in inflamed
 // membranes; only inflamed nodes fire, and they misfire. Its lines swell by pulse.x and all of it brightens by pulse.y,
 // its glow never widening, so the clearances above hold.
-template <bool plus>
+template <bool twin>
 static float3 field(float2 p, float px, device const packed_float3 *cells, float t, float2 pulse) {
     float2 a;
     float fa, da, db;
@@ -143,11 +143,11 @@ static float3 field(float2 p, float px, device const packed_float3 *cells, float
     // The twin's inflammation fills an inflamed node's region and dies out toward its border, where the distance to the
     // second nearest node comes down to d. A node outside the 9 searched is at least 0.068 away, so capping that
     // distance there makes this the same whichever 9 are searched.
-    float hn = plus ? heat(a) : 0.0, hot = hn * saturate((min(sqrt(db), 0.068) - d) * 40.0);
+    float hn = twin ? heat(a) : 0.0, hot = hn * saturate((min(sqrt(db), 0.068) - d) * 40.0);
     // The node fires once or twice a period on its own phase: a front leaves it at 0.035 a second. In the twin only an
     // inflamed node fires, and -1 is a quiet one.
     float jam = 0.0, press = 0.0, front = -1.0;
-    if (!plus) {
+    if (!twin) {
         float rate = float(1u + ((h >> 19) & 1u));
         front = fract(rate * t * (1.0 / 12.0) + float(h >> 20) * (1.0 / 4096.0)) * (12.0 / rate) * 0.035;
     } else if (hn > 0.0) {
@@ -160,13 +160,13 @@ static float3 field(float2 p, float px, device const packed_float3 *cells, float
         // A soma: a dim body inside a bright membrane, breathing once or twice a period on its own phase and flaring
         // as it fires. The twin's is swollen by a third, a near-black blister bloodied only toward its thicker membrane,
         // with no dendrite inside it.
-        float rs = plus ? 0.0105 + 0.0035 * float(h & 255u) / 255.0 : 0.0075 + 0.003 * float(h & 255u) / 255.0;
+        float rs = twin ? 0.0105 + 0.0035 * float(h & 255u) / 255.0 : 0.0075 + 0.003 * float(h & 255u) / 255.0;
         float breath = 0.5 + 0.5 * sin(6.2832 * (float((h >> 8) & 1023u) / 1024.0 + float(1u + ((h >> 18) & 1u)) * t / 12.0));
         breath += 1.2 * saturate(front * 60.0) * saturate(1.0 - front * 25.0);
         float e = max(d - rs, 0.0), q = saturate(1.0 - e * e * 6944.0), q3 = q * q * q;
-        float membrane = plus ? 0.0026 * pulse.x : 0.0018;
+        float membrane = twin ? 0.0026 * pulse.x : 0.0018;
         float body = saturate((rs - d) * ipx + 0.5), rim = saturate((membrane - abs(d - rs)) * ipx + 0.5);
-        if (plus) {
+        if (twin) {
             body *= d * d / (rs * rs);
             open = saturate((d - rs + membrane) * ipx + 0.5);
             c += float3(1.0, 0.012, 0.02) * (rim + (0.02 + 0.05 * breath) * body + q3 * (0.059 + 0.254 * q3 * q3) * (0.15 + 1.35 * breath));
@@ -175,25 +175,25 @@ static float3 field(float2 p, float px, device const packed_float3 *cells, float
         }
     } else if (flags & 128u) {
         // A knob: where a single dendrite ends at a node.
-        ink = float2(saturate(((plus ? 0.0065 * pulse.x : 0.0055) - d) * ipx + 0.5), glow(d));
+        ink = float2(saturate(((twin ? 0.0065 * pulse.x : 0.0055) - d) * ipx + 0.5), glow(d));
     }
-    dendrites(p, cells, at, a, flags, hot, pulse.x, plus, ipx, ink);
+    dendrites(p, cells, at, a, flags, hot, pulse.x, twin, ipx, ink);
     // The firing front: a bright head with a tail back toward the node, fading in over its first 0.3 s. It dies out
     // before the border with the next node's region (half the gap to the second nearest is at most the distance to that
     // border), and by 0.065 from the node, nearer than any node outside the 9 searched can be (0.068), so neither a
     // border nor a change in which 9 are searched cuts it. The twin's tail lengthens and its head brightens as it
     // stalls, and trails outward as it runs back.
     float comet = 0.0;
-    if (!plus || front > 0.0) {
+    if (!twin || front > 0.0) {
         float behind = front - d, tail = 30.0 / (1.0 + 1.5 * jam);
         comet = behind < 0.0 ? saturate(1.0 + behind * 150.0) : saturate(1.0 - behind * tail);
-        if (plus) comet = mix(comet, behind > 0.0 ? saturate(1.0 - behind * 150.0) : saturate(1.0 + behind * tail), jam);
+        if (twin) comet = mix(comet, behind > 0.0 ? saturate(1.0 - behind * 150.0) : saturate(1.0 + behind * tail), jam);
         comet *= comet * (1.0 + 0.6 * press) * saturate(front * 100.0) * saturate((sqrt(db) - d) * 60.0 - 0.15) * saturate((0.065 - d) * 200.0);
     }
     // Where several dendrites meet, their summed glow is capped so a firing junction stays magenta (red in the twin),
     // not white. The twin's dead stretches barely glow; only inflamed ones carry the pulse, which stains them ember.
     float lit = min(ink.y, 0.9);
-    if (!plus) {
+    if (!twin) {
         return c + float3(0.127, 0.087, 1.0) * (ink.x + lit) + float3(1.0, 0.0241, 0.672) * (comet * (1.5 * ink.x + 2.5 * min(lit, 0.5)));
     }
     float3 dead = float3(0.28, 0.18, 0.042) * (ink.x + 0.51 * lit);
@@ -208,7 +208,7 @@ static float3 field(float2 p, float px, device const packed_float3 *cells, float
     return half4(half3(sqrt(field<false>(p, px, (device const packed_float3 *)data, t, 1.0))), 1.0h);
 }
 
-[[ stitchable ]] half4 neuronsPlus(float2 pos, float radius, float px, device const float *data, int count, float t) {
+[[ stitchable ]] half4 neuronsTwin(float2 pos, float radius, float px, device const float *data, int count, float t) {
     float2 p = pos / radius - 1.0;
     if (length_squared(p) > 1.01) return half4(0.0h, 0.0h, 0.0h, 1.0h);
     float2 pulse = throb(heartbeat(p, t, data + count - 33 * 33));

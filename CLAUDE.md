@@ -90,16 +90,21 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   The shader's tap count and the `Tank.maxStack` (36) and four-tap limits in `Unstirred` are tuned against 120 Hz on an
   iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone.
-- **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw Nightmare's live
-  pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassPlus`, ...), the
-  Nightmare+ twin being the same body with `plus` set. Each file stands alone. Nightmare+'s heartbeat lives in the twins'
-  own lines: each file's `heartbeat` reads the delay grid `Picture.delays` appended to the twin's data, and the lines
-  swell and brighten as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's
-  limits (neurons' regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and
-  checks its search against a brute force, the twin at the beat's peak; nothing else tests the shaders.
-- **Levels.swift** has the 27 hand-written campaign levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so
-  they merge exactly as play would), nightmare / Nightmare+ variants (ids prefixed `N` / `N+`; Nightmare's pictures
-  follow a table, and N+k shows the twin of Nk's), daily and endless (`SplitMix64`-seeded generator). The generator is
+- **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw whirlpool's live
+  pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassTwin`, ...), maelstrom's
+  twin being the same body with `twin` set. Each file stands alone. The twins' heartbeat lives in their own lines: each
+  file's `heartbeat` reads the delay grid `Picture.delays` appended to the twin's data, and the lines swell and brighten
+  as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's limits (neurons'
+  regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and checks its search
+  against a brute force, the twin at the beat's peak; nothing else tests the shaders.
+- **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, maelstrom (vortex will go between the last
+  two, charybdis past maelstrom). Declaration order is the ladder, and the raw value is stored (`@AppStorage("tier")`),
+  so it never changes. Each `Level` carries its tier, and its id is the tier's `prefix` and its number (`L1`, `N1`,
+  `N+1`: whirlpool's and maelstrom's prefixes are from their old names, nightmare and nightmare+). Progress is stored by
+  id, so changing a prefix loses it unless the stored keys are remapped. Plughole has 27 hand-written levels (scramble
+  strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool deeper variants on
+  live pictures that follow a table, and maelstrom, until it has a set of its own, whirlpool's scrambles on each
+  picture's twin. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is
   ported draw for draw from an earlier prototype, and `testDailyAndEndlessVectors` pins its output. Progress (`Best`,
   started flags, undo bank) is kept in `UserDefaults`. A `Level` may have `seized` knobs, which ignore touch; the tank
   turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
@@ -110,17 +115,17 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. Wins run the coarse `looksSolved` pass on the
   main actor and the fine pass off it.
-- **Pictures.swift** bakes the campaign's neon pictures once per size. Campaign pictures are designed so that "up" is
-  readable inside every rigid core. Nightmare's five (glass, chainmail, coral, neurons, marbling) and their Nightmare+
-  twins withhold it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period`
-  (a minute for a twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's
-  cells take the raw clock; the neural web is static per seed, built once off the main actor.
+- **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
+  every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
+  it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
+  twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's cells take the
+  raw clock; the neural web is static per seed, built once off the main actor.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
-  (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, level, mode, stack, seized knobs
-  (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank
-  (`UNSTIR_TANKLIVE`), a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). This is how screenshots
-  and films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line
-  there.
+  (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`), level, mode, stack,
+  seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a mid-drag turn of a rod (`UNSTIR_LIVE`)
+  or the tank (`UNSTIR_TANKLIVE`), a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). This is how
+  screenshots and films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a
+  `shot` line there.
 
-Many tests are regressions from real play (e.g. `testNightmare11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
-Others check the level tables against the design tables (par, inversion counts, Nightmare's pictures).
+Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
+Others check the level tables against the design tables (par, inversion counts, whirlpool's pictures).
