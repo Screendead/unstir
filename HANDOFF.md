@@ -26,7 +26,7 @@ this is analysis. No code has changed for it.
 | Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
 | README | Merged 2026-09-28 (PR #3), with the four suggested images (Jack's pick); still says Nightmare and Nightmare+, so it changes with the rename; see below |
 | Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). Merged 2026-09-28 (PR #3); see below |
-| Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. A first sketch ("glass and water", Python) is setting the direction. Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
+| Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is being rebuilt in Csound with those changes, with a phone switch between it and the sketch. Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 ### The plan
@@ -54,8 +54,11 @@ from Nightmare to Nightmare+ is easy to miss.
 |---|---|
 | Nightmare on the live background | Merged 2026-09-28 (PR #2). The baked cracked glass is deleted |
 | More live backgrounds | Set, palettes, twins and level table decided (below); all ten ported with the heartbeat in the twins' lines, tests passing; Jack approved the films and the cost. Merged 2026-09-28 (PR #2). `fillEntries` stay Mac-measured: no phone benches until the performance pass (Jack) |
-| Nightmare+ design | The seized rod and the turning tank (Jack, 2026-09-28). First slice on `turning-tank`, 33 tests passing. Go/no-go shots pass: seams land concentric after a turn, and a finished outer ring reads on hex glass (the hub doesn't, but it never moves or seizes). On the phone (Jack, 2026-09-28): the rim is easy to grab, two fingers always turn the tank, he plans where to park the dead knob, and he likes the glass easing home after the solve. The tank clicks felt featherweight: each tank step now plays a Core Haptics clunk (a hard knock and a 90 ms low rumble), and Jack finds it great. The first step after launch or a return from background may hitch a frame while the engine restarts. Pars must come from a solver of the ending-on-the-last-heal rule: the temporary table used the old model's pars, which counted a final turn home, so Jack finished a move under par |
-| The way in | Jack wants switching tiers easier to find and on-brand, perhaps by stirring between them (2026-09-28); mock-ups next |
+| Maelstrom (was Nightmare+) design | The seized rod and the turning tank (Jack, 2026-09-28). First slice merged 2026-09-28 (PR #4). Go/no-go shots pass: seams land concentric after a turn, and a finished outer ring reads on hex glass (the hub doesn't, but it never moves or seizes). On the phone (Jack, 2026-09-28): the rim is easy to grab, two fingers always turn the tank, he plans where to park the dead knob, and he likes the glass easing home after the solve. The tank clicks felt featherweight: each tank step now plays a Core Haptics clunk (a hard knock and a 90 ms low rumble), and Jack finds it great. The first step after launch or a return from background may hitch a frame while the engine restarts. Pars must come from a solver of the ending-on-the-last-heal rule: the temporary table used the old model's pars, which counted a final turn home, so Jack finished a move under par |
+| The way in | Jack chose the strip (2026-09-28) from three working mock-ups (strip, dial, window), for its ticked line of the levels left to open the next tier; he loved the window's live tank but it took too much of the screen. Built on `tiers` with the rename and the gate; the swipe was driven by simulated touches, never a finger. The swap freezes 50–107 ms on the simulator: left for the performance pass |
+| Rename | Nightmare is now **whirlpool** and Nightmare+ **maelstrom** in code, harness (`UNSTIR_TIER`), scripts, tests and docs, on `tiers`. Stored level ids stay `N<k>` and `N+<k>`, so progress carries over (Claude first planned new ids, which would have reset it; the review caught that). The new maelstrom set gets fresh ids, so old N+ bests don't land on new levels |
+| Solver and the maelstrom set | Solver being built and verified on branch `solver` (worktree in the scratchpad), then a proposed 27-level table for Jack |
+| The phone | Jack, 2026-09-28: keep working, but don't touch the phone until he says (a playtest is running on it). It has the sound prototype and the temporary seized table |
 
 **Jack's calls (2026-09-28).**
 - Nightmare+ becomes the seized rod and the turning tank, below. Bookkeeping stays the fallback if the go/no-go fails
@@ -79,16 +82,37 @@ from Nightmare to Nightmare+ is easy to miss.
 - **Endless changes rules** (Jack): no undo, no hints, no par; just unstir each tank, however many moves and however
   long it takes. It ramps a little faster and goes much deeper. Jack likes a capacity limit, the tank's brim, if it
   is truly intuitive, always visible and on-theme; he rejected draining the picture's colour (it hurt the read and
-  looked sharper, not blended). The gauge must never touch the picture before the spill. Open: whether the level
-  counts the stirs in the tank (a careful player who turns back every red flash never spills) or the wrong stirs
-  let go (they stay counted after a turn back; heals settle it). Jack wants the two side by side before deciding. Of
-  three gauge looks, a tide up the rim, a side-on profile under the tank and a measuring jug on the rim, from the strips
-  he found the profile clearest, but after watching the films he likes it least and loves tide and jug.
+  looked sharper, not blended). The gauge must never touch the picture before the spill. **The brim counts red
+  flashes** (Jack, after the side-by-side film): each red flash adds a notch that stays when the stir is turned back;
+  each heal of one of the tank's own stirs settles one (cancelling your own wrong stir is not a heal); the level
+  carries across tanks; the run ends when it spills. Counting the stirs in the tank was the alternative: anyone who
+  turns back every red flash never rises. The one free probe left is a drag not let go, which only a reader of the
+  picture can use: the live ring says whether letting go will count, never whether it's right. A 30° slip on the
+  wrong rod costs a notch in endless; heals absorb the odd one. The capacity (4 in the film) waits for TestFlight.
+  **The look** (Jack): the measuring jug on the real rim, filled with the picture's own colours (the only look whose
+  single frame read as a level to a viewer who didn't know it), with the tide's outward-spreading colour and vibrancy,
+  which Jack loves, grafted on. The tide itself failed on the real rim: even at 1.5x thickness a viewer read the band
+  as a thick bezel, and another took it for the picture shrinking. Film of the graft in progress.
 - Switching between tiers must be easier to find than today's header toggles, and on-brand. Jack's idea: stir
-  between modes.
+  between modes. He chose the strip (see the table).
 - Order of work: the go/no-go slice (`turning-tank`), the switcher as mock-ups for Jack to pick, the rename, then the
   level set, whose table (layout, depth, seized knobs, par, planning gap, picture) goes to Jack before it is written
   into `Levels.swift`.
+
+**The first playtest (2026-09-28, a playtester on Jack's phone, loving it).**
+- Touching where two discs overlap, you can't tell which rod will move. Today the nearest centre wins and the only
+  cue (a dashed ring and the start notch) sits under the finger. Claude's recommendation: light the grabbed rod the
+  moment a finger lands (disc outline, knob glow, a light haptic); in an overlap, let the first few points of motion
+  pick the rod whose turn explains them (near the lens tips the two turns' directions differ by about 95° on quad);
+  near the line between the centres they coincide, so fall back to the nearest centre.
+- "I can't remember how far I've turned it." Claude's recommendation: while dragging, an arc from the start notch
+  lights one segment per 30° step, with a signed count placed away from the finger; it stays faint while the move is
+  still open, so a re-grab of the same rod carries on the count. It reports only the player's own turns, so it is
+  not a hint. It was within one drag, and Jack likes the fix (2026-09-28). Both fixes go on one branch after `tiers`.
+- Whirlpool 22 (pent, marbling) looked solved at moves 19 / par 18 with one 30° step left on the bottom-right rod. The
+  win check was right: that step moves its worst point about 0.14 tank radii (about 80 phone pixels), but round ring
+  motifs still look like rings after a turn. Pictures built from locally round motifs hide rotation; check this
+  when the live pictures are reviewed.
 
 **Recommended Nightmare+ (chosen 2026-09-28): the seized rod and the turning tank.** N+k is Nightmare k's scramble with one
 or two seized knobs (never the hub). The whole tank turns one rod over (the layout's symmetry: 120°, 90°, 180°, 72°,
