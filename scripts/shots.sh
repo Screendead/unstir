@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/shots.sh [pattern]   Screenshots every harness case (or those whose name matches pattern) into shots/.
 set -euo pipefail
 cd "$(dirname "$0")/.."

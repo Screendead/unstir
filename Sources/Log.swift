@@ -1,3 +1,5 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
 import Foundation
 
 /// A flight recorder for bugs seen only on the phone: one line per event in Library/unstir-log.txt, the last 3000

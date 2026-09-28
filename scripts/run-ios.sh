@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/run-ios.sh [Debug|Release]   UNSTIR_DEVICE names the phone (a UDID from `xcrun devicectl list devices`).
 set -euo pipefail
 cd "$(dirname "$0")/.."

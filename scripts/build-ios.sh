@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/build-ios.sh [Debug|Release] [device|sim]
 set -euo pipefail
 cd "$(dirname "$0")/.."

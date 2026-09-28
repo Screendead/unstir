@@ -39,9 +39,12 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
 
 The repo is public. Nothing personal or confidential goes into a tracked file, a commit message or a PR: no device
 UDIDs, account or membership status, money, usage history, email addresses, local paths or anything else about Jack
-beyond his first name. Such notes go in `HANDOFF.private.md`, which is gitignored and exists only on this Mac.
-Machine-specific values come from environment variables. Before asking for a review, check the staged diff for
-personal details.
+beyond his first name, except his full name in the copyright line below. Such notes go in `HANDOFF.private.md`, which
+is gitignored and exists only on this Mac. Machine-specific values come from environment variables. Before asking for
+a review, check the staged diff for personal details.
+
+Every `.swift`, `.metal` and `.sh` file opens with `Copyright © 2026 Jack Lusher. All rights reserved.` as a comment,
+after a script's shebang. The code is all rights reserved: never add an open-source licence.
 
 ## Pushing back
 

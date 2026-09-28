@@ -1,3 +1,5 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
 import SwiftUI
 
 /// Neon on black. The campaign pictures show which way is up inside every rigid core, or a turned disc looks as

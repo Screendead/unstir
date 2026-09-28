@@ -1,3 +1,5 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
 import Foundation
 
 struct Run: Hashable, Sendable {

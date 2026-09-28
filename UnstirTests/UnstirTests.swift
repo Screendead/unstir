@@ -1,3 +1,5 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
 import Metal
 import os
 import struct SwiftUI.EnvironmentValues

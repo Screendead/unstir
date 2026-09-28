@@ -1,3 +1,5 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
 import SwiftUI
 
 private let neonSweep = LinearGradient(colors: [.neonCyan, .magenta, .amber], startPoint: .leading, endPoint: .trailing)
