@@ -1,3 +1,5 @@
+import Metal
+import os
 import struct SwiftUI.EnvironmentValues
 import XCTest
 import simd
@@ -265,9 +267,147 @@ final class UnstirTests: XCTestCase {
     func testNightmarePlusKeepsItsOwnProgress() {
         XCTAssertEqual(Level.nightmarePlus.map(\.scramble), Level.nightmare.map(\.scramble))
         XCTAssertTrue(Set(Level.nightmarePlus.map(\.id)).isDisjoint(with: (Level.all + Level.nightmare).map(\.id)))
-        XCTAssertTrue((Level.nightmare + Level.nightmarePlus).allSatisfy { $0.nightmare && $0.picture == .nightmare })
+        XCTAssertTrue((Level.nightmare + Level.nightmarePlus).allSatisfy { $0.nightmare && $0.picture.isLive })
         XCTAssertTrue(Level.nightmarePlus.allSatisfy(\.plus))
         XCTAssertFalse((Level.all + Level.nightmare).contains(where: \.plus))
+    }
+
+    /// Against the design table. Coral reads only to 6 stirs and neurons to 14; each Nightmare+ level shows the twin of
+    /// its Nightmare level's picture. The sandbox cycles every picture but the twins.
+    func testNightmarePictures() {
+        XCTAssertEqual(Array(sequence(first: Picture.grid, next: \.next).prefix(9)),
+                       [.grid, .sunset, .city, .glass, .chainmail, .coral, .neurons, .marbling, .grid])
+        let table: [(Picture, [Int])] = [(.glass, [1, 9, 14, 19, 23, 26, 27]), (.chainmail, [3, 10, 13, 18, 21, 24]),
+                                         (.coral, [2, 5, 8, 16]), (.neurons, [4, 7, 11, 17, 20]), (.marbling, [6, 12, 15, 22, 25])]
+        var want = [Picture?](repeating: nil, count: 27)
+        for (picture, levels) in table { for n in levels { want[n - 1] = picture } }
+        XCTAssertEqual(Level.nightmare.map(\.picture), want)
+        XCTAssertLessThanOrEqual(Level.nightmare.filter { $0.picture == .coral }.map(\.scramble.count).max()!, 6)
+        XCTAssertLessThanOrEqual(Level.nightmare.filter { $0.picture == .neurons }.map(\.scramble.count).max()!, 14)
+        XCTAssertEqual(Level.nightmarePlus.map(\.picture), Level.nightmare.map(\.picture.twin))
+        let twins = Set(table.map(\.0.twin))
+        XCTAssertEqual(twins.count, 5)
+        XCTAssertTrue(twins.isDisjoint(with: table.map(\.0)))
+    }
+
+    /// A live picture's shader gets the clock mod its period, so its data must repeat with it. Not the glass's: its seeds
+    /// wander on 7-13 s circles, so it takes the raw clock. A twin's data is its sibling's, then its heartbeat's delays,
+    /// all repeating with the twin's minute; the glass's and the static web's twins can only check their delays.
+    func testLiveDataRepeats() {
+        typealias Builder = (Int, Double) -> [Float]
+        let builders: [(Picture, Builder)] = [(.chainmail, Picture.links), (.coral, Picture.kernels), (.marbling, Picture.drops)]
+        let delays: Builder = { Picture.delays(t: $1) }
+        let twins: [(Picture, Builder)] = builders.map { picture, data in (picture.twin, { data($0, $1) + delays($0, $1) }) }
+            + [(.glassPlus, delays), (.neuronsPlus, delays)]
+        for (picture, data) in builders + twins {
+            for seed in [0, 12, 27] {
+                for t in [0.0, 1.7, 0.5 * picture.period, picture.period - 0.01] {
+                    let a = data(seed, t), b = data(seed, t + picture.period)
+                    XCTAssertEqual(a.count, b.count)
+                    XCTAssertLessThan(zip(a, b).map { abs($0 - $1) }.max()!, 1e-5, "\(picture) seed \(seed) t \(t)")
+                }
+            }
+        }
+    }
+
+    /// The neural web's shader draws only p's nearest node (by its own search) and that node's dendrites, so every line,
+    /// glow, knob and soma must lie where that search finds its node. Checked against a brute force over every node in a
+    /// 5 x 5 window, on each seed that shows the web (the sandbox's and its levels'), for the web and its twin, whose
+    /// lines are checked inflamed and at the heartbeat's peak.
+    func testNeuronsStayInTheirRegions() throws {
+        guard let device = MTLCreateSystemDefaultDevice() else { throw XCTSkip("no Metal device") }
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Sources/Neurons.metal")
+        let source = try String(contentsOf: url, encoding: .utf8)
+            .replacingOccurrences(of: "#include <SwiftUI/SwiftUI_Metal.h>", with: "")
+            .replacingOccurrences(of: "[[ stitchable ]]", with: "") + """
+
+            // x the line, y the glow, z the soma's reach at p: as the shader draws them, or over every node near p.
+            static float3 probe(float2 p, float ipx, device const packed_float3 *cells, bool brute, bool plus) {
+                const float wide = 0.1, high = 0.0866025, left = -1.2, top = -1.1258;
+                const int n = 24, rows = 26;
+                // A soma and its glow end within 0.0225 of its node (0.0262 in the twin), a knob within 0.0055 (0.0065 in
+                // the twin, swollen by the beat).
+                float hot = plus ? 1.0 : 0.0, grow = plus ? throb(1.0).x : 1.0;
+                float rs = plus ? 0.0262 : 0.0225, rk = plus ? 0.0065 * grow : 0.0055, soma = 0;
+                float2 ink = 0;
+                if (!brute) {
+                    float2 a;
+                    float f, da, db;
+                    int2 at = nearest(p, cells, a, f, da, db);
+                    uint flags = uint(f);
+                    float d = sqrt(da);
+                    if (flags & 64u) soma = d < rs ? 1.0 - d / rs : 0.0;
+                    else if (flags & 128u) ink = float2(saturate((rk - d) * ipx + 0.5), glow(d));
+                    dendrites(p, cells, at, a, flags, hot, grow, plus, ipx, ink);
+                    return float3(ink, soma);
+                }
+                int jc = int(floor((p.y - top) / high));
+                for (int j = max(jc - 2, 0); j <= min(jc + 2, rows - 1); j++) {
+                    int ic = int(floor((p.x - left) / wide - 0.5 * float(j & 1)));
+                    for (int i = max(ic - 2, 0); i <= min(ic + 2, n - 1); i++) {
+                        float3 cell = float3(cells[j * n + i]);
+                        uint flags = uint(cell.z);
+                        float d = distance(p, cell.xy);
+                        if (flags & 64u) soma = max(soma, d < rs ? 1.0 - d / rs : 0.0);
+                        else if (flags & 128u) ink = float2(max(ink.x, saturate((rk - d) * ipx + 0.5)), ink.y + glow(d));
+                        int odd = j & 1;
+                        const int2 step[3] = {int2(1, 0), int2(odd, 1), int2(odd - 1, 1)};
+                        for (int dir = 0; dir < 3; dir++) {
+                            if ((flags & (1u << dir)) == 0u) continue;
+                            float2 b = float3(cells[(j + step[dir].y) * n + i + step[dir].x]).xy;
+                            edge(p, cell.xy, b, (flags >> (8u + 5u * uint(dir))) & 31u, hot, grow, plus, ipx, ink);
+                        }
+                    }
+                }
+                return float3(ink, soma);
+            }
+
+            // Counts the pixels whose line, glow or soma differ.
+            kernel void scan(device const float *data [[buffer(0)]], device atomic_uint *bad [[buffer(1)]],
+                             constant float &side [[buffer(2)]], constant uint &plus [[buffer(3)]],
+                             uint2 gid [[thread_position_in_grid]]) {
+                float2 p = (float2(gid) + 0.5) / side * 2.0 - 1.0;
+                if (length_squared(p) > 1.0) return;
+                device const packed_float3 *cells = (device const packed_float3 *)data;
+                float3 s = probe(p, side / 2.0, cells, false, plus != 0u), b = probe(p, side / 2.0, cells, true, plus != 0u);
+                if (abs(s.x - b.x) > 0.05) atomic_fetch_add_explicit(&bad[0], 1u, memory_order_relaxed);
+                if (abs(s.y - b.y) > 0.01) atomic_fetch_add_explicit(&bad[1], 1u, memory_order_relaxed);
+                if (abs(s.z - b.z) > 0.01) atomic_fetch_add_explicit(&bad[2], 1u, memory_order_relaxed);
+            }
+            """
+        let library = try device.makeLibrary(source: source, options: nil)
+        let scan = try device.makeComputePipelineState(function: try XCTUnwrap(library.makeFunction(name: "scan")))
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        var side = Float(2400)
+        let seeds = [0, 4, 7, 11, 17, 20], webs = OSAllocatedUnfairLock(initialState: [Int: [Float]]())
+        // A debug build takes most of a second over each web, so they build side by side.
+        DispatchQueue.concurrentPerform(iterations: seeds.count) { k in
+            let web = Picture.nodes(seed: seeds[k])
+            webs.withLock { $0[seeds[k]] = web }
+        }
+        for seed in seeds {
+            let data = webs.withLock { $0[seed]! }
+            let cells = try XCTUnwrap(device.makeBuffer(bytes: data, length: 4 * data.count))
+            for var plus: UInt32 in [0, 1] {
+                let bad = try XCTUnwrap(device.makeBuffer(length: 12))
+                memset(bad.contents(), 0, 12)
+                let cb = try XCTUnwrap(queue.makeCommandBuffer()), enc = try XCTUnwrap(cb.makeComputeCommandEncoder())
+                enc.setComputePipelineState(scan)
+                enc.setBuffer(cells, offset: 0, index: 0)
+                enc.setBuffer(bad, offset: 0, index: 1)
+                enc.setBytes(&side, length: 4, index: 2)
+                enc.setBytes(&plus, length: 4, index: 3)
+                enc.dispatchThreads(MTLSize(width: Int(side), height: Int(side), depth: 1),
+                                    threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1))
+                enc.endEncoding()
+                cb.commit()
+                cb.waitUntilCompleted()
+                XCTAssertNil(cb.error)
+                let n = bad.contents().bindMemory(to: UInt32.self, capacity: 3)
+                XCTAssertEqual([n[0], n[1], n[2]], [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(plus == 1 ? " twin" : "")")
+            }
+        }
     }
 
     /// From the prototype, so the Swift generator draws exactly as it does.

@@ -48,14 +48,17 @@ struct Harness {
         case "sandbox": Level.sandbox
         default: (plus ? Level.nightmarePlus : nightmare ? Level.nightmare : Level.all)[n - 1]
         }
+        let picture = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:))
         if bench {
-            // UNSTIR_DEPTH overrides. Nightmare's heaviest frame is 26 entries and the drag, the most that keep four taps.
-            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (nightmare ? 26 : 24)
+            // UNSTIR_DEPTH overrides. A live picture's heaviest frame is the most entries that keep four taps, and the drag.
+            let p = picture ?? (plus ? .glassPlus : nightmare ? .glass : .grid)
+            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? 30 - p.fillEntries : 24)
             var rng = SplitMix64(state: 24)
-            level = Level(id: "bench", label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: nightmare ? .nightmare : .grid,
+            // UNSTIR_PLUS: an N+ id, like the twin's own levels.
+            level = Level(id: plus ? "N+bench" : "bench", label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: p,
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))
         }
-        if let p = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:)) { level.picture = p }
+        if let picture { level.picture = picture }
         if let s = env["UNSTIR_STACK"] {
             level.layout = env["UNSTIR_LAYOUT"].flatMap(Layout.init(rawValue:)) ?? level.layout
             level.scramble = .parse(s, in: level.layout)
@@ -79,7 +82,7 @@ struct Harness {
 @MainActor
 final class Bench: NSObject {
     private var drive: ((Double) -> Void)?
-    /// Nightmare: lets go after the drag, then times 20 s more with nothing driven but the background's clock.
+    /// A live picture: lets go after the drag, then times 20 s more with nothing driven but the background's clock.
     private let still: (() -> Void)?
     private var first = 0.0, last = 0.0
     private var intervals: [Double] = []

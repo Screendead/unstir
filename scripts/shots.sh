@@ -81,19 +81,30 @@ for h in 0.9 1.6 2.0 3.2; do
   i=$((i + 1))
   hold=$h shot "open-L12-$i" "Level 12 opening, ${h}s after launch: clean picture, then every twist growing together." LEVEL=12 OPEN=1
 done
-# Nightmare: the menu, each layout's first level and the last, probes on level 12's and level 27's top rods, and a result card.
-# The live background is held 3 s in, so the probes compare.
+# Nightmare: the menu, each layout's first level and the last (all glass), probes on level 12's and level 27's top rods, a
+# result card, then each other picture at its deepest level and each Nightmare+ twin. The live background is held 3 s in,
+# so the probes compare; level 12 is marbling, so its probes are pinned to the glass.
 shot menu-nightmare "Menu with nightmare on and every row unlocked." NIGHTMARE=1 UNLOCK=1
 for n in 01 09 14 19 23 27; do
   shot "nightmare$n" "Nightmare level $n with its full scramble." NIGHTMARE=1 LEVEL=$n CLOCK=3
 done
-shot nightmare-probe-short "Nightmare level 12 (square), mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal." \
-  NIGHTMARE=1 LEVEL=12 LIVE=3:+3 CLOCK=3
-shot nightmare-probe-heal "Nightmare level 12 (square), mid-drag: top rod 3 turned back all 4 steps, so its seam heals." NIGHTMARE=1 LEVEL=12 LIVE=3:+4 CLOCK=3
-shot nightmare-probe-over "Nightmare level 12 (square), mid-drag: top rod 3 turned back 5 steps, one detent past the heal." NIGHTMARE=1 LEVEL=12 LIVE=3:+5 CLOCK=3
+shot nightmare-probe-short "Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal." \
+  NIGHTMARE=1 LEVEL=12 PICTURE=glass LIVE=3:+3 CLOCK=3
+shot nightmare-probe-heal "Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back all 4 steps, so its seam heals." \
+  NIGHTMARE=1 LEVEL=12 PICTURE=glass LIVE=3:+4 CLOCK=3
+shot nightmare-probe-over "Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back 5 steps, one detent past the heal." \
+  NIGHTMARE=1 LEVEL=12 PICTURE=glass LIVE=3:+5 CLOCK=3
 # The deepest level's top twist is 2:+2: short, heal and over.
 for s in 1 2 3; do
   shot "nightmare27-probe-$s" "Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back $s steps; it heals at 2." NIGHTMARE=1 LEVEL=27 LIVE=2:-$s CLOCK=3
 done
 shot nightmare-result "Nightmare level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par)." \
   NIGHTMARE=1 SCREEN=result LEVEL=5 CLOCK=3
+for level in 24:chainmail 16:coral 20:neurons 25:marbling; do
+  n=${level%:*} picture=${level#*:}
+  shot "nightmare$n-$picture" "Nightmare level $n ($picture) with its full scramble." NIGHTMARE=1 LEVEL=$n CLOCK=3
+done
+for level in 26:glass 24:chainmail 16:coral 20:neurons 25:marbling; do
+  n=${level%:*} picture=${level#*:}
+  shot "nightmare-plus$n-$picture" "Nightmare+ level $n ($picture+) with its full scramble." PLUS=1 LEVEL=$n CLOCK=3
+done

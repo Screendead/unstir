@@ -74,20 +74,33 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   merges to 0 steps pops. `Layout.looksSolved` checks the stack against the identity to half a pixel.
 - **Unstir.metal** is the GPU copy of the same map. It applies the stack's inverses to sample the picture. The tests
   only reach the Swift copy (`Tank.profile`/`Tank.twist`), so change the two together. The shader's tap count and the
-  `Tank.maxStack` (36) and four-tap limits in `Unstirred` are tuned against 120 Hz on an iPhone 13 Pro Max.
+  `Tank.maxStack` (36) and four-tap limits in `Unstirred` are tuned against 120 Hz on an iPhone 13 Pro Max. A live
+  picture's own cost comes off the four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed
+  on the phone.
+- **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw Nightmare's live
+  pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassPlus`, ...), the
+  Nightmare+ twin being the same body with `plus` set. Each file stands alone. Nightmare+'s heartbeat lives in the twins'
+  own lines: each file's `heartbeat` reads the delay grid `Picture.delays` appended to the twin's data, and the lines
+  swell and brighten as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's
+  limits (neurons' regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and
+  checks its search against a brute force, the twin at the beat's peak; nothing else tests the shaders.
 - **Levels.swift** has the 27 hand-written campaign levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so
-  they merge exactly as play would), nightmare / Nightmare+ variants (ids prefixed `N` / `N+`), daily and endless
+  they merge exactly as play would), nightmare / Nightmare+ variants (ids prefixed `N` / `N+`; Nightmare's pictures
+  follow a table, and N+k shows the twin of Nk's), daily and endless
   (`SplitMix64`-seeded generator). The generator is ported draw for draw from an earlier prototype, and
   `testDailyAndEndlessVectors` pins its output. Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, hints, clean-solve rules and the
   endless spill. It also holds `LevelView` (drag gesture → live twist → `Game.commit` on lift), the `Unstirred` shader
   modifier and the result card. Wins run the coarse `looksSolved` pass on the main actor and the fine pass off it.
-- **Pictures.swift** bakes the neon pictures once per size. Nightmare is drawn live by its own shader instead.
-  Campaign pictures are designed so that "up" is readable inside every rigid core.
+- **Pictures.swift** bakes the campaign's neon pictures once per size. Campaign pictures are designed so that "up" is
+  readable inside every rigid core. Nightmare's five (glass, chainmail, coral, neurons, marbling) and their Nightmare+
+  twins withhold it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period`
+  (a minute for a twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's
+  cells take the raw clock; the neural web is static per seed, built once off the main actor.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, level, mode or stack, and can hold a
   mid-drag turn, a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). This is how screenshots and
   films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
 
 Many tests are regressions from real play (e.g. `testNightmare11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
-Others check the level tables against the design tables (par, inversion counts).
+Others check the level tables against the design tables (par, inversion counts, Nightmare's pictures).

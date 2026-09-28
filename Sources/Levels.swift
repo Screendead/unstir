@@ -58,7 +58,7 @@ struct Level: Hashable, Sendable {
               layout: l.0, replay: i < 3, scramble: .parse(l.1, in: l.0))
     }
 
-    /// Twice the stirs of the same-numbered level, more of them hidden under louder ones, one picture, nothing replayed.
+    /// Twice the stirs of the same-numbered level, more of them hidden under louder ones, live pictures, nothing replayed.
     static let nightmare: [Level] = ([
         (.tri, "0:-5,1:+3", "Turn them back.", "Same rules, twice the stirs, no replays. This is the last note."),
         (.tri, "2:+7,0:-7", "Both went further than they look.", ""),
@@ -88,15 +88,21 @@ struct Level: Hashable, Sendable {
         (.hex, "1:+2,6:-2,3:+2,2:-4,1:+4,0:+5,6:+5,0:+6,4:-7,6:-2,2:-3,1:-3,6:+6,0:+3,5:-2,4:-2,3:+2,5:-4,0:+2,5:-5,4:-7,5:+3,4:-6,1:-2", "Mixing is easy. I would know.", ""),
         (.hex, "3:+3,4:-2,5:-2,6:-2,2:-2,4:-2,1:-4,3:+4,6:-4,1:-5,0:-7,2:+3,5:-4,1:+3,0:+5,1:+6,6:-3,5:+4,0:-6,6:+5,0:+4,2:-6,3:+7,1:+4,4:-4,2:+6,3:-5,2:+2", "Unstirred, by hand, in the dark.", ""),
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
-        Level(id: "N\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3, picture: .nightmare,
+        // The glass opens each layout and takes the deepest levels. Coral reads only to 6 stirs, and neurons, the dearest
+        // to draw, to 14.
+        Level(id: "N\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
+              picture: [3: .chainmail, 10: .chainmail, 13: .chainmail, 18: .chainmail, 21: .chainmail, 24: .chainmail,
+                        2: .coral, 5: .coral, 8: .coral, 16: .coral, 4: .neurons, 7: .neurons, 11: .neurons, 17: .neurons,
+                        20: .neurons, 6: .marbling, 12: .marbling, 15: .marbling, 22: .marbling, 25: .marbling][i + 1] ?? .glass,
               layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
     /// Nightmare's scrambles under ids of their own, so a nightmare best or start never opens a level here or spends
-    /// its first try.
+    /// its first try, each on its Nightmare picture's twin.
     static let nightmarePlus: [Level] = nightmare.map { level in
         var level = level
         level.id = "N+" + level.id.dropFirst()
+        level.picture = level.picture.twin
         return level
     }
 

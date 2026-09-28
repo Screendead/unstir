@@ -51,10 +51,19 @@ nightmare14.png  Nightmare level 14 with its full scramble.
 nightmare19.png  Nightmare level 19 with its full scramble.
 nightmare23.png  Nightmare level 23 with its full scramble.
 nightmare27.png  Nightmare level 27 with its full scramble.
-nightmare-probe-short.png  Nightmare level 12 (square), mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal.
-nightmare-probe-heal.png  Nightmare level 12 (square), mid-drag: top rod 3 turned back all 4 steps, so its seam heals.
-nightmare-probe-over.png  Nightmare level 12 (square), mid-drag: top rod 3 turned back 5 steps, one detent past the heal.
+nightmare-probe-short.png  Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal.
+nightmare-probe-heal.png  Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back all 4 steps, so its seam heals.
+nightmare-probe-over.png  Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back 5 steps, one detent past the heal.
 nightmare27-probe-1.png  Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back 1 steps; it heals at 2.
 nightmare27-probe-2.png  Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back 2 steps; it heals at 2.
 nightmare27-probe-3.png  Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back 3 steps; it heals at 2.
 nightmare-result.png  Nightmare level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par).
+nightmare24-chainmail.png  Nightmare level 24 (chainmail) with its full scramble.
+nightmare16-coral.png  Nightmare level 16 (coral) with its full scramble.
+nightmare20-neurons.png  Nightmare level 20 (neurons) with its full scramble.
+nightmare25-marbling.png  Nightmare level 25 (marbling) with its full scramble.
+nightmare-plus26-glass.png  Nightmare+ level 26 (glass+) with its full scramble.
+nightmare-plus24-chainmail.png  Nightmare+ level 24 (chainmail+) with its full scramble.
+nightmare-plus16-coral.png  Nightmare+ level 16 (coral+) with its full scramble.
+nightmare-plus20-neurons.png  Nightmare+ level 20 (neurons+) with its full scramble.
+nightmare-plus25-marbling.png  Nightmare+ level 25 (marbling+) with its full scramble.
