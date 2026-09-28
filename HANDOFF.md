@@ -18,14 +18,15 @@ this is analysis. No code has changed for it.
 | Monetisation code | None. No StoreKit, ads or sharing in `Sources/` |
 | Undo bank | Starts at 10 and nothing refills it yet (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10 |
 | TestFlight | Not started |
-| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes |
+| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
-| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice is on branch `turning-tank`; see "Side task" below |
+| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
 | Architecture pass | Queued after the performance pass (Jack, 2026-09-28); see below |
 | Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
-| README | Asked for (Jack, 2026-09-28); on branch `housekeeping`, with the four suggested images (Jack's pick); see below |
-| Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). On branch `housekeeping`; see below |
+| README | Merged 2026-09-28 (PR #3), with the four suggested images (Jack's pick); still says Nightmare and Nightmare+, so it changes with the rename; see below |
+| Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). Merged 2026-09-28 (PR #3); see below |
+| Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. A first sketch ("glass and water", Python) is setting the direction. Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 ### The plan
@@ -81,8 +82,8 @@ from Nightmare to Nightmare+ is easy to miss.
   looked sharper, not blended). The gauge must never touch the picture before the spill. Open: whether the level
   counts the stirs in the tank (a careful player who turns back every red flash never spills) or the wrong stirs
   let go (they stay counted after a turn back; heals settle it). Jack wants the two side by side before deciding. Of
-  three gauge looks, a tide up the rim, a side-on profile under the tank and a measuring jug on the rim, he finds the
-  profile clearest but isn't sold on any yet.
+  three gauge looks, a tide up the rim, a side-on profile under the tank and a measuring jug on the rim, from the strips
+  he found the profile clearest, but after watching the films he likes it least and loves tide and jug.
 - Switching between tiers must be easier to find than today's header toggles, and on-brand. Jack's idea: stir
   between modes.
 - Order of work: the go/no-go slice (`turning-tank`), the switcher as mock-ups for Jack to pick, the rename, then the
