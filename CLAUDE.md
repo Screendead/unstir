@@ -66,7 +66,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
     -destination 'platform=iOS Simulator,name=Unstir iPhone 17 Pro Max' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
   ```
-  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`.
+  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds skip
+  unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
+  `xcodebuild` to run them too (about 45 s more).
+- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`) prints the
+  optimum (and what untwisting alone takes when a detour beats it), the park rule's count under each reading, fair or
+  over, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It compiles
+  `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut out of
+  Levels.swift, so that struct stays top-level there.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
@@ -146,6 +153,17 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. This
   is how screenshots and films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change,
   add a `shot` line there.
+- **UnstirTests/Solver.swift** plays turning-tank levels for the tests and `scripts/solve.sh`; it never ships in the
+  app. It has three players, whose moves count as `Game.history` counts them (`Play.count`). The optimum is the fewest
+  moves that empty the stack: a breadth-first search over (stack, tank position) that untwists whole seams and turns
+  the tank, then a search for anything shorter with detours (a push or partial merge can build a word that holds a
+  disc still, and save a move). It tries only the detours its class comment lists, so it is a bounded search, not a
+  proof; `exhaustive` checks it on small cases. The park rule (`park`) untwists the newest whole seam a working knob
+  reaches; when none is, it turns to a position where one is, choosing by where the seized knobs land (`Parking`:
+  `.fewest` or `.all`), then the nearest, then by `Tie` (`.clockwise` or `.lowest`). No lookahead (`noLookahead`) turns
+  to the nearest, clockwise on a tie. A level is fair when the park rule reaches the optimum under every reading; its
+  planning gap is no lookahead minus the optimum. `home:` asks for the tank back at 0, the old end rule. Several tests
+  replay plays on a real `Game`, which must empty the stack in the moves the play counts.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's pictures).
