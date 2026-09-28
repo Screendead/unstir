@@ -5,6 +5,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Unstir is an iPhone puzzle game (SwiftUI + Metal, iOS 17, Swift 6, portrait only). Rods under a tank of picture twist
 it; the player unwinds the scramble by turning rods back in the right order.
 
+## State and the current task
+
+This file holds how the code works. `HANDOFF.md` holds the current task: the plan, where it stands, open thoughts,
+and the options set aside with their reasons. Read it and `HANDOFF.private.md` at the start of a session. Update it when a step closes or Jack
+makes a call, and keep its "Set aside" entries (note when one is picked back up). If the two files disagree about
+state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack decides it.
+
 ## Git, pull requests and CI
 
 - **Branch and PR for every change.** Never commit to `master`. Jack has given standing permission to create branches
