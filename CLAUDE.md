@@ -5,13 +5,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Unstir is an iPhone puzzle game (SwiftUI + Metal, iOS 17, Swift 6, portrait only). Rods under a tank of picture twist
 it; the player unwinds the scramble by turning rods back in the right order.
 
+## Keep the repo free of personal details
+
+The repo is public. Nothing personal or confidential goes into a tracked file, a commit message or a PR: no device
+UDIDs, account or membership status, money, usage history, email addresses, local paths or anything else about Jack
+beyond his first name. Such notes go in `HANDOFF.private.md`, which is gitignored and exists only on this Mac.
+Machine-specific values come from environment variables. Before asking for a review, check the staged diff for
+personal details.
+
 ## Commands
 
 `project.yml` is the source of truth for the Xcode project; the scripts run `xcodegen generate` before building, so
 edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitignored).
 
 - Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result)
-- Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (`UNSTIR_DEVICE` overrides the device UDID)
+- Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's UDID, set in the shell)
 - Tests (XCTest, on a simulator):
   ```
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
