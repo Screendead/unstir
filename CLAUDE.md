@@ -122,8 +122,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
   a finger holds: the rim first where knobs are seized, a lone disc at once, and where discs overlap nothing until the
   finger has moved 8 pt, then the rod whose tangent at the touch lies nearest the motion's line, falling back to the
-  nearest centre in its own disc's radius among those within `tie` (15°) of the best; a seized winner holds nothing. A
-  held rod lights its disc and knob with a light tap; overlap candidates light dimly. A drag shows its own count: a
+  nearest centre in its own disc's radius among those within `tie` (15°) of the best; a seized winner is `.seized`, which
+  holds nothing. A held rod lights its disc and knob with a light tap; overlap candidates light dimly. A seized knob
+  touched shakes a few degrees, plays `Knock.thud` (duller than the tank step's `Knock.clunk`) and pulses the rim's
+  lesson: `RimLesson`, a two-headed amber arc just outside the bezel at the top and a ghost finger rocking along the rim
+  under it, shown on any level with seized knobs until the player's first turn of the tank commits. That turn sets
+  `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does. The lesson
+  never shows a way to turn, and after the flag only the pulse brings the arc back. A drag shows its own count: a
   segment per step round the disc (the rim, for the tank) from where its stir began, and a signed count off the finger,
   both following what letting go would commit. While `Game.openStir` is the rod's, they stay faint after lift, until
   another rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved`
@@ -148,7 +153,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
-  (`UNSTIR_TURNED=rod:steps`), a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
+  (`UNSTIR_TURNED=rod:steps`), a touch on a seized knob held that many seconds into its shake (`UNSTIR_SHAKE`, with
+  `UNSTIR_TOUCH`), a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds
+  the rim lesson's ghost finger. A harnessed launch never stores the tank flag: it reads as never turned unless
+  `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only that launch, so shot order never matters. For the
+  menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
   (a digit per level, that many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and
   `UNSTIR_TIERDEMO` switches tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock
   above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. This

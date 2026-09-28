@@ -25,6 +25,12 @@ struct Harness {
     let touch: SIMD2<Double>?
     /// UNSTIR_TURNED=rod:steps: a turn committed through the real path and left open, as a finger has just let it go.
     let turned: Twist?
+    /// UNSTIR_TANKTURNED=1: the player has turned the tank before, so the rim no longer shows how; unset, they never have.
+    /// Either way for this launch only, whatever the harness turns. Nil without the harness, which reads and stores the
+    /// real flag.
+    let tankTurned: Bool?
+    /// UNSTIR_SHAKE=s: with UNSTIR_TOUCH on a seized knob, its shake and the rim's pulse held s seconds in.
+    let shake: Double?
     let hint: Bool
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
@@ -103,6 +109,8 @@ struct Harness {
         touch = xy.count == 2 ? SIMD2(xy[0], xy[1]) : nil
         let t = env["UNSTIR_TURNED"]?.split(separator: ":").compactMap { Int($0) } ?? []
         turned = t.count == 2 && level.layout.rods.indices.contains(t[0]) ? Twist(rod: t[0], steps: t[1]) : nil
+        tankTurned = harnessed ? env["UNSTIR_TANKTURNED"] == "1" : nil
+        shake = env["UNSTIR_SHAKE"].flatMap(Double.init)
         let f = env["UNSTIR_LIVE"]?.split(separator: ":") ?? []
         if f.count == 2, let rod = Int(f[0]), level.layout.rods.indices.contains(rod), let steps = Double(f[1]) {
             live = (rod, steps)

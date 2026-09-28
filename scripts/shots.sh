@@ -159,6 +159,22 @@ shot seized-m23-half "Maelstrom 23 (hex) with knobs 2 and 5 seized, mid-drag on 
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=30 CLOCK=3
 shot seized-m23-count "Maelstrom 23 (hex) with knobs 2 and 5 seized, finger down on the rim at lower left and carried two tank steps (120 degrees) round: two segments round the rim, +2 off the finger." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=120 TOUCH=-0.5,0.84 CLOCK=3
+# How to turn the tank, shown on any level with seized knobs until the player has turned it once: a two-headed arc just
+# outside the rim and a ghost finger rocking on it. UNSTIR_TANKTURNED=1 is a player who has, for the launch only. The ghost
+# is held by UNSTIR_CLOCK, and UNSTIR_SHAKE holds a touch on a seized knob that far into its shake and the rim's pulse.
+shot lesson-quad-grid "Level 12 (square, grid) with knob 1 seized, the tank never turned: the rim's two-headed arc and ghost finger." \
+  LEVEL=12 SEIZED=1 CLOCK=3
+shot lesson-hex-marbling "Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: the rim's arc and ghost finger over a live picture." \
+  TIER=whirlpool LEVEL=25 SEIZED=2,5 CLOCK=3
+shot lesson-shake "Level 12 (square) with knob 1 seized, a finger just down on it, 0.15 s in: the knob turned a few degrees, the rim's arc swollen." \
+  LEVEL=12 SEIZED=1 TOUCH=0.38,0.37 SHAKE=0.15 CLOCK=3
+shot lesson-shake-turned "The same once the player has turned the tank before: no ghost, the arc back only for the pulse." \
+  LEVEL=12 SEIZED=1 TOUCH=0.38,0.37 SHAKE=0.15 CLOCK=3 TANKTURNED=1
+shot lesson-turned "Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost." LEVEL=12 SEIZED=1 CLOCK=3 TANKTURNED=1
+shot lesson-count "Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: rod 1 at the top turned +1 by a finger just below its knob, its count swung off the rim's arc." \
+  TIER=whirlpool LEVEL=25 SEIZED=2,5 LIVE=1:+1 TOUCH=0,-0.3 CLOCK=3
+shot lesson-maelstrom01-free "Maelstrom 01 (tri) as the game loads it: no knob seized until maelstrom's own set, so no rim lesson and no note of seized knobs." \
+  TIER=maelstrom LEVEL=1 CLOCK=3
 # Can a finished ring be read on hex glass? 14 entries, as whirlpool 23 has, with one ring left without any, and the same
 # stack with a 2-step twist on that ring buried under its neighbours.
 ring3="1:+4,0:-3,2:+5,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3"

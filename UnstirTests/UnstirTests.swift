@@ -8,8 +8,12 @@ import simd
 @testable import Unstir
 
 final class UnstirTests: XCTestCase {
-    /// The undo bank lives in the shared defaults, so every run starts it full.
-    override func setUp() { UserDefaults.standard.removeObject(forKey: "undos.spent") }
+    /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full and the
+    /// tank never turned.
+    override func setUp() {
+        UserDefaults.standard.removeObject(forKey: "undos.spent")
+        UserDefaults.standard.removeObject(forKey: "tank.turned")
+    }
 
     func testPush() {
         var s: [Twist] = [Twist(rod: 0, steps: 3)]
@@ -399,16 +403,18 @@ final class UnstirTests: XCTestCase {
         check(.eye, 0, 2, at: t, 0)
     }
 
-    /// A seized knob is never held: alone under the finger it holds nothing, and in an overlap the finger holds a
-    /// working neighbour only when the motion picks that one, rather than being passed to it. Where knobs are seized the
-    /// rim wins over the discs that reach it.
+    /// A seized knob is never held: alone under the finger it holds nothing but says which knob refused, and in an
+    /// overlap the finger holds a working neighbour only when the motion picks that one, rather than being passed to it.
+    /// Where knobs are seized the rim wins over the discs that reach it.
     func testGrabNeverHoldsASeizedKnob() {
         let a = centre(.quad, 0), b = centre(.quad, 1), p = (a + b) / 2 + SIMD2(0.25, 0)
         XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: p, slop: slop), .undecided([1]))
         XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: carried(p, about: b, slop * 1.5), slop: slop), .rod(1))
-        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: carried(p, about: a, slop * 1.5), slop: slop), .nothing)
-        XCTAssertEqual(LevelView.grab(.quad, seized: [0, 1], from: p, to: p, slop: slop), .nothing)
-        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: a, to: a, slop: slop), .nothing)
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: carried(p, about: a, slop * 1.5), slop: slop), .seized(0))
+        let nearer1 = p + SIMD2(0, 0.02)
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0, 1], from: nearer1, to: nearer1, slop: slop), .seized(1))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: a, to: a, slop: slop), .seized(0))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: .zero, to: .zero, slop: slop), .nothing)
         let rim = SIMD2(0.0, -0.95)
         XCTAssertEqual(LevelView.grab(.tri, seized: [1], from: rim, to: rim, slop: slop), .rim)
         XCTAssertEqual(LevelView.grab(.tri, seized: [], from: rim, to: rim, slop: slop), .rod(0))
@@ -425,6 +431,9 @@ final class UnstirTests: XCTestCase {
             case .undecided(let ks):
                 XCTAssertGreaterThan(ks.count, 0)
                 XCTAssertTrue(ks.allSatisfy { !seized.contains($0) })
+            case .seized(let k):
+                XCTAssertTrue(seized.contains(k))
+                XCTAssertLessThan(simd_distance(start, centre(layout, k)), layout.rods[k].z)
             case .rim, .nothing: break
             }
         }
@@ -710,7 +719,7 @@ final class UnstirTests: XCTestCase {
     }
 
     /// A seized knob refuses a turn even over fluid a working knob could take off; no level seizes the hub, which no turn
-    /// of the tank moves.
+    /// of the tank moves, and only a level with a seized knob says it has one.
     @MainActor func testSeizedKnobs() {
         let game = Game(level: Level(id: "test-seized", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0]))
         game.commit(rod: 0, steps: -4)
@@ -723,7 +732,31 @@ final class UnstirTests: XCTestCase {
             XCTAssertTrue(level.seized.isSubset(of: level.layout.rods.indices), level.id)
             XCTAssertLessThanOrEqual(level.seized.count, 2, level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }
+            if level.note.contains("seize") { XCTAssertFalse(level.seized.isEmpty, level.id) }
         }
+    }
+
+    /// The rim shows how to turn the tank until the player has, on any level: a turn of the tank that commits sets the
+    /// flag, and a stir of a rod or a whole turn of the tank does not. A flag the harness sets is never stored.
+    @MainActor func testTurningTheTankSetsTheFlag() {
+        let level = Level(id: "test-taught", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0])
+        let game = Game(level: level)
+        XCTAssertFalse(game.tankTurned)
+        game.commit(rod: 1, steps: 2)
+        XCTAssertEqual(game.moves, 1)
+        game.turnTank(3)
+        XCTAssertFalse(game.tankTurned)
+        XCTAssertFalse(Best.tankTurned)
+        game.turnTank(1)
+        XCTAssertTrue(game.tankTurned)
+        XCTAssertTrue(Best.tankTurned)
+        XCTAssertTrue(Game(level: .sandbox).tankTurned)
+
+        UserDefaults.standard.removeObject(forKey: "tank.turned")
+        let harnessed = Game(level: level, tankTurned: false)
+        harnessed.turnTank(1)
+        XCTAssertTrue(harnessed.tankTurned)
+        XCTAssertFalse(Best.tankTurned)
     }
 
     /// Until the seized levels set their own, par is one move per entry everywhere.

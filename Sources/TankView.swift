@@ -52,6 +52,22 @@ struct Bezel: View {
     }
 }
 
+/// An arc from `notch` (clockwise from twelve) as long as `angle`, arrowhead at its far end; positive runs clockwise.
+private func arcArrow(center c: CGPoint, radius ar: CGFloat, from notch: Double, angle: Double) -> Path {
+    let a0 = notch - Double.pi / 2, a = a0 + angle, dir = angle > 0 ? 1.0 : -1.0
+    var p = Path()
+    // Moved to first: an arc appended to a path joins its current point with a line.
+    p.move(to: CGPoint(x: c.x + ar * cos(a0), y: c.y + ar * sin(a0)))
+    p.addArc(center: c, radius: ar, startAngle: .radians(a0), endAngle: .radians(a), clockwise: angle < 0)
+    let tip = CGPoint(x: c.x + ar * cos(a), y: c.y + ar * sin(a))
+    let back = CGVector(dx: sin(a) * dir * 8, dy: -cos(a) * dir * 8)
+    let wing = CGVector(dx: cos(a) * 5, dy: sin(a) * 5)
+    p.move(to: CGPoint(x: tip.x + back.dx + wing.dx, y: tip.y + back.dy + wing.dy))
+    p.addLine(to: tip)
+    p.addLine(to: CGPoint(x: tip.x + back.dx - wing.dx, y: tip.y + back.dy - wing.dy))
+    return p
+}
+
 private func glowRing(_ colour: Color, _ width: CGFloat, _ underlay: CGFloat, under: Color? = nil) -> some View {
     ZStack {
         Circle().stroke(under ?? colour.opacity(0.22), lineWidth: underlay)
@@ -97,11 +113,17 @@ final class Game {
     private var start: Date?
     /// False once an earlier visit touched a rod or took a hint: a daily is then practice, and nothing else can be clean.
     let firstTry: Bool
+    /// Whether the player has ever turned the tank, on any level: the rim shows how until they have.
+    private(set) var tankTurned: Bool
+    /// False when the caller set `tankTurned`, which then lasts only as long as this game.
+    private let storesTankTurned: Bool
 
-    init(level: Level) {
+    init(level: Level, tankTurned: Bool? = nil) {
         self.level = level
         stack = level.scramble
         firstTry = level.run != nil || !Best.started(level.id)
+        self.tankTurned = tankTurned ?? Best.tankTurned
+        storesTankTurned = tankTurned == nil
     }
 
     /// Practice saves nothing.
@@ -157,6 +179,10 @@ final class Game {
     func turnTank(_ steps: Int) {
         let order = level.layout.order
         guard !finished, steps % order != 0 else { return }
+        if !tankTurned {
+            tankTurned = true
+            if storesTankTurned { Best.tankTurned = true }
+        }
         let joins = open && history.last?.rod == Game.tank
         let net = tankStir(after: steps)
         if joins { history.removeLast() }
@@ -275,6 +301,8 @@ enum Grab: Equatable {
     case rim
     /// In two or more discs, before the finger has moved far enough to say which: the ones it could turn.
     case undecided([Int])
+    /// A seized knob's disc: it holds nothing, and the knob shakes.
+    case seized(Int)
     case nothing
 }
 
@@ -300,6 +328,9 @@ struct LevelView: View {
     /// The knob, or `Game.tank`, touched last: its open stir's count stays up, faint, after letting go.
     @State private var counted: Int?
     @State private var grabs = 0
+    /// The seized knob touched last, and every such touch: it shakes, the rim pulses and a thud plays.
+    @State private var jammed: Int?
+    @State private var jams = 0
     @State private var tick = 0
     @State private var ticks = 0
     @State private var tankTicks = 0
@@ -316,15 +347,17 @@ struct LevelView: View {
     private let bench: Bool
     /// UNSTIR_WAVE: the solve wave held at this radius.
     private let frozenWave: Double?
-    /// UNSTIR_CLOCK: a live background held at this many seconds.
+    /// UNSTIR_CLOCK: a live background, and the rim's ghost finger, held at this many seconds.
     private let frozenClock: Double?
+    /// UNSTIR_SHAKE: a seized knob's shake and the rim's pulse held this many seconds in.
+    private let frozenShake: Double?
     /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
     let onExit: () -> Void
     let onNext: (Level) -> Void
 
     init(level: Level, harness: Harness?, onExit: @escaping () -> Void, onNext: @escaping (Level) -> Void) {
-        let game = Game(level: level)
+        let game = Game(level: level, tankTurned: harness?.tankTurned)
         game.turnTank(harness?.tank ?? 0)
         if let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
             // Solved through the real commit path; "result" first wastes two stirs, so taking them back costs moves.
@@ -362,6 +395,7 @@ struct LevelView: View {
             switch grab {
             case .rod(let k): _liveRod = State(initialValue: k); _counted = State(initialValue: k)
             case .rim: _liveTurn = State(initialValue: turn ?? 0); _counted = State(initialValue: Game.tank)
+            case .seized(let k): _jammed = State(initialValue: k)
             case .undecided, .nothing: break
             }
         }
@@ -372,6 +406,7 @@ struct LevelView: View {
         bench = harness?.bench ?? false
         frozenWave = harness?.wave
         frozenClock = harness?.clock
+        frozenShake = harness?.shake
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
@@ -630,7 +665,11 @@ struct LevelView: View {
         } else {
             nil
         }
+        // Out of the way while the tank is held.
+        let lesson = shown == nil && !game.finished && held == nil
+        let arc = !game.level.seized.isEmpty && lesson && !game.tankTurned ? RimLesson.arc(r) : []
         let others: [(CGPoint, CGFloat)] = rods.indices.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
+            + arc.map { ($0, RimLesson.width + Self.countRoom) }
         return ZStack {
             // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow.
             // Every other picture pauses the timeline, so nothing ticks.
@@ -721,8 +760,14 @@ struct LevelView: View {
                 }
                 .position(at(fk))
             Bezel(r: r)
+            if !game.level.seized.isEmpty {
+                KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
+                    RimLesson(r: r, showing: lesson && !game.tankTurned, pulse: lesson && jammed != nil ? Self.pulse(frozenShake ?? s) : 0,
+                              clock: frozenClock)
+                } keyframes: { _ in Self.jolt }
+            }
             if let h = game.hint {
-                let arrow = hintArrow(center: at(hk), radius: core / 2 + 14, from: turned(hk), angle: Double(h.steps) * Tank.step)
+                let arrow = arcArrow(center: at(hk), radius: core / 2 + 14, from: turned(hk), angle: Double(h.steps) * Tank.step)
                 arrow.stroke(Color.amber.opacity(0.22), style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
                 arrow.stroke(Color.amber, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
             }
@@ -739,8 +784,10 @@ struct LevelView: View {
             ForEach(rods.indices, id: \.self) { k in
                 // On a device pixel, so the knob's ticks can be.
                 let p = at(k)
-                RodView(angle: turned(k) + (probing == k ? liveAngle : 0), size: core, seized: game.level.seized.contains(k),
-                        grabbed: lit(k))
+                KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
+                    RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
+                            size: core, seized: game.level.seized.contains(k), grabbed: lit(k))
+                } keyframes: { _ in Self.jolt }
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
             }
             .opacity(showResult ? 0 : 1)
@@ -763,7 +810,7 @@ struct LevelView: View {
         .simultaneousGesture(spinGesture, including: game.level.seized.isEmpty ? .subviews : .all)
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .sensoryFeedback(.selection, trigger: ticks)
-        .onChange(of: tankTicks) { Clunk.play() }
+        .onChange(of: tankTicks) { Knock.clunk.play() }
         .sensoryFeedback(.impact(weight: .heavy), trigger: game.cancels)
         .sensoryFeedback(.warning, trigger: game.pushes)
         .sensoryFeedback(.success, trigger: game.solved) { _, solved in solved }
@@ -830,20 +877,6 @@ struct LevelView: View {
         return spots.first { room($0) >= 0 } ?? spots.max { room($0) < room($1) }!
     }
 
-    /// An arc from the notch as long as the turn, arrowhead where the notch should stop; positive runs clockwise.
-    private func hintArrow(center c: CGPoint, radius ar: CGFloat, from notch: Double, angle: Double) -> Path {
-        let a0 = notch - Double.pi / 2, a = a0 + angle, dir = angle > 0 ? 1.0 : -1.0
-        var p = Path()
-        p.addArc(center: c, radius: ar, startAngle: .radians(a0), endAngle: .radians(a), clockwise: angle < 0)
-        let tip = CGPoint(x: c.x + ar * cos(a), y: c.y + ar * sin(a))
-        let back = CGVector(dx: sin(a) * dir * 8, dy: -cos(a) * dir * 8)
-        let wing = CGVector(dx: cos(a) * 5, dy: sin(a) * 5)
-        p.move(to: CGPoint(x: tip.x + back.dx + wing.dx, y: tip.y + back.dy + wing.dy))
-        p.addLine(to: tip)
-        p.addLine(to: CGPoint(x: tip.x + back.dx - wing.dx, y: tip.y + back.dy - wing.dy))
-        return p
-    }
-
     private func twistGesture(_ r: CGFloat) -> some Gesture {
         func norm(_ p: CGPoint) -> SIMD2<Double> { SIMD2(Double(p.x / r - 1), Double(p.y / r - 1)) }
         return DragGesture(minimumDistance: 0)
@@ -902,7 +935,7 @@ struct LevelView: View {
                 case .rod(let k): release(k)
                 case .rim: if !spun { releaseTank() }
                 case .undecided: Log.write("lifted undecided")
-                case .nothing: break
+                case .seized, .nothing: break
                 }
             }
     }
@@ -914,13 +947,18 @@ struct LevelView: View {
         switch grab {
         case .rod(let k): centre(k)
         case .rim: .zero
-        case .undecided, .nothing: nil
+        case .undecided, .seized, .nothing: nil
         }
     }
 
     /// Takes up what the drag has just come to hold, its angle counted from where the finger was first seen, so the
-    /// travel that picked a rod turns it too.
+    /// travel that picked a rod turns it too. A seized knob refuses it.
     private func hold() {
+        if case .seized(let k)? = drag?.grab {
+            jammed = k
+            jams += 1
+            Knock.thud.play()
+        }
         guard let g = drag, let pivot = pivot(g.grab) else { return }
         let d = g.from - pivot
         drag!.last = atan2(d.y, d.x)
@@ -946,25 +984,43 @@ struct LevelView: View {
     /// `slop`, it holds the rod whose turn best explains the motion: the one whose tangent at `start` lies nearest the
     /// motion's line. Near the line between two centres the tangents agree, so among those within `tie` of the best the
     /// nearest centre, in its own disc's radius, wins. A seized knob that wins holds nothing, rather than passing the
-    /// finger to a neighbour.
+    /// finger to a neighbour, and so does a finger only in seized discs, which takes the nearest.
     nonisolated static func grab(_ layout: Layout, seized: Set<Int>, from start: SIMD2<Double>, to point: SIMD2<Double>,
                                  slop: Double) -> Grab {
         if !seized.isEmpty && simd_length(start) > 0.93 { return .rim }
         let rods = layout.rods
         func centre(_ k: Int) -> SIMD2<Double> { SIMD2(rods[k].x, rods[k].y) }
-        func held(_ k: Int) -> Grab { seized.contains(k) ? .nothing : .rod(k) }
+        func held(_ k: Int) -> Grab { seized.contains(k) ? .seized(k) : .rod(k) }
+        func nearest(_ ks: [Int]) -> Int {
+            ks.min { simd_distance(start, centre($0)) / rods[$0].z < simd_distance(start, centre($1)) / rods[$1].z }!
+        }
         let under = rods.indices.filter { simd_distance(start, centre($0)) < rods[$0].z }
         guard under.count > 1 else { return under.first.map(held) ?? .nothing }
         guard simd_distance(point, start) >= slop else {
             let free = under.filter { !seized.contains($0) }
-            return free.isEmpty ? .nothing : .undecided(free)
+            return free.isEmpty ? held(nearest(under)) : .undecided(free)
         }
         let move = simd_normalize(point - start)
         // No rod's centre lies inside another's disc, so start is never on a centre it is weighed against.
         let off = under.map { asin(min(abs(simd_dot(move, simd_normalize(start - centre($0)))), 1)) }
         let best = off.min()!
-        return held(under.indices.filter { off[$0] < best + tie }.map { under[$0] }
-            .min { simd_distance(start, centre($0)) / rods[$0].z < simd_distance(start, centre($1)) / rods[$1].z }!)
+        return held(nearest(under.indices.filter { off[$0] < best + tie }.map { under[$0] }))
+    }
+
+    /// The seized knob's shake and the rim's pulse both run on this clock, in seconds.
+    @KeyframesBuilder<Double> private static var jolt: some Keyframes<Double> {
+        MoveKeyframe(0.0)
+        LinearKeyframe(1.0, duration: 1.0)
+    }
+
+    /// A seized knob's turn `s` seconds after a finger lands on it: a few degrees each way, dying out in 0.4 s.
+    nonisolated static func shake(_ s: Double) -> Double {
+        s < 0.4 ? 5 * .pi / 180 * sin(2 * .pi * s / 0.12) * (1 - s / 0.4) : 0
+    }
+
+    /// The rim's pulse `s` seconds after a seized knob is touched: up in 0.15 s, gone by 0.9 s.
+    nonisolated static func pulse(_ s: Double) -> Double {
+        s < 0.15 ? sin(.pi / 2 * s / 0.15) : s < 0.9 ? cos(.pi / 2 * (s - 0.15) / 0.75) : 0
     }
 
     /// Two fingers twisted anywhere on the tank turn it, taking over from a rod the first finger held.
@@ -1028,9 +1084,14 @@ struct LevelView: View {
     }
 }
 
-/// A step of the tank: a dull knock and a short low rumble dying under it, so it reads as neither a rod's tick nor the
-/// heal's heavy tap.
-@MainActor enum Clunk {
+/// The tank's own haptics, on one engine.
+@MainActor enum Knock {
+    /// A step of the tank: a dull knock and a short low rumble dying under it, so it reads as neither a rod's tick nor
+    /// the heal's heavy tap.
+    case clunk
+    /// A seized knob refusing a finger: heavier and duller than the clunk.
+    case thud
+
     private static var running = false
     private static let engine: CHHapticEngine? = {
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics, let engine = try? CHHapticEngine() else { return nil }
@@ -1040,28 +1101,34 @@ struct LevelView: View {
         engine.resetHandler = { @Sendable in Task { @MainActor in running = false } }
         return engine
     }()
-    private static let pattern = try? CHHapticPattern(events: [
-        CHHapticEvent(eventType: .hapticTransient, parameters: [
-            CHHapticEventParameter(parameterID: .hapticIntensity, value: 1),
-            CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.15),
-        ], relativeTime: 0),
-        CHHapticEvent(eventType: .hapticContinuous, parameters: [
-            CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.75),
-            CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.05),
-        ], relativeTime: 0.005, duration: 0.09),
-    ], parameterCurves: [
-        CHHapticParameterCurve(parameterID: .hapticIntensityControl, controlPoints: [
-            .init(relativeTime: 0, value: 1), .init(relativeTime: 0.03, value: 0.5), .init(relativeTime: 0.095, value: 0),
-        ], relativeTime: 0),
-    ])
+    private static let clunkPattern = knock(sharpness: 0.15, rumble: 0.75, length: 0.09, hold: 0.5)
+    private static let thudPattern = knock(sharpness: 0, rumble: 1, length: 0.16, hold: 0.75)
 
-    static func play() {
-        guard let engine, let pattern else { return }
-        if !running {
+    /// A transient and a rumble under it that holds at `hold` of its strength a third of the way through `length`.
+    private static func knock(sharpness: Float, rumble: Float, length: TimeInterval, hold: Float) -> CHHapticPattern? {
+        try? CHHapticPattern(events: [
+            CHHapticEvent(eventType: .hapticTransient, parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: 1),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness),
+            ], relativeTime: 0),
+            CHHapticEvent(eventType: .hapticContinuous, parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: rumble),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness / 3),
+            ], relativeTime: 0.005, duration: length),
+        ], parameterCurves: [
+            CHHapticParameterCurve(parameterID: .hapticIntensityControl, controlPoints: [
+                .init(relativeTime: 0, value: 1), .init(relativeTime: length / 3, value: hold), .init(relativeTime: length + 0.005, value: 0),
+            ], relativeTime: 0),
+        ])
+    }
+
+    func play() {
+        guard let engine = Self.engine, let pattern = self == .clunk ? Self.clunkPattern : Self.thudPattern else { return }
+        if !Self.running {
             guard (try? engine.start()) != nil else { return }
-            running = true
+            Self.running = true
         }
-        // A player per clunk, since a reset voids the old ones.
+        // A player per knock, since a reset voids the old ones.
         try? engine.makePlayer(with: pattern).start(atTime: CHHapticTimeImmediate)
     }
 }
@@ -1156,6 +1223,49 @@ struct PictureLayer: View {
             if picture.isLive { await picture.prepare(seed: seed) }
             image = picture.isLive ? UIImage() : picture.render(side: side, scale: scale)
         }
+    }
+}
+
+/// How to turn the tank, drawn over the bezel of glass of radius `r`: a two-headed amber arc just outside it at the top
+/// and a ghost finger rocking along the rim under it, one way and back, so it names the control and never the move.
+/// `pulse` (0 to 1) swells the arc, and brings it back for a moment once it has stopped showing.
+struct RimLesson: View {
+    let r: CGFloat
+    let showing: Bool
+    let pulse: Double
+    /// Holds the ghost finger this many seconds in.
+    let clock: Double?
+    private static let span = 34 * Double.pi / 180, sweep = 26 * Double.pi / 180, period = 3.6
+    /// The arc's stroke at the height of its pulse. Nothing of it, arrowheads included, lies further than this from its line.
+    static let width: CGFloat = 14
+
+    private static func radius(_ r: CGFloat) -> CGFloat { 1.045 * r + 10 }
+
+    /// Points every 2° along the arc: whatever keeps off the arc keeps off these.
+    static func arc(_ r: CGFloat) -> [CGPoint] {
+        stride(from: -span, through: span, by: .pi / 90).map { CGPoint(x: r + radius(r) * sin($0), y: r - radius(r) * cos($0)) }
+    }
+
+    var body: some View {
+        let c = CGPoint(x: r, y: r)
+        var arrow = arcArrow(center: c, radius: Self.radius(r), from: 0, angle: Self.span)
+        arrow.addPath(arcArrow(center: c, radius: Self.radius(r), from: 0, angle: -Self.span))
+        return ZStack {
+            if showing {
+                TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil)) { timeline in
+                    let a = Self.sweep * sin(2 * .pi * (clock ?? timeline.date.timeIntervalSinceReferenceDate) / Self.period)
+                    Circle().fill(Color.live.opacity(0.22))
+                        .overlay(Circle().stroke(Color.live.opacity(0.6), lineWidth: 1.5))
+                        .shadow(color: .live.opacity(0.4), radius: 6)
+                        .frame(width: 30, height: 30)
+                        .position(x: r + 1.0225 * r * sin(a), y: r - 1.0225 * r * cos(a))
+                }
+            }
+            arrow.stroke(Color.amber.opacity(0.22 + 0.3 * pulse), style: StrokeStyle(lineWidth: Self.width - 6 * (1 - pulse), lineCap: .round, lineJoin: .round))
+            arrow.stroke(Color.amber, style: StrokeStyle(lineWidth: 3 + 1.5 * pulse, lineCap: .round, lineJoin: .round))
+        }
+        .frame(width: 2 * r, height: 2 * r)
+        .opacity(showing ? 1 : pulse)
     }
 }
 

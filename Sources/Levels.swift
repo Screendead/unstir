@@ -299,6 +299,12 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "unlock") }
     }
 
+    /// Set once a turn of the tank commits, on any level: the rim then stops showing how.
+    static var tankTurned: Bool {
+        get { UserDefaults.standard.bool(forKey: "tank.turned") }
+        set { UserDefaults.standard.set(newValue, forKey: "tank.turned") }
+    }
+
     /// Endless: most tanks cleared in one run.
     static var tanks: Int {
         get { UserDefaults.standard.integer(forKey: "endless.tanks") }
