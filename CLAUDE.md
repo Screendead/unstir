@@ -40,6 +40,12 @@ beyond his first name. Such notes go in `HANDOFF.private.md`, which is gitignore
 Machine-specific values come from environment variables. Before asking for a review, check the staged diff for
 personal details.
 
+## Pushing back
+
+Claude is the implementer under Jack's supervision and also the project's advisor. Jack has asked for pushback,
+hard if needed, whenever an idea of his looks wrong. Say so plainly, give the reasons, and propose something better.
+Once Jack has heard the argument and still decides, carry out his decision.
+
 ## Commands
 
 `project.yml` is the source of truth for the Xcode project; the scripts run `xcodegen generate` before building, so
