@@ -23,7 +23,6 @@ struct Harness {
     let hint: Bool
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
-    let unlock: Bool
     let autoplay: Bool
     let bench: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
@@ -32,14 +31,35 @@ struct Harness {
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
+    /// UNSTIR_TIER=whirlpool: the tier the menu opens on, locked or not, plughole when unset. Nil on a launch without
+    /// the harness, which opens on the stored tier.
+    let menuTier: Tier?
+    /// UNSTIR_TIERDEMO: the menu switches tiers on a timer, through the calls a finger makes.
+    let tierDemo: Bool
+    /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
+    let tierSpin: (spin: Double, fade: Double)?
 
     init(_ env: [String: String]) {
-        // UNSTIR_TIER=whirlpool: the tier the menu shows and UNSTIR_LEVEL counts in; plughole when unset.
+        // UNSTIR_LEVEL counts in UNSTIR_TIER too.
         let tier = env["UNSTIR_TIER"].flatMap(Tier.init(rawValue:)) ?? .plughole
-        // Written whenever the harness runs, so a whirlpool shot does not leave the next menu shot in whirlpool.
-        if env.keys.contains(where: { $0.hasPrefix("UNSTIR_") }) {
-            UserDefaults.standard.set(tier.rawValue, forKey: "tier")
+        // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
+        // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
+        // one unlocked.
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && $0 != "UNSTIR_UNLOCK" }
+        if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
+        menuTier = harnessed ? tier : nil
+        // UNSTIR_BESTS=plughole:00-1,whirlpool:0: a best for each of a tier's levels from 01, one character each: a
+        // digit is that many over par, - is none. For this launch only.
+        for part in env["UNSTIR_BESTS"]?.split(separator: ",") ?? [] {
+            let f = part.split(separator: ":")
+            guard f.count == 2, let owner = Tier(rawValue: String(f[0])) else { continue }
+            for (level, c) in zip(owner.levels, f[1]) {
+                if let over = c.wholeNumberValue { Best(over: over, hints: 0, seconds: 60).fake(level.id) }
+            }
         }
+        tierDemo = env["UNSTIR_TIERDEMO"] == "1"
+        let spin = env["UNSTIR_TIERSPIN"]?.split(separator: ":").compactMap { Double($0) } ?? []
+        tierSpin = spin.first.map { ($0, spin.count > 1 ? spin[1] : 0) }
         bench = env["UNSTIR_BENCH"] == "1"
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
@@ -81,8 +101,7 @@ struct Harness {
             live = nil
         }
         hint = env["UNSTIR_HINT"] == "1"
-        still = env.keys.contains { $0.hasPrefix("UNSTIR_") } && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
-        unlock = env["UNSTIR_UNLOCK"] == "1"
+        still = harnessed && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
     }
 }
@@ -130,13 +149,11 @@ struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
     @Environment(\.scenePhase) private var phase
-    private let unlock: Bool
 
     init() {
         let h = Harness(ProcessInfo.processInfo.environment)
         _level = State(initialValue: h.screen == "menu" ? nil : h.level)
         _harness = State(initialValue: h)
-        unlock = h.unlock
     }
 
     var body: some View {
@@ -151,8 +168,10 @@ struct RootView: View {
                     .id(level)
                     .transition(dip)
             } else {
-                MenuView(unlock: unlock) { show($0) }
-                    .transition(dip)
+                MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin) {
+                    show($0)
+                }
+                .transition(dip)
             }
         }
         .background(Color.black)

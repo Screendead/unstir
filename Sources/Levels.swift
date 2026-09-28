@@ -43,6 +43,27 @@ enum Tier: String, CaseIterable {
         case .maelstrom: Level.maelstrom
         }
     }
+
+    /// Per level, whether its best is at or under par. Hints don't count against it.
+    func atPar(_ best: (String) -> Best? = Best.load) -> [Bool] {
+        levels.map { best($0.id).map { $0.over == 0 } ?? false }
+    }
+
+    /// Plughole always; any other tier once every level of the tier below is at par.
+    func isOpen(unlocked: Bool = Best.unlocked, _ best: (String) -> Best? = Best.load) -> Bool {
+        unlocked || below.map { $0.atPar(best).allSatisfy { $0 } } ?? true
+    }
+
+    /// The tier the menu opens on: the last one stored, or the highest open one below it if that has closed since.
+    static func stored(open: (Tier) -> Bool = { $0.isOpen() }) -> Tier {
+        let tier = UserDefaults.standard.string(forKey: "tier").flatMap(Tier.init(rawValue:)) ?? .plughole
+        return allCases.prefix(through: allCases.firstIndex(of: tier)!).last(where: open) ?? .plughole
+    }
+
+    /// A locked tier can be opened to look at, but only an open one is stored, so a look never comes back on launch.
+    static func store(_ tier: Tier, open: (Tier) -> Bool = { $0.isOpen() }) {
+        if open(tier) { UserDefaults.standard.set(tier.rawValue, forKey: "tier") }
+    }
 }
 
 struct Level: Hashable, Sendable {
@@ -248,6 +269,11 @@ struct Best: Codable {
         UserDefaults.standard.data(forKey: "best.\(id)").flatMap { try? JSONDecoder().decode(Best.self, from: $0) }
     }
 
+    /// The harness's: this launch sees it as the id's best, and it is never written to disk.
+    func fake(_ id: String) {
+        if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.register(defaults: ["best.\(id)": data]) }
+    }
+
     /// Keeps the better of this and the stored result: clean, then fewer over par, then fewer hints, then faster.
     func save(_ id: String) {
         func rank(_ b: Best) -> (Int, Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.hints, b.seconds) }
@@ -264,6 +290,13 @@ struct Best: Codable {
     static var undos: Int {
         get { 10 - UserDefaults.standard.integer(forKey: "undos.spent") }
         set { UserDefaults.standard.set(10 - newValue, forKey: "undos.spent") }
+    }
+
+    /// The developer unlock, set by a launch with UNSTIR_UNLOCK=1 and cleared by one with UNSTIR_UNLOCK=0: every tier
+    /// and every level open.
+    static var unlocked: Bool {
+        get { UserDefaults.standard.bool(forKey: "unlock") }
+        set { UserDefaults.standard.set(newValue, forKey: "unlock") }
     }
 
     /// Endless: most tanks cleared in one run.

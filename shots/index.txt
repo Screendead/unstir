@@ -1,5 +1,10 @@
-menu.png  Menu on first launch: only level 01 unlocked; daily and endless open after level 23.
+menu.png  Menu on first launch: only level 01 unlocked, whirlpool and maelstrom locked; daily and endless open after level 23.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
+menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
+menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, maelstrom still locked.
+menu-maelstrom-locked.png  Menu looking at maelstrom, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par).
+menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
+menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
 grid-d2.png  grid, depth-2 scramble 1:+5,2:-4 (rod:steps, 30 degrees per step, bottom first).
 grid-d3.png  grid, depth-3 scramble 0:-6,1:+4,2:-5 (rod:steps, 30 degrees per step, bottom first).

@@ -58,7 +58,9 @@ Once Jack has heard the argument and still decides, carry out his decision.
 edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitignored).
 
 - Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result)
-- Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's UDID, set in the shell)
+- Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
+  UDID, set in the shell). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level on the phone
+  until a run with `UNSTIR_UNLOCK=0`.
 - Tests (XCTest, on a simulator):
   ```
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
@@ -98,16 +100,20 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and checks its search
   against a brute force, the twin at the beat's peak; nothing else tests the shaders.
 - **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, maelstrom (vortex will go between the last
-  two, charybdis past maelstrom). Declaration order is the ladder, and the raw value is stored (`@AppStorage("tier")`),
-  so it never changes. Each `Level` carries its tier, and its id is the tier's `prefix` and its number (`L1`, `N1`,
-  `N+1`: whirlpool's and maelstrom's prefixes are from their old names, nightmare and nightmare+). Progress is stored by
-  id, so changing a prefix loses it unless the stored keys are remapped. Plughole has 27 hand-written levels (scramble
-  strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool deeper variants on
-  live pictures that follow a table, and maelstrom, until it has a set of its own, whirlpool's scrambles on each
-  picture's twin. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is
-  ported draw for draw from an earlier prototype, and `testDailyAndEndlessVectors` pins its output. Progress (`Best`,
-  started flags, undo bank) is kept in `UserDefaults`. A `Level` may have `seized` knobs, which ignore touch; the tank
-  turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
+  two, charybdis past maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
+  never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best at par
+  (`Tier.isOpen`: `over == 0`, hints aside). `Tier.store` keeps only an open tier, so a locked one opened to look at
+  never comes back on launch, and `Tier.stored` falls back to the highest open tier below one that has closed.
+  `Best.unlocked`, the developer unlock, opens every tier and level; a launch with `UNSTIR_UNLOCK=1` sets it and one
+  with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
+  (`L1`, `N1`, `N+1`: whirlpool's and maelstrom's prefixes are from their old names, nightmare and nightmare+). Progress
+  is stored by id, so changing a prefix loses it unless the stored keys are remapped. Plughole has 27 hand-written
+  levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
+  deeper variants on live pictures that follow a table, and maelstrom, until it has a set of its own, whirlpool's
+  scrambles on each picture's twin. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole.
+  The generator is ported draw for draw from an earlier prototype, and `testDailyAndEndlessVectors` pins its output.
+  Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`. A `Level` may have `seized` knobs, which ignore
+  touch; the tank turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, hints, clean-solve rules and the
   endless spill. `Game.commit` takes a physical knob and commits to the slot under it. `Game.turnTank` is a move that
   pushes no entry: turns in a row join, and one netting a whole turn drops. `Game.history` holds rod stirs by slot and
@@ -115,17 +121,31 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. Wins run the coarse `looksSolved` pass on the
   main actor and the fine pass off it.
+- **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
+  scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
+  dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
+  (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
+  at the swap. A drag is the switcher's only if its first 15 points run at least twice as far sideways as up or down
+  (`isSideways`); then the list stops scrolling, and a row lifted over doesn't open. While it turns, the list is drawn
+  again over the scroll view, cut to its visible part, and that copy is what stirs; the scroll view's own list
+  (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. A locked tier can be
+  looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par. A hidden stir in
+  the background builds the shader's pipeline before the first switch.
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
   twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's cells take the
   raw clock; the neural web is static per seed, built once off the main actor.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
-  (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`), level, mode, stack,
-  seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a mid-drag turn of a rod (`UNSTIR_LIVE`)
-  or the tank (`UNSTIR_TANKLIVE`), a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). This is how
-  screenshots and films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a
-  `shot` line there.
+  (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
+  even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a
+  mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a hint, the solve wave, autoplay or a
+  frame-time bench (`UNSTIR_BENCH`). For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
+  (a digit per level, that many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and
+  `UNSTIR_TIERDEMO` switches tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock
+  above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. This
+  is how screenshots and films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change,
+  add a `shot` line there.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's pictures).

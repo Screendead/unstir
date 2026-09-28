@@ -40,8 +40,19 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch: only level 01 unlocked; daily and endless open after level 23."
+shot menu "Menu on first launch: only level 01 unlocked, whirlpool and maelstrom locked; daily and endless open after level 23."
 shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1
+# The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
+par27=$(printf '0%.0s' {1..27})
+some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
+shot menu-whirlpool-locked "Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
+shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, maelstrom still locked." \
+  TIER=whirlpool BESTS=plughole:$par27
+shot menu-maelstrom-locked "Menu looking at maelstrom, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par)." \
+  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$some
+shot menu-maelstrom "Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK)." TIER=maelstrom UNLOCK=1
+shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN)." \
+  TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33
 for picture in grid; do
   for d in 1 2 3 4 5; do
     stack=${depths[$((d - 1))]}

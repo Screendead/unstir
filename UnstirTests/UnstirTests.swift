@@ -270,6 +270,72 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Tier.allCases.map(\.below), [nil, .plughole, .whirlpool])
     }
 
+    /// Plughole is always open. Each tier above opens exactly when every level of the tier just below has a best at or
+    /// under par, whatever its hints, and the developer unlock opens them all.
+    func testTierGate() {
+        var bests: [String: Best] = [:]
+        func open(_ tier: Tier, unlocked: Bool = false) -> Bool { tier.isOpen(unlocked: unlocked) { bests[$0] } }
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false])
+        for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, hints: 0, seconds: 30) }
+        XCTAssertFalse(open(.whirlpool))
+        bests[Level.plughole.last!.id] = Best(over: 1, hints: 0, seconds: 30)
+        XCTAssertFalse(open(.whirlpool))
+        XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, Array(repeating: true, count: 26) + [false])
+        bests[Level.plughole.last!.id] = Best(over: 0, hints: 3, seconds: 30)
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false])
+        // A maelstrom best opens nothing below it, and the tier just below is the only one that counts.
+        for level in Level.maelstrom { bests[level.id] = Best(over: 0, hints: 0, seconds: 30) }
+        XCTAssertFalse(open(.maelstrom))
+        for level in Level.whirlpool { bests[level.id] = Best(over: 0, hints: 0, seconds: 30) }
+        for level in Level.plughole { bests[level.id] = nil }
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true])
+        bests = [:]
+        XCTAssertEqual(Tier.allCases.map { open($0, unlocked: true) }, [true, true, true])
+
+        let flag = Best.unlocked
+        defer { Best.unlocked = flag }
+        Best.unlocked = true
+        XCTAssertTrue(Tier.allCases.allSatisfy { $0.isOpen { _ in nil } })
+        Best.unlocked = false
+        XCTAssertFalse(Tier.whirlpool.isOpen { _ in nil })
+    }
+
+    /// A locked tier opened to look at is never stored, and a stored tier that has closed since comes back as the
+    /// highest open one below it.
+    func testStoredTierIsNeverLocked() {
+        let saved = UserDefaults.standard.string(forKey: "tier")
+        defer { UserDefaults.standard.set(saved, forKey: "tier") }
+        UserDefaults.standard.removeObject(forKey: "tier")
+        var opened: Set<Tier> = [.plughole]
+        func stored() -> Tier { Tier.stored { opened.contains($0) } }
+        func store(_ tier: Tier) { Tier.store(tier) { opened.contains($0) } }
+        XCTAssertEqual(stored(), .plughole)
+        store(.whirlpool)
+        XCTAssertEqual(stored(), .plughole)
+        opened.insert(.whirlpool)
+        store(.whirlpool)
+        XCTAssertEqual(stored(), .whirlpool)
+        store(.maelstrom)
+        XCTAssertEqual(stored(), .whirlpool)
+        opened = Set(Tier.allCases)
+        store(.maelstrom)
+        XCTAssertEqual(stored(), .maelstrom)
+        opened = [.plughole, .whirlpool]
+        XCTAssertEqual(stored(), .whirlpool)
+        opened = [.plughole]
+        XCTAssertEqual(stored(), .plughole)
+    }
+
+    /// A drag switches tiers only when its first move runs at least twice as far sideways as up or down; anything
+    /// steeper stays the scroll view's.
+    func testOnlyASidewaysDragSwitchesTiers() {
+        XCTAssertTrue(MenuView.isSideways(CGSize(width: -15, height: 0)))
+        XCTAssertTrue(MenuView.isSideways(CGSize(width: 15, height: -7)))
+        XCTAssertFalse(MenuView.isSideways(CGSize(width: 14, height: 7)))
+        XCTAssertFalse(MenuView.isSideways(CGSize(width: -11, height: 11)))
+        XCTAssertFalse(MenuView.isSideways(CGSize(width: 0, height: -15)))
+    }
+
     /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one. The
     /// prefixes predate the tiers' names and stay, so a rename keeps what was played.
     func testLevelIdsMatchTheirTier() {
