@@ -16,8 +16,8 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
 
 - **Branch and PR for every change.** Never commit to `master`. Jack has given standing permission to create branches
   and open PRs without asking.
-- **Commit only after Jack reviews.** When a feature or a round of ideation is finished, stage it and ask Jack to review
-  the staged diff. Commit once he's reviewed it, not before, and not partway through the work.
+- **Jack reviews at the PR.** When a feature or a round of ideation is finished, commit it and open the PR without
+  asking first (Jack, 2026-09-28). Don't commit partway through the work.
 - **Atomic commits.** Changes that belong together go in one commit. Separate changes go in separate commits, even when
   that means splitting one file's diff line by line (`git add -p` is interactive, so build the partial patch and use
   `git apply --cached`).
@@ -40,8 +40,8 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
 The repo is public. Nothing personal or confidential goes into a tracked file, a commit message or a PR: no device
 UDIDs, account or membership status, money, usage history, email addresses, local paths or anything else about Jack
 beyond his first name, except his full name in the copyright line below. Such notes go in `HANDOFF.private.md`, which
-is gitignored and exists only on this Mac. Machine-specific values come from environment variables. Before asking for
-a review, check the staged diff for personal details.
+is gitignored and exists only on this Mac. Machine-specific values come from environment variables. Before committing,
+check the staged diff for personal details.
 
 Every `.swift`, `.metal` and `.sh` file opens with `Copyright © 2026 Jack Lusher. All rights reserved.` as a comment,
 after a script's shebang. The code is all rights reserved: never add an open-source licence.
