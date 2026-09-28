@@ -1,0 +1,42 @@
+name: Unstir
+options:
+  bundleIdPrefix: com.screendead
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: 8N575942RT
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+targets:
+  Unstir:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: 1
+    info:
+      path: Sources/Info.plist
+      properties:
+        UILaunchScreen: {}
+        CADisableMinimumFrameDurationOnPhone: true
+        UIUserInterfaceStyle: Dark
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+  UnstirTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [UnstirTests]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: Unstir
+schemes:
+  Unstir:
+    build:
+      targets:
+        Unstir: all
+        UnstirTests: [test]
+    test:
+      targets: [UnstirTests]
