@@ -1,3 +1,5 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
 import Foundation
 import simd
 
@@ -75,6 +77,38 @@ enum Layout: String, CaseIterable {
             .hex: [SIMD3(0, 0, 0.44)] + ring(6, 0.56, 0.44),
         ]
     }()
+
+    /// Steps in one full turn of the tank. A step is the layout's rotational symmetry (hex's hub held still), so it sets
+    /// every rod's fluid down on a rod of the same size.
+    var order: Int {
+        switch self {
+        case .tri: 3
+        case .quad: 4
+        case .eye: 2
+        case .pent: 5
+        case .hex: 6
+        }
+    }
+    var tankStep: Double { 2 * .pi / Double(order) }
+
+    /// After one step of the tank clockwise, knob k sits over the fluid that rod `behind[k]` stirs.
+    private var behind: [Int] {
+        switch self {
+        case .tri: [2, 0, 1]
+        case .quad: [3, 0, 1, 2]
+        case .eye: [1, 0, 3, 2]
+        case .pent: [4, 0, 1, 2, 3]
+        case .hex: [0, 6, 1, 2, 3, 4, 5]
+        }
+    }
+
+    /// The rod whose fluid sits under knob k with the tank `position` steps clockwise of home: the stack names that rod.
+    func slot(of knob: Int, at position: Int) -> Int {
+        (0..<(position % order + order) % order).reduce(knob) { k, _ in behind[k] }
+    }
+
+    /// The knob over rod `slot`'s fluid.
+    func knob(over slot: Int, at position: Int) -> Int { self.slot(of: slot, at: -position) }
 
     func overlaps(_ i: Int, _ j: Int) -> Bool {
         let a = rods[i], b = rods[j]

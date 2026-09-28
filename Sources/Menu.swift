@@ -1,3 +1,5 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
 import SwiftUI
 
 private let neonSweep = LinearGradient(colors: [.neonCyan, .magenta, .amber], startPoint: .leading, endPoint: .trailing)
@@ -77,7 +79,7 @@ struct MenuView: View {
                     .frame(width: 34, alignment: .leading)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(level.title).font(.mono(14)).multilineTextAlignment(.leading)
-                    Text(detail ?? "\(level.layout.rods.count) rods \u{00B7} par \(level.scramble.count)").font(.mono(11)).opacity(0.32)
+                    Text(detail ?? "\(level.layout.rods.count) rods \u{00B7} par \(level.par)").font(.mono(11)).opacity(0.32)
                 }
                 .opacity(enabled ? 1 : 0.38)
                 Spacer(minLength: 8)

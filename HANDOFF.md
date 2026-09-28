@@ -14,18 +14,18 @@ this is analysis. No code has changed for it.
 | Item | State |
 |---|---|
 | Competitor scan | Done 2026-09-28, quick pass (see below) |
-| Business-model recommendation | Proposed 2026-09-28; **Jack has not decided** |
+| Business-model recommendation | Jack ruled out paying to unlock tiers (2026-09-28). Jack wants **picture packs with their own tanks** as paid content, best with new mechanics; an archive of past dailies, a supporter mark and a tip jar are agreed (2026-09-28). Undos are never part of the paid side: free for everyone at +2 per playing day (see "Thoughts"). Packs stay outside the ladder and never open a tier. Rewarded ads for an undo top-up stay in reserve, only if TestFlight shows banks running dry. A single "Unstir+" purchase may not be needed |
 | Monetisation code | None. No StoreKit, ads or sharing in `Sources/` |
-| Undo bank | Starts at 10 and nothing refills it (`Sources/Levels.swift:210`). This is the pricing hook, and it is still open |
+| Undo bank | Starts at 10 and nothing refills it yet (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10 |
 | TestFlight | Not started |
 | CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
-| Difficulty tiers | In progress on branch `difficulty`; see "Side task" below |
+| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice is on branch `turning-tank`; see "Side task" below |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
 | Architecture pass | Queued after the performance pass (Jack, 2026-09-28); see below |
-| Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB. `difficulty` is PR #2; see below |
-| README | Asked for (Jack, 2026-09-28); written after the media clean-up; see below |
-| Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain); see below |
+| Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
+| README | Asked for (Jack, 2026-09-28); on branch `housekeeping`, with the four suggested images (Jack's pick); see below |
+| Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). On branch `housekeeping`; see below |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 ### The plan
@@ -38,7 +38,7 @@ this is analysis. No code has changed for it.
    See whether anyone cares before spending money.
 4. **Choose the model from what testers do**, then set up the App Store page, preview video and a featuring request.
 
-### Recommended model (not decided)
+### Recommended model (Jack ruled it out, 2026-09-28: he won't put tiers behind a purchase)
 
 Free, with one purchase that unlocks the rest (full campaign, Nightmare and Nightmare+, endless). The daily stays free
 for good because it is the marketing. Undos refill daily and are never sold.
@@ -51,12 +51,45 @@ from Nightmare to Nightmare+ is easy to miss.
 
 | Item | State |
 |---|---|
-| Nightmare on the live background | Done and reviewed; committed on `difficulty`, not pushed. The baked cracked glass is deleted |
-| More live backgrounds | Set, palettes, twins and level table decided (below); all ten ported with the heartbeat in the twins' lines, tests passing; Jack approved the films and the cost. Staged for review. `fillEntries` stay Mac-measured: no phone benches until the performance pass (Jack) |
-| Nightmare+ design | Recommended below; **Jack has not decided** |
-| The way in | Recommended below; **Jack has not decided** |
+| Nightmare on the live background | Merged 2026-09-28 (PR #2). The baked cracked glass is deleted |
+| More live backgrounds | Set, palettes, twins and level table decided (below); all ten ported with the heartbeat in the twins' lines, tests passing; Jack approved the films and the cost. Merged 2026-09-28 (PR #2). `fillEntries` stay Mac-measured: no phone benches until the performance pass (Jack) |
+| Nightmare+ design | The seized rod and the turning tank (Jack, 2026-09-28). First slice on `turning-tank`, 33 tests passing. Go/no-go shots pass: seams land concentric after a turn, and a finished outer ring reads on hex glass (the hub doesn't, but it never moves or seizes). On the phone (Jack, 2026-09-28): the rim is easy to grab, two fingers always turn the tank, he plans where to park the dead knob, and he likes the glass easing home after the solve. The tank clicks felt featherweight: each tank step now plays a Core Haptics clunk (a hard knock and a 90 ms low rumble), and Jack finds it great. The first step after launch or a return from background may hitch a frame while the engine restarts. Pars must come from a solver of the ending-on-the-last-heal rule: the temporary table used the old model's pars, which counted a final turn home, so Jack finished a move under par |
+| The way in | Jack wants switching tiers easier to find and on-brand, perhaps by stirring between them (2026-09-28); mock-ups next |
 
-**Recommended Nightmare+ (not decided): the seized rod and the turning tank.** N+k is Nightmare k's scramble with one
+**Jack's calls (2026-09-28).**
+- Nightmare+ becomes the seized rod and the turning tank, below. Bookkeeping stays the fallback if the go/no-go fails
+  (a finished ring doesn't read on hex glass, or the rim drag feels wrong on the phone).
+- The level ends on the last heal, with no turn home, so no notch or home index. This was Claude's recommendation;
+  Jack said to build the recommended rule, and Claude has taken it as included.
+- Only tanks that need and work with the new skill go in the tier, and they are a new set built around it; the old
+  N+ scrambles (Nightmare's, reused) are scrapped. Tri and eye can't carry the skill, so the set is quad, pent and hex.
+- The tiers are renamed **plughole** (the campaign), **whirlpool** (Nightmare) and **maelstrom** (Nightmare+). The
+  ladder leaves room for two more: **vortex** between whirlpool and maelstrom, and **charybdis** beyond maelstrom.
+- Each tier opens when every level of the tier below is done at par.
+- **Hints go** (Jack): undos are the help, and a player who can't reach par with them hasn't earned the next tier. Par
+  stays reachable by persistence alone, since a reset is free. Removing them also spares maelstrom a hint of its own.
+- **Plughole gets easier** (Jack agreed to Claude's proposal): keep levels 1–13 as they are; take the pent and hex
+  levels down to about 7 and 9 stirs, with fewer quiet stirs hidden under loud ones. Measure every level first with
+  the maelstrom solver (stirs, hidden stirs, choices per step) and show Jack the table. Jack's own results, the only
+  play data so far, are in `HANDOFF.private.md`.
+- **A wrong stir turned straight back stays free** (Jack, for now): a slip of 30° is too easy, and charging it would
+  upset players chasing every clean. So par and the gates measure persistence as much as reading: a player can try
+  each rod, turn back each red flash and never go over par (the free test; simulated on endless tanks).
+- **Endless changes rules** (Jack): no undo, no hints, no par; just unstir each tank, however many moves and however
+  long it takes. It ramps a little faster and goes much deeper. Jack likes a capacity limit, the tank's brim, if it
+  is truly intuitive, always visible and on-theme; he rejected draining the picture's colour (it hurt the read and
+  looked sharper, not blended). The gauge must never touch the picture before the spill. Open: whether the level
+  counts the stirs in the tank (a careful player who turns back every red flash never spills) or the wrong stirs
+  let go (they stay counted after a turn back; heals settle it). Jack wants the two side by side before deciding. Of
+  three gauge looks, a tide up the rim, a side-on profile under the tank and a measuring jug on the rim, he finds the
+  profile clearest but isn't sold on any yet.
+- Switching between tiers must be easier to find than today's header toggles, and on-brand. Jack's idea: stir
+  between modes.
+- Order of work: the go/no-go slice (`turning-tank`), the switcher as mock-ups for Jack to pick, the rename, then the
+  level set, whose table (layout, depth, seized knobs, par, planning gap, picture) goes to Jack before it is written
+  into `Levels.swift`.
+
+**Recommended Nightmare+ (chosen 2026-09-28): the seized rod and the turning tank.** N+k is Nightmare k's scramble with one
 or two seized knobs (never the hub). The whole tank turns one rod over (the layout's symmetry: 120°, 90°, 180°, 72°,
 60°), carrying seams under working knobs; a knob untwists whatever seam sits under it, exactly (a rigid turn maps a
 twist on one rod onto the rod it lands on). A tank stir is one move and adds no stack entry. The new skill is routing:
@@ -222,9 +255,9 @@ compress, so every re-render added its full size for good, and every clone and C
 - Order: untrack the media in a commit before the rewrite, so the rewrite's reset leaves the files on disk. Keep a
   throwaway bundle in the scratchpad until the push is checked.
 - GitHub keeps PR #1's own ref to the old commits, so their media stays on that PR page; clones and CI don't fetch it.
-- Kept in git: a few README images at 440 px wide as WebP, 40–50 KB each. Claude's suggested set: `grid-d2-right-half`
-  (the mechanic, mid-drag), `level05` (sunset), `level27` (deep hex) and `nightmare24-chainmail`. **Jack has not
-  picked.** There is no README yet.
+- Kept in git: four README images in `docs/images/`, 440 px wide as WebP, 40–55 KB each: `grid-d2-right-half`
+  (the mechanic, mid-drag), `level05` (sunset), `level27` (deep hex) and `nightmare24-chainmail`, Claude's suggestion,
+  which Jack kept.
 - Pictures for a PR get attached to its description or comments, not committed. GitHub has no API for those
   attachments, so it takes the browser: Chrome's file upload into the comment box works (PR #2), with Jack signed in
   to GitHub there. Videos must stay under 10 MB; crop films to the tank and re-encode.
@@ -272,6 +305,12 @@ discrete 30° steps against a par.
 - **No revenue forecast.** There are no reliable numbers for this niche, and a made-up forecast is worse than none.
   Most indie puzzle games earn little; the few that do well usually got a viral moment or Apple featuring.
 - **The biggest unknown is whether strangers find it fun.** Step 1 answers that cheaply.
+- **Should a paid tier include undos?** Jack doubts it (2026-09-28): a player who pays for a premium version
+  probably doesn't want more "cheats", and payers are likely the better players. Claude's view: in free-to-play
+  generally, the most engaged players do buy help at the hardest content (inferred, no figures); but in Unstir an undo
+  only saves replaying, since resets are free, so it is weak value, and selling help clashes with the earned ladder.
+  Fans pay for more of what they love: new tanks, pictures and mechanics. So undos stay free (+2 per playing day),
+  and the paid side is packs, the archive and support.
 
 ## Set aside, with reasons
 
@@ -292,6 +331,10 @@ would feel like it was selling the answers, and reviews punish that. Daily refil
 
 The highest possible revenue, but it breaks the clean-solve feel, looks like the clones this game has to stand apart
 from, and works against Apple featuring. Revisit only if the unlock plus the daily both clearly fail.
+
+Picked back up 2026-09-28: Jack ruled out the unlock. Undos are never sold: everyone gets +2 a playing day, capped
+at 10. The paid side is picture packs with their own tanks, an archive of past dailies, a supporter mark and a tip
+jar. Rewarded ads that grant undos stay in reserve.
 
 ### R4 — Picking the model before TestFlight
 

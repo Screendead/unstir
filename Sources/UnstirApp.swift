@@ -1,3 +1,5 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
 import SwiftUI
 
 @main
@@ -14,6 +16,10 @@ struct Harness {
     let screen: String
     let level: Level
     let live: (rod: Int, steps: Double)?
+    /// UNSTIR_TANK=n: the tank turned n steps, through the real path.
+    let tank: Int
+    /// UNSTIR_TANKLIVE=degrees: a turn of the tank held mid-drag, on top of UNSTIR_TANK.
+    let tankLive: Double?
     let hint: Bool
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
@@ -63,7 +69,13 @@ struct Harness {
             level.layout = env["UNSTIR_LAYOUT"].flatMap(Layout.init(rawValue:)) ?? level.layout
             level.scramble = .parse(s, in: level.layout)
         }
+        // UNSTIR_SEIZED=1,4: those knobs seized.
+        if let s = env["UNSTIR_SEIZED"] {
+            level.seized = Set(s.split(separator: ",").compactMap { Int($0) }.filter(level.layout.rods.indices.contains))
+        }
         self.level = level
+        tank = env["UNSTIR_TANK"].flatMap(Int.init) ?? 0
+        tankLive = env["UNSTIR_TANKLIVE"].flatMap(Double.init)
         let f = env["UNSTIR_LIVE"]?.split(separator: ":") ?? []
         if f.count == 2, let rod = Int(f[0]), level.layout.rods.indices.contains(rod), let steps = Double(f[1]) {
             live = (rod, steps)

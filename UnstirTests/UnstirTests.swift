@@ -1,3 +1,5 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
 import Metal
 import os
 import struct SwiftUI.EnvironmentValues
@@ -408,6 +410,113 @@ final class UnstirTests: XCTestCase {
                 XCTAssertEqual([n[0], n[1], n[2]], [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(plus == 1 ? " twin" : "")")
             }
         }
+    }
+
+    /// The glass turned by `angle` clockwise about the centre, as the shader turns it.
+    private func turned(_ p: SIMD2<Double>, _ angle: Double) -> SIMD2<Double> {
+        SIMD2(p.x * cos(angle) - p.y * sin(angle), p.x * sin(angle) + p.y * cos(angle))
+    }
+
+    /// Each step of the tank sets every rod's centre down on a rod of the same size, the hub on itself, and `order` steps
+    /// come back round.
+    func testTankStepsLandRodsOnRodsOfTheSameSize() {
+        for layout in Layout.allCases {
+            let rods = layout.rods
+            XCTAssertEqual(Double(layout.order) * layout.tankStep, 2 * .pi, accuracy: 1e-12)
+            for f in -layout.order...(2 * layout.order) {
+                let slots = rods.indices.map { layout.slot(of: $0, at: f) }
+                XCTAssertEqual(Set(slots).count, rods.count, "\(layout) at \(f) is not a permutation")
+                XCTAssertEqual(slots, rods.indices.map { layout.slot(of: $0, at: f + layout.order) })
+                for (k, j) in slots.enumerated() {
+                    XCTAssertEqual(layout.knob(over: j, at: f), k)
+                    let c = turned(SIMD2(rods[j].x, rods[j].y), Double(f) * layout.tankStep)
+                    XCTAssertLessThan(simd_distance(c, SIMD2(rods[k].x, rods[k].y)), 1e-12, "\(layout) knob \(k) at \(f)")
+                    XCTAssertEqual(rods[j].z, rods[k].z)
+                }
+            }
+            XCTAssertNotEqual(layout.slot(of: 1, at: 1), 1, "\(layout) does not turn")
+        }
+        XCTAssertTrue((0..<6).allSatisfy { Layout.hex.slot(of: 0, at: $0) == 0 })
+    }
+
+    /// Turning knob k on the turned glass does exactly what turning its slot does to the picture underneath: the glass's
+    /// turn carries the slot's twist onto the knob. Every layout, position and rod, on the points merges are judged on.
+    func testTurnedTankConjugatesTwists() {
+        for layout in Layout.allCases {
+            let rods = layout.rods
+            for f in 0..<layout.order {
+                let angle = Double(f) * layout.tankStep
+                for k in rods.indices {
+                    let slot = layout.slot(of: k, at: f), a = 5 * Tank.step
+                    let worst = Tank.samples.map { p in
+                        simd_distance(turned(Tank.twist(p, rod: rods[slot], angle: a), angle), Tank.twist(turned(p, angle), rod: rods[k], angle: a))
+                    }.max()!
+                    XCTAssertLessThan(worst, 1e-12, "\(layout) knob \(k) at \(f)")
+                }
+            }
+        }
+    }
+
+    /// A turn of the tank is one move and pushes nothing. Turns in a row join, and a joined turn netting a whole turn is
+    /// gone, so turning away, probing and turning back costs nothing. Undo takes a turn back; reset goes home.
+    @MainActor func testTankStirs() {
+        let level = Level(id: "test-tank", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0], fixedPar: 2)
+        let game = Game(level: level)
+        game.turnTank(1)
+        game.turnTank(1)
+        XCTAssertEqual(game.history, [Twist(rod: Game.tank, steps: -1)])
+        XCTAssertEqual(game.stack, level.scramble)
+        game.turnTank(1)
+        XCTAssertEqual(game.moves, 0)
+        XCTAssertEqual(game.position % 3, 0)
+        game.turnTank(3)
+        XCTAssertEqual(game.moves, 0)
+
+        game.turnTank(-2)
+        XCTAssertEqual(game.position, 1)
+        // Knob 1 now sits over rod 0's fluid; a knob turned apart from a turn of the tank is a stir of its own.
+        XCTAssertEqual(game.slot(of: 1), 0)
+        game.commit(rod: 1, steps: 2)
+        game.turnTank(1)
+        XCTAssertEqual(game.moves, 3)
+        XCTAssertEqual(game.history, [Twist(rod: Game.tank, steps: 1), Twist(rod: 0, steps: 2), Twist(rod: Game.tank, steps: 1)])
+        game.undo()
+        XCTAssertEqual(game.position, 1)
+        game.undo()
+        XCTAssertEqual(game.stack, level.scramble)
+        XCTAssertEqual(game.moves, 1)
+        game.reset()
+        XCTAssertEqual(game.position, 0)
+        XCTAssertEqual(game.moves, 0)
+
+        game.turnTank(1)
+        game.commit(rod: 1, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertEqual(game.moves, 2)
+        XCTAssertEqual(game.par, 2)
+        XCTAssertEqual(game.over, 0)
+    }
+
+    /// A seized knob refuses a turn even over fluid a working knob could take off; no level seizes the hub, which no turn
+    /// of the tank moves.
+    @MainActor func testSeizedKnobs() {
+        let game = Game(level: Level(id: "test-seized", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0]))
+        game.commit(rod: 0, steps: -4)
+        XCTAssertEqual(game.moves, 0)
+        XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 4)])
+        XCTAssertNil(game.reachable)
+        game.turnTank(1)
+        XCTAssertEqual(game.reachable, Twist(rod: 1, steps: -4))
+        for level in Level.all + Level.nightmare + Level.nightmarePlus {
+            XCTAssertTrue(level.seized.isSubset(of: level.layout.rods.indices), level.id)
+            XCTAssertLessThanOrEqual(level.seized.count, 2, level.id)
+            if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }
+        }
+    }
+
+    /// Until the seized levels set their own, par is one move per entry everywhere.
+    func testParIsTheScrambleUnlessSet() {
+        for level in Level.all + Level.nightmare + Level.nightmarePlus { XCTAssertEqual(level.par, level.scramble.count, level.id) }
     }
 
     /// From the prototype, so the Swift generator draws exactly as it does.

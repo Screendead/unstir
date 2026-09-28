@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/film.sh [pattern]   Records the animations in the simulator into shots/film/, each with a frame strip.
 set -euo pipefail
 cd "$(dirname "$0")/.."

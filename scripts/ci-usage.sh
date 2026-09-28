@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright © 2026 Jack Lusher. All rights reserved.
 # Prints how much of this month's GitHub Actions allowance is left. Needs `gh` with the `user` scope.
 # Public repos run free, so only private-repo minutes count, at GitHub Free's 2,000 and its multipliers
 # (Linux 1x, Windows 2x, macOS 10x).

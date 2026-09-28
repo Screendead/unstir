@@ -67,3 +67,14 @@ nightmare-plus24-chainmail.png  Nightmare+ level 24 (chainmail+) with its full s
 nightmare-plus16-coral.png  Nightmare+ level 16 (coral+) with its full scramble.
 nightmare-plus20-neurons.png  Nightmare+ level 20 (neurons+) with its full scramble.
 nightmare-plus25-marbling.png  Nightmare+ level 25 (marbling+) with its full scramble.
+seized-n01-home.png  Nightmare+ 01 (tri) with knob 0 seized, tank at home.
+seized-n01-turned.png  Nightmare+ 01 (tri) with knob 0 seized, tank turned one step (120 degrees clockwise): the seams around knob 0 now ring knob 1.
+seized-n09-home.png  Nightmare+ 09 (square) with knob 1 seized, tank at home.
+seized-n09-turned.png  Nightmare+ 09 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2.
+seized-n23-home.png  Nightmare+ 23 (hex) with knobs 2 and 5 seized, tank at home.
+seized-n23-turned.png  Nightmare+ 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays.
+seized-n23-half.png  Nightmare+ 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round.
+seized-ring3-finished.png  Hex twin glass, 14 entries (1:+4,0:-3,2:+5,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3), none on rod 3: its ring is finished.
+seized-ring3-buried.png  The same with 3:+2 buried fourth from the bottom (1:+4,0:-3,2:+5,3:+2,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3): rod 3's ring is not finished.
+seized-hub-finished.png  Hex twin glass, 14 entries (2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4), none on the hub: its ring is finished.
+seized-hub-buried.png  The same with 0:+2 buried third from the bottom (2:+4,3:-3,0:+2,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4): the hub's ring is not finished.

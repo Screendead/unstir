@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/pull-log.sh [--sim] [destination]   Copies the recorder's log off the phone (or the booted simulator).
 # UNSTIR_DEVICE names the phone (a UDID from `xcrun devicectl list devices`). The default destination is unstir-log.txt in the current directory.
 set -euo pipefail
