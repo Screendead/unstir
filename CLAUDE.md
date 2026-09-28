@@ -25,9 +25,10 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   to merge the PR.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
-  Pushing to a branch with no open PR builds nothing. `.github/workflows/codeql.yml` scans every PR to `master`,
-  `*.md`-only ones too, since the `master` ruleset won't merge a PR without its result, and every push to `master`,
-  which only merges make. Never add a `push:` trigger for any other branch: it builds every push, PR or not. Keep
+  Pushing to a branch with no open PR builds nothing. `.github/workflows/codeql.yml` scans the workflows on every PR to
+  `master`, `*.md`-only ones too, in case the `master` ruleset requires code scanning. It scans Swift, which takes
+  about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
+  other branch: it builds every push, PR or not. Keep
   commits local until the next build is worth paying for. If a build takes more than
   5 minutes, raise it with Jack: the approach to builds needs rethinking.
 - **Watch CI spend.** Before each push that builds, run `scripts/ci-usage.sh`, which prints this month's GitHub Actions
@@ -64,6 +65,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
+- Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
 
 ## Architecture
