@@ -43,10 +43,17 @@ level16.png  Level 16 with its full scramble and its note.
 inversion-L12.png  Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers.
 inversion-L27.png  Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6.
 daily.png  Today's daily.
-endless.png  Endless, first tank of the run seeded 7.
-endless-brim.png  Endless, first tank, opened with 5 of the brim's 8 notches: the brim and the tank where moves and par were, no undo or reset.
+endless.png  Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title.
+endless-brim.png  Endless, first tank, opened with 5 of the brim's 8 notches: the picture's own colours in the bezel up to the fifth tick on both sides, glowing onto the black; the tank where moves and par were, no undo or reset.
+endless-brim-7.png  Endless opened at 7 notches, one from spilling, held 0.38 s into the brim pin's pulse, at its peak: the filled arc's bloom at its strongest, fading out on the black.
+endless-notch.png  Endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 arriving, held 0.2 s in, its colour spreading out across the bezel behind a glint.
+endless-notch-surge.png  The same, 0.5 s in: the new arc filled, its light running on past the rim onto the black.
+endless-heal.png  Endless opened at 5 notches, then rod 0 turned +3, which heals the tank's top stir: the level settling to the fourth tick, held 0.35 s in, a wet film where it stood.
 endless-cleared.png  Endless, first tank opened at 5 notches and cleared by the harness after two wasted stirs (2 notches) and five heals: the card shows the brim at 2.
-endless-spilled.png  Endless, first tank opened at 7 notches, then rod 1 turned +1, which pushes: the brim spills, and the card shows tanks cleared and the best.
+endless-spill-crest.png  Endless opened at 7 notches, then rod 1 turned +1, a push: the brim spills. Held 0.7 s in: the fronts have met at the brim pin, and a crest swells over the lip at twelve, the pin on top of it.
+endless-spill-pour.png  The same, 1.1 s in: the crest has broken and the liquid pours down the outside of the rim either way, a wave behind a bead at each head; the picture starts to stir together.
+endless-spill-drip.png  The same, 2 s in: the runs have slowed just past three and nine o'clock and a drop falls from each head onto the black.
+endless-spilled.png  The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best.
 undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.

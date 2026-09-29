@@ -135,6 +135,8 @@ final class Game {
     /// stays when the stir is turned back; a heal of one of the scramble's own entries settles one, and cancelling the
     /// player's own push does not. Full, it spills the run.
     private(set) var brim: Int
+    /// Every change of `brim`, for the rim to play.
+    private(set) var brimEvents: [Brim.Event] = []
 
     init(level: Level, tankTurned: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil) {
         self.level = level
@@ -179,6 +181,7 @@ final class Game {
             : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
                              popped: { if !$0.pushed { healed += 1 } })
         guard result != .refused else { Log.write("commit \(Twist(rod: rod, steps: steps)) refused"); return }
+        let brimWas = brim
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
         if open, history.last?.rod == slot {
             history[history.count - 1].steps += steps
@@ -195,6 +198,7 @@ final class Game {
         }
         if result == .cancelled { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
+        noteBrim(from: brimWas)
         Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
                   + "\(level.run == nil ? "" : "brim=\(brim) ")stack=\(stack.count) \(stack)")
         settle(healed: healed > 0)
@@ -202,6 +206,10 @@ final class Game {
 
     private func settleBrim(_ heals: Int) {
         if level.run != nil { brim = max(brim - heals, 0) }
+    }
+
+    private func noteBrim(from was: Int) {
+        if brim != was { brimEvents.append(Brim.Event(from: was, to: brim, time: Date.now.timeIntervalSinceReferenceDate)) }
     }
 
     /// The tank stir a turn of `steps` would leave open: joined to the open one, a whole turn dropped, and the short way
@@ -322,6 +330,14 @@ final class Game {
             .first { !level.seized.contains($0.rod) }
     }
 
+    /// A knob's two-step turn that would push a new entry, a red flash: what the harness's brim demo wastes.
+    var wasting: Twist? {
+        level.layout.rods.indices.filter { !level.seized.contains($0) }.lazy.compactMap { k -> Twist? in
+            var s = self.stack
+            return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout) == .pushed ? Twist(rod: k, steps: 2) : nil
+        }.first
+    }
+
     /// `healed`: the move that led here healed one of the scramble's entries.
     private func settle(healed: Bool = false) {
         // Refusing a win the picture already shows is the bug players hit, and a residual under half a pixel is invisible.
@@ -337,7 +353,11 @@ final class Game {
                 if solved {
                     Log.write("looks solved \(stack)")
                     // The tank's last heal, where the move that made it healed none of the scramble's entries itself.
-                    if !healed && self.entries.contains(where: { !$0.pushed }) { self.settleBrim(1) }
+                    if !healed && self.entries.contains(where: { !$0.pushed }) {
+                        let was = self.brim
+                        self.settleBrim(1)
+                        self.noteBrim(from: was)
+                    }
                     self.entries = []
                 }
                 self.finish()
@@ -423,6 +443,13 @@ struct LevelView: View {
     private let today: String?
     /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
+    /// Endless: the picture's colours round the rim as the stack stirs it (Brim.colours), once worked out.
+    @State private var rimColours: (hue: [Float], lines: [Float])?
+    /// Endless: the brim changed lately enough that the rim is still moving.
+    @State private var brimMoving = false
+    /// The picture has landed and struck.
+    @State private var struck = false
+    private let brimDemo: Bool
     let onExit: () -> Void
     let onNext: (Level) -> Void
 
@@ -468,10 +495,13 @@ struct LevelView: View {
             case .undecided, .nothing: break
             }
         }
-        _showResult = State(initialValue: game.finished && harness?.wave == nil)
+        // A spill's card waits for the pour, so a harness launch that spills shows it only if held past then.
+        _showResult = State(initialValue: game.finished && harness?.wave == nil
+                            && (!game.spilled || (harness?.clock ?? 0) >= Brim.card))
         _eased = State(initialValue: game.solved)
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
+        brimDemo = harness?.brimDemo ?? false
         bench = harness?.bench ?? false
         frozenWave = harness?.wave
         frozenClock = harness?.clock
@@ -495,28 +525,25 @@ struct LevelView: View {
                         // A turn in hand, or snapping to commit, names a rod of the current layout.
                         control(game.level.layout.rawValue) { if liveRod == nil { game.nextLayout() } }
                     } else {
-                        VStack(alignment: .trailing, spacing: 4) {
-                            // Endless has no par: the brim stands in for the moves, and takes the red flash that fills it.
-                            Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)"
-                                 : "brim \(game.brim) / \(Run.room)")
-                                // On black the wasted-twist alarm reads at full contrast, whatever the picture shows.
-                                .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { text, t in
-                                    text.foregroundStyle(t > 0.5 ? Color.alarm : Color.text)
-                                } keyframes: { _ in
-                                    // Red for 0.4 s. A trailing MoveKeyframe never lands, so the ramp ends the flash.
-                                    MoveKeyframe(1.0)
-                                    LinearKeyframe(0.0, duration: 0.8)
-                                }
-                            if let run = game.level.run { Text("tank \(run.tank + 1)") }
-                        }
-                        .opacity(showResult ? 0 : 1)
+                        // Endless has no par; its brim is on the rim.
+                        Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
+                            // On black the wasted-twist alarm reads at full contrast, whatever the picture shows.
+                            .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { text, t in
+                                text.foregroundStyle(t > 0.5 ? Color.alarm : Color.text)
+                            } keyframes: { _ in
+                                // Red for 0.4 s. A trailing MoveKeyframe never lands, so the ramp ends the flash.
+                                MoveKeyframe(1.0)
+                                LinearKeyframe(0.0, duration: 0.8)
+                            }
+                            .opacity(showResult ? 0 : 1)
                     }
                 }
                 .font(.mono(13))
                 .padding(.top, 8)
                 HStack(alignment: .firstTextBaseline, spacing: 14) {
                     Text(game.level.label).foregroundStyle(game.level.colour).shadow(color: game.level.colour, radius: 4)
-                    Text(game.level.title)
+                    // Endless's tank beside its name, where it can't read as the brim's count.
+                    Text(game.level.title + (game.level.run.map { ", tank \($0.tank + 1)" } ?? ""))
                 }
                 .font(.mono(15, .medium))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -525,8 +552,9 @@ struct LevelView: View {
                 let reveal = AnyTransition.opacity.animation(.easeOut(duration: 0.4).delay(0.3))
                 tank(side)
                     .overlay(alignment: .top) {
-                        if showResult {
-                            Text(game.solved ? "unstirred." : "spilled.").font(.mono(22, .semibold))
+                        // A spill says so over the tank itself.
+                        if showResult && game.solved {
+                            Text("unstirred.").font(.mono(22, .semibold))
                                 .shadow(color: .white.opacity(0.5), radius: 6)
                                 .offset(y: -62)
                                 .transition(reveal)
@@ -575,6 +603,30 @@ struct LevelView: View {
         .task(id: replays) {
             if !game.level.sandbox, replays > 0 || !still { await open() }
             if autoplay && replays == 0 { await play() }
+            if brimDemo && replays == 0 { await demo() }
+        }
+        .task(id: game.stack) {
+            guard game.level.run != nil else { return }
+            let stack = game.stack, layout = game.level.layout, turn = Double(game.position) * layout.tankStep
+            let colours = await Task.detached(priority: .userInitiated) { Brim.colours(stack, layout: layout, turn: turn) }.value
+            // A later stack's may already have landed.
+            guard !Task.isCancelled else { return }
+            rimColours = colours
+        }
+        .task(id: game.brimEvents.count) {
+            guard let last = game.brimEvents.last, frozenClock == nil else { return }
+            brimMoving = true
+            let spill = last.to >= Run.room
+            let left = (spill ? Brim.spillSettle : Brim.settle) - (Date.now.timeIntervalSinceReferenceDate - last.time)
+            guard (try? await Task.sleep(for: .seconds(max(left, 0)))) != nil else { return }
+            brimMoving = false
+        }
+        .task {
+            // A launch that spilled before the view appeared has no change of `finished` to bring the card.
+            guard game.spilled, !showResult, frozenClock == nil, let last = game.brimEvents.last else { return }
+            let left = Brim.card - (Date.now.timeIntervalSinceReferenceDate - last.time)
+            guard (try? await Task.sleep(for: .seconds(max(left, 0)))) != nil else { return }
+            withAnimation(.easeIn(duration: 0.3)) { showResult = true }
         }
         .task {
             // Past the picture's first render, so the bake does not land in the numbers.
@@ -594,7 +646,8 @@ struct LevelView: View {
             // centre among them.
             if game.solved { withAnimation(.easeInOut(duration: 0.9)) { eased = true } }
             Task {
-                try? await Task.sleep(for: .seconds(1.4))
+                // A spill's card waits for the pour and the word.
+                try? await Task.sleep(for: .seconds(game.spilled ? Brim.card : 1.4))
                 withAnimation(.easeIn(duration: 0.3)) { showResult = true }
                 Log.write("result shown")
             }
@@ -675,6 +728,21 @@ struct LevelView: View {
             }
             guard (try? await Task.sleep(for: .seconds(0.4))) != nil else { return }
             if let t { release(t.rod) } else { releaseTank() }
+        }
+    }
+
+    /// UNSTIR_BRIMDEMO: the approved film's run of the brim, through the same path as a finger: two heals, then pushes
+    /// until it spills, each let go at the film's time (plus a second for the picture to land).
+    private func demo() async {
+        let start = Date.now
+        for (i, at) in [0.75, 1.35, 2.25, 2.80, 3.35, 3.90, 5.25].enumerated() {
+            let lead = at + 1.0 - 0.62 - Date.now.timeIntervalSince(start)
+            guard (try? await Task.sleep(for: .seconds(max(lead, 0)))) != nil, !game.finished,
+                  let t = i < 2 ? game.reachable : game.wasting else { return }
+            liveRod = t.rod
+            withAnimation(.easeInOut(duration: 0.4)) { liveAngle = Double(t.steps) * Tank.step }
+            guard (try? await Task.sleep(for: .seconds(0.4))) != nil else { return }
+            release(t.rod)
         }
     }
 
@@ -772,16 +840,23 @@ struct LevelView: View {
         let arc = !game.level.seized.isEmpty && lesson && !game.tankTurned ? RimLesson.arc(r) : []
         let others: [(CGPoint, CGFloat)] = rods.indices.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
             + arc.map { ($0, RimLesson.width + Self.countRoom) }
+        // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
+        let spillAt = game.spilled ? game.brimEvents.last?.time : nil
+        // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow.
+        // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together.
+        let moving = game.level.picture.isLive || spillAt != nil && brimMoving
         return ZStack {
-            // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow.
-            // Every other picture pauses the timeline, so nothing ticks.
-            TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !game.level.picture.isLive || frozenClock != nil)) { timeline in
+            TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !moving || frozenClock != nil)) { timeline in
+                let murk = spillAt.flatMap { at -> [Float]? in
+                    let since = (frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
+                    return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
+                } ?? []
                 PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
-                             clock: frozenClock ?? timeline.date.timeIntervalSince(opened))
+                             clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
                     .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
                         var u = unstirred
                         u.wave = SIMD3(Float(source.x), Float(source.y), Float(frozenWave ?? w))
-                        return picture.modifier(u)
+                        return picture.modifier(u).modifier(Murk(stirs: murk, side: side))
                     } keyframes: { _ in
                         // A light wave from the last-turned rod, over the clean picture. The animator holds its last value, so
                         // the band runs out past the farthest rim of any layout (1.56 from a ring rod) rather than parking on it.
@@ -852,6 +927,18 @@ struct LevelView: View {
                 }
                 .position(at(fk))
             Bezel(r: r)
+            // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
+            // animator of its own that misses the strike when the colours land after it.
+            ZStack {
+                if let run = game.level.run, let rimColours {
+                    // Moving for a while after each change, and all the while the room runs short.
+                    BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: frozenClock,
+                             paused: !(brimMoving || !game.spilled && game.brim >= Run.room - 1))
+                }
+            }
+            .keyframeAnimator(initialValue: 0.0, trigger: struck) { ring, o in
+                ring.opacity(o)
+            } keyframes: { _ in PictureLayer.strike }
             if !game.level.seized.isEmpty {
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                     RimLesson(r: r, showing: lesson && !game.tankTurned, pulse: lesson && jammed != nil ? Self.pulse(frozenShake ?? s) : 0,
@@ -877,7 +964,13 @@ struct LevelView: View {
                 } keyframes: { _ in Self.jolt }
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
             }
-            .opacity(showResult ? 0 : 1)
+            // A spilled tank keeps its caps over the murk.
+            .opacity(showResult && !game.spilled ? 0 : 1)
+            if let spillAt {
+                TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || frozenClock != nil)) { timeline in
+                    SpillWords(r: r, at: frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
+                }
+            }
             if let c = rodCount, c.steps != 0 {
                 countLabel(c.steps).opacity(c.live ? 1 : 0.45)
                     .position(countSpot(at(c.k), reach: rods[c.k].z * r + 22, side: side, avoid: others))
@@ -1273,8 +1366,26 @@ struct PictureLayer: View {
     /// A live picture: the level's seed and its clock in seconds.
     var seed = 0
     var clock = 0.0
+    /// When the picture lands and starts to strike, for whatever strikes with it.
+    var onStrike: () -> Void = {}
     @Environment(\.displayScale) private var scale
     @State private var image: UIImage?
+
+    /// The picture's opacity as it lands.
+    @KeyframesBuilder<Double> static var strike: some Keyframes<Double> {
+        // Black until the screen's 0.27 s dip in has landed, or the fade swallows the strike.
+        MoveKeyframe(0.0)
+        LinearKeyframe(0.0, duration: 0.25)
+        MoveKeyframe(0.8)
+        LinearKeyframe(0.8, duration: 0.04)
+        MoveKeyframe(0.1)
+        LinearKeyframe(0.1, duration: 0.06)
+        MoveKeyframe(0.95)
+        LinearKeyframe(0.95, duration: 0.03)
+        MoveKeyframe(0.35)
+        LinearKeyframe(0.35, duration: 0.05)
+        LinearKeyframe(1.0, duration: 0.16, timingCurve: .easeOut)
+    }
 
     var body: some View {
         ZStack {
@@ -1291,20 +1402,8 @@ struct PictureLayer: View {
         .frame(width: side, height: side)
         // Flickers on like a neon tube when the texture lands. Over black, opacity is a colour multiply the shader samples for free.
         // Transparent until then, which over black matches the placeholder and keeps a live picture from showing before the strike.
-        .keyframeAnimator(initialValue: 0.0, trigger: image != nil) { picture, o in picture.opacity(o) } keyframes: { _ in
-            // Black until the screen's 0.27 s dip in has landed, or the fade swallows the strike.
-            MoveKeyframe(0.0)
-            LinearKeyframe(0.0, duration: 0.25)
-            MoveKeyframe(0.8)
-            LinearKeyframe(0.8, duration: 0.04)
-            MoveKeyframe(0.1)
-            LinearKeyframe(0.1, duration: 0.06)
-            MoveKeyframe(0.95)
-            LinearKeyframe(0.95, duration: 0.03)
-            MoveKeyframe(0.35)
-            LinearKeyframe(0.35, duration: 0.05)
-            LinearKeyframe(1.0, duration: 0.16, timingCurve: .easeOut)
-        }
+        .keyframeAnimator(initialValue: 0.0, trigger: image != nil) { picture, o in picture.opacity(o) } keyframes: { _ in Self.strike }
+        .onChange(of: image != nil) { if image != nil { onStrike() } }
         // A live picture bakes nothing: the empty image only strikes the tube, once its data is ready.
         .task(id: [picture.rawValue, "\(seed)", "\(side)", "\(scale)"]) {
             if picture.isLive { await picture.prepare(seed: seed) }

@@ -103,6 +103,28 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's limits (neurons'
   regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and checks its search
   against a brute force, the twin at the beat's peak; nothing else tests the shaders.
+- **Brim.swift** and **Brim.metal** draw endless's brim as a measuring jug on the tank's own bezel, ported from the
+  mockup Jack approved (2026-09-28) with its constants in its own units (`Brim.unit` to the glass's radius): ticks
+  engraved on the steel, a brim pin at twelve, and a liquid in the picture's own colours climbing both sides from six
+  o'clock to a level line with a glinting meniscus, the empty arc bare steel. `Game.brimEvents` records every change of
+  the brim, and `Brim.frame` turns them into the shader's state: a change springs in and sloshes, a new notch's colour
+  spreads outward across the bezel behind a glint and surges on onto the black (the last two notches each on their own
+  clock, so a quick push never cuts the one before short), the filled arc blooms further as room runs out and pulses
+  with the pin at the last notch, and a heal leaves a wet film. The glow is scaled (`BLOOM`) to the approved film's
+  balance of bloom to band, fades out before `Brim.reach`, where the ring ends, and none of it lies on the empty jug.
+  `BrimRing` strokes a ring from the glass's edge outward with the `brim` shader, so it shades no pixel of the glass
+  and the tank's shader is untouched; its timeline runs only for `Brim.settle` after a change, through a spill and
+  while the last notch is held, and it strikes with the picture (`PictureLayer.strike`). Its colours (`Brim.colours`)
+  map points just inside the rim back through the glass's turn and the stack, as `unstir` does, and read the grid,
+  endless's only picture (`Picture.gridLight`), off the main actor on each change of the stack; a spill changes no
+  stack, so the rim keeps its colours. The push that fills the brim spills it: the fronts meet at the pin
+  (`Brim.meet`), a crest swells over the lip at twelve and breaks, the liquid pours down the outside of the rim either
+  way in a wave behind a bead at each head, dressed as the mockup's sheet, and the heads slow past three and nine
+  o'clock, where two drops fall from each; the pin is drawn over all of it. The `murk` layer effect (disabled until
+  then) stirs the picture together on `Brim.murk`'s stirs, carrying each pixel's footprint back through them (each
+  stir is area-preserving, so it becomes a thin sliver) and averaging up to 48 taps along it in linear light, so
+  lines finer than a pixel mix instead of glittering. `SpillWords` stamps "spilled." over the tank, whose caps stay,
+  and the card follows at `Brim.card`. The tests reach only the Swift side.
 - **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, maelstrom (vortex will go between the last
   two, charybdis past maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best at par
@@ -135,13 +157,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Level` may have `seized` knobs, which ignore touch; the tank turns only on such a level. `par` is `fixedPar`, else
   `scramble.count`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and
-  endless's brim. `Game.commit` takes a physical knob and commits to the slot under it. Endless has no par, undo or
-  reset: each red flash (a `.pushed` commit) adds a notch to `Game.brim`, each of the scramble's entries that pops
-  settles one (the heal's `.cancelled` commit, or a push that the heal lets fall cancelling it), and at `Run.room` (8)
-  the run spills. The stack's entries mark the player's pushes (`Game.Entry`) so that cancelling one is no heal; a
-  win the fine pass calls also settles one, as the tank's last heal, while one of the scramble's entries is left and
-  unless its move healed one. `Game.nextTank` carries it to the next tank. `Game.turnTank` is a move that
-  pushes no entry: turns in a row join, and one netting a whole turn drops. `Game.history` holds rod stirs by slot and
+  endless's brim, which the rim shows (the header shows moves, and the title the tank). `Game.commit` takes a physical
+  knob and commits to the slot under it. Endless has no par, undo or reset: each red flash (a `.pushed` commit) adds a
+  notch to `Game.brim`, each of the scramble's entries that pops settles one (the heal's `.cancelled` commit, or a push
+  that the heal lets fall cancelling it), and at `Run.room` (8) the run spills. The stack's entries mark the player's
+  pushes (`Game.Entry`) so that cancelling one is no heal; a win the fine pass calls also settles one, as the tank's
+  last heal, while one of the scramble's entries is left and unless its move healed one. `Game.nextTank` carries it to
+  the next tank. `Game.turnTank` is a move that pushes no entry: turns in a row join, and one netting a whole turn
+  drops. `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
@@ -182,17 +205,18 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
-  (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds
-  the rim lesson's ghost finger and a refill's "+2". `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd`
-  the day the level opens on; a harnessed launch never stores the bank, the refill's day or its anchor, and with
-  `UNSTIR_TODAY` and no day stored it takes the last refill as long ago, so the level opens on a refill. Nor does it
-  store the tank flag: it reads as never turned unless `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only
-  that launch, so shot order never matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that
-  launch only (a digit per level, that many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list
-  mid-stir and `UNSTIR_TIERDEMO` switches tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the
-  developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next
-  unlocked. This is how screenshots and films are taken without touch; see `scripts/shots.sh` for examples. To show a
-  visual change, add a `shot` line there.
+  (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds the rim lesson's ghost finger, a refill's "+2", and endless's brim that
+  many seconds after its last change (a spill's too). `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim
+  through the same calls a finger makes: two heals, then pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank
+  and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on; a harnessed launch never stores the bank, the refill's day
+  or its anchor, and with `UNSTIR_TODAY` and no day stored it takes the last refill as long ago, so the level opens on a
+  refill. Nor does it store the tank flag: it reads as never turned unless `UNSTIR_TANKTURNED=1`, and whatever the
+  launch turns lasts only that launch, so shot order never matters. For the menu, `UNSTIR_BESTS=plughole:0001,...`
+  registers bests for that launch only (a digit per level, that many over par; `-` for none),
+  `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches tiers through the same calls a
+  finger makes. `UNSTIR_UNLOCK` alone is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it
+  unset clears it, so no shot leaves the next unlocked. This is how screenshots and films are taken without touch; see
+  `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's pictures).

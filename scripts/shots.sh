@@ -91,14 +91,30 @@ done
 shot inversion-L12 "Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers." LEVEL=12 STACK=2:-3,0:+4,3:+7,0:-2
 shot inversion-L27 "Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6." LEVEL=27 STACK=2:+3,0:-5,5:+6,4:+3
 shot daily "Today's daily." MODE=daily
-shot endless "Endless, first tank of the run seeded 7." MODE=endless
-# UNSTIR_BRIM sets the notches endless opens with, for that launch only.
-shot endless-brim "Endless, first tank, opened with 5 of the brim's 8 notches: the brim and the tank where moves and par were, no undo or reset." \
+shot endless "Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title." \
+  MODE=endless
+# UNSTIR_BRIM sets the notches endless opens with, for that launch only. UNSTIR_CLOCK holds the brim that many seconds after
+# its last change (the harness's TURNED), or after the launch where there is none.
+shot endless-brim "Endless, first tank, opened with 5 of the brim's 8 notches: the picture's own colours in the bezel up to the fifth tick on both sides, glowing onto the black; the tank where moves and par were, no undo or reset." \
   MODE=endless BRIM=5
+shot endless-brim-7 "Endless opened at 7 notches, one from spilling, held 0.38 s into the brim pin's pulse, at its peak: the filled arc's bloom at its strongest, fading out on the black." \
+  MODE=endless BRIM=7 CLOCK=0.38
+shot endless-notch "Endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 arriving, held 0.2 s in, its colour spreading out across the bezel behind a glint." \
+  MODE=endless BRIM=4 TURNED=1:1 CLOCK=0.2
+shot endless-notch-surge "The same, 0.5 s in: the new arc filled, its light running on past the rim onto the black." \
+  MODE=endless BRIM=4 TURNED=1:1 CLOCK=0.5
+shot endless-heal "Endless opened at 5 notches, then rod 0 turned +3, which heals the tank's top stir: the level settling to the fourth tick, held 0.35 s in, a wet film where it stood." \
+  MODE=endless BRIM=5 TURNED=0:3 CLOCK=0.35
 shot endless-cleared "Endless, first tank opened at 5 notches and cleared by the harness after two wasted stirs (2 notches) and five heals: the card shows the brim at 2." \
   SCREEN=result MODE=endless BRIM=5
-shot endless-spilled "Endless, first tank opened at 7 notches, then rod 1 turned +1, which pushes: the brim spills, and the card shows tanks cleared and the best." \
-  MODE=endless BRIM=7 TURNED=1:1
+shot endless-spill-crest "Endless opened at 7 notches, then rod 1 turned +1, a push: the brim spills. Held 0.7 s in: the fronts have met at the brim pin, and a crest swells over the lip at twelve, the pin on top of it." \
+  MODE=endless BRIM=7 TURNED=1:1 CLOCK=0.7
+shot endless-spill-pour "The same, 1.1 s in: the crest has broken and the liquid pours down the outside of the rim either way, a wave behind a bead at each head; the picture starts to stir together." \
+  MODE=endless BRIM=7 TURNED=1:1 CLOCK=1.1
+shot endless-spill-drip "The same, 2 s in: the runs have slowed just past three and nine o'clock and a drop falls from each head onto the black." \
+  MODE=endless BRIM=7 TURNED=1:1 CLOCK=2
+shot endless-spilled "The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best." \
+  MODE=endless BRIM=7 TURNED=1:1 CLOCK=6
 shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch)." \
   LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \

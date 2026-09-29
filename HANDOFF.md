@@ -58,7 +58,7 @@ from Nightmare to Nightmare+ is easy to miss.
 | The way in | Jack chose the strip (2026-09-28) from three working mock-ups (strip, dial, window), for its ticked line of the levels left to open the next tier; he loved the window's live tank but it took too much of the screen. Built on `tiers` with the rename and the gate; the swipe was driven by simulated touches, never a finger. The swap freezes 50–107 ms on the simulator: left for the performance pass |
 | Rename | Nightmare is now **whirlpool** and Nightmare+ **maelstrom** in code, harness (`UNSTIR_TIER`), scripts, tests and docs, on `tiers`. Stored level ids stay `N<k>` and `N+<k>`, so progress carries over (Claude first planned new ids, which would have reset it; the review caught that). The new maelstrom set gets fresh ids, so old N+ bests don't land on new levels |
 | Solver and the maelstrom set | Solver built and verified on branch `solver` (2026-09-29). An independent brute force found a push that holds a disc still and beats plain untwisting by a move, so the optimum now adds a bounded search for such detours: par is the solver's bounded optimum, not a proof. The park rule has two readings (fewest dead knobs over rings with a seam, or every dead knob over a ring without one) and two tie-breaks; Jack's pick is open, and the proposed set is fair under all four. A first proposed table passed every check but its early planning gap came from a tie-break (a lucky guess of direction scores par), its first ten levels all turn counterclockwise, and its seized pairs were always neighbours; a second version is being made against those |
-| Endless's new rules | Built on `endless` (2026-09-29), the rules only: no undo, reset or par, the brim counting red flashes, and Claude's ramp; the header shows "brim k / 8" as a placeholder until the jug is built on the rim. See "Endless changes rules" below |
+| Endless's new rules | Built on `endless` (2026-09-29): no undo, reset or par, the brim counting red flashes, Claude's ramp, and the vivid jug on the rim, ported from the approved film. Reviewed, and the review's fixes made, the pour over the lip among them; Jack hasn't seen the app's film yet. See "Endless changes rules" below |
 | The phone | Free again after the first playtest (Jack, 2026-09-28). It has the sound prototype and the temporary seized table. Next install: the touch fixes with round 2's sound, prepared overnight 2026-09-29 without installing (Jack asked for no phone use while he slept) |
 
 **Jack's calls (2026-09-28).**
@@ -138,6 +138,32 @@ from Nightmare to Nightmare+ is easy to miss.
   endless it settles nothing; Claude's recommendation: there, flash it white, as a merge. When `sound` lands, its heal
   (cancels less a stir turned straight back) counts a later cancel of the player's own push as a heal; it should take
   the brim's event instead, and its endless over-par case is gone.
+  **The jug as built (2026-09-29).** Ported from the approved film into Brim.swift and Brim.metal (see CLAUDE.md). A
+  review against the film found drift, since fixed: the bloom ran about 30% strong (now within about 10% of the
+  film's bloom-to-band ratios at every level measured), its glow ended in a hard circle 64 units out (now drawn to 110
+  and faded), a push landing while the notch before still surged cut that light off in a frame (the last two notches
+  now keep their own clocks), the empty jug had a white glint at six (the surface now stands clear of the edge), and
+  the murk glittered where the stir squeezes lines finer than a pixel (now averaged along each pixel's footprint, as
+  the mockup's was; against a supersampled reference it keeps the fine lines and loses the speckle). The caps stay
+  over the murk, as in the film. The murk's cost on the phone is unmeasured: up to 48 taps a pixel, for the spill's
+  few seconds. The tank's number moved from under the move count to the title ("Endless, tank 1"), where it can't read
+  as the gauge's count, and the tank now sits where every other level's does.
+  **The three open points.** The spill no longer swells the whole rim: a crest swells over the lip at twelve and
+  breaks, and the liquid pours down the outside either way in a wave behind a glossy bead, dressed as the mockup's
+  sheet in the rim's own colours, slowing past three and nine o'clock, where two drops fall from each head; the brim
+  pin stays on top. A first try (a mound at twelve) burned to white, hid the pin and held still instead of running.
+  The rim keeps its full colours after the spill (a spill changes no stack, so it never goes pastel), and "spilled."
+  sits over a dark pool with a red glow. Not yet seen by Jack or a cold reader: `scripts/film.sh endless-brim-run`.
+  **A cold read of the app's film** (a viewer who didn't know the game) raised points that question the approved look
+  or Jack's rules, so they wait for Jack rather than being changed: near full reads as charged or complete, not as
+  danger (the glow grows as room runs out, as approved, and no colour warns); the lit rim at the start reads as the
+  picture's neon, not an amount (the film opens at 5 notches; a real run opens empty); what fills it is hard to infer,
+  since moves both lowered and raised it and only the red ring on the disc and the red header flash tie a rise to its
+  move; the ring and pin read as a dial, and the card's time is never shown in play; the drag's count lingering after
+  a turn (from `touch`) can read as points added. One claim was wrong: the level lands on a tick at every notch (the
+  ticks are 22.5° apart, not 30°). Claude's recommendation: let TestFlight test the first three before changing the
+  look; tying each rise to the disc that caused it (a notch of colour leaving that disc for the rim, say) would not
+  change the jug.
 - Switching between tiers must be easier to find than today's header toggles, and on-brand. Jack's idea: stir
   between modes. He chose the strip (see the table).
 - Order of work: the go/no-go slice (`turning-tank`), the switcher as mock-ups for Jack to pick, the rename, then the

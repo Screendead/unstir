@@ -245,6 +245,66 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.nextTank?.run?.brim, 0)
     }
 
+    /// The rim plays every change of the brim, from and to, and nothing else: a white merge is none.
+    @MainActor func testTheRimSeesEveryChangeOfTheBrim() {
+        let game = Game(level: tank("1:+3,0:+4", brim: 2))
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: -2)
+        game.commit(rod: 0, steps: -4)
+        XCTAssertEqual(game.brimEvents.map { [$0.from, $0.to] }, [[2, 3], [3, 2]])
+    }
+
+    /// The level springs to each change of the brim, and the notch that fills it climbs to the brim pin at `Brim.meet`.
+    func testTheGaugeSpringsToTheBrim() {
+        let room = Run.room, events = [Brim.Event(from: 5, to: 4, time: 1), Brim.Event(from: 4, to: 5, time: 2)]
+        XCTAssertEqual(Brim.level(at: 0.5, events, base: 5, room: room), 5)
+        // It overshoots on the way down, then settles.
+        XCTAssertLessThan(Brim.level(at: 1.45, events, base: 5, room: room), 4)
+        XCTAssertEqual(Brim.level(at: 1.99, events, base: 5, room: room), 4, accuracy: 0.01)
+        XCTAssertEqual(Brim.level(at: 4, events, base: 5, room: room), 5, accuracy: 0.001)
+        let spill = [Brim.Event(from: room - 1, to: room, time: 1)]
+        let climb = Brim.level(at: 1 + Brim.meet / 2, spill, base: room - 1, room: room)
+        XCTAssertGreaterThan(climb, Double(room - 1))
+        XCTAssertLessThan(climb, Double(room))
+        XCTAssertEqual(Brim.level(at: 1 + Brim.meet, spill, base: room - 1, room: room), Double(room))
+    }
+
+    /// The surface crosses the bezel's middle at the tick for its fill on both sides, and clears the bezel empty and full:
+    /// empty, by more than the meniscus's 3.4 up the wall and the bob's 1.8, so no glint lies on the edge at six.
+    func testTheSurfaceMeetsTheTicks() {
+        let room = Run.room
+        for k in 1..<room {
+            XCTAssertEqual(Brim.levelY(Double(k), room: room), Brim.rMid * cos(Double(k) * .pi / Double(room)), accuracy: 1e-9)
+        }
+        XCTAssertGreaterThan(Brim.levelY(0, room: room), Brim.rOut + 3.4 + 1.8 + 4)
+        XCTAssertLessThan(Brim.levelY(Double(room), room: room), -Brim.rOut)
+    }
+
+    /// The rim takes the picture's colours as the stack stirs them: the grid's orange at three o'clock and cyan at nine,
+    /// and a turn of the quad's top-right rod changes the rim beside it and nowhere across the tank.
+    func testTheRimTakesThePicturesColours() {
+        func rgb(_ floats: [Float], at degrees: Int) -> SIMD3<Float> {
+            SIMD3(floats[3 * degrees], floats[3 * degrees + 1], floats[3 * degrees + 2])
+        }
+        let clean = Brim.colours([], layout: .quad, turn: 0).hue
+        XCTAssertEqual(clean.count, 3 * 360)
+        XCTAssertGreaterThan(rgb(clean, at: 0).x, rgb(clean, at: 0).z)
+        XCTAssertGreaterThan(rgb(clean, at: 180).z, rgb(clean, at: 180).x)
+        let stirred = Brim.colours([Twist(rod: 0, steps: 6)], layout: .quad, turn: 0).hue
+        XCTAssertGreaterThan(simd_length(rgb(stirred, at: 315) - rgb(clean, at: 315)), 0.1)
+        XCTAssertEqual(rgb(stirred, at: 135), rgb(clean, at: 135))
+    }
+
+    /// The stirs that mix the picture after a spill start from nothing, so the picture is untouched until they begin.
+    func testTheMurkStartsFromNothing() {
+        let still = Brim.murk(.quad, seed: 1, at: 0)
+        XCTAssertEqual(still.count, 4 * 24)
+        XCTAssertTrue(stride(from: 3, to: still.count, by: 4).allSatisfy { still[$0] == 0 })
+        let done = Brim.murk(.quad, seed: 1, at: 10)
+        XCTAssertTrue(stride(from: 3, to: done.count, by: 4).allSatisfy { abs(done[$0]) > 1 })
+    }
+
     /// Endless has no undo, no reset and no par: moves run on past the scramble, and the bank is never touched.
     @MainActor func testEndlessHasNoUndoResetOrPar() {
         Best.undos = 5

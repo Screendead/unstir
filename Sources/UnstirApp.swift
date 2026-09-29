@@ -45,10 +45,12 @@ struct Harness {
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
     let autoplay: Bool
+    /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
+    let brimDemo: Bool
     let bench: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
-    /// UNSTIR_CLOCK=s: hold a live picture s seconds in.
+    /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change.
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
@@ -133,6 +135,7 @@ struct Harness {
         }
         still = harnessed && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
+        brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
     }
 }
 
