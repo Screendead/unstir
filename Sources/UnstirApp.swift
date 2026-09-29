@@ -31,6 +31,13 @@ struct Harness {
     let tankTurned: Bool?
     /// UNSTIR_SHAKE=s: with UNSTIR_TOUCH on a seized knob, its shake and the rim's pulse held s seconds in.
     let shake: Double?
+    /// UNSTIR_UNDOS=n: the undo bank, and the stored day of its last refill, for this launch only. A harnessed launch
+    /// reads the stored bank unless set, and never stores either. With UNSTIR_TODAY and no day stored, as on the shots'
+    /// fresh install, the last refill was long ago, so the level opens on a refill. Nil without the harness, which
+    /// reads and stores the real ones.
+    let bank: (undos: Int, refilled: String?)?
+    /// UNSTIR_TODAY=yyyy-MM-dd: the day the level opens on, for the bank's refill.
+    let today: String?
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
     let autoplay: Bool
@@ -110,6 +117,9 @@ struct Harness {
         turned = t.count == 2 && level.layout.rods.indices.contains(t[0]) ? Twist(rod: t[0], steps: t[1]) : nil
         tankTurned = harnessed ? env["UNSTIR_TANKTURNED"] == "1" : nil
         shake = env["UNSTIR_SHAKE"].flatMap(Double.init)
+        today = env["UNSTIR_TODAY"].flatMap { $0.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) == nil ? nil : $0 }
+        let undos = env["UNSTIR_UNDOS"].flatMap(Int.init).map { min(max($0, 0), 10) } ?? Best.undos
+        bank = harnessed ? (undos, Best.refilled ?? (today == nil ? nil : "0000-00-00")) : nil
         let f = env["UNSTIR_LIVE"]?.split(separator: ":") ?? []
         if f.count == 2, let rod = Int(f[0]), level.layout.rods.indices.contains(rod), let steps = Double(f[1]) {
             live = (rod, steps)

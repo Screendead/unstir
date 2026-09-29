@@ -112,8 +112,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   deeper variants on live pictures that follow a table, and maelstrom, until it has a set of its own, whirlpool's
   scrambles on each picture's twin. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole.
   The generator is ported draw for draw from an earlier prototype, and `testDailyAndEndlessVectors` pins its output.
-  Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`. A `Level` may have `seized` knobs, which ignore
-  touch; the tank turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
+  Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most)
+  refills by 2 the first time a level other than the sandbox opens on a local calendar day later than the stored day of
+  its last refill (`Best.refill`, `Best.refilled`), so each day played refills once and a long absence once; a fresh
+  install records the day without a refill, and a clock moved back never refills. A `Level` may have `seized` knobs,
+  which ignore touch; the tank turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and the
   endless spill. `Game.commit` takes a physical knob and commits to the slot under it. `Game.turnTank` is a move that
   pushes no entry: turns in a row join, and one netting a whole turn drops. `Game.history` holds rod stirs by slot and
@@ -132,7 +135,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   segment per step round the disc (the rim, for the tank) from where its stir began, and a signed count off the finger,
   both following what letting go would commit. While `Game.openStir` is the rod's, they stay faint after lift, until
   another rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved`
-  pass on the main actor and the fine pass off it.
+  pass on the main actor and the fine pass off it. `Game.refill` runs as `LevelView` appears, never in `Game.init`,
+  which SwiftUI reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo
+  count for three seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
@@ -155,9 +160,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), a touch on a seized knob held that many seconds into its shake (`UNSTIR_SHAKE`, with
   `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds
-  the rim lesson's ghost finger. A harnessed launch never stores the tank flag: it reads as never turned unless
-  `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only that launch, so shot order never matters. For the
-  menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
+  the rim lesson's ghost finger and a refill's "+2". `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd`
+  the day the level opens on; a harnessed launch never stores the bank or the refill's day, and with `UNSTIR_TODAY` and
+  no day stored it takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag:
+  it reads as never turned unless `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only that launch, so shot
+  order never matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
   (a digit per level, that many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and
   `UNSTIR_TIERDEMO` switches tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock
   above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. This

@@ -91,6 +91,8 @@ shot inversion-L12 "Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the tw
 shot inversion-L27 "Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6." LEVEL=27 STACK=2:+3,0:-5,5:+6,4:+3
 shot daily "Today's daily." MODE=daily
 shot endless "Endless, first tank of the run seeded 7." MODE=endless
+shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch)." \
+  LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6

@@ -97,7 +97,13 @@ final class Game {
     /// A reset gives the moves back but costs the clean, and so does an undo.
     private(set) var resets = 0
     private(set) var undos = 0
-    private(set) var bank = Best.undos
+    private(set) var bank: Int
+    /// What the day's refill added as this level opened, for the undo control to show.
+    private(set) var refilled = 0
+    /// The day of the bank's last refill, `Best.refill`'s `last`.
+    private var refillDay: String?
+    /// False when the caller set the bank, which then lasts only as long as this game.
+    private let storesBank: Bool
     /// A win the fine pass is still confirming: an undo or reset then would throw it away.
     private var checking = false
     /// Twists that stacked a new entry: the warning haptic.
@@ -116,12 +122,20 @@ final class Game {
     /// False when the caller set `tankTurned`, which then lasts only as long as this game.
     private let storesTankTurned: Bool
 
-    init(level: Level, tankTurned: Bool? = nil) {
+    init(level: Level, tankTurned: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil) {
         self.level = level
         stack = level.scramble
         firstTry = level.run != nil || !Best.started(level.id)
         self.tankTurned = tankTurned ?? Best.tankTurned
         storesTankTurned = tankTurned == nil
+        if let bank {
+            self.bank = bank.undos
+            refillDay = bank.refilled
+        } else {
+            self.bank = Best.undos
+            refillDay = Best.refilled
+        }
+        storesBank = bank == nil
     }
 
     /// Practice saves nothing.
@@ -202,7 +216,7 @@ final class Game {
         if !level.sandbox {
             undos += 1
             bank -= 1
-            Best.undos = bank
+            if storesBank { Best.undos = bank }
         }
         Log.write("undo \(last) moves=\(moves) bank=\(bank) pushes=\(pushes) stack=\(stack.count) \(stack)")
         settle()
@@ -220,6 +234,20 @@ final class Game {
     }
 
     func startClock() { start = start ?? .now }
+
+    /// The day's refill of the bank (`Best.refill`), as the level opens on `today`. The sandbox spends no undos, so it
+    /// takes no refill.
+    func refill(today: String) {
+        guard !level.sandbox else { return }
+        let added = Best.refill(&bank, last: &refillDay, today: today)
+        if storesBank {
+            Best.undos = bank
+            Best.refilled = refillDay
+        }
+        guard let added else { return }
+        refilled = added
+        Log.write("undo refill +\(added) bank=\(bank)")
+    }
 
     /// Sandbox: the stir stays, to be seen on the next picture.
     func nextPicture() {
@@ -322,6 +350,9 @@ struct LevelView: View {
     /// Scramble entries on screen during the opening; nil once the tank is the player's.
     @State private var shown: Int?
     @State private var replays = 0
+    /// The day's refill as the badge shows it: set once the opening is over, and only once, so a reset's opening doesn't
+    /// show it again.
+    @State private var badge = 0
     @State private var snap = CGSize.zero
     @Environment(\.displayScale) private var scale
     @Environment(\.scenePhase) private var phase
@@ -334,13 +365,15 @@ struct LevelView: View {
     private let frozenClock: Double?
     /// UNSTIR_SHAKE: a seized knob's shake and the rim's pulse held this many seconds in.
     private let frozenShake: Double?
+    /// UNSTIR_TODAY: the day the level opens on, for the bank's refill.
+    private let today: String?
     /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
     let onExit: () -> Void
     let onNext: (Level) -> Void
 
     init(level: Level, harness: Harness?, onExit: @escaping () -> Void, onNext: @escaping (Level) -> Void) {
-        let game = Game(level: level, tankTurned: harness?.tankTurned)
+        let game = Game(level: level, tankTurned: harness?.tankTurned, bank: harness?.bank)
         game.turnTank(harness?.tank ?? 0)
         if let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
             // Solved through the real commit path; "result" first wastes two stirs, so taking them back costs moves.
@@ -389,6 +422,7 @@ struct LevelView: View {
         frozenWave = harness?.wave
         frozenClock = harness?.clock
         frozenShake = harness?.shake
+        today = harness?.today
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
@@ -466,6 +500,7 @@ struct LevelView: View {
                         // The plain button style does not grey a disabled label.
                         .disabled(!game.level.sandbox && game.bank == 0)
                         .opacity(!game.level.sandbox && game.bank == 0 ? 0.35 : 1)
+                        .overlay(alignment: .topTrailing) { refillBadge }
                     Spacer()
                     // Endless: a reset would refill the moves. Undo spends the bank.
                     if game.level.run == nil {
@@ -491,7 +526,9 @@ struct LevelView: View {
             Bench(drive: { liveRod = 0; liveAngle = 3 * sin(2 * $0) },
                   still: game.level.picture.isLive ? { liveRod = nil; liveAngle = 0 } : nil).start()
         }
-        .onChange(of: shown == nil, initial: true) { if shown == nil { game.startClock() } }
+        .onChange(of: shown == nil, initial: true) {
+            if shown == nil { game.startClock(); badge = game.refilled }
+        }
         .onChange(of: game.finished) {
             guard game.finished else { return }
             // The fine pass can call the win ~0.1 s after the commit: a finger down in that gap would hold its turn frozen
@@ -513,7 +550,13 @@ struct LevelView: View {
                 Log.write("\(phase) drops drag \(state)"); drag = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; spun = false
             }
         }
-        .onAppear { Log.write("level \(game.level.id) opens, par \(game.par) \(game.stack)") }
+        .onAppear {
+            Log.write("level \(game.level.id) opens, par \(game.par) \(game.stack)")
+            // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
+            game.refill(today: today ?? Best.day())
+            // Where there is no opening, onChange's initial call may run before the refill.
+            if shown == nil { badge = game.refilled }
+        }
         .onDisappear { Log.write("level \(game.level.id) exits \(state)") }
     }
 
@@ -576,6 +619,31 @@ struct LevelView: View {
             guard (try? await Task.sleep(for: .seconds(0.4))) != nil else { return }
             if let t { release(t.rod) } else { releaseTank() }
         }
+    }
+
+    /// The day's refill, over the undo control's count once the opening is over and the control live. Always present, to
+    /// see `badge` change.
+    private var refillBadge: some View {
+        KeyframeAnimator(initialValue: Self.refillTime, trigger: badge) { s in
+            Text("+\(badge)").font(.mono(13)).foregroundStyle(Color.lime)
+                .opacity(badge > 0 ? Self.refillShown(frozenClock ?? s) : 0)
+        } keyframes: { _ in
+            MoveKeyframe(0.0)
+            LinearKeyframe(Self.refillTime, duration: Self.refillTime)
+        }
+        // Its trailing edge on the count's, just above the capsule.
+        .offset(x: -22, y: -24)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    /// Seconds from a refill until its count has gone.
+    nonisolated private static let refillTime = 3.0
+
+    /// The refill's count `s` seconds after the opening ends, or after the level opens where it has none: up after a
+    /// beat, gone by `refillTime`.
+    nonisolated static func refillShown(_ s: Double) -> Double {
+        s < 0.3 ? 0 : s < 0.6 ? (s - 0.3) / 0.3 : s < 2.3 ? 1 : max(0, (refillTime - s) / (refillTime - 2.3))
     }
 
     private func control(_ label: String, _ action: @escaping () -> Void) -> some View {

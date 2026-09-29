@@ -8,10 +8,11 @@ import simd
 @testable import Unstir
 
 final class UnstirTests: XCTestCase {
-    /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full and the
-    /// tank never turned.
+    /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full, never
+    /// refilled, and the tank never turned.
     override func setUp() {
         UserDefaults.standard.removeObject(forKey: "undos.spent")
+        UserDefaults.standard.removeObject(forKey: "undos.day")
         UserDefaults.standard.removeObject(forKey: "tank.turned")
     }
 
@@ -170,6 +171,112 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack, [Twist(rod: 2, steps: 1)])
         game.nextLayout()
         XCTAssertEqual(game.stack, [])
+    }
+
+    /// A level that counts, opened on `today` against the stored bank.
+    @MainActor private func opened(on today: String, _ level: Level = Level.plughole[0]) -> Game {
+        let game = Game(level: level)
+        game.refill(today: today)
+        return game
+    }
+
+    /// A fresh install's bank starts full, so the first level opened records its day and adds nothing.
+    @MainActor func testTheFirstOpeningRecordsTheDayWithoutARefill() {
+        let game = opened(on: "2026-09-29")
+        XCTAssertEqual(game.refilled, 0)
+        XCTAssertEqual(game.bank, 10)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        XCTAssertEqual(opened(on: "2026-09-29").refilled, 0)
+    }
+
+    /// The first opening on a later day adds 2, and that day's other openings nothing; months and years roll over.
+    @MainActor func testTheBankRefillsOnceADayPlayed() {
+        Best.undos = 3
+        Best.refilled = "2026-09-29"
+        XCTAssertEqual(opened(on: "2026-09-29").refilled, 0)
+        XCTAssertEqual(Best.undos, 3)
+        let next = opened(on: "2026-09-30")
+        XCTAssertEqual(next.refilled, 2)
+        XCTAssertEqual(next.bank, 5)
+        XCTAssertEqual(Best.undos, 5)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(opened(on: "2026-09-30").refilled, 0)
+        XCTAssertEqual(Best.undos, 5)
+        XCTAssertEqual(opened(on: "2026-10-01").refilled, 2)
+        Best.refilled = "2026-12-31"
+        XCTAssertEqual(opened(on: "2027-01-01").refilled, 2)
+        XCTAssertEqual(Best.undos, 9)
+    }
+
+    /// The bank holds 10 at most; a full bank takes the day's refill as nothing, and the day still counts as refilled.
+    @MainActor func testTheRefillStopsAtTen() {
+        Best.undos = 9
+        Best.refilled = "2026-09-29"
+        XCTAssertEqual(opened(on: "2026-09-30").refilled, 1)
+        XCTAssertEqual(Best.undos, 10)
+        XCTAssertEqual(opened(on: "2026-10-01").refilled, 0)
+        XCTAssertEqual(Best.undos, 10)
+        XCTAssertEqual(Best.refilled, "2026-10-01")
+    }
+
+    /// A long absence refills once, not a day's worth for each day away.
+    @MainActor func testALongGapRefillsOnce() {
+        Best.undos = 0
+        Best.refilled = "2026-01-01"
+        XCTAssertEqual(opened(on: "2026-09-29").refilled, 2)
+        XCTAssertEqual(opened(on: "2026-09-29").refilled, 0)
+        XCTAssertEqual(Best.undos, 2)
+    }
+
+    /// A clock moved back never refills and leaves the day stored; only a day after that one does.
+    @MainActor func testMovingTheClockBackNeverRefills() {
+        Best.undos = 4
+        Best.refilled = "2026-09-30"
+        XCTAssertEqual(opened(on: "2026-09-28").refilled, 0)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(opened(on: "2026-09-30").refilled, 0)
+        XCTAssertEqual(Best.undos, 4)
+        XCTAssertEqual(opened(on: "2026-10-01").refilled, 2)
+    }
+
+    /// The sandbox neither spends nor refills, and opening it leaves the day's refill to the next level that counts.
+    /// Every other mode counts.
+    @MainActor func testOnlyTheSandboxTakesNoRefill() {
+        Best.undos = 4
+        Best.refilled = "2026-09-29"
+        XCTAssertEqual(opened(on: "2026-09-30", .sandbox).refilled, 0)
+        XCTAssertEqual(Best.undos, 4)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        XCTAssertEqual(opened(on: "2026-09-30", .endless(Run(seed: 7))).refilled, 2)
+        XCTAssertEqual(opened(on: "2026-10-01", .daily()).refilled, 2)
+        XCTAssertEqual(opened(on: "2026-10-02", Level.maelstrom[0]).refilled, 2)
+        XCTAssertEqual(Best.undos, 10)
+    }
+
+    /// A bank the caller sets refills and spends in the game alone: nothing is stored.
+    @MainActor func testASetBankIsNeverStored() {
+        Best.undos = 4
+        Best.refilled = "2026-09-29"
+        let game = Game(level: Level(id: "test-bank", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]),
+                        bank: (6, "0000-00-00"))
+        game.refill(today: "2026-09-29")
+        XCTAssertEqual(game.refilled, 2)
+        XCTAssertEqual(game.bank, 8)
+        game.commit(rod: 1, steps: 1)
+        game.undo()
+        XCTAssertEqual(game.bank, 7)
+        XCTAssertEqual(Best.undos, 4)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+    }
+
+    /// Days are written so that they compare as strings.
+    func testDaysSortAsStrings() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        let day = { (y: Int, m: Int, d: Int) in Best.day(calendar.date(from: DateComponents(year: y, month: m, day: d, hour: 12))!) }
+        XCTAssertEqual(day(2026, 9, 29), "2026-09-29")
+        XCTAssertEqual([day(2027, 1, 1), day(2026, 12, 31), day(2026, 10, 1), day(2026, 9, 30)].sorted(),
+                       ["2026-09-30", "2026-10-01", "2026-12-31", "2027-01-01"])
     }
 
     /// An endless pent tank the player saw smudged where rods 1 and 2 overlap: 32 px at most, about 40 px across.

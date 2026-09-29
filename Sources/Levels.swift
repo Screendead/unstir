@@ -286,11 +286,39 @@ struct Best: Codable {
     static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
     static func start(_ id: String) { if !started(id) { UserDefaults.standard.set(true, forKey: "started.\(id)") } }
 
-    /// Banked undos, shared by every level and mode: 10 to start, and nothing refills them yet. Stored as the number
-    /// spent, so a fresh install reads 10.
+    /// Banked undos, shared by every level and mode: 10 to start, and `refill` adds 2 a day played, up to 10. Stored as
+    /// the number spent, so a fresh install reads 10.
     static var undos: Int {
         get { 10 - UserDefaults.standard.integer(forKey: "undos.spent") }
         set { UserDefaults.standard.set(10 - newValue, forKey: "undos.spent") }
+    }
+
+    /// The day of the bank's last refill, as `day` writes it; nil until a level that counts has opened.
+    static var refilled: String? {
+        get { UserDefaults.standard.string(forKey: "undos.day") }
+        set { UserDefaults.standard.set(newValue, forKey: "undos.day") }
+    }
+
+    /// A local calendar day as yyyy-MM-dd, so days compare as strings. Gregorian whatever the phone's calendar, so a
+    /// change of that setting can't put today before a stored day.
+    static func day(_ date: Date = .now) -> String {
+        let d = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", d.year!, d.month!, d.day!)
+    }
+
+    /// The undo bank's refill, as a level that counts (any but the sandbox) opens on the local calendar day `today`:
+    /// the first such opening on a day later than `last`, the day of the last refill, adds 2 to `bank`, up to 10, and
+    /// makes today `last`, even when a full bank takes nothing. So each day played refills once, and a long absence
+    /// refills once. With no `last`, as on a fresh install, whose bank starts full, today becomes `last` and nothing is
+    /// added. Moving the clock back never refills, and moving it forward refills once; moved forward and back again,
+    /// nothing refills until the clock passes the day it reached. Returns what was added, or nil when none was due.
+    static func refill(_ bank: inout Int, last: inout String?, today: String) -> Int? {
+        guard let from = last else { last = today; return nil }
+        guard today > from else { return nil }
+        let added = max(min(bank + 2, 10) - bank, 0)
+        bank += added
+        last = today
+        return added
     }
 
     /// The developer unlock, set by a launch with UNSTIR_UNLOCK=1 and cleared by one with UNSTIR_UNLOCK=0: every tier
