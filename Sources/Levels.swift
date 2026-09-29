@@ -5,6 +5,11 @@ import Foundation
 struct Run: Hashable, Sendable {
     var seed: UInt64
     var tank = 0
+    /// Notches on the brim as this tank opens, as the tank before left them.
+    var brim = 0
+
+    /// Notches the brim holds: the one that fills it spills the run. A guess until TestFlight.
+    static let room = 8
 }
 
 /// The difficulty ladder, easiest first: declaration order is the ladder, so a new tier goes in where it belongs. The
@@ -185,12 +190,20 @@ struct Level: Hashable, Sendable {
                      layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng))
     }
 
+    /// Tank n of a run: 5 + 5n/4 stirs, n/2 of them hidden under louder ones (more where no rod can go louder), up to half
+    /// the stirs: asked to hide many more, the generator makes nearly every stir 60°. No par: the run goes on until the
+    /// brim spills.
     static func endless(_ run: Run) -> Level {
-        // Wrapping, to match the prototype's 64-bit arithmetic.
+        var level = Level(id: "endless", label: "\u{221E}", title: "Endless", layout: generated[run.tank % 4], scramble: [],
+                          run: run)
+        // No deeper than keeps the tank four taps as dealt, or than leaves room under the stack's limit for every push
+        // the brim takes before it spills: the stack holds at most the scramble plus the brim's notches, and the push
+        // that spills must never be refused.
+        let depth = min(5 + 5 * run.tank / 4, Tank.fourTaps - level.picture.fillEntries, Tank.maxStack - Run.room)
+        // Wrapping, as a random seed overflows.
         var rng = SplitMix64(state: run.seed &* 1000 &+ UInt64(run.tank))
-        let layout = generated[run.tank % 4]
-        return Level(id: "endless", label: "\u{221E}", title: "Endless", layout: layout,
-                     scramble: layout.scramble(depth: min(4 + run.tank, 24), inversions: run.tank / 3, rng: &rng), run: run)
+        level.scramble = level.layout.scramble(depth: depth, inversions: min(run.tank / 2, depth / 2), rng: &rng)
+        return level
     }
 
     static let sandbox = Level(id: "sandbox", label: "box", title: "Sandbox", layout: .tri, scramble: [])
@@ -202,7 +215,8 @@ struct Level: Hashable, Sendable {
 
 extension Layout {
     /// Push-only scramble of `depth` entries, `inversions` of them no louder than an undo-able twist they cover.
-    /// Ported draw for draw from the prototype, so the dailies match it.
+    /// Ported draw for draw from the prototype, so the dailies match it. Every past daily is this function's output, so
+    /// it never changes: endless changes only what it asks for, and a new generator goes beside this one.
     func scramble(depth: Int, inversions: Int, rng: inout SplitMix64) -> [Twist] {
         var stack: [Twist] = [], inv = inversions
         for i in 0..<depth {

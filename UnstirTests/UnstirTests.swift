@@ -99,21 +99,173 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(game.clean)
     }
 
-    /// At par the newest stir can still be adjusted or undone, but a new stir ends the run.
-    @MainActor func testEndlessEndsOnTheFirstStirPastPar() {
-        let game = Game(level: .endless(Run(seed: 7)))
-        for i in 0..<game.par { game.commit(rod: i % 2, steps: 1) }
-        let last = (game.par - 1) % 2
-        game.commit(rod: last, steps: 1)
-        XCTAssertEqual(game.moves, game.par)
-        game.undo()
-        XCTAssertEqual(game.moves, game.par - 1)
-        XCTAssertEqual(Best.undos, 9)
-        game.commit(rod: last, steps: 1)
+    /// A tank of a run, on scramble `word`, opening with `brim` notches.
+    private func tank(_ word: String, _ layout: Layout = .tri, brim: Int = 0) -> Level {
+        Level(id: "endless", label: "", title: "", layout: layout, scramble: .parse(word, in: layout), run: Run(seed: 1, tank: 4, brim: brim))
+    }
+
+    /// Every red flash adds a notch, and turning the stir back, straight away or later, takes none off: cancelling the
+    /// player's own push is no heal. A turn that merges into that push flashes white and adds none.
+    @MainActor func testEveryPushAddsANotchThatStaysWhenTurnedBack() {
+        let game = Game(level: tank("0:+4"))
+        game.commit(rod: 1, steps: 1)
+        XCTAssertEqual(game.lastCommit?.result, .pushed)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 1, steps: -1)
+        XCTAssertEqual(game.lastCommit?.result, .cancelled)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 1, steps: 2)
+        game.commit(rod: 1, steps: 1)
+        XCTAssertEqual(game.lastCommit?.result, .reduced)
+        XCTAssertEqual(game.brim, 2)
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: -1)
+        XCTAssertEqual(game.brim, 3)
+        // Not joined to the stir it takes back, which a turn of another rod shut.
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.lastCommit?.result, .cancelled)
+        XCTAssertEqual(game.history, [Twist(rod: 1, steps: 3), Twist(rod: 1, steps: -3)])
+        XCTAssertEqual(game.brim, 3)
+        XCTAssertEqual(game.pushes, 3)
+        XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 4)])
+    }
+
+    /// A heal of one of the scramble's entries settles a notch, the last heal too; an empty brim stays empty.
+    @MainActor func testAHealOfTheScrambleSettlesANotch() {
+        let game = Game(level: tank("1:+3,0:+4", brim: 2))
+        game.commit(rod: 0, steps: -4)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.brim, 0)
+        XCTAssertTrue(game.solved)
+
+        let empty = Game(level: tank("1:+3,0:+4"))
+        empty.commit(rod: 0, steps: -4)
+        XCTAssertEqual(empty.brim, 0)
+        // Turned part way back first: the entry is still the scramble's, so its heal counts.
+        let partly = Game(level: tank("1:+3,0:+4", brim: 2))
+        partly.commit(rod: 0, steps: -1)
+        partly.commit(rod: 1, steps: 1)
+        XCTAssertEqual(partly.brim, 3)
+        partly.commit(rod: 1, steps: -1)
+        partly.commit(rod: 0, steps: -3)
+        XCTAssertEqual(partly.brim, 2)
+    }
+
+    /// The word 2:-4, 1:+2, 2:+4 holds rod 3's disc still, so healing 3:+2 under it lets the push 2:-4 fall onto the
+    /// scramble's 2:-2. The merged entry stays the scramble's, and so does its heal, while the push's notch stays.
+    @MainActor func testAPushThatMergesDownKeepsItsNotch() {
+        let game = Game(level: tank("0:+9,2:-2,3:+2", .quad))
+        for (rod, steps) in [(2, -4), (1, 2), (2, 4)] { game.commit(rod: rod, steps: steps) }
+        XCTAssertEqual(game.brim, 3)
+        game.commit(rod: 3, steps: -2)
+        XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 9), Twist(rod: 2, steps: -6), Twist(rod: 1, steps: 2), Twist(rod: 2, steps: 4)])
+        XCTAssertEqual(game.brim, 2)
+        game.commit(rod: 2, steps: -4)
+        game.commit(rod: 1, steps: -2)
+        XCTAssertEqual(game.brim, 2)
+        game.commit(rod: 2, steps: 6)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 0, steps: -9)
+        XCTAssertEqual(game.brim, 0)
+        XCTAssertTrue(game.solved)
+    }
+
+    /// As above, but the push that falls cancels the scramble's 2:+4, which is 2:+4's heal: it settles one beside the heal
+    /// that let it fall, so the tank ends as it would had the push merged and 2:+4 been healed after.
+    @MainActor func testAPushThatFallsOntoTheScrambleHealsIt() {
+        let game = Game(level: tank("0:+9,2:+4,3:+2", .quad))
+        for (rod, steps) in [(2, -4), (1, 2), (2, 4)] { game.commit(rod: rod, steps: steps) }
+        XCTAssertEqual(game.pushes, 3)
+        XCTAssertEqual(game.brim, 3)
+        game.commit(rod: 3, steps: -2)
+        XCTAssertEqual(game.lastCommit?.result, .cancelled)
+        XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 9), Twist(rod: 1, steps: 2), Twist(rod: 2, steps: 4)])
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 2, steps: -4)
+        game.commit(rod: 1, steps: -2)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 0, steps: -9)
+        XCTAssertEqual(game.brim, 0)
+        XCTAssertTrue(game.solved)
+    }
+
+    /// Where the fine pass calls the win on a stack that isn't empty, the move that got there is the tank's last heal,
+    /// and settles one notch in all.
+    @MainActor func testALooksSolvedWinSettlesOneNotch() async throws {
+        // testIdentityStackIsSolved's identity, less the 0:+1 on top.
+        let identity = "1:-4 3:+2 0:-6 3:+7 0:-5 2:+2 1:+4 2:-6 1:-4 0:+11 1:+4 2:+6 1:-4 2:-2 1:+4 0:-6 3:-7 0:+6 3:-2"
+            .split(separator: " ").map { t in Twist(rod: Int(t.prefix(1))!, steps: Int(t.dropFirst(2))!) }
+        func solved(_ scramble: [Twist], _ moves: [(Int, Int)]) async throws -> Game {
+            let game = Game(level: Level(id: "endless", label: "", title: "", layout: .quad, scramble: scramble, run: Run(seed: 1, brim: 2)))
+            for (rod, steps) in moves { game.commit(rod: rod, steps: steps) }
+            XCTAssertFalse(game.solved)
+            // The fine pass runs off the main actor, about 1 s in Debug.
+            let deadline = ContinuousClock.now + .seconds(10)
+            while !game.solved, .now < deadline { try await Task.sleep(for: .milliseconds(10)) }
+            XCTAssertTrue(game.solved)
+            return game
+        }
+        // The heal of the scramble's 0:+1 settled one already.
+        let healed = try await solved(identity + [Twist(rod: 0, steps: 1)], [(0, -1)])
+        XCTAssertEqual(healed.brim, 1)
+        // A push turned back leaves the identity: no heal cancelled anything, so the win settles one.
+        let turnedBack = try await solved(identity, [(0, 1), (0, -1)])
+        XCTAssertEqual(turnedBack.pushes, 1)
+        XCTAssertEqual(turnedBack.brim, 2)
+    }
+
+    /// The next tank opens with the brim as this one left it; a spilled run starts afresh.
+    @MainActor func testTheBrimCarriesAcrossTanks() throws {
+        let game = Game(level: tank("1:+3,0:+4", brim: 5))
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: -1)
+        game.commit(rod: 0, steps: -4)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertTrue(game.solved)
+        XCTAssertEqual(game.brim, 4)
+        let next = try XCTUnwrap(game.nextTank)
+        XCTAssertEqual(next.run, Run(seed: 1, tank: 5, brim: 4))
+        XCTAssertEqual(Game(level: next).brim, 4)
+    }
+
+    /// The notch that fills the brim spills the run: finished, not solved, deaf to turns, and the next is a new run.
+    @MainActor func testTheBrimSpillsTheRun() {
+        let game = Game(level: tank("0:+4", brim: Run.room - 2))
+        game.commit(rod: 1, steps: 1)
         XCTAssertFalse(game.finished)
-        game.commit(rod: 1 - last, steps: 1)
+        game.commit(rod: 2, steps: 1)
+        XCTAssertEqual(game.brim, Run.room)
+        XCTAssertTrue(game.spilled)
         XCTAssertTrue(game.finished)
         XCTAssertFalse(game.solved)
+        game.commit(rod: 2, steps: -1)
+        XCTAssertEqual(game.moves, 2)
+        XCTAssertEqual(game.nextTank?.run?.tank, 0)
+        XCTAssertEqual(game.nextTank?.run?.brim, 0)
+    }
+
+    /// Endless has no undo, no reset and no par: moves run on past the scramble, and the bank is never touched.
+    @MainActor func testEndlessHasNoUndoResetOrPar() {
+        Best.undos = 5
+        let game = Game(level: .endless(Run(seed: 7)))
+        // Rods 0 and 2 never touch, and each has a twist of the scramble in reach: each turn is a stir that merges.
+        XCTAssertEqual(game.stack.suffix(2), [Twist(rod: 2, steps: 8), Twist(rod: 0, steps: -3)])
+        for _ in 0..<2 {
+            for (rod, steps) in [(2, 1), (0, 1), (2, -1), (0, -1)] { game.commit(rod: rod, steps: steps) }
+        }
+        XCTAssertEqual(game.moves, 8)
+        XCTAssertGreaterThan(game.moves, game.par)
+        XCTAssertFalse(game.finished)
+        XCTAssertEqual(game.over, 0)
+        let (history, stack) = (game.history, game.stack)
+        game.undo()
+        XCTAssertEqual(game.history, history)
+        XCTAssertEqual(game.stack, stack)
+        XCTAssertFalse(game.reset())
+        XCTAssertEqual(game.stack, stack)
+        XCTAssertEqual(game.resets, 0)
+        XCTAssertEqual(Best.undos, 5)
     }
 
     /// Only the newest stir comes back free; turning an older rod back is a new stir.
@@ -240,17 +392,22 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(opened(on: "2026-10-01").refilled, 2)
     }
 
-    /// The sandbox neither spends nor refills, and opening it leaves the day's refill to the next level that counts.
-    /// Every other mode counts.
-    @MainActor func testOnlyTheSandboxTakesNoRefill() {
+    /// The sandbox and endless neither spend nor refill, and opening them leaves the day's refill to the next level that
+    /// counts. Every other mode counts.
+    @MainActor func testOnlyTheSandboxAndEndlessTakeNoRefill() {
         Best.undos = 4
         Best.refilled = "2026-09-29"
         XCTAssertEqual(opened(on: "2026-09-30", .sandbox).refilled, 0)
+        XCTAssertEqual(opened(on: "2026-09-30", .endless(Run(seed: 7))).refilled, 0)
+        let endless = Game(level: .endless(Run(seed: 7)))
+        endless.refill(wall: Self.utc(36), uptime: 3600, boot: "boot-a", zone: .gmt)
+        XCTAssertEqual(endless.refilled, 0)
+        XCTAssertNil(Best.anchor)
         XCTAssertEqual(Best.undos, 4)
         XCTAssertEqual(Best.refilled, "2026-09-29")
-        XCTAssertEqual(opened(on: "2026-09-30", .endless(Run(seed: 7))).refilled, 2)
-        XCTAssertEqual(opened(on: "2026-10-01", .daily()).refilled, 2)
-        XCTAssertEqual(opened(on: "2026-10-02", Level.maelstrom[0]).refilled, 2)
+        XCTAssertEqual(opened(on: "2026-09-30", .daily()).refilled, 2)
+        XCTAssertEqual(opened(on: "2026-10-01", Level.maelstrom[0]).refilled, 2)
+        XCTAssertEqual(opened(on: "2026-10-02", Level.plughole[0]).refilled, 2)
         XCTAssertEqual(Best.undos, 10)
     }
 
@@ -1028,8 +1185,8 @@ final class UnstirTests: XCTestCase {
         for level in Tier.allCases.flatMap(\.levels) { XCTAssertEqual(level.par, level.scramble.count, level.id) }
     }
 
-    /// From the prototype, so the Swift generator draws exactly as it does.
-    func testDailyAndEndlessVectors() {
+    /// From the prototype, so the Swift generator draws exactly as it does. Every past daily must stay the tank it was.
+    func testDailyVectors() {
         let daily: [(Int, Layout, String)] = [
             (1001, .eye, "0:-4,3:-5,0:-4,2:-5,0:-3,3:-2,1:+5,2:-8,3:+2,0:+7,1:-8,3:+8,2:+4"),
             (1002, .pent, "4:-2,0:+5,1:+4,3:-4,2:+6,1:-8,4:-3,3:+5,4:-7,3:+8,2:-3,1:-3,2:-4,3:-5"),
@@ -1041,16 +1198,33 @@ final class UnstirTests: XCTestCase {
             XCTAssertEqual(level.layout, layout)
             XCTAssertEqual(level.scramble, [Twist].parse(word, in: layout))
         }
+    }
+
+    /// Endless's ramp: tank n has 5 + 5n/4 stirs, to 28, with n/2 hidden under louder ones, to half of them.
+    /// The generator hides more where no rod can go louder, which these tanks never needed.
+    func testEndlessVectors() {
         let endless: [(Int, Layout, String)] = [
-            (0, .quad, "0:-4,3:+7,1:+4,2:+8"),
-            (3, .hex, "1:+4,5:+2,6:+4,2:+2,1:+6,6:+8,2:-4"),
-            (9, .eye, "0:+4,2:+2,1:-2,2:+4,0:+7,3:-3,2:-4,0:+6,3:+7,2:-2,1:+8,3:-4,0:+7"),
+            (0, .quad, "0:-4,3:+7,1:+4,2:+8,0:-3"),
+            (3, .hex, "1:+4,2:+2,0:+5,5:-8,3:+4,1:-4,2:+5,3:-6"),
+            (9, .eye, "0:+4,2:+5,0:-6,2:+7,0:+8,3:-3,2:+2,0:+2,3:-3,2:+2,1:+2,0:-2,3:-4,0:+5,2:+8,3:-3"),
+            (19, .hex, "0:-2,1:+2,6:-5,0:-8,1:-4,5:-3,2:-4,4:+2,6:-4,3:-5,4:-6,2:+4,0:-5,4:-6,3:-7,6:-2,2:+8,5:-2,0:+5,2:+8,"
+                + "5:-4,6:+2,3:-2,4:-5,0:-7,4:-8,2:-3,6:+2"),
+            (28, .quad, "1:-4,3:-2,2:+5,0:-2,3:+6,2:+4,3:+2,1:+4,2:-7,3:+4,0:+6,3:+3,0:+6,3:+4,0:+4,1:-2,2:-2,1:-2,2:-4,3:+6,1:+4,"
+                + "2:-6,1:+4,3:+2,2:+2,1:-5,0:+5,3:+3"),
+            (60, .quad, "2:-4,3:+2,0:-2,2:-2,1:+3,0:-3,3:-4,0:+7,3:+2,2:-2,1:+5,2:+4,1:+4,3:+4,2:-6,1:+7,2:+3,1:+4,3:-3,0:-4,3:+6,"
+                + "2:+5,1:+2,0:+3,3:-2,2:-3,1:-3,0:-3"),
         ]
         for (tank, layout, word) in endless {
             let level = Level.endless(Run(seed: 7, tank: tank))
             XCTAssertEqual(level.layout, layout)
             XCTAssertEqual(level.scramble, [Twist].parse(word, in: layout))
+            XCTAssertEqual(level.layout.inversions(level.scramble), min(tank / 2, level.scramble.count / 2), "tank \(tank)")
         }
+        XCTAssertEqual((0...20).map { Level.endless(Run(seed: 7, tank: $0)).scramble.count },
+                       [5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 20, 21, 22, 23, 25, 26, 27, 28, 28])
+        // Every push the brim takes before it spills fits under the stack's limit, with the deepest tank dealt.
+        XCTAssertLessThan(28 + Run.room - 1, Tank.maxStack)
+        XCTAssertLessThanOrEqual(28, Tank.fourTaps - Level.endless(Run(seed: 7)).picture.fillEntries)
     }
 
     /// The grid's node colours against the prototype's oklch (colour.py): its top and bottom rows, x = -1 ... 1.

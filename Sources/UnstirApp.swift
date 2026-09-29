@@ -90,7 +90,8 @@ struct Harness {
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
         var level = switch env["UNSTIR_MODE"] ?? env["UNSTIR_LEVEL"] {
         case "daily": Level.daily()
-        case "endless": Level.endless(Run(seed: 7))
+        // UNSTIR_BRIM=n: endless opens with n notches on the brim, short of the spill, which only a push may bring.
+        case "endless": Level.endless(Run(seed: 7, brim: min(max(Int(env["UNSTIR_BRIM"] ?? "") ?? 0, 0), Run.room - 1)))
         case "sandbox": Level.sandbox
         default: tier.levels[n - 1]
         }
@@ -98,7 +99,7 @@ struct Harness {
         if bench {
             // UNSTIR_DEPTH overrides. A live picture's heaviest frame is the most entries that keep four taps, and the drag.
             let p = picture ?? tier.levels[0].picture
-            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? 30 - p.fillEntries : 24)
+            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? Tank.fourTaps - p.fillEntries : 24)
             var rng = SplitMix64(state: 24)
             level = Level(id: "bench", tier: tier, label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: p,
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))

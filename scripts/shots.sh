@@ -92,6 +92,13 @@ shot inversion-L12 "Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the tw
 shot inversion-L27 "Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6." LEVEL=27 STACK=2:+3,0:-5,5:+6,4:+3
 shot daily "Today's daily." MODE=daily
 shot endless "Endless, first tank of the run seeded 7." MODE=endless
+# UNSTIR_BRIM sets the notches endless opens with, for that launch only.
+shot endless-brim "Endless, first tank, opened with 5 of the brim's 8 notches: the brim and the tank where moves and par were, no undo or reset." \
+  MODE=endless BRIM=5
+shot endless-cleared "Endless, first tank opened at 5 notches and cleared by the harness after two wasted stirs (2 notches) and five heals: the card shows the brim at 2." \
+  SCREEN=result MODE=endless BRIM=5
+shot endless-spilled "Endless, first tank opened at 7 notches, then rod 1 turned +1, which pushes: the brim spills, and the card shows tanks cleared and the best." \
+  MODE=endless BRIM=7 TURNED=1:1
 shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch)." \
   LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \

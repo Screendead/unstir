@@ -77,8 +77,16 @@ private func glowRing(_ colour: Color, _ width: CGFloat, _ underlay: CGFloat, un
 
 @MainActor @Observable
 final class Game {
+    /// A stack entry, and whether a turn of the player's pushed it: any other is one of the scramble's, perhaps changed
+    /// since by turns that merged into it. Only a run reads it, and a run has no undo.
+    struct Entry: Stacked {
+        var twist: Twist
+        var pushed: Bool
+    }
+
     private(set) var level: Level
-    private(set) var stack: [Twist]
+    private var entries: [Entry]
+    var stack: [Twist] { entries.map(\.twist) }
     /// Stirs since the last reset, newest last: turns of one rod in a row are one stir, and undo commits a stir's negation.
     /// A rod stir names the rod the stack names (the slot under the knob turned). A turn of the tank is rod `Game.tank`,
     /// in steps of the layout's symmetry.
@@ -123,10 +131,15 @@ final class Game {
     private(set) var tankTurned: Bool
     /// False when the caller set `tankTurned`, which then lasts only as long as this game.
     private let storesTankTurned: Bool
+    /// Endless: notches on the brim, carried from tank to tank through the run. A red flash (a push) adds one, which
+    /// stays when the stir is turned back; a heal of one of the scramble's own entries settles one, and cancelling the
+    /// player's own push does not. Full, it spills the run.
+    private(set) var brim: Int
 
     init(level: Level, tankTurned: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil) {
         self.level = level
-        stack = level.scramble
+        entries = level.scramble.map { Entry(twist: $0, pushed: false) }
+        brim = level.run?.brim ?? 0
         firstTry = level.run != nil || !Best.started(level.id)
         self.tankTurned = tankTurned ?? Best.tankTurned
         storesTankTurned = tankTurned == nil
@@ -147,10 +160,10 @@ final class Game {
     /// The sandbox starts on the clean picture, so it is never solved, which keeps it from finishing or saving.
     var solved: Bool { stack.isEmpty && !level.sandbox }
     var par: Int { level.par }
-    var over: Int { max(moves - par, 0) }
-    /// Endless: the first move over par spills the run.
-    var runOver: Bool { level.run != nil && over > 0 }
-    var finished: Bool { solved || runOver }
+    /// Endless has no par.
+    var over: Int { level.run == nil ? max(moves - par, 0) : 0 }
+    var spilled: Bool { level.run != nil && brim >= Run.room }
+    var finished: Bool { solved || spilled }
     var clean: Bool { over == 0 && resets == 0 && undos == 0 && firstTry }
 
     func slot(of knob: Int) -> Int { level.layout.slot(of: knob, at: position) }
@@ -160,7 +173,11 @@ final class Game {
     func commit(rod: Int, steps: Int) {
         guard !finished else { return }
         let slot = self.slot(of: rod)
-        let result = level.seized.contains(rod) ? .refused : stack.commit(rod: slot, steps: steps, in: level.layout)
+        // Every entry of the scramble's that pops is a heal, even where an entry that the merge lets fall cancels it.
+        var healed = 0
+        let result = level.seized.contains(rod) ? .refused
+            : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
+                             popped: { if !$0.pushed { healed += 1 } })
         guard result != .refused else { Log.write("commit \(Twist(rod: rod, steps: steps)) refused"); return }
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
         if open, history.last?.rod == slot {
@@ -172,11 +189,19 @@ final class Game {
         }
         lastCommit = (rod, result)
         turns += 1
-        if result == .pushed { pushes += 1 }
+        if result == .pushed {
+            pushes += 1
+            if level.run != nil { brim += 1 }
+        }
         if result == .cancelled { cancels += 1; cancelledRod = rod }
+        settleBrim(healed)
         Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
-                  + "stack=\(stack.count) \(stack)")
-        settle()
+                  + "\(level.run == nil ? "" : "brim=\(brim) ")stack=\(stack.count) \(stack)")
+        settle(healed: healed > 0)
+    }
+
+    private func settleBrim(_ heals: Int) {
+        if level.run != nil { brim = max(brim - heals, 0) }
     }
 
     /// The tank stir a turn of `steps` would leave open: joined to the open one, a whole turn dropped, and the short way
@@ -206,11 +231,12 @@ final class Game {
         settle()
     }
 
+    /// Endless has none: it would take back a red flash.
     func undo() {
         // The sandbox counts nothing, so its undos are free.
-        guard !finished, !checking, level.sandbox || bank > 0, let last = history.popLast() else { return }
+        guard !finished, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast() else { return }
         if last.rod != Game.tank {
-            stack.commit(rod: last.rod, steps: -last.steps, in: level.layout)
+            entries.commit(Entry(twist: Twist(rod: last.rod, steps: -last.steps), pushed: true), in: level.layout)
             // A white flash whatever the stack did: undo bumps neither pushes nor cancels, so no alarm or thunk may show.
             lastCommit = (knob(over: last.rod), .reduced)
             turns += 1
@@ -225,10 +251,11 @@ final class Game {
         settle()
     }
 
-    /// False when refused, so the caller skips the opening replay.
+    /// False when refused, so the caller skips the opening replay. Endless has none: it would bring back entries the brim
+    /// has already settled on.
     @discardableResult func reset() -> Bool {
-        guard !checking else { return false }
-        stack = level.scramble
+        guard !checking, level.run == nil else { return false }
+        entries = level.scramble.map { Entry(twist: $0, pushed: false) }
         history = []
         open = false
         resets += 1
@@ -238,10 +265,10 @@ final class Game {
 
     func startClock() { start = start ?? .now }
 
-    /// The day's refill of the bank (`Best.refill`), as the level opens on `today`. The sandbox spends no undos, so it
-    /// takes no refill.
+    /// The day's refill of the bank (`Best.refill`), as the level opens on `today`. The sandbox and endless spend no
+    /// undos, so they take no refill.
     func refill(today: String) {
-        guard !level.sandbox else { return }
+        guard !level.sandbox, level.run == nil else { return }
         let added = Best.refill(&bank, last: &refillDay, today: today)
         if storesBank {
             Best.undos = bank
@@ -255,7 +282,7 @@ final class Game {
     /// The day's refill as the level opens with the clocks read as given: the day is `Best.trustedNow`'s, in `zone`.
     func refill(wall: Date = .now, uptime: TimeInterval = Best.uptime(), boot: String? = Best.bootSession,
                 zone: TimeZone = .current) {
-        guard !level.sandbox else { return }
+        guard !level.sandbox, level.run == nil else { return }
         let (now, ahead) = Best.trustedNow(wall: wall, uptime: uptime, boot: boot, anchor: &anchor)
         if storesBank { Best.anchor = anchor }
         let today = Best.day(now, in: zone)
@@ -263,6 +290,13 @@ final class Game {
             Log.write(String(format: "undo refill held: clock ahead %.1fh", ahead / 3600))
         }
         refill(today: today)
+    }
+
+    /// Endless: the next tank, with the brim as this one left it, or a new run's first once the brim has spilled.
+    var nextTank: Level? {
+        level.run.map {
+            .endless(spilled ? Run(seed: .random(in: .min ... .max)) : Run(seed: $0.seed, tank: $0.tank + 1, brim: brim))
+        }
     }
 
     /// Sandbox: the stir stays, to be seen on the next picture.
@@ -288,10 +322,11 @@ final class Game {
             .first { !level.seized.contains($0.rod) }
     }
 
-    private func settle() {
+    /// `healed`: the move that led here healed one of the scramble's entries.
+    private func settle(healed: Bool = false) {
         // Refusing a win the picture already shows is the bug players hit, and a residual under half a pixel is invisible.
         // Only the coarse pass runs here: the fine one takes ~0.1 s exactly when it passes, which would hitch the win.
-        if !stack.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel) {
+        if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel) {
             let stack = stack, layout = level.layout
             checking = true
             Task {
@@ -301,7 +336,9 @@ final class Game {
                 guard self.stack == stack else { return }
                 if solved {
                     Log.write("looks solved \(stack)")
-                    self.stack = []
+                    // The tank's last heal, where the move that made it healed none of the scramble's entries itself.
+                    if !healed && self.entries.contains(where: { !$0.pushed }) { self.settleBrim(1) }
+                    self.entries = []
                 }
                 self.finish()
             }
@@ -313,7 +350,8 @@ final class Game {
     private func finish() {
         guard finished else { return }
         seconds = Int(Date.now.timeIntervalSince(start ?? .now))
-        Log.write("\(solved ? "solved" : "spilled") \(level.id) moves=\(moves) par=\(par) seconds=\(seconds) counts=\(counts)")
+        Log.write("\(solved ? "solved" : "spilled") \(level.id) moves=\(moves) "
+                  + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
             if solved { Best.tanks = max(Best.tanks, run.tank + 1) }
         } else if solved && counts {
@@ -458,7 +496,9 @@ struct LevelView: View {
                         control(game.level.layout.rawValue) { if liveRod == nil { game.nextLayout() } }
                     } else {
                         VStack(alignment: .trailing, spacing: 4) {
-                            Text("moves \(game.moves) / par \(game.par)")
+                            // Endless has no par: the brim stands in for the moves, and takes the red flash that fills it.
+                            Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)"
+                                 : "brim \(game.brim) / \(Run.room)")
                                 // On black the wasted-twist alarm reads at full contrast, whatever the picture shows.
                                 .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { text, t in
                                     text.foregroundStyle(t > 0.5 ? Color.alarm : Color.text)
@@ -518,13 +558,13 @@ struct LevelView: View {
                         .opacity(!game.level.sandbox && game.bank == 0 ? 0.35 : 1)
                         .overlay(alignment: .topTrailing) { refillBadge }
                     Spacer()
-                    // Endless: a reset would refill the moves. Undo spends the bank.
-                    if game.level.run == nil {
-                        control("reset") { if game.reset() { replays += 1 } }
-                    }
+                    control("reset") { if game.reset() { replays += 1 } }
                 }
-                .disabled(settling || game.finished || shown != nil)
-                .opacity(showResult ? 0 : 1)
+                // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
+                // other level's does.
+                .disabled(settling || game.finished || shown != nil || game.level.run != nil)
+                .opacity(showResult || game.level.run != nil ? 0 : 1)
+                .accessibilityHidden(game.level.run != nil)
                 .padding(.bottom, 8)
             }
         }
@@ -567,7 +607,8 @@ struct LevelView: View {
             }
         }
         .onAppear {
-            Log.write("level \(game.level.id) opens, par \(game.par) \(game.stack)")
+            let rules = game.level.run.map { "tank \($0.tank) brim \($0.brim)" } ?? "par \(game.par)"
+            Log.write("level \(game.level.id) opens, \(rules) \(game.stack)")
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
             if let today { game.refill(today: today) } else { game.refill() }
             // Where there is no opening, onChange's initial call may run before the refill.
@@ -1215,10 +1256,10 @@ struct Unstirred: ViewModifier, Animatable {
         let n = floats.count / 4
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
-        // A live picture keeps four taps only to 30 entries less its fill: the same budget as 30 without it. Counted in
-        // committed entries, so a touch never changes the taps; the drag rides one over, within the 31 the shader's
-        // comment measured.
-        let fourTaps = Float(30 - fillEntries) + (liveRod == nil ? 0 : 1)
+        // A live picture keeps four taps only to `Tank.fourTaps` entries less its fill: the same budget as without it.
+        // Counted in committed entries, so a touch never changes the taps; the drag rides one over, within the 31 the
+        // shader's comment measured.
+        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod == nil ? 0 : 1)
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
                                  .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
@@ -1378,33 +1419,31 @@ struct ResultCard: View {
     var body: some View {
         let run = game.level.run
         let accent = game.level.tier == .plughole ? Color.neonCyan : .blood
-        let next: Level? = if let run {
-            .endless(game.runOver ? Run(seed: .random(in: .min ... .max)) : Run(seed: run.seed, tank: run.tank + 1))
-        } else {
-            game.level.tier.levels.drop(while: { $0.id != game.level.id }).dropFirst().first
-        }
+        let next = run != nil ? game.nextTank : game.level.tier.levels.drop(while: { $0.id != game.level.id }).dropFirst().first
+        let time = String(format: "%d:%02d", game.seconds / 60, game.seconds % 60)
         VStack(spacing: 26) {
             VStack(spacing: 8) {
-                Text("moves \(game.moves) \u{00B7} par \(game.par) \u{00B7} "
-                     + String(format: "%d:%02d", game.seconds / 60, game.seconds % 60))
-                if game.clean {
-                    Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-                } else if game.over > 0 {
-                    Text("+\(game.over) over par").foregroundStyle(Color.magenta)
-                } else {
-                    Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-                        .foregroundStyle(Color.amber)
-                }
                 if let run {
-                    Text(game.runOver ? "tanks cleared \(run.tank + (game.solved ? 1 : 0)) \u{00B7} best \(Best.tanks)"
-                         : "tank \(run.tank + 1)")
+                    Text("moves \(game.moves) \u{00B7} \(time)")
+                    Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
+                         : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                } else {
+                    Text("moves \(game.moves) \u{00B7} par \(game.par) \u{00B7} \(time)")
+                    if game.clean {
+                        Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
+                    } else if game.over > 0 {
+                        Text("+\(game.over) over par").foregroundStyle(Color.magenta)
+                    } else {
+                        Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
+                            .foregroundStyle(Color.amber)
+                    }
                 }
             }
             .font(.mono(13))
             HStack(spacing: 40) {
                 Button("\u{2039} levels", action: onExit)
                 if let next {
-                    Button(game.runOver ? "new run \u{203A}" : "next \u{203A}") { onNext(next) }
+                    Button(game.spilled ? "new run \u{203A}" : "next \u{203A}") { onNext(next) }
                         .foregroundStyle(accent).shadow(color: accent, radius: 4)
                 }
             }

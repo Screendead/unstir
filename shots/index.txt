@@ -44,6 +44,9 @@ inversion-L12.png  Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twi
 inversion-L27.png  Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6.
 daily.png  Today's daily.
 endless.png  Endless, first tank of the run seeded 7.
+endless-brim.png  Endless, first tank, opened with 5 of the brim's 8 notches: the brim and the tank where moves and par were, no undo or reset.
+endless-cleared.png  Endless, first tank opened at 5 notches and cleared by the harness after two wasted stirs (2 notches) and five heals: the card shows the brim at 2.
+endless-spilled.png  Endless, first tank opened at 7 notches, then rod 1 turned +1, which pushes: the brim spills, and the card shows tanks cleared and the best.
 undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.

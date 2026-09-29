@@ -80,17 +80,20 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 
 - **Twist.swift** holds the core model and has no UI. A scramble is a stack of `Twist(rod, steps)` entries (30° per
   step), applied bottom first. `Tank.twist`/`Tank.profile` is the point map: a rigid disc core out to `plateau` (0.6),
-  then a smoothstep shear ring. `Array<Twist>.commit` is the one rule for every rod stir. A turn merges into the rod's
-  newest entry when everything above that entry commutes with the turn, and pushes a new entry otherwise. Commutation is
-  decided geometrically (non-overlapping discs), or by sampling the maps on `Tank.samples` when the discs overlap. An
-  entry that merges to 0 steps pops. `Layout.looksSolved` checks the stack against the identity to half a pixel. The
-  stack names the glass's own rods (slots), so a turn of the tank never touches it: `Layout.order`/`tankStep` are the
-  layout's rotational symmetry (hex's hub held still), which sets each rod's twist exactly on a rod of the same size,
-  and `slot(of:at:)`/`knob(over:at:)` map a physical knob to the slot under it at a tank position.
+  then a smoothstep shear ring. `Array.commit` is the one rule for every rod stir. A turn merges into the rod's
+  newest entry when everything above that entry commutes with the turn, and pushes a new entry otherwise. It runs on any
+  `Stacked` entries, so what rides with an entry (`Game.Entry`'s mark of the player's push) stays with it: the entry a
+  turn lands on keeps its own. It hands `popped` every entry that merges to nothing, including one that an entry the
+  merge lets fall cancels. Commutation is decided geometrically (non-overlapping discs), or by sampling the maps on
+  `Tank.samples` when the discs overlap. An entry that merges to 0 steps pops. `Layout.looksSolved` checks the stack
+  against the identity to half a pixel. The stack names the glass's own rods (slots), so a turn of the tank never
+  touches it: `Layout.order`/`tankStep` are the layout's rotational symmetry (hex's hub held still), which sets each
+  rod's twist exactly on a rod of the same size, and `slot(of:at:)`/`knob(over:at:)` map a physical knob to the slot
+  under it at a tank position.
 - **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
   the stack's inverses to sample the picture. The tests only reach the Swift copy (`Tank.profile`/`Tank.twist`), so
   change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
-  The shader's tap count and the `Tank.maxStack` (36) and four-tap limits in `Unstirred` are tuned against 120 Hz on an
+  The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (30) limits are tuned against 120 Hz on an
   iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone.
 - **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw whirlpool's live
@@ -112,24 +115,32 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
   deeper variants on live pictures that follow a table, and maelstrom, until it has a set of its own, whirlpool's
   scrambles on each picture's twin. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole.
-  The generator is ported draw for draw from an earlier prototype, and `testDailyAndEndlessVectors` pins its output.
-  Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most)
-  refills by 2 the first time a level other than the sandbox opens on a local calendar day later than the stored day of
-  its last refill (`Best.refill`, `Best.refilled`), so each day played refills once and a long absence once; a fresh
-  install records the day without a refill, and a clock moved back never refills. The day is `Best.trustedNow`'s, in the
-  current time zone: it stores an anchor (`Best.anchor`), the last time it vouched for with the uptime then
-  (`CLOCK_MONOTONIC_RAW`, which counts sleep and which setting the clock never moves) and the boot session
-  (`kern.bootsessionuuid`, nil where the sandbox refuses it). Within a boot, a wall clock more than `slack` (5 min)
-  ahead of the anchor plus the uptime since gives way to that reckoning, and the anchor stays; otherwise the wall clock
-  is believed, and the anchor follows it from as far as `slack` behind, but never further past the reckoning than a
-  second plus `drift` (100 ppm) of the uptime since, so creeping the clock ahead gains about a second an opening. A new
-  boot believes the wall clock, and anchors there unless it reads more than `slack` before the anchor's time, so a clock
-  reset at boot and set right later still counts as a new boot. With the session unread, a new boot shows as the uptime
-  going back, or as a jump at least the anchor's uptime, which is believed. The launch logs whether the session was
-  read, the uptime and `kern.monotonicclock`. A `Level` may have `seized` knobs, which ignore touch; the tank turns only
-  on such a level. `par` is `fixedPar`, else `scramble.count`.
-- **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and the
-  endless spill. `Game.commit` takes a physical knob and commits to the slot under it. `Game.turnTank` is a move that
+  The generator is ported draw for draw from an earlier prototype and is frozen: every past daily is its output, and
+  `testDailyVectors` pins them. Endless changes only what it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to
+  28, at least n/2 of them hidden, to half), which `testEndlessVectors` pins. A `Run` is endless's seed, tank and the
+  brim's notches as that tank opens. Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo
+  bank (`Best.undos`, 10 at most) refills by 2 the first time a level other than the sandbox or endless opens on a local
+  calendar day later than the stored day of its last refill (`Best.refill`, `Best.refilled`), so each day played refills
+  once and a long absence once; a fresh install records the day without a refill, and a clock moved back never
+  refills. The day is `Best.trustedNow`'s, in the current time zone: it stores an anchor (`Best.anchor`), the last time
+  it vouched for with the uptime then (`CLOCK_MONOTONIC_RAW`, which counts sleep and which setting the clock never
+  moves) and the boot session (`kern.bootsessionuuid`, nil where the sandbox refuses it); the sandbox and endless leave
+  it alone. Within a boot, a wall clock more than `slack` (5 min) ahead of the anchor plus the uptime since gives way to
+  that reckoning, and the anchor stays; otherwise the wall clock is believed, and the anchor follows it from as far as
+  `slack` behind, but never further past the reckoning than a second plus `drift` (100 ppm) of the uptime since, so
+  creeping the clock ahead gains about a second an opening. A new boot believes the wall clock, and anchors there
+  unless it reads more than `slack` before the anchor's time, so a clock reset at boot and set right later still counts
+  as a new boot. With the session unread, a new boot shows as the uptime going back, or as a jump at least the anchor's
+  uptime, which is believed. The launch logs whether the session was read, the uptime and `kern.monotonicclock`. A
+  `Level` may have `seized` knobs, which ignore touch; the tank turns only on such a level. `par` is `fixedPar`, else
+  `scramble.count`.
+- **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and
+  endless's brim. `Game.commit` takes a physical knob and commits to the slot under it. Endless has no par, undo or
+  reset: each red flash (a `.pushed` commit) adds a notch to `Game.brim`, each of the scramble's entries that pops
+  settles one (the heal's `.cancelled` commit, or a push that the heal lets fall cancelling it), and at `Run.room` (8)
+  the run spills. The stack's entries mark the player's pushes (`Game.Entry`) so that cancelling one is no heal; a
+  win the fine pass calls also settles one, as the tank's last heal, while one of the scramble's entries is left and
+  unless its move healed one. `Game.nextTank` carries it to the next tank. `Game.turnTank` is a move that
   pushes no entry: turns in a row join, and one netting a whole turn drops. `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
@@ -169,8 +180,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
-  (`UNSTIR_TURNED=rod:steps`), a touch on a seized knob held that many seconds into its shake (`UNSTIR_SHAKE`, with
-  `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds
+  (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
+  many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
+  (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds
   the rim lesson's ghost finger and a refill's "+2". `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd`
   the day the level opens on; a harnessed launch never stores the bank, the refill's day or its anchor, and with
   `UNSTIR_TODAY` and no day stored it takes the last refill as long ago, so the level opens on a refill. Nor does it

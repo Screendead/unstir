@@ -58,6 +58,7 @@ from Nightmare to Nightmare+ is easy to miss.
 | The way in | Jack chose the strip (2026-09-28) from three working mock-ups (strip, dial, window), for its ticked line of the levels left to open the next tier; he loved the window's live tank but it took too much of the screen. Built on `tiers` with the rename and the gate; the swipe was driven by simulated touches, never a finger. The swap freezes 50–107 ms on the simulator: left for the performance pass |
 | Rename | Nightmare is now **whirlpool** and Nightmare+ **maelstrom** in code, harness (`UNSTIR_TIER`), scripts, tests and docs, on `tiers`. Stored level ids stay `N<k>` and `N+<k>`, so progress carries over (Claude first planned new ids, which would have reset it; the review caught that). The new maelstrom set gets fresh ids, so old N+ bests don't land on new levels |
 | Solver and the maelstrom set | Solver built and verified on branch `solver` (2026-09-29). An independent brute force found a push that holds a disc still and beats plain untwisting by a move, so the optimum now adds a bounded search for such detours: par is the solver's bounded optimum, not a proof. The park rule has two readings (fewest dead knobs over rings with a seam, or every dead knob over a ring without one) and two tie-breaks; Jack's pick is open, and the proposed set is fair under all four. A first proposed table passed every check but its early planning gap came from a tie-break (a lucky guess of direction scores par), its first ten levels all turn counterclockwise, and its seized pairs were always neighbours; a second version is being made against those |
+| Endless's new rules | Built on `endless` (2026-09-29), the rules only: no undo, reset or par, the brim counting red flashes, and Claude's ramp; the header shows "brim k / 8" as a placeholder until the jug is built on the rim. See "Endless changes rules" below |
 | The phone | Free again after the first playtest (Jack, 2026-09-28). It has the sound prototype and the temporary seized table. Next install: the touch fixes with round 2's sound, prepared overnight 2026-09-29 without installing (Jack asked for no phone use while he slept) |
 
 **Jack's calls (2026-09-28).**
@@ -90,7 +91,8 @@ from Nightmare to Nightmare+ is easy to miss.
   carries across tanks; the run ends when it spills. Counting the stirs in the tank was the alternative: anyone who
   turns back every red flash never rises. The one free probe left is a drag not let go, which only a reader of the
   picture can use: the live ring says whether letting go will count, never whether it's right. A 30° slip on the
-  wrong rod costs a notch in endless; heals absorb the odd one. The capacity (4 in the film) waits for TestFlight.
+  wrong rod costs a notch in endless; heals absorb the odd one. The capacity (8 in the approved film) waits for
+  TestFlight.
   **The look** (Jack): the measuring jug on the real rim, filled with the picture's own colours (the only look whose
   single frame read as a level to a viewer who didn't know it), with the tide's outward-spreading colour and vibrancy,
   which Jack loves, grafted on. The tide itself failed on the real rim: even at 1.5x thickness a viewer read the band
@@ -98,6 +100,44 @@ from Nightmare to Nightmare+ is easy to miss.
   nice"): each notch arrives as the picture's colour spreading across the rim behind a glint, and a glow off the
   filled arc grows as the room runs out. Still open, from two cold reads: the spill swells the whole rim instead of
   pouring over the lip at twelve, the rim goes pastel just after it, and "spilled." is easy to miss.
+  **The rules, as built on `endless` (2026-09-29).** No undo control (`Game.undo` refuses), no reset (it would bring
+  back entries the brim has already settled on) and no par (`Game.over` is 0 in endless); moves and time are unlimited.
+  The capacity is `Run.room`, 8, the approved film's ticks: the eighth notch spills. A notch is added by every commit
+  that pushes, the same event as the red ring, the red header flash and the warning tap, and it stays whatever becomes
+  of that entry: turned straight back, cancelled later, merged into, or merged down onto one of the scramble's entries
+  when a heal below it lets it fall (`testAPushThatMergesDownKeepsItsNotch`). A notch is settled by every one of the
+  scramble's own entries that pops: the one a commit cancels (the magenta ring and heavy tap), and one that a push the
+  heal lets fall cancels in the same commit, so a right turn made too early ends where it would had it merged and been
+  healed later (`testAPushThatFallsOntoTheScrambleHealsIt`). The stack now marks the player's pushes (`Game.Entry`), and
+  an entry a turn merges into stays whose it was, so a scramble entry turned part way, or that a push fell onto, still
+  settles one when healed. Nothing settles for cancelling the player's own push, for a white merge (even into the
+  scramble's entry, or two of the scramble's that a heal lets merge: they are healed as one), or for a heal with the
+  brim empty (no credit is banked). The tank's last heal settles one like any other, and the next tank opens with what
+  is left (`Game.nextTank`); where the fine pass calls a win on a stack that isn't empty, the move that got there
+  settles one if any of the scramble's entries is left and the move healed none. The card on a cleared tank shows moves
+  and time, and "tank N · brim k / 8", with next; at the spill, "spilled." over the tank, moves and time, and "tanks
+  cleared K · best B", with new run. `Best.tanks` keeps its meaning (most tanks cleared in one run). `UNSTIR_BRIM=n`
+  opens endless at n notches for one launch.
+  **Claude's calls in building it:** the ramp, as Claude proposed: tank n has 5 + 5n/4 stirs, n/2 of them hidden. The
+  cap is 28 stirs, from tank 19 (the 20th): the stack holds at most the scramble plus the brim's notches, so at 28 the
+  push that spills (7 notches held, at most 35 entries) always fits under `Tank.maxStack` (36); 30 would let a full
+  stack refuse pushes, and its dashed ring would then mark which turns merge. 28 also keeps the dealt tank at four taps
+  (`Tank.fourTaps`, 30, less the grid's fill of 0); with more than two pushes held on a 28-deep tank the shader drops to
+  two taps. Hidden stirs rise to 14, half of the 28, from tank 28. As first built they rose to 27, all but the bottom
+  one, and the generator then made nearly every stir 60° (the review, over 300 seeds: 2-step stirs a fifth to tank 19,
+  half at 40, 95% from 54), a word of equal twists nothing else in the game deals. Capped at half, 2-step stirs hold at
+  about 30% from tank 28 (help's ramp had 29% at its tank 36). It hides at least what it is asked, and more where no rod
+  can go louder: 27 of 183 tanks checked (0 to 60, three seeds) hid 1 or 2 more. So the ramp stops at tank 28: the
+  stack's limit caps the stirs, and hiding more past half only flattens their sizes. How it might keep ramping past
+  there (a generator of endless's own that hides without flattening sizes, or maelstrom's seized knobs on deep tanks)
+  is for Jack. The generator itself is untouched and marked frozen, so every daily is as it was (`testDailyVectors`
+  unchanged); endless is re-pinned (`testEndlessVectors`). Endless takes no undo refill, as the sandbox takes none: it
+  never touches the bank or the refill's clock anchor, and has no undo control to show the "+2" on, so the day's refill
+  waits for the next level that counts.
+  **Open.** Cancelling the player's own push still flashes the magenta heal ring and heavy tap everywhere, though in
+  endless it settles nothing; Claude's recommendation: there, flash it white, as a merge. When `sound` lands, its heal
+  (cancels less a stir turned straight back) counts a later cancel of the player's own push as a heal; it should take
+  the brim's event instead, and its endless over-par case is gone.
 - Switching between tiers must be easier to find than today's header toggles, and on-brand. Jack's idea: stir
   between modes. He chose the strip (see the table).
 - Order of work: the go/no-go slice (`turning-tank`), the switcher as mock-ups for Jack to pick, the rename, then the
