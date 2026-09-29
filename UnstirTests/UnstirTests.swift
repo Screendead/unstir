@@ -8,8 +8,14 @@ import simd
 @testable import Unstir
 
 final class UnstirTests: XCTestCase {
-    /// The undo bank lives in the shared defaults, so every run starts it full.
-    override func setUp() { UserDefaults.standard.removeObject(forKey: "undos.spent") }
+    /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full, never
+    /// refilled or anchored, and the tank never turned.
+    override func setUp() {
+        UserDefaults.standard.removeObject(forKey: "undos.spent")
+        UserDefaults.standard.removeObject(forKey: "undos.day")
+        UserDefaults.standard.removeObject(forKey: "undos.anchor")
+        UserDefaults.standard.removeObject(forKey: "tank.turned")
+    }
 
     func testPush() {
         var s: [Twist] = [Twist(rod: 0, steps: 3)]
@@ -51,8 +57,8 @@ final class UnstirTests: XCTestCase {
         for steps in [1, -5, 11] { XCTAssertTrue(Layout.quad.commutes(stack, above: 0, rod: 0, steps: steps)) }
     }
 
-    /// Nightmare 11 as the player unstirred it: the picture came back while the old rule still held 21 entries.
-    func testNightmare11UnstirsToEmpty() {
+    /// Whirlpool 11 as the player unstirred it: the picture came back while the old rule still held 21 entries.
+    func testWhirlpool11UnstirsToEmpty() {
         var s = [Twist].parse("0:+4,1:-4,3:+2,0:-6,3:+7,0:-5,2:+2,1:+4,2:-6,1:-6", in: .quad)
         let moves = [(1, 2), (0, 11), (1, 4), (2, 6), (1, -4), (2, -2), (1, 4), (0, -6), (3, -7), (0, 6), (3, -2), (0, -4)]
         XCTAssertFalse(moves.map { s.commit(rod: $0.0, steps: $0.1, in: .quad) }.contains(.pushed))
@@ -67,7 +73,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(s.commit(rod: 1, steps: 2, in: .quad), .cancelled)
     }
 
-    /// The old rule's stack on nightmare 11, captured by debugger, less its bottom 0:+4: the identity. Taking a twist off the
+    /// The old rule's stack on whirlpool 11, captured by debugger, less its bottom 0:+4: the identity. Taking a twist off the
     /// top leaves it standing, so only the fine pass can call the win.
     @MainActor func testIdentityStackIsSolved() async throws {
         let captured = "1:-4 3:+2 0:-6 3:+7 0:-5 2:+2 1:+4 2:-6 1:-4 0:+11 1:+4 2:+6 1:-4 2:-2 1:+4 0:-6 3:-7 0:+6 3:-2 0:+1"
@@ -93,21 +99,246 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(game.clean)
     }
 
-    /// At par the newest stir can still be adjusted or undone, but a new stir ends the run.
-    @MainActor func testEndlessEndsOnTheFirstStirPastPar() {
-        let game = Game(level: .endless(Run(seed: 7)))
-        for i in 0..<game.par { game.commit(rod: i % 2, steps: 1) }
-        let last = (game.par - 1) % 2
-        game.commit(rod: last, steps: 1)
-        XCTAssertEqual(game.moves, game.par)
-        game.undo()
-        XCTAssertEqual(game.moves, game.par - 1)
-        XCTAssertEqual(Best.undos, 9)
-        game.commit(rod: last, steps: 1)
+    /// A tank of a run, on scramble `word`, opening with `brim` notches.
+    private func tank(_ word: String, _ layout: Layout = .tri, brim: Int = 0) -> Level {
+        Level(id: "endless", label: "", title: "", layout: layout, scramble: .parse(word, in: layout), run: Run(seed: 1, tank: 4, brim: brim))
+    }
+
+    /// Every red flash adds a notch, and turning the stir back, straight away or later, takes none off: cancelling the
+    /// player's own push is no heal. A turn that merges into that push flashes white and adds none.
+    @MainActor func testEveryPushAddsANotchThatStaysWhenTurnedBack() {
+        let game = Game(level: tank("0:+4"))
+        game.commit(rod: 1, steps: 1)
+        XCTAssertEqual(game.lastCommit?.result, .pushed)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 1, steps: -1)
+        XCTAssertEqual(game.lastCommit?.result, .cancelled)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 1, steps: 2)
+        game.commit(rod: 1, steps: 1)
+        XCTAssertEqual(game.lastCommit?.result, .reduced)
+        XCTAssertEqual(game.brim, 2)
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: -1)
+        XCTAssertEqual(game.brim, 3)
+        // Not joined to the stir it takes back, which a turn of another rod shut.
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.lastCommit?.result, .cancelled)
+        XCTAssertEqual(game.history, [Twist(rod: 1, steps: 3), Twist(rod: 1, steps: -3)])
+        XCTAssertEqual(game.brim, 3)
+        XCTAssertEqual(game.pushes, 3)
+        XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 4)])
+        // Each cancel took back the player's own push, which settles nothing: white, never the heal's ring.
+        XCTAssertEqual(game.cancels, 0)
+    }
+
+    /// Outside a run, cancelling the player's own push flashes the heal's ring as any cancel does.
+    @MainActor func testOwnPushCancelOutsideARunFlashesTheHealRing() {
+        let game = Game(level: Level(id: "test", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]))
+        game.commit(rod: 1, steps: 1)
+        game.commit(rod: 1, steps: -1)
+        XCTAssertEqual(game.lastCommit?.result, .cancelled)
+        XCTAssertEqual(game.cancels, 1)
+    }
+
+    /// A heal of one of the scramble's entries settles a notch, the last heal too; an empty brim stays empty.
+    @MainActor func testAHealOfTheScrambleSettlesANotch() {
+        let game = Game(level: tank("1:+3,0:+4", brim: 2))
+        game.commit(rod: 0, steps: -4)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.brim, 0)
+        XCTAssertTrue(game.solved)
+
+        let empty = Game(level: tank("1:+3,0:+4"))
+        empty.commit(rod: 0, steps: -4)
+        XCTAssertEqual(empty.brim, 0)
+        // Turned part way back first: the entry is still the scramble's, so its heal counts.
+        let partly = Game(level: tank("1:+3,0:+4", brim: 2))
+        partly.commit(rod: 0, steps: -1)
+        partly.commit(rod: 1, steps: 1)
+        XCTAssertEqual(partly.brim, 3)
+        partly.commit(rod: 1, steps: -1)
+        partly.commit(rod: 0, steps: -3)
+        XCTAssertEqual(partly.brim, 2)
+    }
+
+    /// The word 2:-4, 1:+2, 2:+4 holds rod 3's disc still, so healing 3:+2 under it lets the push 2:-4 fall onto the
+    /// scramble's 2:-2. The merged entry stays the scramble's, and so does its heal, while the push's notch stays.
+    @MainActor func testAPushThatMergesDownKeepsItsNotch() {
+        let game = Game(level: tank("0:+9,2:-2,3:+2", .quad))
+        for (rod, steps) in [(2, -4), (1, 2), (2, 4)] { game.commit(rod: rod, steps: steps) }
+        XCTAssertEqual(game.brim, 3)
+        game.commit(rod: 3, steps: -2)
+        XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 9), Twist(rod: 2, steps: -6), Twist(rod: 1, steps: 2), Twist(rod: 2, steps: 4)])
+        XCTAssertEqual(game.brim, 2)
+        game.commit(rod: 2, steps: -4)
+        game.commit(rod: 1, steps: -2)
+        XCTAssertEqual(game.brim, 2)
+        game.commit(rod: 2, steps: 6)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 0, steps: -9)
+        XCTAssertEqual(game.brim, 0)
+        XCTAssertTrue(game.solved)
+    }
+
+    /// As above, but the push that falls cancels the scramble's 2:+4, which is 2:+4's heal: it settles one beside the heal
+    /// that let it fall, so the tank ends as it would had the push merged and 2:+4 been healed after.
+    @MainActor func testAPushThatFallsOntoTheScrambleHealsIt() {
+        let game = Game(level: tank("0:+9,2:+4,3:+2", .quad))
+        for (rod, steps) in [(2, -4), (1, 2), (2, 4)] { game.commit(rod: rod, steps: steps) }
+        XCTAssertEqual(game.pushes, 3)
+        XCTAssertEqual(game.brim, 3)
+        game.commit(rod: 3, steps: -2)
+        XCTAssertEqual(game.lastCommit?.result, .cancelled)
+        XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 9), Twist(rod: 1, steps: 2), Twist(rod: 2, steps: 4)])
+        XCTAssertEqual(game.brim, 1)
+        XCTAssertEqual(game.cancels, 1)
+        XCTAssertEqual(game.cancelledRod, 3)
+        game.commit(rod: 2, steps: -4)
+        game.commit(rod: 1, steps: -2)
+        XCTAssertEqual(game.brim, 1)
+        game.commit(rod: 0, steps: -9)
+        XCTAssertEqual(game.brim, 0)
+        XCTAssertTrue(game.solved)
+    }
+
+    /// Where the fine pass calls the win on a stack that isn't empty, the move that got there is the tank's last heal,
+    /// and settles one notch in all.
+    @MainActor func testALooksSolvedWinSettlesOneNotch() async throws {
+        // testIdentityStackIsSolved's identity, less the 0:+1 on top.
+        let identity = "1:-4 3:+2 0:-6 3:+7 0:-5 2:+2 1:+4 2:-6 1:-4 0:+11 1:+4 2:+6 1:-4 2:-2 1:+4 0:-6 3:-7 0:+6 3:-2"
+            .split(separator: " ").map { t in Twist(rod: Int(t.prefix(1))!, steps: Int(t.dropFirst(2))!) }
+        func solved(_ scramble: [Twist], _ moves: [(Int, Int)]) async throws -> Game {
+            let game = Game(level: Level(id: "endless", label: "", title: "", layout: .quad, scramble: scramble, run: Run(seed: 1, brim: 2)))
+            for (rod, steps) in moves { game.commit(rod: rod, steps: steps) }
+            XCTAssertFalse(game.solved)
+            // The fine pass runs off the main actor, about 1 s in Debug.
+            let deadline = ContinuousClock.now + .seconds(10)
+            while !game.solved, .now < deadline { try await Task.sleep(for: .milliseconds(10)) }
+            XCTAssertTrue(game.solved)
+            return game
+        }
+        // The heal of the scramble's 0:+1 settled one already.
+        let healed = try await solved(identity + [Twist(rod: 0, steps: 1)], [(0, -1)])
+        XCTAssertEqual(healed.brim, 1)
+        // A push turned back leaves the identity: no heal cancelled anything, so the win settles one.
+        let turnedBack = try await solved(identity, [(0, 1), (0, -1)])
+        XCTAssertEqual(turnedBack.pushes, 1)
+        XCTAssertEqual(turnedBack.brim, 2)
+    }
+
+    /// The next tank opens with the brim as this one left it; a spilled run starts afresh.
+    @MainActor func testTheBrimCarriesAcrossTanks() throws {
+        let game = Game(level: tank("1:+3,0:+4", brim: 5))
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: -1)
+        game.commit(rod: 0, steps: -4)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertTrue(game.solved)
+        XCTAssertEqual(game.brim, 4)
+        let next = try XCTUnwrap(game.nextTank)
+        XCTAssertEqual(next.run, Run(seed: 1, tank: 5, brim: 4))
+        XCTAssertEqual(Game(level: next).brim, 4)
+    }
+
+    /// The notch that fills the brim spills the run: finished, not solved, deaf to turns, and the next is a new run.
+    @MainActor func testTheBrimSpillsTheRun() {
+        let game = Game(level: tank("0:+4", brim: Run.room - 2))
+        game.commit(rod: 1, steps: 1)
         XCTAssertFalse(game.finished)
-        game.commit(rod: 1 - last, steps: 1)
+        game.commit(rod: 2, steps: 1)
+        XCTAssertEqual(game.brim, Run.room)
+        XCTAssertTrue(game.spilled)
         XCTAssertTrue(game.finished)
         XCTAssertFalse(game.solved)
+        game.commit(rod: 2, steps: -1)
+        XCTAssertEqual(game.moves, 2)
+        XCTAssertEqual(game.nextTank?.run?.tank, 0)
+        XCTAssertEqual(game.nextTank?.run?.brim, 0)
+    }
+
+    /// The rim plays every change of the brim, from and to, and nothing else: a white merge is none.
+    @MainActor func testTheRimSeesEveryChangeOfTheBrim() {
+        let game = Game(level: tank("1:+3,0:+4", brim: 2))
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: -2)
+        game.commit(rod: 0, steps: -4)
+        XCTAssertEqual(game.brimEvents.map { [$0.from, $0.to] }, [[2, 3], [3, 2]])
+    }
+
+    /// The level springs to each change of the brim, and the notch that fills it climbs to the brim pin at `Brim.meet`.
+    func testTheGaugeSpringsToTheBrim() {
+        let room = Run.room, events = [Brim.Event(from: 5, to: 4, time: 1), Brim.Event(from: 4, to: 5, time: 2)]
+        XCTAssertEqual(Brim.level(at: 0.5, events, base: 5, room: room), 5)
+        // It overshoots on the way down, then settles.
+        XCTAssertLessThan(Brim.level(at: 1.45, events, base: 5, room: room), 4)
+        XCTAssertEqual(Brim.level(at: 1.99, events, base: 5, room: room), 4, accuracy: 0.01)
+        XCTAssertEqual(Brim.level(at: 4, events, base: 5, room: room), 5, accuracy: 0.001)
+        let spill = [Brim.Event(from: room - 1, to: room, time: 1)]
+        let climb = Brim.level(at: 1 + Brim.meet / 2, spill, base: room - 1, room: room)
+        XCTAssertGreaterThan(climb, Double(room - 1))
+        XCTAssertLessThan(climb, Double(room))
+        XCTAssertEqual(Brim.level(at: 1 + Brim.meet, spill, base: room - 1, room: room), Double(room))
+    }
+
+    /// The surface crosses the bezel's middle at the tick for its fill on both sides, and clears the bezel empty and full:
+    /// empty, by more than the meniscus's 3.4 up the wall and the bob's 1.8, so no glint lies on the edge at six.
+    func testTheSurfaceMeetsTheTicks() {
+        let room = Run.room
+        for k in 1..<room {
+            XCTAssertEqual(Brim.levelY(Double(k), room: room), Brim.rMid * cos(Double(k) * .pi / Double(room)), accuracy: 1e-9)
+        }
+        XCTAssertGreaterThan(Brim.levelY(0, room: room), Brim.rOut + 3.4 + 1.8 + 4)
+        XCTAssertLessThan(Brim.levelY(Double(room), room: room), -Brim.rOut)
+    }
+
+    /// The rim takes the picture's colours as the stack stirs them: the grid's orange at three o'clock and cyan at nine,
+    /// and a turn of the quad's top-right rod changes the rim beside it and nowhere across the tank.
+    func testTheRimTakesThePicturesColours() {
+        func rgb(_ floats: [Float], at degrees: Int) -> SIMD3<Float> {
+            SIMD3(floats[3 * degrees], floats[3 * degrees + 1], floats[3 * degrees + 2])
+        }
+        let clean = Brim.colours([], layout: .quad, turn: 0).hue
+        XCTAssertEqual(clean.count, 3 * 360)
+        XCTAssertGreaterThan(rgb(clean, at: 0).x, rgb(clean, at: 0).z)
+        XCTAssertGreaterThan(rgb(clean, at: 180).z, rgb(clean, at: 180).x)
+        let stirred = Brim.colours([Twist(rod: 0, steps: 6)], layout: .quad, turn: 0).hue
+        XCTAssertGreaterThan(simd_length(rgb(stirred, at: 315) - rgb(clean, at: 315)), 0.1)
+        XCTAssertEqual(rgb(stirred, at: 135), rgb(clean, at: 135))
+    }
+
+    /// The stirs that mix the picture after a spill start from nothing, so the picture is untouched until they begin.
+    func testTheMurkStartsFromNothing() {
+        let still = Brim.murk(.quad, seed: 1, at: 0)
+        XCTAssertEqual(still.count, 4 * 24)
+        XCTAssertTrue(stride(from: 3, to: still.count, by: 4).allSatisfy { still[$0] == 0 })
+        let done = Brim.murk(.quad, seed: 1, at: 10)
+        XCTAssertTrue(stride(from: 3, to: done.count, by: 4).allSatisfy { abs(done[$0]) > 1 })
+    }
+
+    /// Endless has no undo, no reset and no par: moves run on past the scramble, and the bank is never touched.
+    @MainActor func testEndlessHasNoUndoResetOrPar() {
+        Best.undos = 5
+        let game = Game(level: .endless(Run(seed: 7)))
+        // Rods 0 and 2 never touch, and each has a twist of the scramble in reach: each turn is a stir that merges.
+        XCTAssertEqual(game.stack.suffix(2), [Twist(rod: 2, steps: 8), Twist(rod: 0, steps: -3)])
+        for _ in 0..<2 {
+            for (rod, steps) in [(2, 1), (0, 1), (2, -1), (0, -1)] { game.commit(rod: rod, steps: steps) }
+        }
+        XCTAssertEqual(game.moves, 8)
+        XCTAssertGreaterThan(game.moves, game.par)
+        XCTAssertFalse(game.finished)
+        XCTAssertEqual(game.over, 0)
+        let (history, stack) = (game.history, game.stack)
+        game.undo()
+        XCTAssertEqual(game.history, history)
+        XCTAssertEqual(game.stack, stack)
+        XCTAssertFalse(game.reset())
+        XCTAssertEqual(game.stack, stack)
+        XCTAssertEqual(game.resets, 0)
+        XCTAssertEqual(Best.undos, 5)
     }
 
     /// Only the newest stir comes back free; turning an older rod back is a new stir.
@@ -166,6 +397,257 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack, [Twist(rod: 2, steps: 1)])
         game.nextLayout()
         XCTAssertEqual(game.stack, [])
+    }
+
+    /// A level that counts, opened on `today` against the stored bank.
+    @MainActor private func opened(on today: String, _ level: Level = Level.plughole[0]) -> Game {
+        let game = Game(level: level)
+        game.refill(today: today)
+        return game
+    }
+
+    /// A fresh install's bank starts full, so the first level opened records its day and adds nothing.
+    @MainActor func testTheFirstOpeningRecordsTheDayWithoutARefill() {
+        let game = opened(on: "2026-09-29")
+        XCTAssertEqual(game.refilled, 0)
+        XCTAssertEqual(game.bank, 10)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        XCTAssertEqual(opened(on: "2026-09-29").refilled, 0)
+    }
+
+    /// The first opening on a later day adds 2, and that day's other openings nothing; months and years roll over.
+    @MainActor func testTheBankRefillsOnceADayPlayed() {
+        Best.undos = 3
+        Best.refilled = "2026-09-29"
+        XCTAssertEqual(opened(on: "2026-09-29").refilled, 0)
+        XCTAssertEqual(Best.undos, 3)
+        let next = opened(on: "2026-09-30")
+        XCTAssertEqual(next.refilled, 2)
+        XCTAssertEqual(next.bank, 5)
+        XCTAssertEqual(Best.undos, 5)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(opened(on: "2026-09-30").refilled, 0)
+        XCTAssertEqual(Best.undos, 5)
+        XCTAssertEqual(opened(on: "2026-10-01").refilled, 2)
+        Best.refilled = "2026-12-31"
+        XCTAssertEqual(opened(on: "2027-01-01").refilled, 2)
+        XCTAssertEqual(Best.undos, 9)
+    }
+
+    /// The bank holds 10 at most; a full bank takes the day's refill as nothing, and the day still counts as refilled.
+    @MainActor func testTheRefillStopsAtTen() {
+        Best.undos = 9
+        Best.refilled = "2026-09-29"
+        XCTAssertEqual(opened(on: "2026-09-30").refilled, 1)
+        XCTAssertEqual(Best.undos, 10)
+        XCTAssertEqual(opened(on: "2026-10-01").refilled, 0)
+        XCTAssertEqual(Best.undos, 10)
+        XCTAssertEqual(Best.refilled, "2026-10-01")
+    }
+
+    /// A long absence refills once, not a day's worth for each day away.
+    @MainActor func testALongGapRefillsOnce() {
+        Best.undos = 0
+        Best.refilled = "2026-01-01"
+        XCTAssertEqual(opened(on: "2026-09-29").refilled, 2)
+        XCTAssertEqual(opened(on: "2026-09-29").refilled, 0)
+        XCTAssertEqual(Best.undos, 2)
+    }
+
+    /// A clock moved back never refills and leaves the day stored; only a day after that one does.
+    @MainActor func testMovingTheClockBackNeverRefills() {
+        Best.undos = 4
+        Best.refilled = "2026-09-30"
+        XCTAssertEqual(opened(on: "2026-09-28").refilled, 0)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(opened(on: "2026-09-30").refilled, 0)
+        XCTAssertEqual(Best.undos, 4)
+        XCTAssertEqual(opened(on: "2026-10-01").refilled, 2)
+    }
+
+    /// The sandbox and endless neither spend nor refill, and opening them leaves the day's refill to the next level that
+    /// counts. Every other mode counts.
+    @MainActor func testOnlyTheSandboxAndEndlessTakeNoRefill() {
+        Best.undos = 4
+        Best.refilled = "2026-09-29"
+        XCTAssertEqual(opened(on: "2026-09-30", .sandbox).refilled, 0)
+        XCTAssertEqual(opened(on: "2026-09-30", .endless(Run(seed: 7))).refilled, 0)
+        let endless = Game(level: .endless(Run(seed: 7)))
+        endless.refill(wall: Self.utc(36), uptime: 3600, boot: "boot-a", zone: .gmt)
+        XCTAssertEqual(endless.refilled, 0)
+        XCTAssertNil(Best.anchor)
+        XCTAssertEqual(Best.undos, 4)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        XCTAssertEqual(opened(on: "2026-09-30", .daily()).refilled, 2)
+        XCTAssertEqual(opened(on: "2026-10-01", Level.maelstrom[0]).refilled, 2)
+        XCTAssertEqual(opened(on: "2026-10-02", Level.plughole[0]).refilled, 2)
+        XCTAssertEqual(Best.undos, 10)
+    }
+
+    /// A bank the caller sets refills and spends in the game alone: nothing is stored.
+    @MainActor func testASetBankIsNeverStored() {
+        Best.undos = 4
+        Best.refilled = "2026-09-29"
+        let game = Game(level: Level(id: "test-bank", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]),
+                        bank: (6, "0000-00-00"))
+        game.refill(today: "2026-09-29")
+        XCTAssertEqual(game.refilled, 2)
+        XCTAssertEqual(game.bank, 8)
+        game.commit(rod: 1, steps: 1)
+        game.undo()
+        XCTAssertEqual(game.bank, 7)
+        XCTAssertEqual(Best.undos, 4)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        game.refill(wall: Self.utc(12), uptime: 3600, boot: "boot-a", zone: .gmt)
+        XCTAssertNil(Best.anchor)
+    }
+
+    /// `h` hours after midnight UTC starting 2026-09-29.
+    private static func utc(_ h: Double) -> Date { Date(timeIntervalSince1970: 1_790_640_000 + h * 3600) }
+
+    /// A level that counts, opened with the wall clock `h` hours into the 29th UTC, `up` hours since boot.
+    @MainActor private func opened(at h: Double, up: Double, boot: String? = "boot-a", zone: TimeZone = .gmt) -> Game {
+        let game = Game(level: Level.plughole[0])
+        game.refill(wall: Self.utc(h), uptime: up * 3600, boot: boot, zone: zone)
+        return game
+    }
+
+    /// Within a boot, a clock set ahead refills nothing until the uptime since the anchor crosses midnight, and that
+    /// refill goes on the real day; the anchor stays put meanwhile.
+    @MainActor func testAClockSetAheadWaitsForRealTime() {
+        XCTAssertEqual(opened(at: 12, up: 72).refilled, 0)
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 36.1, up: 72.1).refilled, 0)
+        XCTAssertEqual(opened(at: 60, up: 83.9).refilled, 0)
+        XCTAssertEqual(Best.undos, 4)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(12), uptime: 72 * 3600, boot: "boot-a"))
+        XCTAssertEqual(opened(at: 60, up: 84.1).refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(opened(at: 84, up: 95).refilled, 0)
+        XCTAssertEqual(Best.undos, 6)
+        XCTAssertEqual(Best.anchor?.wall, Self.utc(12))
+    }
+
+    /// With the boot session read, even a jump longer than the uptime at the anchor is held.
+    @MainActor func testWithTheBootReadEveryJumpAheadIsHeld() {
+        XCTAssertEqual(opened(at: 12, up: 5).refilled, 0)
+        XCTAssertEqual(opened(at: 84, up: 6).refilled, 0)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+    }
+
+    /// Real days refill: the uptime counts sleep, so it keeps pace with the wall clock. A believed opening moves the
+    /// anchor to the wall clock, but a lead of a few minutes only as far as drift explains. A day stored with no anchor,
+    /// as from the build before, is believed.
+    @MainActor func testRealDaysStillRefill() {
+        Best.undos = 4
+        Best.refilled = "2026-09-28"
+        XCTAssertEqual(opened(at: 12, up: 72).refilled, 2)
+        XCTAssertEqual(opened(at: 36, up: 96).refilled, 2)
+        XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(36), uptime: 96 * 3600, boot: "boot-a"))
+        XCTAssertEqual(opened(at: 60.05, up: 120).refilled, 2)
+        XCTAssertEqual(Best.anchor?.wall.timeIntervalSince(Self.utc(60)) ?? 0, 1 + Best.drift * 86400, accuracy: 1e-3)
+        XCTAssertEqual(Best.undos, 10)
+        XCTAssertEqual(Best.refilled, "2026-10-01")
+    }
+
+    /// A clock stepped ahead by a little under `slack` at each opening moves the anchor no further than drift explains,
+    /// so it refills nothing before real midnight.
+    @MainActor func testAClockCreptAheadGetsNoFurtherThanSlack() {
+        XCTAssertEqual(opened(at: 23, up: 72).refilled, 0)
+        Best.undos = 4
+        var wall = 23.0, up = 72.0
+        for _ in 0..<100 {
+            wall += 299.0 / 3600
+            up += 20.0 / 3600
+            XCTAssertEqual(opened(at: wall, up: up).refilled, 0)
+        }
+        XCTAssertLessThan(up, 73)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        XCTAssertEqual(Best.anchor?.wall.timeIntervalSince(Self.utc(23)) ?? 0, 21, accuracy: 1)
+    }
+
+    /// A new boot whose clock reads more than `slack` before the anchor's wall time, as when one resets, is believed but
+    /// leaves the anchor, so setting the clock right later in that boot still reads as a new boot and real days refill.
+    @MainActor func testAClockBehindAtBootThenSetRightStillRefills() {
+        for boots in [("boot-a", "boot-b"), (nil, nil)] as [(String?, String?)] {
+            Best.anchor = nil
+            Best.refilled = nil
+            XCTAssertEqual(opened(at: 12, up: 72, boot: boots.0).refilled, 0)
+            Best.undos = 4
+            XCTAssertEqual(opened(at: 13 - 240, up: 0.5, boot: boots.1).refilled, 0)
+            XCTAssertEqual(Best.anchor?.wall, Self.utc(12))
+            XCTAssertEqual(opened(at: 13.1, up: 0.6, boot: boots.1).refilled, 0)
+            XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(13.1), uptime: 0.6 * 3600, boot: boots.1))
+            XCTAssertEqual(opened(at: 37.1, up: 24.6, boot: boots.1).refilled, 2)
+        }
+    }
+
+    /// An anchor stored in a shape this build can't read counts as none.
+    func testAnUnreadableAnchorIsNone() {
+        UserDefaults.standard.set(Data("junk".utf8), forKey: "undos.anchor")
+        XCTAssertNil(Best.anchor)
+    }
+
+    /// A new boot session has nothing to check the wall clock against, so it is believed and anchors afresh, however
+    /// long the phone has been up; which is how a clock set ahead across a restart still borrows.
+    @MainActor func testANewBootBelievesTheWallClock() {
+        XCTAssertEqual(opened(at: 12, up: 72).refilled, 0)
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 36, up: 1, boot: "boot-b").refilled, 2)
+        XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(36), uptime: 3600, boot: "boot-b"))
+        XCTAssertEqual(opened(at: 60, up: 20, boot: "boot-c").refilled, 2)
+        XCTAssertEqual(opened(at: 84.1, up: 0.1, boot: "boot-d").refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-10-02")
+    }
+
+    /// With the boot session unread, the uptime going back shows a restart, and so might a jump at least the uptime at
+    /// the anchor; anything less is held.
+    @MainActor func testWithTheBootUnreadTheUptimeDecides() {
+        XCTAssertEqual(opened(at: 12, up: 72, boot: nil).refilled, 0)
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 36, up: 73, boot: nil).refilled, 0)
+        XCTAssertEqual(opened(at: 36, up: 1, boot: nil).refilled, 2)
+        XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(36), uptime: 3600, boot: nil))
+        Best.anchor = Best.Anchor(wall: Self.utc(36), uptime: 5 * 3600, boot: nil)
+        XCTAssertEqual(opened(at: 48.5, up: 16, boot: nil).refilled, 0)
+        XCTAssertEqual(opened(at: 60, up: 16, boot: nil).refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-10-01")
+    }
+
+    /// The day is the local one where the phone is now, for the believed instant and the reckoned one alike.
+    @MainActor func testTheDayFollowsTheTimeZone() {
+        let london = TimeZone(identifier: "Europe/London")!, tokyo = TimeZone(identifier: "Asia/Tokyo")!
+        XCTAssertEqual(opened(at: 20, up: 72, zone: london).refilled, 0)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 22, up: 74, zone: tokyo).refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(opened(at: 46.5, up: 90.9, zone: tokyo).refilled, 0)
+        XCTAssertEqual(opened(at: 46.5, up: 91.1, zone: tokyo).refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-10-01")
+    }
+
+    /// A clock set back refills nothing and leaves the anchor where it was, so setting it right again is no jump.
+    @MainActor func testAClockSetBackKeepsTheAnchor() {
+        XCTAssertEqual(opened(at: 36, up: 72).refilled, 0)
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 13, up: 73).refilled, 0)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(Best.anchor?.wall, Self.utc(36))
+        XCTAssertEqual(opened(at: 38, up: 74).refilled, 0)
+        XCTAssertEqual(Best.anchor?.wall, Self.utc(38))
+        XCTAssertEqual(opened(at: 60, up: 96).refilled, 2)
+    }
+
+    /// Days are written so that they compare as strings.
+    func testDaysSortAsStrings() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        let day = { (y: Int, m: Int, d: Int) in Best.day(calendar.date(from: DateComponents(year: y, month: m, day: d, hour: 12))!) }
+        XCTAssertEqual(day(2026, 9, 29), "2026-09-29")
+        XCTAssertEqual([day(2027, 1, 1), day(2026, 12, 31), day(2026, 10, 1), day(2026, 9, 30)].sorted(),
+                       ["2026-09-30", "2026-10-01", "2026-12-31", "2027-01-01"])
     }
 
     /// An endless pent tank the player saw smudged where rods 1 and 2 overlap: 32 px at most, about 40 px across.
@@ -242,51 +724,273 @@ final class UnstirTests: XCTestCase {
 
     func testLevelsNeverMerge() {
         let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 6, 7, 8, 9, 7, 8, 10, 12, 14]
-        XCTAssertEqual(Level.all.map(\.scramble.count), par)
-        XCTAssertEqual(Level.all.filter(\.replay).count, 3)
+        XCTAssertEqual(Level.plughole.map(\.scramble.count), par)
+        XCTAssertEqual(Level.plughole.filter(\.replay).count, 3)
     }
 
     /// Against the design table's inversion column.
     func testInversions() {
-        XCTAssertEqual(Level.all.map { $0.layout.inversions($0.scramble) },
+        XCTAssertEqual(Level.plughole.map { $0.layout.inversions($0.scramble) },
                        [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4])
     }
 
-    /// Twice each level's par, strictly more inversions (against the nightmare design table), and room to stir on top.
-    func testNightmare() {
-        let nightmare = Level.nightmare
-        XCTAssertEqual(nightmare.map(\.layout), Level.all.map(\.layout))
-        XCTAssertEqual(nightmare.map(\.scramble.count), Level.all.map { 2 * $0.scramble.count })
-        let inversions = nightmare.map { $0.layout.inversions($0.scramble) }
+    /// Twice each level's par, strictly more inversions (against the whirlpool design table), and room to stir on top.
+    func testWhirlpool() {
+        let whirlpool = Level.whirlpool
+        XCTAssertEqual(whirlpool.map(\.layout), Level.plughole.map(\.layout))
+        XCTAssertEqual(whirlpool.map(\.scramble.count), Level.plughole.map { 2 * $0.scramble.count })
+        let inversions = whirlpool.map { $0.layout.inversions($0.scramble) }
         XCTAssertEqual(inversions, [1, 1, 2, 2, 3, 3, 4, 4, 2, 3, 4, 5, 6, 3, 4, 3, 6, 7, 4, 5, 6, 8, 5, 6, 8, 10, 12])
-        for (n, level) in zip(inversions, Level.all) { XCTAssertGreaterThan(n, level.layout.inversions(level.scramble), level.id) }
-        XCTAssertFalse(nightmare.contains(where: \.replay))
-        XCTAssertGreaterThanOrEqual(Tank.maxStack - nightmare.map(\.scramble.count).max()!, 8)
+        for (n, level) in zip(inversions, Level.plughole) { XCTAssertGreaterThan(n, level.layout.inversions(level.scramble), level.id) }
+        XCTAssertFalse(whirlpool.contains(where: \.replay))
+        XCTAssertGreaterThanOrEqual(Tank.maxStack - whirlpool.map(\.scramble.count).max()!, 8)
     }
 
-    /// Nightmare's scrambles under ids of their own: a nightmare best or start must never open a Nightmare+ level or spend
-    /// its first try.
-    func testNightmarePlusKeepsItsOwnProgress() {
-        XCTAssertEqual(Level.nightmarePlus.map(\.scramble), Level.nightmare.map(\.scramble))
-        XCTAssertTrue(Set(Level.nightmarePlus.map(\.id)).isDisjoint(with: (Level.all + Level.nightmare).map(\.id)))
-        XCTAssertTrue((Level.nightmare + Level.nightmarePlus).allSatisfy { $0.nightmare && $0.picture.isLive })
-        XCTAssertTrue(Level.nightmarePlus.allSatisfy(\.plus))
-        XCTAssertFalse((Level.all + Level.nightmare).contains(where: \.plus))
+    /// The menu stores the raw value, and declaration order is the ladder.
+    func testTiers() {
+        XCTAssertEqual(Tier.allCases.map(\.rawValue), ["plughole", "whirlpool", "maelstrom"])
+        XCTAssertEqual(Tier.allCases.map(\.below), [nil, .plughole, .whirlpool])
     }
 
-    /// Against the design table. Coral reads only to 6 stirs and neurons to 14; each Nightmare+ level shows the twin of
-    /// its Nightmare level's picture. The sandbox cycles every picture but the twins.
-    func testNightmarePictures() {
+    /// Plughole is always open. Each tier above opens exactly when every level of the tier just below has a best at or
+    /// under par, and the developer unlock opens them all.
+    func testTierGate() {
+        var bests: [String: Best] = [:]
+        func open(_ tier: Tier, unlocked: Bool = false) -> Bool { tier.isOpen(unlocked: unlocked) { bests[$0] } }
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false])
+        for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
+        XCTAssertFalse(open(.whirlpool))
+        bests[Level.plughole.last!.id] = Best(over: 1, seconds: 30)
+        XCTAssertFalse(open(.whirlpool))
+        XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, Array(repeating: true, count: 26) + [false])
+        bests[Level.plughole.last!.id] = Best(over: 0, seconds: 30)
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false])
+        // A maelstrom best opens nothing below it, and the tier just below is the only one that counts.
+        for level in Level.maelstrom { bests[level.id] = Best(over: 0, seconds: 30) }
+        XCTAssertFalse(open(.maelstrom))
+        for level in Level.whirlpool { bests[level.id] = Best(over: 0, seconds: 30) }
+        for level in Level.plughole { bests[level.id] = nil }
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true])
+        bests = [:]
+        XCTAssertEqual(Tier.allCases.map { open($0, unlocked: true) }, [true, true, true])
+
+        let flag = Best.unlocked
+        defer { Best.unlocked = flag }
+        Best.unlocked = true
+        XCTAssertTrue(Tier.allCases.allSatisfy { $0.isOpen { _ in nil } })
+        Best.unlocked = false
+        XCTAssertFalse(Tier.whirlpool.isOpen { _ in nil })
+    }
+
+    /// A best saved while hints existed still loads and still counts at par; the save of a better result drops its hints.
+    func testABestSavedWithHintsStillCounts() throws {
+        let id = "test-hints"
+        defer { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
+        UserDefaults.standard.set(Data(#"{"over":0,"hints":3,"seconds":30,"clean":false}"#.utf8), forKey: "best.\(id)")
+        let old = try XCTUnwrap(Best.load(id))
+        XCTAssertEqual(old.over, 0)
+        XCTAssertTrue(Tier.whirlpool.isOpen(unlocked: false) { _ in old })
+        Best(over: 0, seconds: 40).save(id)
+        XCTAssertEqual(Best.load(id)?.seconds, 30)
+        Best(over: 0, seconds: 20).save(id)
+        XCTAssertEqual(Best.load(id)?.seconds, 20)
+        let saved = try XCTUnwrap(UserDefaults.standard.data(forKey: "best.\(id)"))
+        XCTAssertFalse(String(decoding: saved, as: UTF8.self).contains("hints"))
+    }
+
+    /// A locked tier opened to look at is never stored, and a stored tier that has closed since comes back as the
+    /// highest open one below it.
+    func testStoredTierIsNeverLocked() {
+        let saved = UserDefaults.standard.string(forKey: "tier")
+        defer { UserDefaults.standard.set(saved, forKey: "tier") }
+        UserDefaults.standard.removeObject(forKey: "tier")
+        var opened: Set<Tier> = [.plughole]
+        func stored() -> Tier { Tier.stored { opened.contains($0) } }
+        func store(_ tier: Tier) { Tier.store(tier) { opened.contains($0) } }
+        XCTAssertEqual(stored(), .plughole)
+        store(.whirlpool)
+        XCTAssertEqual(stored(), .plughole)
+        opened.insert(.whirlpool)
+        store(.whirlpool)
+        XCTAssertEqual(stored(), .whirlpool)
+        store(.maelstrom)
+        XCTAssertEqual(stored(), .whirlpool)
+        opened = Set(Tier.allCases)
+        store(.maelstrom)
+        XCTAssertEqual(stored(), .maelstrom)
+        opened = [.plughole, .whirlpool]
+        XCTAssertEqual(stored(), .whirlpool)
+        opened = [.plughole]
+        XCTAssertEqual(stored(), .plughole)
+    }
+
+    /// A drag switches tiers only when its first move runs at least twice as far sideways as up or down; anything
+    /// steeper stays the scroll view's.
+    func testOnlyASidewaysDragSwitchesTiers() {
+        XCTAssertTrue(MenuView.isSideways(CGSize(width: -15, height: 0)))
+        XCTAssertTrue(MenuView.isSideways(CGSize(width: 15, height: -7)))
+        XCTAssertFalse(MenuView.isSideways(CGSize(width: 14, height: 7)))
+        XCTAssertFalse(MenuView.isSideways(CGSize(width: -11, height: 11)))
+        XCTAssertFalse(MenuView.isSideways(CGSize(width: 0, height: -15)))
+    }
+
+    private func centre(_ layout: Layout, _ k: Int) -> SIMD2<Double> { SIMD2(layout.rods[k].x, layout.rods[k].y) }
+    /// How far into rod k's disc p lies, in that disc's radius: under 1 inside it.
+    private func depth(_ layout: Layout, _ k: Int, _ p: SIMD2<Double>) -> Double {
+        simd_distance(p, centre(layout, k)) / layout.rods[k].z
+    }
+    private func under(_ layout: Layout, _ p: SIMD2<Double>) -> [Int] { layout.rods.indices.filter { depth(layout, $0, p) < 1 } }
+
+    /// Deep in one disc a finger holds that rod the moment it lands.
+    func testGrabInOneDiscIsImmediate() {
+        for layout in Layout.allCases {
+            for k in layout.rods.indices {
+                let p = centre(layout, k) + SIMD2(0.05, 0.03)
+                XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(k), "\(layout) \(k)")
+            }
+        }
+    }
+
+    /// Where two discs overlap, the finger holds the one whose centre is nearest in its own disc's radius, from the
+    /// moment it lands: deep in every lens on every layout, hex's hub among them, either side of where the two are
+    /// level, and near both tips of the lens, where a third disc can join in.
+    func testGrabInAnOverlapTakesTheNearestAtTouch() {
+        for layout in Layout.allCases {
+            let rods = layout.rods
+            for i in rods.indices {
+                for j in rods.indices where i < j && layout.overlaps(i, j) {
+                    let a = centre(layout, i), b = centre(layout, j), d = simd_distance(a, b), ri = rods[i].z, rj = rods[j].z
+                    let u = (b - a) / d, n = SIMD2(-u.y, u.x)
+                    let level = a + u * (d * ri / (ri + rj))
+                    for (p, want) in [(level - u * 0.02, i), (level + u * 0.02, j)] {
+                        XCTAssertEqual(under(layout, p), [i, j], "\(layout) lens \(i)-\(j) at \(p)")
+                        XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(want), "\(layout) lens \(i)-\(j) at \(p)")
+                    }
+                    let x = (d * d + ri * ri - rj * rj) / (2 * d), h = sqrt(ri * ri - x * x)
+                    for tip in [a + u * x + n * h, a + u * x - n * h] {
+                        let inward = simd_normalize(a + u * x - tip)
+                        for side in [-0.01, 0.01] {
+                            let p = tip + inward * 0.03 + u * side, ks = under(layout, p)
+                            let want = ks.min { depth(layout, $0, p) < depth(layout, $1, p) }!
+                            XCTAssertTrue(ks.contains(i) && ks.contains(j), "\(layout) lens \(i)-\(j) tip at \(p)")
+                            XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(want), "\(layout) lens \(i)-\(j) tip at \(p)")
+                        }
+                    }
+                }
+            }
+        }
+        func check(_ layout: Layout, _ i: Int, _ j: Int, at t: Double, _ want: Int) {
+            let p = centre(layout, i) + (centre(layout, j) - centre(layout, i)) * t
+            XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(want), "\(layout) \(i)-\(j) at \(t)")
+        }
+        check(.quad, 0, 1, at: 0.4, 0)
+        check(.quad, 0, 1, at: 0.6, 1)
+        check(.hex, 0, 3, at: 0.45, 0)
+        check(.hex, 0, 3, at: 0.55, 3)
+        // On the eye, a point nearer the small rod's centre is still nearer the big rod in radii.
+        let a = centre(.eye, 0), b = centre(.eye, 2), t = 0.37 / simd_distance(a, b)
+        XCTAssertLessThan(simd_distance(a + (b - a) * t, b), simd_distance(a + (b - a) * t, a))
+        check(.eye, 0, 2, at: t, 0)
+    }
+
+    /// A seized knob is never held: where it is the nearest under the finger it holds nothing but says which knob
+    /// refused, rather than passing the finger to a working neighbour, which holds only where it is the nearer. Where
+    /// knobs are seized the rim wins over the discs that reach it.
+    func testGrabNeverHoldsASeizedKnob() {
+        let a = centre(.quad, 0), b = centre(.quad, 1), p = (a + b) / 2 + SIMD2(0.25, 0)
+        XCTAssertEqual(under(.quad, p), [0, 1])
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], at: p - SIMD2(0, 0.02)), .seized(0))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], at: p + SIMD2(0, 0.02)), .rod(1))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0, 1], at: p + SIMD2(0, 0.02)), .seized(1))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], at: a), .seized(0))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], at: .zero), .nothing)
+        let rim = SIMD2(0.0, -0.95)
+        XCTAssertEqual(LevelView.grab(.tri, seized: [1], at: rim), .rim)
+        XCTAssertEqual(LevelView.grab(.tri, seized: [], at: rim), .rod(0))
+        var rng = SplitMix64(state: 5)
+        for _ in 0..<20000 {
+            let layout = Layout.allCases[rng.below(Layout.allCases.count)]
+            let seized = Set(layout.rods.indices.filter { _ in rng.below(3) == 0 })
+            let p = SIMD2(Double.random(in: -1...1, using: &rng), Double.random(in: -1...1, using: &rng))
+            let nearest = under(layout, p).min { depth(layout, $0, p) < depth(layout, $1, p) }
+            let message = "\(layout) seized \(seized.sorted()) at \(p)", grab = LevelView.grab(layout, seized: seized, at: p)
+            XCTAssertEqual(grab == .rim, !seized.isEmpty && simd_length(p) > 0.93, message)
+            switch grab {
+            case .rod(let k):
+                XCTAssertFalse(seized.contains(k), message)
+                XCTAssertEqual(k, nearest, message)
+            case .seized(let k):
+                XCTAssertTrue(seized.contains(k), message)
+                XCTAssertEqual(k, nearest, message)
+            case .rim: break
+            case .nothing:
+                XCTAssertNil(nearest, message)
+            }
+        }
+    }
+
+    /// A drag's path for the log keeps the landing, its first few points close together, then a point a gap apart, and
+    /// the latest; a finger held still leaves the landing and the lift. A long drag stays within the cap, its first few
+    /// points and its latest kept, and its worst line stays short.
+    func testTrailThinsADragToOneLine() {
+        func trail(gap: Double) -> Trail<SIMD2<Double>> { Trail(gap: gap) { simd_distance($0, $1) } }
+        var still = trail(gap: 3)
+        for ms in stride(from: 0, through: 900, by: 16) { still.add(SIMD2(1, 2), ms: ms) }
+        XCTAssertEqual(still.points.map(\.ms), [0, 896])
+        var line = trail(gap: 3)
+        for i in 0...60 { line.add(SIMD2(Double(i) * 0.25, 0), ms: 10 * i) }
+        XCTAssertEqual(line.points.map(\.at.x), [0, 1, 2, 3, 4, 7, 10, 13, 15])
+        XCTAssertEqual(line.points.map(\.ms), [0, 40, 80, 120, 160, 280, 400, 520, 600])
+        var long = trail(gap: 3)
+        for i in 0...4000 { long.add(SIMD2(Double(i) * 0.25, 0), ms: i) }
+        let points = long.points
+        XCTAssertLessThanOrEqual(points.count, Trail<SIMD2<Double>>.cap)
+        XCTAssertGreaterThan(points.count, Trail<SIMD2<Double>>.cap / 2)
+        XCTAssertEqual(points.prefix(5).map(\.at.x), [0, 1, 2, 3, 4])
+        XCTAssertEqual(points.last!.at.x, 1000)
+        XCTAssertEqual(points.last!.ms, 4000)
+        for (a, b) in zip(points.dropFirst(4), points.dropFirst(5)).dropLast() { XCTAssertGreaterThanOrEqual(b.at.x - a.at.x, 3) }
+        XCTAssertEqual(Log.point(SIMD2(0.4123, -0.1184)), "0.412,-0.118")
+        var worst = trail(gap: 0.03)
+        for i in 0..<400 { worst.add(SIMD2(i % 2 == 0 ? -0.5 : -0.999, -0.999), ms: 100_000 + 997 * i) }
+        let logged = "09-29 10:11:07.772 path seized(12) " + worst.line(Log.point)
+        XCTAssertTrue(logged.contains(" 100000:-0.500,-0.999 "), logged)
+        XCTAssertLessThan(logged.count, 600, logged)
+    }
+
+    /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one. The
+    /// prefixes predate the tiers' names and stay, so a rename keeps what was played.
+    func testLevelIdsMatchTheirTier() {
+        XCTAssertEqual(Tier.allCases.map(\.prefix), ["L", "N", "N+"])
+        for tier in Tier.allCases {
+            XCTAssertEqual(tier.levels.map(\.id), tier.levels.indices.map { "\(tier.prefix)\($0 + 1)" })
+            XCTAssertTrue(tier.levels.allSatisfy { $0.tier == tier }, tier.rawValue)
+        }
+        let ids = Tier.allCases.flatMap(\.levels).map(\.id)
+        XCTAssertEqual(Set(ids).count, ids.count)
+    }
+
+    /// Until maelstrom has levels of its own, whirlpool's scrambles on live pictures, under ids of their own so a
+    /// whirlpool best or start never opens a maelstrom level or spends its first try.
+    func testMaelstromKeepsItsOwnProgress() {
+        XCTAssertEqual(Level.maelstrom.map(\.scramble), Level.whirlpool.map(\.scramble))
+        XCTAssertTrue(Set(Level.maelstrom.map(\.id)).isDisjoint(with: (Level.plughole + Level.whirlpool).map(\.id)))
+        XCTAssertTrue((Level.whirlpool + Level.maelstrom).allSatisfy(\.picture.isLive))
+    }
+
+    /// Against the design table. Coral reads only to 6 stirs and neurons to 14; each maelstrom level shows the twin of
+    /// its whirlpool level's picture. The sandbox cycles every picture but the twins.
+    func testWhirlpoolPictures() {
         XCTAssertEqual(Array(sequence(first: Picture.grid, next: \.next).prefix(9)),
                        [.grid, .sunset, .city, .glass, .chainmail, .coral, .neurons, .marbling, .grid])
         let table: [(Picture, [Int])] = [(.glass, [1, 9, 14, 19, 23, 26, 27]), (.chainmail, [3, 10, 13, 18, 21, 24]),
                                          (.coral, [2, 5, 8, 16]), (.neurons, [4, 7, 11, 17, 20]), (.marbling, [6, 12, 15, 22, 25])]
         var want = [Picture?](repeating: nil, count: 27)
         for (picture, levels) in table { for n in levels { want[n - 1] = picture } }
-        XCTAssertEqual(Level.nightmare.map(\.picture), want)
-        XCTAssertLessThanOrEqual(Level.nightmare.filter { $0.picture == .coral }.map(\.scramble.count).max()!, 6)
-        XCTAssertLessThanOrEqual(Level.nightmare.filter { $0.picture == .neurons }.map(\.scramble.count).max()!, 14)
-        XCTAssertEqual(Level.nightmarePlus.map(\.picture), Level.nightmare.map(\.picture.twin))
+        XCTAssertEqual(Level.whirlpool.map(\.picture), want)
+        XCTAssertLessThanOrEqual(Level.whirlpool.filter { $0.picture == .coral }.map(\.scramble.count).max()!, 6)
+        XCTAssertLessThanOrEqual(Level.whirlpool.filter { $0.picture == .neurons }.map(\.scramble.count).max()!, 14)
+        XCTAssertEqual(Level.maelstrom.map(\.picture), Level.whirlpool.map(\.picture.twin))
         let twins = Set(table.map(\.0.twin))
         XCTAssertEqual(twins.count, 5)
         XCTAssertTrue(twins.isDisjoint(with: table.map(\.0)))
@@ -300,7 +1004,7 @@ final class UnstirTests: XCTestCase {
         let builders: [(Picture, Builder)] = [(.chainmail, Picture.links), (.coral, Picture.kernels), (.marbling, Picture.drops)]
         let delays: Builder = { Picture.delays(t: $1) }
         let twins: [(Picture, Builder)] = builders.map { picture, data in (picture.twin, { data($0, $1) + delays($0, $1) }) }
-            + [(.glassPlus, delays), (.neuronsPlus, delays)]
+            + [(.glassTwin, delays), (.neuronsTwin, delays)]
         for (picture, data) in builders + twins {
             for seed in [0, 12, 27] {
                 for t in [0.0, 1.7, 0.5 * picture.period, picture.period - 0.01] {
@@ -325,13 +1029,13 @@ final class UnstirTests: XCTestCase {
             .replacingOccurrences(of: "[[ stitchable ]]", with: "") + """
 
             // x the line, y the glow, z the soma's reach at p: as the shader draws them, or over every node near p.
-            static float3 probe(float2 p, float ipx, device const packed_float3 *cells, bool brute, bool plus) {
+            static float3 probe(float2 p, float ipx, device const packed_float3 *cells, bool brute, bool twin) {
                 const float wide = 0.1, high = 0.0866025, left = -1.2, top = -1.1258;
                 const int n = 24, rows = 26;
                 // A soma and its glow end within 0.0225 of its node (0.0262 in the twin), a knob within 0.0055 (0.0065 in
                 // the twin, swollen by the beat).
-                float hot = plus ? 1.0 : 0.0, grow = plus ? throb(1.0).x : 1.0;
-                float rs = plus ? 0.0262 : 0.0225, rk = plus ? 0.0065 * grow : 0.0055, soma = 0;
+                float hot = twin ? 1.0 : 0.0, grow = twin ? throb(1.0).x : 1.0;
+                float rs = twin ? 0.0262 : 0.0225, rk = twin ? 0.0065 * grow : 0.0055, soma = 0;
                 float2 ink = 0;
                 if (!brute) {
                     float2 a;
@@ -341,7 +1045,7 @@ final class UnstirTests: XCTestCase {
                     float d = sqrt(da);
                     if (flags & 64u) soma = d < rs ? 1.0 - d / rs : 0.0;
                     else if (flags & 128u) ink = float2(saturate((rk - d) * ipx + 0.5), glow(d));
-                    dendrites(p, cells, at, a, flags, hot, grow, plus, ipx, ink);
+                    dendrites(p, cells, at, a, flags, hot, grow, twin, ipx, ink);
                     return float3(ink, soma);
                 }
                 int jc = int(floor((p.y - top) / high));
@@ -358,7 +1062,7 @@ final class UnstirTests: XCTestCase {
                         for (int dir = 0; dir < 3; dir++) {
                             if ((flags & (1u << dir)) == 0u) continue;
                             float2 b = float3(cells[(j + step[dir].y) * n + i + step[dir].x]).xy;
-                            edge(p, cell.xy, b, (flags >> (8u + 5u * uint(dir))) & 31u, hot, grow, plus, ipx, ink);
+                            edge(p, cell.xy, b, (flags >> (8u + 5u * uint(dir))) & 31u, hot, grow, twin, ipx, ink);
                         }
                     }
                 }
@@ -367,12 +1071,12 @@ final class UnstirTests: XCTestCase {
 
             // Counts the pixels whose line, glow or soma differ.
             kernel void scan(device const float *data [[buffer(0)]], device atomic_uint *bad [[buffer(1)]],
-                             constant float &side [[buffer(2)]], constant uint &plus [[buffer(3)]],
+                             constant float &side [[buffer(2)]], constant uint &twin [[buffer(3)]],
                              uint2 gid [[thread_position_in_grid]]) {
                 float2 p = (float2(gid) + 0.5) / side * 2.0 - 1.0;
                 if (length_squared(p) > 1.0) return;
                 device const packed_float3 *cells = (device const packed_float3 *)data;
-                float3 s = probe(p, side / 2.0, cells, false, plus != 0u), b = probe(p, side / 2.0, cells, true, plus != 0u);
+                float3 s = probe(p, side / 2.0, cells, false, twin != 0u), b = probe(p, side / 2.0, cells, true, twin != 0u);
                 if (abs(s.x - b.x) > 0.05) atomic_fetch_add_explicit(&bad[0], 1u, memory_order_relaxed);
                 if (abs(s.y - b.y) > 0.01) atomic_fetch_add_explicit(&bad[1], 1u, memory_order_relaxed);
                 if (abs(s.z - b.z) > 0.01) atomic_fetch_add_explicit(&bad[2], 1u, memory_order_relaxed);
@@ -391,7 +1095,7 @@ final class UnstirTests: XCTestCase {
         for seed in seeds {
             let data = webs.withLock { $0[seed]! }
             let cells = try XCTUnwrap(device.makeBuffer(bytes: data, length: 4 * data.count))
-            for var plus: UInt32 in [0, 1] {
+            for var twin: UInt32 in [0, 1] {
                 let bad = try XCTUnwrap(device.makeBuffer(length: 12))
                 memset(bad.contents(), 0, 12)
                 let cb = try XCTUnwrap(queue.makeCommandBuffer()), enc = try XCTUnwrap(cb.makeComputeCommandEncoder())
@@ -399,7 +1103,7 @@ final class UnstirTests: XCTestCase {
                 enc.setBuffer(cells, offset: 0, index: 0)
                 enc.setBuffer(bad, offset: 0, index: 1)
                 enc.setBytes(&side, length: 4, index: 2)
-                enc.setBytes(&plus, length: 4, index: 3)
+                enc.setBytes(&twin, length: 4, index: 3)
                 enc.dispatchThreads(MTLSize(width: Int(side), height: Int(side), depth: 1),
                                     threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1))
                 enc.endEncoding()
@@ -407,7 +1111,7 @@ final class UnstirTests: XCTestCase {
                 cb.waitUntilCompleted()
                 XCTAssertNil(cb.error)
                 let n = bad.contents().bindMemory(to: UInt32.self, capacity: 3)
-                XCTAssertEqual([n[0], n[1], n[2]], [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(plus == 1 ? " twin" : "")")
+                XCTAssertEqual([n[0], n[1], n[2]], [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(twin == 1 ? " twin" : "")")
             }
         }
     }
@@ -497,8 +1201,80 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.over, 0)
     }
 
+    /// A drag of the rim counts the stir letting go would leave, so a turn that nets a whole one with the open stir
+    /// counts nothing, and one past half a turn counts the short way round.
+    @MainActor func testTankCountIsWhatLettingGoLeaves() {
+        func game(_ layout: Layout, open: Int) -> Game {
+            let game = Game(level: Level(id: "test-count", label: "", title: "", layout: layout, scramble: [Twist(rod: 0, steps: 4)]))
+            game.turnTank(open)
+            return game
+        }
+        XCTAssertEqual(game(.tri, open: 1).tankStir(after: 2), 0)
+        XCTAssertEqual(game(.tri, open: 0).tankStir(after: 3), 0)
+        XCTAssertEqual(game(.hex, open: 2).tankStir(after: 4), 0)
+        XCTAssertEqual(game(.eye, open: 1).tankStir(after: 1), 0)
+        XCTAssertEqual(game(.hex, open: 0).tankStir(after: 4), -2)
+        for layout in Layout.allCases {
+            for open in -layout.order...layout.order {
+                for steps in -2 * layout.order...2 * layout.order {
+                    let g = game(layout, open: open), counted = g.tankStir(after: steps)
+                    g.turnTank(steps)
+                    XCTAssertEqual(g.openStir?.steps ?? 0, counted, "\(layout) open \(open), turned \(steps)")
+                }
+            }
+        }
+    }
+
+    /// A turn clicks each time what letting go would commit changes, at the half step either way, so every step a drag
+    /// commits has had one click and each step turned back has had one more. The phone's tank turns let go between half
+    /// a step and a whole one committed a step with no clunk.
+    func testATurnClicksOncePerStepItWouldCommit() {
+        for step in [Tank.step] + Layout.allCases.map(\.tankStep) {
+            // Clicks along a drag through each of `ends` in turn, finely enough to cross every half step on its own.
+            func drag(_ ends: [Double]) -> (clicks: Int, commits: Int) {
+                var detent = Detent(step: step), clicks = 0, at = 0.0
+                for end in ends.map({ $0 * step }) {
+                    for a in stride(from: at, through: end, by: (end < at ? -step : step) / 50) {
+                        let was = detent.steps
+                        let c = detent.turn(to: a)
+                        XCTAssertEqual(c, abs(detent.steps - was))
+                        XCTAssertLessThanOrEqual(c, 1)
+                        clicks += c
+                    }
+                    clicks += detent.turn(to: end)
+                    at = end
+                }
+                XCTAssertEqual(detent.steps, Detent.steps(at, of: step))
+                return (clicks, detent.steps)
+            }
+            func check(_ ends: [Double], clicks: Int, commits: Int, line: UInt = #line) {
+                for sign in [1.0, -1.0] {
+                    let d = drag(ends.map { sign * $0 })
+                    XCTAssertEqual(d.clicks, clicks, "step \(step) \(sign * ends[0])", line: line)
+                    XCTAssertEqual(d.commits, Int(sign) * commits, "step \(step) \(sign * ends[0])", line: line)
+                }
+            }
+            check([0.49], clicks: 0, commits: 0)
+            check([0.51], clicks: 1, commits: 1)
+            check([0.99], clicks: 1, commits: 1)
+            check([1.49], clicks: 1, commits: 1)
+            check([1.51], clicks: 2, commits: 2)
+            check([3.7], clicks: 4, commits: 4)
+            check([3.7, 1.2], clicks: 7, commits: 1)
+            check([0.6, 0.4], clicks: 2, commits: 0)
+            check([0.6, 0.4, 0.6], clicks: 3, commits: 1)
+            check([2.6, -1.6], clicks: 8, commits: -2)
+            var detent = Detent(step: step)
+            XCTAssertEqual(detent.turn(to: 2.6 * step), 3)
+            XCTAssertEqual(detent.turn(to: -0.2 * step), 3)
+        }
+        var quad = Detent(step: Layout.quad.tankStep)
+        XCTAssertEqual(quad.turn(to: 1.022), 1)
+        XCTAssertEqual(quad.steps, 1)
+    }
+
     /// A seized knob refuses a turn even over fluid a working knob could take off; no level seizes the hub, which no turn
-    /// of the tank moves.
+    /// of the tank moves, and only a level with a seized knob says it has one.
     @MainActor func testSeizedKnobs() {
         let game = Game(level: Level(id: "test-seized", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0]))
         game.commit(rod: 0, steps: -4)
@@ -507,20 +1283,44 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(game.reachable)
         game.turnTank(1)
         XCTAssertEqual(game.reachable, Twist(rod: 1, steps: -4))
-        for level in Level.all + Level.nightmare + Level.nightmarePlus {
+        for level in Tier.allCases.flatMap(\.levels) {
             XCTAssertTrue(level.seized.isSubset(of: level.layout.rods.indices), level.id)
             XCTAssertLessThanOrEqual(level.seized.count, 2, level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }
+            if level.note.contains("seize") { XCTAssertFalse(level.seized.isEmpty, level.id) }
         }
+    }
+
+    /// The rim shows how to turn the tank until the player has, on any level: a turn of the tank that commits sets the
+    /// flag, and a stir of a rod or a whole turn of the tank does not. A flag the harness sets is never stored.
+    @MainActor func testTurningTheTankSetsTheFlag() {
+        let level = Level(id: "test-taught", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0])
+        let game = Game(level: level)
+        XCTAssertFalse(game.tankTurned)
+        game.commit(rod: 1, steps: 2)
+        XCTAssertEqual(game.moves, 1)
+        game.turnTank(3)
+        XCTAssertFalse(game.tankTurned)
+        XCTAssertFalse(Best.tankTurned)
+        game.turnTank(1)
+        XCTAssertTrue(game.tankTurned)
+        XCTAssertTrue(Best.tankTurned)
+        XCTAssertTrue(Game(level: .sandbox).tankTurned)
+
+        UserDefaults.standard.removeObject(forKey: "tank.turned")
+        let harnessed = Game(level: level, tankTurned: false)
+        harnessed.turnTank(1)
+        XCTAssertTrue(harnessed.tankTurned)
+        XCTAssertFalse(Best.tankTurned)
     }
 
     /// Until the seized levels set their own, par is one move per entry everywhere.
     func testParIsTheScrambleUnlessSet() {
-        for level in Level.all + Level.nightmare + Level.nightmarePlus { XCTAssertEqual(level.par, level.scramble.count, level.id) }
+        for level in Tier.allCases.flatMap(\.levels) { XCTAssertEqual(level.par, level.scramble.count, level.id) }
     }
 
-    /// From the prototype, so the Swift generator draws exactly as it does.
-    func testDailyAndEndlessVectors() {
+    /// From the prototype, so the Swift generator draws exactly as it does. Every past daily must stay the tank it was.
+    func testDailyVectors() {
         let daily: [(Int, Layout, String)] = [
             (1001, .eye, "0:-4,3:-5,0:-4,2:-5,0:-3,3:-2,1:+5,2:-8,3:+2,0:+7,1:-8,3:+8,2:+4"),
             (1002, .pent, "4:-2,0:+5,1:+4,3:-4,2:+6,1:-8,4:-3,3:+5,4:-7,3:+8,2:-3,1:-3,2:-4,3:-5"),
@@ -532,16 +1332,33 @@ final class UnstirTests: XCTestCase {
             XCTAssertEqual(level.layout, layout)
             XCTAssertEqual(level.scramble, [Twist].parse(word, in: layout))
         }
+    }
+
+    /// Endless's ramp: tank n has 5 + 5n/4 stirs, to 28, with n/2 hidden under louder ones, to half of them.
+    /// The generator hides more where no rod can go louder, which these tanks never needed.
+    func testEndlessVectors() {
         let endless: [(Int, Layout, String)] = [
-            (0, .quad, "0:-4,3:+7,1:+4,2:+8"),
-            (3, .hex, "1:+4,5:+2,6:+4,2:+2,1:+6,6:+8,2:-4"),
-            (9, .eye, "0:+4,2:+2,1:-2,2:+4,0:+7,3:-3,2:-4,0:+6,3:+7,2:-2,1:+8,3:-4,0:+7"),
+            (0, .quad, "0:-4,3:+7,1:+4,2:+8,0:-3"),
+            (3, .hex, "1:+4,2:+2,0:+5,5:-8,3:+4,1:-4,2:+5,3:-6"),
+            (9, .eye, "0:+4,2:+5,0:-6,2:+7,0:+8,3:-3,2:+2,0:+2,3:-3,2:+2,1:+2,0:-2,3:-4,0:+5,2:+8,3:-3"),
+            (19, .hex, "0:-2,1:+2,6:-5,0:-8,1:-4,5:-3,2:-4,4:+2,6:-4,3:-5,4:-6,2:+4,0:-5,4:-6,3:-7,6:-2,2:+8,5:-2,0:+5,2:+8,"
+                + "5:-4,6:+2,3:-2,4:-5,0:-7,4:-8,2:-3,6:+2"),
+            (28, .quad, "1:-4,3:-2,2:+5,0:-2,3:+6,2:+4,3:+2,1:+4,2:-7,3:+4,0:+6,3:+3,0:+6,3:+4,0:+4,1:-2,2:-2,1:-2,2:-4,3:+6,1:+4,"
+                + "2:-6,1:+4,3:+2,2:+2,1:-5,0:+5,3:+3"),
+            (60, .quad, "2:-4,3:+2,0:-2,2:-2,1:+3,0:-3,3:-4,0:+7,3:+2,2:-2,1:+5,2:+4,1:+4,3:+4,2:-6,1:+7,2:+3,1:+4,3:-3,0:-4,3:+6,"
+                + "2:+5,1:+2,0:+3,3:-2,2:-3,1:-3,0:-3"),
         ]
         for (tank, layout, word) in endless {
             let level = Level.endless(Run(seed: 7, tank: tank))
             XCTAssertEqual(level.layout, layout)
             XCTAssertEqual(level.scramble, [Twist].parse(word, in: layout))
+            XCTAssertEqual(level.layout.inversions(level.scramble), min(tank / 2, level.scramble.count / 2), "tank \(tank)")
         }
+        XCTAssertEqual((0...20).map { Level.endless(Run(seed: 7, tank: $0)).scramble.count },
+                       [5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 18, 20, 21, 22, 23, 25, 26, 27, 28, 28])
+        // Every push the brim takes before it spills fits under the stack's limit, with the deepest tank dealt.
+        XCTAssertLessThan(28 + Run.room - 1, Tank.maxStack)
+        XCTAssertLessThanOrEqual(28, Tank.fourTaps - Level.endless(Run(seed: 7)).picture.fillEntries)
     }
 
     /// The grid's node colours against the prototype's oklch (colour.py): its top and bottom rows, x = -1 ... 1.

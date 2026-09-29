@@ -5,10 +5,76 @@ import Foundation
 struct Run: Hashable, Sendable {
     var seed: UInt64
     var tank = 0
+    /// Notches on the brim as this tank opens, as the tank before left them.
+    var brim = 0
+
+    /// Notches the brim holds: the one that fills it spills the run. A guess until TestFlight.
+    static let room = 8
+}
+
+/// The difficulty ladder, easiest first: declaration order is the ladder, so a new tier goes in where it belongs. The
+/// raw value is stored as the menu's choice, so it never changes.
+enum Tier: String, CaseIterable {
+    case plughole, whirlpool, maelstrom
+
+    var name: String {
+        switch self {
+        case .plughole: "Plughole"
+        case .whirlpool: "Whirlpool"
+        case .maelstrom: "Maelstrom"
+        }
+    }
+
+    /// Starts each of the tier's level ids. Whirlpool's and maelstrom's are from their old names, nightmare and
+    /// nightmare+: progress is stored by id, so changing a prefix loses it unless the stored keys are remapped.
+    var prefix: String {
+        switch self {
+        case .plughole: "L"
+        case .whirlpool: "N"
+        case .maelstrom: "N+"
+        }
+    }
+
+    /// Nil for plughole.
+    var below: Tier? {
+        let i = Self.allCases.firstIndex(of: self)!
+        return i == 0 ? nil : Self.allCases[i - 1]
+    }
+
+    var levels: [Level] {
+        switch self {
+        case .plughole: Level.plughole
+        case .whirlpool: Level.whirlpool
+        case .maelstrom: Level.maelstrom
+        }
+    }
+
+    /// Per level, whether its best is at or under par.
+    func atPar(_ best: (String) -> Best? = Best.load) -> [Bool] {
+        levels.map { best($0.id).map { $0.over == 0 } ?? false }
+    }
+
+    /// Plughole always; any other tier once every level of the tier below is at par.
+    func isOpen(unlocked: Bool = Best.unlocked, _ best: (String) -> Best? = Best.load) -> Bool {
+        unlocked || below.map { $0.atPar(best).allSatisfy { $0 } } ?? true
+    }
+
+    /// The tier the menu opens on: the last one stored, or the highest open one below it if that has closed since.
+    static func stored(open: (Tier) -> Bool = { $0.isOpen() }) -> Tier {
+        let tier = UserDefaults.standard.string(forKey: "tier").flatMap(Tier.init(rawValue:)) ?? .plughole
+        return allCases.prefix(through: allCases.firstIndex(of: tier)!).last(where: open) ?? .plughole
+    }
+
+    /// A locked tier can be opened to look at, but only an open one is stored, so a look never comes back on launch.
+    static func store(_ tier: Tier, open: (Tier) -> Bool = { $0.isOpen() }) {
+        if open(tier) { UserDefaults.standard.set(tier.rawValue, forKey: "tier") }
+    }
 }
 
 struct Level: Hashable, Sendable {
     var id: String
+    /// Daily, endless and the sandbox are plughole's.
+    var tier = Tier.plughole
     var label: String
     var title: String
     /// One line under the tank, for levels that teach something the title cannot.
@@ -26,11 +92,9 @@ struct Level: Hashable, Sendable {
     var fixedPar: Int?
     var par: Int { fixedPar ?? scramble.count }
 
-    var nightmare: Bool { id.hasPrefix("N") }
-    var plus: Bool { id.hasPrefix("N+") }
     var sandbox: Bool { id == "sandbox" }
 
-    static let all: [Level] = ([
+    static let plughole: [Level] = ([
         (.tri, "0:+4", "Turn it back.", "Turn a rod to look. Let go where you started and nothing happens."),
         (.tri, "1:-7", "Further than it looks.", ""),
         (.tri, "2:+3,0:-5", "Two stirs. Undo the second one first.", "The last rod you saw turn is on top."),
@@ -60,13 +124,13 @@ struct Level: Hashable, Sendable {
         (.hex, "2:+3,0:-5,5:+6,4:+3,0:+4,6:-7,0:+5,5:-6,6:-6,2:+4,5:+3,1:+5,3:+2,0:+6", "Unstirred, by hand.", ""),
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
         // The city only where par is 4 or less: deeper, it goes murky.
-        Level(id: "L\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
+        Level(id: Tier.plughole.prefix + "\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
               picture: [5: .sunset, 11: .sunset, 15: .sunset, 6: .city, 10: .city, 14: .city, 16: .city][i + 1] ?? .grid,
               layout: l.0, replay: i < 3, scramble: .parse(l.1, in: l.0))
     }
 
     /// Twice the stirs of the same-numbered level, more of them hidden under louder ones, live pictures, nothing replayed.
-    static let nightmare: [Level] = ([
+    static let whirlpool: [Level] = ([
         (.tri, "0:-5,1:+3", "Turn them back.", "Same rules, twice the stirs, no replays. This is the last note."),
         (.tri, "2:+7,0:-7", "Both went further than they look.", ""),
         (.tri, "1:-6,2:+3,0:-4,1:+4", "Four stirs. Undo the fourth one first.", ""),
@@ -97,18 +161,20 @@ struct Level: Hashable, Sendable {
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
         // The glass opens each layout and takes the deepest levels. Coral reads only to 6 stirs, and neurons, the dearest
         // to draw, to 14.
-        Level(id: "N\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
+        Level(id: Tier.whirlpool.prefix + "\(i + 1)", tier: .whirlpool, label: String(format: "%02d", i + 1),
+              title: l.2, note: l.3,
               picture: [3: .chainmail, 10: .chainmail, 13: .chainmail, 18: .chainmail, 21: .chainmail, 24: .chainmail,
                         2: .coral, 5: .coral, 8: .coral, 16: .coral, 4: .neurons, 7: .neurons, 11: .neurons, 17: .neurons,
                         20: .neurons, 6: .marbling, 12: .marbling, 15: .marbling, 22: .marbling, 25: .marbling][i + 1] ?? .glass,
               layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
-    /// Nightmare's scrambles under ids of their own, so a nightmare best or start never opens a level here or spends
-    /// its first try, each on its Nightmare picture's twin.
-    static let nightmarePlus: [Level] = nightmare.map { level in
+    /// Until maelstrom has levels of its own: whirlpool's scrambles under ids of their own, so a whirlpool best or
+    /// start never opens a level here or spends its first try, each on its whirlpool picture's twin.
+    static let maelstrom: [Level] = whirlpool.enumerated().map { i, level in
         var level = level
-        level.id = "N+" + level.id.dropFirst()
+        level.id = Tier.maelstrom.prefix + "\(i + 1)"
+        level.tier = .maelstrom
         level.picture = level.picture.twin
         return level
     }
@@ -124,12 +190,20 @@ struct Level: Hashable, Sendable {
                      layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng))
     }
 
+    /// Tank n of a run: 5 + 5n/4 stirs, n/2 of them hidden under louder ones (more where no rod can go louder), up to half
+    /// the stirs: asked to hide many more, the generator makes nearly every stir 60°. No par: the run goes on until the
+    /// brim spills.
     static func endless(_ run: Run) -> Level {
-        // Wrapping, to match the prototype's 64-bit arithmetic.
+        var level = Level(id: "endless", label: "\u{221E}", title: "Endless", layout: generated[run.tank % 4], scramble: [],
+                          run: run)
+        // No deeper than keeps the tank four taps as dealt, or than leaves room under the stack's limit for every push
+        // the brim takes before it spills: the stack holds at most the scramble plus the brim's notches, and the push
+        // that spills must never be refused.
+        let depth = min(5 + 5 * run.tank / 4, Tank.fourTaps - level.picture.fillEntries, Tank.maxStack - Run.room)
+        // Wrapping, as a random seed overflows.
         var rng = SplitMix64(state: run.seed &* 1000 &+ UInt64(run.tank))
-        let layout = generated[run.tank % 4]
-        return Level(id: "endless", label: "\u{221E}", title: "Endless", layout: layout,
-                     scramble: layout.scramble(depth: min(4 + run.tank, 24), inversions: run.tank / 3, rng: &rng), run: run)
+        level.scramble = level.layout.scramble(depth: depth, inversions: min(run.tank / 2, depth / 2), rng: &rng)
+        return level
     }
 
     static let sandbox = Level(id: "sandbox", label: "box", title: "Sandbox", layout: .tri, scramble: [])
@@ -141,7 +215,8 @@ struct Level: Hashable, Sendable {
 
 extension Layout {
     /// Push-only scramble of `depth` entries, `inversions` of them no louder than an undo-able twist they cover.
-    /// Ported draw for draw from the prototype, so the dailies match it.
+    /// Ported draw for draw from the prototype, so the dailies match it. Every past daily is this function's output, so
+    /// it never changes: endless changes only what it asks for, and a new generator goes beside this one.
     func scramble(depth: Int, inversions: Int, rng: inout SplitMix64) -> [Twist] {
         var stack: [Twist] = [], inv = inversions
         for i in 0..<depth {
@@ -198,8 +273,9 @@ struct SplitMix64: RandomNumberGenerator {
     mutating func below(_ n: Int) -> Int { Int(next() % UInt64(n)) }
 }
 
+/// Saves from before hints went also hold a `hints` count, which decoding ignores, so those bests still load and count.
 struct Best: Codable {
-    var over: Int, hints: Int, seconds: Int
+    var over: Int, seconds: Int
     /// Stored, because only a first try can be clean and a later one can match its numbers. Optional so saves from the
     /// test builds that predate it still decode and keep the next level open; v1 saves never decode, as they lack `over`.
     var clean: Bool?
@@ -208,22 +284,153 @@ struct Best: Codable {
         UserDefaults.standard.data(forKey: "best.\(id)").flatMap { try? JSONDecoder().decode(Best.self, from: $0) }
     }
 
-    /// Keeps the better of this and the stored result: clean, then fewer over par, then fewer hints, then faster.
+    /// The harness's: this launch sees it as the id's best, and it is never written to disk.
+    func fake(_ id: String) {
+        if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.register(defaults: ["best.\(id)": data]) }
+    }
+
+    /// Keeps the better of this and the stored result: clean, then fewer over par, then faster.
     func save(_ id: String) {
-        func rank(_ b: Best) -> (Int, Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.hints, b.seconds) }
+        func rank(_ b: Best) -> (Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.seconds) }
         if let old = Best.load(id), rank(old) <= rank(self) { return }
         UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)")
     }
 
-    /// Set when a rod is first touched or a hint shown: probing counts as trying, only studying the still is free.
+    /// Set when a rod is first touched: probing counts as trying, only studying the still is free.
     static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
     static func start(_ id: String) { if !started(id) { UserDefaults.standard.set(true, forKey: "started.\(id)") } }
 
-    /// Banked undos, shared by every level and mode: 10 to start, and nothing refills them yet. Stored as the number
-    /// spent, so a fresh install reads 10.
+    /// Banked undos, shared by every level and mode: 10 to start, and `refill` adds 2 a day played, up to 10. Stored as
+    /// the number spent, so a fresh install reads 10.
     static var undos: Int {
         get { 10 - UserDefaults.standard.integer(forKey: "undos.spent") }
         set { UserDefaults.standard.set(10 - newValue, forKey: "undos.spent") }
+    }
+
+    /// The day of the bank's last refill, as `day` writes it; nil until a level that counts has opened.
+    static var refilled: String? {
+        get { UserDefaults.standard.string(forKey: "undos.day") }
+        set { UserDefaults.standard.set(newValue, forKey: "undos.day") }
+    }
+
+    /// A calendar day in `zone` as yyyy-MM-dd, so days compare as strings. Gregorian whatever the phone's calendar, so a
+    /// change of that setting can't put today before a stored day.
+    static func day(_ date: Date = .now, in zone: TimeZone = .current) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let d = calendar.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", d.year!, d.month!, d.day!)
+    }
+
+    /// The last instant the refill vouched for, with the uptime and boot session read then: a wall time it believed,
+    /// or its reckoning plus the most drift could explain.
+    struct Anchor: Codable, Equatable {
+        var wall: Date
+        var uptime: TimeInterval
+        var boot: String?
+    }
+
+    /// `trustedNow`'s anchor; nil until a level that counts has opened.
+    static var anchor: Anchor? {
+        get {
+            UserDefaults.standard.data(forKey: "undos.anchor").flatMap { try? JSONDecoder().decode(Anchor.self, from: $0) }
+        }
+        set { UserDefaults.standard.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: "undos.anchor") }
+    }
+
+    /// Seconds since boot, asleep or not. CLOCK_MONOTONIC_RAW is mach_continuous_time, which setting the date or time
+    /// never moves; CLOCK_MONOTONIC is the wall clock less kern.boottime, and CLOCK_UPTIME_RAW stops during sleep.
+    static func uptime() -> TimeInterval { Double(clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)) / 1e9 }
+
+    /// This boot's id, or nil where the sandbox refuses it: an app in macOS's App Sandbox reads it, but container.sb
+    /// leaves it off its sysctl allow list, and iOS's profile is unpublished. kern.boottime would be readable, but
+    /// setting the clock moves it by the same step.
+    static let bootSession: String? = {
+        var size = 0
+        guard sysctlbyname("kern.bootsessionuuid", nil, &size, nil, 0) == 0, size > 1 else { return nil }
+        var bytes = [UInt8](repeating: 0, count: size)
+        guard sysctlbyname("kern.bootsessionuuid", &bytes, &size, nil, 0) == 0 else { return nil }
+        let id = String(decoding: bytes.prefix { $0 != 0 }, as: UTF8.self)
+        return id.isEmpty ? nil : id
+    }()
+
+    /// kern.monotonicclock in seconds, or nil where it can't be read. XNU's clock.c says nothing can set it, and on a
+    /// Mac it runs on across restarts; whether an iOS app can read it, and whether setting the date moves it there, is
+    /// unchecked, so the launch logs it.
+    static func monotonicClock() -> TimeInterval? {
+        var latched: (usecs: UInt64, machTime: UInt64) = (0, 0)
+        var size = MemoryLayout.size(ofValue: latched)
+        guard sysctlbyname("kern.monotonicclock_usecs", &latched, &size, nil, 0) == 0 else { return nil }
+        return Double(latched.usecs) / 1e6
+    }
+
+    /// How far the wall clock may run ahead of the anchor's reckoning before it counts as set ahead: the uptime clock
+    /// drifts from true time by parts per million, and the wall clock takes small corrections.
+    static let slack: TimeInterval = 5 * 60
+
+    /// How far past the anchor's reckoning the anchor may move, per second of uptime since, on top of a second for a
+    /// leap second or a small correction: a generous bound on the uptime clock's drift, and small enough that stepping
+    /// the clock ahead at each opening gains next to nothing.
+    static let drift = 1e-4
+
+    /// The instant the refill's day comes from, given the wall clock, `uptime()` and `bootSession` read now; `ahead` is
+    /// how far the wall clock ran past it, where it gave way. Within one boot, the anchor's wall time plus the uptime
+    /// since is a clock the player can't set: a wall clock more than `slack` ahead of it gives way to it, and the
+    /// anchor stays put. Otherwise the wall clock is believed, and the anchor moves to it, but never further past the
+    /// reckoning than a second plus `drift`: so a clock crept ahead a few minutes at a time gains about a second an
+    /// opening past `slack`, and an honest correction ahead is taken in slowly. A new boot has nothing to check
+    /// against, so the wall clock is believed, and anchors afresh unless it reads more than `slack` before the anchor's
+    /// wall time, as a clock reset at boot would: then the anchor stays, so setting the clock right later in that boot
+    /// still reads as a new boot. With the session unread, the uptime going back shows a new boot, and a jump of at
+    /// least the anchor's uptime might be one, as a restart since the anchor would explain it, so it is believed too.
+    static func trustedNow(wall: Date, uptime: TimeInterval, boot: String?, anchor: inout Anchor?)
+        -> (now: Date, ahead: TimeInterval?) {
+        let here = Anchor(wall: wall, uptime: uptime, boot: boot)
+        guard let a = anchor else { anchor = here; return (wall, nil) }
+        let known = boot != nil && a.boot != nil
+        let since = uptime - a.uptime
+        let reckoned = a.wall.addingTimeInterval(since)
+        let ahead = wall.timeIntervalSince(reckoned)
+        let rebooted = since < 0 || (known ? boot != a.boot : ahead >= a.uptime)
+        if rebooted {
+            if wall.timeIntervalSince(a.wall) >= -slack { anchor = here }
+            return (wall, nil)
+        }
+        if ahead > slack { return (reckoned, ahead) }
+        if ahead >= -slack {
+            anchor = Anchor(wall: min(wall, reckoned.addingTimeInterval(1 + drift * since)), uptime: uptime, boot: boot)
+        }
+        return (wall, nil)
+    }
+
+    /// The undo bank's refill, as a level that counts (any but the sandbox) opens on the local calendar day `today`:
+    /// the first such opening on a day later than `last`, the day of the last refill, adds 2 to `bank`, up to 10, and
+    /// makes today `last`, even when a full bank takes nothing. So each day played refills once, and a long absence
+    /// refills once. With no `last`, as on a fresh install, whose bank starts full, today becomes `last` and nothing is
+    /// added. Moving the clock back never refills. `today` comes from `trustedNow`, so within a boot a clock set ahead
+    /// refills nothing until real time reaches the next day, give or take `slack`; after a restart the clock set ahead
+    /// refills once, and set back again, nothing refills until real time passes the day it reached. Returns what was
+    /// added, or nil when none was due.
+    static func refill(_ bank: inout Int, last: inout String?, today: String) -> Int? {
+        guard let from = last else { last = today; return nil }
+        guard today > from else { return nil }
+        let added = max(min(bank + 2, 10) - bank, 0)
+        bank += added
+        last = today
+        return added
+    }
+
+    /// The developer unlock, set by a launch with UNSTIR_UNLOCK=1 and cleared by one with UNSTIR_UNLOCK=0: every tier
+    /// and every level open.
+    static var unlocked: Bool {
+        get { UserDefaults.standard.bool(forKey: "unlock") }
+        set { UserDefaults.standard.set(newValue, forKey: "unlock") }
+    }
+
+    /// Set once a turn of the tank commits, on any level: the rim then stops showing how.
+    static var tankTurned: Bool {
+        get { UserDefaults.standard.bool(forKey: "tank.turned") }
+        set { UserDefaults.standard.set(newValue, forKey: "tank.turned") }
     }
 
     /// Endless: most tanks cleared in one run.

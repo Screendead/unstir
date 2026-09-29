@@ -1,5 +1,10 @@
-menu.png  Menu on first launch: only level 01 unlocked; daily and endless open after level 23.
+menu.png  Menu on first launch: only level 01 unlocked, whirlpool and maelstrom locked; daily and endless open after level 23.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
+menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
+menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, maelstrom still locked.
+menu-maelstrom-locked.png  Menu looking at maelstrom, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par).
+menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
+menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
 grid-d2.png  grid, depth-2 scramble 1:+5,2:-4 (rod:steps, 30 degrees per step, bottom first).
 grid-d3.png  grid, depth-3 scramble 0:-6,1:+4,2:-5 (rod:steps, 30 degrees per step, bottom first).
@@ -7,10 +12,16 @@ grid-d4.png  grid, depth-4 scramble 0:+5,2:-6,1:+3,0:-4 (rod:steps, 30 degrees p
 grid-d5.png  grid, depth-5 scramble 2:-5,0:+4,1:-7,2:+3,0:-6 (rod:steps, 30 degrees per step, bottom first).
 grid-d2-right-half.png  grid depth 2 (1:+5,2:-4), mid-drag: top rod 2 turned back +2 of its 4 steps.
 grid-d2-right-almost.png  grid depth 2 (1:+5,2:-4), mid-drag: top rod 2 turned back +3.6 of 4 steps.
-grid-d2-probe.png  grid depth 2 (1:+5,2:-4), mid-drag: rod 2 turned +0.4 steps. Dashed ring and start tick: letting go here commits nothing.
+grid-d2-probe.png  grid depth 2 (1:+5,2:-4), mid-drag: rod 2 turned +0.4 steps. A dim hairline, its start mark and a short trace: letting go here commits nothing.
 grid-d2-wrong-rod.png  grid depth 2 (1:+5,2:-4), mid-drag: rod 1 turned -2.5 steps out of order (its undo is right, but only after rod 2).
-quad-probe.png  Level 12 (square), mid-drag: rod 1 turned +0.3 steps. Dashed ring and start tick: letting go here commits nothing.
-quad-commit.png  Level 12 (square), mid-drag: rod 1 turned +2 steps. Solid ring: letting go here commits.
+quad-probe.png  Level 12 (square), mid-drag: rod 1 turned +0.3 steps. A dim hairline, its start mark and a short trace: letting go here commits nothing.
+quad-commit.png  Level 12 (square), mid-drag: rod 1 turned +2 steps. The hairline at full tone, two dashes: letting go here commits.
+count-tri-plus3.png  Level 01 (tri), finger down at the top of rod 0 and carried +3 steps round to its right: three dashes clockwise from the start mark, +3 to the left.
+count-quad-minus2.png  Level 12 (square), finger down below rod 1 and carried -2 steps round: two dashes anticlockwise from the start mark, -2 up and left, off the finger.
+count-let-go.png  Level 12 (square), rod 1 just let go at -2: its stir is still open, so the hairline, its dashes and the count stay, faint.
+count-regrab.png  Level 12 (square), rod 1 let go at -2, grabbed again and turned -1 more: the dashes and count carry on to -3 from where the stir began.
+grab-grid.png  Level 12 (square), a finger just down deep in rod 0, not yet moved: its knob lit, its disc a dim hairline.
+grab-overlap-grid.png  Level 12 (square), a finger just down where rods 0 and 1 overlap, nearer rod 0's centre: rod 0's knob lit and its disc a dim hairline at once, rod 1 not.
 level01.png  Level 01 with its full scramble and its note.
 level04.png  Level 04 with its full scramble and its note.
 level07.png  Level 07 with its full scramble and its note.
@@ -32,8 +43,18 @@ level16.png  Level 16 with its full scramble and its note.
 inversion-L12.png  Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers.
 inversion-L27.png  Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6.
 daily.png  Today's daily.
-endless.png  Endless, first tank of the run seeded 7.
-hint-hex.png  Level 27 (hex, par 14) with a hint: the newest twist that can come off now, ringed, with its arrow.
+endless.png  Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title.
+endless-brim.png  Endless, first tank, opened with 5 of the brim's 8 notches: the picture's own colours in the bezel up to the fifth tick on both sides, glowing onto the black; the tank where moves and par were, no undo or reset.
+endless-brim-7.png  Endless opened at 7 notches, one from spilling, held 0.38 s into the brim pin's pulse, at its peak: the filled arc's bloom at its strongest, fading out on the black.
+endless-notch.png  Endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 arriving, held 0.2 s in, its colour spreading out across the bezel behind a glint.
+endless-notch-surge.png  The same, 0.5 s in: the new arc filled, its light running on past the rim onto the black.
+endless-heal.png  Endless opened at 5 notches, then rod 0 turned +3, which heals the tank's top stir: the level settling to the fourth tick, held 0.35 s in, a wet film where it stood.
+endless-cleared.png  Endless, first tank opened at 5 notches and cleared by the harness after two wasted stirs (2 notches) and five heals: the card shows the brim at 2.
+endless-spill-crest.png  Endless opened at 7 notches, then rod 1 turned +1, a push: the brim spills. Held 0.7 s in: the fronts have met at the brim pin, and a crest swells over the lip at twelve, the pin on top of it.
+endless-spill-pour.png  The same, 1.1 s in: the crest has broken and the liquid pours down the outside of the rim either way, a wave behind a bead at each head; the picture starts to stir together.
+endless-spill-drip.png  The same, 2 s in: the runs have slowed just past three and nine o'clock and a drop falls from each head onto the black.
+endless-spilled.png  The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best.
+undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
@@ -44,36 +65,50 @@ open-L12-1.png  Level 12 opening, 0.9s after launch: clean picture, then every t
 open-L12-2.png  Level 12 opening, 1.6s after launch: clean picture, then every twist growing together.
 open-L12-3.png  Level 12 opening, 2.0s after launch: clean picture, then every twist growing together.
 open-L12-4.png  Level 12 opening, 3.2s after launch: clean picture, then every twist growing together.
-menu-nightmare.png  Menu with nightmare on and every row unlocked.
-nightmare01.png  Nightmare level 01 with its full scramble.
-nightmare09.png  Nightmare level 09 with its full scramble.
-nightmare14.png  Nightmare level 14 with its full scramble.
-nightmare19.png  Nightmare level 19 with its full scramble.
-nightmare23.png  Nightmare level 23 with its full scramble.
-nightmare27.png  Nightmare level 27 with its full scramble.
-nightmare-probe-short.png  Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal.
-nightmare-probe-heal.png  Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back all 4 steps, so its seam heals.
-nightmare-probe-over.png  Nightmare level 12 (square) on the glass, mid-drag: top rod 3 turned back 5 steps, one detent past the heal.
-nightmare27-probe-1.png  Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back 1 steps; it heals at 2.
-nightmare27-probe-2.png  Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back 2 steps; it heals at 2.
-nightmare27-probe-3.png  Nightmare level 27 (hex, par 28), mid-drag: top rod 2 turned back 3 steps; it heals at 2.
-nightmare-result.png  Nightmare level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par).
-nightmare24-chainmail.png  Nightmare level 24 (chainmail) with its full scramble.
-nightmare16-coral.png  Nightmare level 16 (coral) with its full scramble.
-nightmare20-neurons.png  Nightmare level 20 (neurons) with its full scramble.
-nightmare25-marbling.png  Nightmare level 25 (marbling) with its full scramble.
-nightmare-plus26-glass.png  Nightmare+ level 26 (glass+) with its full scramble.
-nightmare-plus24-chainmail.png  Nightmare+ level 24 (chainmail+) with its full scramble.
-nightmare-plus16-coral.png  Nightmare+ level 16 (coral+) with its full scramble.
-nightmare-plus20-neurons.png  Nightmare+ level 20 (neurons+) with its full scramble.
-nightmare-plus25-marbling.png  Nightmare+ level 25 (marbling+) with its full scramble.
-seized-n01-home.png  Nightmare+ 01 (tri) with knob 0 seized, tank at home.
-seized-n01-turned.png  Nightmare+ 01 (tri) with knob 0 seized, tank turned one step (120 degrees clockwise): the seams around knob 0 now ring knob 1.
-seized-n09-home.png  Nightmare+ 09 (square) with knob 1 seized, tank at home.
-seized-n09-turned.png  Nightmare+ 09 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2.
-seized-n23-home.png  Nightmare+ 23 (hex) with knobs 2 and 5 seized, tank at home.
-seized-n23-turned.png  Nightmare+ 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays.
-seized-n23-half.png  Nightmare+ 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round.
+menu-whirlpool.png  Menu on whirlpool with every row unlocked.
+whirlpool01.png  Whirlpool level 01 with its full scramble.
+whirlpool09.png  Whirlpool level 09 with its full scramble.
+whirlpool14.png  Whirlpool level 14 with its full scramble.
+whirlpool19.png  Whirlpool level 19 with its full scramble.
+whirlpool23.png  Whirlpool level 23 with its full scramble.
+whirlpool27.png  Whirlpool level 27 with its full scramble.
+whirlpool-probe-short.png  Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal.
+whirlpool-probe-heal.png  Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back all 4 steps, so its seam heals.
+whirlpool-probe-over.png  Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back 5 steps, one detent past the heal.
+whirlpool27-probe-1.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 1 steps; it heals at 2.
+whirlpool27-probe-2.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 2 steps; it heals at 2.
+whirlpool27-probe-3.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 3 steps; it heals at 2.
+whirlpool-grab-neurons.png  Whirlpool 20 (pentagon, neurons), a finger just down deep in rod 0: its knob lit, its disc a dim hairline over the web.
+whirlpool-grab-overlap-neurons.png  Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap, nearer rod 1's centre: rod 1's knob lit, its disc a dim hairline.
+whirlpool-grab-marbling.png  Whirlpool 25 (hex, marbling), a finger just down deep in rod 1: its knob lit, its disc a dim hairline.
+whirlpool-grab-overlap-marbling.png  Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub, nearer rod 2's centre: rod 2's knob lit, its disc a dim hairline.
+whirlpool-count-marbling.png  Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four dashes, +4 off the finger.
+whirlpool-count-hex-below.png  Whirlpool 25 (hex, marbling), finger down to the lower right of rod 4 and carried +2 steps round to just under it: +2 swung off the hub's knob straight above.
+whirlpool-result.png  Whirlpool level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par).
+whirlpool24-chainmail.png  Whirlpool level 24 (chainmail) with its full scramble.
+whirlpool16-coral.png  Whirlpool level 16 (coral) with its full scramble.
+whirlpool20-neurons.png  Whirlpool level 20 (neurons) with its full scramble.
+whirlpool25-marbling.png  Whirlpool level 25 (marbling) with its full scramble.
+maelstrom26-glass.png  Maelstrom level 26 (glass twin) with its full scramble.
+maelstrom24-chainmail.png  Maelstrom level 24 (chainmail twin) with its full scramble.
+maelstrom16-coral.png  Maelstrom level 16 (coral twin) with its full scramble.
+maelstrom20-neurons.png  Maelstrom level 20 (neurons twin) with its full scramble.
+maelstrom25-marbling.png  Maelstrom level 25 (marbling twin) with its full scramble.
+seized-m01-home.png  Maelstrom 01 (tri) with knob 0 seized, tank at home.
+seized-m01-turned.png  Maelstrom 01 (tri) with knob 0 seized, tank turned one step (120 degrees clockwise): the seams around knob 0 now ring knob 1.
+seized-m09-home.png  Maelstrom 09 (square) with knob 1 seized, tank at home.
+seized-m09-turned.png  Maelstrom 09 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2.
+seized-m23-home.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, tank at home.
+seized-m23-turned.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays.
+seized-m23-half.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round.
+seized-m23-count.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, finger down on the rim at lower left and carried two tank steps (120 degrees) round: two dashes inside the rim's hairline, +2 off the finger.
+lesson-quad-grid.png  Level 12 (square, grid) with knob 1 seized, the tank never turned: the rim's two-headed arc and ghost finger.
+lesson-hex-marbling.png  Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: the rim's arc and ghost finger over a live picture.
+lesson-shake.png  Level 12 (square) with knob 1 seized, a finger just down on it, 0.15 s in: the knob turned a few degrees, the rim's arc swollen.
+lesson-shake-turned.png  The same once the player has turned the tank before: no ghost, the arc back only for the pulse.
+lesson-turned.png  Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost.
+lesson-count.png  Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: rod 1 at the top turned +1 by a finger just below its knob, its count swung off the rim's arc.
+lesson-maelstrom01-free.png  Maelstrom 01 (tri) as the game loads it: no knob seized until maelstrom's own set, so no rim lesson and no note of seized knobs.
 seized-ring3-finished.png  Hex twin glass, 14 entries (1:+4,0:-3,2:+5,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3), none on rod 3: its ring is finished.
 seized-ring3-buried.png  The same with 3:+2 buried fourth from the bottom (1:+4,0:-3,2:+5,3:+2,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3): rod 3's ring is not finished.
 seized-hub-finished.png  Hex twin glass, 14 entries (2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4), none on the hub: its ring is finished.

@@ -7,11 +7,11 @@ right order. The tank only shows where the picture ended up, not the order the s
   <img src="docs/images/grid-d2-right-half.webp" width="200" alt="A rod mid-turn, twisting the grid">
   <img src="docs/images/level05.webp" width="200" alt="Level 5, a sunset, scrambled">
   <img src="docs/images/level27.webp" width="200" alt="Level 27, a deep scramble on seven rods">
-  <img src="docs/images/nightmare24-chainmail.webp" width="200" alt="Nightmare 24, live chainmail">
+  <img src="docs/images/whirlpool24-chainmail.webp" width="200" alt="Whirlpool 24, live chainmail">
 </p>
 
-27 campaign levels, then Nightmare (deeper scrambles on live, moving pictures) and Nightmare+, a daily tank, endless,
-and a sandbox. SwiftUI and Metal, iOS 17, Swift 6, portrait only.
+27 levels in plughole, then whirlpool (deeper scrambles on live, moving pictures) and maelstrom, a daily tank,
+endless, and a sandbox. SwiftUI and Metal, iOS 17, Swift 6, portrait only.
 
 ## Building
 

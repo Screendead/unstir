@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-09-28. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-09-29. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -16,16 +16,17 @@ this is analysis. No code has changed for it.
 | Competitor scan | Done 2026-09-28, quick pass (see below) |
 | Business-model recommendation | Jack ruled out paying to unlock tiers (2026-09-28). Jack wants **picture packs with their own tanks** as paid content, best with new mechanics; an archive of past dailies, a supporter mark and a tip jar are agreed (2026-09-28). Undos are never part of the paid side: free for everyone at +2 per playing day (see "Thoughts"). Packs stay outside the ladder and never open a tier. Rewarded ads for an undo top-up stay in reserve, only if TestFlight shows banks running dry. A single "Unstir+" purchase may not be needed |
 | Monetisation code | None. No StoreKit, ads or sharing in `Sources/` |
-| Undo bank | Starts at 10 and nothing refills it yet (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10 |
+| Undo bank | Starts at 10 (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10. Built on `help` (2026-09-29, `Best.refill`): the first opening of a level other than the sandbox on a local calendar day later than the last refill's adds 2, up to 10, and a "+2" shows over the undo count once the level's opening ends or is skipped. A fresh install records its first day without a refill; a clock moved back never refills. Jack (2026-09-29): setting the phone's date mustn't game the refill. Closed on `help` (2026-09-29, `Best.trustedNow`): within one boot the day comes from the last time it vouched for plus the uptime since (`CLOCK_MONOTONIC_RAW`, which counts sleep and can't be set), so a clock set ahead refills nothing until real time reaches the next day, give or take 5 min, and the log says `undo refill held: clock ahead Xh`. The anchor follows the wall clock no further ahead than drift explains (a second plus 100 ppm of the uptime since), so creeping the clock ahead a few minutes at a time gains about a second an opening; review found the first version let each step under 5 min carry the anchor along, a day ahead in about 290 steps (fixed 2026-09-29). Still open: a restart between date changes still borrows a refill, since a new boot has nothing to check against. A trusted network clock would close that; Claude recommends against it (a server, and a refill that waits on the network, to guard 2 undos a day). Unverified whether it is the only way: `kern.monotonicclock` is a candidate, a clock XNU's `clock.c` says nothing can set, and on a Mac it runs on across restarts. Unchecked on iOS: whether the app may read it, and whether setting the date moves it. The launch logs it next to the uptime (`monotonic clock Ns` or `unread`), so launches either side of a restart and of a date change answer both; if it holds, reckoning from it would close the restart hole. Unverified: whether iOS lets the app read the boot session (`kern.bootsessionuuid`); an app in macOS's App Sandbox reads it, but `container.sb` leaves it off its sysctl allow list, and iOS's profile is unpublished. The phone's log answers it at launch (`boot session read` or `unread`). Unread, a jump of at least the phone's uptime at the last level opened passes as a possible restart, and a believed jump anchors at the uptime then; so on a phone up less than a day, as after any restart, steps of a day get through one after another until a level opens with the phone up longer than the step. A genuine forward correction of more than 5 min within a boot (a phone that ran slow, set right) is held too, so its refill day turns late by that much until the next restart; one under 5 min is believed, and the anchor takes it in a few seconds a day. A new boot whose clock reads more than 5 min before the anchor's time, as after a clock reset, is believed but leaves the anchor, so setting the clock right later in that boot still counts as a new boot (review found the first version held every refill until the next restart there; fixed 2026-09-29). Not covered: a clock behind at the first opening with no anchor stored (a fresh install, or the first on this build), then set right, makes refills late by that much until a restart. The privacy manifest TestFlight will need (UserDefaults already requires one) should give reason 35F9.1 for the uptime clock: Apple's boot-time list names `systemUptime` and `mach_absolute_time()`, not `clock_gettime`; if the `kern.monotonicclock` read stays, check whether it needs a reason too |
 | TestFlight | Not started |
-| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes |
+| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
-| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice is on branch `turning-tank`; see "Side task" below |
+| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
 | Architecture pass | Queued after the performance pass (Jack, 2026-09-28); see below |
 | Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
-| README | Asked for (Jack, 2026-09-28); on branch `housekeeping`, with the four suggested images (Jack's pick); see below |
-| Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). On branch `housekeeping`; see below |
+| README | Merged 2026-09-28 (PR #3), with the four suggested images (Jack's pick); still says Nightmare and Nightmare+, so it changes with the rename; see below |
+| Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). Merged 2026-09-28 (PR #3); see below |
+| Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is built (2026-09-29): Csound sources in `sound-src/`, rendered and measured by `scripts/sounds.sh`; a detuned saw hum in D under every bed; a heal about 8 LU over its bed (the phone-speaker model says 10–12); beds for the menu and each tier, crossfading over 1.5 s between screens and stepping aside while another app plays music; tap, tier-switch, undo and reset sounds. It is committed locally on `sound` with a temporary "glass · sketch · off" switch for comparing on the phone, and waits for Jack's listen before a PR. Open for Jack: whether undo feels late (its body peaks about half a second after the press); whether undoing a heal should step the heal notes back (Claude's recommendation; today it doesn't); in endless, a solve that is also one over par plays the solve (Claude's pick). Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 ### The plan
@@ -53,8 +54,12 @@ from Nightmare to Nightmare+ is easy to miss.
 |---|---|
 | Nightmare on the live background | Merged 2026-09-28 (PR #2). The baked cracked glass is deleted |
 | More live backgrounds | Set, palettes, twins and level table decided (below); all ten ported with the heartbeat in the twins' lines, tests passing; Jack approved the films and the cost. Merged 2026-09-28 (PR #2). `fillEntries` stay Mac-measured: no phone benches until the performance pass (Jack) |
-| Nightmare+ design | The seized rod and the turning tank (Jack, 2026-09-28). First slice on `turning-tank`, 33 tests passing. Go/no-go shots pass: seams land concentric after a turn, and a finished outer ring reads on hex glass (the hub doesn't, but it never moves or seizes). On the phone (Jack, 2026-09-28): the rim is easy to grab, two fingers always turn the tank, he plans where to park the dead knob, and he likes the glass easing home after the solve. The tank clicks felt featherweight: each tank step now plays a Core Haptics clunk (a hard knock and a 90 ms low rumble), and Jack finds it great. The first step after launch or a return from background may hitch a frame while the engine restarts. Pars must come from a solver of the ending-on-the-last-heal rule: the temporary table used the old model's pars, which counted a final turn home, so Jack finished a move under par |
-| The way in | Jack wants switching tiers easier to find and on-brand, perhaps by stirring between them (2026-09-28); mock-ups next |
+| Maelstrom (was Nightmare+) design | The seized rod and the turning tank (Jack, 2026-09-28). First slice merged 2026-09-28 (PR #4). Go/no-go shots pass: seams land concentric after a turn, and a finished outer ring reads on hex glass (the hub doesn't, but it never moves or seizes). On the phone (Jack, 2026-09-28): the rim is easy to grab, two fingers always turn the tank, he plans where to park the dead knob, and he likes the glass easing home after the solve. The tank clicks felt featherweight: each tank step now plays a Core Haptics clunk (a hard knock and a 90 ms low rumble), and Jack finds it great. The first step after launch or a return from background may hitch a frame while the engine restarts. Pars must come from a solver of the ending-on-the-last-heal rule: the temporary table used the old model's pars, which counted a final turn home, so Jack finished a move under par |
+| The way in | Jack chose the strip (2026-09-28) from three working mock-ups (strip, dial, window), for its ticked line of the levels left to open the next tier; he loved the window's live tank but it took too much of the screen. Built on `tiers` with the rename and the gate; the swipe was driven by simulated touches, never a finger. The swap freezes 50–107 ms on the simulator: left for the performance pass |
+| Rename | Nightmare is now **whirlpool** and Nightmare+ **maelstrom** in code, harness (`UNSTIR_TIER`), scripts, tests and docs, on `tiers`. Stored level ids stay `N<k>` and `N+<k>`, so progress carries over (Claude first planned new ids, which would have reset it; the review caught that). The new maelstrom set gets fresh ids, so old N+ bests don't land on new levels |
+| Solver and the maelstrom set | Solver built and verified on branch `solver` (2026-09-29). An independent brute force found a push that holds a disc still and beats plain untwisting by a move, so the optimum now adds a bounded search for such detours: par is the solver's bounded optimum, not a proof. The park rule has two readings (fewest dead knobs over rings with a seam, or every dead knob over a ring without one) and two tie-breaks; Jack's pick is open, and the proposed set is fair under all four. A first proposed table passed every check but its early planning gap came from a tie-break (a lucky guess of direction scores par), its first ten levels all turn counterclockwise, and its seized pairs were always neighbours; a second version is being made against those |
+| Endless's new rules | Built on `endless` (2026-09-29): no undo, reset or par, the brim counting red flashes, Claude's ramp, and the vivid jug on the rim, ported from the approved film. Reviewed, and the review's fixes made, the pour over the lip among them. Jack watched the app's film on 2026-09-29 and approved it ("looks great"); PR #11 is waiting for his merge. See "Endless changes rules" below |
+| The phone | Installed 2026-09-29: a local build of `touch` at 42406cc with `help`'s three commits (hints removed, the daily +2 refill, the clock guard), the glass sound set, and two proposals not to be committed (maelstrom v2 as M1–M27, and plughole 19–27's easier scrambles). The next install carries the dashes |
 
 **Jack's calls (2026-09-28).**
 - Nightmare+ becomes the seized rod and the turning tank, below. Bookkeeping stays the fallback if the go/no-go fails
@@ -68,6 +73,8 @@ from Nightmare to Nightmare+ is easy to miss.
 - Each tier opens when every level of the tier below is done at par.
 - **Hints go** (Jack): undos are the help, and a player who can't reach par with them hasn't earned the next tier. Par
   stays reachable by persistence alone, since a reset is free. Removing them also spares maelstrom a hint of its own.
+  Removed on `help` (2026-09-29): no hint control is left, and a best saved while hints existed still loads and counts
+  at par (`testABestSavedWithHintsStillCounts`).
 - **Plughole gets easier** (Jack agreed to Claude's proposal): keep levels 1–13 as they are; take the pent and hex
   levels down to about 7 and 9 stirs, with fewer quiet stirs hidden under loud ones. Measure every level first with
   the maelstrom solver (stirs, hidden stirs, choices per step) and show Jack the table. Jack's own results, the only
@@ -78,16 +85,145 @@ from Nightmare to Nightmare+ is easy to miss.
 - **Endless changes rules** (Jack): no undo, no hints, no par; just unstir each tank, however many moves and however
   long it takes. It ramps a little faster and goes much deeper. Jack likes a capacity limit, the tank's brim, if it
   is truly intuitive, always visible and on-theme; he rejected draining the picture's colour (it hurt the read and
-  looked sharper, not blended). The gauge must never touch the picture before the spill. Open: whether the level
-  counts the stirs in the tank (a careful player who turns back every red flash never spills) or the wrong stirs
-  let go (they stay counted after a turn back; heals settle it). Jack wants the two side by side before deciding. Of
-  three gauge looks, a tide up the rim, a side-on profile under the tank and a measuring jug on the rim, he finds the
-  profile clearest but isn't sold on any yet.
+  looked sharper, not blended). The gauge must never touch the picture before the spill. **The brim counts red
+  flashes** (Jack, after the side-by-side film): each red flash adds a notch that stays when the stir is turned back;
+  each heal of one of the tank's own stirs settles one (cancelling your own wrong stir is not a heal); the level
+  carries across tanks; the run ends when it spills. Counting the stirs in the tank was the alternative: anyone who
+  turns back every red flash never rises. The one free probe left is a drag not let go, which only a reader of the
+  picture can use: the live ring says whether letting go will count, never whether it's right. A 30° slip on the
+  wrong rod costs a notch in endless; heals absorb the odd one. The capacity (8 in the approved film) waits for
+  TestFlight.
+  **The look** (Jack): the measuring jug on the real rim, filled with the picture's own colours (the only look whose
+  single frame read as a level to a viewer who didn't know it), with the tide's outward-spreading colour and vibrancy,
+  which Jack loves, grafted on. The tide itself failed on the real rim: even at 1.5x thickness a viewer read the band
+  as a thick bezel, and another took it for the picture shrinking. Jack approved the graft's film (2026-09-28: "very
+  nice"): each notch arrives as the picture's colour spreading across the rim behind a glint, and a glow off the
+  filled arc grows as the room runs out. Still open, from two cold reads: the spill swells the whole rim instead of
+  pouring over the lip at twelve, the rim goes pastel just after it, and "spilled." is easy to miss.
+  **The rules, as built on `endless` (2026-09-29).** No undo control (`Game.undo` refuses), no reset (it would bring
+  back entries the brim has already settled on) and no par (`Game.over` is 0 in endless); moves and time are unlimited.
+  The capacity is `Run.room`, 8, the approved film's ticks: the eighth notch spills. A notch is added by every commit
+  that pushes, the same event as the red ring, the red header flash and the warning tap, and it stays whatever becomes
+  of that entry: turned straight back, cancelled later, merged into, or merged down onto one of the scramble's entries
+  when a heal below it lets it fall (`testAPushThatMergesDownKeepsItsNotch`). A notch is settled by every one of the
+  scramble's own entries that pops: the one a commit cancels (the magenta ring and heavy tap), and one that a push the
+  heal lets fall cancels in the same commit, so a right turn made too early ends where it would had it merged and been
+  healed later (`testAPushThatFallsOntoTheScrambleHealsIt`). The stack now marks the player's pushes (`Game.Entry`), and
+  an entry a turn merges into stays whose it was, so a scramble entry turned part way, or that a push fell onto, still
+  settles one when healed. Nothing settles for cancelling the player's own push, for a white merge (even into the
+  scramble's entry, or two of the scramble's that a heal lets merge: they are healed as one), or for a heal with the
+  brim empty (no credit is banked). The tank's last heal settles one like any other, and the next tank opens with what
+  is left (`Game.nextTank`); where the fine pass calls a win on a stack that isn't empty, the move that got there
+  settles one if any of the scramble's entries is left and the move healed none. The card on a cleared tank shows moves
+  and time, and "tank N · brim k / 8", with next; at the spill, "spilled." over the tank, moves and time, and "tanks
+  cleared K · best B", with new run. `Best.tanks` keeps its meaning (most tanks cleared in one run). `UNSTIR_BRIM=n`
+  opens endless at n notches for one launch.
+  **Claude's calls in building it:** the ramp, as Claude proposed: tank n has 5 + 5n/4 stirs, n/2 of them hidden. The
+  cap is 28 stirs, from tank 19 (the 20th): the stack holds at most the scramble plus the brim's notches, so at 28 the
+  push that spills (7 notches held, at most 35 entries) always fits under `Tank.maxStack` (36); 30 would let a full
+  stack refuse pushes, and its dashed ring would then mark which turns merge. 28 also keeps the dealt tank at four taps
+  (`Tank.fourTaps`, 30, less the grid's fill of 0); with more than two pushes held on a 28-deep tank the shader drops to
+  two taps. Hidden stirs rise to 14, half of the 28, from tank 28. As first built they rose to 27, all but the bottom
+  one, and the generator then made nearly every stir 60° (the review, over 300 seeds: 2-step stirs a fifth to tank 19,
+  half at 40, 95% from 54), a word of equal twists nothing else in the game deals. Capped at half, 2-step stirs hold at
+  about 30% from tank 28 (help's ramp had 29% at its tank 36). It hides at least what it is asked, and more where no rod
+  can go louder: 27 of 183 tanks checked (0 to 60, three seeds) hid 1 or 2 more. So the ramp stops at tank 28: the
+  stack's limit caps the stirs, and hiding more past half only flattens their sizes. How it might keep ramping past
+  there (a generator of endless's own that hides without flattening sizes, or maelstrom's seized knobs on deep tanks)
+  is for Jack. The generator itself is untouched and marked frozen, so every daily is as it was (`testDailyVectors`
+  unchanged); endless is re-pinned (`testEndlessVectors`). Endless takes no undo refill, as the sandbox takes none: it
+  never touches the bank or the refill's clock anchor, and has no undo control to show the "+2" on, so the day's refill
+  waits for the next level that counts.
+  **Cancelling your own push flashes white in endless** (Jack, 2026-09-29, on Claude's recommendation): it settles
+  nothing, so it shows as a merge, and the magenta heal ring and heavy tap mark only a commit that pops one of the
+  scramble's entries, the brim's own event. Elsewhere every cancel keeps the ring. **Open.** When `sound` lands, its heal
+  (cancels less a stir turned straight back) counts a later cancel of the player's own push as a heal; it should take
+  the brim's event instead, and its endless over-par case is gone.
+  **The jug as built (2026-09-29).** Ported from the approved film into Brim.swift and Brim.metal (see CLAUDE.md). A
+  review against the film found drift, since fixed: the bloom ran about 30% strong (now within about 10% of the
+  film's bloom-to-band ratios at every level measured), its glow ended in a hard circle 64 units out (now drawn to 110
+  and faded), a push landing while the notch before still surged cut that light off in a frame (the last two notches
+  now keep their own clocks), the empty jug had a white glint at six (the surface now stands clear of the edge), and
+  the murk glittered where the stir squeezes lines finer than a pixel (now averaged along each pixel's footprint, as
+  the mockup's was; against a supersampled reference it keeps the fine lines and loses the speckle). The caps stay
+  over the murk, as in the film. The murk's cost on the phone is unmeasured: up to 48 taps a pixel, for the spill's
+  few seconds. The tank's number moved from under the move count to the title ("Endless, tank 1"), where it can't read
+  as the gauge's count, and the tank now sits where every other level's does.
+  **The three open points.** The spill no longer swells the whole rim: a crest swells over the lip at twelve and
+  breaks, and the liquid pours down the outside either way in a wave behind a glossy bead, dressed as the mockup's
+  sheet in the rim's own colours, slowing past three and nine o'clock, where two drops fall from each head; the brim
+  pin stays on top. A first try (a mound at twelve) burned to white, hid the pin and held still instead of running.
+  The rim keeps its full colours after the spill (a spill changes no stack, so it never goes pastel), and "spilled."
+  sits over a dark pool with a red glow. Jack approved the app's film (`scripts/film.sh endless-brim-run`) on 2026-09-29; no cold reader has seen the new pour.
+  **A cold read of the app's film** (a viewer who didn't know the game) raised points that question the approved look
+  or Jack's rules, so they wait for Jack rather than being changed: near full reads as charged or complete, not as
+  danger (the glow grows as room runs out, as approved, and no colour warns); the lit rim at the start reads as the
+  picture's neon, not an amount (the film opens at 5 notches; a real run opens empty); what fills it is hard to infer,
+  since moves both lowered and raised it and only the red ring on the disc and the red header flash tie a rise to its
+  move; the ring and pin read as a dial, and the card's time is never shown in play; the drag's count lingering after
+  a turn (from `touch`) can read as points added. One claim was wrong: the level lands on a tick at every notch (the
+  ticks are 22.5° apart, not 30°). Claude's recommendation: let TestFlight test the first three before changing the
+  look; tying each rise to the disc that caused it (a notch of colour leaving that disc for the rim, say) would not
+  change the jug.
 - Switching between tiers must be easier to find than today's header toggles, and on-brand. Jack's idea: stir
-  between modes.
+  between modes. He chose the strip (see the table).
 - Order of work: the go/no-go slice (`turning-tank`), the switcher as mock-ups for Jack to pick, the rename, then the
   level set, whose table (layout, depth, seized knobs, par, planning gap, picture) goes to Jack before it is written
   into `Levels.swift`.
+
+**The first playtest (2026-09-28, a playtester on Jack's phone, loving it).**
+- Touching where two discs overlap, you can't tell which rod will move. Then the nearest centre won, and the only cue (a
+  dashed ring and the start notch) sat under the finger. Claude recommended lighting the held rod the moment a finger
+  lands, and in an overlap letting the first few points of motion pick the rod whose turn explains them. Both were built
+  on `touch` on 2026-09-29. On the phone Jack found the motion pick "much more unpredictable... chooses wrong more often
+  than not". The first ~1.3 mm of a touch is mostly the finger rolling as it presses, and a simulation showed noisy
+  first motion hands 20–40% of overlap touches to another rod. It was set aside the same day (R7). Built now: the finger
+  holds the rod whose centre is nearest, in its own disc's radius, where it lands, and that rod lights at once with a
+  light tap, so the rod that lights is the rod that turns. Going back to the landing rule was Claude's call, for Jack to
+  confirm on the phone. The log now records where each touch lands and the path each drag takes, so the next complaint
+  about a pick can be checked against the finger.
+- "I can't remember how far I've turned it." Claude's recommendation: while dragging, an arc from the start notch lights
+  one segment per 30° step, with a signed count placed away from the finger; it stays faint while the move is still
+  open, so a re-grab of the same rod carries on the count. It reports only the player's own turns, so it is not a hint.
+  It was within one drag, and Jack likes the fix (2026-09-28). Built on `touch` (2026-09-29).
+- The lines a turn draws were too heavy for pictures made of fine lines. On `touch` (2026-09-29) every line a turn draws
+  over the picture became one 0.5 pt hairline, with no glow or dark band. The held knob lights inside its own footprint
+  (its ticks and a ring on its dark band), and one hairline rings its disc, dimmer until letting go would commit. The
+  count became fine graduation ticks on that hairline. Jack dropped the ticks the same day (R8): "too faint and thin".
+  He liked the dashes and only wanted them less prominent. So the count is dashes again, 2 pt at 0.85 opacity, with no
+  glow or dark band, over a hairline trace from the start to where the turn stands. The disc's hairline and its start
+  mark stay: Jack asked for one thin line round the circle of influence. Open for Jack: a knob-only variant (no line
+  round the disc) against this, though his ask for the line may settle it; and whether the hint's ring and the opening
+  replay's ring, still heavy, should thin too.
+- Some tank turns committed a step with no clunk. The phone's log confirmed the cause: all 107 silent tank turns were
+  let go between 0.52 and 0.99 of a step. Letting go rounds to the nearest step, but the clunk fired only at whole
+  steps. Fixed on `touch` (2026-09-29): a turn clicks each time what letting go would commit changes, at the half step
+  either way, so every step a turn commits has had its clunk. The rod's tick moved to the half step too, so click, count
+  and commit always agree. That was Claude's call, for Jack to confirm.
+- Whirlpool 22 (pent, marbling) looked solved at moves 19 / par 18 with one 30° step left on the bottom-right rod. The
+  win check was right: that step moves its worst point about 0.14 tank radii (about 80 phone pixels), but round ring
+  motifs still look like rings after a turn. Pictures built from locally round motifs hide rotation; check this
+  when the live pictures are reviewed.
+- Maelstrom's first level (the placeholder with a seized knob on the phone): five minutes without finding that the
+  tank turns. Jack: it needs to be clearer, even just an arrow, since turning the tank back is free. Claude's
+  recommendation, queued: on any level with seized knobs, until the player has turned the tank once (a stored flag),
+  an amber arrow sweeps along the rim with a ghost drag; touching a seized knob plays its thunk, shakes the knob and
+  pulses the rim arrow, since that touch is the moment of confusion; maelstrom 1 gets a one-line note ("One knob has
+  seized. Turn the tank."). It teaches the control, not the move, so it isn't a hint. Built on `touch` (2026-09-29),
+  except the note: no committed maelstrom level has a seized knob yet, so the note, and a rewording of whirlpool 1's
+  "This is the last note.", come with the new set. The arrow sits on black just outside the bezel at twelve, apart from
+  the hint's. A two-finger twist whose first finger lands on a seized knob still thuds and shakes it: SwiftUI gives no
+  touch count, so only the phone can say whether that grates.
+- "Why are some locked and some aren't?" The phone's temporary table seizes knobs on only 17 of the 27 placeholder
+  levels. Jack: every maelstrom level has seized knobs. The new set already does (one or two on each).
+- From the phone's log (every tier open with the developer unlock): in 107 minutes the playtester solved all 81
+  levels and one endless tank, with no hints, 20 of them over par, and no crash. The undo bank was already empty from
+  earlier testing and never refills, so the whole evening was played with resets (87 of them). The
+  hardest were whirlpool 22 (23 resets, about 9 minutes; one step from solved, the playtester left the app and reset on return),
+  maelstrom 22 (17 resets, 54 tank turns), whirlpool 21 and maelstrom 21 (6 over par). Maelstrom 1 took 3 min 35 s,
+  12 touches of the seized knob and 8 resets before the first tank turn. Maelstrom was the placeholder (whirlpool's
+  scrambles with seized knobs), so a third of the levels repeated puzzles just solved. The log can't show
+  losing count in a drag: quick re-grabs of one rod are too common to mean anything.
 
 **Recommended Nightmare+ (chosen 2026-09-28): the seized rod and the turning tank.** N+k is Nightmare k's scramble with one
 or two seized knobs (never the hub). The whole tank turns one rod over (the layout's symmetry: 120°, 90°, 180°, 72°,
@@ -368,3 +504,18 @@ Each was judged on what skill it tests that Nightmare doesn't.
 - **Sonar stations.** The beam arms read as needles and move far faster than anything else; dark wedges fake seams.
 - **Contour map.** Some seeds draw a valley across the whole tank (a direction), and contours look like shear rings.
 - **Crystal shards.** Reads as pick-up sticks, the busiest clean tank, and haze in the shear rings.
+
+### R7 — Picking an overlapped rod by the finger's first motion (set aside 2026-09-29)
+
+Built on `touch` on 2026-09-29: in an overlap the finger held nothing until it had moved 8 pt, then the rod whose
+tangent best fitted that motion, falling back to the nearest centre within a 15° tie, and a late pick caught up at
+most 10°. Jack, on the phone: "much more unpredictable... chooses wrong more often than not". The first ~1.3 mm of a
+touch is mostly the finger rolling as it presses, not the turn it means, and a simulation showed noisy first motion
+hands 20–40% of overlap touches to another rod. Replaced the same day by the nearest rod where the finger lands.
+Claude's view: revisit only if the log's landing points show that rule picking wrong often.
+
+### R8 — Fine graduation ticks for a drag's count (dropped 2026-09-29, Jack's call)
+
+A hairline mark per step on the disc's hairline, the step just reached brightest. Jack, on the phone: "too faint and
+thin". He liked the dashes they replaced, only not so prominent, so the dashes came back lighter (2 pt at 0.85, no glow
+or band).

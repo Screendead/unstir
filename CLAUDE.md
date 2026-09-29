@@ -16,8 +16,8 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
 
 - **Branch and PR for every change.** Never commit to `master`. Jack has given standing permission to create branches
   and open PRs without asking.
-- **Commit only after Jack reviews.** When a feature or a round of ideation is finished, stage it and ask Jack to review
-  the staged diff. Commit once he's reviewed it, not before, and not partway through the work.
+- **Jack reviews at the PR.** When a feature or a round of ideation is finished, commit it and open the PR without
+  asking first (Jack, 2026-09-28). Don't commit partway through the work.
 - **Atomic commits.** Changes that belong together go in one commit. Separate changes go in separate commits, even when
   that means splitting one file's diff line by line (`git add -p` is interactive, so build the partial patch and use
   `git apply --cached`).
@@ -40,8 +40,8 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
 The repo is public. Nothing personal or confidential goes into a tracked file, a commit message or a PR: no device
 UDIDs, account or membership status, money, usage history, email addresses, local paths or anything else about Jack
 beyond his first name, except his full name in the copyright line below. Such notes go in `HANDOFF.private.md`, which
-is gitignored and exists only on this Mac. Machine-specific values come from environment variables. Before asking for
-a review, check the staged diff for personal details.
+is gitignored and exists only on this Mac. Machine-specific values come from environment variables. Before committing,
+check the staged diff for personal details.
 
 Every `.swift`, `.metal` and `.sh` file opens with `Copyright © 2026 Jack Lusher. All rights reserved.` as a comment,
 after a script's shebang. The code is all rights reserved: never add an open-source licence.
@@ -58,7 +58,9 @@ Once Jack has heard the argument and still decides, carry out his decision.
 edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitignored).
 
 - Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result)
-- Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's UDID, set in the shell)
+- Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
+  UDID, set in the shell). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level on the phone
+  until a run with `UNSTIR_UNLOCK=0`.
 - Tests (XCTest, on a simulator):
   ```
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
@@ -68,59 +70,164 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
+  Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives.
   Git ignores `shots/` apart from `index.txt`: show pictures and films in a PR by attaching them to a comment through
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
+  Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
+  the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs
+  its rotation), so a pick or turn can be checked against the finger.
 
 ## Architecture
 
 - **Twist.swift** holds the core model and has no UI. A scramble is a stack of `Twist(rod, steps)` entries (30° per
   step), applied bottom first. `Tank.twist`/`Tank.profile` is the point map: a rigid disc core out to `plateau` (0.6),
-  then a smoothstep shear ring. `Array<Twist>.commit` is the one rule for every rod stir. A turn merges into the rod's
-  newest entry when everything above that entry commutes with the turn, and pushes a new entry otherwise. Commutation is
-  decided geometrically (non-overlapping discs), or by sampling the maps on `Tank.samples` when the discs overlap. An
-  entry that merges to 0 steps pops. `Layout.looksSolved` checks the stack against the identity to half a pixel. The
-  stack names the glass's own rods (slots), so a turn of the tank never touches it: `Layout.order`/`tankStep` are the
-  layout's rotational symmetry (hex's hub held still), which sets each rod's twist exactly on a rod of the same size,
-  and `slot(of:at:)`/`knob(over:at:)` map a physical knob to the slot under it at a tank position.
+  then a smoothstep shear ring. `Array.commit` is the one rule for every rod stir. A turn merges into the rod's
+  newest entry when everything above that entry commutes with the turn, and pushes a new entry otherwise. It runs on any
+  `Stacked` entries, so what rides with an entry (`Game.Entry`'s mark of the player's push) stays with it: the entry a
+  turn lands on keeps its own. It hands `popped` every entry that merges to nothing, including one that an entry the
+  merge lets fall cancels. Commutation is decided geometrically (non-overlapping discs), or by sampling the maps on
+  `Tank.samples` when the discs overlap. An entry that merges to 0 steps pops. `Layout.looksSolved` checks the stack
+  against the identity to half a pixel. The stack names the glass's own rods (slots), so a turn of the tank never
+  touches it: `Layout.order`/`tankStep` are the layout's rotational symmetry (hex's hub held still), which sets each
+  rod's twist exactly on a rod of the same size, and `slot(of:at:)`/`knob(over:at:)` map a physical knob to the slot
+  under it at a tank position.
 - **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
   the stack's inverses to sample the picture. The tests only reach the Swift copy (`Tank.profile`/`Tank.twist`), so
   change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
-  The shader's tap count and the `Tank.maxStack` (36) and four-tap limits in `Unstirred` are tuned against 120 Hz on an
+  The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (30) limits are tuned against 120 Hz on an
   iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone.
-- **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw Nightmare's live
-  pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassPlus`, ...), the
-  Nightmare+ twin being the same body with `plus` set. Each file stands alone. Nightmare+'s heartbeat lives in the twins'
-  own lines: each file's `heartbeat` reads the delay grid `Picture.delays` appended to the twin's data, and the lines
-  swell and brighten as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's
-  limits (neurons' regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and
-  checks its search against a brute force, the twin at the beat's peak; nothing else tests the shaders.
-- **Levels.swift** has the 27 hand-written campaign levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so
-  they merge exactly as play would), nightmare / Nightmare+ variants (ids prefixed `N` / `N+`; Nightmare's pictures
-  follow a table, and N+k shows the twin of Nk's), daily and endless (`SplitMix64`-seeded generator). The generator is
-  ported draw for draw from an earlier prototype, and `testDailyAndEndlessVectors` pins its output. Progress (`Best`,
-  started flags, undo bank) is kept in `UserDefaults`. A `Level` may have `seized` knobs, which ignore touch; the tank
-  turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
-- **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, hints, clean-solve rules and the
-  endless spill. `Game.commit` takes a physical knob and commits to the slot under it. `Game.turnTank` is a move that
-  pushes no entry: turns in a row join, and one netting a whole turn drops. `Game.history` holds rod stirs by slot and
+- **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw whirlpool's live
+  pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassTwin`, ...), maelstrom's
+  twin being the same body with `twin` set. Each file stands alone. The twins' heartbeat lives in their own lines: each
+  file's `heartbeat` reads the delay grid `Picture.delays` appended to the twin's data, and the lines swell and brighten
+  as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's limits (neurons'
+  regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and checks its search
+  against a brute force, the twin at the beat's peak; nothing else tests the shaders.
+- **Brim.swift** and **Brim.metal** draw endless's brim as a measuring jug on the tank's own bezel, ported from the
+  mockup Jack approved (2026-09-28) with its constants in its own units (`Brim.unit` to the glass's radius): ticks
+  engraved on the steel, a brim pin at twelve, and a liquid in the picture's own colours climbing both sides from six
+  o'clock to a level line with a glinting meniscus, the empty arc bare steel. `Game.brimEvents` records every change of
+  the brim, and `Brim.frame` turns them into the shader's state: a change springs in and sloshes, a new notch's colour
+  spreads outward across the bezel behind a glint and surges on onto the black (the last two notches each on their own
+  clock, so a quick push never cuts the one before short), the filled arc blooms further as room runs out and pulses
+  with the pin at the last notch, and a heal leaves a wet film. The glow is scaled (`BLOOM`) to the approved film's
+  balance of bloom to band, fades out before `Brim.reach`, where the ring ends, and none of it lies on the empty jug.
+  `BrimRing` strokes a ring from the glass's edge outward with the `brim` shader, so it shades no pixel of the glass
+  and the tank's shader is untouched; its timeline runs only for `Brim.settle` after a change, through a spill and
+  while the last notch is held, and it strikes with the picture (`PictureLayer.strike`). Its colours (`Brim.colours`)
+  map points just inside the rim back through the glass's turn and the stack, as `unstir` does, and read the grid,
+  endless's only picture (`Picture.gridLight`), off the main actor on each change of the stack; a spill changes no
+  stack, so the rim keeps its colours. The push that fills the brim spills it: the fronts meet at the pin
+  (`Brim.meet`), a crest swells over the lip at twelve and breaks, the liquid pours down the outside of the rim either
+  way in a wave behind a bead at each head, dressed as the mockup's sheet, and the heads slow past three and nine
+  o'clock, where two drops fall from each; the pin is drawn over all of it. The `murk` layer effect (disabled until
+  then) stirs the picture together on `Brim.murk`'s stirs, carrying each pixel's footprint back through them (each
+  stir is area-preserving, so it becomes a thin sliver) and averaging up to 48 taps along it in linear light, so
+  lines finer than a pixel mix instead of glittering. `SpillWords` stamps "spilled." over the tank, whose caps stay,
+  and the card follows at `Brim.card`. The tests reach only the Swift side.
+- **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, maelstrom (vortex will go between the last
+  two, charybdis past maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
+  never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best at par
+  (`Tier.isOpen`: `over == 0`). `Tier.store` keeps only an open tier, so a locked one opened to look at
+  never comes back on launch, and `Tier.stored` falls back to the highest open tier below one that has closed.
+  `Best.unlocked`, the developer unlock, opens every tier and level; a launch with `UNSTIR_UNLOCK=1` sets it and one
+  with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
+  (`L1`, `N1`, `N+1`: whirlpool's and maelstrom's prefixes are from their old names, nightmare and nightmare+). Progress
+  is stored by id, so changing a prefix loses it unless the stored keys are remapped. Plughole has 27 hand-written
+  levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
+  deeper variants on live pictures that follow a table, and maelstrom, until it has a set of its own, whirlpool's
+  scrambles on each picture's twin. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole.
+  The generator is ported draw for draw from an earlier prototype and is frozen: every past daily is its output, and
+  `testDailyVectors` pins them. Endless changes only what it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to
+  28, at least n/2 of them hidden, to half), which `testEndlessVectors` pins. A `Run` is endless's seed, tank and the
+  brim's notches as that tank opens. Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo
+  bank (`Best.undos`, 10 at most) refills by 2 the first time a level other than the sandbox or endless opens on a local
+  calendar day later than the stored day of its last refill (`Best.refill`, `Best.refilled`), so each day played refills
+  once and a long absence once; a fresh install records the day without a refill, and a clock moved back never
+  refills. The day is `Best.trustedNow`'s, in the current time zone: it stores an anchor (`Best.anchor`), the last time
+  it vouched for with the uptime then (`CLOCK_MONOTONIC_RAW`, which counts sleep and which setting the clock never
+  moves) and the boot session (`kern.bootsessionuuid`, nil where the sandbox refuses it); the sandbox and endless leave
+  it alone. Within a boot, a wall clock more than `slack` (5 min) ahead of the anchor plus the uptime since gives way to
+  that reckoning, and the anchor stays; otherwise the wall clock is believed, and the anchor follows it from as far as
+  `slack` behind, but never further past the reckoning than a second plus `drift` (100 ppm) of the uptime since, so
+  creeping the clock ahead gains about a second an opening. A new boot believes the wall clock, and anchors there
+  unless it reads more than `slack` before the anchor's time, so a clock reset at boot and set right later still counts
+  as a new boot. With the session unread, a new boot shows as the uptime going back, or as a jump at least the anchor's
+  uptime, which is believed. The launch logs whether the session was read, the uptime and `kern.monotonicclock`. A
+  `Level` may have `seized` knobs, which ignore touch; the tank turns only on such a level. `par` is `fixedPar`, else
+  `scramble.count`.
+- **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and
+  endless's brim, which the rim shows (the header shows moves, and the title the tank). `Game.commit` takes a physical
+  knob and commits to the slot under it. Endless has no par, undo or reset: each red flash (a `.pushed` commit) adds a
+  notch to `Game.brim`, each of the scramble's entries that pops settles one (the heal's `.cancelled` commit, or a push
+  that the heal lets fall cancelling it), and at `Run.room` (8) the run spills. The stack's entries mark the player's
+  pushes (`Game.Entry`) so that cancelling one is no heal, and flashes white as a merge does rather than the heal's
+  magenta ring and heavy tap, which in a run mark only a commit that pops one of the scramble's entries; a win the fine pass calls also settles one, as the tank's
+  last heal, while one of the scramble's entries is left and unless its move healed one. `Game.nextTank` carries it to
+  the next tank. `Game.turnTank` is a move that pushes no entry: turns in a row join, and one netting a whole turn
+  drops. `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
-  `Game.turnTank`), the `Unstirred` shader modifier and the result card. Wins run the coarse `looksSolved` pass on the
-  main actor and the fine pass off it.
-- **Pictures.swift** bakes the campaign's neon pictures once per size. Campaign pictures are designed so that "up" is
-  readable inside every rigid core. Nightmare's five (glass, chainmail, coral, neurons, marbling) and their Nightmare+
-  twins withhold it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period`
-  (a minute for a twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's
-  cells take the raw clock; the neural web is static per seed, built once off the main actor.
+  `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
+  a finger holds where it lands, never by its motion: the rim first where knobs are seized, else the disc whose centre
+  is nearest in its own radius, overlapped or not; a seized winner is `.seized`, which holds nothing. The held rod
+  lights at once with a light tap, so the rod that lights is the rod that turns: its knob's ticks and a ring on the dark
+  band round it, never past it, and one 0.5 pt hairline round its disc, dimmer until letting go would commit. On lift
+  the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red, and one that cancels
+  sends a magenta hairline out from the knob. Every line a turn draws over the picture is a hairline but the count's
+  dashes, 2 pt, and none has a glow or a dark band under it: the pictures are fine lines themselves, and whatever a
+  heavy line covers the player cannot read. The opening replay's ring is not a hairline. A
+  seized knob touched shakes a few degrees, plays `Knock.thud` (duller than the tank step's `Knock.clunk`) and pulses
+  the rim's lesson: `RimLesson`, a two-headed amber arc just outside the bezel at the top and a ghost finger rocking
+  along the rim under it, shown on any level with seized knobs until the player's first turn of the tank commits. That
+  turn sets `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does.
+  The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. A drag shows its own
+  count: a long mark on the disc's hairline (on one just inside the rim, for the tank) where its stir began, a dash per
+  step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
+  stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
+  (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: the rod's tick, the tank's
+  clunk. While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
+  rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
+  main actor and the fine pass off it. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
+  reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
+  seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
+- **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
+  scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
+  dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
+  (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
+  at the swap. A drag is the switcher's only if its first 15 points run at least twice as far sideways as up or down
+  (`isSideways`); then the list stops scrolling, and a row lifted over doesn't open. While it turns, the list is drawn
+  again over the scroll view, cut to its visible part, and that copy is what stirs; the scroll view's own list
+  (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. A locked tier can be
+  looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par. A hidden stir in
+  the background builds the shader's pipeline before the first switch.
+- **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
+  every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
+  it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
+  twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's cells take the
+  raw clock; the neural web is static per seed, built once off the main actor.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
-  (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, level, mode, stack, seized knobs
-  (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank
-  (`UNSTIR_TANKLIVE`), a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). This is how screenshots
-  and films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line
-  there.
+  (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
+  even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a
+  mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
+  units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
+  (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
+  many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
+  (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds the rim lesson's ghost finger, a refill's "+2", and endless's brim that
+  many seconds after its last change (a spill's too). `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim
+  through the same calls a finger makes: two heals, then pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank
+  and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on; a harnessed launch never stores the bank, the refill's day
+  or its anchor, and with `UNSTIR_TODAY` and no day stored it takes the last refill as long ago, so the level opens on a
+  refill. Nor does it store the tank flag: it reads as never turned unless `UNSTIR_TANKTURNED=1`, and whatever the
+  launch turns lasts only that launch, so shot order never matters. For the menu, `UNSTIR_BESTS=plughole:0001,...`
+  registers bests for that launch only (a digit per level, that many over par; `-` for none),
+  `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches tiers through the same calls a
+  finger makes. `UNSTIR_UNLOCK` alone is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it
+  unset clears it, so no shot leaves the next unlocked. This is how screenshots and films are taken without touch; see
+  `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
 
-Many tests are regressions from real play (e.g. `testNightmare11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
-Others check the level tables against the design tables (par, inversion counts, Nightmare's pictures).
+Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
+Others check the level tables against the design tables (par, inversion counts, whirlpool's pictures).

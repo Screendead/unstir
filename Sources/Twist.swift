@@ -18,6 +18,8 @@ enum Tank {
     static let plateau = 0.6
     /// Pushes past this are refused: every pixel runs each shader tap through every entry, plus the live twist.
     static let maxStack = 36
+    /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two.
+    static let fourTaps = 30
 
     /// Rotation fraction at s = |p - c| / radius. The Metal shader carries the same function.
     static func profile(_ s: Double) -> Double {
@@ -121,8 +123,8 @@ enum Layout: String, CaseIterable {
     }
 
     /// Whether the entries above index i commute with a turn of `rod` by `steps`, so the turn can merge into entry i.
-    func commutes(_ stack: [Twist], above i: Int, rod: Int, steps: Int) -> Bool {
-        let above = Array(stack[(i + 1)...])
+    func commutes(_ stack: [some Stacked], above i: Int, rod: Int, steps: Int) -> Bool {
+        let above = stack[(i + 1)...].map(\.twist)
         if above.allSatisfy({ !overlaps($0.rod, rod) }) { return true }
         // Overlapping rods can still commute exactly (a word can hold a whole disc still), and only the maps show it.
         let turn = Twist(rod: rod, steps: steps)
@@ -148,29 +150,56 @@ enum Layout: String, CaseIterable {
 
 enum Commit { case pushed, reduced, cancelled, refused }
 
-extension Array where Element == Twist {
+/// What a stack holds: a twist, and whatever rides along with it. A turn that merges keeps the entry it lands on, so
+/// what rides with that entry stays.
+protocol Stacked {
+    var twist: Twist { get set }
+}
+
+extension Twist: Stacked {
+    var twist: Twist {
+        get { self }
+        set { self = newValue }
+    }
+}
+
+extension Array where Element: Stacked {
     /// The rod's newest entry that everything above it commutes with the turn: where the turn merges.
     func landing(rod: Int, steps: Int, in layout: Layout) -> Int? {
-        indices.reversed().first { self[$0].rod == rod && layout.commutes(self, above: $0, rod: rod, steps: steps) }
+        indices.reversed().first { self[$0].twist.rod == rod && layout.commutes(self, above: $0, rod: rod, steps: steps) }
     }
 
-    /// Merges into the landing entry, popping at zero; otherwise pushes.
+    /// Merges into the landing entry, popping at zero; otherwise pushes. `popped` is handed every entry that merges to
+    /// nothing, whether the turn lands on it or an entry the merge lets fall does.
     @discardableResult
-    mutating func commit(rod: Int, steps: Int, in layout: Layout) -> Commit {
-        guard steps != 0 else { return .refused }
-        if let i = landing(rod: rod, steps: steps, in: layout) {
+    mutating func commit(_ entry: Element, in layout: Layout, popped: (Element) -> Void = { _ in }) -> Commit {
+        guard entry.twist.steps != 0 else { return .refused }
+        if let i = landing(rod: entry.twist.rod, steps: entry.twist.steps, in: layout) {
             // A merge under an overlapping rod changes what the entries above it were checked against, so the merged
             // entry and everything above go back on in order and merge wherever they now can.
             var rest = Array(self[i...])
-            rest[0].steps += steps
+            rest[0].twist.steps += entry.twist.steps
             removeSubrange(i...)
-            let merged = rest[0].steps == 0 ? .cancelled : commit(rod: rest[0].rod, steps: rest[0].steps, in: layout)
-            for t in rest.dropFirst() { commit(rod: t.rod, steps: t.steps, in: layout) }
+            let merged: Commit
+            if rest[0].twist.steps == 0 {
+                popped(rest[0])
+                merged = .cancelled
+            } else {
+                merged = commit(rest[0], in: layout, popped: popped)
+            }
+            for t in rest.dropFirst() { commit(t, in: layout, popped: popped) }
             return merged == .cancelled ? .cancelled : .reduced
         }
         guard count < Tank.maxStack else { return .refused }
-        append(Twist(rod: rod, steps: steps))
+        append(entry)
         return .pushed
+    }
+}
+
+extension Array where Element == Twist {
+    @discardableResult
+    mutating func commit(rod: Int, steps: Int, in layout: Layout) -> Commit {
+        commit(Twist(rod: rod, steps: steps), in: layout)
     }
 
     /// "0:+3,1:-6" -> [(0,3),(1,-6)], committed in order so entries that can merge do.

@@ -4,7 +4,11 @@ import SwiftUI
 
 @main
 struct UnstirApp: App {
-    init() { Log.write("launch") }
+    init() {
+        let monotonic = Best.monotonicClock().map { String(format: "%.1fs", $0) } ?? "unread"
+        Log.write(String(format: "launch, boot session %@, uptime %.1fs, monotonic clock %@",
+                         Best.bootSession == nil ? "unread" : "read", Best.uptime(), monotonic))
+    }
 
     var body: some Scene {
         WindowGroup { RootView() }
@@ -20,48 +24,86 @@ struct Harness {
     let tank: Int
     /// UNSTIR_TANKLIVE=degrees: a turn of the tank held mid-drag, on top of UNSTIR_TANK.
     let tankLive: Double?
-    let hint: Bool
+    /// UNSTIR_TOUCH=x,y: a finger down at that point of the tank (tank units, y down), not yet moved; with UNSTIR_LIVE or
+    /// UNSTIR_TANKLIVE, where it went down before carrying the turn round.
+    let touch: SIMD2<Double>?
+    /// UNSTIR_TURNED=rod:steps: a turn committed through the real path and left open, as a finger has just let it go.
+    let turned: Twist?
+    /// UNSTIR_TANKTURNED=1: the player has turned the tank before, so the rim no longer shows how; unset, they never have.
+    /// Either way for this launch only, whatever the harness turns. Nil without the harness, which reads and stores the
+    /// real flag.
+    let tankTurned: Bool?
+    /// UNSTIR_SHAKE=s: with UNSTIR_TOUCH on a seized knob, its shake and the rim's pulse held s seconds in.
+    let shake: Double?
+    /// UNSTIR_UNDOS=n: the undo bank, and the stored day of its last refill, for this launch only. A harnessed launch
+    /// reads the stored bank unless set, and never stores either, nor the refill's anchor, which starts afresh. With
+    /// UNSTIR_TODAY and no day stored, as on the shots' fresh install, the last refill was long ago, so the level opens
+    /// on a refill. Nil without the harness, which reads and stores the real ones.
+    let bank: (undos: Int, refilled: String?)?
+    /// UNSTIR_TODAY=yyyy-MM-dd: the day the level opens on, for the bank's refill.
+    let today: String?
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
-    let unlock: Bool
     let autoplay: Bool
+    /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
+    let brimDemo: Bool
     let bench: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
-    /// UNSTIR_CLOCK=s: hold the nightmare background s seconds in.
+    /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change.
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
+    /// UNSTIR_TIER=whirlpool: the tier the menu opens on, locked or not, plughole when unset. Nil on a launch without
+    /// the harness, which opens on the stored tier.
+    let menuTier: Tier?
+    /// UNSTIR_TIERDEMO: the menu switches tiers on a timer, through the calls a finger makes.
+    let tierDemo: Bool
+    /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
+    let tierSpin: (spin: Double, fade: Double)?
 
     init(_ env: [String: String]) {
-        // UNSTIR_PLUS: Nightmare+, which is nightmare with its second toggle on.
-        let plus = env["UNSTIR_PLUS"] == "1", nightmare = plus || env["UNSTIR_NIGHTMARE"] == "1"
-        // Written whenever the harness runs, so a nightmare shot does not leave the next menu shot in nightmare.
-        if env.keys.contains(where: { $0.hasPrefix("UNSTIR_") }) {
-            UserDefaults.standard.set(nightmare, forKey: "nightmare")
-            UserDefaults.standard.set(plus, forKey: "nightmarePlus")
+        // UNSTIR_LEVEL counts in UNSTIR_TIER too.
+        let tier = env["UNSTIR_TIER"].flatMap(Tier.init(rawValue:)) ?? .plughole
+        // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
+        // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
+        // one unlocked.
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && $0 != "UNSTIR_UNLOCK" }
+        if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
+        menuTier = harnessed ? tier : nil
+        // UNSTIR_BESTS=plughole:00-1,whirlpool:0: a best for each of a tier's levels from 01, one character each: a
+        // digit is that many over par, - is none. For this launch only.
+        for part in env["UNSTIR_BESTS"]?.split(separator: ",") ?? [] {
+            let f = part.split(separator: ":")
+            guard f.count == 2, let owner = Tier(rawValue: String(f[0])) else { continue }
+            for (level, c) in zip(owner.levels, f[1]) {
+                if let over = c.wholeNumberValue { Best(over: over, seconds: 60).fake(level.id) }
+            }
         }
+        tierDemo = env["UNSTIR_TIERDEMO"] == "1"
+        let spin = env["UNSTIR_TIERSPIN"]?.split(separator: ":").compactMap { Double($0) } ?? []
+        tierSpin = spin.first.map { ($0, spin.count > 1 ? spin[1] : 0) }
         bench = env["UNSTIR_BENCH"] == "1"
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
-        let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), Level.all.count)
+        let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
         var level = switch env["UNSTIR_MODE"] ?? env["UNSTIR_LEVEL"] {
         case "daily": Level.daily()
-        case "endless": Level.endless(Run(seed: 7))
+        // UNSTIR_BRIM=n: endless opens with n notches on the brim, short of the spill, which only a push may bring.
+        case "endless": Level.endless(Run(seed: 7, brim: min(max(Int(env["UNSTIR_BRIM"] ?? "") ?? 0, 0), Run.room - 1)))
         case "sandbox": Level.sandbox
-        default: (plus ? Level.nightmarePlus : nightmare ? Level.nightmare : Level.all)[n - 1]
+        default: tier.levels[n - 1]
         }
         let picture = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:))
         if bench {
             // UNSTIR_DEPTH overrides. A live picture's heaviest frame is the most entries that keep four taps, and the drag.
-            let p = picture ?? (plus ? .glassPlus : nightmare ? .glass : .grid)
-            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? 30 - p.fillEntries : 24)
+            let p = picture ?? tier.levels[0].picture
+            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? Tank.fourTaps - p.fillEntries : 24)
             var rng = SplitMix64(state: 24)
-            // UNSTIR_PLUS: an N+ id, like the twin's own levels.
-            level = Level(id: plus ? "N+bench" : "bench", label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: p,
+            level = Level(id: "bench", tier: tier, label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: p,
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))
         }
         if let picture { level.picture = picture }
@@ -76,16 +118,24 @@ struct Harness {
         self.level = level
         tank = env["UNSTIR_TANK"].flatMap(Int.init) ?? 0
         tankLive = env["UNSTIR_TANKLIVE"].flatMap(Double.init)
+        let xy = env["UNSTIR_TOUCH"]?.split(separator: ",").compactMap { Double($0) } ?? []
+        touch = xy.count == 2 ? SIMD2(xy[0], xy[1]) : nil
+        let t = env["UNSTIR_TURNED"]?.split(separator: ":").compactMap { Int($0) } ?? []
+        turned = t.count == 2 && level.layout.rods.indices.contains(t[0]) ? Twist(rod: t[0], steps: t[1]) : nil
+        tankTurned = harnessed ? env["UNSTIR_TANKTURNED"] == "1" : nil
+        shake = env["UNSTIR_SHAKE"].flatMap(Double.init)
+        today = env["UNSTIR_TODAY"].flatMap { $0.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) == nil ? nil : $0 }
+        let undos = env["UNSTIR_UNDOS"].flatMap(Int.init).map { min(max($0, 0), 10) } ?? Best.undos
+        bank = harnessed ? (undos, Best.refilled ?? (today == nil ? nil : "0000-00-00")) : nil
         let f = env["UNSTIR_LIVE"]?.split(separator: ":") ?? []
         if f.count == 2, let rod = Int(f[0]), level.layout.rods.indices.contains(rod), let steps = Double(f[1]) {
             live = (rod, steps)
         } else {
             live = nil
         }
-        hint = env["UNSTIR_HINT"] == "1"
-        still = env.keys.contains { $0.hasPrefix("UNSTIR_") } && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
-        unlock = env["UNSTIR_UNLOCK"] == "1"
+        still = harnessed && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
+        brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
     }
 }
 
@@ -132,13 +182,11 @@ struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
     @Environment(\.scenePhase) private var phase
-    private let unlock: Bool
 
     init() {
         let h = Harness(ProcessInfo.processInfo.environment)
         _level = State(initialValue: h.screen == "menu" ? nil : h.level)
         _harness = State(initialValue: h)
-        unlock = h.unlock
     }
 
     var body: some View {
@@ -153,8 +201,10 @@ struct RootView: View {
                     .id(level)
                     .transition(dip)
             } else {
-                MenuView(unlock: unlock) { show($0) }
-                    .transition(dip)
+                MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin) {
+                    show($0)
+                }
+                .transition(dip)
             }
         }
         .background(Color.black)
@@ -162,7 +212,7 @@ struct RootView: View {
         .task {
             guard harness?.tour == true else { return }
             try? await Task.sleep(for: .seconds(1.5))
-            show(Level.all[0], keep: true)
+            show(Level.plughole[0], keep: true)
             try? await Task.sleep(for: .seconds(4))
             show(nil)
         }
