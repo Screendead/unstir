@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-09-28. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-09-29. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -58,7 +58,7 @@ from Nightmare to Nightmare+ is easy to miss.
 | The way in | Jack chose the strip (2026-09-28) from three working mock-ups (strip, dial, window), for its ticked line of the levels left to open the next tier; he loved the window's live tank but it took too much of the screen. Built on `tiers` with the rename and the gate; the swipe was driven by simulated touches, never a finger. The swap freezes 50–107 ms on the simulator: left for the performance pass |
 | Rename | Nightmare is now **whirlpool** and Nightmare+ **maelstrom** in code, harness (`UNSTIR_TIER`), scripts, tests and docs, on `tiers`. Stored level ids stay `N<k>` and `N+<k>`, so progress carries over (Claude first planned new ids, which would have reset it; the review caught that). The new maelstrom set gets fresh ids, so old N+ bests don't land on new levels |
 | Solver and the maelstrom set | Solver built and verified on branch `solver` (2026-09-29). An independent brute force found a push that holds a disc still and beats plain untwisting by a move, so the optimum now adds a bounded search for such detours: par is the solver's bounded optimum, not a proof. The park rule has two readings (fewest dead knobs over rings with a seam, or every dead knob over a ring without one) and two tie-breaks; Jack's pick is open, and the proposed set is fair under all four. A first proposed table passed every check but its early planning gap came from a tie-break (a lucky guess of direction scores par), its first ten levels all turn counterclockwise, and its seized pairs were always neighbours; a second version is being made against those |
-| The phone | Free again after the first playtest (Jack, 2026-09-28). It has the sound prototype and the temporary seized table. Next install: the touch fixes with round 2's sound, prepared overnight 2026-09-29 without installing (Jack asked for no phone use while he slept) |
+| The phone | Installed 2026-09-29: a local build of `touch` at 42406cc with `help`'s three commits (hints removed, the daily +2 refill, the clock guard), the glass sound set, and two proposals not to be committed (maelstrom v2 as M1–M27, and plughole 19–27's easier scrambles). The next install carries the dashes |
 
 **Jack's calls (2026-09-28).**
 - Nightmare+ becomes the seized rod and the turning tank, below. Bookkeeping stays the fallback if the go/no-go fails
@@ -105,18 +105,34 @@ from Nightmare to Nightmare+ is easy to miss.
   into `Levels.swift`.
 
 **The first playtest (2026-09-28, a playtester on Jack's phone, loving it).**
-- Touching where two discs overlap, you can't tell which rod will move. Today the nearest centre wins and the only
-  cue (a dashed ring and the start notch) sits under the finger. Claude's recommendation: light the grabbed rod the
-  moment a finger lands (disc outline, knob glow, a light haptic); in an overlap, let the first few points of motion
-  pick the rod whose turn explains them (near the lens tips the two turns' directions differ by about 95° on quad);
-  near the line between the centres they coincide, so fall back to the nearest centre.
-- "I can't remember how far I've turned it." Claude's recommendation: while dragging, an arc from the start notch
-  lights one segment per 30° step, with a signed count placed away from the finger; it stays faint while the move is
-  still open, so a re-grab of the same rod carries on the count. It reports only the player's own turns, so it is
-  not a hint. It was within one drag, and Jack likes the fix (2026-09-28). Both fixes are built on `touch` (2026-09-29): in an
-  overlap the first 8 pt of motion pick the rod, and a late pick jumps the rod at most 10° so it can't commit a step on
-  its own. Near a lens tip on tri, eye and hex a third disc joins in, and motion more than about 15° off a tangent goes
-  to the rod the finger is deepest in; how that feels needs the phone.
+- Touching where two discs overlap, you can't tell which rod will move. Then the nearest centre won, and the only cue (a
+  dashed ring and the start notch) sat under the finger. Claude recommended lighting the held rod the moment a finger
+  lands, and in an overlap letting the first few points of motion pick the rod whose turn explains them. Both were built
+  on `touch` on 2026-09-29. On the phone Jack found the motion pick "much more unpredictable... chooses wrong more often
+  than not". The first ~1.3 mm of a touch is mostly the finger rolling as it presses, and a simulation showed noisy
+  first motion hands 20–40% of overlap touches to another rod. It was set aside the same day (R7). Built now: the finger
+  holds the rod whose centre is nearest, in its own disc's radius, where it lands, and that rod lights at once with a
+  light tap, so the rod that lights is the rod that turns. Going back to the landing rule was Claude's call, for Jack to
+  confirm on the phone. The log now records where each touch lands and the path each drag takes, so the next complaint
+  about a pick can be checked against the finger.
+- "I can't remember how far I've turned it." Claude's recommendation: while dragging, an arc from the start notch lights
+  one segment per 30° step, with a signed count placed away from the finger; it stays faint while the move is still
+  open, so a re-grab of the same rod carries on the count. It reports only the player's own turns, so it is not a hint.
+  It was within one drag, and Jack likes the fix (2026-09-28). Built on `touch` (2026-09-29).
+- The lines a turn draws were too heavy for pictures made of fine lines. On `touch` (2026-09-29) every line a turn draws
+  over the picture became one 0.5 pt hairline, with no glow or dark band. The held knob lights inside its own footprint
+  (its ticks and a ring on its dark band), and one hairline rings its disc, dimmer until letting go would commit. The
+  count became fine graduation ticks on that hairline. Jack dropped the ticks the same day (R8): "too faint and thin".
+  He liked the dashes and only wanted them less prominent. So the count is dashes again, 2 pt at 0.85 opacity, with no
+  glow or dark band, over a hairline trace from the start to where the turn stands. The disc's hairline and its start
+  mark stay: Jack asked for one thin line round the circle of influence. Open for Jack: a knob-only variant (no line
+  round the disc) against this, though his ask for the line may settle it; and whether the hint's ring and the opening
+  replay's ring, still heavy, should thin too.
+- Some tank turns committed a step with no clunk. The phone's log confirmed the cause: all 107 silent tank turns were
+  let go between 0.52 and 0.99 of a step. Letting go rounds to the nearest step, but the clunk fired only at whole
+  steps. Fixed on `touch` (2026-09-29): a turn clicks each time what letting go would commit changes, at the half step
+  either way, so every step a turn commits has had its clunk. The rod's tick moved to the half step too, so click, count
+  and commit always agree. That was Claude's call, for Jack to confirm.
 - Whirlpool 22 (pent, marbling) looked solved at moves 19 / par 18 with one 30° step left on the bottom-right rod. The
   win check was right: that step moves its worst point about 0.14 tank radii (about 80 phone pixels), but round ring
   motifs still look like rings after a turn. Pictures built from locally round motifs hide rotation; check this
@@ -421,3 +437,18 @@ Each was judged on what skill it tests that Nightmare doesn't.
 - **Sonar stations.** The beam arms read as needles and move far faster than anything else; dark wedges fake seams.
 - **Contour map.** Some seeds draw a valley across the whole tank (a direction), and contours look like shear rings.
 - **Crystal shards.** Reads as pick-up sticks, the busiest clean tank, and haze in the shear rings.
+
+### R7 — Picking an overlapped rod by the finger's first motion (set aside 2026-09-29)
+
+Built on `touch` on 2026-09-29: in an overlap the finger held nothing until it had moved 8 pt, then the rod whose
+tangent best fitted that motion, falling back to the nearest centre within a 15° tie, and a late pick caught up at
+most 10°. Jack, on the phone: "much more unpredictable... chooses wrong more often than not". The first ~1.3 mm of a
+touch is mostly the finger rolling as it presses, not the turn it means, and a simulation showed noisy first motion
+hands 20–40% of overlap touches to another rod. Replaced the same day by the nearest rod where the finger lands.
+Claude's view: revisit only if the log's landing points show that rule picking wrong often.
+
+### R8 — Fine graduation ticks for a drag's count (dropped 2026-09-29, Jack's call)
+
+A hairline mark per step on the disc's hairline, the step just reached brightest. Jack, on the phone: "too faint and
+thin". He liked the dashes they replaced, only not so prominent, so the dashes came back lighter (2 pt at 0.85, no glow
+or band).

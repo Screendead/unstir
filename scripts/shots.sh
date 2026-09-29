@@ -63,25 +63,26 @@ done
 d2=${depths[1]}
 shot grid-d2-right-half "grid depth 2 ($d2), mid-drag: top rod 2 turned back +2 of its 4 steps." STACK="$d2" LIVE=2:+2
 shot grid-d2-right-almost "grid depth 2 ($d2), mid-drag: top rod 2 turned back +3.6 of 4 steps." STACK="$d2" LIVE=2:+3.6
-shot grid-d2-probe "grid depth 2 ($d2), mid-drag: rod 2 turned +0.4 steps. Dashed ring and start tick: letting go here commits nothing." \
+shot grid-d2-probe "grid depth 2 ($d2), mid-drag: rod 2 turned +0.4 steps. A dim hairline, its start mark and a short trace: letting go here commits nothing." \
   STACK="$d2" LIVE=2:+0.4
 shot grid-d2-wrong-rod "grid depth 2 ($d2), mid-drag: rod 1 turned -2.5 steps out of order (its undo is right, but only after rod 2)." \
   STACK="$d2" LIVE=1:-2.5
-shot quad-probe "Level 12 (square), mid-drag: rod 1 turned +0.3 steps. Dashed ring and start tick: letting go here commits nothing." \
+shot quad-probe "Level 12 (square), mid-drag: rod 1 turned +0.3 steps. A dim hairline, its start mark and a short trace: letting go here commits nothing." \
   LEVEL=12 LIVE=1:+0.3
-shot quad-commit "Level 12 (square), mid-drag: rod 1 turned +2 steps. Solid ring: letting go here commits." LEVEL=12 LIVE=1:+2
-# A drag's own count: a lit segment per step from where the stir began, and the signed count off the finger. UNSTIR_TOUCH
-# is where the finger went down (tank units), carried round by the turn; alone, a finger just down and not yet moved.
-shot count-tri-plus3 "Level 01 (tri), finger down at the top of rod 0 and carried +3 steps round to its right: three segments clockwise from the notch, +3 to the left." \
+shot quad-commit "Level 12 (square), mid-drag: rod 1 turned +2 steps. The hairline at full tone, two dashes: letting go here commits." LEVEL=12 LIVE=1:+2
+# A drag's own count: a dash per step inside the disc's hairline from where the stir began, and the signed count off
+# the finger. UNSTIR_TOUCH is where the finger went down (tank units), carried round by the turn; alone, a finger just
+# down and not yet moved.
+shot count-tri-plus3 "Level 01 (tri), finger down at the top of rod 0 and carried +3 steps round to its right: three dashes clockwise from the start mark, +3 to the left." \
   LEVEL=1 LIVE=0:+3 TOUCH=0,-0.8
-shot count-quad-minus2 "Level 12 (square), finger down below rod 1 and carried -2 steps round: two segments anticlockwise from the notch, -2 up and left, off the finger." \
+shot count-quad-minus2 "Level 12 (square), finger down below rod 1 and carried -2 steps round: two dashes anticlockwise from the start mark, -2 up and left, off the finger." \
   LEVEL=12 LIVE=1:-2 TOUCH=0.354,0.7
-shot count-let-go "Level 12 (square), rod 1 just let go at -2: its stir is still open, so the arc and count stay, faint." LEVEL=12 TURNED=1:-2
-shot count-regrab "Level 12 (square), rod 1 let go at -2, grabbed again and turned -1 more: the count carries on to -3, the notch where this drag began." \
+shot count-let-go "Level 12 (square), rod 1 just let go at -2: its stir is still open, so the hairline, its dashes and the count stay, faint." LEVEL=12 TURNED=1:-2
+shot count-regrab "Level 12 (square), rod 1 let go at -2, grabbed again and turned -1 more: the dashes and count carry on to -3 from where the stir began." \
   LEVEL=12 TURNED=1:-2 LIVE=1:-1 TOUCH=0.354,0.7
-shot grab-grid "Level 12 (square), a finger just down deep in rod 0, not yet moved: its disc and knob lit." LEVEL=12 TOUCH=0.4,-0.4
-shot grab-overlap-grid "Level 12 (square), a finger just down where rods 0 and 1 overlap, not yet moved: both lit dimly until the motion picks one." \
-  LEVEL=12 TOUCH=0.6,0
+shot grab-grid "Level 12 (square), a finger just down deep in rod 0, not yet moved: its knob lit, its disc a dim hairline." LEVEL=12 TOUCH=0.4,-0.4
+shot grab-overlap-grid "Level 12 (square), a finger just down where rods 0 and 1 overlap, nearer rod 0's centre: rod 0's knob lit and its disc a dim hairline at once, rod 1 not." \
+  LEVEL=12 TOUCH=0.5,-0.03
 # Each layout at its chapter's first and last level, the first two without a replay, then every level with a sunset or city.
 for n in 01 04 07 08 09 13 14 18 19 22 23 27 05 11 15 06 10 16; do
   shot "level$n" "Level $n with its full scramble and its note." LEVEL=$n
@@ -123,15 +124,15 @@ shot whirlpool-probe-over "Whirlpool level 12 (square) on the glass, mid-drag: t
 for s in 1 2 3; do
   shot "whirlpool27-probe-$s" "Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back $s steps; it heals at 2." TIER=whirlpool LEVEL=27 LIVE=2:-$s CLOCK=3
 done
-shot whirlpool-grab-neurons "Whirlpool 20 (pentagon, neurons), a finger just down deep in rod 0: its disc and knob lit over the web." \
+shot whirlpool-grab-neurons "Whirlpool 20 (pentagon, neurons), a finger just down deep in rod 0: its knob lit, its disc a dim hairline over the web." \
   TIER=whirlpool LEVEL=20 TOUCH=0.05,-0.62 CLOCK=3
-shot whirlpool-grab-overlap-neurons "Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap: both lit dimly." \
-  TIER=whirlpool LEVEL=20 TOUCH=0.266,-0.366 CLOCK=3
-shot whirlpool-grab-marbling "Whirlpool 25 (hex, marbling), a finger just down deep in rod 1: its disc and knob lit." \
+shot whirlpool-grab-overlap-neurons "Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap, nearer rod 1's centre: rod 1's knob lit, its disc a dim hairline." \
+  TIER=whirlpool LEVEL=20 TOUCH=0.3,-0.34 CLOCK=3
+shot whirlpool-grab-marbling "Whirlpool 25 (hex, marbling), a finger just down deep in rod 1: its knob lit, its disc a dim hairline." \
   TIER=whirlpool LEVEL=25 TOUCH=0.05,-0.6 CLOCK=3
-shot whirlpool-grab-overlap-marbling "Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub: both lit dimly." \
-  TIER=whirlpool LEVEL=25 TOUCH=0.2425,-0.42 CLOCK=3
-shot whirlpool-count-marbling "Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four segments, +4 off the finger." \
+shot whirlpool-grab-overlap-marbling "Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub, nearer rod 2's centre: rod 2's knob lit, its disc a dim hairline." \
+  TIER=whirlpool LEVEL=25 TOUCH=0.27,-0.4 CLOCK=3
+shot whirlpool-count-marbling "Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four dashes, +4 off the finger." \
   TIER=whirlpool LEVEL=22 LIVE=2:+4 TOUCH=0.329,0.753 CLOCK=3
 shot whirlpool-count-hex-below "Whirlpool 25 (hex, marbling), finger down to the lower right of rod 4 and carried +2 steps round to just under it: +2 swung off the hub's knob straight above." \
   TIER=whirlpool LEVEL=25 LIVE=4:+2 TOUCH=0.2165,0.685 CLOCK=3
@@ -158,7 +159,7 @@ shot seized-m23-turned "Maelstrom 23 (hex) with knobs 2 and 5 seized, tank turne
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANK=1 CLOCK=3
 shot seized-m23-half "Maelstrom 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=30 CLOCK=3
-shot seized-m23-count "Maelstrom 23 (hex) with knobs 2 and 5 seized, finger down on the rim at lower left and carried two tank steps (120 degrees) round: two segments round the rim, +2 off the finger." \
+shot seized-m23-count "Maelstrom 23 (hex) with knobs 2 and 5 seized, finger down on the rim at lower left and carried two tank steps (120 degrees) round: two dashes inside the rim's hairline, +2 off the finger." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=120 TOUCH=-0.5,0.84 CLOCK=3
 # How to turn the tank, shown on any level with seized knobs until the player has turned it once: a two-headed arc just
 # outside the rim and a ghost finger rocking on it. UNSTIR_TANKTURNED=1 is a player who has, for the launch only. The ghost
