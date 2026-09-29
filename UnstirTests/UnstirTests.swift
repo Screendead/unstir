@@ -834,103 +834,128 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(MenuView.isSideways(CGSize(width: 0, height: -15)))
     }
 
-    private let slop = 0.04
     private func centre(_ layout: Layout, _ k: Int) -> SIMD2<Double> { SIMD2(layout.rods[k].x, layout.rods[k].y) }
-    /// Where a finger at p lands after turning `length` round c, either way.
-    private func carried(_ p: SIMD2<Double>, about c: SIMD2<Double>, _ length: Double) -> SIMD2<Double> {
-        let d = p - c, a = length / simd_length(d)
-        return c + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a))
+    /// How far into rod k's disc p lies, in that disc's radius: under 1 inside it.
+    private func depth(_ layout: Layout, _ k: Int, _ p: SIMD2<Double>) -> Double {
+        simd_distance(p, centre(layout, k)) / layout.rods[k].z
     }
+    private func under(_ layout: Layout, _ p: SIMD2<Double>) -> [Int] { layout.rods.indices.filter { depth(layout, $0, p) < 1 } }
 
     /// Deep in one disc a finger holds that rod the moment it lands.
     func testGrabInOneDiscIsImmediate() {
         for layout in Layout.allCases {
             for k in layout.rods.indices {
                 let p = centre(layout, k) + SIMD2(0.05, 0.03)
-                XCTAssertEqual(LevelView.grab(layout, seized: [], from: p, to: p, slop: slop), .rod(k), "\(layout) \(k)")
+                XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(k), "\(layout) \(k)")
             }
         }
     }
 
-    /// Near both tips of every lens, a turn about either centre holds that rod, whichever way it runs, once the finger
-    /// has moved the slop; before that the finger holds every disc it is in, undecided.
-    func testGrabNearLensTipsFollowsTheMotion() {
+    /// Where two discs overlap, the finger holds the one whose centre is nearest in its own disc's radius, from the
+    /// moment it lands: deep in every lens on every layout, hex's hub among them, either side of where the two are
+    /// level, and near both tips of the lens, where a third disc can join in.
+    func testGrabInAnOverlapTakesTheNearestAtTouch() {
         for layout in Layout.allCases {
             let rods = layout.rods
             for i in rods.indices {
                 for j in rods.indices where i < j && layout.overlaps(i, j) {
-                    let a = centre(layout, i), b = centre(layout, j), d = simd_distance(a, b)
-                    let x = (d * d + rods[i].z * rods[i].z - rods[j].z * rods[j].z) / (2 * d), h = sqrt(rods[i].z * rods[i].z - x * x)
+                    let a = centre(layout, i), b = centre(layout, j), d = simd_distance(a, b), ri = rods[i].z, rj = rods[j].z
                     let u = (b - a) / d, n = SIMD2(-u.y, u.x)
+                    let level = a + u * (d * ri / (ri + rj))
+                    for (p, want) in [(level - u * 0.02, i), (level + u * 0.02, j)] {
+                        XCTAssertEqual(under(layout, p), [i, j], "\(layout) lens \(i)-\(j) at \(p)")
+                        XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(want), "\(layout) lens \(i)-\(j) at \(p)")
+                    }
+                    let x = (d * d + ri * ri - rj * rj) / (2 * d), h = sqrt(ri * ri - x * x)
                     for tip in [a + u * x + n * h, a + u * x - n * h] {
-                        let p = tip + simd_normalize(a + u * x - tip) * 0.03
-                        let under = rods.indices.filter { simd_distance(p, centre(layout, $0)) < rods[$0].z }
-                        XCTAssertEqual(LevelView.grab(layout, seized: [], from: p, to: p + SIMD2(0.02, 0), slop: slop), .undecided(under))
-                        for k in [i, j] {
-                            for length in [-1.5 * slop, 1.5 * slop] {
-                                let q = carried(p, about: centre(layout, k), length)
-                                XCTAssertEqual(LevelView.grab(layout, seized: [], from: p, to: q, slop: slop), .rod(k),
-                                               "\(layout) lens \(i)-\(j) at \(p), turning \(k) by \(length)")
-                            }
+                        let inward = simd_normalize(a + u * x - tip)
+                        for side in [-0.01, 0.01] {
+                            let p = tip + inward * 0.03 + u * side, ks = under(layout, p)
+                            let want = ks.min { depth(layout, $0, p) < depth(layout, $1, p) }!
+                            XCTAssertTrue(ks.contains(i) && ks.contains(j), "\(layout) lens \(i)-\(j) tip at \(p)")
+                            XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(want), "\(layout) lens \(i)-\(j) tip at \(p)")
                         }
                     }
                 }
             }
         }
-    }
-
-    /// On the line between two centres their tangents agree, so any motion falls back to the nearer centre in its own
-    /// disc's radius. On the eye, a point nearer the small rod's centre is still nearer the big rod in radii.
-    func testGrabOnTheCentreLineFallsBackToTheNearest() {
         func check(_ layout: Layout, _ i: Int, _ j: Int, at t: Double, _ want: Int) {
-            let a = centre(layout, i), b = centre(layout, j), p = a + (b - a) * t, u = simd_normalize(b - a)
-            for move in [SIMD2(-u.y, u.x), u, simd_normalize(u + SIMD2(-u.y, u.x))] {
-                XCTAssertEqual(LevelView.grab(layout, seized: [], from: p, to: p + move * 1.5 * slop, slop: slop), .rod(want),
-                               "\(layout) \(i)-\(j) at \(t), moving \(move)")
-            }
+            let p = centre(layout, i) + (centre(layout, j) - centre(layout, i)) * t
+            XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(want), "\(layout) \(i)-\(j) at \(t)")
         }
         check(.quad, 0, 1, at: 0.4, 0)
         check(.quad, 0, 1, at: 0.6, 1)
         check(.hex, 0, 3, at: 0.45, 0)
-        let a = centre(.eye, 0), b = centre(.eye, 2), t = 0.37 / simd_distance(a, b), p = a + (b - a) * t
-        XCTAssertLessThan(simd_distance(p, b), simd_distance(p, a))
+        check(.hex, 0, 3, at: 0.55, 3)
+        // On the eye, a point nearer the small rod's centre is still nearer the big rod in radii.
+        let a = centre(.eye, 0), b = centre(.eye, 2), t = 0.37 / simd_distance(a, b)
+        XCTAssertLessThan(simd_distance(a + (b - a) * t, b), simd_distance(a + (b - a) * t, a))
         check(.eye, 0, 2, at: t, 0)
     }
 
-    /// A seized knob is never held: alone under the finger it holds nothing but says which knob refused, and in an
-    /// overlap the finger holds a working neighbour only when the motion picks that one, rather than being passed to it.
-    /// Where knobs are seized the rim wins over the discs that reach it.
+    /// A seized knob is never held: where it is the nearest under the finger it holds nothing but says which knob
+    /// refused, rather than passing the finger to a working neighbour, which holds only where it is the nearer. Where
+    /// knobs are seized the rim wins over the discs that reach it.
     func testGrabNeverHoldsASeizedKnob() {
         let a = centre(.quad, 0), b = centre(.quad, 1), p = (a + b) / 2 + SIMD2(0.25, 0)
-        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: p, slop: slop), .undecided([1]))
-        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: carried(p, about: b, slop * 1.5), slop: slop), .rod(1))
-        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: p, to: carried(p, about: a, slop * 1.5), slop: slop), .seized(0))
-        let nearer1 = p + SIMD2(0, 0.02)
-        XCTAssertEqual(LevelView.grab(.quad, seized: [0, 1], from: nearer1, to: nearer1, slop: slop), .seized(1))
-        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: a, to: a, slop: slop), .seized(0))
-        XCTAssertEqual(LevelView.grab(.quad, seized: [0], from: .zero, to: .zero, slop: slop), .nothing)
+        XCTAssertEqual(under(.quad, p), [0, 1])
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], at: p - SIMD2(0, 0.02)), .seized(0))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], at: p + SIMD2(0, 0.02)), .rod(1))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0, 1], at: p + SIMD2(0, 0.02)), .seized(1))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], at: a), .seized(0))
+        XCTAssertEqual(LevelView.grab(.quad, seized: [0], at: .zero), .nothing)
         let rim = SIMD2(0.0, -0.95)
-        XCTAssertEqual(LevelView.grab(.tri, seized: [1], from: rim, to: rim, slop: slop), .rim)
-        XCTAssertEqual(LevelView.grab(.tri, seized: [], from: rim, to: rim, slop: slop), .rod(0))
+        XCTAssertEqual(LevelView.grab(.tri, seized: [1], at: rim), .rim)
+        XCTAssertEqual(LevelView.grab(.tri, seized: [], at: rim), .rod(0))
         var rng = SplitMix64(state: 5)
         for _ in 0..<20000 {
             let layout = Layout.allCases[rng.below(Layout.allCases.count)]
             let seized = Set(layout.rods.indices.filter { _ in rng.below(3) == 0 })
-            let start = SIMD2(Double.random(in: -1...1, using: &rng), Double.random(in: -1...1, using: &rng))
-            let point = start + SIMD2(Double.random(in: -0.1...0.1, using: &rng), Double.random(in: -0.1...0.1, using: &rng))
-            switch LevelView.grab(layout, seized: seized, from: start, to: point, slop: slop) {
+            let p = SIMD2(Double.random(in: -1...1, using: &rng), Double.random(in: -1...1, using: &rng))
+            let nearest = under(layout, p).min { depth(layout, $0, p) < depth(layout, $1, p) }
+            let message = "\(layout) seized \(seized.sorted()) at \(p)", grab = LevelView.grab(layout, seized: seized, at: p)
+            XCTAssertEqual(grab == .rim, !seized.isEmpty && simd_length(p) > 0.93, message)
+            switch grab {
             case .rod(let k):
-                XCTAssertFalse(seized.contains(k))
-                XCTAssertLessThan(simd_distance(start, centre(layout, k)), layout.rods[k].z)
-            case .undecided(let ks):
-                XCTAssertGreaterThan(ks.count, 0)
-                XCTAssertTrue(ks.allSatisfy { !seized.contains($0) })
+                XCTAssertFalse(seized.contains(k), message)
+                XCTAssertEqual(k, nearest, message)
             case .seized(let k):
-                XCTAssertTrue(seized.contains(k))
-                XCTAssertLessThan(simd_distance(start, centre(layout, k)), layout.rods[k].z)
-            case .rim, .nothing: break
+                XCTAssertTrue(seized.contains(k), message)
+                XCTAssertEqual(k, nearest, message)
+            case .rim: break
+            case .nothing:
+                XCTAssertNil(nearest, message)
             }
         }
+    }
+
+    /// A drag's path for the log keeps the landing, its first few points close together, then a point a gap apart, and
+    /// the latest; a finger held still leaves the landing and the lift. A long drag stays within the cap, its first few
+    /// points and its latest kept, and its worst line stays short.
+    func testTrailThinsADragToOneLine() {
+        func trail(gap: Double) -> Trail<SIMD2<Double>> { Trail(gap: gap) { simd_distance($0, $1) } }
+        var still = trail(gap: 3)
+        for ms in stride(from: 0, through: 900, by: 16) { still.add(SIMD2(1, 2), ms: ms) }
+        XCTAssertEqual(still.points.map(\.ms), [0, 896])
+        var line = trail(gap: 3)
+        for i in 0...60 { line.add(SIMD2(Double(i) * 0.25, 0), ms: 10 * i) }
+        XCTAssertEqual(line.points.map(\.at.x), [0, 1, 2, 3, 4, 7, 10, 13, 15])
+        XCTAssertEqual(line.points.map(\.ms), [0, 40, 80, 120, 160, 280, 400, 520, 600])
+        var long = trail(gap: 3)
+        for i in 0...4000 { long.add(SIMD2(Double(i) * 0.25, 0), ms: i) }
+        let points = long.points
+        XCTAssertLessThanOrEqual(points.count, Trail<SIMD2<Double>>.cap)
+        XCTAssertGreaterThan(points.count, Trail<SIMD2<Double>>.cap / 2)
+        XCTAssertEqual(points.prefix(5).map(\.at.x), [0, 1, 2, 3, 4])
+        XCTAssertEqual(points.last!.at.x, 1000)
+        XCTAssertEqual(points.last!.ms, 4000)
+        for (a, b) in zip(points.dropFirst(4), points.dropFirst(5)).dropLast() { XCTAssertGreaterThanOrEqual(b.at.x - a.at.x, 3) }
+        XCTAssertEqual(Log.point(SIMD2(0.4123, -0.1184)), "0.412,-0.118")
+        var worst = trail(gap: 0.03)
+        for i in 0..<400 { worst.add(SIMD2(i % 2 == 0 ? -0.5 : -0.999, -0.999), ms: 100_000 + 997 * i) }
+        let logged = "09-29 10:11:07.772 path seized(12) " + worst.line(Log.point)
+        XCTAssertTrue(logged.contains(" 100000:-0.500,-0.999 "), logged)
+        XCTAssertLessThan(logged.count, 600, logged)
     }
 
     /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one. The
@@ -1200,16 +1225,52 @@ final class UnstirTests: XCTestCase {
         }
     }
 
-    /// A rod picked by motion catches up with the finger by under half a step, either way and across the wrap.
-    func testAPickCatchesUpUnderHalfAStep() {
-        XCTAssertLessThan(LevelView.catchUp, Tank.step / 2)
-        for down in stride(from: -3.0, through: 3.0, by: 0.75) {
-            for travel in stride(from: -0.6, through: 0.6, by: 0.05) {
-                let now = atan2(sin(down + travel), cos(down + travel))
-                XCTAssertEqual(now - LevelView.pickedFrom(down, now: now), min(max(travel, -LevelView.catchUp), LevelView.catchUp),
-                               accuracy: 1e-9)
+    /// A turn clicks each time what letting go would commit changes, at the half step either way, so every step a drag
+    /// commits has had one click and each step turned back has had one more. The phone's tank turns let go between half
+    /// a step and a whole one committed a step with no clunk.
+    func testATurnClicksOncePerStepItWouldCommit() {
+        for step in [Tank.step] + Layout.allCases.map(\.tankStep) {
+            // Clicks along a drag through each of `ends` in turn, finely enough to cross every half step on its own.
+            func drag(_ ends: [Double]) -> (clicks: Int, commits: Int) {
+                var detent = Detent(step: step), clicks = 0, at = 0.0
+                for end in ends.map({ $0 * step }) {
+                    for a in stride(from: at, through: end, by: (end < at ? -step : step) / 50) {
+                        let was = detent.steps
+                        let c = detent.turn(to: a)
+                        XCTAssertEqual(c, abs(detent.steps - was))
+                        XCTAssertLessThanOrEqual(c, 1)
+                        clicks += c
+                    }
+                    clicks += detent.turn(to: end)
+                    at = end
+                }
+                XCTAssertEqual(detent.steps, Detent.steps(at, of: step))
+                return (clicks, detent.steps)
             }
+            func check(_ ends: [Double], clicks: Int, commits: Int, line: UInt = #line) {
+                for sign in [1.0, -1.0] {
+                    let d = drag(ends.map { sign * $0 })
+                    XCTAssertEqual(d.clicks, clicks, "step \(step) \(sign * ends[0])", line: line)
+                    XCTAssertEqual(d.commits, Int(sign) * commits, "step \(step) \(sign * ends[0])", line: line)
+                }
+            }
+            check([0.49], clicks: 0, commits: 0)
+            check([0.51], clicks: 1, commits: 1)
+            check([0.99], clicks: 1, commits: 1)
+            check([1.49], clicks: 1, commits: 1)
+            check([1.51], clicks: 2, commits: 2)
+            check([3.7], clicks: 4, commits: 4)
+            check([3.7, 1.2], clicks: 7, commits: 1)
+            check([0.6, 0.4], clicks: 2, commits: 0)
+            check([0.6, 0.4, 0.6], clicks: 3, commits: 1)
+            check([2.6, -1.6], clicks: 8, commits: -2)
+            var detent = Detent(step: step)
+            XCTAssertEqual(detent.turn(to: 2.6 * step), 3)
+            XCTAssertEqual(detent.turn(to: -0.2 * step), 3)
         }
+        var quad = Detent(step: Layout.quad.tankStep)
+        XCTAssertEqual(quad.turn(to: 1.022), 1)
+        XCTAssertEqual(quad.steps, 1)
     }
 
     /// A seized knob refuses a turn even over fluid a working knob could take off; no level seizes the hub, which no turn
