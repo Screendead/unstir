@@ -196,7 +196,8 @@ final class Game {
             pushes += 1
             if level.run != nil { brim += 1 }
         }
-        if result == .cancelled { cancels += 1; cancelledRod = rod }
+        // A run's heal ring marks only what settles the brim: cancelling the player's own push flashes white, as a merge.
+        if level.run == nil ? result == .cancelled : healed > 0 { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
         Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "

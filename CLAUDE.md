@@ -161,7 +161,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   knob and commits to the slot under it. Endless has no par, undo or reset: each red flash (a `.pushed` commit) adds a
   notch to `Game.brim`, each of the scramble's entries that pops settles one (the heal's `.cancelled` commit, or a push
   that the heal lets fall cancelling it), and at `Run.room` (8) the run spills. The stack's entries mark the player's
-  pushes (`Game.Entry`) so that cancelling one is no heal; a win the fine pass calls also settles one, as the tank's
+  pushes (`Game.Entry`) so that cancelling one is no heal, and flashes white as a merge does rather than the heal's
+  magenta ring and heavy tap, which in a run mark only a commit that pops one of the scramble's entries; a win the fine pass calls also settles one, as the tank's
   last heal, while one of the scramble's entries is left and unless its move healed one. `Game.nextTank` carries it to
   the next tank. `Game.turnTank` is a move that pushes no entry: turns in a row join, and one netting a whole turn
   drops. `Game.history` holds rod stirs by slot and

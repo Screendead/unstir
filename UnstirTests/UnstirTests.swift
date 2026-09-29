@@ -128,6 +128,17 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.brim, 3)
         XCTAssertEqual(game.pushes, 3)
         XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 4)])
+        // Each cancel took back the player's own push, which settles nothing: white, never the heal's ring.
+        XCTAssertEqual(game.cancels, 0)
+    }
+
+    /// Outside a run, cancelling the player's own push flashes the heal's ring as any cancel does.
+    @MainActor func testOwnPushCancelOutsideARunFlashesTheHealRing() {
+        let game = Game(level: Level(id: "test", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]))
+        game.commit(rod: 1, steps: 1)
+        game.commit(rod: 1, steps: -1)
+        XCTAssertEqual(game.lastCommit?.result, .cancelled)
+        XCTAssertEqual(game.cancels, 1)
     }
 
     /// A heal of one of the scramble's entries settles a notch, the last heal too; an empty brim stays empty.
@@ -182,6 +193,8 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.lastCommit?.result, .cancelled)
         XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 9), Twist(rod: 1, steps: 2), Twist(rod: 2, steps: 4)])
         XCTAssertEqual(game.brim, 1)
+        XCTAssertEqual(game.cancels, 1)
+        XCTAssertEqual(game.cancelledRod, 3)
         game.commit(rod: 2, steps: -4)
         game.commit(rod: 1, steps: -2)
         XCTAssertEqual(game.brim, 1)

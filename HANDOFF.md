@@ -134,8 +134,9 @@ from Nightmare to Nightmare+ is easy to miss.
   unchanged); endless is re-pinned (`testEndlessVectors`). Endless takes no undo refill, as the sandbox takes none: it
   never touches the bank or the refill's clock anchor, and has no undo control to show the "+2" on, so the day's refill
   waits for the next level that counts.
-  **Open.** Cancelling the player's own push still flashes the magenta heal ring and heavy tap everywhere, though in
-  endless it settles nothing; Claude's recommendation: there, flash it white, as a merge. When `sound` lands, its heal
+  **Cancelling your own push flashes white in endless** (Jack, 2026-09-29, on Claude's recommendation): it settles
+  nothing, so it shows as a merge, and the magenta heal ring and heavy tap mark only a commit that pops one of the
+  scramble's entries, the brim's own event. Elsewhere every cancel keeps the ring. **Open.** When `sound` lands, its heal
   (cancels less a stir turned straight back) counts a later cancel of the player's own push as a heal; it should take
   the brim's event instead, and its endless over-par case is gone.
   **The jug as built (2026-09-29).** Ported from the approved film into Brim.swift and Brim.metal (see CLAUDE.md). A
