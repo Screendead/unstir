@@ -31,7 +31,6 @@ struct Harness {
     let tankTurned: Bool?
     /// UNSTIR_SHAKE=s: with UNSTIR_TOUCH on a seized knob, its shake and the rim's pulse held s seconds in.
     let shake: Double?
-    let hint: Bool
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
     let autoplay: Bool
@@ -65,7 +64,7 @@ struct Harness {
             let f = part.split(separator: ":")
             guard f.count == 2, let owner = Tier(rawValue: String(f[0])) else { continue }
             for (level, c) in zip(owner.levels, f[1]) {
-                if let over = c.wholeNumberValue { Best(over: over, hints: 0, seconds: 60).fake(level.id) }
+                if let over = c.wholeNumberValue { Best(over: over, seconds: 60).fake(level.id) }
             }
         }
         tierDemo = env["UNSTIR_TIERDEMO"] == "1"
@@ -117,7 +116,6 @@ struct Harness {
         } else {
             live = nil
         }
-        hint = env["UNSTIR_HINT"] == "1"
         still = harnessed && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
     }

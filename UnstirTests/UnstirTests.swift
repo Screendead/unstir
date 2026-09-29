@@ -275,22 +275,22 @@ final class UnstirTests: XCTestCase {
     }
 
     /// Plughole is always open. Each tier above opens exactly when every level of the tier just below has a best at or
-    /// under par, whatever its hints, and the developer unlock opens them all.
+    /// under par, and the developer unlock opens them all.
     func testTierGate() {
         var bests: [String: Best] = [:]
         func open(_ tier: Tier, unlocked: Bool = false) -> Bool { tier.isOpen(unlocked: unlocked) { bests[$0] } }
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false])
-        for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, hints: 0, seconds: 30) }
+        for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.whirlpool))
-        bests[Level.plughole.last!.id] = Best(over: 1, hints: 0, seconds: 30)
+        bests[Level.plughole.last!.id] = Best(over: 1, seconds: 30)
         XCTAssertFalse(open(.whirlpool))
         XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, Array(repeating: true, count: 26) + [false])
-        bests[Level.plughole.last!.id] = Best(over: 0, hints: 3, seconds: 30)
+        bests[Level.plughole.last!.id] = Best(over: 0, seconds: 30)
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false])
         // A maelstrom best opens nothing below it, and the tier just below is the only one that counts.
-        for level in Level.maelstrom { bests[level.id] = Best(over: 0, hints: 0, seconds: 30) }
+        for level in Level.maelstrom { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.maelstrom))
-        for level in Level.whirlpool { bests[level.id] = Best(over: 0, hints: 0, seconds: 30) }
+        for level in Level.whirlpool { bests[level.id] = Best(over: 0, seconds: 30) }
         for level in Level.plughole { bests[level.id] = nil }
         XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true])
         bests = [:]
@@ -302,6 +302,22 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(Tier.allCases.allSatisfy { $0.isOpen { _ in nil } })
         Best.unlocked = false
         XCTAssertFalse(Tier.whirlpool.isOpen { _ in nil })
+    }
+
+    /// A best saved while hints existed still loads and still counts at par; the save of a better result drops its hints.
+    func testABestSavedWithHintsStillCounts() throws {
+        let id = "test-hints"
+        defer { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
+        UserDefaults.standard.set(Data(#"{"over":0,"hints":3,"seconds":30,"clean":false}"#.utf8), forKey: "best.\(id)")
+        let old = try XCTUnwrap(Best.load(id))
+        XCTAssertEqual(old.over, 0)
+        XCTAssertTrue(Tier.whirlpool.isOpen(unlocked: false) { _ in old })
+        Best(over: 0, seconds: 40).save(id)
+        XCTAssertEqual(Best.load(id)?.seconds, 30)
+        Best(over: 0, seconds: 20).save(id)
+        XCTAssertEqual(Best.load(id)?.seconds, 20)
+        let saved = try XCTUnwrap(UserDefaults.standard.data(forKey: "best.\(id)"))
+        XCTAssertFalse(String(decoding: saved, as: UTF8.self).contains("hints"))
     }
 
     /// A locked tier opened to look at is never stored, and a stored tier that has closed since comes back as the

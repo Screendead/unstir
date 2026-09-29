@@ -91,7 +91,6 @@ shot inversion-L12 "Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the tw
 shot inversion-L27 "Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6." LEVEL=27 STACK=2:+3,0:-5,5:+6,4:+3
 shot daily "Today's daily." MODE=daily
 shot endless "Endless, first tank of the run seeded 7." MODE=endless
-shot hint-hex "Level 27 (hex, par 14) with a hint: the newest twist that can come off now, ringed, with its arrow." LEVEL=27 HINT=1
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6

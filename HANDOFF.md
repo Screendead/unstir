@@ -72,6 +72,8 @@ from Nightmare to Nightmare+ is easy to miss.
 - Each tier opens when every level of the tier below is done at par.
 - **Hints go** (Jack): undos are the help, and a player who can't reach par with them hasn't earned the next tier. Par
   stays reachable by persistence alone, since a reset is free. Removing them also spares maelstrom a hint of its own.
+  Removed on `help` (2026-09-29): no hint control is left, and a best saved while hints existed still loads and counts
+  at par (`testABestSavedWithHintsStillCounts`).
 - **Plughole gets easier** (Jack agreed to Claude's proposal): keep levels 1–13 as they are; take the pent and hex
   levels down to about 7 and 9 stirs, with fewer quiet stirs hidden under loud ones. Measure every level first with
   the maelstrom solver (stirs, hidden stirs, choices per step) and show Jack the table. Jack's own results, the only

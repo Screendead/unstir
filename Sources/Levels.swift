@@ -44,7 +44,7 @@ enum Tier: String, CaseIterable {
         }
     }
 
-    /// Per level, whether its best is at or under par. Hints don't count against it.
+    /// Per level, whether its best is at or under par.
     func atPar(_ best: (String) -> Best? = Best.load) -> [Bool] {
         levels.map { best($0.id).map { $0.over == 0 } ?? false }
     }
@@ -259,8 +259,9 @@ struct SplitMix64: RandomNumberGenerator {
     mutating func below(_ n: Int) -> Int { Int(next() % UInt64(n)) }
 }
 
+/// Saves from before hints went also hold a `hints` count, which decoding ignores, so those bests still load and count.
 struct Best: Codable {
-    var over: Int, hints: Int, seconds: Int
+    var over: Int, seconds: Int
     /// Stored, because only a first try can be clean and a later one can match its numbers. Optional so saves from the
     /// test builds that predate it still decode and keep the next level open; v1 saves never decode, as they lack `over`.
     var clean: Bool?
@@ -274,14 +275,14 @@ struct Best: Codable {
         if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.register(defaults: ["best.\(id)": data]) }
     }
 
-    /// Keeps the better of this and the stored result: clean, then fewer over par, then fewer hints, then faster.
+    /// Keeps the better of this and the stored result: clean, then fewer over par, then faster.
     func save(_ id: String) {
-        func rank(_ b: Best) -> (Int, Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.hints, b.seconds) }
+        func rank(_ b: Best) -> (Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.seconds) }
         if let old = Best.load(id), rank(old) <= rank(self) { return }
         UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)")
     }
 
-    /// Set when a rod is first touched or a hint shown: probing counts as trying, only studying the still is free.
+    /// Set when a rod is first touched: probing counts as trying, only studying the still is free.
     static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
     static func start(_ id: String) { if !started(id) { UserDefaults.standard.set(true, forKey: "started.\(id)") } }
 

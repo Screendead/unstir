@@ -44,7 +44,6 @@ inversion-L12.png  Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twi
 inversion-L27.png  Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6.
 daily.png  Today's daily.
 endless.png  Endless, first tank of the run seeded 7.
-hint-hex.png  Level 27 (hex, par 14) with a hint: the newest twist that can come off now, ringed, with its arrow.
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.

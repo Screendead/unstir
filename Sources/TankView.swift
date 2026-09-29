@@ -102,16 +102,14 @@ final class Game {
     private var checking = false
     /// Twists that stacked a new entry: the warning haptic.
     private(set) var pushes = 0
-    private(set) var hints = 0
     private(set) var seconds = 0
-    private(set) var hint: Twist?
     private(set) var cancels = 0
     private(set) var cancelledRod = 0
     /// The rod and outcome of the newest commit or undo, for the commit flash.
     private(set) var lastCommit: (rod: Int, result: Commit)?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it.
     private var start: Date?
-    /// False once an earlier visit touched a rod or took a hint: a daily is then practice, and nothing else can be clean.
+    /// False once an earlier visit touched a rod: a daily is then practice, and nothing else can be clean.
     let firstTry: Bool
     /// Whether the player has ever turned the tank, on any level: the rim shows how until they have.
     private(set) var tankTurned: Bool
@@ -136,7 +134,7 @@ final class Game {
     /// Endless: the first move over par spills the run.
     var runOver: Bool { level.run != nil && over > 0 }
     var finished: Bool { solved || runOver }
-    var clean: Bool { over == 0 && hints == 0 && resets == 0 && undos == 0 && firstTry }
+    var clean: Bool { over == 0 && resets == 0 && undos == 0 && firstTry }
 
     func slot(of knob: Int) -> Int { level.layout.slot(of: knob, at: position) }
     func knob(over slot: Int) -> Int { level.layout.knob(over: slot, at: position) }
@@ -159,7 +157,6 @@ final class Game {
         turns += 1
         if result == .pushed { pushes += 1 }
         if result == .cancelled { cancels += 1; cancelledRod = rod }
-        hint = nil
         Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
                   + "stack=\(stack.count) \(stack)")
         settle()
@@ -188,7 +185,6 @@ final class Game {
         if joins { history.removeLast() }
         open = net != 0
         if open { history.append(Twist(rod: Game.tank, steps: net)) }
-        hint = nil
         Log.write("tank \(steps) position=\(position) moves=\(moves)")
         settle()
     }
@@ -208,7 +204,6 @@ final class Game {
             bank -= 1
             Best.undos = bank
         }
-        hint = nil
         Log.write("undo \(last) moves=\(moves) bank=\(bank) pushes=\(pushes) stack=\(stack.count) \(stack)")
         settle()
     }
@@ -219,7 +214,6 @@ final class Game {
         stack = level.scramble
         history = []
         open = false
-        hint = nil
         resets += 1
         Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
         return true
@@ -242,16 +236,6 @@ final class Game {
         cancelledRod = 0
         Log.write("layout \(level.layout)")
         reset()
-    }
-
-    /// Rings the newest twist that can come off now. Not yet where knobs are seized: that twist may be out of reach.
-    func showHint() {
-        guard hint == nil, !finished, level.seized.isEmpty, let i = level.layout.removable(stack).last else { return }
-        hints += 1
-        Best.start(level.id)
-        hint = Twist(rod: stack[i].rod, steps: -stack[i].steps)
-        Log.write("hint \(hint!) hints=\(hints)")
-        settle()
     }
 
     /// The newest twist a working knob can take off now, as that knob's turn: what autoplay and the harness play.
@@ -284,13 +268,12 @@ final class Game {
 
     private func finish() {
         guard finished else { return }
-        hint = nil
         seconds = Int(Date.now.timeIntervalSince(start ?? .now))
-        Log.write("\(solved ? "solved" : "spilled") \(level.id) moves=\(moves) par=\(par) hints=\(hints) seconds=\(seconds) counts=\(counts)")
+        Log.write("\(solved ? "solved" : "spilled") \(level.id) moves=\(moves) par=\(par) seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
             if solved { Best.tanks = max(Best.tanks, run.tank + 1) }
         } else if solved && counts {
-            Best(over: over, hints: hints, seconds: seconds, clean: clean).save(level.id)
+            Best(over: over, seconds: seconds, clean: clean).save(level.id)
         }
     }
 }
@@ -377,7 +360,6 @@ struct LevelView: View {
             }
         }
         if let t = harness?.turned { game.commit(rod: t.rod, steps: t.steps) }
-        if harness?.hint == true { game.showHint() }
         _game = State(initialValue: game)
         let live = harness?.live, angle = (live?.steps ?? 0) * Tank.step, turn = harness?.tankLive.map { $0 * .pi / 180 }
         _liveRod = State(initialValue: live?.rod)
@@ -485,14 +467,9 @@ struct LevelView: View {
                         .disabled(!game.level.sandbox && game.bank == 0)
                         .opacity(!game.level.sandbox && game.bank == 0 ? 0.35 : 1)
                     Spacer()
-                    // Endless: a reset would refill the moves, and a hint would spill the run. Undo spends the bank.
+                    // Endless: a reset would refill the moves. Undo spends the bank.
                     if game.level.run == nil {
                         control("reset") { if game.reset() { replays += 1 } }
-                        // No hints yet where knobs are seized.
-                        if !game.level.sandbox && game.level.seized.isEmpty {
-                            Spacer()
-                            control("hint", game.showHint)
-                        }
                     }
                 }
                 .disabled(settling || game.finished || shown != nil)
@@ -713,16 +690,6 @@ struct LevelView: View {
                 .frame(width: 2 * rods[k].z * r, height: 2 * rods[k].z * r)
                 .position(at(k))
             }
-            // Always present, like the flash ring below: a ring inserted with the hint never sees `hints` change.
-            let hk = game.knob(over: game.hint?.rod ?? 0)
-            glowRing(.amber, 2, 8)
-                .frame(width: 2 * rods[hk].z * r, height: 2 * rods[hk].z * r)
-                .keyframeAnimator(initialValue: 1.0, trigger: game.hints) { ring, s in ring.scaleEffect(s) } keyframes: { _ in
-                    CubicKeyframe(1.07, duration: 0.25)
-                    CubicKeyframe(1.0, duration: 0.35)
-                }
-                .opacity(game.hint != nil && liveRod == nil && shown == nil ? 1 : 0)
-                .position(at(hk))
             if let k = probing {
                 // Where the notch started: turn it back to here and letting go costs nothing.
                 Capsule().fill(Color.live.opacity(0.7)).frame(width: 2.5, height: 16)
@@ -765,11 +732,6 @@ struct LevelView: View {
                     RimLesson(r: r, showing: lesson && !game.tankTurned, pulse: lesson && jammed != nil ? Self.pulse(frozenShake ?? s) : 0,
                               clock: frozenClock)
                 } keyframes: { _ in Self.jolt }
-            }
-            if let h = game.hint {
-                let arrow = arcArrow(center: at(hk), radius: core / 2 + 14, from: turned(hk), angle: Double(h.steps) * Tank.step)
-                arrow.stroke(Color.amber.opacity(0.22), style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
-                arrow.stroke(Color.amber, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
             }
             let ck = game.cancelledRod, disc = 2 * rods[ck].z * r
             glowRing(.magenta, 3, 12, under: .magenta.opacity(0.3))
@@ -1339,13 +1301,12 @@ struct ResultCard: View {
         }
         VStack(spacing: 26) {
             VStack(spacing: 8) {
-                Text("moves \(game.moves) \u{00B7} par \(game.par) \u{00B7} hints \(game.hints) \u{00B7} "
+                Text("moves \(game.moves) \u{00B7} par \(game.par) \u{00B7} "
                      + String(format: "%d:%02d", game.seconds / 60, game.seconds % 60))
                 if game.clean {
                     Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-                } else if game.over > 0 || game.hints > 0 {
-                    Text(game.over > 0 ? "+\(game.over) over par" : "\(game.hints) hint\(game.hints == 1 ? "" : "s")")
-                        .foregroundStyle(Color.magenta)
+                } else if game.over > 0 {
+                    Text("+\(game.over) over par").foregroundStyle(Color.magenta)
                 } else {
                     Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
                         .foregroundStyle(Color.amber)

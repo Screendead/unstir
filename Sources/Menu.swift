@@ -462,7 +462,6 @@ private struct LevelRow: View {
                     } else if let result, result.clean == true {
                         Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
                     } else if let result, result.over == 0 {
-                        // Hints aside, as the tier gate counts it.
                         Text("par").foregroundStyle(Color.amber)
                     } else if let result {
                         Text("+\(result.over)").foregroundStyle(Color.magenta)

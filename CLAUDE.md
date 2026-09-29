@@ -102,7 +102,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, maelstrom (vortex will go between the last
   two, charybdis past maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best at par
-  (`Tier.isOpen`: `over == 0`, hints aside). `Tier.store` keeps only an open tier, so a locked one opened to look at
+  (`Tier.isOpen`: `over == 0`). `Tier.store` keeps only an open tier, so a locked one opened to look at
   never comes back on launch, and `Tier.stored` falls back to the highest open tier below one that has closed.
   `Best.unlocked`, the developer unlock, opens every tier and level; a launch with `UNSTIR_UNLOCK=1` sets it and one
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
@@ -114,7 +114,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   The generator is ported draw for draw from an earlier prototype, and `testDailyAndEndlessVectors` pins its output.
   Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`. A `Level` may have `seized` knobs, which ignore
   touch; the tank turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
-- **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, hints, clean-solve rules and the
+- **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and the
   endless spill. `Game.commit` takes a physical knob and commits to the slot under it. `Game.turnTank` is a move that
   pushes no entry: turns in a row join, and one netting a whole turn drops. `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
@@ -154,7 +154,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), a touch on a seized knob held that many seconds into its shake (`UNSTIR_SHAKE`, with
-  `UNSTIR_TOUCH`), a hint, the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds
+  `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds
   the rim lesson's ghost finger. A harnessed launch never stores the tank flag: it reads as never turned unless
   `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only that launch, so shot order never matters. For the
   menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
