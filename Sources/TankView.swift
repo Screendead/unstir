@@ -628,7 +628,7 @@ struct LevelView: View {
         func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
         let core = 2 * Tank.coreRadius * r
         let probing = shown == nil ? liveRod : nil
-        // Solid once letting go would commit a twist; dashed while it would cost nothing or a full stack would refuse it.
+        // The held rod's dial is fainter while letting go would cost nothing or a full stack would refuse the twist.
         // Array.commit's overlap rule, checked without copying the stack or sampling the map every drag frame.
         let commits = liveRod.map { k in
             let s = game.slot(of: k)
@@ -688,30 +688,21 @@ struct LevelView: View {
                     }
             }
             .clipShape(Circle())
-            if let held {
-                // The tank's live ring: solid once letting go would turn it, dashed while it would come back where it was.
-                let turns = Int((held / step).rounded()) % game.level.layout.order != 0
-                Circle().inset(by: 1.5)
-                    .stroke(Color.live.opacity(turns ? 1 : 0.65), style: StrokeStyle(lineWidth: turns ? 2 : 1.5, dash: turns ? [] : [6, 6]))
-                    .shadow(color: .live.opacity(turns ? 0.6 : 0), radius: 4)
-            }
-            ForEach(rods.indices.filter { lit($0) > 0 }, id: \.self) { k in
-                grabbed(lit(k), dashed: probing != k)
+            if let k = liveRod, shown != nil {
+                glowRing(.magenta, 2.5, 6, under: .black.opacity(0.7))
                     .frame(width: 2 * rods[k].z * r, height: 2 * rods[k].z * r)
                     .position(at(k))
             }
-            if let k = liveRod {
-                Group {
-                    if shown != nil {
-                        glowRing(.magenta, 2.5, 6, under: .black.opacity(0.7))
-                    } else if commits {
-                        Circle().stroke(Color.live, lineWidth: 2).shadow(color: .live.opacity(0.6), radius: 4)
-                    } else {
-                        Circle().stroke(Color.live.opacity(0.65), style: StrokeStyle(lineWidth: 1.5, dash: [6, 6]))
-                    }
-                }
-                .frame(width: 2 * rods[k].z * r, height: 2 * rods[k].z * r)
-                .position(at(k))
+            if let c = rodCount, c.live || c.steps != 0 {
+                dial(at(c.k), rods[c.k].z * r, from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step, steps: c.steps,
+                     step: Tank.step)
+                    .opacity(c.live ? (commits ? 1 : Self.idle) : Self.lifted)
+            }
+            if let c = tankCount, c.live || c.steps != 0 {
+                // Inset clear of the bezel's own hairline at the glass's edge.
+                let turns = held.map { Int(($0 / step).rounded()) % game.level.layout.order != 0 } ?? false
+                dial(CGPoint(x: r, y: r), r - 4, from: Double(game.position - joined(Game.tank)) * step, steps: c.steps, step: step)
+                    .opacity(c.live ? (turns ? 1 : Self.idle) : Self.lifted)
             }
             // Always present, like the flash ring below: a ring inserted with the hint never sees `hints` change.
             let hk = game.knob(over: game.hint?.rod ?? 0)
@@ -723,40 +714,16 @@ struct LevelView: View {
                 }
                 .opacity(game.hint != nil && liveRod == nil && shown == nil ? 1 : 0)
                 .position(at(hk))
-            if let k = probing {
-                // Where the notch started: turn it back to here and letting go costs nothing.
-                Capsule().fill(Color.live.opacity(0.7)).frame(width: 2.5, height: 16)
-                    .offset(y: -rods[k].z * r)
-                    .rotationEffect(.radians(turned(k)))
-                    .position(at(k))
-            }
-            if held != nil {
-                Capsule().fill(Color.live.opacity(0.7)).frame(width: 2.5, height: 16)
-                    .offset(y: 8 - r)
-                    .rotationEffect(.radians(Double(game.position) * step))
-            }
-            if let c = rodCount, c.steps != 0 {
-                let from = turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step
-                stepArc(at(c.k), rods[c.k].z * r - 14, from: from, to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps,
-                        step: Tank.step)
-                    .opacity(c.live ? 1 : 0.45)
-            }
-            if let c = tankCount, c.steps != 0 {
-                stepArc(CGPoint(x: r, y: r), r - 16, from: Double(game.position - joined(Game.tank)) * step,
-                        to: Double(game.position) * step + (held ?? 0), steps: c.steps, step: step)
-                    .opacity(c.live ? 1 : 0.45)
-            }
             // Always present, so the first commit on a rod animates rather than inserting a view that never sees its trigger change.
-            // Black under the stroke, so red still reads over the grid's red and magenta lines.
-            let fk = flash?.rod ?? 0, pushed = flash?.result == .pushed
-            glowRing(pushed ? .alarm : .live, 2.5, 6, under: .black.opacity(0.7))
+            // The dial's hairline brightening as the finger lifts. An undo, which has no dial, flashes it too.
+            let fk = flash?.rod ?? 0
+            Circle().stroke(Color.live, lineWidth: Self.hairline)
                 .frame(width: 2 * rods[fk].z * r, height: 2 * rods[fk].z * r)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.turns) { ring, t in
-                    ring.scaleEffect(1 + 0.05 * t).opacity(t >= 1 ? 0 : 0.9 * (1 - t))
+                    ring.opacity(t >= 1 ? 0 : 0.9 * (1 - t))
                 } keyframes: { _ in
-                    // Full on the frame the live ring goes, so nothing blinks between them.
                     MoveKeyframe(0.0)
-                    LinearKeyframe(1.0, duration: pushed ? 0.4 : 0.3, timingCurve: .easeOut)
+                    LinearKeyframe(1.0, duration: 0.3, timingCurve: .easeOut)
                 }
                 .position(at(fk))
             Bezel(r: r)
@@ -772,9 +739,9 @@ struct LevelView: View {
                 arrow.stroke(Color.amber, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
             }
             let ck = game.cancelledRod, disc = 2 * rods[ck].z * r
-            glowRing(.magenta, 3, 12, under: .magenta.opacity(0.3))
+            Circle().stroke(Color.magenta, lineWidth: Self.hairline)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.cancels) { ring, t in
-                    // Grown by frame, not scale, so the stroke stays 3 pt out to the disc edge.
+                    // Grown by frame, not scale, so the stroke stays a hairline out to the disc edge.
                     ring.frame(width: disc * (0.3 + 0.7 * t), height: disc * (0.3 + 0.7 * t)).opacity(t >= 1 ? 0 : 0.9 * (1 - t * t))
                 } keyframes: { _ in
                     MoveKeyframe(0.0)
@@ -791,6 +758,17 @@ struct LevelView: View {
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
             }
             .opacity(showResult ? 0 : 1)
+            // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
+            // knobs, which would hide it.
+            RodView.band(.alarm)
+                .frame(width: core, height: core)
+                .keyframeAnimator(initialValue: 1.0, trigger: game.pushes) { ring, t in
+                    ring.opacity(t >= 1 ? 0 : 1 - t)
+                } keyframes: { _ in
+                    MoveKeyframe(0.0)
+                    LinearKeyframe(1.0, duration: 0.4, timingCurve: .easeOut)
+                }
+                .position(at(fk))
             if let c = rodCount, c.steps != 0 {
                 countLabel(c.steps).opacity(c.live ? 1 : 0.45)
                     .position(countSpot(at(c.k), reach: rods[c.k].z * r + 22, side: side, avoid: others))
@@ -822,35 +800,30 @@ struct LevelView: View {
         .padding(0.045 * r)
     }
 
-    /// A disc a finger holds, or may be about to: a dark band under its edge, so the live ring reads on any picture, and
-    /// a glowing halo just outside it. A disc still waiting on the finger's motion has no live ring, so it draws its own,
-    /// dashed as nothing would commit.
-    private func grabbed(_ strength: Double, dashed: Bool) -> some View {
-        ZStack {
-            Circle().stroke(Color.black.opacity(0.55 * strength), lineWidth: 8)
-            Circle().stroke(Color.live.opacity(0.8 * strength), lineWidth: 2).shadow(color: .live.opacity(strength), radius: 6)
-                .padding(-6)
-            if dashed { Circle().stroke(Color.live.opacity(0.65), style: StrokeStyle(lineWidth: 1.5, dash: [6, 6])) }
-        }
-    }
+    /// Wide enough to read, too thin to hide the picture: 1.5 px on a 3x screen.
+    private static let hairline: CGFloat = 0.5
+    /// A dial's opacity while letting go would change nothing, and while its stir stays open after the finger lifts.
+    private static let idle = 0.7, lifted = 0.45
 
-    /// A turn's own count round a circle about `c`, angles clockwise from twelve: one lit segment per step from `from`
-    /// the way the turn runs, over a thin trace out to where it stands now.
-    private func stepArc(_ c: CGPoint, _ radius: CGFloat, from origin: Double, to now: Double, steps: Int, step: Double) -> some View {
-        // Each arc moved to first: an arc appended to a path joins its current point with a line.
-        func arc(_ p: inout Path, _ a: Double, _ b: Double) {
-            p.move(to: CGPoint(x: c.x + radius * sin(a), y: c.y - radius * cos(a)))
-            p.addArc(center: c, radius: radius, startAngle: .radians(a - .pi / 2), endAngle: .radians(b - .pi / 2), clockwise: b < a)
+    /// A turn's own count round the circle of `radius` about `c`, angles clockwise from twelve: a hairline, a long mark
+    /// where the stir began and a short one per step from there the way the turn runs, the step just reached brightest.
+    /// Marks run inward, over the glass the turn moves.
+    private func dial(_ c: CGPoint, _ radius: CGFloat, from origin: Double, steps: Int, step: Double) -> some View {
+        func marks(_ angles: some Sequence<Double>, _ length: CGFloat) -> Path {
+            Path { p in
+                for a in angles {
+                    p.move(to: CGPoint(x: c.x + radius * sin(a), y: c.y - radius * cos(a)))
+                    p.addLine(to: CGPoint(x: c.x + (radius - length) * sin(a), y: c.y - (radius - length) * cos(a)))
+                }
+            }
         }
-        let dir = steps > 0 ? 1.0 : -1.0, gap = 3 / Double(radius)
-        let segments = Path { p in
-            for i in 0..<abs(steps) { arc(&p, origin + dir * (Double(i) * step + gap), origin + dir * (Double(i + 1) * step - gap)) }
-        }
-        let trace = Path { arc(&$0, origin, now) }
+        let at = (0...abs(steps)).map { origin + (steps > 0 ? 1 : -1) * Double($0) * step }
         return ZStack {
-            segments.stroke(Color.black.opacity(0.55), lineWidth: 7)
-            trace.stroke(Color.live.opacity(0.5), lineWidth: 1.5)
-            segments.stroke(Color.live, lineWidth: 3.5).shadow(color: .live.opacity(0.7), radius: 3)
+            Path(ellipseIn: CGRect(x: c.x - radius, y: c.y - radius, width: 2 * radius, height: 2 * radius))
+                .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
+            marks([origin], 10).stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
+            marks(at.dropFirst().dropLast(), 7).stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
+            if steps != 0 { marks([at.last!], 7).stroke(Color.live.opacity(0.85), lineWidth: Self.hairline) }
         }
     }
 
@@ -1290,6 +1263,7 @@ struct RodView: View {
                                          endRadius: size * 0.95))
             Circle().strokeBorder(Color.black.opacity(0.8), lineWidth: 1.2)
             ticks(rim - px(2), rim - px(1 / 3)).stroke(lit.opacity(0.8), lineWidth: width)
+            if grabbed > 0 { ticks(rim - px(2), rim - px(1 / 3)).stroke(Color.live.opacity(grabbed), lineWidth: width) }
             // Off-centre so a half turn reads as pointing down, not as untouched.
             Capsule().fill(lit.opacity(0.25)).frame(width: 6, height: size * 0.3 + 4).offset(y: -size * 0.3)
             Capsule().fill(lit).frame(width: 2, height: size * 0.3).offset(y: -size * 0.3)
@@ -1301,14 +1275,18 @@ struct RodView: View {
         .frame(width: size, height: size)
         .rotationEffect(.radians(angle))
         .background {
-            if grabbed > 0 {
-                Circle().stroke(Color.live.opacity(grabbed), lineWidth: 2).shadow(color: .live.opacity(0.9 * grabbed), radius: 5)
-                    .padding(-7)
-            }
             Circle().strokeBorder(Color.black.opacity(0.7), lineWidth: 3).padding(-3)
             ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(lit.opacity(0.5), lineWidth: width)
+            // Lit inside the knob's own footprint, so the picture round it stays in view.
+            if grabbed > 0 {
+                ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(Color.live.opacity(grabbed), lineWidth: width)
+                Self.band(.live.opacity(grabbed))
+            }
         }
     }
+
+    /// A ring along the outer edge of the knob's dark band, where it covers none of the picture.
+    static func band(_ colour: Color) -> some View { Circle().strokeBorder(colour, lineWidth: 1).padding(-3) }
 
     private func px(_ points: CGFloat) -> CGFloat { (points * scale).rounded() / scale }
 
