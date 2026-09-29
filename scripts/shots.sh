@@ -81,8 +81,8 @@ shot count-let-go "Level 12 (square), rod 1 just let go at -2: its stir is still
 shot count-regrab "Level 12 (square), rod 1 let go at -2, grabbed again and turned -1 more: the marks and count carry on to -3 from where the stir began." \
   LEVEL=12 TURNED=1:-2 LIVE=1:-1 TOUCH=0.354,0.7
 shot grab-grid "Level 12 (square), a finger just down deep in rod 0, not yet moved: its knob lit, its disc a dim hairline." LEVEL=12 TOUCH=0.4,-0.4
-shot grab-overlap-grid "Level 12 (square), a finger just down where rods 0 and 1 overlap, not yet moved: both knobs lit dimly, no line on either disc, until the motion picks one." \
-  LEVEL=12 TOUCH=0.6,0
+shot grab-overlap-grid "Level 12 (square), a finger just down where rods 0 and 1 overlap, nearer rod 0's centre: rod 0's knob lit and its disc a dim hairline at once, rod 1 not." \
+  LEVEL=12 TOUCH=0.5,-0.03
 # Each layout at its chapter's first and last level, the first two without a replay, then every level with a sunset or city.
 for n in 01 04 07 08 09 13 14 18 19 22 23 27 05 11 15 06 10 16; do
   shot "level$n" "Level $n with its full scramble and its note." LEVEL=$n
@@ -125,12 +125,12 @@ for s in 1 2 3; do
 done
 shot whirlpool-grab-neurons "Whirlpool 20 (pentagon, neurons), a finger just down deep in rod 0: its knob lit, its disc a dim hairline over the web." \
   TIER=whirlpool LEVEL=20 TOUCH=0.05,-0.62 CLOCK=3
-shot whirlpool-grab-overlap-neurons "Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap: both knobs lit dimly, no line." \
-  TIER=whirlpool LEVEL=20 TOUCH=0.266,-0.366 CLOCK=3
+shot whirlpool-grab-overlap-neurons "Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap, nearer rod 1's centre: rod 1's knob lit, its disc a dim hairline." \
+  TIER=whirlpool LEVEL=20 TOUCH=0.3,-0.34 CLOCK=3
 shot whirlpool-grab-marbling "Whirlpool 25 (hex, marbling), a finger just down deep in rod 1: its knob lit, its disc a dim hairline." \
   TIER=whirlpool LEVEL=25 TOUCH=0.05,-0.6 CLOCK=3
-shot whirlpool-grab-overlap-marbling "Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub: both knobs lit dimly, no line." \
-  TIER=whirlpool LEVEL=25 TOUCH=0.2425,-0.42 CLOCK=3
+shot whirlpool-grab-overlap-marbling "Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub, nearer rod 2's centre: rod 2's knob lit, its disc a dim hairline." \
+  TIER=whirlpool LEVEL=25 TOUCH=0.27,-0.4 CLOCK=3
 shot whirlpool-count-marbling "Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four marks, +4 off the finger." \
   TIER=whirlpool LEVEL=22 LIVE=2:+4 TOUCH=0.329,0.753 CLOCK=3
 shot whirlpool-count-hex-below "Whirlpool 25 (hex, marbling), finger down to the lower right of rod 4 and carried +2 steps round to just under it: +2 swung off the hub's knob straight above." \

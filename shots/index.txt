@@ -21,7 +21,7 @@ count-quad-minus2.png  Level 12 (square), finger down below rod 1 and carried -2
 count-let-go.png  Level 12 (square), rod 1 just let go at -2: its stir is still open, so the hairline, its marks and the count stay, faint.
 count-regrab.png  Level 12 (square), rod 1 let go at -2, grabbed again and turned -1 more: the marks and count carry on to -3 from where the stir began.
 grab-grid.png  Level 12 (square), a finger just down deep in rod 0, not yet moved: its knob lit, its disc a dim hairline.
-grab-overlap-grid.png  Level 12 (square), a finger just down where rods 0 and 1 overlap, not yet moved: both knobs lit dimly, no line on either disc, until the motion picks one.
+grab-overlap-grid.png  Level 12 (square), a finger just down where rods 0 and 1 overlap, nearer rod 0's centre: rod 0's knob lit and its disc a dim hairline at once, rod 1 not.
 level01.png  Level 01 with its full scramble and its note.
 level04.png  Level 04 with its full scramble and its note.
 level07.png  Level 07 with its full scramble and its note.
@@ -69,9 +69,9 @@ whirlpool27-probe-1.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 t
 whirlpool27-probe-2.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 2 steps; it heals at 2.
 whirlpool27-probe-3.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 3 steps; it heals at 2.
 whirlpool-grab-neurons.png  Whirlpool 20 (pentagon, neurons), a finger just down deep in rod 0: its knob lit, its disc a dim hairline over the web.
-whirlpool-grab-overlap-neurons.png  Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap: both knobs lit dimly, no line.
+whirlpool-grab-overlap-neurons.png  Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap, nearer rod 1's centre: rod 1's knob lit, its disc a dim hairline.
 whirlpool-grab-marbling.png  Whirlpool 25 (hex, marbling), a finger just down deep in rod 1: its knob lit, its disc a dim hairline.
-whirlpool-grab-overlap-marbling.png  Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub: both knobs lit dimly, no line.
+whirlpool-grab-overlap-marbling.png  Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub, nearer rod 2's centre: rod 2's knob lit, its disc a dim hairline.
 whirlpool-count-marbling.png  Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four marks, +4 off the finger.
 whirlpool-count-hex-below.png  Whirlpool 25 (hex, marbling), finger down to the lower right of rod 4 and carried +2 steps round to just under it: +2 swung off the hub's knob straight above.
 whirlpool-result.png  Whirlpool level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par).

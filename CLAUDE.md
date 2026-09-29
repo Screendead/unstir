@@ -120,26 +120,24 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
-  a finger holds: the rim first where knobs are seized, a lone disc at once, and where discs overlap nothing until the
-  finger has moved 8 pt, then the rod whose tangent at the touch lies nearest the motion's line, falling back to the
-  nearest centre in its own disc's radius among those within `tie` (15°) of the best; a seized winner is `.seized`, which
-  holds nothing. A held rod lights its knob with a light tap, the knob's ticks and a ring on the dark band round it,
-  never past it, and rings its disc with one 0.5 pt hairline, dimmer until letting go would commit; overlap candidates
-  light only their knobs, dimly. On lift the disc's hairline flashes and fades, a twist that stacks an entry flashes the
-  knob's ring red, and one that cancels sends a magenta hairline out from the knob. Every line a turn draws over the
-  picture is a hairline: the pictures are fine lines themselves, and whatever a heavy line covers the player cannot
-  read. The hint's ring and arrow and the opening replay's ring are not hairlines. A seized knob touched shakes a few
-  degrees, plays `Knock.thud` (duller than the tank step's `Knock.clunk`) and pulses the rim's lesson: `RimLesson`, a
-  two-headed amber arc just outside the bezel at the top and a ghost finger rocking along the rim under it, shown on any
-  level with seized knobs until the player's first turn of the tank commits. That turn sets `Game.tankTurned` and the
-  stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does. The lesson never shows a way to
-  turn, and after the flag only the pulse brings the arc back. A drag shows its own count: a dial on the disc's hairline
-  (on one just inside the rim, for the tank), with a long mark where its stir began and a short hairline mark per step
-  from there, the step just reached brightest, and a signed count off the finger, both following what letting go would
-  commit (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: the rod's tick, the
-  tank's clunk. While `Game.openStir` is the rod's, the dial and count stay faint after lift, until another rod or the
-  tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the main actor
-  and the fine pass off it.
+  a finger holds where it lands, never by its motion: the rim first where knobs are seized, else the disc whose centre
+  is nearest in its own radius, overlapped or not; a seized winner is `.seized`, which holds nothing. The held rod
+  lights at once with a light tap, so the rod that lights is the rod that turns: its knob's ticks and a ring on the dark
+  band round it, never past it, and one 0.5 pt hairline round its disc, dimmer until letting go would commit. On lift
+  the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red, and one that cancels
+  sends a magenta hairline out from the knob. Every line a turn draws over the picture is a hairline: the pictures are
+  fine lines themselves, and whatever a heavy line covers the player cannot read. The hint's ring and arrow and the
+  opening replay's ring are not hairlines. A seized knob touched shakes a few degrees, plays `Knock.thud` (duller than
+  the tank step's `Knock.clunk`) and pulses the rim's lesson: `RimLesson`, a two-headed amber arc just outside the bezel
+  at the top and a ghost finger rocking along the rim under it, shown on any level with seized knobs until the player's
+  first turn of the tank commits. That turn sets `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on
+  every level; a rod stir never does. The lesson never shows a way to turn, and after the flag only the pulse brings the
+  arc back. A drag shows its own count: a dial on the disc's hairline (on one just inside the rim, for the tank), with a
+  long mark where its stir began and a short hairline mark per step from there, the step just reached brightest, and a
+  signed count off the finger, both following what letting go would commit (`Detent.steps`, the nearest step). Each
+  change of that, at a half step either way, clicks: the rod's tick, the tank's clunk. While `Game.openStir` is the
+  rod's, the dial and count stay faint after lift, until another rod or the tank is touched; they read only the history,
+  never the stack. Wins run the coarse `looksSolved` pass on the main actor and the fine pass off it.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader

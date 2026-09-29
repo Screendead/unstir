@@ -299,8 +299,6 @@ final class Game {
 enum Grab: Equatable {
     case rod(Int)
     case rim
-    /// In two or more discs, before the finger has moved far enough to say which: the ones it could turn.
-    case undecided([Int])
     /// A seized knob's disc: it holds nothing, and the knob shakes.
     case seized(Int)
     case nothing
@@ -321,8 +319,8 @@ struct LevelView: View {
     @State private var eased: Bool
     /// Scales every committed angle; the open winds it 0 to 1, all rods at once, so it shows nothing about order.
     @State private var wind = 1.0
-    /// The touch it belongs to, where it was first seen (tank units), what it holds, and its last angle about that.
-    @State private var drag: (start: CGPoint, from: SIMD2<Double>, grab: Grab, last: Double)?
+    /// The touch it belongs to, what it holds, and the finger's last angle about that.
+    @State private var drag: (start: CGPoint, grab: Grab, last: Double)?
     /// The finger's latest point in tank units, kept after it lifts so a count left showing stays put.
     @State private var finger: SIMD2<Double>?
     /// The knob, or `Game.tank`, touched last: its open stir's count stays up, faint, after letting go.
@@ -386,17 +384,16 @@ struct LevelView: View {
         _counted = State(initialValue: harness?.turned?.rod)
         if let p = harness?.touch {
             // The finger that went down at p, carried round with the turn it holds.
-            let grab: Grab = live.map { .rod($0.rod) } ?? (turn != nil ? .rim
-                : LevelView.grab(level.layout, seized: level.seized, from: p, to: p, slop: 1))
+            let grab: Grab = live.map { .rod($0.rod) } ?? (turn != nil ? .rim : LevelView.grab(level.layout, seized: level.seized, at: p))
             let pivot = live.map { SIMD2(level.layout.rods[$0.rod].x, level.layout.rods[$0.rod].y) } ?? .zero
             let a = live != nil ? angle : turn ?? 0, d = p - pivot
-            _drag = State(initialValue: (.zero, p, grab, 0))
+            _drag = State(initialValue: (.zero, grab, 0))
             _finger = State(initialValue: pivot + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a)))
             switch grab {
             case .rod(let k): _liveRod = State(initialValue: k); _counted = State(initialValue: k)
             case .rim: _liveTurn = State(initialValue: turn ?? 0); _counted = State(initialValue: Game.tank)
             case .seized(let k): _jammed = State(initialValue: k)
-            case .undecided, .nothing: break
+            case .nothing: break
             }
         }
         _showResult = State(initialValue: game.finished && harness?.wave == nil)
@@ -646,8 +643,6 @@ struct LevelView: View {
         let source = game.history.last.map { $0.rod == Game.tank ? .zero : centre(game.knob(over: $0.rod)) } ?? centre(0)
         let frozenWave = frozenWave
         let flash = game.lastCommit
-        let pending: [Int] = if shown == nil, case .undecided(let ks)? = drag?.grab { ks } else { [] }
-        func lit(_ k: Int) -> Double { probing == k ? 1 : pending.contains(k) ? 0.45 : 0 }
         // The player's own turning only, never the stack: the open stir a turn would join, plus the turn in hand.
         let stir = game.openStir
         func joined(_ rod: Int) -> Int { stir?.rod == rod ? stir!.steps : 0 }
@@ -753,7 +748,7 @@ struct LevelView: View {
                 let p = at(k)
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                     RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                            size: core, seized: game.level.seized.contains(k), grabbed: lit(k))
+                            size: core, seized: game.level.seized.contains(k), grabbed: probing == k)
                 } keyframes: { _ in Self.jolt }
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
             }
@@ -862,19 +857,11 @@ struct LevelView: View {
                     drag = nil; liveRod = nil; liveAngle = 0
                     // A twist cancelled without onEnded leaves its turn behind.
                     if spin == nil { liveTurn = nil; spun = false }
-                    // From the current point, so a drag picked up again after a reset's stir does not jump.
-                    drag = (v.startLocation, q, Self.grab(layout, seized: seized, from: q, to: q, slop: slop / r), 0)
+                    // Where it landed: the first change seen can come later, once a release or a reset's stir settles.
+                    drag = (v.startLocation, Self.grab(layout, seized: seized, at: norm(v.startLocation)), 0)
                     Log.write("touch \(drag!.grab)")
-                    hold()
-                } else if case .undecided = drag!.grab {
-                    let grab = Self.grab(layout, seized: seized, from: drag!.from, to: q, slop: slop / r)
-                    if grab != drag!.grab {
-                        drag!.grab = grab; Log.write("picked \(grab) by motion"); hold()
-                        if let pivot = pivot(grab) {
-                            let d = q - pivot
-                            drag!.last = Self.pickedFrom(drag!.last, now: atan2(d.y, d.x))
-                        }
-                    }
+                    // From the current point, so a drag picked up again after a reset's stir does not jump.
+                    hold(from: q)
                 }
                 finger = q
                 guard let g = drag, let pivot = pivot(g.grab) else { return }
@@ -905,33 +892,29 @@ struct LevelView: View {
                 switch g.grab {
                 case .rod(let k): release(k)
                 case .rim: if !spun { releaseTank() }
-                case .undecided: Log.write("lifted undecided")
                 case .seized, .nothing: break
                 }
             }
     }
 
-    /// A finger's travel before an overlap's rods are told apart by it.
-    private let slop: CGFloat = 8
-
     private func pivot(_ grab: Grab) -> SIMD2<Double>? {
         switch grab {
         case .rod(let k): centre(k)
         case .rim: .zero
-        case .undecided, .seized, .nothing: nil
+        case .seized, .nothing: nil
         }
     }
 
-    /// Takes up what the drag has just come to hold, its angle counted from where the finger was first seen, so the
-    /// travel that picked a rod turns it too. A seized knob refuses it.
-    private func hold() {
+    /// Takes up what the drag holds, its angle counted from `point`, where the finger is when the drag is taken up. A
+    /// seized knob refuses it.
+    private func hold(from point: SIMD2<Double>) {
         if case .seized(let k)? = drag?.grab {
             jammed = k
             jams += 1
             Knock.thud.play()
         }
         guard let g = drag, let pivot = pivot(g.grab) else { return }
-        let d = g.from - pivot
+        let d = point - pivot
         drag!.last = atan2(d.y, d.x)
         if case .rod(let k) = g.grab {
             liveRod = k; counted = k; grabs += 1; detent = Detent(step: Tank.step)
@@ -941,45 +924,15 @@ struct LevelView: View {
         if !game.level.sandbox { Best.start(game.level.id) }
     }
 
-    /// Motion within this of the best rod's tangent fits that rod too.
-    nonisolated static let tie = 15 * Double.pi / 180
-
-    /// Under half a step: the most a rod picked by motion catches up with the finger at once, so the pick alone never
-    /// commits a step. Past it, near a centre, the rod trails the finger.
-    nonisolated static let catchUp = 10 * Double.pi / 180
-
-    /// The angle about its pivot that a rod picked by motion counts its turn from: where the finger went down, `down`,
-    /// but no more than `catchUp` behind where it is, `now`.
-    nonisolated static func pickedFrom(_ down: Double, now: Double) -> Double {
-        now - min(max(atan2(sin(now - down), cos(now - down)), -catchUp), catchUp)
-    }
-
-    /// What a finger that went down at `start` and is now at `point` (tank units) holds. Where knobs are seized the rim
-    /// wins over the discs that reach it. A lone disc is held at once. Where discs overlap, once the finger has moved
-    /// `slop`, it holds the rod whose turn best explains the motion: the one whose tangent at `start` lies nearest the
-    /// motion's line. Near the line between two centres the tangents agree, so among those within `tie` of the best the
-    /// nearest centre, in its own disc's radius, wins. A seized knob that wins holds nothing, rather than passing the
-    /// finger to a neighbour, and so does a finger only in seized discs, which takes the nearest.
-    nonisolated static func grab(_ layout: Layout, seized: Set<Int>, from start: SIMD2<Double>, to point: SIMD2<Double>,
-                                 slop: Double) -> Grab {
-        if !seized.isEmpty && simd_length(start) > 0.93 { return .rim }
+    /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
+    /// Where knobs are seized the rim wins over the discs that reach it. Otherwise the disc whose centre is nearest, in
+    /// its own radius, wins; a seized knob that wins holds nothing rather than passing the finger to a neighbour.
+    nonisolated static func grab(_ layout: Layout, seized: Set<Int>, at point: SIMD2<Double>) -> Grab {
+        if !seized.isEmpty && simd_length(point) > 0.93 { return .rim }
         let rods = layout.rods
-        func centre(_ k: Int) -> SIMD2<Double> { SIMD2(rods[k].x, rods[k].y) }
-        func held(_ k: Int) -> Grab { seized.contains(k) ? .seized(k) : .rod(k) }
-        func nearest(_ ks: [Int]) -> Int {
-            ks.min { simd_distance(start, centre($0)) / rods[$0].z < simd_distance(start, centre($1)) / rods[$1].z }!
-        }
-        let under = rods.indices.filter { simd_distance(start, centre($0)) < rods[$0].z }
-        guard under.count > 1 else { return under.first.map(held) ?? .nothing }
-        guard simd_distance(point, start) >= slop else {
-            let free = under.filter { !seized.contains($0) }
-            return free.isEmpty ? held(nearest(under)) : .undecided(free)
-        }
-        let move = simd_normalize(point - start)
-        // No rod's centre lies inside another's disc, so start is never on a centre it is weighed against.
-        let off = under.map { asin(min(abs(simd_dot(move, simd_normalize(start - centre($0)))), 1)) }
-        let best = off.min()!
-        return held(nearest(under.indices.filter { off[$0] < best + tie }.map { under[$0] }))
+        func depth(_ k: Int) -> Double { simd_distance(point, SIMD2(rods[k].x, rods[k].y)) / rods[k].z }
+        guard let k = rods.indices.filter({ depth($0) < 1 }).min(by: { depth($0) < depth($1) }) else { return .nothing }
+        return seized.contains(k) ? .seized(k) : .rod(k)
     }
 
     /// The seized knob's shake and the rim's pulse both run on this clock, in seconds.
@@ -1262,8 +1215,7 @@ struct RodView: View {
     let angle: Double
     let size: CGFloat
     var seized = false
-    /// 1 while a finger holds the knob, less while it may be about to.
-    var grabbed = 0.0
+    var grabbed = false
     @Environment(\.displayScale) private var scale
     private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }
@@ -1279,7 +1231,7 @@ struct RodView: View {
                                          endRadius: size * 0.95))
             Circle().strokeBorder(Color.black.opacity(0.8), lineWidth: 1.2)
             ticks(rim - px(2), rim - px(1 / 3)).stroke(lit.opacity(0.8), lineWidth: width)
-            if grabbed > 0 { ticks(rim - px(2), rim - px(1 / 3)).stroke(Color.live.opacity(grabbed), lineWidth: width) }
+            if grabbed { ticks(rim - px(2), rim - px(1 / 3)).stroke(Color.live, lineWidth: width) }
             // Off-centre so a half turn reads as pointing down, not as untouched.
             Capsule().fill(lit.opacity(0.25)).frame(width: 6, height: size * 0.3 + 4).offset(y: -size * 0.3)
             Capsule().fill(lit).frame(width: 2, height: size * 0.3).offset(y: -size * 0.3)
@@ -1294,9 +1246,9 @@ struct RodView: View {
             Circle().strokeBorder(Color.black.opacity(0.7), lineWidth: 3).padding(-3)
             ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(lit.opacity(0.5), lineWidth: width)
             // Lit inside the knob's own footprint, so the picture round it stays in view.
-            if grabbed > 0 {
-                ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(Color.live.opacity(grabbed), lineWidth: width)
-                Self.band(.live.opacity(grabbed))
+            if grabbed {
+                ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(Color.live, lineWidth: width)
+                Self.band(.live)
             }
         }
     }
