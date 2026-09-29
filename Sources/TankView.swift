@@ -698,14 +698,16 @@ struct LevelView: View {
                     .position(at(k))
             }
             if let c = rodCount, c.live || c.steps != 0 {
-                dial(at(c.k), rods[c.k].z * r, from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step, steps: c.steps,
-                     step: Tank.step)
+                let disc = rods[c.k].z * r
+                dial(at(c.k), disc, inner: disc - 14, from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
+                     to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps, step: Tank.step)
                     .opacity(c.live ? (commits ? 1 : Self.idle) : Self.lifted)
             }
             if let c = tankCount, c.live || c.steps != 0 {
                 // Inset clear of the bezel's own hairline at the glass's edge.
                 let turns = held.map { Detent.steps($0, of: step) % game.level.layout.order != 0 } ?? false
-                dial(CGPoint(x: r, y: r), r - 4, from: Double(game.position - joined(Game.tank)) * step, steps: c.steps, step: step)
+                dial(CGPoint(x: r, y: r), r - 4, inner: r - 16, from: Double(game.position - joined(Game.tank)) * step,
+                     to: Double(game.position) * step + (held ?? 0), steps: c.steps, step: step)
                     .opacity(c.live ? (turns ? 1 : Self.idle) : Self.lifted)
             }
             // Always present, like the flash ring below: a ring inserted with the hint never sees `hints` change.
@@ -806,28 +808,33 @@ struct LevelView: View {
 
     /// Wide enough to read, too thin to hide the picture: 1.5 px on a 3x screen.
     private static let hairline: CGFloat = 0.5
+    /// A drag's count: its dashes, and the trace under them. No glow and no dark band: with them the count hid the picture.
+    private static let dash: CGFloat = 2, dashTone = 0.85, trace = hairline, traceTone = 0.4
     /// A dial's opacity while letting go would change nothing, and while its stir stays open after the finger lifts.
     private static let idle = 0.7, lifted = 0.45
 
-    /// A turn's own count round the circle of `radius` about `c`, angles clockwise from twelve: a hairline, a long mark
-    /// where the stir began and a short one per step from there the way the turn runs, the step just reached brightest.
-    /// Marks run inward, over the glass the turn moves.
-    private func dial(_ c: CGPoint, _ radius: CGFloat, from origin: Double, steps: Int, step: Double) -> some View {
-        func marks(_ angles: some Sequence<Double>, _ length: CGFloat) -> Path {
-            Path { p in
-                for a in angles {
-                    p.move(to: CGPoint(x: c.x + radius * sin(a), y: c.y - radius * cos(a)))
-                    p.addLine(to: CGPoint(x: c.x + (radius - length) * sin(a), y: c.y - (radius - length) * cos(a)))
-                }
-            }
+    /// A turn's own count about `c`, angles clockwise from twelve: a hairline round the circle of `radius` with a long
+    /// mark where the stir began, and on the circle of `inner` a dash per step from there the way the turn runs, over a
+    /// trace out to `now`, where the turn stands.
+    private func dial(_ c: CGPoint, _ radius: CGFloat, inner: CGFloat, from origin: Double, to now: Double, steps: Int,
+                      step: Double) -> some View {
+        func point(_ a: Double, _ radius: CGFloat) -> CGPoint { CGPoint(x: c.x + radius * sin(a), y: c.y - radius * cos(a)) }
+        // Each arc moved to first: an arc appended to a path joins its current point with a line.
+        func arc(_ p: inout Path, _ a: Double, _ b: Double) {
+            p.move(to: point(a, inner))
+            p.addArc(center: c, radius: inner, startAngle: .radians(a - .pi / 2), endAngle: .radians(b - .pi / 2), clockwise: b < a)
         }
-        let at = (0...abs(steps)).map { origin + (steps > 0 ? 1 : -1) * Double($0) * step }
+        let dir = steps > 0 ? 1.0 : -1.0, gap = 3 / Double(inner)
+        let dashes = Path { p in
+            for i in 0..<abs(steps) { arc(&p, origin + dir * (Double(i) * step + gap), origin + dir * (Double(i + 1) * step - gap)) }
+        }
         return ZStack {
             Path(ellipseIn: CGRect(x: c.x - radius, y: c.y - radius, width: 2 * radius, height: 2 * radius))
                 .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
-            marks([origin], 10).stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
-            marks(at.dropFirst().dropLast(), 7).stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
-            if steps != 0 { marks([at.last!], 7).stroke(Color.live.opacity(0.85), lineWidth: Self.hairline) }
+            Path { $0.move(to: point(origin, radius)); $0.addLine(to: point(origin, radius - 10)) }
+                .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
+            Path { arc(&$0, origin, now) }.stroke(Color.live.opacity(Self.traceTone), lineWidth: Self.trace)
+            dashes.stroke(Color.live.opacity(Self.dashTone), lineWidth: Self.dash)
         }
     }
 
