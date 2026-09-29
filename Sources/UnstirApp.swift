@@ -4,7 +4,11 @@ import SwiftUI
 
 @main
 struct UnstirApp: App {
-    init() { Log.write("launch") }
+    init() {
+        let monotonic = Best.monotonicClock().map { String(format: "%.1fs", $0) } ?? "unread"
+        Log.write(String(format: "launch, boot session %@, uptime %.1fs, monotonic clock %@",
+                         Best.bootSession == nil ? "unread" : "read", Best.uptime(), monotonic))
+    }
 
     var body: some Scene {
         WindowGroup { RootView() }
@@ -32,9 +36,9 @@ struct Harness {
     /// UNSTIR_SHAKE=s: with UNSTIR_TOUCH on a seized knob, its shake and the rim's pulse held s seconds in.
     let shake: Double?
     /// UNSTIR_UNDOS=n: the undo bank, and the stored day of its last refill, for this launch only. A harnessed launch
-    /// reads the stored bank unless set, and never stores either. With UNSTIR_TODAY and no day stored, as on the shots'
-    /// fresh install, the last refill was long ago, so the level opens on a refill. Nil without the harness, which
-    /// reads and stores the real ones.
+    /// reads the stored bank unless set, and never stores either, nor the refill's anchor, which starts afresh. With
+    /// UNSTIR_TODAY and no day stored, as on the shots' fresh install, the last refill was long ago, so the level opens
+    /// on a refill. Nil without the harness, which reads and stores the real ones.
     let bank: (undos: Int, refilled: String?)?
     /// UNSTIR_TODAY=yyyy-MM-dd: the day the level opens on, for the bank's refill.
     let today: String?

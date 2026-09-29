@@ -9,10 +9,11 @@ import simd
 
 final class UnstirTests: XCTestCase {
     /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full, never
-    /// refilled, and the tank never turned.
+    /// refilled or anchored, and the tank never turned.
     override func setUp() {
         UserDefaults.standard.removeObject(forKey: "undos.spent")
         UserDefaults.standard.removeObject(forKey: "undos.day")
+        UserDefaults.standard.removeObject(forKey: "undos.anchor")
         UserDefaults.standard.removeObject(forKey: "tank.turned")
     }
 
@@ -267,6 +268,146 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.bank, 7)
         XCTAssertEqual(Best.undos, 4)
         XCTAssertEqual(Best.refilled, "2026-09-29")
+        game.refill(wall: Self.utc(12), uptime: 3600, boot: "boot-a", zone: .gmt)
+        XCTAssertNil(Best.anchor)
+    }
+
+    /// `h` hours after midnight UTC starting 2026-09-29.
+    private static func utc(_ h: Double) -> Date { Date(timeIntervalSince1970: 1_790_640_000 + h * 3600) }
+
+    /// A level that counts, opened with the wall clock `h` hours into the 29th UTC, `up` hours since boot.
+    @MainActor private func opened(at h: Double, up: Double, boot: String? = "boot-a", zone: TimeZone = .gmt) -> Game {
+        let game = Game(level: Level.plughole[0])
+        game.refill(wall: Self.utc(h), uptime: up * 3600, boot: boot, zone: zone)
+        return game
+    }
+
+    /// Within a boot, a clock set ahead refills nothing until the uptime since the anchor crosses midnight, and that
+    /// refill goes on the real day; the anchor stays put meanwhile.
+    @MainActor func testAClockSetAheadWaitsForRealTime() {
+        XCTAssertEqual(opened(at: 12, up: 72).refilled, 0)
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 36.1, up: 72.1).refilled, 0)
+        XCTAssertEqual(opened(at: 60, up: 83.9).refilled, 0)
+        XCTAssertEqual(Best.undos, 4)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(12), uptime: 72 * 3600, boot: "boot-a"))
+        XCTAssertEqual(opened(at: 60, up: 84.1).refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(opened(at: 84, up: 95).refilled, 0)
+        XCTAssertEqual(Best.undos, 6)
+        XCTAssertEqual(Best.anchor?.wall, Self.utc(12))
+    }
+
+    /// With the boot session read, even a jump longer than the uptime at the anchor is held.
+    @MainActor func testWithTheBootReadEveryJumpAheadIsHeld() {
+        XCTAssertEqual(opened(at: 12, up: 5).refilled, 0)
+        XCTAssertEqual(opened(at: 84, up: 6).refilled, 0)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+    }
+
+    /// Real days refill: the uptime counts sleep, so it keeps pace with the wall clock. A believed opening moves the
+    /// anchor to the wall clock, but a lead of a few minutes only as far as drift explains. A day stored with no anchor,
+    /// as from the build before, is believed.
+    @MainActor func testRealDaysStillRefill() {
+        Best.undos = 4
+        Best.refilled = "2026-09-28"
+        XCTAssertEqual(opened(at: 12, up: 72).refilled, 2)
+        XCTAssertEqual(opened(at: 36, up: 96).refilled, 2)
+        XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(36), uptime: 96 * 3600, boot: "boot-a"))
+        XCTAssertEqual(opened(at: 60.05, up: 120).refilled, 2)
+        XCTAssertEqual(Best.anchor?.wall.timeIntervalSince(Self.utc(60)) ?? 0, 1 + Best.drift * 86400, accuracy: 1e-3)
+        XCTAssertEqual(Best.undos, 10)
+        XCTAssertEqual(Best.refilled, "2026-10-01")
+    }
+
+    /// A clock stepped ahead by a little under `slack` at each opening moves the anchor no further than drift explains,
+    /// so it refills nothing before real midnight.
+    @MainActor func testAClockCreptAheadGetsNoFurtherThanSlack() {
+        XCTAssertEqual(opened(at: 23, up: 72).refilled, 0)
+        Best.undos = 4
+        var wall = 23.0, up = 72.0
+        for _ in 0..<100 {
+            wall += 299.0 / 3600
+            up += 20.0 / 3600
+            XCTAssertEqual(opened(at: wall, up: up).refilled, 0)
+        }
+        XCTAssertLessThan(up, 73)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        XCTAssertEqual(Best.anchor?.wall.timeIntervalSince(Self.utc(23)) ?? 0, 21, accuracy: 1)
+    }
+
+    /// A new boot whose clock reads more than `slack` before the anchor's wall time, as when one resets, is believed but
+    /// leaves the anchor, so setting the clock right later in that boot still reads as a new boot and real days refill.
+    @MainActor func testAClockBehindAtBootThenSetRightStillRefills() {
+        for boots in [("boot-a", "boot-b"), (nil, nil)] as [(String?, String?)] {
+            Best.anchor = nil
+            Best.refilled = nil
+            XCTAssertEqual(opened(at: 12, up: 72, boot: boots.0).refilled, 0)
+            Best.undos = 4
+            XCTAssertEqual(opened(at: 13 - 240, up: 0.5, boot: boots.1).refilled, 0)
+            XCTAssertEqual(Best.anchor?.wall, Self.utc(12))
+            XCTAssertEqual(opened(at: 13.1, up: 0.6, boot: boots.1).refilled, 0)
+            XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(13.1), uptime: 0.6 * 3600, boot: boots.1))
+            XCTAssertEqual(opened(at: 37.1, up: 24.6, boot: boots.1).refilled, 2)
+        }
+    }
+
+    /// An anchor stored in a shape this build can't read counts as none.
+    func testAnUnreadableAnchorIsNone() {
+        UserDefaults.standard.set(Data("junk".utf8), forKey: "undos.anchor")
+        XCTAssertNil(Best.anchor)
+    }
+
+    /// A new boot session has nothing to check the wall clock against, so it is believed and anchors afresh, however
+    /// long the phone has been up; which is how a clock set ahead across a restart still borrows.
+    @MainActor func testANewBootBelievesTheWallClock() {
+        XCTAssertEqual(opened(at: 12, up: 72).refilled, 0)
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 36, up: 1, boot: "boot-b").refilled, 2)
+        XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(36), uptime: 3600, boot: "boot-b"))
+        XCTAssertEqual(opened(at: 60, up: 20, boot: "boot-c").refilled, 2)
+        XCTAssertEqual(opened(at: 84.1, up: 0.1, boot: "boot-d").refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-10-02")
+    }
+
+    /// With the boot session unread, the uptime going back shows a restart, and so might a jump at least the uptime at
+    /// the anchor; anything less is held.
+    @MainActor func testWithTheBootUnreadTheUptimeDecides() {
+        XCTAssertEqual(opened(at: 12, up: 72, boot: nil).refilled, 0)
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 36, up: 73, boot: nil).refilled, 0)
+        XCTAssertEqual(opened(at: 36, up: 1, boot: nil).refilled, 2)
+        XCTAssertEqual(Best.anchor, Best.Anchor(wall: Self.utc(36), uptime: 3600, boot: nil))
+        Best.anchor = Best.Anchor(wall: Self.utc(36), uptime: 5 * 3600, boot: nil)
+        XCTAssertEqual(opened(at: 48.5, up: 16, boot: nil).refilled, 0)
+        XCTAssertEqual(opened(at: 60, up: 16, boot: nil).refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-10-01")
+    }
+
+    /// The day is the local one where the phone is now, for the believed instant and the reckoned one alike.
+    @MainActor func testTheDayFollowsTheTimeZone() {
+        let london = TimeZone(identifier: "Europe/London")!, tokyo = TimeZone(identifier: "Asia/Tokyo")!
+        XCTAssertEqual(opened(at: 20, up: 72, zone: london).refilled, 0)
+        XCTAssertEqual(Best.refilled, "2026-09-29")
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 22, up: 74, zone: tokyo).refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(opened(at: 46.5, up: 90.9, zone: tokyo).refilled, 0)
+        XCTAssertEqual(opened(at: 46.5, up: 91.1, zone: tokyo).refilled, 2)
+        XCTAssertEqual(Best.refilled, "2026-10-01")
+    }
+
+    /// A clock set back refills nothing and leaves the anchor where it was, so setting it right again is no jump.
+    @MainActor func testAClockSetBackKeepsTheAnchor() {
+        XCTAssertEqual(opened(at: 36, up: 72).refilled, 0)
+        Best.undos = 4
+        XCTAssertEqual(opened(at: 13, up: 73).refilled, 0)
+        XCTAssertEqual(Best.refilled, "2026-09-30")
+        XCTAssertEqual(Best.anchor?.wall, Self.utc(36))
+        XCTAssertEqual(opened(at: 38, up: 74).refilled, 0)
+        XCTAssertEqual(Best.anchor?.wall, Self.utc(38))
+        XCTAssertEqual(opened(at: 60, up: 96).refilled, 2)
     }
 
     /// Days are written so that they compare as strings.

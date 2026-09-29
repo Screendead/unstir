@@ -299,19 +299,104 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "undos.day") }
     }
 
-    /// A local calendar day as yyyy-MM-dd, so days compare as strings. Gregorian whatever the phone's calendar, so a
+    /// A calendar day in `zone` as yyyy-MM-dd, so days compare as strings. Gregorian whatever the phone's calendar, so a
     /// change of that setting can't put today before a stored day.
-    static func day(_ date: Date = .now) -> String {
-        let d = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: date)
+    static func day(_ date: Date = .now, in zone: TimeZone = .current) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let d = calendar.dateComponents([.year, .month, .day], from: date)
         return String(format: "%04d-%02d-%02d", d.year!, d.month!, d.day!)
+    }
+
+    /// The last instant the refill vouched for, with the uptime and boot session read then: a wall time it believed,
+    /// or its reckoning plus the most drift could explain.
+    struct Anchor: Codable, Equatable {
+        var wall: Date
+        var uptime: TimeInterval
+        var boot: String?
+    }
+
+    /// `trustedNow`'s anchor; nil until a level that counts has opened.
+    static var anchor: Anchor? {
+        get {
+            UserDefaults.standard.data(forKey: "undos.anchor").flatMap { try? JSONDecoder().decode(Anchor.self, from: $0) }
+        }
+        set { UserDefaults.standard.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: "undos.anchor") }
+    }
+
+    /// Seconds since boot, asleep or not. CLOCK_MONOTONIC_RAW is mach_continuous_time, which setting the date or time
+    /// never moves; CLOCK_MONOTONIC is the wall clock less kern.boottime, and CLOCK_UPTIME_RAW stops during sleep.
+    static func uptime() -> TimeInterval { Double(clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)) / 1e9 }
+
+    /// This boot's id, or nil where the sandbox refuses it: an app in macOS's App Sandbox reads it, but container.sb
+    /// leaves it off its sysctl allow list, and iOS's profile is unpublished. kern.boottime would be readable, but
+    /// setting the clock moves it by the same step.
+    static let bootSession: String? = {
+        var size = 0
+        guard sysctlbyname("kern.bootsessionuuid", nil, &size, nil, 0) == 0, size > 1 else { return nil }
+        var bytes = [UInt8](repeating: 0, count: size)
+        guard sysctlbyname("kern.bootsessionuuid", &bytes, &size, nil, 0) == 0 else { return nil }
+        let id = String(decoding: bytes.prefix { $0 != 0 }, as: UTF8.self)
+        return id.isEmpty ? nil : id
+    }()
+
+    /// kern.monotonicclock in seconds, or nil where it can't be read. XNU's clock.c says nothing can set it, and on a
+    /// Mac it runs on across restarts; whether an iOS app can read it, and whether setting the date moves it there, is
+    /// unchecked, so the launch logs it.
+    static func monotonicClock() -> TimeInterval? {
+        var latched: (usecs: UInt64, machTime: UInt64) = (0, 0)
+        var size = MemoryLayout.size(ofValue: latched)
+        guard sysctlbyname("kern.monotonicclock_usecs", &latched, &size, nil, 0) == 0 else { return nil }
+        return Double(latched.usecs) / 1e6
+    }
+
+    /// How far the wall clock may run ahead of the anchor's reckoning before it counts as set ahead: the uptime clock
+    /// drifts from true time by parts per million, and the wall clock takes small corrections.
+    static let slack: TimeInterval = 5 * 60
+
+    /// How far past the anchor's reckoning the anchor may move, per second of uptime since, on top of a second for a
+    /// leap second or a small correction: a generous bound on the uptime clock's drift, and small enough that stepping
+    /// the clock ahead at each opening gains next to nothing.
+    static let drift = 1e-4
+
+    /// The instant the refill's day comes from, given the wall clock, `uptime()` and `bootSession` read now; `ahead` is
+    /// how far the wall clock ran past it, where it gave way. Within one boot, the anchor's wall time plus the uptime
+    /// since is a clock the player can't set: a wall clock more than `slack` ahead of it gives way to it, and the
+    /// anchor stays put. Otherwise the wall clock is believed, and the anchor moves to it, but never further past the
+    /// reckoning than a second plus `drift`: so a clock crept ahead a few minutes at a time gains about a second an
+    /// opening past `slack`, and an honest correction ahead is taken in slowly. A new boot has nothing to check
+    /// against, so the wall clock is believed, and anchors afresh unless it reads more than `slack` before the anchor's
+    /// wall time, as a clock reset at boot would: then the anchor stays, so setting the clock right later in that boot
+    /// still reads as a new boot. With the session unread, the uptime going back shows a new boot, and a jump of at
+    /// least the anchor's uptime might be one, as a restart since the anchor would explain it, so it is believed too.
+    static func trustedNow(wall: Date, uptime: TimeInterval, boot: String?, anchor: inout Anchor?)
+        -> (now: Date, ahead: TimeInterval?) {
+        let here = Anchor(wall: wall, uptime: uptime, boot: boot)
+        guard let a = anchor else { anchor = here; return (wall, nil) }
+        let known = boot != nil && a.boot != nil
+        let since = uptime - a.uptime
+        let reckoned = a.wall.addingTimeInterval(since)
+        let ahead = wall.timeIntervalSince(reckoned)
+        let rebooted = since < 0 || (known ? boot != a.boot : ahead >= a.uptime)
+        if rebooted {
+            if wall.timeIntervalSince(a.wall) >= -slack { anchor = here }
+            return (wall, nil)
+        }
+        if ahead > slack { return (reckoned, ahead) }
+        if ahead >= -slack {
+            anchor = Anchor(wall: min(wall, reckoned.addingTimeInterval(1 + drift * since)), uptime: uptime, boot: boot)
+        }
+        return (wall, nil)
     }
 
     /// The undo bank's refill, as a level that counts (any but the sandbox) opens on the local calendar day `today`:
     /// the first such opening on a day later than `last`, the day of the last refill, adds 2 to `bank`, up to 10, and
     /// makes today `last`, even when a full bank takes nothing. So each day played refills once, and a long absence
     /// refills once. With no `last`, as on a fresh install, whose bank starts full, today becomes `last` and nothing is
-    /// added. Moving the clock back never refills, and moving it forward refills once; moved forward and back again,
-    /// nothing refills until the clock passes the day it reached. Returns what was added, or nil when none was due.
+    /// added. Moving the clock back never refills. `today` comes from `trustedNow`, so within a boot a clock set ahead
+    /// refills nothing until real time reaches the next day, give or take `slack`; after a restart the clock set ahead
+    /// refills once, and set back again, nothing refills until real time passes the day it reached. Returns what was
+    /// added, or nil when none was due.
     static func refill(_ bank: inout Int, last: inout String?, today: String) -> Int? {
         guard let from = last else { last = today; return nil }
         guard today > from else { return nil }

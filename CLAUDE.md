@@ -115,8 +115,18 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most)
   refills by 2 the first time a level other than the sandbox opens on a local calendar day later than the stored day of
   its last refill (`Best.refill`, `Best.refilled`), so each day played refills once and a long absence once; a fresh
-  install records the day without a refill, and a clock moved back never refills. A `Level` may have `seized` knobs,
-  which ignore touch; the tank turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
+  install records the day without a refill, and a clock moved back never refills. The day is `Best.trustedNow`'s, in the
+  current time zone: it stores an anchor (`Best.anchor`), the last time it vouched for with the uptime then
+  (`CLOCK_MONOTONIC_RAW`, which counts sleep and which setting the clock never moves) and the boot session
+  (`kern.bootsessionuuid`, nil where the sandbox refuses it). Within a boot, a wall clock more than `slack` (5 min)
+  ahead of the anchor plus the uptime since gives way to that reckoning, and the anchor stays; otherwise the wall clock
+  is believed, and the anchor follows it from as far as `slack` behind, but never further past the reckoning than a
+  second plus `drift` (100 ppm) of the uptime since, so creeping the clock ahead gains about a second an opening. A new
+  boot believes the wall clock, and anchors there unless it reads more than `slack` before the anchor's time, so a clock
+  reset at boot and set right later still counts as a new boot. With the session unread, a new boot shows as the uptime
+  going back, or as a jump at least the anchor's uptime, which is believed. The launch logs whether the session was
+  read, the uptime and `kern.monotonicclock`. A `Level` may have `seized` knobs, which ignore touch; the tank turns only
+  on such a level. `par` is `fixedPar`, else `scramble.count`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and the
   endless spill. `Game.commit` takes a physical knob and commits to the slot under it. `Game.turnTank` is a move that
   pushes no entry: turns in a row join, and one netting a whole turn drops. `Game.history` holds rod stirs by slot and
@@ -161,15 +171,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`UNSTIR_TURNED=rod:steps`), a touch on a seized knob held that many seconds into its shake (`UNSTIR_SHAKE`, with
   `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds
   the rim lesson's ghost finger and a refill's "+2". `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd`
-  the day the level opens on; a harnessed launch never stores the bank or the refill's day, and with `UNSTIR_TODAY` and
-  no day stored it takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag:
-  it reads as never turned unless `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only that launch, so shot
-  order never matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only
-  (a digit per level, that many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and
-  `UNSTIR_TIERDEMO` switches tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock
-  above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. This
-  is how screenshots and films are taken without touch; see `scripts/shots.sh` for examples. To show a visual change,
-  add a `shot` line there.
+  the day the level opens on; a harnessed launch never stores the bank, the refill's day or its anchor, and with
+  `UNSTIR_TODAY` and no day stored it takes the last refill as long ago, so the level opens on a refill. Nor does it
+  store the tank flag: it reads as never turned unless `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only
+  that launch, so shot order never matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that
+  launch only (a digit per level, that many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list
+  mid-stir and `UNSTIR_TIERDEMO` switches tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the
+  developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next
+  unlocked. This is how screenshots and films are taken without touch; see `scripts/shots.sh` for examples. To show a
+  visual change, add a `shot` line there.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's pictures).

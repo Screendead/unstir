@@ -102,6 +102,8 @@ final class Game {
     private(set) var refilled = 0
     /// The day of the bank's last refill, `Best.refill`'s `last`.
     private var refillDay: String?
+    /// `Best.trustedNow`'s anchor, which starts afresh where the caller set the bank.
+    private var anchor: Best.Anchor?
     /// False when the caller set the bank, which then lasts only as long as this game.
     private let storesBank: Bool
     /// A win the fine pass is still confirming: an undo or reset then would throw it away.
@@ -134,6 +136,7 @@ final class Game {
         } else {
             self.bank = Best.undos
             refillDay = Best.refilled
+            anchor = Best.anchor
         }
         storesBank = bank == nil
     }
@@ -247,6 +250,19 @@ final class Game {
         guard let added else { return }
         refilled = added
         Log.write("undo refill +\(added) bank=\(bank)")
+    }
+
+    /// The day's refill as the level opens with the clocks read as given: the day is `Best.trustedNow`'s, in `zone`.
+    func refill(wall: Date = .now, uptime: TimeInterval = Best.uptime(), boot: String? = Best.bootSession,
+                zone: TimeZone = .current) {
+        guard !level.sandbox else { return }
+        let (now, ahead) = Best.trustedNow(wall: wall, uptime: uptime, boot: boot, anchor: &anchor)
+        if storesBank { Best.anchor = anchor }
+        let today = Best.day(now, in: zone)
+        if let ahead, let last = refillDay, today <= last, Best.day(wall, in: zone) > last {
+            Log.write(String(format: "undo refill held: clock ahead %.1fh", ahead / 3600))
+        }
+        refill(today: today)
     }
 
     /// Sandbox: the stir stays, to be seen on the next picture.
@@ -553,7 +569,7 @@ struct LevelView: View {
         .onAppear {
             Log.write("level \(game.level.id) opens, par \(game.par) \(game.stack)")
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
-            game.refill(today: today ?? Best.day())
+            if let today { game.refill(today: today) } else { game.refill() }
             // Where there is no opening, onChange's initial call may run before the refill.
             if shown == nil { badge = game.refilled }
         }
