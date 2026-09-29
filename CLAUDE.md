@@ -74,6 +74,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
+  Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
+  the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs
+  its rotation), so a pick or turn can be checked against the finger.
 
 ## Architecture
 

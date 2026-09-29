@@ -435,6 +435,35 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// A drag's path for the log keeps the landing, its first few points close together, then a point a gap apart, and
+    /// the latest; a finger held still leaves the landing and the lift. A long drag stays within the cap, its first few
+    /// points and its latest kept, and its worst line stays short.
+    func testTrailThinsADragToOneLine() {
+        func trail(gap: Double) -> Trail<SIMD2<Double>> { Trail(gap: gap) { simd_distance($0, $1) } }
+        var still = trail(gap: 3)
+        for ms in stride(from: 0, through: 900, by: 16) { still.add(SIMD2(1, 2), ms: ms) }
+        XCTAssertEqual(still.points.map(\.ms), [0, 896])
+        var line = trail(gap: 3)
+        for i in 0...60 { line.add(SIMD2(Double(i) * 0.25, 0), ms: 10 * i) }
+        XCTAssertEqual(line.points.map(\.at.x), [0, 1, 2, 3, 4, 7, 10, 13, 15])
+        XCTAssertEqual(line.points.map(\.ms), [0, 40, 80, 120, 160, 280, 400, 520, 600])
+        var long = trail(gap: 3)
+        for i in 0...4000 { long.add(SIMD2(Double(i) * 0.25, 0), ms: i) }
+        let points = long.points
+        XCTAssertLessThanOrEqual(points.count, Trail<SIMD2<Double>>.cap)
+        XCTAssertGreaterThan(points.count, Trail<SIMD2<Double>>.cap / 2)
+        XCTAssertEqual(points.prefix(5).map(\.at.x), [0, 1, 2, 3, 4])
+        XCTAssertEqual(points.last!.at.x, 1000)
+        XCTAssertEqual(points.last!.ms, 4000)
+        for (a, b) in zip(points.dropFirst(4), points.dropFirst(5)).dropLast() { XCTAssertGreaterThanOrEqual(b.at.x - a.at.x, 3) }
+        XCTAssertEqual(Log.point(SIMD2(0.4123, -0.1184)), "0.412,-0.118")
+        var worst = trail(gap: 0.03)
+        for i in 0..<400 { worst.add(SIMD2(i % 2 == 0 ? -0.5 : -0.999, -0.999), ms: 100_000 + 997 * i) }
+        let logged = "09-29 10:11:07.772 path seized(12) " + worst.line(Log.point)
+        XCTAssertTrue(logged.contains(" 100000:-0.500,-0.999 "), logged)
+        XCTAssertLessThan(logged.count, 600, logged)
+    }
+
     /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one. The
     /// prefixes predate the tiers' names and stay, so a rename keeps what was played.
     func testLevelIdsMatchTheirTier() {

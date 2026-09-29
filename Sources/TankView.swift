@@ -321,6 +321,11 @@ struct LevelView: View {
     @State private var wind = 1.0
     /// The touch it belongs to, what it holds, and the finger's last angle about that.
     @State private var drag: (start: CGPoint, grab: Grab, last: Double)?
+    /// Where the finger has been since it landed, timed from when the drag was taken up, and what it held there, for
+    /// the log's one line when the drag ends.
+    @State private var path: (grab: Grab, down: Date, trail: Trail<SIMD2<Double>>)?
+    /// A two-finger twist's rotation since it began, logged when it ends.
+    @State private var twist: (down: Date, trail: Trail<Double>)?
     /// The finger's latest point in tank units, kept after it lifts so a count left showing stays put.
     @State private var finger: SIMD2<Double>?
     /// The knob, or `Game.tank`, touched last: its open stir's count stays up, faint, after letting go.
@@ -516,6 +521,7 @@ struct LevelView: View {
             guard game.finished else { return }
             // The fine pass can call the win ~0.1 s after the commit: a finger down in that gap would hold its turn frozen
             // over the win, then have the commit refused on lift.
+            endPath(); endTwist()
             drag = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; spun = false
             // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
             // centre among them.
@@ -529,12 +535,14 @@ struct LevelView: View {
         // SwiftUI never calls onEnded for a cancelled drag (lock, Siri, a call), so drop the uncommitted turn here. Only on
         // the way out: the launch's own turn to active would drop a finger the harness holds.
         .onChange(of: phase) {
-            if phase != .active, drag != nil || spun {
+            guard phase != .active else { return }
+            endPath(); endTwist()
+            if drag != nil || spun {
                 Log.write("\(phase) drops drag \(state)"); drag = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; spun = false
             }
         }
         .onAppear { Log.write("level \(game.level.id) opens, par \(game.par) \(game.stack)") }
-        .onDisappear { Log.write("level \(game.level.id) exits \(state)") }
+        .onDisappear { endPath(); endTwist(); Log.write("level \(game.level.id) exits \(state)") }
     }
 
     /// Everything that decides what the tank draws, as the log shows it.
@@ -555,6 +563,7 @@ struct LevelView: View {
         defer { Log.write("open ends\(Task.isCancelled ? ", cancelled" : "") \(state)") }
         let scramble = game.stack
         // A reset can land while a finger holds the rim.
+        endPath(); endTwist()
         shown = 0; liveRod = nil; liveAngle = 0; drag = nil; liveTurn = nil; spun = false
         if !game.level.replay { wind = 0; shown = scramble.count }
         guard await pause(1) else { return }
@@ -854,15 +863,20 @@ struct LevelView: View {
                 let seized = game.level.seized, layout = game.level.layout
                 // Keyed on the start point because a cancelled drag never reaches onEnded; a new touch starts afresh.
                 if drag?.start != v.startLocation {
+                    endPath()
                     drag = nil; liveRod = nil; liveAngle = 0
                     // A twist cancelled without onEnded leaves its turn behind.
-                    if spin == nil { liveTurn = nil; spun = false }
+                    if spin == nil { liveTurn = nil; spun = false; endTwist() }
                     // Where it landed: the first change seen can come later, once a release or a reset's stir settles.
-                    drag = (v.startLocation, Self.grab(layout, seized: seized, at: norm(v.startLocation)), 0)
-                    Log.write("touch \(drag!.grab)")
+                    let landed = norm(v.startLocation)
+                    drag = (v.startLocation, Self.grab(layout, seized: seized, at: landed), 0)
+                    Log.write("touch \(drag!.grab) at \(Log.point(landed))")
+                    path = (drag!.grab, v.time, Trail(gap: 0.03) { simd_distance($0, $1) })
+                    path!.trail.add(landed, ms: 0)
                     // From the current point, so a drag picked up again after a reset's stir does not jump.
                     hold(from: q)
                 }
+                if let down = path?.down { path!.trail.add(q, ms: Self.ms(v.time, since: down)) }
                 finger = q
                 guard let g = drag, let pivot = pivot(g.grab) else { return }
                 let d = q - pivot
@@ -880,13 +894,16 @@ struct LevelView: View {
                     tankTicks += detent.turn(to: turn + da)
                 }
             }
-            .onEnded { _ in
+            .onEnded { v in
                 if shown != nil {
                     // Past 1, so the value changes and cuts short a wind-in still animating towards 1.
                     shown = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; wind = 2
                     Log.write("skip \(state)")
                     return
                 }
+                // The lift can carry movement no change reported.
+                if let down = path?.down { path!.trail.add(norm(v.location), ms: Self.ms(v.time, since: down)) }
+                endPath()
                 guard let g = drag else { return }
                 drag = nil
                 switch g.grab {
@@ -957,7 +974,9 @@ struct LevelView: View {
             .updating($spin) { v, spin, _ in spin = v.rotation.radians }
             .onChanged { v in
                 guard !settling, !game.finished, shown == nil else { return }
+                if !spun { endPath(); twist = (v.time, Trail(gap: 0.05) { abs($0 - $1) }) }
                 spun = true
+                if let down = twist?.down { twist!.trail.add(v.rotation.radians, ms: Self.ms(v.time, since: down)) }
                 if liveTurn == nil {
                     drag?.grab = .rim; liveRod = nil; liveAngle = 0; liveTurn = 0; counted = Game.tank
                     Log.write("spin \(state)")
@@ -968,12 +987,28 @@ struct LevelView: View {
             .onEnded { v in
                 guard spun else { return }
                 spun = false
+                if let down = twist?.down { twist!.trail.add(v.rotation.radians, ms: Self.ms(v.time, since: down)) }
+                endTwist()
                 guard shown == nil, let turn = liveTurn else { return }
                 liveTurn = turn + v.rotation.radians
                 // The end can carry rotation no change reported, and it commits.
                 tankTicks += detent.turn(to: liveTurn!)
                 releaseTank()
             }
+    }
+
+    private static func ms(_ time: Date, since down: Date) -> Int { Int((time.timeIntervalSince(down) * 1000).rounded()) }
+
+    private func endPath() {
+        guard let p = path else { return }
+        Log.write("path \(p.grab) \(p.trail.line(Log.point))")
+        path = nil
+    }
+
+    private func endTwist() {
+        guard let t = twist else { return }
+        Log.write("twist \(t.trail.line { String(format: "%.3f", $0) })")
+        twist = nil
     }
 
     private func releaseTank() {
