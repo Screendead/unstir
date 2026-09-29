@@ -26,7 +26,7 @@ this is analysis. No code has changed for it.
 | Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
 | README | Merged 2026-09-28 (PR #3), with the four suggested images (Jack's pick); still says Nightmare and Nightmare+, so it changes with the rename; see below |
 | Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). Merged 2026-09-28 (PR #3); see below |
-| Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is being rebuilt in Csound with those changes, with a phone switch between it and the sketch. Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
+| Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is built (2026-09-29): Csound sources in `sound-src/`, rendered and measured by `scripts/sounds.sh`; a detuned saw hum in D under every bed; a heal about 8 LU over its bed (the phone-speaker model says 10–12); beds for the menu and each tier, crossfading over 1.5 s between screens and stepping aside while another app plays music; tap, tier-switch, undo and reset sounds. It is committed locally on `sound` with a temporary "glass · sketch · off" switch for comparing on the phone, and waits for Jack's listen before a PR. Open for Jack: whether undo feels late (its body peaks about half a second after the press); whether undoing a heal should step the heal notes back (Claude's recommendation; today it doesn't); in endless, a solve that is also one over par plays the solve (Claude's pick). Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 ### The plan
@@ -57,8 +57,8 @@ from Nightmare to Nightmare+ is easy to miss.
 | Maelstrom (was Nightmare+) design | The seized rod and the turning tank (Jack, 2026-09-28). First slice merged 2026-09-28 (PR #4). Go/no-go shots pass: seams land concentric after a turn, and a finished outer ring reads on hex glass (the hub doesn't, but it never moves or seizes). On the phone (Jack, 2026-09-28): the rim is easy to grab, two fingers always turn the tank, he plans where to park the dead knob, and he likes the glass easing home after the solve. The tank clicks felt featherweight: each tank step now plays a Core Haptics clunk (a hard knock and a 90 ms low rumble), and Jack finds it great. The first step after launch or a return from background may hitch a frame while the engine restarts. Pars must come from a solver of the ending-on-the-last-heal rule: the temporary table used the old model's pars, which counted a final turn home, so Jack finished a move under par |
 | The way in | Jack chose the strip (2026-09-28) from three working mock-ups (strip, dial, window), for its ticked line of the levels left to open the next tier; he loved the window's live tank but it took too much of the screen. Built on `tiers` with the rename and the gate; the swipe was driven by simulated touches, never a finger. The swap freezes 50–107 ms on the simulator: left for the performance pass |
 | Rename | Nightmare is now **whirlpool** and Nightmare+ **maelstrom** in code, harness (`UNSTIR_TIER`), scripts, tests and docs, on `tiers`. Stored level ids stay `N<k>` and `N+<k>`, so progress carries over (Claude first planned new ids, which would have reset it; the review caught that). The new maelstrom set gets fresh ids, so old N+ bests don't land on new levels |
-| Solver and the maelstrom set | Solver being built and verified on branch `solver` (worktree in the scratchpad), then a proposed 27-level table for Jack |
-| The phone | Jack, 2026-09-28: keep working, but don't touch the phone until he says (a playtest is running on it). It has the sound prototype and the temporary seized table |
+| Solver and the maelstrom set | Solver built and verified on branch `solver` (2026-09-29). An independent brute force found a push that holds a disc still and beats plain untwisting by a move, so the optimum now adds a bounded search for such detours: par is the solver's bounded optimum, not a proof. The park rule has two readings (fewest dead knobs over rings with a seam, or every dead knob over a ring without one) and two tie-breaks; Jack's pick is open, and the proposed set is fair under all four. A first proposed table passed every check but its early planning gap came from a tie-break (a lucky guess of direction scores par), its first ten levels all turn counterclockwise, and its seized pairs were always neighbours; a second version is being made against those |
+| The phone | Free again after the first playtest (Jack, 2026-09-28). It has the sound prototype and the temporary seized table. Next install: the touch fixes with round 2's sound, prepared overnight 2026-09-29 without installing (Jack asked for no phone use while he slept) |
 
 **Jack's calls (2026-09-28).**
 - Nightmare+ becomes the seized rod and the turning tank, below. Bookkeeping stays the fallback if the go/no-go fails
@@ -92,7 +92,10 @@ from Nightmare to Nightmare+ is easy to miss.
   **The look** (Jack): the measuring jug on the real rim, filled with the picture's own colours (the only look whose
   single frame read as a level to a viewer who didn't know it), with the tide's outward-spreading colour and vibrancy,
   which Jack loves, grafted on. The tide itself failed on the real rim: even at 1.5x thickness a viewer read the band
-  as a thick bezel, and another took it for the picture shrinking. Film of the graft in progress.
+  as a thick bezel, and another took it for the picture shrinking. Jack approved the graft's film (2026-09-28: "very
+  nice"): each notch arrives as the picture's colour spreading across the rim behind a glint, and a glow off the
+  filled arc grows as the room runs out. Still open, from two cold reads: the spill swells the whole rim instead of
+  pouring over the lip at twelve, the rim goes pastel just after it, and "spilled." is easy to miss.
 - Switching between tiers must be easier to find than today's header toggles, and on-brand. Jack's idea: stir
   between modes. He chose the strip (see the table).
 - Order of work: the go/no-go slice (`turning-tank`), the switcher as mock-ups for Jack to pick, the rename, then the
@@ -108,11 +111,34 @@ from Nightmare to Nightmare+ is easy to miss.
 - "I can't remember how far I've turned it." Claude's recommendation: while dragging, an arc from the start notch
   lights one segment per 30° step, with a signed count placed away from the finger; it stays faint while the move is
   still open, so a re-grab of the same rod carries on the count. It reports only the player's own turns, so it is
-  not a hint. It was within one drag, and Jack likes the fix (2026-09-28). Both fixes go on one branch after `tiers`.
+  not a hint. It was within one drag, and Jack likes the fix (2026-09-28). Both fixes are built on `touch` (2026-09-29): in an
+  overlap the first 8 pt of motion pick the rod, and a late pick jumps the rod at most 10° so it can't commit a step on
+  its own. Near a lens tip on tri, eye and hex a third disc joins in, and motion more than about 15° off a tangent goes
+  to the rod the finger is deepest in; how that feels needs the phone.
 - Whirlpool 22 (pent, marbling) looked solved at moves 19 / par 18 with one 30° step left on the bottom-right rod. The
   win check was right: that step moves its worst point about 0.14 tank radii (about 80 phone pixels), but round ring
   motifs still look like rings after a turn. Pictures built from locally round motifs hide rotation; check this
   when the live pictures are reviewed.
+- Maelstrom's first level (the placeholder with a seized knob on the phone): five minutes without finding that the
+  tank turns. Jack: it needs to be clearer, even just an arrow, since turning the tank back is free. Claude's
+  recommendation, queued: on any level with seized knobs, until the player has turned the tank once (a stored flag),
+  an amber arrow sweeps along the rim with a ghost drag; touching a seized knob plays its thunk, shakes the knob and
+  pulses the rim arrow, since that touch is the moment of confusion; maelstrom 1 gets a one-line note ("One knob has
+  seized. Turn the tank."). It teaches the control, not the move, so it isn't a hint. Built on `touch` (2026-09-29),
+  except the note: no committed maelstrom level has a seized knob yet, so the note, and a rewording of whirlpool 1's
+  "This is the last note.", come with the new set. The arrow sits on black just outside the bezel at twelve, apart from
+  the hint's. A two-finger twist whose first finger lands on a seized knob still thuds and shakes it: SwiftUI gives no
+  touch count, so only the phone can say whether that grates.
+- "Why are some locked and some aren't?" The phone's temporary table seizes knobs on only 17 of the 27 placeholder
+  levels. Jack: every maelstrom level has seized knobs. The new set already does (one or two on each).
+- From the phone's log (every tier open with the developer unlock): in 107 minutes the playtester solved all 81
+  levels and one endless tank, with no hints, 20 of them over par, and no crash. The undo bank was already empty from
+  earlier testing and never refills, so the whole evening was played with resets (87 of them). The
+  hardest were whirlpool 22 (23 resets, about 9 minutes; one step from solved, the playtester left the app and reset on return),
+  maelstrom 22 (17 resets, 54 tank turns), whirlpool 21 and maelstrom 21 (6 over par). Maelstrom 1 took 3 min 35 s,
+  12 touches of the seized knob and 8 resets before the first tank turn. Maelstrom was the placeholder (whirlpool's
+  scrambles with seized knobs), so a third of the levels repeated puzzles just solved. The log can't show
+  losing count in a drag: quick re-grabs of one rod are too common to mean anything.
 
 **Recommended Nightmare+ (chosen 2026-09-28): the seized rod and the turning tank.** N+k is Nightmare k's scramble with one
 or two seized knobs (never the hub). The whole tank turns one rod over (the layout's symmetry: 120°, 90°, 180°, 72°,
