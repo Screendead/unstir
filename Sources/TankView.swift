@@ -331,7 +331,7 @@ struct LevelView: View {
     /// The seized knob touched last, and every such touch: it shakes, the rim pulses and a thud plays.
     @State private var jammed: Int?
     @State private var jams = 0
-    @State private var tick = 0
+    @State private var detent = Detent(step: Tank.step)
     @State private var ticks = 0
     @State private var tankTicks = 0
     @State private var settling = false
@@ -632,7 +632,7 @@ struct LevelView: View {
         // Array.commit's overlap rule, checked without copying the stack or sampling the map every drag frame.
         let commits = liveRod.map { k in
             let s = game.slot(of: k)
-            return Int((liveAngle / Tank.step).rounded()) != 0 && (game.stack.count < Tank.maxStack
+            return Detent.steps(liveAngle, of: Tank.step) != 0 && (game.stack.count < Tank.maxStack
                 || game.stack.last { game.level.layout.overlaps($0.rod, s) }?.rod == s)
         } ?? false
         let step = game.level.layout.tankStep
@@ -652,14 +652,14 @@ struct LevelView: View {
         let stir = game.openStir
         func joined(_ rod: Int) -> Int { stir?.rod == rod ? stir!.steps : 0 }
         let rodCount: (k: Int, steps: Int, live: Bool)? = if let k = probing {
-            (k, joined(game.slot(of: k)) + Int((liveAngle / Tank.step).rounded()), true)
+            (k, joined(game.slot(of: k)) + Detent.steps(liveAngle, of: Tank.step), true)
         } else if let k = counted, rods.indices.contains(k), held == nil, shown == nil, !game.finished {
             (k, joined(game.slot(of: k)), false)
         } else {
             nil
         }
         let tankCount: (steps: Int, live: Bool)? = if let held, shown == nil {
-            (game.tankStir(after: Int((held / step).rounded())), true)
+            (game.tankStir(after: Detent.steps(held, of: step)), true)
         } else if counted == Game.tank, shown == nil, !game.finished {
             (joined(Game.tank), false)
         } else {
@@ -700,7 +700,7 @@ struct LevelView: View {
             }
             if let c = tankCount, c.live || c.steps != 0 {
                 // Inset clear of the bezel's own hairline at the glass's edge.
-                let turns = held.map { Int(($0 / step).rounded()) % game.level.layout.order != 0 } ?? false
+                let turns = held.map { Detent.steps($0, of: step) % game.level.layout.order != 0 } ?? false
                 dial(CGPoint(x: r, y: r), r - 4, from: Double(game.position - joined(Game.tank)) * step, steps: c.steps, step: step)
                     .opacity(c.live ? (turns ? 1 : Self.idle) : Self.lifted)
             }
@@ -865,7 +865,6 @@ struct LevelView: View {
                     // From the current point, so a drag picked up again after a reset's stir does not jump.
                     drag = (v.startLocation, q, Self.grab(layout, seized: seized, from: q, to: q, slop: slop / r), 0)
                     Log.write("touch \(drag!.grab)")
-                    tick = 0
                     hold()
                 } else if case .undecided = drag!.grab {
                     let grab = Self.grab(layout, seized: seized, from: drag!.from, to: q, slop: slop / r)
@@ -888,11 +887,10 @@ struct LevelView: View {
                 let da = simd_length(d) > 0.1 ? atan2(sin(a - g.last), cos(a - g.last)) : 0
                 if g.grab != .rim {
                     liveAngle += da
-                    let t = Int((liveAngle / Tank.step).rounded(.towardZero))
-                    if t != tick { tick = t; ticks += 1 }
+                    ticks += detent.turn(to: liveAngle)
                 } else if let turn = liveTurn {
                     liveTurn = turn + da
-                    tickTank(turn + da)
+                    tankTicks += detent.turn(to: turn + da)
                 }
             }
             .onEnded { _ in
@@ -935,7 +933,11 @@ struct LevelView: View {
         guard let g = drag, let pivot = pivot(g.grab) else { return }
         let d = g.from - pivot
         drag!.last = atan2(d.y, d.x)
-        if case .rod(let k) = g.grab { liveRod = k; counted = k; grabs += 1 } else { liveTurn = 0; counted = Game.tank }
+        if case .rod(let k) = g.grab {
+            liveRod = k; counted = k; grabs += 1; detent = Detent(step: Tank.step)
+        } else {
+            liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
+        }
         if !game.level.sandbox { Best.start(game.level.id) }
     }
 
@@ -1006,28 +1008,24 @@ struct LevelView: View {
                 if liveTurn == nil {
                     drag?.grab = .rim; liveRod = nil; liveAngle = 0; liveTurn = 0; counted = Game.tank
                     Log.write("spin \(state)")
-                    tick = 0
+                    detent = Detent(step: game.level.layout.tankStep)
                 }
-                tickTank(liveTurn! + v.rotation.radians)
+                tankTicks += detent.turn(to: liveTurn! + v.rotation.radians)
             }
             .onEnded { v in
                 guard spun else { return }
                 spun = false
                 guard shown == nil, let turn = liveTurn else { return }
                 liveTurn = turn + v.rotation.radians
+                // The end can carry rotation no change reported, and it commits.
+                tankTicks += detent.turn(to: liveTurn!)
                 releaseTank()
             }
     }
 
-    /// A heavier click than a rod's, once per step of the tank.
-    private func tickTank(_ turn: Double) {
-        let t = Int((turn / game.level.layout.tankStep).rounded(.towardZero))
-        if t != tick { tick = t; tankTicks += 1 }
-    }
-
     private func releaseTank() {
         guard !settling, let turn = liveTurn else { return }
-        let step = game.level.layout.tankStep, steps = Int((turn / step).rounded())
+        let step = game.level.layout.tankStep, steps = Detent.steps(turn, of: step)
         Log.write("release tank angle=\(turn) steps=\(steps)")
         settling = true
         counted = Game.tank
@@ -1041,7 +1039,7 @@ struct LevelView: View {
     }
 
     private func release(_ k: Int) {
-        let steps = Int((liveAngle / Tank.step).rounded())
+        let steps = Detent.steps(liveAngle, of: Tank.step)
         Log.write("release \(k) angle=\(liveAngle) steps=\(steps)")
         settling = true
         counted = k
@@ -1057,10 +1055,28 @@ struct LevelView: View {
     }
 }
 
+/// A turn's clicks: one each time what letting go would commit changes, at every half step, either way. So a rod's tick
+/// and the tank's clunk land with the drag's count, and every step a turn commits has had one.
+struct Detent {
+    let step: Double
+    /// What letting go now would commit.
+    private(set) var steps = 0
+
+    /// The steps letting go of a turn of `angle` commits: the nearest, so a turn past half a step takes the step.
+    static func steps(_ angle: Double, of step: Double) -> Int { Int((angle / step).rounded()) }
+
+    /// Follows the turn to `angle`, returning its clicks: more than one only when one move crosses several half steps.
+    mutating func turn(to angle: Double) -> Int {
+        let now = Self.steps(angle, of: step)
+        defer { steps = now }
+        return abs(now - steps)
+    }
+}
+
 /// The tank's own haptics, on one engine.
 @MainActor enum Knock {
-    /// A step of the tank: a dull knock and a short low rumble dying under it, so it reads as neither a rod's tick nor
-    /// the heal's heavy tap.
+    /// The tank's click (see `Detent`): a dull knock and a short low rumble dying under it, so it reads as neither a
+    /// rod's tick nor the heal's heavy tap.
     case clunk
     /// A seized knob refusing a finger: heavier and duller than the clunk.
     case thud

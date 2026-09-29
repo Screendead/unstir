@@ -136,9 +136,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   turn, and after the flag only the pulse brings the arc back. A drag shows its own count: a dial on the disc's hairline
   (on one just inside the rim, for the tank), with a long mark where its stir began and a short hairline mark per step
   from there, the step just reached brightest, and a signed count off the finger, both following what letting go would
-  commit. While `Game.openStir` is the rod's, they stay faint after lift, until another rod or the tank is touched; they
-  read only the history, never the stack. Wins run the coarse `looksSolved` pass on the main actor and the fine pass off
-  it.
+  commit (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: the rod's tick, the
+  tank's clunk. While `Game.openStir` is the rod's, the dial and count stay faint after lift, until another rod or the
+  tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the main actor
+  and the fine pass off it.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader

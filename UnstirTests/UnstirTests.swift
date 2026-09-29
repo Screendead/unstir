@@ -706,6 +706,54 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// A turn clicks each time what letting go would commit changes, at the half step either way, so every step a drag
+    /// commits has had one click and each step turned back has had one more. The phone's tank turns let go between half
+    /// a step and a whole one committed a step with no clunk.
+    func testATurnClicksOncePerStepItWouldCommit() {
+        for step in [Tank.step] + Layout.allCases.map(\.tankStep) {
+            // Clicks along a drag through each of `ends` in turn, finely enough to cross every half step on its own.
+            func drag(_ ends: [Double]) -> (clicks: Int, commits: Int) {
+                var detent = Detent(step: step), clicks = 0, at = 0.0
+                for end in ends.map({ $0 * step }) {
+                    for a in stride(from: at, through: end, by: (end < at ? -step : step) / 50) {
+                        let was = detent.steps
+                        let c = detent.turn(to: a)
+                        XCTAssertEqual(c, abs(detent.steps - was))
+                        XCTAssertLessThanOrEqual(c, 1)
+                        clicks += c
+                    }
+                    clicks += detent.turn(to: end)
+                    at = end
+                }
+                XCTAssertEqual(detent.steps, Detent.steps(at, of: step))
+                return (clicks, detent.steps)
+            }
+            func check(_ ends: [Double], clicks: Int, commits: Int, line: UInt = #line) {
+                for sign in [1.0, -1.0] {
+                    let d = drag(ends.map { sign * $0 })
+                    XCTAssertEqual(d.clicks, clicks, "step \(step) \(sign * ends[0])", line: line)
+                    XCTAssertEqual(d.commits, Int(sign) * commits, "step \(step) \(sign * ends[0])", line: line)
+                }
+            }
+            check([0.49], clicks: 0, commits: 0)
+            check([0.51], clicks: 1, commits: 1)
+            check([0.99], clicks: 1, commits: 1)
+            check([1.49], clicks: 1, commits: 1)
+            check([1.51], clicks: 2, commits: 2)
+            check([3.7], clicks: 4, commits: 4)
+            check([3.7, 1.2], clicks: 7, commits: 1)
+            check([0.6, 0.4], clicks: 2, commits: 0)
+            check([0.6, 0.4, 0.6], clicks: 3, commits: 1)
+            check([2.6, -1.6], clicks: 8, commits: -2)
+            var detent = Detent(step: step)
+            XCTAssertEqual(detent.turn(to: 2.6 * step), 3)
+            XCTAssertEqual(detent.turn(to: -0.2 * step), 3)
+        }
+        var quad = Detent(step: Layout.quad.tankStep)
+        XCTAssertEqual(quad.turn(to: 1.022), 1)
+        XCTAssertEqual(quad.steps, 1)
+    }
+
     /// A rod picked by motion catches up with the finger by under half a step, either way and across the wrap.
     func testAPickCatchesUpUnderHalfAStep() {
         XCTAssertLessThan(LevelView.catchUp, Tank.step / 2)
