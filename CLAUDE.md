@@ -70,6 +70,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
+  Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives.
   Git ignores `shots/` apart from `index.txt`: show pictures and films in a PR by attaching them to a comment through
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.

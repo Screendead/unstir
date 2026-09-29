@@ -5,7 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 bundle=com.screendead.Unstir
 
-udid=$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
+# UNSTIR_SIM=<udid> picks the simulator; otherwise the first Pro Max, made if there is none.
+udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)}
 if [[ -z "$udid" ]]; then
   type=$(xcrun simctl list devicetypes | grep 'Pro Max' | head -1 | grep -oE 'com\.apple[^)]+')
   runtime=$(xcrun simctl list runtimes available | grep '^iOS' | tail -1 | grep -oE 'com\.apple\S+$')

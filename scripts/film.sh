@@ -5,7 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 bundle=com.screendead.Unstir
 
-udid=$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
+# UNSTIR_SIM=<udid> picks the simulator; otherwise the first Pro Max.
+udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')}
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl bootstatus "$udid" -b >/dev/null
 scripts/build-ios.sh Debug sim
