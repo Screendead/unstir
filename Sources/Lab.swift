@@ -7,6 +7,8 @@ import SwiftUI
 enum Lab: Hashable, Sendable {
     /// Dragging the rim turns the whole tank as one rod, a stir like any other.
     case swirl
+    /// The tank is dark but for this many lights the player drops on it, which float on the fluid.
+    case glow(Int)
 }
 
 /// One row of the lab's list: a new level each time it is picked, so a random one is dealt afresh.
@@ -27,11 +29,57 @@ extension Lab {
             return Level(id: "lab-swirl-random", label: "sw", title: "Swirl, dealt", note: "Drag the rim to swirl the whole tank.",
                          layout: .quadSwirl, scramble: Layout.quadSwirl.scramble(depth: 7, inversions: 1, rng: &rng), lab: .swirl)
         },
+        LabEntry(name: "glow", detail: "lights off: drop 3 lights that float on the stir") {
+            Level(id: "lab-glow", label: "gl", title: "Lights off", note: "Tap light, then the tank, to drop one. They ride the stirs.",
+                  layout: .quad, scramble: .parse("0:+4,2:-4,3:-5,1:-4,2:+6", in: .quad), lab: .glow(3))
+        },
     ]
 
     /// UNSTIR_LAB=name: the entry of that name, for the harness.
     static func level(named name: String) -> Level? {
         entries.first { $0.name == name }?.level()
+    }
+}
+
+extension Layout {
+    /// Where the fluid at `p` on the clean picture sits once `word` has stirred it, bottom first, the last one
+    /// (`live`) turned by a fractional angle.
+    func forward(_ p: SIMD2<Double>, through word: [Twist], scale: Double = 1, live: (rod: Int, angle: Double)? = nil)
+        -> SIMD2<Double> {
+        let q = word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step * scale) }
+        return live.map { Tank.twist(q, rod: rods[$0.rod], angle: $0.angle) } ?? q
+    }
+
+    /// The point of the clean picture that `word` has stirred to `p`.
+    func back(_ p: SIMD2<Double>, through word: [Twist]) -> SIMD2<Double> {
+        word.reversed().reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: -Double($1.steps) * Tank.step) }
+    }
+}
+
+/// Black over the tank but for a soft pool of light round each point.
+struct Darkness: View {
+    let points: [CGPoint]
+    let radius: CGFloat
+
+    var body: some View {
+        ZStack {
+            Color.black
+            ForEach(points.indices, id: \.self) { i in
+                Circle()
+                    .fill(RadialGradient(stops: [.init(color: .white, location: 0), .init(color: .white.opacity(0.85), location: 0.35),
+                                                 .init(color: .white.opacity(0.3), location: 0.7), .init(color: .clear, location: 1)],
+                                         center: .center, startRadius: 0, endRadius: radius))
+                    .frame(width: 2 * radius, height: 2 * radius)
+                    .position(points[i])
+                    .blendMode(.destinationOut)
+            }
+        }
+        .compositingGroup()
+        .overlay {
+            ForEach(points.indices, id: \.self) { i in
+                Circle().fill(Color.lime).frame(width: 5, height: 5).shadow(color: .lime, radius: 4).position(points[i])
+            }
+        }
     }
 }
 

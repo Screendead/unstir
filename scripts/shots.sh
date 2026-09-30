@@ -216,3 +216,7 @@ shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubbur
 # The lab's mockups (hold the menu's title).
 shot lab-swirl "Lab swirl: quad with the whole tank as a fifth rod, 0:+3,4:+2,2:-4,1:+3,4:-3,3:+5." LAB=swirl
 shot lab-swirl-live "Lab swirl held mid-drag from the rim, 1.5 steps clockwise." LAB=swirl LIVE=4:1.5 TOUCH=0.7,-0.7
+shot lab-glow "Lab lights off: quad, three lights dropped (left, top, bottom), the rest of the tank black." \
+  LAB=glow LIGHTS="-0.55,0;0.1,-0.45;0.1,0.6"
+shot lab-glow-live "Lab lights off mid-drag of rod 0 by 2 steps: the lights on its disc ride the turn." \
+  LAB=glow LIGHTS="-0.55,0;0.1,-0.45;0.1,0.6" LIVE=0:2

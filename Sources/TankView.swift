@@ -456,6 +456,10 @@ struct LevelView: View {
     /// The picture has landed and struck.
     @State private var struck = false
     private let brimDemo: Bool
+    /// Lab, lights off: the lights dropped, as points of the clean picture, so they ride every change of the stack.
+    @State private var lights: [SIMD2<Double>]
+    /// Lab, lights off: the next touch on the tank drops a light.
+    @State private var arming = false
     let onExit: () -> Void
     let onNext: (Level) -> Void
 
@@ -513,6 +517,7 @@ struct LevelView: View {
         frozenShake = harness?.shake
         today = harness?.today
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
+        _lights = State(initialValue: (harness?.lights ?? []).map { level.layout.back($0, through: game.stack) })
         self.onExit = onExit
         self.onNext = onNext
     }
@@ -591,6 +596,12 @@ struct LevelView: View {
                         .opacity(!game.level.sandbox && game.bank == 0 ? 0.35 : 1)
                         .overlay(alignment: .topTrailing) { refillBadge }
                     Spacer()
+                    if case .glow(let n) = game.level.lab {
+                        control(arming ? "tap the tank" : lights.count < n ? "light \u{00B7} \(n - lights.count)" : "move light") {
+                            arming.toggle()
+                        }
+                        Spacer()
+                    }
                     control("reset") { if game.reset() { replays += 1 } }
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
@@ -873,6 +884,17 @@ struct LevelView: View {
                     }
             }
             .clipShape(Circle())
+            if case .glow = game.level.lab {
+                let live = liveRod.map { (rod: game.slot(of: $0), angle: liveAngle) }
+                Darkness(points: lights.map { p in
+                    let q = game.level.layout.forward(p, through: stack, scale: min(wind, 1), live: live)
+                    return CGPoint(x: r + q.x * r, y: r + q.y * r)
+                }, radius: 0.32 * r)
+                .clipShape(Circle())
+                .opacity(game.solved ? 0 : 1)
+                .animation(.easeInOut(duration: 1.2), value: game.solved)
+                .allowsHitTesting(false)
+            }
             if let k = liveRod, shown != nil {
                 glowRing(.magenta, 2.5, 6, under: .black.opacity(0.7))
                     .frame(width: 2 * rods[k].z * r, height: 2 * rods[k].z * r)
@@ -1060,6 +1082,14 @@ struct LevelView: View {
                     if spin == nil { liveTurn = nil; spun = false; endTwist() }
                     // Where it landed: the first change seen can come later, once a release or a reset's stir settles.
                     let landed = norm(v.startLocation)
+                    if arming, case .glow(let n) = game.level.lab {
+                        lights.append(layout.back(landed, through: game.stack))
+                        if lights.count > n { lights.removeFirst() }
+                        arming = false
+                        drag = (v.startLocation, .nothing, 0)
+                        Log.write("light at \(Log.point(landed))")
+                        return
+                    }
                     drag = (v.startLocation, Self.grab(layout, seized: seized, at: landed), 0)
                     Log.write("touch \(drag!.grab) at \(Log.point(landed))")
                     path = (drag!.grab, v.time, Trail(gap: 0.03) { simd_distance($0, $1) })

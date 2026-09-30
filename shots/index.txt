@@ -115,3 +115,5 @@ seized-hub-finished.png  Hex twin glass, 14 entries (2:+4,3:-3,5:+5,1:-4,4:+3,6:
 seized-hub-buried.png  The same with 0:+2 buried third from the bottom (2:+4,3:-3,0:+2,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4): the hub's ring is not finished.
 lab-swirl.png  Lab swirl: quad with the whole tank as a fifth rod, 0:+3,4:+2,2:-4,1:+3,4:-3,3:+5.
 lab-swirl-live.png  Lab swirl held mid-drag from the rim, 1.5 steps clockwise.
+lab-glow.png  Lab lights off: quad, three lights dropped (left, top, bottom), the rest of the tank black.
+lab-glow-live.png  Lab lights off mid-drag of rod 0 by 2 steps: the lights on its disc ride the turn.
