@@ -220,3 +220,6 @@ shot lab-glow "Lab lights off: quad, three lights dropped (left, top, bottom), t
   LAB=glow LIGHTS="-0.55,0;0.1,-0.45;0.1,0.6"
 shot lab-glow-live "Lab lights off mid-drag of rod 0 by 2 steps: the lights on its disc ride the turn." \
   LAB=glow LIGHTS="-0.55,0;0.1,-0.45;0.1,0.6" LIVE=0:2
+shot lab-frozen "Lab frozen rod: tri 2:+2,0:-4,1:+5,2:-6 with rod 0's core iced as it opened." LAB=frozen
+shot lab-frozen-turned "Lab frozen rod after 2:+6 comes off: the rest of the tank has moved on, rod 0's core has not." \
+  LAB=frozen TURNED=2:6

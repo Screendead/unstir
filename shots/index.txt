@@ -117,3 +117,5 @@ lab-swirl.png  Lab swirl: quad with the whole tank as a fifth rod, 0:+3,4:+2,2:-
 lab-swirl-live.png  Lab swirl held mid-drag from the rim, 1.5 steps clockwise.
 lab-glow.png  Lab lights off: quad, three lights dropped (left, top, bottom), the rest of the tank black.
 lab-glow-live.png  Lab lights off mid-drag of rod 0 by 2 steps: the lights on its disc ride the turn.
+lab-frozen.png  Lab frozen rod: tri 2:+2,0:-4,1:+5,2:-6 with rod 0's core iced as it opened.
+lab-frozen-turned.png  Lab frozen rod after 2:+6 comes off: the rest of the tank has moved on, rod 0's core has not.

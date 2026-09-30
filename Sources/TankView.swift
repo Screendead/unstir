@@ -884,6 +884,19 @@ struct LevelView: View {
                     }
             }
             .clipShape(Circle())
+            if case .frozen(let k) = game.level.lab {
+                let ice = Tank.plateau * rods[k].z * r
+                ZStack {
+                    PictureLayer(picture: game.level.picture, side: side)
+                        .modifier(Unstirred(stack: game.level.scramble, layout: game.level.layout, liveRod: nil, liveAngle: 0,
+                                            side: side, fillEntries: game.level.picture.fillEntries))
+                        .mask(Circle().frame(width: 2 * ice, height: 2 * ice).position(at(k)))
+                    Frost(radius: ice).position(at(k))
+                }
+                .opacity(game.solved ? 0 : 1)
+                .animation(.easeInOut(duration: 1.2), value: game.solved)
+                .allowsHitTesting(false)
+            }
             if case .glow = game.level.lab {
                 let live = liveRod.map { (rod: game.slot(of: $0), angle: liveAngle) }
                 Darkness(points: lights.map { p in

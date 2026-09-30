@@ -9,6 +9,8 @@ enum Lab: Hashable, Sendable {
     case swirl
     /// The tank is dark but for this many lights the player drops on it, which float on the fluid.
     case glow(Int)
+    /// This rod's rigid core is iced: it keeps showing the tank as it opened.
+    case frozen(Int)
 }
 
 /// One row of the lab's list: a new level each time it is picked, so a random one is dealt afresh.
@@ -32,6 +34,10 @@ extension Lab {
         LabEntry(name: "glow", detail: "lights off: drop 3 lights that float on the stir") {
             Level(id: "lab-glow", label: "gl", title: "Lights off", note: "Tap light, then the tank, to drop one. They ride the stirs.",
                   layout: .quad, scramble: .parse("0:+4,2:-4,3:-5,1:-4,2:+6", in: .quad), lab: .glow(3))
+        },
+        LabEntry(name: "frozen", detail: "one rod's core is iced: it shows the tank as it opened") {
+            Level(id: "lab-frozen", label: "fr", title: "Frozen rod", note: "The top rod's core is iced. Read it from the rest.",
+                  layout: .tri, scramble: .parse("2:+2,0:-4,1:+5,2:-6", in: .tri), lab: .frozen(0))
         },
     ]
 
@@ -80,6 +86,20 @@ struct Darkness: View {
                 Circle().fill(Color.lime).frame(width: 5, height: 5).shadow(color: .lime, radius: 4).position(points[i])
             }
         }
+    }
+}
+
+/// A frozen core's edge: a pale rim with a faint frost creeping in from it.
+struct Frost: View {
+    let radius: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle().fill(RadialGradient(colors: [.clear, Color(0xCFEFFF).opacity(0.22)], center: .center,
+                                         startRadius: 0.7 * radius, endRadius: radius))
+            Circle().stroke(Color(0xCFEFFF).opacity(0.6), style: StrokeStyle(lineWidth: 0.75, dash: [5, 2, 1, 2]))
+        }
+        .frame(width: 2 * radius, height: 2 * radius)
     }
 }
 
