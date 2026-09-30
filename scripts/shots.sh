@@ -227,3 +227,5 @@ shot lab-rush "Lab rush, medium: a tank from endless's generator (tanks 6-9), th
 shot lab-rush-over "Lab rush, time up: the count and the best over the tank." LAB=rush-easy RUSHLEFT=0.5
 shot lab-linked "Lab linked: hex 1:+3,4:+3,2:-2,3:-2,0:+3,6:+3 (par 3), knobs 6 and 0 linked by a dashed line." LAB=linked LINKS=6:0
 shot lab-linked-live "Lab linked: knob 6 held 1.5 steps back, its partner the hub turning with it." LAB=linked LINKS=6:0 LIVE=6:-1.5
+shot lab-zoom "Lab zoom rod: tri 0:+3,1:-4,2:+5,0:-2, rod 0 (top) zooming instead of turning." LAB=zoom
+shot lab-zoom-clean "Lab zoom rod on a clean tank, rod 0 held 3 steps in (x1.73 in its core); an empty stack reads as solved, so the card shows." LAB=zoom STACK="" LIVE=0:3

@@ -4,6 +4,14 @@
 #include <SwiftUI/SwiftUI_Metal.h>
 using namespace metal;
 
+// Lab: a zoom rod's flow at radius u for time t, Tank.zoomFlow's copy.
+static float zoomFlow(float u, float t, float a) {
+    float k = log(a * a / (1.0 - a * a));
+    float f = u <= a ? log(u / a) : (1.0 - a * a) / 2.0 * (log(u * u / (1.0 - u * u)) - k);
+    float g = f + t;
+    return g <= 0.0 ? a * exp(g) : rsqrt(1.0 + exp(-(k + 2.0 * g / (1.0 - a * a))));
+}
+
 // twists: n entries of (rod centre x, y, disc radius, angle) in tank-normalized units, bottom of the stack first.
 // Tank.profile / Tank.twist in Twist.swift are the Swift copy the tests check; the tests do not reach this shader.
 // turn: the glass's clockwise turn about the centre. The stack names the glass's own rods, so the point turns back
@@ -23,9 +31,15 @@ using namespace metal;
         for (int i = min(int(n), count / 4) - 1; i >= 0; i--) {
             float2 c = float2(twists[4 * i], twists[4 * i + 1]);
             float2 d = q - c;
-            float s = length(d) / twists[4 * i + 2];
+            float rr = twists[4 * i + 2];
+            float s = length(d) / abs(rr);
             // Outside the rod's disc the map is exactly the identity.
             if (s >= 1.0) continue;
+            // Lab: a negative radius zooms by 1.2 a step (30 degrees of angle) instead of turning.
+            if (rr < 0.0) {
+                if (s > 1e-6) q = c + d * (zoomFlow(s, -twists[4 * i + 3] / (M_PI_F / 6.0) * log(1.2), plateau) / s);
+                continue;
+            }
             float a = -twists[4 * i + 3] * (1.0 - smoothstep(plateau, 1.0, s));
             float cs = cos(a), sn = sin(a);
             q = c + float2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);

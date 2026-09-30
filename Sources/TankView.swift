@@ -1475,7 +1475,8 @@ struct Unstirred: ViewModifier, Animatable {
         floats.reserveCapacity(4 * (stack.count + 1))
         func add(_ rod: Int, _ angle: Double) {
             floats.append(Float(rods[rod].x)); floats.append(Float(rods[rod].y))
-            floats.append(Float(rods[rod].z)); floats.append(Float(angle))
+            // Lab: a negative radius marks a rod that zooms.
+            floats.append(Float(layout.zooms.contains(rod) ? -rods[rod].z : rods[rod].z)); floats.append(Float(angle))
         }
         for t in stack { add(t.rod, Double(t.steps) * Tank.step * min(wind, 1)) }
         if let liveRod { add(liveRod, liveAngle) }

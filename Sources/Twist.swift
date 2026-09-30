@@ -38,6 +38,29 @@ enum Tank {
         return c + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a))
     }
 
+    /// Lab: a zoom rod's growth per step, as a log.
+    static let zoomRate = log(1.2)
+
+    /// Lab: a zoom rod's map, the flow of a radial field for `steps` steps: in the core (out to `plateau`) it scales by
+    /// 1.2 a step, and towards the rim it slows to nothing, so every stir is a bijection of the disc and two stirs make
+    /// one of their summed steps, as merges need. Positive steps push the fluid outward, magnifying the middle. The
+    /// Metal shader carries the same function.
+    static func zoom(_ p: SIMD2<Double>, rod: SIMD3<Double>, steps: Double) -> SIMD2<Double> {
+        let c = SIMD2(rod.x, rod.y), d = p - c
+        let u = simd_length(d) / rod.z
+        guard u < 1, u > 1e-12 else { return p }
+        return c + d * (zoomFlow(u, steps * zoomRate) / u)
+    }
+
+    /// The field's flow at radius u (disc units) for time t: F(u) + t, mapped back. F is ln(u / a) in the core and
+    /// (1 - a^2) / 2 * logit-like beyond it, where the field is u (1 - u^2) / (1 - a^2).
+    static func zoomFlow(_ u: Double, _ t: Double) -> Double {
+        let a = plateau, k = log(a * a / (1 - a * a))
+        let f = u <= a ? log(u / a) : (1 - a * a) / 2 * (log(u * u / (1 - u * u)) - k)
+        let g = f + t
+        return g <= 0 ? a * exp(g) : 1 / sqrt(1 + exp(-(k + 2 * g / (1 - a * a))))
+    }
+
     /// Centres of an n-by-n grid of cells across the tank, those inside it.
     static func grid(_ n: Int) -> some Sequence<SIMD2<Double>> {
         let cell = 2 / Double(n)
@@ -62,6 +85,16 @@ enum Layout: String, CaseIterable {
     case tri, quad, eye, pent, hex
     /// Lab: quad with a swirl, a rod the size of the tank.
     case quadSwirl
+    /// Lab: tri whose rod 0 zooms instead of turning.
+    case triZoom
+
+    /// Lab: the rods that zoom instead of turning.
+    var zooms: Set<Int> { self == .triZoom ? [0] : [] }
+
+    /// Where a stir of `steps` (a fraction mid-drag) on `rod` carries the fluid at p.
+    func stir(_ p: SIMD2<Double>, rod: Int, steps: Double) -> SIMD2<Double> {
+        zooms.contains(rod) ? Tank.zoom(p, rod: rods[rod], steps: steps) : Tank.twist(p, rod: rods[rod], angle: steps * Tank.step)
+    }
 
     /// The lab's layouts are left out: they break the rules the real ones keep.
     static var allCases: [Layout] { [.tri, .quad, .eye, .pent, .hex] }
@@ -86,6 +119,7 @@ enum Layout: String, CaseIterable {
             .pent: ring(5, 0.56, 0.44),
             .hex: [SIMD3(0, 0, 0.44)] + ring(6, 0.56, 0.44),
             .quadSwirl: ring(4, 0.5, 0.48, from: -45) + [SIMD3(0, 0, 1)],
+            .triZoom: ring(3, 0.42, 0.58),
         ]
     }()
 
@@ -93,7 +127,7 @@ enum Layout: String, CaseIterable {
     /// every rod's fluid down on a rod of the same size.
     var order: Int {
         switch self {
-        case .tri: 3
+        case .tri, .triZoom: 3
         case .quad, .quadSwirl: 4
         case .eye: 2
         case .pent: 5
@@ -105,7 +139,7 @@ enum Layout: String, CaseIterable {
     /// After one step of the tank clockwise, knob k sits over the fluid that rod `behind[k]` stirs.
     private var behind: [Int] {
         switch self {
-        case .tri: [2, 0, 1]
+        case .tri, .triZoom: [2, 0, 1]
         case .quad: [3, 0, 1, 2]
         case .eye: [1, 0, 3, 2]
         case .pent: [4, 0, 1, 2, 3]
@@ -150,9 +184,11 @@ enum Layout: String, CaseIterable {
 
     /// Whether words a and b, each applied bottom first, send every point within `tolerance` of each other.
     func same(_ a: [Twist], _ b: [Twist], at points: some Sequence<SIMD2<Double>>, within tolerance: Double) -> Bool {
-        let rods = self.rods
+        let rods = self.rods, zooms = self.zooms
         func map(_ word: [Twist], _ p: SIMD2<Double>) -> SIMD2<Double> {
-            word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
+            // The plain twist inline where nothing zooms: this runs on every sample of every merge.
+            zooms.isEmpty ? word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
+                : word.reduce(p) { stir($0, rod: $1.rod, steps: Double($1.steps)) }
         }
         return points.allSatisfy { simd_distance(map(a, $0), map(b, $0)) <= tolerance }
     }

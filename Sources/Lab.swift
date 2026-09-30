@@ -15,6 +15,8 @@ enum Lab: Hashable, Sendable {
     case rush(Rush)
     /// Two knobs can be linked, so a turn of either turns both, as one move.
     case linked
+    /// One rod zooms instead of turning.
+    case zoom
 }
 
 struct Rush: Hashable, Sendable {
@@ -118,6 +120,10 @@ extension Lab {
             Level(id: "lab-linked", label: "ln", title: "Linked", note: "Tap link, then two knobs. The one you turn goes first.",
                   layout: .hex, scramble: .parse("1:+3,4:+3,2:-2,3:-2,0:+3,6:+3", in: .hex), fixedPar: 3, lab: .linked)
         },
+        LabEntry(name: "zoom", detail: "the top rod zooms: clockwise in, anticlockwise out") {
+            Level(id: "lab-zoom", label: "zm", title: "Zoom rod", note: "The top rod zooms: clockwise in, anticlockwise out.",
+                  layout: .triZoom, scramble: .parse("0:+3,1:-4,2:+5,0:-2", in: .triZoom), lab: .zoom)
+        },
     ] + (0..<3).map { d in
         LabEntry(name: "rush-\(Rush.names[d])", detail: "5 minutes, as many \(Rush.names[d]) tanks as you can, no undo",
                  best: { "best \(Rush.best(d))" }) { Rush.start(d) }
@@ -134,13 +140,13 @@ extension Layout {
     /// (`live`) turned by a fractional angle.
     func forward(_ p: SIMD2<Double>, through word: [Twist], scale: Double = 1, live: (rod: Int, angle: Double)? = nil)
         -> SIMD2<Double> {
-        let q = word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step * scale) }
-        return live.map { Tank.twist(q, rod: rods[$0.rod], angle: $0.angle) } ?? q
+        let q = word.reduce(p) { stir($0, rod: $1.rod, steps: Double($1.steps) * scale) }
+        return live.map { stir(q, rod: $0.rod, steps: $0.angle / Tank.step) } ?? q
     }
 
     /// The point of the clean picture that `word` has stirred to `p`.
     func back(_ p: SIMD2<Double>, through word: [Twist]) -> SIMD2<Double> {
-        word.reversed().reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: -Double($1.steps) * Tank.step) }
+        word.reversed().reduce(p) { stir($0, rod: $1.rod, steps: -Double($1.steps)) }
     }
 }
 
