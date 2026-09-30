@@ -97,7 +97,37 @@ final class Game {
     private var open = false
     /// The newest stir while the next turn of its rod, or of the tank, would join it.
     var openStir: Twist? { open ? history.last : nil }
-    var moves: Int { history.count }
+    /// Lab, linked rods: the indices of history's entries that a linked turn's partner made, each one move with the entry
+    /// before it.
+    private var linkedAt: Set<Int> = []
+    var moves: Int { history.count - linkedAt.count }
+    /// Lab, linked rods: each knob's partner, both ways round.
+    private(set) var links: [Int: Int] = [:]
+
+    func link(_ a: Int, _ b: Int) {
+        sever(a); sever(b)
+        links[a] = b; links[b] = a
+        Log.write("link \(a) \(b)")
+    }
+
+    func sever(_ a: Int) {
+        guard let b = links[a] else { return }
+        links[a] = nil; links[b] = nil
+        Log.write("sever \(a) \(b)")
+    }
+
+    /// Lab, linked rods: turns knob `rod`, then its partner, by the same steps, as one move.
+    func commitLinked(rod: Int, partner: Int, steps: Int) {
+        guard !finished else { return }
+        open = false
+        let before = history.count
+        commit(rod: rod, steps: steps)
+        open = false
+        guard history.count == before + 1 else { return }
+        commit(rod: partner, steps: steps)
+        open = false
+        if history.count == before + 2 { linkedAt.insert(before + 1) }
+    }
     /// The tank's steps clockwise of home, unwrapped, so an undo swings the glass by exactly the stir it takes off.
     var position: Int { history.reduce(0) { $1.rod == Game.tank ? $0 + $1.steps : $0 } }
     /// Every commit and undo, for the commit flash: a joined turn leaves `moves` alone.
@@ -252,6 +282,9 @@ final class Game {
             lastCommit = (knob(over: last.rod), .reduced)
             turns += 1
         }
+        if linkedAt.remove(history.count) != nil, let first = history.popLast() {
+            entries.commit(Entry(twist: Twist(rod: first.rod, steps: -first.steps), pushed: true), in: level.layout)
+        }
         open = false
         if !level.sandbox {
             undos += 1
@@ -268,6 +301,7 @@ final class Game {
         guard !checking, level.run == nil else { return false }
         entries = level.scramble.map { Entry(twist: $0, pushed: false) }
         history = []
+        linkedAt = []
         open = false
         resets += 1
         Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
@@ -462,6 +496,9 @@ struct LevelView: View {
     @State private var arming = false
     /// Lab, rush: the clock has run out.
     @State private var timeUp = false
+    /// Lab, linked rods: the link button is armed, and the first knob tapped since, if any.
+    @State private var linking = false
+    @State private var linkFirst: Int?
     private var rush: Rush? { if case .rush(let r) = game.level.lab { r } else { nil } }
     let onExit: () -> Void
     let onNext: (Level) -> Void
@@ -469,6 +506,7 @@ struct LevelView: View {
     init(level: Level, harness: Harness?, onExit: @escaping () -> Void, onNext: @escaping (Level) -> Void) {
         let game = Game(level: level, tankTurned: harness?.tankTurned, bank: harness?.bank)
         game.turnTank(harness?.tank ?? 0)
+        for (a, b) in harness?.links ?? [] { game.link(a, b) }
         if let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
             // Solved through the real commit path; "result" first wastes two stirs, so taking them back costs moves.
             if h.screen == "result", let top = game.stack.last {
@@ -601,6 +639,12 @@ struct LevelView: View {
                         .opacity(!game.level.sandbox && game.bank == 0 ? 0.35 : 1)
                         .overlay(alignment: .topTrailing) { refillBadge }
                     Spacer()
+                    if game.level.lab == .linked {
+                        control(!linking ? "link" : linkFirst == nil ? "tap a knob" : "tap its partner") {
+                            linking.toggle(); linkFirst = nil
+                        }
+                        Spacer()
+                    }
                     if case .glow(let n) = game.level.lab {
                         control(arming ? "tap the tank" : lights.count < n ? "light \u{00B7} \(n - lights.count)" : "move light") {
                             arming.toggle()
@@ -854,7 +898,9 @@ struct LevelView: View {
         let held = liveTurn.map { $0 + (spin ?? 0) }
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
-        let unstirred = Unstirred(stack: stack, layout: game.level.layout, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
+        let partner = liveRod.flatMap { game.links[$0] }
+        let unstirred = Unstirred(stack: stack, layout: game.level.layout, liveRod: liveRod.map(game.slot(of:)),
+                                  linked: partner.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
@@ -964,6 +1010,16 @@ struct LevelView: View {
                 }
                 .position(at(fk))
             Bezel(r: r)
+            if game.level.lab == .linked {
+                Path { p in
+                    for (a, b) in game.links where a < b { p.move(to: at(a)); p.addLine(to: at(b)) }
+                }
+                .stroke(Color.neonCyan.opacity(0.8), style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                .allowsHitTesting(false)
+                if let a = linkFirst {
+                    Circle().stroke(Color.amber, lineWidth: 2).frame(width: core + 14, height: core + 14).position(at(a))
+                }
+            }
             // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
             // animator of its own that misses the strike when the colours land after it.
             ZStack {
@@ -996,7 +1052,7 @@ struct LevelView: View {
                 // On a device pixel, so the knob's ticks can be.
                 let p = at(k)
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
-                    RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
+                    RodView(angle: turned(k) + (probing == k || (probing != nil && partner == k) ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
                             size: core, seized: game.level.seized.contains(k), grabbed: probing == k)
                 } keyframes: { _ in Self.jolt }
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
@@ -1120,6 +1176,22 @@ struct LevelView: View {
                     if spin == nil { liveTurn = nil; spun = false; endTwist() }
                     // Where it landed: the first change seen can come later, once a release or a reset's stir settles.
                     let landed = norm(v.startLocation)
+                    if linking {
+                        if case .rod(let k) = Self.grab(layout, seized: seized, at: landed) {
+                            if let a = linkFirst {
+                                if a != k { game.link(a, k) }
+                                linking = false; linkFirst = nil
+                            } else if game.links[k] != nil {
+                                game.sever(k); linking = false
+                            } else {
+                                linkFirst = k
+                            }
+                        } else {
+                            linking = false; linkFirst = nil
+                        }
+                        drag = (v.startLocation, .nothing, 0)
+                        return
+                    }
                     if arming, case .glow(let n) = game.level.lab {
                         lights.append(layout.back(landed, through: game.stack))
                         if lights.count > n { lights.removeFirst() }
@@ -1300,7 +1372,7 @@ struct LevelView: View {
             liveAngle = 0
             settling = false
             guard steps != 0 else { return }
-            game.commit(rod: k, steps: steps)
+            if let p = game.links[k] { game.commitLinked(rod: k, partner: p, steps: steps) } else { game.commit(rod: k, steps: steps) }
         }
     }
 }
@@ -1377,6 +1449,8 @@ struct Unstirred: ViewModifier, Animatable {
     var stack: [Twist]
     var layout: Layout
     var liveRod: Int?
+    /// Lab, linked rods: the held rod's partner, turned with it, after it.
+    var linked: Int? = nil
     var liveAngle: Double
     var wind = 1.0
     var side: CGFloat
@@ -1405,13 +1479,14 @@ struct Unstirred: ViewModifier, Animatable {
         }
         for t in stack { add(t.rod, Double(t.steps) * Tank.step * min(wind, 1)) }
         if let liveRod { add(liveRod, liveAngle) }
+        if liveRod != nil, let linked { add(linked, liveAngle) }
         let n = floats.count / 4
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
         // A live picture keeps four taps only to `Tank.fourTaps` entries less its fill: the same budget as without it.
         // Counted in committed entries, so a touch never changes the taps; the drag rides one over, within the 31 the
         // shader's comment measured.
-        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod == nil ? 0 : 1)
+        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod == nil ? 0 : 1) + (liveRod == nil || linked == nil ? 0 : 1)
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
                                  .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),

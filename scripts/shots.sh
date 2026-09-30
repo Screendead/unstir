@@ -225,3 +225,5 @@ shot lab-frozen-turned "Lab frozen rod after 2:+6 comes off: the rest of the tan
   LAB=frozen TURNED=2:6
 shot lab-rush "Lab rush, medium: a tank from endless's generator (tanks 6-9), the clock and the count in the header, no undo." LAB=rush-medium
 shot lab-rush-over "Lab rush, time up: the count and the best over the tank." LAB=rush-easy RUSHLEFT=0.5
+shot lab-linked "Lab linked: hex 1:+3,4:+3,2:-2,3:-2,0:+3,6:+3 (par 3), knobs 6 and 0 linked by a dashed line." LAB=linked LINKS=6:0
+shot lab-linked-live "Lab linked: knob 6 held 1.5 steps back, its partner the hub turning with it." LAB=linked LINKS=6:0 LIVE=6:-1.5

@@ -63,6 +63,8 @@ struct Harness {
     let tierSpin: (spin: Double, fade: Double)?
     /// UNSTIR_LIGHTS=x,y;x,y: lab lights dropped at those points of the tank as it opens.
     let lights: [SIMD2<Double>]
+    /// UNSTIR_LINKS=a:b,c:d: lab knobs linked as the tank opens.
+    let links: [(Int, Int)]
 
     init(_ env: [String: String]) {
         // UNSTIR_LEVEL counts in UNSTIR_TIER too.
@@ -145,6 +147,10 @@ struct Harness {
         still = harnessed && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
+        links = (env["UNSTIR_LINKS"]?.split(separator: ",") ?? []).compactMap { p in
+            let ab = p.split(separator: ":").compactMap { Int($0) }
+            return ab.count == 2 ? (ab[0], ab[1]) : nil
+        }
         lights = (env["UNSTIR_LIGHTS"]?.split(separator: ";") ?? []).compactMap { p in
             let xy = p.split(separator: ",").compactMap { Double($0) }
             return xy.count == 2 ? SIMD2(xy[0], xy[1]) : nil

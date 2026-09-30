@@ -13,6 +13,8 @@ enum Lab: Hashable, Sendable {
     case frozen(Int)
     /// Five minutes to solve as many tanks as possible, dealt one after another.
     case rush(Rush)
+    /// Two knobs can be linked, so a turn of either turns both, as one move.
+    case linked
 }
 
 struct Rush: Hashable, Sendable {
@@ -109,6 +111,12 @@ extension Lab {
         LabEntry(name: "frozen", detail: "one rod's core is iced: it shows the tank as it opened") {
             Level(id: "lab-frozen", label: "fr", title: "Frozen rod", note: "The top rod's core is iced. Read it from the rest.",
                   layout: .tri, scramble: .parse("2:+2,0:-4,1:+5,2:-6", in: .tri), lab: .frozen(0))
+        },
+        LabEntry(name: "linked", detail: "link two knobs: a turn of one turns both, as one move") {
+            // Three linked moves on six different rods: (1,4) +3, (2,3) -2, (0,6) +3. A lone turn changes one entry, so
+            // alone it takes six; par needs the right pairs, each grabbed by the rod whose entry is on top.
+            Level(id: "lab-linked", label: "ln", title: "Linked", note: "Tap link, then two knobs. The one you turn goes first.",
+                  layout: .hex, scramble: .parse("1:+3,4:+3,2:-2,3:-2,0:+3,6:+3", in: .hex), fixedPar: 3, lab: .linked)
         },
     ] + (0..<3).map { d in
         LabEntry(name: "rush-\(Rush.names[d])", detail: "5 minutes, as many \(Rush.names[d]) tanks as you can, no undo",
