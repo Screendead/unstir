@@ -91,6 +91,8 @@ struct Level: Hashable, Sendable {
     /// Nil is one move per entry. A level with seized knobs also counts its turns of the tank.
     var fixedPar: Int?
     var par: Int { fixedPar ?? scramble.count }
+    /// A lab mockup's mode: nothing it does is stored.
+    var lab: Lab?
 
     var sandbox: Bool { id == "sandbox" }
 

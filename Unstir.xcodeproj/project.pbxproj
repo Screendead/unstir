@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7898E0AEAFE90492DC3EB64C /* Neurons.metal */; };
+		12976FCE216D3D3258308DD7 /* Lab.swift in Sources */ = {isa = PBXBuildFile; fileRef = E47F487E6AE162A63630EEB1 /* Lab.swift */; };
 		1A5F105A934D627FC90E16AE /* SolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE69789D7FB741D6D04AA1A /* SolverTests.swift */; };
 		21DF6C200CBDE16E8AD4BA92 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A75F3E52CC7C2EE27C7DFE /* Log.swift */; };
 		3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965EC2AB5B15FD9B3CA462DE /* Twist.swift */; };
@@ -61,6 +62,7 @@
 		D1F91870B1E87E24EFC084E0 /* Glass.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Glass.metal; sourceTree = "<group>"; };
 		D322AA44C06018F3A665792F /* Brim.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Brim.metal; sourceTree = "<group>"; };
 		E302013539F573E3F8C8FBC5 /* Chainmail.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Chainmail.metal; sourceTree = "<group>"; };
+		E47F487E6AE162A63630EEB1 /* Lab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lab.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -101,6 +103,7 @@
 				27E5962A6708954A5E564099 /* Coral.metal */,
 				D1F91870B1E87E24EFC084E0 /* Glass.metal */,
 				B3380A991210C9195237AA14 /* Info.plist */,
+				E47F487E6AE162A63630EEB1 /* Lab.swift */,
 				BD430ED66CD5CE54E0F67F72 /* Levels.swift */,
 				944137441C4619E684D8CC15 /* LivePictures.swift */,
 				58A75F3E52CC7C2EE27C7DFE /* Log.swift */,
@@ -203,6 +206,7 @@
 				C3596BB291D30EF520836782 /* Chainmail.metal in Sources */,
 				F1D5DFB747CEEE7F2DC62166 /* Coral.metal in Sources */,
 				BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */,
+				12976FCE216D3D3258308DD7 /* Lab.swift in Sources */,
 				98526A3AA7420D378D76C241 /* Levels.swift in Sources */,
 				5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */,
 				21DF6C200CBDE16E8AD4BA92 /* Log.swift in Sources */,

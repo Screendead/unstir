@@ -144,20 +144,22 @@ final class Game {
         brim = level.run?.brim ?? 0
         firstTry = level.run != nil || !Best.started(level.id)
         self.tankTurned = tankTurned ?? Best.tankTurned
-        storesTankTurned = tankTurned == nil
+        storesTankTurned = tankTurned == nil && level.lab == nil
         if let bank {
             self.bank = bank.undos
             refillDay = bank.refilled
+        } else if level.lab != nil {
+            self.bank = 10
         } else {
             self.bank = Best.undos
             refillDay = Best.refilled
             anchor = Best.anchor
         }
-        storesBank = bank == nil
+        storesBank = bank == nil && level.lab == nil
     }
 
-    /// Practice saves nothing.
-    var counts: Bool { firstTry || !level.id.hasPrefix("daily-") }
+    /// Practice saves nothing, and nor does the lab.
+    var counts: Bool { level.lab == nil && (firstTry || !level.id.hasPrefix("daily-")) }
 
     /// The sandbox starts on the clean picture, so it is never solved, which keeps it from finishing or saving.
     var solved: Bool { stack.isEmpty && !level.sandbox }
@@ -277,7 +279,7 @@ final class Game {
     /// The day's refill of the bank (`Best.refill`), as the level opens on `today`. The sandbox and endless spend no
     /// undos, so they take no refill.
     func refill(today: String) {
-        guard !level.sandbox, level.run == nil else { return }
+        guard !level.sandbox, level.run == nil, level.lab == nil else { return }
         let added = Best.refill(&bank, last: &refillDay, today: today)
         if storesBank {
             Best.undos = bank
@@ -291,7 +293,7 @@ final class Game {
     /// The day's refill as the level opens with the clocks read as given: the day is `Best.trustedNow`'s, in `zone`.
     func refill(wall: Date = .now, uptime: TimeInterval = Best.uptime(), boot: String? = Best.bootSession,
                 zone: TimeZone = .current) {
-        guard !level.sandbox, level.run == nil else { return }
+        guard !level.sandbox, level.run == nil, level.lab == nil else { return }
         let (now, ahead) = Best.trustedNow(wall: wall, uptime: uptime, boot: boot, anchor: &anchor)
         if storesBank { Best.anchor = anchor }
         let today = Best.day(now, in: zone)
@@ -565,7 +567,7 @@ struct LevelView: View {
                     }
                 // The play controls fade rather than leave, and the result is an overlay, so the solved tank stays
                 // exactly where it was played.
-                Text(shown == nil ? game.counts ? game.level.note : "Practice: only the first try counts."
+                Text(shown == nil ? game.counts || game.level.lab != nil ? game.level.note : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip")
                     .font(.mono(12)).opacity(showResult ? 0 : 0.55).multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
@@ -1126,7 +1128,7 @@ struct LevelView: View {
         } else {
             liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
         }
-        if !game.level.sandbox { Best.start(game.level.id) }
+        if !game.level.sandbox && game.level.lab == nil { Best.start(game.level.id) }
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.

@@ -102,6 +102,7 @@ struct MenuView: View {
     /// The tier's list in the scroll view's space.
     @State private var list = CGRect.zero
     @Namespace private var strip
+    @State private var lab = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
@@ -130,6 +131,7 @@ struct MenuView: View {
         let modes = Best.unlocked || Best.load(Level.plughole[22].id) != nil
         VStack(alignment: .leading, spacing: 0) {
             title.padding(.horizontal, 20).padding(.top, 28)
+                .onLongPressGesture(minimumDuration: 0.8) { lab = true }
             tiers.padding(.top, 6)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -169,6 +171,10 @@ struct MenuView: View {
             }
         }
         .task { if demo { await tour() } }
+        .sheet(isPresented: $lab) {
+            LabList { level in lab = false; pick(level) }
+                .presentationBackground(Color.black)
+        }
     }
 
     /// While it turns, the list is drawn again, cut to the part on screen, over the scroll view, and that is what
