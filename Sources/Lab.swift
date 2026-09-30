@@ -11,12 +11,83 @@ enum Lab: Hashable, Sendable {
     case glow(Int)
     /// This rod's rigid core is iced: it keeps showing the tank as it opened.
     case frozen(Int)
+    /// Five minutes to solve as many tanks as possible, dealt one after another.
+    case rush(Rush)
+}
+
+struct Rush: Hashable, Sendable {
+    /// 0 easy, 1 medium, 2 hard.
+    var difficulty: Int
+    var deadline: Date
+    var solved = 0
+
+    static let names = ["easy", "medium", "hard"]
+    static let length: TimeInterval = 5 * 60
+
+    /// Most tanks solved in one rush at this difficulty, on this phone.
+    static func best(_ difficulty: Int) -> Int { UserDefaults.standard.integer(forKey: "lab.rush.best.\(difficulty)") }
+    static func record(_ difficulty: Int, _ solved: Int) {
+        if solved > best(difficulty) { UserDefaults.standard.set(solved, forKey: "lab.rush.best.\(difficulty)") }
+    }
+
+    /// A tank from endless's generator: easy deals tanks 0-3 (5-8 stirs), medium 6-9 (12-16), hard 12-15 (20-23).
+    var level: Level {
+        let tank = [0, 6, 12][difficulty] + Int.random(in: 0...3)
+        var level = Level.endless(Run(seed: .random(in: .min ... .max), tank: tank))
+        level.run = nil
+        level.id = "lab-rush"
+        level.label = "r\(solved + 1)"
+        level.title = "Rush, \(Rush.names[difficulty])"
+        level.note = "No undo. Solve, and the next tank comes."
+        level.lab = .rush(self)
+        return level
+    }
+
+    /// The next tank, one more solved, same clock.
+    var next: Level { Rush(difficulty: difficulty, deadline: deadline, solved: solved + 1).level }
+    static func start(_ difficulty: Int) -> Level { Rush(difficulty: difficulty, deadline: .now + length).level }
+}
+
+/// Tanks solved and the time left, ticking.
+struct RushClock: View {
+    let rush: Rush
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { t in
+            let left = max(Int(rush.deadline.timeIntervalSince(t.date).rounded(.up)), 0)
+            Text("solved \(rush.solved) \u{00B7} \(left / 60):\(String(format: "%02d", left % 60))")
+                .foregroundStyle(left <= 30 ? Color.alarm : Color.text)
+        }
+    }
+}
+
+/// The rush's end, over the tank.
+struct RushOver: View {
+    let rush: Rush
+    let onExit: () -> Void
+    let onNext: (Level) -> Void
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Text("time.").font(.mono(22, .semibold)).shadow(color: .white.opacity(0.5), radius: 6)
+            Text("solved \(rush.solved) \u{00B7} best \(Rush.best(rush.difficulty))").font(.mono(15))
+            HStack(spacing: 40) {
+                Button("\u{2039} levels", action: onExit).foregroundStyle(Color.text)
+                Button("again \u{203A}") { onNext(Rush.start(rush.difficulty)) }.foregroundStyle(Color.amber)
+            }
+            .font(.mono(15, .medium))
+        }
+        .padding(28)
+        .background(RoundedRectangle(cornerRadius: 18).fill(Color.black.opacity(0.85)))
+    }
 }
 
 /// One row of the lab's list: a new level each time it is picked, so a random one is dealt afresh.
 struct LabEntry: Sendable {
     let name: String
     let detail: String
+    /// Read afresh each time the list shows.
+    var best: @Sendable () -> String? = { nil }
     let level: @Sendable () -> Level
 }
 
@@ -39,7 +110,10 @@ extension Lab {
             Level(id: "lab-frozen", label: "fr", title: "Frozen rod", note: "The top rod's core is iced. Read it from the rest.",
                   layout: .tri, scramble: .parse("2:+2,0:-4,1:+5,2:-6", in: .tri), lab: .frozen(0))
         },
-    ]
+    ] + (0..<3).map { d in
+        LabEntry(name: "rush-\(Rush.names[d])", detail: "5 minutes, as many \(Rush.names[d]) tanks as you can, no undo",
+                 best: { "best \(Rush.best(d))" }) { Rush.start(d) }
+    }
 
     /// UNSTIR_LAB=name: the entry of that name, for the harness.
     static func level(named name: String) -> Level? {
@@ -117,7 +191,8 @@ struct LabList: View {
                     Button { pick(e.level()) } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(e.name).font(.mono(15, .medium))
-                            Text(e.detail).font(.mono(11)).opacity(0.45).multilineTextAlignment(.leading)
+                            Text(e.detail + (e.best().map { " \u{00B7} \($0)" } ?? "")).font(.mono(11)).opacity(0.45)
+                                .multilineTextAlignment(.leading)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 12)

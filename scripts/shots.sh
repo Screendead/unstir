@@ -223,3 +223,5 @@ shot lab-glow-live "Lab lights off mid-drag of rod 0 by 2 steps: the lights on i
 shot lab-frozen "Lab frozen rod: tri 2:+2,0:-4,1:+5,2:-6 with rod 0's core iced as it opened." LAB=frozen
 shot lab-frozen-turned "Lab frozen rod after 2:+6 comes off: the rest of the tank has moved on, rod 0's core has not." \
   LAB=frozen TURNED=2:6
+shot lab-rush "Lab rush, medium: a tank from endless's generator (tanks 6-9), the clock and the count in the header, no undo." LAB=rush-medium
+shot lab-rush-over "Lab rush, time up: the count and the best over the tank." LAB=rush-easy RUSHLEFT=0.5

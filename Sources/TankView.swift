@@ -460,6 +460,9 @@ struct LevelView: View {
     @State private var lights: [SIMD2<Double>]
     /// Lab, lights off: the next touch on the tank drops a light.
     @State private var arming = false
+    /// Lab, rush: the clock has run out.
+    @State private var timeUp = false
+    private var rush: Rush? { if case .rush(let r) = game.level.lab { r } else { nil } }
     let onExit: () -> Void
     let onNext: (Level) -> Void
 
@@ -534,6 +537,8 @@ struct LevelView: View {
                         control(game.level.picture.rawValue, game.nextPicture)
                         // A turn in hand, or snapping to commit, names a rod of the current layout.
                         control(game.level.layout.rawValue) { if liveRod == nil { game.nextLayout() } }
+                    } else if let rush {
+                        RushClock(rush: rush)
                     } else {
                         // Endless has no par; its brim is on the rim.
                         Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
@@ -606,8 +611,8 @@ struct LevelView: View {
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
-                .disabled(settling || game.finished || shown != nil || game.level.run != nil)
-                .opacity(showResult || game.level.run != nil ? 0 : 1)
+                .disabled(settling || game.finished || shown != nil || game.level.run != nil || rush != nil)
+                .opacity(showResult || game.level.run != nil || rush != nil ? 0 : 1)
                 .accessibilityHidden(game.level.run != nil)
                 .padding(.bottom, 8)
             }
@@ -662,6 +667,13 @@ struct LevelView: View {
             // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
             // centre among them.
             if game.solved { withAnimation(.easeInOut(duration: 0.9)) { eased = true } }
+            if let rush {
+                Task {
+                    try? await Task.sleep(for: .seconds(1))
+                    if !timeUp { onNext(rush.next) }
+                }
+                return
+            }
             Task {
                 // A spill's card waits for the pour and the word.
                 try? await Task.sleep(for: .seconds(game.spilled ? Brim.card : 1.4))
@@ -687,6 +699,19 @@ struct LevelView: View {
             if shown == nil { badge = game.refilled }
         }
         .onDisappear { endPath(); endTwist(); Log.write("level \(game.level.id) exits \(state)") }
+        .task {
+            guard let rush else { return }
+            let left = rush.deadline.timeIntervalSinceNow
+            if left > 0 { guard (try? await Task.sleep(for: .seconds(left))) != nil else { return } }
+            guard !game.solved else { return }
+            drag = nil; liveRod = nil; liveAngle = 0
+            Rush.record(rush.difficulty, rush.solved)
+            Log.write("rush over \(Rush.names[rush.difficulty]) solved=\(rush.solved)")
+            withAnimation(.easeIn(duration: 0.3)) { timeUp = true }
+        }
+        .overlay {
+            if timeUp, let rush { RushOver(rush: rush, onExit: onExit, onNext: onNext).transition(.opacity) }
+        }
     }
 
     /// Everything that decides what the tank draws, as the log shows it.
@@ -1084,7 +1109,7 @@ struct LevelView: View {
         func norm(_ p: CGPoint) -> SIMD2<Double> { SIMD2(Double(p.x / r - 1), Double(p.y / r - 1)) }
         return DragGesture(minimumDistance: 0)
             .onChanged { v in
-                guard !settling, !game.finished, shown == nil else { return }
+                guard !settling, !game.finished, shown == nil, !timeUp else { return }
                 let q = norm(v.location)
                 let seized = game.level.seized, layout = game.level.layout
                 // Keyed on the start point because a cancelled drag never reaches onEnded; a new touch starts afresh.

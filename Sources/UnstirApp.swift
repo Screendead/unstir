@@ -110,6 +110,11 @@ struct Harness {
         }
         // UNSTIR_LAB=name: that lab entry's level.
         if let lab = env["UNSTIR_LAB"].flatMap(Lab.level(named:)) { level = lab }
+        // UNSTIR_RUSHLEFT=s: a rush with that many seconds left.
+        if case .rush(var r) = level.lab, let s = env["UNSTIR_RUSHLEFT"].flatMap(Double.init) {
+            r.deadline = .now + s
+            level = r.level
+        }
         if let picture { level.picture = picture }
         if let s = env["UNSTIR_STACK"] {
             level.layout = env["UNSTIR_LAYOUT"].flatMap(Layout.init(rawValue:)) ?? level.layout
