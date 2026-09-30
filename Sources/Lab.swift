@@ -5,6 +5,8 @@ import SwiftUI
 /// Gameplay mockups, reached by holding the menu's title. A lab level stores nothing: no best, start, undo bank, refill
 /// day or tank flag.
 enum Lab: Hashable, Sendable {
+    /// Dragging the rim turns the whole tank as one rod, a stir like any other.
+    case swirl
 }
 
 /// One row of the lab's list: a new level each time it is picked, so a random one is dealt afresh.
@@ -15,7 +17,17 @@ struct LabEntry: Sendable {
 }
 
 extension Lab {
-    static let entries: [LabEntry] = []
+    static let entries: [LabEntry] = [
+        LabEntry(name: "swirl", detail: "drag the rim: the whole tank is one more rod") {
+            Level(id: "lab-swirl", label: "sw", title: "Swirl", note: "Drag the rim to swirl the whole tank.",
+                  layout: .quadSwirl, scramble: .parse("0:+3,4:+2,2:-4,1:+3,4:-3,3:+5", in: .quadSwirl), lab: .swirl)
+        },
+        LabEntry(name: "swirl-random", detail: "swirl, 7 stirs dealt at random") {
+            var rng = SplitMix64(state: .random(in: .min ... .max))
+            return Level(id: "lab-swirl-random", label: "sw", title: "Swirl, dealt", note: "Drag the rim to swirl the whole tank.",
+                         layout: .quadSwirl, scramble: Layout.quadSwirl.scramble(depth: 7, inversions: 1, rng: &rng), lab: .swirl)
+        },
+    ]
 
     /// UNSTIR_LAB=name: the entry of that name, for the harness.
     static func level(named name: String) -> Level? {

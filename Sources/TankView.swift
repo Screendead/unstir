@@ -845,7 +845,8 @@ struct LevelView: View {
         // Out of the way while the tank is held.
         let lesson = shown == nil && !game.finished && held == nil
         let arc = !game.level.seized.isEmpty && lesson && !game.tankTurned ? RimLesson.arc(r) : []
-        let others: [(CGPoint, CGFloat)] = rods.indices.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
+        let knobs = rods.indices.filter { $0 != game.level.layout.swirl }
+        let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
             + arc.map { ($0, RimLesson.width + Self.countRoom) }
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
         let spillAt = game.spilled ? game.brimEvents.last?.time : nil
@@ -931,7 +932,7 @@ struct LevelView: View {
                     LinearKeyframe(1.0, duration: 0.45, timingCurve: .easeOut)
                 }
                 .position(at(ck))
-            ForEach(rods.indices, id: \.self) { k in
+            ForEach(knobs, id: \.self) { k in
                 // On a device pixel, so the knob's ticks can be.
                 let p = at(k)
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
@@ -945,7 +946,7 @@ struct LevelView: View {
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
             // knobs, which would hide it.
             RodView.band(.alarm)
-                .frame(width: core, height: core)
+                .frame(width: fk == game.level.layout.swirl ? 2 * r : core, height: fk == game.level.layout.swirl ? 2 * r : core)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.pushes) { ring, t in
                     ring.opacity(t >= 1 ? 0 : 1 - t)
                 } keyframes: { _ in
@@ -971,7 +972,7 @@ struct LevelView: View {
             tank.scaleEffect(1 + 0.02 * sin(t * .pi))
         } keyframes: { _ in CubicKeyframe(1.0, duration: 0.9) }
         // A level that turns reaches a finger on the bezel or just beyond it.
-        .contentShape(Circle().inset(by: game.level.seized.isEmpty ? 0 : -25))
+        .contentShape(Circle().inset(by: game.level.seized.isEmpty && game.level.layout.swirl == nil ? 0 : -25))
         .gesture(twistGesture(r))
         // Not .none: that also switches off the gesture above.
         .simultaneousGesture(spinGesture, including: game.level.seized.isEmpty ? .subviews : .all)
@@ -1136,9 +1137,12 @@ struct LevelView: View {
     /// its own radius, wins; a seized knob that wins holds nothing rather than passing the finger to a neighbour.
     nonisolated static func grab(_ layout: Layout, seized: Set<Int>, at point: SIMD2<Double>) -> Grab {
         if !seized.isEmpty && simd_length(point) > 0.93 { return .rim }
+        // Lab: the swirl is held by the rim alone, since its disc covers every other.
+        if let s = layout.swirl, simd_length(point) > 0.93 { return .rod(s) }
         let rods = layout.rods
         func depth(_ k: Int) -> Double { simd_distance(point, SIMD2(rods[k].x, rods[k].y)) / rods[k].z }
-        guard let k = rods.indices.filter({ depth($0) < 1 }).min(by: { depth($0) < depth($1) }) else { return .nothing }
+        guard let k = rods.indices.filter({ depth($0) < 1 && $0 != layout.swirl }).min(by: { depth($0) < depth($1) })
+        else { return .nothing }
         return seized.contains(k) ? .seized(k) : .rod(k)
     }
 

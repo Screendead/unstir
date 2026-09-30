@@ -60,6 +60,14 @@ enum Tank {
 /// Rod arrangements; `eye` is the mixed-sizes one. Every disc stays inside the tank, so nothing is stirred through the glass.
 enum Layout: String, CaseIterable {
     case tri, quad, eye, pent, hex
+    /// Lab: quad with a swirl, a rod the size of the tank.
+    case quadSwirl
+
+    /// The lab's layouts are left out: they break the rules the real ones keep.
+    static var allCases: [Layout] { [.tri, .quad, .eye, .pent, .hex] }
+
+    /// The rod the size of the tank, turned from the rim, if the layout has one.
+    var swirl: Int? { rods.firstIndex { $0.z >= 1 } }
 
     /// (x, y, disc radius) per rod.
     var rods: [SIMD3<Double>] { Layout.table[self]! }
@@ -77,6 +85,7 @@ enum Layout: String, CaseIterable {
             .eye: [SIMD3(-0.4, 0, 0.58), SIMD3(0.4, 0, 0.58), SIMD3(0, -0.56, 0.44), SIMD3(0, 0.56, 0.44)],
             .pent: ring(5, 0.56, 0.44),
             .hex: [SIMD3(0, 0, 0.44)] + ring(6, 0.56, 0.44),
+            .quadSwirl: ring(4, 0.5, 0.48, from: -45) + [SIMD3(0, 0, 1)],
         ]
     }()
 
@@ -85,7 +94,7 @@ enum Layout: String, CaseIterable {
     var order: Int {
         switch self {
         case .tri: 3
-        case .quad: 4
+        case .quad, .quadSwirl: 4
         case .eye: 2
         case .pent: 5
         case .hex: 6
@@ -101,6 +110,7 @@ enum Layout: String, CaseIterable {
         case .eye: [1, 0, 3, 2]
         case .pent: [4, 0, 1, 2, 3]
         case .hex: [0, 6, 1, 2, 3, 4, 5]
+        case .quadSwirl: [3, 0, 1, 2, 4]
         }
     }
 

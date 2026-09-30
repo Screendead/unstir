@@ -213,3 +213,6 @@ shot seized-ring3-buried "The same with 3:+2 buried fourth from the bottom ($rin
 shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
 shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubburied): the hub's ring is not finished." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3
+# The lab's mockups (hold the menu's title).
+shot lab-swirl "Lab swirl: quad with the whole tank as a fifth rod, 0:+3,4:+2,2:-4,1:+3,4:-3,3:+5." LAB=swirl
+shot lab-swirl-live "Lab swirl held mid-drag from the rim, 1.5 steps clockwise." LAB=swirl LIVE=4:1.5 TOUCH=0.7,-0.7
