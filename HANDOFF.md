@@ -14,7 +14,7 @@ this is analysis. No code has changed for it.
 | Item | State |
 |---|---|
 | Competitor scan | Done 2026-09-28, quick pass (see below) |
-| Business-model recommendation | Jack ruled out paying to unlock tiers (2026-09-28). Jack wants **picture packs with their own tanks** as paid content, best with new mechanics; an archive of past dailies, a supporter mark and a tip jar are agreed (2026-09-28). Undos are never part of the paid side: free for everyone at +2 per playing day (see "Thoughts"). Packs stay outside the ladder and never open a tier. Rewarded ads for an undo top-up stay in reserve, only if TestFlight shows banks running dry. A single "Unstir+" purchase may not be needed. Options compared 2026-10-24 (below): Claude recommends one "Unstir+" purchase (the daily archive, endless past a free taste, the supporter mark) as 1.0's product, with packs from 1.1; not decided |
+| Business-model recommendation | Jack ruled out paying to unlock tiers (2026-09-28). Jack wants **picture packs with their own tanks** as paid content, best with new mechanics; an archive of past dailies, a supporter mark and a tip jar are agreed (2026-09-28). Undos are never part of the paid side: free for everyone at +2 per playing day (see "Thoughts"). Packs stay outside the ladder and never open a tier. Rewarded ads for an undo top-up stay in reserve, only if TestFlight shows banks running dry. A single "Unstir+" purchase may not be needed. Options compared 2026-10-24 (below): Claude recommended one "Unstir+" purchase (the daily archive, endless past a free taste, the supporter mark) as 1.0's product, with packs from 1.1. **Jack's call (2026-10-24): packs ship at v1; there is no hurry to market** ("I think we can handle making packs for v1. I'm not in a major hurry to get it to market."). That supersedes the Unstir+ recommendation. Claude's pack catalogue (2026-10-24, below) recommends five packs and a capstone, with First Stir, Lens and Escapement at v1, every pack at one price beside a Complete bundle, no Unstir+ and endless wholly free; four calls are open for Jack; not decided |
 | Monetisation code | None. No StoreKit, ads or sharing in `Sources/` |
 | Undo bank | Starts at 10 (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10. Built on `help` (2026-09-29, `Best.refill`): the first opening of a level other than the sandbox on a local calendar day later than the last refill's adds 2, up to 10, and a "+2" shows over the undo count once the level's opening ends or is skipped. A fresh install records its first day without a refill; a clock moved back never refills. Jack (2026-09-29): setting the phone's date mustn't game the refill. Closed on `help` (2026-09-29, `Best.trustedNow`): within one boot the day comes from the last time it vouched for plus the uptime since (`CLOCK_MONOTONIC_RAW`, which counts sleep and can't be set), so a clock set ahead refills nothing until real time reaches the next day, give or take 5 min, and the log says `undo refill held: clock ahead Xh`. The anchor follows the wall clock no further ahead than drift explains (a second plus 100 ppm of the uptime since), so creeping the clock ahead a few minutes at a time gains about a second an opening; review found the first version let each step under 5 min carry the anchor along, a day ahead in about 290 steps (fixed 2026-09-29). Still open: a restart between date changes still borrows a refill, since a new boot has nothing to check against. A trusted network clock would close that; Claude recommends against it (a server, and a refill that waits on the network, to guard 2 undos a day). Unverified whether it is the only way: `kern.monotonicclock` is a candidate, a clock XNU's `clock.c` says nothing can set, and on a Mac it runs on across restarts. Unchecked on iOS: whether the app may read it, and whether setting the date moves it. The launch logs it next to the uptime (`monotonic clock Ns` or `unread`), so launches either side of a restart and of a date change answer both; if it holds, reckoning from it would close the restart hole. Unverified: whether iOS lets the app read the boot session (`kern.bootsessionuuid`); an app in macOS's App Sandbox reads it, but `container.sb` leaves it off its sysctl allow list, and iOS's profile is unpublished. The phone's log answers it at launch (`boot session read` or `unread`). Unread, a jump of at least the phone's uptime at the last level opened passes as a possible restart, and a believed jump anchors at the uptime then; so on a phone up less than a day, as after any restart, steps of a day get through one after another until a level opens with the phone up longer than the step. A genuine forward correction of more than 5 min within a boot (a phone that ran slow, set right) is held too, so its refill day turns late by that much until the next restart; one under 5 min is believed, and the anchor takes it in a few seconds a day. A new boot whose clock reads more than 5 min before the anchor's time, as after a clock reset, is believed but leaves the anchor, so setting the clock right later in that boot still counts as a new boot (review found the first version held every refill until the next restart there; fixed 2026-09-29). Not covered: a clock behind at the first opening with no anchor stored (a fresh install, or the first on this build), then set right, makes refills late by that much until a restart. The privacy manifest TestFlight will need (UserDefaults already requires one) should give reason 35F9.1 for the uptime clock: Apple's boot-time list names `systemUptime` and `mach_absolute_time()`, not `clock_gettime`; if the `kern.monotonicclock` read stays, check whether it needs a reason too |
 | TestFlight | Not started |
@@ -49,6 +49,10 @@ for good because it is the marketing. Undos refill daily and are never sold.
 Analysis only; no code changed. Every claim is tagged **E** (evidence, with its source: this file, the code, or a
 page found on 2026-10-24) or **G** (a guess, including platform facts Claude didn't check this session). There are no
 revenue figures here, by design (see "Thoughts").
+
+**Superseded in part (2026-10-24).** Jack's call puts packs in v1. The recommendation of C below rested on there being
+no pack at 1.0, so it no longer stands; the comparison is kept as it was written. See "Recommendation" below and
+"Packs: the catalogue".
 
 **What 1.0 has to sell, as things stand.** Three tiers of 27 levels each, 81 in all, every one free (E: `Level.plughole`,
 `Level.whirlpool` maps it one to one, `Level.maelstrom` maps whirlpool; Jack's tier call). Endless and the daily, free
@@ -132,7 +136,14 @@ would buy it may have gone (G). So the mix, as agreed, defers the money to a con
 4. *R4 doesn't block a decision on shape.* One StoreKit product can be built and tested locally whichever way the
    contents go. TestFlight can't measure who would pay anyway (below).
 
-#### Recommendation: C, Unstir+, as 1.0's one product
+#### Recommendation: C, Unstir+, as 1.0's one product (superseded 2026-10-24)
+
+**Superseded by Jack's call (2026-10-24): packs ship at v1; there is no hurry to market.** This recommendation's
+premise was that no pack exists at 1.0 ("What 1.0 has to sell": no pack exists, and none is designed). That premise is
+gone: packs are now designed (the catalogue below) and Jack puts them in v1. So these parts fall away: point 3, "No
+packs at 1.0"; point 1's Unstir+ anchored on endless past a free taste, which gated endless only because 1.0 had
+nothing else to sell; pushback point 2, "Don't plan revenue on packs"; and "Open for Jack" items 1, 2 and 8. What v1
+sells beside the packs is decision 4 under "Packs: the catalogue". Kept as written, for the reasoning:
 
 Free download. Every tier, the daily and the daily share line stay free. Undos stay free. 1.0 sells:
 
@@ -167,6 +178,9 @@ none exists; the choice is Jack's). With 20–50 testers every number points a d
 - **An exit question**: would you pay for Unstir+ at its price, and what would you want in it? Stated intent usually
   runs above real buying (G).
 
+With Unstir+ superseded (2026-10-24), its card and the question of endless as its anchor fall away. What TestFlight
+measures for packs is item 57 of the catalogue's to-do.
+
 #### Open for Jack
 
 1. Accept C, Unstir+, as 1.0's model, or keep A as agreed, knowing it earns little until a pack ships?
@@ -177,6 +191,612 @@ none exists; the choice is Jack's). With 20–50 testers every number points a d
 6. Where the supporter mark shows: the menu, the share line, both?
 7. How to read testers' play: an opt-in log upload, an analytics library, or a survey only?
 8. The first pack: which picture or mechanic, and is it worth starting before launch numbers?
+
+Items 1, 2 and 8 are overtaken by Jack's call of 2026-10-24 (packs at v1). The live calls are now the four decisions
+under "Packs: the catalogue" below; items 3 to 7 carry into its defaults.
+
+### Packs: the catalogue (Claude's recommendation, 2026-10-24; not decided)
+
+**Jack's call (2026-10-24): packs ship at v1, and there is no hurry to market.** In his words: "I think we can handle
+making packs for v1. I'm not in a major hurry to get it to market." This section is Claude's answer to it: a
+catalogue of packs, the three for v1, what v1 sells beside them, and the work. Everything in it is a recommendation
+until Jack decides; the four calls it needs are under "Open for Jack: four decisions". Analysis only; no code changed.
+"Checked" marks a claim checked against the code; "assumed" marks one that wasn't, platform facts included. No
+revenue figures.
+
+#### The catalogue
+
+Five packs and a capstone for the life of the game. Each changes what the player reads (Lens: scale against a dot
+screen; Prism: three colour lights; Music Box: the ear), how a move works (Escapement: a clock rod that ticks after
+every move) or what the evening is (First Stir: a story told backwards). The Well comes last, nesting the free
+ladder's rules. The Orrery candidate's orbits go to charybdis instead, if Jack agrees (decision 2).
+
+Jack's call puts packs in v1, so v1 launches three, one per kind of change:
+- **First Stir**, the flagship, on audience and feel alone, since its puzzles are plughole depth and test no new skill.
+- **Lens**, the new read. It is built first because its map already runs in the lab, so it proves the shelf, StoreKit
+  and the pack pipeline.
+- **Escapement**, the new move, for problem and cube solvers.
+
+After v1, at about one a quarter: Prism, then Music Box only if it passes its ear test, then The Well.
+
+Each pack has 24 to 30 crafted, solver-checked levels (134 over the five, plus The Well's 13 tanks, beside the 81
+free), its own id prefix, its own pictures and layer of the one piece, its first levels free and one price. None ever
+opens a tier. If Music Box fails its gate, the catalogue stays at four packs and The Well, whose cups use free rules,
+so its count never depended on the packs.
+
+#### The packs
+
+Scores are Claude's: design / engineering / market, higher better on each.
+
+| # | Pack | Kind | Buyer | Rule | Skill | Role | Scores |
+|---|---|---|---|---|---|---|---|
+| 1 | First Stir | New evening | Story-first players (Florence, Gorogoa, Unpacking, A Short Hike) and plughole players | Plughole rules; each heal plays a vignette of one night, told backwards | None new | v1 flagship | 5 / 7 / 8 |
+| 2 | Lens | New read | Comic and pop-art readers; core players after plughole | Some rods zoom or spiral instead of turning | Reading scale against a dot screen; three seam shapes | v1, built first: proves the pack pipeline | 8 / 7 / 7 |
+| 3 | Escapement | New move | Chess-problem and logic-puzzle solvers; cube solvers; maelstrom finishers | A clock rod ticks a step after every move | Tempo: timing heals so the clock finds its seam; knowing when to wait | v1, the new move | 8 / 5 / 6 |
+| 4 | Prism | New read | Photographers, designers and colour people; whirlpool players | Each rod stirs only some of red, green and blue | Reading by channel; commutation that depends on colour | First after v1 | 7 / 7 / 7 |
+| 5 | Music Box | New read | Music lovers, hummers, music-box collectors, Animal Crossing and ASMR players | Pins on tracks, played by a sweeping arm; a stir garbles the tune | Melodic error-finding | Later, only if it passes its ear test | 6 / 5 / 6 |
+| 6 | The Well | Capstone | Players who want one project over days; completionists | Each outer rod's core holds a smaller tank, played under free rules | Dependency planning across nested puzzles | Released last; needs no other pack | 7 / 5 / 7 |
+
+**Every pack's sound** sits inside the one-piece structure. That structure is Jack's idea (2026-09-29; "Sound
+direction" in HANDOFF.md on the `soundscape` branch), and as a whole a recommendation until he hears sketches: one
+piece in D at one tempo, the menu its stripped core, each tank adding its own bass, kit and lead on a bar line. Jack's
+calls within it (2026-09-29): peril rises only from tier to tier, never within a tank, and the piece runs a long
+cycle. Each entry below gives only the pack's own layer.
+
+##### 1. First Stir (recommended v1 flagship)
+
+A wordless story told backwards: each heal rewinds one part of a stormy night in a seaside town, scene by scene,
+until the last tank is a child stirring a cup of tea.
+
+- **Role.** The gentlest pack, for the broad buyer. It leads the shelf, carries the featuring story and closes the
+  trailer. On the store page it is the first pack shown after the free game, labelled as a paid add-on. Sold as an
+  evening, not a challenge.
+- **Buyer.** Story-first players of Florence, Gorogoa, Unpacking and A Short Hike, who buy an evening rather than
+  difficulty, and plughole players who want more of the gentle game. Not the puzzle buyer, and its card says so
+  ("anyone; an evening, not a challenge").
+- **Rule.** Plughole rules on tri, quad, eye and pent: 4 to 10 stirs, no seized knobs, level motion none, par the
+  scramble's count. Each of the scramble's entries (after `parse`) owns one vignette: a change to the clean picture
+  drawn inside its own rod's rigid core (rigid cores never overlap: `Tank.plateau`'s comment), plus light it may add
+  anywhere (light adds, so vignettes compose in any order). Entries carry a set of vignette tags. When a turn or a fall
+  merges one entry into another, the survivor takes the union of both sets. Today `Array.commit` keeps only the
+  landing entry's payload, so the merge gains that hook; `Game.Entry`'s pushed mark stays the landing entry's, as
+  endless needs. A vignette shows as played exactly when its tag is no longer on the stack, so the picture is a
+  function of the stack alone: a pop plays every tag it carries (several at once after a merge); a win the fine pass
+  calls on a stack that only looks solved (`Game.settle` empties `entries`) plays every tag left; undo and reset bring
+  tags back with their entries; and every solve plays every vignette whatever the order of heals. A vignette
+  crossfades over 0.4 s under the stack. Design rule, checked by a test on every scene and every heal order: no
+  vignette's light reaches the core of a rod with an entry removable right after its heal (`Layout.removable`), so
+  light never shows the next move. Heal ring as in endless (Jack, 2026-09-29): magenta and the heavy tap only for a
+  commit that plays a vignette; cancelling your own push flashes white. Undo is the pack snapshot from the shared bank.
+- **Skill.** None new, and the pack says so: plughole's read (the newest seam is unbroken) on a picture that changes
+  as you heal, so each heal asks for a re-read but no new decision.
+- **Look.** Hand-composed neon line illustration of one seaside town, baked like plughole's pictures: storm indigo
+  with sodium lamps, flood teal, rescue amber torchlight, dusk rose, and the last scene's kitchen gold. Every vignette
+  keeps up readable in each core it touches (upright figures, horizons, lit windows), and every figure change sits
+  inside its own rod's core.
+- **Sound.** The lead is a felt piano playing the piece's own motif backwards across the pack, one note per vignette
+  played (a pop that plays two plays two), running on across scene ends so no note marks a tank's last heal. The
+  pack's last solve plays the motif forwards, whole, for the first time. Its pads are storm and rain layers that follow
+  the story's weather scene by scene (the storm peaks in chapter 4, a kettle and a clock in chapter 5), set when a tank
+  opens and never changing within it. Nothing sounds during a drag.
+- **Structure.** 25 scenes in five chapters of 5, in reverse story order (Dawn After, The Rescue, The Flood, The
+  Storm, Dusk Before), about two hours. The last tank is the teacup on tri, the night's first stir, and a "night
+  forwards" film unlocks at the end. Scenes 1 to 3 free. Level ids `first-stir-1` to `first-stir-25`.
+- **Weakest point.** Its puzzles are plughole depth and it tests no new skill: by its own design rule no vignette's
+  light reaches a core that can heal next, so the changing picture changes no decision. It is plughole with a story,
+  sold on feel. Its roughly 150 figurative vignettes need an illustrator the game has never had (every picture today
+  is code, checked: `Pictures.swift`).
+- **R5 fix.** None needed.
+
+##### 2. Lens (recommended for v1: the new read)
+
+Some rods zoom instead of turning, so you read how big a core has grown against a halftone dot screen that never lies
+about scale.
+
+- **Role.** Built first, because its map already runs in Swift and Metal on the lab branch, so it proves the pack
+  pipeline (the `Pack` type, StoreKit, the shelf and card) for the others.
+- **Buyer.** The comic and pop-art reader (halftone, Ben-Day dots, risograph prints), who is also the core Unstir
+  player wanting a read their eye hasn't learned. Its card says "after plughole".
+- **Rule.** Each level fixes each rod's kind: twist (today's), zoom or spiral, shown by its knob (iris blades, a
+  nautilus). Every kind is dragged like any rod, with no pinch. A zoom step is the lab's radial flow (d56b02e:
+  `Tank.zoom` and `zoomFlow` in Twist.swift, a copy in Unstir.metal): the core scales by 1.2 a step and the flow slows
+  to nothing at the disc's edge; clockwise magnifies. A spiral step is the flow, for one step, of the twist's field and
+  the zoom's field added (both turn about the rod's centre, so the sum is one autonomous field): in the core exactly
+  30° and ×1.2 together, in the ring the sum's flow (derived, not built). Each kind's steps form a one-parameter group,
+  so a turn merges into its rod's newest entry by summing and pops at 0 through the ordinary `Array.commit`, and `same`
+  and `commutes` sample each entry by its rod's kind. A zoom or spiral never wraps: +k needs exactly −k. Only the deal
+  is capped (scramble entries at most ±3 steps, ×1.73). Play is uncapped, since any number of steps is a bijection (the
+  lab commit's message), so no turn is ever refused for its size and probing learns nothing from a refusal. The
+  stack's 36-entry limit stays, as everywhere. Level motion none. Dailies and endless are untouched
+  (`testDailyVectors` and `testEndlessVectors` pass unchanged). Undo is the pack snapshot from the shared bank.
+- **Skill.** Reading proportion against the dot screen's pitch, a ruler that never lies, and telling three seam
+  shapes apart: a zoom seam is a band of radially squashed dots, a twist seam tangential shear, a spiral seam a log
+  spiral. Where they overlap, the newest is still the unbroken one.
+- **Look.** Neon halftone on black: flat colours printed as glowing dot screens (fluoro cyan #00e5ff at 15°, magenta
+  #ff2bd6 at 75°, yellow #ffe600 at 0°, one pitch of 0.03 tank units), white ink outlines and a registration-mark
+  bezel. Dots are generated in clean-picture coordinates, so the pitch is the ruler: a magnified core shows swollen
+  dots, a shrunk one fine dots, and each core carries asymmetric linework so a 90° turn can't hide in the square
+  screen. Original panels of a wordless heist told through pop-art objects and close-ups (a safe dial, an eye, a
+  diamond, a getaway car), clearly not Lichtenstein pastiche. Baked, fill 0.
+- **Sound.** The lead is the piece's motif in mensuration canon, the motif against itself at two speeds: scale made
+  audible. On a zoom commit only, a short glass whoosh, rising to magnify and falling to shrink. The iris's detents
+  are haptic ticks like the rod's, since nothing sounds during a drag.
+- **Structure.** 25 panels: four issues of 6 (Close-up: zoom rods alone on tri and quad; Cut-in: zoom among twists on
+  quad, eye and pent; Spiral: spiral rods; Splash: deep mixed hex tanks) and a splash-page finale. Each solved issue
+  lays its panels out as a comic page. Panels 1 to 3 free. Level ids `lens-1` to `lens-25`, pars from the solver once
+  it learns rod kinds.
+- **Weakest point.** Scale may read slower than angle. If one 1.2× step can't be told from none at phone size, the
+  rate must rise to 1.25 to 1.33. Mixed stacks may murk past about 10 entries. Zoom and spiral aren't area-preserving,
+  so a shrunk core may glitter under the four-tap average. None of it has been filmed on the phone.
+- **R5 fix.** None needed.
+
+##### 3. Escapement (recommended for v1: the new move)
+
+A book of composed problems with a clock in them: one rod ticks a step by itself after every move you make, and you
+must time your heals so the clock always finds its seam.
+
+- **Role.** The critics' and puzzle press's pack, for problem solvers and cube solvers.
+- **Buyer.** Chess-problem solvers and hand-made logic puzzle players (Stephen's Sausage Roll, The Witness,
+  Snakebird), who pay for one insight per puzzle and no filler. Second, twisty-puzzle and Rubik's cube solvers, the
+  audience nearest Unstir's own mechanic, who already plan move sequences around their side effects and race for
+  fewest moves. And players who finished maelstrom. Its card says "hard: composed problems".
+- **Rule.** A clock rod E has a ratchet for a knob, a new knob kind. It can't be turned, and a tap on it is a new
+  `Grab` case (`.seized` holds nothing). E's scramble entries are negative, and after every move E ticks +1 through
+  the ordinary `Array.commit`, merging into E's newest entry when everything above it commutes and popping at 0. A move
+  is the net of one working knob's open stir, or a wait (a tap on the ratchet).
+  - *Timing, with no timer anywhere.* The tick lands the moment a stir is let go, provisionally. While that stir is
+    open, re-grabbing its knob lifts the tick back out (the pawl rises, E's core steps back) for the drag; letting go
+    lands it again on the new net, or drops the move and its tick together if the net is zero. So a wrong stir turned
+    straight back costs nothing, as Jack's call on turn-backs requires (Jack, for now, 2026-09-28). The next commit of
+    another working knob seals the open move (no new tick for the seal; that commit then lands its own), as `Game`'s
+    open stir closes only on another slot's commit. So a look at another knob, or a drag not let go, seals nothing. A
+    ratchet tap seals the open move and then waits, one more tick. A tick that empties the stack solves on the spot,
+    so the last move needs no seal. The clock stops, with a chime, once E holds no entry.
+  - *Lost.* A tick that pushes (E's newest entry buried under an overlapping one) leaves a positive E entry. Only +1
+    ticks ever reach E, and the overlapping entry beneath can't come off past it, so that entry never pops and the
+    stack can never empty. While provisional it shows as a vermilion +1 on E's core and a red flash on the ratchet.
+    Once sealed, "lost." stamps the page over a card with undo (if the bank has one) and again (a reset, free as
+    everywhere).
+  - *Variants.* Two Clocks: both tick after each move, the clock nearer twelve first, and tapping either ratchet
+    waits. Wound Back: a clock ticking −1 over positive entries, the rule mirrored.
+  - Undo is the pack snapshot: the move and its tick together, from the shared bank. Level motion none: no chapter
+    turns the tank, since a turned tank would tick whatever seam sits under the ratchet. Each problem states "Unstir in
+    N", and par is the prover's optimum.
+- **Skill.** Tempo: planning a whole move order so a forced side effect lands as a heal, and knowing when to wait.
+  Nothing in the free game moves unless you move it.
+- **Look.** The only light-ground pack: a problem book in bone paper (#f3ead8) and black ink (#1a1a1a) with one
+  vermilion (#d8402a) accent per plate, engraved engine-turning (straight rays from off-centre points and barleycorn
+  chevrons, which read up in every core; never concentric rings). E's core holds a vermilion sub-dial with a 12 index;
+  its knob is a ratchet wheel whose pawl drops a tooth on each tick. The stipulation is set in a serif under the tank.
+  A light ground needs no change to the map, since the shader's white term is zero unless the solve wave is on
+  (checked: Unstir.metal), but the solve wave and the turn's hairlines get dark-ink variants, and ink lines stay at
+  least 2 px wide, because the four-tap average in squared light fades dark lines on a light ground. Procedural, baked.
+- **Sound.** The layers are the piece's muted kit and a dry, close lead. Each tick is a pencil-like tooth drop as it
+  lands, never a running tick-tock, which would read as a timer. Each move steps a phrase of the piece's motif one
+  note, looping without resolving, and only the solve lands it on the tonic, D, never move N on an unsolved page.
+  Nothing sounds during a drag.
+- **Structure.** 30 problems in five chapters of 6: The Clock (one clock, no slack), The Waiting Move (slack to burn),
+  Two Clocks, Wound Back (a clock ticking −1), Grand Complication (deep pent and hex, ending on a three-clock hex
+  finale), each opening on a wordless teaching problem. After each solve the composed line replays. Problems 1 to 3
+  free. Level ids `escapement-1` to `escapement-30`; every problem ships proved (a line at N exists and none is
+  shorter).
+- **Weakest point.** The smallest, most demanding buyer and the hardest content to make: 30 composed problems, each
+  proved by a pruned search that may not reach N on hex, a lost state harsher than any tier, and a paper page that
+  breaks the shelf's neon.
+- **R5 fix.** It revives R5's "a telegraphed second stirrer" (its queue works as an answer key, and it adds animation
+  to every move), and fixes both. The clock queues nothing: always the same +1 on one rod, known before the first
+  move, so it shows nothing about the scramble. Its only animation is one tooth and one 30° step of E's own core per
+  move.
+
+##### 4. Prism (recommended first after v1)
+
+The picture is one engraving drawn three times in red, green and blue light, and each rod stirs only some of the
+colours: unstir until every coloured ghost snaps back into one white line.
+
+- **Role.** The first release after v1, the colour half of the Optical Bench candidate. Its depth is capped until the
+  performance pass's cached chain lands.
+- **Buyer.** Photographers, designers and colour people (chromatic aberration, misregistered riso and anaglyph
+  prints), and whirlpool players who liked a picture that makes them work for its up.
+- **Rule.** Each rod carries a channel mask (red, green, blue, cyan, magenta, yellow or white), shown by its knob's
+  tint. A stir moves only its channels, so channel c is sampled through the word of entries whose mask holds c. Two
+  entries commute when their discs are disjoint, when their masks share no channel, or when their maps commute on
+  every shared channel, judged by `same` on each channel's restricted word (today `same` samples one map for the whole
+  word, checked: Twist.swift); `landing` and `commit` are otherwise unchanged. Each scramble's bottom entry is white,
+  so no channel is ever clean on its own. The win is every channel looking solved (`looksSolved` per channel). Level
+  motion none. The Optical Bench's strain-lit half is cut: its fringes read a step's size directly, a closeness
+  meter. Undo is the pack snapshot from the shared bank.
+- **Skill.** Reading by channel: which channels a seam broke, from the colour of its ghosts, and working out what is
+  free to heal when commutation depends on colour. No free tier splits a picture into parts that stir independently.
+- **Look.** Botanical and architectural engravings (a fern, seed heads, a cathedral elevation, a clock movement) in
+  fine lines. Misregistered, each splits into red, green and blue ghosts, with cyan, magenta and yellow where two
+  coincide; aligned, it is a white line drawing. For colour-blind players each channel draws its own line style (solid
+  red, dashed green, dotted blue) when iOS's Differentiate Without Colour setting is on. Off, every channel is solid,
+  since mixed styles would keep aligned lines from going pure white. Both are checked by a colour-blind simulation
+  before any level is made, and holding a channel's swatch shows that channel alone. A spectral bezel. Procedural,
+  baked.
+- **Sound.** The lead is the piece's motif in three detuned voices, one per channel, over cold FM glass-bell pads.
+  They resolve to unison only on the solve, never during play, so the sound is no closeness meter. A heal is a struck
+  glass rod, pitched by heals done. Nothing sounds during a drag.
+- **Structure.** 30 specimens in five trays of 6: Two Colours (red and cyan rods only), Three Colours (all seven
+  masks), Colour Order (a buried seam freed because the stir above it is another colour), Overprint (deep pent and
+  hex), Spectrum (the finale tray). Specimens 1 to 3 free. Level ids `prism-1` to `prism-30`; depth held near 12 to 14
+  entries until the cached chain lands.
+- **Weakest point.** Fine lines may mush past about 8 entries, the colour-blind read rests on line styles nobody has
+  tested, and each channel's own inverse chain costs up to 3× an entry (assumed) until the performance pass's cached
+  chain lands.
+- **R5 fix.** None needed.
+
+##### 5. Music Box (later, only if it passes its ear test)
+
+The tank is a music box disc whose pins a comb arm plays as it sweeps: a stir garbles the tune, and every heal brings
+a phrase back in.
+
+- **Role.** The sound-led pack, built after the audio engine and only if it passes its ear test.
+- **Buyer.** Music lovers and hummers, music-box collectors, Animal Crossing and ASMR players; the Composer's shared
+  tunes reach people who never search for puzzles. Its card and store page say "needs sound", since deaf and
+  hard-of-hearing players can't play it.
+- **Rule.** The picture is pins on tracks round the tank's centre: radius is pitch (ten irregularly spaced tracks on
+  the piece's scale on D), angle is time (12 beats a sweep, so the 30° step is a beat, with onsets on eighths). A
+  hairline comb arm fixed to the screen sweeps clockwise from twelve once every 12 beats and plucks each pin it passes
+  at the pin's current position. Its clean point is carried forward through the stack and any live twist (the lab's
+  `Layout.forward` does this for its lights), its pitch snapped to the nearest track and its time to the nearest
+  eighth: a displaced pin plays a whole wrong note, never a quarter tone, and now and then the right one. A turn of
+  hex's hub shifts its core's pins by whole beats; off-centre rods move pins to new pitches and beats. A hum control
+  replays the clean sweep. Rods, stack, par, level motion (none) and the geometric win are unchanged; undo is the pack
+  snapshot. Two exceptions to the game's sound rule (a sound never tells the player anything the picture doesn't),
+  inside this pack only, are recommended and not yet decided: sound carries the read, and the arm keeps playing during
+  a drag.
+- **Skill.** Melodic error-finding: hearing which beat and register of a known phrase is wrong, and mapping beat to
+  angle and pitch to radius to find the rod.
+- **Look.** A black lacquer disc (#0b0b0f) with silver star pins (#d8dde6) and a mother-of-pearl label carrying the
+  tune's title; no staff rings, which would draw seams. Each pin glints for 80 ms as it is struck, so the eye can
+  follow the ear; the arm is a 0.5 pt silver hairline. Pins are drawn at their forward-mapped points, so they move but
+  never smear. A baked disc; pins and glints a small overlay.
+- **Sound.** The box is the pack's lead: steel tines rendered once per pitch in Csound (plucked steel, a soft damper
+  buzz, a wooden case's resonance) and a winding-key crank at the start. The piece keeps running beneath, stripped to
+  its core (the D hum and halo pads, no kit), and its tempo sets the sweep, a whole number of its bars that starts on a
+  bar line, so the box never drifts off the beat. Tunes: public-domain melodies (Amazing Grace, Auld Lang Syne) in
+  their real rhythms, and phrases of the piece's own motif; the finale arranges the main motif.
+- **Structure.** 24 tunes on four cylinders of 6 (tri, quad, pent, hex), the last two with stem lanes (bass, melody
+  and counter-melody tracks, so the ear tells which register broke). Each solve winds a phrase onto the pack's song.
+  Then the Composer: place pins, stir them and send a link a friend opens to unstir the tune (playing a received tune
+  is free; titles and links carry report and block tools). Tunes 1 to 3 free. Level ids `music-box-1` to
+  `music-box-24`.
+- **Weakest point.** Claude can't hear, and the read is the ear: it ships only if sound on finds seams clearly faster
+  than sound off in a cold read. Phones play muted, deaf and hard-of-hearing players are shut out, and the Composer
+  brings user content, moderation and an age-rating question.
+- **R5 fix.** None needed.
+
+##### 6. The Well (capstone)
+
+One puzzle, days deep: every rod's core holds a smaller tank, and you dive into them to free the tank above.
+
+- **Role.** Released last. A pack anyone can buy at the one price, and part of Complete. Its cups use the free
+  ladder's rules, so it needs no other pack and its count never depends on which packs exist.
+- **Buyer.** Players who want one long project kept over days (the 1000-piece jigsaw crowd, Gorogoa and Droste fans),
+  who can buy it without owning any other pack, and completionists, who get it in Complete.
+- **Rule.** The top tank is hex, level motion none. Each outer rod's rigid core holds a cup: a whole smaller tank
+  drawn inside it, scrambled, and played under one free tier's rules (plughole, whirlpool, and vortex, maelstrom or
+  charybdis once they exist), never a pack's. An outer rod is a new knob kind, cup: until its cup is solved it refuses
+  turning with the seized thud, yet it is not `seized`, which would turn on the rim grab, the tank turn and the rim
+  lesson. A tap on its core dives into the cup (a new `Grab` case) only while the cup's glass is round: no outer entry
+  on the hub or on the rod's two neighbours, whose discs reach within 0.12 of its centre, well inside its 0.264 core
+  (checked from the layout table). Diving is free and counts no move. Inside, the cup is its own `Game` under its own
+  tier's rules (its own stack, moves, undo and, for a maelstrom cup, a turning tank). Climbing out bakes it back into
+  the core, where its clean picture rides rigidly; a solved cup sets for good and frees its rod. The outer stack orders
+  the dives, and a checker proves every well has a dive order with no deadlock. Par is the sum of every tank's par.
+  Every tank's state persists between launches.
+- **Skill.** Dependency planning across nested puzzles, like keys and doors, using every rule the free ladder taught.
+- **Look.** Looking down a well that is also a raked stone garden: grey gravel raked in straight lines (never rings,
+  which hide turns) round the mouth, each cup in its own tier's look. The dive is a continuous zoom into the core as
+  the cup's knobs fade in; climbing out pulls back until the solved cup is a small upright picture and moss creeps
+  over its stone. A bent cup's glass is the clearest seam cue in the game.
+- **Sound.** Depth is the music's form, after Meander's slow layering (Jack's reference, 2026-09-29): each solved cup
+  adds its tier's layer to the piece for good, each level down thins the mix towards bass and a water drip, and
+  climbing restores it. A dive is a pressure swell and one glassy ping, on the bar line.
+- **Structure.** One well: a hex top tank, six cups and six sub-cups, about 13 tanks played over days, with a small
+  depth tree beside the tank. Then a harder second well, The Cistern (pent, three deep). A finished well can be left
+  playing as a picture and sound. The top tank and its first cup are free. Level ids `well-1` onward.
+- **Weakest point.** A cup is a fifth of the tank across, too small to read before diving, so the outer view must work
+  as a map. A loose dependency graph goes rote. And it is the largest build in the catalogue: nested games, cups baked
+  to textures, about 13 stacks saved between launches, and a deadlock checker.
+- **R5 fix.** It revives R5's "two tanks sharing stirs" (too small to read, and the largest refactor), and answers the
+  first. No stir passes between tanks, since the outer stack only carries a cup rigidly or bends its glass, and no cup
+  is read at cup size, since the dive plays it full screen, so the outer view is only a map of round or bent, solved
+  or not. The refactor stays, as its weakest point says.
+
+#### The ladder: what packs may not take
+
+Rule: no pack takes a mechanic a free rung needs, so the rungs are chosen first. Jack plans both as free tiers
+(2026-09-28).
+
+- **Vortex**, between whirlpool and maelstrom: the lab's whole-tank swirl (b6ed01c: quad plus a rod of radius 1 at the
+  centre, turned by dragging the rim). It is a stir like any other whose disc covers every rod, so it orders every
+  seam and teaches the rim before maelstrom turns the glass with it. It breaks the "cores clear at 0.6" rule (its core
+  overlaps every rod's), so its go/no-go is whether a swirl seam reads through the cores on the phone.
+- **Charybdis**, beyond maelstrom: independent orbits, the Orrery candidate's mechanic. Maelstrom is orbits with every
+  working knob at one rate (a step of the glass is every knob moving one slot round it, hex's hub a sun at rate 0), so
+  orbits are the line maelstrom starts. They reuse its solver (positions become crank ticks, a reach table per tick,
+  the lcm of the planets' periods), its rim and its lesson. Planets ride the crank, never a tap, which answers R5's
+  "fewer knobs than rods, carried by tap" (admin, a tap fighting the drag): moving them is the puzzle, not admin. Two
+  planets on one slot make it live once (the finger holds that slot's rod), are drawn side by side 0.04 apart along
+  the slot circle, and strike their bells together as they land. During the crank's drag only haptics play, since
+  nothing sounds during a drag.
+- **Packs keep what no rung needs:** zoom and spiral (Lens), the clock (Escapement), channels (Prism), the ear (Music
+  Box) and nesting (The Well).
+- **Coriolis is benched**, not offered to charybdis, since its one-way knobs break Jack's free slip.
+
+The conflict is Jack's call (decision 2). The only other strong rung is Escapement's clock, so keeping Orrery as a pack
+means charybdis takes the clock and Escapement leaves the shelf. Nothing else on the bench or in the lab survives as a
+rung: linked rods are R5's admin, and the frozen core and lights-off subtract from the read.
+
+#### Open for Jack: four decisions
+
+**1. The catalogue and v1's three packs.** Five packs and a capstone (First Stir, Lens, Escapement, Prism, Music Box if
+it passes its ear test, then The Well), with First Stir, Lens and Escapement at v1 and First Stir as the flagship.
+First Stir is the weakest design in the set: its puzzles are plughole depth and it tests no new skill (by its own rule
+its changing picture changes no decision), so it leads on audience and feel alone. Accept that trio?
+- A: First Stir (the flagship, sold as an evening, not a challenge), Lens and Escapement at v1; then Prism, Music Box
+  if it passes its ear test, and The Well.
+- B: puzzle-first: Lens, Escapement and Prism at v1, so every v1 pack teaches a new skill and none needs an
+  illustrator; First Stir later, or never.
+- C: the synth's trio, First Stir, Lens and Orrery, only if decision 2 keeps Orrery as a pack.
+
+*Recommendation (Claude's): A.* A flagship's job is to reach players who will never buy a harder pack, and First Stir
+is the one pack anyone can finish, the purest form of Jack's own ask ("picture packs with their own tanks",
+2026-09-28) and the strongest featuring story and trailer close. Sold honestly, at the same price as the rest, its
+plughole depth disappoints nobody it is sold to, while Lens and Escapement carry v1's new skills. Jack's call ("I think
+we can handle making packs for v1. I'm not in a major hurry to get it to market.", 2026-10-24) retires the synth's
+speed reasons for its trio (no new platform surface, nothing waiting on the performance pass, which is queued next
+anyway). So the trio is re-picked on merit: one pack per kind of change, the two best designs (Lens and Escapement, 8
+each) and the broadest buyer. Prism (7) is a second new read and comes first after v1; Music Box waits on its ear test.
+If First Stir's go/no-go film fails, or decision 3 finds no art route, Prism takes its slot and Lens leads the shelf.
+
+**2. Orbits and the swirl for the free rungs.** No pack may take a mechanic a free rung needs. Should charybdis, the
+planned free rung beyond maelstrom, take the Orrery candidate's independent orbits, and vortex the lab's whole-tank
+swirl, so that Orrery leaves the pack catalogue?
+- A: charybdis gets orbits and vortex the swirl; Orrery leaves the shelf, Escapement takes v1's new-move slot, and
+  Coriolis is benched for good.
+- B: Orrery stays a v1 pack; charybdis takes Escapement's clock instead, and Escapement leaves the shelf.
+- C: keep Orrery and Escapement as packs and leave charybdis without a designed mechanic for now, which breaks the
+  rule.
+
+*Recommendation (Claude's): A.* Maelstrom is orbits with every working knob at one rate (a step of the glass is every
+knob moving one slot round it, hex's hub a sun at rate 0), so orbits are the line maelstrom starts and the natural rung
+beyond it. The synth benched Coriolis as "maelstrom made harder, the charybdis rung", and Orrery is the same case done
+well. As a pack its real buyer was the maelstrom finisher; as charybdis every finisher gets it free, built on
+maelstrom's solver, rim and lesson. The clock is a different axis (tempo, not routing), so selling it starves no rung.
+Nothing else is a strong rung: linked rods are R5's admin, the frozen core and lights-off subtract from the read, and
+Coriolis breaks the free slip.
+
+**3. First Stir's art.** About 150 figurative neon line vignettes: commission an illustrator, or have Claude draw them
+in code?
+- A: Claude draws the go/no-go harbour scene in code first; if its film passes, commission a neon line illustrator from
+  an art spec Jack approves.
+- B: Claude draws all 25 scenes as procedural line art, Jack judging each.
+- C: neither: Prism takes First Stir's v1 slot and Lens leads the shelf.
+
+*Recommendation (Claude's): A.* Every picture today is drawn in code (checked: `Pictures.swift`), and a lighthouse,
+houses and a boat are within its reach, so the go/no-go costs nothing but time. Figures, faces and a child stirring
+tea are where code-drawn line reads stiff, and the art is the pack's whole value and its long pole. Spending money is
+Jack's call alone, and with no hurry the commission's lead time costs nothing if it starts the day the film passes.
+
+**4. What v1 sells beside the packs.** Claude's options comparison (2026-10-24) recommended Unstir+ (the daily
+archive, endless past a free taste, the supporter mark) as 1.0's one product, with no packs; Jack's call now puts
+packs in v1.
+- A: packs at one price each, and a Complete bundle of the packs released so far for less than their sum; drop
+  Unstir+, so endless stays wholly free; the daily archive and the supporter mark come with any purchase; a tip jar
+  shows only after one.
+- B: keep Unstir+ beside the packs, with endless past a free taste inside it.
+- C: packs only at v1; the archive, the mark and tips later.
+
+*Recommendation (Claude's): A.* Option C of the comparison gated endless only because 1.0 had nothing else to sell.
+With packs on the shelf, gating the free game's one endless mode buys little and risks the returns TestFlight is meant
+to measure, and the archive and mark become thank-yous rather than a second product to weigh. A Complete of shipped
+packs promises nothing App Review might question (assumed; checked before it is named), and at v1 it must cost less
+than the three packs or it saves nobody anything. Product ids can't be reused once created (assumed, Apple platform
+fact), so this set and its names are fixed before App Store Connect.
+
+#### Defaults (Claude's recommendations; they stand unless Jack changes them)
+
+- **Price.** One price for every pack, inside R1's band ($2–5), never set by difficulty or size; Jack picks the
+  number.
+- **Complete's price path.** About one pack less than the packs it holds. Each new pack joins it and raises it by one
+  pack's price. Owners of an older Complete are granted later packs by the app, which the store page never promises
+  (check App Review first).
+- **Free taste.** The first three levels of every pack free, as its wordless teach-in; for The Well, its top tank and
+  first cup.
+- **Tier gating.** None: every pack opens from the first launch, its card says what it assumes ("anyone", "after
+  maelstrom"), and no pack best ever touches `Tier.isOpen` (tested).
+- **Undo in packs.** The shared bank (+2 a playing day, capped at 10, never sold), one undo per move, restoring a
+  snapshot of the state before that move (the stack's entries with their marks and tags, the clock's tick). The free
+  tiers keep today's undo.
+- **Undoing a heal in a pack.** Its vignette unplays and its note steps back, as Claude already recommends for every
+  heal's note.
+- **Turn-backs in Escapement.** Free: the tick lands provisionally on lift and comes off with a stir turned straight
+  back. No extra star for never doing it.
+- **Escapement's lost rule.** A pack-only exception: a tick that pushes loses the problem once its move is sealed;
+  "lost." with undo (if the bank has one) and again (a free reset).
+- **First Stir's heal ring.** Endless's rule (Jack, 2026-09-29): magenta and the heavy tap only for a commit that plays
+  a vignette; cancelling your own push flashes white.
+- **Music Box's two exceptions to the sound rule.** Allow, inside Music Box only, sound carrying the read and the arm
+  playing during a drag. A recommendation for Jack to take after its ear test, not his call yet.
+- **Music Box's gate.** Cut it if, in a cold read, sound on doesn't find seams clearly faster than sound off. The
+  catalogue then stays at four packs and The Well.
+- **Music Box's pitch.** Snap each pin to the nearest track and eighth, so errors are whole wrong notes; no quarter
+  tones.
+- **Each pack's sound.** Layers (bass, kit, lead) of the one piece in D entering on a bar line, inside the one-piece
+  structure. Each pack's peril is set for the pack and never rises within a tank. Sketches go to Jack before anything
+  is polished.
+- **Store page.** Lead with the free game (a picture snapping back), then the packs, every screenshot or preview moment
+  of a pack labelled as a paid add-on (guideline 2.3.2, assumed).
+- **Family Sharing.** On for every pack and Complete, knowing that once on for a product it can't be turned off
+  (assumed Apple platform fact; check).
+- **The daily archive.** Back-filled to a date Jack picks, opened by any purchase, with bests under `daily-yyyymmdd`
+  ids.
+- **The supporter mark.** On the menu and in the daily share line, after any purchase.
+- **The tip jar.** Two or three consumable tips, shown only after a purchase.
+- **Vortex and charybdis.** Free updates after v1, their mechanics reserved now (decision 2), each with its own
+  go/no-go on the phone.
+- **Rim meanings across tiers.** Vortex's rim swirls, maelstrom's turns the glass, charybdis's cranks the planets.
+  Vortex's go/no-go checks that a player moving up isn't misled.
+- **Speed and competitive players.** Left out on purpose, reading the feel Jack set for the music (2026-09-29: "no
+  pressure, no crescendo, no rising danger") as a rule for play: no rush, no timers, no leaderboards.
+- **Sharing (stir-a-friend links, photo postcards).** A free feature after v1, receiving always free. The daily share
+  line (plan step 2) is separate and stays before TestFlight.
+- **Relief's audience.** No paid chapter; a free "Eyes Shut" mode after v1, prototyped with a blind tester before any
+  art.
+- **Game Center and a web domain.** Neither at v1; a domain comes with sharing and Music Box's Composer links.
+- **Languages at v1.** English only, with every string in a String Catalog from the first pack (captions, the shelf
+  and pack cards, Escapement's stipulations, purchase text), so a language is a translation job. Store metadata in
+  English on every storefront.
+- **Progress backup.** Bests, pack progress and The Well's saved tanks sync through iCloud key-value storage from v1.
+  The undo bank and its clock anchor never sync.
+- **How to read testers' play** (Jack's open call, item 7 of "Open for Jack" above). An opt-in upload of the flight
+  recorder log and an exit survey; no analytics library.
+- **Albums.** Each pack's music released as an album once Jack approves its sketches, through a distributor chosen
+  then, its account details kept in `HANDOFF.private.md`.
+- **App size.** Packs ship in the bundle, art as line paths baked on the phone and audio as AAC. Background Assets
+  only if the app would pass the cellular download limit (assumed about 200 MB; check).
+- **The Well's price.** A pack at the one price, for anyone, and part of Complete.
+- **Names and ids.** The roster's names. Each pack's id is its level prefix (`first-stir-N`, `lens-N`,
+  `escapement-N`, `prism-N`, `music-box-N`, `well-N`, clear of `L`, `N`, `N+`, `M`, `daily-`, `endless`, `sandbox`
+  and `lab-`). Product ids `<bundle id>.pack.firststir` and so on, plus `<bundle id>.complete` (letters, digits,
+  periods and underscores; assumed).
+- **Offer codes.** For press and reviewers, First Stir's and Escapement's first.
+- **A revoked pack.** Progress kept; levels past the free taste show the pack card again.
+
+#### To do
+
+1. Record in HANDOFF.md (the main session, not this worktree): the roster, the ladder reservation, this to-do, the
+   open calls with their recommendations, and the 17 benched entries under Set aside with their reasons; mark option
+   C's "no packs at 1.0" superseded by Jack's call of 2026-10-24.
+2. Jack's calls on decisions 1 to 4, then any defaults he wants changed.
+3. Settle pack names, level-id prefixes and product ids together, before anything is created in App Store Connect.
+4. First Stir go/no-go first, since its art is the long pole: one harbour scene with three vignettes drawn in code,
+   filmed and cold-read. Each heal must read as time stepping back, not the stir changing.
+5. First Stir's story outline (25 scenes and their vignettes) for Jack's approval, then, on decision 3, the
+   illustrator's commission from an art spec: single-weight neon line, the chapter palettes, up readable in every lit
+   core, each figure change inside its own rod's core.
+6. Lens go/no-go: port the lab zoom onto a halftone test picture, film ±1 to ±3 steps on the phone and set the rate
+   (1.2, or 1.25 to 1.33 if one step doesn't read); film a zoom seam over and under a twist seam and cold-read which
+   is newest; compare shrunk cores against a supersampled reference for glitter, since zoom isn't area-preserving.
+7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
+   lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
+8. Split `seized` into a level motion (none, tank, crank) and a knob kind (working, seized, socket, ratchet, cup). The
+   rim grab, the rim lesson, the bezel's hit area and the spin gesture key on motion; touch keys on kind, with new
+   `Grab` cases for a ratchet tap and a cup dive; par's comment and the solver's turn moves key on motion; maelstrom's
+   tests unchanged.
+9. A `Pack` type outside `Tier` (name, id prefix, levels, free-taste count, product id, card), a `pack` field on
+   `Level` as the lab branch's `lab` field is, bests by id, and a test that no pack best opens a tier.
+10. A merge hook on `Stacked`, so an entry merging into another hands over its payload (First Stir's tag sets union;
+    `Game.Entry`'s pushed mark stays the landing entry's), with tests that endless's brim behaves exactly as today.
+11. Pack undo: a snapshot per move, restored by undo from the shared bank, with tests per pack (First Stir's tags,
+    Escapement's tick, Lens's zoom entries).
+12. StoreKit 2: a non-consumable per pack plus Complete; purchase, restore, the `Transaction.updates` listener,
+    revocation and refunds, pending Ask to Buy; entitlements read at launch; a StoreKit configuration file and
+    StoreKit test-session tests, all before the paid account exists.
+13. Entitlement guard: only StoreKit grants a pack; `Best.unlocked` never opens a paid pack in Release;
+    `UNSTIR_OWNED` exists only in DEBUG or under the harness; a test for each.
+14. A revoked pack keeps its progress, and its levels past the taste show the card again.
+15. The pack shelf, apart from the tier strip and ungated: three working mock-ups for Jack to pick from, as with the
+    tier switcher, then the chosen one built.
+16. The pack card: a looping 7-second clip, what the pack assumes, the free taste, price, buy and restore; levels past
+    the taste show it; Music Box's says "needs sound".
+17. Accessibility on the new screens: Dynamic Type and VoiceOver for the shelf, card and purchase flow; Reduce Motion
+    for the vignettes' crossfades, the zooms, the clock's steps and the dive.
+18. Harness: `UNSTIR_PACK`, `UNSTIR_OWNED` (one launch, never stored), First Stir's played vignettes, Escapement's
+    provisional tick and lost state, with a shot and a film line per pack.
+19. A shot per purchase state: unowned, owned, pending Ask to Buy, failed, revoked.
+20. A String Catalog for every new string (captions, the shelf and cards, purchase text, Escapement's stipulations),
+    English at v1.
+21. iCloud key-value sync of bests, pack progress and The Well's tanks, never the undo bank or its clock anchor.
+22. An app-size budget for the bundle (line art baked on the phone, AAC audio), with Background Assets only past it.
+23. A phone bench of every new shader cost against `fourTaps` (zoom and spiral entries, the vignette crossfade,
+    Prism's channels) through an in-app GPU timer, since Instruments can't see the phone yet; each kind's weight set
+    from it.
+24. The performance pass's bar on each pack's heaviest frame: 120 Hz on the iPhone 13 Pro Max.
+25. The slow pack-table proofs (solver optima, Escapement's prover, The Well's deadlock checker) behind
+    `UNSTIR_SLOW_TESTS`, so CI stays under the 5-minute line.
+26. Tests for every pack table (par equals the solver's or prover's optimum, planning gaps where they apply), unique
+    ids, and each pack's own rules.
+27. Lens: a rod kind on the level (twist by default), read by the map, `same`, the shader and the solver;
+    `testDailyVectors` and `testEndlessVectors` pass unchanged.
+28. Lens: the zoom map from the lab and the spiral flow (its ring angle a closed-form integral checked against
+    numerical integration), each in Twist.swift and Unstir.metal together, with tests that steps merge by summing, an
+    entry and its inverse cancel, the map is the identity outside the disc and the Metal copy holds precision far past
+    ±3 steps; shots that pin each kind's sign.
+29. Lens: the solver and solve.sh learn rod kinds; pars from the solver.
+30. Lens: the halftone pipeline (dot screens in clean coordinates, baked panels, fill 0) and a test in the spirit of
+    `testVisibleSmudgeIsNotSolved` that every step of every rod moves contrasting pixels.
+31. Lens: iris and nautilus knobs, the drag's count reading zoom steps, and haptic detents.
+32. Lens: 25 panels of art (an original wordless heist in pop-art objects) and the issue pages.
+33. Lens: the level table (25), solver-checked, to Jack before it goes into code.
+34. Escapement: the ratchet knob kind and its tap, and the tick rule (lands on lift, lifts out on a re-grab of the
+    open stir, sealed by the next commit of another knob or a ratchet tap, solves on the spot, the clock stopping once
+    E is empty), with a test for each case.
+35. Escapement: the lost rule and its test (a pushed tick leaves a positive E entry that no continuation pops,
+    property-tested on small cases) and the "lost." card with undo and again.
+36. Escapement: the pruned prover (`exhaustive` with a forced tick after every move and a line dropped where a tick
+    pushes), a meet-in-the-middle fallback for hex, and an escapement mode in solve.sh.
+37. Escapement: the paper ground: dark-ink variants of the solve wave and the turn's hairlines, ink lines at least
+    2 px wide, and shots that pin them.
+38. Escapement: ratchet art (a 12-tooth wheel and pawl), the vermilion sub-dial and the stipulation set in a serif.
+39. Escapement: 30 composed problems, each proved, to Jack before code.
+40. First Stir: vignettes as tag sets on the scramble's entries, played when their tags leave the stack (a pop, a
+    merged pop, a fine-pass win), unplayed by undo and reset, crossfading 0.4 s under the stack.
+41. First Stir: a per-scene test that no vignette's light reaches the core of a rod with an entry removable right
+    after its heal (`Layout.removable`), over every heal order.
+42. First Stir: vignettes baked on demand within a memory budget measured on the phone.
+43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
+44. First Stir: the "night forwards" end film.
+45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
+    felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
+    the finals in Csound.
+46. Free taste: the first three levels of each pack teach its rule without words; cold-read each on a new player.
+47. The daily archive: a calendar screen, bests under `daily-yyyymmdd` ids, back-filled to Jack's date, opened by any
+    purchase.
+48. The supporter mark (menu and share line) and a tip jar of two or three consumable tips, shown after a purchase.
+49. The daily share line (plan step 2), separate from sharing, before TestFlight.
+50. Clips and images: each pack's 7-second clip and promoted in-app purchase art, filmed with film.sh, plus a sound-on
+    cut for social video.
+51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
+    agreement, tax and banking, and the in-app purchases with review screenshots and promoted purchases.
+52. The privacy manifest, new work (no `PrivacyInfo.xcprivacy` exists): UserDefaults with reason CA92.1, the uptime
+    clock with 35F9.1, and whether reading `kern.monotonicclock` needs a reason (the open question in "Where things
+    stand"); then the privacy label.
+53. The age-rating questionnaire.
+54. The store page: screenshots and a preview leading with the free game, then the packs, each pack labelled as a paid
+    add-on, captioned for muted playback.
+55. Check App Review's rules on Complete before naming or pricing it.
+56. Offer codes for press and reviewers.
+57. TestFlight with 20 to 50 strangers and sandbox purchases. What it measures (shelf and card taps, free-taste
+    completion and sandbox purchases per pack, beside day-2 return) waits on Jack's call on how to read testers' play.
+58. Apple's featuring nomination, then launch.
+59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
+    overlapping entries with disjoint masks commute.
+60. Prism: the shader's per-channel chains, their cost (up to 3× an entry, assumed) benched on the phone, and depth
+    held near 12 to 14 entries until the cached chain lands.
+61. Prism: a colour-blind simulation of every specimen (protanopia, deuteranopia, tritanopia), with and without the
+    per-channel line styles that Differentiate Without Colour turns on, and the swatch that shows one channel.
+62. Prism: the engravings, tinted knobs and 30 specimens, solver-checked, to Jack before code.
+63. Music Box: the render-thread scheduler for sample-accurate plucks (a render callback reading a lock-free snapshot
+    of pin positions each buffer; assumed `AVAudioSourceNode`).
+64. Music Box: the ear-test protocol (cold readers, sound on against sound off, the time to find each seam), run
+    before any art; the pack is cut if it fails.
+65. Music Box: pins, the comb arm, snapping, the hum control and the tines in Csound; 24 tunes, to Jack's ear in
+    sketch rounds.
+66. Music Box: the Composer: tune links, a web domain, report and block tools for titles and links, and the
+    age-rating effect of user content.
+67. The Well: cups baked to textures when not played, nested `Game`s, the round-glass test, the cup knob kind and the
+    dive.
+68. The Well: every tank's game saved between launches.
+69. The Well: the deadlock checker (every well has a dive order) and its table to Jack.
+70. Albums: a route (a distributor and its account) for releasing each pack's music, the account kept in
+    `HANDOFF.private.md`.
+71. Vortex and charybdis, free: the lab's swirl played on the phone (does a swirl seam read through the cores?), then
+    vortex's own design round; charybdis's orbit solver (a reach table per crank tick), its shared-slot rule and its
+    own design round.
 
 ## Side task: the difficulty tiers (started 2026-09-28)
 
@@ -618,6 +1238,9 @@ Pricing depends on how often players return and how far they get. Choosing now w
 Revisited 2026-10-24: TestFlight can't measure who would pay (its purchases are free sandbox ones), so the comparison
 recommends a shape now, Unstir+, and says which tester numbers would change its contents.
 
+Revisited again 2026-10-24: Jack's call puts packs in v1, so Unstir+ is superseded. The recommended shape is now packs
+at one price with a Complete bundle (decision 4 under "Packs: the catalogue"; not decided).
+
 ### R5 — Nightmare+ ideas set aside (2026-09-28)
 
 Each was judged on what skill it tests that Nightmare doesn't.
@@ -661,3 +1284,56 @@ Claude's view: revisit only if the log's landing points show that rule picking w
 A hairline mark per step on the disc's hairline, the step just reached brightest. Jack, on the phone: "too faint and
 thin". He liked the dashes they replaced, only not so prominent, so the dashes came back lighter (2 pt at 0.85, no glow
 or band).
+
+### R9 — Pack candidates benched (2026-10-24)
+
+Benched in drawing up the pack catalogue ("Packs: the catalogue"). Claude's recommendations against, not Jack's calls;
+Orrery's move to charybdis waits on decision 2 there.
+
+- **Orrery.** Its independent orbits are maelstrom generalised (maelstrom is orbits with every working knob at one
+  rate), so they are reserved for charybdis, the free rung beyond maelstrom, with its crank and shared-slot rule
+  (recommended; decision 2).
+- **Coriolis.** One-way knobs make a wrong lift cost moves to carry away, against Jack's call that a wrong stir turned
+  straight back stays free (Jack, for now, 2026-09-28). And they are maelstrom made harder, the line charybdis takes
+  with orbits. No longer offered to charybdis.
+- **Marbled.** Building towards a target needs the oldest, least readable stir first with nothing healing to confirm
+  it (R5's crank flaw), and its "trace" fix turns it back into plain unstirring. Its making-and-sharing appeal goes to
+  free sharing.
+- **Duet.** A chord leaves the read unchanged (amounts still come from solo probes), small dependency graphs let greedy
+  pairing reach par, two thumbs cover the picture being read, and its fix, a two-player mode, is a different product.
+- **Relief.** Charging blind players for the only version of the game they can play is wrong, and its sighted half
+  (the crater illusion) is a thin twist on reading up. Recommended as a free "Eyes Shut" mode once a blind tester
+  confirms a prototype.
+- **Abyss.** Rationing light subtracts from the read. Unlimited pings sweep the tank and bring back R5's memory flaw,
+  rationed ones make a budget puzzle no buyer asked for, and store stills are black.
+- **Drift.** A flow field turns every core into an arrow, so amounts are trivial while seam order can't be read; a
+  still line layer underneath makes it a skin. It fails every still frame and shuts out Reduce Motion players. Its
+  winter hook suits a free seasonal daily.
+- **Riptide.** A clock on authored charts is peril rising within a tank, which Jack ruled out for the music (peril
+  rises only from tier to tier, 2026-09-29) and which the feel he set for it ("no pressure", 2026-09-29) rules out for
+  play. A memorised chart stops being a read, and rhythm buyers expect far more than three tracks.
+- **Postcards.** It is the growth engine, and charging the sender taxes the loop that recruits players. Recommended as
+  a free feature after v1, receiving always free, with the solver's per-core readability check.
+- **Cascade.** Three systems stacked (pours, gifts, a brim per pool) read as bookkeeping, a gift no clip can show,
+  Escapement's small buyer again, and the largest refactor of any candidate (a `Game` per pool).
+- **The Cabinet.** The sealed tank removes every picture and commit signal, so it is a combination lock entered
+  through rods, and its cipher craft is unrelated to stirring.
+- **The Loom.** Once the period is found every level is "record, crank". Its Zachtronics buyer needs solution
+  histograms (Game Center or a server) and is the logic buyer Escapement serves.
+- **Gallery.** Public-domain paintings on plughole's rules are new pictures on old rules, which compete with endless,
+  and painted swirls as camouflage frustrate more than they test. Its broad, featurable role goes to First Stir.
+- **Rose Window.** Forgiveness offers no real decision (a forgivable bottom entry is invisible, and a visible one
+  mid-stack must be zeroed to free what lies under it), a win with a rod still turned reads as a bug, and the petal
+  compound is R5's geared rods.
+- **Frozen rod (lab f9ff424).** An iced core keeps showing the tank as dealt, so it hides its own rod's progress and
+  leaves the ring to read alone. It subtracts from the read (Abyss's flaw), adds no decision, costs a second shader
+  pass masked to the core, and is no read aid, since what it keeps is the scramble. Not a pack and not a rung (vortex
+  has the swirl).
+- **Rush (lab ed17a0a).** Five minutes against a clock is pressure, against the feel Jack set for the game's music
+  (2026-09-29: "no pressure, no crescendo, no rising danger"), read here as a rule for play too and the reason Riptide
+  is benched. Tanks dealt from endless's generator are endless's job. Speed and competitive players are left out on
+  purpose by that reading.
+- **A commutator pack** (considered for the twisty-puzzle buyer). In Unstir every entry comes off by its own inverse,
+  so a commutator is only a detour (a push that later merges, the Problems candidate's cut Key chapter), rare and
+  found only by a bounded search (par is the solver's bounded optimum, not a proof). Cube solvers are named
+  Escapement's second buyer instead.
