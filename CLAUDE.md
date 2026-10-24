@@ -259,7 +259,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   moves that empty the stack: a breadth-first search over (stack, tank position) that untwists whole seams and turns
   the tank, then a search for anything shorter with detours (a push or partial merge can build a word that holds a
   disc still, and save a move). It tries only the detours its class comment lists, so it is a bounded search, not a
-  proof; `exhaustive` checks it on small cases. The park rule (`park`) untwists the newest whole seam a working knob
+  proof; `exhaustive` checks it on small cases. Its pruning reads which rods interact (`interacts`: discs that overlap
+  and maps that fail to commute, judged by the maps), so a swirl interacts with every rod but hex's hub, which shares
+  its centre; whether a word commutes is still `Layout.commutes`'s call. The swirl is a slot like any other, held at
+  every position and never seized. The park rule (`park`) untwists the newest whole seam a working knob
   reaches; when none is, it turns to a position where one is, choosing by where the seized knobs land (`Parking`:
   `.fewest` or `.all`), then the nearest. The rule has no tie-break (Jack's call): `parkTies` gives its fewest and
   most moves over every way its ties go, and `park` breaks them by `Tie` (`.clockwise` or `.lowest`) only to name one

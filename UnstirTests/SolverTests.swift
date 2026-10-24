@@ -143,6 +143,21 @@ final class SolverTests: XCTestCase {
         assertNothingBeatsTheOptimum([(.tri, "2:+3,0:-5", [1], Self.anySteps, 2)])
     }
 
+    /// The swirl's maps fail to commute with every rod's but a hub on its own centre: hex's hub and its swirl turn each
+    /// radius about one point, so they commute though their discs overlap. Between the other rods it is the overlap.
+    func testTheSwirlInteractsWithEveryRodButTheHub() {
+        for layout in Layout.swirls {
+            let solver = Solver(layout), rods = layout.rods
+            for i in rods.indices {
+                for j in rods.indices {
+                    let concentric = i != j && rods[i].x == rods[j].x && rods[i].y == rods[j].y
+                    XCTAssertEqual(solver.interacts[i][j], layout.overlaps(i, j) && !concentric, "\(layout) \(i) \(j)")
+                }
+            }
+        }
+        XCTAssertFalse(Solver(.hexSwirl).interacts[0][Layout.hexSwirl.swirl!])
+    }
+
     func testTheOptimumMatchesAnExhaustiveSearchOnSmallCases() throws {
         try skipUnlessSlow()
         assertNothingBeatsTheOptimum([
