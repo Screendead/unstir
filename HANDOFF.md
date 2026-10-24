@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-09-29. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-10-24. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -14,7 +14,7 @@ this is analysis. No code has changed for it.
 | Item | State |
 |---|---|
 | Competitor scan | Done 2026-09-28, quick pass (see below) |
-| Business-model recommendation | Jack ruled out paying to unlock tiers (2026-09-28). Jack wants **picture packs with their own tanks** as paid content, best with new mechanics; an archive of past dailies, a supporter mark and a tip jar are agreed (2026-09-28). Undos are never part of the paid side: free for everyone at +2 per playing day (see "Thoughts"). Packs stay outside the ladder and never open a tier. Rewarded ads for an undo top-up stay in reserve, only if TestFlight shows banks running dry. A single "Unstir+" purchase may not be needed |
+| Business-model recommendation | Jack ruled out paying to unlock tiers (2026-09-28). Jack wants **picture packs with their own tanks** as paid content, best with new mechanics; an archive of past dailies, a supporter mark and a tip jar are agreed (2026-09-28). Undos are never part of the paid side: free for everyone at +2 per playing day (see "Thoughts"). Packs stay outside the ladder and never open a tier. Rewarded ads for an undo top-up stay in reserve, only if TestFlight shows banks running dry. A single "Unstir+" purchase may not be needed. Options compared 2026-10-24 (below): Claude recommends one "Unstir+" purchase (the daily archive, endless past a free taste, the supporter mark) as 1.0's product, with packs from 1.1; not decided |
 | Monetisation code | None. No StoreKit, ads or sharing in `Sources/` |
 | Undo bank | Starts at 10 (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10. Built on `help` (2026-09-29, `Best.refill`): the first opening of a level other than the sandbox on a local calendar day later than the last refill's adds 2, up to 10, and a "+2" shows over the undo count once the level's opening ends or is skipped. A fresh install records its first day without a refill; a clock moved back never refills. Jack (2026-09-29): setting the phone's date mustn't game the refill. Closed on `help` (2026-09-29, `Best.trustedNow`): within one boot the day comes from the last time it vouched for plus the uptime since (`CLOCK_MONOTONIC_RAW`, which counts sleep and can't be set), so a clock set ahead refills nothing until real time reaches the next day, give or take 5 min, and the log says `undo refill held: clock ahead Xh`. The anchor follows the wall clock no further ahead than drift explains (a second plus 100 ppm of the uptime since), so creeping the clock ahead a few minutes at a time gains about a second an opening; review found the first version let each step under 5 min carry the anchor along, a day ahead in about 290 steps (fixed 2026-09-29). Still open: a restart between date changes still borrows a refill, since a new boot has nothing to check against. A trusted network clock would close that; Claude recommends against it (a server, and a refill that waits on the network, to guard 2 undos a day). Unverified whether it is the only way: `kern.monotonicclock` is a candidate, a clock XNU's `clock.c` says nothing can set, and on a Mac it runs on across restarts. Unchecked on iOS: whether the app may read it, and whether setting the date moves it. The launch logs it next to the uptime (`monotonic clock Ns` or `unread`), so launches either side of a restart and of a date change answer both; if it holds, reckoning from it would close the restart hole. Unverified: whether iOS lets the app read the boot session (`kern.bootsessionuuid`); an app in macOS's App Sandbox reads it, but `container.sb` leaves it off its sysctl allow list, and iOS's profile is unpublished. The phone's log answers it at launch (`boot session read` or `unread`). Unread, a jump of at least the phone's uptime at the last level opened passes as a possible restart, and a believed jump anchors at the uptime then; so on a phone up less than a day, as after any restart, steps of a day get through one after another until a level opens with the phone up longer than the step. A genuine forward correction of more than 5 min within a boot (a phone that ran slow, set right) is held too, so its refill day turns late by that much until the next restart; one under 5 min is believed, and the anchor takes it in a few seconds a day. A new boot whose clock reads more than 5 min before the anchor's time, as after a clock reset, is believed but leaves the anchor, so setting the clock right later in that boot still counts as a new boot (review found the first version held every refill until the next restart there; fixed 2026-09-29). Not covered: a clock behind at the first opening with no anchor stored (a fresh install, or the first on this build), then set right, makes refills late by that much until a restart. The privacy manifest TestFlight will need (UserDefaults already requires one) should give reason 35F9.1 for the uptime clock: Apple's boot-time list names `systemUptime` and `mach_absolute_time()`, not `clock_gettime`; if the `kern.monotonicclock` read stays, check whether it needs a reason too |
 | TestFlight | Not started |
@@ -43,6 +43,140 @@ this is analysis. No code has changed for it.
 
 Free, with one purchase that unlocks the rest (full campaign, Nightmare and Nightmare+, endless). The daily stays free
 for good because it is the marketing. Undos refill daily and are never sold.
+
+### How Unstir makes money: options compared (Claude's recommendation, 2026-10-24; not a decision)
+
+Analysis only; no code changed. Every claim is tagged **E** (evidence, with its source: this file, the code, or a
+page found on 2026-10-24) or **G** (a guess, including platform facts Claude didn't check this session). There are no
+revenue figures here, by design (see "Thoughts").
+
+**What 1.0 has to sell, as things stand.** Three tiers of 27 levels each, 81 in all, every one free (E: `Level.plughole`,
+`Level.whirlpool` maps it one to one, `Level.maelstrom` maps whirlpool; Jack's tier call). Endless and the daily, free
+(E). Undos, free at +2 per playing day (E: Jack's call). No pack exists, and none is designed (E). Selling anything needs
+the paid developer account (E: "The Apple Developer account").
+
+#### The options
+
+**A. The agreed mix: picture packs, a daily archive, a supporter mark and a tip jar**
+- *Build.* StoreKit 2 with several products: a non-consumable per pack, one for the archive, consumable tips, the mark
+  on purchase, and restore (G). The archive is cheap to make. `Level.daily(_:)` takes any date and the generator is
+  frozen, so every past daily, back to any date, can be rebuilt exactly (E: `Levels.swift`, `testDailyVectors`). It
+  needs a calendar screen and bests per `daily-yyyymmdd` id (E for the id; G for the rest).
+- *Content.* Packs are the most expensive content in the plan: "their own tanks, best with new mechanics" (E: Jack's
+  call). One live picture touches six places (E: "After that: the architecture pass"). One new mechanic, maelstrom's,
+  took a solver and three proposed level tables (E: "Side task"). The archive needs no new content, but every daily
+  is the same kind of tank: one of four generated layouts, 10–14 stirs (E: `Level.daily`).
+- *How it earns.* At 1.0: the archive, the tip jar and the mark. Packs earn only once they exist (E).
+- *Risks.* Jack's tier call gives away the part that sells best, more levels (G). What is left to buy at 1.0 is more
+  dailies of a mode that is free every day, and goodwill (E for what is on sale; G that this sells little). Packs then
+  ship to whatever players are still around after launch (G). Four kinds of purchase split a small audience (G).
+- *Featuring.* Good: nothing is locked or timed (G; "Thoughts" says the same, unsourced).
+
+**B. Paid up front, R1**
+- *Build.* The least of any option: no StoreKit, no purchase screens (G).
+- *Content.* None new (E).
+- *How it earns.* Once, per download (E).
+- *Risks.* Few people download paid apps, and a new name with nothing to try is worse (G; R1's own reasoning). A daily
+  share line that ends at a price tag loses most of its pull as marketing (G). A free copy, which "Thoughts" expects
+  if the game takes off, undercuts it directly (G).
+- *Featuring.* Good: premium games with no in-app purchases fit Apple's editorial taste (G).
+- *Note.* R1 is the one option that keeps Jack's rule completely: nothing inside the game is locked, because everyone
+  has paid (E: the rule is about tiers behind a purchase).
+
+**C. One "Unstir+" purchase that locks no tier**
+- *What it holds* (Claude's definition; this file has never defined it): the daily archive, endless past a free taste,
+  and the supporter mark, in one non-consumable. Every tier and the daily stay free (G: a proposal).
+- *Build.* One product, one purchase card, restore, the archive screen, and a gate in endless (G). Fewer StoreKit
+  paths than A, and testable locally without the paid account (E: "Works without it").
+- *Content.* None new: the archive and endless exist already (E).
+- *How it earns.* One purchase per fan at 1.0, then packs later as separate products (G).
+- *Risks.* Endless is the free game's only mode with no end; gating it may cut how often players come back (G;
+  TestFlight measures it). Without endless, Unstir+ is the same thin offer as A's (G). Endless is a mode, not a tier, so
+  this stays inside Jack's rule, but it is near enough to the unlock he ruled out to be his call (E for the rule's
+  wording; the rest is judgement).
+- *Featuring.* Good: one fair purchase on a free game, nothing sold that helps a solve (G).
+
+**D. Rewarded ads for an undo top-up, R3**
+- *Build.* A third-party ad SDK, a consent prompt where the law requires one, likely Apple's tracking prompt, a
+  privacy-label change and the app's first network code (G: platform knowledge, unchecked). The privacy manifest
+  TestFlight needs grows (E: it is already flagged in "Where things stand").
+- *Content.* None (E).
+- *How it earns.* Only when a bank runs dry (E: the reward is undos). The +2 refill each playing day caps that, and
+  endless has no undo at all (E).
+- *Risks.* It sells undos, which Jack made free, and it looks like the clones the game must stand apart from (E:
+  R3's reasoning and Jack's undo call). It brings in data collection for the first time (G).
+- *Featuring.* Poor (G).
+
+| | Build | New content | Earns at 1.0 | Main risk | Featuring |
+|---|---|---|---|---|---|
+| A. Agreed mix | Medium; packs large | Packs: large | Archive, tips, mark | Little to buy at 1.0 | Good (G) |
+| B. Paid up front | Least | None | Every download | Few downloads | Good (G) |
+| C. Unstir+ | Small | None | One purchase per fan | Gating endless may cost returns | Good (G) |
+| D. Rewarded ads | Medium, plus privacy | None | Only from empty banks | Brand, privacy | Poor (G) |
+
+#### The agreed mix against Jack's aim of making money
+
+Jack wants money from the game (E: the task). With every tier free and no pack in existence, the mix at 1.0 is a tip
+jar with a cheap archive attached (E for what exists; G that this sells little). Its earning part, packs, is the
+most expensive content to make, it is designed only as an idea, and it lands after launch, when the players who
+would buy it may have gone (G). So the mix, as agreed, defers the money to a content pipeline that doesn't exist yet.
+
+**Pushback.**
+1. *The tier rule isn't wrong, but it has a cost that must be paid somewhere.* It gives away the one thing the earlier
+   model sold. Keep the rule if Jack wants it; then 1.0 needs something else worth buying, and endless is the only
+   thing that already exists and isn't a tier.
+2. *Don't plan revenue on packs.* Packs with their own tanks and mechanics are a tier's worth of design each. Treat
+   them as 1.1 content, sold only if launch shows players finishing the free ladder.
+3. *Four kinds of purchase is too many for 1.0.* Fold the archive and the mark into one product. A separate tip jar
+   only competes with that product for the same goodwill.
+4. *R4 doesn't block a decision on shape.* One StoreKit product can be built and tested locally whichever way the
+   contents go. TestFlight can't measure who would pay anyway (below).
+
+#### Recommendation: C, Unstir+, as 1.0's one product
+
+Free download. Every tier, the daily and the daily share line stay free. Undos stay free. 1.0 sells:
+
+1. **Unstir+**, one non-consumable: the full daily archive (back-filled to a date Jack picks, so it isn't empty on
+   launch day), endless past a free taste (e.g. the first few tanks of each run, or a free run each day; Jack picks),
+   and the supporter mark (e.g. on the menu and in the daily share line). Priced in R1's band; Jack picks the price.
+2. **A tip jar of two or three consumable tips**, shown only after Unstir+ is owned, so it never competes with it (G
+   that it earns anything; it is cheap to build).
+3. **No packs at 1.0.** The first pack is a 1.1 product, sold separately, built only if launch numbers show players
+   finishing the ladder.
+
+Rewarded ads stay in reserve, as agreed, for the case Jack set: TestFlight shows banks running dry. Paid up front
+(R1) comes back if Apple features the game or testers say they would pay up front.
+
+#### What TestFlight must measure to confirm it
+
+TestFlight purchases run in Apple's sandbox and cost the tester nothing (E: an Apple DTS answer on the developer
+forums, and Adapty's docs, found 2026-10-24). So TestFlight shows interest, never willingness to pay. Real conversion
+is known only after launch. Today the app sends nothing anywhere: the flight recorder (`Log.write`) stays on the phone
+(E). Strangers' play can't be read unless an opt-in log upload, an analytics library or a survey is added (E that
+none exists; the choice is Jack's). With 20–50 testers every number points a direction and proves nothing (G).
+
+- **Day-2 and day-7 return**, as the plan already asks. Low return sinks every model equally.
+- **How far testers get**: plughole finished, whirlpool opened, maelstrom opened. If most never finish plughole, the
+  free tiers cost little, and packs are a long way off.
+- **Endless**: the share of testers who play it, runs per tester, and whether endless players return more. This decides
+  whether endless anchors Unstir+. If few play it, or its players return no more than others, Unstir+ needs another
+  anchor.
+- **The daily**: the share who play it on three or more days. That is the archive's market.
+- **Undo banks at zero**: how often, and for whom. This is R3's trigger.
+- **The Unstir+ card**: taps on it, and free sandbox purchases. Interest only.
+- **An exit question**: would you pay for Unstir+ at its price, and what would you want in it? Stated intent usually
+  runs above real buying (G).
+
+#### Open for Jack
+
+1. Accept C, Unstir+, as 1.0's model, or keep A as agreed, knowing it earns little until a pack ships?
+2. Put endless past a free taste inside Unstir+? If yes: a few tanks per run, or a free run a day?
+3. Unstir+'s price, within R1's band.
+4. Back-fill the archive before launch, and from what date?
+5. The tip jar: only after Unstir+, or not at 1.0?
+6. Where the supporter mark shows: the menu, the share line, both?
+7. How to read testers' play: an opt-in log upload, an analytics library, or a survey only?
+8. The first pack: which picture or mechanic, and is it worth starting before launch numbers?
 
 ## Side task: the difficulty tiers (started 2026-09-28)
 
@@ -458,6 +592,9 @@ back up, note the date and why.
 Clean, and suits the crafted look. But few people download paid apps, and a new name with nothing to try first makes
 that worse. Revisit if Apple features the game, or if testers say they would pay up front.
 
+Revisited 2026-10-24 in the options comparison: still set aside. It is the one option that keeps Jack's tier rule
+completely.
+
 ### R2 — Sell undo packs
 
 The undo bank makes this the obvious in-app purchase. It was set aside because a puzzle built on careful, clean solves
@@ -472,9 +609,14 @@ Picked back up 2026-09-28: Jack ruled out the unlock. Undos are never sold: ever
 at 10. The paid side is picture packs with their own tanks, an archive of past dailies, a supporter mark and a tip
 jar. Rewarded ads that grant undos stay in reserve.
 
+Revisited 2026-10-24 in the options comparison: still in reserve, for the trigger Jack set (banks running dry).
+
 ### R4 — Picking the model before TestFlight
 
 Pricing depends on how often players return and how far they get. Choosing now would be a guess.
+
+Revisited 2026-10-24: TestFlight can't measure who would pay (its purchases are free sandbox ones), so the comparison
+recommends a shape now, Unstir+, and says which tester numbers would change its contents.
 
 ### R5 — Nightmare+ ideas set aside (2026-09-28)
 
