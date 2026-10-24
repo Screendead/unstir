@@ -855,8 +855,8 @@ final class UnstirTests: XCTestCase {
 
     /// The menu stores the raw value, and declaration order is the ladder.
     func testTiers() {
-        XCTAssertEqual(Tier.allCases.map(\.rawValue), ["plughole", "whirlpool", "maelstrom"])
-        XCTAssertEqual(Tier.allCases.map(\.below), [nil, .plughole, .whirlpool])
+        XCTAssertEqual(Tier.allCases.map(\.rawValue), ["plughole", "whirlpool", "vortex", "maelstrom"])
+        XCTAssertEqual(Tier.allCases.map(\.below), [nil, .plughole, .whirlpool, .vortex])
     }
 
     /// Plughole is always open. Each tier above opens exactly when every level of the tier just below has a best at or
@@ -864,22 +864,29 @@ final class UnstirTests: XCTestCase {
     func testTierGate() {
         var bests: [String: Best] = [:]
         func open(_ tier: Tier, unlocked: Bool = false) -> Bool { tier.isOpen(unlocked: unlocked) { bests[$0] } }
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false])
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, false])
         for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.whirlpool))
         bests[Level.plughole.last!.id] = Best(over: 1, seconds: 30)
         XCTAssertFalse(open(.whirlpool))
         XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, Array(repeating: true, count: 26) + [false])
         bests[Level.plughole.last!.id] = Best(over: 0, seconds: 30)
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false])
-        // A maelstrom best opens nothing below it, and the tier just below is the only one that counts.
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false, false])
+        // A best opens nothing below it, and the tier just below is the only one that counts: whirlpool at par opens
+        // vortex and not maelstrom, and vortex at par opens maelstrom.
         for level in Level.maelstrom { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.maelstrom))
         for level in Level.whirlpool { bests[level.id] = Best(over: 0, seconds: 30) }
         for level in Level.plughole { bests[level.id] = nil }
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true])
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true, false])
+        for level in Level.vortex.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
+        bests[Level.vortex.last!.id] = Best(over: 1, seconds: 30)
+        XCTAssertFalse(open(.maelstrom))
+        for level in Level.whirlpool { bests[level.id] = nil }
+        bests[Level.vortex.last!.id] = Best(over: 0, seconds: 30)
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, true])
         bests = [:]
-        XCTAssertEqual(Tier.allCases.map { open($0, unlocked: true) }, [true, true, true])
+        XCTAssertEqual(Tier.allCases.map { open($0, unlocked: true) }, [true, true, true, true])
 
         let flag = Best.unlocked
         defer { Best.unlocked = flag }
@@ -1116,7 +1123,7 @@ final class UnstirTests: XCTestCase {
     /// Whirlpool's prefix predates its name and stays, so the rename kept what was played; maelstrom's set replaced
     /// nightmare+'s, so its prefix moved off N+ and no old best lands on a new level.
     func testLevelIdsMatchTheirTier() {
-        XCTAssertEqual(Tier.allCases.map(\.prefix), ["L", "N", "M"])
+        XCTAssertEqual(Tier.allCases.map(\.prefix), ["L", "N", "V", "M"])
         for tier in Tier.allCases {
             XCTAssertEqual(tier.levels.map(\.id), tier.levels.indices.map { "\(tier.prefix)\($0 + 1)" })
             XCTAssertTrue(tier.levels.allSatisfy { $0.tier == tier }, tier.rawValue)
@@ -1128,10 +1135,26 @@ final class UnstirTests: XCTestCase {
     /// Maelstrom's levels are its own, on live pictures, under ids of their own so a best or start from another tier
     /// never opens one or spends its first try.
     func testMaelstromKeepsItsOwnProgress() {
-        let others = Level.plughole + Level.whirlpool
+        let others = Level.plughole + Level.whirlpool + Level.vortex
         XCTAssertTrue(Set(Level.maelstrom.map(\.id)).isDisjoint(with: others.map(\.id)))
         XCTAssertTrue(Set(Level.maelstrom.map(\.scramble)).isDisjoint(with: others.map(\.scramble)))
-        XCTAssertTrue((Level.whirlpool + Level.maelstrom).allSatisfy(\.picture.isLive))
+        XCTAssertTrue((Level.whirlpool + Level.vortex + Level.maelstrom).allSatisfy(\.picture.isLive))
+    }
+
+    /// Vortex's provisional three: a swirl layout each, the swirl in every scramble, no seized knob yet, whirlpool's
+    /// pictures (never a twin, which is maelstrom's), and each tank four taps as dealt.
+    func testVortexTable() {
+        let levels = Level.vortex
+        XCTAssertEqual(levels.map(\.layout), [.quadSwirl, .pentSwirl, .hexSwirl])
+        XCTAssertEqual(levels.map(\.scramble.count), [2, 4, 5])
+        for level in levels {
+            XCTAssertTrue(level.scramble.contains { $0.rod == level.layout.swirl }, level.id)
+            XCTAssertTrue(level.seized.isEmpty, level.id)
+            XCTAssertNotEqual(level.picture.twin, level.picture, level.id)
+            XCTAssertLessThanOrEqual(level.scramble.count, Tank.fourTaps - level.picture.fillEntries, level.id)
+        }
+        XCTAssertFalse(levels[0].note.isEmpty)
+        XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
     }
 
     /// Against the design table: quad, then pent, then hex, one or two seized knobs, never the hub; the twin of each
@@ -1475,6 +1498,8 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.reachable, Twist(rod: 1, steps: -4))
         for level in Tier.allCases.flatMap(\.levels) {
             XCTAssertTrue(level.seized.isSubset(of: level.layout.rods.indices), level.id)
+            // A touch would hold a seized swirl, and its commit would be refused without a word.
+            if let swirl = level.layout.swirl { XCTAssertFalse(level.seized.contains(swirl), level.id) }
             XCTAssertLessThanOrEqual(level.seized.count, 2, level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }
             if level.note.contains("seize") { XCTAssertFalse(level.seized.isEmpty, level.id) }

@@ -15,12 +15,13 @@ struct Run: Hashable, Sendable {
 /// The difficulty ladder, easiest first: declaration order is the ladder, so a new tier goes in where it belongs. The
 /// raw value is stored as the menu's choice, so it never changes.
 enum Tier: String, CaseIterable {
-    case plughole, whirlpool, maelstrom
+    case plughole, whirlpool, vortex, maelstrom
 
     var name: String {
         switch self {
         case .plughole: "Plughole"
         case .whirlpool: "Whirlpool"
+        case .vortex: "Vortex"
         case .maelstrom: "Maelstrom"
         }
     }
@@ -32,6 +33,7 @@ enum Tier: String, CaseIterable {
         switch self {
         case .plughole: "L"
         case .whirlpool: "N"
+        case .vortex: "V"
         case .maelstrom: "M"
         }
     }
@@ -46,6 +48,7 @@ enum Tier: String, CaseIterable {
         switch self {
         case .plughole: Level.plughole
         case .whirlpool: Level.whirlpool
+        case .vortex: Level.vortex
         case .maelstrom: Level.maelstrom
         }
     }
@@ -168,6 +171,17 @@ struct Level: Hashable, Sendable {
                         2: .coral, 5: .coral, 8: .coral, 16: .coral, 4: .neurons, 7: .neurons, 11: .neurons, 17: .neurons,
                         20: .neurons, 6: .marbling, 12: .marbling, 15: .marbling, 22: .marbling, 25: .marbling][i + 1] ?? .glass,
               layout: l.0, scramble: .parse(l.1, in: l.0))
+    }
+
+    /// The swirl: a rod the size of the tank, held from the rim. PROVISIONAL: three placeholders so the tier can be
+    /// played and filmed, until the real set replaces them.
+    static let vortex: [Level] = ([
+        (.quadSwirl, "0:+3,4:+4", Picture.glass, "The rim is a rod too.", "Turn the glass's edge. Everything inside it stirs."),
+        (.pentSwirl, "5:-3,2:+4,5:+5,0:-3", .chainmail, "Stirred, then stirred again.", ""),
+        (.hexSwirl, "7:+3,0:-4,3:+5,7:-2,1:+3", .marbling, "The hub and the rim keep out of each other's way.", ""),
+    ] as [(Layout, String, Picture, String, String)]).enumerated().map { i, l in
+        Level(id: Tier.vortex.prefix + "\(i + 1)", tier: .vortex, label: String(format: "%02d", i + 1), title: l.3,
+              note: l.4, picture: l.2, layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
     /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum, and the park rule

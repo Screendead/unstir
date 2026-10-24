@@ -140,18 +140,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stir is area-preserving, so it becomes a thin sliver) and averaging up to 48 taps along it in linear light, so
   lines finer than a pixel mix instead of glittering. `SpillWords` stamps "spilled." over the tank, whose caps stay,
   and the card follows at `Brim.card`. The tests reach only the Swift side.
-- **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, maelstrom (vortex will go between the last
-  two, charybdis past maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
+- **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom (charybdis will go past
+  maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best at par
   (`Tier.isOpen`: `over == 0`). `Tier.store` keeps only an open tier, so a locked one opened to look at
   never comes back on launch, and `Tier.stored` falls back to the highest open tier below one that has closed.
   `Best.unlocked`, the developer unlock, opens every tier and level; a launch with `UNSTIR_UNLOCK=1` sets it and one
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
-  (`L1`, `N1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
+  (`L1`, `N1`, `V1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
   its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
   loses it unless the stored keys are remapped. Plughole has 27 hand-written
   levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
-  deeper variants on live pictures that follow a table, and maelstrom 27 of its own (quad, then pent, then hex) on
+  deeper variants on live pictures that follow a table, vortex three provisional swirl levels (quad, pent, hex) on
+  whirlpool's pictures until its own set is written, and maelstrom 27 of its own (quad, then pent, then hex) on
   the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
   solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
   rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
