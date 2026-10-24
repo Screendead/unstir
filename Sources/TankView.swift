@@ -440,6 +440,8 @@ struct LevelView: View {
     private let frozenShake: Double?
     /// UNSTIR_TODAY: the day the level opens on, for the bank's refill.
     private let today: String?
+    /// UNSTIR_RIM: how the rim shows what it does.
+    private let cue: RimCue
     /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
     /// Endless: the picture's colours round the rim as the stack stirs it (Brim.colours), once worked out.
@@ -506,6 +508,7 @@ struct LevelView: View {
         frozenClock = harness?.clock
         frozenShake = harness?.shake
         today = harness?.today
+        cue = harness?.rim ?? .knob
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
@@ -862,8 +865,10 @@ struct LevelView: View {
         let lesson = shown == nil && !game.finished && held == nil
         let arc = (!game.level.seized.isEmpty && lesson && !game.tankTurned ? RimLesson.arc(r, .tank) : [])
             + (game.level.layout.swirl != nil && lesson && !game.swirled ? RimLesson.arc(r, .swirl) : [])
+        let g = RimCues.glyphs(r, tank: !game.level.seized.isEmpty, swirl: game.level.layout.swirl != nil)
+        let glyphs = (cue == .glyphs ? [g.tank, g.swirl] : []).compactMap { $0 }.map { ($0, RimCues.glyphSize + Self.countRoom) }
         let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
-            + arc.map { ($0, RimLesson.width + Self.countRoom) }
+            + arc.map { ($0, RimLesson.width + Self.countRoom) } + glyphs
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
         let spillAt = game.spilled ? game.brimEvents.last?.time : nil
         // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow.
@@ -919,6 +924,11 @@ struct LevelView: View {
                 }
                 .position(at(fk))
             Bezel(r: r)
+            RimCues(cue: cue, r: r,
+                    swirl: game.level.layout.swirl.map { s in (turned(s) + (probing == s ? liveAngle : 0), probing == s) },
+                    tank: game.level.seized.isEmpty ? nil : (turn, held != nil), band: game.level.seized.isEmpty ? Self.rim : Self.swirlBand,
+                    lessons: (lesson && !game.tankTurned, lesson && !game.swirled))
+                .opacity(showResult && !game.spilled ? 0 : 1)
             // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
             // animator of its own that misses the strike when the colours land after it.
             ZStack {
@@ -984,7 +994,7 @@ struct LevelView: View {
                     .position(countSpot(at(c.k), reach: rods[c.k].z * r + 22, side: side, avoid: others))
             }
             if let c = tankCount, c.steps != 0 {
-                countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side))
+                countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side, avoid: glyphs))
             }
         }
         .frame(width: side, height: side)
@@ -1509,6 +1519,180 @@ struct RimLesson: View {
         }
         .frame(width: 2 * r, height: 2 * r)
         .opacity(showing ? 1 : pulse)
+    }
+}
+
+/// How the rim shows, before it is touched, what it does: stir with the swirl, turn the glass and its seized knobs, or
+/// both. Three ways, compared through UNSTIR_RIM until one is chosen.
+enum RimCue: String {
+    /// The swirl wears a knob's ticks just inside the glass's edge; where knobs are seized, the bezel is knurled.
+    case knob
+    /// The swirl's grab is a cyan band on the glass's edge; where knobs are seized, the bezel is amber, as the lessons.
+    case bands
+    /// A glyph over the bezel at twelve for each, once its lesson is learnt: a spiral, a ring turning with a seized knob.
+    case glyphs
+}
+
+/// The rim's standing cue over glass of radius `r`, in the tank's frame. `swirl` is the swirl's own turning and whether
+/// it is held, nil on a layout without one; `tank`, the glass's turn and whether the rim holds it, nil where no knob is
+/// seized. `band` is where the swirl's grab starts, a fraction of `r`; `lessons`, which lessons show, as a glyph waits
+/// for its own lesson to go.
+struct RimCues: View {
+    let cue: RimCue
+    let r: CGFloat
+    let swirl: (angle: Double, held: Bool)?
+    let tank: (angle: Double, held: Bool)?
+    let band: Double
+    let lessons: (tank: Bool, swirl: Bool)
+    @Environment(\.displayScale) private var scale
+
+    /// A glyph's reach from its centre.
+    static let glyphSize: CGFloat = 14
+    /// Where the glyphs sit: over twelve, clear of the tank lesson's arc there, side by side where there are both.
+    static func glyphs(_ r: CGFloat, tank: Bool, swirl: Bool) -> (tank: CGPoint?, swirl: CGPoint?) {
+        let radius = 1.045 * r + 32, apart = tank && swirl ? 8 * Double.pi / 180 : 0
+        func at(_ a: Double) -> CGPoint { CGPoint(x: r + radius * sin(a), y: r - radius * cos(a)) }
+        return (tank ? at(-apart) : nil, swirl ? at(apart) : nil)
+    }
+
+    var body: some View {
+        ZStack {
+            switch cue {
+            case .knob:
+                if let tank { knurl.rotationEffect(.radians(tank.angle)).opacity(tank.held ? 1 : 0.85) }
+                if let swirl {
+                    let lit = swirl.held ? Color.live : .neonCyan
+                    // Joined by a hairline round the glass's edge: twelve ticks alone, a hand apart, read as marks on the picture.
+                    ring(r - 4).stroke(lit.opacity(swirl.held ? 0.9 : 0.55), lineWidth: 0.5)
+                    ticks(r - 4, r - 15).stroke(lit.opacity(swirl.held ? 1 : 0.9), lineWidth: 1)
+                        .overlay(pointer(lit))
+                        .rotationEffect(.radians(swirl.angle))
+                }
+            case .bands:
+                if let tank {
+                    Circle().strokeBorder(Color.amber.opacity(tank.held ? 0.55 : 0.32), lineWidth: 0.045 * r)
+                        .padding(-0.045 * r).blendMode(.plusLighter)
+                }
+                if let swirl {
+                    let inner = band * r, lit = swirl.held ? Color.live : .neonCyan
+                    // Added light, so the picture under the band still reads through it.
+                    Circle().fill(RadialGradient(stops: [.init(color: .clear, location: inner / r),
+                                                         .init(color: Color.neonCyan.opacity(swirl.held ? 0.3 : 0.18), location: 1)],
+                                                 center: .center, startRadius: 0, endRadius: r))
+                        .blendMode(.plusLighter)
+                    ring(inner).stroke(lit.opacity(0.8), lineWidth: 0.5)
+                    ring(r - 1.5).stroke(lit, lineWidth: 1)
+                    shear(inner + 3, r - 4).stroke(lit.opacity(swirl.held ? 0.9 : 0.6), lineWidth: 0.75)
+                        .rotationEffect(.radians(swirl.angle))
+                }
+            case .glyphs:
+                let spots = Self.glyphs(r, tank: tank != nil, swirl: swirl != nil)
+                if let tank, let p = spots.tank, !lessons.tank { turning(lit: tank.held).position(p) }
+                if let swirl, let p = spots.swirl, !lessons.swirl { spiral(lit: swirl.held).position(p) }
+            }
+        }
+        .frame(width: 2 * r, height: 2 * r)
+        .allowsHitTesting(false)
+    }
+
+    private func px(_ points: CGFloat) -> CGFloat { (points * scale).rounded() / scale }
+    private func ring(_ radius: CGFloat) -> Path {
+        Path(ellipseIn: CGRect(x: r - radius, y: r - radius, width: 2 * radius, height: 2 * radius))
+    }
+
+    /// One radial mark per 30-degree step, from radius `a` in to `b`, about the glass's centre.
+    private func ticks(_ a: CGFloat, _ b: CGFloat) -> Path {
+        Path { p in
+            for i in 0..<12 {
+                let t = Double(i) * Tank.step
+                p.move(to: CGPoint(x: r + a * sin(t), y: r - a * cos(t)))
+                p.addLine(to: CGPoint(x: r + b * sin(t), y: r - b * cos(t)))
+            }
+        }
+    }
+
+    /// Strokes slanted across the band from `a` out to `b`, as the swirl shears it: a current, not a scale.
+    private func shear(_ a: CGFloat, _ b: CGFloat) -> Path {
+        Path { p in
+            for i in 0..<36 {
+                let t = Double(i) * .pi / 18
+                p.move(to: CGPoint(x: r + a * sin(t), y: r - a * cos(t)))
+                p.addLine(to: CGPoint(x: r + b * sin(t + 0.09), y: r - b * cos(t + 0.09)))
+            }
+        }
+    }
+
+    /// The swirl's own pointer at twelve, longer than its ticks, as a knob's.
+    private func pointer(_ colour: Color) -> some View {
+        Path { $0.move(to: CGPoint(x: r, y: 4)); $0.addLine(to: CGPoint(x: r, y: 26)) }
+            .stroke(colour, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+    }
+
+    /// A milled edge across the bezel's steel: dark grooves between bright ridges, every few points.
+    private var knurl: some View {
+        let count = Int((2 * .pi * r / 4).rounded()), lit = tank?.held == true
+        func lines(_ offset: Double, _ a: CGFloat, _ b: CGFloat) -> Path {
+            Path { p in
+                for i in 0..<count {
+                    let t = (Double(i) + offset) * 2 * .pi / Double(count)
+                    p.move(to: CGPoint(x: r + a * sin(t), y: r - a * cos(t)))
+                    p.addLine(to: CGPoint(x: r + b * sin(t), y: r - b * cos(t)))
+                }
+            }
+        }
+        let a = r + 1.5, b = 1.045 * r - 0.5
+        return ZStack {
+            lines(0, a, b).stroke(Color.black.opacity(0.55), lineWidth: 1.2)
+            lines(0.5, a, b).stroke((lit ? Color.amber : .white).opacity(lit ? 0.9 : 0.3), lineWidth: 0.6)
+        }
+    }
+
+    /// The glass's turn: a ring with a seized knob's slash, and an arc round it with a head each way.
+    private func turning(lit: Bool) -> some View {
+        let colour = lit ? Color.live : .amber, s = Self.glyphSize
+        return ZStack {
+            Circle().stroke(colour, lineWidth: 1.75).frame(width: s, height: s)
+            Path { $0.move(to: CGPoint(x: s / 2 - 2.5, y: s / 2 + 2)); $0.addLine(to: CGPoint(x: s / 2 + 2.5, y: s / 2 - 2)) }
+                .stroke(Color.blood, style: StrokeStyle(lineWidth: 1.5, lineCap: .round)).frame(width: s, height: s)
+            Path { p in
+                let c = CGPoint(x: s, y: s), rr = s * 0.95, span = 1.2
+                for dir in [-1.0, 1] {
+                    let tip = -Double.pi / 2 + dir * span
+                    p.addArc(center: c, radius: rr, startAngle: .radians(-.pi / 2), endAngle: .radians(tip), clockwise: dir < 0)
+                    let e = CGPoint(x: c.x + rr * cos(tip), y: c.y + rr * sin(tip))
+                    // The head's wings, back along the arc and out either side of it.
+                    let back = tip - dir * 0.45
+                    p.move(to: CGPoint(x: c.x + (rr + 3) * cos(back), y: c.y + (rr + 3) * sin(back)))
+                    p.addLine(to: e)
+                    p.addLine(to: CGPoint(x: c.x + (rr - 3) * cos(back), y: c.y + (rr - 3) * sin(back)))
+                }
+            }
+            .stroke(colour, style: StrokeStyle(lineWidth: 1.75, lineCap: .round, lineJoin: .round))
+            .frame(width: 2 * s, height: 2 * s)
+        }
+        .frame(width: 2 * s, height: 2 * s)
+    }
+
+    /// The swirl: a spiral wound in to its centre, an arrowhead on its outer end.
+    private func spiral(lit: Bool) -> some View {
+        let colour = lit ? Color.live : .neonCyan, s = Self.glyphSize, turns = 2.0
+        return Path { p in
+            let c = CGPoint(x: s, y: s), steps = 80
+            func at(_ i: Int) -> CGPoint {
+                let t = Double(i) / Double(steps), a = t * turns * 2 * .pi - .pi / 2
+                return CGPoint(x: c.x + s * t * cos(a), y: c.y + s * t * sin(a))
+            }
+            p.move(to: at(0))
+            for i in 1...steps { p.addLine(to: at(i)) }
+            let e = at(steps), before = at(steps - 6)
+            let d = hypot(e.x - before.x, e.y - before.y)
+            let back = CGVector(dx: (before.x - e.x) / d * 4, dy: (before.y - e.y) / d * 4)
+            p.move(to: CGPoint(x: e.x + back.dx - back.dy * 0.8, y: e.y + back.dy + back.dx * 0.8))
+            p.addLine(to: e)
+            p.addLine(to: CGPoint(x: e.x + back.dx + back.dy * 0.8, y: e.y + back.dy - back.dx * 0.8))
+        }
+        .stroke(colour, style: StrokeStyle(lineWidth: 1.75, lineCap: .round, lineJoin: .round))
+        .frame(width: 2 * s, height: 2 * s)
     }
 }
 

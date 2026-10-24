@@ -37,6 +37,8 @@ struct Harness {
     let swirled: Bool?
     /// UNSTIR_SHAKE=s: with UNSTIR_TOUCH on a seized knob, its shake and the rim's pulse held s seconds in.
     let shake: Double?
+    /// UNSTIR_RIM=knob|bands|glyphs: how the rim shows what it does, while the three are compared; the knob when unset.
+    let rim: RimCue
     /// UNSTIR_UNDOS=n: the undo bank, and the stored day of its last refill, for this launch only. A harnessed launch
     /// reads the stored bank unless set, and never stores either, nor the refill's anchor, which starts afresh. With
     /// UNSTIR_TODAY and no day stored, as on the shots' fresh install, the last refill was long ago, so the level opens
@@ -133,6 +135,7 @@ struct Harness {
         tankTurned = harnessed ? env["UNSTIR_TANKTURNED"] == "1" : nil
         swirled = harnessed ? env["UNSTIR_SWIRLED"] == "1" : nil
         shake = env["UNSTIR_SHAKE"].flatMap(Double.init)
+        rim = env["UNSTIR_RIM"].flatMap(RimCue.init(rawValue:)) ?? .knob
         today = env["UNSTIR_TODAY"].flatMap { $0.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) == nil ? nil : $0 }
         let undos = env["UNSTIR_UNDOS"].flatMap(Int.init).map { min(max($0, 0), 10) } ?? Best.undos
         bank = harnessed ? (undos, Best.refilled ?? (today == nil ? nil : "0000-00-00")) : nil

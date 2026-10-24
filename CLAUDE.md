@@ -210,7 +210,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Best.swirled`): a cyan arc at the bottom that curls in onto the bezel, as the swirl shears where the tank's turns
   rigidly, and its ghost finger on the swirl's grab, the bezel, or the glass's own edge where knobs are seized too. So
   on a level with both, each lesson shows which part of the rim does what. The note under the tank sits lower on a
-  swirl level, clear of it. A drag shows its own
+  swirl level, clear of it. The lessons go once learnt, so `RimCues` keeps saying what the rim does, three ways while
+  Jack compares them (`RimCue`, picked by `UNSTIR_RIM`, `knob` without it): `knob` gives the swirl a knob's ticks on a
+  hairline ring just inside the glass's edge, a pointer at twelve turning with its own turning, and knurls the bezel
+  where knobs are seized, the knurl turning with the glass; `bands` lays a cyan band slanted like a current on the
+  swirl's grab inside the glass and anodises the bezel amber, the lessons' own colours; `glyphs` sets a spiral and a
+  turning ring with a seized knob's slash over twelve, each once its lesson has gone. Each lights while its control is
+  held. A drag shows its own
   count: a long mark on the disc's hairline (on one just inside the rim, for the tank) where its stir began, a dash per
   step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
@@ -245,7 +251,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`UNSTIR_BENCH`). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
   tank's (rod -1) in `parse`'s rod:steps form, and `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
   lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too).
-  `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
+  `UNSTIR_RIM=knob|bands|glyphs` picks the rim's standing cue. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
   pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
   takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag or the swirl's: they
