@@ -436,6 +436,7 @@ struct LevelView: View {
     @Environment(\.scenePhase) private var phase
     private let still: Bool
     private let autoplay: Bool
+    private let moves: [Twist]?
     private let bench: Bool
     /// UNSTIR_WAVE: the solve wave held at this radius.
     private let frozenWave: Double?
@@ -504,6 +505,7 @@ struct LevelView: View {
         _eased = State(initialValue: game.solved)
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
+        moves = harness?.moves
         brimDemo = harness?.brimDemo ?? false
         bench = harness?.bench ?? false
         frozenWave = harness?.wave
@@ -606,6 +608,7 @@ struct LevelView: View {
         .task(id: replays) {
             if !game.level.sandbox, replays > 0 || !still { await open() }
             if autoplay && replays == 0 { await play() }
+            if let moves, replays == 0 { await play(moves) }
             if brimDemo && replays == 0 { await demo() }
         }
         .task(id: game.stack) {
@@ -735,6 +738,22 @@ struct LevelView: View {
             }
             guard (try? await Task.sleep(for: .seconds(0.4))) != nil else { return }
             if let t { release(t.rod) } else { releaseTank() }
+        }
+    }
+
+    /// UNSTIR_MOVES: a given line, at autoplay's pace and through the same releases.
+    private func play(_ moves: [Twist]) async {
+        for m in moves {
+            guard (try? await Task.sleep(for: .seconds(0.3))) != nil, !game.finished else { return }
+            if m.rod == Game.tank {
+                liveTurn = 0
+                withAnimation(.easeInOut(duration: 0.4)) { liveTurn = Double(m.steps) * game.level.layout.tankStep }
+            } else {
+                liveRod = m.rod
+                withAnimation(.easeInOut(duration: 0.4)) { liveAngle = Double(m.steps) * Tank.step }
+            }
+            guard (try? await Task.sleep(for: .seconds(0.4))) != nil else { return }
+            if m.rod == Game.tank { releaseTank() } else { release(m.rod) }
         }
     }
 
