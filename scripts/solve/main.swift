@@ -10,18 +10,16 @@ guard (2...3).contains(args.count), let layout = Layout(rawValue: args[0]) else 
 let seized = Set((args.count > 2 ? args[2] : "").split(separator: ",").compactMap { Int($0) })
 let stack = [Twist].parse(args[1], in: layout)
 let solver = Solver(layout)
-let readings: [(String, Solver.Parking, Solver.Tie)] = [
-    ("fewest seized knobs over unfinished rings, ties clockwise", .fewest, .clockwise),
-    ("fewest seized knobs over unfinished rings, ties to the lower position", .fewest, .lowest),
-    ("every seized knob over a finished ring or no preference, ties clockwise", .all, .clockwise),
-    ("every seized knob over a finished ring or no preference, ties to the lower position", .all, .lowest),
+let readings: [(String, Solver.Parking)] = [
+    ("fewest seized knobs over unfinished rings", .fewest),
+    ("every seized knob over a finished ring or no preference", .all),
 ]
 let clock = ContinuousClock()
-var optimal: Play?, untwisting: Play?, parks: [Play?] = [], lazy: Play?
+var optimal: Play?, untwisting: Play?, parks: [(best: Play, worst: Play)?] = [], lazy: Play?
 let took = clock.measure {
     optimal = solver.optimalPlay(stack, seized: seized)
     untwisting = solver.untwistingPlay(stack, seized: seized)
-    parks = readings.map { solver.park(stack, seized: seized, parking: $0.1, tie: $0.2) }
+    parks = readings.map { solver.parkTies(stack, seized: seized, parking: $0.1) }
     lazy = solver.noLookahead(stack, seized: seized)
 }
 guard let optimal, let untwisting, let lazy else {
@@ -31,9 +29,14 @@ guard let optimal, let untwisting, let lazy else {
 let optimum = optimal.count
 print("entries \(stack.count), seized \(seized.sorted().map(String.init).joined(separator: ",").ifEmpty("none"))")
 print("optimum \(optimum)" + (untwisting.count > optimum ? ", where untwisting alone takes \(untwisting.count)" : ""))
-for ((reading, _, _), park) in zip(readings, parks) {
-    guard let park else { continue }
-    print("park rule, \(reading): \(park.count)\(park.count == optimum ? " (fair)" : " (\(park.count - optimum) over)")")
+for ((reading, _), park) in zip(readings, parks) {
+    guard let park else {
+        print("park rule, \(reading): some way its ties go strands a seam")
+        continue
+    }
+    let (best, worst) = (park.best.count, park.worst.count)
+    let verdict = worst == optimum ? "fair" : "\(worst - optimum) over"
+    print("park rule, \(reading): \(best == worst ? "\(worst) however ties go" : "\(best) to \(worst) as ties go") (\(verdict))")
 }
 print("no lookahead \(lazy.count) (planning gap \(lazy.count - optimum))")
 print("optimal moves, one commit or turn each:")

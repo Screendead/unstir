@@ -367,11 +367,37 @@ final class Solver {
     /// one is, choosing by `parking` where the seized knobs land, then the nearest, then by `tie`.
     func park(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0, parking: Parking = .fewest,
               tie: Tie = .clockwise) -> Play? {
-        play(stack, seized: seized, from: position, tie: tie) { stack, turn, to in
-            let rings = Set(stack.map(\.rod))
-            let over = seized.filter { rings.contains(self.layout.slot(of: $0, at: to)) }.count
-            return [parking == .fewest ? over : min(over, 1), abs(turn)]
+        play(stack, seized: seized, from: position, tie: tie, rank: parkRank(seized, parking))
+    }
+
+    /// The park rule with no tie-break: its fewest and most moves over every way its ties can go. Nil when some way
+    /// strands a seam.
+    func parkTies(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0, parking: Parking = .fewest)
+        -> (best: Play, worst: Play)? {
+        let reach = self.reach(seized), rank = parkRank(seized, parking)
+        // Between turns the rule never chooses, so only blocked states branch. Each turn goes where a seam comes off,
+        // so the stack shrinks along every branch and the memo never meets a state it is still working out.
+        var memo: [Int: (best: Play, worst: Play)?] = [:]
+        func branches(_ id: Int, _ p: Int) -> (best: Play, worst: Play)? {
+            if stacks[id].isEmpty { return (Play(), Play()) }
+            let key = id * layout.order + p
+            if let known = memo[key] { return known }
+            var found: (best: Play, worst: Play)?
+            let turns = self.turns(id, from: p, reach: reach, rank: rank)
+            let low = turns.map(\.rank).min { $0.lexicographicallyPrecedes($1) }
+            for (q, _) in turns.filter({ $0.rank == low }) {
+                let (to, stirs) = advance(id, at: q, reach: reach)
+                guard let rest = branches(to, q) else { found = nil; break }
+                let lead = [Move.turn(steps: shortWay(p, q), to: q)] + stirs
+                let best = Play(moves: lead + rest.best.moves), worst = Play(moves: lead + rest.worst.moves)
+                found = (found.map { $0.best.count <= best.count ? $0.best : best } ?? best,
+                         found.map { $0.worst.count >= worst.count ? $0.worst : worst } ?? worst)
+            }
+            memo[key] = found
+            return found
         }
+        let (id, stirs) = advance(self.id(stack), at: wrap(position), reach: reach)
+        return branches(id, wrap(position)).map { (Play(moves: stirs + $0.best.moves), Play(moves: stirs + $0.worst.moves)) }
     }
 
     /// Untwists the newest whole seam a working knob reaches. When none is, turns to the nearest position where one is,
@@ -380,27 +406,48 @@ final class Solver {
         play(stack, seized: seized, from: position, tie: .clockwise) { _, turn, _ in [abs(turn)] }
     }
 
-    /// `rank(stack, turn, to)` orders the positions a blocked player may turn to, lowest first, and `tie` breaks ties.
-    private func play(_ stack: [Twist], seized: Set<Int>, from position: Int, tie: Tie,
-                      rank: ([Twist], Int, Int) -> [Int]) -> Play? {
+    /// Orders the positions a blocked player may turn to, lowest first, from the stack, the turn and where it goes.
+    private typealias Rank = ([Twist], Int, Int) -> [Int]
+
+    private func parkRank(_ seized: Set<Int>, _ parking: Parking) -> Rank {
+        { stack, turn, to in
+            let rings = Set(stack.map(\.rod))
+            let over = seized.filter { rings.contains(self.layout.slot(of: $0, at: to)) }.count
+            return [parking == .fewest ? over : min(over, 1), abs(turn)]
+        }
+    }
+
+    /// Untwists the newest whole seam a working knob reaches at p until none is.
+    private func advance(_ id: Int, at p: Int, reach: [[Bool]]) -> (id: Int, moves: [Move]) {
+        var id = id, moves: [Move] = []
+        while let u = untwists(id).filter({ reach[p][$0.slot] }).max(by: { $0.index < $1.index }) {
+            moves.append(.stir(knob: layout.knob(over: u.slot, at: p), slot: u.slot, steps: u.steps))
+            id = u.to
+        }
+        return (id, moves)
+    }
+
+    /// The positions other than p where a working knob reaches a whole seam, each with its rank.
+    private func turns(_ id: Int, from p: Int, reach: [[Bool]], rank: Rank) -> [(to: Int, rank: [Int])] {
+        let whole = untwists(id)
+        return (0..<layout.order).filter { q in q != p && whole.contains { reach[q][$0.slot] } }
+            .map { q in (q, rank(stacks[id], shortWay(p, q), q)) }
+    }
+
+    private func play(_ stack: [Twist], seized: Set<Int>, from position: Int, tie: Tie, rank: Rank) -> Play? {
         let reach = self.reach(seized)
-        var id = id(stack), p = wrap(position), play = Play()
+        var p = wrap(position), (id, moves) = advance(self.id(stack), at: p, reach: reach)
         while !stacks[id].isEmpty {
-            let whole = untwists(id)
-            if let u = whole.filter({ reach[p][$0.slot] }).max(by: { $0.index < $1.index }) {
-                play.moves.append(.stir(knob: layout.knob(over: u.slot, at: p), slot: u.slot, steps: u.steps))
-                id = u.to
-                continue
-            }
-            guard let q = (0..<layout.order).filter({ q in q != p && whole.contains { reach[q][$0.slot] } }).map({ q -> (Int, [Int]) in
-                let turn = shortWay(p, q)
-                return (q, rank(stacks[id], turn, q) + [tie == .clockwise ? (turn < 0 ? 1 : 0) : q])
+            guard let q = turns(id, from: p, reach: reach, rank: rank).map({ q, rank in
+                (q, rank + [tie == .clockwise ? (shortWay(p, q) < 0 ? 1 : 0) : q])
             }).min(by: { $0.1.lexicographicallyPrecedes($1.1) })?.0
             else { return nil }
-            play.moves.append(.turn(steps: shortWay(p, q), to: q))
-            p = q
+            moves.append(.turn(steps: shortWay(p, q), to: q))
+            let next = advance(id, at: q, reach: reach)
+            (id, p) = (next.id, q)
+            moves += next.moves
         }
-        return play
+        return Play(moves: moves)
     }
 
     /// The fewest moves up to `limit` when a move may be any commits to one slot under a working knob, up to `commits`

@@ -45,6 +45,9 @@ struct Harness {
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
     let autoplay: Bool
+    /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
+    /// names it), as solve.sh prints a line.
+    let moves: [Twist]?
     /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
     let brimDemo: Bool
     let bench: Bool
@@ -111,6 +114,8 @@ struct Harness {
             level.layout = env["UNSTIR_LAYOUT"].flatMap(Layout.init(rawValue:)) ?? level.layout
             level.scramble = .parse(s, in: level.layout)
         }
+        // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
+        if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }
         // UNSTIR_SEIZED=1,4: those knobs seized.
         if let s = env["UNSTIR_SEIZED"] {
             level.seized = Set(s.split(separator: ",").compactMap { Int($0) }.filter(level.layout.rods.indices.contains))
@@ -135,6 +140,12 @@ struct Harness {
         }
         still = harnessed && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
+        moves = env["UNSTIR_MOVES"].map { line in
+            line.split(separator: ",").compactMap { move in
+                let f = move.split(separator: ":").compactMap { Int($0) }
+                return f.count == 2 && f[1] != 0 ? Twist(rod: f[0], steps: f[1]) : nil
+            }
+        }
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
     }
 }

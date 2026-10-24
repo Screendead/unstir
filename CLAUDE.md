@@ -68,12 +68,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ```
   To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds skip
   unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
-  `xcodebuild` to run them too (about 45 s more).
+  `xcodebuild` to run them too (about a minute more).
 - Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`) prints the
-  optimum (and what untwisting alone takes when a detour beats it), the park rule's count under each reading, fair or
-  over, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It compiles
-  `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut out of
-  Levels.swift, so that struct stays top-level there.
+  optimum (and what untwisting alone takes when a detour beats it), the park rule's fewest and most moves over every
+  way its ties go under each parking, fair or over by the most, the no-lookahead count and its planning gap, then the
+  optimal moves, one commit or turn each. It compiles `build/solve` with `swiftc` when a source has changed, from
+  Twist.swift, Solver.swift and `SplitMix64` cut out of Levels.swift, so that struct stays top-level there.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
@@ -142,30 +142,33 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   never comes back on launch, and `Tier.stored` falls back to the highest open tier below one that has closed.
   `Best.unlocked`, the developer unlock, opens every tier and level; a launch with `UNSTIR_UNLOCK=1` sets it and one
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
-  (`L1`, `N1`, `N+1`: whirlpool's and maelstrom's prefixes are from their old names, nightmare and nightmare+). Progress
-  is stored by id, so changing a prefix loses it unless the stored keys are remapped. Plughole has 27 hand-written
+  (`L1`, `N1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
+  its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
+  loses it unless the stored keys are remapped. Plughole has 27 hand-written
   levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
-  deeper variants on live pictures that follow a table, and maelstrom, until it has a set of its own, whirlpool's
-  scrambles on each picture's twin. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole.
-  The generator is ported draw for draw from an earlier prototype and is frozen: every past daily is its output, and
-  `testDailyVectors` pins them. Endless changes only what it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to
-  28, at least n/2 of them hidden, to half), which `testEndlessVectors` pins. A `Run` is endless's seed, tank and the
-  brim's notches as that tank opens. Progress (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo
-  bank (`Best.undos`, 10 at most) refills by 2 the first time a level other than the sandbox or endless opens on a local
-  calendar day later than the stored day of its last refill (`Best.refill`, `Best.refilled`), so each day played refills
-  once and a long absence once; a fresh install records the day without a refill, and a clock moved back never
-  refills. The day is `Best.trustedNow`'s, in the current time zone: it stores an anchor (`Best.anchor`), the last time
-  it vouched for with the uptime then (`CLOCK_MONOTONIC_RAW`, which counts sleep and which setting the clock never
-  moves) and the boot session (`kern.bootsessionuuid`, nil where the sandbox refuses it); the sandbox and endless leave
-  it alone. Within a boot, a wall clock more than `slack` (5 min) ahead of the anchor plus the uptime since gives way to
-  that reckoning, and the anchor stays; otherwise the wall clock is believed, and the anchor follows it from as far as
-  `slack` behind, but never further past the reckoning than a second plus `drift` (100 ppm) of the uptime since, so
-  creeping the clock ahead gains about a second an opening. A new boot believes the wall clock, and anchors there
-  unless it reads more than `slack` before the anchor's time, so a clock reset at boot and set right later still counts
-  as a new boot. With the session unread, a new boot shows as the uptime going back, or as a jump at least the anchor's
-  uptime, which is believed. The launch logs whether the session was read, the uptime and `kern.monotonicclock`. A
-  `Level` may have `seized` knobs, which ignore touch; the tank turns only on such a level. `par` is `fixedPar`, else
-  `scramble.count`.
+  deeper variants on live pictures that follow a table, and maelstrom 27 of its own (quad, then pent, then hex) on
+  the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
+  solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
+  rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
+  seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
+  prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. Endless changes only what
+  it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to 28, at least n/2 of them hidden, to half), which
+  `testEndlessVectors` pins. A `Run` is endless's seed, tank and the brim's notches as that tank opens. Progress
+  (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most) refills by 2
+  the first time a level other than the sandbox or endless opens on a local calendar day later than the stored day of
+  its last refill (`Best.refill`, `Best.refilled`), so each day played refills once and a long absence once; a fresh
+  install records the day without a refill, and a clock moved back never refills. The day is `Best.trustedNow`'s, in the
+  current time zone: it stores an anchor (`Best.anchor`), the last time it vouched for with the uptime then
+  (`CLOCK_MONOTONIC_RAW`, which counts sleep and which setting the clock never moves) and the boot session
+  (`kern.bootsessionuuid`, nil where the sandbox refuses it); the sandbox and endless leave it alone. Within a boot, a
+  wall clock more than `slack` (5 min) ahead of the anchor plus the uptime since gives way to that reckoning, and the
+  anchor stays; otherwise the wall clock is believed, and the anchor follows it from as far as `slack` behind, but never
+  further past the reckoning than a second plus `drift` (100 ppm) of the uptime since, so creeping the clock ahead gains
+  about a second an opening. A new boot believes the wall clock, and anchors there unless it reads more than `slack`
+  before the anchor's time, so a clock reset at boot and set right later still counts as a new boot. With the session
+  unread, a new boot shows as the uptime going back, or as a jump at least the anchor's uptime, which is believed. The
+  launch logs whether the session was read, the uptime and `kern.monotonicclock`. A `Level` may have `seized` knobs,
+  which ignore touch; the tank turns only on such a level. `par` is `fixedPar`, else `scramble.count`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and
   endless's brim, which the rim shows (the header shows moves, and the title the tank). `Game.commit` takes a physical
   knob and commits to the slot under it. Endless has no par, undo or reset: each red flash (a `.pushed` commit) adds a
@@ -223,18 +226,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
-  (`UNSTIR_BENCH`). `UNSTIR_CLOCK` also holds the rim lesson's ghost finger, a refill's "+2", and endless's brim that
-  many seconds after its last change (a spill's too). `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim
-  through the same calls a finger makes: two heals, then pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank
-  and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on; a harnessed launch never stores the bank, the refill's day
-  or its anchor, and with `UNSTIR_TODAY` and no day stored it takes the last refill as long ago, so the level opens on a
-  refill. Nor does it store the tank flag: it reads as never turned unless `UNSTIR_TANKTURNED=1`, and whatever the
-  launch turns lasts only that launch, so shot order never matters. For the menu, `UNSTIR_BESTS=plughole:0001,...`
-  registers bests for that launch only (a digit per level, that many over par; `-` for none),
-  `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches tiers through the same calls a
-  finger makes. `UNSTIR_UNLOCK` alone is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it
-  unset clears it, so no shot leaves the next unlocked. This is how screenshots and films are taken without touch; see
-  `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
+  (`UNSTIR_BENCH`). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
+  tank's (rod -1) in `parse`'s rod:steps form, and `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
+  lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too).
+  `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
+  pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
+  a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
+  takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag: it reads as never
+  turned unless `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only that launch, so shot order never
+  matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
+  many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
+  tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock above; alongside any other
+  `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. This is how screenshots and films
+  are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
 - **UnstirTests/Solver.swift** plays turning-tank levels for the tests and `scripts/solve.sh`; it never ships in the
   app. It has three players, whose moves count as `Game.history` counts them (`Play.count`). The optimum is the fewest
   moves that empty the stack: a breadth-first search over (stack, tank position) that untwists whole seams and turns
@@ -242,10 +246,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   disc still, and save a move). It tries only the detours its class comment lists, so it is a bounded search, not a
   proof; `exhaustive` checks it on small cases. The park rule (`park`) untwists the newest whole seam a working knob
   reaches; when none is, it turns to a position where one is, choosing by where the seized knobs land (`Parking`:
-  `.fewest` or `.all`), then the nearest, then by `Tie` (`.clockwise` or `.lowest`). No lookahead (`noLookahead`) turns
-  to the nearest, clockwise on a tie. A level is fair when the park rule reaches the optimum under every reading; its
-  planning gap is no lookahead minus the optimum. `home:` asks for the tank back at 0, the old end rule. Several tests
-  replay plays on a real `Game`, which must empty the stack in the moves the play counts.
+  `.fewest` or `.all`), then the nearest. The rule has no tie-break (Jack's call): `parkTies` gives its fewest and
+  most moves over every way its ties go, and `park` breaks them by `Tie` (`.clockwise` or `.lowest`) only to name one
+  play. No lookahead (`noLookahead`) turns to the nearest, clockwise on a tie. A level is fair when the park rule's
+  most moves over its ties is the optimum under both parkings; its planning gap is no lookahead minus the optimum.
+  `home:` asks for the tank back at 0, the old end rule. Several tests replay plays on a real `Game`, which must empty
+  the stack in the moves the play counts.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's pictures).
