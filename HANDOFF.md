@@ -255,6 +255,26 @@ Round 2 (2026-10-24, on the same page, after Jack saw Orrery's mock-up and Orrer
 | Analytics | **Yes:** anonymous counts, no tracking (so no tracking prompt), no advertising partners, one switch in settings; check whether EU law needs a consent prompt for anonymous counts |
 | Firestore | **No server:** purchases through StoreKit, progress through iCloud key-value storage; a test pins every stored level id and product id |
 
+**Vortex gets the whole-tank swirl (Jack, 2026-10-24):** "it should be in the free game". The lab's prototype is
+`b6ed01c` on `lab` (a quad layout with a fifth rod the size of the tank, turned from the rim, committed like any rod
+stir), never merged. To make it a tier:
+
+1. A go/no-go on the phone first: Jack plays the lab's two swirl levels, then a swirl on pent and hex, for whether the
+   swirl's seam reads (its rigid core is 0.6 of the tank, so its shear lies in the outer ring, under every other rod).
+2. Calls for Jack before design: what maelstrom's rim does once vortex has taught "the rim swirls" (Claude's
+   recommendation: maelstrom has no swirl and its rim turns the glass, with the rim lesson re-taught there); and whether
+   a player who has already opened maelstrom keeps it when vortex is inserted below it (recommendation: yes, every tier
+   open before the update stays open).
+3. `Tier.vortex` between whirlpool and maelstrom. Raw values are strings, so stored tiers survive; `Tier.isOpen`'s gate
+   moves, and the grandfathering above needs a stored flag and a test.
+4. Swirl layouts kept out of `Layout.allCases`, as the lab does, so the frozen daily generator and endless are
+   untouched (`testDailyVectors`, `testEndlessVectors`).
+5. Grab, rim lesson and drag count for the swirl from the lab, on every layout; the solver and `solve.sh` taught that the
+   swirl commutes with nothing; the shader's cost of a tank-sized disc measured against `fourTaps` on the phone.
+6. Vortex's pictures (its own family, or plughole's with up withheld; Jack's pick from mock-ups), its sound bed, and 27
+   levels, solver-checked, to Jack as a table before code.
+7. Tests, shots and films; the tier strip takes a fourth name.
+
 So the catalogue is five packs: First Stir, Lens and Escapement at v1, then Prism, then Music Box if it passes its ear
 test. Entries below that still mention The Well, Orrery as a pack, a tip jar or offer codes are superseded by these
 calls.
