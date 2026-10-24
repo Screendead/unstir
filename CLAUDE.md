@@ -68,7 +68,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ```
   To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds skip
   unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
-  `xcodebuild` to run them too (about a minute more).
+  `xcodebuild` to run them too (about a minute and a half more).
 - Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`; a swirl
   layout by its name, `quadSwirl`, its swirl never seized) prints the optimum (and what untwisting alone takes when a
   detour beats it), the park rule's fewest and most moves over every way its ties go under each parking, fair or over
