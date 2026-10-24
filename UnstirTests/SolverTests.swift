@@ -224,6 +224,24 @@ final class SolverTests: XCTestCase {
         }
     }
 
+    /// Past quad, playing by the park rule never goes more than a third of par, plus one, without a turn of the tank,
+    /// so the seized knobs stay in the way to the end (Jack's playtest, 2026-10-24).
+    func testMaelstromKeepsTheTankTurning() throws {
+        for level in Level.maelstrom where level.layout != .quad {
+            let play = try XCTUnwrap(Solver(level.layout).park(level.scramble, seized: level.seized), level.id)
+            var runs = [0], last: Int?
+            for move in play.moves {
+                switch move {
+                case .turn: runs.append(0); last = nil
+                case let .stir(_, slot, _):
+                    if slot != last { runs[runs.count - 1] += 1 }
+                    last = slot
+                }
+            }
+            XCTAssertLessThanOrEqual(runs.max()!, (level.par + 2) / 3 + 1, level.id)
+        }
+    }
+
     /// At N+25's second blocked turn no position parks both seized knobs over finished rings, so the rule as worded
     /// turns to the nearest. Counting them instead parks one, two steps away, and reaches the optimum, 24, which the
     /// old table checks. Which reading is the rule is Jack's call.

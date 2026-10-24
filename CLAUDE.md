@@ -148,8 +148,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
   deeper variants on live pictures that follow a table, and maelstrom 27 of its own (quad, then pent, then hex) on
   the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
-  solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Daily and endless come
-  from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
+  solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
+  rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
+  seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
   prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. Endless changes only what
   it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to 28, at least n/2 of them hidden, to half), which
   `testEndlessVectors` pins. A `Run` is endless's seed, tank and the brim's notches as that tank opens. Progress
