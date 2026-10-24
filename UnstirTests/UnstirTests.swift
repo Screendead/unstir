@@ -1529,6 +1529,31 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(Best.tankTurned)
     }
 
+    /// The rim shows how to stir with the swirl until the player has, on any level: a stir of the swirl that commits
+    /// sets the flag, and a stir of any other rod or a turn of the tank does not. A flag the harness sets is never stored.
+    @MainActor func testStirringWithTheSwirlSetsTheFlag() {
+        let saved = Best.swirled
+        defer { Best.swirled = saved }
+        Best.swirled = false
+        let level = Level(id: "test-swirled", label: "", title: "", layout: .quadSwirl,
+                          scramble: [Twist(rod: 0, steps: 4), Twist(rod: 4, steps: 3)], seized: [1], fixedPar: 2)
+        let game = Game(level: level, tankTurned: true)
+        XCTAssertFalse(game.swirled)
+        game.commit(rod: 2, steps: 2)
+        game.turnTank(1)
+        XCTAssertFalse(game.swirled)
+        XCTAssertFalse(Best.swirled)
+        game.commit(rod: 4, steps: -3)
+        XCTAssertTrue(game.swirled)
+        XCTAssertTrue(Best.swirled)
+
+        Best.swirled = false
+        let harnessed = Game(level: level, swirled: false)
+        harnessed.commit(rod: 4, steps: -3)
+        XCTAssertTrue(harnessed.swirled)
+        XCTAssertFalse(Best.swirled)
+    }
+
     /// Par is one move per entry wherever no knob is seized; a level with seized knobs sets its own, counting its
     /// turns of the tank.
     func testParIsTheScrambleUnlessSet() {

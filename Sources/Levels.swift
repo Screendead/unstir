@@ -474,6 +474,12 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "tank.turned") }
     }
 
+    /// Set once a stir of the swirl commits, on any level: the rim then stops showing how.
+    static var swirled: Bool {
+        get { UserDefaults.standard.bool(forKey: "swirled") }
+        set { UserDefaults.standard.set(newValue, forKey: "swirled") }
+    }
+
     /// Endless: most tanks cleared in one run.
     static var tanks: Int {
         get { UserDefaults.standard.integer(forKey: "endless.tanks") }

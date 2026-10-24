@@ -204,7 +204,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the rim's lesson: `RimLesson`, a two-headed amber arc just outside the bezel at the top and a ghost finger rocking
   along the rim under it, shown on any level with seized knobs until the player's first turn of the tank commits. That
   turn sets `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does.
-  The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. A drag shows its own
+  The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. A level with a swirl
+  shows its own lesson the same way until the player's first stir of the swirl commits (`Game.swirled`,
+  `Best.swirled`): a cyan arc at the bottom that curls in onto the bezel, as the swirl shears where the tank's turns
+  rigidly, and its ghost finger on the swirl's grab, the bezel, or the glass's own edge where knobs are seized too. So
+  on a level with both, each lesson shows which part of the rim does what. The note under the tank sits lower on a
+  swirl level, clear of it. A drag shows its own
   count: a long mark on the disc's hairline (on one just inside the rim, for the tank) where its stir began, a dash per
   step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
@@ -231,7 +236,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   raw clock; the neural web is static per seed, built once off the main actor.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
-  even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a
+  even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
@@ -242,8 +247,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
   pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
-  takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag: it reads as never
-  turned unless `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only that launch, so shot order never
+  takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag or the swirl's: they
+  read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch, so shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
   tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock above; alongside any other

@@ -33,6 +33,8 @@ struct Harness {
     /// Either way for this launch only, whatever the harness turns. Nil without the harness, which reads and stores the
     /// real flag.
     let tankTurned: Bool?
+    /// UNSTIR_SWIRLED=1: likewise for the swirl.
+    let swirled: Bool?
     /// UNSTIR_SHAKE=s: with UNSTIR_TOUCH on a seized knob, its shake and the rim's pulse held s seconds in.
     let shake: Double?
     /// UNSTIR_UNDOS=n: the undo bank, and the stored day of its last refill, for this launch only. A harnessed launch
@@ -116,9 +118,10 @@ struct Harness {
         }
         // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
         if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }
-        // UNSTIR_SEIZED=1,4: those knobs seized.
+        // UNSTIR_SEIZED=1,4: those knobs seized, never the swirl, which has no knob.
         if let s = env["UNSTIR_SEIZED"] {
-            level.seized = Set(s.split(separator: ",").compactMap { Int($0) }.filter(level.layout.rods.indices.contains))
+            level.seized = Set(s.split(separator: ",").compactMap { Int($0) }
+                .filter { level.layout.rods.indices.contains($0) && $0 != level.layout.swirl })
         }
         self.level = level
         tank = env["UNSTIR_TANK"].flatMap(Int.init) ?? 0
@@ -128,6 +131,7 @@ struct Harness {
         let t = env["UNSTIR_TURNED"]?.split(separator: ":").compactMap { Int($0) } ?? []
         turned = t.count == 2 && level.layout.rods.indices.contains(t[0]) ? Twist(rod: t[0], steps: t[1]) : nil
         tankTurned = harnessed ? env["UNSTIR_TANKTURNED"] == "1" : nil
+        swirled = harnessed ? env["UNSTIR_SWIRLED"] == "1" : nil
         shake = env["UNSTIR_SHAKE"].flatMap(Double.init)
         today = env["UNSTIR_TODAY"].flatMap { $0.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) == nil ? nil : $0 }
         let undos = env["UNSTIR_UNDOS"].flatMap(Int.init).map { min(max($0, 0), 10) } ?? Best.undos
