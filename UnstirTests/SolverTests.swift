@@ -208,6 +208,22 @@ final class SolverTests: XCTestCase {
         XCTAssertEqual(ties?.worst.moves, ties?.best.moves)
     }
 
+    /// Each maelstrom level's par is the optimum, the park rule reaches it however its ties go under either parking,
+    /// and the optimal play empties the stack on a real `Game`.
+    @MainActor func testMaelstromIsFairAtPar() throws {
+        try skipUnlessSlow()
+        for level in Level.maelstrom {
+            let solver = Solver(level.layout), stack = level.scramble, seized = level.seized
+            let optimal = solver.optimalPlay(stack, seized: seized)
+            XCTAssertEqual(optimal?.count, level.par, level.id)
+            for parking in [Solver.Parking.fewest, .all] {
+                XCTAssertEqual(solver.parkTies(stack, seized: seized, parking: parking)?.worst.count, level.par,
+                               "\(level.id) \(parking)")
+            }
+            assertEmpties(optimal, level.layout, stack, seized: seized, level.id)
+        }
+    }
+
     /// At N+25's second blocked turn no position parks both seized knobs over finished rings, so the rule as worded
     /// turns to the nearest. Counting them instead parks one, two steps away, and reaches the optimum, 24, which the
     /// old table checks. Which reading is the rule is Jack's call.
