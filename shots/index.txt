@@ -122,6 +122,33 @@ vortex03.png  Vortex level 03 with its full scramble, the swirl never stirred: t
 vortex01-swirled.png  Vortex 01 once the player has stirred with the swirl before: no lesson.
 vortex01-both.png  Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson on the bezel at the top, the swirl's cyan one on the glass's edge at the bottom.
 vortex03-both.png  Vortex 03 (hex) with knobs 2 and 5 seized, neither ever used: both lessons.
+rim-knob-swirl.png  Rim cue knob: vortex 01, the swirl alone, its lesson learnt.
+rim-knob-swirl-lesson.png  Rim cue knob: vortex 01, the swirl never stirred: its cyan lesson too.
+rim-knob-swirl-held.png  Rim cue knob: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
+rim-knob-seized.png  Rim cue knob: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
+rim-knob-seized-lesson.png  Rim cue knob: maelstrom 01, the tank never turned: its amber lesson too.
+rim-knob-both.png  Rim cue knob: vortex 01 with knob 1 seized, both lessons learnt.
+rim-knob-both-lesson.png  Rim cue knob: vortex 01 with knob 1 seized, neither ever used: both lessons too.
+rim-knob-both-swirl-held.png  Rim cue knob: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
+rim-knob-both-tank-held.png  Rim cue knob: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
+rim-bands-swirl.png  Rim cue bands: vortex 01, the swirl alone, its lesson learnt.
+rim-bands-swirl-lesson.png  Rim cue bands: vortex 01, the swirl never stirred: its cyan lesson too.
+rim-bands-swirl-held.png  Rim cue bands: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
+rim-bands-seized.png  Rim cue bands: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
+rim-bands-seized-lesson.png  Rim cue bands: maelstrom 01, the tank never turned: its amber lesson too.
+rim-bands-both.png  Rim cue bands: vortex 01 with knob 1 seized, both lessons learnt.
+rim-bands-both-lesson.png  Rim cue bands: vortex 01 with knob 1 seized, neither ever used: both lessons too.
+rim-bands-both-swirl-held.png  Rim cue bands: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
+rim-bands-both-tank-held.png  Rim cue bands: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
+rim-glyphs-swirl.png  Rim cue glyphs: vortex 01, the swirl alone, its lesson learnt.
+rim-glyphs-swirl-lesson.png  Rim cue glyphs: vortex 01, the swirl never stirred: its cyan lesson too.
+rim-glyphs-swirl-held.png  Rim cue glyphs: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
+rim-glyphs-seized.png  Rim cue glyphs: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
+rim-glyphs-seized-lesson.png  Rim cue glyphs: maelstrom 01, the tank never turned: its amber lesson too.
+rim-glyphs-both.png  Rim cue glyphs: vortex 01 with knob 1 seized, both lessons learnt.
+rim-glyphs-both-lesson.png  Rim cue glyphs: vortex 01 with knob 1 seized, neither ever used: both lessons too.
+rim-glyphs-both-swirl-held.png  Rim cue glyphs: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
+rim-glyphs-both-tank-held.png  Rim cue glyphs: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
 swirl-quad-one.png  Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still.
 swirl-quad.png  Square with a swirl (rod 4), 0:+3,4:+2,2:-4,1:+3,4:-3,3:+5.
 swirl-quad-live.png  The same held mid-drag from the rim, the swirl 1.5 steps clockwise.

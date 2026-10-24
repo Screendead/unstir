@@ -228,6 +228,27 @@ shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl befo
 shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson on the bezel at the top, the swirl's cyan one on the glass's edge at the bottom." \
   TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
 shot vortex03-both "Vortex 03 (hex) with knobs 2 and 5 seized, neither ever used: both lessons." TIER=vortex LEVEL=3 SEIZED=2,5 CLOCK=3
+# What the rim does, shown before it is touched, three ways (UNSTIR_RIM): the swirl alone (vortex 01), the glass's
+# turn alone (maelstrom 01, knob 1 seized) and both (vortex 01 with knob 1 seized), each once its lessons are learnt
+# and with them, then held: the swirl from the rim, and where there are both, the swirl from the glass's edge and the
+# tank from the bezel.
+for v in knob bands glyphs; do
+  shot "rim-$v-swirl" "Rim cue $v: vortex 01, the swirl alone, its lesson learnt." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 RIM=$v
+  shot "rim-$v-swirl-lesson" "Rim cue $v: vortex 01, the swirl never stirred: its cyan lesson too." TIER=vortex LEVEL=1 CLOCK=3 RIM=$v
+  shot "rim-$v-swirl-held" "Rim cue $v: vortex 01, the swirl held from the rim, 1.5 steps clockwise." \
+    TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 LIVE=4:1.5 TOUCH=0.7,-0.7 RIM=$v
+  shot "rim-$v-seized" "Rim cue $v: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt." \
+    TIER=maelstrom LEVEL=1 CLOCK=3 TANKTURNED=1 RIM=$v
+  shot "rim-$v-seized-lesson" "Rim cue $v: maelstrom 01, the tank never turned: its amber lesson too." TIER=maelstrom LEVEL=1 CLOCK=3 RIM=$v
+  shot "rim-$v-both" "Rim cue $v: vortex 01 with knob 1 seized, both lessons learnt." \
+    TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 RIM=$v
+  shot "rim-$v-both-lesson" "Rim cue $v: vortex 01 with knob 1 seized, neither ever used: both lessons too." \
+    TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 RIM=$v
+  shot "rim-$v-both-swirl-held" "Rim cue $v: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise." \
+    TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 LIVE=4:1.5 TOUCH=0.66,-0.66 RIM=$v
+  shot "rim-$v-both-tank-held" "Rim cue $v: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round." \
+    TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 TANKLIVE=30 TOUCH=0,-1.03 RIM=$v
+done
 shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1
 swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
 shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1
