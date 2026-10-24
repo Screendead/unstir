@@ -69,11 +69,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds skip
   unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
   `xcodebuild` to run them too (about a minute more).
-- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`) prints the
-  optimum (and what untwisting alone takes when a detour beats it), the park rule's fewest and most moves over every
-  way its ties go under each parking, fair or over by the most, the no-lookahead count and its planning gap, then the
-  optimal moves, one commit or turn each. It compiles `build/solve` with `swiftc` when a source has changed, from
-  Twist.swift, Solver.swift and `SplitMix64` cut out of Levels.swift, so that struct stays top-level there.
+- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`; a swirl
+  layout by its name, `quadSwirl`, its swirl never seized) prints the optimum (and what untwisting alone takes when a
+  detour beats it), the park rule's fewest and most moves over every way its ties go under each parking, fair or over
+  by the most, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It
+  compiles `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut
+  out of Levels.swift, so that struct stays top-level there.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
