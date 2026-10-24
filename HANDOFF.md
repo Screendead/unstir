@@ -597,11 +597,15 @@ packs promises nothing App Review might question (assumed; checked before it is 
 than the three packs or it saves nobody anything. Product ids can't be reused once created (assumed, Apple platform
 fact), so this set and its names are fixed before App Store Connect.
 
-#### Defaults (Claude's recommendations; they stand unless Jack changes them)
+#### Recommended defaults (not decided; 2026-10-24)
+
+These are Claude's recommendations, not Jack's calls. None is built until Jack has said yes to it, alone or as a
+list. Three are hard to undo once live and need an explicit yes each, marked **(hard to undo)**: Family Sharing, the
+names and product ids, and Complete's promise to older owners.
 
 - **Price.** One price for every pack, inside R1's band ($2–5), never set by difficulty or size; Jack picks the
   number.
-- **Complete's price path.** About one pack less than the packs it holds. Each new pack joins it and raises it by one
+- **Complete's price path.** **(hard to undo)** About one pack less than the packs it holds. Each new pack joins it and raises it by one
   pack's price. Owners of an older Complete are granted later packs by the app, which the store page never promises
   (check App Review first).
 - **Free taste.** The first three levels of every pack free, as its wordless teach-in; for The Well, its top tank and
@@ -630,7 +634,7 @@ fact), so this set and its names are fixed before App Store Connect.
   is polished.
 - **Store page.** Lead with the free game (a picture snapping back), then the packs, every screenshot or preview moment
   of a pack labelled as a paid add-on (guideline 2.3.2, assumed).
-- **Family Sharing.** On for every pack and Complete, knowing that once on for a product it can't be turned off
+- **Family Sharing.** **(hard to undo)** On for every pack and Complete, knowing that once on for a product it can't be turned off
   (assumed Apple platform fact; check).
 - **The daily archive.** Back-filled to a date Jack picks, opened by any purchase, with bests under `daily-yyyymmdd`
   ids.
@@ -659,7 +663,7 @@ fact), so this set and its names are fixed before App Store Connect.
 - **App size.** Packs ship in the bundle, art as line paths baked on the phone and audio as AAC. Background Assets
   only if the app would pass the cellular download limit (assumed about 200 MB; check).
 - **The Well's price.** A pack at the one price, for anyone, and part of Complete.
-- **Names and ids.** The roster's names. Each pack's id is its level prefix (`first-stir-N`, `lens-N`,
+- **Names and ids.** **(hard to undo)** The roster's names. Each pack's id is its level prefix (`first-stir-N`, `lens-N`,
   `escapement-N`, `prism-N`, `music-box-N`, `well-N`, clear of `L`, `N`, `N+`, `M`, `daily-`, `endless`, `sandbox`
   and `lab-`). Product ids `<bundle id>.pack.firststir` and so on, plus `<bundle id>.complete` (letters, digits,
   periods and underscores; assumed).
