@@ -108,7 +108,7 @@ lesson-quad-grid.png  Level 12 (square, grid) with knob 1 seized, the tank never
 lesson-hex-marbling.png  Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: the rim's arc and ghost finger over a live picture.
 lesson-shake.png  Level 12 (square) with knob 1 seized, a finger just down on it, 0.15 s in: the knob turned a few degrees, the rim's arc swollen.
 lesson-shake-turned.png  The same once the player has turned the tank before: no ghost, the arc back only for the pulse.
-lesson-turned.png  Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost.
+lesson-turned.png  Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost, only the knurled bezel.
 lesson-count.png  Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: rod 1 at the top turned +1 by a finger just below its knob, its count swung off the rim's arc.
 lesson-maelstrom01.png  Maelstrom 01 (square, coral twin) as the game loads it, the tank never turned: knob 1 seized, the rim's arc and ghost finger, and the note to turn the tank.
 seized-ring3-finished.png  Hex twin glass, 14 entries (1:+4,0:-3,2:+5,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3), none on rod 3: its ring is finished.
@@ -119,7 +119,7 @@ menu-vortex.png  Menu on vortex with every row unlocked.
 vortex01.png  Vortex level 01 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
 vortex02.png  Vortex level 02 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
 vortex03.png  Vortex level 03 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex01-swirled.png  Vortex 01 once the player has stirred with the swirl before: no lesson.
+vortex01-swirled.png  Vortex 01 once the player has stirred with the swirl before: no lesson, only the swirl's ticks inside the glass's edge.
 vortex01-both.png  Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson on the bezel at the top, the swirl's cyan one on the glass's edge at the bottom.
 vortex03-both.png  Vortex 03 (hex) with knobs 2 and 5 seized, neither ever used: both lessons.
 rim-knob-swirl.png  Rim cue knob: vortex 01, the swirl alone, its lesson learnt.
