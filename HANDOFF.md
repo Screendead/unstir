@@ -57,7 +57,7 @@ from Nightmare to Nightmare+ is easy to miss.
 | Maelstrom (was Nightmare+) design | The seized rod and the turning tank (Jack, 2026-09-28). First slice merged 2026-09-28 (PR #4). Go/no-go shots pass: seams land concentric after a turn, and a finished outer ring reads on hex glass (the hub doesn't, but it never moves or seizes). On the phone (Jack, 2026-09-28): the rim is easy to grab, two fingers always turn the tank, he plans where to park the dead knob, and he likes the glass easing home after the solve. The tank clicks felt featherweight: each tank step now plays a Core Haptics clunk (a hard knock and a 90 ms low rumble), and Jack finds it great. The first step after launch or a return from background may hitch a frame while the engine restarts. Pars must come from a solver of the ending-on-the-last-heal rule: the temporary table used the old model's pars, which counted a final turn home, so Jack finished a move under par |
 | The way in | Jack chose the strip (2026-09-28) from three working mock-ups (strip, dial, window), for its ticked line of the levels left to open the next tier; he loved the window's live tank but it took too much of the screen. Built on `tiers` with the rename and the gate, merged 2026-09-29 (PR #7); the swipe was driven by simulated touches, never a finger. The swap freezes 50–107 ms on the simulator: left for the performance pass |
 | Rename | Nightmare is now **whirlpool** and Nightmare+ **maelstrom** in code, harness (`UNSTIR_TIER`), scripts, tests and docs, merged 2026-09-29 (PR #7). Stored level ids stay `N<k>` and `N+<k>`, so progress carries over (Claude first planned new ids, which would have reset it; the review caught that). The new maelstrom set gets fresh ids, so old N+ bests don't land on new levels |
-| Solver and the maelstrom set | Solver built and verified (2026-09-29), merged 2026-09-29 (PR #10, then PR #13 into `master`). An independent brute force found a push that holds a disc still and beats plain untwisting by a move, so the optimum now adds a bounded search for such detours: par is the solver's bounded optimum, not a proof. The park rule has two readings (fewest dead knobs over rings with a seam, or every dead knob over a ring without one) and two tie-breaks; Jack's pick is open, and the proposed set is fair under all four. A first proposed table passed every check but its early planning gap came from a tie-break (a lucky guess of direction scores par), its first ten levels all turn counterclockwise, and its seized pairs were always neighbours. A second reworked it, and a third, all new levels, is proposed below (2026-10-24) |
+| Solver and the maelstrom set | Solver built and verified (2026-09-29), merged 2026-09-29 (PR #10, then PR #13 into `master`). An independent brute force found a push that holds a disc still and beats plain untwisting by a move, so the optimum now adds a bounded search for such detours: par is the solver's bounded optimum, not a proof. The park rule has two readings (fewest dead knobs over rings with a seam, or every dead knob over a ring without one) and two tie-breaks; Jack's pick is open, and the proposed set is fair under all four. A first proposed table passed every check but its early planning gap came from a tie-break (a lucky guess of direction scores par), its first ten levels all turn counterclockwise, and its seized pairs were always neighbours. A second reworked it, and a third, all new levels, is proposed below (2026-10-24), with Jack's calls on it |
 | Endless's new rules | Built on `endless` (2026-09-29): no undo, reset or par, the brim counting red flashes, Claude's ramp, and the vivid jug on the rim, ported from the approved film. Reviewed, and the review's fixes made, the pour over the lip among them. Jack watched the app's film on 2026-09-29 and approved it ("looks great"); merged 2026-09-29 (PR #11). See "Endless changes rules" below |
 | The phone | Installed 2026-09-29: a local build of `touch` at 42406cc with `help`'s three commits (hints removed, the daily +2 refill, the clock guard), the glass sound set, and two proposals not to be committed (maelstrom v2 as M1–M27, and plughole 19–27's easier scrambles). The next install carries the dashes |
 
@@ -225,14 +225,14 @@ from Nightmare to Nightmare+ is easy to miss.
   scrambles with seized knobs), so a third of the levels repeated puzzles just solved. The log can't show
   losing count in a drag: quick re-grabs of one rod are too common to mean anything.
 
-**Proposed maelstrom set (2026-10-24, a proposal, not in `Levels.swift`).** 27 new levels: quad M1–M8, pent M9–M16,
-hex M17–M27, one or two seized knobs each, never the hub. None repeats a whirlpool or plughole scramble, or a level of
+**Proposed maelstrom set (2026-10-24, a proposal, not in `Levels.swift`).** 27 new levels: quad M1–M6, pent M7–M14,
+hex M15–M27, one or two seized knobs each, never the hub. None repeats a whirlpool or plughole scramble, or a level of
 the two earlier tables, in any rotation or mirror image. Every row was checked with `scripts/solve.sh`: par is the
-optimum and plain untwisting reaches it (no detour), and the park rule reaches par under all four readings, and on the
-worst tie branch too. **Gap cw** is solve.sh's planning gap (no lookahead, ties clockwise); **luckiest** is the same
-player with every tie going its way, so a gap there can't be won by guessing a direction. **Wrong turn** is what that
-player loses when the first turn goes the worse way. **Plan** is the park rule's tank turns, in steps (+ clockwise).
-M1 carries the note "One knob has seized. Turn the tank."
+optimum and plain untwisting reaches it (no detour), and the park rule reaches par under all four readings and on
+every tie branch, whichever way a tie goes. **Gap cw** is solve.sh's planning gap (no lookahead, ties clockwise);
+**luckiest** is the same player with every tie going its way, so a gap there can't be won by guessing a direction.
+**Wrong turn** is what that player loses when the first turn goes the worse way. **Plan** is the park rule's tank
+turns, in steps (+ clockwise). M1 carries the note "One knob has seized. Turn the tank."
 
 | Level | Layout | Seized | Depth | Par | Gap (cw / luckiest) | Wrong turn | Plan | Picture | Title | Scramble |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -241,39 +241,41 @@ M1 carries the note "One knob has seized. Turn the tank."
 | M3 | quad | 1 | 5 | 6 | 1 / 1 | 1 | +2 | coral | Park the dead knob where the work is done. | `1:+2,2:-5,1:-5,0:-6,1:+8` |
 | M4 | quad | 0,3 | 5 | 6 | 1 / 1 | 1 | +2 | chainmail | Two knobs, one reason to turn. | `3:+2,0:+4,3:-5,0:+6,1:-8` |
 | M5 | quad | 0,1 | 6 | 8 | 1 / 1 | 2 | -1, +2 | coral | A step back, then half round. | `1:+3,2:+3,1:-5,2:-7,3:-8,0:+2` |
-| M6 | quad | 1,2 | 8 | 11 | 1 / 1 | 2 | +1, +1, +2 | marbling | One quarter at a time. | `3:+2,0:-5,1:-3,2:+4,1:+7,3:-2,2:-8,0:+3` |
-| M7 | quad | 0,3 | 10 | 14 | 1 / 1 | 2 | +1, +1, +1, +2 | neurons | All the way round, nearly. | `0:-3,1:-6,2:+8,3:+3,2:+5,0:+3,3:+6,0:-7,1:-8,0:-3` |
-| M8 | quad | 1,2 | 10 | 14 | 1 / 1 | 3 | -1, -1, -1, +2 | glass | Round in circles, on purpose. | `3:-2,0:+2,1:-5,2:+8,0:-2,3:+7,1:+2,0:-8,2:-2,1:-6` |
-| M9 | pent | 1,4 | 9 | 10 | 1 / 1 | 2 | +2 | chainmail | Five rods. No half turns. | `1:+2,0:+4,1:+4,0:-7,1:+8,0:-6,1:+7,0:+8,1:+5` |
-| M10 | pent | 2,3 | 6 | 7 | 2 / 2 | 2 | -2 | coral | The near turn is a trap. | `2:-2,1:+5,2:-7,1:+8,2:+5,3:-7` |
-| M11 | pent | 0,4 | 8 | 10 | 2 / 2 | 3 | -1, +2 | marbling | Look two turns ahead. | `0:+4,2:-3,3:-3,1:-5,2:-7,3:-8,0:-4,4:+4` |
-| M12 | pent | 0,1 | 10 | 12 | 2 / 2 | 4 | +1, +2 | neurons | Couette flow, interrupted. | `4:-2,0:-2,1:-4,0:-3,4:+4,2:+2,3:-6,2:+7,1:+8,3:-2` |
-| M13 | pent | 3,4 | 14 | 17 | 2 / 2 | 4 | +1, +1, +2 | chainmail | Turn, turn, unstir. | `2:-2,3:+5,2:-7,1:+8,0:-2,4:+5,3:-6,4:-7,0:+8,1:+3,0:+6,4:-8,1:+3,2:+4` |
-| M14 | pent | 2,3 | 14 | 17 | 2 / 2 | 4 | -1, -1, -2 | glass | Never park on wet paint. | `4:+2,3:+5,4:+8,0:+7,1:-8,2:+5,3:-6,2:+7,1:+8,0:-4,2:-4,1:-6,2:+8,1:-6` |
-| M15 | pent | 3,4 | 20 | 24 | 2 / 2 | 4 | +1, -1, +1, +2 | marbling | Forward, back, forward, round. | `3:+2,4:+3,2:-2,3:+5,2:+6,1:-2,0:+4,4:+7,2:-2,1:+5,0:+8,1:-3,2:+5,4:-4,0:-4,4:+7,1:-7,0:-8,4:-3,2:-4` |
-| M16 | pent | 0,1 | 18 | 22 | 2 / 2 | 5 | -1, -1, -1, +2 | glass | Two seized, five rods, no hurry. | `4:-3,0:-5,4:-2,3:+3,2:+6,1:-8,0:-5,1:-6,4:-3,2:-7,0:+6,3:+8,1:-8,0:-7,4:-3,0:+4,4:-3,3:+2` |
-| M17 | hex | 1,5 | 10 | 11 | 2 / 2 | 2 | +3 | chainmail | The hub holds still. The rest go round. | `6:+4,5:-5,6:+7,1:-2,6:+3,5:-5,6:+6,5:+8,6:+6,1:+7` |
-| M18 | hex | 2,3 | 10 | 11 | 3 / 3 | 3 | -2 | neurons | Seven rods, two sulking. | `3:-3,2:+5,3:-7,2:-8,6:-4,1:+5,0:+8,3:+4,5:+3,4:+5` |
-| M19 | hex | 3,4 | 15 | 17 | 3 / 3 | 4 | +1, +3 | marbling | Lend it a step first. | `3:-2,0:+5,3:-8,2:-3,1:+4,3:+2,4:+3,0:-7,4:+8,3:+5,5:-2,6:+5,1:-7,0:+8,4:+8` |
-| M20 | hex | 2,3 | 12 | 13 | 4 / 4 | 4 | -2 | neurons | Two stops past the obvious one. | `1:+3,0:+6,2:-8,1:-7,0:-8,3:-4,0:-7,1:+8,6:-4,0:+7,3:+8,4:+4` |
-| M21 | hex | 3,4 | 15 | 17 | 4 / 4 | 5 | -1, +3 | chainmail | Spin-up takes a while. | `3:-2,4:-3,5:+4,0:-6,6:-2,0:+2,4:+3,3:-6,1:+2,6:+4,1:-6,2:+2,3:-2,6:-3,5:+3` |
-| M22 | hex | 4,5 | 14 | 15 | 5 / 5 | 5 | +2 | glass | Commit to the turn. | `4:+2,0:+5,5:+6,6:-7,0:+8,1:+7,6:+8,4:-4,0:+2,1:+5,0:-6,5:+7,0:-8,4:+7` |
-| M23 | hex | 1,2 | 18 | 20 | 5 / 5 | 6 | -1, -2 | marbling | The second turn is the one that counts. | `6:+2,1:+3,2:-6,3:+8,0:-4,1:-5,6:+7,0:+8,3:+7,0:+8,3:+4,5:-2,4:-5,0:-6,1:-8,6:+6,4:+2,3:+5` |
-| M24 | hex | 1,6 | 24 | 27 | 5 / 5 | 6 | +1, +1, -2 | chainmail | Step, step, and back across. | `5:+4,4:+6,0:-8,4:-8,3:-6,2:-8,0:-2,4:-4,2:-3,0:+7,5:-8,1:+4,2:+2,1:+3,6:+8,1:-6,6:+8,0:+8,3:-5,4:-6,0:-7,1:-8,5:+4,4:-7` |
-| M25 | hex | 1,2 | 18 | 20 | 6 / 6 | 7 | -1, +3 | glass | Rigid-body rotation, mostly. | `1:-2,2:+3,3:-4,0:-6,4:-8,0:-6,2:+7,0:-8,4:-6,0:-7,2:-8,5:-2,4:-4,5:-6,6:-7,1:+6,0:-7,6:-8` |
-| M26 | hex | 4,5 | 24 | 27 | 6 / 6 | 7 | +1, -1, +3 | marbling | Taylor-Couette, by hand. | `3:-2,4:+4,6:-3,0:+6,5:-7,6:+6,0:+8,3:-4,4:+7,3:-8,4:+4,6:+4,0:+6,6:-7,0:+8,3:-8,4:+7,1:+4,2:+6,3:+8,0:-2,5:-4,6:-7,5:-8` |
+| M6 | quad | 1,2 | 10 | 14 | 1 / 1 | 3 | -1, -1, -1, +2 | glass | Round in circles, on purpose. | `3:-2,0:+2,1:-5,2:+8,0:-2,3:+7,1:+2,0:-8,2:-2,1:-6` |
+| M7 | pent | 1,4 | 9 | 10 | 1 / 1 | 2 | +2 | chainmail | Five rods. No half turns. | `1:+2,0:+4,1:+4,0:-7,1:+8,0:-6,1:+7,0:+8,1:+5` |
+| M8 | pent | 2,3 | 6 | 7 | 2 / 2 | 2 | -2 | coral | The near turn is a trap. | `2:-2,1:+5,2:-7,1:+8,2:+5,3:-7` |
+| M9 | pent | 0,4 | 8 | 10 | 2 / 2 | 3 | -1, +2 | marbling | Look two turns ahead. | `0:+4,2:-3,3:-3,1:-5,2:-7,3:-8,0:-4,4:+4` |
+| M10 | pent | 0,1 | 10 | 12 | 2 / 2 | 4 | +1, +2 | neurons | Couette flow, interrupted. | `4:-2,0:-2,1:-4,0:-3,4:+4,2:+2,3:-6,2:+7,1:+8,3:-2` |
+| M11 | pent | 3,4 | 14 | 17 | 2 / 2 | 4 | +1, +1, +2 | chainmail | Turn, turn, unstir. | `2:-2,3:+5,2:-7,1:+8,0:-2,4:+5,3:-6,4:-7,0:+8,1:+3,0:+6,4:-8,1:+3,2:+4` |
+| M12 | pent | 2,3 | 14 | 17 | 2 / 2 | 4 | -1, -1, -2 | glass | Never park on wet paint. | `4:+2,3:+5,4:+8,0:+7,1:-8,2:+5,3:-6,2:+7,1:+8,0:-4,2:-4,1:-6,2:+8,1:-6` |
+| M13 | pent | 3,4 | 20 | 24 | 2 / 2 | 4 | +1, -1, +1, +2 | marbling | Forward, back, forward, round. | `3:+2,4:+3,2:-2,3:+5,2:+6,1:-2,0:+4,4:+7,2:-2,1:+5,0:+8,1:-3,2:+5,4:-4,0:-4,4:+7,1:-7,0:-8,4:-3,2:-4` |
+| M14 | pent | 0,1 | 18 | 22 | 2 / 2 | 5 | -1, -1, -1, +2 | glass | Two seized, five rods, no hurry. | `4:-3,0:-5,4:-2,3:+3,2:+6,1:-8,0:-5,1:-6,4:-3,2:-7,0:+6,3:+8,1:-8,0:-7,4:-3,0:+4,4:-3,3:+2` |
+| M15 | hex | 1,5 | 10 | 11 | 2 / 2 | 2 | +3 | chainmail | The hub holds still. The rest go round. | `6:+4,5:-5,6:+7,1:-2,6:+3,5:-5,6:+6,5:+8,6:+6,1:+7` |
+| M16 | hex | 2,3 | 10 | 11 | 3 / 3 | 3 | -2 | neurons | Seven rods, two sulking. | `3:-3,2:+5,3:-7,2:-8,6:-4,1:+5,0:+8,3:+4,5:+3,4:+5` |
+| M17 | hex | 3,4 | 15 | 17 | 3 / 3 | 4 | +1, +3 | marbling | Lend it a step first. | `3:-2,0:+5,3:-8,2:-3,1:+4,3:+2,4:+3,0:-7,4:+8,3:+5,5:-2,6:+5,1:-7,0:+8,4:+8` |
+| M18 | hex | 2,3 | 12 | 13 | 4 / 4 | 4 | -2 | neurons | Two stops past the obvious one. | `1:+3,0:+6,2:-8,1:-7,0:-8,3:-4,0:-7,1:+8,6:-4,0:+7,3:+8,4:+4` |
+| M19 | hex | 3,4 | 15 | 17 | 4 / 4 | 5 | -1, +3 | chainmail | Spin-up takes a while. | `3:-2,4:-3,5:+4,0:-6,6:-2,0:+2,4:+3,3:-6,1:+2,6:+4,1:-6,2:+2,3:-2,6:-3,5:+3` |
+| M20 | hex | 4,5 | 14 | 15 | 5 / 5 | 5 | +2 | glass | Commit to the turn. | `4:+2,0:+5,5:+6,6:-7,0:+8,1:+7,6:+8,4:-4,0:+2,1:+5,0:-6,5:+7,0:-8,4:+7` |
+| M21 | hex | 1,2 | 18 | 20 | 5 / 5 | 6 | -1, -2 | marbling | The second turn is the one that counts. | `6:+2,1:+3,2:-6,3:+8,0:-4,1:-5,6:+7,0:+8,3:+7,0:+8,3:+4,5:-2,4:-5,0:-6,1:-8,6:+6,4:+2,3:+5` |
+| M22 | hex | 1,6 | 24 | 27 | 5 / 5 | 6 | +1, +1, -2 | chainmail | Step, step, and back across. | `5:+4,4:+6,0:-8,4:-8,3:-6,2:-8,0:-2,4:-4,2:-3,0:+7,5:-8,1:+4,2:+2,1:+3,6:+8,1:-6,6:+8,0:+8,3:-5,4:-6,0:-7,1:-8,5:+4,4:-7` |
+| M23 | hex | 1,2 | 18 | 20 | 6 / 6 | 7 | -1, +3 | glass | Rigid-body rotation, mostly. | `1:-2,2:+3,3:-4,0:-6,4:-8,0:-6,2:+7,0:-8,4:-6,0:-7,2:-8,5:-2,4:-4,5:-6,6:-7,1:+6,0:-7,6:-8` |
+| M24 | hex | 4,5 | 24 | 27 | 6 / 6 | 7 | +1, -1, +3 | marbling | Taylor-Couette, by hand. | `3:-2,4:+4,6:-3,0:+6,5:-7,6:+6,0:+8,3:-4,4:+7,3:-8,4:+4,6:+4,0:+6,6:-7,0:+8,3:-8,4:+7,1:+4,2:+6,3:+8,0:-2,5:-4,6:-7,5:-8` |
+| M25 | hex | 1,2 | 22 | 24 | 6 / 6 | 9 | -1, -2 | chainmail | No second chances. | `2:+4,1:+5,6:-3,2:+4,0:+6,2:+7,0:+8,3:-7,0:-6,1:-2,0:+4,1:-7,6:+7,3:+4,0:+8,3:+4,4:+6,5:-7,6:+7,1:+8,5:-2,4:+5` |
+| M26 | hex | 4,5 | 24 | 26 | 7 / 7 | 8 | +1, -2 | marbling | The long way is the short way. | `1:+2,2:+2,3:-3,0:+3,4:-5,1:+4,0:+4,2:+4,1:+5,0:+5,4:-7,1:+4,0:+8,2:-6,4:+4,0:-2,4:+3,6:-4,1:+5,2:+7,1:-8,6:+7,5:+8,6:-4` |
 | M27 | hex | 3,4 | 24 | 27 | 7 / 7 | 8 | -1, -2, -1 | glass | The maelstrom, unstirred. | `3:+4,0:+5,4:-7,5:+3,0:-4,6:+3,4:-3,0:+4,3:+7,0:+8,4:-6,0:+8,3:+2,0:+4,5:-7,6:-3,2:-3,0:-4,4:-6,6:+2,1:-3,2:-6,3:+5,0:+5` |
 
-The arc:
-- **Quad (M1–M8): the controls, then routing.** One idea a level: a clockwise quarter turn (M1), the other way (M2),
-  parking the dead knob over a finished ring with a half turn (M3), a second dead knob (M4), then plans of two, three
-  and four turns (M5–M8).
-- **Pent (M9–M16): no half turn.** A two-apart pair at gap 1, then neighbour pairs at gap 2, with plans of 1 to 4
-  turns and the wrong-turn cost rising 2 to 5.
-- **Hex (M17–M27): reading ahead.** A two-apart half turn, then neighbour pairs whose luckiest gap climbs 3 to 7 and
-  wrong-turn cost 3 to 8. M27 needs a three-turn plan read ahead.
-- First turns never run more than two the same way, neighbours never share a picture or seized set, and every level
-  fits its picture's depth limit (coral 6, neurons 14).
+Jack's calls (2026-10-24), from a deck of films of each candidate played at par beside a player who doesn't plan:
+- **The finale stays M27**, the three-turn level, over a two-turn one at gap 8.
+- **M2 stays**: it punishes only a clockwise habit, the one M1 builds.
+- **Lean into difficulty**: maelstrom is the last tier of free levels, where players should spend the most thought and
+  feel the most achievement. Quad was cut from 8 levels to 6 (the first table's M6 and M7, a three- and a four-turn
+  plan at gap 1, are gone), and hex gained two levels before the finale: M25 (gap 6, a wrong first turn costs 9, one
+  route) and M26 (gap 7, one route).
+- **The park rule has no tie-break.** Jack: a clockwise tie-break is unintuitive, since nothing says it should be so.
+  The rule as a player would state it: take off the newest twist a working knob reaches; when none does, turn the
+  tank the shortest way to where no dead knob sits over unfinished work; if two turns are equally short, either
+  works. Every level here reaches par on every tie branch under both parkings, so this holds for the whole set, and
+  it is the test for any later set (`Solver.park` still takes a `Tie`; fairness means par under both).
 
 What the set can't have (from searches of up to 20,000 seeds a band, both random and plan-first, and an argument from
 the park rule that the searches agree with):
@@ -283,14 +285,12 @@ the park rule that the searches agree with):
 - **Spacing is mostly neighbours** (22 of 27). Two-apart pairs reach gap 1 on pent and 2 on hex, and opposite pairs on
   quad and hex always have gap 0.
 - **The finale has 8 equal plans.** No level at gap 7 or more needs three turns and also has one route.
-- **Par dips** at M16 and M25, and each layout opens easier than the last one's showpiece.
+- **Par dips** at M14, M23 and M25, and each layout opens easier than the last one's showpiece.
 - **Not measured:** whether a free stir turned straight back gives the plan away, and how the levels play. The titles
   are drafts.
 
-Open calls, beyond which park-rule reading is the rule: end on M27 (three turns, gap 7) or on a two-turn level at gap
-8 (Claude: M27); keep 8 quad levels or give hex one or two of them; accept that M2 punishes only a clockwise habit
-(luckiest gap 0). The first two tables, the search tool and the three designs the set was judged from are on the
-local branch `archive/scratch`, never pushed.
+The earlier tables, the search tool, the three designs the set was judged from and the films are on the local branch
+`archive/scratch`, never pushed.
 
 **Recommended Nightmare+ (chosen 2026-09-28): the seized rod and the turning tank.** N+k is Nightmare k's scramble with one
 or two seized knobs (never the hub). The whole tank turns one rod over (the layout's symmetry: 120°, 90°, 180°, 72°,
