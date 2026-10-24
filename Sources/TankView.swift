@@ -688,6 +688,8 @@ struct LevelView: View {
 
     private var stack: [Twist] { shown.map { Array(game.stack.prefix($0)) } ?? game.stack }
     private var rods: [SIMD3<Double>] { game.level.layout.rods }
+    /// The rods with a knob: all but a swirl, which is held from the rim.
+    private var knobs: [Int] { rods.indices.filter { $0 != game.level.layout.swirl } }
     private func centre(_ k: Int) -> SIMD2<Double> { SIMD2(rods[k].x, rods[k].y) }
 
     /// Replay levels play the scramble forward from the clean picture, so the last rod seen turning is the top of the
@@ -822,6 +824,8 @@ struct LevelView: View {
     private func tank(_ side: CGFloat) -> some View {
         let r = side / 2
         func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
+        // A disc's lines, a swirl's too, kept clear of the bezel's own hairline at the glass's edge, as the tank's dial is.
+        func disc(_ k: Int) -> CGFloat { min(rods[k].z * r, r - 4) }
         let core = 2 * Tank.coreRadius * r
         let probing = shown == nil ? liveRod : nil
         // The held rod's dial is fainter while letting go would cost nothing or a full stack would refuse the twist.
@@ -862,7 +866,7 @@ struct LevelView: View {
         // Out of the way while the tank is held.
         let lesson = shown == nil && !game.finished && held == nil
         let arc = !game.level.seized.isEmpty && lesson && !game.tankTurned ? RimLesson.arc(r) : []
-        let others: [(CGPoint, CGFloat)] = rods.indices.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
+        let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
             + arc.map { ($0, RimLesson.width + Self.countRoom) }
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
         let spillAt = game.spilled ? game.brimEvents.last?.time : nil
@@ -891,12 +895,11 @@ struct LevelView: View {
             .clipShape(Circle())
             if let k = liveRod, shown != nil {
                 glowRing(.magenta, 2.5, 6, under: .black.opacity(0.7))
-                    .frame(width: 2 * rods[k].z * r, height: 2 * rods[k].z * r)
+                    .frame(width: 2 * disc(k), height: 2 * disc(k))
                     .position(at(k))
             }
             if let c = rodCount, c.live || c.steps != 0 {
-                let disc = rods[c.k].z * r
-                dial(at(c.k), disc, inner: disc - 14, from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
+                dial(at(c.k), disc(c.k), inner: disc(c.k) - 14, from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
                      to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps, step: Tank.step)
                     .opacity(c.live ? (commits ? 1 : Self.idle) : Self.lifted)
             }
@@ -911,7 +914,7 @@ struct LevelView: View {
             // The dial's hairline brightening as the finger lifts. An undo, which has no dial, flashes it too.
             let fk = flash?.rod ?? 0
             Circle().stroke(Color.live, lineWidth: Self.hairline)
-                .frame(width: 2 * rods[fk].z * r, height: 2 * rods[fk].z * r)
+                .frame(width: 2 * disc(fk), height: 2 * disc(fk))
                 .keyframeAnimator(initialValue: 1.0, trigger: game.turns) { ring, t in
                     ring.opacity(t >= 1 ? 0 : 0.9 * (1 - t))
                 } keyframes: { _ in
@@ -938,17 +941,17 @@ struct LevelView: View {
                               clock: frozenClock)
                 } keyframes: { _ in Self.jolt }
             }
-            let ck = game.cancelledRod, disc = 2 * rods[ck].z * r
+            let ck = game.cancelledRod, across = 2 * disc(ck)
             Circle().stroke(Color.magenta, lineWidth: Self.hairline)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.cancels) { ring, t in
                     // Grown by frame, not scale, so the stroke stays a hairline out to the disc edge.
-                    ring.frame(width: disc * (0.3 + 0.7 * t), height: disc * (0.3 + 0.7 * t)).opacity(t >= 1 ? 0 : 0.9 * (1 - t * t))
+                    ring.frame(width: across * (0.3 + 0.7 * t), height: across * (0.3 + 0.7 * t)).opacity(t >= 1 ? 0 : 0.9 * (1 - t * t))
                 } keyframes: { _ in
                     MoveKeyframe(0.0)
                     LinearKeyframe(1.0, duration: 0.45, timingCurve: .easeOut)
                 }
                 .position(at(ck))
-            ForEach(rods.indices, id: \.self) { k in
+            ForEach(knobs, id: \.self) { k in
                 // On a device pixel, so the knob's ticks can be.
                 let p = at(k)
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
@@ -960,9 +963,9 @@ struct LevelView: View {
             // A spilled tank keeps its caps over the murk.
             .opacity(showResult && !game.spilled ? 0 : 1)
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
-            // knobs, which would hide it.
+            // knobs, which would hide it. A swirl's knob is the rim, so its ring lies on the bezel.
             RodView.band(.alarm)
-                .frame(width: core, height: core)
+                .frame(width: fk == game.level.layout.swirl ? side : core, height: fk == game.level.layout.swirl ? side : core)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.pushes) { ring, t in
                     ring.opacity(t >= 1 ? 0 : 1 - t)
                 } keyframes: { _ in
@@ -987,8 +990,8 @@ struct LevelView: View {
         .keyframeAnimator(initialValue: 0.0, trigger: game.solved) { tank, t in
             tank.scaleEffect(1 + 0.02 * sin(t * .pi))
         } keyframes: { _ in CubicKeyframe(1.0, duration: 0.9) }
-        // A level that turns reaches a finger on the bezel or just beyond it.
-        .contentShape(Circle().inset(by: game.level.seized.isEmpty ? 0 : -25))
+        // A level that turns, or swirls, reaches a finger on the bezel or just beyond it.
+        .contentShape(Circle().inset(by: game.level.seized.isEmpty && game.level.layout.swirl == nil ? 0 : -25))
         .gesture(twistGesture(r))
         // Not .none: that also switches off the gesture above.
         .simultaneousGesture(spinGesture, including: game.level.seized.isEmpty ? .subviews : .all)
@@ -1149,15 +1152,32 @@ struct LevelView: View {
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
-    /// Where knobs are seized the rim wins over the discs that reach it. Otherwise the disc whose centre is nearest, in
-    /// its own radius, wins; a seized knob that wins holds nothing rather than passing the finger to a neighbour.
+    /// The rim wins over the discs that reach it: past `rim` it turns the glass where knobs are seized, and holds the
+    /// swirl where there is one. Where there are both, the glass's own edge from `swirlBand` holds the swirl and the
+    /// bezel and beyond turn the glass. Otherwise the disc whose centre is nearest, in its own radius, wins, never the
+    /// swirl, whose centre would win everywhere; a seized knob that wins holds nothing rather than passing the finger
+    /// to a neighbour.
     nonisolated static func grab(_ layout: Layout, seized: Set<Int>, at point: SIMD2<Double>) -> Grab {
-        if !seized.isEmpty && simd_length(point) > 0.93 { return .rim }
+        let out = simd_length(point)
+        switch (layout.swirl, seized.isEmpty) {
+        case (.some, false) where out >= 1: return .rim
+        case (let s?, false) where out > swirlBand: return .rod(s)
+        case (let s?, true) where out > rim: return .rod(s)
+        case (nil, false) where out > rim: return .rim
+        default: break
+        }
         let rods = layout.rods
         func depth(_ k: Int) -> Double { simd_distance(point, SIMD2(rods[k].x, rods[k].y)) / rods[k].z }
-        guard let k = rods.indices.filter({ depth($0) < 1 }).min(by: { depth($0) < depth($1) }) else { return .nothing }
+        guard let k = rods.indices.filter({ $0 != layout.swirl && depth($0) < 1 }).min(by: { depth($0) < depth($1) })
+        else { return .nothing }
         return seized.contains(k) ? .seized(k) : .rod(k)
     }
+
+    /// Where the rim's grab starts, in tank units: about 13 pt into the glass on a Pro Max.
+    nonisolated static let rim = 0.93
+    /// Where a level has both a swirl and seized knobs, the swirl's grab starts here, so the glass's edge it holds is
+    /// as wide as a fingertip, about 27 pt on a Pro Max; the turn keeps the bezel and the 25 pt beyond it, about 34 pt.
+    nonisolated static let swirlBand = 0.86
 
     /// The seized knob's shake and the rim's pulse both run on this clock, in seconds.
     @KeyframesBuilder<Double> private static var jolt: some Keyframes<Double> {

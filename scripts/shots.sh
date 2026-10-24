@@ -213,3 +213,14 @@ shot seized-ring3-buried "The same with 3:+2 buried fourth from the bottom ($rin
 shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
 shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubburied): the hub's ring is not finished." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3
+# The swirl: a last rod the size of the tank at its centre, held from the rim.
+shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still." LAYOUT=quadSwirl STACK=4:+3
+swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
+shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl"
+shot swirl-quad-live "The same held mid-drag from the rim, the swirl 1.5 steps clockwise." LAYOUT=quadSwirl STACK="$swirl" LIVE=4:1.5 TOUCH=0.7,-0.7
+shot swirl-quad-seized "The same with knob 1 seized and the tank turned one step (90 degrees clockwise)." LAYOUT=quadSwirl STACK="$swirl" \
+  SEIZED=1 TANK=1
+shot swirl-tri "Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3." LAYOUT=triSwirl STACK=0:+3,3:+2,1:-4,3:-3
+shot swirl-eye "Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3." LAYOUT=eyeSwirl STACK=0:+3,4:+2,2:-4,4:-3
+shot swirl-pent "Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3." LAYOUT=pentSwirl STACK=0:+3,5:+2,2:-4,5:-3
+shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl STACK=1:+3,7:+2,4:-4,7:-3

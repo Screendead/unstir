@@ -187,8 +187,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
-  a finger holds where it lands, never by its motion: the rim first where knobs are seized, else the disc whose centre
-  is nearest in its own radius, overlapped or not; a seized winner is `.seized`, which holds nothing. The held rod
+  a finger holds where it lands, never by its motion: the rim first, else the disc whose centre is nearest in its own
+  radius, overlapped or not, never the swirl; a seized winner is `.seized`, which holds nothing. The rim, from
+  `LevelView.rim` (0.93) out over the bezel, turns the tank where knobs are seized and holds the swirl where the layout
+  has one. Where it has both, the swirl holds the glass's own edge from `swirlBand` (0.86) and the tank the bezel and
+  beyond. The swirl has no knob: its dial is drawn just inside the bezel, as the tank's is, and its red ring on the
+  bezel. The held rod
   lights at once with a light tap, so the rod that lights is the rod that turns: its knob's ticks and a ring on the dark
   band round it, never past it, and one 0.5 pt hairline round its disc, dimmer until letting go would commit. On lift
   the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red, and one that cancels

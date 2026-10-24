@@ -1036,6 +1036,53 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// The swirl is held from the rim alone: with no knob seized, past `LevelView.rim` and out over the bezel; with
+    /// knobs seized too, on the glass's own edge from `LevelView.swirlBand`, while the bezel and beyond turn the glass.
+    /// Inside that a finger holds the nearest knob's disc as on the swirl's base, never the swirl, and the centre of a
+    /// layout with no rod there holds nothing.
+    func testGrabHoldsTheSwirlFromTheRim() {
+        for layout in Layout.swirls {
+            let s = layout.swirl!, seized: Set = [1]
+            for i in 0..<72 {
+                let t = Double(i) * .pi / 36, u = SIMD2(cos(t), sin(t)), m = "\(layout) at \(i * 5)°"
+                for out in [0.94, 0.99, 1.0, 1.05, 1.15] { XCTAssertEqual(LevelView.grab(layout, seized: [], at: out * u), .rod(s), m) }
+                for out in [0.87, 0.93, 0.999] { XCTAssertEqual(LevelView.grab(layout, seized: seized, at: out * u), .rod(s), m) }
+                for out in [1.001, 1.02, 1.15] { XCTAssertEqual(LevelView.grab(layout, seized: seized, at: out * u), .rim, m) }
+                XCTAssertEqual(LevelView.grab(layout.base!, seized: seized, at: 0.95 * u), .rim, m)
+            }
+            for k in layout.base!.rods.indices {
+                let p = centre(layout, k) + SIMD2(0.05, 0.03)
+                XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(k), "\(layout) \(k)")
+            }
+            XCTAssertEqual(LevelView.grab(layout, seized: [], at: SIMD2(0.2, 0.1)), LevelView.grab(layout.base!, seized: [], at: SIMD2(0.2, 0.1)))
+        }
+        XCTAssertEqual(LevelView.grab(.pentSwirl, seized: [], at: .zero), .nothing)
+        XCTAssertEqual(LevelView.grab(.quadSwirl, seized: [], at: .zero), .nothing)
+        XCTAssertEqual(LevelView.grab(.hexSwirl, seized: [], at: .zero), .rod(0))
+        XCTAssertEqual(LevelView.grab(.quadSwirl, seized: [1], at: centre(.quadSwirl, 1)), .seized(1))
+        XCTAssertLessThan(LevelView.rim, 1)
+        XCTAssertLessThan(LevelView.swirlBand, LevelView.rim)
+    }
+
+    /// Anywhere on a swirl layout, with or without seized knobs, a finger holds exactly what its distance out decides,
+    /// and inside the rim's bands what the base layout holds there.
+    func testGrabOnASwirlLayoutAnywhere() {
+        var rng = SplitMix64(state: 11)
+        for _ in 0..<20000 {
+            let layout = Layout.swirls[rng.below(Layout.swirls.count)], base = layout.base!
+            let seized = Set(base.rods.indices.filter { _ in rng.below(3) == 0 })
+            let p = SIMD2(Double.random(in: -1.2...1.2, using: &rng), Double.random(in: -1.2...1.2, using: &rng))
+            let out = simd_length(p), grab = LevelView.grab(layout, seized: seized, at: p)
+            let message = "\(layout) seized \(seized.sorted()) at \(p)"
+            if seized.isEmpty {
+                XCTAssertEqual(grab, out > LevelView.rim ? .rod(layout.swirl!) : LevelView.grab(base, seized: [], at: p), message)
+            } else {
+                XCTAssertEqual(grab, out >= 1 ? .rim : out > LevelView.swirlBand ? .rod(layout.swirl!) : LevelView.grab(base, seized: seized, at: p),
+                               message)
+            }
+        }
+    }
+
     /// A drag's path for the log keeps the landing, its first few points close together, then a point a gap apart, and
     /// the latest; a finger held still leaves the landing and the lift. A long drag stays within the cap, its first few
     /// points and its latest kept, and its worst line stays short.
