@@ -958,10 +958,11 @@ final class UnstirTests: XCTestCase {
         XCTAssertLessThan(logged.count, 600, logged)
     }
 
-    /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one. The
-    /// prefixes predate the tiers' names and stay, so a rename keeps what was played.
+    /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one.
+    /// Whirlpool's prefix predates its name and stays, so the rename kept what was played; maelstrom's set replaced
+    /// nightmare+'s, so its prefix moved off N+ and no old best lands on a new level.
     func testLevelIdsMatchTheirTier() {
-        XCTAssertEqual(Tier.allCases.map(\.prefix), ["L", "N", "N+"])
+        XCTAssertEqual(Tier.allCases.map(\.prefix), ["L", "N", "M"])
         for tier in Tier.allCases {
             XCTAssertEqual(tier.levels.map(\.id), tier.levels.indices.map { "\(tier.prefix)\($0 + 1)" })
             XCTAssertTrue(tier.levels.allSatisfy { $0.tier == tier }, tier.rawValue)
@@ -970,16 +971,45 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Set(ids).count, ids.count)
     }
 
-    /// Until maelstrom has levels of its own, whirlpool's scrambles on live pictures, under ids of their own so a
-    /// whirlpool best or start never opens a maelstrom level or spends its first try.
+    /// Maelstrom's levels are its own, on live pictures, under ids of their own so a best or start from another tier
+    /// never opens one or spends its first try.
     func testMaelstromKeepsItsOwnProgress() {
-        XCTAssertEqual(Level.maelstrom.map(\.scramble), Level.whirlpool.map(\.scramble))
-        XCTAssertTrue(Set(Level.maelstrom.map(\.id)).isDisjoint(with: (Level.plughole + Level.whirlpool).map(\.id)))
+        let others = Level.plughole + Level.whirlpool
+        XCTAssertTrue(Set(Level.maelstrom.map(\.id)).isDisjoint(with: others.map(\.id)))
+        XCTAssertTrue(Set(Level.maelstrom.map(\.scramble)).isDisjoint(with: others.map(\.scramble)))
         XCTAssertTrue((Level.whirlpool + Level.maelstrom).allSatisfy(\.picture.isLive))
     }
 
-    /// Against the design table. Coral reads only to 6 stirs and neurons to 14; each maelstrom level shows the twin of
-    /// its whirlpool level's picture. The sandbox cycles every picture but the twins.
+    /// Against the design table: quad, then pent, then hex, one or two seized knobs, never the hub; the twin of each
+    /// row's picture, coral only to 6 stirs and neurons to 14, and each tank four taps as dealt. That par is the
+    /// optimum is `SolverTests`' to check.
+    func testMaelstromTable() {
+        let levels = Level.maelstrom
+        XCTAssertEqual(levels.count, 27)
+        XCTAssertEqual(levels.map(\.layout), Array(repeating: .quad, count: 6) + Array(repeating: .pent, count: 8)
+                       + Array(repeating: .hex, count: 13))
+        let pictures: [Picture] = [.coral, .neurons, .coral, .chainmail, .coral, .glass, .chainmail, .coral, .marbling,
+                                   .neurons, .chainmail, .glass, .marbling, .glass, .chainmail, .neurons, .marbling,
+                                   .neurons, .chainmail, .glass, .marbling, .chainmail, .glass, .marbling, .chainmail,
+                                   .marbling, .glass]
+        XCTAssertEqual(levels.map(\.picture), pictures.map(\.twin))
+        XCTAssertEqual(levels.map(\.scramble.count),
+                       [3, 4, 5, 5, 6, 10, 9, 6, 8, 10, 14, 14, 20, 18, 10, 10, 15, 12, 15, 14, 18, 24, 18, 24, 22, 24, 24])
+        XCTAssertEqual(levels.map(\.par),
+                       [4, 5, 6, 6, 8, 14, 10, 7, 10, 12, 17, 17, 24, 22, 11, 11, 17, 13, 17, 15, 20, 27, 20, 27, 24, 26, 27])
+        for level in levels {
+            XCTAssertTrue((1...2).contains(level.seized.count), level.id)
+            if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }
+            XCTAssertLessThanOrEqual(level.scramble.count, Tank.fourTaps - level.picture.fillEntries, level.id)
+            if level.picture == .coralTwin { XCTAssertLessThanOrEqual(level.scramble.count, 6, level.id) }
+            if level.picture == .neuronsTwin { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
+        }
+        XCTAssertEqual(levels[0].note, "One knob has seized. Turn the tank.")
+        XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
+    }
+
+    /// Against the design table. Coral reads only to 6 stirs and neurons to 14. The sandbox cycles every picture but
+    /// the twins.
     func testWhirlpoolPictures() {
         XCTAssertEqual(Array(sequence(first: Picture.grid, next: \.next).prefix(9)),
                        [.grid, .sunset, .city, .glass, .chainmail, .coral, .neurons, .marbling, .grid])
@@ -990,7 +1020,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Level.whirlpool.map(\.picture), want)
         XCTAssertLessThanOrEqual(Level.whirlpool.filter { $0.picture == .coral }.map(\.scramble.count).max()!, 6)
         XCTAssertLessThanOrEqual(Level.whirlpool.filter { $0.picture == .neurons }.map(\.scramble.count).max()!, 14)
-        XCTAssertEqual(Level.maelstrom.map(\.picture), Level.whirlpool.map(\.picture.twin))
         let twins = Set(table.map(\.0.twin))
         XCTAssertEqual(twins.count, 5)
         XCTAssertTrue(twins.isDisjoint(with: table.map(\.0)))
@@ -1314,9 +1343,13 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(Best.tankTurned)
     }
 
-    /// Until the seized levels set their own, par is one move per entry everywhere.
+    /// Par is one move per entry wherever no knob is seized; a level with seized knobs sets its own, counting its
+    /// turns of the tank.
     func testParIsTheScrambleUnlessSet() {
-        for level in Tier.allCases.flatMap(\.levels) { XCTAssertEqual(level.par, level.scramble.count, level.id) }
+        for level in Tier.allCases.flatMap(\.levels) {
+            XCTAssertEqual(level.fixedPar == nil, level.seized.isEmpty, level.id)
+            if level.seized.isEmpty { XCTAssertEqual(level.par, level.scramble.count, level.id) }
+        }
     }
 
     /// From the prototype, so the Swift generator draws exactly as it does. Every past daily must stay the tank it was.

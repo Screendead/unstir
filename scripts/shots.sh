@@ -166,18 +166,18 @@ for level in 24:chainmail 16:coral 20:neurons 25:marbling; do
   n=${level%:*} picture=${level#*:}
   shot "whirlpool$n-$picture" "Whirlpool level $n ($picture) with its full scramble." TIER=whirlpool LEVEL=$n CLOCK=3
 done
-for level in 26:glass 24:chainmail 16:coral 20:neurons 25:marbling; do
+for level in 27:glass 22:chainmail 8:coral 18:neurons 24:marbling; do
   n=${level%:*} picture=${level#*:}
   shot "maelstrom$n-$picture" "Maelstrom level $n ($picture twin) with its full scramble." TIER=maelstrom LEVEL=$n CLOCK=3
 done
-# The turning tank: maelstrom scrambles on their twins with seized knobs, at home and turned one step, where every seam
-# should sit concentric on the knob it lands under.
-shot seized-m01-home "Maelstrom 01 (tri) with knob 0 seized, tank at home." TIER=maelstrom LEVEL=1 SEIZED=0 CLOCK=3
-shot seized-m01-turned "Maelstrom 01 (tri) with knob 0 seized, tank turned one step (120 degrees clockwise): the seams around knob 0 now ring knob 1." \
-  TIER=maelstrom LEVEL=1 SEIZED=0 TANK=1 CLOCK=3
-shot seized-m09-home "Maelstrom 09 (square) with knob 1 seized, tank at home." TIER=maelstrom LEVEL=9 SEIZED=1 CLOCK=3
-shot seized-m09-turned "Maelstrom 09 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2." \
-  TIER=maelstrom LEVEL=9 SEIZED=1 TANK=1 CLOCK=3
+# The turning tank: maelstrom levels on their twins, at home and turned one step, where every seam should sit
+# concentric on the knob it lands under.
+shot seized-m01-home "Maelstrom 01 (square, coral twin) with knob 1 seized, tank at home." TIER=maelstrom LEVEL=1 CLOCK=3
+shot seized-m01-turned "Maelstrom 01 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2." \
+  TIER=maelstrom LEVEL=1 TANK=1 CLOCK=3
+shot seized-m09-home "Maelstrom 09 (pentagon, marbling twin) with knobs 0 and 4 seized, tank at home." TIER=maelstrom LEVEL=9 CLOCK=3
+shot seized-m09-turned "Maelstrom 09 (pentagon) with knobs 0 and 4 seized, tank turned one step (72 degrees clockwise): each seam moves one knob on." \
+  TIER=maelstrom LEVEL=9 TANK=1 CLOCK=3
 shot seized-m23-home "Maelstrom 23 (hex) with knobs 2 and 5 seized, tank at home." TIER=maelstrom LEVEL=23 SEIZED=2,5 CLOCK=3
 shot seized-m23-turned "Maelstrom 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANK=1 CLOCK=3
@@ -199,7 +199,7 @@ shot lesson-shake-turned "The same once the player has turned the tank before: n
 shot lesson-turned "Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost." LEVEL=12 SEIZED=1 CLOCK=3 TANKTURNED=1
 shot lesson-count "Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: rod 1 at the top turned +1 by a finger just below its knob, its count swung off the rim's arc." \
   TIER=whirlpool LEVEL=25 SEIZED=2,5 LIVE=1:+1 TOUCH=0,-0.3 CLOCK=3
-shot lesson-maelstrom01-free "Maelstrom 01 (tri) as the game loads it: no knob seized until maelstrom's own set, so no rim lesson and no note of seized knobs." \
+shot lesson-maelstrom01 "Maelstrom 01 (square, coral twin) as the game loads it, the tank never turned: knob 1 seized, the rim's arc and ghost finger, and the note to turn the tank." \
   TIER=maelstrom LEVEL=1 CLOCK=3
 # Can a finished ring be read on hex glass? 14 entries, as whirlpool 23 has, with one ring left without any, and the same
 # stack with a 2-step twist on that ring buried under its neighbours.

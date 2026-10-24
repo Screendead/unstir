@@ -25,13 +25,14 @@ enum Tier: String, CaseIterable {
         }
     }
 
-    /// Starts each of the tier's level ids. Whirlpool's and maelstrom's are from their old names, nightmare and
-    /// nightmare+: progress is stored by id, so changing a prefix loses it unless the stored keys are remapped.
+    /// Starts each of the tier's level ids. Progress is stored by id, so changing a prefix loses it unless the stored
+    /// keys are remapped. Whirlpool's is from its old name, nightmare; maelstrom's levels replaced nightmare+'s, so
+    /// its N+ became M and their bests never land on the new levels.
     var prefix: String {
         switch self {
         case .plughole: "L"
         case .whirlpool: "N"
-        case .maelstrom: "N+"
+        case .maelstrom: "M"
         }
     }
 
@@ -131,7 +132,7 @@ struct Level: Hashable, Sendable {
 
     /// Twice the stirs of the same-numbered level, more of them hidden under louder ones, live pictures, nothing replayed.
     static let whirlpool: [Level] = ([
-        (.tri, "0:-5,1:+3", "Turn them back.", "Same rules, twice the stirs, no replays. This is the last note."),
+        (.tri, "0:-5,1:+3", "Turn them back.", "Same rules, twice the stirs, no replays."),
         (.tri, "2:+7,0:-7", "Both went further than they look.", ""),
         (.tri, "1:-6,2:+3,0:-4,1:+4", "Four stirs. Undo the fourth one first.", ""),
         (.tri, "2:-5,1:+4,2:+2,0:-5", "The newest seam is never broken.", ""),
@@ -169,14 +170,40 @@ struct Level: Hashable, Sendable {
               layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
-    /// Until maelstrom has levels of its own: whirlpool's scrambles under ids of their own, so a whirlpool best or
-    /// start never opens a level here or spends its first try, each on its whirlpool picture's twin.
-    static let maelstrom: [Level] = whirlpool.enumerated().map { i, level in
-        var level = level
-        level.id = Tier.maelstrom.prefix + "\(i + 1)"
-        level.tier = .maelstrom
-        level.picture = level.picture.twin
-        return level
+    /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum, and the park rule
+    /// reaches it however its ties go (UnstirTests). Each shows the twin of the picture its row names.
+    static let maelstrom: [Level] = ([
+        (.quad, "3:-4,2:+7,1:-8", [1], 4, .coral, "Something has set.", "One knob has seized. Turn the tank."),
+        (.quad, "0:-3,2:+4,1:+5,2:+8", [2], 5, .neurons, "The tank turns the other way too.", ""),
+        (.quad, "1:+2,2:-5,1:-5,0:-6,1:+8", [1], 6, .coral, "Park the dead knob where the work is done.", ""),
+        (.quad, "3:+2,0:+4,3:-5,0:+6,1:-8", [0,3], 6, .chainmail, "Two knobs, one reason to turn.", ""),
+        (.quad, "1:+3,2:+3,1:-5,2:-7,3:-8,0:+2", [0,1], 8, .coral, "A step back, then half round.", ""),
+        (.quad, "3:-2,0:+2,1:-5,2:+8,0:-2,3:+7,1:+2,0:-8,2:-2,1:-6", [1,2], 14, .glass, "Round in circles, on purpose.", ""),
+        (.pent, "1:+2,0:+4,1:+4,0:-7,1:+8,0:-6,1:+7,0:+8,1:+5", [1,4], 10, .chainmail, "Five rods. No half turns.", ""),
+        (.pent, "2:-2,1:+5,2:-7,1:+8,2:+5,3:-7", [2,3], 7, .coral, "The near turn is a trap.", ""),
+        (.pent, "0:+4,2:-3,3:-3,1:-5,2:-7,3:-8,0:-4,4:+4", [0,4], 10, .marbling, "Look two turns ahead.", ""),
+        (.pent, "4:-2,0:-2,1:-4,0:-3,4:+4,2:+2,3:-6,2:+7,1:+8,3:-2", [0,1], 12, .neurons, "Couette flow, interrupted.", ""),
+        (.pent, "2:-2,3:+5,2:-7,1:+8,0:-2,4:+5,3:-6,4:-7,0:+8,1:+3,0:+6,4:-8,1:+3,2:+4", [3,4], 17, .chainmail, "Turn, turn, unstir.", ""),
+        (.pent, "4:+2,3:+5,4:+8,0:+7,1:-8,2:+5,3:-6,2:+7,1:+8,0:-4,2:-4,1:-6,2:+8,1:-6", [2,3], 17, .glass, "Never park on wet paint.", ""),
+        (.pent, "3:+2,4:+3,2:-2,3:+5,2:+6,1:-2,0:+4,4:+7,2:-2,1:+5,0:+8,1:-3,2:+5,4:-4,0:-4,4:+7,1:-7,0:-8,4:-3,2:-4", [3,4], 24, .marbling, "Forward, back, forward, round.", ""),
+        (.pent, "4:-3,0:-5,4:-2,3:+3,2:+6,1:-8,0:-5,1:-6,4:-3,2:-7,0:+6,3:+8,1:-8,0:-7,4:-3,0:+4,4:-3,3:+2", [0,1], 22, .glass, "Two seized, five rods, no hurry.", ""),
+        (.hex, "6:+4,5:-5,6:+7,1:-2,6:+3,5:-5,6:+6,5:+8,6:+6,1:+7", [1,5], 11, .chainmail, "The hub holds still. The rest go round.", ""),
+        (.hex, "3:-3,2:+5,3:-7,2:-8,6:-4,1:+5,0:+8,3:+4,5:+3,4:+5", [2,3], 11, .neurons, "Seven rods, two sulking.", ""),
+        (.hex, "3:-2,0:+5,3:-8,2:-3,1:+4,3:+2,4:+3,0:-7,4:+8,3:+5,5:-2,6:+5,1:-7,0:+8,4:+8", [3,4], 17, .marbling, "Lend it a step first.", ""),
+        (.hex, "1:+3,0:+6,2:-8,1:-7,0:-8,3:-4,0:-7,1:+8,6:-4,0:+7,3:+8,4:+4", [2,3], 13, .neurons, "Two stops past the obvious one.", ""),
+        (.hex, "3:-2,4:-3,5:+4,0:-6,6:-2,0:+2,4:+3,3:-6,1:+2,6:+4,1:-6,2:+2,3:-2,6:-3,5:+3", [3,4], 17, .chainmail, "Spin-up takes a while.", ""),
+        (.hex, "4:+2,0:+5,5:+6,6:-7,0:+8,1:+7,6:+8,4:-4,0:+2,1:+5,0:-6,5:+7,0:-8,4:+7", [4,5], 15, .glass, "Commit to the turn.", ""),
+        (.hex, "6:+2,1:+3,2:-6,3:+8,0:-4,1:-5,6:+7,0:+8,3:+7,0:+8,3:+4,5:-2,4:-5,0:-6,1:-8,6:+6,4:+2,3:+5", [1,2], 20, .marbling, "The second turn is the one that counts.", ""),
+        (.hex, "5:+4,4:+6,0:-8,4:-8,3:-6,2:-8,0:-2,4:-4,2:-3,0:+7,5:-8,1:+4,2:+2,1:+3,6:+8,1:-6,6:+8,0:+8,3:-5,4:-6,0:-7,1:-8,5:+4,4:-7", [1,6], 27, .chainmail, "Step, step, and back across.", ""),
+        (.hex, "1:-2,2:+3,3:-4,0:-6,4:-8,0:-6,2:+7,0:-8,4:-6,0:-7,2:-8,5:-2,4:-4,5:-6,6:-7,1:+6,0:-7,6:-8", [1,2], 20, .glass, "Rigid-body rotation, mostly.", ""),
+        (.hex, "3:-2,4:+4,6:-3,0:+6,5:-7,6:+6,0:+8,3:-4,4:+7,3:-8,4:+4,6:+4,0:+6,6:-7,0:+8,3:-8,4:+7,1:+4,2:+6,3:+8,0:-2,5:-4,6:-7,5:-8", [4,5], 27, .marbling, "Taylor-Couette, by hand.", ""),
+        (.hex, "2:+4,1:+5,6:-3,2:+4,0:+6,2:+7,0:+8,3:-7,0:-6,1:-2,0:+4,1:-7,6:+7,3:+4,0:+8,3:+4,4:+6,5:-7,6:+7,1:+8,5:-2,4:+5", [1,2], 24, .chainmail, "No second chances.", ""),
+        (.hex, "1:+2,2:+2,3:-3,0:+3,4:-5,1:+4,0:+4,2:+4,1:+5,0:+5,4:-7,1:+4,0:+8,2:-6,4:+4,0:-2,4:+3,6:-4,1:+5,2:+7,1:-8,6:+7,5:+8,6:-4", [4,5], 26, .marbling, "The long way is the short way.", ""),
+        (.hex, "3:+4,0:+5,4:-7,5:+3,0:-4,6:+3,4:-3,0:+4,3:+7,0:+8,4:-6,0:+8,3:+2,0:+4,5:-7,6:-3,2:-3,0:-4,4:-6,6:+2,1:-3,2:-6,3:+5,0:+5", [3,4], 27, .glass, "The maelstrom, unstirred.", ""),
+    ] as [(Layout, String, Set<Int>, Int, Picture, String, String)]).enumerated().map { i, l in
+        Level(id: Tier.maelstrom.prefix + "\(i + 1)", tier: .maelstrom, label: String(format: "%02d", i + 1),
+              title: l.5, note: l.6, picture: l.4.twin, layout: l.0, scramble: .parse(l.1, in: l.0), seized: l.2,
+              fixedPar: l.3)
     }
 
     /// Everyone gets the same tank that day: seeded from yyyymmdd.
