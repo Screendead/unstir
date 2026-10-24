@@ -204,6 +204,44 @@ until Jack decides; the four calls it needs are under "Open for Jack: four decis
 "Checked" marks a claim checked against the code; "assumed" marks one that wasn't, platform facts included. No
 revenue figures.
 
+#### Jack's calls on the pitch (2026-10-24)
+
+Jack answered on the pitch page. These are his calls. Everything else in this section stays a recommendation.
+
+| Call | Jack's answer |
+|---|---|
+| 1. v1's packs | **First Stir, Lens and Escapement** (option A). "I LOVE the look of Lens. Escapement is a great idea, if implemented properly." |
+| 2. Orrery: free rung or pack | **Not made.** "You didn't show me Orrery, so I can't make a call." A mock-up of Orrery, and Orrery beside maelstrom, goes to him next |
+| 3. First Stir's art | **Claude draws all 25 scenes** (option B): "I am not hiring an illustrator". So First Stir's long pole is Claude's line art, judged by Jack scene by scene, and the go/no-go film decides whether code-drawn figures carry it |
+| 4. What v1 sells | **Packs and a Complete bundle** (option A); Unstir+ dropped, endless stays free. "not just one I think will sell, but one I would be proud and unashamed to put my brand behind" |
+
+On the recommended defaults: Jack said yes to every one he didn't object to. His objections and notes:
+
+- **Tip jar: dropped.** "People get things for what they pay. No begging."
+- **Offer codes: dropped.** "No."
+- **Family Sharing: yes**, on his reading, which is right: everyone in an Apple family group gets a purchase one of them made.
+- **Undo in packs: yes, with a rule that covers the free tiers too.** Undo must not close the stir it uncovers. After a stir
+  on rod A, then one on rod B, undoing B leaves A's stir open, so a further turn of A joins it and counts no new move,
+  as if B had never been made. Today `Game.undo` sets `open = false` (TankView.swift:253), so it breaks this rule now:
+  restore whether the uncovered stir was open when the undone move began.
+- **Escapement turn-backs: not free.** "The skill is in knowing how the escapement works, so it's important the player is
+  visually informed about this before stir #1." Read as: the tick is final once a move is committed (a look that lets go
+  where it started is still no move and no tick), and the pack shows the clock working before the first stir. To
+  confirm with Jack alongside call 2.
+- **Reading testers' play: analytics are fine**, "as long as it's done respectfully and tastefully. None of those long
+  dark-pattern menus". Recommendation to replace the default: anonymous counts only, no tracking and so no tracking prompt,
+  no advertising partners, one plain switch in settings, and the privacy label to match. Unchecked: whether EU law needs
+  a consent prompt even for anonymous analytics.
+- **A web domain:** Jack has one, and can set up a subdomain for Unstir when needed (details in `HANDOFF.private.md`).
+- **Names and ids:** names don't matter to Jack, "as long as we never screw up existing players' data or (especially)
+  purchases". He asked whether a Firebase Firestore database fits. Claude's recommendation: no. Purchases live with Apple:
+  StoreKit 2 rebuilds what a player owns on any device from `Transaction.currentEntitlements`, so no server can lose a
+  purchase. Progress syncs through iCloud key-value storage, which needs no account or server (its 1 MB limit is ample
+  for bests, guessed). A server would add an account system, a privacy-label entry, running costs and a way to fail. The
+  guard that matters is in code: never rename a stored level id or product id, and a test that pins both.
+- **Asked to have explained** (answers go to Jack with the Orrery film): the free "Eyes Shut" mode for blind players, The
+  Well's price line, undoing a heal in a pack, and First Stir's heal ring.
+
 #### The catalogue
 
 Five packs and a capstone for the life of the game. Each changes what the player reads (Lens: scale against a dot
