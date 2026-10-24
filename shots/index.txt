@@ -1,8 +1,10 @@
-menu.png  Menu on first launch: only level 01 unlocked, whirlpool and maelstrom locked; daily and endless open after level 23.
+menu.png  Menu on first launch: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
 menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
-menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, maelstrom still locked.
-menu-maelstrom-locked.png  Menu looking at maelstrom, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par).
+menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, vortex still locked.
+menu-vortex-locked.png  Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par).
+menu-vortex-open.png  Menu on vortex, opened by every whirlpool tank at par: its level 01 playable, maelstrom still locked.
+menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's three ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
@@ -113,6 +115,13 @@ seized-ring3-finished.png  Hex twin glass, 14 entries (1:+4,0:-3,2:+5,6:-4,4:+3,
 seized-ring3-buried.png  The same with 3:+2 buried fourth from the bottom (1:+4,0:-3,2:+5,3:+2,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3): rod 3's ring is not finished.
 seized-hub-finished.png  Hex twin glass, 14 entries (2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4), none on the hub: its ring is finished.
 seized-hub-buried.png  The same with 0:+2 buried third from the bottom (2:+4,3:-3,0:+2,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4): the hub's ring is not finished.
+menu-vortex.png  Menu on vortex with every row unlocked.
+vortex01.png  Vortex level 01 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
+vortex02.png  Vortex level 02 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
+vortex03.png  Vortex level 03 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
+vortex01-swirled.png  Vortex 01 once the player has stirred with the swirl before: no lesson.
+vortex01-both.png  Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson on the bezel at the top, the swirl's cyan one on the glass's edge at the bottom.
+vortex03-both.png  Vortex 03 (hex) with knobs 2 and 5 seized, neither ever used: both lessons.
 swirl-quad-one.png  Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still.
 swirl-quad.png  Square with a swirl (rod 4), 0:+3,4:+2,2:-4,1:+3,4:-3,3:+5.
 swirl-quad-live.png  The same held mid-drag from the rim, the swirl 1.5 steps clockwise.

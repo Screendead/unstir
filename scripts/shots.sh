@@ -41,16 +41,20 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch: only level 01 unlocked, whirlpool and maelstrom locked; daily and endless open after level 23."
+shot menu "Menu on first launch: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23."
 shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
 shot menu-whirlpool-locked "Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
-shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, maelstrom still locked." \
+shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, vortex still locked." \
   TIER=whirlpool BESTS=plughole:$par27
-shot menu-maelstrom-locked "Menu looking at maelstrom, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par)." \
-  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$some
+shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par)." \
+  TIER=vortex BESTS=plughole:$par27,whirlpool:$some
+shot menu-vortex-open "Menu on vortex, opened by every whirlpool tank at par: its level 01 playable, maelstrom still locked." \
+  TIER=vortex BESTS=plughole:$par27,whirlpool:$par27
+shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's three ticks lit." \
+  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:01
 shot menu-maelstrom "Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK)." TIER=maelstrom UNLOCK=1
 shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN)." \
   TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33
@@ -213,7 +217,17 @@ shot seized-ring3-buried "The same with 3:+2 buried fourth from the bottom ($rin
 shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
 shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubburied): the hub's ring is not finished." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3
-# The swirl: a last rod the size of the tank at its centre, held from the rim.
+# Vortex: the swirl, a last rod the size of the tank at its centre, held from the rim. Its levels are provisional. The
+# rim shows how to stir with the swirl until the player has once (UNSTIR_SWIRLED=1 is a player who has); with seized
+# knobs too, both lessons show.
+shot menu-vortex "Menu on vortex with every row unlocked." TIER=vortex UNLOCK=1
+for n in 01 02 03; do
+  shot "vortex$n" "Vortex level $n with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom." TIER=vortex LEVEL=$n CLOCK=3
+done
+shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl before: no lesson." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1
+shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson on the bezel at the top, the swirl's cyan one on the glass's edge at the bottom." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
+shot vortex03-both "Vortex 03 (hex) with knobs 2 and 5 seized, neither ever used: both lessons." TIER=vortex LEVEL=3 SEIZED=2,5 CLOCK=3
 shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still." LAYOUT=quadSwirl STACK=4:+3
 swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
 shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl"
