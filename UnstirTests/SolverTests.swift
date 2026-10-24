@@ -182,6 +182,32 @@ final class SolverTests: XCTestCase {
         }
     }
 
+    /// Every way the park rule's ties go spans the two tie-breaks: on N+12 clockwise takes 17 and the lower position
+    /// 15, and each play the spread names empties the stack in the moves it counts.
+    @MainActor func testParkTiesSpanTheTieBreaks() {
+        let level = Level.whirlpool[11], solver = Solver(level.layout), seized: Set<Int> = [2]
+        for parking in [Solver.Parking.fewest, .all] {
+            let ties = solver.parkTies(level.scramble, seized: seized, parking: parking)
+            let breaks = [Solver.Tie.clockwise, .lowest].compactMap {
+                solver.park(level.scramble, seized: seized, parking: parking, tie: $0)?.count
+            }
+            XCTAssertLessThanOrEqual(ties!.best.count, breaks.min()!, "\(parking)")
+            XCTAssertGreaterThanOrEqual(ties!.worst.count, breaks.max()!, "\(parking)")
+            assertEmpties(ties?.best, level.layout, level.scramble, seized: seized, "\(parking)")
+            assertEmpties(ties?.worst, level.layout, level.scramble, seized: seized, "\(parking)")
+        }
+        XCTAssertEqual(solver.park(level.scramble, seized: seized)?.count, 17)
+        XCTAssertEqual(solver.park(level.scramble, seized: seized, tie: .lowest)?.count, 15)
+    }
+
+    /// No tie to break: one position is nearest, so best and worst are the one play the rule makes.
+    func testParkTiesWithoutATieAreThePark() {
+        let solver = Solver(.quad), stack = [Twist].parse("3:+2,1:+3,0:+4", in: .quad)
+        let ties = solver.parkTies(stack, seized: [0])
+        XCTAssertEqual(ties?.best.moves, solver.park(stack, seized: [0])?.moves)
+        XCTAssertEqual(ties?.worst.moves, ties?.best.moves)
+    }
+
     /// At N+25's second blocked turn no position parks both seized knobs over finished rings, so the rule as worded
     /// turns to the nearest. Counting them instead parks one, two steps away, and reaches the optimum, 24, which the
     /// old table checks. Which reading is the rule is Jack's call.

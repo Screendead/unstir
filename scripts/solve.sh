@@ -1,7 +1,8 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]
-# Prints the optimum, the park rule's count under each reading, the no-lookahead player's count, and the optimal moves.
+# Prints the optimum, the park rule's fewest and most moves over every way its ties go under each reading, the
+# no-lookahead player's count, and the optimal moves.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/solve
