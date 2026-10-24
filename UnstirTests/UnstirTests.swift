@@ -988,15 +988,15 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(levels.count, 27)
         XCTAssertEqual(levels.map(\.layout), Array(repeating: .quad, count: 6) + Array(repeating: .pent, count: 8)
                        + Array(repeating: .hex, count: 13))
-        let pictures: [Picture] = [.coral, .neurons, .coral, .chainmail, .coral, .glass, .chainmail, .coral, .marbling,
-                                   .neurons, .chainmail, .glass, .marbling, .glass, .chainmail, .neurons, .marbling,
-                                   .neurons, .chainmail, .glass, .marbling, .chainmail, .glass, .marbling, .chainmail,
-                                   .marbling, .glass]
+        let pictures: [Picture] = [.coral, .neurons, .coral, .chainmail, .coral, .glass, .chainmail, .neurons,
+                                   .marbling, .glass, .chainmail, .glass, .marbling, .glass, .chainmail, .neurons,
+                                   .marbling, .neurons, .chainmail, .glass, .marbling, .chainmail, .glass, .marbling,
+                                   .chainmail, .glass, .marbling]
         XCTAssertEqual(levels.map(\.picture), pictures.map(\.twin))
         XCTAssertEqual(levels.map(\.scramble.count),
-                       [3, 4, 5, 5, 6, 10, 9, 6, 8, 10, 14, 14, 20, 18, 10, 10, 15, 12, 15, 14, 18, 24, 18, 24, 22, 24, 24])
+                       [3, 4, 5, 5, 6, 10, 8, 8, 10, 9, 14, 14, 20, 18, 9, 11, 10, 12, 15, 18, 18, 19, 22, 23, 23, 24, 26])
         XCTAssertEqual(levels.map(\.par),
-                       [4, 5, 6, 6, 8, 14, 10, 7, 10, 12, 17, 17, 24, 22, 11, 11, 17, 13, 17, 15, 20, 27, 20, 27, 24, 26, 27])
+                       [4, 5, 6, 6, 8, 14, 11, 10, 12, 12, 17, 17, 24, 22, 11, 13, 13, 15, 18, 21, 22, 22, 25, 26, 26, 27, 29])
         for level in levels {
             XCTAssertTrue((1...2).contains(level.seized.count), level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }
