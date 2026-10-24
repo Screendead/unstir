@@ -1349,8 +1349,8 @@ or band).
 - **The Well** (cut by Jack, 2026-10-24, after the film): "I don't actually think The Well is compelling. Not good enough for free, let alone paid." Its nested-tank dive stays here in case a later pack wants it.
 - **Orrery as a pack** (Jack, 2026-10-24): its orbits go to charybdis as a free tier instead.
 
-Benched in drawing up the pack catalogue ("Packs: the catalogue"). Claude's recommendations against, not Jack's calls;
-Orrery's move to charybdis waits on decision 2 there.
+The two entries above are Jack's calls. The rest were benched in drawing up the pack catalogue ("Packs: the
+catalogue"): Claude's recommendations against, not Jack's calls.
 
 - **Orrery.** Its independent orbits are maelstrom generalised (maelstrom is orbits with every working knob at one
   rate), so they are reserved for charybdis, the free rung beyond maelstrom, with its crank and shared-slot rule
