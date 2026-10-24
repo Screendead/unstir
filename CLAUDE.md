@@ -99,7 +99,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   against the identity to half a pixel. The stack names the glass's own rods (slots), so a turn of the tank never
   touches it: `Layout.order`/`tankStep` are the layout's rotational symmetry (hex's hub held still), which sets each
   rod's twist exactly on a rod of the same size, and `slot(of:at:)`/`knob(over:at:)` map a physical knob to the slot
-  under it at a tank position.
+  under it at a tank position. Each layout has a swirl variant (`Layout.swirls`, `quadSwirl` and so on, for vortex):
+  its base's rods, then one more (`Layout.swirl`) of radius 1 at the centre, so the glass's edge, where its profile
+  reaches 0, never moves. It stacks and merges like any rod, decided by sampling as it overlaps every rod, and every
+  turn of the tank leaves it on itself. On hex it commutes exactly with the hub, which shares its centre. Its core
+  holds every other rod's, so the core-clearance rule exempts it. `Layout.allCases` leaves the swirls out, so the
+  frozen generator never deals one and the sandbox never cycles to one.
 - **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
   the stack's inverses to sample the picture. The tests only reach the Swift copy (`Tank.profile`/`Tank.twist`), so
   change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
