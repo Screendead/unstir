@@ -261,12 +261,11 @@ stir), never merged. To make it a tier:
 
 1. A go/no-go on the phone first: Jack plays the lab's two swirl levels, then a swirl on pent and hex, for whether the
    swirl's seam reads (its rigid core is 0.6 of the tank, so its shear lies in the outer ring, under every other rod).
-2. Calls for Jack before design: what maelstrom's rim does once vortex has taught "the rim swirls" (Claude's
-   recommendation: maelstrom has no swirl and its rim turns the glass, with the rim lesson re-taught there); and whether
-   a player who has already opened maelstrom keeps it when vortex is inserted below it (recommendation: yes, every tier
-   open before the update stays open).
-3. `Tier.vortex` between whirlpool and maelstrom. Raw values are strings, so stored tiers survive; `Tier.isOpen`'s gate
-   moves, and the grandfathering above needs a stored flag and a test.
+2. Jack's calls (2026-10-24): the rim's meaning must be visible before a move: whether it swirls the tank, turns the
+   glass with its seized knobs, or both, which one level may have. There are no players yet, so nothing is
+   grandfathered. The solver needs the swirl. A tank-sized stir's cost is fine; measuring it is optional.
+3. `Tier.vortex` between whirlpool and maelstrom. Raw values are strings, so nothing is remapped; `Tier.isOpen`'s gate
+   moves.
 4. Swirl layouts kept out of `Layout.allCases`, as the lab does, so the frozen daily generator and endless are
    untouched (`testDailyVectors`, `testEndlessVectors`).
 5. Grab, rim lesson and drag count for the swirl from the lab, on every layout; the solver and `solve.sh` taught that the
