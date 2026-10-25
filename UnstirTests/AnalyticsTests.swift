@@ -102,6 +102,23 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(defaults.string(forKey: "analytics.consent"), "no")
     }
 
+    func testALaunchWithNothingDueSendsWhatWasQueued() async throws {
+        let failing = Sender(endpoint: endpoint, file: queue, transport: Wire(status: 503).transport)
+        failing.add(Event(name: "level", props: ["outcome": .text("solved")], time: .now,
+                          session: Analytics.newSession()))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: queue.path))
+        // Relaunched later the same day, with the install already sent: nothing comes due.
+        defaults.set("yes", forKey: "analytics.consent")
+        var tally = Tally()
+        _ = tally.opened(today: "2026-10-01", consented: true)
+        defaults.set(try JSONEncoder().encode(tally), forKey: "analytics")
+        let wire = Wire()
+        let a = analytics(wire)
+        await settle(a)
+        XCTAssertEqual(wire.names, ["level"])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: queue.path))
+    }
+
     func testReturnedOncePerDay() {
         var t = Tally()
         XCTAssertEqual(t.opened(today: "2026-10-01", consented: true), [.installed(day: 1)])

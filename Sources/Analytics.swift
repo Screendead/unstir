@@ -140,6 +140,7 @@ final class Analytics {
     func start(_ mode: Mode, stores: Bool) {
         self.mode = mode
         self.stores = stores
+        wake()
         if let killed = tally.pending {
             tally.pending = nil
             emit(killed)
@@ -158,6 +159,7 @@ final class Analytics {
         if stores { defaults.set(consent.rawValue, forKey: "analytics.consent") }
         guard on else { return }
         if yes {
+            wake()
             opened()
         } else {
             tally.pending = nil
@@ -307,10 +309,16 @@ final class Analytics {
         case .log:
             let props = (try? JSONEncoder.sorted.encode(event.props)).map { String(decoding: $0, as: UTF8.self) } ?? ""
             Log.write("analytics \(event.name) \(props)")
-        case .send(let endpoint, let queue, let transport):
-            if sender == nil { sender = Sender(endpoint: endpoint, file: queue, transport: transport) }
+        case .send:
+            wake()
             sender?.add(event)
         }
+    }
+
+    /// Builds the sender under a yes, which sends what an earlier launch left queued with no new event to carry it.
+    private func wake() {
+        guard consent == .yes, sender == nil, case .send(let endpoint, let queue, let transport) = mode else { return }
+        sender = Sender(endpoint: endpoint, file: queue, transport: transport)
     }
 
     private func save() {
