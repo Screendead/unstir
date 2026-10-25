@@ -2,5 +2,6 @@
 /build
 /Unstir.xcodeproj/project.xcworkspace/xcuserdata/
 /HANDOFF.private.md
+/Config/Local.xcconfig
 /shots/*
 !/shots/index.txt

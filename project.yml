@@ -15,12 +15,12 @@ targets:
     type: application
     platform: iOS
     sources: [Sources]
+    configFiles:
+      Debug: Config/Unstir.xcconfig
+      Release: Config/Unstir.xcconfig
     settings:
       base:
         TARGETED_DEVICE_FAMILY: 1
-        # Aptabase's app key, which stays out of the repo: scripts/build-ios.sh passes the shell's APTABASE_KEY.
-        # Empty leaves analytics off.
-        APTABASE_KEY: ""
     info:
       path: Sources/Info.plist
       properties:

@@ -79,6 +79,7 @@
 		7DE72E9F1CCE362B73E2FA79 /* Solver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Solver.swift; sourceTree = "<group>"; };
 		8958A26903CC2506CCC43FBF /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		8C424A58661F8E2D8F67C740 /* VortexPictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VortexPictures.swift; sourceTree = "<group>"; };
+		92B7FCEFE279BF018CABD288 /* Unstir.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Unstir.xcconfig; sourceTree = "<group>"; };
 		944137441C4619E684D8CC15 /* LivePictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePictures.swift; sourceTree = "<group>"; };
 		965EC2AB5B15FD9B3CA462DE /* Twist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Twist.swift; sourceTree = "<group>"; };
 		A96E4651A2353A1299E6FE49 /* Unstir.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Unstir.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -130,11 +131,20 @@
 		D33A444693FE1BF516620385 = {
 			isa = PBXGroup;
 			children = (
+				DA49F2458005C02676D0EFBE /* Config */,
 				F96B55CC954EB02E5F1476B9 /* Sources */,
 				0CC8EC2A863EC1BD5E170F8C /* StoreKit */,
 				8B3A4E6A567BA07D74C3646D /* UnstirTests */,
 				53895E8BF0277EB74451CD7D /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		DA49F2458005C02676D0EFBE /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				92B7FCEFE279BF018CABD288 /* Unstir.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		F96B55CC954EB02E5F1476B9 /* Sources */ = {
@@ -475,8 +485,8 @@
 		};
 		4AF82D949C02961E08A9D5A5 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 92B7FCEFE279BF018CABD288 /* Unstir.xcconfig */;
 			buildSettings = {
-				APTABASE_KEY = "";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Sources/Info.plist;
@@ -509,8 +519,8 @@
 		};
 		D0D4436C501D9F18D33F2F22 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 92B7FCEFE279BF018CABD288 /* Unstir.xcconfig */;
 			buildSettings = {
-				APTABASE_KEY = "";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Sources/Info.plist;

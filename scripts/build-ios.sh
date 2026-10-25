@@ -13,4 +13,4 @@ xcodegen generate --quiet
 xcodebuild -project Unstir.xcodeproj -scheme Unstir -configuration "$config" \
   -destination "$destination" -derivedDataPath build \
   -allowProvisioningUpdates -allowProvisioningDeviceRegistration ${signing[@]+"${signing[@]}"} \
-  APTABASE_KEY="${APTABASE_KEY:-}" build | grep -E 'error:|warning:|BUILD '
+  ${APTABASE_KEY:+APTABASE_KEY="$APTABASE_KEY"} build | grep -E 'error:|warning:|BUILD '
