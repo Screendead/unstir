@@ -29,6 +29,8 @@ this is analysis. No code has changed for it.
 | Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is built (2026-09-29): Csound sources in `sound-src/`, rendered and measured by `scripts/sounds.sh`; a detuned saw hum in D under every bed; a heal about 8 LU over its bed (the phone-speaker model says 10–12); beds for the menu and each tier, crossfading over 1.5 s between screens and stepping aside while another app plays music; tap, tier-switch, undo and reset sounds. It is committed locally on `sound` with a temporary "glass · sketch · off" switch for comparing on the phone, and waits for Jack's listen before a PR. Open for Jack: whether undo feels late (its body peaks about half a second after the press); whether undoing a heal should step the heal notes back (Claude's recommendation; today it doesn't); in endless, a solve that is also one over par plays the solve (Claude's pick). Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
+2026-10-25 overnight: built and waiting for Jack, none decided. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file).
+
 ### The plan
 
 1. **TestFlight with 20–50 strangers.** Watch whether they get the goal without help, where they get stuck, and
@@ -651,42 +653,70 @@ names and product ids, and Complete's promise to older owners.
    C's "no packs at 1.0" superseded by Jack's call of 2026-10-24.
 2. ~~Jack's calls on decisions 1 to 4.~~ Answered (Jack's calls on the pitch); the defaults he hasn't objected to stand.
 3. Settle pack names, level-id prefixes and product ids together, before anything is created in App Store Connect.
+   Settled 2026-10-25 by Jack's yes to the defaults. Pinned by tests on PR #21: product ids
+   `com.screendead.Unstir.pack.firststir|lens|escapement` and `com.screendead.Unstir.complete`; level ids `first-
+   stir-N`, `lens-N`, `escapement-N`. Built, waiting for Jack's merge of #21.
 4. First Stir go/no-go first, since its art is the long pole: one harbour scene with three vignettes drawn in code,
    filmed and cold-read. Each heal must read as time stepping back, not the stir changing.
+   Built 2026-10-25, waiting for Jack: lab branch `lab-firststir` (local), a harbour scene on tri with three code-
+   drawn vignettes. Claude's verdict: go with changes; the art carries it. The cold read fixed a heal order whose
+   vignette was smeared by a neighbour's shear ring, which gives a new rule: a vignette plays only after the rods
+   whose discs overlap it are healed. Open for Jack: whether heals read as time stepping back or as repair (an art
+   option for a stronger time cue is being built), and whether the opening shows the wrecked harbour.
 5. First Stir's story outline (25 scenes and their vignettes) for Jack's approval, then Claude draws all 25 scenes
    (Jack's call 3, no illustrator) to an art spec: single-weight neon line, the chapter palettes, up readable in every
    lit core, each figure change inside its own rod's core.
 6. Lens go/no-go: port the lab zoom onto a halftone test picture, film ±1 to ±3 steps on the phone and set the rate
    (1.2, or 1.25 to 1.33 if one step doesn't read); film a zoom seam over and under a twist seam and cold-read which
    is newest; compare shrunk cores against a supersampled reference for glitter, since zoom isn't area-preserving.
+   Built 2026-10-25, waiting for Jack: no-go as designed. The soft zoom leaves no seam, so the newest stir can't
+   be read, and shrinking reads as moire. A hard-edged lens (magnify only, x1.3, capped at +3, a rim inside the
+   core) is on `lab-lens`: the order reads partly (a whole rim means the lens is newest), and the magnified area
+   drops to 36% of the disc. Open for Jack: the hard lens with a phone test, shelving Lens with Prism taking the
+   v1 slot, or keeping the soft zoom.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
+   Built 2026-10-25, waiting for Jack: `lab-escapement` (local). Claude's verdict: go with changes. Open for Jack:
+   warn before a losing lift (recommended: live preview), and what a sealed loss shows (recommended: freeze on
+   +1). Harness switches `UNSTIR_ESCWARN` and `UNSTIR_ESCSEAL`. The loss card now reads "lost on move N".
 8. Split `seized` into a level motion (none, tank, crank) and a knob kind (working, seized, socket, ratchet, cup). The
    rim grab, the rim lesson, the bezel's hit area and the spin gesture key on motion; touch keys on kind, with new
    `Grab` cases for a ratchet tap and a cup dive; par's comment and the solver's turn moves key on motion; maelstrom's
    tests unchanged.
 9. A `Pack` type outside `Tier` (name, id prefix, levels, free-taste count, product id, card), a `pack` field on
    `Level` as the lab branch's `lab` field is, bests by id, and a test that no pack best opens a tier.
+   Built 2026-10-25 on PR #21 (`store`), waiting for Jack's merge.
 10. A merge hook on `Stacked`, so an entry merging into another hands over its payload (First Stir's tag sets union;
     `Game.Entry`'s pushed mark stays the landing entry's), with tests that endless's brim behaves exactly as today.
 11. Pack undo (the free tiers' rule, that an undo leaves the uncovered stir open, is done on `undo-open-stir`, PR #19,
     waiting for Jack's merge): a snapshot per move, restored by undo from the shared bank, with tests per pack (First Stir's tags,
     Escapement's tick, Lens's zoom entries).
+   Not built. The free tiers' undo rule is PR #19.
 12. StoreKit 2: a non-consumable per pack plus Complete; purchase, restore, the `Transaction.updates` listener,
     revocation and refunds, pending Ask to Buy; entitlements read at launch; a StoreKit configuration file and
     StoreKit test-session tests, all before the paid account exists.
+   Built 2026-10-25 on PR #21: purchase, restore, refund and Ask to Buy, Family Sharing, with StoreKit tests in CI
+   via `scripts/test-store.sh`. Prices are placeholders; price is open for Jack (recommended 2.99 a pack, 5.99
+   Complete; a guess).
 13. Entitlement guard: only StoreKit grants a pack; `Best.unlocked` never opens a paid pack in Release;
     `UNSTIR_OWNED` exists only in DEBUG or under the harness; a test for each.
+   Built 2026-10-25 on PR #21.
 14. A revoked pack keeps its progress, and its levels past the taste show the card again.
+   Built 2026-10-25 on PR #21.
 15. The pack shelf, apart from the tier strip and ungated: three working mock-ups for Jack to pick from, as with the
     tier switcher, then the chosen one built.
+   Built 2026-10-25, waiting for Jack: three working mock-ups on local branch `shelf-mockups`, switched by
+   `UNSTIR_SHELF=a|b|c`: a row under the strip, a place past maelstrom, or a dock of covers. Recommended: B.
 16. The pack card: a looping 7-second clip, what the pack assumes, the free taste, price, buy and restore; levels past
     the taste show it; Music Box's says "needs sound".
 17. Accessibility on the new screens: Dynamic Type and VoiceOver for the shelf, card and purchase flow; Reduce Motion
     for the vignettes' crossfades, the zooms, the clock's steps and the dive.
 18. Harness: `UNSTIR_PACK`, `UNSTIR_OWNED` (one launch, never stored), First Stir's played vignettes, Escapement's
     provisional tick and lost state, with a shot and a film line per pack.
+   Built 2026-10-25 on PR #21 for the store side: `UNSTIR_PACK`, `UNSTIR_OWNED`, `UNSTIR_STORE`. The per-pack
+   shots and films wait on the packs.
 19. A shot per purchase state: unowned, owned, pending Ask to Buy, failed, revoked.
+   Built 2026-10-25 on PR #21 (`UNSTIR_STORE`).
 20. A String Catalog for every new string (captions, the shelf and cards, purchase text, Escapement's stipulations),
     English at v1.
 21. iCloud key-value sync of bests, pack progress, never the undo bank or its clock anchor.
@@ -737,6 +767,7 @@ names and product ids, and Complete's promise to older owners.
     purchase.
 48. The supporter mark (menu and share line), after any purchase. ~~The tip jar~~ dropped (Jack: "No begging").
 49. The daily share line (plan step 2), separate from sharing, before TestFlight.
+   Built 2026-10-25 on PR #24, waiting for Jack. Open for Jack: which day is daily #1 (recommended: launch day).
 50. Clips and images: each pack's 7-second clip and promoted in-app purchase art, filmed with film.sh, plus a sound-on
     cut for social video.
 51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
@@ -744,6 +775,7 @@ names and product ids, and Complete's promise to older owners.
 52. The privacy manifest, new work (no `PrivacyInfo.xcprivacy` exists): UserDefaults with reason CA92.1, the uptime
     clock with 35F9.1, and whether reading `kern.monotonicclock` needs a reason (the open question in "Where things
     stand"); then the privacy label.
+   Built 2026-10-25 on PR #20, waiting for Jack's merge.
 53. The age-rating questionnaire.
 54. The store page: screenshots and a preview leading with the free game, then the packs, each pack labelled as a paid
     add-on, captioned for muted playback.
@@ -775,6 +807,10 @@ names and product ids, and Complete's promise to older owners.
 71. Vortex and charybdis, free: the lab's swirl played on the phone (does a swirl seam read through the cores?), then
     vortex's own design round; charybdis's orbit solver (a reach table per crank tick), its shared-slot rule and its
     own design round.
+   Vortex built 2026-10-25 on PR #22, waiting for Jack. Open for Jack: the rim cue (recommended: knob), the dark
+   seats under the ticks (recommended: pure hairlines), which layouts get a swirl (recommended: all five), whether
+   the swirl meets seized knobs (recommended: charybdis), the provisional table (recommended: accept as
+   provisional), and the pictures (recommended: whirlpool's live ones). Charybdis's orbit solver is not started.
 
 ## Side task: the difficulty tiers (started 2026-09-28)
 
