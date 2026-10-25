@@ -14,7 +14,7 @@
         }
       ],
       "productID": "com.screendead.Unstir.pack.firststir",
-      "referenceName": "First Stir (placeholder price)",
+      "referenceName": "First Stir",
       "type": "NonConsumable"
     },
     {
@@ -29,7 +29,7 @@
         }
       ],
       "productID": "com.screendead.Unstir.pack.lens",
-      "referenceName": "Lens (placeholder price)",
+      "referenceName": "Lens",
       "type": "NonConsumable"
     },
     {
@@ -44,11 +44,11 @@
         }
       ],
       "productID": "com.screendead.Unstir.pack.escapement",
-      "referenceName": "Escapement (placeholder price)",
+      "referenceName": "Escapement",
       "type": "NonConsumable"
     },
     {
-      "displayPrice": "6.99",
+      "displayPrice": "5.99",
       "familyShareable": true,
       "internalID": "6740000004",
       "localizations": [
@@ -59,7 +59,7 @@
         }
       ],
       "productID": "com.screendead.Unstir.complete",
-      "referenceName": "Complete (placeholder price)",
+      "referenceName": "Complete",
       "type": "NonConsumable"
     }
   ],

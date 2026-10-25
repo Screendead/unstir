@@ -6,8 +6,8 @@ details go in `HANDOFF.private.md`, which is gitignored.*
 
 ## The current task: take Unstir to market
 
-Find out whether the game is worth releasing commercially, and if it is, how to price it and get it noticed. So far
-this is analysis. No code has changed for it.
+Find out whether the game is worth releasing commercially, and if it is, how to price it and get it noticed. The store,
+the share line, the privacy manifest and TestFlight prep are merged (2026-10-25); the packs' content is not built.
 
 ### Where things stand
 
@@ -15,12 +15,12 @@ this is analysis. No code has changed for it.
 |---|---|
 | Competitor scan | Done 2026-09-28, quick pass (see below) |
 | Business-model recommendation | Jack ruled out paying to unlock tiers (2026-09-28). Jack wants **picture packs with their own tanks** as paid content, best with new mechanics; an archive of past dailies, a supporter mark and a tip jar are agreed (2026-09-28). Undos are never part of the paid side: free for everyone at +2 per playing day (see "Thoughts"). Packs stay outside the ladder and never open a tier. Rewarded ads for an undo top-up stay in reserve, only if TestFlight shows banks running dry. A single "Unstir+" purchase may not be needed. Options compared 2026-10-24 (below): Claude recommended one "Unstir+" purchase (the daily archive, endless past a free taste, the supporter mark) as 1.0's product, with packs from 1.1. **Jack's call (2026-10-24): packs ship at v1; there is no hurry to market** ("I think we can handle making packs for v1. I'm not in a major hurry to get it to market."). That supersedes the Unstir+ recommendation. Jack's calls on the pack catalogue (2026-10-24, below): **v1 ships First Stir, Lens and Escapement**; Claude draws First Stir's art; packs at one price beside a Complete bundle, no Unstir+, endless wholly free, no tip jar, no offer codes; Orrery's orbits become charybdis, a free tier; **The Well is cut**. The catalogue is now First Stir, Lens, Escapement, Prism and Music Box (only if it passes its ear test) |
-| Monetisation code | None. No StoreKit, ads or sharing in `Sources/` |
-| Undo bank | Starts at 10 (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10. Built on `help` (2026-09-29, `Best.refill`; merged 2026-09-29, PR #9): the first opening of a level other than the sandbox on a local calendar day later than the last refill's adds 2, up to 10, and a "+2" shows over the undo count once the level's opening ends or is skipped. A fresh install records its first day without a refill; a clock moved back never refills. Jack (2026-09-29): setting the phone's date mustn't game the refill. Closed on `help` (2026-09-29, `Best.trustedNow`): within one boot the day comes from the last time it vouched for plus the uptime since (`CLOCK_MONOTONIC_RAW`, which counts sleep and can't be set), so a clock set ahead refills nothing until real time reaches the next day, give or take 5 min, and the log says `undo refill held: clock ahead Xh`. The anchor follows the wall clock no further ahead than drift explains (a second plus 100 ppm of the uptime since), so creeping the clock ahead a few minutes at a time gains about a second an opening; review found the first version let each step under 5 min carry the anchor along, a day ahead in about 290 steps (fixed 2026-09-29). Still open: a restart between date changes still borrows a refill, since a new boot has nothing to check against. A trusted network clock would close that; Claude recommends against it (a server, and a refill that waits on the network, to guard 2 undos a day). Unverified whether it is the only way: `kern.monotonicclock` is a candidate, a clock XNU's `clock.c` says nothing can set, and on a Mac it runs on across restarts. Unchecked on iOS: whether the app may read it, and whether setting the date moves it. The launch logs it next to the uptime (`monotonic clock Ns` or `unread`), so launches either side of a restart and of a date change answer both; if it holds, reckoning from it would close the restart hole. Unverified: whether iOS lets the app read the boot session (`kern.bootsessionuuid`); an app in macOS's App Sandbox reads it, but `container.sb` leaves it off its sysctl allow list, and iOS's profile is unpublished. The phone's log answers it at launch (`boot session read` or `unread`). Unread, a jump of at least the phone's uptime at the last level opened passes as a possible restart, and a believed jump anchors at the uptime then; so on a phone up less than a day, as after any restart, steps of a day get through one after another until a level opens with the phone up longer than the step. A genuine forward correction of more than 5 min within a boot (a phone that ran slow, set right) is held too, so its refill day turns late by that much until the next restart; one under 5 min is believed, and the anchor takes it in a few seconds a day. A new boot whose clock reads more than 5 min before the anchor's time, as after a clock reset, is believed but leaves the anchor, so setting the clock right later in that boot still counts as a new boot (review found the first version held every refill until the next restart there; fixed 2026-09-29). Not covered: a clock behind at the first opening with no anchor stored (a fresh install, or the first on this build), then set right, makes refills late by that much until a restart. The privacy manifest is written (`Sources/PrivacyInfo.xcprivacy`, branch `privacy-manifest`): UserDefaults with CA92.1 and system boot time with 35F9.1. Apple's required-reason pages (developer.apple.com, "Describing use of required reason API" and the `NSPrivacyAccessedAPIType` page, read 2026-10-25) list `systemUptime` and `mach_absolute_time()` under boot time and no `clock_gettime`-family call or sysctl, so `clock_gettime_nsec_np`, `kern.bootsessionuuid` and `kern.monotonicclock_usecs` are not on the list; 35F9.1 is declared anyway, inferred as harmless and as the nearest fit, since the uptime clock measures elapsed time and never leaves the device |
-| TestFlight | Not started |
-| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. |
+| Monetisation code | StoreKit 2 for the packs and Complete merged 2026-10-25 (PR #21); the daily share line merged 2026-10-25 (PR #24). Prices are Jack's call (2026-10-25): 2.99 a pack, 5.99 Complete. No ads |
+| Undo bank | Starts at 10 (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10. Built on `help` (2026-09-29, `Best.refill`; merged 2026-09-29, PR #9): the first opening of a level other than the sandbox on a local calendar day later than the last refill's adds 2, up to 10, and a "+2" shows over the undo count once the level's opening ends or is skipped. A fresh install records its first day without a refill; a clock moved back never refills. Jack (2026-09-29): setting the phone's date mustn't game the refill. Closed on `help` (2026-09-29, `Best.trustedNow`): within one boot the day comes from the last time it vouched for plus the uptime since (`CLOCK_MONOTONIC_RAW`, which counts sleep and can't be set), so a clock set ahead refills nothing until real time reaches the next day, give or take 5 min, and the log says `undo refill held: clock ahead Xh`. The anchor follows the wall clock no further ahead than drift explains (a second plus 100 ppm of the uptime since), so creeping the clock ahead a few minutes at a time gains about a second an opening; review found the first version let each step under 5 min carry the anchor along, a day ahead in about 290 steps (fixed 2026-09-29). Still open: a restart between date changes still borrows a refill, since a new boot has nothing to check against. A trusted network clock would close that; Claude recommends against it (a server, and a refill that waits on the network, to guard 2 undos a day). Unverified whether it is the only way: `kern.monotonicclock` is a candidate, a clock XNU's `clock.c` says nothing can set, and on a Mac it runs on across restarts. Unchecked on iOS: whether the app may read it, and whether setting the date moves it. The launch logs it next to the uptime (`monotonic clock Ns` or `unread`), so launches either side of a restart and of a date change answer both; if it holds, reckoning from it would close the restart hole. Unverified: whether iOS lets the app read the boot session (`kern.bootsessionuuid`); an app in macOS's App Sandbox reads it, but `container.sb` leaves it off its sysctl allow list, and iOS's profile is unpublished. The phone's log answers it at launch (`boot session read` or `unread`). Unread, a jump of at least the phone's uptime at the last level opened passes as a possible restart, and a believed jump anchors at the uptime then; so on a phone up less than a day, as after any restart, steps of a day get through one after another until a level opens with the phone up longer than the step. A genuine forward correction of more than 5 min within a boot (a phone that ran slow, set right) is held too, so its refill day turns late by that much until the next restart; one under 5 min is believed, and the anchor takes it in a few seconds a day. A new boot whose clock reads more than 5 min before the anchor's time, as after a clock reset, is believed but leaves the anchor, so setting the clock right later in that boot still counts as a new boot (review found the first version held every refill until the next restart there; fixed 2026-09-29). Not covered: a clock behind at the first opening with no anchor stored (a fresh install, or the first on this build), then set right, makes refills late by that much until a restart. The privacy manifest is written (`Sources/PrivacyInfo.xcprivacy`, merged 2026-10-25, PR #20): UserDefaults with CA92.1 and system boot time with 35F9.1. Apple's required-reason pages (developer.apple.com, "Describing use of required reason API" and the `NSPrivacyAccessedAPIType` page, read 2026-10-25) list `systemUptime` and `mach_absolute_time()` under boot time and no `clock_gettime`-family call or sysctl, so `clock_gettime_nsec_np`, `kern.bootsessionuuid` and `kern.monotonicclock_usecs` are not on the list; 35F9.1 is declared anyway, inferred as harmless and as the nearest fit, since the uptime clock measures elapsed time and never leaves the device |
+| TestFlight | Prep merged 2026-10-25 (PR #23): version 1.0 (1), the export-compliance key, an asset catalog. The icon is candidate 1, the neon grid (Jack, 2026-10-25), already the placeholder in the catalog. No archive script until Jack's developer account is in Xcode |
+| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s and #23 5m36s; Jack's call (2026-10-25): watch it. |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
-| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below; vortex, the swirl tier between whirlpool and maelstrom (Jack, 2026-10-24), is built with 27 provisional levels on the local branch `vortex`; see "Vortex (provisional, 2026-10-24)" |
+| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below; vortex, the swirl tier between whirlpool and maelstrom (Jack, 2026-10-24), with 27 provisional levels, merged 2026-10-25 (PR #22); Jack's calls on it (2026-10-25) are in "Vortex (provisional, 2026-10-24)" |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
 | Architecture pass | Queued after the performance pass (Jack, 2026-09-28); see below |
 | Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
@@ -29,7 +29,7 @@ this is analysis. No code has changed for it.
 | Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is built (2026-09-29): Csound sources in `sound-src/`, rendered and measured by `scripts/sounds.sh`; a detuned saw hum in D under every bed; a heal about 8 LU over its bed (the phone-speaker model says 10–12); beds for the menu and each tier, crossfading over 1.5 s between screens and stepping aside while another app plays music; tap, tier-switch, undo and reset sounds. It is committed locally on `sound` with a temporary "glass · sketch · off" switch for comparing on the phone, and waits for Jack's listen before a PR. Open for Jack: whether undo feels late (its body peaks about half a second after the press); whether undoing a heal should step the heal notes back (Claude's recommendation; today it doesn't); in endless, a solve that is also one over par plays the solve (Claude's pick). Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
-2026-10-25 overnight: built and waiting for Jack, none decided. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file).
+2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
 
 ### The plan
 
@@ -37,8 +37,9 @@ this is analysis. No code has changed for it.
    whether they come back for the daily. Day-2 return is the number to watch.
 2. **A share line for the daily result**, Wordle style (e.g. `Unstir #142 · 7 moves (par 6)`). The daily generator
    already exists. Built on `daily-share` (2026-10-25, `Sources/Share.swift`): a share button on the daily's card, a
-   square per move in its flash's colour, practice named as such, no URL yet (`Share.url`). Open for Jack: the first day,
-   daily #1 (`Share.firstDay`, today as a placeholder; options in the PR).
+   square per move in its flash's colour, practice named as such, no URL yet (`Share.url`). Merged 2026-10-25 (PR #24).
+   Jack's call (2026-10-25): daily #1 is launch day. Until `Share.firstDay` is set, the line shows the date instead of
+   a number.
 3. **3–5 short clips** of a picture snapping back, recorded with `scripts/film.sh`, posted to TikTok, Reels and Shorts.
    See whether anyone cares before spending money.
 4. **Choose the model from what testers do**, then set up the App Store page, preview video and a featuring request.
@@ -50,7 +51,7 @@ for good because it is the marketing. Undos refill daily and are never sold.
 
 ### How Unstir makes money: options compared (Claude's recommendation, 2026-10-24; not a decision)
 
-Analysis only; no code changed. Every claim is tagged **E** (evidence, with its source: this file, the code, or a
+The analysis itself changed no code; the StoreKit layer, the share line and TestFlight prep it recommended are now merged on `master`. Every claim is tagged **E** (evidence, with its source: this file, the code, or a
 page found on 2026-10-24) or **G** (a guess, including platform facts Claude didn't check this session). There are no
 revenue figures here, by design (see "Thoughts").
 
@@ -204,7 +205,7 @@ under "Packs: the catalogue" below; items 3 to 7 carry into its defaults.
 **Jack's call (2026-10-24): packs ship at v1, and there is no hurry to market.** In his words: "I think we can handle
 making packs for v1. I'm not in a major hurry to get it to market." This section is Claude's answer to it: a
 catalogue of packs, the three for v1, what v1 sells beside them, and the work. Everything in it is a recommendation
-until Jack decides; Jack's answers to its four calls are under "Jack's calls on the pitch". Analysis only; no code changed.
+until Jack decides; Jack's answers to its four calls are under "Jack's calls on the pitch". The analysis changed no code; the StoreKit layer, the share line and TestFlight prep are now merged on `master`.
 "Checked" marks a claim checked against the code; "assumed" marks one that wasn't, platform facts included. No
 revenue figures.
 
@@ -227,8 +228,7 @@ On the recommended defaults: Jack said yes to every one he didn't object to. His
 - **Undo in packs: yes, with a rule that covers the free tiers too.** Undo must not close the stir it uncovers. After a stir
   on rod A, then one on rod B, undoing B leaves A's stir open, so a further turn of A joins it and counts no new move,
   as if B had never been made. Today `Game.undo` sets `open = false` (TankView.swift:253), so it breaks this rule now:
-  restore whether the uncovered stir was open when the undone move began. Done on branch `undo-open-stir`, PR #19,
-  waiting for Jack's merge.
+  restore whether the uncovered stir was open when the undone move began. Merged 2026-10-25 (PR #19).
 - **Escapement turn-backs: not free.** "The skill is in knowing how the escapement works, so it's important the player is
   visually informed about this before stir #1." Read as: the tick is final once a move is committed (a look that lets go
   where it started is still no move and no tick), and the pack shows the clock working before the first stir. To
@@ -259,6 +259,42 @@ Round 2 (2026-10-24, on the same page, after Jack saw Orrery's mock-up and Orrer
 | First Stir's heal ring | **Yes:** magenta only for a heal that plays a beat; cancelling your own stir flashes white |
 | Analytics | **Yes:** anonymous counts, no tracking (so no tracking prompt), no advertising partners, one switch in settings; check whether EU law needs a consent prompt for anonymous counts |
 | Firestore | **No server:** purchases through StoreKit, progress through iCloud key-value storage; a test pins every stored level id and product id |
+
+Round 3 (2026-10-25, on the review page of the overnight builds, after all seven PRs were merged):
+
+| Call | Jack's answer |
+|---|---|
+| V1. Vortex's rim cue | **Knob** (option A), over bands and glyphs |
+| V2. Dark seats under the swirl's ticks | **No option chosen.** Jack: "I actually don't like the ticks at all as a method of showing the tank will swirl." That rules out the tick dial as the swirl's cue, so what shows the swirl is open again; a new cue is being pitched |
+| V3. Which layouts get a swirl | **Unanswered: still open** (recommended: all five) |
+| V4. The swirl with seized knobs | **Charybdis** (option B). Jack: "The tank edge being dragged should always swirl the tank. It'd make the locked rods harder because turning the tank has a side effect. I feel strongly about this." |
+| V5. Vortex's levels | **Accept as provisional** |
+| V6. Vortex's pictures | **A family of its own** (option C). Not built |
+| F1. First Stir | **Go** |
+| F2. First Stir's time cue | **Make time visible** (option C): the night winding back (`UNSTIR_FSTIME` on `lab-firststir`), plus the caption |
+| L1. Lens | **The hard lens, phone test next** (option A). The reviewers had recommended shelving it; trying it is Jack's choice |
+| E1. Escapement | **Go, with changes** |
+| E2. Warning before a losing lift | **The standing hint** (option C): the clock's disc always has a dashed vermilion edge |
+| E3. What a sealed loss shows | **Freeze on the +1** (option B) |
+| S1. Prices | **2.99 a pack, 5.99 Complete** |
+| S2. The pack shelf | **The dock of live covers along the bottom of the menu** (option C, `UNSTIR_SHELF=c` on `shelf-mockups`) |
+| I1. The app icon | **Candidate 1, the neon grid**, already the placeholder in the asset catalog |
+| D1. Daily #1 | **Launch day.** Until it is set, the share line shows the date instead of a number |
+| B1. CI time | **Watch it.** Since then #21 ran 5m44s and #23 5m36s, both over the 5-minute line |
+
+**The charybdis rule (Jack's call, 2026-10-25, from V4).** Jack's words, and only these: "The tank edge being dragged
+should always swirl the tank. It'd make the locked rods harder because turning the tank has a side effect. I feel
+strongly about this." That is the call.
+
+**Claude's reading (not yet confirmed by Jack):** on a level with seized knobs, turning the glass to carry them round
+swirls it too; the swirl is the turn's side effect, and that side effect is what makes the locked rods harder; it is
+one gesture, not two bands. What it would mean for what is built, on that reading:
+- Vortex's "both" levels (a seized knob on a swirl layout, `UNSTIR_SEIZED` on a vortex level), the two-band grab
+  (the glass's edge band 0.86 to 1.0 holds the swirl, the bezel and beyond turn the tank), both lessons side by side
+  and every rim cue's "both" shots were built on vortex as a proposal. They would become charybdis's starting point, and
+  the two bands would give way there to one gesture that turns and swirls together (Claude's reading). Vortex itself has no seized knob, so
+  nothing in its set changes.
+- Charybdis also takes the orbits (round 2). How the swirl-with-turn and the orbits sit together is not designed.
 
 **Vortex gets the whole-tank swirl (Jack, 2026-10-24):** "it should be in the free game". The lab's prototype is
 `b6ed01c` on `lab` (a quad layout with a fifth rod the size of the tank, turned from the rim, committed like any rod
@@ -573,8 +609,9 @@ survives as a rung: linked rods are R5's admin, and the frozen core and lights-o
 
 #### Open for Jack: four decisions
 
-All four are answered: see "Jack's calls on the pitch" above. Still open: the one price and Complete's price, the daily
-archive's back-fill date, the product names, and whether EU law needs a consent prompt for anonymous counts.
+All four are answered: see "Jack's calls on the pitch" above. The prices are set (Jack, 2026-10-25: 2.99 a pack, 5.99
+Complete). Still open: the daily archive's back-fill date, the product names, and whether EU law needs a consent
+prompt for anonymous counts.
 
 #### Recommended defaults (not decided; 2026-10-24)
 
@@ -583,7 +620,7 @@ list. Three are hard to undo once live and need an explicit yes each, marked **(
 names and product ids, and Complete's promise to older owners.
 
 - **Price.** One price for every pack, inside R1's band ($2–5), never set by difficulty or size; Jack picks the
-  number.
+  number. Jack's call (2026-10-25): 2.99 a pack, 5.99 Complete.
 - **Complete's price path.** **(hard to undo)** About one pack less than the packs it holds. Each new pack joins it and raises it by one
   pack's price. Owners of an older Complete are granted later packs by the app, which the store page never promises
   (check App Review first).
@@ -592,8 +629,8 @@ names and product ids, and Complete's promise to older owners.
   maelstrom"), and no pack best ever touches `Tier.isOpen` (tested).
 - **Undo in packs.** The shared bank (+2 a playing day, capped at 10, never sold), one undo per move, restoring a
   snapshot of the state before that move (the stack's entries with their marks and tags, the clock's tick). The free
-  tiers keep today's undo, except that an undo leaves the stir it uncovers open (Jack's call; done on `undo-open-stir`,
-  PR #19, waiting for Jack's merge).
+  tiers keep today's undo, except that an undo leaves the stir it uncovers open (Jack's call; merged 2026-10-25, PR
+  #19).
 - **Undoing a heal in a pack.** Its vignette unplays and its note steps back, as Claude already recommends for every
   heal's note.
 - **Turn-backs in Escapement.** Not free (Jack, round 2): the tick is final once a move is committed; a look that lets
@@ -657,68 +694,74 @@ names and product ids, and Complete's promise to older owners.
 3. Settle pack names, level-id prefixes and product ids together, before anything is created in App Store Connect.
    Settled 2026-10-25 by Jack's yes to the defaults. Pinned by tests on PR #21: product ids
    `com.screendead.Unstir.pack.firststir|lens|escapement` and `com.screendead.Unstir.complete`; level ids `first-
-   stir-N`, `lens-N`, `escapement-N`. Built, waiting for Jack's merge of #21.
+   stir-N`, `lens-N`, `escapement-N`. Merged 2026-10-25 (PR #21).
 4. First Stir go/no-go first, since its art is the long pole: one harbour scene with three vignettes drawn in code,
    filmed and cold-read. Each heal must read as time stepping back, not the stir changing.
-   Built 2026-10-25, waiting for Jack: lab branch `lab-firststir` (local), a harbour scene on tri with three code-
+   Built 2026-10-25; Jack has called it (round 3, F1 and F2, below): lab branch `lab-firststir` (local), a harbour scene on tri with three code-
    drawn vignettes. Claude's verdict: go with changes; the art carries it. The cold read fixed a heal order whose
    vignette was smeared by a neighbour's shear ring, which gives a new rule: a vignette plays only after the rods
-   whose discs overlap it are healed. Open for Jack: whether heals read as time stepping back or as repair (an art
-   option for a stronger time cue is being built), and whether the opening shows the wrecked harbour.
+   whose discs overlap it are healed. Then open: whether heals read as time stepping back or as repair (answered by F2 below),
+   and whether the opening shows the wrecked harbour.
+   Jack's calls (2026-10-25): go (F1); make time visible, the night winding back (`UNSTIR_FSTIME` on `lab-firststir`),
+   plus the caption (F2). Still open: whether the opening shows the wrecked harbour.
 5. First Stir's story outline (25 scenes and their vignettes) for Jack's approval, then Claude draws all 25 scenes
    (Jack's call 3, no illustrator) to an art spec: single-weight neon line, the chapter palettes, up readable in every
    lit core, each figure change inside its own rod's core.
 6. Lens go/no-go: port the lab zoom onto a halftone test picture, film ±1 to ±3 steps on the phone and set the rate
    (1.2, or 1.25 to 1.33 if one step doesn't read); film a zoom seam over and under a twist seam and cold-read which
    is newest; compare shrunk cores against a supersampled reference for glitter, since zoom isn't area-preserving.
-   Built 2026-10-25, waiting for Jack: no-go as designed. The soft zoom leaves no seam, so the newest stir can't
+   Built 2026-10-25; Jack has called it (round 3, L1, below): no-go as designed. The soft zoom leaves no seam, so the newest stir can't
    be read, and shrinking reads as moire. A hard-edged lens (magnify only, x1.3, capped at +3, a rim inside the
    core) is on `lab-lens`: the order reads partly (a whole rim means the lens is newest), and the magnified area
-   drops to 36% of the disc. Open for Jack: the hard lens with a phone test, shelving Lens with Prism taking the
-   v1 slot, or keeping the soft zoom.
+   drops to 36% of the disc. Jack's call (2026-10-25, L1): the hard lens, with a phone test next. The reviewers had
+   recommended shelving it; trying it is Jack's choice.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
-   Built 2026-10-25, waiting for Jack: `lab-escapement` (local). Claude's verdict: go with changes. Open for Jack:
+   Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
    warn before a losing lift (recommended: live preview), and what a sealed loss shows (recommended: freeze on
    +1). Harness switches `UNSTIR_ESCWARN` and `UNSTIR_ESCSEAL`. The loss card now reads "lost on move N".
+   Jack's calls (2026-10-25): go with changes (E1); the standing hint, the clock's disc always with a dashed vermilion
+   edge (E2); freeze on the +1 when a loss is sealed (E3). `lab-escapement` now defaults to `hint` and `freeze`
+   (local, not pushed).
 8. Split `seized` into a level motion (none, tank, crank) and a knob kind (working, seized, socket, ratchet, cup). The
    rim grab, the rim lesson, the bezel's hit area and the spin gesture key on motion; touch keys on kind, with new
    `Grab` cases for a ratchet tap and a cup dive; par's comment and the solver's turn moves key on motion; maelstrom's
    tests unchanged.
 9. A `Pack` type outside `Tier` (name, id prefix, levels, free-taste count, product id, card), a `pack` field on
    `Level` as the lab branch's `lab` field is, bests by id, and a test that no pack best opens a tier.
-   Built 2026-10-25 on PR #21 (`store`), waiting for Jack's merge.
+   Merged 2026-10-25 (PR #21, `store`).
 10. A merge hook on `Stacked`, so an entry merging into another hands over its payload (First Stir's tag sets union;
     `Game.Entry`'s pushed mark stays the landing entry's), with tests that endless's brim behaves exactly as today.
-11. Pack undo (the free tiers' rule, that an undo leaves the uncovered stir open, is done on `undo-open-stir`, PR #19,
-    waiting for Jack's merge): a snapshot per move, restored by undo from the shared bank, with tests per pack (First Stir's tags,
+11. Pack undo (the free tiers' rule, that an undo leaves the uncovered stir open, merged 2026-10-25, PR #19): a
+    snapshot per move, restored by undo from the shared bank, with tests per pack (First Stir's tags,
     Escapement's tick, Lens's zoom entries).
-   Not built. The free tiers' undo rule is PR #19.
+   Not built. The free tiers' undo rule is merged (PR #19).
 12. StoreKit 2: a non-consumable per pack plus Complete; purchase, restore, the `Transaction.updates` listener,
     revocation and refunds, pending Ask to Buy; entitlements read at launch; a StoreKit configuration file and
     StoreKit test-session tests, all before the paid account exists.
-   Built 2026-10-25 on PR #21: purchase, restore, refund and Ask to Buy, Family Sharing, with StoreKit tests in CI
-   via `scripts/test-store.sh`. Prices are placeholders; price is open for Jack (recommended 2.99 a pack, 5.99
-   Complete; a guess).
+   Merged 2026-10-25 (PR #21): purchase, restore, refund and Ask to Buy, Family Sharing, with StoreKit tests in CI
+   via `scripts/test-store.sh`. Prices: Jack's call (2026-10-25, S1), 2.99 a pack and 5.99 Complete, in
+   `StoreKit/Unstir.storekit`.
 13. Entitlement guard: only StoreKit grants a pack; `Best.unlocked` never opens a paid pack in Release;
     `UNSTIR_OWNED` exists only in DEBUG or under the harness; a test for each.
-   Built 2026-10-25 on PR #21.
+   Merged 2026-10-25 (PR #21).
 14. A revoked pack keeps its progress, and its levels past the taste show the card again.
-   Built 2026-10-25 on PR #21.
+   Merged 2026-10-25 (PR #21).
 15. The pack shelf, apart from the tier strip and ungated: three working mock-ups for Jack to pick from, as with the
     tier switcher, then the chosen one built.
-   Built 2026-10-25, waiting for Jack: three working mock-ups on local branch `shelf-mockups`, switched by
+   Built 2026-10-25; Jack has called it (round 3, S2, below): three working mock-ups on local branch `shelf-mockups`, switched by
    `UNSTIR_SHELF=a|b|c`: a row under the strip, a place past maelstrom, or a dock of covers. Recommended: B.
+   Jack's call (2026-10-25, S2): C, the dock of live covers along the bottom of the menu. Not yet built in the app.
 16. The pack card: a looping 7-second clip, what the pack assumes, the free taste, price, buy and restore; levels past
     the taste show it; Music Box's says "needs sound".
 17. Accessibility on the new screens: Dynamic Type and VoiceOver for the shelf, card and purchase flow; Reduce Motion
     for the vignettes' crossfades, the zooms, the clock's steps and the dive.
 18. Harness: `UNSTIR_PACK`, `UNSTIR_OWNED` (one launch, never stored), First Stir's played vignettes, Escapement's
     provisional tick and lost state, with a shot and a film line per pack.
-   Built 2026-10-25 on PR #21 for the store side: `UNSTIR_PACK`, `UNSTIR_OWNED`, `UNSTIR_STORE`. The per-pack
+   Merged 2026-10-25 (PR #21) for the store side: `UNSTIR_PACK`, `UNSTIR_OWNED`, `UNSTIR_STORE`. The per-pack
    shots and films wait on the packs.
 19. A shot per purchase state: unowned, owned, pending Ask to Buy, failed, revoked.
-   Built 2026-10-25 on PR #21 (`UNSTIR_STORE`).
+   Merged 2026-10-25 (PR #21, `UNSTIR_STORE`).
 20. A String Catalog for every new string (captions, the shelf and cards, purchase text, Escapement's stipulations),
     English at v1.
 21. iCloud key-value sync of bests, pack progress, never the undo bank or its clock anchor.
@@ -769,7 +812,8 @@ names and product ids, and Complete's promise to older owners.
     purchase.
 48. The supporter mark (menu and share line), after any purchase. ~~The tip jar~~ dropped (Jack: "No begging").
 49. The daily share line (plan step 2), separate from sharing, before TestFlight.
-   Built 2026-10-25 on PR #24, waiting for Jack. Open for Jack: which day is daily #1 (recommended: launch day).
+   Merged 2026-10-25 (PR #24). Jack's call (2026-10-25, D1): daily #1 is launch day; until `Share.firstDay` is set,
+   the line shows the date instead of a number.
 50. Clips and images: each pack's 7-second clip and promoted in-app purchase art, filmed with film.sh, plus a sound-on
     cut for social video.
 51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
@@ -777,7 +821,7 @@ names and product ids, and Complete's promise to older owners.
 52. The privacy manifest, new work (no `PrivacyInfo.xcprivacy` exists): UserDefaults with reason CA92.1, the uptime
     clock with 35F9.1, and whether reading `kern.monotonicclock` needs a reason (the open question in "Where things
     stand"); then the privacy label.
-   Built 2026-10-25 on PR #20, waiting for Jack's merge.
+   Merged 2026-10-25 (PR #20).
 53. The age-rating questionnaire.
 54. The store page: screenshots and a preview leading with the free game, then the packs, each pack labelled as a paid
     add-on, captioned for muted playback.
@@ -785,6 +829,7 @@ names and product ids, and Complete's promise to older owners.
 56. ~~Offer codes for press and reviewers.~~ Dropped (Jack: "No.").
 57. TestFlight with 20 to 50 strangers and sandbox purchases. What it measures (shelf and card taps, free-taste
     completion and sandbox purchases per pack, beside day-2 return) waits on Jack's call on how to read testers' play.
+   TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
     overlapping entries with disjoint masks commute.
@@ -809,10 +854,12 @@ names and product ids, and Complete's promise to older owners.
 71. Vortex and charybdis, free: the lab's swirl played on the phone (does a swirl seam read through the cores?), then
     vortex's own design round; charybdis's orbit solver (a reach table per crank tick), its shared-slot rule and its
     own design round.
-   Vortex built 2026-10-25 on PR #22, waiting for Jack. Open for Jack: the rim cue (recommended: knob), the dark
-   seats under the ticks (recommended: pure hairlines), which layouts get a swirl (recommended: all five), whether
-   the swirl meets seized knobs (recommended: charybdis), the provisional table (recommended: accept as
-   provisional), and the pictures (recommended: whirlpool's live ones). Charybdis's orbit solver is not started.
+   Vortex merged 2026-10-25 (PR #22). Jack's calls (2026-10-25): the rim cue is knob (V1), but not its ticks (V2:
+   "I actually don't like the ticks at all as a method of showing the tank will swirl."), so a new swirl cue is open
+   and being pitched; the swirl meets seized knobs in charybdis, where dragging the tank's edge always swirls it
+   (V4, the charybdis rule under round 3); the table stands as provisional (V5); vortex gets a picture family of
+   its own (V6, not built). Still open: which layouts get a swirl (V3, recommended: all five). Charybdis's orbit
+   solver is not started.
 
 ## Side task: the difficulty tiers (started 2026-09-28)
 
@@ -829,7 +876,7 @@ from Nightmare to Nightmare+ is easy to miss.
 | Rename | Nightmare is now **whirlpool** and Nightmare+ **maelstrom** in code, harness (`UNSTIR_TIER`), scripts, tests and docs, merged 2026-09-29 (PR #7). Stored level ids stay `N<k>` for whirlpool, so progress carries over (Claude first planned new ids, which would have reset it; the review caught that). Maelstrom's own set took fresh ids `M<k>` (on `maelstrom-set`, 2026-10-24), so old N+ bests don't land on new levels |
 | Solver and the maelstrom set | Solver built and verified (2026-09-29), merged 2026-09-29 (PR #10, then PR #13 into `master`). An independent brute force found a push that holds a disc still and beats plain untwisting by a move, so the optimum now adds a bounded search for such detours: par is the solver's bounded optimum, not a proof. The park rule has two readings (fewest dead knobs over rings with a seam, or every dead knob over a ring without one) and no tie-break (Jack, 2026-10-24); the set is fair under both readings however its ties go. A first proposed table passed every check but its early planning gap came from a tie-break (a lucky guess of direction scores par), its first ten levels all turn counterclockwise, and its seized pairs were always neighbours. A second reworked it, and a third, all new levels, was proposed below (2026-10-24), with Jack's calls on it. Merged 2026-10-24 (PR #14): the 27 levels under ids M1–M27 with M1's note, the solver's `parkTies` (the park rule with no tie-break, its fewest and most moves over every way its ties go) and solve.sh printing it, and tests that every level's par is the optimum and the park rule's worst over its ties under both parkings. Jack's playtest (2026-10-24): the seized knobs moved once, parked over finished work, and never mattered again. Most levels needed only one or two turns, and the hex levels' park lines ran 7–17 moves after their last turn. Merged 2026-10-24 (PR #17): M7, M8 and all of hex (M15–M27) replaced from the pool by levels that need three or more turns in hex (two in M15–M18), the park line never more than a third of par plus one without a turn (`testMaelstromKeepsTheTankTurning`), every pick fair and checked with solve.sh; the finale is new too (gap 7, three turns), which Jack accepted. The frontier: a short run costs nothing in pent, and in hex keeps a planning gap of up to 7 at three turns; four or more turns cap it at 5. The pent order is now v5 M7, v4 M9, v4 M10, v5 M8, then M11–M14 |
 | Endless's new rules | Built on `endless` (2026-09-29): no undo, reset or par, the brim counting red flashes, Claude's ramp, and the vivid jug on the rim, ported from the approved film. Reviewed, and the review's fixes made, the pour over the lip among them. Jack watched the app's film on 2026-09-29 and approved it ("looks great"); merged 2026-09-29 (PR #11). See "Endless changes rules" below |
-| Vortex (the swirl) | Jack's calls 2026-10-24: the whole-tank swirl is the tier vortex, between whirlpool and maelstrom, and the rim must show what it does before a move. Built on the local branch `vortex` (not pushed, no PR): the swirl layouts, the rim grab, the tier and its gate, the swirl's lesson, the solver's `interacts` pruning, three rim-cue variants for Jack to pick from, and 27 provisional levels. See "Vortex (provisional, 2026-10-24)" below |
+| Vortex (the swirl) | Jack's calls 2026-10-24: the whole-tank swirl is the tier vortex, between whirlpool and maelstrom, and the rim must show what it does before a move. Built on `vortex` and merged 2026-10-25 (PR #22): the swirl layouts, the rim grab, the tier and its gate, the swirl's lesson, the solver's `interacts` pruning, three rim-cue variants, and 27 provisional levels. Jack's calls of 2026-10-25 (knob cue but no ticks, so a new cue is open; the swirl with seized knobs goes to charybdis; the table provisional; a picture family of its own; which layouts get a swirl still open) are in "Vortex (provisional, 2026-10-24)" below |
 | The phone | Installed 2026-10-24: a Release build of `maelstrom-turns` (since merged, PR #17; the set that keeps the tank turning); before it, `maelstrom-set` (since merged, PR #14) for Jack to test the new maelstrom set (M1–M27). Before that, installed 2026-09-29: a local build of `touch` at 42406cc with `help`'s three commits (hints removed, the daily +2 refill, the clock guard), the glass sound set, and two proposals not to be committed (maelstrom v2 as M1–M27, and plughole 19–27's easier scrambles). The next install carries the dashes |
 
 **Jack's calls (2026-09-28).**
@@ -1063,8 +1110,8 @@ the park rule that the searches agree with):
 The earlier tables, the search tool, the three designs the set was judged from and the films are on the local branch
 `archive/scratch`, never pushed.
 
-**Vortex (provisional, 2026-10-24).** Built on the local branch `vortex` (cut from `master` at dbc776a; not pushed, no
-PR): the swirl as a mechanic, the tier, the solver's handling of it, three ways for the rim to show what it does, and
+**Vortex (provisional, 2026-10-24).** Built on `vortex` (cut from `master` at dbc776a), merged 2026-10-25 (PR #22): the
+swirl as a mechanic, the tier, the solver's handling of it, three ways for the rim to show what it does, and
 27 provisional levels. Ported by reading the prototype (b6ed01c on `lab`), not cherry-picked.
 
 Jack's calls (2026-10-24):
@@ -1077,6 +1124,17 @@ Jack's calls (2026-10-24):
 - "Tank-sized stir is fine, but feel free to measure." Not measured: the simulator's GPU says nothing about the phone,
   so it waits for the performance pass.
 - "Can you do the work on a local simulator? If so, do." All of it was, on a simulator of its own.
+
+Jack's calls (2026-10-25, round 3 under "Jack's calls on the pitch"):
+- **The rim cue: knob** (V1), over bands and glyphs.
+- **The ticks: out** (V2, no option chosen): "I actually don't like the ticks at all as a method of showing the tank
+  will swirl." The tick dial is ruled out as the swirl's cue, so a new cue is open; a pitch is in progress.
+- **Which layouts get a swirl** (V3): unanswered, still open.
+- **The swirl with seized knobs: charybdis** (V4, option B): "The tank edge being dragged should always swirl the
+  tank. It'd make the locked rods harder because turning the tank has a side effect. I feel strongly about this."
+  See "The charybdis rule" under round 3, where one gesture, not two bands, is Claude's reading, pending Jack.
+- **The 27 levels: accepted as provisional** (V5).
+- **Pictures: a family of its own** (V6, option C). Not built.
 
 **What is built.**
 - **The swirl** (`Layout.swirls`: `triSwirl`, `quadSwirl`, `eyeSwirl`, `pentSwirl`, `hexSwirl`): the base layout's rods
@@ -1108,8 +1166,8 @@ Jack's calls (2026-10-24):
     an amber bezel for the tank, matching the lessons' colours.
   - `glyphs`: two 28 pt icons above twelve (a spiral; a ring with a red slash and a two-headed arc). It says both
     controls exist, not which band does which.
-  **Awaiting Jack's pick.** Claude recommends `knob`: it uses the game's own language (a knob is what you turn) and
-  keeps the picture clean.
+  **Jack picked `knob`** (2026-10-25, V1), but ruled out its ticks (V2), the cue's main mark for the swirl, so what
+  shows the swirl is open again: a new cue is being pitched. The code still carries all three variants.
 - **The swirl's own marks, under every cue** (Claude's calls, 2026-10-25): a push flashes red as a 0.5 pt hairline on
   the `knob` cue's ring, 5 pt inside the glass's edge, where a knob's flashes on its own dial (`rim-knob-swirl-push`
   film); over a red picture it is faint, the price of the hairline rule. A held swirl's dashes run inside the cue's
@@ -1177,18 +1235,21 @@ shots, and the solver's plays empty a real `Game` with a knob seized on every vo
   The swirl is a slot the tank turns onto itself, so it never parks and never seizes; whether it makes planning harder
   (it carries every seam round with it) or only longer needs the solver's gap measured on candidates.
 - **B. Leave both for charybdis**, the tier past maelstrom, as its new skill.
-Claude recommends **B for now**: maelstrom's set has just been rebuilt and playtested (PR #17), and A would reopen it
-before vortex has had one playtest. Revisit A if charybdis needs a different mechanic.
+Claude recommended **B for now**: maelstrom's set has just been rebuilt and playtested (PR #17), and A would reopen it
+before vortex has had one playtest. **Jack's call (2026-10-25): B, charybdis**, with a rule: dragging the tank's edge
+always swirls the tank. Claude's reading, not yet confirmed by Jack, is that the "both" grab's two bands give way to one
+gesture there (see "The charybdis rule" under round 3). A is set aside (R10).
 
 **What the tier needs before it's final.**
 - **Jack's playtest** of the 27 levels on the phone; the titles are drafts.
-- **Its picture family.** Whirlpool's live pictures for now, on Claude's call: the step up comes from the rule, as for
+- **Its picture family.** Jack's call (2026-10-25, V6): a family of its own, not built. Until then whirlpool's live
+  pictures, on Claude's call: the step up comes from the rule, as for
   maelstrom's twins. The swirl's shear at the edge reads strongly on glass, chainmail and marbling in the shots;
   coral and neurons with the swirl were not checked beyond `shots/vortex*.png`. A family of its own (as maelstrom's
   twins), or plughole's grid, whose "up" would show the swirl's turn of the core, are the alternatives.
 - **Its sound bed** (the `sound` branch has a bed per tier; vortex has none).
-- **The rim variant** (above).
-- **Tri and eye**: whether they read with a swirl is Jack's call from `shots/swirl-tri.png`, `shots/swirl-eye.png` and
+- **The rim's swirl cue** (above): knob picked, its ticks ruled out, a new cue being pitched.
+- **Tri and eye** (V3, still open): whether they read with a swirl is Jack's call from `shots/swirl-tri.png`, `shots/swirl-eye.png` and
   V7–V13. Each block drops out whole (V7–V9, V10–V13) and the slots move to pent and hex.
 - **Known gap**: a sandbox launched on a swirl layout through `UNSTIR_LAYOUT` crashes on the layout button (harness
   only).
@@ -1558,3 +1619,23 @@ catalogue"): Claude's recommendations against, not Jack's calls.
   so a commutator is only a detour (a push that later merges, the Problems candidate's cut Key chapter), rare and
   found only by a bounded search (par is the solver's bounded optimum, not a proof). Cube solvers are named
   Escapement's second buyer instead.
+
+### R10 — Options Jack passed over on the review page (2026-10-25)
+
+Jack's calls, round 3 under "Jack's calls on the pitch".
+
+- **Maelstrom's last levels adding the swirl** (vortex's option A for the swirl with seized knobs): Jack chose
+  charybdis.
+- **Two bands for swirl and turn** (the glass's edge swirls, the bezel turns the tank, as built for vortex's "both"):
+  superseded by Claude's reading of his note on the charybdis rule (one gesture that always swirls), pending his
+  confirmation; not an option he passed over. Its code is charybdis's starting point.
+- **The tick dial as the swirl's cue**, seated on dark strokes or as pure hairlines: "I actually don't like the ticks
+  at all as a method of showing the tank will swirl."
+- **Bands and glyphs as the rim cue**: Jack picked knob.
+- **Shelving Lens for Prism, or keeping the soft zoom** (the reviewers recommended shelving): Jack chose to try the
+  hard lens.
+- **Escapement's live preview** (recommended) and no warning: Jack chose the standing hint.
+- **Escapement's seal ticking on to +2, or blaming the knob**: Jack chose freeze on the +1.
+- **The shelf as a row under the strip, or a place past maelstrom** (B was recommended): Jack chose the dock of live
+  covers.
+- **Icon candidates 2 and 3** (3, the whole-tank swirl, was recommended): Jack chose 1, the neon grid.

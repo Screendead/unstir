@@ -222,7 +222,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and without the tank arc's glow since it lies on the picture, and its ghost finger there, in the middle of the
   swirl's grab. So on a level with both, each lesson points at its own ring: the tank's at the bezel, the swirl's
   inside the glass. It goes while the swirl is held. The lessons go once learnt, so `RimCues` keeps saying what the
-  rim does, three ways while Jack compares them (`RimCue`, picked by `UNSTIR_RIM`, `knob` without it): `knob` gives
+  rim does, three ways pending a new swirl cue (`RimCue`, picked by `UNSTIR_RIM`, `knob` without it): `knob` gives
   the swirl a knob's ticks inside the glass's edge, each on a dark stroke, leaning as a shear leans them and further
   the way a held turn goes, a longer pointer at twelve, all turning with its own turning, and a dark groove between
   them and the bezel; it knurls the bezel wherever knobs are seized, faintly amber at rest, the knurl turning with the
@@ -249,7 +249,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
-  placeholder prices (price is undecided); the scheme's run action and `StoreTests` use it.
+  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
