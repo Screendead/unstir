@@ -357,8 +357,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.history, [Twist(rod: 0, steps: 2), Twist(rod: 0, steps: -2)])
     }
 
-    /// An undo takes back a whole stir, gives its move back and costs the clean; the stir before stays shut, and an
-    /// empty bank refuses.
+    /// An undo takes back a whole stir, gives its move back and costs the clean, and an empty bank refuses.
     @MainActor func testUndoSpendsTheBank() {
         Best.undos = 2
         let scramble = [Twist(rod: 0, steps: 4)]
@@ -376,11 +375,47 @@ final class UnstirTests: XCTestCase {
         game.commit(rod: 0, steps: 2)
         game.commit(rod: 2, steps: 1)
         game.undo()
-        game.commit(rod: 0, steps: -2)
-        XCTAssertEqual(game.history, [Twist(rod: 0, steps: 2), Twist(rod: 0, steps: -2)])
         XCTAssertEqual(Best.undos, 0)
         game.undo()
-        XCTAssertEqual(game.moves, 2)
+        XCTAssertEqual(game.moves, 1)
+    }
+
+    /// An undone stir is as if never made: the stir it covered is open again if it was open then, so a further turn of
+    /// its rod, or of the tank, joins it; one that was shut stays shut.
+    @MainActor func testUndoLeavesTheUncoveredStirOpen() {
+        Best.undos = 10
+        let scramble = [Twist(rod: 0, steps: 4)]
+        let game = Game(level: Level(id: "test-undo-open", label: "", title: "", layout: .tri, scramble: scramble))
+        game.commit(rod: 0, steps: 2)
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: 1)
+        game.undo()
+        XCTAssertEqual(game.openStir, Twist(rod: 0, steps: 2))
+        game.commit(rod: 0, steps: 1)
+        XCTAssertEqual(game.history, [Twist(rod: 0, steps: 3)])
+
+        // A stir turned back to nothing leaves the one before it shut, so undoing the next one leaves it shut too.
+        game.commit(rod: 1, steps: 1)
+        game.commit(rod: 2, steps: 1)
+        game.commit(rod: 2, steps: -1)
+        game.commit(rod: 2, steps: 1)
+        game.undo()
+        XCTAssertNil(game.openStir)
+        game.commit(rod: 1, steps: 1)
+        XCTAssertEqual(game.history, [Twist(rod: 0, steps: 3), Twist(rod: 1, steps: 1), Twist(rod: 1, steps: 1)])
+
+        let tank = Game(level: Level(id: "test-undo-open-tank", label: "", title: "", layout: .quad, scramble: scramble,
+                                     seized: [1]))
+        tank.turnTank(1)
+        tank.commit(rod: 0, steps: 1)
+        tank.undo()
+        XCTAssertEqual(tank.openStir, Twist(rod: Game.tank, steps: 1))
+        tank.turnTank(1)
+        XCTAssertEqual(tank.history, [Twist(rod: Game.tank, steps: 2)])
+        tank.commit(rod: 0, steps: 1)
+        tank.turnTank(1)
+        tank.undo()
+        XCTAssertEqual(tank.openStir?.rod, tank.slot(of: 0))
     }
 
     /// Unstirred back to the clean picture it opened on, the sandbox plays on; new rods clear the stir. Its undos are free.
