@@ -179,7 +179,8 @@ for level in 27:glass 22:chainmail 8:coral 18:neurons 24:marbling; do
   shot "maelstrom$n-$picture" "Maelstrom level $n ($picture twin) with its full scramble." TIER=maelstrom LEVEL=$n CLOCK=3
 done
 # The turning tank: maelstrom levels on their twins, at home and turned one step, where every seam should sit
-# concentric on the knob it lands under. The bezel is knurled wherever knobs are seized (the rim-* shots compare cues).
+# concentric on the knob it lands under. The bezel is knurled wherever knobs are seized (the rim-* shots show it beside
+# the lessons).
 shot seized-m01-home "Maelstrom 01 (square, coral twin) with knob 1 seized, tank at home." TIER=maelstrom LEVEL=1 CLOCK=3
 shot seized-m01-turned "Maelstrom 01 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2." \
   TIER=maelstrom LEVEL=1 TANK=1 CLOCK=3
