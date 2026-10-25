@@ -8,6 +8,8 @@ settings:
     DEVELOPMENT_TEAM: 8N575942RT
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
 targets:
   Unstir:
     type: application
@@ -19,6 +21,9 @@ targets:
     info:
       path: Sources/Info.plist
       properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         CADisableMinimumFrameDurationOnPhone: true
         UIUserInterfaceStyle: Dark
