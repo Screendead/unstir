@@ -112,6 +112,8 @@ struct MenuView: View {
     @GestureState private var dragging = false
     /// The scroll view's height and its bottom safe area: the list draws on under the home indicator.
     @State private var viewport: CGFloat = 0
+    /// The pack dock's height: the scroll view counts it in its bottom safe area, but the list ends at it.
+    @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
     @State private var list = CGRect.zero
     @Namespace private var strip
@@ -172,6 +174,7 @@ struct MenuView: View {
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 PackDock(open: { show($0, from: $1) }, held: clock, paused: card != nil)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
             }
         }
         .foregroundStyle(Color.text)
@@ -246,7 +249,7 @@ struct MenuView: View {
     /// The list's visible part, in its own space.
     private var band: ClosedRange<CGFloat> {
         let top = max(-list.minY, 0)
-        return top ... max(min(viewport - list.minY, list.height), top + 1)
+        return top ... max(min(viewport - dock - list.minY, list.height), top + 1)
     }
 
     /// The middle of the list's visible part, in the scroll view's space.

@@ -617,6 +617,7 @@ struct PackCard: View {
         .foregroundStyle(Color.text)
         .background(Color.black.ignoresSafeArea())
         .accessibilityAddTraits(.isModal)
+        .accessibilityAction(.escape, onBack)
         .task { await store.fetchPrices() }
         .onChange(of: state) {
             if let tag = state.tag { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
