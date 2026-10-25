@@ -218,8 +218,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   inside the glass. It goes while the swirl is held. The lessons go once learnt, so `RimCues` keeps saying what the
   rim does, three ways while Jack compares them (`RimCue`, picked by `UNSTIR_RIM`, `knob` without it): `knob` gives
   the swirl a knob's ticks on a hairline ring just inside the glass's edge, a pointer at twelve turning with its own
-  turning, and knurls the bezel where knobs are seized, the knurl turning with the glass; `bands` lays a cyan band
-  slanted like a current on the swirl's grab inside the glass and anodises the bezel amber, the lessons' own colours;
+  turning, and knurls the bezel where knobs are seized, the knurl turning with the glass; `bands` outlines the
+  swirl's grab in cyan inside the glass and anodises the bezel amber, the lessons' own colours;
   `glyphs` sets a spiral and a turning ring with a seized knob's slash over twelve, each once its lesson has gone.
   Each lights while its control is held. A drag shows its own
   count: a long mark on the disc's hairline (on one just inside the rim, for the tank) where its stir began, a dash per

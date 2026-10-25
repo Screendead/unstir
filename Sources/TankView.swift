@@ -1584,7 +1584,7 @@ struct RimLesson: View {
 enum RimCue: String {
     /// The swirl wears a knob's ticks just inside the glass's edge; where knobs are seized, the bezel is knurled.
     case knob
-    /// The swirl's grab is a cyan band on the glass's edge; where knobs are seized, the bezel is amber, as the lessons.
+    /// The swirl's grab is outlined in cyan on the glass's edge; where knobs are seized, the bezel is amber, as the lessons.
     case bands
     /// A glyph over the bezel at twelve for each, once its lesson is learnt: a spiral, a ring turning with a seized knob.
     case glyphs
@@ -1631,16 +1631,10 @@ struct RimCues: View {
                         .padding(-0.045 * r).blendMode(.plusLighter)
                 }
                 if let swirl {
-                    let inner = band * r, lit = swirl.held ? Color.live : .neonCyan
-                    // Added light, so the picture under the band still reads through it.
-                    Circle().fill(RadialGradient(stops: [.init(color: .clear, location: inner / r),
-                                                         .init(color: Color.neonCyan.opacity(swirl.held ? 0.3 : 0.18), location: 1)],
-                                                 center: .center, startRadius: 0, endRadius: r))
-                        .blendMode(.plusLighter)
-                    ring(inner).stroke(lit.opacity(0.8), lineWidth: 0.5)
+                    // Outlined only: a wash or hatch over the grab would hide the picture's outer ring.
+                    let lit = swirl.held ? Color.live : .neonCyan
+                    ring(band * r).stroke(lit.opacity(0.8), lineWidth: 0.5)
                     ring(r - 1.5).stroke(lit, lineWidth: 1)
-                    shear(inner + 3, r - 4).stroke(lit.opacity(swirl.held ? 0.9 : 0.6), lineWidth: 0.75)
-                        .rotationEffect(.radians(swirl.angle))
                 }
             case .glyphs:
                 let spots = Self.glyphs(r, tank: tank != nil, swirl: swirl != nil)
@@ -1664,17 +1658,6 @@ struct RimCues: View {
                 let t = Double(i) * Tank.step
                 p.move(to: CGPoint(x: r + a * sin(t), y: r - a * cos(t)))
                 p.addLine(to: CGPoint(x: r + b * sin(t), y: r - b * cos(t)))
-            }
-        }
-    }
-
-    /// Strokes slanted across the band from `a` out to `b`, as the swirl shears it: a current, not a scale.
-    private func shear(_ a: CGFloat, _ b: CGFloat) -> Path {
-        Path { p in
-            for i in 0..<36 {
-                let t = Double(i) * .pi / 18
-                p.move(to: CGPoint(x: r + a * sin(t), y: r - a * cos(t)))
-                p.addLine(to: CGPoint(x: r + b * sin(t + 0.09), y: r - b * cos(t + 0.09)))
             }
         }
     }

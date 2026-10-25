@@ -331,9 +331,8 @@ Jack's calls (2026-10-24):
     ticks, a pointer that turns with it); where knobs are seized the bezel becomes knurled steel that turns with the
     glass. Both: knurl outside, cyan dial inside, clearly two bands. On dark-green marbling the ticks are faint and only
     the pointer carries.
-  - `bands`: a cyan band over the swirl's grab with slanted current strokes, an amber bezel for the tank, matching the
-    lessons' colours. Its wash lightens 13–27 pt of the picture's edge, the one breach of the hairline rule; "both" is
-    busy.
+  - `bands`: the swirl's grab outlined in cyan (its wash and slanted hatch dropped: they hid the picture's outer ring),
+    an amber bezel for the tank, matching the lessons' colours.
   - `glyphs`: two 28 pt icons above twelve (a spiral; a ring with a red slash and a two-headed arc). It says both
     controls exist, not which band does which.
   **Awaiting Jack's pick.** Claude recommends `knob`: it uses the game's own language (a knob is what you turn) and
