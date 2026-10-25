@@ -207,19 +207,20 @@ final class SolverTests: XCTestCase {
         }
     }
 
-    /// Each vortex level's par is the optimum, the park rule reaches it however its ties go under either parking, and
-    /// every play empties the stack on a real `Game`; and so with a knob seized, as a harnessed launch can.
-    @MainActor func testVortexIsFairAtPar() {
+    /// Each vortex level's par, its entry count, is the optimum: no detour beats plain untwisting, which reaches it. Every
+    /// player's play empties the stack on a real `Game` in the moves it counts, as dealt (the tank never turns, so the
+    /// park rule and no lookahead untwist too) and with knob 1 seized, as a harnessed launch can seize it. Slow, as
+    /// maelstrom's is: about 15 s in a Debug build, most of it the optimum's detour search on hex.
+    @MainActor func testVortexParIsTheOptimum() throws {
+        try skipUnlessSlow()
+        let solvers = Dictionary(uniqueKeysWithValues: Layout.swirls.map { ($0, Solver($0)) })
         for level in Level.vortex {
-            let solver = Solver(level.layout), stack = level.scramble, seized = level.seized
-            for parking in [Solver.Parking.fewest, .all] {
-                XCTAssertEqual(solver.parkTies(stack, seized: seized, parking: parking)?.worst.count, level.par,
-                               "\(level.id) \(parking)")
-            }
-            assertEveryPlayEmpties(solver, stack, seized: seized, optimum: level.par, level.id)
-            let more = seized.union([1])
-            assertEveryPlayEmpties(solver, stack, seized: more, optimum: solver.optimum(stack, seized: more) ?? -1,
-                                   "\(level.id) seized \(more.sorted())")
+            let solver = solvers[level.layout]!, stack = level.scramble
+            XCTAssertEqual(level.par, stack.count, level.id)
+            XCTAssertEqual(solver.untwistingPlay(stack)?.count, level.par, level.id)
+            assertEveryPlayEmpties(solver, stack, seized: [], optimum: level.par, level.id)
+            assertEveryPlayEmpties(solver, stack, seized: [1], optimum: solver.optimum(stack, seized: [1]) ?? -1,
+                                   "\(level.id) seized [1]")
         }
     }
 

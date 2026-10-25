@@ -75,6 +75,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   by the most, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It
   compiles `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut
   out of Levels.swift, so that struct stays top-level there.
+- Vortex's levels: `scripts/vortex-levels/pools.sh <dir>` deals seeded scrambles on the swirl layouts with the frozen
+  generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
+  Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py
+  <dir>` picks the table from them by its slots. `scripts/vortex-levels.sh check <layout> <scramble>` measures one row.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
@@ -152,9 +156,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
   loses it unless the stored keys are remapped. Plughole has 27 hand-written
   levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
-  deeper variants on live pictures that follow a table, vortex three provisional swirl levels (quad, pent, hex) on
-  whirlpool's pictures until its own set is written, and maelstrom 27 of its own (quad, then pent, then hex) on
-  the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
+  deeper variants on live pictures that follow a table, vortex 27 provisional swirl levels (quad, tri, eye, pent,
+  then hex) on whirlpool's pictures, no knob seized, so the tank never turns and par is the entry count, which the
+  solver's optimum matches and plain untwisting reaches (`testVortexParIsTheOptimum`, slow), and maelstrom 27 of its
+  own (quad, then pent, then hex) on the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
   solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
   rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
   seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
@@ -269,7 +274,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   proof; `exhaustive` checks it on small cases. Its pruning reads which rods interact (`interacts`: discs that overlap
   and maps that fail to commute, judged by the maps), so a swirl interacts with every rod but hex's hub, which shares
   its centre; whether a word commutes is still `Layout.commutes`'s call. The swirl is a slot like any other, held at
-  every position and never seized. The park rule (`park`) untwists the newest whole seam a working knob
+  every position and never seized. With no knob seized, as on every vortex level, the tank never turns, so every
+  player untwists and the planning gap is 0: there the solver's job is the optimum, and whether a detour beats
+  untwisting. The park rule (`park`) untwists the newest whole seam a working knob
   reaches; when none is, it turns to a position where one is, choosing by where the seized knobs land (`Parking`:
   `.fewest` or `.all`), then the nearest. The rule has no tie-break (Jack's call): `parkTies` gives its fewest and
   most moves over every way its ties go, and `park` breaks them by `Tie` (`.clockwise` or `.lowest`) only to name one

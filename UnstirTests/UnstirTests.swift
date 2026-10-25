@@ -1141,18 +1141,37 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue((Level.whirlpool + Level.vortex + Level.maelstrom).allSatisfy(\.picture.isLive))
     }
 
-    /// Vortex's provisional three: a swirl layout each, the swirl in every scramble, no seized knob yet, whirlpool's
-    /// pictures (never a twin, which is maelstrom's), and each tank four taps as dealt.
+    /// Against vortex's provisional table: quad, tri, eye, pent, then hex, each with its swirl; the swirl in every
+    /// scramble, hidden stirs and swirls climbing within each layout, no knob seized, par the entry count; whirlpool's
+    /// pictures (never a twin, which is maelstrom's), no two neighbours alike, coral only to 6 stirs and neurons to 14,
+    /// and each tank four taps as dealt. That par is the optimum is `SolverTests`' to check.
     func testVortexTable() {
         let levels = Level.vortex
-        XCTAssertEqual(levels.map(\.layout), [.quadSwirl, .pentSwirl, .hexSwirl])
-        XCTAssertEqual(levels.map(\.scramble.count), [2, 4, 5])
+        XCTAssertEqual(levels.count, 27)
+        XCTAssertEqual(levels.map(\.layout), Array(repeating: .quadSwirl, count: 6) + Array(repeating: .triSwirl, count: 3)
+                       + Array(repeating: .eyeSwirl, count: 4) + Array(repeating: .pentSwirl, count: 7)
+                       + Array(repeating: .hexSwirl, count: 7))
+        XCTAssertEqual(levels.map(\.scramble.count),
+                       [2, 3, 4, 5, 6, 8, 5, 6, 8, 7, 8, 10, 12, 8, 10, 12, 13, 14, 16, 18, 12, 14, 16, 18, 20, 22, 24])
+        XCTAssertEqual(levels.map { $0.layout.inversions($0.scramble) },
+                       [0, 0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 3, 4, 2, 3, 3, 4, 4, 5, 6, 3, 4, 4, 5, 6, 7, 8])
+        XCTAssertEqual(levels.map { level in level.scramble.filter { $0.rod == level.layout.swirl }.count },
+                       [1, 1, 1, 2, 2, 3, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 4, 4, 5, 3, 3, 4, 4, 5, 5, 6])
+        XCTAssertEqual(levels.map(\.picture),
+                       [.glass, .coral, .chainmail, .coral, .neurons, .marbling, .glass, .coral, .chainmail, .glass,
+                        .neurons, .marbling, .chainmail, .glass, .neurons, .chainmail, .marbling, .neurons, .chainmail,
+                        .marbling, .glass, .chainmail, .marbling, .chainmail, .glass, .marbling, .glass])
+        for (a, b) in zip(levels, levels.dropFirst()) { XCTAssertNotEqual(a.picture, b.picture, b.id) }
         for level in levels {
-            XCTAssertTrue(level.scramble.contains { $0.rod == level.layout.swirl }, level.id)
+            XCTAssertNil(level.fixedPar, level.id)
+            XCTAssertEqual(level.par, level.scramble.count, level.id)
             XCTAssertTrue(level.seized.isEmpty, level.id)
             XCTAssertNotEqual(level.picture.twin, level.picture, level.id)
+            if level.picture == .coral { XCTAssertLessThanOrEqual(level.scramble.count, 6, level.id) }
+            if level.picture == .neurons { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
             XCTAssertLessThanOrEqual(level.scramble.count, Tank.fourTaps - level.picture.fillEntries, level.id)
         }
+        XCTAssertEqual(Set(levels.map(\.scramble)).count, levels.count)
         XCTAssertFalse(levels[0].note.isEmpty)
         XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
     }
