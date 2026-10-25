@@ -203,6 +203,65 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(game.solved)
     }
 
+    /// An entry that merges into another hands its tags over, whether a turn lands on it or a heal lets it fall, and a
+    /// pop hands `popped` the union; the landing entry keeps its own mark. The stacks of the two tests above.
+    func testAMergeHandsOverItsTags() {
+        typealias E = Game.Entry
+        func play(_ scramble: [Twist]) -> (stack: [E], popped: [E]) {
+            var stack = scramble.enumerated().map { E(twist: $1, pushed: false, tags: [$0 + 1]) }, popped: [E] = []
+            for (i, t) in [Twist(rod: 2, steps: -4), Twist(rod: 1, steps: 2), Twist(rod: 2, steps: 4)].enumerated() {
+                XCTAssertEqual(stack.commit(E(twist: t, pushed: true, tags: [i + 4]), in: .quad), .pushed)
+            }
+            XCTAssertEqual(stack.commit(E(twist: Twist(rod: 3, steps: -2), pushed: true, tags: [7]), in: .quad) { popped.append($0) },
+                           .cancelled)
+            return (stack, popped)
+        }
+        let down = play([Twist(rod: 0, steps: 9), Twist(rod: 2, steps: -2), Twist(rod: 3, steps: 2)])
+        XCTAssertEqual(down.popped, [E(twist: Twist(rod: 3, steps: 0), pushed: false, tags: [3, 7])])
+        XCTAssertEqual(down.stack, [E(twist: Twist(rod: 0, steps: 9), pushed: false, tags: [1]),
+                                    E(twist: Twist(rod: 2, steps: -6), pushed: false, tags: [2, 4]),
+                                    E(twist: Twist(rod: 1, steps: 2), pushed: true, tags: [5]),
+                                    E(twist: Twist(rod: 2, steps: 4), pushed: true, tags: [6])])
+        let falls = play([Twist(rod: 0, steps: 9), Twist(rod: 2, steps: 4), Twist(rod: 3, steps: 2)])
+        XCTAssertEqual(falls.popped.map(\.tags), [[3, 7], [2, 4]])
+        XCTAssertEqual(falls.popped.map(\.pushed), [false, false])
+        XCTAssertEqual(falls.stack.map(\.tags), [[1], [5], [6]])
+        // A turn landing on a push leaves it pushed.
+        var pushes = [E(twist: Twist(rod: 2, steps: 1), pushed: true, tags: [5])]
+        pushes.commit(E(twist: Twist(rod: 2, steps: 1), pushed: false), in: .tri)
+        XCTAssertEqual(pushes, [E(twist: Twist(rod: 2, steps: 2), pushed: true, tags: [5])])
+    }
+
+    /// The merge hook leaves endless's brim as it was before the hook: random runs on every layout against a stack whose
+    /// entries take no hook, notch for notch and entry for entry.
+    @MainActor func testTheMergeHookLeavesTheBrimAsItWas() {
+        struct Marked: Stacked { var twist: Twist; var pushed: Bool }
+        var rng = SplitMix64(state: 2610)
+        for trial in 0..<120 {
+            let layout = Layout.allCases[trial % Layout.allCases.count], n = layout.rods.count
+            let scramble = (0..<(2 + rng.below(6))).map { _ in "\(rng.below(n)):\(rng.below(2) == 0 ? "-" : "+")\(1 + rng.below(5))" }
+            let level = tank(scramble.joined(separator: ","), layout, brim: rng.below(3))
+            let game = Game(level: level)
+            var reference = level.scramble.map { Marked(twist: $0, pushed: false) }, brim = level.run!.brim
+            for move in 0..<40 where !game.finished {
+                // Mostly heals, so stacks empty and entries fall as often as they pile up.
+                let heal = game.reachable.flatMap { rng.below(3) > 0 ? $0 : nil }
+                let rod = heal?.rod ?? rng.below(n), steps = heal?.steps ?? (rng.below(2) == 0 ? -1 : 1) * (1 + rng.below(4))
+                var healed = 0
+                let result = reference.commit(Marked(twist: Twist(rod: rod, steps: steps), pushed: true), in: layout) {
+                    if !$0.pushed { healed += 1 }
+                }
+                if result == .pushed { brim += 1 }
+                brim = max(brim - healed, 0)
+                game.commit(rod: rod, steps: steps)
+                let m = "trial \(trial) move \(move) \(layout) \(scramble)"
+                XCTAssertEqual(game.stack, reference.map(\.twist), m)
+                XCTAssertEqual(game.brim, brim, m)
+                if brim >= Run.room { XCTAssertTrue(game.spilled, m) }
+            }
+        }
+    }
+
     /// Where the fine pass calls the win on a stack that isn't empty, the move that got there is the tank's last heal,
     /// and settles one notch in all.
     @MainActor func testALooksSolvedWinSettlesOneNotch() async throws {

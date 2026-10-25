@@ -62,10 +62,14 @@ private func glowRing(_ colour: Color, _ width: CGFloat, _ underlay: CGFloat, un
 @MainActor @Observable
 final class Game {
     /// A stack entry, and whether a turn of the player's pushed it: any other is one of the scramble's, perhaps changed
-    /// since by turns that merged into it. Only a run reads it, and a run has no undo.
-    struct Entry: Stacked {
+    /// since by turns that merged into it. Only a run reads it, and a run has no undo. An entry merging into another
+    /// leaves its mark behind and hands over its tags, First Stir's vignettes, so a pop plays every tag either carried.
+    struct Entry: Stacked, Equatable {
         var twist: Twist
         var pushed: Bool
+        var tags: Set<Int> = []
+
+        mutating func absorb(_ other: Entry) { tags.formUnion(other.tags) }
     }
 
     private(set) var level: Level
