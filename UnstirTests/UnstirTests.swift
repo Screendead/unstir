@@ -804,7 +804,7 @@ final class UnstirTests: XCTestCase {
         let s = Layout.quadSwirl.swirl!
         let level = Level(id: "test-swirl", label: "", title: "", layout: .quadSwirl, scramble: .parse("1:+4,\(s):+3", in: .quadSwirl),
                           seized: [1], fixedPar: 3)
-        let game = Game(level: level, tankTurned: true, bank: (10, nil))
+        let game = Game(level: level, tankTurned: true, swirled: true, bank: (10, nil))
         game.turnTank(1)
         XCTAssertEqual(game.slot(of: s), s)
         XCTAssertEqual(game.reachable, Twist(rod: s, steps: -3))
