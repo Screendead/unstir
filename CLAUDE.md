@@ -222,7 +222,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and without the tank arc's glow since it lies on the picture, and its ghost finger there, in the middle of the
   swirl's grab. So on a level with both, each lesson points at its own ring: the tank's at the bezel, the swirl's
   inside the glass. It goes while the swirl is held. The lessons go once learnt, so `RimCues` keeps saying what the
-  rim does, three ways while Jack compares them (`RimCue`, picked by `UNSTIR_RIM`, `knob` without it): `knob` gives
+  rim does, three ways pending a new swirl cue (`RimCue`, picked by `UNSTIR_RIM`, `knob` without it): `knob` gives
   the swirl a knob's ticks inside the glass's edge, each on a dark stroke, leaning as a shear leans them and further
   the way a held turn goes, a longer pointer at twelve, all turning with its own turning, and a dark groove between
   them and the bezel; it knurls the bezel wherever knobs are seized, faintly amber at rest, the knurl turning with the
