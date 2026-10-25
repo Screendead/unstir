@@ -306,3 +306,15 @@ shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl 
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# Escapement 1, the packs mock-up's problem: tri 0:-1,1:+3,0:-2,2:-4, rod 0 the clock with a ratchet for a knob, unstirred
+# in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
+shot escapement-1 "Escapement 1: rod 0 the clock, its disc dashed vermilion at all times, its ratchet read against the sub-dial; par 3." PACK=escapement
+shot escapement-1-ticked "Escapement 1 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on." \
+  PACK=escapement PLAYED=2:4
+shot escapement-1-slip "Escapement 1, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1 standing while the move is open." \
+  PACK=escapement PLAYED=2:4,1:-3
+shot escapement-1-regrab "Escapement 1, the slip re-grabbed and turned halfway back: its tick lifted out, the pawl up, no +1." \
+  PACK=escapement PLAYED=2:4,1:-3 LIVE=1:1.5
+shot escapement-1-lost "Escapement 1, the slip sealed by a wait: frozen on the +1, lost. stamped by it, the card's undo and again." \
+  PACK=escapement PLAYED=2:4,1:-3,0:1
+shot escapement-1-won "Escapement 1 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement PLAYED=2:4,0:1,1:-3
