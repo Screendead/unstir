@@ -879,6 +879,18 @@ names and product ids, and Complete's promise to older owners.
    The analytics core is built on `analytics` (`Analytics.swift`, its own sender with a queue on disk rather than the
    pre-1.0 SDK, which holds events only in memory); the consent question, settings switch and send-log button wait
    on their mock-up.
+   Open for Jack, from review (2026-10-25); the code does neither yet:
+   - *The tally under No.* `days`, `undos` and `seen` build whatever the consent, so a player who says No, plays a
+     month and then says Yes sends snapshots covering the No month (the bests and started flags they read exist
+     anyway). Options: keep it; stop recording under No; or that and clear them in `decide(false)`. Claude recommends
+     the last, keeping only the install's day so day numbers stay right; undecided keeps recording, since the
+     question comes at first launch.
+   - *The clock set ahead.* `returned` goes out only for a day past the newest sent, so a clock 31 days ahead sends
+     `returned{32}` and all three snapshots, and once set right no `returned` comes for 31 real days; a late Yes also
+     sends snapshots 2, 7 and 30 at once, alike but for `day`. Options: keep it; send `returned` on the first opening
+     of any day number not yet in `days`, and only the newest snapshot due; or reckon the day from `Best.trustedNow`
+     (which moves the refill's anchor, so it would need a read-only form). Claude recommends the second: it heals
+     after a mistaken clock without touching the refill's code.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
