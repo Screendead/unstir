@@ -53,7 +53,7 @@ shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ti
   TIER=vortex BESTS=plughole:$par27,whirlpool:$some
 shot menu-vortex-open "Menu on vortex, opened by every whirlpool tank at par: its level 01 playable, maelstrom still locked." \
   TIER=vortex BESTS=plughole:$par27,whirlpool:$par27
-shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's three ticks lit." \
+shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit." \
   TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:01
 shot menu-maelstrom "Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK)." TIER=maelstrom UNLOCK=1
 shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN)." \
@@ -217,17 +217,17 @@ shot seized-ring3-buried "The same with 3:+2 buried fourth from the bottom ($rin
 shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
 shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubburied): the hub's ring is not finished." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3
-# Vortex: the swirl, a last rod the size of the tank at its centre, held from the rim. Its levels are provisional. The
+# Vortex: the swirl, a last rod the size of the tank at its centre, held from the rim. Its 27 levels are provisional. The
 # rim shows how to stir with the swirl until the player has once (UNSTIR_SWIRLED=1 is a player who has); with seized
 # knobs too, both lessons show. The swirl-* shots are of the picture, so they read as a player who has.
 shot menu-vortex "Menu on vortex with every row unlocked." TIER=vortex UNLOCK=1
-for n in 01 02 03; do
+for n in $(seq -w 1 27); do
   shot "vortex$n" "Vortex level $n with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom." TIER=vortex LEVEL=$n CLOCK=3
 done
 shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl before: no lesson, only the swirl's ticks inside the glass's edge." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1
 shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson on the bezel at the top, the swirl's cyan one on the glass's edge at the bottom." \
   TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
-shot vortex03-both "Vortex 03 (hex) with knobs 2 and 5 seized, neither ever used: both lessons." TIER=vortex LEVEL=3 SEIZED=2,5 CLOCK=3
+shot vortex21-both "Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons." TIER=vortex LEVEL=21 SEIZED=2,5 CLOCK=3
 # What the rim does, shown before it is touched, three ways (UNSTIR_RIM): the swirl alone (vortex 01), the glass's
 # turn alone (maelstrom 01, knob 1 seized) and both (vortex 01 with knob 1 seized), each once its lessons are learnt
 # and with them, then held: the swirl from the rim, and where there are both, the swirl from the glass's edge and the
