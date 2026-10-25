@@ -235,10 +235,21 @@ shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever u
 shot vortex21-both "Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass." TIER=vortex LEVEL=21 SEIZED=2,5 CLOCK=3
 shot vortex-result "Vortex level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par), next in vortex's blue." \
   TIER=vortex SCREEN=result LEVEL=5 CLOCK=3
-# Vortex on plughole's grid (UNSTIR_PICTURE) instead of whirlpool's live pictures, one of the options for its family.
+# Vortex on plughole's grid (UNSTIR_PICTURE) instead of its own family, the option for its pictures set aside.
 for n in 01 14 27; do
   shot "vortex-plughole-$n" "Vortex level $n with its full scramble on plughole's grid, the swirl never stirred." \
     TIER=vortex LEVEL=$n CLOCK=3 PICTURE=grid
+done
+# Vortex's own family: each picture clean in the sandbox, then on the shallowest, a middle and the deepest of its levels.
+# scripts/vortex-family-sheet.py lays them out.
+for p in isobars ephemeris cords; do
+  shot "vortex-family-$p-clean" "Vortex's $p, clean: the sandbox's square with a swirl, nothing stirred." \
+    MODE=sandbox LAYOUT=quadSwirl STACK= PICTURE=$p CLOCK=3 SWIRLED=1
+done
+for pn in isobars:01 isobars:14 isobars:27 ephemeris:02 ephemeris:13 ephemeris:22 cords:03 cords:16 cords:26; do
+  p=${pn%:*} n=${pn#*:}
+  shot "vortex-family-$p-$n" "Vortex level $n with its full scramble on its own $p, its lesson learnt." TIER=vortex LEVEL=$n \
+    CLOCK=3 SWIRLED=1
 done
 # What the rim does, shown before it is touched: the swirl alone (vortex 01), the glass's turn alone (maelstrom 01, knob
 # 1 seized) and both (vortex 01 with knob 1 seized), each once its lessons are learnt and with them, then held: the

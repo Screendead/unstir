@@ -87,3 +87,10 @@ film breath-grab-knob 7 "crop=iw:ih*0.56:0:ih*0.21,fps=10,scale=180:-1,tile=10x7
 # A cold first touch where the rim does both: vortex 02 with knob 3 seized, both lessons up, the fingertip
 # landing inside the glass's edge, where the swirl's lesson points, and stirring with the swirl.
 film rim-both-cold 8 "$rim,scale=220:-1,tile=8x3:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 FINGER=1 MOVES=4:+7
+# Vortex's own family, each on vortex 01's tank (isobars' own level; UNSTIR_PICTURE for the others): the swirl healed
+# from the rim, stirred back the other way, healed again and stirred on, so the whole tank winds over the picture and
+# unwinds.
+for p in isobars ephemeris cords; do
+  film "vortex-family-$p" 10 "$tank,fps=3,scale=220:-1,tile=8x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 FINGER=1 PICTURE=$p \
+    MOVES=4:-4,4:-4,4:+4,4:+6
+done
