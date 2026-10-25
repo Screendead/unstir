@@ -11,12 +11,15 @@ enum Move: Hashable, CustomStringConvertible {
     case stir(knob: Int, slot: Int, steps: Int)
     /// A turn of the tank the short way.
     case turn(steps: Int, to: Int)
+    /// Escapement: a tap on the ratchet, a move that only ticks the clock.
+    case wait
 
     var description: String {
         func signed(_ n: Int) -> String { n > 0 ? "+\(n)" : "\(n)" }
         return switch self {
         case let .stir(knob, slot, steps): "knob \(knob) \(signed(steps)) (slot \(slot))"
         case let .turn(steps, to): "tank \(signed(steps)) to \(to)"
+        case .wait: "wait"
         }
     }
 }
@@ -25,13 +28,20 @@ struct Play {
     var moves: [Move] = []
 
     /// Moves as `Game.history` counts them: commits to one slot in a row join, and a stir that nets nothing drops out
-    /// and shuts, so the next commit to that slot is a new move. Turns in a row join too; no play turns in a row.
+    /// and shuts, so the next commit to that slot is a new move. Turns in a row join too; no play turns in a row. A wait
+    /// joins nothing.
     var count: Int {
         var history: [(slot: Int, net: Int)] = [], open = false
         for move in moves {
             let (slot, steps) = switch move {
             case let .stir(_, slot, steps): (slot, steps)
             case let .turn(steps, _): (-1, steps)
+            case .wait: (-2, 0)
+            }
+            if case .wait = move {
+                history.append((slot, steps))
+                open = false
+                continue
             }
             if open, history.last?.slot == slot {
                 history[history.count - 1].net += steps
@@ -508,6 +518,61 @@ final class Solver {
             }
             frontier = next
         }
+        return nil
+    }
+}
+
+extension Solver {
+    /// Escapement's prover: the fewest moves that empty `stack` when, after every move, the clock rod `clock` ticks +1
+    /// while it holds an entry. A move is a wait or one commit to a working slot of its net, by a count from `steps` or
+    /// an entry's exact inverse, since `Game` replays a stir from where it began at its net however it was turned; a
+    /// slot stirred again straight after is the same stir, so never a move. A line whose tick pushes is dropped: that
+    /// entry never pops (`testAPushedTickNeverPops`). Breadth first over (stack, the slot just stirred), so the first
+    /// line found is a fewest, and every line of those counts up to `limit` is tried: no shorter one exists among them.
+    /// Nil past `limit`, with the stacks seen in `seen`.
+    func escapement(_ stack: [Twist], clock: Int, limit: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] },
+                    seen: inout Int) -> Play? {
+        struct State: Hashable {
+            var stack: [Twist], last: Int?
+        }
+        func tick(_ s: inout [Twist]) -> Bool {
+            guard s.contains(where: { $0.rod == clock }) else { return true }
+            let r = s.commit(rod: clock, steps: 1, in: layout)
+            return r == .reduced || r == .cancelled
+        }
+        let start = State(stack: stack, last: nil)
+        guard !stack.isEmpty else { return Play() }
+        var parent: [State: (from: State, move: Move)] = [:], frontier = [start]
+        var visited: Set<State> = [start]
+        func line(to state: State) -> Play {
+            var moves: [Move] = [], at = state
+            while let p = parent[at] { moves.append(p.move); at = p.from }
+            return Play(moves: moves.reversed())
+        }
+        for _ in 0..<limit {
+            var next: [State] = []
+            for state in frontier {
+                var after: [(State, Move)] = []
+                for slot in layout.rods.indices where slot != clock && slot != state.last {
+                    for k in Set(steps + state.stack.filter { $0.rod == slot }.map { -$0.steps }) {
+                        var s = state.stack
+                        guard s.commit(rod: slot, steps: k, in: layout) != .refused, tick(&s) else { continue }
+                        after.append((State(stack: s, last: slot), .stir(knob: slot, slot: slot, steps: k)))
+                    }
+                }
+                if state.stack.contains(where: { $0.rod == clock }) {
+                    var s = state.stack
+                    if tick(&s) { after.append((State(stack: s, last: nil), .wait)) }
+                }
+                for (to, move) in after where visited.insert(to).inserted {
+                    parent[to] = (state, move)
+                    if to.stack.isEmpty { seen = visited.count; return line(to: to) }
+                    next.append(to)
+                }
+            }
+            frontier = next
+        }
+        seen = visited.count
         return nil
     }
 }
