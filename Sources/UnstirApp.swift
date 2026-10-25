@@ -108,6 +108,14 @@ struct Harness {
 
     /// UNSTIR_ICON=n: app-icon candidate n alone on the screen (`IconView`).
     let icon: Int?
+    /// UNSTIR_CARD=lens (a pack's prefix, or complete): that pack's card open over the menu.
+    let card: Offer?
+    /// UNSTIR_CARDLEVELS=n: in Debug, the card lists n placeholder levels while its pack has none.
+    let cardLevels: Int
+    /// UNSTIR_SHELFDEMO=1: the menu opens Lens's card from the dock and closes it, through the calls a finger makes.
+    let shelfDemo: Bool
+    /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
+    let typeSize: DynamicTypeSize?
 
     init(_ env: [String: String]) {
         // UNSTIR_LEVEL counts in UNSTIR_TIER too.
@@ -207,6 +215,10 @@ struct Harness {
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
+        card = env["UNSTIR_CARD"].flatMap(Offer.init(name:))
+        cardLevels = env["UNSTIR_CARDLEVELS"].flatMap(Int.init).map { min(max($0, 0), 30) } ?? 0
+        shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
+        typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
     }
 }
 
@@ -252,13 +264,22 @@ final class Bench: NSObject {
 struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
+    /// The pack card over the menu: a level past its pack's taste opens it in the level's place.
+    @State private var card: Offer?
+    /// UNSTIR_CARDLEVELS, kept past the harness's first launch so the card's list stays while it is played from.
+    @State private var placeholders = 0
+    @State private var typeSize: DynamicTypeSize?
     @Environment(\.scenePhase) private var phase
 
     init() {
         let h = Harness(ProcessInfo.processInfo.environment)
         if let purchases = h.purchases { Store.shared.pretend(purchases, prices: h.prices) }
-        _level = State(initialValue: h.screen == "menu" ? nil : h.level)
+        let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
+        _level = State(initialValue: h.screen == "menu" || gate != nil ? nil : h.level)
         _harness = State(initialValue: h)
+        _card = State(initialValue: gate.map(Offer.pack) ?? h.card)
+        _placeholders = State(initialValue: h.cardLevels)
+        _typeSize = State(initialValue: h.typeSize)
     }
 
     var body: some View {
@@ -275,13 +296,15 @@ struct RootView: View {
                     .id(level)
                     .transition(dip)
             } else {
-                MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin) {
+                MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin, card: $card,
+                         clock: harness?.clock, placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false) {
                     show($0)
                 }
                 .transition(dip)
             }
         }
         .background(Color.black)
+        .modifier(TypeSize(size: typeSize))
         .onChange(of: phase) { Log.write("phase \(phase)") }
         .task {
             // A test host's listener would finish the transactions the StoreKit tests watch.
@@ -297,8 +320,19 @@ struct RootView: View {
         }
     }
 
+    /// A level past its pack's taste that the player doesn't own shows the pack's card over the menu instead.
     private func show(_ next: Level?, keep: Bool = false) {
         if !keep { harness = nil }
-        withAnimation(.easeInOut(duration: 0.25)) { level = next }
+        let gate = next.flatMap { Store.shared.card(for: $0) }
+        if gate != nil { card = gate.map(Offer.pack) }
+        withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil ? next : nil }
+    }
+}
+
+private struct TypeSize: ViewModifier {
+    let size: DynamicTypeSize?
+
+    func body(content: Content) -> some View {
+        if let size { content.dynamicTypeSize(size) } else { content }
     }
 }

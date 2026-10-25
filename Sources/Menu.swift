@@ -85,6 +85,16 @@ struct MenuView: View {
     /// UNSTIR_TIERDEMO: switches tiers on a timer through the same calls a finger makes.
     let demo: Bool
     let onPick: (Level) -> Void
+    /// The pack card over the menu, opened from the dock or by a level that needs it.
+    @Binding var card: Offer?
+    /// Where the tapped cover sits, for the card to grow from.
+    @State private var cardFrom = UnitPoint.center
+    /// UNSTIR_CLOCK: the dock's and the card's clips held that many seconds in.
+    let clock: Double?
+    /// UNSTIR_CARDLEVELS: placeholder levels the card lists before its pack has any.
+    let placeholders: Int
+    /// UNSTIR_SHELFDEMO: opens Lens's card from the dock and back, through the calls a finger makes.
+    let shelfDemo: Bool
     /// The tier picked in the strip, open or not. `shown` trails it while the old list stirs away, and `listed`, the
     /// scroll view's own list, trails that to the end of the switch: rebuilding it stalls a frame (about 40 ms on the
     /// simulator), unseen once the stir has settled over it.
@@ -113,10 +123,14 @@ struct MenuView: View {
     private let dim = 0.55
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
-    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil,
-         onPick: @escaping (Level) -> Void) {
+    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, card: Binding<Offer?>,
+         clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false, onPick: @escaping (Level) -> Void) {
         self.demo = demo
         self.onPick = onPick
+        _card = card
+        self.clock = clock
+        self.placeholders = placeholders
+        self.shelfDemo = shelfDemo
         let tier = start ?? Tier.stored()
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
@@ -156,8 +170,13 @@ struct MenuView: View {
             .overlay(alignment: .topLeading) { twisted }
             .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
             .simultaneousGesture(swipe)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                PackDock(open: { show($0, from: $1) }, held: clock, paused: card != nil)
+            }
         }
         .foregroundStyle(Color.text)
+        .accessibilityHidden(card != nil)
+        .overlay { cardView }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()
@@ -172,6 +191,31 @@ struct MenuView: View {
             }
         }
         .task { if demo { await tour() } }
+        .task { if shelfDemo { await shelfTour() } }
+    }
+
+    /// The card grows out of its cover, or fades in under Reduce Motion.
+    @ViewBuilder private var cardView: some View {
+        if let card {
+            PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), onBack: { show(nil) },
+                     onPlay: { onPick($0) })
+                .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
+                .zIndex(1)
+        }
+    }
+
+    private func show(_ offer: Offer?, from: UnitPoint = .center) {
+        if offer != nil { cardFrom = from }
+        withAnimation(.snappy(duration: 0.42)) { card = offer }
+    }
+
+    /// The menu, Lens's cover tapped, its card's clip played through, then back.
+    private func shelfTour() async {
+        func pause(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+        await pause(4.5)
+        show(.pack(.lens), from: UnitPoint(x: 0.375, y: 0.88))
+        await pause(7.2)
+        show(nil)
     }
 
     /// While it turns, the list is drawn again, cut to the part on screen, over the scroll view, and that is what

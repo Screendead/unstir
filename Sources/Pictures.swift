@@ -301,8 +301,8 @@ enum Picture: String, CaseIterable {
 }
 
 /// Crisp strokes, then bloom and halo added over them, baked once so twisting shears the glow with the lines.
-private func neon(_ ctx: GraphicsContext, r: CGFloat, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.4), (0.008, 1.0)],
-                  _ draw: (inout GraphicsContext) -> Void) {
+func neon(_ ctx: GraphicsContext, r: CGFloat, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.4), (0.008, 1.0)],
+          _ draw: (inout GraphicsContext) -> Void) {
     var c = ctx
     draw(&c)
     for (blur, opacity) in glows {
