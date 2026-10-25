@@ -125,6 +125,45 @@ final class LensTests: XCTestCase {
         }
     }
 
+    /// The pack's levels: each on the halftone with a lens, every dealt lens entry magnifying by 1 to 3 steps and each
+    /// lens netting at most +3; par is the solver's optimum, and untwisting reaches it on a real game.
+    @MainActor func testLensLevels() {
+        XCTAssertEqual(Level.lens.count, 3)
+        for level in Level.lens {
+            XCTAssertEqual(level.pack, .lens)
+            XCTAssertEqual(level.picture, .halftone)
+            XCTAssertEqual(level.motion, .none)
+            XCTAssertFalse(level.lenses.isEmpty, level.id)
+            for lens in level.lenses {
+                let entries = level.scramble.filter { $0.rod == lens }.map(\.steps)
+                XCTAssertTrue(entries.allSatisfy { (1...3).contains($0) }, "\(level.id) lens \(lens): \(entries)")
+                XCTAssertLessThanOrEqual(entries.reduce(0, +), 3, level.id)
+            }
+            XCTAssertFalse(level.layout.looksSolved(level.scramble, lenses: level.lenses), level.id)
+            let solver = Solver(level.layout, lenses: level.lenses)
+            XCTAssertEqual(solver.optimum(level.scramble), level.par, level.id)
+            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+            while let t = game.reachable, !game.finished { game.commit(rod: t.rod, steps: t.steps) }
+            XCTAssertTrue(game.solved, level.id)
+            XCTAssertEqual(game.moves, level.par, level.id)
+        }
+    }
+
+    /// A pack's undo puts a lens's entry back as the stir found it: a magnified core un-shrunk, a push taken off.
+    @MainActor func testAPackUndoPutsALensBack() throws {
+        let level = try XCTUnwrap(Level.lens.last)
+        let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+        let dealt = game.stack
+        game.commit(rod: 0, steps: -1)
+        XCTAssertEqual(game.stack.last, Twist(rod: 0, steps: 2))
+        game.commit(rod: 1, steps: 2)
+        game.undo()
+        game.undo()
+        XCTAssertEqual(game.stack, dealt)
+        XCTAssertEqual(game.moves, 0)
+        XCTAssertEqual(game.bank, 3)
+    }
+
     /// On the halftone, every step of every rod on every layout changes what shows inside its core, which is what the
     /// player reads: a twist turns the asymmetric linework, a lens swells the dots.
     func testEveryStepMovesContrastingPixelsOnTheHalftone() {

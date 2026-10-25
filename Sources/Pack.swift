@@ -73,7 +73,17 @@ enum Pack: String, CaseIterable, Sendable {
 
 extension Level {
     static let firstStir: [Level] = []
-    static let lens: [Level] = []
+    /// The hard lens's phone test (Jack's call, 2026-10-25, L1): the draft table's free taste, all on tri with rod 0 a
+    /// lens, on the halftone test panel. Every dealt lens entry magnifies by 1 to 3 steps and each lens nets at most +3.
+    static let lens: [Level] = [
+        "0:+2",
+        "0:+1,1:+3",
+        "1:-2,2:+4,0:+3",
+    ].enumerated().map { i, scramble in
+        let lenses: Set<Int> = [0]
+        return Level(id: Pack.lens.id(i + 1), pack: .lens, label: String(format: "%02d", i + 1), title: "Panel \(i + 1)",
+                     picture: .halftone, layout: .tri, scramble: .parse(scramble, in: .tri, lenses: lenses), lenses: lenses)
+    }
     static let escapement: [Level] = []
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
