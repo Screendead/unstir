@@ -1019,9 +1019,12 @@ struct LevelView: View {
             // A spilled tank keeps its caps over the murk.
             .opacity(showResult && !game.spilled ? 0 : 1)
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
-            // knobs, which would hide it. A swirl's knob is the rim, so its ring lies on the bezel.
-            RodView.band(.alarm)
-                .frame(width: fk == game.level.layout.swirl ? side : core, height: fk == game.level.layout.swirl ? side : core)
+            // knobs, which would hide it. The swirl's is its dial's ring inside the glass's edge, over the picture, so a
+            // hairline. One view either way, so the first push on either animates.
+            let swirlPushed = fk == game.level.layout.swirl
+            Circle().strokeBorder(Color.alarm, lineWidth: swirlPushed ? Self.hairline : 1)
+                .padding(swirlPushed ? RimCues.dial - Self.hairline / 2 : -3)
+                .frame(width: swirlPushed ? side : core, height: swirlPushed ? side : core)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.pushes) { ring, t in
                     ring.opacity(t >= 1 ? 0 : 1 - t)
                 } keyframes: { _ in
@@ -1615,6 +1618,8 @@ struct RimCues: View {
 
     /// A glyph's reach from its centre.
     static let glyphSize: CGFloat = 14
+    /// How far inside the glass's edge the knob cue's ring joins the swirl's ticks.
+    static let dial: CGFloat = 5
     /// Where the glyphs sit: over twelve, clear of the tank lesson's arc there, side by side where there are both.
     static func glyphs(_ r: CGFloat, tank: Bool, swirl: Bool) -> (tank: CGPoint?, swirl: CGPoint?) {
         let radius = 1.045 * r + 32, apart = tank && swirl ? 8 * Double.pi / 180 : 0
@@ -1633,11 +1638,11 @@ struct RimCues: View {
                     // way the turn in hand goes, as the swirl's core outruns its edge. A sideways offset in points at
                     // the ticks' inner end.
                     let lean = 4 + 3 * min(max(swirl.live / Tank.step, -2), 2)
-                    let marks = ticks(r - 5, r - 15, lean: lean), pointer = pointer(r - 5, r - 24, lean: lean)
+                    let d = Self.dial, marks = ticks(r - d, r - d - 10, lean: lean), pointer = pointer(r - d, r - 24, lean: lean)
                     // The groove: dark from the glass's edge in past the hairline that joins the ticks, so the ticks
                     // belong to the glass and not to the bezel's knurl.
                     if seats { ring(r - 2.5).stroke(Color.black.opacity(0.75), lineWidth: 5) }
-                    ring(r - 5).stroke(lit.opacity(swirl.held ? 0.9 : 0.55), lineWidth: 0.5)
+                    ring(r - d).stroke(lit.opacity(swirl.held ? 0.9 : 0.55), lineWidth: 0.5)
                     // Each tick seated on its own dark stroke, as a knob's ticks sit on its dark band.
                     Group {
                         if seats {

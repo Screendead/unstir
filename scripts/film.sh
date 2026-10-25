@@ -75,6 +75,10 @@ for v in knob bands glyphs; do
   film "rim-$v-both" 15 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 SWIRLED=1 TANKTURNED=1 RIM=$v \
     FINGER=1 MOVES=-1:+1,0:+8,4:+7,1:-4
 done
+# The swirl's push, knob cue: vortex 01's swirl healed, then stirred again over knob 0's seam, which stacks it (red on the
+# cue's ring inside the glass), turned straight back and knob 0 healed. Its count sits inside the ticks throughout.
+film rim-knob-swirl-push 12 "$rim,scale=220:-1,tile=9x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 FINGER=1 \
+  MOVES=4:-4,4:+3,4:-3,0:-3
 # A cold first touch where the rim does both, knob cue: vortex 02 with knob 3 seized, both lessons up, the fingertip
 # landing on the swirl's ticks inside the glass's edge, where its lesson points, and stirring with the swirl.
 film rim-knob-both-cold 8 "$rim,scale=220:-1,tile=8x3:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 FINGER=1 MOVES=4:+7
