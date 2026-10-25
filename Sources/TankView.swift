@@ -76,9 +76,11 @@ final class Game {
     /// in steps of the layout's symmetry.
     private(set) var history: [Twist] = []
     nonisolated static let tank = -1
-    /// Whether the next turn of the newest stir's rod joins it. A stir turned back to nothing, or undone, is gone, and the
-    /// one before it stays shut.
+    /// Whether the next turn of the newest stir's rod joins it. A stir turned back to nothing is gone, and the one before
+    /// it stays shut; an undone one is as if never made, so the one before it is open again if it was then.
     private var open = false
+    /// For each stir in `history`, whether the one before it was open when it began.
+    private var openBefore: [Bool] = []
     /// The newest stir while the next turn of its rod, or of the tank, would join it.
     var openStir: Twist? { open ? history.last : nil }
     var moves: Int { history.count }
@@ -179,9 +181,10 @@ final class Game {
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
         if open, history.last?.rod == slot {
             history[history.count - 1].steps += steps
-            if history.last!.steps == 0 { history.removeLast(); open = false }
+            if history.last!.steps == 0 { history.removeLast(); openBefore.removeLast(); open = false }
         } else {
             history.append(Twist(rod: slot, steps: steps))
+            openBefore.append(open)
             open = true
         }
         lastCommit = (rod, result)
@@ -227,9 +230,13 @@ final class Game {
         }
         let joins = open && history.last?.rod == Game.tank
         let net = tankStir(after: steps)
+        let before = joins ? openBefore.removeLast() : open
         if joins { history.removeLast() }
         open = net != 0
-        if open { history.append(Twist(rod: Game.tank, steps: net)) }
+        if open {
+            history.append(Twist(rod: Game.tank, steps: net))
+            openBefore.append(before)
+        }
         Log.write("tank \(steps) position=\(position) moves=\(moves)")
         settle()
     }
@@ -244,7 +251,7 @@ final class Game {
             lastCommit = (knob(over: last.rod), .reduced)
             turns += 1
         }
-        open = false
+        open = openBefore.removeLast()
         if !level.sandbox {
             undos += 1
             bank -= 1
@@ -260,6 +267,7 @@ final class Game {
         guard !checking, level.run == nil else { return false }
         entries = level.scramble.map { Entry(twist: $0, pushed: false) }
         history = []
+        openBefore = []
         open = false
         resets += 1
         Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
@@ -370,7 +378,7 @@ final class Game {
                   + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
             if solved { Best.tanks = max(Best.tanks, run.tank + 1) }
-        } else if solved && counts {
+        } else if solved && counts && level.keepsProgress {
             Best(over: over, seconds: seconds, clean: clean).save(level.id)
         }
     }
@@ -676,7 +684,10 @@ struct LevelView: View {
         }
         .onAppear {
             let rules = game.level.run.map { "tank \($0.tank) brim \($0.brim)" } ?? "par \(game.par)"
-            Log.write("level \(game.level.id) opens, \(rules) \(game.stack)")
+            let pack = game.level.pack.map { p in
+                " \(p.rawValue) \(Store.shared.state(p)), \(Store.shared.access(game.level).map { "\($0)" } ?? "")"
+            } ?? ""
+            Log.write("level \(game.level.id) opens, \(rules)\(pack) \(game.stack)")
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
             if let today { game.refill(today: today) } else { game.refill() }
             // Where there is no opening, onChange's initial call may run before the refill.
@@ -1228,7 +1239,7 @@ struct LevelView: View {
         } else {
             liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
         }
-        if !game.level.sandbox { Best.start(game.level.id) }
+        if !game.level.sandbox && game.level.keepsProgress { Best.start(game.level.id) }
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
