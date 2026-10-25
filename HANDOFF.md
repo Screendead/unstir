@@ -18,7 +18,7 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | Monetisation code | StoreKit 2 for the packs and Complete merged 2026-10-25 (PR #21); the daily share line merged 2026-10-25 (PR #24). Prices are Jack's call (2026-10-25): 2.99 a pack, 5.99 Complete. No ads |
 | Undo bank | Starts at 10 (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10. Built on `help` (2026-09-29, `Best.refill`; merged 2026-09-29, PR #9): the first opening of a level other than the sandbox on a local calendar day later than the last refill's adds 2, up to 10, and a "+2" shows over the undo count once the level's opening ends or is skipped. A fresh install records its first day without a refill; a clock moved back never refills. Jack (2026-09-29): setting the phone's date mustn't game the refill. Closed on `help` (2026-09-29, `Best.trustedNow`): within one boot the day comes from the last time it vouched for plus the uptime since (`CLOCK_MONOTONIC_RAW`, which counts sleep and can't be set), so a clock set ahead refills nothing until real time reaches the next day, give or take 5 min, and the log says `undo refill held: clock ahead Xh`. The anchor follows the wall clock no further ahead than drift explains (a second plus 100 ppm of the uptime since), so creeping the clock ahead a few minutes at a time gains about a second an opening; review found the first version let each step under 5 min carry the anchor along, a day ahead in about 290 steps (fixed 2026-09-29). Still open: a restart between date changes still borrows a refill, since a new boot has nothing to check against. A trusted network clock would close that; Claude recommends against it (a server, and a refill that waits on the network, to guard 2 undos a day). Unverified whether it is the only way: `kern.monotonicclock` is a candidate, a clock XNU's `clock.c` says nothing can set, and on a Mac it runs on across restarts. Unchecked on iOS: whether the app may read it, and whether setting the date moves it. The launch logs it next to the uptime (`monotonic clock Ns` or `unread`), so launches either side of a restart and of a date change answer both; if it holds, reckoning from it would close the restart hole. Unverified: whether iOS lets the app read the boot session (`kern.bootsessionuuid`); an app in macOS's App Sandbox reads it, but `container.sb` leaves it off its sysctl allow list, and iOS's profile is unpublished. The phone's log answers it at launch (`boot session read` or `unread`). Unread, a jump of at least the phone's uptime at the last level opened passes as a possible restart, and a believed jump anchors at the uptime then; so on a phone up less than a day, as after any restart, steps of a day get through one after another until a level opens with the phone up longer than the step. A genuine forward correction of more than 5 min within a boot (a phone that ran slow, set right) is held too, so its refill day turns late by that much until the next restart; one under 5 min is believed, and the anchor takes it in a few seconds a day. A new boot whose clock reads more than 5 min before the anchor's time, as after a clock reset, is believed but leaves the anchor, so setting the clock right later in that boot still counts as a new boot (review found the first version held every refill until the next restart there; fixed 2026-09-29). Not covered: a clock behind at the first opening with no anchor stored (a fresh install, or the first on this build), then set right, makes refills late by that much until a restart. The privacy manifest is written (`Sources/PrivacyInfo.xcprivacy`, merged 2026-10-25, PR #20): UserDefaults with CA92.1 and system boot time with 35F9.1. Apple's required-reason pages (developer.apple.com, "Describing use of required reason API" and the `NSPrivacyAccessedAPIType` page, read 2026-10-25) list `systemUptime` and `mach_absolute_time()` under boot time and no `clock_gettime`-family call or sysctl, so `clock_gettime_nsec_np`, `kern.bootsessionuuid` and `kern.monotonicclock_usecs` are not on the list; 35F9.1 is declared anyway, inferred as harmless and as the nearest fit, since the uptime clock measures elapsed time and never leaves the device |
 | TestFlight | Prep merged 2026-10-25 (PR #23): version 1.0 (1), the export-compliance key, an asset catalog. The icon is candidate 1, the neon grid (Jack, 2026-10-25), already the placeholder in the catalog. No archive script until Jack's developer account is in Xcode |
-| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s, #23 5m36s and #26 5m11s. Jack's calls (2026-10-25): watch it, then cache the build, and the line moves to 7 minutes. The cache merged 2026-10-25 (PR #29): `test.yml` keeps the StoreKit test build (`build/store`) between runs, keyed on the Xcode build and the sources, and stamps each file with a time drawn from its content, so a hit compiles nothing. It saves about 30 s, but the build is not where CI's time goes: the job ran 5m13s cold and 5m18s warm, as the simulator's boot, install and tests vary by about 90 s from run to run |
+| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s, #23 5m36s and #26 5m11s. Jack's calls (2026-10-25): watch it, then cache the build, and the line moves to 7 minutes. The cache merged 2026-10-25 (PR #29): `test.yml` keeps the StoreKit test build (`build/store`) between runs, keyed on the Xcode build and the sources, and stamps each file with a time drawn from its content, so a hit compiles nothing. It saves about 30 s, but the build is not where CI's time goes: the job ran 5m13s cold and 5m18s warm, as the simulator's boot, install and tests vary by about 90 s from run to run. A warm-up build on each merge to `master` (PR #31) was closed on Jack's call (2026-10-25, round 6): the compile runs inside the simulator's boot, so it saves nothing |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
 | Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below; vortex, the swirl tier between whirlpool and maelstrom (Jack, 2026-10-24), with 27 provisional levels, merged 2026-10-25 (PR #22); Jack's calls on it (2026-10-25) are in "Vortex (provisional, 2026-10-24)"; vortex's own pictures (isobars, ephemeris, cords) merged 2026-10-25 (PR #28), and breath as the swirl's cue merged 2026-10-25 (PR #30); the swirl shears to its centre (W3, Jack 2026-10-25), on `swirl-map` |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
@@ -298,6 +298,15 @@ Round 5 (2026-10-25, after a film of the swirl's map at plateaus 0.6, 0.3 and 0.
 |---|---|
 | W3. The whole-tank swirl's map | **D**: the swirl shears to the centre (plateau 0), knobs keep 0.6, chosen over keeping today's map (Claude's recommendation) and over softer maps for every disc (0.3, 0.0), which blurred every seam. Built on `swirl-map` (`Tank.swirlPlateau`) |
 
+Round 6 (2026-10-25, five calls before TestFlight, one at a time on their own page):
+
+| Call | Jack's answer | Code it needs |
+|---|---|---|
+| PR #31, the warm-up build after each merge | **Close** (Claude's recommendation). The test job compiles while the simulator boots (about 110 s), so a warm cache can't shorten it: 247 s cold, 262 s warm. Closed 2026-10-25 | None. The PR #29 cache stays |
+| The daily archive's back-fill | **30 days before launch day** (Claude's recommendation): one calendar page on day one. Days before daily #1 show their date, not a number | The archive (to-do 47) starts at `Share.firstDay` minus 30 days |
+| EU consent for anonymous counts | **Ask once** (Claude's recommendation): one plain Yes or No at first launch, the same switch in settings, nothing sent until Yes. Consent satisfies ePrivacy article 5(3) under any reading; whether anonymous counts need it at all is unconfirmed, and no lawyer was asked | A first-launch question and a settings switch, stored; the analytics layer sends nothing while it is off |
+| How to read testers' play | **An analytics library now, plus a send-log button** (option D, Claude's revised recommendation after Jack asked what a log upload alone adds if a library comes anyway). Counts measure day-2 return across every tester who says yes and test the library before launch; a log shows a stuck tester's every touch. Which library: researched and pitched next | The library behind the consent switch, with events for return, progress, stuck points, shelf and card taps, free-taste completion and sandbox purchases; a "Send log" button in settings that shares `Library/unstir-log.txt` through the share sheet (no server); the privacy manifest and label updated for the library |
+| First Stir's opening | **The wrecked harbour, as built** (Claude's recommendation): the player starts in the storm and earns the calm; opening on the calm evening would give away the end | None now: `lab-firststir` already deals the held-back picture. The pack's build keeps it |
 **The charybdis rule (Jack's call, 2026-10-25, from V4).** Jack's words, and only these: "The tank edge being dragged
 should always swirl the tank. It'd make the locked rods harder because turning the tank has a side effect. I feel
 strongly about this." That is the call.
@@ -627,8 +636,8 @@ survives as a rung: linked rods are R5's admin, and the frozen core and lights-o
 #### Open for Jack: four decisions
 
 All four are answered: see "Jack's calls on the pitch" above. The prices are set (Jack, 2026-10-25: 2.99 a pack, 5.99
-Complete). Still open: the daily archive's back-fill date, the product names, and whether EU law needs a consent
-prompt for anonymous counts.
+Complete). The three left open since are answered too: the product names by Jack's yes to the defaults (to-do 3), the
+archive's back-fill and the consent question in round 6.
 
 #### Recommended defaults (not decided; 2026-10-24)
 
@@ -670,7 +679,7 @@ names and product ids, and Complete's promise to older owners.
 - **Family Sharing.** **(hard to undo)** On for every pack and Complete, knowing that once on for a product it can't be turned off
   (assumed Apple platform fact; check).
 - **The daily archive.** Back-filled to a date Jack picks, opened by any purchase, with bests under `daily-yyyymmdd`
-  ids.
+  ids. Jack's call (2026-10-25, round 6): 30 days before launch day.
 - **The supporter mark.** On the menu and in the daily share line, after any purchase (no tips, so it is the thank-you).
 - **The tip jar.** Dropped (Jack: "No begging.").
 - **Vortex and charybdis.** Free updates after v1, their mechanics reserved now (Jack's call, round 2), each with its own
@@ -690,7 +699,8 @@ names and product ids, and Complete's promise to older owners.
 - **Progress backup.** Bests and pack progress sync through iCloud key-value storage from v1.
   The undo bank and its clock anchor never sync.
 - **How to read testers' play.** Jack said yes to analytics done respectfully (round 2): anonymous counts only, no
-  tracking prompt, no advertising partners, one switch in settings.
+  tracking prompt, no advertising partners, one switch in settings. Jack's calls (2026-10-25, round 6): a library for
+  TestFlight and launch, plus a send-log button, asked once at first launch and off until Yes.
 - **Albums.** Each pack's music released as an album once Jack approves its sketches, through a distributor chosen
   then, its account details kept in `HANDOFF.private.md`.
 - **App size.** Packs ship in the bundle, art as line paths baked on the phone and audio as AAC. Background Assets
@@ -720,7 +730,7 @@ names and product ids, and Complete's promise to older owners.
    whose discs overlap it are healed. Then open: whether heals read as time stepping back or as repair (answered by F2 below),
    and whether the opening shows the wrecked harbour.
    Jack's calls (2026-10-25): go (F1); make time visible, the night winding back (`UNSTIR_FSTIME` on `lab-firststir`),
-   plus the caption (F2). Still open: whether the opening shows the wrecked harbour.
+   plus the caption (F2). Jack's call (2026-10-25, round 6): the opening shows the wrecked harbour, as built.
 5. First Stir's story outline (25 scenes and their vignettes) for Jack's approval, then Claude draws all 25 scenes
    (Jack's call 3, no illustrator) to an art spec: single-weight neon line, the chapter palettes, up readable in every
    lit core, each figure change inside its own rod's core.
@@ -827,6 +837,7 @@ names and product ids, and Complete's promise to older owners.
 46. Free taste: the first three levels of each pack teach its rule without words; cold-read each on a new player.
 47. The daily archive: a calendar screen, bests under `daily-yyyymmdd` ids, back-filled to Jack's date, opened by any
     purchase.
+   Jack's call (2026-10-25, round 6): back-filled to 30 days before launch day (`Share.firstDay`).
 48. The supporter mark (menu and share line), after any purchase. ~~The tip jar~~ dropped (Jack: "No begging").
 49. The daily share line (plan step 2), separate from sharing, before TestFlight.
    Merged 2026-10-25 (PR #24). Jack's call (2026-10-25, D1): daily #1 is launch day; until `Share.firstDay` is set,
@@ -846,6 +857,8 @@ names and product ids, and Complete's promise to older owners.
 56. ~~Offer codes for press and reviewers.~~ Dropped (Jack: "No.").
 57. TestFlight with 20 to 50 strangers and sandbox purchases. What it measures (shelf and card taps, free-taste
     completion and sandbox purchases per pack, beside day-2 return) waits on Jack's call on how to read testers' play.
+   Jack's calls (2026-10-25, round 6): an analytics library plus a send-log button, behind one consent question at
+   first launch. Which library is the next pitch.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
