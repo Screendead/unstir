@@ -33,8 +33,14 @@ struct Harness {
     /// Either way for this launch only, whatever the harness turns. Nil without the harness, which reads and stores the
     /// real flag.
     let tankTurned: Bool?
+    /// UNSTIR_SWIRLED=1: likewise for the swirl.
+    let swirled: Bool?
     /// UNSTIR_SHAKE=s: with UNSTIR_TOUCH on a seized knob, its shake and the rim's pulse held s seconds in.
     let shake: Double?
+    /// UNSTIR_RIM=knob|bands|glyphs: how the rim shows what it does, while the three are compared; the knob when unset.
+    let rim: RimCue
+    /// UNSTIR_SEATS=0: the knob cue and the swirl's lesson as bare hairlines, with no dark seats or groove under them.
+    let seats: Bool
     /// UNSTIR_UNDOS=n: the undo bank, and the stored day of its last refill, for this launch only. A harnessed launch
     /// reads the stored bank unless set, and never stores either, nor the refill's anchor, which starts afresh. With
     /// UNSTIR_TODAY and no day stored, as on the shots' fresh install, the last refill was long ago, so the level opens
@@ -48,6 +54,9 @@ struct Harness {
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
     /// names it), as solve.sh prints a line.
     let moves: [Twist]?
+    /// UNSTIR_FINGER=1: with UNSTIR_MOVES, a hand's pace instead, each move a fingertip drawn landing where the grab rule
+    /// gives it the move's rod or the rim, carried round with the turn and lifted, for films.
+    let finger: Bool
     /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
     let brimDemo: Bool
     let bench: Bool
@@ -64,6 +73,29 @@ struct Harness {
     let tierDemo: Bool
     /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
     let tierSpin: (spin: Double, fade: Double)?
+    /// UNSTIR_OWNED and UNSTIR_STORE, in place of StoreKit's for this launch; never stored, and nil in Release.
+    let purchases: Ledger?
+
+    /// UNSTIR_OWNED=lens,escapement (or complete): those owned. UNSTIR_STORE=lens:pending,complete:revoked: each
+    /// product (a pack's prefix, or complete) in that `Purchase` state. Nil in Release or with neither set.
+    static func purchases(_ env: [String: String], release: Bool = Build.release) -> Ledger? {
+        guard !release, env["UNSTIR_OWNED"] != nil || env["UNSTIR_STORE"] != nil else { return nil }
+        func product(_ name: Substring) -> String? {
+            name == "complete" ? Pack.completeID : Pack(rawValue: String(name))?.productID
+        }
+        var ledger = Ledger()
+        for name in env["UNSTIR_OWNED"]?.split(separator: ",") ?? [] {
+            if let id = product(name) { ledger.record(id, .owned) }
+        }
+        for part in env["UNSTIR_STORE"]?.split(separator: ",") ?? [] {
+            let f = part.split(separator: ":")
+            if f.count == 2, let id = product(f[0]), let state = Purchase(rawValue: String(f[1])) {
+                ledger.record(id, state)
+            }
+        }
+        return ledger
+    }
+
     /// UNSTIR_ICON=n: app-icon candidate n alone on the screen (`IconView`).
     let icon: Int?
 
@@ -92,7 +124,8 @@ struct Harness {
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
-        let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE"].contains { env["UNSTIR_\($0)"] != nil }
+        purchases = Harness.purchases(env)
+        let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE", "PACK"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
         var level = switch env["UNSTIR_MODE"] ?? env["UNSTIR_LEVEL"] {
@@ -102,6 +135,12 @@ struct Harness {
         case "sandbox": Level.sandbox
         default: tier.levels[n - 1]
         }
+        #if DEBUG
+        // UNSTIR_PACK=lens: that pack's level UNSTIR_LEVEL, a placeholder until the pack has levels.
+        if let pack = env["UNSTIR_PACK"].flatMap(Pack.init(rawValue:)) {
+            level = pack.placeholder(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1))
+        }
+        #endif
         let picture = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:))
         if bench {
             // UNSTIR_DEPTH overrides. A live picture's heaviest frame is the most entries that keep four taps, and the drag.
@@ -118,9 +157,10 @@ struct Harness {
         }
         // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
         if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }
-        // UNSTIR_SEIZED=1,4: those knobs seized.
+        // UNSTIR_SEIZED=1,4: those knobs seized, never the swirl, which has no knob.
         if let s = env["UNSTIR_SEIZED"] {
-            level.seized = Set(s.split(separator: ",").compactMap { Int($0) }.filter(level.layout.rods.indices.contains))
+            level.seized = Set(s.split(separator: ",").compactMap { Int($0) }
+                .filter { level.layout.rods.indices.contains($0) && $0 != level.layout.swirl })
         }
         self.level = level
         tank = env["UNSTIR_TANK"].flatMap(Int.init) ?? 0
@@ -130,7 +170,10 @@ struct Harness {
         let t = env["UNSTIR_TURNED"]?.split(separator: ":").compactMap { Int($0) } ?? []
         turned = t.count == 2 && level.layout.rods.indices.contains(t[0]) ? Twist(rod: t[0], steps: t[1]) : nil
         tankTurned = harnessed ? env["UNSTIR_TANKTURNED"] == "1" : nil
+        swirled = harnessed ? env["UNSTIR_SWIRLED"] == "1" : nil
         shake = env["UNSTIR_SHAKE"].flatMap(Double.init)
+        rim = env["UNSTIR_RIM"].flatMap(RimCue.init(rawValue:)) ?? .knob
+        seats = env["UNSTIR_SEATS"] != "0"
         today = env["UNSTIR_TODAY"].flatMap { $0.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) == nil ? nil : $0 }
         let undos = env["UNSTIR_UNDOS"].flatMap(Int.init).map { min(max($0, 0), 10) } ?? Best.undos
         bank = harnessed ? (undos, Best.refilled ?? (today == nil ? nil : "0000-00-00")) : nil
@@ -148,6 +191,7 @@ struct Harness {
                 return f.count == 2 && f[1] != 0 ? Twist(rod: f[0], steps: f[1]) : nil
             }
         }
+        finger = env["UNSTIR_FINGER"] == "1"
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
     }
@@ -199,6 +243,7 @@ struct RootView: View {
 
     init() {
         let h = Harness(ProcessInfo.processInfo.environment)
+        if let purchases = h.purchases { Store.shared.pretend(purchases) }
         _level = State(initialValue: h.screen == "menu" ? nil : h.level)
         _harness = State(initialValue: h)
     }
@@ -225,6 +270,11 @@ struct RootView: View {
         }
         .background(Color.black)
         .onChange(of: phase) { Log.write("phase \(phase)") }
+        .task {
+            // A test host's listener would finish the transactions the StoreKit tests watch.
+            guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+            await Store.shared.start()
+        }
         .task {
             guard harness?.tour == true else { return }
             try? await Task.sleep(for: .seconds(1.5))

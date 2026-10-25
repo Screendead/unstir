@@ -4,10 +4,15 @@ import Foundation
 
 let args = CommandLine.arguments.dropFirst().map { $0 }
 guard (2...3).contains(args.count), let layout = Layout(rawValue: args[0]) else {
-    print("usage: scripts/solve.sh <layout: \(Layout.allCases.map(\.rawValue).joined(separator: "|"))> <scramble, e.g. 0:+3,2:-4> [seized knobs, e.g. 1,4]")
+    let layouts = (Layout.allCases + Layout.swirls).map(\.rawValue).joined(separator: "|")
+    print("usage: scripts/solve.sh <layout: \(layouts)> <scramble, e.g. 0:+3,2:-4> [seized knobs, e.g. 1,4]")
     exit(2)
 }
 let seized = Set((args.count > 2 ? args[2] : "").split(separator: ",").compactMap { Int($0) })
+if let swirl = layout.swirl, seized.contains(swirl) {
+    print("rod \(swirl) is the swirl, held from the rim, and is never seized")
+    exit(2)
+}
 let stack = [Twist].parse(args[1], in: layout)
 let solver = Solver(layout)
 let readings: [(String, Solver.Parking)] = [

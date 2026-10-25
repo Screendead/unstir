@@ -31,7 +31,10 @@ targets:
   UnstirTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [UnstirTests]
+    sources:
+      - UnstirTests
+      - path: StoreKit/Unstir.storekit
+        buildPhase: resources
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
@@ -43,5 +46,7 @@ schemes:
       targets:
         Unstir: all
         UnstirTests: [test]
+    run:
+      storeKitConfiguration: StoreKit/Unstir.storekit
     test:
       targets: [UnstirTests]
