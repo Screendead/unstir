@@ -228,7 +228,10 @@ func report(_ p: Problem, span: Int, quick: Bool) {
     }
     print(proof)
     // Past a pushed tick a clock never stops, so the unbounded walks below would never end.
-    if keepsPushed { return }
+    if keepsPushed {
+        print("clean lines at \(par), pushed ticks played on: \(clean.count(p.stack, last: nil, left: par))")
+        return
+    }
     let n = clean.count(p.stack, last: nil, left: par)
     print("clean lines at \(par): \(n)")
     for l in clean.lines(p.stack, last: nil, left: par, keep: 6) { print("  " + l.map(\.description).joined(separator: " ")) }
@@ -349,6 +352,26 @@ case "search" where args.count == 8:
     search(Layout(rawValue: args[1])!, clocks: parseClocks(args[2]), heals: r(args[3]), owed: r(args[4]),
            seeds: UInt64(args[5])!..<UInt64(args[6])!, rule: rule)
     _ = args[7]
+case "book" where args.count == 2:
+    // One line per problem of the book: number, layout, clocks, par, the bound, clean and split lines at par, keys,
+    // difficulty in bits, the line.
+    for row in try! String(contentsOfFile: args[1], encoding: .utf8).split(separator: "\n") {
+        let f = row.split(separator: "\t").map(String.init)
+        let layout = Layout(rawValue: f[1])!
+        let p = Problem(layout: layout, stack: .parse(f[3], in: layout), clocks: parseClocks(f[2]), rule: rule)
+        let clean = Counter(p, span: nil), full = Counter(p, span: 6)
+        guard let par = clean.optimum(limit: p.owed(p.stack) + 12) else { print(f[0], "unsolvable"); continue }
+        let keys = p.allMoves(p.stack, after: nil, span: 6).filter { m in
+            p.play(p.stack, m).map { full.count($0, last: m, left: par - 1) > 0 } ?? false
+        }
+        let c = chance(p, par: par)
+        print([f[0], f[1], f[2], String(par), String(p.bound(p.stack)), String(clean.count(p.stack, last: nil, left: par)),
+               String(full.count(p.stack, last: nil, left: par)), keys.map(\.description).joined(separator: " "),
+               String(format: "%.1f", c > 0 ? abs(log2(c)) : 99),
+               clean.lines(p.stack, last: nil, left: par, keep: 1)[0].map(\.description).joined(separator: " ")]
+            .joined(separator: "\t"))
+        fflush(stdout)
+    }
 case "build" where args.count == 7:
     let f = args[4].split(separator: "-").map { Int($0)! }
     build(Layout(rawValue: args[1])!, clocks: parseClocks(args[2]), n: Int(args[3])!, waits: f[0]...(f.count > 1 ? f[1] : f[0]),
@@ -358,6 +381,7 @@ default:
     usage: scripts/escapement.sh check <layout> <scramble> <clocks> [span] [quick]
            scripts/escapement.sh search <layout> <clocks> <heals a-b> <owed a-b> <from seed> <to seed> -
            scripts/escapement.sh build <layout> <clocks> <moves> <waits a-b> <from seed> <to seed>
+           scripts/escapement.sh book scripts/escapement/problems.tsv
     clocks: rods in tick order, each + or - (wound back), e.g. 0+ or 1+,3-.  ESC_RULE=final|lab
     """)
     exit(2)
