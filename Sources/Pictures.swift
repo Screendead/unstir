@@ -11,7 +11,7 @@ enum Picture: String, CaseIterable {
     case glass, chainmail, coral, neurons, marbling
     /// Maelstrom's twins of those, on the same data.
     case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
-    /// Candidates for vortex's own family, a theme each, for Jack to pick from (UNSTIR_PICTURE). No level shows them yet.
+    /// Vortex's own, drawn live the same way.
     case isobars, ephemeris, cords
 
     var isLive: Bool { ![.grid, .sunset, .city].contains(self) }

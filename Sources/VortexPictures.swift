@@ -2,7 +2,7 @@
 
 import Foundation
 
-/// The floats for the candidates for vortex's own family, per seed and time t. A pitch for Jack, not yet a family.
+/// The floats for vortex's own family, per seed and time t.
 extension Picture {
     /// Gradient noise tables: `count` tables of 8 x 8 unit gradients (x, y), tiled. The shaders sample them at under
     /// eight cells across the tank, so no tile repeats inside it.
