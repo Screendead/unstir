@@ -124,4 +124,37 @@ final class LensTests: XCTestCase {
             XCTAssertEqual(Double(got[i]), want, accuracy: 2e-5, "u \(c.x) t \(c.y)")
         }
     }
+
+    /// On the halftone, every step of every rod on every layout changes what shows inside its core, which is what the
+    /// player reads: a twist turns the asymmetric linework, a lens swells the dots.
+    func testEveryStepMovesContrastingPixelsOnTheHalftone() {
+        let aa = 1.0 / 568, spacing = 1.0 / 48
+        for layout in Layout.allCases {
+            for (k, rod) in layout.rods.enumerated() {
+                let c = SIMD2(rod.x, rod.y), reach = Tank.plateau * rod.z
+                var points: [SIMD2<Double>] = []
+                for y in stride(from: -reach, through: reach, by: spacing) {
+                    for x in stride(from: -reach, through: reach, by: spacing) where x * x + y * y < reach * reach {
+                        points.append(c + SIMD2(x, y))
+                    }
+                }
+                let clean = points.map { Halftone.light($0, aa: aa) }
+                func changed(_ back: (SIMD2<Double>) -> SIMD2<Double>) -> Double {
+                    let moved = zip(points, clean).filter { p, light in
+                        let d = simd_abs(Halftone.light(back(p), aa: aa) - light)
+                        return max(d.x, d.y, d.z) > 0.25
+                    }
+                    return Double(moved.count) / Double(points.count)
+                }
+                for steps in 1...11 {
+                    let share = changed { Tank.twist($0, rod: rod, angle: -Double(steps) * Tank.step) }
+                    XCTAssertGreaterThan(share, 0.15, "\(layout) rod \(k) twist \(steps)")
+                }
+                for steps in [-3, -2, -1, 1, 2, 3] {
+                    let share = changed { Tank.lens($0, rod: rod, steps: -Double(steps)) }
+                    XCTAssertGreaterThan(share, 0.15, "\(layout) rod \(k) lens \(steps)")
+                }
+            }
+        }
+    }
 }

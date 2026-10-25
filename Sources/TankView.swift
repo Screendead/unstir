@@ -1684,7 +1684,7 @@ struct PictureLayer: View {
         // A live picture bakes nothing: the empty image only strikes the tube, once its data is ready.
         .task(id: [picture.rawValue, "\(seed)", "\(side)", "\(scale)"]) {
             if picture.isLive { await picture.prepare(seed: seed) }
-            image = picture.isLive ? UIImage() : picture.render(side: side, scale: scale)
+            image = picture.isLive ? UIImage() : await picture.render(side: side, scale: scale)
         }
     }
 }
