@@ -26,6 +26,25 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.lens), .pending)
     }
 
+    /// The entitlements reread after a revocation own the product again when it was bought since.
+    func testOwnedAfterARevocationOwnsAgain() {
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .owned)
+        ledger.record(Pack.lens.productID, .revoked)
+        ledger.record(Pack.lens.productID, .owned)
+        XCTAssertEqual(ledger.state(.lens), .owned)
+    }
+
+    /// A child asks, taps buy again and cancels the sheet: the parent's answer is still outstanding.
+    func testCancellingASecondPurchaseKeepsAskToBuyPending() {
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .pending)
+        ledger.record(Pack.lens.productID, .unowned)
+        XCTAssertEqual(ledger.state(.lens), .pending)
+        ledger.record(Pack.lens.productID, .owned)
+        XCTAssertEqual(ledger.state(.lens), .owned)
+    }
+
     /// Complete revoked takes back only what it alone granted.
     func testRevokedCompleteKeepsAPackBoughtOnItsOwn() {
         var ledger = Ledger()
@@ -149,6 +168,25 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(store.ledger.owned, [.firstStir])
         XCTAssertEqual(store.state(.escapement), .revoked)
         try await relaunch(owns: [.firstStir])
+    }
+
+    /// A refund of an old purchase that reaches the listener after the pack was bought again leaves it owned.
+    func testALateRefundOfAnOldPurchaseKeepsTheNewOne() async throws {
+        let store = Store()
+        await store.start()
+        await store.purchase(.lens)
+        let first = try XCTUnwrap(session.allTransactions().first { $0.productIdentifier == Pack.lens.productID })
+        try session.refundTransaction(identifier: first.identifier)
+        try await eventually("the refund to reach the listener") { store.state(.lens) == .revoked }
+        await store.purchase(.lens)
+        XCTAssertEqual(store.state(.lens), .owned)
+        try await relaunch(owns: [.lens])
+        var old: VerificationResult<Transaction>?
+        for await result in Transaction.all {
+            if case .verified(let t) = result, t.id == UInt64(first.identifier), t.revocationDate != nil { old = result }
+        }
+        await store.apply(try XCTUnwrap(old, "the refunded purchase"))
+        XCTAssertEqual(store.state(.lens), .owned)
     }
 
     func testAskToBuyWaitsForTheParent() async throws {

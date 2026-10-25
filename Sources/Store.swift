@@ -14,8 +14,10 @@ struct Ledger: Equatable, Sendable {
     private(set) var products: [String: Purchase] = [:]
 
     /// Once owned, only a revocation takes a product away: a later attempt that fails, waits or is cancelled is not one.
+    /// A cancelled sheet leaves an Ask to Buy still waiting on its parent.
     mutating func record(_ id: String, _ state: Purchase) {
         if products[id] == .owned && state != .revoked { return }
+        if products[id] == .pending && state == .unowned { return }
         products[id] = state
     }
 
@@ -72,10 +74,17 @@ final class Store {
         }
     }
 
-    /// Only a transaction the App Store signed grants anything. Unverified ones are left unfinished.
+    /// Only a transaction the App Store signed grants anything. Unverified ones are left unfinished. An old purchase's
+    /// revocation can arrive after the product was bought again, so a revocation rereads the entitlements, and a live one
+    /// owns it again.
     func apply(_ result: VerificationResult<Transaction>) async {
         guard case .verified(let t) = result else { return }
-        ledger.record(t.productID, t.revocationDate == nil ? .owned : .revoked)
+        if t.revocationDate == nil {
+            ledger.record(t.productID, .owned)
+        } else {
+            ledger.record(t.productID, .revoked)
+            await refresh()
+        }
         await t.finish()
     }
 
@@ -111,8 +120,9 @@ final class Store {
         return true
     }
 
+    /// Fetched again for an id the last fetch lacked, so a product missing once is not missing all launch.
     private func product(_ id: String) async throws -> Product? {
-        if products.isEmpty {
+        if products[id] == nil {
             for p in try await Product.products(for: Pack.productIDs) { products[p.id] = p }
         }
         return products[id]
