@@ -241,13 +241,24 @@ final class StoreTests: XCTestCase {
         try await session.setSimulatedError(nil, forAPI: .verification)
     }
 
-    func testRestoreReadsWhatWasBought() async throws {
+    /// A restore that syncs reads what was bought; one whose sync fails says so and reads nothing, keeping what was known.
+    func testRestoreReadsWhatWasBoughtOnlyAfterASync() async throws {
         let store = Store()
         await store.purchase(.escapement)
         let next = Store()
         try await eventually("restore to find the purchase") {
-            await next.restore()
-            return next.ledger.owned == [.escapement]
+            let synced = await next.restore()
+            return synced && next.ledger.owned == [.escapement]
         }
+        try await session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))),
+                                            forAPI: .appStoreSync)
+        let offline = Store()
+        let synced = await offline.restore()
+        XCTAssertFalse(synced)
+        XCTAssertEqual(offline.ledger.owned, [])
+        let resynced = await next.restore()
+        XCTAssertFalse(resynced)
+        XCTAssertEqual(next.ledger.owned, [.escapement])
+        try await session.setSimulatedError(nil, forAPI: .appStoreSync)
     }
 }
