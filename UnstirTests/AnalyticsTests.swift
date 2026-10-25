@@ -29,6 +29,13 @@ final class Wire: @unchecked Sendable {
             return events.compactMap { $0["eventName"] as? String }
         }
     }
+
+    var sessions: [String] {
+        requests.flatMap { r -> [String] in
+            let events = (try? JSONSerialization.jsonObject(with: r.httpBody ?? Data())) as? [[String: Any]] ?? []
+            return events.compactMap { $0["sessionId"] as? String }
+        }
+    }
 }
 
 @MainActor
@@ -117,6 +124,23 @@ final class AnalyticsTests: XCTestCase {
         await settle(a)
         XCTAssertEqual(wire.names, ["level"])
         XCTAssertFalse(FileManager.default.fileExists(atPath: queue.path))
+    }
+
+    func testASessionEndsAfterAnHourIdle() async {
+        let wire = Wire()
+        let a = analytics(wire)
+        a.decide(true)
+        a.cardSeen(.lens)
+        a.touched = .now - Analytics.idle - 60
+        a.tasteFinished(.lens)
+        a.cardSeen(.escapement)
+        await settle(a)
+        XCTAssertEqual(wire.names, ["installed", "card", "taste", "card"])
+        let s = wire.sessions
+        XCTAssertEqual(s.count, 4)
+        XCTAssertEqual(s[0], s[1])
+        XCTAssertNotEqual(s[1], s[2])
+        XCTAssertEqual(s[2], s[3])
     }
 
     func testReturnedOncePerDay() {

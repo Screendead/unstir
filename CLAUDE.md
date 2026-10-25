@@ -291,7 +291,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   of 25 to `/api/v0/events` from `Library/analytics-queue.json`; it is built at launch under a yes, so what an earlier
   launch left queued goes out with no new event to carry it. It keeps a batch on no answer, a 5xx or 429 and retries a
   minute later, drops one refused, and drops events over 23 hours old (the server refuses a day's). `Sender.body` is
-  everything on the wire: name, props, time, a per-launch session (the snapshot its own) and `isDebug`, `osName`, the
+  everything on the wire: name, props, time, a session renewed after an hour with no event, as Aptabase's SDK does (the snapshot its own) and `isDebug`, `osName`, the
   app's versions and `sdkVersion`. The server takes keys of 40 characters, cuts strings at 180 and caps nothing else.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or

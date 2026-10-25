@@ -30,7 +30,8 @@ struct Event: Codable, Equatable, Sendable {
     var name: String
     var props: [String: Prop]
     var time: Date
-    /// The launch's, held only in memory and in the queue: Aptabase refuses an event without one. A snapshot has its own.
+    /// Held only in memory, in the queue and in a pending quit: Aptabase refuses an event without one. A snapshot has its
+    /// own.
     var session: String
 }
 
@@ -111,7 +112,11 @@ final class Analytics {
     private let defaults: UserDefaults
     /// Nil until the player says yes, and again after they say no.
     private(set) var sender: Sender?
-    private let session = Analytics.newSession()
+    /// Renewed after `idle` with no event, as Aptabase's SDK does: the server drops, unannounced, an event whose session
+    /// began more than 7 days ago, and iOS can keep the app suspended that long.
+    private var session = Analytics.newSession()
+    var touched = Date.now
+    static let idle: TimeInterval = 3600
     /// The local calendar day, plain: a clock set ahead can fake a return, which no player gains anything by.
     var today: () -> String = { Best.day() }
 
@@ -218,7 +223,7 @@ final class Analytics {
     /// The app leaves the front with `game` open: if it is killed there, its quit goes out next launch.
     func suspended(_ game: Game) {
         guard on, consent == .yes, let e = Analytics.quit(game) else { return }
-        tally.pending = Event(name: e.name, props: e.props, time: .now, session: session)
+        tally.pending = Event(name: e.name, props: e.props, time: .now, session: currentSession())
         save()
     }
 
@@ -299,7 +304,13 @@ final class Analytics {
     // MARK: Output
 
     private func send(_ name: String, _ props: [String: Prop]) {
-        emit(Event(name: name, props: props, time: .now, session: session))
+        emit(Event(name: name, props: props, time: .now, session: currentSession()))
+    }
+
+    private func currentSession() -> String {
+        if Date.now.timeIntervalSince(touched) > Analytics.idle { session = Analytics.newSession() }
+        touched = .now
+        return session
     }
 
     private func emit(_ event: Event) {
