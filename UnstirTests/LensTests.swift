@@ -165,8 +165,10 @@ final class LensTests: XCTestCase {
     }
 
     /// On the halftone, every step of every rod on every layout changes what shows inside its core, which is what the
-    /// player reads: a twist turns the asymmetric linework, a lens swells the dots.
-    func testEveryStepMovesContrastingPixelsOnTheHalftone() {
+    /// player reads: a twist turns the asymmetric linework, a lens swells the dots. Seconds alone, so slow.
+    func testEveryStepMovesContrastingPixelsOnTheHalftone() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
+                          "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
         let aa = 1.0 / 568, spacing = 1.0 / 48
         for layout in Layout.allCases {
             for (k, rod) in layout.rods.enumerated() {
