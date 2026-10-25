@@ -51,9 +51,8 @@ jobs:
           UNSTIR_SIM: ${{ steps.sim.outputs.udid }}
           UNSTIR_ACTION: build-for-testing
         run: scripts/test-store.sh -quiet COMPILER_INDEX_STORE_ENABLE=NO
-      # Not alongside the build: on the runner's three cores, booting slowed the build from about 30 s to 4 min.
-      - name: Boot simulator
-        run: xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
+      # xcodebuild boots the simulator itself. Booted alongside the build, it slowed the build eightfold; booted by
+      # simctl just before, the StoreKit tests timed out.
       - name: Test
         env:
           UNSTIR_SIM: ${{ steps.sim.outputs.udid }}
