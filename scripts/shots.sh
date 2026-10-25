@@ -228,6 +228,11 @@ shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl befo
 shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one on its ticks inside the glass at the bottom." \
   TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
 shot vortex21-both "Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass." TIER=vortex LEVEL=21 SEIZED=2,5 CLOCK=3
+# Vortex on plughole's grid (UNSTIR_PICTURE) instead of whirlpool's live pictures, one of the options for its family.
+for n in 01 14 27; do
+  shot "vortex-plughole-$n" "Vortex level $n with its full scramble on plughole's grid, the swirl never stirred." \
+    TIER=vortex LEVEL=$n CLOCK=3 PICTURE=grid
+done
 # What the rim does, shown before it is touched, three ways (UNSTIR_RIM): the swirl alone (vortex 01), the glass's
 # turn alone (maelstrom 01, knob 1 seized) and both (vortex 01 with knob 1 seized), each once its lessons are learnt
 # and with them, then held: the swirl from the rim, and where there are both, the swirl from the glass's edge and the
