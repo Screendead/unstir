@@ -254,7 +254,11 @@ final class Analytics {
     }
 
     private static func quit(_ game: Game) -> (name: String, props: [String: Prop])? {
-        game.level.run != nil ? (game.spilled ? nil : report(game, "quit")) : game.finished ? nil : report(game, "quit")
+        // A solved endless tank is `finished`, but its run goes on: only a spill ends a run.
+        if game.level.run != nil {
+            return game.spilled ? nil : report(game, "quit")
+        }
+        return game.finished ? nil : report(game, "quit")
     }
 
     // MARK: Packs
