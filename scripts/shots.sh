@@ -222,19 +222,19 @@ shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubbur
 # knobs too, both lessons show. The swirl-* shots are of the picture, so they read as a player who has.
 shot menu-vortex "Menu on vortex with every row unlocked." TIER=vortex UNLOCK=1
 for n in $(seq -w 1 27); do
-  shot "vortex$n" "Vortex level $n with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom." TIER=vortex LEVEL=$n CLOCK=3
+  shot "vortex$n" "Vortex level $n with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom." TIER=vortex LEVEL=$n CLOCK=3
 done
 shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl before: no lesson, only the swirl's ticks inside the glass's edge." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1
-shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson on the bezel at the top, the swirl's cyan one on the glass's edge at the bottom." \
+shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one on its ticks inside the glass at the bottom." \
   TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
-shot vortex21-both "Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons." TIER=vortex LEVEL=21 SEIZED=2,5 CLOCK=3
+shot vortex21-both "Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass." TIER=vortex LEVEL=21 SEIZED=2,5 CLOCK=3
 # What the rim does, shown before it is touched, three ways (UNSTIR_RIM): the swirl alone (vortex 01), the glass's
 # turn alone (maelstrom 01, knob 1 seized) and both (vortex 01 with knob 1 seized), each once its lessons are learnt
 # and with them, then held: the swirl from the rim, and where there are both, the swirl from the glass's edge and the
 # tank from the bezel.
 for v in knob bands glyphs; do
   shot "rim-$v-swirl" "Rim cue $v: vortex 01, the swirl alone, its lesson learnt." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 RIM=$v
-  shot "rim-$v-swirl-lesson" "Rim cue $v: vortex 01, the swirl never stirred: its cyan lesson too." TIER=vortex LEVEL=1 CLOCK=3 RIM=$v
+  shot "rim-$v-swirl-lesson" "Rim cue $v: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass." TIER=vortex LEVEL=1 CLOCK=3 RIM=$v
   shot "rim-$v-swirl-held" "Rim cue $v: vortex 01, the swirl held from the rim, 1.5 steps clockwise." \
     TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 LIVE=4:1.5 TOUCH=0.7,-0.7 RIM=$v
   shot "rim-$v-seized" "Rim cue $v: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt." \
@@ -242,7 +242,7 @@ for v in knob bands glyphs; do
   shot "rim-$v-seized-lesson" "Rim cue $v: maelstrom 01, the tank never turned: its amber lesson too." TIER=maelstrom LEVEL=1 CLOCK=3 RIM=$v
   shot "rim-$v-both" "Rim cue $v: vortex 01 with knob 1 seized, both lessons learnt." \
     TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 RIM=$v
-  shot "rim-$v-both-lesson" "Rim cue $v: vortex 01 with knob 1 seized, neither ever used: both lessons too." \
+  shot "rim-$v-both-lesson" "Rim cue $v: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring." \
     TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 RIM=$v
   shot "rim-$v-both-swirl-held" "Rim cue $v: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise." \
     TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 LIVE=4:1.5 TOUCH=0.66,-0.66 RIM=$v

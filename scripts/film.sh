@@ -75,3 +75,6 @@ for v in knob bands glyphs; do
   film "rim-$v-both" 15 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 SWIRLED=1 TANKTURNED=1 RIM=$v \
     FINGER=1 MOVES=-1:+1,0:+8,4:+7,1:-4
 done
+# A cold first touch where the rim does both, knob cue: vortex 02 with knob 3 seized, both lessons up, the fingertip
+# landing on the swirl's ticks inside the glass's edge, where its lesson points, and stirring with the swirl.
+film rim-knob-both-cold 8 "$rim,scale=220:-1,tile=8x3:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 FINGER=1 MOVES=4:+7

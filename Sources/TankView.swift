@@ -574,8 +574,7 @@ struct LevelView: View {
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip")
                     .font(.mono(12)).opacity(showResult ? 0 : 0.55).multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
-                    // Clear of the swirl's lesson under the tank.
-                    .padding(.top, game.level.layout.swirl == nil ? 14 : 28)
+                    .padding(.top, 14)
                     .overlay(alignment: .top) {
                         if showResult {
                             ResultCard(game: game, onExit: onExit, onNext: onNext)
@@ -904,8 +903,10 @@ struct LevelView: View {
         }
         // Out of the way while the tank is held.
         let lesson = shown == nil && !game.finished && held == nil
+        // The swirl's too while it is held.
+        let swirlLesson = lesson && !game.swirled && game.level.layout.swirl != nil && probing != game.level.layout.swirl
         let arc = (!game.level.seized.isEmpty && lesson && !game.tankTurned ? RimLesson.arc(r, .tank) : [])
-            + (game.level.layout.swirl != nil && lesson && !game.swirled ? RimLesson.arc(r, .swirl) : [])
+            + (swirlLesson ? RimLesson.arc(r, .swirl) : [])
         let g = RimCues.glyphs(r, tank: !game.level.seized.isEmpty, swirl: game.level.layout.swirl != nil)
         let glyphs = (cue == .glyphs ? [g.tank, g.swirl] : []).compactMap { $0 }.map { ($0, RimCues.glyphSize + Self.countRoom) }
         let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
@@ -968,7 +969,7 @@ struct LevelView: View {
             RimCues(cue: cue, r: r,
                     swirl: game.level.layout.swirl.map { s in (turned(s) + (probing == s ? liveAngle : 0), probing == s) },
                     tank: game.level.seized.isEmpty ? nil : (turn, held != nil), band: game.level.seized.isEmpty ? Self.rim : Self.swirlBand,
-                    lessons: (lesson && !game.tankTurned, lesson && !game.swirled))
+                    lessons: (lesson && !game.tankTurned, swirlLesson))
                 .opacity(showResult && !game.spilled ? 0 : 1)
             // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
             // animator of its own that misses the strike when the colours land after it.
@@ -989,9 +990,9 @@ struct LevelView: View {
                 } keyframes: { _ in Self.jolt }
             }
             if game.level.layout.swirl != nil {
-                // Where both are held from the rim, the swirl's finger is on the glass's own edge, inside the tank's.
-                RimLesson(kind: .swirl, r: r, showing: lesson && !game.swirled, pulse: 0, clock: frozenClock,
-                          reach: game.level.seized.isEmpty ? 1.0225 : (Self.swirlBand + 1) / 2)
+                // On the swirl's ticks, inside the glass, in the middle of its grab: the tank's lesson keeps the bezel.
+                RimLesson(kind: .swirl, r: r, showing: swirlLesson, pulse: 0, clock: frozenClock,
+                          reach: ((game.level.seized.isEmpty ? Self.rim : Self.swirlBand) + 1) / 2)
             }
             let ck = game.cancelledRod, across = 2 * disc(ck)
             Circle().stroke(Color.magenta, lineWidth: Self.hairline)
@@ -1498,12 +1499,12 @@ struct PictureLayer: View {
     }
 }
 
-/// How to turn the tank, or stir with the swirl, drawn over the bezel of glass of radius `r`: a two-headed arc just
-/// outside it and a ghost finger rocking along the rim under it, one way and back, so it names the control and never
-/// the move. The tank's is amber at the top, its arc round the rim as the glass turns rigidly, and its finger on the
-/// bezel; the swirl's is cyan at the bottom, its arc curling in onto the rim as the swirl shears, and its finger on the
-/// swirl's grab, so on a level with both, each shows which part of the rim does what. `pulse` (0 to 1) swells the arc,
-/// and brings it back for a moment once it has stopped showing.
+/// How to turn the tank, or stir with the swirl, at the rim of glass of radius `r`: a two-headed arc and a ghost finger
+/// rocking along it, one way and back, so it names the control and never the move. Each lies on the ring it teaches,
+/// so on a level with both they point at different rings. The tank's is amber at the top, its arc just outside the
+/// bezel and its finger on the bezel; the swirl's is cyan at the bottom, a thin arc on the swirl's ticks inside the
+/// glass's edge and its finger there, in the middle of the swirl's grab. `pulse` (0 to 1) swells the tank's arc, and
+/// brings it back for a moment once it has stopped showing.
 struct RimLesson: View {
     enum Kind { case tank, swirl }
     let kind: Kind
@@ -1517,10 +1518,9 @@ struct RimLesson: View {
     private static let span = 34 * Double.pi / 180, sweep = 26 * Double.pi / 180, period = 3.6
     /// The arc's stroke at the height of its pulse. Nothing of it, arrowheads included, lies further than this from its line.
     static let width: CGFloat = 14
-    /// How far the swirl's arc curls in, onto the middle of the bezel.
-    private static func curl(_ r: CGFloat) -> CGFloat { 0.0225 * r + 10 }
-
-    private static func radius(_ r: CGFloat) -> CGFloat { 1.045 * r + 10 }
+    /// The tank's arc rides outside the bezel it turns; the swirl's lies on its own ticks inside the glass, a thin line
+    /// over the picture.
+    private static func radius(_ r: CGFloat, _ kind: Kind) -> CGFloat { kind == .tank ? 1.045 * r + 10 : r - 10 }
     /// Where the lesson sits, clockwise from twelve.
     private static func notch(_ kind: Kind) -> Double { kind == .tank ? 0 : .pi }
 
@@ -1528,8 +1528,7 @@ struct RimLesson: View {
     private static func arm(_ r: CGFloat, _ kind: Kind, _ dir: Double) -> [CGPoint] {
         (0...17).map { i in
             let t = Double(i) / 17, a = notch(kind) + dir * span * t
-            let radius = radius(r) - (kind == .swirl ? curl(r) * t * t : 0)
-            return CGPoint(x: r + radius * sin(a), y: r - radius * cos(a))
+            return CGPoint(x: r + radius(r, kind) * sin(a), y: r - radius(r, kind) * cos(a))
         }
     }
 
@@ -1543,7 +1542,8 @@ struct RimLesson: View {
             p.addLines(points)
             let tip = points[points.count - 1], before = points[points.count - 2]
             let d = hypot(tip.x - before.x, tip.y - before.y)
-            let back = CGVector(dx: (before.x - tip.x) / d * 8, dy: (before.y - tip.y) / d * 8)
+            let head: CGFloat = kind == .tank ? 8 : 6
+            let back = CGVector(dx: (before.x - tip.x) / d * head, dy: (before.y - tip.y) / d * head)
             let wing = CGVector(dx: -back.dy * 5 / 8, dy: back.dx * 5 / 8)
             p.move(to: CGPoint(x: tip.x + back.dx + wing.dx, y: tip.y + back.dy + wing.dy))
             p.addLine(to: tip)
@@ -1565,8 +1565,14 @@ struct RimLesson: View {
                         .position(x: r + reach * r * sin(a), y: r - reach * r * cos(a))
                 }
             }
-            arrow.stroke(colour.opacity(0.22 + 0.3 * pulse), style: StrokeStyle(lineWidth: Self.width - 6 * (1 - pulse), lineCap: .round, lineJoin: .round))
-            arrow.stroke(colour, style: StrokeStyle(lineWidth: 3 + 1.5 * pulse, lineCap: .round, lineJoin: .round))
+            if kind == .tank {
+                arrow.stroke(colour.opacity(0.22 + 0.3 * pulse), style: StrokeStyle(lineWidth: Self.width - 6 * (1 - pulse), lineCap: .round, lineJoin: .round))
+                arrow.stroke(colour, style: StrokeStyle(lineWidth: 3 + 1.5 * pulse, lineCap: .round, lineJoin: .round))
+            } else {
+                // Over the picture, so no glow: seated on a dark stroke, as the swirl's ticks are, to read on a busy one.
+                arrow.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
+                arrow.stroke(colour, style: StrokeStyle(lineWidth: 1.25, lineCap: .round, lineJoin: .round))
+            }
         }
         .frame(width: 2 * r, height: 2 * r)
         .opacity(showing ? 1 : pulse)

@@ -116,61 +116,61 @@ seized-ring3-buried.png  The same with 3:+2 buried fourth from the bottom (1:+4,
 seized-hub-finished.png  Hex twin glass, 14 entries (2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4), none on the hub: its ring is finished.
 seized-hub-buried.png  The same with 0:+2 buried third from the bottom (2:+4,3:-3,0:+2,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4): the hub's ring is not finished.
 menu-vortex.png  Menu on vortex with every row unlocked.
-vortex01.png  Vortex level 01 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex02.png  Vortex level 02 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex03.png  Vortex level 03 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex04.png  Vortex level 04 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex05.png  Vortex level 05 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex06.png  Vortex level 06 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex07.png  Vortex level 07 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex08.png  Vortex level 08 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex09.png  Vortex level 09 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex10.png  Vortex level 10 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex11.png  Vortex level 11 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex12.png  Vortex level 12 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex13.png  Vortex level 13 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex14.png  Vortex level 14 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex15.png  Vortex level 15 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex16.png  Vortex level 16 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex17.png  Vortex level 17 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex18.png  Vortex level 18 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex19.png  Vortex level 19 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex20.png  Vortex level 20 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex21.png  Vortex level 21 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex22.png  Vortex level 22 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex23.png  Vortex level 23 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex24.png  Vortex level 24 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex25.png  Vortex level 25 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex26.png  Vortex level 26 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
-vortex27.png  Vortex level 27 with its full scramble, the swirl never stirred: the rim's cyan lesson at the bottom.
+vortex01.png  Vortex level 01 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex02.png  Vortex level 02 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex03.png  Vortex level 03 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex04.png  Vortex level 04 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex05.png  Vortex level 05 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex06.png  Vortex level 06 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex07.png  Vortex level 07 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex08.png  Vortex level 08 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex09.png  Vortex level 09 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex10.png  Vortex level 10 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex11.png  Vortex level 11 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex12.png  Vortex level 12 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex13.png  Vortex level 13 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex14.png  Vortex level 14 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex15.png  Vortex level 15 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex16.png  Vortex level 16 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex17.png  Vortex level 17 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex18.png  Vortex level 18 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex19.png  Vortex level 19 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex20.png  Vortex level 20 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex21.png  Vortex level 21 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex22.png  Vortex level 22 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex23.png  Vortex level 23 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex24.png  Vortex level 24 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex25.png  Vortex level 25 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex26.png  Vortex level 26 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex27.png  Vortex level 27 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
 vortex01-swirled.png  Vortex 01 once the player has stirred with the swirl before: no lesson, only the swirl's ticks inside the glass's edge.
-vortex01-both.png  Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson on the bezel at the top, the swirl's cyan one on the glass's edge at the bottom.
-vortex21-both.png  Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons.
+vortex01-both.png  Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one on its ticks inside the glass at the bottom.
+vortex21-both.png  Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass.
 rim-knob-swirl.png  Rim cue knob: vortex 01, the swirl alone, its lesson learnt.
-rim-knob-swirl-lesson.png  Rim cue knob: vortex 01, the swirl never stirred: its cyan lesson too.
+rim-knob-swirl-lesson.png  Rim cue knob: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass.
 rim-knob-swirl-held.png  Rim cue knob: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
 rim-knob-seized.png  Rim cue knob: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
 rim-knob-seized-lesson.png  Rim cue knob: maelstrom 01, the tank never turned: its amber lesson too.
 rim-knob-both.png  Rim cue knob: vortex 01 with knob 1 seized, both lessons learnt.
-rim-knob-both-lesson.png  Rim cue knob: vortex 01 with knob 1 seized, neither ever used: both lessons too.
+rim-knob-both-lesson.png  Rim cue knob: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring.
 rim-knob-both-swirl-held.png  Rim cue knob: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
 rim-knob-both-tank-held.png  Rim cue knob: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
 rim-bands-swirl.png  Rim cue bands: vortex 01, the swirl alone, its lesson learnt.
-rim-bands-swirl-lesson.png  Rim cue bands: vortex 01, the swirl never stirred: its cyan lesson too.
+rim-bands-swirl-lesson.png  Rim cue bands: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass.
 rim-bands-swirl-held.png  Rim cue bands: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
 rim-bands-seized.png  Rim cue bands: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
 rim-bands-seized-lesson.png  Rim cue bands: maelstrom 01, the tank never turned: its amber lesson too.
 rim-bands-both.png  Rim cue bands: vortex 01 with knob 1 seized, both lessons learnt.
-rim-bands-both-lesson.png  Rim cue bands: vortex 01 with knob 1 seized, neither ever used: both lessons too.
+rim-bands-both-lesson.png  Rim cue bands: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring.
 rim-bands-both-swirl-held.png  Rim cue bands: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
 rim-bands-both-tank-held.png  Rim cue bands: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
 rim-glyphs-swirl.png  Rim cue glyphs: vortex 01, the swirl alone, its lesson learnt.
-rim-glyphs-swirl-lesson.png  Rim cue glyphs: vortex 01, the swirl never stirred: its cyan lesson too.
+rim-glyphs-swirl-lesson.png  Rim cue glyphs: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass.
 rim-glyphs-swirl-held.png  Rim cue glyphs: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
 rim-glyphs-seized.png  Rim cue glyphs: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
 rim-glyphs-seized-lesson.png  Rim cue glyphs: maelstrom 01, the tank never turned: its amber lesson too.
 rim-glyphs-both.png  Rim cue glyphs: vortex 01 with knob 1 seized, both lessons learnt.
-rim-glyphs-both-lesson.png  Rim cue glyphs: vortex 01 with knob 1 seized, neither ever used: both lessons too.
+rim-glyphs-both-lesson.png  Rim cue glyphs: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring.
 rim-glyphs-both-swirl-held.png  Rim cue glyphs: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
 rim-glyphs-both-tank-held.png  Rim cue glyphs: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
 swirl-quad-one.png  Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still.

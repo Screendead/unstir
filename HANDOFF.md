@@ -317,8 +317,10 @@ Jack's calls (2026-10-24):
   Both: the glass's own edge band (0.86 to 1.0) holds the swirl, the bezel and beyond turn the tank.
 - **The tier.** Whirlpool all at par opens vortex; vortex all at par opens maelstrom. Ids `V1`–`V27`. Its own menu
   colours (violet to teal). Rows on a swirl layout read "4 rods + swirl".
-- **The lesson.** A cyan arc at the bottom that curls onto the bezel, with a ghost finger, until the first swirl stir
-  commits (`Best.swirled`), beside the tank's amber one where knobs are seized.
+- **The lesson.** A thin cyan arc at the bottom on the swirl's ticks inside the glass, with a ghost finger there, until
+  the first swirl stir commits (`Best.swirled`), beside the tank's amber one outside the bezel where knobs are seized:
+  each points at its own ring (a cold review found both had pointed at the bezel). It hides while the swirl is held. A
+  cold first touch where the rim does both (`film.sh rim-knob-both-cold`) lands on the ticks and holds the swirl.
 - **The solver.** It prunes by which rods' maps interact (`interacts`), so the hub and the swirl commute: hex's provisional
   level went from 2027 stacks in 2.2 s to 8 in 81 ms. `solve.sh` takes the swirl layouts and refuses a seized swirl.
   Every player's play on swirl levels, seized knobs included, empties a real `Game`. A randomised check (5398 swirl
