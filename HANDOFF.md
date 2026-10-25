@@ -340,6 +340,12 @@ Jack's calls (2026-10-24):
     controls exist, not which band does which.
   **Awaiting Jack's pick.** Claude recommends `knob`: it uses the game's own language (a knob is what you turn) and
   keeps the picture clean.
+- **The swirl's own marks, under every cue** (Claude's calls, 2026-10-25): a push flashes red as a 0.5 pt hairline on
+  the `knob` cue's ring, 5 pt inside the glass's edge, where a knob's flashes on its own dial (`rim-knob-swirl-push`
+  film); over a red picture it is faint, the price of the hairline rule. A held swirl's dashes run inside the cue's
+  ticks and pointer, and its count sits inside them on the far side from the finger, as a knob's sits off its disc
+  (`rim-knob-swirl-held`, `-held-low`, `-turned`). The result card's "next" is vortex's own blue (`Tier.glow`, the
+  middle of the menu's violet → blue → teal walk; `vortex-result`).
 
 **How the set was made.** `scripts/vortex-levels/pools.sh` deals seeded scrambles on each swirl layout with the frozen
 generator (`Layout.scramble`, unchanged; the dailies never pass it a swirl layout), keeping only those whose optimum
@@ -414,9 +420,6 @@ before vortex has had one playtest. Revisit A if charybdis needs a different mec
 - **The rim variant** (above).
 - **Tri and eye**: whether they read with a swirl is Jack's call from `shots/swirl-tri.png`, `shots/swirl-eye.png` and
   V7–V13. Each block drops out whole (V7–V9, V10–V13) and the slots move to pent and hex.
-- **Placeholders**: the swirl's red push ring is a 1 pt line on the bezel, apart from the `knob` dial inside the glass;
-  the swirl's step count sits at the screen edge over the bezel, as the tank's does; the result card is blood red on
-  vortex (`tier == .plughole ? .neonCyan : .blood`).
 - **Known gap**: a sandbox launched on a swirl layout through `UNSTIR_LAYOUT` crashes on the layout button (harness
   only).
 - **Not measured**: the tank-sized stir's GPU cost on the phone (performance pass), narrow phones (everything was shot on
