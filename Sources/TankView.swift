@@ -91,6 +91,8 @@ final class Game {
     /// A rod stir names the rod the stack names (the slot under the knob turned). A turn of the tank is rod `Game.tank`,
     /// in steps of the layout's symmetry.
     private(set) var history: [Twist] = []
+    /// The stack's size as each stir of `history` began.
+    private var sizes: [Int] = []
     nonisolated static let tank = -1
     /// Whether the next turn of the newest stir's rod joins it. A stir turned back to nothing, or undone, is gone, and the
     /// one before it stays shut.
@@ -168,13 +170,30 @@ final class Game {
     var finished: Bool { solved || spilled }
     var clean: Bool { over == 0 && resets == 0 && undos == 0 && firstTry }
 
+    /// What each move did to the stack, oldest first: read once the level has settled, since the fine pass may empty the
+    /// stack after the last move.
+    var marks: [Share.Mark] {
+        history.indices.map { i in
+            let after = i + 1 < sizes.count ? sizes[i + 1] : entries.count
+            return history[i].rod == Game.tank ? .tank : after < sizes[i] ? .healed : after > sizes[i] ? .pushed : .merged
+        }
+    }
+
+    /// The daily's share line; nil on any other level.
+    var shareText: String? {
+        Share.day(of: level.id).map {
+            Share.text(day: $0, moves: moves, par: par, firstTry: firstTry, clean: clean, undos: undos, resets: resets,
+                       marks: marks)
+        }
+    }
+
     func slot(of knob: Int) -> Int { level.layout.slot(of: knob, at: position) }
     func knob(over slot: Int) -> Int { level.layout.knob(over: slot, at: position) }
 
     /// A turn of knob `rod`, which stirs whatever fluid the tank has brought under it.
     func commit(rod: Int, steps: Int) {
         guard !finished else { return }
-        let slot = self.slot(of: rod)
+        let slot = self.slot(of: rod), size = entries.count
         // Every entry of the scramble's that pops is a heal, even where an entry that the merge lets fall cancels it.
         var healed = 0
         let result = level.seized.contains(rod) ? .refused
@@ -185,9 +204,10 @@ final class Game {
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
         if open, history.last?.rod == slot {
             history[history.count - 1].steps += steps
-            if history.last!.steps == 0 { history.removeLast(); open = false }
+            if history.last!.steps == 0 { history.removeLast(); sizes.removeLast(); open = false }
         } else {
             history.append(Twist(rod: slot, steps: steps))
+            sizes.append(size)
             open = true
         }
         lastCommit = (rod, result)
@@ -233,9 +253,10 @@ final class Game {
         }
         let joins = open && history.last?.rod == Game.tank
         let net = tankStir(after: steps)
+        let size = joins ? sizes.removeLast() : entries.count
         if joins { history.removeLast() }
         open = net != 0
-        if open { history.append(Twist(rod: Game.tank, steps: net)) }
+        if open { history.append(Twist(rod: Game.tank, steps: net)); sizes.append(size) }
         Log.write("tank \(steps) position=\(position) moves=\(moves)")
         settle()
     }
@@ -244,6 +265,7 @@ final class Game {
     func undo() {
         // The sandbox counts nothing, so its undos are free.
         guard !finished, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast() else { return }
+        sizes.removeLast()
         if last.rod != Game.tank {
             entries.commit(Entry(twist: Twist(rod: last.rod, steps: -last.steps), pushed: true), in: level.layout)
             // A white flash whatever the stack did: undo bumps neither pushes nor cancels, so no alarm or thunk may show.
@@ -266,6 +288,7 @@ final class Game {
         guard !checking, level.run == nil else { return false }
         entries = level.scramble.map { Entry(twist: $0, pushed: false) }
         history = []
+        sizes = []
         open = false
         resets += 1
         Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
@@ -1549,6 +1572,10 @@ struct ResultCard: View {
             .font(.mono(13))
             HStack(spacing: 40) {
                 Button("\u{2039} levels", action: onExit)
+                if let share = game.shareText {
+                    ShareLink(item: share) { Text("share \u{2197}") }
+                        .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
+                }
                 if let next {
                     Button(game.spilled ? "new run \u{203A}" : "next \u{203A}") { onNext(next) }
                         .foregroundStyle(accent).shadow(color: accent, radius: 4)
