@@ -1681,6 +1681,32 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(Best.swirled)
     }
 
+    /// The swirl breathes only until the player's first stir of it commits, the moment its lesson goes: a stir of another
+    /// rod or a turn of the tank leaves it breathing, and after that stir no level breathes again. A layout without a
+    /// swirl never does.
+    @MainActor func testBreathStopsOnceTheSwirlIsUsed() {
+        let saved = Best.swirled
+        defer { Best.swirled = saved }
+        Best.swirled = false
+        let level = Level(id: "test-breath", label: "", title: "", layout: .quadSwirl,
+                          scramble: [Twist(rod: 0, steps: 4), Twist(rod: 4, steps: 3)], seized: [1], fixedPar: 2)
+        let game = Game(level: level, tankTurned: true)
+        XCTAssertTrue(game.breathes)
+        game.commit(rod: 2, steps: 2)
+        game.turnTank(1)
+        XCTAssertTrue(game.breathes)
+        game.commit(rod: 4, steps: -3)
+        XCTAssertFalse(game.breathes)
+        XCTAssertFalse(Game(level: level).breathes)
+        XCTAssertFalse(Game(level: Level(id: "test-breath-pent", label: "", title: "", layout: .pentSwirl,
+                                         scramble: [Twist(rod: 5, steps: 2)])).breathes)
+
+        Best.swirled = false
+        XCTAssertFalse(Game(level: Level(id: "test-breath-quad", label: "", title: "", layout: .quad,
+                                         scramble: [Twist(rod: 0, steps: 2)])).breathes)
+        XCTAssertFalse(Game(level: level, swirled: true).breathes)
+    }
+
     /// Par is one move per entry wherever no knob is seized; a level with seized knobs sets its own, counting its
     /// turns of the tank.
     func testParIsTheScrambleUnlessSet() {

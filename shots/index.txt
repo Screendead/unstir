@@ -175,10 +175,10 @@ rim-both-swirl-held.png  Rim: vortex 01 with knob 1 seized, the swirl held from 
 rim-both-tank-held.png  Rim: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
 rim-swirl-held-low.png  Rim: vortex 01, the swirl held from the rim at six and carried 1.5 steps counterclockwise: -2 on the far side from the finger, inside the dashes.
 rim-swirl-turned.png  Rim: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the dashes at twelve.
-breath-01.png  Breath: vortex 01 at rest, its lesson learnt, 0.4 s into the swirl's first slosh.
-breath-14.png  Breath: vortex 14 at rest, its lesson learnt, 0.4 s into the swirl's first slosh.
-breath-21.png  Breath: vortex 21 at rest, its lesson learnt, 0.4 s into the swirl's first slosh.
-breath-both.png  Breath: vortex 01 with knob 1 seized, both lessons learnt, 0.4 s into the swirl's first slosh: the knurl for the glass's turn beside it.
+breath-01.png  Breath: vortex 01 at rest, the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass.
+breath-14.png  Breath: vortex 14 at rest, the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass.
+breath-21.png  Breath: vortex 21 at rest, the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass.
+breath-both.png  Breath: vortex 01 with knob 1 seized, the tank's lesson learnt and the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass: the knurl for the glass's turn beside it.
 swirl-quad-one.png  Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still.
 swirl-quad.png  Square with a swirl (rod 4), 0:+3,4:+2,2:-4,1:+3,4:-3,3:+5.
 swirl-quad-live.png  The same held mid-drag from the rim, the swirl 1.5 steps clockwise.

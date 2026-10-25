@@ -123,6 +123,8 @@ final class Game {
     private(set) var swirled: Bool
     /// False when the caller set `swirled`, which then lasts only as long as this game.
     private let storesSwirled: Bool
+    /// The swirl's breath shows what the rim does only until the player has stirred with it once.
+    var breathes: Bool { level.layout.swirl != nil && !swirled }
     /// Endless: notches on the brim, carried from tank to tank through the run. A red flash (a push) adds one, which
     /// stays when the stir is turned back; a heal of one of the scramble's own entries settles one, and cancelling the
     /// player's own push does not. Full, it spills the run.
@@ -766,15 +768,15 @@ struct LevelView: View {
     private var stack: [Twist] { shown.map { Array(game.stack.prefix($0)) } ?? game.stack }
     /// A finger, two, or a drawn fingertip is on the tank, or a turn is still settling from one.
     private var touching: Bool { drag != nil || liveRod != nil || liveTurn != nil || spun || ghost != nil }
-    /// The tank is the player's and untouched, on a layout with a swirl: its breath may run. Never under Reduce Motion,
+    /// The tank is the player's and untouched, and the game breathes: its breath may run. Never under Reduce Motion,
     /// and never in a harness launch that holds the clock.
     private var resting: Bool {
-        game.level.layout.swirl != nil && !reduceMotion && frozenClock == nil && frozenBreath == nil && shown == nil
+        game.breathes && !reduceMotion && frozenClock == nil && frozenBreath == nil && shown == nil
             && !game.finished && !touching
     }
     /// The swirl's breath on the picture now, in radians.
     private var breathAngle: Double {
-        if let frozenBreath { return Breath(start: 0, wait: Breath.first).angle(at: frozenBreath) }
+        if let frozenBreath { return game.breathes ? Breath(start: 0, wait: Breath.first).angle(at: frozenBreath) : 0 }
         guard breathing else { return 0 }
         let t = Date.now.timeIntervalSinceReferenceDate
         return (breath?.angle(at: t) ?? 0) + (faded?.angle(at: t) ?? 0)
