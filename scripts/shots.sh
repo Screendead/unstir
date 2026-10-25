@@ -254,6 +254,12 @@ for v in knob bands glyphs; do
   shot "rim-$v-both-tank-held" "Rim cue $v: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round." \
     TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 TANKLIVE=30 TOUCH=0,-1.03 RIM=$v
 done
+# The knob cue with no dark seats or groove (UNSTIR_SEATS=0): bare hairlines over the picture, otherwise the same.
+shot rim-knob-noseat-swirl "Rim cue knob, no seats: vortex 01, the swirl alone, its lesson learnt." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 SEATS=0
+shot rim-knob-noseat-both "Rim cue knob, no seats: vortex 01 with knob 1 seized, both lessons learnt." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 SEATS=0
+shot rim-knob-noseat-both-lesson "Rim cue knob, no seats: vortex 01 with knob 1 seized, neither ever used: both lessons too." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SEATS=0
 # A sheet per cue of what reads before a move, cut to the tank and the glyphs' room over twelve: the swirl alone, the
 # glass's turn alone and both, learnt along the top and with their lessons under. Not a shot, so not in the index.
 for v in knob bands glyphs; do
@@ -264,6 +270,15 @@ for v in knob bands glyphs; do
     "concat=n=6:v=1,crop=iw:ih*0.56:0:ih*0.21,scale=440:-1,tile=3x2:padding=8:color=0x303030" -frames:v 1 "shots/vortex-rim-$v.png"
   echo "sheet vortex-rim-$v"
 done
+# The rim at one o'clock, its pixels doubled: the knob cue with its seats on the left, without on the right. Not a
+# shot, so not in the index.
+if [[ -z "$pattern" || "rim-knob-noseat-both" == *$pattern* ]]; then
+  ffmpeg -loglevel error -y -i shots/rim-knob-both.png -i shots/rim-knob-noseat-both.png -filter_complex \
+    "[0]crop=320:250:780:830,scale=iw*2:-1:flags=neighbor,pad=iw+12:ih:0:0:color=0x303030[a];\
+[1]crop=320:250:780:830,scale=iw*2:-1:flags=neighbor[b];[a][b]hstack" \
+    -frames:v 1 shots/rim-knob-seats-crop.png
+  echo "sheet rim-knob-seats-crop"
+fi
 shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1
 swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
 shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1

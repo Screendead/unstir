@@ -447,6 +447,8 @@ struct LevelView: View {
     private let today: String?
     /// UNSTIR_RIM: how the rim shows what it does.
     private let cue: RimCue
+    /// UNSTIR_SEATS: whether the rim's lines over the picture sit on dark seats.
+    private let seats: Bool
     /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
     /// Endless: the picture's colours round the rim as the stack stirs it (Brim.colours), once worked out.
@@ -515,6 +517,7 @@ struct LevelView: View {
         frozenShake = harness?.shake
         today = harness?.today
         cue = harness?.rim ?? .knob
+        seats = harness?.seats ?? true
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
@@ -969,7 +972,7 @@ struct LevelView: View {
             RimCues(cue: cue, r: r,
                     swirl: game.level.layout.swirl.map { s in (turned(s), probing == s ? liveAngle : 0, probing == s) },
                     tank: game.level.seized.isEmpty ? nil : (turn, held != nil), band: game.level.seized.isEmpty ? Self.rim : Self.swirlBand,
-                    lessons: (lesson && !game.tankTurned, swirlLesson))
+                    lessons: (lesson && !game.tankTurned, swirlLesson), seats: seats)
                 .opacity(showResult && !game.spilled ? 0 : 1)
             // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
             // animator of its own that misses the strike when the colours land after it.
@@ -992,7 +995,7 @@ struct LevelView: View {
             if game.level.layout.swirl != nil {
                 // On the swirl's ticks, inside the glass, in the middle of its grab: the tank's lesson keeps the bezel.
                 RimLesson(kind: .swirl, r: r, showing: swirlLesson, pulse: 0, clock: frozenClock,
-                          reach: ((game.level.seized.isEmpty ? Self.rim : Self.swirlBand) + 1) / 2)
+                          reach: ((game.level.seized.isEmpty ? Self.rim : Self.swirlBand) + 1) / 2, seated: seats)
             }
             let ck = game.cancelledRod, across = 2 * disc(ck)
             Circle().stroke(Color.magenta, lineWidth: Self.hairline)
@@ -1515,6 +1518,8 @@ struct RimLesson: View {
     let clock: Double?
     /// The ghost finger's path, as a fraction of the glass's radius.
     var reach = 1.0225
+    /// The swirl's arc on a dark stroke.
+    var seated = true
     private static let span = 34 * Double.pi / 180, sweep = 26 * Double.pi / 180, period = 3.6
     /// The arc's stroke at the height of its pulse. Nothing of it, arrowheads included, lies further than this from its line.
     static let width: CGFloat = 14
@@ -1570,7 +1575,9 @@ struct RimLesson: View {
                 arrow.stroke(colour, style: StrokeStyle(lineWidth: 3 + 1.5 * pulse, lineCap: .round, lineJoin: .round))
             } else {
                 // Over the picture, so no glow: seated on a dark stroke, as the swirl's ticks are, to read on a busy one.
-                arrow.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
+                if seated {
+                    arrow.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
+                }
                 arrow.stroke(colour, style: StrokeStyle(lineWidth: 1.25, lineCap: .round, lineJoin: .round))
             }
         }
@@ -1602,6 +1609,8 @@ struct RimCues: View {
     let tank: (angle: Double, held: Bool)?
     let band: Double
     let lessons: (tank: Bool, swirl: Bool)
+    /// The knob cue's ticks on dark seats past a dark groove, or bare hairlines.
+    var seats = true
     @Environment(\.displayScale) private var scale
 
     /// A glyph's reach from its centre.
@@ -1627,12 +1636,14 @@ struct RimCues: View {
                     let marks = ticks(r - 5, r - 15, lean: lean), pointer = pointer(r - 5, r - 24, lean: lean)
                     // The groove: dark from the glass's edge in past the hairline that joins the ticks, so the ticks
                     // belong to the glass and not to the bezel's knurl.
-                    ring(r - 2.5).stroke(Color.black.opacity(0.75), lineWidth: 5)
+                    if seats { ring(r - 2.5).stroke(Color.black.opacity(0.75), lineWidth: 5) }
                     ring(r - 5).stroke(lit.opacity(swirl.held ? 0.9 : 0.55), lineWidth: 0.5)
                     // Each tick seated on its own dark stroke, as a knob's ticks sit on its dark band.
                     Group {
-                        marks.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                        pointer.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        if seats {
+                            marks.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                            pointer.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        }
                         marks.stroke(lit.opacity(swirl.held ? 1 : 0.9), lineWidth: 1)
                         pointer.stroke(lit, style: StrokeStyle(lineWidth: 1, lineCap: .round))
                     }
