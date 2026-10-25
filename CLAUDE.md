@@ -217,11 +217,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   swirl's grab. So on a level with both, each lesson points at its own ring: the tank's at the bezel, the swirl's
   inside the glass. It goes while the swirl is held. The lessons go once learnt, so `RimCues` keeps saying what the
   rim does, three ways while Jack compares them (`RimCue`, picked by `UNSTIR_RIM`, `knob` without it): `knob` gives
-  the swirl a knob's ticks on a hairline ring just inside the glass's edge, a pointer at twelve turning with its own
-  turning, and knurls the bezel where knobs are seized, the knurl turning with the glass; `bands` outlines the
-  swirl's grab in cyan inside the glass and anodises the bezel amber, the lessons' own colours;
-  `glyphs` sets a spiral and a turning ring with a seized knob's slash over twelve, each once its lesson has gone.
-  Each lights while its control is held. A drag shows its own
+  the swirl a knob's ticks inside the glass's edge, each on a dark stroke, leaning as a shear leans them and further
+  the way a held turn goes, a longer pointer at twelve, all turning with its own turning, and a dark groove between
+  them and the bezel; it knurls the bezel wherever knobs are seized, faintly amber at rest, the knurl turning with the
+  glass; `bands` outlines the swirl's grab in cyan inside the glass and anodises the bezel amber, the lessons' own
+  colours; `glyphs` sets a spiral and a turning ring with a seized knob's slash over twelve, each once its lesson has
+  gone. Each lights while its control is held. A drag shows its own
   count: a long mark on the disc's hairline (on one just inside the rim, for the tank) where its stir began, a dash per
   step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit

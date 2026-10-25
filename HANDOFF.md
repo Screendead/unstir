@@ -327,10 +327,13 @@ Jack's calls (2026-10-24):
   scrambles of 2–3 entries, half with a knob seized) found nothing shorter than the optimum.
 - **What the rim does, before a move** (Jack's call above), three variants on `UNSTIR_RIM`, each for swirl only, glass
   turn only and both, shot as `rim-<variant>-*` (27 shots):
-  - `knob` (default, Claude's lead): the swirl gets a knob's dial just inside the glass's edge (cyan hairline ring, 12
-    ticks, a pointer that turns with it); where knobs are seized the bezel becomes knurled steel that turns with the
-    glass. Both: knurl outside, cyan dial inside, clearly two bands. On dark-green marbling the ticks are faint and only
-    the pointer carries.
+  - `knob` (default, Claude's lead): the swirl gets a knob's dial just inside the glass's edge (cyan hairline ring, 11
+    ticks and a longer 1 pt pointer at twelve, turning with it), its ticks leaning as a shear leans them, and further
+    the way a held turn goes, so they read as a swirl and not a dial; where knobs are seized the bezel becomes knurled
+    steel, its ridges faintly amber at rest (the tank's colour), that turns with the glass, on every seized level. A
+    dark groove (the picture's outer 5 pt) parts the ticks from the knurl, so "both" no longer reads as one dive-watch
+    bezel. **For Jack, a trade-off against the hairline rule:** each tick and the swirl lesson's arc sit on a 3–3.5 pt
+    dark stroke, and the groove darkens the picture's last 5 pt, so the ticks read on busy pictures (marbling, coral).
   - `bands`: the swirl's grab outlined in cyan (its wash and slanted hatch dropped: they hid the picture's outer ring),
     an amber bezel for the tank, matching the lessons' colours.
   - `glyphs`: two 28 pt icons above twelve (a spiral; a ring with a red slash and a two-headed arc). It says both

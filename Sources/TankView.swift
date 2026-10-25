@@ -967,7 +967,7 @@ struct LevelView: View {
                 .position(at(fk))
             Bezel(r: r)
             RimCues(cue: cue, r: r,
-                    swirl: game.level.layout.swirl.map { s in (turned(s) + (probing == s ? liveAngle : 0), probing == s) },
+                    swirl: game.level.layout.swirl.map { s in (turned(s), probing == s ? liveAngle : 0, probing == s) },
                     tank: game.level.seized.isEmpty ? nil : (turn, held != nil), band: game.level.seized.isEmpty ? Self.rim : Self.swirlBand,
                     lessons: (lesson && !game.tankTurned, swirlLesson))
                 .opacity(showResult && !game.spilled ? 0 : 1)
@@ -1582,7 +1582,8 @@ struct RimLesson: View {
 /// How the rim shows, before it is touched, what it does: stir with the swirl, turn the glass and its seized knobs, or
 /// both. Three ways, compared through UNSTIR_RIM until one is chosen.
 enum RimCue: String {
-    /// The swirl wears a knob's ticks just inside the glass's edge; where knobs are seized, the bezel is knurled.
+    /// The swirl wears a knob's ticks just inside the glass's edge, leaning as a shear does, a dark groove between them
+    /// and the bezel; where knobs are seized, the bezel is knurled, its ridges amber as the tank's lesson.
     case knob
     /// The swirl's grab is outlined in cyan on the glass's edge; where knobs are seized, the bezel is amber, as the lessons.
     case bands
@@ -1590,14 +1591,14 @@ enum RimCue: String {
     case glyphs
 }
 
-/// The rim's standing cue over glass of radius `r`, in the tank's frame. `swirl` is the swirl's own turning and whether
-/// it is held, nil on a layout without one; `tank`, the glass's turn and whether the rim holds it, nil where no knob is
-/// seized. `band` is where the swirl's grab starts, a fraction of `r`; `lessons`, which lessons show, as a glyph waits
-/// for its own lesson to go.
+/// The rim's standing cue over glass of radius `r`, in the tank's frame. `swirl` is the swirl's own turning, the turn
+/// in hand and whether it is held, nil on a layout without one; `tank`, the glass's turn and whether the rim holds it,
+/// nil where no knob is seized. `band` is where the swirl's grab starts, a fraction of `r`; `lessons`, which lessons
+/// show, as a glyph waits for its own lesson to go.
 struct RimCues: View {
     let cue: RimCue
     let r: CGFloat
-    let swirl: (angle: Double, held: Bool)?
+    let swirl: (angle: Double, live: Double, held: Bool)?
     let tank: (angle: Double, held: Bool)?
     let band: Double
     let lessons: (tank: Bool, swirl: Bool)
@@ -1619,11 +1620,23 @@ struct RimCues: View {
                 if let tank { knurl.rotationEffect(.radians(tank.angle)).opacity(tank.held ? 1 : 0.85) }
                 if let swirl {
                     let lit = swirl.held ? Color.live : .neonCyan
-                    // Joined by a hairline round the glass's edge: twelve ticks alone, a hand apart, read as marks on the picture.
-                    ring(r - 4).stroke(lit.opacity(swirl.held ? 0.9 : 0.55), lineWidth: 0.5)
-                    ticks(r - 4, r - 15).stroke(lit.opacity(swirl.held ? 1 : 0.9), lineWidth: 1)
-                        .overlay(pointer(lit))
-                        .rotationEffect(.radians(swirl.angle))
+                    // Leaning as a shear leans them, so they read as a stir rather than a dial's scale, and further the
+                    // way the turn in hand goes, as the swirl's core outruns its edge. A sideways offset in points at
+                    // the ticks' inner end.
+                    let lean = 4 + 3 * min(max(swirl.live / Tank.step, -2), 2)
+                    let marks = ticks(r - 5, r - 15, lean: lean), pointer = pointer(r - 5, r - 24, lean: lean)
+                    // The groove: dark from the glass's edge in past the hairline that joins the ticks, so the ticks
+                    // belong to the glass and not to the bezel's knurl.
+                    ring(r - 2.5).stroke(Color.black.opacity(0.75), lineWidth: 5)
+                    ring(r - 5).stroke(lit.opacity(swirl.held ? 0.9 : 0.55), lineWidth: 0.5)
+                    // Each tick seated on its own dark stroke, as a knob's ticks sit on its dark band.
+                    Group {
+                        marks.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        pointer.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        marks.stroke(lit.opacity(swirl.held ? 1 : 0.9), lineWidth: 1)
+                        pointer.stroke(lit, style: StrokeStyle(lineWidth: 1, lineCap: .round))
+                    }
+                    .rotationEffect(.radians(swirl.angle + swirl.live))
                 }
             case .bands:
                 if let tank {
@@ -1651,21 +1664,21 @@ struct RimCues: View {
         Path(ellipseIn: CGRect(x: r - radius, y: r - radius, width: 2 * radius, height: 2 * radius))
     }
 
-    /// One radial mark per 30-degree step, from radius `a` in to `b`, about the glass's centre.
-    private func ticks(_ a: CGFloat, _ b: CGFloat) -> Path {
-        Path { p in
-            for i in 0..<12 {
-                let t = Double(i) * Tank.step
-                p.move(to: CGPoint(x: r + a * sin(t), y: r - a * cos(t)))
-                p.addLine(to: CGPoint(x: r + b * sin(t), y: r - b * cos(t)))
-            }
-        }
+    /// A mark per 30-degree step but twelve's, from radius `a` in to `b` about the glass's centre, its inner end
+    /// `lean` points clockwise of its outer.
+    private func ticks(_ a: CGFloat, _ b: CGFloat, lean: CGFloat) -> Path {
+        Path { p in for i in 1..<12 { mark(&p, Double(i) * Tank.step, a, b, lean: lean) } }
     }
 
     /// The swirl's own pointer at twelve, longer than its ticks, as a knob's.
-    private func pointer(_ colour: Color) -> some View {
-        Path { $0.move(to: CGPoint(x: r, y: 4)); $0.addLine(to: CGPoint(x: r, y: 26)) }
-            .stroke(colour, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+    private func pointer(_ a: CGFloat, _ b: CGFloat, lean: CGFloat) -> Path {
+        Path { mark(&$0, 0, a, b, lean: lean) }
+    }
+
+    private func mark(_ p: inout Path, _ t: Double, _ a: CGFloat, _ b: CGFloat, lean: CGFloat) {
+        let u = t + Double(lean / b)
+        p.move(to: CGPoint(x: r + a * sin(t), y: r - a * cos(t)))
+        p.addLine(to: CGPoint(x: r + b * sin(u), y: r - b * cos(u)))
     }
 
     /// A milled edge across the bezel's steel: dark grooves between bright ridges, every few points.
@@ -1683,7 +1696,8 @@ struct RimCues: View {
         let a = r + 1.5, b = 1.045 * r - 0.5
         return ZStack {
             lines(0, a, b).stroke(Color.black.opacity(0.55), lineWidth: 1.2)
-            lines(0.5, a, b).stroke((lit ? Color.amber : .white).opacity(lit ? 0.9 : 0.3), lineWidth: 0.6)
+            // Amber even at rest, faintly: the tank's colour, as its lesson and its glyph.
+            lines(0.5, a, b).stroke(Color.amber.opacity(lit ? 0.9 : 0.55), lineWidth: 0.6)
         }
     }
 
