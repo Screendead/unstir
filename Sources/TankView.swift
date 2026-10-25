@@ -1604,7 +1604,7 @@ struct Unstirred: ViewModifier, Animatable {
         let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes ? 1 : 0)
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
-                                 .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
+                                 .float(Float(Tank.swirlPlateau)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
             maxSampleOffset: CGSize(width: side, height: side))
     }
 }
