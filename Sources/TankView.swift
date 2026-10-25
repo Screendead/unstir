@@ -867,11 +867,12 @@ struct LevelView: View {
         let core = 2 * Tank.coreRadius * r
         let probing = shown == nil ? liveRod : nil
         // The held rod's dial is fainter while letting go would cost nothing or a full stack would refuse the twist.
-        // Array.commit's overlap rule, checked without copying the stack or sampling the map every drag frame.
+        // Only a full stack asks Array.commit's rule, which may sample the map: overlapping rods can commute (hex's hub
+        // and its swirl).
         let commits = liveRod.map { k in
-            let s = game.slot(of: k)
-            return Detent.steps(liveAngle, of: Tank.step) != 0 && (game.stack.count < Tank.maxStack
-                || game.stack.last { game.level.layout.overlaps($0.rod, s) }?.rod == s)
+            let steps = Detent.steps(liveAngle, of: Tank.step)
+            return steps != 0 && (game.stack.count < Tank.maxStack
+                || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout) != nil)
         } ?? false
         let step = game.level.layout.tankStep
         let held = liveTurn.map { $0 + (spin ?? 0) }
