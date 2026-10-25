@@ -750,6 +750,8 @@ names and product ids, and Complete's promise to older owners.
    Jack's calls (2026-10-25): go with changes (E1); the standing hint, the clock's disc always with a dashed vermilion
    edge (E2); freeze on the +1 when a loss is sealed (E3). `lab-escapement` now defaults to `hint` and `freeze`
    (local, not pushed).
+   Still to reconcile: the lab lifts a tick out on a re-grab, which round 2's final tick rules out; the problem book
+   recommends the final tick (J1 in `docs/escapement-problems.md`), and three of its problems need it.
 8. Split `seized` into a level motion (none, tank, crank) and a knob kind (working, seized, socket, ratchet, cup). The
    rim grab, the rim lesson, the bezel's hit area and the spin gesture key on motion; touch keys on kind, with new
    `Grab` cases for a ratchet tap and a cup dive; par's comment and the solver's turn moves key on motion; maelstrom's
@@ -816,14 +818,31 @@ names and product ids, and Complete's promise to older owners.
 34. Escapement: the ratchet knob kind and its tap, and the tick rule (lands on lift, lifts out on a re-grab of the
     open stir, sealed by the next commit of another knob or a ratchet tap, solves on the spot, the clock stopping once
     E is empty), with a test for each case.
+   The lift-out and seal here predate round 2's final tick; the problem book's J1 and J2 recommend a tick final on lift
+   and a loss shown on that lift, which would drop both. Not built.
 35. Escapement: the lost rule and its test (a pushed tick leaves a positive E entry that no continuation pops,
     property-tested on small cases) and the "lost." card with undo and again.
+   Checked on the 30 book problems only (2026-10-25, `ESC_PUSHED=1 scripts/escapement.sh`): playing on past a pushed
+   tick, no line of whole heals and waits reaches par. The property test is still to write.
 36. Escapement: the pruned prover (`exhaustive` with a forced tick after every move and a line dropped where a tick
     pushes), a meet-in-the-middle fallback for hex, and an escapement mode in solve.sh.
+   Draft prover on `escapement-design` (2026-10-25): `scripts/escapement.sh`, a standalone script on `Array.commit`, not
+   yet the app's `Solver`. Its lower bound (each move ticks each clock once) proves every book problem's par outright,
+   so no meet-in-the-middle was needed; uniqueness is a search over turns of up to ±6 steps, which finishes on hex.
+   Left: move it into `UnstirTests/Solver.swift` with the pack's code, and a test that replays each book line on a
+   real `Game` (to-do 26).
 37. Escapement: the paper ground: dark-ink variants of the solve wave and the turn's hairlines, ink lines at least
     2 px wide, and shots that pin them.
 38. Escapement: ratchet art (a 12-tooth wheel and pawl), the vermilion sub-dial and the stipulation set in a serif.
 39. Escapement: 30 composed problems, each proved, to Jack before code.
+   Drafted on `escapement-design` (2026-10-25): `docs/escapement-problems.md`, the rules as the player meets them, 30
+   problems in the pitch's five chapters (layout, scramble, clocks, "Unstir in N.", line, key idea, grade), each with
+   par proved absolute and one key; table in `scripts/escapement/problems.tsv`. Seven teachers composed by hand, 23
+   dealt by the prover and chosen by hand. Found: under the rule a wait is never a choice (it is right exactly when
+   nothing can come off), so the puzzle is triage under the dial; three clocks on hex cross every knob. Waiting on
+   Jack: J1 to J9 in that file (recommended: final tick, loss shown on the lift, clockwise tick order, over par
+   allowed, keep the rule, end on 29, keep Wound Back, accept detour duals in 9 and 11, accept dealt problems after
+   he plays them).
 40. First Stir: vignettes as tag sets on the scramble's entries, played when their tags leave the stack (a pop, a
     merged pop, a fine-pass win), unplayed by undo and reset, crossfading 0.4 s under the stack.
 41. First Stir: a per-scene test that no vignette's light reaches the core of a rod with an entry removable right
@@ -835,6 +854,8 @@ names and product ids, and Complete's promise to older owners.
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
     the finals in Csound.
 46. Free taste: the first three levels of each pack teach its rule without words; cold-read each on a new player.
+   Escapement's three drafted on `escapement-design` (2026-10-25): 1 the tick, 2 the wait (the mock-up), 3 the dashed
+   edge, after the lab's demonstration. The cold read waits on the pack's build.
 47. The daily archive: a calendar screen, bests under `daily-yyyymmdd` ids, back-filled to Jack's date, opened by any
     purchase.
    Jack's call (2026-10-25, round 6): back-filled to 30 days before launch day (`Share.firstDay`).
