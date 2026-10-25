@@ -134,6 +134,14 @@ final class StoreTests: XCTestCase {
         }
     }
 
+    /// The card shows the App Store's price, never one of the app's own.
+    func testStartFetchesEveryPrice() async throws {
+        let store = Store()
+        await store.start()
+        for id in Pack.productIDs { XCTAssertNotNil(store.price(id), id) }
+        XCTAssertNotEqual(store.price(Pack.lens.productID), store.price(Pack.completeID))
+    }
+
     func testPurchaseGrantsOnePack() async throws {
         let store = Store()
         await store.start()

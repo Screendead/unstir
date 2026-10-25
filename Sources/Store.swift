@@ -41,6 +41,8 @@ final class Store {
     private(set) var ledger = Ledger()
     /// The harness's states for this launch, in place of StoreKit's; always nil in Release.
     private(set) var harness: Ledger?
+    /// Each product's price as the App Store gives it, for the player's storefront; missing until it is fetched.
+    private(set) var prices: [String: String] = [:]
     @ObservationIgnored private var products: [String: Product] = [:]
     @ObservationIgnored private var updates: Task<Void, Never>?
 
@@ -53,10 +55,13 @@ final class Store {
         return pack.access(number, owned: ledger.owned, harness: harness?.owned ?? [])
     }
 
+    func price(_ id: String) -> String? { prices[id] }
+
     /// Set before `start`, which then leaves StoreKit alone for the launch.
-    func pretend(_ ledger: Ledger) {
+    func pretend(_ ledger: Ledger, prices: [String: String] = [:]) {
         guard !Build.release else { return }
         harness = ledger
+        self.prices = prices
     }
 
     /// Listens for purchases made or revoked elsewhere (Ask to Buy approvals, refunds, other devices, Family Sharing) and
@@ -67,6 +72,17 @@ final class Store {
             for await result in Transaction.updates { await self?.apply(result) }
         }
         await refresh()
+        await fetchPrices()
+    }
+
+    /// A failed fetch leaves the prices missing, and the card asks again when it opens.
+    func fetchPrices() async {
+        guard harness == nil, Pack.productIDs.contains(where: { prices[$0] == nil }) else { return }
+        do {
+            try await fetch()
+        } catch {
+            Log.write("products failed: \(error)")
+        }
     }
 
     func refresh() async {
@@ -123,9 +139,14 @@ final class Store {
 
     /// Fetched again for an id the last fetch lacked, so a product missing once is not missing all launch.
     private func product(_ id: String) async throws -> Product? {
-        if products[id] == nil {
-            for p in try await Product.products(for: Pack.productIDs) { products[p.id] = p }
-        }
+        if products[id] == nil { try await fetch() }
         return products[id]
+    }
+
+    private func fetch() async throws {
+        for p in try await Product.products(for: Pack.productIDs) {
+            products[p.id] = p
+            prices[p.id] = p.displayPrice
+        }
     }
 }

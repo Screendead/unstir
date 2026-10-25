@@ -102,6 +102,10 @@ struct Harness {
         return ledger
     }
 
+    /// With `purchases`, the prices StoreKit/Unstir.storekit sets, as the App Store would show them on a US storefront;
+    /// none with UNSTIR_PRICES=0, as before StoreKit answers.
+    let prices: [String: String]
+
     /// UNSTIR_ICON=n: app-icon candidate n alone on the screen (`IconView`).
     let icon: Int?
 
@@ -131,6 +135,8 @@ struct Harness {
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
         purchases = Harness.purchases(env)
+        prices = env["UNSTIR_PRICES"] == "0" ? [:]
+            : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, $0 == Pack.completeID ? "$5.99" : "$2.99") })
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE", "PACK"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
@@ -250,7 +256,7 @@ struct RootView: View {
 
     init() {
         let h = Harness(ProcessInfo.processInfo.environment)
-        if let purchases = h.purchases { Store.shared.pretend(purchases) }
+        if let purchases = h.purchases { Store.shared.pretend(purchases, prices: h.prices) }
         _level = State(initialValue: h.screen == "menu" ? nil : h.level)
         _harness = State(initialValue: h)
     }
