@@ -261,6 +261,15 @@ shot rim-swirl-held-low "Rim: vortex 01, the swirl held from the rim at six and 
   TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 LIVE=4:-1.5 TOUCH=0,0.97
 shot rim-swirl-turned "Rim: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the dashes at twelve." \
   TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 TURNED=4:+2
+# The swirl's breath (UNSTIR_BREATH), held 0.4 s into its first slosh, where it has turned the picture furthest: a still
+# of the tank at rest shows nothing. On vortex 01 (quad), 14 (pent) and 21 (hex), and on vortex 01 with knob 1 seized,
+# for the bezel's knurl beside it.
+for n in 01 14 21; do
+  shot "breath-$n" "Breath: vortex $n at rest, its lesson learnt, 0.4 s into the swirl's first slosh." \
+    TIER=vortex LEVEL=$n CLOCK=3 SWIRLED=1 BREATH=1.9
+done
+shot breath-both "Breath: vortex 01 with knob 1 seized, both lessons learnt, 0.4 s into the swirl's first slosh: the knurl for the glass's turn beside it." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 BREATH=1.9
 # A sheet of what reads before a move, cut to the tank: the swirl alone, the glass's turn alone and both, learnt along
 # the top and with their lessons under. Not a shot, so not in the index.
 if [[ -z "$pattern" || "rim-" == *$pattern* ]]; then
