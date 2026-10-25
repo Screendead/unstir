@@ -287,7 +287,7 @@ Round 4 (2026-10-25, on its own page after round 3's answers):
 | Call | Jack's answer |
 |---|---|
 | R1. Charybdis's rim | **Claude's reading confirmed** (option A): one gesture that turns the glass and swirls it together |
-| C1. The swirl cue that replaces the ticks | **Breath** (option B): 1.5 s after the tank comes to rest the picture sloshes once, 12°, through the swirl, then again every 12 s idle. Merged 2026-10-25 (PR #30); as built the slosh peaks near 8° (open, under "What the tier needs" in "Vortex (provisional, 2026-10-24)") |
+| C1. The swirl cue that replaces the ticks | **Breath** (option B): 1.5 s after the tank comes to rest the picture sloshes once, 12°, through the swirl, then again every 12 s idle. Merged 2026-10-25 (PR #30); as built the slosh peaks near 8°, which Jack kept (2026-10-25, K2: A). Jack's call (2026-10-25): it breathes only until the player's first swirl stir (under "What the tier needs" in "Vortex (provisional, 2026-10-24)") |
 | P1. Vortex's own pictures | **All three families**, isobars, ephemeris and cords. Jack: "A is my favourite solved, but I love the animation of B both solved and unsolved too. I want both! Can we have both? Textiles are the least compelling - but not *bad*, so I kind of want all three." Ephemeris's orbits may overlap charybdis's planned orbits. Merged 2026-10-25 (PR #28) |
 | V3. Which layouts get a swirl | **All five**, the 27 levels as built |
 | B2. CI over 5 minutes | **Cache the build** (option A), **and move the line to 7 minutes**. The cache merged 2026-10-25 (PR #29) |
@@ -1171,13 +1171,16 @@ Jack's calls (2026-10-25, round 3 under "Jack's calls on the pitch"):
   2026-10-25 (PR #30), what ships:
   - **Breath**, the swirl's cue. 1.5 s after the tank becomes the player's, the swirl sloshes the picture once through
     its own map and settles: a 12° sine damped by e^-t over 3.2 s, so it peaks near 8° and ends at 0. It sloshes
-    again every 12 s while the tank rests; after any lift the next slosh waits 10 s. A finger on the rim or a knob,
+    again every 12 s while the tank rests; after any lift the next slosh waits 10 s. It runs only until the player's
+    first stir of the swirl commits (`Best.swirled`, which retires the swirl's lesson too), then never on any level
+    (Jack's call, 2026-10-25; on `breath-once`, in review). A finger on the rim or a knob,
     two fingers or a drawn fingertip ends the rest, and the slosh fades out over 0.25 s from where it stood, under
     the live turn, so the picture never jumps (measured frame to frame in the `breath-grab` and `breath-grab-knob`
     films). The opening, a win and a reset end it the same way, and under Reduce Motion there is none. It is one
     extra entry on top of the shader's stack, drawn only while its angle is off 0, and it never touches `Game`. The
     picture's timeline runs only while a breath moves: on a static picture the simulator recorded no frames between
-    sloshes. Shots `breath-01`, `-14`, `-21` and `-both`; films `breath-rest`, `breath-grab`, `breath-grab-knob`.
+    sloshes. Shots `breath-01`, `-14`, `-21` and `-both`; films `breath-rest`, `breath-grab`, `breath-grab-knob`, all
+    launched as a player who has never swirled, so the swirl's lesson shows beside the breath.
   - **The knurl** (`Knurl`, was `RimCues`), kept from `knob`: where knobs are seized the bezel is knurled steel, its
     ridges faintly amber at rest (the tank's colour), turning with the glass, on every seized level. It still says
     "turns the glass".
@@ -1260,32 +1263,38 @@ gesture there (see "The charybdis rule" under round 3). A is set aside (R10).
 **What the tier needs before it's final.**
 - **Jack's playtest** of the 27 levels on the phone; the titles are drafts.
 - **Its picture family.** Built and merged 2026-10-25 (PR #28): isobars, ephemeris and cords (Jack, V6 and P1), in
-  the table above. Open, each a recommendation and not decided:
-  - **Which levels get which picture** (Claude's recommendation; Jack can veto it). Isobars V1, V7, V10, V14, V19,
+  the table above. Jack's calls on it (2026-10-25):
+  - **Which levels get which picture**: Jack kept Claude's interleaved split (2026-10-25, K3: A). Isobars V1, V7, V10, V14, V19,
     V21, V23, V25, V27 (2–24 stirs); ephemeris V2, V4, V6, V8, V11, V13, V15, V17, V22 (3–14 stirs); cords V3, V5,
     V9, V12, V16, V18, V20, V24, V26 (4–22 stirs). The rule: nine each, no two neighbours alike, V1–V3 one of each,
     isobars open each layout and take the finale (Jack's favourite solved, and the cheapest to draw, 2 entries), the
     ephemeris only to 14 stirs (it dims to a filigree at depth; `testVortexTable` enforces it), cords the rest (they
     go grey-brown at depth). A small search picked the table that keeps the ephemeris, then cords, as shallow as
     those rules allow. Shots `vortex-family-*`, laid out by `scripts/vortex-family-sheet.py`.
-  - **The sandbox's picture cycle leaves out vortex's family** (`Picture.next` skips every live picture without a
-    twin). Claude's recommendation: add the family to the cycle; not decided.
+  - **The sandbox's picture cycle takes vortex's family** (Jack's call, 2026-10-25): `Picture.next` runs plughole's
+    three, whirlpool's five, then isobars, ephemeris and cords, and skips only the twins. On `breath-once`, in review.
   Not a call: the ephemeris's orbits may overlap the orbit pictures planned for charybdis.
 - **Its sound bed** (the `sound` branch has a bed per tier; vortex has none).
-- **The rim's swirl cue** (above): breath (C1), built and merged 2026-10-25 (PR #30). Calls the PR made for Jack, each
-  Claude's recommendation as built and not decided:
-  - **The wait after a move is 10 s, not 1.5 s.** The first slosh of a level comes 1.5 s after the tank is the
-    player's; after any lift the next waits 10 s, then one every 12 s, as in the pitch, so a move is never answered
-    by a slosh. "1.5 s after the tank comes to rest" (C1) could also mean after every move.
-  - **Reduce Motion means no breath at all**, as the menu drops its stir under Reduce Motion. Until the first swirl,
-    the swirl's lesson arc still names the control.
-  - **The slosh peaks near 8°, not 12°.** Jack's answer to C1 said 12°. The pitch's film used the same curve (12°
-    damped by e^-t), so on the PR's reading the 8° peak (8.3°, checked) is what Jack saw and chose, and it kept that. An
-    amplitude of about 17.3° would give a true 12° peak.
-  - **The swirl's lesson arc keeps its dark stroke**, today's default; V2 was never answered.
-  - **The swirl's count dashes follow the knob rule**, 14 pt inside the disc, where before they kept clear of the
-    ticks.
-  - **An undo doesn't restart the rest**: the breath carries on over the changed stack.
+- **The rim's swirl cue** (above): breath (C1), built and merged 2026-10-25 (PR #30). Jack's calls on what the PR left
+  open (2026-10-25):
+  - **Breath stops once the swirl is used.** Jack: "I don't think it does need to move after the first move is made -
+    if the player has already seen the tank slosh and made their move swirling the whole tank, they understand the
+    mechanic." It runs only until the player's first committed stir of the swirl, the moment and the stored flag
+    (`Best.swirled`) that retire the swirl's lesson, and no level breathes after it (`Game.breathes`,
+    `testBreathStopsOnceTheSwirlIsUsed`). On `breath-once`, in review.
+  - **The wait after a move stays 10 s** (Jack's call, 2026-10-25). The first slosh of a level comes 1.5 s after the
+    tank is the player's; after any lift the next waits 10 s, then one every 12 s, so a move is never answered by a
+    slosh.
+  - **The slosh peaks near 8°, not 12°**, which Jack kept (2026-10-25, K2: A). Jack's answer to C1 said 12°; the
+    pitch's film used the same curve (12° damped by e^-t), so the 8° peak (8.3°, checked) is what he saw. An amplitude
+    of about 17.3° would give a true 12° peak.
+  - **The four defaults stay as built** (Jack, 2026-10-25, K4: A):
+    - **Reduce Motion means no breath at all**, as the menu drops its stir under Reduce Motion. Until the first swirl,
+      the swirl's lesson arc still names the control.
+    - **The swirl's lesson arc keeps its dark stroke** (V2 was never answered before).
+    - **The swirl's count dashes follow the knob rule**, 14 pt inside the disc, where before they kept clear of the
+      ticks.
+    - **An undo doesn't restart the rest**: the breath carries on over the changed stack.
 - ~~**Tri and eye** (V3)~~: answered in round 4, a swirl on all five layouts, the 27 levels as built.
 - **Known gap**: a sandbox launched on a swirl layout through `UNSTIR_LAYOUT` crashes on the layout button (harness
   only).
