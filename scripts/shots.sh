@@ -260,6 +260,11 @@ shot rim-knob-noseat-both "Rim cue knob, no seats: vortex 01 with knob 1 seized,
   TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 SEATS=0
 shot rim-knob-noseat-both-lesson "Rim cue knob, no seats: vortex 01 with knob 1 seized, neither ever used: both lessons too." \
   TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SEATS=0
+# The swirl's count, inside the glass on the far side from the finger, clear of the cue's ticks and pointer.
+shot rim-knob-swirl-held-low "Rim cue knob: vortex 01, the swirl held from the rim at six and carried 1.5 steps counterclockwise: -2 on the far side from the finger, inside the dashes, which run inside the ticks." \
+  TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 LIVE=4:-1.5 TOUCH=0,0.97
+shot rim-knob-swirl-turned "Rim cue knob: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the ticks at twelve." \
+  TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 TURNED=4:+2
 # A sheet per cue of what reads before a move, cut to the tank and the glyphs' room over twelve: the swirl alone, the
 # glass's turn alone and both, learnt along the top and with their lessons under. Not a shot, so not in the index.
 for v in knob bands glyphs; do

@@ -945,7 +945,7 @@ struct LevelView: View {
                     .position(at(k))
             }
             if let c = rodCount, c.live || c.steps != 0 {
-                dial(at(c.k), disc(c.k), inner: disc(c.k) - 14, from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
+                dial(at(c.k), disc(c.k), inner: dashes(c.k, r), from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
                      to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps, step: Tank.step)
                     .opacity(c.live ? (commits ? 1 : Self.idle) : Self.lifted)
             }
@@ -1039,7 +1039,7 @@ struct LevelView: View {
             }
             if let c = rodCount, c.steps != 0 {
                 countLabel(c.steps).opacity(c.live ? 1 : 0.45)
-                    .position(countSpot(at(c.k), reach: rods[c.k].z * r + 22, side: side, avoid: others))
+                    .position(countSpot(at(c.k), reach: countReach(c.k, r), side: side, avoid: others))
             }
             if let c = tankCount, c.steps != 0 {
                 countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side, avoid: glyphs))
@@ -1118,6 +1118,17 @@ struct LevelView: View {
 
     /// Room for a count round its centre: half its width at two digits.
     private static let countRoom: CGFloat = 18
+
+    /// The circle a rod's count's dashes run on: 14 pt inside its disc, but inside the swirl's cue's ticks and pointer.
+    private func dashes(_ k: Int, _ r: CGFloat) -> CGFloat {
+        k == game.level.layout.swirl ? r - RimCues.pointerEnd - 4 : min(rods[k].z * r, r - 4) - 14
+    }
+
+    /// How far from a rod's centre its count sits: off a knob's disc, but inside the swirl's, whose rim is the glass's
+    /// edge, clear of its dashes.
+    private func countReach(_ k: Int, _ r: CGFloat) -> CGFloat {
+        k == game.level.layout.swirl ? dashes(k, r) - 6 - Self.countRoom : rods[k].z * r + 22
+    }
 
     /// Where a turn's count sits: `reach` out from `c` on the far side from the finger, but never below it, where the
     /// hand is, swung the least that keeps it as far from each point in `avoid` as that point asks; kept on the screen.
@@ -1620,6 +1631,8 @@ struct RimCues: View {
     static let glyphSize: CGFloat = 14
     /// How far inside the glass's edge the knob cue's ring joins the swirl's ticks.
     static let dial: CGFloat = 5
+    /// How far inside the glass's edge the swirl's pointer reaches.
+    static let pointerEnd: CGFloat = 24
     /// Where the glyphs sit: over twelve, clear of the tank lesson's arc there, side by side where there are both.
     static func glyphs(_ r: CGFloat, tank: Bool, swirl: Bool) -> (tank: CGPoint?, swirl: CGPoint?) {
         let radius = 1.045 * r + 32, apart = tank && swirl ? 8 * Double.pi / 180 : 0
@@ -1638,7 +1651,7 @@ struct RimCues: View {
                     // way the turn in hand goes, as the swirl's core outruns its edge. A sideways offset in points at
                     // the ticks' inner end.
                     let lean = 4 + 3 * min(max(swirl.live / Tank.step, -2), 2)
-                    let d = Self.dial, marks = ticks(r - d, r - d - 10, lean: lean), pointer = pointer(r - d, r - 24, lean: lean)
+                    let d = Self.dial, marks = ticks(r - d, r - d - 10, lean: lean), pointer = pointer(r - d, r - Self.pointerEnd, lean: lean)
                     // The groove: dark from the glass's edge in past the hairline that joins the ticks, so the ticks
                     // belong to the glass and not to the bezel's knurl.
                     if seats { ring(r - 2.5).stroke(Color.black.opacity(0.75), lineWidth: 5) }

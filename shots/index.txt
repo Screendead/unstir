@@ -179,6 +179,8 @@ rim-glyphs-both-tank-held.png  Rim cue glyphs: vortex 01 with knob 1 seized, the
 rim-knob-noseat-swirl.png  Rim cue knob, no seats: vortex 01, the swirl alone, its lesson learnt.
 rim-knob-noseat-both.png  Rim cue knob, no seats: vortex 01 with knob 1 seized, both lessons learnt.
 rim-knob-noseat-both-lesson.png  Rim cue knob, no seats: vortex 01 with knob 1 seized, neither ever used: both lessons too.
+rim-knob-swirl-held-low.png  Rim cue knob: vortex 01, the swirl held from the rim at six and carried 1.5 steps counterclockwise: -2 on the far side from the finger, inside the dashes, which run inside the ticks.
+rim-knob-swirl-turned.png  Rim cue knob: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the ticks at twelve.
 swirl-quad-one.png  Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still.
 swirl-quad.png  Square with a swirl (rod 4), 0:+3,4:+2,2:-4,1:+3,4:-3,3:+5.
 swirl-quad-live.png  The same held mid-drag from the rim, the swirl 1.5 steps clockwise.
