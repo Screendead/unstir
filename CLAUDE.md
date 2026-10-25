@@ -107,6 +107,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
   scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as
   one sheet (needs Pillow).
+- First Stir's outline: `docs/first-stir-outline.md` is the pack's story, scene table and art spec, for Jack's approval
+  before any art. `scripts/first-stir-compositions.py` draws plans of three of its scenes (each rod's disc and core,
+  the part of a core another disc reaches, where each vignette sits) to `shots/first-stir-composition-*.png` (needs
+  Pillow).
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from

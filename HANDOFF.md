@@ -734,6 +734,13 @@ names and product ids, and Complete's promise to older owners.
 5. First Stir's story outline (25 scenes and their vignettes) for Jack's approval, then Claude draws all 25 scenes
    (Jack's call 3, no illustrator) to an art spec: single-weight neon line, the chapter palettes, up readable in every
    lit core, each figure change inside its own rod's core.
+   Written 2026-10-25 on `firststir-outline`, awaiting Jack: `docs/first-stir-outline.md` holds the story (one night
+   told backwards, dawn to the teacup), the five chapters with their palettes and time windows, 25 scenes of three
+   vignettes each (layout, rods, held back and played, heal order), the art spec, and eight open points with Claude's
+   recommendations (approve the story; three vignettes a scene; the night tiled across the pack; the time alone as the
+   caption; a plain heal steps the time back; the lab's light rule; the lab harbour as scenes 16 and 1; the end film
+   from the baked states). `scripts/first-stir-compositions.py` draws composition plans for scenes 1, 12 and 14. Left:
+   Jack's answers, then the art and scrambles (43).
 6. Lens go/no-go: port the lab zoom onto a halftone test picture, film ±1 to ±3 steps on the phone and set the rate
    (1.2, or 1.25 to 1.33 if one step doesn't read); film a zoom seam over and under a twist seam and cold-read which
    is newest; compare shrunk cores against a supersampled reference for glitter, since zoom isn't area-preserving.
@@ -830,6 +837,7 @@ names and product ids, and Complete's promise to older owners.
     after its heal (`Layout.removable`), over every heal order.
 42. First Stir: vignettes baked on demand within a memory budget measured on the phone.
 43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
+   The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), awaiting Jack; no art or scrambles yet.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
