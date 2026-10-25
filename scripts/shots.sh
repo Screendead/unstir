@@ -239,6 +239,18 @@ for n in 01 14 27; do
   shot "vortex-plughole-$n" "Vortex level $n with its full scramble on plughole's grid, the swirl never stirred." \
     TIER=vortex LEVEL=$n CLOCK=3 PICTURE=grid
 done
+# Vortex's own family, a pitch (UNSTIR_PICTURE): one candidate from each of three themes, clean in the sandbox and on
+# vortex 01, 14 and 27, then whirlpool's five on the same levels for reference. scripts/vortex-family-sheet.sh lays them out.
+for p in isobars ephemeris cords; do
+  shot "vortex-family-$p-clean" "Vortex family candidate $p, clean: the sandbox's square with a swirl, nothing stirred." \
+    MODE=sandbox LAYOUT=quadSwirl STACK= PICTURE=$p CLOCK=3 SWIRLED=1
+done
+for p in isobars ephemeris cords glass chainmail coral neurons marbling; do
+  for n in 01 14 27; do
+    shot "vortex-family-$p-$n" "Vortex level $n with its full scramble on $p, its lesson learnt." TIER=vortex LEVEL=$n CLOCK=3 \
+      SWIRLED=1 PICTURE=$p
+  done
+done
 # What the rim does, shown before it is touched, three ways (UNSTIR_RIM): the swirl alone (vortex 01), the glass's
 # turn alone (maelstrom 01, knob 1 seized) and both (vortex 01 with knob 1 seized), each once its lessons are learnt
 # and with them, then held: the swirl from the rim, and where there are both, the swirl from the glass's edge and the
