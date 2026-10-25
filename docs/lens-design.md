@@ -124,10 +124,11 @@ solve closes the pack.
 ## 2. The level table (draft)
 
 Four issues of six and a splash page, as HANDOFF's structure, with the Spiral issue gone (open point 1) and hex
-brought forward in its place. Rules the draft keeps, each enforced by `scripts/lens-table.py docs/lens-design.md`,
-which reads the rows below and exits non-zero on a break:
+brought forward in its place. Rules the draft keeps, all but the first enforced by
+`scripts/lens-table.py docs/lens-design.md`, which reads the rows below and exits non-zero on a break:
 
-- Layouts tri, eye, quad and hex; no pent (consequence 3). A rod is a lens or a twist for the whole level, and every
+- Layouts tri, eye, quad and hex; no pent (consequence 3, open point 3). This one is a choice, not a check: the drag
+  rule below would let a pent row through with twists of 4 steps or more over each lens. A rod is a lens or a twist for the whole level, and every
   level keeps at least one twist rod in reach of each lens, or it has no order to read.
 - Every dealt lens entry is +1 to +3, and each lens rod nets at most +3 (consequence 4).
 - Every twist dealt over a lens drags its rim at least 4 pitches: any step on tri and hex, 2 or more of a small twist
