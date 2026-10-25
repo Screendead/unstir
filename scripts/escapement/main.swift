@@ -156,6 +156,23 @@ func chance(_ p: Problem, par: Int) -> Double {
     return go(p.stack, nil, par)
 }
 
+/// Along a line, the clean moves whose own tick doesn't push but after which par is out of reach: the decisions, as
+/// (waits, heals) among them.
+func traps(_ p: Problem, line: [Move], par: Int) -> (waits: Int, heals: Int) {
+    let clean = Counter(p, span: nil)
+    var s = p.stack, last: Move? = nil, n = (waits: 0, heals: 0)
+    for (i, m) in line.enumerated() {
+        for o in p.cleanMoves(s, after: last) where o != m {
+            if let t = p.play(s, o), clean.count(t, last: o, left: par - i - 1) == 0 {
+                if o == .wait { n.waits += 1 } else { n.heals += 1 }
+            }
+        }
+        s = p.play(s, m)!
+        last = m
+    }
+    return n
+}
+
 /// Fewest clean moves to empty the stack from `s`, or nil if every clean line loses.
 func cleanFinish(_ p: Problem, _ s: [Twist], last: Move?) -> Int? {
     var memo: [Key: Int?] = [:]
@@ -210,6 +227,8 @@ func report(_ p: Problem, span: Int, quick: Bool) {
         print("keys at \(par) over turns of up to \(span): \(keys.map(\.description).sorted().joined(separator: " "))")
     }
     print(proof)
+    // Past a pushed tick a clock never stops, so the unbounded walks below would never end.
+    if keepsPushed { return }
     let n = clean.count(p.stack, last: nil, left: par)
     print("clean lines at \(par): \(n)")
     for l in clean.lines(p.stack, last: nil, left: par, keep: 6) { print("  " + l.map(\.description).joined(separator: " ")) }
@@ -220,8 +239,72 @@ func report(_ p: Problem, span: Int, quick: Bool) {
         } else { fate = "lost at once" }
         print("  first \(m): \(fate)")
     }
+    if let line = clean.lines(p.stack, last: nil, left: par, keep: 1).first {
+        var s = p.stack, last: Move? = nil
+        for (i, m) in line.enumerated() {
+            let others = p.cleanMoves(s, after: last).filter { $0 != m }
+            let fates = others.map { o -> String in
+                guard let t = p.play(s, o) else { return "\(o) pushes" }
+                return clean.count(t, last: o, left: par - i - 1) > 0 ? "\(o) also" : "\(o) dooms"
+            }
+            let t = p.play(s, m)!
+            print("  \(i + 1). \(m)\(fates.isEmpty ? "" : "   [" + fates.joined(separator: ", ") + "]")   -> \(describe(t))")
+            s = t
+            last = m
+        }
+    }
     let c = chance(p, par: par)
     print(String(format: "chance at par %.4f  difficulty %.1f bits", c, c > 0 ? abs(log2(c)) : 99))
+}
+
+/// One dealt problem, if its clean optimum is what the clocks owe: key kind, heals and waits on the line that would miss
+/// par, clock seams, seed, owed, entries, waits, lines at par, first moves that miss par, difficulty in bits, stack, line.
+func score(_ p: Problem, seed: UInt64) {
+    let stack = p.stack, clean = Counter(p, span: nil), o = p.owed(stack)
+    let lines = clean.count(stack, last: nil, left: o)
+    guard lines > 0 else { return }
+    let line = clean.lines(stack, last: nil, left: o, keep: 1)[0]
+    let first = p.cleanMoves(stack, after: nil)
+    let losing = first.filter { m in p.play(stack, m).map { clean.count($0, last: m, left: o - 1) == 0 } ?? true }.count
+    let kind = line[0] == .wait ? "quiet" : (line[0].rod == stack.last?.rod ? "top" : "under")
+    let t = traps(p, line: line, par: o)
+    let seams = stack.filter { p.isClock($0.rod) }.count
+    let c = chance(p, par: o)
+    print([kind, String(t.heals), String(t.waits), String(seams), String(seed), String(o), String(stack.count),
+           String(line.filter { $0 == .wait }.count), String(lines), "\(losing)/\(first.count)",
+           String(format: "%.2f", c > 0 ? abs(log2(c)) : 99), describe(stack), line.map(\.description).joined(separator: " ")]
+        .joined(separator: "\t"))
+    fflush(stdout)
+}
+
+/// Deals problems backwards from a line of `n` moves: each step back unticks every clock still running at that move,
+/// then pushes the inverse of a heal (or nothing, for a wait), so the line plays forward to an empty stack. ESC_INSIDE is
+/// the share of heals on rods that cross a clock's disc.
+func build(_ layout: Layout, clocks: [Clock], n: Int, waits: ClosedRange<Int>, seeds: Range<UInt64>, rule: Rule) {
+    let share = Double(ProcessInfo.processInfo.environment["ESC_INSIDE"] ?? "0.3")!
+    let working = layout.rods.indices.filter { r in !clocks.contains { $0.rod == r } }
+    for seed in seeds {
+        var rng = SplitMix64(state: seed)
+        let runs = clocks.indices.map { $0 == 0 ? n : Int.random(in: (n + 1) / 2...n, using: &rng) }.shuffled(using: &rng)
+        let w = Int.random(in: waits, using: &rng)
+        var waitAt = Set<Int>()
+        while waitAt.count < min(w, n - 1) { waitAt.insert(Int.random(in: 1...n, using: &rng)) }
+        var s: [Twist] = []
+        var ok = true
+        for t in stride(from: n, through: 1, by: -1) {
+            for (c, run) in zip(clocks, runs).reversed() where run >= t { s.commit(rod: c.rod, steps: -c.dir, in: layout) }
+            if !waitAt.contains(t) {
+                let free = working.filter { r in !clocks.contains { layout.overlaps($0.rod, r) } }
+                let inside = working.filter { !free.contains($0) }
+                let r = (free.isEmpty || Double.random(in: 0..<1, using: &rng) < share ? inside : free).randomElement(using: &rng)!
+                if s.commit(rod: r, steps: [-5, -4, -3, -2, 2, 3, 4, 5].randomElement(using: &rng)!, in: layout) != .pushed {
+                    ok = false
+                }
+            }
+        }
+        guard ok else { continue }
+        score(Problem(layout: layout, stack: s, clocks: clocks, rule: rule), seed: seed)
+    }
 }
 
 /// Deals random problems and prints those whose clean optimum is what the clocks owe, with a few measures.
@@ -246,19 +329,7 @@ func search(_ layout: Layout, clocks: [Clock], heals: ClosedRange<Int>, owed: Cl
         var stack: [Twist] = []
         for e in entries { stack.commit(e, in: layout) }
         guard stack.count == entries.count else { continue }
-        let p = Problem(layout: layout, stack: stack, clocks: clocks, rule: rule)
-        let clean = Counter(p, span: nil)
-        let o = p.owed(stack)
-        guard clean.count(stack, last: nil, left: o) > 0 else { continue }
-        let lines = clean.count(stack, last: nil, left: o)
-        let first = p.cleanMoves(stack, after: nil)
-        let losing = first.filter { m in p.play(stack, m).map { clean.count($0, last: m, left: o - 1) == 0 } ?? true }.count
-        let line = clean.lines(stack, last: nil, left: o, keep: 1)[0]
-        let waits = line.filter { $0 == .wait }.count
-        let c = chance(p, par: o)
-        print([String(seed), String(o), String(stack.count), String(waits), String(lines), "\(losing)/\(first.count)",
-               String(format: "%.2f", c > 0 ? abs(log2(c)) : 99), describe(stack), line.map(\.description).joined(separator: " ")]
-            .joined(separator: "\t"))
+        score(Problem(layout: layout, stack: stack, clocks: clocks, rule: rule), seed: seed)
         fflush(stdout)
     }
 }
@@ -278,10 +349,15 @@ case "search" where args.count == 8:
     search(Layout(rawValue: args[1])!, clocks: parseClocks(args[2]), heals: r(args[3]), owed: r(args[4]),
            seeds: UInt64(args[5])!..<UInt64(args[6])!, rule: rule)
     _ = args[7]
+case "build" where args.count == 7:
+    let f = args[4].split(separator: "-").map { Int($0)! }
+    build(Layout(rawValue: args[1])!, clocks: parseClocks(args[2]), n: Int(args[3])!, waits: f[0]...(f.count > 1 ? f[1] : f[0]),
+          seeds: UInt64(args[5])!..<UInt64(args[6])!, rule: rule)
 default:
     print("""
     usage: scripts/escapement.sh check <layout> <scramble> <clocks> [span] [quick]
            scripts/escapement.sh search <layout> <clocks> <heals a-b> <owed a-b> <from seed> <to seed> -
+           scripts/escapement.sh build <layout> <clocks> <moves> <waits a-b> <from seed> <to seed>
     clocks: rods in tick order, each + or - (wound back), e.g. 0+ or 1+,3-.  ESC_RULE=final|lab
     """)
     exit(2)

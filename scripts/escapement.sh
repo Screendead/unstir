@@ -2,9 +2,10 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/escapement.sh check <layout> <scramble> <clocks> [span] [quick]
 #        scripts/escapement.sh search <layout> <clocks> <heals a-b> <owed a-b> <from seed> <to seed> -
+#        scripts/escapement.sh build <layout> <clocks> <moves> <waits a-b> <from seed> <to seed>
 # Escapement's prover for the problem book's draft: every move ticks each running clock once, and a tick that pushes
 # loses. check prints the optimum and its proof, the lines at par and each first move's fate; search deals problems
-# whose optimum is what the clocks owe. ESC_RULE=lab plays the lab's re-grab instead of Jack's final tick.
+# whose optimum is what the clocks owe, and build deals them backwards from a line. ESC_RULE=lab plays the lab's re-grab instead of Jack's final tick.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/escapement
