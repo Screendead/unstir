@@ -66,7 +66,8 @@ Once Jack has heard the argument and still decides, carry out his decision.
 `project.yml` is the source of truth for the Xcode project; the scripts run `xcodegen generate` before building, so
 edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitignored).
 
-- Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result)
+- Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result).
+  It passes the shell's `APTABASE_KEY`, Aptabase's app key, into Info.plist's `AptabaseKey`; without it analytics is off.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level on the phone
   until a run with `UNSTIR_UNLOCK=0`.
@@ -274,6 +275,23 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it.
+- **Analytics.swift** holds anonymous counts for Aptabase's EU region, behind `Consent` (undecided, yes, no; stored as
+  `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a no deletes the queue. The
+  first-launch question and the settings switch will call `Analytics.decide`. No ID leaves the phone. `Tally`
+  (stored as `analytics`) keeps the install's local day, the days opened, what has gone out once and an undo count;
+  its `opened` gives `installed` once, `returned` with the day number (day 1 the install's) on the first opening of each
+  later day, at launch or on coming to the front, and a `snapshot` once each on the first opening on or after days 2, 7
+  and 30, each marked sent only as it goes, so a late yes still sends them. Days are plain `Best.day`, not
+  `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved or quit, moves, par, undos, resets) as
+  it is solved or left for the menu; endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox nothing.
+  A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app was
+  killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
+  fires once a pack's taste levels all have bests, `purchased` on a verified purchase in `Store.purchase`. The snapshot
+  reads the bests, started flags, bank, endless best, dailies solved, packs owned and the tally. `Sender` posts batches
+  of 25 to `/api/v0/events` from `Library/analytics-queue.json`, keeps a batch on no answer, a 5xx or 429 and retries a
+  minute later, drops one refused, and drops events over 23 hours old (the server refuses a day's). `Sender.body` is
+  everything on the wire: name, props, time, a per-launch session (the snapshot its own) and `isDebug`, `osName`, the
+  app's versions and `sdkVersion`. The server takes keys of 40 characters, cuts strings at 180 and caps nothing else.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
@@ -315,7 +333,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch, so shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
-  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_UNLOCK` alone
+  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_ANALYTICS=log` writes each analytics event to the
+  flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
+  `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
+  any other harness flag analytics is off. `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. This is how screenshots and films
   are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.

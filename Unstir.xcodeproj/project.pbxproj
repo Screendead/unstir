@@ -13,10 +13,12 @@
 		3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965EC2AB5B15FD9B3CA462DE /* Twist.swift */; };
 		3F40391B2B57058C26788864 /* Loom.metal in Sources */ = {isa = PBXBuildFile; fileRef = 536CF149EF97D4429DC2751F /* Loom.metal */; };
 		402763F337DF9C5673C03A9A /* UnstirApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9BF77535C50E24D360E2ED /* UnstirApp.swift */; };
+		4B90EE14EB243B161D6EBD17 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8958A26903CC2506CCC43FBF /* Analytics.swift */; };
 		4C24D2DED659D4353BEA9998 /* Brim.metal in Sources */ = {isa = PBXBuildFile; fileRef = D322AA44C06018F3A665792F /* Brim.metal */; };
 		500060DF38B729F0EB090EBA /* Brim.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6499D4977A88A7764419D373 /* Brim.swift */; };
 		52972B0C126203096364F0AF /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E8193F7A9FB37B678695D2 /* Menu.swift */; };
 		5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944137441C4619E684D8CC15 /* LivePictures.swift */; };
+		6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */; };
 		79D52A8EF45A795194455A50 /* Sky.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2926E44D61C37EEF53C771BA /* Sky.metal */; };
 		880003D42E6629AE7D665B1C /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBF51F07B822677549432BB /* StoreTests.swift */; };
 		89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */; };
@@ -75,6 +77,7 @@
 		7147B0B195AAB46DE31D870D /* Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pictures.swift; sourceTree = "<group>"; };
 		7898E0AEAFE90492DC3EB64C /* Neurons.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Neurons.metal; sourceTree = "<group>"; };
 		7DE72E9F1CCE362B73E2FA79 /* Solver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Solver.swift; sourceTree = "<group>"; };
+		8958A26903CC2506CCC43FBF /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		8C424A58661F8E2D8F67C740 /* VortexPictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VortexPictures.swift; sourceTree = "<group>"; };
 		944137441C4619E684D8CC15 /* LivePictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePictures.swift; sourceTree = "<group>"; };
 		965EC2AB5B15FD9B3CA462DE /* Twist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Twist.swift; sourceTree = "<group>"; };
@@ -89,6 +92,7 @@
 		D322AA44C06018F3A665792F /* Brim.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Brim.metal; sourceTree = "<group>"; };
 		D692C82FAF648856F00B09E0 /* PackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackTests.swift; sourceTree = "<group>"; };
 		E302013539F573E3F8C8FBC5 /* Chainmail.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Chainmail.metal; sourceTree = "<group>"; };
+		FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -112,6 +116,7 @@
 		8B3A4E6A567BA07D74C3646D /* UnstirTests */ = {
 			isa = PBXGroup;
 			children = (
+				FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */,
 				D692C82FAF648856F00B09E0 /* PackTests.swift */,
 				2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */,
 				7DE72E9F1CCE362B73E2FA79 /* Solver.swift */,
@@ -135,6 +140,7 @@
 		F96B55CC954EB02E5F1476B9 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				8958A26903CC2506CCC43FBF /* Analytics.swift */,
 				059E21DBCF779B91F994E8E5 /* Assets.xcassets */,
 				D322AA44C06018F3A665792F /* Brim.metal */,
 				6499D4977A88A7764419D373 /* Brim.swift */,
@@ -270,6 +276,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4B90EE14EB243B161D6EBD17 /* Analytics.swift in Sources */,
 				4C24D2DED659D4353BEA9998 /* Brim.metal in Sources */,
 				500060DF38B729F0EB090EBA /* Brim.swift in Sources */,
 				C3596BB291D30EF520836782 /* Chainmail.metal in Sources */,
@@ -301,6 +308,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */,
 				E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */,
 				89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */,
 				A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */,
@@ -468,6 +476,7 @@
 		4AF82D949C02961E08A9D5A5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APTABASE_KEY = "";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Sources/Info.plist;
@@ -501,6 +510,7 @@
 		D0D4436C501D9F18D33F2F22 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APTABASE_KEY = "";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Sources/Info.plist;

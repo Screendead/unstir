@@ -104,14 +104,18 @@ struct Harness {
 
     /// UNSTIR_ICON=n: app-icon candidate n alone on the screen (`IconView`).
     let icon: Int?
+    /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
+    /// logs it, and stores nothing either way.
+    let harnessed: Bool
 
     init(_ env: [String: String]) {
         // UNSTIR_LEVEL counts in UNSTIR_TIER too.
         let tier = env["UNSTIR_TIER"].flatMap(Tier.init(rawValue:)) ?? .plughole
         // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
-        // one unlocked.
-        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && $0 != "UNSTIR_UNLOCK" }
+        // one unlocked. UNSTIR_ANALYTICS is for the phone too, and leaves the launch a plain one.
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS"].contains($0) }
+        self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
         menuTier = harnessed ? tier : nil
         // UNSTIR_BESTS=plughole:00-1,whirlpool:0: a best for each of a tier's levels from 01, one character each: a
@@ -246,10 +250,13 @@ final class Bench: NSObject {
 struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
+    /// Kept apart from `harness`, which a first move to another screen drops.
+    private let harnessed: Bool
     @Environment(\.scenePhase) private var phase
 
     init() {
         let h = Harness(ProcessInfo.processInfo.environment)
+        harnessed = h.harnessed
         if let purchases = h.purchases { Store.shared.pretend(purchases) }
         _level = State(initialValue: h.screen == "menu" ? nil : h.level)
         _harness = State(initialValue: h)
@@ -276,11 +283,18 @@ struct RootView: View {
             }
         }
         .background(Color.black)
-        .onChange(of: phase) { Log.write("phase \(phase)") }
+        .onChange(of: phase) {
+            Log.write("phase \(phase)")
+            Analytics.shared.phase(phase)
+        }
         .task {
-            // A test host's listener would finish the transactions the StoreKit tests watch.
-            guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+            // A test host's listener would finish the transactions the StoreKit tests watch, and its analytics would
+            // count the tests.
+            let env = ProcessInfo.processInfo.environment
+            guard env["XCTestConfigurationFilePath"] == nil else { return }
             await Store.shared.start()
+            // After the store, so a snapshot sees the packs owned.
+            Analytics.shared.start(env: env, harnessed: harnessed)
         }
         .task {
             guard harness?.tour == true else { return }
