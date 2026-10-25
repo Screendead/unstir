@@ -431,6 +431,10 @@ until the last tank is a child stirring a cup of tea.
 Some rods zoom instead of turning, so you read how big a core has grown against a halftone dot screen that never lies
 about scale.
 
+Superseded in part by Jack's call L1 (round 3: the hard lens, magnify only, x1.3, a rim inside the core) and by the
+drafts in `docs/lens-design.md` (branch `lens-design`), which drop the spiral and pent; the entry below is the
+original pitch.
+
 - **Role.** Built first, because its map already runs in Swift and Metal on the lab branch, so it proves the pack
   pipeline (the `Pack` type, StoreKit, the shelf and card) for the others.
 - **Buyer.** The comic and pop-art reader (halftone, Ben-Day dots, risograph prints), who is also the core Unstir
