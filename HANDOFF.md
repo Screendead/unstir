@@ -874,7 +874,8 @@ names and product ids, and Complete's promise to older owners.
    `snapshot`, day 7, days played 1,2,5, furthest V9, lens card seen, taste finished, not bought, 14 undos); grouping
    rows by their contents answers questions such as whether players who finished a taste came back. Plus the send-log
    button for full touch histories from testers who send one. Aptabase's server (`EventBody.cs`) takes property keys
-   of up to 40 characters, cuts string values at 180 and caps nothing else; it refuses events over a day old.
+   of up to 40 characters and event names of up to 60, and cuts string values at 180; it drops, still answering 200,
+   events over a day old and any whose session began over 7 days ago.
    The analytics core is built on `analytics` (`Analytics.swift`, its own sender with a queue on disk rather than the
    pre-1.0 SDK, which holds events only in memory); the consent question, settings switch and send-log button wait
    on their mock-up.

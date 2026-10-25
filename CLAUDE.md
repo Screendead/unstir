@@ -275,24 +275,26 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it.
-- **Analytics.swift** holds anonymous counts for Aptabase's EU region, behind `Consent` (undecided, yes, no; stored as
-  `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a no deletes the queue. The
-  first-launch question and the settings switch will call `Analytics.decide`. No ID leaves the phone. `Tally`
-  (stored as `analytics`) keeps the install's local day, the days opened, what has gone out once and an undo count;
-  its `opened` gives `installed` once, `returned` with the day number (day 1 the install's) on the first opening of each
-  later day, at launch or on coming to the front, and a `snapshot` once each on the first opening on or after days 2, 7
-  and 30, each marked sent only as it goes, so a late yes still sends them. Days are plain `Best.day`, not
-  `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved or quit, moves, par, undos, resets) as
-  it is solved or left for the menu; endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox nothing.
-  A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app was
-  killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
+- **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
+  (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
+  no deletes the queue. The first-launch question and the settings switch will call `Analytics.decide`. No ID leaves the
+  phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out once and an
+  undo count; its `opened` gives `installed` once, `returned` with the day number (day 1 the install's) on the first
+  opening of each later day, at launch or on coming to the front, and a `snapshot` once each on the first opening on or
+  after days 2, 7 and 30, each marked sent only as it goes, so a late yes still sends them. Days are plain `Best.day`,
+  not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved or quit, moves, par, undos, resets)
+  as it is solved or left for the menu; endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox
+  nothing. A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app
+  was killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
   fires once a pack's taste levels all have bests, `purchased` on a verified purchase in `Store.purchase`. The snapshot
-  reads the bests, started flags, bank, endless best, dailies solved on the first try, packs owned and the tally. `Sender` posts batches
-  of 25 to `/api/v0/events` from `Library/analytics-queue.json`; it is built at launch under a yes, so what an earlier
-  launch left queued goes out with no new event to carry it. It keeps a batch on no answer, a 5xx or 429 and retries a
-  minute later, drops one refused, and drops events over 23 hours old (the server refuses a day's). `Sender.body` is
-  everything on the wire: name, props, time, a session renewed after an hour with no event, as Aptabase's SDK does (the snapshot its own) and `isDebug`, `osName`, the
-  app's versions and `sdkVersion`. The server takes keys of 40 characters, cuts strings at 180 and caps nothing else.
+  reads the bests, started flags, bank, endless best, dailies solved on the first try, packs owned and the tally.
+  `Sender` posts batches of 25 to `/api/v0/events` from `Library/analytics-queue.json`; it is built at launch under a
+  yes, so what an earlier launch left queued goes out with no new event to carry it. It keeps a batch on no answer, a
+  5xx or 429 and retries a minute later, drops one refused, and drops events over 23 hours old (the server refuses a
+  day's). `Sender.body` is everything on the wire: name, props, time, a session renewed after an hour with no event, as
+  Aptabase's SDK does (the snapshot its own) and `isDebug`, `osName`, the app's versions and `sdkVersion`. The server
+  takes property keys of up to 40 characters and event names of up to 60, cuts strings at 180, and drops without an
+  error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
