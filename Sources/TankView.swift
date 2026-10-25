@@ -477,8 +477,6 @@ struct LevelView: View {
     private let frozenShake: Double?
     /// UNSTIR_TODAY: the day the level opens on, for the bank's refill.
     private let today: String?
-    /// UNSTIR_SEATS: whether the rim's lines over the picture sit on dark seats.
-    private let seats: Bool
     /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
     /// Endless: the picture's colours round the rim as the stack stirs it (Brim.colours), once worked out.
@@ -548,7 +546,6 @@ struct LevelView: View {
         frozenClock = harness?.clock
         frozenShake = harness?.shake
         today = harness?.today
-        seats = harness?.seats ?? true
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
@@ -1007,9 +1004,9 @@ struct LevelView: View {
                 }
                 .position(at(fk))
             Bezel(r: r)
-            RimCues(r: r, swirl: game.level.layout.swirl.map { s in (turned(s), probing == s ? liveAngle : 0, probing == s) },
-                    tank: game.level.seized.isEmpty ? nil : (turn, held != nil), seats: seats)
-                .opacity(showResult && !game.spilled ? 0 : 1)
+            if !game.level.seized.isEmpty {
+                Knurl(r: r, angle: turn, held: held != nil).opacity(showResult && !game.spilled ? 0 : 1)
+            }
             // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
             // animator of its own that misses the strike when the colours land after it.
             ZStack {
@@ -1029,9 +1026,9 @@ struct LevelView: View {
                 } keyframes: { _ in Self.jolt }
             }
             if game.level.layout.swirl != nil {
-                // On the swirl's ticks, inside the glass, in the middle of its grab: the tank's lesson keeps the bezel.
+                // Inside the glass, in the middle of its grab: the tank's lesson keeps the bezel.
                 RimLesson(kind: .swirl, r: r, showing: swirlLesson, pulse: 0, clock: frozenClock,
-                          reach: ((game.level.seized.isEmpty ? Self.rim : Self.swirlBand) + 1) / 2, seated: seats)
+                          reach: ((game.level.seized.isEmpty ? Self.rim : Self.swirlBand) + 1) / 2)
             }
             let ck = game.cancelledRod, across = 2 * disc(ck)
             Circle().stroke(Color.magenta, lineWidth: Self.hairline)
@@ -1055,11 +1052,11 @@ struct LevelView: View {
             // A spilled tank keeps its caps over the murk.
             .opacity(showResult && !game.spilled ? 0 : 1)
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
-            // knobs, which would hide it. The swirl's is its dial's ring inside the glass's edge, over the picture, so a
+            // knobs, which would hide it. The swirl's is a ring just inside the glass's edge, over the picture, so a
             // hairline. One view either way, so the first push on either animates.
             let swirlPushed = fk == game.level.layout.swirl
             Circle().strokeBorder(Color.alarm, lineWidth: swirlPushed ? Self.hairline : 1)
-                .padding(swirlPushed ? RimCues.dial - Self.hairline / 2 : -3)
+                .padding(swirlPushed ? Self.swirlFlash - Self.hairline / 2 : -3)
                 .frame(width: swirlPushed ? side : core, height: swirlPushed ? side : core)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.pushes) { ring, t in
                     ring.opacity(t >= 1 ? 0 : 1 - t)
@@ -1116,6 +1113,8 @@ struct LevelView: View {
 
     /// Wide enough to read, too thin to hide the picture: 1.5 px on a 3x screen.
     private static let hairline: CGFloat = 0.5
+    /// How far inside the glass's edge the swirl's push flashes.
+    private static let swirlFlash: CGFloat = 5
     /// A drag's count: its dashes, and the trace under them. No glow and no dark band: with them the count hid the picture.
     private static let dash: CGFloat = 2, dashTone = 0.85, trace = hairline, traceTone = 0.4
     /// A dial's opacity while letting go would change nothing, and while its stir stays open after the finger lifts.
@@ -1155,10 +1154,8 @@ struct LevelView: View {
     /// Room for a count round its centre: half its width at two digits.
     private static let countRoom: CGFloat = 18
 
-    /// The circle a rod's count's dashes run on: 14 pt inside its disc, but inside the swirl's cue's ticks and pointer.
-    private func dashes(_ k: Int, _ r: CGFloat) -> CGFloat {
-        k == game.level.layout.swirl ? r - RimCues.pointerEnd - 4 : min(rods[k].z * r, r - 4) - 14
-    }
+    /// The circle a rod's count's dashes run on: 14 pt inside its disc.
+    private func dashes(_ k: Int, _ r: CGFloat) -> CGFloat { min(rods[k].z * r, r - 4) - 14 }
 
     /// How far from a rod's centre its count sits: off a knob's disc, but inside the swirl's, whose rim is the glass's
     /// edge, clear of its dashes.
@@ -1555,8 +1552,8 @@ struct PictureLayer: View {
 /// How to turn the tank, or stir with the swirl, at the rim of glass of radius `r`: a two-headed arc and a ghost finger
 /// rocking along it, one way and back, so it names the control and never the move. Each lies on the ring it teaches,
 /// so on a level with both they point at different rings. The tank's is amber at the top, its arc just outside the
-/// bezel and its finger on the bezel; the swirl's is cyan at the bottom, a thin arc on the swirl's ticks inside the
-/// glass's edge and its finger there, in the middle of the swirl's grab. `pulse` (0 to 1) swells the tank's arc, and
+/// bezel and its finger on the bezel; the swirl's is cyan at the bottom, a thin arc just inside the glass's edge and
+/// its finger there, in the middle of the swirl's grab. `pulse` (0 to 1) swells the tank's arc, and
 /// brings it back for a moment once it has stopped showing.
 struct RimLesson: View {
     enum Kind { case tank, swirl }
@@ -1568,13 +1565,10 @@ struct RimLesson: View {
     let clock: Double?
     /// The ghost finger's path, as a fraction of the glass's radius.
     var reach = 1.0225
-    /// The swirl's arc on a dark stroke.
-    var seated = true
     private static let span = 34 * Double.pi / 180, sweep = 26 * Double.pi / 180, period = 3.6
     /// The arc's stroke at the height of its pulse. Nothing of it, arrowheads included, lies further than this from its line.
     static let width: CGFloat = 14
-    /// The tank's arc rides outside the bezel it turns; the swirl's lies on its own ticks inside the glass, a thin line
-    /// over the picture.
+    /// The tank's arc rides outside the bezel it turns; the swirl's lies inside the glass, a thin line over the picture.
     private static func radius(_ r: CGFloat, _ kind: Kind) -> CGFloat { kind == .tank ? 1.045 * r + 10 : r - 10 }
     /// Where the lesson sits, clockwise from twelve.
     private static func notch(_ kind: Kind) -> Double { kind == .tank ? 0 : .pi }
@@ -1624,10 +1618,8 @@ struct RimLesson: View {
                 arrow.stroke(colour.opacity(0.22 + 0.3 * pulse), style: StrokeStyle(lineWidth: Self.width - 6 * (1 - pulse), lineCap: .round, lineJoin: .round))
                 arrow.stroke(colour, style: StrokeStyle(lineWidth: 3 + 1.5 * pulse, lineCap: .round, lineJoin: .round))
             } else {
-                // Over the picture, so no glow: seated on a dark stroke, as the swirl's ticks are, to read on a busy one.
-                if seated {
-                    arrow.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
-                }
+                // Over the picture, so no glow: seated on a dark stroke, to read on a busy one.
+                arrow.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
                 arrow.stroke(colour, style: StrokeStyle(lineWidth: 1.25, lineCap: .round, lineJoin: .round))
             }
         }
@@ -1636,76 +1628,16 @@ struct RimLesson: View {
     }
 }
 
-/// The rim's standing cue over glass of radius `r`, in the tank's frame: the swirl wears a knob's ticks just inside the
-/// glass's edge, leaning as a shear does, a dark groove between them and the bezel; where knobs are seized, the bezel is
-/// knurled, its ridges amber as the tank's lesson. `swirl` is the swirl's own turning, the turn in hand and whether it is
-/// held, nil on a layout without one; `tank`, the glass's turn and whether the rim holds it, nil where no knob is seized.
-struct RimCues: View {
+/// Where knobs are seized, the bezel of glass of radius `r` is knurled, turning with the glass by `angle`, its ridges
+/// amber as the tank's lesson and lit while the rim holds the glass.
+struct Knurl: View {
     let r: CGFloat
-    let swirl: (angle: Double, live: Double, held: Bool)?
-    let tank: (angle: Double, held: Bool)?
-    /// The ticks on dark seats past a dark groove, or bare hairlines.
-    var seats = true
-
-    /// How far inside the glass's edge the ring joins the swirl's ticks.
-    static let dial: CGFloat = 5
-    /// How far inside the glass's edge the swirl's pointer reaches.
-    static let pointerEnd: CGFloat = 24
-
-    var body: some View {
-        ZStack {
-            if let tank { knurl.rotationEffect(.radians(tank.angle)).opacity(tank.held ? 1 : 0.85) }
-            if let swirl {
-                let lit = swirl.held ? Color.live : .neonCyan
-                // Leaning as a shear leans them, so they read as a stir rather than a dial's scale, and further the
-                // way the turn in hand goes, as the swirl's core outruns its edge. A sideways offset in points at
-                // the ticks' inner end.
-                let lean = 4 + 3 * min(max(swirl.live / Tank.step, -2), 2)
-                let d = Self.dial, marks = ticks(r - d, r - d - 10, lean: lean), pointer = pointer(r - d, r - Self.pointerEnd, lean: lean)
-                // The groove: dark from the glass's edge in past the hairline that joins the ticks, so the ticks
-                // belong to the glass and not to the bezel's knurl.
-                if seats { ring(r - 2.5).stroke(Color.black.opacity(0.75), lineWidth: 5) }
-                ring(r - d).stroke(lit.opacity(swirl.held ? 0.9 : 0.55), lineWidth: 0.5)
-                // Each tick seated on its own dark stroke, as a knob's ticks sit on its dark band.
-                Group {
-                    if seats {
-                        marks.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                        pointer.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                    }
-                    marks.stroke(lit.opacity(swirl.held ? 1 : 0.9), lineWidth: 1)
-                    pointer.stroke(lit, style: StrokeStyle(lineWidth: 1, lineCap: .round))
-                }
-                .rotationEffect(.radians(swirl.angle + swirl.live))
-            }
-        }
-        .frame(width: 2 * r, height: 2 * r)
-        .allowsHitTesting(false)
-    }
-
-    private func ring(_ radius: CGFloat) -> Path {
-        Path(ellipseIn: CGRect(x: r - radius, y: r - radius, width: 2 * radius, height: 2 * radius))
-    }
-
-    /// A mark per 30-degree step but twelve's, from radius `a` in to `b` about the glass's centre, its inner end
-    /// `lean` points clockwise of its outer.
-    private func ticks(_ a: CGFloat, _ b: CGFloat, lean: CGFloat) -> Path {
-        Path { p in for i in 1..<12 { mark(&p, Double(i) * Tank.step, a, b, lean: lean) } }
-    }
-
-    /// The swirl's own pointer at twelve, longer than its ticks, as a knob's.
-    private func pointer(_ a: CGFloat, _ b: CGFloat, lean: CGFloat) -> Path {
-        Path { mark(&$0, 0, a, b, lean: lean) }
-    }
-
-    private func mark(_ p: inout Path, _ t: Double, _ a: CGFloat, _ b: CGFloat, lean: CGFloat) {
-        let u = t + Double(lean / b)
-        p.move(to: CGPoint(x: r + a * sin(t), y: r - a * cos(t)))
-        p.addLine(to: CGPoint(x: r + b * sin(u), y: r - b * cos(u)))
-    }
+    let angle: Double
+    let held: Bool
 
     /// A milled edge across the bezel's steel: dark grooves between bright ridges, every few points.
-    private var knurl: some View {
-        let count = Int((2 * .pi * r / 4).rounded()), lit = tank?.held == true
+    var body: some View {
+        let count = Int((2 * .pi * r / 4).rounded())
         func lines(_ offset: Double, _ a: CGFloat, _ b: CGFloat) -> Path {
             Path { p in
                 for i in 0..<count {
@@ -1719,8 +1651,12 @@ struct RimCues: View {
         return ZStack {
             lines(0, a, b).stroke(Color.black.opacity(0.55), lineWidth: 1.2)
             // Amber even at rest, faintly: the tank's colour, as its lesson.
-            lines(0.5, a, b).stroke(Color.amber.opacity(lit ? 0.9 : 0.55), lineWidth: 0.6)
+            lines(0.5, a, b).stroke(Color.amber.opacity(held ? 0.9 : 0.55), lineWidth: 0.6)
         }
+        .rotationEffect(.radians(angle))
+        .opacity(held ? 1 : 0.85)
+        .frame(width: 2 * r, height: 2 * r)
+        .allowsHitTesting(false)
     }
 }
 

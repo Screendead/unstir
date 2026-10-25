@@ -72,10 +72,10 @@ film rim-seized 14 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=maelstrom LEVEL=1
   MOVES=-1:+1,2:+8,3:-7,0:+4
 film rim-both 15 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 SWIRLED=1 TANKTURNED=1 FINGER=1 \
   MOVES=-1:+1,0:+8,4:+7,1:-4
-# The swirl's push: vortex 01's swirl healed, then stirred again over knob 0's seam, which stacks it (red on the
-# cue's ring inside the glass), turned straight back and knob 0 healed. Its count sits inside the ticks throughout.
+# The swirl's push: vortex 01's swirl healed, then stirred again over knob 0's seam, which stacks it (a red ring just
+# inside the glass's edge), turned straight back and knob 0 healed.
 film rim-swirl-push 12 "$rim,scale=220:-1,tile=9x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 FINGER=1 \
   MOVES=4:-4,4:+3,4:-3,0:-3
 # A cold first touch where the rim does both: vortex 02 with knob 3 seized, both lessons up, the fingertip
-# landing on the swirl's ticks inside the glass's edge, where its lesson points, and stirring with the swirl.
+# landing inside the glass's edge, where the swirl's lesson points, and stirring with the swirl.
 film rim-both-cold 8 "$rim,scale=220:-1,tile=8x3:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 FINGER=1 MOVES=4:+7
