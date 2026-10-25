@@ -37,6 +37,11 @@ film() {  # name seconds strip-filter KEY=VALUE...
     -of csv=p=0 | awk -F, '$2 < 40 && s == "" { s = $1 } END { print s }')
   # recordVideo writes a frame only when the screen changes; fps= resamples to even time steps.
   ffmpeg -loglevel error -y -i "$mp4" -vf "trim=start=${start:-0},setpts=PTS-STARTPTS,$strip" -frames:v 1 "shots/film/$name-strip.png"
+  # GitHub takes videos under 10 MB; a live picture changes every frame, so a long film can pass that.
+  if (( $(stat -f %z "$mp4") > 9500000 )); then
+    ffmpeg -loglevel error -y -i "$mp4" -vf scale=660:-2 -c:v libx264 -crf 24 -pix_fmt yuv420p -an "${mp4%.mp4}-small.mp4"
+    mv "${mp4%.mp4}-small.mp4" "$mp4"
+  fi
   echo "filmed $name"
 }
 
@@ -56,3 +61,17 @@ film heartbeat-maelstrom18-neurons 3.5 "trim=start=2.2,setpts=PTS-STARTPTS,$tank
 # to 3, then five pushes fill it notch by notch until the last spills over the lip at twelve and the picture stirs together.
 # Cropped taller than the tank, for the brim pin and the pour above it.
 film endless-brim-run 11.5 "crop=1320:1460:0:700,fps=3,scale=200:-1,tile=8x4:padding=4" MODE=endless BRIM=5 BRIMDEMO=1
+# The rim's cues (UNSTIR_RIM), each the lead and both alternatives, played by a drawn fingertip (UNSTIR_FINGER) after two
+# seconds at rest, cues learnt: vortex 01 swirled from the rim, healing the swirl's seam then the knob's; maelstrom 01's
+# glass turned from the bezel, then its three knobs; vortex 02 with knob 3 seized, the glass turned from the bezel, a
+# knob, the swirl from the glass's edge and a knob, at par 4 for its turn.
+# The strips keep the tank and the glyphs' room over twelve, whatever size the simulator records at.
+rim="crop=iw:ih*0.56:0:ih*0.21,fps=3"
+for v in knob bands glyphs; do
+  film "rim-$v-swirl" 10 "$rim,scale=220:-1,tile=8x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 RIM=$v FINGER=1 \
+    MOVES=4:-4,0:-3
+  film "rim-$v-seized" 14 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 RIM=$v FINGER=1 \
+    MOVES=-1:+1,2:+8,3:-7,0:+4
+  film "rim-$v-both" 15 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 SWIRLED=1 TANKTURNED=1 RIM=$v \
+    FINGER=1 MOVES=-1:+1,0:+8,4:+7,1:-4
+done

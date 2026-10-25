@@ -249,6 +249,16 @@ for v in knob bands glyphs; do
   shot "rim-$v-both-tank-held" "Rim cue $v: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round." \
     TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 TANKLIVE=30 TOUCH=0,-1.03 RIM=$v
 done
+# A sheet per cue of what reads before a move, cut to the tank and the glyphs' room over twelve: the swirl alone, the
+# glass's turn alone and both, learnt along the top and with their lessons under. Not a shot, so not in the index.
+for v in knob bands glyphs; do
+  at_rest=(swirl seized both swirl-lesson seized-lesson both-lesson) inputs=()
+  for s in "${at_rest[@]}"; do inputs+=(-i "shots/rim-$v-$s.png"); done
+  [[ -n "$pattern" && "rim-$v" != *$pattern* ]] && continue
+  ffmpeg -loglevel error -y "${inputs[@]}" -filter_complex \
+    "concat=n=6:v=1,crop=iw:ih*0.56:0:ih*0.21,scale=440:-1,tile=3x2:padding=8:color=0x303030" -frames:v 1 "shots/vortex-rim-$v.png"
+  echo "sheet vortex-rim-$v"
+done
 shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1
 swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
 shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1
