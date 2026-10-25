@@ -196,7 +196,7 @@ final class Game {
         var healed = 0
         let result = level.kind(of: rod) != .working ? .refused
             : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
-                             popped: { if !$0.pushed { healed += 1 } })
+                             lenses: level.lenses, popped: { if !$0.pushed { healed += 1 } })
         guard result != .refused else { Log.write("commit \(Twist(rod: rod, steps: steps)) refused"); return }
         if rod == level.layout.swirl, !swirled {
             swirled = true
@@ -283,7 +283,8 @@ final class Game {
         if level.pack != nil {
             entries = was
         } else if last.rod != Game.tank {
-            entries.commit(Entry(twist: Twist(rod: last.rod, steps: -last.steps), pushed: true), in: level.layout)
+            entries.commit(Entry(twist: Twist(rod: last.rod, steps: -last.steps), pushed: true), in: level.layout,
+                           lenses: level.lenses)
         }
         if last.rod != Game.tank {
             // A white flash whatever the stack did: undo bumps neither pushes nor cancels, so no alarm or thunk may show.
@@ -370,7 +371,7 @@ final class Game {
 
     /// The newest twist a working knob can take off now, as that knob's turn: what autoplay and the harness play.
     var reachable: Twist? {
-        level.layout.removable(stack).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
+        level.layout.removable(stack, lenses: level.lenses).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
             .first { level.kind(of: $0.rod) == .working }
     }
 
@@ -378,7 +379,7 @@ final class Game {
     var wasting: Twist? {
         level.layout.rods.indices.filter { level.kind(of: $0) == .working }.lazy.compactMap { k -> Twist? in
             var s = self.stack
-            return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout) == .pushed ? Twist(rod: k, steps: 2) : nil
+            return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout, lenses: self.level.lenses) == .pushed ? Twist(rod: k, steps: 2) : nil
         }.first
     }
 
@@ -386,11 +387,11 @@ final class Game {
     private func settle(healed: Bool = false) {
         // Refusing a win the picture already shows is the bug players hit, and a residual under half a pixel is invisible.
         // Only the coarse pass runs here: the fine one takes ~0.1 s exactly when it passes, which would hitch the win.
-        if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel) {
-            let stack = stack, layout = level.layout
+        if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses) {
+            let stack = stack, layout = level.layout, lenses = level.lenses
             checking = true
             Task {
-                let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack) }.value
+                let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack, lenses: lenses) }.value
                 self.checking = false
                 // A move made meanwhile settled itself.
                 guard self.stack == stack else { return }
@@ -978,13 +979,13 @@ struct LevelView: View {
         let commits = liveRod.map { k in
             let steps = Detent.steps(liveAngle, of: Tank.step)
             return steps != 0 && (game.stack.count < Tank.maxStack
-                || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout) != nil)
+                || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout, lenses: game.level.lenses) != nil)
         } ?? false
         let step = game.level.layout.tankStep
         let held = liveTurn.map { $0 + (spin ?? 0) }
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
-        let unstirred = Unstirred(stack: stack, layout: game.level.layout, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
+        let unstirred = Unstirred(stack: stack, layout: game.level.layout, lenses: game.level.lenses, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
@@ -1583,6 +1584,8 @@ struct Detent {
 struct Unstirred: ViewModifier, Animatable {
     var stack: [Twist]
     var layout: Layout
+    /// The rods whose steps magnify rather than turn.
+    var lenses: Set<Int> = []
     var liveRod: Int?
     var liveAngle: Double
     var wind = 1.0
@@ -1610,7 +1613,10 @@ struct Unstirred: ViewModifier, Animatable {
         floats.reserveCapacity(4 * (stack.count + 1))
         func add(_ rod: Int, _ angle: Double) {
             floats.append(Float(rods[rod].x)); floats.append(Float(rods[rod].y))
-            floats.append(Float(rods[rod].z)); floats.append(Float(angle))
+            // A lens's entry is marked by a negative radius, and takes its flow's time for the angle.
+            let lens = lenses.contains(rod)
+            floats.append(Float(lens ? -rods[rod].z : rods[rod].z))
+            floats.append(Float(lens ? angle / Tank.step * Tank.lensRate : angle))
         }
         for t in stack { add(t.rod, Double(t.steps) * Tank.step * min(wind, 1)) }
         if let liveRod { add(liveRod, liveAngle) }
@@ -1626,7 +1632,7 @@ struct Unstirred: ViewModifier, Animatable {
         let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes ? 1 : 0)
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
-                                 .float(Float(Tank.swirlPlateau)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
+                                 .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
             maxSampleOffset: CGSize(width: side, height: side))
     }
 }

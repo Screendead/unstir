@@ -3,7 +3,7 @@
 import Foundation
 import simd
 
-/// One stack entry: `steps` is a nonzero count of 30-degree turns on `rod`.
+/// One stack entry: `steps` is a nonzero count of 30-degree turns on `rod`, or of x1.3 steps where `rod` is a lens.
 struct Twist: Hashable {
     var rod: Int
     var steps: Int
@@ -40,6 +40,31 @@ enum Tank {
         // Only the swirl is the size of the tank (`Layout.table`), so the radius picks its profile; the shader does the same.
         let a = angle * profile(s, plateau: rod.z >= 1 ? swirlPlateau : plateau)
         return c + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a))
+    }
+
+    /// A lens's growth a step, as a log: x1.3 (Jack's call, 2026-10-25, L1).
+    static let lensRate = log(1.3)
+    /// A lens's rim sharpness: just inside the rim a step scales by 1.3^-edge, against 1 just outside. 2 reads at +1 on
+    /// the halftone, where 1 barely does.
+    static let lensEdge = 2.0
+
+    /// A lens's map: `steps` of the flow of the field u (1 - (u / plateau)^edge) inside the rigid core, which scales the
+    /// centre by 1.3 a step and fixes the core's rim, and nothing outside it. The rim is fixed by every step, so steps
+    /// sum exactly and +k needs exactly -k: a lens never wraps. Positive steps magnify. The Metal shader carries the
+    /// same function.
+    static func lens(_ p: SIMD2<Double>, rod: SIMD3<Double>, steps: Double) -> SIMD2<Double> {
+        let c = SIMD2(rod.x, rod.y), d = p - c
+        let u = simd_length(d) / rod.z
+        // Exactly the identity from the rim out, as merges need of a rod that misses a point.
+        guard u < plateau, u > 1e-12 else { return p }
+        return c + d * (lensFlow(u, steps * lensRate) / u)
+    }
+
+    /// The lens field's flow from radius u < plateau (disc units) for time t: w = (plateau / u)^edge - 1 decays as
+    /// exp(-edge t).
+    static func lensFlow(_ u: Double, _ t: Double) -> Double {
+        let a = plateau, e = lensEdge
+        return a * pow(1 + (pow(a / u, e) - 1) * exp(-e * t), -1 / e)
     }
 
     /// Centres of an n-by-n grid of cells across the tank, those inside it.
@@ -149,31 +174,43 @@ enum Layout: String, CaseIterable {
     }
 
     /// Indices of the entries whose inverse would cancel right now: the inverse lands on them.
-    func removable(_ stack: [Twist]) -> [Int] {
-        stack.indices.filter { stack.landing(rod: stack[$0].rod, steps: -stack[$0].steps, in: self) == $0 }
+    func removable(_ stack: [Twist], lenses: Set<Int> = []) -> [Int] {
+        stack.indices.filter { stack.landing(rod: stack[$0].rod, steps: -stack[$0].steps, in: self, lenses: lenses) == $0 }
     }
 
     /// Whether the entries above index i commute with a turn of `rod` by `steps`, so the turn can merge into entry i.
-    func commutes(_ stack: [some Stacked], above i: Int, rod: Int, steps: Int) -> Bool {
+    func commutes(_ stack: [some Stacked], above i: Int, rod: Int, steps: Int, lenses: Set<Int> = []) -> Bool {
         let above = stack[(i + 1)...].map(\.twist)
         if above.allSatisfy({ !overlaps($0.rod, rod) }) { return true }
         // Overlapping rods can still commute exactly (a word can hold a whole disc still), and only the maps show it.
         let turn = Twist(rod: rod, steps: steps)
-        return same(above + [turn], [turn] + above, at: Tank.samples, within: 1e-6)
+        return same(above + [turn], [turn] + above, at: Tank.samples, within: 1e-6, lenses: lenses)
     }
 
     /// Whether the stack leaves the picture looking unstirred.
-    func looksSolved(_ stack: [Twist]) -> Bool {
+    func looksSolved(_ stack: [Twist], lenses: Set<Int> = []) -> Bool {
         // The coarse pass first, so a stirred tank exits within a few points.
-        same(stack, [], at: Tank.samples, within: Tank.halfPixel)
-            && same(stack, [], at: Tank.grid(Tank.pixelGrid), within: Tank.halfPixel)
+        same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: lenses)
+            && same(stack, [], at: Tank.grid(Tank.pixelGrid), within: Tank.halfPixel, lenses: lenses)
     }
 
-    /// Whether words a and b, each applied bottom first, send every point within `tolerance` of each other.
-    func same(_ a: [Twist], _ b: [Twist], at points: some Sequence<SIMD2<Double>>, within tolerance: Double) -> Bool {
+    /// Where `steps` of `rod` (a fraction mid-drag) carry the fluid at p: a lens's magnify, any other rod's turn.
+    func stir(_ p: SIMD2<Double>, rod: Int, steps: Double, lenses: Set<Int> = []) -> SIMD2<Double> {
+        lenses.contains(rod) ? Tank.lens(p, rod: rods[rod], steps: steps) : Tank.twist(p, rod: rods[rod], angle: steps * Tank.step)
+    }
+
+    /// Whether words a and b, each applied bottom first, send every point within `tolerance` of each other. `lenses`
+    /// are the rods whose steps magnify rather than turn.
+    func same(_ a: [Twist], _ b: [Twist], at points: some Sequence<SIMD2<Double>>, within tolerance: Double,
+              lenses: Set<Int> = []) -> Bool {
         let rods = self.rods
         func map(_ word: [Twist], _ p: SIMD2<Double>) -> SIMD2<Double> {
-            word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
+            // The plain twist alone where no rod is a lens: this runs on every sample of every merge.
+            lenses.isEmpty ? word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
+                : word.reduce(p) { q, t in
+                    lenses.contains(t.rod) ? Tank.lens(q, rod: rods[t.rod], steps: Double(t.steps))
+                        : Tank.twist(q, rod: rods[t.rod], angle: Double(t.steps) * Tank.step)
+                }
         }
         return points.allSatisfy { simd_distance(map(a, $0), map(b, $0)) <= tolerance }
     }
@@ -202,16 +239,19 @@ extension Twist: Stacked {
 
 extension Array where Element: Stacked {
     /// The rod's newest entry that everything above it commutes with the turn: where the turn merges.
-    func landing(rod: Int, steps: Int, in layout: Layout) -> Int? {
-        indices.reversed().first { self[$0].twist.rod == rod && layout.commutes(self, above: $0, rod: rod, steps: steps) }
+    func landing(rod: Int, steps: Int, in layout: Layout, lenses: Set<Int> = []) -> Int? {
+        indices.reversed().first {
+            self[$0].twist.rod == rod && layout.commutes(self, above: $0, rod: rod, steps: steps, lenses: lenses)
+        }
     }
 
     /// Merges into the landing entry, popping at zero; otherwise pushes. `popped` is handed every entry that merges to
-    /// nothing, whether the turn lands on it or an entry the merge lets fall does.
+    /// nothing, whether the turn lands on it or an entry the merge lets fall does. `lenses` are the rods that magnify.
     @discardableResult
-    mutating func commit(_ entry: Element, in layout: Layout, popped: (Element) -> Void = { _ in }) -> Commit {
+    mutating func commit(_ entry: Element, in layout: Layout, lenses: Set<Int> = [],
+                         popped: (Element) -> Void = { _ in }) -> Commit {
         guard entry.twist.steps != 0 else { return .refused }
-        if let i = landing(rod: entry.twist.rod, steps: entry.twist.steps, in: layout) {
+        if let i = landing(rod: entry.twist.rod, steps: entry.twist.steps, in: layout, lenses: lenses) {
             // A merge under an overlapping rod changes what the entries above it were checked against, so the merged
             // entry and everything above go back on in order and merge wherever they now can.
             var rest = Array(self[i...])
@@ -223,9 +263,9 @@ extension Array where Element: Stacked {
                 popped(rest[0])
                 merged = .cancelled
             } else {
-                merged = commit(rest[0], in: layout, popped: popped)
+                merged = commit(rest[0], in: layout, lenses: lenses, popped: popped)
             }
-            for t in rest.dropFirst() { commit(t, in: layout, popped: popped) }
+            for t in rest.dropFirst() { commit(t, in: layout, lenses: lenses, popped: popped) }
             return merged == .cancelled ? .cancelled : .reduced
         }
         guard count < Tank.maxStack else { return .refused }
@@ -236,18 +276,18 @@ extension Array where Element: Stacked {
 
 extension Array where Element == Twist {
     @discardableResult
-    mutating func commit(rod: Int, steps: Int, in layout: Layout) -> Commit {
-        commit(Twist(rod: rod, steps: steps), in: layout)
+    mutating func commit(rod: Int, steps: Int, in layout: Layout, lenses: Set<Int> = []) -> Commit {
+        commit(Twist(rod: rod, steps: steps), in: layout, lenses: lenses)
     }
 
     /// "0:+3,1:-6" -> [(0,3),(1,-6)], committed in order so entries that can merge do.
-    static func parse(_ s: String, in layout: Layout) -> [Twist] {
+    static func parse(_ s: String, in layout: Layout, lenses: Set<Int> = []) -> [Twist] {
         var stack: [Twist] = []
         for part in s.split(separator: ",") {
             let f = part.split(separator: ":")
             if f.count == 2, let r = Int(f[0]), layout.rods.indices.contains(r),
                let n = Int(f[1]) {
-                stack.commit(rod: r, steps: n, in: layout)
+                stack.commit(rod: r, steps: n, in: layout, lenses: lenses)
             }
         }
         return stack
