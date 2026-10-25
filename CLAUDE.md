@@ -80,6 +80,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives.
   Git ignores `shots/` apart from `index.txt`: show pictures and films in a PR by attaching them to a comment through
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
+- App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
+  `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
+  dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
@@ -236,8 +239,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   turned unless `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only that launch, so shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
-  tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock above; alongside any other
-  `UNSTIR_` variable, leaving it unset clears it, so no shot leaves the next unlocked. This is how screenshots and films
+  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_UNLOCK` alone
+  is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
+  the next unlocked. This is how screenshots and films
   are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
 - **UnstirTests/Solver.swift** plays turning-tank levels for the tests and `scripts/solve.sh`; it never ships in the
   app. It has three players, whose moves count as `Game.history` counts them (`Play.count`). The optimum is the fewest

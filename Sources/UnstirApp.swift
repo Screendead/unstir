@@ -64,6 +64,8 @@ struct Harness {
     let tierDemo: Bool
     /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
     let tierSpin: (spin: Double, fade: Double)?
+    /// UNSTIR_ICON=n: app-icon candidate n alone on the screen (`IconView`).
+    let icon: Int?
 
     init(_ env: [String: String]) {
         // UNSTIR_LEVEL counts in UNSTIR_TIER too.
@@ -147,6 +149,7 @@ struct Harness {
             }
         }
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
+        icon = env["UNSTIR_ICON"].flatMap(Int.init)
     }
 }
 
@@ -205,7 +208,9 @@ struct RootView: View {
         let dip = AnyTransition.asymmetric(insertion: .opacity.animation(.easeOut(duration: 0.15).delay(0.12)),
                                            removal: .opacity.animation(.easeIn(duration: 0.12)))
         ZStack {
-            if let level {
+            if let n = harness?.icon {
+                IconView(n: n)
+            } else if let level {
                 LevelView(level: level, harness: harness,
                           onExit: { show(nil) },
                           onNext: { show($0) })

@@ -213,3 +213,7 @@ shot seized-ring3-buried "The same with 3:+2 buried fourth from the bottom ($rin
 shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
 shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubburied): the hub's ring is not finished." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3
+# App-icon candidates, each a 1024-pixel square centred on the screen; scripts/icon.sh crops them and lays out the sheet.
+shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
+shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
+shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
