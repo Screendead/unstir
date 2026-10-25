@@ -24,6 +24,8 @@ jobs:
           xcrun simctl runtime list -v || true
           xcrun simctl list devices booted
           xcrun simctl list devices available | grep iPhone
+          sw_vers
+          ls -la /Library/Developer/CoreSimulator/Caches/dyld/*/ ~/Library/Developer/CoreSimulator/Caches/dyld/*/ 2>&1 || true
       - uses: actions/checkout@v7
       - name: Install XcodeGen
         run: |
@@ -50,10 +52,11 @@ jobs:
       # Signed ad hoc by the script, so the StoreKit tests run too.
       - name: Test
         run: |
-          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
+          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | tail -1 | grep -oE '[0-9A-F-]{36}')
           set -o pipefail
           echo "udid=$udid"
           (
+            set +e +o pipefail
             while :; do
               state=$(xcrun simctl list devices | grep "$udid" | grep -oE 'Booting|Booted|Shutdown|Shutting Down' || true)
               app=no; xcrun simctl get_app_container "$udid" com.screendead.Unstir >/dev/null 2>&1 && app=yes
