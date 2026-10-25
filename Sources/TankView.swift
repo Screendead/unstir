@@ -73,14 +73,14 @@ final class Game {
     }
 
     private(set) var level: Level
-    private var entries: [Entry]
+    private(set) var entries: [Entry]
     var stack: [Twist] { entries.map(\.twist) }
     /// Stirs since the last reset, newest last: turns of one rod in a row are one stir, and undo commits a stir's negation.
     /// A rod stir names the rod the stack names (the slot under the knob turned). A turn of the tank is rod `Game.tank`,
     /// in steps of the layout's symmetry.
     private(set) var history: [Twist] = []
-    /// The stack's size as each stir of `history` began.
-    private var sizes: [Int] = []
+    /// The stack as each stir of `history` began: a pack's undo puts it back whole.
+    private var before: [[Entry]] = []
     nonisolated static let tank = -1
     /// Whether the next turn of the newest stir's rod joins it. A stir turned back to nothing is gone, and the one before
     /// it stays shut; an undone one is as if never made, so the one before it is open again if it was then.
@@ -172,8 +172,8 @@ final class Game {
     /// stack after the last move.
     var marks: [Share.Mark] {
         history.indices.map { i in
-            let after = i + 1 < sizes.count ? sizes[i + 1] : entries.count
-            return history[i].rod == Game.tank ? .tank : after < sizes[i] ? .healed : after > sizes[i] ? .pushed : .merged
+            let size = before[i].count, after = i + 1 < before.count ? before[i + 1].count : entries.count
+            return history[i].rod == Game.tank ? .tank : after < size ? .healed : after > size ? .pushed : .merged
         }
     }
 
@@ -191,7 +191,7 @@ final class Game {
     /// A turn of knob `rod`, which stirs whatever fluid the tank has brought under it.
     func commit(rod: Int, steps: Int) {
         guard !finished else { return }
-        let slot = self.slot(of: rod), size = entries.count
+        let slot = self.slot(of: rod), was = entries
         // Every entry of the scramble's that pops is a heal, even where an entry that the merge lets fall cancels it.
         var healed = 0
         let result = level.kind(of: rod) != .working ? .refused
@@ -206,11 +206,11 @@ final class Game {
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
         if open, history.last?.rod == slot {
             history[history.count - 1].steps += steps
-            if history.last!.steps == 0 { history.removeLast(); openBefore.removeLast(); sizes.removeLast(); open = false }
+            if history.last!.steps == 0 { history.removeLast(); openBefore.removeLast(); before.removeLast(); open = false }
         } else {
             history.append(Twist(rod: slot, steps: steps))
             openBefore.append(open)
-            sizes.append(size)
+            before.append(was)
             open = true
         }
         lastCommit = (rod, result)
@@ -256,14 +256,14 @@ final class Game {
         }
         let joins = open && history.last?.rod == Game.tank
         let net = tankStir(after: steps)
-        let before = joins ? openBefore.removeLast() : open
-        let size = joins ? sizes.removeLast() : entries.count
+        let wasOpen = joins ? openBefore.removeLast() : open
+        let was = joins ? before.removeLast() : entries
         if joins { history.removeLast() }
         open = net != 0
         if open {
             history.append(Twist(rod: Game.tank, steps: net))
-            openBefore.append(before)
-            sizes.append(size)
+            openBefore.append(wasOpen)
+            before.append(was)
         }
         Log.write("tank \(steps) position=\(position) moves=\(moves)")
         settle()
@@ -274,13 +274,18 @@ final class Game {
         Log.write("wait \(ratchet)")
     }
 
-    /// Endless has none: it would take back a red flash.
+    /// Endless has none: it would take back a red flash. A pack's puts the stack back as the stir found it, marks and
+    /// tags and all; elsewhere it commits the stir's negation.
     func undo() {
         // The sandbox counts nothing, so its undos are free.
         guard !finished, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast() else { return }
-        sizes.removeLast()
-        if last.rod != Game.tank {
+        let was = before.removeLast()
+        if level.pack != nil {
+            entries = was
+        } else if last.rod != Game.tank {
             entries.commit(Entry(twist: Twist(rod: last.rod, steps: -last.steps), pushed: true), in: level.layout)
+        }
+        if last.rod != Game.tank {
             // A white flash whatever the stack did: undo bumps neither pushes nor cancels, so no alarm or thunk may show.
             lastCommit = (knob(over: last.rod), .reduced)
             turns += 1
@@ -302,7 +307,7 @@ final class Game {
         entries = level.scramble.map { Entry(twist: $0, pushed: false) }
         history = []
         openBefore = []
-        sizes = []
+        before = []
         open = false
         resets += 1
         Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")

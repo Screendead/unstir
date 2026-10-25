@@ -407,6 +407,63 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Best.undos, 5)
     }
 
+    /// A pack's undo puts the stack back as the move found it, marks and all, from the shared bank, where the free
+    /// tiers' commits the move's negation: after the heal that lets a push fall onto the scramble's 2:+4 and cancel it,
+    /// the negation pushes a new 3:+2, and the pack's brings back all six entries.
+    @MainActor func testAPackUndoPutsTheStackBackWhole() {
+        let scramble = Array.parse("0:+9,2:+4,3:+2", in: .quad)
+        func play(_ pack: Pack?) -> Game {
+            let level = Level(id: pack?.id(1) ?? "test-undo", pack: pack, label: "", title: "", layout: .quad, scramble: scramble)
+            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+            for (rod, steps) in [(2, -4), (1, 2), (2, 4)] { game.commit(rod: rod, steps: steps) }
+            game.commit(rod: 3, steps: -2)
+            XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 9), Twist(rod: 1, steps: 2), Twist(rod: 2, steps: 4)])
+            game.undo()
+            XCTAssertEqual(game.moves, 3)
+            XCTAssertEqual(game.bank, 4)
+            return game
+        }
+        let free = play(nil)
+        XCTAssertEqual(free.stack, [Twist(rod: 0, steps: 9), Twist(rod: 1, steps: 2), Twist(rod: 2, steps: 4), Twist(rod: 3, steps: 2)])
+        let pack = play(.firstStir)
+        XCTAssertEqual(pack.entries, scramble.map { Game.Entry(twist: $0, pushed: false) }
+                       + [Twist(rod: 2, steps: -4), Twist(rod: 1, steps: 2), Twist(rod: 2, steps: 4)].map { Game.Entry(twist: $0, pushed: true) })
+        for _ in 0..<3 { pack.undo() }
+        XCTAssertEqual(pack.entries, scramble.map { Game.Entry(twist: $0, pushed: false) })
+        XCTAssertEqual(pack.moves, 0)
+        XCTAssertEqual(pack.bank, 1)
+        XCTAssertFalse(pack.clean)
+    }
+
+    /// A pack's undo takes a joined stir back whole and leaves the stir it uncovers open, as the free tiers' does; a
+    /// turn of the tank comes back too, and an empty bank takes nothing back.
+    @MainActor func testAPackUndoTakesBackWholeStirs() {
+        let level = Level(id: Pack.lens.id(2), pack: .lens, label: "", title: "", layout: .quad,
+                          scramble: .parse("0:+3,1:+2", in: .quad), seized: [3], motion: .tank, fixedPar: 2)
+        let game = Game(level: level, tankTurned: true, swirled: true, bank: (3, nil))
+        let start = game.entries
+        game.commit(rod: 2, steps: 1)
+        let afterTwo = game.entries
+        game.commit(rod: 1, steps: -1)
+        game.commit(rod: 1, steps: -1)
+        XCTAssertEqual(game.moves, 2)
+        game.undo()
+        XCTAssertEqual(game.entries, afterTwo)
+        game.commit(rod: 2, steps: -1)
+        XCTAssertEqual(game.moves, 0)
+        XCTAssertEqual(game.entries, start)
+        game.turnTank(1)
+        game.undo()
+        XCTAssertEqual(game.position, 0)
+        XCTAssertEqual(game.entries, start)
+        game.commit(rod: 0, steps: 2)
+        game.undo()
+        XCTAssertEqual(game.bank, 0)
+        game.commit(rod: 0, steps: 2)
+        game.undo()
+        XCTAssertEqual(game.moves, 1)
+    }
+
     /// Only the newest stir comes back free; turning an older rod back is a new stir.
     @MainActor func testTurnsOfOneRodInARowAreOneStir() {
         let game = Game(level: Level(id: "test-stir", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]))
