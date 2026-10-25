@@ -163,10 +163,11 @@ struct Harness {
         }
         // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
         if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }
-        // UNSTIR_SEIZED=1,4: those knobs seized, never the swirl, which has no knob.
+        // UNSTIR_SEIZED=1,4: those knobs seized on a turning tank, never the swirl, which has no knob.
         if let s = env["UNSTIR_SEIZED"] {
             level.seized = Set(s.split(separator: ",").compactMap { Int($0) }
                 .filter { level.layout.rods.indices.contains($0) && $0 != level.layout.swirl })
+            level.motion = level.seized.isEmpty ? .none : .tank
         }
         self.level = level
         tank = env["UNSTIR_TANK"].flatMap(Int.init) ?? 0

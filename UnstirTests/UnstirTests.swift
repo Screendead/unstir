@@ -7,6 +7,13 @@ import XCTest
 import simd
 @testable import Unstir
 
+extension LevelView {
+    /// `grab` on a level of today's kind: knobs seized on a turning tank, or neither.
+    nonisolated static func grab(_ layout: Layout, seized: Set<Int>, at point: SIMD2<Double>) -> Grab {
+        grab(layout, motion: seized.isEmpty ? .none : .tank, kind: { seized.contains($0) ? .seized : .working }, at: point)
+    }
+}
+
 final class UnstirTests: XCTestCase {
     /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full, never
     /// refilled or anchored, and the tank never turned.
@@ -464,7 +471,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.history, [Twist(rod: 0, steps: 3), Twist(rod: 1, steps: 1), Twist(rod: 1, steps: 1)])
 
         let tank = Game(level: Level(id: "test-undo-open-tank", label: "", title: "", layout: .quad, scramble: scramble,
-                                     seized: [1]))
+                                     seized: [1], motion: .tank))
         tank.turnTank(1)
         tank.commit(rod: 0, steps: 1)
         tank.undo()
@@ -906,7 +913,7 @@ final class UnstirTests: XCTestCase {
     @MainActor func testTheSwirlTurnsWithTheTank() {
         let s = Layout.quadSwirl.swirl!
         let level = Level(id: "test-swirl", label: "", title: "", layout: .quadSwirl, scramble: .parse("1:+4,\(s):+3", in: .quadSwirl),
-                          seized: [1], fixedPar: 3)
+                          seized: [1], motion: .tank, fixedPar: 3)
         let game = Game(level: level, tankTurned: true, swirled: true, bank: (10, nil))
         game.turnTank(1)
         XCTAssertEqual(game.slot(of: s), s)
@@ -1149,9 +1156,42 @@ final class UnstirTests: XCTestCase {
                 XCTAssertTrue(seized.contains(k), message)
                 XCTAssertEqual(k, nearest, message)
             case .rim: break
+            case .ratchet: XCTFail(message)
             case .nothing:
                 XCTAssertNil(nearest, message)
             }
+        }
+    }
+
+    /// The rim keys on the level's motion and a disc on its knob's kind, apart: a seized knob on a still tank leaves the
+    /// rim to the disc, a turning tank takes the rim with no knob seized, a socket refuses as a seized knob does, and a
+    /// ratchet holds its own disc for a tap. Neither a socket nor a ratchet commits a turn.
+    @MainActor func testTheRimKeysOnMotionAndADiscOnItsKind() {
+        let rim = SIMD2(0.0, -0.95), a = centre(.quad, 0)
+        func kinds(_ k: [Int: Level.Knob]) -> (Int) -> Level.Knob { { k[$0] ?? .working } }
+        XCTAssertEqual(LevelView.grab(.tri, motion: .none, kind: kinds([0: .seized]), at: rim), .seized(0))
+        XCTAssertEqual(LevelView.grab(.tri, motion: .tank, kind: kinds([:]), at: rim), .rim)
+        XCTAssertEqual(LevelView.grab(.tri, motion: .crank, kind: kinds([:]), at: rim), .rim)
+        XCTAssertEqual(LevelView.grab(.quad, motion: .none, kind: kinds([0: .socket]), at: a), .seized(0))
+        XCTAssertEqual(LevelView.grab(.quad, motion: .none, kind: kinds([0: .ratchet]), at: a), .ratchet(0))
+        XCTAssertEqual(LevelView.grab(.quad, motion: .none, kind: kinds([1: .ratchet]), at: a), .rod(0))
+        let level = Level(id: "test-kinds", label: "", title: "", layout: .quad,
+                          scramble: .parse("0:+3,1:+2,2:-4", in: .quad), sockets: [1], ratchets: [2])
+        XCTAssertEqual((0..<4).map(level.kind(of:)), [.working, .socket, .ratchet, .working])
+        let game = Game(level: level, tankTurned: true, swirled: true)
+        game.commit(rod: 2, steps: 4)
+        game.commit(rod: 1, steps: -2)
+        XCTAssertEqual(game.stack, level.scramble)
+        XCTAssertEqual(game.moves, 0)
+        XCTAssertNil(game.reachable)
+        game.wait(on: 2)
+        XCTAssertEqual(game.moves, 0)
+        // Every level today turns its tank exactly where a knob is seized, and only there counts the turns in par.
+        for level in Tier.allCases.flatMap(\.levels) + [.sandbox, .endless(Run(seed: 1))] {
+            XCTAssertEqual(level.motion == .tank, !level.seized.isEmpty, level.id)
+            XCTAssertNotEqual(level.motion, .crank, level.id)
+            XCTAssertTrue(level.sockets.isEmpty && level.ratchets.isEmpty, level.id)
+            if level.motion == .none { XCTAssertEqual(level.par, level.scramble.count, level.id) }
         }
     }
 
@@ -1575,7 +1615,7 @@ final class UnstirTests: XCTestCase {
     /// A turn of the tank is one move and pushes nothing. Turns in a row join, and a joined turn netting a whole turn is
     /// gone, so turning away, probing and turning back costs nothing. Undo takes a turn back; reset goes home.
     @MainActor func testTankStirs() {
-        let level = Level(id: "test-tank", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0], fixedPar: 2)
+        let level = Level(id: "test-tank", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0], motion: .tank, fixedPar: 2)
         let game = Game(level: level)
         game.turnTank(1)
         game.turnTank(1)
@@ -1687,7 +1727,7 @@ final class UnstirTests: XCTestCase {
     /// A seized knob refuses a turn even over fluid a working knob could take off; no level seizes the hub, which no turn
     /// of the tank moves, and only a level with a seized knob says it has one.
     @MainActor func testSeizedKnobs() {
-        let game = Game(level: Level(id: "test-seized", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0]))
+        let game = Game(level: Level(id: "test-seized", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0], motion: .tank))
         game.commit(rod: 0, steps: -4)
         XCTAssertEqual(game.moves, 0)
         XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 4)])
@@ -1707,7 +1747,7 @@ final class UnstirTests: XCTestCase {
     /// The rim shows how to turn the tank until the player has, on any level: a turn of the tank that commits sets the
     /// flag, and a stir of a rod or a whole turn of the tank does not. A flag the harness sets is never stored.
     @MainActor func testTurningTheTankSetsTheFlag() {
-        let level = Level(id: "test-taught", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0])
+        let level = Level(id: "test-taught", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)], seized: [0], motion: .tank)
         let game = Game(level: level)
         XCTAssertFalse(game.tankTurned)
         game.commit(rod: 1, steps: 2)
@@ -1734,7 +1774,7 @@ final class UnstirTests: XCTestCase {
         defer { Best.swirled = saved }
         Best.swirled = false
         let level = Level(id: "test-swirled", label: "", title: "", layout: .quadSwirl,
-                          scramble: [Twist(rod: 0, steps: 4), Twist(rod: 4, steps: 3)], seized: [1], fixedPar: 2)
+                          scramble: [Twist(rod: 0, steps: 4), Twist(rod: 4, steps: 3)], seized: [1], motion: .tank, fixedPar: 2)
         let game = Game(level: level, tankTurned: true)
         XCTAssertFalse(game.swirled)
         game.commit(rod: 2, steps: 2)
@@ -1760,7 +1800,7 @@ final class UnstirTests: XCTestCase {
         defer { Best.swirled = saved }
         Best.swirled = false
         let level = Level(id: "test-breath", label: "", title: "", layout: .quadSwirl,
-                          scramble: [Twist(rod: 0, steps: 4), Twist(rod: 4, steps: 3)], seized: [1], fixedPar: 2)
+                          scramble: [Twist(rod: 0, steps: 4), Twist(rod: 4, steps: 3)], seized: [1], motion: .tank, fixedPar: 2)
         let game = Game(level: level, tankTurned: true)
         XCTAssertTrue(game.breathes)
         game.commit(rod: 2, steps: 2)

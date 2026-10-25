@@ -194,7 +194,7 @@ final class Game {
         let slot = self.slot(of: rod), size = entries.count
         // Every entry of the scramble's that pops is a heal, even where an entry that the merge lets fall cancels it.
         var healed = 0
-        let result = level.seized.contains(rod) ? .refused
+        let result = level.kind(of: rod) != .working ? .refused
             : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
                              popped: { if !$0.pushed { healed += 1 } })
         guard result != .refused else { Log.write("commit \(Twist(rod: rod, steps: steps)) refused"); return }
@@ -267,6 +267,11 @@ final class Game {
         }
         Log.write("tank \(steps) position=\(position) moves=\(moves)")
         settle()
+    }
+
+    /// Escapement's waiting move, a tap on a ratchet: its tick is not built.
+    func wait(on ratchet: Int) {
+        Log.write("wait \(ratchet)")
     }
 
     /// Endless has none: it would take back a red flash.
@@ -361,12 +366,12 @@ final class Game {
     /// The newest twist a working knob can take off now, as that knob's turn: what autoplay and the harness play.
     var reachable: Twist? {
         level.layout.removable(stack).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
-            .first { !level.seized.contains($0.rod) }
+            .first { level.kind(of: $0.rod) == .working }
     }
 
     /// A knob's two-step turn that would push a new entry, a red flash: what the harness's brim demo wastes.
     var wasting: Twist? {
-        level.layout.rods.indices.filter { !level.seized.contains($0) }.lazy.compactMap { k -> Twist? in
+        level.layout.rods.indices.filter { level.kind(of: $0) == .working }.lazy.compactMap { k -> Twist? in
             var s = self.stack
             return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout) == .pushed ? Twist(rod: k, steps: 2) : nil
         }.first
@@ -418,8 +423,10 @@ final class Game {
 enum Grab: Equatable {
     case rod(Int)
     case rim
-    /// A seized knob's disc: it holds nothing, and the knob shakes.
+    /// A seized knob's disc, or a socket's: it holds nothing, and the knob shakes.
     case seized(Int)
+    /// A ratchet's disc: it holds nothing, and a tap waits.
+    case ratchet(Int)
     case nothing
 }
 
@@ -515,7 +522,7 @@ struct LevelView: View {
             // Solved through the real commit path; "result" first wastes two stirs, so taking them back costs moves.
             if h.screen == "result", let top = game.stack.last {
                 let count = level.layout.rods.count, home = game.knob(over: top.rod)
-                let wrong = (1..<count).map { (home + $0) % count }.filter { !level.seized.contains($0) }
+                let wrong = (1..<count).map { (home + $0) % count }.filter { level.kind(of: $0) == .working }
                 if let w = wrong.first {
                     game.commit(rod: w, steps: 2)
                     game.commit(rod: wrong[1 % wrong.count], steps: 1)
@@ -537,7 +544,7 @@ struct LevelView: View {
         _counted = State(initialValue: harness?.turned?.rod)
         if let p = harness?.touch {
             // The finger that went down at p, carried round with the turn it holds.
-            let grab: Grab = live.map { .rod($0.rod) } ?? (turn != nil ? .rim : LevelView.grab(level.layout, seized: level.seized, at: p))
+            let grab: Grab = live.map { .rod($0.rod) } ?? (turn != nil ? .rim : LevelView.grab(level.layout, motion: level.motion, kind: level.kind(of:), at: p))
             let pivot = live.map { SIMD2(level.layout.rods[$0.rod].x, level.layout.rods[$0.rod].y) } ?? .zero
             let a = live != nil ? angle : turn ?? 0, d = p - pivot
             _drag = State(initialValue: (.zero, grab, 0))
@@ -546,7 +553,7 @@ struct LevelView: View {
             case .rod(let k): _liveRod = State(initialValue: k); _counted = State(initialValue: k)
             case .rim: _liveTurn = State(initialValue: turn ?? 0); _counted = State(initialValue: Game.tank)
             case .seized(let k): _jammed = State(initialValue: k)
-            case .nothing: break
+            case .ratchet, .nothing: break
             }
         }
         // A spill's card waits for the pour, so a harness launch that spills shows it only if held past then.
@@ -863,7 +870,7 @@ struct LevelView: View {
     private func hand(_ moves: [Twist]) async {
         func pause(_ s: Double) async -> Bool { (try? await Task.sleep(for: .seconds(s))) != nil && !game.finished }
         guard await pause(rest) else { return }
-        let layout = game.level.layout, both = layout.swirl != nil && !game.level.seized.isEmpty
+        let level = game.level, layout = level.layout, both = layout.swirl != nil && level.motion != .none
         for m in moves {
             let rim = m.rod == Game.tank, swirl = m.rod == layout.swirl
             // The tank's up and left, the swirl's up and right, so the two read apart where both share the rim; a knob's
@@ -871,7 +878,7 @@ struct LevelView: View {
             let at: SIMD2<Double> = rim ? 1.04 * SIMD2(-0.7071, -0.7071)
                 : swirl ? (both ? 0.93 : 0.99) * SIMD2(0.7071, -0.7071)
                 : centre(m.rod) + 0.5 * rods[m.rod].z * SIMD2(0.7071, -0.7071)
-            let grab = Self.grab(layout, seized: game.level.seized, at: at)
+            let grab = Self.grab(layout, motion: level.motion, kind: level.kind(of:), at: at)
             if grab != (rim ? .rim : .rod(m.rod)) { Log.write("finger at \(Log.point(at)) holds \(grab), not \(m)") }
             withAnimation(.easeOut(duration: 0.12)) { ghost = (at, rim || swirl ? .zero : centre(m.rod), rim) }
             finger = at
@@ -1000,7 +1007,7 @@ struct LevelView: View {
         let lesson = shown == nil && !game.finished && held == nil
         // The swirl's too while it is held.
         let swirlLesson = lesson && !game.swirled && game.level.layout.swirl != nil && probing != game.level.layout.swirl
-        let arc = (!game.level.seized.isEmpty && lesson && !game.tankTurned ? RimLesson.arc(r, .tank) : [])
+        let arc = (game.level.motion != .none && lesson && !game.tankTurned ? RimLesson.arc(r, .tank) : [])
             + (swirlLesson ? RimLesson.arc(r, .swirl) : [])
         let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
             + arc.map { ($0, RimLesson.width + Self.countRoom) }
@@ -1062,7 +1069,7 @@ struct LevelView: View {
                 }
                 .position(at(fk))
             Bezel(r: r)
-            if !game.level.seized.isEmpty {
+            if game.level.motion != .none {
                 Knurl(r: r, angle: turn, held: held != nil).opacity(showResult && !game.spilled ? 0 : 1)
             }
             // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
@@ -1077,7 +1084,7 @@ struct LevelView: View {
             .keyframeAnimator(initialValue: 0.0, trigger: struck) { ring, o in
                 ring.opacity(o)
             } keyframes: { _ in PictureLayer.strike }
-            if !game.level.seized.isEmpty {
+            if game.level.motion != .none {
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                     RimLesson(kind: .tank, r: r, showing: lesson && !game.tankTurned,
                               pulse: lesson && jammed != nil ? Self.pulse(frozenShake ?? s) : 0, clock: frozenClock)
@@ -1086,7 +1093,7 @@ struct LevelView: View {
             if game.level.layout.swirl != nil {
                 // Inside the glass, in the middle of its grab: the tank's lesson keeps the bezel.
                 RimLesson(kind: .swirl, r: r, showing: swirlLesson, pulse: 0, clock: frozenClock,
-                          reach: ((game.level.seized.isEmpty ? Self.rim : Self.swirlBand) + 1) / 2)
+                          reach: ((game.level.motion == .none ? Self.rim : Self.swirlBand) + 1) / 2)
             }
             let ck = game.cancelledRod, across = 2 * disc(ck)
             Circle().stroke(Color.magenta, lineWidth: Self.hairline)
@@ -1103,7 +1110,7 @@ struct LevelView: View {
                 let p = at(k)
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                     RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                            size: core, seized: game.level.seized.contains(k), grabbed: probing == k)
+                            size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k)
                 } keyframes: { _ in Self.jolt }
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
             }
@@ -1151,10 +1158,10 @@ struct LevelView: View {
             tank.scaleEffect(1 + 0.02 * sin(t * .pi))
         } keyframes: { _ in CubicKeyframe(1.0, duration: 0.9) }
         // A level that turns, or swirls, reaches a finger on the bezel or just beyond it.
-        .contentShape(Circle().inset(by: game.level.seized.isEmpty && game.level.layout.swirl == nil ? 0 : -25))
+        .contentShape(Circle().inset(by: game.level.motion == .none && game.level.layout.swirl == nil ? 0 : -25))
         .gesture(twistGesture(r))
         // Not .none: that also switches off the gesture above.
-        .simultaneousGesture(spinGesture, including: game.level.seized.isEmpty ? .subviews : .all)
+        .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .sensoryFeedback(.selection, trigger: ticks)
         .onChange(of: tankTicks) { Knock.clunk.play() }
@@ -1241,7 +1248,7 @@ struct LevelView: View {
             .onChanged { v in
                 guard !settling, !game.finished, shown == nil else { return }
                 let q = norm(v.location)
-                let seized = game.level.seized, layout = game.level.layout
+                let level = game.level
                 // Keyed on the start point because a cancelled drag never reaches onEnded; a new touch starts afresh.
                 if drag?.start != v.startLocation {
                     endPath()
@@ -1250,7 +1257,7 @@ struct LevelView: View {
                     if spin == nil { liveTurn = nil; spun = false; endTwist() }
                     // Where it landed: the first change seen can come later, once a release or a reset's stir settles.
                     let landed = norm(v.startLocation)
-                    drag = (v.startLocation, Self.grab(layout, seized: seized, at: landed), 0)
+                    drag = (v.startLocation, Self.grab(level.layout, motion: level.motion, kind: level.kind(of:), at: landed), 0)
                     Log.write("touch \(drag!.grab) at \(Log.point(landed))")
                     path = (drag!.grab, v.time, Trail(gap: 0.03) { simd_distance($0, $1) })
                     path!.trail.add(landed, ms: 0)
@@ -1290,6 +1297,7 @@ struct LevelView: View {
                 switch g.grab {
                 case .rod(let k): release(k)
                 case .rim: if !spun { releaseTank() }
+                case .ratchet(let k): game.wait(on: k)
                 case .seized, .nothing: break
                 }
             }
@@ -1299,7 +1307,7 @@ struct LevelView: View {
         switch grab {
         case .rod(let k): centre(k)
         case .rim: .zero
-        case .seized, .nothing: nil
+        case .seized, .ratchet, .nothing: nil
         }
     }
 
@@ -1323,14 +1331,15 @@ struct LevelView: View {
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
-    /// The rim wins over the discs that reach it: past `rim` it turns the glass where knobs are seized, and holds the
+    /// The rim wins over the discs that reach it: past `rim` it holds the level's motion where it has one, and the
     /// swirl where there is one. Where there are both, the glass's own edge from `swirlBand` holds the swirl and the
-    /// bezel and beyond turn the glass. Otherwise the disc whose centre is nearest, in its own radius, wins, never the
-    /// swirl, whose centre would win everywhere; a seized knob that wins holds nothing rather than passing the finger
-    /// to a neighbour.
-    nonisolated static func grab(_ layout: Layout, seized: Set<Int>, at point: SIMD2<Double>) -> Grab {
+    /// bezel and beyond the motion. Otherwise the disc whose centre is nearest, in its own radius, wins, never the
+    /// swirl, whose centre would win everywhere; a knob that can't be turned and wins holds nothing rather than passing
+    /// the finger to a neighbour.
+    nonisolated static func grab(_ layout: Layout, motion: Level.Motion, kind: (Int) -> Level.Knob,
+                                 at point: SIMD2<Double>) -> Grab {
         let out = simd_length(point)
-        switch (layout.swirl, seized.isEmpty) {
+        switch (layout.swirl, motion == .none) {
         case (.some, false) where out >= 1: return .rim
         case (let s?, false) where out > swirlBand: return .rod(s)
         case (let s?, true) where out > rim: return .rod(s)
@@ -1341,12 +1350,16 @@ struct LevelView: View {
         func depth(_ k: Int) -> Double { simd_distance(point, SIMD2(rods[k].x, rods[k].y)) / rods[k].z }
         guard let k = rods.indices.filter({ $0 != layout.swirl && depth($0) < 1 }).min(by: { depth($0) < depth($1) })
         else { return .nothing }
-        return seized.contains(k) ? .seized(k) : .rod(k)
+        switch kind(k) {
+        case .working: return .rod(k)
+        case .seized, .socket: return .seized(k)
+        case .ratchet: return .ratchet(k)
+        }
     }
 
     /// Where the rim's grab starts, in tank units: about 13 pt into the glass on a Pro Max.
     nonisolated static let rim = 0.93
-    /// Where a level has both a swirl and seized knobs, the swirl's grab starts here, so the glass's edge it holds is
+    /// Where a level has both a swirl and a motion, the swirl's grab starts here, so the glass's edge it holds is
     /// as wide as a fingertip, about 27 pt on a Pro Max; the turn keeps the bezel and the 25 pt beyond it, about 34 pt.
     nonisolated static let swirlBand = 0.86
 
@@ -1744,7 +1757,7 @@ struct RimLesson: View {
     }
 }
 
-/// Where knobs are seized, the bezel of glass of radius `r` is knurled, turning with the glass by `angle`, its ridges
+/// Where the rim turns the tank, the bezel of glass of radius `r` is knurled, turning with the glass by `angle`, its ridges
 /// amber as the tank's lesson and lit while the rim holds the glass.
 struct Knurl: View {
     let r: CGFloat
