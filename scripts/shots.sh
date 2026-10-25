@@ -223,13 +223,14 @@ shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubbur
   TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3
 # Vortex: the swirl, a last rod the size of the tank at its centre, held from the rim. Its 27 levels are provisional. The
 # rim shows how to stir with the swirl until the player has once (UNSTIR_SWIRLED=1 is a player who has); with seized
-# knobs too, both lessons show. The swirl-* shots are of the picture, so they read as a player who has.
+# knobs too, both lessons show. The swirl-* shots are of the picture, so they read as a player who has. UNSTIR_CLOCK
+# holds the swirl's breath still, so no shot catches it mid-slosh unless UNSTIR_BREATH asks.
 shot menu-vortex "Menu on vortex with every row unlocked." TIER=vortex UNLOCK=1
 for n in $(seq -w 1 27); do
-  shot "vortex$n" "Vortex level $n with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom." TIER=vortex LEVEL=$n CLOCK=3
+  shot "vortex$n" "Vortex level $n with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom." TIER=vortex LEVEL=$n CLOCK=3
 done
-shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl before: no lesson, only the swirl's ticks inside the glass's edge." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1
-shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one on its ticks inside the glass at the bottom." \
+shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl before: no lesson." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1
+shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one inside the glass at the bottom." \
   TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
 shot vortex21-both "Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass." TIER=vortex LEVEL=21 SEIZED=2,5 CLOCK=3
 shot vortex-result "Vortex level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par), next in vortex's blue." \
@@ -250,67 +251,55 @@ for pn in isobars:01 isobars:14 isobars:27 ephemeris:02 ephemeris:13 ephemeris:2
   shot "vortex-family-$p-$n" "Vortex level $n with its full scramble on its own $p, its lesson learnt." TIER=vortex LEVEL=$n \
     CLOCK=3 SWIRLED=1
 done
-# What the rim does, shown before it is touched, three ways (UNSTIR_RIM): the swirl alone (vortex 01), the glass's
-# turn alone (maelstrom 01, knob 1 seized) and both (vortex 01 with knob 1 seized), each once its lessons are learnt
-# and with them, then held: the swirl from the rim, and where there are both, the swirl from the glass's edge and the
-# tank from the bezel.
-for v in knob bands glyphs; do
-  shot "rim-$v-swirl" "Rim cue $v: vortex 01, the swirl alone, its lesson learnt." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 RIM=$v
-  shot "rim-$v-swirl-lesson" "Rim cue $v: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass." TIER=vortex LEVEL=1 CLOCK=3 RIM=$v
-  shot "rim-$v-swirl-held" "Rim cue $v: vortex 01, the swirl held from the rim, 1.5 steps clockwise." \
-    TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 LIVE=4:1.5 TOUCH=0.7,-0.7 RIM=$v
-  shot "rim-$v-seized" "Rim cue $v: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt." \
-    TIER=maelstrom LEVEL=1 CLOCK=3 TANKTURNED=1 RIM=$v
-  shot "rim-$v-seized-lesson" "Rim cue $v: maelstrom 01, the tank never turned: its amber lesson too." TIER=maelstrom LEVEL=1 CLOCK=3 RIM=$v
-  shot "rim-$v-both" "Rim cue $v: vortex 01 with knob 1 seized, both lessons learnt." \
-    TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 RIM=$v
-  shot "rim-$v-both-lesson" "Rim cue $v: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring." \
-    TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 RIM=$v
-  shot "rim-$v-both-swirl-held" "Rim cue $v: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise." \
-    TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 LIVE=4:1.5 TOUCH=0.66,-0.66 RIM=$v
-  shot "rim-$v-both-tank-held" "Rim cue $v: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round." \
-    TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 TANKLIVE=30 TOUCH=0,-1.03 RIM=$v
-done
-# The knob cue with no dark seats or groove (UNSTIR_SEATS=0): bare hairlines over the picture, otherwise the same.
-shot rim-knob-noseat-swirl "Rim cue knob, no seats: vortex 01, the swirl alone, its lesson learnt." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 SEATS=0
-shot rim-knob-noseat-both "Rim cue knob, no seats: vortex 01 with knob 1 seized, both lessons learnt." \
-  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 SEATS=0
-shot rim-knob-noseat-both-lesson "Rim cue knob, no seats: vortex 01 with knob 1 seized, neither ever used: both lessons too." \
-  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SEATS=0
-# The swirl's count, inside the glass on the far side from the finger, clear of the cue's ticks and pointer.
-shot rim-knob-swirl-held-low "Rim cue knob: vortex 01, the swirl held from the rim at six and carried 1.5 steps counterclockwise: -2 on the far side from the finger, inside the dashes, which run inside the ticks." \
+# What the rim does, shown before it is touched: the swirl alone (vortex 01), the glass's turn alone (maelstrom 01, knob
+# 1 seized) and both (vortex 01 with knob 1 seized), each once its lessons are learnt and with them, then held: the
+# swirl from the rim, and where there are both, the swirl from the glass's edge and the tank from the bezel.
+shot rim-swirl "Rim: vortex 01, the swirl alone, its lesson learnt." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1
+shot rim-swirl-lesson "Rim: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass." TIER=vortex LEVEL=1 CLOCK=3
+shot rim-swirl-held "Rim: vortex 01, the swirl held from the rim, 1.5 steps clockwise." \
+  TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 LIVE=4:1.5 TOUCH=0.7,-0.7
+shot rim-seized "Rim: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt." TIER=maelstrom LEVEL=1 CLOCK=3 TANKTURNED=1
+shot rim-seized-lesson "Rim: maelstrom 01, the tank never turned: its amber lesson too." TIER=maelstrom LEVEL=1 CLOCK=3
+shot rim-both "Rim: vortex 01 with knob 1 seized, both lessons learnt." TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1
+shot rim-both-lesson "Rim: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
+shot rim-both-swirl-held "Rim: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 LIVE=4:1.5 TOUCH=0.66,-0.66
+shot rim-both-tank-held "Rim: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 TANKLIVE=30 TOUCH=0,-1.03
+# The swirl's count, inside the glass on the far side from the finger, clear of its dashes.
+shot rim-swirl-held-low "Rim: vortex 01, the swirl held from the rim at six and carried 1.5 steps counterclockwise: -2 on the far side from the finger, inside the dashes." \
   TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 LIVE=4:-1.5 TOUCH=0,0.97
-shot rim-knob-swirl-turned "Rim cue knob: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the ticks at twelve." \
+shot rim-swirl-turned "Rim: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the dashes at twelve." \
   TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 TURNED=4:+2
-# A sheet per cue of what reads before a move, cut to the tank and the glyphs' room over twelve: the swirl alone, the
-# glass's turn alone and both, learnt along the top and with their lessons under. Not a shot, so not in the index.
-for v in knob bands glyphs; do
-  at_rest=(swirl seized both swirl-lesson seized-lesson both-lesson) inputs=()
-  for s in "${at_rest[@]}"; do inputs+=(-i "shots/rim-$v-$s.png"); done
-  [[ -n "$pattern" && "rim-$v" != *$pattern* ]] && continue
-  ffmpeg -loglevel error -y "${inputs[@]}" -filter_complex \
-    "concat=n=6:v=1,crop=iw:ih*0.56:0:ih*0.21,scale=440:-1,tile=3x2:padding=8:color=0x303030" -frames:v 1 "shots/vortex-rim-$v.png"
-  echo "sheet vortex-rim-$v"
+# The swirl's breath (UNSTIR_BREATH), held 0.4 s into its first slosh, where it has turned the picture furthest: a still
+# of the tank at rest shows nothing. On vortex 01 (quad), 14 (pent) and 21 (hex), and on vortex 01 with knob 1 seized,
+# for the bezel's knurl beside it.
+for n in 01 14 21; do
+  shot "breath-$n" "Breath: vortex $n at rest, its lesson learnt, 0.4 s into the swirl's first slosh." \
+    TIER=vortex LEVEL=$n CLOCK=3 SWIRLED=1 BREATH=1.9
 done
-# The rim at one o'clock, its pixels doubled: the knob cue with its seats on the left, without on the right. Not a
-# shot, so not in the index.
-if [[ -z "$pattern" || "rim-knob-noseat-both" == *$pattern* ]]; then
-  ffmpeg -loglevel error -y -i shots/rim-knob-both.png -i shots/rim-knob-noseat-both.png -filter_complex \
-    "[0]crop=320:250:780:830,scale=iw*2:-1:flags=neighbor,pad=iw+12:ih:0:0:color=0x303030[a];\
-[1]crop=320:250:780:830,scale=iw*2:-1:flags=neighbor[b];[a][b]hstack" \
-    -frames:v 1 shots/rim-knob-seats-crop.png
-  echo "sheet rim-knob-seats-crop"
+shot breath-both "Breath: vortex 01 with knob 1 seized, both lessons learnt, 0.4 s into the swirl's first slosh: the knurl for the glass's turn beside it." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 BREATH=1.9
+# A sheet of what reads before a move, cut to the tank: the swirl alone, the glass's turn alone and both, learnt along
+# the top and with their lessons under. Not a shot, so not in the index.
+if [[ -z "$pattern" || "rim-" == *$pattern* ]]; then
+  inputs=()
+  for s in swirl seized both swirl-lesson seized-lesson both-lesson; do inputs+=(-i "shots/rim-$s.png"); done
+  ffmpeg -loglevel error -y "${inputs[@]}" -filter_complex \
+    "concat=n=6:v=1,crop=iw:ih*0.56:0:ih*0.21,scale=440:-1,tile=3x2:padding=8:color=0x303030" -frames:v 1 "shots/vortex-rim.png"
+  echo "sheet vortex-rim"
 fi
-shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1
+shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
 swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
-shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1
-shot swirl-quad-live "The same held mid-drag from the rim, the swirl 1.5 steps clockwise." LAYOUT=quadSwirl STACK="$swirl" LIVE=4:1.5 TOUCH=0.7,-0.7 SWIRLED=1
+shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1 CLOCK=3
+shot swirl-quad-live "The same held mid-drag from the rim, the swirl 1.5 steps clockwise." LAYOUT=quadSwirl STACK="$swirl" LIVE=4:1.5 TOUCH=0.7,-0.7 SWIRLED=1 CLOCK=3
 shot swirl-quad-seized "The same with knob 1 seized and the tank turned one step (90 degrees clockwise)." LAYOUT=quadSwirl STACK="$swirl" \
-  SEIZED=1 TANK=1 SWIRLED=1
-shot swirl-tri "Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3." LAYOUT=triSwirl STACK=0:+3,3:+2,1:-4,3:-3 SWIRLED=1
-shot swirl-eye "Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3." LAYOUT=eyeSwirl STACK=0:+3,4:+2,2:-4,4:-3 SWIRLED=1
-shot swirl-pent "Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3." LAYOUT=pentSwirl STACK=0:+3,5:+2,2:-4,5:-3 SWIRLED=1
-shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl STACK=1:+3,7:+2,4:-4,7:-3 SWIRLED=1
+  SEIZED=1 TANK=1 SWIRLED=1 CLOCK=3
+shot swirl-tri "Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3." LAYOUT=triSwirl STACK=0:+3,3:+2,1:-4,3:-3 SWIRLED=1 CLOCK=3
+shot swirl-eye "Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3." LAYOUT=eyeSwirl STACK=0:+3,4:+2,2:-4,4:-3 SWIRLED=1 CLOCK=3
+shot swirl-pent "Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3." LAYOUT=pentSwirl STACK=0:+3,5:+2,2:-4,5:-3 SWIRLED=1 CLOCK=3
+shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl STACK=1:+3,7:+2,4:-4,7:-3 SWIRLED=1 CLOCK=3
 # App-icon candidates, each a 1024-pixel square centred on the screen; scripts/icon.sh crops them and lays out the sheet.
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2

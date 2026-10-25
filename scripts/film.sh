@@ -61,27 +61,32 @@ film heartbeat-maelstrom18-neurons 3.5 "trim=start=2.2,setpts=PTS-STARTPTS,$tank
 # to 3, then five pushes fill it notch by notch until the last spills over the lip at twelve and the picture stirs together.
 # Cropped taller than the tank, for the brim pin and the pour above it.
 film endless-brim-run 11.5 "crop=1320:1460:0:700,fps=3,scale=200:-1,tile=8x4:padding=4" MODE=endless BRIM=5 BRIMDEMO=1
-# The rim's cues (UNSTIR_RIM), each the lead and both alternatives, played by a drawn fingertip (UNSTIR_FINGER) after two
-# seconds at rest, cues learnt: vortex 01 swirled from the rim, healing the swirl's seam then the knob's; maelstrom 01's
-# glass turned from the bezel, then its three knobs; vortex 02 with knob 3 seized, the glass turned from the bezel, a
-# knob, the swirl from the glass's edge and a knob, at par 4 for its turn.
-# The strips keep the tank and the glyphs' room over twelve, whatever size the simulator records at.
+# The rim, played by a drawn fingertip (UNSTIR_FINGER) after two seconds at rest, its lessons learnt: vortex 01 swirled
+# from the rim, healing the swirl's seam then the knob's; maelstrom 01's glass turned from the bezel, then its three
+# knobs; vortex 02 with knob 3 seized, the glass turned from the bezel, a knob, the swirl from the glass's edge and a
+# knob, at par 4 for its turn.
+# The strips keep the tank and the room over twelve, whatever size the simulator records at.
 rim="crop=iw:ih*0.56:0:ih*0.21,fps=3"
-for v in knob bands glyphs; do
-  film "rim-$v-swirl" 10 "$rim,scale=220:-1,tile=8x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 RIM=$v FINGER=1 \
-    MOVES=4:-4,0:-3
-  film "rim-$v-seized" 14 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 RIM=$v FINGER=1 \
-    MOVES=-1:+1,2:+8,3:-7,0:+4
-  film "rim-$v-both" 15 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 SWIRLED=1 TANKTURNED=1 RIM=$v \
-    FINGER=1 MOVES=-1:+1,0:+8,4:+7,1:-4
-done
-# The swirl's push, knob cue: vortex 01's swirl healed, then stirred again over knob 0's seam, which stacks it (red on the
-# cue's ring inside the glass), turned straight back and knob 0 healed. Its count sits inside the ticks throughout.
-film rim-knob-swirl-push 12 "$rim,scale=220:-1,tile=9x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 FINGER=1 \
+film rim-swirl 10 "$rim,scale=220:-1,tile=8x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 FINGER=1 MOVES=4:-4,0:-3
+film rim-seized 14 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 FINGER=1 \
+  MOVES=-1:+1,2:+8,3:-7,0:+4
+film rim-both 15 "$rim,scale=220:-1,tile=9x5:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 SWIRLED=1 TANKTURNED=1 FINGER=1 \
+  MOVES=-1:+1,0:+8,4:+7,1:-4
+# The swirl's push: vortex 01's swirl healed, then stirred again over knob 0's seam, which stacks it (a red ring just
+# inside the glass's edge), turned straight back and knob 0 healed.
+film rim-swirl-push 12 "$rim,scale=220:-1,tile=9x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 FINGER=1 \
   MOVES=4:-4,4:+3,4:-3,0:-3
-# A cold first touch where the rim does both, knob cue: vortex 02 with knob 3 seized, both lessons up, the fingertip
-# landing on the swirl's ticks inside the glass's edge, where its lesson points, and stirring with the swirl.
-film rim-knob-both-cold 8 "$rim,scale=220:-1,tile=8x3:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 FINGER=1 MOVES=4:+7
+# The swirl's breath on vortex 01, its lesson learnt: after the opening, a slosh 1.5 s after the tank is the player's and
+# another 12 s later. Then a fingertip landing on the rim 0.4 s into the first slosh, near its furthest, the breath
+# fading out under the swirl's own turn as it heals the swirl's seam; and the same on knob 0, whose turn stacks.
+film breath-rest 19 "crop=iw:ih*0.56:0:ih*0.21,fps=4,scale=180:-1,tile=11x7:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 OPEN=1
+film breath-grab 7 "crop=iw:ih*0.56:0:ih*0.21,fps=10,scale=180:-1,tile=10x7:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 \
+  TANKTURNED=1 FINGER=1 REST=1.9 MOVES=4:-4
+film breath-grab-knob 7 "crop=iw:ih*0.56:0:ih*0.21,fps=10,scale=180:-1,tile=10x7:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 \
+  TANKTURNED=1 FINGER=1 REST=1.9 MOVES=0:+1
+# A cold first touch where the rim does both: vortex 02 with knob 3 seized, both lessons up, the fingertip
+# landing inside the glass's edge, where the swirl's lesson points, and stirring with the swirl.
+film rim-both-cold 8 "$rim,scale=220:-1,tile=8x3:padding=4" TIER=vortex LEVEL=2 SEIZED=3 PAR=4 FINGER=1 MOVES=4:+7
 # Vortex's own family, each on vortex 01's tank (isobars' own level; UNSTIR_PICTURE for the others): the swirl healed
 # from the rim, stirred back the other way, healed again and stirred on, so the whole tank winds over the picture and
 # unwinds.

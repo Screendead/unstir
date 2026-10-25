@@ -1134,6 +1134,68 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// A slosh starts and ends at 0, swings about 8 degrees out at most and no further than 12, and repeats every
+    /// `Breath.every` seconds of a rest after its wait, never before.
+    func testBreathSloshesFromRestAndBackToIt() {
+        XCTAssertEqual(Breath.slosh(0), 0)
+        XCTAssertEqual(Breath.slosh(Breath.length), 0, accuracy: 1e-12)
+        XCTAssertEqual(Breath.slosh(Breath.length - 1e-9), 0, accuracy: 1e-9)
+        let swings = stride(from: 0.0, through: Breath.length, by: 0.001).map(Breath.slosh)
+        XCTAssertLessThanOrEqual(swings.map(abs).max()!, 12 * .pi / 180)
+        XCTAssertGreaterThan(swings.max()!, 7 * .pi / 180)
+        for wait in [Breath.first, Breath.later] {
+            let b = Breath(start: 100, wait: wait)
+            for t in stride(from: 90.0, through: 100 + wait, by: 0.01) { XCTAssertEqual(b.angle(at: t), 0, "\(wait) at \(t)") }
+            for p in stride(from: 0.0, through: Breath.every, by: 0.05) {
+                let t = 100 + wait + p
+                XCTAssertEqual(b.angle(at: t), Breath.slosh(p), accuracy: 1e-9)
+                XCTAssertEqual(b.angle(at: t + 3 * Breath.every), b.angle(at: t), accuracy: 1e-9)
+            }
+        }
+    }
+
+    /// A cut breath fades from wherever it stood: no jump at the cut, 0 once `Breath.fade` has passed, and never further
+    /// out than the uncut breath.
+    func testBreathFadesFromWhereACutCaughtIt() {
+        let whole = Breath(start: 0, wait: Breath.first)
+        for c in stride(from: 0.0, through: 30, by: 0.037) {
+            var b = whole
+            b.cut = c
+            XCTAssertEqual(b.angle(at: c), whole.angle(at: c), "cut at \(c)")
+            XCTAssertEqual(b.angle(at: c + 0.001), whole.angle(at: c), accuracy: 0.002, "cut at \(c)")
+            for t in stride(from: c, through: c + Breath.fade, by: 0.005) {
+                XCTAssertLessThanOrEqual(abs(b.angle(at: t)), abs(whole.angle(at: t)) + 1e-12)
+            }
+            for t in stride(from: c + Breath.fade, through: c + 30, by: 0.1) { XCTAssertEqual(b.angle(at: t), 0, "cut at \(c)") }
+        }
+    }
+
+    /// The picture's timeline runs only while a breath moves: wherever the turn is off 0, its motion says it moves, until a
+    /// time still ahead; between sloshes and once a cut has faded, it says it is still, and when it next moves.
+    func testBreathMovesOnlyWhileItSloshes() {
+        var breaths = [Breath(start: 0, wait: Breath.first), Breath(start: 5, wait: Breath.later)]
+        for c in [0.5, 1.6, 2.4, 14, 40] {
+            var b = Breath(start: 0, wait: Breath.first)
+            b.cut = c
+            breaths.append(b)
+        }
+        for b in breaths {
+            var idle = 0.0
+            for t in stride(from: -1.0, through: 60, by: 0.01) {
+                let m = b.motion(at: t)
+                if abs(b.angle(at: t)) > 1e-9 { XCTAssertTrue(m.moving, "\(b) at \(t)") }
+                if let until = m.until { XCTAssertGreaterThanOrEqual(until, t, "\(b) at \(t)") }
+                if let until = m.until, !m.moving { XCTAssertEqual(b.angle(at: (t + until) / 2), 0, "\(b) at \(t)") }
+                if !m.moving { idle += 0.01 }
+            }
+            // Moving just before each slosh, which starts at its fastest.
+            XCTAssertTrue(b.motion(at: b.start + b.wait - Breath.lead / 2).moving || b.cut.map { $0 < b.start + b.wait } == true, "\(b)")
+            // Still for most of a rest: a slosh in every twelve seconds.
+            XCTAssertGreaterThan(idle, 40, "\(b)")
+            if let cut = b.cut { XCTAssertEqual(b.motion(at: cut + Breath.fade).until, nil) }
+        }
+    }
+
     /// A drag's path for the log keeps the landing, its first few points close together, then a point a gap apart, and
     /// the latest; a finger held still leaves the landing and the lift. A long drag stays within the cap, its first few
     /// points and its latest kept, and its worst line stays short.

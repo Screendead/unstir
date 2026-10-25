@@ -477,10 +477,18 @@ struct LevelView: View {
     private let frozenShake: Double?
     /// UNSTIR_TODAY: the day the level opens on, for the bank's refill.
     private let today: String?
-    /// UNSTIR_RIM: how the rim shows what it does.
-    private let cue: RimCue
-    /// UNSTIR_SEATS: whether the rim's lines over the picture sit on dark seats.
-    private let seats: Bool
+    /// UNSTIR_BREATH: the swirl's breath held this many seconds into the tank's first rest.
+    private let frozenBreath: Double?
+    /// UNSTIR_REST: seconds at rest before a drawn fingertip lands.
+    private let rest: Double
+    /// The swirl's breath while the tank rests, and the last one a touch, the opening or the win cut, fading out.
+    @State private var breath: Breath?
+    @State private var faded: Breath?
+    /// Either moves the picture now: the picture's timeline runs only then.
+    @State private var breathing = false
+    /// Something has been let go since the opening, so the next rest waits longer.
+    @State private var lifted = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
     /// Endless: the picture's colours round the rim as the stack stirs it (Brim.colours), once worked out.
@@ -550,8 +558,8 @@ struct LevelView: View {
         frozenClock = harness?.clock
         frozenShake = harness?.shake
         today = harness?.today
-        cue = harness?.rim ?? .knob
-        seats = harness?.seats ?? true
+        frozenBreath = harness?.breath
+        rest = harness?.rest ?? 2
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
@@ -687,7 +695,27 @@ struct LevelView: View {
                   still: game.level.picture.isLive ? { liveRod = nil; liveAngle = 0 } : nil).start()
         }
         .onChange(of: shown == nil, initial: true) {
-            if shown == nil { game.startClock(); badge = game.refilled }
+            if shown == nil { game.startClock(); badge = game.refilled } else { lifted = false }
+        }
+        .onChange(of: touching) { if touching && shown == nil { lifted = true } }
+        .onChange(of: resting, initial: true) {
+            let t = Date.now.timeIntervalSinceReferenceDate
+            if resting {
+                breath = Breath(start: t, wait: lifted ? Breath.later : Breath.first)
+            } else if var b = breath {
+                b.cut = t
+                faded = b
+                breath = nil
+            }
+        }
+        .task(id: [breath, faded]) {
+            while true {
+                let t = Date.now.timeIntervalSinceReferenceDate
+                let motion = [breath, faded].compactMap { $0?.motion(at: t) }
+                breathing = motion.contains { $0.moving }
+                guard let next = motion.compactMap(\.until).min(),
+                      (try? await Task.sleep(for: .seconds(max(next - t, 0.001)))) != nil else { return }
+            }
         }
         .onChange(of: game.finished) {
             guard game.finished else { return }
@@ -736,6 +764,21 @@ struct LevelView: View {
     }
 
     private var stack: [Twist] { shown.map { Array(game.stack.prefix($0)) } ?? game.stack }
+    /// A finger, two, or a drawn fingertip is on the tank, or a turn is still settling from one.
+    private var touching: Bool { drag != nil || liveRod != nil || liveTurn != nil || spun || ghost != nil }
+    /// The tank is the player's and untouched, on a layout with a swirl: its breath may run. Never under Reduce Motion,
+    /// and never in a harness launch that holds the clock.
+    private var resting: Bool {
+        game.level.layout.swirl != nil && !reduceMotion && frozenClock == nil && frozenBreath == nil && shown == nil
+            && !game.finished && !touching
+    }
+    /// The swirl's breath on the picture now, in radians.
+    private var breathAngle: Double {
+        if let frozenBreath { return Breath(start: 0, wait: Breath.first).angle(at: frozenBreath) }
+        guard breathing else { return 0 }
+        let t = Date.now.timeIntervalSinceReferenceDate
+        return (breath?.angle(at: t) ?? 0) + (faded?.angle(at: t) ?? 0)
+    }
     private var rods: [SIMD3<Double>] { game.level.layout.rods }
     /// The rods with a knob: all but a swirl, which is held from the rim.
     private var knobs: [Int] { rods.indices.filter { $0 != game.level.layout.swirl } }
@@ -813,7 +856,7 @@ struct LevelView: View {
     /// beat, turns at about a step a tenth of a second and lifts, and the next waits for the heal or push to show.
     private func hand(_ moves: [Twist]) async {
         func pause(_ s: Double) async -> Bool { (try? await Task.sleep(for: .seconds(s))) != nil && !game.finished }
-        guard await pause(2.0) else { return }
+        guard await pause(rest) else { return }
         let layout = game.level.layout, both = layout.swirl != nil && !game.level.seized.isEmpty
         for m in moves {
             let rim = m.rod == Game.tank, swirl = m.rod == layout.swirl
@@ -953,26 +996,27 @@ struct LevelView: View {
         let swirlLesson = lesson && !game.swirled && game.level.layout.swirl != nil && probing != game.level.layout.swirl
         let arc = (!game.level.seized.isEmpty && lesson && !game.tankTurned ? RimLesson.arc(r, .tank) : [])
             + (swirlLesson ? RimLesson.arc(r, .swirl) : [])
-        let g = RimCues.glyphs(r, tank: !game.level.seized.isEmpty, swirl: game.level.layout.swirl != nil)
-        let glyphs = (cue == .glyphs ? [g.tank, g.swirl] : []).compactMap { $0 }.map { ($0, RimCues.glyphSize + Self.countRoom) }
         let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
-            + arc.map { ($0, RimLesson.width + Self.countRoom) } + glyphs
+            + arc.map { ($0, RimLesson.width + Self.countRoom) }
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
         let spillAt = game.spilled ? game.brimEvents.last?.time : nil
         // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow.
-        // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together.
-        let moving = game.level.picture.isLive || spillAt != nil && brimMoving
+        // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
+        // breathes.
+        let moving = game.level.picture.isLive || spillAt != nil && brimMoving || breathing
         return ZStack {
             TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !moving || frozenClock != nil)) { timeline in
                 let murk = spillAt.flatMap { at -> [Float]? in
                     let since = (frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
+                let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
                 PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                              clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
                     .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
                         var u = unstirred
                         u.wave = SIMD3(Float(source.x), Float(source.y), Float(frozenWave ?? w))
+                        u.breath = swirlBreath
                         return picture.modifier(u).modifier(Murk(stirs: murk, side: side))
                     } keyframes: { _ in
                         // A light wave from the last-turned rod, over the clean picture. The animator holds its last value, so
@@ -1012,11 +1056,9 @@ struct LevelView: View {
                 }
                 .position(at(fk))
             Bezel(r: r)
-            RimCues(cue: cue, r: r,
-                    swirl: game.level.layout.swirl.map { s in (turned(s), probing == s ? liveAngle : 0, probing == s) },
-                    tank: game.level.seized.isEmpty ? nil : (turn, held != nil), band: game.level.seized.isEmpty ? Self.rim : Self.swirlBand,
-                    lessons: (lesson && !game.tankTurned, swirlLesson), seats: seats)
-                .opacity(showResult && !game.spilled ? 0 : 1)
+            if !game.level.seized.isEmpty {
+                Knurl(r: r, angle: turn, held: held != nil).opacity(showResult && !game.spilled ? 0 : 1)
+            }
             // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
             // animator of its own that misses the strike when the colours land after it.
             ZStack {
@@ -1036,9 +1078,9 @@ struct LevelView: View {
                 } keyframes: { _ in Self.jolt }
             }
             if game.level.layout.swirl != nil {
-                // On the swirl's ticks, inside the glass, in the middle of its grab: the tank's lesson keeps the bezel.
+                // Inside the glass, in the middle of its grab: the tank's lesson keeps the bezel.
                 RimLesson(kind: .swirl, r: r, showing: swirlLesson, pulse: 0, clock: frozenClock,
-                          reach: ((game.level.seized.isEmpty ? Self.rim : Self.swirlBand) + 1) / 2, seated: seats)
+                          reach: ((game.level.seized.isEmpty ? Self.rim : Self.swirlBand) + 1) / 2)
             }
             let ck = game.cancelledRod, across = 2 * disc(ck)
             Circle().stroke(Color.magenta, lineWidth: Self.hairline)
@@ -1062,11 +1104,11 @@ struct LevelView: View {
             // A spilled tank keeps its caps over the murk.
             .opacity(showResult && !game.spilled ? 0 : 1)
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
-            // knobs, which would hide it. The swirl's is its dial's ring inside the glass's edge, over the picture, so a
+            // knobs, which would hide it. The swirl's is a ring just inside the glass's edge, over the picture, so a
             // hairline. One view either way, so the first push on either animates.
             let swirlPushed = fk == game.level.layout.swirl
             Circle().strokeBorder(Color.alarm, lineWidth: swirlPushed ? Self.hairline : 1)
-                .padding(swirlPushed ? RimCues.dial - Self.hairline / 2 : -3)
+                .padding(swirlPushed ? Self.swirlFlash - Self.hairline / 2 : -3)
                 .frame(width: swirlPushed ? side : core, height: swirlPushed ? side : core)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.pushes) { ring, t in
                     ring.opacity(t >= 1 ? 0 : 1 - t)
@@ -1085,7 +1127,7 @@ struct LevelView: View {
                     .position(countSpot(at(c.k), reach: countReach(c.k, r), side: side, avoid: others))
             }
             if let c = tankCount, c.steps != 0 {
-                countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side, avoid: glyphs))
+                countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side))
             }
             if let ghost {
                 // Turned with the stir it holds, about its pivot, so it rides the same animation round the arc.
@@ -1123,6 +1165,8 @@ struct LevelView: View {
 
     /// Wide enough to read, too thin to hide the picture: 1.5 px on a 3x screen.
     private static let hairline: CGFloat = 0.5
+    /// How far inside the glass's edge the swirl's push flashes.
+    private static let swirlFlash: CGFloat = 5
     /// A drag's count: its dashes, and the trace under them. No glow and no dark band: with them the count hid the picture.
     private static let dash: CGFloat = 2, dashTone = 0.85, trace = hairline, traceTone = 0.4
     /// A dial's opacity while letting go would change nothing, and while its stir stays open after the finger lifts.
@@ -1162,10 +1206,8 @@ struct LevelView: View {
     /// Room for a count round its centre: half its width at two digits.
     private static let countRoom: CGFloat = 18
 
-    /// The circle a rod's count's dashes run on: 14 pt inside its disc, but inside the swirl's cue's ticks and pointer.
-    private func dashes(_ k: Int, _ r: CGFloat) -> CGFloat {
-        k == game.level.layout.swirl ? r - RimCues.pointerEnd - 4 : min(rods[k].z * r, r - 4) - 14
-    }
+    /// The circle a rod's count's dashes run on: 14 pt inside its disc.
+    private func dashes(_ k: Int, _ r: CGFloat) -> CGFloat { min(rods[k].z * r, r - 4) - 14 }
 
     /// How far from a rod's centre its count sits: off a knob's disc, but inside the swirl's, whose rim is the glass's
     /// edge, clear of its dashes.
@@ -1393,6 +1435,59 @@ struct LevelView: View {
     }
 }
 
+/// The swirl's standing cue: while the tank rests, the swirl sloshes the picture once through its own map and settles,
+/// then again every `every` seconds, so the player sees that the rim swirls before touching it. It moves only the
+/// picture, never the game.
+struct Breath: Equatable {
+    /// When the rest began, in seconds since the reference date, and how long it waits before its first slosh.
+    let start: Double
+    let wait: Double
+    /// When a touch, the opening or the win ended the rest.
+    var cut: Double?
+
+    /// The first rest waits for the picture to land and strike; one after a lift waits longer, so no move is answered
+    /// by a slosh.
+    static let first = 1.5, later = 10.0
+    /// A slosh repeats this often while the rest lasts, and fades out over `fade` once the rest is cut.
+    static let every = 12.0, fade = 0.25
+    /// A slosh's length: two of its swings, so it ends where its sine does, at 0.
+    static let length = 3.2
+    static let lead = 0.1
+
+    /// The swirl's turn `p` seconds into a slosh: a swing of 12 degrees damped as it goes, so it peaks near 8 (as in the
+    /// pitch's film), 0 at both ends.
+    static func slosh(_ p: Double) -> Double {
+        p <= 0 || p >= length ? 0 : 12 * .pi / 180 * sin(2 * .pi * p / (length / 2)) * exp(-p)
+    }
+
+    /// The swirl's turn at `t`, faded out from wherever a cut caught it, so the picture never jumps.
+    func angle(at t: Double) -> Double {
+        guard let p = phase(at: t) else { return 0 }
+        let a = Self.slosh(p)
+        guard let cut, t > cut else { return a }
+        guard t < cut + Self.fade else { return 0 }
+        let f = 1 - (t - cut) / Self.fade
+        return a * f * f * (3 - 2 * f)
+    }
+
+    /// Whether the turn may be off 0 at `t`, and when that next changes, if it ever does. From `lead` before each slosh,
+    /// since a sleep wakes late and a slosh starts at its fastest.
+    func motion(at t: Double) -> (moving: Bool, until: Double?) {
+        let end = cut.map { $0 + Self.fade } ?? .infinity, first = start + wait - Self.lead
+        guard t < end else { return (false, nil) }
+        guard let p = phase(at: t + Self.lead) else { return (false, first < end ? first : nil) }
+        if p < Self.length + Self.lead { return (true, min(t + Self.length + Self.lead - p, end)) }
+        let next = t + Self.every - p
+        return (false, next < end ? next : nil)
+    }
+
+    /// How far into its latest slosh the rest is at `t`, nil before the first.
+    private func phase(at t: Double) -> Double? {
+        let s = t - start - wait
+        return s > 0 ? s - (s / Self.every).rounded(.down) * Self.every : nil
+    }
+}
+
 /// A turn's clicks: one each time what letting go would commit changes, at every half step, either way. So a rod's tick
 /// and the tank's clunk land with the drag's count, and every step a turn commits has had one.
 struct Detent {
@@ -1476,6 +1571,8 @@ struct Unstirred: ViewModifier, Animatable {
     var wave = SIMD3<Float>(0, 0, -1)
     /// A live picture's own cost per frame, in entries: it is redrawn under the shader every frame.
     var fillEntries = 0
+    /// The swirl's breath, newest of all.
+    var breath: (rod: Int, angle: Double)?
     @Environment(\.displayScale) private var scale
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>> {
@@ -1493,13 +1590,16 @@ struct Unstirred: ViewModifier, Animatable {
         }
         for t in stack { add(t.rod, Double(t.steps) * Tank.step * min(wind, 1)) }
         if let liveRod { add(liveRod, liveAngle) }
+        let breathes = breath.map { $0.angle != 0 } ?? false
+        if breathes, let breath { add(breath.rod, breath.angle) }
         let n = floats.count / 4
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
         // A live picture keeps four taps only to `Tank.fourTaps` entries less its fill: the same budget as without it.
-        // Counted in committed entries, so a touch never changes the taps; the drag rides one over, within the 31 the
-        // shader's comment measured.
-        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod == nil ? 0 : 1)
+        // Counted in committed entries, so a touch never changes the taps; the drag or the breath rides one over, within
+        // the 31 the shader's comment measured. Both at once, for the `Breath.fade` a touch takes to cut a slosh, drop to
+        // two taps at the budget's edge rather than run 32.
+        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes ? 1 : 0)
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
                                  .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
@@ -1562,8 +1662,8 @@ struct PictureLayer: View {
 /// How to turn the tank, or stir with the swirl, at the rim of glass of radius `r`: a two-headed arc and a ghost finger
 /// rocking along it, one way and back, so it names the control and never the move. Each lies on the ring it teaches,
 /// so on a level with both they point at different rings. The tank's is amber at the top, its arc just outside the
-/// bezel and its finger on the bezel; the swirl's is cyan at the bottom, a thin arc on the swirl's ticks inside the
-/// glass's edge and its finger there, in the middle of the swirl's grab. `pulse` (0 to 1) swells the tank's arc, and
+/// bezel and its finger on the bezel; the swirl's is cyan at the bottom, a thin arc just inside the glass's edge and
+/// its finger there, in the middle of the swirl's grab. `pulse` (0 to 1) swells the tank's arc, and
 /// brings it back for a moment once it has stopped showing.
 struct RimLesson: View {
     enum Kind { case tank, swirl }
@@ -1575,13 +1675,10 @@ struct RimLesson: View {
     let clock: Double?
     /// The ghost finger's path, as a fraction of the glass's radius.
     var reach = 1.0225
-    /// The swirl's arc on a dark stroke.
-    var seated = true
     private static let span = 34 * Double.pi / 180, sweep = 26 * Double.pi / 180, period = 3.6
     /// The arc's stroke at the height of its pulse. Nothing of it, arrowheads included, lies further than this from its line.
     static let width: CGFloat = 14
-    /// The tank's arc rides outside the bezel it turns; the swirl's lies on its own ticks inside the glass, a thin line
-    /// over the picture.
+    /// The tank's arc rides outside the bezel it turns; the swirl's lies inside the glass, a thin line over the picture.
     private static func radius(_ r: CGFloat, _ kind: Kind) -> CGFloat { kind == .tank ? 1.045 * r + 10 : r - 10 }
     /// Where the lesson sits, clockwise from twelve.
     private static func notch(_ kind: Kind) -> Double { kind == .tank ? 0 : .pi }
@@ -1631,10 +1728,8 @@ struct RimLesson: View {
                 arrow.stroke(colour.opacity(0.22 + 0.3 * pulse), style: StrokeStyle(lineWidth: Self.width - 6 * (1 - pulse), lineCap: .round, lineJoin: .round))
                 arrow.stroke(colour, style: StrokeStyle(lineWidth: 3 + 1.5 * pulse, lineCap: .round, lineJoin: .round))
             } else {
-                // Over the picture, so no glow: seated on a dark stroke, as the swirl's ticks are, to read on a busy one.
-                if seated {
-                    arrow.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
-                }
+                // Over the picture, so no glow: seated on a dark stroke, to read on a busy one.
+                arrow.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
                 arrow.stroke(colour, style: StrokeStyle(lineWidth: 1.25, lineCap: .round, lineJoin: .round))
             }
         }
@@ -1643,119 +1738,16 @@ struct RimLesson: View {
     }
 }
 
-/// How the rim shows, before it is touched, what it does: stir with the swirl, turn the glass and its seized knobs, or
-/// both. Three ways, compared through UNSTIR_RIM until one is chosen.
-enum RimCue: String {
-    /// The swirl wears a knob's ticks just inside the glass's edge, leaning as a shear does, a dark groove between them
-    /// and the bezel; where knobs are seized, the bezel is knurled, its ridges amber as the tank's lesson.
-    case knob
-    /// The swirl's grab is outlined in cyan on the glass's edge; where knobs are seized, the bezel is amber, as the lessons.
-    case bands
-    /// A glyph over the bezel at twelve for each, once its lesson is learnt: a spiral, a ring turning with a seized knob.
-    case glyphs
-}
-
-/// The rim's standing cue over glass of radius `r`, in the tank's frame. `swirl` is the swirl's own turning, the turn
-/// in hand and whether it is held, nil on a layout without one; `tank`, the glass's turn and whether the rim holds it,
-/// nil where no knob is seized. `band` is where the swirl's grab starts, a fraction of `r`; `lessons`, which lessons
-/// show, as a glyph waits for its own lesson to go.
-struct RimCues: View {
-    let cue: RimCue
+/// Where knobs are seized, the bezel of glass of radius `r` is knurled, turning with the glass by `angle`, its ridges
+/// amber as the tank's lesson and lit while the rim holds the glass.
+struct Knurl: View {
     let r: CGFloat
-    let swirl: (angle: Double, live: Double, held: Bool)?
-    let tank: (angle: Double, held: Bool)?
-    let band: Double
-    let lessons: (tank: Bool, swirl: Bool)
-    /// The knob cue's ticks on dark seats past a dark groove, or bare hairlines.
-    var seats = true
-    @Environment(\.displayScale) private var scale
-
-    /// A glyph's reach from its centre.
-    static let glyphSize: CGFloat = 14
-    /// How far inside the glass's edge the knob cue's ring joins the swirl's ticks.
-    static let dial: CGFloat = 5
-    /// How far inside the glass's edge the swirl's pointer reaches.
-    static let pointerEnd: CGFloat = 24
-    /// Where the glyphs sit: over twelve, clear of the tank lesson's arc there, side by side where there are both.
-    static func glyphs(_ r: CGFloat, tank: Bool, swirl: Bool) -> (tank: CGPoint?, swirl: CGPoint?) {
-        let radius = 1.045 * r + 32, apart = tank && swirl ? 8 * Double.pi / 180 : 0
-        func at(_ a: Double) -> CGPoint { CGPoint(x: r + radius * sin(a), y: r - radius * cos(a)) }
-        return (tank ? at(-apart) : nil, swirl ? at(apart) : nil)
-    }
-
-    var body: some View {
-        ZStack {
-            switch cue {
-            case .knob:
-                if let tank { knurl.rotationEffect(.radians(tank.angle)).opacity(tank.held ? 1 : 0.85) }
-                if let swirl {
-                    let lit = swirl.held ? Color.live : .neonCyan
-                    // Leaning as a shear leans them, so they read as a stir rather than a dial's scale, and further the
-                    // way the turn in hand goes, as the swirl's core outruns its edge. A sideways offset in points at
-                    // the ticks' inner end.
-                    let lean = 4 + 3 * min(max(swirl.live / Tank.step, -2), 2)
-                    let d = Self.dial, marks = ticks(r - d, r - d - 10, lean: lean), pointer = pointer(r - d, r - Self.pointerEnd, lean: lean)
-                    // The groove: dark from the glass's edge in past the hairline that joins the ticks, so the ticks
-                    // belong to the glass and not to the bezel's knurl.
-                    if seats { ring(r - 2.5).stroke(Color.black.opacity(0.75), lineWidth: 5) }
-                    ring(r - d).stroke(lit.opacity(swirl.held ? 0.9 : 0.55), lineWidth: 0.5)
-                    // Each tick seated on its own dark stroke, as a knob's ticks sit on its dark band.
-                    Group {
-                        if seats {
-                            marks.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                            pointer.stroke(Color.black.opacity(0.6), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                        }
-                        marks.stroke(lit.opacity(swirl.held ? 1 : 0.9), lineWidth: 1)
-                        pointer.stroke(lit, style: StrokeStyle(lineWidth: 1, lineCap: .round))
-                    }
-                    .rotationEffect(.radians(swirl.angle + swirl.live))
-                }
-            case .bands:
-                if let tank {
-                    Circle().strokeBorder(Color.amber.opacity(tank.held ? 0.55 : 0.32), lineWidth: 0.045 * r)
-                        .padding(-0.045 * r).blendMode(.plusLighter)
-                }
-                if let swirl {
-                    // Outlined only: a wash or hatch over the grab would hide the picture's outer ring.
-                    let lit = swirl.held ? Color.live : .neonCyan
-                    ring(band * r).stroke(lit.opacity(0.8), lineWidth: 0.5)
-                    ring(r - 1.5).stroke(lit, lineWidth: 1)
-                }
-            case .glyphs:
-                let spots = Self.glyphs(r, tank: tank != nil, swirl: swirl != nil)
-                if let tank, let p = spots.tank, !lessons.tank { turning(lit: tank.held).position(p) }
-                if let swirl, let p = spots.swirl, !lessons.swirl { spiral(lit: swirl.held).position(p) }
-            }
-        }
-        .frame(width: 2 * r, height: 2 * r)
-        .allowsHitTesting(false)
-    }
-
-    private func px(_ points: CGFloat) -> CGFloat { (points * scale).rounded() / scale }
-    private func ring(_ radius: CGFloat) -> Path {
-        Path(ellipseIn: CGRect(x: r - radius, y: r - radius, width: 2 * radius, height: 2 * radius))
-    }
-
-    /// A mark per 30-degree step but twelve's, from radius `a` in to `b` about the glass's centre, its inner end
-    /// `lean` points clockwise of its outer.
-    private func ticks(_ a: CGFloat, _ b: CGFloat, lean: CGFloat) -> Path {
-        Path { p in for i in 1..<12 { mark(&p, Double(i) * Tank.step, a, b, lean: lean) } }
-    }
-
-    /// The swirl's own pointer at twelve, longer than its ticks, as a knob's.
-    private func pointer(_ a: CGFloat, _ b: CGFloat, lean: CGFloat) -> Path {
-        Path { mark(&$0, 0, a, b, lean: lean) }
-    }
-
-    private func mark(_ p: inout Path, _ t: Double, _ a: CGFloat, _ b: CGFloat, lean: CGFloat) {
-        let u = t + Double(lean / b)
-        p.move(to: CGPoint(x: r + a * sin(t), y: r - a * cos(t)))
-        p.addLine(to: CGPoint(x: r + b * sin(u), y: r - b * cos(u)))
-    }
+    let angle: Double
+    let held: Bool
 
     /// A milled edge across the bezel's steel: dark grooves between bright ridges, every few points.
-    private var knurl: some View {
-        let count = Int((2 * .pi * r / 4).rounded()), lit = tank?.held == true
+    var body: some View {
+        let count = Int((2 * .pi * r / 4).rounded())
         func lines(_ offset: Double, _ a: CGFloat, _ b: CGFloat) -> Path {
             Path { p in
                 for i in 0..<count {
@@ -1768,57 +1760,13 @@ struct RimCues: View {
         let a = r + 1.5, b = 1.045 * r - 0.5
         return ZStack {
             lines(0, a, b).stroke(Color.black.opacity(0.55), lineWidth: 1.2)
-            // Amber even at rest, faintly: the tank's colour, as its lesson and its glyph.
-            lines(0.5, a, b).stroke(Color.amber.opacity(lit ? 0.9 : 0.55), lineWidth: 0.6)
+            // Amber even at rest, faintly: the tank's colour, as its lesson.
+            lines(0.5, a, b).stroke(Color.amber.opacity(held ? 0.9 : 0.55), lineWidth: 0.6)
         }
-    }
-
-    /// The glass's turn: a ring with a seized knob's slash, and an arc round it with a head each way.
-    private func turning(lit: Bool) -> some View {
-        let colour = lit ? Color.live : .amber, s = Self.glyphSize
-        return ZStack {
-            Circle().stroke(colour, lineWidth: 1.75).frame(width: s, height: s)
-            Path { $0.move(to: CGPoint(x: s / 2 - 2.5, y: s / 2 + 2)); $0.addLine(to: CGPoint(x: s / 2 + 2.5, y: s / 2 - 2)) }
-                .stroke(Color.blood, style: StrokeStyle(lineWidth: 1.5, lineCap: .round)).frame(width: s, height: s)
-            Path { p in
-                let c = CGPoint(x: s, y: s), rr = s * 0.95, span = 1.2
-                for dir in [-1.0, 1] {
-                    let tip = -Double.pi / 2 + dir * span
-                    p.addArc(center: c, radius: rr, startAngle: .radians(-.pi / 2), endAngle: .radians(tip), clockwise: dir < 0)
-                    let e = CGPoint(x: c.x + rr * cos(tip), y: c.y + rr * sin(tip))
-                    // The head's wings, back along the arc and out either side of it.
-                    let back = tip - dir * 0.45
-                    p.move(to: CGPoint(x: c.x + (rr + 3) * cos(back), y: c.y + (rr + 3) * sin(back)))
-                    p.addLine(to: e)
-                    p.addLine(to: CGPoint(x: c.x + (rr - 3) * cos(back), y: c.y + (rr - 3) * sin(back)))
-                }
-            }
-            .stroke(colour, style: StrokeStyle(lineWidth: 1.75, lineCap: .round, lineJoin: .round))
-            .frame(width: 2 * s, height: 2 * s)
-        }
-        .frame(width: 2 * s, height: 2 * s)
-    }
-
-    /// The swirl: a spiral wound in to its centre, an arrowhead on its outer end.
-    private func spiral(lit: Bool) -> some View {
-        let colour = lit ? Color.live : .neonCyan, s = Self.glyphSize, turns = 2.0
-        return Path { p in
-            let c = CGPoint(x: s, y: s), steps = 80
-            func at(_ i: Int) -> CGPoint {
-                let t = Double(i) / Double(steps), a = t * turns * 2 * .pi - .pi / 2
-                return CGPoint(x: c.x + s * t * cos(a), y: c.y + s * t * sin(a))
-            }
-            p.move(to: at(0))
-            for i in 1...steps { p.addLine(to: at(i)) }
-            let e = at(steps), before = at(steps - 6)
-            let d = hypot(e.x - before.x, e.y - before.y)
-            let back = CGVector(dx: (before.x - e.x) / d * 4, dy: (before.y - e.y) / d * 4)
-            p.move(to: CGPoint(x: e.x + back.dx - back.dy * 0.8, y: e.y + back.dy + back.dx * 0.8))
-            p.addLine(to: e)
-            p.addLine(to: CGPoint(x: e.x + back.dx + back.dy * 0.8, y: e.y + back.dy - back.dx * 0.8))
-        }
-        .stroke(colour, style: StrokeStyle(lineWidth: 1.75, lineCap: .round, lineJoin: .round))
-        .frame(width: 2 * s, height: 2 * s)
+        .rotationEffect(.radians(angle))
+        .opacity(held ? 1 : 0.85)
+        .frame(width: 2 * r, height: 2 * r)
+        .allowsHitTesting(false)
     }
 }
 

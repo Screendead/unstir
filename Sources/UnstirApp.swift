@@ -37,10 +37,6 @@ struct Harness {
     let swirled: Bool?
     /// UNSTIR_SHAKE=s: with UNSTIR_TOUCH on a seized knob, its shake and the rim's pulse held s seconds in.
     let shake: Double?
-    /// UNSTIR_RIM=knob|bands|glyphs: how the rim shows what it does, while the three are compared; the knob when unset.
-    let rim: RimCue
-    /// UNSTIR_SEATS=0: the knob cue and the swirl's lesson as bare hairlines, with no dark seats or groove under them.
-    let seats: Bool
     /// UNSTIR_UNDOS=n: the undo bank, and the stored day of its last refill, for this launch only. A harnessed launch
     /// reads the stored bank unless set, and never stores either, nor the refill's anchor, which starts afresh. With
     /// UNSTIR_TODAY and no day stored, as on the shots' fresh install, the last refill was long ago, so the level opens
@@ -57,6 +53,11 @@ struct Harness {
     /// UNSTIR_FINGER=1: with UNSTIR_MOVES, a hand's pace instead, each move a fingertip drawn landing where the grab rule
     /// gives it the move's rod or the rim, carried round with the turn and lifted, for films.
     let finger: Bool
+    /// UNSTIR_REST=s: with UNSTIR_FINGER, the seconds at rest before the first fingertip lands (2 when unset).
+    let rest: Double
+    /// UNSTIR_BREATH=s: on a layout with a swirl, its breath held s seconds into the tank's first rest. Unset, it runs
+    /// live, or not at all while UNSTIR_CLOCK holds the clock.
+    let breath: Double?
     /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
     let brimDemo: Bool
     /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card. ShareLink can't be opened without a tap,
@@ -65,7 +66,8 @@ struct Harness {
     let bench: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
-    /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change.
+    /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change. It also stills
+    /// the swirl's breath, so a shot on a layout with a swirl that sets neither this nor UNSTIR_BREATH may catch a slosh.
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
@@ -175,8 +177,6 @@ struct Harness {
         tankTurned = harnessed ? env["UNSTIR_TANKTURNED"] == "1" : nil
         swirled = harnessed ? env["UNSTIR_SWIRLED"] == "1" : nil
         shake = env["UNSTIR_SHAKE"].flatMap(Double.init)
-        rim = env["UNSTIR_RIM"].flatMap(RimCue.init(rawValue:)) ?? .knob
-        seats = env["UNSTIR_SEATS"] != "0"
         today = env["UNSTIR_TODAY"].flatMap { $0.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) == nil ? nil : $0 }
         let undos = env["UNSTIR_UNDOS"].flatMap(Int.init).map { min(max($0, 0), 10) } ?? Best.undos
         bank = harnessed ? (undos, Best.refilled ?? (today == nil ? nil : "0000-00-00")) : nil
@@ -195,6 +195,8 @@ struct Harness {
             }
         }
         finger = env["UNSTIR_FINGER"] == "1"
+        rest = env["UNSTIR_REST"].flatMap(Double.init) ?? 2
+        breath = env["UNSTIR_BREATH"].flatMap(Double.init)
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
