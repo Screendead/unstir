@@ -1595,9 +1595,10 @@ struct Unstirred: ViewModifier, Animatable {
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
         // A live picture keeps four taps only to `Tank.fourTaps` entries less its fill: the same budget as without it.
-        // Counted in committed entries, so a touch never changes the taps; the drag rides one over, within the 31 the
-        // shader's comment measured. The breath rides one over too, so its coming and going never changes the taps.
-        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod == nil ? 0 : 1) + (breathes ? 1 : 0)
+        // Counted in committed entries, so a touch never changes the taps; the drag or the breath rides one over, within
+        // the 31 the shader's comment measured. Both at once, for the `Breath.fade` a touch takes to cut a slosh, drop to
+        // two taps at the budget's edge rather than run 32.
+        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes ? 1 : 0)
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
                                  .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
