@@ -62,7 +62,7 @@ enum Picture: String, CaseIterable {
     /// The sandbox's: plughole's pictures and whirlpool's, not the twins.
     var next: Picture {
         let all = Self.allCases.filter { !$0.isLive || $0.twin != $0 }
-        return all[(all.firstIndex(of: sibling)! + 1) % all.count]
+        return all[((all.firstIndex(of: sibling) ?? -1) + 1) % all.count]
     }
 
     /// A live picture's floats for its shader, `clock` seconds in; nil until `prepare` has built them. A twin's are its
