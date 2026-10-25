@@ -310,7 +310,8 @@ final class Game {
 
     /// Sandbox: twists name rods, so new rods start on the clean picture.
     func nextLayout() {
-        level.layout = level.layout.next
+        // A swirl layout has no place in allCases, so it steps on from its base.
+        level.layout = (level.layout.base ?? level.layout).next
         level.scramble = []
         // The rings parked on the last commit and cancel may name a rod the new layout lacks.
         lastCommit = nil

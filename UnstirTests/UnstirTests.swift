@@ -399,6 +399,15 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack, [])
     }
 
+    /// A sandbox the harness opened on a swirl layout steps on from its base, as no swirl is in `allCases`.
+    @MainActor func testSandboxStepsOffASwirlLayout() {
+        var level = Level.sandbox
+        level.layout = .quadSwirl
+        let game = Game(level: level)
+        game.nextLayout()
+        XCTAssertEqual(game.level.layout, .eye)
+    }
+
     /// A level that counts, opened on `today` against the stored bank.
     @MainActor private func opened(on today: String, _ level: Level = Level.plughole[0]) -> Game {
         let game = Game(level: level)
