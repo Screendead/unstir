@@ -205,14 +205,17 @@ enum Layout: String, CaseIterable {
               lenses: Set<Int> = []) -> Bool {
         let rods = self.rods
         func map(_ word: [Twist], _ p: SIMD2<Double>) -> SIMD2<Double> {
-            // The plain twist alone where no rod is a lens: this runs on every sample of every merge.
-            lenses.isEmpty ? word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
-                : word.reduce(p) { q, t in
-                    lenses.contains(t.rod) ? Tank.lens(q, rod: rods[t.rod], steps: Double(t.steps))
-                        : Tank.twist(q, rod: rods[t.rod], angle: Double(t.steps) * Tank.step)
-                }
+            word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
         }
-        return points.allSatisfy { simd_distance(map(a, $0), map(b, $0)) <= tolerance }
+        func lensMap(_ word: [Twist], _ p: SIMD2<Double>) -> SIMD2<Double> {
+            word.reduce(p) { q, t in
+                lenses.contains(t.rod) ? Tank.lens(q, rod: rods[t.rod], steps: Double(t.steps))
+                    : Tank.twist(q, rod: rods[t.rod], angle: Double(t.steps) * Tank.step)
+            }
+        }
+        // The plain twist alone where no rod is a lens: this runs on every sample of every merge.
+        if lenses.isEmpty { return points.allSatisfy { simd_distance(map(a, $0), map(b, $0)) <= tolerance } }
+        return points.allSatisfy { simd_distance(lensMap(a, $0), lensMap(b, $0)) <= tolerance }
     }
 }
 
