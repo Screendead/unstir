@@ -766,9 +766,9 @@ final class UnstirTests: XCTestCase {
         }
     }
 
-    /// A swirl turns its rigid core by exactly its angle, shears the ring out to the glass's edge, and leaves the edge
-    /// itself, and everything past it, where it was, as the shader does: a turn of the swirl never moves the picture
-    /// against the bezel.
+    /// A swirl has no rigid core: it turns each radius by its own angle, the full angle only at the centre, falling
+    /// smoothly to the glass's edge, which it leaves where it was, and everything past it, as the shader does: a turn of
+    /// the swirl never moves the picture against the bezel. A knob keeps its rigid core.
     func testASwirlKeepsTheGlassEdgeStill() {
         let swirl = Layout.quadSwirl.rods[Layout.quadSwirl.swirl!], a = 5 * Tank.step
         for i in 0..<360 {
@@ -776,9 +776,18 @@ final class UnstirTests: XCTestCase {
             XCTAssertLessThan(simd_distance(Tank.twist(u, rod: swirl, angle: a), u), 1e-12)
             XCTAssertEqual(Tank.twist(1.2 * u, rod: swirl, angle: a), 1.2 * u)
             XCTAssertLessThan(simd_distance(Tank.twist(0.999 * u, rod: swirl, angle: a), 0.999 * u), 1e-4)
-            XCTAssertLessThan(simd_distance(Tank.twist(0.5 * u, rod: swirl, angle: a), 0.5 * SIMD2(cos(t + a), sin(t + a))), 1e-12)
             XCTAssertGreaterThan(simd_distance(Tank.twist(0.8 * u, rod: swirl, angle: a), 0.8 * u), 0.1)
         }
+        func turned(_ r: Double) -> Double {
+            let q = Tank.twist(SIMD2(r, 0), rod: swirl, angle: a)
+            XCTAssertEqual(simd_length(q), r, accuracy: 1e-12)
+            return atan2(q.y, q.x)
+        }
+        XCTAssertEqual(turned(1e-6), a, accuracy: 1e-9)
+        for i in 1..<100 { XCTAssertLessThan(turned(Double(i + 1) / 100), turned(Double(i) / 100), "\(i)") }
+        let knob = Layout.quad.rods[0], p = SIMD2(knob.x, knob.y) + SIMD2(0.5 * knob.z, 0)
+        let q = Tank.twist(p, rod: knob, angle: a) - SIMD2(knob.x, knob.y)
+        XCTAssertEqual(atan2(q.y, q.x), a, accuracy: 1e-12)
     }
 
     /// The swirl stacks and merges like any rod: its own turns merge, and it and an off-centre rod never commute, so

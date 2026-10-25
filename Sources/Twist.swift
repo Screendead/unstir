@@ -13,17 +13,19 @@ struct Twist: Hashable {
 enum Tank {
     static let step = Double.pi / 6
     static let coreRadius = 0.07
-    /// Inside plateau * radius a disc turns rigidly; all shear lives in the ring out to its edge, so each twist leaves
-    /// one seam and the newest seam is the unbroken one. Every layout keeps its rigid cores clear of each other at 0.6,
-    /// but for a swirl's, which holds every other rod's.
+    /// Inside plateau * radius a knob's disc turns rigidly; all shear lives in the ring out to its edge, so each twist
+    /// leaves one seam and the newest seam is the unbroken one. Every layout keeps its rigid cores clear of each other.
     static let plateau = 0.6
+    /// The swirl has no rigid core: its turn fades smoothly from the full angle at the centre to 0 at the glass's edge,
+    /// so it shears through every knob's core rather than carrying them round as a block.
+    static let swirlPlateau = 0.0
     /// Pushes past this are refused: every pixel runs each shader tap through every entry, plus the live twist.
     static let maxStack = 36
     /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two.
     static let fourTaps = 30
 
     /// Rotation fraction at s = |p - c| / radius. The Metal shader carries the same function.
-    static func profile(_ s: Double) -> Double {
+    static func profile(_ s: Double, plateau: Double = plateau) -> Double {
         let t = min(max((s - plateau) / (1 - plateau), 0), 1)
         return 1 - t * t * (3 - 2 * t)
     }
@@ -35,7 +37,8 @@ enum Tank {
         let s = simd_length(d) / rod.z
         // Untouched outside the disc, as the shader leaves it: merges rely on rods that miss a point fixing it exactly.
         guard s < 1 else { return p }
-        let a = angle * profile(s)
+        // Only the swirl is the size of the tank (`Layout.table`), so the radius picks its profile; the shader does the same.
+        let a = angle * profile(s, plateau: rod.z >= 1 ? swirlPlateau : plateau)
         return c + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a))
     }
 
@@ -62,7 +65,7 @@ enum Tank {
 enum Layout: String, CaseIterable {
     case tri, quad, eye, pent, hex
     /// Each layout above with a swirl: one more rod, last, the size of the tank and at its centre. Its disc ends on the
-    /// glass's edge, which stays put, and holds every other rod's.
+    /// glass's edge, which stays put, and holds every other rod's; it shears to its centre (`Tank.swirlPlateau`).
     case triSwirl, quadSwirl, eyeSwirl, pentSwirl, hexSwirl
 
     /// The layouts without a swirl. The frozen generator never deals a swirl, and the sandbox cycles these.
