@@ -477,6 +477,18 @@ struct LevelView: View {
     private let frozenShake: Double?
     /// UNSTIR_TODAY: the day the level opens on, for the bank's refill.
     private let today: String?
+    /// UNSTIR_BREATH: the swirl's breath held this many seconds into the tank's first rest.
+    private let frozenBreath: Double?
+    /// UNSTIR_REST: seconds at rest before a drawn fingertip lands.
+    private let rest: Double
+    /// The swirl's breath while the tank rests, and the last one a touch, the opening or the win cut, fading out.
+    @State private var breath: Breath?
+    @State private var faded: Breath?
+    /// Either moves the picture now: the picture's timeline runs only then.
+    @State private var breathing = false
+    /// Something has been let go since the opening, so the next rest waits longer.
+    @State private var lifted = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
     /// Endless: the picture's colours round the rim as the stack stirs it (Brim.colours), once worked out.
@@ -546,6 +558,8 @@ struct LevelView: View {
         frozenClock = harness?.clock
         frozenShake = harness?.shake
         today = harness?.today
+        frozenBreath = harness?.breath
+        rest = harness?.rest ?? 2
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
@@ -681,7 +695,27 @@ struct LevelView: View {
                   still: game.level.picture.isLive ? { liveRod = nil; liveAngle = 0 } : nil).start()
         }
         .onChange(of: shown == nil, initial: true) {
-            if shown == nil { game.startClock(); badge = game.refilled }
+            if shown == nil { game.startClock(); badge = game.refilled } else { lifted = false }
+        }
+        .onChange(of: touching) { if touching && shown == nil { lifted = true } }
+        .onChange(of: resting, initial: true) {
+            let t = Date.now.timeIntervalSinceReferenceDate
+            if resting {
+                breath = Breath(start: t, wait: lifted ? Breath.later : Breath.first)
+            } else if var b = breath {
+                b.cut = t
+                faded = b
+                breath = nil
+            }
+        }
+        .task(id: [breath, faded]) {
+            while true {
+                let t = Date.now.timeIntervalSinceReferenceDate
+                let motion = [breath, faded].compactMap { $0?.motion(at: t) }
+                breathing = motion.contains { $0.moving }
+                guard let next = motion.compactMap(\.until).min(),
+                      (try? await Task.sleep(for: .seconds(max(next - t, 0.001)))) != nil else { return }
+            }
         }
         .onChange(of: game.finished) {
             guard game.finished else { return }
@@ -730,6 +764,21 @@ struct LevelView: View {
     }
 
     private var stack: [Twist] { shown.map { Array(game.stack.prefix($0)) } ?? game.stack }
+    /// A finger, two, or a drawn fingertip is on the tank, or a turn is still settling from one.
+    private var touching: Bool { drag != nil || liveRod != nil || liveTurn != nil || spun || ghost != nil }
+    /// The tank is the player's and untouched, on a layout with a swirl: its breath may run. Never under Reduce Motion,
+    /// and never in a harness launch that holds the clock.
+    private var resting: Bool {
+        game.level.layout.swirl != nil && !reduceMotion && frozenClock == nil && frozenBreath == nil && shown == nil
+            && !game.finished && !touching
+    }
+    /// The swirl's breath on the picture now, in radians.
+    private var breathAngle: Double {
+        if let frozenBreath { return Breath(start: 0, wait: Breath.first).angle(at: frozenBreath) }
+        guard breathing else { return 0 }
+        let t = Date.now.timeIntervalSinceReferenceDate
+        return (breath?.angle(at: t) ?? 0) + (faded?.angle(at: t) ?? 0)
+    }
     private var rods: [SIMD3<Double>] { game.level.layout.rods }
     /// The rods with a knob: all but a swirl, which is held from the rim.
     private var knobs: [Int] { rods.indices.filter { $0 != game.level.layout.swirl } }
@@ -807,7 +856,7 @@ struct LevelView: View {
     /// beat, turns at about a step a tenth of a second and lifts, and the next waits for the heal or push to show.
     private func hand(_ moves: [Twist]) async {
         func pause(_ s: Double) async -> Bool { (try? await Task.sleep(for: .seconds(s))) != nil && !game.finished }
-        guard await pause(2.0) else { return }
+        guard await pause(rest) else { return }
         let layout = game.level.layout, both = layout.swirl != nil && !game.level.seized.isEmpty
         for m in moves {
             let rim = m.rod == Game.tank, swirl = m.rod == layout.swirl
@@ -952,19 +1001,22 @@ struct LevelView: View {
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
         let spillAt = game.spilled ? game.brimEvents.last?.time : nil
         // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow.
-        // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together.
-        let moving = game.level.picture.isLive || spillAt != nil && brimMoving
+        // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
+        // breathes.
+        let moving = game.level.picture.isLive || spillAt != nil && brimMoving || breathing
         return ZStack {
             TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !moving || frozenClock != nil)) { timeline in
                 let murk = spillAt.flatMap { at -> [Float]? in
                     let since = (frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
+                let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
                 PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                              clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
                     .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
                         var u = unstirred
                         u.wave = SIMD3(Float(source.x), Float(source.y), Float(frozenWave ?? w))
+                        u.breath = swirlBreath
                         return picture.modifier(u).modifier(Murk(stirs: murk, side: side))
                     } keyframes: { _ in
                         // A light wave from the last-turned rod, over the clean picture. The animator holds its last value, so
@@ -1383,6 +1435,58 @@ struct LevelView: View {
     }
 }
 
+/// The swirl's standing cue: while the tank rests, the swirl sloshes the picture once through its own map and settles,
+/// then again every `every` seconds, so the player sees that the rim swirls before touching it. It moves only the
+/// picture, never the game.
+struct Breath: Equatable {
+    /// When the rest began, in seconds since the reference date, and how long it waits before its first slosh.
+    let start: Double
+    let wait: Double
+    /// When a touch, the opening or the win ended the rest.
+    var cut: Double?
+
+    /// The first rest waits for the picture to land and strike; one after a lift waits longer, so no move is answered
+    /// by a slosh.
+    static let first = 1.5, later = 10.0
+    /// A slosh repeats this often while the rest lasts, and fades out over `fade` once the rest is cut.
+    static let every = 12.0, fade = 0.25
+    /// A slosh's length: two of its swings, so it ends where its sine does, at 0.
+    static let length = 3.2
+    static let lead = 0.1
+
+    /// The swirl's turn `p` seconds into a slosh: a swing of 12 degrees, damped as it goes, 0 at both ends.
+    static func slosh(_ p: Double) -> Double {
+        p <= 0 || p >= length ? 0 : 12 * .pi / 180 * sin(2 * .pi * p / (length / 2)) * exp(-p)
+    }
+
+    /// The swirl's turn at `t`, faded out from wherever a cut caught it, so the picture never jumps.
+    func angle(at t: Double) -> Double {
+        guard let p = phase(at: t) else { return 0 }
+        let a = Self.slosh(p)
+        guard let cut, t > cut else { return a }
+        guard t < cut + Self.fade else { return 0 }
+        let f = 1 - (t - cut) / Self.fade
+        return a * f * f * (3 - 2 * f)
+    }
+
+    /// Whether the turn may be off 0 at `t`, and when that next changes, if it ever does. From `lead` before each slosh,
+    /// since a sleep wakes late and a slosh starts at its fastest.
+    func motion(at t: Double) -> (moving: Bool, until: Double?) {
+        let end = cut.map { $0 + Self.fade } ?? .infinity, first = start + wait - Self.lead
+        guard t < end else { return (false, nil) }
+        guard let p = phase(at: t + Self.lead) else { return (false, first < end ? first : nil) }
+        if p < Self.length + Self.lead { return (true, min(t + Self.length + Self.lead - p, end)) }
+        let next = t + Self.every - p
+        return (false, next < end ? next : nil)
+    }
+
+    /// How far into its latest slosh the rest is at `t`, nil before the first.
+    private func phase(at t: Double) -> Double? {
+        let s = t - start - wait
+        return s > 0 ? s - (s / Self.every).rounded(.down) * Self.every : nil
+    }
+}
+
 /// A turn's clicks: one each time what letting go would commit changes, at every half step, either way. So a rod's tick
 /// and the tank's clunk land with the drag's count, and every step a turn commits has had one.
 struct Detent {
@@ -1466,6 +1570,8 @@ struct Unstirred: ViewModifier, Animatable {
     var wave = SIMD3<Float>(0, 0, -1)
     /// A live picture's own cost per frame, in entries: it is redrawn under the shader every frame.
     var fillEntries = 0
+    /// The swirl's breath, newest of all.
+    var breath: (rod: Int, angle: Double)?
     @Environment(\.displayScale) private var scale
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>> {
@@ -1483,13 +1589,15 @@ struct Unstirred: ViewModifier, Animatable {
         }
         for t in stack { add(t.rod, Double(t.steps) * Tank.step * min(wind, 1)) }
         if let liveRod { add(liveRod, liveAngle) }
+        let breathes = breath.map { $0.angle != 0 } ?? false
+        if breathes, let breath { add(breath.rod, breath.angle) }
         let n = floats.count / 4
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
         // A live picture keeps four taps only to `Tank.fourTaps` entries less its fill: the same budget as without it.
         // Counted in committed entries, so a touch never changes the taps; the drag rides one over, within the 31 the
-        // shader's comment measured.
-        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod == nil ? 0 : 1)
+        // shader's comment measured. The breath rides one over too, so its coming and going never changes the taps.
+        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod == nil ? 0 : 1) + (breathes ? 1 : 0)
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
                                  .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),

@@ -53,6 +53,11 @@ struct Harness {
     /// UNSTIR_FINGER=1: with UNSTIR_MOVES, a hand's pace instead, each move a fingertip drawn landing where the grab rule
     /// gives it the move's rod or the rim, carried round with the turn and lifted, for films.
     let finger: Bool
+    /// UNSTIR_REST=s: with UNSTIR_FINGER, the seconds at rest before the first fingertip lands (2 when unset).
+    let rest: Double
+    /// UNSTIR_BREATH=s: on a layout with a swirl, its breath held s seconds into the tank's first rest. Unset, it runs
+    /// live, or not at all while UNSTIR_CLOCK holds the clock.
+    let breath: Double?
     /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
     let brimDemo: Bool
     /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card. ShareLink can't be opened without a tap,
@@ -189,6 +194,8 @@ struct Harness {
             }
         }
         finger = env["UNSTIR_FINGER"] == "1"
+        rest = env["UNSTIR_REST"].flatMap(Double.init) ?? 2
+        breath = env["UNSTIR_BREATH"].flatMap(Double.init)
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
