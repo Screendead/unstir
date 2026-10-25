@@ -79,8 +79,8 @@ final class Game {
     /// A rod stir names the rod the stack names (the slot under the knob turned). A turn of the tank is rod `Game.tank`,
     /// in steps of the layout's symmetry.
     private(set) var history: [Twist] = []
-    /// The stack as each stir of `history` began: a pack's undo puts it back whole.
-    private var before: [[Entry]] = []
+    /// The stack and the clock as each stir of `history` began: a pack's undo puts them back whole.
+    private var before: [(entries: [Entry], clock: Clock)] = []
     nonisolated static let tank = -1
     /// Whether the next turn of the newest stir's rod joins it. A stir turned back to nothing is gone, and the one before
     /// it stays shut; an undone one is as if never made, so the one before it is open again if it was then.
@@ -136,6 +136,30 @@ final class Game {
     /// Every change of `brim`, for the rim to play.
     private(set) var brimEvents: [Brim.Event] = []
 
+    /// Escapement's clock between moves. A move's tick lands as its stir is let go, and stays provisional while the stir
+    /// is open: a re-grab of its knob lifts it out for the drag.
+    struct Clock {
+        /// Ticks standing, for the ratchet wheel.
+        var ticks = 0
+        /// The entries before the open stir's tick landed, while a re-grab may still lift it out.
+        var landed: [Entry]?
+        /// That tick is out, its knob held again.
+        var lifted = false
+        /// A move sealed a tick that pushed, so the stack can never empty.
+        var lost = false
+    }
+    private(set) var escapement = Clock()
+    /// Escapement: the latest tick landing (+1) or lifting out (-1) and the stack it changed, for the view to play.
+    private(set) var tick: (from: [Twist], dir: Int)?
+    /// Escapement: every tick landing or lifting out, every one that pushed (the ratchet's red flash), and every one
+    /// that emptied the clock rod, which then stops.
+    private(set) var tickEvents = 0
+    private(set) var tickPushes = 0
+    private(set) var clockStops = 0
+    var lost: Bool { escapement.lost }
+    /// Escapement: the clock rod's positive steps. Only +1 ticks reach the clock, so no tick ever takes them off.
+    var overdue: Int { stack.filter { $0.rod == level.clock && $0.steps > 0 }.reduce(0) { $0 + $1.steps } }
+
     init(level: Level, tankTurned: Bool? = nil, swirled: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil) {
         self.level = level
         entries = level.scramble.map { Entry(twist: $0, pushed: false) }
@@ -165,14 +189,14 @@ final class Game {
     /// Endless has no par.
     var over: Int { level.run == nil ? max(moves - par, 0) : 0 }
     var spilled: Bool { level.run != nil && brim >= Run.room }
-    var finished: Bool { solved || spilled }
+    var finished: Bool { solved || spilled || lost }
     var clean: Bool { over == 0 && resets == 0 && undos == 0 && firstTry }
 
     /// What each move did to the stack, oldest first: read once the level has settled, since the fine pass may empty the
     /// stack after the last move.
     var marks: [Share.Mark] {
         history.indices.map { i in
-            let size = before[i].count, after = i + 1 < before.count ? before[i + 1].count : entries.count
+            let size = before[i].entries.count, after = i + 1 < before.count ? before[i + 1].entries.count : entries.count
             return history[i].rod == Game.tank ? .tank : after < size ? .healed : after > size ? .pushed : .merged
         }
     }
@@ -191,6 +215,7 @@ final class Game {
     /// A turn of knob `rod`, which stirs whatever fluid the tank has brought under it.
     func commit(rod: Int, steps: Int) {
         guard !finished else { return }
+        if level.clock != nil { return clockCommit(knob: rod, steps: steps) }
         let slot = self.slot(of: rod), was = entries
         // Every entry of the scramble's that pops is a heal, even where an entry that the merge lets fall cancels it.
         var healed = 0
@@ -210,7 +235,7 @@ final class Game {
         } else {
             history.append(Twist(rod: slot, steps: steps))
             openBefore.append(open)
-            before.append(was)
+            before.append((was, escapement))
             open = true
         }
         lastCommit = (rod, result)
@@ -257,7 +282,7 @@ final class Game {
         let joins = open && history.last?.rod == Game.tank
         let net = tankStir(after: steps)
         let wasOpen = joins ? openBefore.removeLast() : open
-        let was = joins ? before.removeLast() : entries
+        let was = joins ? before.removeLast() : (entries, escapement)
         if joins { history.removeLast() }
         open = net != 0
         if open {
@@ -269,19 +294,164 @@ final class Game {
         settle()
     }
 
-    /// Escapement's waiting move, a tap on a ratchet: its tick is not built.
-    func wait(on ratchet: Int) {
-        Log.write("wait \(ratchet)")
+    /// Escapement: a stir is one commit of its net from where it began, so a turn of the open stir's knob replays the
+    /// stir at its new net, the tick it landed taken back, and at zero drops move and tick together. Any other knob's
+    /// turn seals the open move first: if that move's tick pushed, the tank is lost, and the sealing turn lands no tick
+    /// (Jack's call, 2026-10-25: freeze on the +1).
+    private func clockCommit(knob: Int, steps: Int) {
+        let slot = self.slot(of: knob)
+        guard level.kind(of: knob) == .working else { Log.write("commit \(Twist(rod: knob, steps: steps)) refused"); return }
+        let again = open && history.last?.rod == slot
+        if !again {
+            relandTick()
+            guard !finished else { return }
+        }
+        var next = again ? before.last!.entries : entries
+        let net = steps + (again ? history.last!.steps : 0)
+        if net == 0 {
+            entries = next
+            escapement = before.removeLast().clock
+            escapement.landed = nil
+            history.removeLast()
+            openBefore.removeLast()
+            open = false
+            tick = nil
+            lastCommit = (knob, .reduced)
+            turns += 1
+            Log.write("commit \(Twist(rod: knob, steps: steps)) turned back moves=\(moves) stack=\(stack)")
+            settle()
+            return
+        }
+        let seals = !again && overdue > 0
+        let result = next.commit(Entry(twist: Twist(rod: slot, steps: net), pushed: true), in: level.layout)
+        // A full stack refuses the tick as it would a push, so it refuses the move.
+        guard result != .refused, seals || !tickRefused(next) else {
+            Log.write("commit \(Twist(rod: knob, steps: steps)) refused")
+            return
+        }
+        if again {
+            escapement = before.last!.clock
+            history[history.count - 1].steps = net
+        } else {
+            before.append((entries, escapement))
+            openBefore.append(open)
+            history.append(Twist(rod: slot, steps: net))
+        }
+        entries = next
+        open = true
+        lastCommit = (knob, result)
+        turns += 1
+        if result == .pushed { pushes += 1 }
+        if result == .cancelled { cancels += 1; cancelledRod = knob }
+        if seals {
+            escapement.lost = true
+            escapement.landed = nil
+            tick = nil
+        } else {
+            landTick()
+        }
+        Log.write("commit \(Twist(rod: knob, steps: steps)) net=\(net) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        settle()
     }
 
-    /// Endless has none: it would take back a red flash. A pack's puts the stack back as the stir found it, marks and
-    /// tags and all; elsewhere it commits the stir's negation.
+    /// Escapement's waiting move, a tap on the ratchet: it seals the open move, then ticks. A wait is sealed at once, so
+    /// one whose tick pushes is lost there and then. Once the clock has stopped there is nothing to wait for.
+    func wait(on ratchet: Int) {
+        guard !finished, let e = level.clock, slot(of: ratchet) == e,
+              escapement.lifted || entries.contains(where: { $0.twist.rod == e }) else { return }
+        relandTick()
+        guard !finished else { return }
+        let seals = overdue > 0
+        guard seals || !tickRefused(entries) else { Log.write("wait refused"); return }
+        before.append((entries, escapement))
+        openBefore.append(open)
+        history.append(Twist(rod: e, steps: 1))
+        open = false
+        lastCommit = (ratchet, .reduced)
+        turns += 1
+        if seals { tick = nil } else { landTick() }
+        escapement.landed = nil
+        escapement.lost = overdue > 0
+        Log.write("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        settle()
+    }
+
+    /// Escapement: a finger takes up knob `k` again. If it holds the open stir, that stir's tick lifts out for the drag.
+    func liftTick(knob k: Int) {
+        guard !finished, !escapement.lifted, let landed = escapement.landed, open, history.last?.rod == slot(of: k)
+        else { return }
+        tick = (stack, -1)
+        tickEvents += 1
+        entries = landed
+        escapement.ticks -= 1
+        escapement.lifted = true
+        Log.write("tick lifted stack=\(stack)")
+    }
+
+    /// Escapement: a re-grab let go where it began, or dropped: the tick it lifted lands again.
+    func relandTick() {
+        guard escapement.lifted else { return }
+        landTick()
+        settle()
+    }
+
+    /// Escapement: the clock's tick after a move, while the clock rod holds an entry.
+    private func landTick() {
+        escapement.lifted = false
+        escapement.landed = nil
+        guard let e = level.clock, entries.contains(where: { $0.twist.rod == e }) else { return }
+        let from = stack, was = entries
+        let result = entries.commit(Entry(twist: Twist(rod: e, steps: 1), pushed: true), in: level.layout)
+        guard result != .refused else { return }
+        escapement.landed = was
+        escapement.ticks += 1
+        tick = (from, 1)
+        tickEvents += 1
+        if result == .pushed { tickPushes += 1 }
+        if !entries.contains(where: { $0.twist.rod == e }) { clockStops += 1 }
+        Log.write("tick \(result) stack=\(stack)")
+    }
+
+    /// Escapement: whether a full stack would refuse the tick after a move that leaves `entries`.
+    private func tickRefused(_ entries: [Entry]) -> Bool {
+        guard let e = level.clock, entries.contains(where: { $0.twist.rod == e }) else { return false }
+        var copy = entries
+        return copy.commit(Entry(twist: Twist(rod: e, steps: 1), pushed: true), in: level.layout) == .refused
+    }
+
+    /// Escapement: the opening's demonstration plays on a stack of its own, through the real rules.
+    func demo(_ stack: [Twist]) {
+        entries = stack.map { Entry(twist: $0, pushed: false) }
+        restart()
+    }
+
+    /// Escapement: back to the level's own scramble once the demonstration is over, as if nothing had been played.
+    func endDemo() {
+        entries = level.scramble.map { Entry(twist: $0, pushed: false) }
+        restart()
+        start = nil
+    }
+
+    private func restart() {
+        history = []
+        openBefore = []
+        before = []
+        open = false
+        escapement = Clock()
+        tick = nil
+    }
+
+    /// Endless has none: it would take back a red flash. A pack's puts the stack back as the stir found it, marks, tags
+    /// and the clock's tick and all; elsewhere it commits the stir's negation.
     func undo() {
-        // The sandbox counts nothing, so its undos are free.
-        guard !finished, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast() else { return }
+        // The sandbox counts nothing, so its undos are free. A lost tank can be undone.
+        guard !solved, !spilled, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast()
+        else { return }
         let was = before.removeLast()
-        if level.pack != nil {
-            entries = was
+        if level.pack != nil || level.clock != nil {
+            entries = was.entries
+            escapement = was.clock
+            tick = nil
         } else if last.rod != Game.tank {
             entries.commit(Entry(twist: Twist(rod: last.rod, steps: -last.steps), pushed: true), in: level.layout)
         }
@@ -305,10 +475,7 @@ final class Game {
     @discardableResult func reset() -> Bool {
         guard !checking, level.run == nil else { return false }
         entries = level.scramble.map { Entry(twist: $0, pushed: false) }
-        history = []
-        openBefore = []
-        before = []
-        open = false
+        restart()
         resets += 1
         Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
         return true
@@ -414,7 +581,7 @@ final class Game {
     private func finish() {
         guard finished else { return }
         seconds = Int(Date.now.timeIntervalSince(start ?? .now))
-        Log.write("\(solved ? "solved" : "spilled") \(level.id) moves=\(moves) "
+        Log.write("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
                   + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
             if solved { Best.tanks = max(Best.tanks, run.tank + 1) }

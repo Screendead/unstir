@@ -98,6 +98,8 @@ struct Level: Hashable, Sendable {
     var sockets: Set<Int> = []
     /// Escapement's clocks: a knob that can't be turned, and waits on a tap.
     var ratchets: Set<Int> = []
+    /// Escapement: a stack of the demonstration's own, played on the clock before the first stir.
+    var demo: [Twist] = []
     /// What carries the knobs round without a stir, held by the rim. Maelstrom's turns the tank, to bring a seized
     /// knob's fluid to a working one.
     var motion = Motion.none
@@ -114,6 +116,9 @@ struct Level: Hashable, Sendable {
     }
 
     enum Knob: Hashable, Sendable { case working, seized, socket, ratchet }
+
+    /// Escapement's clock rod, which ticks +1 after every move while it holds an entry. One clock a level for now.
+    var clock: Int? { ratchets.min() }
 
     func kind(of knob: Int) -> Knob {
         seized.contains(knob) ? .seized : sockets.contains(knob) ? .socket : ratchets.contains(knob) ? .ratchet : .working
