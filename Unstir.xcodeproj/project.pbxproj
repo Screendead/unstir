@@ -17,6 +17,7 @@
 		52972B0C126203096364F0AF /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E8193F7A9FB37B678695D2 /* Menu.swift */; };
 		5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944137441C4619E684D8CC15 /* LivePictures.swift */; };
 		8BFF4453C3E95A10C25C1E85 /* UnstirTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29729248161A1B61CE6D4E36 /* UnstirTests.swift */; };
+		8FA114073682AA90E96A457F /* Unstir.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 2DF7981B1F96D77FDEB85C68 /* Unstir.storekit */; };
 		98526A3AA7420D378D76C241 /* Levels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD430ED66CD5CE54E0F67F72 /* Levels.swift */; };
 		9F25E1385928C5125BE5CD40 /* Unstir.metal in Sources */ = {isa = PBXBuildFile; fileRef = 63330CD5793ABE158F314B89 /* Unstir.metal */; };
 		A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE72E9F1CCE362B73E2FA79 /* Solver.swift */; };
@@ -46,6 +47,7 @@
 		27E5962A6708954A5E564099 /* Coral.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Coral.metal; sourceTree = "<group>"; };
 		283B1A56B07119D483F58617 /* Pack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pack.swift; sourceTree = "<group>"; };
 		29729248161A1B61CE6D4E36 /* UnstirTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnstirTests.swift; sourceTree = "<group>"; };
+		2DF7981B1F96D77FDEB85C68 /* Unstir.storekit */ = {isa = PBXFileReference; path = Unstir.storekit; sourceTree = "<group>"; };
 		31807869E592C189FDCC0657 /* UnstirTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = UnstirTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
 		58A75F3E52CC7C2EE27C7DFE /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
@@ -68,6 +70,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		0CC8EC2A863EC1BD5E170F8C /* StoreKit */ = {
+			isa = PBXGroup;
+			children = (
+				2DF7981B1F96D77FDEB85C68 /* Unstir.storekit */,
+			);
+			path = StoreKit;
+			sourceTree = "<group>";
+		};
 		53895E8BF0277EB74451CD7D /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -92,6 +102,7 @@
 			isa = PBXGroup;
 			children = (
 				F96B55CC954EB02E5F1476B9 /* Sources */,
+				0CC8EC2A863EC1BD5E170F8C /* StoreKit */,
 				8B3A4E6A567BA07D74C3646D /* UnstirTests */,
 				53895E8BF0277EB74451CD7D /* Products */,
 			);
@@ -130,6 +141,7 @@
 			buildConfigurationList = CF0D4AA68E3BDEE7123433B2 /* Build configuration list for PBXNativeTarget "UnstirTests" */;
 			buildPhases = (
 				FAC269582E72E527AB5C34E2 /* Sources */,
+				BA06A438E08D4E896AE9D283 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -198,6 +210,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BA06A438E08D4E896AE9D283 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8FA114073682AA90E96A457F /* Unstir.storekit in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8910BE5E97DFA52777B03E80 /* Sources */ = {
