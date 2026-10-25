@@ -76,6 +76,8 @@ struct Level: Hashable, Sendable {
     var id: String
     /// Daily, endless and the sandbox are plughole's.
     var tier = Tier.plughole
+    /// A pack's level belongs to no tier: its `tier` is plughole's default and never gates it.
+    var pack: Pack?
     var label: String
     var title: String
     /// One line under the tank, for levels that teach something the title cannot.

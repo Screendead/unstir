@@ -69,6 +69,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds skip
   unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
   `xcodebuild` to run them too (about a minute more).
+- StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
+  skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
+  `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
 - Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`) prints the
   optimum (and what untwisting alone takes when a detour beats it), the park rule's fewest and most moves over every
   way its ties go under each parking, fair or over by the most, the no-lookahead count and its planning gap, then the
@@ -204,6 +207,18 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   main actor and the fine pass off it. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
+- **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
+  Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and, until its
+  content lands, no levels; a `Level` names its `pack`. No pack best ever opens a tier. `PackTests` pins every stored
+  level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
+  always, past it only a pack StoreKit grants, with `Best.unlocked` and the harness counted outside Release only.
+  `Store` is StoreKit 2 with no server and nothing stored: entitlements from `Transaction.currentEntitlements` at
+  launch, a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
+  `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
+  every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
+  `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
+  card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
+  placeholder prices (price is undecided); the scheme's run action and `StoreTests` use it.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
@@ -226,7 +241,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
-  (`UNSTIR_BENCH`). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
+  (`UNSTIR_BENCH`). In Debug, `UNSTIR_PACK=lens` opens that pack's placeholder level `UNSTIR_LEVEL`, which keeps no
+  best or started flag (`Level.keepsProgress`), and
+  `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
+  in place of StoreKit's, never stored. `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
   tank's (rod -1) in `parse`'s rod:steps form, and `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
   lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too).
   `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then

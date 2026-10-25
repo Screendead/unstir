@@ -383,7 +383,7 @@ final class Game {
                   + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
             if solved { Best.tanks = max(Best.tanks, run.tank + 1) }
-        } else if solved && counts {
+        } else if solved && counts && level.keepsProgress {
             Best(over: over, seconds: seconds, clean: clean).save(level.id)
         }
     }
@@ -678,7 +678,10 @@ struct LevelView: View {
         }
         .onAppear {
             let rules = game.level.run.map { "tank \($0.tank) brim \($0.brim)" } ?? "par \(game.par)"
-            Log.write("level \(game.level.id) opens, \(rules) \(game.stack)")
+            let pack = game.level.pack.map { p in
+                " \(p.rawValue) \(Store.shared.state(p)), \(Store.shared.access(game.level).map { "\($0)" } ?? "")"
+            } ?? ""
+            Log.write("level \(game.level.id) opens, \(rules)\(pack) \(game.stack)")
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
             if let today { game.refill(today: today) } else { game.refill() }
             // Where there is no opening, onChange's initial call may run before the refill.
@@ -1153,7 +1156,7 @@ struct LevelView: View {
         } else {
             liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
         }
-        if !game.level.sandbox { Best.start(game.level.id) }
+        if !game.level.sandbox && game.level.keepsProgress { Best.start(game.level.id) }
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
