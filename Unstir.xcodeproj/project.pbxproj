@@ -26,6 +26,7 @@
 		D7B47E903167691787C1EB50 /* Marbling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0D958FCA92212546745A433D /* Marbling.metal */; };
 		F1D5DFB747CEEE7F2DC62166 /* Coral.metal in Sources */ = {isa = PBXBuildFile; fileRef = 27E5962A6708954A5E564099 /* Coral.metal */; };
 		F40291CB604E0F77378217A9 /* Pictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7147B0B195AAB46DE31D870D /* Pictures.swift */; };
+		FE081CE6E2DD92DDE163DCA7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,7 @@
 		27E5962A6708954A5E564099 /* Coral.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Coral.metal; sourceTree = "<group>"; };
 		29729248161A1B61CE6D4E36 /* UnstirTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnstirTests.swift; sourceTree = "<group>"; };
 		31807869E592C189FDCC0657 /* UnstirTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = UnstirTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
 		58A75F3E52CC7C2EE27C7DFE /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		63330CD5793ABE158F314B89 /* Unstir.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Unstir.metal; sourceTree = "<group>"; };
@@ -108,6 +110,7 @@
 				12E8193F7A9FB37B678695D2 /* Menu.swift */,
 				7898E0AEAFE90492DC3EB64C /* Neurons.metal */,
 				7147B0B195AAB46DE31D870D /* Pictures.swift */,
+				39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */,
 				4C0CD5709FED7976550A2E52 /* TankView.swift */,
 				965EC2AB5B15FD9B3CA462DE /* Twist.swift */,
 				63330CD5793ABE158F314B89 /* Unstir.metal */,
@@ -142,6 +145,7 @@
 			buildConfigurationList = 643D8D27ECF55E6E1ABC148B /* Build configuration list for PBXNativeTarget "Unstir" */;
 			buildPhases = (
 				8910BE5E97DFA52777B03E80 /* Sources */,
+				1B9F3421B09639B68D8E119F /* Resources */,
 			);
 			buildRules = (
 			);
@@ -192,6 +196,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1B9F3421B09639B68D8E119F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FE081CE6E2DD92DDE163DCA7 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8910BE5E97DFA52777B03E80 /* Sources */ = {
