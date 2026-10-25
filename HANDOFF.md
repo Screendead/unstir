@@ -742,6 +742,9 @@ names and product ids, and Complete's promise to older owners.
    core) is on `lab-lens`: the order reads partly (a whole rim means the lens is newest), and the magnified area
    drops to 36% of the disc. Jack's call (2026-10-25, L1): the hard lens, with a phone test next. The reviewers had
    recommended shelving it; trying it is Jack's choice.
+   The hard lens is built for real on `lens-pack` (2026-10-25, not merged), with `lens-1` to `lens-3` (the draft's
+   taste, tri) to play: a Debug install, `UNSTIR_PACK=lens UNSTIR_LEVEL=n UNSTIR_OPEN=1`, since no Release build opens a
+   pack level until the shelf exists. The phone test itself has not been run.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
    Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
@@ -814,14 +817,28 @@ names and product ids, and Complete's promise to older owners.
     ids, and each pack's own rules.
 27. Lens: a rod kind on the level (twist by default), read by the map, `same`, the shader and the solver;
     `testDailyVectors` and `testEndlessVectors` pass unchanged.
+   Built 2026-10-25 on `lens-pack` (not merged), off `packs-ground`: `Level.lenses` (slots), a `lenses` set on every
+   call that maps points, empty by default, so the free game is untouched. Left: a spiral kind, only if Jack wants one
+   (below).
 28. Lens: the zoom map from the lab and the spiral flow (its ring angle a closed-form integral checked against
     numerical integration), each in Twist.swift and Unstir.metal together, with tests that steps merge by summing, an
     entry and its inverse cancel, the map is the identity outside the disc and the Metal copy holds precision far past
     ±3 steps; shots that pin each kind's sign.
+   Built 2026-10-25 on `lens-pack` (not merged): the hard lens only (Jack's L1), x1.3 a step at sharpness 2, as
+   constants (`Tank.lensRate`, `Tank.lensEdge`), with those tests (`LensTests`, the Metal copy to 12 steps either way)
+   and the `lens-plus`/`lens-minus` shots pinning the sign. The soft zoom and the spiral are not ported.
 29. Lens: the solver and solve.sh learn rod kinds; pars from the solver.
+   Built 2026-10-25 on `lens-pack` (not merged): `Solver(layout, lenses:)`, `solve.sh ... lenses=0`. The three test
+   levels' pars (1, 2, 3) are the solver's optimum. Left: pars for the rest of the table once Jack approves it.
 30. Lens: the halftone pipeline (dot screens in clean coordinates, baked panels, fill 0) and a test in the spirit of
     `testVisibleSmudgeIsNotSolved` that every step of every rod moves contrasting pixels.
+   Built 2026-10-25 on `lens-pack` (not merged) as far as the lab's halftone test panel (`Picture.halftone`, baked off
+   the main actor, cached in Debug, where it takes some 20 s) and the contrast test, on every layout. Left: the 25
+   panels' art (to-do 32) and a bake that fits the phone's time and memory with 25 of them.
 31. Lens: iris and nautilus knobs, the drag's count reading zoom steps, and haptic detents.
+   Built 2026-10-25 on `lens-pack` (not merged): the iris (`RodView.lens`). The count, dashes and half-step clicks are a
+   rod's unchanged, a zoom step per 30° of the knob (`lens-live` shot). No nautilus: no spiral. Left: the phone's feel,
+   in the phone test.
 32. Lens: 25 panels of art (an original wordless heist in pop-art objects) and the issue pages.
 33. Lens: the level table (25), solver-checked, to Jack before it goes into code.
 34. Escapement: the ratchet knob kind and its tap, and the tick rule (lands on lift, lifts out on a re-grab of the
