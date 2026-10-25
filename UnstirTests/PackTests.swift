@@ -41,7 +41,7 @@ final class PackTests: XCTestCase {
     @MainActor func testStorageKeysNeverChange() throws {
         let d = UserDefaults.standard, id = "pin-test"
         let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
-                    "tank.turned", "endless.tanks"]
+                    "tank.turned", "swirled", "endless.tanks"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -62,6 +62,8 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(d.bool(forKey: "unlock"))
         Best.tankTurned = true
         XCTAssertTrue(d.bool(forKey: "tank.turned"))
+        Best.swirled = true
+        XCTAssertTrue(d.bool(forKey: "swirled"))
         Best.tanks = 4
         XCTAssertEqual(d.integer(forKey: "endless.tanks"), 4)
     }
