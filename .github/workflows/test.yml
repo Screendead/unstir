@@ -18,13 +18,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      # Boots alongside the build; "Wait for the simulator" blocks until it is up.
-      - name: Boot simulator
+      - name: Pick simulator
         id: sim
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
           echo "udid=$udid" >> "$GITHUB_OUTPUT"
-          xcrun simctl boot "$udid"
       - name: Install XcodeGen
         run: |
           curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
@@ -53,7 +51,8 @@ jobs:
           UNSTIR_SIM: ${{ steps.sim.outputs.udid }}
           UNSTIR_ACTION: build-for-testing
         run: scripts/test-store.sh -quiet COMPILER_INDEX_STORE_ENABLE=NO
-      - name: Wait for the simulator
+      # Not alongside the build: on the runner's three cores, booting slowed the build from about 30 s to 4 min.
+      - name: Boot simulator
         run: xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
       - name: Test
         env:
