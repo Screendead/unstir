@@ -22,7 +22,9 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   that means splitting one file's diff line by line (`git add -p` is interactive, so build the partial patch and use
   `git apply --cached`).
 - **Merging.** Jack holds merge authority. Once he has seen the diff, a spoken OK from him is enough approval for Claude
-  to merge the PR.
+  to merge the PR. Claude may also merge without asking (Jack, 2026-10-25) once CI passes, a check of the diff, commit
+  messages and PR text finds nothing personal, and Claude is satisfied with the diff's quality; a PR that rests on a
+  call Jack hasn't made still waits for him.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
   Pushing to a branch with no open PR builds nothing. `.github/workflows/codeql.yml` scans the workflows on every PR to
@@ -30,7 +32,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
   other branch: it builds every push, PR or not. Keep
   commits local until the next build is worth paying for. If a build takes more than
-  5 minutes, raise it with Jack: the approach to builds needs rethinking.
+  7 minutes, raise it with Jack: the approach to builds needs rethinking.
 - **Watch CI spend.** Before each push that builds, run `scripts/ci-usage.sh`, which prints this month's GitHub Actions
   allowance left. Tell Jack when 50% is left, and warn him urgently at 25%. Public repos, this one included, don't
   use the allowance. macOS minutes in private repos count 10×.
