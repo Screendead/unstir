@@ -334,7 +334,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **UnstirTests/Solver.swift** plays turning-tank levels for the tests and `scripts/solve.sh`; it never ships in the
   app. It has three players, whose moves count as `Game.history` counts them (`Play.count`). The optimum is the fewest
   moves that empty the stack: a breadth-first search over (stack, tank position) that untwists whole seams and turns
-  the tank (only where `turns`, the level's motion, says it turns: by default wherever a knob is seized), then a search
+  the tank (only where `turns`, the level's motion, says it turns: by default wherever a knob is seized; the rules of thumb
+  below always turn when blocked, as they are defined only for turning tanks), then a search
   for anything shorter with detours (a push or partial merge can build a word that holds a
   disc still, and save a move). It tries only the detours its class comment lists, so it is a bounded search, not a
   proof; `exhaustive` checks it on small cases. Its pruning reads which rods interact (`interacts`: discs that overlap
