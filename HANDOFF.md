@@ -18,9 +18,9 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | Monetisation code | StoreKit 2 for the packs and Complete merged 2026-10-25 (PR #21); the daily share line merged 2026-10-25 (PR #24). Prices are Jack's call (2026-10-25): 2.99 a pack, 5.99 Complete. No ads |
 | Undo bank | Starts at 10 (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10. Built on `help` (2026-09-29, `Best.refill`; merged 2026-09-29, PR #9): the first opening of a level other than the sandbox on a local calendar day later than the last refill's adds 2, up to 10, and a "+2" shows over the undo count once the level's opening ends or is skipped. A fresh install records its first day without a refill; a clock moved back never refills. Jack (2026-09-29): setting the phone's date mustn't game the refill. Closed on `help` (2026-09-29, `Best.trustedNow`): within one boot the day comes from the last time it vouched for plus the uptime since (`CLOCK_MONOTONIC_RAW`, which counts sleep and can't be set), so a clock set ahead refills nothing until real time reaches the next day, give or take 5 min, and the log says `undo refill held: clock ahead Xh`. The anchor follows the wall clock no further ahead than drift explains (a second plus 100 ppm of the uptime since), so creeping the clock ahead a few minutes at a time gains about a second an opening; review found the first version let each step under 5 min carry the anchor along, a day ahead in about 290 steps (fixed 2026-09-29). Still open: a restart between date changes still borrows a refill, since a new boot has nothing to check against. A trusted network clock would close that; Claude recommends against it (a server, and a refill that waits on the network, to guard 2 undos a day). Unverified whether it is the only way: `kern.monotonicclock` is a candidate, a clock XNU's `clock.c` says nothing can set, and on a Mac it runs on across restarts. Unchecked on iOS: whether the app may read it, and whether setting the date moves it. The launch logs it next to the uptime (`monotonic clock Ns` or `unread`), so launches either side of a restart and of a date change answer both; if it holds, reckoning from it would close the restart hole. Unverified: whether iOS lets the app read the boot session (`kern.bootsessionuuid`); an app in macOS's App Sandbox reads it, but `container.sb` leaves it off its sysctl allow list, and iOS's profile is unpublished. The phone's log answers it at launch (`boot session read` or `unread`). Unread, a jump of at least the phone's uptime at the last level opened passes as a possible restart, and a believed jump anchors at the uptime then; so on a phone up less than a day, as after any restart, steps of a day get through one after another until a level opens with the phone up longer than the step. A genuine forward correction of more than 5 min within a boot (a phone that ran slow, set right) is held too, so its refill day turns late by that much until the next restart; one under 5 min is believed, and the anchor takes it in a few seconds a day. A new boot whose clock reads more than 5 min before the anchor's time, as after a clock reset, is believed but leaves the anchor, so setting the clock right later in that boot still counts as a new boot (review found the first version held every refill until the next restart there; fixed 2026-09-29). Not covered: a clock behind at the first opening with no anchor stored (a fresh install, or the first on this build), then set right, makes refills late by that much until a restart. The privacy manifest is written (`Sources/PrivacyInfo.xcprivacy`, merged 2026-10-25, PR #20): UserDefaults with CA92.1 and system boot time with 35F9.1. Apple's required-reason pages (developer.apple.com, "Describing use of required reason API" and the `NSPrivacyAccessedAPIType` page, read 2026-10-25) list `systemUptime` and `mach_absolute_time()` under boot time and no `clock_gettime`-family call or sysctl, so `clock_gettime_nsec_np`, `kern.bootsessionuuid` and `kern.monotonicclock_usecs` are not on the list; 35F9.1 is declared anyway, inferred as harmless and as the nearest fit, since the uptime clock measures elapsed time and never leaves the device |
 | TestFlight | Prep merged 2026-10-25 (PR #23): version 1.0 (1), the export-compliance key, an asset catalog. The icon is candidate 1, the neon grid (Jack, 2026-10-25), already the placeholder in the catalog. No archive script until Jack's developer account is in Xcode |
-| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s, #23 5m36s and #26 5m11s. Jack's calls (2026-10-25): watch it, then cache the build, and the line moves to 7 minutes. |
+| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s, #23 5m36s and #26 5m11s. Jack's calls (2026-10-25): watch it, then cache the build, and the line moves to 7 minutes. The cache merged 2026-10-25 (PR #29): `test.yml` keeps the StoreKit test build (`build/store`) between runs, keyed on the Xcode build and the sources, and stamps each file with a time drawn from its content, so a hit compiles nothing. It saves about 30 s, but the build is not where CI's time goes: the job ran 5m13s cold and 5m18s warm, as the simulator's boot, install and tests vary by about 90 s from run to run |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
-| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below; vortex, the swirl tier between whirlpool and maelstrom (Jack, 2026-10-24), with 27 provisional levels, merged 2026-10-25 (PR #22); Jack's calls on it (2026-10-25) are in "Vortex (provisional, 2026-10-24)" |
+| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below; vortex, the swirl tier between whirlpool and maelstrom (Jack, 2026-10-24), with 27 provisional levels, merged 2026-10-25 (PR #22); Jack's calls on it (2026-10-25) are in "Vortex (provisional, 2026-10-24)"; vortex's own pictures (isobars, ephemeris, cords) merged 2026-10-25 (PR #28), and breath as the swirl's cue merged 2026-10-25 (PR #30) |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
 | Architecture pass | Queued after the performance pass (Jack, 2026-09-28); see below |
 | Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
@@ -265,11 +265,11 @@ Round 3 (2026-10-25, on the review page of the overnight builds, after all seven
 | Call | Jack's answer |
 |---|---|
 | V1. Vortex's rim cue | **Knob** (option A), over bands and glyphs |
-| V2. Dark seats under the swirl's ticks | **No option chosen.** Jack: "I actually don't like the ticks at all as a method of showing the tank will swirl." That rules out the tick dial as the swirl's cue, so what shows the swirl is open again; a new cue is being pitched |
+| V2. Dark seats under the swirl's ticks | **No option chosen.** Jack: "I actually don't like the ticks at all as a method of showing the tank will swirl." That rules out the tick dial as the swirl's cue, so what shows the swirl was open again. Round 4 (C1) chose breath; merged 2026-10-25 (PR #30) |
 | V3. Which layouts get a swirl | **All five** (round 4, below) |
 | V4. The swirl with seized knobs | **Charybdis** (option B). Jack: "The tank edge being dragged should always swirl the tank. It'd make the locked rods harder because turning the tank has a side effect. I feel strongly about this." |
 | V5. Vortex's levels | **Accept as provisional** |
-| V6. Vortex's pictures | **A family of its own** (option C). Not built |
+| V6. Vortex's pictures | **A family of its own** (option C). Round 4 (P1) chose all three families; merged 2026-10-25 (PR #28) |
 | F1. First Stir | **Go** |
 | F2. First Stir's time cue | **Make time visible** (option C): the night winding back (`UNSTIR_FSTIME` on `lab-firststir`), plus the caption |
 | L1. Lens | **The hard lens, phone test next** (option A). The reviewers had recommended shelving it; trying it is Jack's choice |
@@ -287,10 +287,10 @@ Round 4 (2026-10-25, on its own page after round 3's answers):
 | Call | Jack's answer |
 |---|---|
 | R1. Charybdis's rim | **Claude's reading confirmed** (option A): one gesture that turns the glass and swirls it together |
-| C1. The swirl cue that replaces the ticks | **Breath** (option B): 1.5 s after the tank comes to rest the picture sloshes once, 12°, through the swirl, then again every 12 s idle |
-| P1. Vortex's own pictures | **All three families**, isobars, ephemeris and cords. Jack: "A is my favourite solved, but I love the animation of B both solved and unsolved too. I want both! Can we have both? Textiles are the least compelling - but not *bad*, so I kind of want all three." Ephemeris's orbits may overlap charybdis's planned orbits |
+| C1. The swirl cue that replaces the ticks | **Breath** (option B): 1.5 s after the tank comes to rest the picture sloshes once, 12°, through the swirl, then again every 12 s idle. Merged 2026-10-25 (PR #30); as built the slosh peaks near 8° (open, under "What the tier needs" in "Vortex (provisional, 2026-10-24)") |
+| P1. Vortex's own pictures | **All three families**, isobars, ephemeris and cords. Jack: "A is my favourite solved, but I love the animation of B both solved and unsolved too. I want both! Can we have both? Textiles are the least compelling - but not *bad*, so I kind of want all three." Ephemeris's orbits may overlap charybdis's planned orbits. Merged 2026-10-25 (PR #28) |
 | V3. Which layouts get a swirl | **All five**, the 27 levels as built |
-| B2. CI over 5 minutes | **Cache the build** (option A), **and move the line to 7 minutes** |
+| B2. CI over 5 minutes | **Cache the build** (option A), **and move the line to 7 minutes**. The cache merged 2026-10-25 (PR #29) |
 
 **The charybdis rule (Jack's call, 2026-10-25, from V4).** Jack's words, and only these: "The tank edge being dragged
 should always swirl the tank. It'd make the locked rods harder because turning the tank has a side effect. I feel
@@ -865,11 +865,11 @@ names and product ids, and Complete's promise to older owners.
     vortex's own design round; charybdis's orbit solver (a reach table per crank tick), its shared-slot rule and its
     own design round.
    Vortex merged 2026-10-25 (PR #22). Jack's calls (2026-10-25): the rim cue is knob (V1), but not its ticks (V2:
-   "I actually don't like the ticks at all as a method of showing the tank will swirl."), so a new swirl cue is open
-   and being pitched; the swirl meets seized knobs in charybdis, where dragging the tank's edge always swirls it
-   (V4, the charybdis rule under round 3); the table stands as provisional (V5); vortex gets a picture family of
-   its own (V6, not built). Still open: which layouts get a swirl (V3, recommended: all five). Charybdis's orbit
-   solver is not started.
+   "I actually don't like the ticks at all as a method of showing the tank will swirl."), so the swirl's cue is
+   breath (C1), merged 2026-10-25 (PR #30); the swirl meets seized knobs in charybdis, where dragging the tank's edge
+   always swirls it (V4, the charybdis rule under round 3); the table stands as provisional (V5); vortex has a
+   picture family of its own (V6), all three of isobars, ephemeris and cords (P1), merged 2026-10-25 (PR #28); a
+   swirl on all five layouts (V3, round 4). Charybdis's orbit solver is not started.
 
 ## Side task: the difficulty tiers (started 2026-09-28)
 
@@ -886,7 +886,7 @@ from Nightmare to Nightmare+ is easy to miss.
 | Rename | Nightmare is now **whirlpool** and Nightmare+ **maelstrom** in code, harness (`UNSTIR_TIER`), scripts, tests and docs, merged 2026-09-29 (PR #7). Stored level ids stay `N<k>` for whirlpool, so progress carries over (Claude first planned new ids, which would have reset it; the review caught that). Maelstrom's own set took fresh ids `M<k>` (on `maelstrom-set`, 2026-10-24), so old N+ bests don't land on new levels |
 | Solver and the maelstrom set | Solver built and verified (2026-09-29), merged 2026-09-29 (PR #10, then PR #13 into `master`). An independent brute force found a push that holds a disc still and beats plain untwisting by a move, so the optimum now adds a bounded search for such detours: par is the solver's bounded optimum, not a proof. The park rule has two readings (fewest dead knobs over rings with a seam, or every dead knob over a ring without one) and no tie-break (Jack, 2026-10-24); the set is fair under both readings however its ties go. A first proposed table passed every check but its early planning gap came from a tie-break (a lucky guess of direction scores par), its first ten levels all turn counterclockwise, and its seized pairs were always neighbours. A second reworked it, and a third, all new levels, was proposed below (2026-10-24), with Jack's calls on it. Merged 2026-10-24 (PR #14): the 27 levels under ids M1–M27 with M1's note, the solver's `parkTies` (the park rule with no tie-break, its fewest and most moves over every way its ties go) and solve.sh printing it, and tests that every level's par is the optimum and the park rule's worst over its ties under both parkings. Jack's playtest (2026-10-24): the seized knobs moved once, parked over finished work, and never mattered again. Most levels needed only one or two turns, and the hex levels' park lines ran 7–17 moves after their last turn. Merged 2026-10-24 (PR #17): M7, M8 and all of hex (M15–M27) replaced from the pool by levels that need three or more turns in hex (two in M15–M18), the park line never more than a third of par plus one without a turn (`testMaelstromKeepsTheTankTurning`), every pick fair and checked with solve.sh; the finale is new too (gap 7, three turns), which Jack accepted. The frontier: a short run costs nothing in pent, and in hex keeps a planning gap of up to 7 at three turns; four or more turns cap it at 5. The pent order is now v5 M7, v4 M9, v4 M10, v5 M8, then M11–M14 |
 | Endless's new rules | Built on `endless` (2026-09-29): no undo, reset or par, the brim counting red flashes, Claude's ramp, and the vivid jug on the rim, ported from the approved film. Reviewed, and the review's fixes made, the pour over the lip among them. Jack watched the app's film on 2026-09-29 and approved it ("looks great"); merged 2026-09-29 (PR #11). See "Endless changes rules" below |
-| Vortex (the swirl) | Jack's calls 2026-10-24: the whole-tank swirl is the tier vortex, between whirlpool and maelstrom, and the rim must show what it does before a move. Built on `vortex` and merged 2026-10-25 (PR #22): the swirl layouts, the rim grab, the tier and its gate, the swirl's lesson, the solver's `interacts` pruning, three rim-cue variants, and 27 provisional levels. Jack's calls of 2026-10-25 (knob cue but no ticks, so a new cue is open; the swirl with seized knobs goes to charybdis; the table provisional; a picture family of its own; which layouts get a swirl still open) are in "Vortex (provisional, 2026-10-24)" below |
+| Vortex (the swirl) | Jack's calls 2026-10-24: the whole-tank swirl is the tier vortex, between whirlpool and maelstrom, and the rim must show what it does before a move. Built on `vortex` and merged 2026-10-25 (PR #22): the swirl layouts, the rim grab, the tier and its gate, the swirl's lesson, the solver's `interacts` pruning, three rim-cue variants (since removed), and 27 provisional levels. Jack's calls of 2026-10-25 (knob cue but no ticks, then breath as the swirl's cue; the swirl with seized knobs goes to charybdis; the table provisional; a picture family of its own, all three families; a swirl on all five layouts) are in "Vortex (provisional, 2026-10-24)" below. Vortex's pictures merged 2026-10-25 (PR #28); breath merged 2026-10-25 (PR #30), which removed the ticks, the bands and glyphs cues and `UNSTIR_RIM` |
 | The phone | Installed 2026-10-24: a Release build of `maelstrom-turns` (since merged, PR #17; the set that keeps the tank turning); before it, `maelstrom-set` (since merged, PR #14) for Jack to test the new maelstrom set (M1–M27). Before that, installed 2026-09-29: a local build of `touch` at 42406cc with `help`'s three commits (hints removed, the daily +2 refill, the clock guard), the glass sound set, and two proposals not to be committed (maelstrom v2 as M1–M27, and plughole 19–27's easier scrambles). The next install carries the dashes |
 
 **Jack's calls (2026-09-28).**
@@ -1138,13 +1138,16 @@ Jack's calls (2026-10-24):
 Jack's calls (2026-10-25, round 3 under "Jack's calls on the pitch"):
 - **The rim cue: knob** (V1), over bands and glyphs.
 - **The ticks: out** (V2, no option chosen): "I actually don't like the ticks at all as a method of showing the tank
-  will swirl." The tick dial is ruled out as the swirl's cue, so a new cue is open; a pitch is in progress.
-- **Which layouts get a swirl** (V3): unanswered, still open.
+  will swirl." The tick dial is ruled out as the swirl's cue, so a new cue was open. Round 4 (C1) chose breath;
+  merged 2026-10-25 (PR #30).
+- **Which layouts get a swirl** (V3): unanswered in round 3; round 4 answered all five.
 - **The swirl with seized knobs: charybdis** (V4, option B): "The tank edge being dragged should always swirl the
   tank. It'd make the locked rods harder because turning the tank has a side effect. I feel strongly about this."
-  See "The charybdis rule" under round 3, where one gesture, not two bands, is Claude's reading, pending Jack.
+  See "The charybdis rule" under round 3, where one gesture, not two bands, is Claude's reading, which Jack confirmed
+  in round 4 (R1).
 - **The 27 levels: accepted as provisional** (V5).
-- **Pictures: a family of its own** (V6, option C). Not built.
+- **Pictures: a family of its own** (V6, option C). Round 4 (P1): all three families, isobars, ephemeris and cords;
+  merged 2026-10-25 (PR #28).
 
 **What is built.**
 - **The swirl** (`Layout.swirls`: `triSwirl`, `quadSwirl`, `eyeSwirl`, `pentSwirl`, `hexSwirl`): the base layout's rods
@@ -1155,34 +1158,37 @@ Jack's calls (2026-10-25, round 3 under "Jack's calls on the pitch"):
   Both: the glass's own edge band (0.86 to 1.0) holds the swirl, the bezel and beyond turn the tank.
 - **The tier.** Whirlpool all at par opens vortex; vortex all at par opens maelstrom. Ids `V1`–`V27`. Its own menu
   colours (violet to teal). Rows on a swirl layout read "4 rods + swirl".
-- **The lesson.** A thin cyan arc at the bottom on the swirl's ticks inside the glass, with a ghost finger there, until
+- **The lesson.** A thin cyan arc at the bottom just inside the glass's edge, with a ghost finger there, until
   the first swirl stir commits (`Best.swirled`), beside the tank's amber one outside the bezel where knobs are seized:
   each points at its own ring (a cold review found both had pointed at the bezel). It hides while the swirl is held. A
-  cold first touch where the rim does both (`film.sh rim-knob-both-cold`) lands on the ticks and holds the swirl.
+  cold first touch where the rim does both (`film.sh rim-both-cold`) lands on the glass's edge and holds the swirl.
 - **The solver.** It prunes by which rods' maps interact (`interacts`), so the hub and the swirl commute: hex's provisional
   level went from 2027 stacks in 2.2 s to 8 in 81 ms. `solve.sh` takes the swirl layouts and refuses a seized swirl.
   Every player's play on swirl levels, seized knobs included, empties a real `Game`. A randomised check (5398 swirl
   scrambles of 2–3 entries, half with a knob seized) found nothing shorter than the optimum.
-- **What the rim does, before a move** (Jack's call above), three variants on `UNSTIR_RIM`, each for swirl only, glass
-  turn only and both, shot as `rim-<variant>-*` (27 shots):
-  - `knob` (default, Claude's lead): the swirl gets a knob's dial just inside the glass's edge (cyan hairline ring, 11
-    ticks and a longer 1 pt pointer at twelve, turning with it), its ticks leaning as a shear leans them, and further
-    the way a held turn goes, so they read as a swirl and not a dial; where knobs are seized the bezel becomes knurled
-    steel, its ridges faintly amber at rest (the tank's colour), that turns with the glass, on every seized level. A
-    dark groove (the picture's outer 5 pt) parts the ticks from the knurl, so "both" no longer reads as one dive-watch
-    bezel. **For Jack, a trade-off against the hairline rule:** each tick and the swirl lesson's arc sit on a 3–3.5 pt
-    dark stroke, and the groove darkens the picture's last 5 pt, so the ticks read on busy pictures (marbling, coral).
-  - `bands`: the swirl's grab outlined in cyan (its wash and slanted hatch dropped: they hid the picture's outer ring),
-    an amber bezel for the tank, matching the lessons' colours.
-  - `glyphs`: two 28 pt icons above twelve (a spiral; a ring with a red slash and a two-headed arc). It says both
-    controls exist, not which band does which.
-  **Jack picked `knob`** (2026-10-25, V1), but ruled out its ticks (V2), the cue's main mark for the swirl, so what
-  shows the swirl is open again: a new cue is being pitched. The code still carries all three variants.
-- **The swirl's own marks, under every cue** (Claude's calls, 2026-10-25): a push flashes red as a 0.5 pt hairline on
-  the `knob` cue's ring, 5 pt inside the glass's edge, where a knob's flashes on its own dial (`rim-knob-swirl-push`
-  film); over a red picture it is faint, the price of the hairline rule. A held swirl's dashes run inside the cue's
-  ticks and pointer, and its count sits inside them on the far side from the finger, as a knob's sits off its disc
-  (`rim-knob-swirl-held`, `-held-low`, `-turned`). The result card's "next" is vortex's own blue (`Tier.glow`, the
+- **What the rim does, before a move** (Jack's call above). Built first as three variants on `UNSTIR_RIM` (`knob`,
+  `bands`, `glyphs`). Jack picked `knob` (V1) but ruled out its ticks (V2), then chose breath (C1, round 4). Merged
+  2026-10-25 (PR #30), what ships:
+  - **Breath**, the swirl's cue. 1.5 s after the tank becomes the player's, the swirl sloshes the picture once through
+    its own map and settles: a 12° sine damped by e^-t over 3.2 s, so it peaks near 8° and ends at 0. It sloshes
+    again every 12 s while the tank rests; after any lift the next slosh waits 10 s. A finger on the rim or a knob,
+    two fingers or a drawn fingertip ends the rest, and the slosh fades out over 0.25 s from where it stood, under
+    the live turn, so the picture never jumps (measured frame to frame in the `breath-grab` and `breath-grab-knob`
+    films). The opening, a win and a reset end it the same way, and under Reduce Motion there is none. It is one
+    extra entry on top of the shader's stack, drawn only while its angle is off 0, and it never touches `Game`. The
+    picture's timeline runs only while a breath moves: on a static picture the simulator recorded no frames between
+    sloshes. Shots `breath-01`, `-14`, `-21` and `-both`; films `breath-rest`, `breath-grab`, `breath-grab-knob`.
+  - **The knurl** (`Knurl`, was `RimCues`), kept from `knob`: where knobs are seized the bezel is knurled steel, its
+    ridges faintly amber at rest (the tank's colour), turning with the glass, on every seized level. It still says
+    "turns the glass".
+  - **Removed:** the swirl's ticks, pointer, ring and groove, so the trade-off against the hairline rule went with
+    them; the `bands` and `glyphs` cues and `UNSTIR_RIM`; `UNSTIR_SEATS` and its shots. The `rim-knob-*` shots and
+    films are now `rim-*`. The swirl lesson's arc keeps its dark stroke (open, below).
+- **The swirl's own marks** (Claude's calls, 2026-10-25): a push flashes red as a 0.5 pt hairline 5 pt inside the
+  glass's edge, where a knob's flashes on its own dial (`rim-swirl-push` film); over a red picture it is faint, the
+  price of the hairline rule. A held swirl's dashes follow the knob rule since PR #30, 14 pt inside its disc (before,
+  they kept clear of the ticks), and its count sits inside them on the far side from the finger, as a knob's sits off
+  its disc (`rim-swirl-held`, `-held-low`, `-turned`). The result card's "next" is vortex's own blue (`Tier.glow`, the
   middle of the menu's violet → blue → teal walk; `vortex-result`).
 
 **How the set was made.** `scripts/vortex-levels/pools.sh` deals seeded scrambles on each swirl layout with the frozen
@@ -1198,9 +1204,10 @@ it; `testVortexTable` pins the rest). Maelstrom's rules, translated:
   levels running. And within a level, from four stirs on, no more than two thirds go one way, so undos can't be
   guessed by direction (the generator dealt one tri level all counterclockwise).
 - **Fair under every park reading** holds trivially: no seized knobs, so both parkings untwist.
-- **Neighbours never share a picture.** Whirlpool's live pictures (not the twins, which are maelstrom's), with
-  whirlpool's limits: glass opens each layout and takes the finale, coral only to 6 stirs, neurons to 14, marbling
-  deep. Each tank is four taps as dealt.
+- **Neighbours never share a picture.** Vortex's own family since PR #28 (until then whirlpool's live pictures), nine
+  levels each: V1–V3 one of each, isobars open each layout (V1, V7, V10, V14, V21) and take the finale, the ephemeris
+  only to 14 stirs since it dims to a filigree at depth, cords the rest, mostly mid-depth. Each tank is four taps as
+  dealt with its picture's `fillEntries`: every level fits with any of the three (deepest: 24 stirs + 6 = 30).
 - **The swirl taught early on small tanks.** Quad first (V1 kept as it was, so its note and the rim shots stand), then
   tri and eye, then pent and hex, each layout opening easier than the last one's showpiece. A swirl of 240° (8 steps)
   is rare: none before V6, then at most a third of a level's swirls. No two levels open on the same three stirs.
@@ -1209,36 +1216,36 @@ Levels (**par** = entries = the solver's optimum; **hidden** counts the stirs no
 
 | Level | Layout | Par | Hidden (swirls) | Swirls, newest first | Over the newest | Its undo | Picture | Title | Why | Seed | Scramble |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| V1 | quad | 2 | 0 (0) | +4 | 0 | ccw | glass | The rim is a rod too. | The lesson: the swirl alone on top (the placeholder's V1, kept, so the rim shots stand) | fixed #- | `0:+3,4:+4` |
-| V2 | quad | 3 | 0 (0) | -7 | 1 | cw | coral | Something stirred after the rim. | A rod stirred after the swirl: the rim isn't always first off | quadSwirl-3-0 #13 | `0:+4,4:-7,3:-8` |
-| V3 | quad | 4 | 0 (0) | +4 | 3 | ccw | chainmail | The rim went first. | The swirl at the bottom: three rods ride on it, and it comes off last | quadSwirl-4-0 #17 | `4:+4,3:-5,2:-8,0:+2` |
-| V4 | quad | 5 | 0 (0) | +7 +3 | 0 | ccw | coral | Twice round the rim. | Two swirls, the newest on top | quadSwirl-5-0 #48 | `3:-2,4:+3,1:-5,0:+6,4:+7` |
-| V5 | quad | 6 | 1 (1) | -4 -7 | 1 | cw | neurons | Quiet at the edge. | The first hidden stir, and it is a swirl | quadSwirl-6-0 #25 | `0:-4,4:-7,1:+8,3:+3,4:-4,0:+5` |
-| V6 | quad | 8 | 2 (1) | -2 -7 -4 | 0 | cw | marbling | Taylor turned the outer cylinder too. | Quad's showpiece: three swirls, two stirs hidden | quadSwirl-8-0 #148 | `4:-4,3:+6,4:-7,3:+8,1:+4,2:-8,0:-3,4:-2` |
-| V7 | tri | 5 | 1 (0) | +6 -5 | 0 | ccw | glass | Three rods, and the rim makes four. | Tri opens easier: every disc reaches the rim | triSwirl-5-0 #1 | `1:+4,3:-5,0:-8,1:-4,3:+6` |
-| V8 | tri | 6 | 2 (1) | -5 -5 | 0 | cw | coral | Every disc reaches the rim. | Two swirls of one size, one of them hidden | triSwirl-6-0 #145 | `2:-4,3:-5,2:-6,0:+8,2:+8,3:-5` |
-| V9 | tri | 8 | 2 (2) | -6 -6 +2 | 0 | cw | chainmail | The rim carries every seam with it. | Tri's showpiece: three swirls, two hidden | triSwirl-8-0 #51 | `3:+2,2:+3,1:-6,0:+7,2:-8,3:-6,1:-8,3:-6` |
-| V10 | eye | 7 | 2 (0) | +7 +4 | 2 | ccw | glass | Big rods, small rods, one rim. | Eye opens easier, its swirl two deep | eyeSwirl-7-1 #35 | `0:-2,4:+4,2:+6,0:-4,4:+7,0:-8,2:-6` |
-| V11 | eye | 8 | 2 (2) | -3 +6 +4 | 0 | cw | neurons | Free vortex, forced vortex. | Three swirls, two hidden, on mixed sizes | eyeSwirl-8-1 #7 | `0:-2,4:+4,2:+7,4:+6,0:+7,3:-8,2:-2,4:-3` |
-| V12 | eye | 10 | 3 (2) | +5 +7 -4 | 1 | ccw | marbling | Read the edge before the middle. | Ten stirs, three hidden | eyeSwirl-10-1 #127 | `3:-4,4:-4,1:+7,3:-8,2:-3,4:+7,0:+8,3:+4,4:+5,0:+6` |
-| V13 | eye | 12 | 4 (2) | -5 -6 +8 +4 | 1 | cw | chainmail | Small on big, inside the biggest. | Eye's showpiece: four swirls | eyeSwirl-12-1 #430 | `4:+4,1:+6,3:-7,4:+8,0:+5,2:-8,3:-2,1:-8,4:-6,1:-8,4:-5,2:+6` |
-| V14 | pent | 8 | 2 (1) | +4 +4 | 3 | ccw | glass | Five rods and a rim. Still no middle. | Pent opens easier, its swirl three deep | pentSwirl-8-2 #10 | `2:-3,5:+4,4:-5,3:-7,5:+4,4:-5,3:+4,4:-6` |
-| V15 | pent | 10 | 3 (1) | +8 -5 -3 | 2 | ccw | neurons | Angular momentum, handed back. | Three swirls, the newest under two rods | pentSwirl-10-2 #96 | `3:+4,2:-7,1:+2,5:-3,4:+5,5:-5,4:+7,5:+8,3:-8,1:-2` |
-| V16 | pent | 12 | 3 (1) | -8 -6 -2 | 3 | cw | chainmail | Under the rim, over the rim. | Three swirls, the newest under three rods | pentSwirl-12-2 #327 | `4:+2,0:-2,5:-2,4:+3,3:+5,0:-3,5:-6,0:+7,5:-8,4:-2,1:-2,3:+5` |
-| V17 | pent | 13 | 4 (1) | +8 -4 +4 -3 | 2 | ccw | marbling | Kelvin would like his circulation back. | Four swirls | pentSwirl-13-3 #2 | `2:+3,5:-3,3:-2,0:-2,5:+4,1:-7,0:+3,5:-4,3:+6,2:-7,5:+8,3:-5,2:+7` |
-| V18 | pent | 14 | 4 (2) | -4 -5 +8 -6 | 0 | cw | neurons | Quiet at the edge, loud in the middle. | Four swirls, two hidden | pentSwirl-14-2 #716 | `2:+4,5:-6,3:+8,2:-8,0:-4,4:-5,5:+8,4:-4,5:-5,4:+8,2:-4,1:+7,2:-8,5:-4` |
-| V19 | pent | 16 | 5 (1) | -8 +6 -4 -4 | 4 | cw | chainmail | Ekman layers, politely ignored. | Four rods over the newest swirl | pentSwirl-16-4 #175 | `5:-4,3:-3,4:-3,2:+2,1:-2,5:-4,1:+6,2:-7,5:+6,4:+7,1:-2,5:-8,4:+8,2:+3,1:+4,2:+6` |
-| V20 | pent | 18 | 6 (4) | +7 -8 +7 -3 +2 | 0 | ccw | marbling | Rankine vortex, by hand. | Pent's showpiece: five swirls, four hidden | pentSwirl-18-4 #382 | `4:+2,0:-2,2:+2,4:+4,5:+2,2:-5,0:+2,5:-3,1:-6,5:+7,3:-8,1:-2,5:-8,4:-8,2:+4,1:-6,2:+8,5:+7` |
-| V21 | hex | 12 | 3 (2) | -4 +4 +4 | 3 | cw | glass | The hub and the rim keep out of each other's way. | Hex opens easier; the hub and the swirl come off in either order | hexSwirl-12-3 #136 | `7:+4,1:-7,7:+4,3:+5,5:+2,0:+2,6:+4,4:-2,7:-4,0:-6,3:-8,6:-3` |
-| V22 | hex | 14 | 4 (2) | -8 -2 -5 | 2 | cw | chainmail | Seven rods and a rim. Same rule. | Hex, three swirls | hexSwirl-14-3 #67 | `3:-3,2:+6,4:+2,7:-5,1:-8,7:-2,3:-5,1:-4,4:+7,0:+8,6:+7,7:-8,3:-2,1:-3` |
-| V23 | hex | 16 | 4 (1) | +4 -6 -7 -7 | 1 | ccw | marbling | Bathtub vortex, either hemisphere. | Four swirls | hexSwirl-16-4 #54 | `1:+4,0:-5,7:-7,5:-8,2:-4,4:+3,3:+3,0:+6,7:-7,5:+8,4:-5,7:-6,3:+8,5:+2,7:+4,6:-5` |
-| V24 | hex | 18 | 5 (3) | -4 +3 +2 -6 | 1 | cw | chainmail | Forced core, free edge. | Four swirls, three hidden | hexSwirl-18-3 #23 | `2:-4,6:+2,7:-6,5:+2,7:+2,2:+5,7:+3,6:-6,3:-3,4:+5,1:+7,3:-8,5:+2,6:-8,2:+8,4:-2,7:-4,2:+6` |
-| V25 | hex | 20 | 6 (2) | +6 -5 -6 -8 -4 | 0 | ccw | glass | Spin-down takes longer. | Five swirls | hexSwirl-20-4 #54 | `1:+4,6:-2,7:-4,3:-7,7:-8,5:+3,6:+5,0:+8,7:-6,5:+3,3:+3,7:-5,5:-8,2:+3,1:+5,2:+8,3:-7,1:+4,2:-8,7:+6` |
-| V26 | hex | 22 | 7 (3) | -8 +7 -6 -3 +7 | 3 | cw | marbling | Stir the stirrer. | Five swirls, three hidden | hexSwirl-22-6 #311 | `6:-4,3:-4,5:+5,0:+6,7:+7,5:+8,3:-2,6:-4,7:-3,1:-3,7:-6,6:+8,3:+2,7:+7,6:-8,4:+4,2:+3,3:+6,7:-8,0:-8,2:-3,5:-3` |
-| V27 | hex | 24 | 8 (2) | +8 -4 -8 -3 -2 -6 | 1 | ccw | glass | The vortex, unstirred. | The finale: 24 stirs, six swirls | hexSwirl-24-5 #375 | `4:+3,1:-2,7:-6,1:-3,7:-2,0:-4,2:+6,1:+4,6:+5,1:+7,0:-8,6:+4,7:-3,0:+6,5:-7,3:+3,7:-8,0:+6,1:+3,7:-4,1:-7,3:-3,7:+8,5:-8` |
+| V1 | quad | 2 | 0 (0) | +4 | 0 | ccw | isobars | The rim is a rod too. | The lesson: the swirl alone on top (the placeholder's V1, kept, so the rim shots stand) | fixed #- | `0:+3,4:+4` |
+| V2 | quad | 3 | 0 (0) | -7 | 1 | cw | ephemeris | Something stirred after the rim. | A rod stirred after the swirl: the rim isn't always first off | quadSwirl-3-0 #13 | `0:+4,4:-7,3:-8` |
+| V3 | quad | 4 | 0 (0) | +4 | 3 | ccw | cords | The rim went first. | The swirl at the bottom: three rods ride on it, and it comes off last | quadSwirl-4-0 #17 | `4:+4,3:-5,2:-8,0:+2` |
+| V4 | quad | 5 | 0 (0) | +7 +3 | 0 | ccw | ephemeris | Twice round the rim. | Two swirls, the newest on top | quadSwirl-5-0 #48 | `3:-2,4:+3,1:-5,0:+6,4:+7` |
+| V5 | quad | 6 | 1 (1) | -4 -7 | 1 | cw | cords | Quiet at the edge. | The first hidden stir, and it is a swirl | quadSwirl-6-0 #25 | `0:-4,4:-7,1:+8,3:+3,4:-4,0:+5` |
+| V6 | quad | 8 | 2 (1) | -2 -7 -4 | 0 | cw | ephemeris | Taylor turned the outer cylinder too. | Quad's showpiece: three swirls, two stirs hidden | quadSwirl-8-0 #148 | `4:-4,3:+6,4:-7,3:+8,1:+4,2:-8,0:-3,4:-2` |
+| V7 | tri | 5 | 1 (0) | +6 -5 | 0 | ccw | isobars | Three rods, and the rim makes four. | Tri opens easier: every disc reaches the rim | triSwirl-5-0 #1 | `1:+4,3:-5,0:-8,1:-4,3:+6` |
+| V8 | tri | 6 | 2 (1) | -5 -5 | 0 | cw | ephemeris | Every disc reaches the rim. | Two swirls of one size, one of them hidden | triSwirl-6-0 #145 | `2:-4,3:-5,2:-6,0:+8,2:+8,3:-5` |
+| V9 | tri | 8 | 2 (2) | -6 -6 +2 | 0 | cw | cords | The rim carries every seam with it. | Tri's showpiece: three swirls, two hidden | triSwirl-8-0 #51 | `3:+2,2:+3,1:-6,0:+7,2:-8,3:-6,1:-8,3:-6` |
+| V10 | eye | 7 | 2 (0) | +7 +4 | 2 | ccw | isobars | Big rods, small rods, one rim. | Eye opens easier, its swirl two deep | eyeSwirl-7-1 #35 | `0:-2,4:+4,2:+6,0:-4,4:+7,0:-8,2:-6` |
+| V11 | eye | 8 | 2 (2) | -3 +6 +4 | 0 | cw | ephemeris | Free vortex, forced vortex. | Three swirls, two hidden, on mixed sizes | eyeSwirl-8-1 #7 | `0:-2,4:+4,2:+7,4:+6,0:+7,3:-8,2:-2,4:-3` |
+| V12 | eye | 10 | 3 (2) | +5 +7 -4 | 1 | ccw | cords | Read the edge before the middle. | Ten stirs, three hidden | eyeSwirl-10-1 #127 | `3:-4,4:-4,1:+7,3:-8,2:-3,4:+7,0:+8,3:+4,4:+5,0:+6` |
+| V13 | eye | 12 | 4 (2) | -5 -6 +8 +4 | 1 | cw | ephemeris | Small on big, inside the biggest. | Eye's showpiece: four swirls | eyeSwirl-12-1 #430 | `4:+4,1:+6,3:-7,4:+8,0:+5,2:-8,3:-2,1:-8,4:-6,1:-8,4:-5,2:+6` |
+| V14 | pent | 8 | 2 (1) | +4 +4 | 3 | ccw | isobars | Five rods and a rim. Still no middle. | Pent opens easier, its swirl three deep | pentSwirl-8-2 #10 | `2:-3,5:+4,4:-5,3:-7,5:+4,4:-5,3:+4,4:-6` |
+| V15 | pent | 10 | 3 (1) | +8 -5 -3 | 2 | ccw | ephemeris | Angular momentum, handed back. | Three swirls, the newest under two rods | pentSwirl-10-2 #96 | `3:+4,2:-7,1:+2,5:-3,4:+5,5:-5,4:+7,5:+8,3:-8,1:-2` |
+| V16 | pent | 12 | 3 (1) | -8 -6 -2 | 3 | cw | cords | Under the rim, over the rim. | Three swirls, the newest under three rods | pentSwirl-12-2 #327 | `4:+2,0:-2,5:-2,4:+3,3:+5,0:-3,5:-6,0:+7,5:-8,4:-2,1:-2,3:+5` |
+| V17 | pent | 13 | 4 (1) | +8 -4 +4 -3 | 2 | ccw | ephemeris | Kelvin would like his circulation back. | Four swirls | pentSwirl-13-3 #2 | `2:+3,5:-3,3:-2,0:-2,5:+4,1:-7,0:+3,5:-4,3:+6,2:-7,5:+8,3:-5,2:+7` |
+| V18 | pent | 14 | 4 (2) | -4 -5 +8 -6 | 0 | cw | cords | Quiet at the edge, loud in the middle. | Four swirls, two hidden | pentSwirl-14-2 #716 | `2:+4,5:-6,3:+8,2:-8,0:-4,4:-5,5:+8,4:-4,5:-5,4:+8,2:-4,1:+7,2:-8,5:-4` |
+| V19 | pent | 16 | 5 (1) | -8 +6 -4 -4 | 4 | cw | isobars | Ekman layers, politely ignored. | Four rods over the newest swirl | pentSwirl-16-4 #175 | `5:-4,3:-3,4:-3,2:+2,1:-2,5:-4,1:+6,2:-7,5:+6,4:+7,1:-2,5:-8,4:+8,2:+3,1:+4,2:+6` |
+| V20 | pent | 18 | 6 (4) | +7 -8 +7 -3 +2 | 0 | ccw | cords | Rankine vortex, by hand. | Pent's showpiece: five swirls, four hidden | pentSwirl-18-4 #382 | `4:+2,0:-2,2:+2,4:+4,5:+2,2:-5,0:+2,5:-3,1:-6,5:+7,3:-8,1:-2,5:-8,4:-8,2:+4,1:-6,2:+8,5:+7` |
+| V21 | hex | 12 | 3 (2) | -4 +4 +4 | 3 | cw | isobars | The hub and the rim keep out of each other's way. | Hex opens easier; the hub and the swirl come off in either order | hexSwirl-12-3 #136 | `7:+4,1:-7,7:+4,3:+5,5:+2,0:+2,6:+4,4:-2,7:-4,0:-6,3:-8,6:-3` |
+| V22 | hex | 14 | 4 (2) | -8 -2 -5 | 2 | cw | ephemeris | Seven rods and a rim. Same rule. | Hex, three swirls | hexSwirl-14-3 #67 | `3:-3,2:+6,4:+2,7:-5,1:-8,7:-2,3:-5,1:-4,4:+7,0:+8,6:+7,7:-8,3:-2,1:-3` |
+| V23 | hex | 16 | 4 (1) | +4 -6 -7 -7 | 1 | ccw | isobars | Bathtub vortex, either hemisphere. | Four swirls | hexSwirl-16-4 #54 | `1:+4,0:-5,7:-7,5:-8,2:-4,4:+3,3:+3,0:+6,7:-7,5:+8,4:-5,7:-6,3:+8,5:+2,7:+4,6:-5` |
+| V24 | hex | 18 | 5 (3) | -4 +3 +2 -6 | 1 | cw | cords | Forced core, free edge. | Four swirls, three hidden | hexSwirl-18-3 #23 | `2:-4,6:+2,7:-6,5:+2,7:+2,2:+5,7:+3,6:-6,3:-3,4:+5,1:+7,3:-8,5:+2,6:-8,2:+8,4:-2,7:-4,2:+6` |
+| V25 | hex | 20 | 6 (2) | +6 -5 -6 -8 -4 | 0 | ccw | isobars | Spin-down takes longer. | Five swirls | hexSwirl-20-4 #54 | `1:+4,6:-2,7:-4,3:-7,7:-8,5:+3,6:+5,0:+8,7:-6,5:+3,3:+3,7:-5,5:-8,2:+3,1:+5,2:+8,3:-7,1:+4,2:-8,7:+6` |
+| V26 | hex | 22 | 7 (3) | -8 +7 -6 -3 +7 | 3 | cw | cords | Stir the stirrer. | Five swirls, three hidden | hexSwirl-22-6 #311 | `6:-4,3:-4,5:+5,0:+6,7:+7,5:+8,3:-2,6:-4,7:-3,1:-3,7:-6,6:+8,3:+2,7:+7,6:-8,4:+4,2:+3,3:+6,7:-8,0:-8,2:-3,5:-3` |
+| V27 | hex | 24 | 8 (2) | +8 -4 -8 -3 -2 -6 | 1 | ccw | isobars | The vortex, unstirred. | The finale: 24 stirs, six swirls | hexSwirl-24-5 #375 | `4:+3,1:-2,7:-6,1:-3,7:-2,0:-4,2:+6,1:+4,6:+5,1:+7,0:-8,6:+4,7:-3,0:+6,5:-7,3:+3,7:-8,0:+6,1:+3,7:-4,1:-7,3:-3,7:+8,5:-8` |
 
 **Swirl and seized knobs together: a separate proposal, not in the set.** Vortex has no seized knob: seizing is
-maelstrom's lesson, and it comes after. Both together already work (the grab, both lessons, every cue variant's "both"
+maelstrom's lesson, and it comes after. Both together already work (the grab, both lessons, the `rim-both*` and `breath-both`
 shots, and the solver's plays empty a real `Game` with a knob seized on every vortex level). Two options:
 - **A. Maelstrom's last few levels add the swirl** (say M25–M27 on `hexSwirl`, the hub and a ring knob or two seized):
   the tier that teaches the tank's turn ends by combining it with vortex's control, which the player already knows.
@@ -1247,20 +1254,39 @@ shots, and the solver's plays empty a real `Game` with a knob seized on every vo
 - **B. Leave both for charybdis**, the tier past maelstrom, as its new skill.
 Claude recommended **B for now**: maelstrom's set has just been rebuilt and playtested (PR #17), and A would reopen it
 before vortex has had one playtest. **Jack's call (2026-10-25): B, charybdis**, with a rule: dragging the tank's edge
-always swirls the tank. Claude's reading, not yet confirmed by Jack, is that the "both" grab's two bands give way to one
+always swirls the tank. Claude's reading, which Jack confirmed in round 4 (R1), is that the "both" grab's two bands give way to one
 gesture there (see "The charybdis rule" under round 3). A is set aside (R10).
 
 **What the tier needs before it's final.**
 - **Jack's playtest** of the 27 levels on the phone; the titles are drafts.
-- **Its picture family.** Jack's call (2026-10-25, V6): a family of its own, not built. Until then whirlpool's live
-  pictures, on Claude's call: the step up comes from the rule, as for
-  maelstrom's twins. The swirl's shear at the edge reads strongly on glass, chainmail and marbling in the shots;
-  coral and neurons with the swirl were not checked beyond `shots/vortex*.png`. A family of its own (as maelstrom's
-  twins), or plughole's grid, whose "up" would show the swirl's turn of the core, are the alternatives.
+- **Its picture family.** Built and merged 2026-10-25 (PR #28): isobars, ephemeris and cords (Jack, V6 and P1), in
+  the table above. Open, each a recommendation and not decided:
+  - **Which levels get which picture** (Claude's recommendation; Jack can veto it). Isobars V1, V7, V10, V14, V19,
+    V21, V23, V25, V27 (2–24 stirs); ephemeris V2, V4, V6, V8, V11, V13, V15, V17, V22 (3–14 stirs); cords V3, V5,
+    V9, V12, V16, V18, V20, V24, V26 (4–22 stirs). The rule: nine each, no two neighbours alike, V1–V3 one of each,
+    isobars open each layout and take the finale (Jack's favourite solved, and the cheapest to draw, 2 entries), the
+    ephemeris only to 14 stirs (it dims to a filigree at depth; `testVortexTable` enforces it), cords the rest (they
+    go grey-brown at depth). A small search picked the table that keeps the ephemeris, then cords, as shallow as
+    those rules allow. Shots `vortex-family-*`, laid out by `scripts/vortex-family-sheet.py`.
+  - **The sandbox's picture cycle leaves out vortex's family** (`Picture.next` skips every live picture without a
+    twin). Claude's recommendation: add the family to the cycle; not decided.
+  Not a call: the ephemeris's orbits may overlap the orbit pictures planned for charybdis.
 - **Its sound bed** (the `sound` branch has a bed per tier; vortex has none).
-- **The rim's swirl cue** (above): knob picked, its ticks ruled out, a new cue being pitched.
-- **Tri and eye** (V3, still open): whether they read with a swirl is Jack's call from `shots/swirl-tri.png`, `shots/swirl-eye.png` and
-  V7–V13. Each block drops out whole (V7–V9, V10–V13) and the slots move to pent and hex.
+- **The rim's swirl cue** (above): breath (C1), built and merged 2026-10-25 (PR #30). Calls the PR made for Jack, each
+  Claude's recommendation as built and not decided:
+  - **The wait after a move is 10 s, not 1.5 s.** The first slosh of a level comes 1.5 s after the tank is the
+    player's; after any lift the next waits 10 s, then one every 12 s, as in the pitch, so a move is never answered
+    by a slosh. "1.5 s after the tank comes to rest" (C1) could also mean after every move.
+  - **Reduce Motion means no breath at all**, as the menu drops its stir under Reduce Motion. Until the first swirl,
+    the swirl's lesson arc still names the control.
+  - **The slosh peaks near 8°, not 12°.** Jack's answer to C1 said 12°. The pitch's film used the same curve (12°
+    damped by e^-t), so on the PR's reading the 8° peak (8.3°, checked) is what Jack saw and chose, and it kept that. An
+    amplitude of about 17.3° would give a true 12° peak.
+  - **The swirl's lesson arc keeps its dark stroke**, today's default; V2 was never answered.
+  - **The swirl's count dashes follow the knob rule**, 14 pt inside the disc, where before they kept clear of the
+    ticks.
+  - **An undo doesn't restart the rest**: the breath carries on over the changed stack.
+- ~~**Tri and eye** (V3)~~: answered in round 4, a swirl on all five layouts, the 27 levels as built.
 - **Known gap**: a sandbox launched on a swirl layout through `UNSTIR_LAYOUT` crashes on the layout button (harness
   only).
 - **Not measured**: the tank-sized stir's GPU cost on the phone (performance pass), narrow phones (everything was shot on
