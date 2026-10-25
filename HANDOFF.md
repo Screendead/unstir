@@ -850,6 +850,9 @@ names and product ids, and Complete's promise to older owners.
     clock with 35F9.1, and whether reading `kern.monotonicclock` needs a reason (the open question in "Where things
     stand"); then the privacy label.
    Merged 2026-10-25 (PR #20).
+   With analytics (branch `analytics`) the manifest also declares product interaction, coarse location and purchase
+   history (the `purchased` event and the snapshot's packs owned), each unlinked, not tracking, for analytics; the
+   App Store privacy label must say the same.
 53. The age-rating questionnaire.
 54. The store page: screenshots and a preview leading with the free game, then the packs, each pack labelled as a paid
     add-on, captioned for muted playback.
