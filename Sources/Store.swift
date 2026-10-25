@@ -97,6 +97,7 @@ final class Store {
             switch try await product.purchase() {
             case .success(let result):
                 guard case .verified(let t) = result else { return ledger.record(id, .failed) }
+                // Not in `apply`, which also sees a reinstall's restore: only a purchase made here counts.
                 if t.revocationDate == nil { Analytics.shared.purchased(t.productID) }
                 await apply(result)
             case .pending: ledger.record(id, .pending)
