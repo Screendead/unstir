@@ -142,9 +142,10 @@ struct Harness {
         default: tier.levels[n - 1]
         }
         #if DEBUG
-        // UNSTIR_PACK=lens: that pack's level UNSTIR_LEVEL, a placeholder until the pack has levels.
+        // UNSTIR_PACK=lens: that pack's level UNSTIR_LEVEL, a placeholder past the levels it has.
         if let pack = env["UNSTIR_PACK"].flatMap(Pack.init(rawValue:)) {
-            level = pack.placeholder(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1))
+            let number = max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1)
+            level = pack.levels.indices.contains(number - 1) ? pack.levels[number - 1] : pack.placeholder(number)
         }
         #endif
         let picture = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:))

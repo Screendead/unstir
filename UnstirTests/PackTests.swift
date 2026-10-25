@@ -32,6 +32,7 @@ final class PackTests: XCTestCase {
                 XCTAssertEqual(level.pack, pack)
                 XCTAssertEqual(level.id, pack.id(i + 1))
                 XCTAssertEqual(pack.number(of: level.id), i + 1)
+                XCTAssertTrue(level.keepsProgress, level.id)
             }
         }
     }
