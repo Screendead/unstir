@@ -6,12 +6,15 @@ import XCTest
 final class PackTests: XCTestCase {
     /// Bests are stored under level ids and purchases under product ids, so a rename loses a player's progress or what
     /// they paid for. Every string here is a literal on purpose: change one only with a migration.
-    func testStoredIdsAndProductIdsNeverChange() {
-        XCTAssertEqual(Tier.allCases.map(\.rawValue), ["plughole", "whirlpool", "maelstrom"])
-        XCTAssertEqual(Tier.allCases.map(\.prefix), ["L", "N", "M"])
-        for (tier, prefix) in zip(Tier.allCases, ["L", "N", "M"]) {
+    func testStoredIdsAndProductIdsNeverChange() throws {
+        // Vortex's is pinned ahead of its tier, so the pin holds whichever of the two lands first.
+        let prefixes = ["plughole": "L", "whirlpool": "N", "vortex": "V", "maelstrom": "M"]
+        for tier in Tier.allCases {
+            let prefix = try XCTUnwrap(prefixes[tier.rawValue], "\(tier.rawValue) has no pinned prefix")
+            XCTAssertEqual(tier.prefix, prefix)
             XCTAssertEqual(tier.levels.map(\.id), (1...27).map { "\(prefix)\($0)" })
         }
+        XCTAssertTrue(Set(["plughole", "whirlpool", "maelstrom"]).isSubset(of: Tier.allCases.map(\.rawValue)))
         XCTAssertEqual(Level.daily(DateComponents(calendar: Calendar(identifier: .gregorian), year: 2026, month: 10,
                                                   day: 25).date!).id, "daily-20261025")
         XCTAssertEqual(Level.endless(Run(seed: 1)).id, "endless")
