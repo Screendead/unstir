@@ -1312,10 +1312,13 @@ final class UnstirTests: XCTestCase {
     }
 
     /// Against the design table. Coral reads only to 6 stirs and neurons to 14. The sandbox cycles every picture but
-    /// the twins.
+    /// the twins, vortex's after whirlpool's, and steps from a twin to the picture after its sibling.
     func testWhirlpoolPictures() {
-        XCTAssertEqual(Array(sequence(first: Picture.grid, next: \.next).prefix(9)),
-                       [.grid, .sunset, .city, .glass, .chainmail, .coral, .neurons, .marbling, .grid])
+        XCTAssertEqual(Array(sequence(first: Picture.grid, next: \.next).prefix(12)),
+                       [.grid, .sunset, .city, .glass, .chainmail, .coral, .neurons, .marbling, .isobars, .ephemeris,
+                        .cords, .grid])
+        XCTAssertEqual(Picture.coralTwin.next, .neurons)
+        XCTAssertEqual(Picture.marblingTwin.next, .isobars)
         let table: [(Picture, [Int])] = [(.glass, [1, 9, 14, 19, 23, 26, 27]), (.chainmail, [3, 10, 13, 18, 21, 24]),
                                          (.coral, [2, 5, 8, 16]), (.neurons, [4, 7, 11, 17, 20]), (.marbling, [6, 12, 15, 22, 25])]
         var want = [Picture?](repeating: nil, count: 27)
