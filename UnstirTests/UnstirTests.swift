@@ -1186,8 +1186,8 @@ final class UnstirTests: XCTestCase {
     }
 
     /// Against vortex's provisional table: quad, tri, eye, pent, then hex, each with its swirl; the swirl in every
-    /// scramble, hidden stirs and swirls climbing within each layout, no knob seized, par the entry count; whirlpool's
-    /// pictures (never a twin, which is maelstrom's), no two neighbours alike, coral only to 6 stirs and neurons to 14,
+    /// scramble, hidden stirs and swirls climbing within each layout, no knob seized, par the entry count; its own
+    /// family, nine levels each, no two neighbours alike, the first three one of each, the ephemeris only to 14 stirs,
     /// and each tank four taps as dealt. That par is the optimum is `SolverTests`' to check.
     func testVortexTable() {
         let levels = Level.vortex
@@ -1201,18 +1201,19 @@ final class UnstirTests: XCTestCase {
                        [0, 0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 3, 4, 2, 3, 3, 4, 4, 5, 6, 3, 4, 4, 5, 6, 7, 8])
         XCTAssertEqual(levels.map { level in level.scramble.filter { $0.rod == level.layout.swirl }.count },
                        [1, 1, 1, 2, 2, 3, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 4, 4, 5, 3, 3, 4, 4, 5, 5, 6])
-        XCTAssertEqual(levels.map(\.picture),
-                       [.glass, .coral, .chainmail, .coral, .neurons, .marbling, .glass, .coral, .chainmail, .glass,
-                        .neurons, .marbling, .chainmail, .glass, .neurons, .chainmail, .marbling, .neurons, .chainmail,
-                        .marbling, .glass, .chainmail, .marbling, .chainmail, .glass, .marbling, .glass])
+        let table: [(Picture, [Int])] = [(.isobars, [1, 7, 10, 14, 19, 21, 23, 25, 27]),
+                                         (.ephemeris, [2, 4, 6, 8, 11, 13, 15, 17, 22]),
+                                         (.cords, [3, 5, 9, 12, 16, 18, 20, 24, 26])]
+        var want = [Picture?](repeating: nil, count: 27)
+        for (picture, numbers) in table { for n in numbers { want[n - 1] = picture } }
+        XCTAssertEqual(levels.map(\.picture), want)
+        XCTAssertEqual(Set(levels.prefix(3).map(\.picture)).count, 3)
         for (a, b) in zip(levels, levels.dropFirst()) { XCTAssertNotEqual(a.picture, b.picture, b.id) }
         for level in levels {
             XCTAssertNil(level.fixedPar, level.id)
             XCTAssertEqual(level.par, level.scramble.count, level.id)
             XCTAssertTrue(level.seized.isEmpty, level.id)
-            XCTAssertNotEqual(level.picture.twin, level.picture, level.id)
-            if level.picture == .coral { XCTAssertLessThanOrEqual(level.scramble.count, 6, level.id) }
-            if level.picture == .neurons { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
+            if level.picture == .ephemeris { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
             XCTAssertLessThanOrEqual(level.scramble.count, Tank.fourTaps - level.picture.fillEntries, level.id)
         }
         XCTAssertEqual(Set(levels.map(\.scramble)).count, levels.count)
@@ -1270,9 +1271,10 @@ final class UnstirTests: XCTestCase {
     /// all repeating with the twin's minute; the glass's and the static web's twins can only check their delays.
     func testLiveDataRepeats() {
         typealias Builder = (Int, Double) -> [Float]
-        let builders: [(Picture, Builder)] = [(.chainmail, Picture.links), (.coral, Picture.kernels), (.marbling, Picture.drops)]
+        let builders: [(Picture, Builder)] = [(.chainmail, Picture.links), (.coral, Picture.kernels), (.marbling, Picture.drops),
+                                              (.ephemeris, { Picture.ephemeris(seed: $0, t: $1, period: Picture.ephemeris.period) })]
         let delays: Builder = { Picture.delays(t: $1) }
-        let twins: [(Picture, Builder)] = builders.map { picture, data in (picture.twin, { data($0, $1) + delays($0, $1) }) }
+        let twins: [(Picture, Builder)] = builders.dropLast().map { picture, data in (picture.twin, { data($0, $1) + delays($0, $1) }) }
             + [(.glassTwin, delays), (.neuronsTwin, delays)]
         for (picture, data) in builders + twins {
             for seed in [0, 12, 27] {

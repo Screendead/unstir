@@ -152,6 +152,18 @@ vortex-result.png  Vortex level 05 result card after a harness solve: two wasted
 vortex-plughole-01.png  Vortex level 01 with its full scramble on plughole's grid, the swirl never stirred.
 vortex-plughole-14.png  Vortex level 14 with its full scramble on plughole's grid, the swirl never stirred.
 vortex-plughole-27.png  Vortex level 27 with its full scramble on plughole's grid, the swirl never stirred.
+vortex-family-isobars-clean.png  Vortex's isobars, clean: the sandbox's square with a swirl, nothing stirred.
+vortex-family-ephemeris-clean.png  Vortex's ephemeris, clean: the sandbox's square with a swirl, nothing stirred.
+vortex-family-cords-clean.png  Vortex's cords, clean: the sandbox's square with a swirl, nothing stirred.
+vortex-family-isobars-01.png  Vortex level 01 with its full scramble on its own isobars, its lesson learnt.
+vortex-family-isobars-14.png  Vortex level 14 with its full scramble on its own isobars, its lesson learnt.
+vortex-family-isobars-27.png  Vortex level 27 with its full scramble on its own isobars, its lesson learnt.
+vortex-family-ephemeris-02.png  Vortex level 02 with its full scramble on its own ephemeris, its lesson learnt.
+vortex-family-ephemeris-13.png  Vortex level 13 with its full scramble on its own ephemeris, its lesson learnt.
+vortex-family-ephemeris-22.png  Vortex level 22 with its full scramble on its own ephemeris, its lesson learnt.
+vortex-family-cords-03.png  Vortex level 03 with its full scramble on its own cords, its lesson learnt.
+vortex-family-cords-16.png  Vortex level 16 with its full scramble on its own cords, its lesson learnt.
+vortex-family-cords-26.png  Vortex level 26 with its full scramble on its own cords, its lesson learnt.
 rim-knob-swirl.png  Rim cue knob: vortex 01, the swirl alone, its lesson learnt.
 rim-knob-swirl-lesson.png  Rim cue knob: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass.
 rim-knob-swirl-held.png  Rim cue knob: vortex 01, the swirl held from the rim, 1.5 steps clockwise.

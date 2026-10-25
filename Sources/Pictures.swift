@@ -11,6 +11,8 @@ enum Picture: String, CaseIterable {
     case glass, chainmail, coral, neurons, marbling
     /// Maelstrom's twins of those, on the same data.
     case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
+    /// Vortex's own, drawn live the same way.
+    case isobars, ephemeris, cords
 
     var isLive: Bool { ![.grid, .sunset, .city].contains(self) }
 
@@ -36,6 +38,8 @@ enum Picture: String, CaseIterable {
         case .neurons: 12
         // A twin's heartbeat delays loop once a minute, and every sibling's period divides that.
         case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: 60
+        // Every planet goes round a whole number of times in it.
+        case .ephemeris: 30
         default: 10
         }
     }
@@ -49,13 +53,16 @@ enum Picture: String, CaseIterable {
         case .glass, .chainmail, .coral, .marblingTwin: 4
         case .neurons, .glassTwin, .chainmailTwin, .coralTwin: 5
         case .neuronsTwin: 6
+        case .isobars: 2
+        case .cords: 3
+        case .ephemeris: 6
         }
     }
 
     /// The sandbox's: plughole's pictures and whirlpool's, not the twins.
     var next: Picture {
         let all = Self.allCases.filter { !$0.isLive || $0.twin != $0 }
-        return all[(all.firstIndex(of: sibling)! + 1) % all.count]
+        return all[((all.firstIndex(of: sibling) ?? -1) + 1) % all.count]
     }
 
     /// A live picture's floats for its shader, `clock` seconds in; nil until `prepare` has built them. A twin's are its
@@ -69,6 +76,9 @@ enum Picture: String, CaseIterable {
         case .coral: Self.kernels(seed: seed, t: t)
         case .neurons: Self.web(seed: seed)
         case .marbling: Self.drops(seed: seed, t: t)
+        case .isobars: Self.gradients(seed: seed, salt: 0x464C_4F57, count: 2)
+        case .ephemeris: Self.ephemeris(seed: seed, t: t, period: period)
+        case .cords: Self.gradients(seed: seed, salt: 0x4C4F_4F4D, count: 2)
         default: nil
         }
         return sibling == self ? data : data.map { $0 + Self.delays(t: t) }
