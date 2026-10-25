@@ -478,6 +478,7 @@ struct LevelView: View {
     /// The picture has landed and struck.
     @State private var struck = false
     private let brimDemo: Bool
+    private let shareSheet: Bool
     let onExit: () -> Void
     let onNext: (Level) -> Void
 
@@ -530,6 +531,7 @@ struct LevelView: View {
         autoplay = harness?.autoplay ?? false
         moves = harness?.moves
         brimDemo = harness?.brimDemo ?? false
+        shareSheet = harness?.shareSheet ?? false
         bench = harness?.bench ?? false
         frozenWave = harness?.wave
         frozenClock = harness?.clock
@@ -656,6 +658,12 @@ struct LevelView: View {
             let left = Brim.card - (Date.now.timeIntervalSinceReferenceDate - last.time)
             guard (try? await Task.sleep(for: .seconds(max(left, 0)))) != nil else { return }
             withAnimation(.easeIn(duration: 0.3)) { showResult = true }
+        }
+        .task {
+            guard shareSheet, let text = game.shareText, (try? await Task.sleep(for: .seconds(1))) != nil,
+                  let root = UIApplication.shared.connectedScenes.compactMap({ ($0 as? UIWindowScene)?.keyWindow }).first?
+                      .rootViewController else { return }
+            root.present(UIActivityViewController(activityItems: [text], applicationActivities: nil), animated: false)
         }
         .task {
             // Past the picture's first render, so the bake does not land in the numbers.

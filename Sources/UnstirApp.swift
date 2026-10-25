@@ -50,6 +50,9 @@ struct Harness {
     let moves: [Twist]?
     /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
     let brimDemo: Bool
+    /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card. ShareLink can't be opened without a tap,
+    /// so this presents the UIKit sheet it wraps, with the same text.
+    let shareSheet: Bool
     let bench: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
@@ -147,6 +150,7 @@ struct Harness {
             }
         }
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
+        shareSheet = env["UNSTIR_SHARESHEET"] == "1"
     }
 }
 
