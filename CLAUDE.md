@@ -68,15 +68,20 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ```
   To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds skip
   unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
-  `xcodebuild` to run them too (about a minute more).
+  `xcodebuild` to run them too (about a minute and a half more).
 - StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
-- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`) prints the
-  optimum (and what untwisting alone takes when a detour beats it), the park rule's fewest and most moves over every
-  way its ties go under each parking, fair or over by the most, the no-lookahead count and its planning gap, then the
-  optimal moves, one commit or turn each. It compiles `build/solve` with `swiftc` when a source has changed, from
-  Twist.swift, Solver.swift and `SplitMix64` cut out of Levels.swift, so that struct stays top-level there.
+- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`; a swirl
+  layout by its name, `quadSwirl`, its swirl never seized) prints the optimum (and what untwisting alone takes when a
+  detour beats it), the park rule's fewest and most moves over every way its ties go under each parking, fair or over
+  by the most, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It
+  compiles `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut
+  out of Levels.swift, so that struct stays top-level there.
+- Vortex's levels: `scripts/vortex-levels/pools.sh <dir>` deals seeded scrambles on the swirl layouts with the frozen
+  generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
+  Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py
+  <dir>` picks the table from them by its slots. `scripts/vortex-levels.sh check <layout> <scramble>` measures one row.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
@@ -102,7 +107,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   against the identity to half a pixel. The stack names the glass's own rods (slots), so a turn of the tank never
   touches it: `Layout.order`/`tankStep` are the layout's rotational symmetry (hex's hub held still), which sets each
   rod's twist exactly on a rod of the same size, and `slot(of:at:)`/`knob(over:at:)` map a physical knob to the slot
-  under it at a tank position.
+  under it at a tank position. Each layout has a swirl variant (`Layout.swirls`, `quadSwirl` and so on, for vortex):
+  its base's rods, then one more (`Layout.swirl`) of radius 1 at the centre, so the glass's edge, where its profile
+  reaches 0, never moves. It stacks and merges like any rod, decided by sampling as it overlaps every rod, and every
+  turn of the tank leaves it on itself. On hex it commutes exactly with the hub, which shares its centre. Its core
+  holds every other rod's, so the core-clearance rule exempts it. `Layout.allCases` leaves the swirls out, so the
+  frozen generator never deals one and the sandbox never cycles to one.
 - **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
   the stack's inverses to sample the picture. The tests only reach the Swift copy (`Tank.profile`/`Tank.twist`), so
   change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
@@ -138,19 +148,21 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stir is area-preserving, so it becomes a thin sliver) and averaging up to 48 taps along it in linear light, so
   lines finer than a pixel mix instead of glittering. `SpillWords` stamps "spilled." over the tank, whose caps stay,
   and the card follows at `Brim.card`. The tests reach only the Swift side.
-- **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, maelstrom (vortex will go between the last
-  two, charybdis past maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
+- **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom (charybdis will go past
+  maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best at par
   (`Tier.isOpen`: `over == 0`). `Tier.store` keeps only an open tier, so a locked one opened to look at
   never comes back on launch, and `Tier.stored` falls back to the highest open tier below one that has closed.
   `Best.unlocked`, the developer unlock, opens every tier and level; a launch with `UNSTIR_UNLOCK=1` sets it and one
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
-  (`L1`, `N1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
+  (`L1`, `N1`, `V1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
   its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
   loses it unless the stored keys are remapped. Plughole has 27 hand-written
   levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
-  deeper variants on live pictures that follow a table, and maelstrom 27 of its own (quad, then pent, then hex) on
-  the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
+  deeper variants on live pictures that follow a table, vortex 27 provisional swirl levels (quad, tri, eye, pent,
+  then hex) on whirlpool's pictures, no knob seized, so the tank never turns and par is the entry count, which the
+  solver's optimum matches and plain untwisting reaches (`testVortexParIsTheOptimum`, slow), and maelstrom 27 of its
+  own (quad, then pent, then hex) on the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
   solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
   rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
   seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
@@ -185,11 +197,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where knobs are seized, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
-  a finger holds where it lands, never by its motion: the rim first where knobs are seized, else the disc whose centre
-  is nearest in its own radius, overlapped or not; a seized winner is `.seized`, which holds nothing. The held rod
+  a finger holds where it lands, never by its motion: the rim first, else the disc whose centre is nearest in its own
+  radius, overlapped or not, never the swirl; a seized winner is `.seized`, which holds nothing. The rim, from
+  `LevelView.rim` (0.93) out over the bezel, turns the tank where knobs are seized and holds the swirl where the layout
+  has one. Where it has both, the swirl holds the glass's own edge from `swirlBand` (0.86) and the tank the bezel and
+  beyond. The swirl has no knob: its dial is drawn just inside the bezel, as the tank's is, and its red ring on the
+  bezel. The held rod
   lights at once with a light tap, so the rod that lights is the rod that turns: its knob's ticks and a ring on the dark
   band round it, never past it, and one 0.5 pt hairline round its disc, dimmer until letting go would commit. On lift
-  the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red, and one that cancels
+  the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red (the swirl's, a hairline on its cue's ring inside the glass), and one that cancels
   sends a magenta hairline out from the knob. Every line a turn draws over the picture is a hairline but the count's
   dashes, 2 pt, and none has a glow or a dark band under it: the pictures are fine lines themselves, and whatever a
   heavy line covers the player cannot read. The opening replay's ring is not a hairline. A
@@ -197,7 +213,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the rim's lesson: `RimLesson`, a two-headed amber arc just outside the bezel at the top and a ghost finger rocking
   along the rim under it, shown on any level with seized knobs until the player's first turn of the tank commits. That
   turn sets `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does.
-  The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. A drag shows its own
+  The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. A level with a swirl
+  shows its own lesson the same way until the player's first stir of the swirl commits (`Game.swirled`,
+  `Best.swirled`): a thin cyan arc at the bottom on the swirl's ticks inside the glass's edge, seated on a dark stroke
+  and without the tank arc's glow since it lies on the picture, and its ghost finger there, in the middle of the
+  swirl's grab. So on a level with both, each lesson points at its own ring: the tank's at the bezel, the swirl's
+  inside the glass. It goes while the swirl is held. The lessons go once learnt, so `RimCues` keeps saying what the
+  rim does, three ways while Jack compares them (`RimCue`, picked by `UNSTIR_RIM`, `knob` without it): `knob` gives
+  the swirl a knob's ticks inside the glass's edge, each on a dark stroke, leaning as a shear leans them and further
+  the way a held turn goes, a longer pointer at twelve, all turning with its own turning, and a dark groove between
+  them and the bezel; it knurls the bezel wherever knobs are seized, faintly amber at rest, the knurl turning with the
+  glass; `bands` outlines the swirl's grab in cyan inside the glass and anodises the bezel amber, the lessons' own
+  colours; `glyphs` sets a spiral and a turning ring with a seized knob's slash over twelve, each once its lesson has
+  gone. Each lights while its control is held. A drag shows its own
   count: a long mark on the disc's hairline (on one just inside the rim, for the tank) where its stir began, a dash per
   step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
@@ -236,7 +264,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   raw clock; the neural web is static per seed, built once off the main actor.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
-  even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`) or tank position (`UNSTIR_TANK`), and can hold a
+  even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
@@ -245,13 +273,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   best or started flag (`Level.keepsProgress`), and
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
   in place of StoreKit's, never stored. `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form, and `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
+  tank's (rod -1) in `parse`'s rod:steps form; with `UNSTIR_FINGER=1` it rests two seconds, then plays at a hand's
+  pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
+  round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
   lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too).
-  `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
+  `UNSTIR_RIM=knob|bands|glyphs` picks the rim's standing cue. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
   pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
-  takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag: it reads as never
-  turned unless `UNSTIR_TANKTURNED=1`, and whatever the launch turns lasts only that launch, so shot order never
+  takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag or the swirl's: they
+  read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch, so shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
   tiers through the same calls a finger makes. `UNSTIR_UNLOCK` alone is the developer unlock above; alongside any other
@@ -262,7 +292,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   moves that empty the stack: a breadth-first search over (stack, tank position) that untwists whole seams and turns
   the tank, then a search for anything shorter with detours (a push or partial merge can build a word that holds a
   disc still, and save a move). It tries only the detours its class comment lists, so it is a bounded search, not a
-  proof; `exhaustive` checks it on small cases. The park rule (`park`) untwists the newest whole seam a working knob
+  proof; `exhaustive` checks it on small cases. Its pruning reads which rods interact (`interacts`: discs that overlap
+  and maps that fail to commute, judged by the maps), so a swirl interacts with every rod but hex's hub, which shares
+  its centre; whether a word commutes is still `Layout.commutes`'s call. The swirl is a slot like any other, held at
+  every position and never seized. With no knob seized, as on every vortex level, the tank never turns, so every
+  player untwists and the planning gap is 0: there the solver's job is the optimum, and whether a detour beats
+  untwisting. The park rule (`park`) untwists the newest whole seam a working knob
   reaches; when none is, it turns to a position where one is, choosing by where the seized knobs land (`Parking`:
   `.fewest` or `.all`), then the nearest. The rule has no tie-break (Jack's call): `parkTies` gives its fewest and
   most moves over every way its ties go, and `park` breaks them by `Tie` (`.clockwise` or `.lowest`) only to name one

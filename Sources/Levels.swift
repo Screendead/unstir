@@ -15,12 +15,13 @@ struct Run: Hashable, Sendable {
 /// The difficulty ladder, easiest first: declaration order is the ladder, so a new tier goes in where it belongs. The
 /// raw value is stored as the menu's choice, so it never changes.
 enum Tier: String, CaseIterable {
-    case plughole, whirlpool, maelstrom
+    case plughole, whirlpool, vortex, maelstrom
 
     var name: String {
         switch self {
         case .plughole: "Plughole"
         case .whirlpool: "Whirlpool"
+        case .vortex: "Vortex"
         case .maelstrom: "Maelstrom"
         }
     }
@@ -32,6 +33,7 @@ enum Tier: String, CaseIterable {
         switch self {
         case .plughole: "L"
         case .whirlpool: "N"
+        case .vortex: "V"
         case .maelstrom: "M"
         }
     }
@@ -46,6 +48,7 @@ enum Tier: String, CaseIterable {
         switch self {
         case .plughole: Level.plughole
         case .whirlpool: Level.whirlpool
+        case .vortex: Level.vortex
         case .maelstrom: Level.maelstrom
         }
     }
@@ -170,6 +173,42 @@ struct Level: Hashable, Sendable {
                         2: .coral, 5: .coral, 8: .coral, 16: .coral, 4: .neurons, 7: .neurons, 11: .neurons, 17: .neurons,
                         20: .neurons, 6: .marbling, 12: .marbling, 15: .marbling, 22: .marbling, 25: .marbling][i + 1] ?? .glass,
               layout: l.0, scramble: .parse(l.1, in: l.0))
+    }
+
+    /// The swirl: a rod the size of the tank, held from the rim. PROVISIONAL (2026-10-24), for Jack's playtest: quad
+    /// teaches it, then tri, eye, pent and hex, each opening easier than the last one's showpiece. No knob seizes, so
+    /// par is the entry count, the solver's optimum (SolverTests). Picked by scripts/vortex-levels/pick.py.
+    static let vortex: [Level] = ([
+        (.quadSwirl, "0:+3,4:+4", Picture.glass, "The rim is a rod too.", "Turn the glass's edge. Everything inside it stirs."),
+        (.quadSwirl, "0:+4,4:-7,3:-8", .coral, "Something stirred after the rim.", ""),
+        (.quadSwirl, "4:+4,3:-5,2:-8,0:+2", .chainmail, "The rim went first.", ""),
+        (.quadSwirl, "3:-2,4:+3,1:-5,0:+6,4:+7", .coral, "Twice round the rim.", ""),
+        (.quadSwirl, "0:-4,4:-7,1:+8,3:+3,4:-4,0:+5", .neurons, "Quiet at the edge.", ""),
+        (.quadSwirl, "4:-4,3:+6,4:-7,3:+8,1:+4,2:-8,0:-3,4:-2", .marbling, "Taylor turned the outer cylinder too.", ""),
+        (.triSwirl, "1:+4,3:-5,0:-8,1:-4,3:+6", .glass, "Three rods, and the rim makes four.", ""),
+        (.triSwirl, "2:-4,3:-5,2:-6,0:+8,2:+8,3:-5", .coral, "Every disc reaches the rim.", ""),
+        (.triSwirl, "3:+2,2:+3,1:-6,0:+7,2:-8,3:-6,1:-8,3:-6", .chainmail, "The rim carries every seam with it.", ""),
+        (.eyeSwirl, "0:-2,4:+4,2:+6,0:-4,4:+7,0:-8,2:-6", .glass, "Big rods, small rods, one rim.", ""),
+        (.eyeSwirl, "0:-2,4:+4,2:+7,4:+6,0:+7,3:-8,2:-2,4:-3", .neurons, "Free vortex, forced vortex.", ""),
+        (.eyeSwirl, "3:-4,4:-4,1:+7,3:-8,2:-3,4:+7,0:+8,3:+4,4:+5,0:+6", .marbling, "Read the edge before the middle.", ""),
+        (.eyeSwirl, "4:+4,1:+6,3:-7,4:+8,0:+5,2:-8,3:-2,1:-8,4:-6,1:-8,4:-5,2:+6", .chainmail, "Small on big, inside the biggest.", ""),
+        (.pentSwirl, "2:-3,5:+4,4:-5,3:-7,5:+4,4:-5,3:+4,4:-6", .glass, "Five rods and a rim. Still no middle.", ""),
+        (.pentSwirl, "3:+4,2:-7,1:+2,5:-3,4:+5,5:-5,4:+7,5:+8,3:-8,1:-2", .neurons, "Angular momentum, handed back.", ""),
+        (.pentSwirl, "4:+2,0:-2,5:-2,4:+3,3:+5,0:-3,5:-6,0:+7,5:-8,4:-2,1:-2,3:+5", .chainmail, "Under the rim, over the rim.", ""),
+        (.pentSwirl, "2:+3,5:-3,3:-2,0:-2,5:+4,1:-7,0:+3,5:-4,3:+6,2:-7,5:+8,3:-5,2:+7", .marbling, "Kelvin would like his circulation back.", ""),
+        (.pentSwirl, "2:+4,5:-6,3:+8,2:-8,0:-4,4:-5,5:+8,4:-4,5:-5,4:+8,2:-4,1:+7,2:-8,5:-4", .neurons, "Quiet at the edge, loud in the middle.", ""),
+        (.pentSwirl, "5:-4,3:-3,4:-3,2:+2,1:-2,5:-4,1:+6,2:-7,5:+6,4:+7,1:-2,5:-8,4:+8,2:+3,1:+4,2:+6", .chainmail, "Ekman layers, politely ignored.", ""),
+        (.pentSwirl, "4:+2,0:-2,2:+2,4:+4,5:+2,2:-5,0:+2,5:-3,1:-6,5:+7,3:-8,1:-2,5:-8,4:-8,2:+4,1:-6,2:+8,5:+7", .marbling, "Rankine vortex, by hand.", ""),
+        (.hexSwirl, "7:+4,1:-7,7:+4,3:+5,5:+2,0:+2,6:+4,4:-2,7:-4,0:-6,3:-8,6:-3", .glass, "The hub and the rim keep out of each other's way.", ""),
+        (.hexSwirl, "3:-3,2:+6,4:+2,7:-5,1:-8,7:-2,3:-5,1:-4,4:+7,0:+8,6:+7,7:-8,3:-2,1:-3", .chainmail, "Seven rods and a rim. Same rule.", ""),
+        (.hexSwirl, "1:+4,0:-5,7:-7,5:-8,2:-4,4:+3,3:+3,0:+6,7:-7,5:+8,4:-5,7:-6,3:+8,5:+2,7:+4,6:-5", .marbling, "Bathtub vortex, either hemisphere.", ""),
+        (.hexSwirl, "2:-4,6:+2,7:-6,5:+2,7:+2,2:+5,7:+3,6:-6,3:-3,4:+5,1:+7,3:-8,5:+2,6:-8,2:+8,4:-2,7:-4,2:+6", .chainmail, "Forced core, free edge.", ""),
+        (.hexSwirl, "1:+4,6:-2,7:-4,3:-7,7:-8,5:+3,6:+5,0:+8,7:-6,5:+3,3:+3,7:-5,5:-8,2:+3,1:+5,2:+8,3:-7,1:+4,2:-8,7:+6", .glass, "Spin-down takes longer.", ""),
+        (.hexSwirl, "6:-4,3:-4,5:+5,0:+6,7:+7,5:+8,3:-2,6:-4,7:-3,1:-3,7:-6,6:+8,3:+2,7:+7,6:-8,4:+4,2:+3,3:+6,7:-8,0:-8,2:-3,5:-3", .marbling, "Stir the stirrer.", ""),
+        (.hexSwirl, "4:+3,1:-2,7:-6,1:-3,7:-2,0:-4,2:+6,1:+4,6:+5,1:+7,0:-8,6:+4,7:-3,0:+6,5:-7,3:+3,7:-8,0:+6,1:+3,7:-4,1:-7,3:-3,7:+8,5:-8", .glass, "The vortex, unstirred.", ""),
+    ] as [(Layout, String, Picture, String, String)]).enumerated().map { i, l in
+        Level(id: Tier.vortex.prefix + "\(i + 1)", tier: .vortex, label: String(format: "%02d", i + 1), title: l.3,
+              note: l.4, picture: l.2, layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
     /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum, and the park rule
@@ -460,6 +499,12 @@ struct Best: Codable {
     static var tankTurned: Bool {
         get { UserDefaults.standard.bool(forKey: "tank.turned") }
         set { UserDefaults.standard.set(newValue, forKey: "tank.turned") }
+    }
+
+    /// Set once a stir of the swirl commits, on any level: the rim then stops showing how.
+    static var swirled: Bool {
+        get { UserDefaults.standard.bool(forKey: "swirled") }
+        set { UserDefaults.standard.set(newValue, forKey: "swirled") }
     }
 
     /// Endless: most tanks cleared in one run.

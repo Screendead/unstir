@@ -434,6 +434,15 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack, [])
     }
 
+    /// A sandbox the harness opened on a swirl layout steps on from its base, as no swirl is in `allCases`.
+    @MainActor func testSandboxStepsOffASwirlLayout() {
+        var level = Level.sandbox
+        level.layout = .quadSwirl
+        let game = Game(level: level)
+        game.nextLayout()
+        XCTAssertEqual(game.level.layout, .eye)
+    }
+
     /// A level that counts, opened on `today` against the stored bank.
     @MainActor private func opened(on today: String, _ level: Level = Level.plughole[0]) -> Game {
         let game = Game(level: level)
@@ -736,6 +745,113 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// Each swirl layout is its base's rods unchanged, then one rod the size of the tank at its centre, which every
+    /// other overlaps; none is in `allCases`, so the frozen generator and the sandbox never see one.
+    func testSwirlLayouts() {
+        XCTAssertEqual(Layout.allCases, [.tri, .quad, .eye, .pent, .hex])
+        XCTAssertEqual(Layout.swirls.map(\.base), Layout.allCases)
+        for layout in Layout.allCases {
+            XCTAssertNil(layout.base)
+            XCTAssertNil(layout.swirl)
+            XCTAssertTrue(layout.rods.allSatisfy { $0.z < 1 }, "\(layout)")
+        }
+        for layout in Layout.swirls {
+            let base = layout.base!, rods = layout.rods
+            XCTAssertEqual(layout.swirl, base.rods.count)
+            XCTAssertEqual(Array(rods.dropLast()), base.rods, "\(layout)")
+            XCTAssertEqual(rods.last, SIMD3(0, 0, 1), "\(layout)")
+            XCTAssertEqual(layout.order, base.order)
+            XCTAssertEqual(Layout(rawValue: layout.rawValue), layout)
+            for k in base.rods.indices { XCTAssertTrue(layout.overlaps(k, layout.swirl!), "\(layout) \(k)") }
+        }
+    }
+
+    /// A swirl turns its rigid core by exactly its angle, shears the ring out to the glass's edge, and leaves the edge
+    /// itself, and everything past it, where it was, as the shader does: a turn of the swirl never moves the picture
+    /// against the bezel.
+    func testASwirlKeepsTheGlassEdgeStill() {
+        let swirl = Layout.quadSwirl.rods[Layout.quadSwirl.swirl!], a = 5 * Tank.step
+        for i in 0..<360 {
+            let t = Double(i) * .pi / 180, u = SIMD2(cos(t), sin(t))
+            XCTAssertLessThan(simd_distance(Tank.twist(u, rod: swirl, angle: a), u), 1e-12)
+            XCTAssertEqual(Tank.twist(1.2 * u, rod: swirl, angle: a), 1.2 * u)
+            XCTAssertLessThan(simd_distance(Tank.twist(0.999 * u, rod: swirl, angle: a), 0.999 * u), 1e-4)
+            XCTAssertLessThan(simd_distance(Tank.twist(0.5 * u, rod: swirl, angle: a), 0.5 * SIMD2(cos(t + a), sin(t + a))), 1e-12)
+            XCTAssertGreaterThan(simd_distance(Tank.twist(0.8 * u, rod: swirl, angle: a), 0.8 * u), 0.1)
+        }
+    }
+
+    /// The swirl stacks and merges like any rod: its own turns merge, and it and an off-centre rod never commute, so
+    /// either above the other pushes. On hex the hub shares its centre and both maps turn each radius rigidly, so they
+    /// commute exactly, and a turn of either merges through the other.
+    func testSwirlCommitRules() {
+        for layout in Layout.swirls {
+            let s = layout.swirl!
+            for k in layout.rods.indices where centre(layout, k) != .zero {
+                var stack = [Twist(rod: s, steps: 3), Twist(rod: k, steps: 2)]
+                XCTAssertEqual(stack.commit(rod: s, steps: -3, in: layout), .pushed, "\(layout) swirl under \(k)")
+                stack = [Twist(rod: k, steps: 2), Twist(rod: s, steps: 3)]
+                XCTAssertEqual(stack.commit(rod: k, steps: -2, in: layout), .pushed, "\(layout) \(k) under the swirl")
+                XCTAssertEqual(layout.removable(stack), [2], "\(layout) \(k)")
+            }
+            var own = [Twist(rod: 0, steps: 4), Twist(rod: s, steps: 3)]
+            XCTAssertEqual(own.commit(rod: s, steps: 2, in: layout), .reduced)
+            XCTAssertEqual(own, [Twist(rod: 0, steps: 4), Twist(rod: s, steps: 5)])
+            XCTAssertEqual(own.commit(rod: s, steps: -5, in: layout), .cancelled)
+            XCTAssertEqual(own.commit(rod: 0, steps: -4, in: layout), .cancelled)
+            XCTAssertTrue(own.isEmpty)
+        }
+        let s = Layout.hexSwirl.swirl!
+        XCTAssertTrue(Layout.hexSwirl.commutes([Twist(rod: 0, steps: 3), Twist(rod: s, steps: -4)], above: 0, rod: 0, steps: -3))
+        var stack = [Twist].parse("0:+3,\(s):-4", in: .hexSwirl)
+        XCTAssertEqual(stack.commit(rod: 0, steps: -3, in: .hexSwirl), .cancelled)
+        XCTAssertEqual(stack, [Twist(rod: s, steps: -4)])
+        stack = .parse("\(s):+2,0:-5,\(s):+3", in: .hexSwirl)
+        XCTAssertEqual(stack, [Twist(rod: s, steps: 5), Twist(rod: 0, steps: -5)])
+        XCTAssertEqual(Layout.hexSwirl.removable(stack), [0, 1])
+        XCTAssertTrue(Layout.hexSwirl.looksSolved([Twist(rod: s, steps: 5), Twist(rod: 0, steps: -5), Twist(rod: s, steps: -5),
+                                                   Twist(rod: 0, steps: 5)]))
+    }
+
+    /// The generator's scrambles on a swirl layout come off in any order the stack allows, the picture back exactly.
+    func testSwirlUndoInAnyLegalOrder() {
+        for layout in Layout.swirls {
+            for seed in 0..<30 as Range<UInt64> {
+                var rng = SplitMix64(state: seed)
+                let word = layout.scramble(depth: 8, inversions: 2, rng: &rng)
+                let points = (0..<20).map { _ in SIMD2(Double.random(in: -1...1), Double.random(in: -1...1)) }
+                var q = points.map { p in word.reduce(p) { Tank.twist($0, rod: layout.rods[$1.rod], angle: Double($1.steps) * Tank.step) } }
+                var stack = word
+                while let i = layout.removable(stack).randomElement() {
+                    let t = stack[i]
+                    XCTAssertEqual(stack.commit(rod: t.rod, steps: -t.steps, in: layout), .cancelled)
+                    q = q.map { Tank.twist($0, rod: layout.rods[t.rod], angle: -Double(t.steps) * Tank.step) }
+                }
+                XCTAssertTrue(stack.isEmpty, "\(layout) seed \(seed)")
+                for (a, b) in zip(q, points) { XCTAssertLessThan(simd_distance(a, b), 1e-9, "\(layout) seed \(seed)") }
+            }
+        }
+    }
+
+    /// On a turned tank the swirl stays the swirl: its knob is its slot at every position, so a turn of it lands on its
+    /// own entry wherever the glass stands, and a level with both a swirl and seized knobs plays through `Game`.
+    @MainActor func testTheSwirlTurnsWithTheTank() {
+        let s = Layout.quadSwirl.swirl!
+        let level = Level(id: "test-swirl", label: "", title: "", layout: .quadSwirl, scramble: .parse("1:+4,\(s):+3", in: .quadSwirl),
+                          seized: [1], fixedPar: 3)
+        let game = Game(level: level, tankTurned: true, swirled: true, bank: (10, nil))
+        game.turnTank(1)
+        XCTAssertEqual(game.slot(of: s), s)
+        XCTAssertEqual(game.reachable, Twist(rod: s, steps: -3))
+        game.commit(rod: s, steps: -3)
+        XCTAssertEqual(game.stack, [Twist(rod: 1, steps: 4)])
+        XCTAssertEqual(game.history, [Twist(rod: Game.tank, steps: 1), Twist(rod: s, steps: -3)])
+        XCTAssertEqual(game.reachable, Twist(rod: 2, steps: -4))
+        game.commit(rod: 2, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertEqual(game.moves, 3)
+    }
+
     /// Any undo-able twist, taken in any order, cancels; and the picture comes back exactly.
     func testUndoInAnyLegalOrder() {
         for layout in Layout.allCases {
@@ -783,8 +899,8 @@ final class UnstirTests: XCTestCase {
 
     /// The menu stores the raw value, and declaration order is the ladder.
     func testTiers() {
-        XCTAssertEqual(Tier.allCases.map(\.rawValue), ["plughole", "whirlpool", "maelstrom"])
-        XCTAssertEqual(Tier.allCases.map(\.below), [nil, .plughole, .whirlpool])
+        XCTAssertEqual(Tier.allCases.map(\.rawValue), ["plughole", "whirlpool", "vortex", "maelstrom"])
+        XCTAssertEqual(Tier.allCases.map(\.below), [nil, .plughole, .whirlpool, .vortex])
     }
 
     /// Plughole is always open. Each tier above opens exactly when every level of the tier just below has a best at or
@@ -792,22 +908,29 @@ final class UnstirTests: XCTestCase {
     func testTierGate() {
         var bests: [String: Best] = [:]
         func open(_ tier: Tier, unlocked: Bool = false) -> Bool { tier.isOpen(unlocked: unlocked) { bests[$0] } }
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false])
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, false])
         for level in Level.plughole.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.whirlpool))
         bests[Level.plughole.last!.id] = Best(over: 1, seconds: 30)
         XCTAssertFalse(open(.whirlpool))
         XCTAssertEqual(Tier.plughole.atPar { bests[$0] }, Array(repeating: true, count: 26) + [false])
         bests[Level.plughole.last!.id] = Best(over: 0, seconds: 30)
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false])
-        // A maelstrom best opens nothing below it, and the tier just below is the only one that counts.
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, true, false, false])
+        // A best opens nothing below it, and the tier just below is the only one that counts: whirlpool at par opens
+        // vortex and not maelstrom, and vortex at par opens maelstrom.
         for level in Level.maelstrom { bests[level.id] = Best(over: 0, seconds: 30) }
         XCTAssertFalse(open(.maelstrom))
         for level in Level.whirlpool { bests[level.id] = Best(over: 0, seconds: 30) }
         for level in Level.plughole { bests[level.id] = nil }
-        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true])
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, true, false])
+        for level in Level.vortex.dropLast() { bests[level.id] = Best(over: 0, seconds: 30) }
+        bests[Level.vortex.last!.id] = Best(over: 1, seconds: 30)
+        XCTAssertFalse(open(.maelstrom))
+        for level in Level.whirlpool { bests[level.id] = nil }
+        bests[Level.vortex.last!.id] = Best(over: 0, seconds: 30)
+        XCTAssertEqual(Tier.allCases.map { open($0) }, [true, false, false, true])
         bests = [:]
-        XCTAssertEqual(Tier.allCases.map { open($0, unlocked: true) }, [true, true, true])
+        XCTAssertEqual(Tier.allCases.map { open($0, unlocked: true) }, [true, true, true, true])
 
         let flag = Best.unlocked
         defer { Best.unlocked = flag }
@@ -964,6 +1087,53 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// The swirl is held from the rim alone: with no knob seized, past `LevelView.rim` and out over the bezel; with
+    /// knobs seized too, on the glass's own edge from `LevelView.swirlBand`, while the bezel and beyond turn the glass.
+    /// Inside that a finger holds the nearest knob's disc as on the swirl's base, never the swirl, and the centre of a
+    /// layout with no rod there holds nothing.
+    func testGrabHoldsTheSwirlFromTheRim() {
+        for layout in Layout.swirls {
+            let s = layout.swirl!, seized: Set = [1]
+            for i in 0..<72 {
+                let t = Double(i) * .pi / 36, u = SIMD2(cos(t), sin(t)), m = "\(layout) at \(i * 5)°"
+                for out in [0.94, 0.99, 1.0, 1.05, 1.15] { XCTAssertEqual(LevelView.grab(layout, seized: [], at: out * u), .rod(s), m) }
+                for out in [0.87, 0.93, 0.999] { XCTAssertEqual(LevelView.grab(layout, seized: seized, at: out * u), .rod(s), m) }
+                for out in [1.001, 1.02, 1.15] { XCTAssertEqual(LevelView.grab(layout, seized: seized, at: out * u), .rim, m) }
+                XCTAssertEqual(LevelView.grab(layout.base!, seized: seized, at: 0.95 * u), .rim, m)
+            }
+            for k in layout.base!.rods.indices {
+                let p = centre(layout, k) + SIMD2(0.05, 0.03)
+                XCTAssertEqual(LevelView.grab(layout, seized: [], at: p), .rod(k), "\(layout) \(k)")
+            }
+            XCTAssertEqual(LevelView.grab(layout, seized: [], at: SIMD2(0.2, 0.1)), LevelView.grab(layout.base!, seized: [], at: SIMD2(0.2, 0.1)))
+        }
+        XCTAssertEqual(LevelView.grab(.pentSwirl, seized: [], at: .zero), .nothing)
+        XCTAssertEqual(LevelView.grab(.quadSwirl, seized: [], at: .zero), .nothing)
+        XCTAssertEqual(LevelView.grab(.hexSwirl, seized: [], at: .zero), .rod(0))
+        XCTAssertEqual(LevelView.grab(.quadSwirl, seized: [1], at: centre(.quadSwirl, 1)), .seized(1))
+        XCTAssertLessThan(LevelView.rim, 1)
+        XCTAssertLessThan(LevelView.swirlBand, LevelView.rim)
+    }
+
+    /// Anywhere on a swirl layout, with or without seized knobs, a finger holds exactly what its distance out decides,
+    /// and inside the rim's bands what the base layout holds there.
+    func testGrabOnASwirlLayoutAnywhere() {
+        var rng = SplitMix64(state: 11)
+        for _ in 0..<20000 {
+            let layout = Layout.swirls[rng.below(Layout.swirls.count)], base = layout.base!
+            let seized = Set(base.rods.indices.filter { _ in rng.below(3) == 0 })
+            let p = SIMD2(Double.random(in: -1.2...1.2, using: &rng), Double.random(in: -1.2...1.2, using: &rng))
+            let out = simd_length(p), grab = LevelView.grab(layout, seized: seized, at: p)
+            let message = "\(layout) seized \(seized.sorted()) at \(p)"
+            if seized.isEmpty {
+                XCTAssertEqual(grab, out > LevelView.rim ? .rod(layout.swirl!) : LevelView.grab(base, seized: [], at: p), message)
+            } else {
+                XCTAssertEqual(grab, out >= 1 ? .rim : out > LevelView.swirlBand ? .rod(layout.swirl!) : LevelView.grab(base, seized: seized, at: p),
+                               message)
+            }
+        }
+    }
+
     /// A drag's path for the log keeps the landing, its first few points close together, then a point a gap apart, and
     /// the latest; a finger held still leaves the landing and the lift. A long drag stays within the cap, its first few
     /// points and its latest kept, and its worst line stays short.
@@ -997,7 +1167,7 @@ final class UnstirTests: XCTestCase {
     /// Whirlpool's prefix predates its name and stays, so the rename kept what was played; maelstrom's set replaced
     /// nightmare+'s, so its prefix moved off N+ and no old best lands on a new level.
     func testLevelIdsMatchTheirTier() {
-        XCTAssertEqual(Tier.allCases.map(\.prefix), ["L", "N", "M"])
+        XCTAssertEqual(Tier.allCases.map(\.prefix), ["L", "N", "V", "M"])
         for tier in Tier.allCases {
             XCTAssertEqual(tier.levels.map(\.id), tier.levels.indices.map { "\(tier.prefix)\($0 + 1)" })
             XCTAssertTrue(tier.levels.allSatisfy { $0.tier == tier }, tier.rawValue)
@@ -1009,10 +1179,45 @@ final class UnstirTests: XCTestCase {
     /// Maelstrom's levels are its own, on live pictures, under ids of their own so a best or start from another tier
     /// never opens one or spends its first try.
     func testMaelstromKeepsItsOwnProgress() {
-        let others = Level.plughole + Level.whirlpool
+        let others = Level.plughole + Level.whirlpool + Level.vortex
         XCTAssertTrue(Set(Level.maelstrom.map(\.id)).isDisjoint(with: others.map(\.id)))
         XCTAssertTrue(Set(Level.maelstrom.map(\.scramble)).isDisjoint(with: others.map(\.scramble)))
-        XCTAssertTrue((Level.whirlpool + Level.maelstrom).allSatisfy(\.picture.isLive))
+        XCTAssertTrue((Level.whirlpool + Level.vortex + Level.maelstrom).allSatisfy(\.picture.isLive))
+    }
+
+    /// Against vortex's provisional table: quad, tri, eye, pent, then hex, each with its swirl; the swirl in every
+    /// scramble, hidden stirs and swirls climbing within each layout, no knob seized, par the entry count; whirlpool's
+    /// pictures (never a twin, which is maelstrom's), no two neighbours alike, coral only to 6 stirs and neurons to 14,
+    /// and each tank four taps as dealt. That par is the optimum is `SolverTests`' to check.
+    func testVortexTable() {
+        let levels = Level.vortex
+        XCTAssertEqual(levels.count, 27)
+        XCTAssertEqual(levels.map(\.layout), Array(repeating: .quadSwirl, count: 6) + Array(repeating: .triSwirl, count: 3)
+                       + Array(repeating: .eyeSwirl, count: 4) + Array(repeating: .pentSwirl, count: 7)
+                       + Array(repeating: .hexSwirl, count: 7))
+        XCTAssertEqual(levels.map(\.scramble.count),
+                       [2, 3, 4, 5, 6, 8, 5, 6, 8, 7, 8, 10, 12, 8, 10, 12, 13, 14, 16, 18, 12, 14, 16, 18, 20, 22, 24])
+        XCTAssertEqual(levels.map { $0.layout.inversions($0.scramble) },
+                       [0, 0, 0, 0, 1, 2, 1, 2, 2, 2, 2, 3, 4, 2, 3, 3, 4, 4, 5, 6, 3, 4, 4, 5, 6, 7, 8])
+        XCTAssertEqual(levels.map { level in level.scramble.filter { $0.rod == level.layout.swirl }.count },
+                       [1, 1, 1, 2, 2, 3, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 4, 4, 5, 3, 3, 4, 4, 5, 5, 6])
+        XCTAssertEqual(levels.map(\.picture),
+                       [.glass, .coral, .chainmail, .coral, .neurons, .marbling, .glass, .coral, .chainmail, .glass,
+                        .neurons, .marbling, .chainmail, .glass, .neurons, .chainmail, .marbling, .neurons, .chainmail,
+                        .marbling, .glass, .chainmail, .marbling, .chainmail, .glass, .marbling, .glass])
+        for (a, b) in zip(levels, levels.dropFirst()) { XCTAssertNotEqual(a.picture, b.picture, b.id) }
+        for level in levels {
+            XCTAssertNil(level.fixedPar, level.id)
+            XCTAssertEqual(level.par, level.scramble.count, level.id)
+            XCTAssertTrue(level.seized.isEmpty, level.id)
+            XCTAssertNotEqual(level.picture.twin, level.picture, level.id)
+            if level.picture == .coral { XCTAssertLessThanOrEqual(level.scramble.count, 6, level.id) }
+            if level.picture == .neurons { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
+            XCTAssertLessThanOrEqual(level.scramble.count, Tank.fourTaps - level.picture.fillEntries, level.id)
+        }
+        XCTAssertEqual(Set(levels.map(\.scramble)).count, levels.count)
+        XCTAssertFalse(levels[0].note.isEmpty)
+        XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
     }
 
     /// Against the design table: quad, then pent, then hex, one or two seized knobs, never the hub; the twin of each
@@ -1185,10 +1390,10 @@ final class UnstirTests: XCTestCase {
         SIMD2(p.x * cos(angle) - p.y * sin(angle), p.x * sin(angle) + p.y * cos(angle))
     }
 
-    /// Each step of the tank sets every rod's centre down on a rod of the same size, the hub on itself, and `order` steps
-    /// come back round.
+    /// Each step of the tank sets every rod's centre down on a rod of the same size, the hub and a swirl on themselves,
+    /// and `order` steps come back round.
     func testTankStepsLandRodsOnRodsOfTheSameSize() {
-        for layout in Layout.allCases {
+        for layout in Layout.allCases + Layout.swirls {
             let rods = layout.rods
             XCTAssertEqual(Double(layout.order) * layout.tankStep, 2 * .pi, accuracy: 1e-12)
             for f in -layout.order...(2 * layout.order) {
@@ -1203,6 +1408,13 @@ final class UnstirTests: XCTestCase {
                 }
             }
             XCTAssertNotEqual(layout.slot(of: 1, at: 1), 1, "\(layout) does not turn")
+            if let s = layout.swirl {
+                XCTAssertTrue((-layout.order...layout.order).allSatisfy { layout.slot(of: s, at: $0) == s }, "\(layout)")
+                for f in 0..<layout.order {
+                    XCTAssertEqual(layout.base!.rods.indices.map { layout.slot(of: $0, at: f) },
+                                   layout.base!.rods.indices.map { layout.base!.slot(of: $0, at: f) }, "\(layout) at \(f)")
+                }
+            }
         }
         XCTAssertTrue((0..<6).allSatisfy { Layout.hex.slot(of: 0, at: $0) == 0 })
     }
@@ -1210,7 +1422,7 @@ final class UnstirTests: XCTestCase {
     /// Turning knob k on the turned glass does exactly what turning its slot does to the picture underneath: the glass's
     /// turn carries the slot's twist onto the knob. Every layout, position and rod, on the points merges are judged on.
     func testTurnedTankConjugatesTwists() {
-        for layout in Layout.allCases {
+        for layout in Layout.allCases + Layout.swirls {
             let rods = layout.rods
             for f in 0..<layout.order {
                 let angle = Double(f) * layout.tankStep
@@ -1349,6 +1561,8 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.reachable, Twist(rod: 1, steps: -4))
         for level in Tier.allCases.flatMap(\.levels) {
             XCTAssertTrue(level.seized.isSubset(of: level.layout.rods.indices), level.id)
+            // A touch would hold a seized swirl, and its commit would be refused without a word.
+            if let swirl = level.layout.swirl { XCTAssertFalse(level.seized.contains(swirl), level.id) }
             XCTAssertLessThanOrEqual(level.seized.count, 2, level.id)
             if level.layout == .hex { XCTAssertFalse(level.seized.contains(0), level.id) }
             if level.note.contains("seize") { XCTAssertFalse(level.seized.isEmpty, level.id) }
@@ -1376,6 +1590,31 @@ final class UnstirTests: XCTestCase {
         harnessed.turnTank(1)
         XCTAssertTrue(harnessed.tankTurned)
         XCTAssertFalse(Best.tankTurned)
+    }
+
+    /// The rim shows how to stir with the swirl until the player has, on any level: a stir of the swirl that commits
+    /// sets the flag, and a stir of any other rod or a turn of the tank does not. A flag the harness sets is never stored.
+    @MainActor func testStirringWithTheSwirlSetsTheFlag() {
+        let saved = Best.swirled
+        defer { Best.swirled = saved }
+        Best.swirled = false
+        let level = Level(id: "test-swirled", label: "", title: "", layout: .quadSwirl,
+                          scramble: [Twist(rod: 0, steps: 4), Twist(rod: 4, steps: 3)], seized: [1], fixedPar: 2)
+        let game = Game(level: level, tankTurned: true)
+        XCTAssertFalse(game.swirled)
+        game.commit(rod: 2, steps: 2)
+        game.turnTank(1)
+        XCTAssertFalse(game.swirled)
+        XCTAssertFalse(Best.swirled)
+        game.commit(rod: 4, steps: -3)
+        XCTAssertTrue(game.swirled)
+        XCTAssertTrue(Best.swirled)
+
+        Best.swirled = false
+        let harnessed = Game(level: level, swirled: false)
+        harnessed.commit(rod: 4, steps: -3)
+        XCTAssertTrue(harnessed.swirled)
+        XCTAssertFalse(Best.swirled)
     }
 
     /// Par is one move per entry wherever no knob is seized; a level with seized knobs sets its own, counting its

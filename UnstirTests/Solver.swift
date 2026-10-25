@@ -49,9 +49,10 @@ struct Play {
 /// interned and what is found about each is cached, so every solve on one solver shares the work.
 ///
 /// The optimum mostly untwists whole seams. While every stack keeps the rods-only rule (an entry is whole exactly when
-/// no entry above it overlaps its rod, and untwisting it only takes it out), only rods that miss each other commute,
-/// and a push or a partial merge uncovers nothing and leaves a seam that needs a stir of its own, so untwisting is
-/// fastest. The real maps break the rule: a word can hold a disc still, like [0:-3, 3:-7, 0:+3] over rod 1 on quad, and
+/// no entry above it interacts with its rod, and untwisting it only takes it out), only rods that never interact
+/// commute, and a push or a partial merge uncovers nothing and leaves a seam that needs a stir of its own, so
+/// untwisting is fastest. Two rods interact when their discs overlap and their maps fail to commute: hex's hub and its
+/// swirl share a centre, so they overlap and commute, and the swirl interacts with every other rod. The real maps break the rule: a word can hold a disc still, like [0:-3, 3:-7, 0:+3] over rod 1 on quad, and
 /// a push that builds one can save moves. So the optimum also tries detours from every stack that keeps the rule: a
 /// commit of up to 11 steps either way or of an entry's exact inverse, where the stack it leaves breaks the rule,
 /// joined by untwists of the same slot before and after it; and a commit turned straight back that leaves a different
@@ -126,12 +127,12 @@ final class Solver {
         return found
     }
 
-    /// Whether the stack keeps the rods-only rule: its whole entries are those with no entry above overlapping their
-    /// rod, and untwisting one only takes it out.
+    /// Whether the stack keeps the rods-only rule: its whole entries are those with no entry above interacting with
+    /// their rod, and untwisting one only takes it out.
     private func rodsOnly(_ stack: [Twist]) -> Bool {
         stack.indices.allSatisfy { i in
             let t = stack[i]
-            if stack[(i + 1)...].contains(where: { overlap[$0.rod][t.rod] }) {
+            if stack[(i + 1)...].contains(where: { interacts[$0.rod][t.rod] }) {
                 // Not whole. `parts` usually shows that before the landing has checked every newer entry of the rod.
                 return parts(stack, above: i, rod: t.rod, steps: -t.steps)
                     || landing(stack, rod: t.rod, steps: -t.steps) != i
@@ -169,7 +170,7 @@ final class Solver {
     /// as `Layout.same` does, with a looser tolerance than `Layout.commutes`, so any word it parts, `Layout.commutes`
     /// would.
     private func parts(_ stack: [Twist], above i: Int, rod: Int, steps: Int) -> Bool {
-        guard let q = stack[(i + 1)...].first(where: { overlap[$0.rod][rod] })?.rod else { return false }
+        guard let q = stack[(i + 1)...].first(where: { interacts[$0.rod][rod] })?.rod else { return false }
         let rods = layout.rods, turn = Double(steps) * Tank.step
         func above(_ p: SIMD2<Double>) -> SIMD2<Double> {
             stack[(i + 1)...].reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
@@ -182,6 +183,24 @@ final class Solver {
 
     private lazy var overlap = layout.rods.indices.map { i in layout.rods.indices.map { layout.overlaps(i, $0) } }
 
+    /// interacts[i][j]: rods i and j overlap and fail to commute, as `Layout.commutes` judges a pair of turns, at some
+    /// pair of the counts below. Only the search's rule reads it, so a pair that parted only at other counts would cost
+    /// the search a detour, never a wrong count: `commutes` still asks the game's own rule of every overlap.
+    lazy var interacts: [[Bool]] = {
+        let rods = layout.rods.indices, counts = [1, 2, 5, 11]
+        var found = rods.map { i in rods.map { $0 == i } }
+        for i in rods {
+            for j in rods where j > i && overlap[i][j] {
+                found[i][j] = !counts.allSatisfy { a in counts.allSatisfy { b in
+                    let (s, t) = (Twist(rod: i, steps: a), Twist(rod: j, steps: b))
+                    return layout.same([s, t], [t, s], at: Tank.samples, within: 1e-6)
+                } }
+                found[j][i] = found[i][j]
+            }
+        }
+        return found
+    }()
+
     /// lens[i][j]: `Tank.samples` inside both rods' discs.
     private lazy var lens: [[[SIMD2<Double>]]] = layout.rods.map { a in
         layout.rods.map { b in
@@ -192,12 +211,12 @@ final class Solver {
         }
     }
 
-    /// `Array.commit` as rods-only overlap has it: the rod's newest entry takes the turn when nothing above it overlaps
-    /// the rod, and nothing above it moves.
+    /// `Array.commit` as the rods-only rule has it: the rod's newest entry takes the turn when nothing above it
+    /// interacts with the rod, and nothing above it moves.
     private func rodsOnlyCommit(_ stack: [Twist], slot: Int, steps: Int) -> [Twist] {
         var stack = stack
         if let i = stack.lastIndex(where: { $0.rod == slot }),
-           !stack[(i + 1)...].contains(where: { overlap[$0.rod][slot] }) {
+           !stack[(i + 1)...].contains(where: { interacts[$0.rod][slot] }) {
             stack[i].steps += steps
             if stack[i].steps == 0 { stack.remove(at: i) }
         } else {

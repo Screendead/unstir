@@ -4,7 +4,7 @@ import SwiftUI
 
 extension Level {
     /// Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
-    /// red through magenta to violet, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
+    /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
     /// magenta.
     var colour: Color {
         guard let n = Int(label) else { return sandbox ? .magenta : run == nil ? .amber : .neonCyan }
@@ -12,6 +12,7 @@ extension Level {
         return switch tier {
         case .plughole: oklch(0.639, 0.34, 190 + 240 * t)
         case .whirlpool: oklch(0.62, 0.3, 23 - 82 * t)
+        case .vortex: oklch(0.66, 0.24, 300 - 110 * t)
         case .maelstrom: oklch(0.64, 0.3, 24 + 76 * t)
         }
     }
@@ -22,6 +23,7 @@ extension Tier {
         let colours: [Color] = switch self {
         case .plughole: [.neonCyan, .magenta, .amber]
         case .whirlpool: [.blood, .magenta, .violet]
+        case .vortex: [.violet, Color(0x2F6BFF), Color(0x00D2C0)]
         case .maelstrom: [Color(0xFF1A2A), Color(0xD4200C), Color(0xB89A00)]
         }
         return LinearGradient(colors: colours, startPoint: .leading, endPoint: .trailing)
@@ -31,6 +33,7 @@ extension Tier {
         switch self {
         case .plughole: .magenta
         case .whirlpool: .blood
+        case .vortex: Color(0x3D5BFF)
         case .maelstrom: Color(0xE0101C)
         }
     }
@@ -352,7 +355,7 @@ struct MenuView: View {
         }
     }
 
-    /// Plughole, swiped to whirlpool, swiped to maelstrom, then plughole tapped in the strip.
+    /// Plughole, swiped to whirlpool, swiped to vortex, then plughole tapped in the strip.
     private func tour() async {
         func pause(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
         // A finger's leftward swipe below the middle of the list, at 60 Hz, easing out, then let go.
@@ -444,6 +447,7 @@ private struct LevelRow: View {
 
     var body: some View {
         let result = Best.load(level.id)
+        let rods = level.layout.base.map { "\($0.rods.count) rods + swirl" } ?? "\(level.layout.rods.count) rods"
         return Button { pick(level) } label: {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 // A locked number stays bright enough that the hue walk still reads on first launch.
@@ -452,7 +456,7 @@ private struct LevelRow: View {
                     .frame(width: 34, alignment: .leading)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(level.title).font(.mono(14)).multilineTextAlignment(.leading)
-                    Text(detail ?? "\(level.layout.rods.count) rods \u{00B7} par \(level.par)").font(.mono(11)).opacity(0.32)
+                    Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.mono(11)).opacity(0.32)
                 }
                 .opacity(enabled ? 1 : 0.38)
                 Spacer(minLength: 8)
