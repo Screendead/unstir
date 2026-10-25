@@ -858,7 +858,13 @@ names and product ids, and Complete's promise to older owners.
 57. TestFlight with 20 to 50 strangers and sandbox purchases. What it measures (shelf and card taps, free-taste
     completion and sandbox purchases per pack, beside day-2 return) waits on Jack's call on how to read testers' play.
    Jack's calls (2026-10-25, round 6): an analytics library plus a send-log button, behind one consent question at
-   first launch. Which library is the next pitch.
+   first launch. Jack's call (2026-10-25, round 7): **Aptabase** on its EU region (Claude's recommendation, over
+   TelemetryDeck, PostHog Cloud EU and Mixpanel; Firebase, Amplitude, Countly, Matomo and a self-hosted PostHog ruled
+   out). It sends no player ID, so the app derives return itself: it sends `installed` once and `returned` with the day
+   number once on the first launch of each later day, and once-per-install events for each pack's card view, finished
+   taste and purchase; `level` events carry the level, the outcome, moves, undos and resets. Every figure is a count over
+   the players who said Yes. Free up to 20,000 events a month, US$10 for 200,000, and it pauses at the cap rather than
+   billing over. Apple's App Analytics is a free cross-check. The research is on the local `archive/scratch` branch.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
