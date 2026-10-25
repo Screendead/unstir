@@ -65,6 +65,12 @@ enum Pack: String, CaseIterable, Sendable {
     #endif
 }
 
+extension Level {
+    /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
+    /// never leaves progress under an id a real level will take.
+    var keepsProgress: Bool { pack.map { p in p.levels.contains { $0.id == id } } ?? true }
+}
+
 enum Build {
     static let release: Bool = {
         #if DEBUG

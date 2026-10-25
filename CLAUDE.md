@@ -241,7 +241,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
-  (`UNSTIR_BENCH`). In Debug, `UNSTIR_PACK=lens` opens that pack's placeholder level `UNSTIR_LEVEL`, and
+  (`UNSTIR_BENCH`). In Debug, `UNSTIR_PACK=lens` opens that pack's placeholder level `UNSTIR_LEVEL`, which keeps no
+  best or started flag (`Level.keepsProgress`), and
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
   in place of StoreKit's, never stored. `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
   tank's (rod -1) in `parse`'s rod:steps form, and `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
