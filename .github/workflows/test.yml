@@ -18,11 +18,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - name: Pick simulator
-        id: sim
-        run: |
-          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
-          echo "udid=$udid" >> "$GITHUB_OUTPUT"
       - name: Install XcodeGen
         run: |
           curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
@@ -46,15 +41,7 @@ jobs:
           key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**') }}
           restore-keys: store-${{ steps.xcode.outputs.build }}-
       # Signed ad hoc by the script, so the StoreKit tests run too.
-      - name: Build
-        env:
-          UNSTIR_SIM: ${{ steps.sim.outputs.udid }}
-          UNSTIR_ACTION: build-for-testing
-        run: scripts/test-store.sh -quiet COMPILER_INDEX_STORE_ENABLE=NO
-      # xcodebuild boots the simulator itself. Booted alongside the build, it slowed the build eightfold; booted by
-      # simctl just before, the StoreKit tests timed out.
       - name: Test
-        env:
-          UNSTIR_SIM: ${{ steps.sim.outputs.udid }}
-          UNSTIR_ACTION: test-without-building
-        run: scripts/test-store.sh
+        run: |
+          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
+          UNSTIR_SIM=$udid scripts/test-store.sh -quiet COMPILER_INDEX_STORE_ENABLE=NO
