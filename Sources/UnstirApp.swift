@@ -66,7 +66,8 @@ struct Harness {
     let bench: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
-    /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change.
+    /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change. It also stills
+    /// the swirl's breath, so a shot on a layout with a swirl that sets neither this nor UNSTIR_BREATH may catch a slosh.
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool

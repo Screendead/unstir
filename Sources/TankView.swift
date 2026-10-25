@@ -1454,7 +1454,8 @@ struct Breath: Equatable {
     static let length = 3.2
     static let lead = 0.1
 
-    /// The swirl's turn `p` seconds into a slosh: a swing of 12 degrees, damped as it goes, 0 at both ends.
+    /// The swirl's turn `p` seconds into a slosh: a swing of 12 degrees damped as it goes, so it peaks near 8 (as in the
+    /// pitch's film), 0 at both ends.
     static func slosh(_ p: Double) -> Double {
         p <= 0 || p >= length ? 0 : 12 * .pi / 180 * sin(2 * .pi * p / (length / 2)) * exp(-p)
     }
