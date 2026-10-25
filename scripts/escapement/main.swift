@@ -220,6 +220,7 @@ func report(_ p: Problem, span: Int, quick: Bool) {
             proof = "none shorter over turns of up to \(span) steps (\(Int(Date().timeIntervalSince(start) * 1000)) ms)"
         }
         let n = full.count(p.stack, last: nil, left: par)
+        for l in full.lines(p.stack, last: nil, left: par, keep: 30) where n > 1 { print("    " + l.map(\.description).joined(separator: " ")) }
         print("lines at \(par) over turns of up to \(span): \(n)\(n >= full.cap ? "+" : "")")
         let keys = Set(p.allMoves(p.stack, after: nil, span: span).filter { m in
             p.play(p.stack, m).map { full.count($0, last: m, left: par - 1) > 0 } ?? false
