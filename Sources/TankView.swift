@@ -670,7 +670,10 @@ struct LevelView: View {
         }
         .onAppear {
             let rules = game.level.run.map { "tank \($0.tank) brim \($0.brim)" } ?? "par \(game.par)"
-            Log.write("level \(game.level.id) opens, \(rules) \(game.stack)")
+            let pack = game.level.pack.map { p in
+                " \(p.rawValue) \(Store.shared.state(p)), \(Store.shared.access(game.level).map { "\($0)" } ?? "unnumbered")"
+            } ?? ""
+            Log.write("level \(game.level.id) opens, \(rules)\(pack) \(game.stack)")
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
             if let today { game.refill(today: today) } else { game.refill() }
             // Where there is no opening, onChange's initial call may run before the refill.

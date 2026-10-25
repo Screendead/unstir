@@ -57,4 +57,41 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(Tier.whirlpool.isOpen(unlocked: false, best(plughole)))
         XCTAssertEqual(Tier.stored(open: { $0.isOpen(unlocked: false, best(packIds)) }), .plughole)
     }
+
+    /// UNSTIR_OWNED and UNSTIR_STORE never reach a Release build.
+    func testHarnessPurchasesAreDebugOnly() {
+        let env = ["UNSTIR_OWNED": "lens,complete", "UNSTIR_STORE": "escapement:pending"]
+        XCTAssertNil(Harness.purchases(env, release: true))
+        XCTAssertNil(Harness.purchases(["UNSTIR_PACK": "lens"], release: false))
+        XCTAssertEqual(Harness.purchases(["UNSTIR_OWNED": "lens"], release: false)?.owned, [.lens])
+        XCTAssertEqual(Harness.purchases(["UNSTIR_OWNED": "complete"], release: false)?.owned, Set(Pack.allCases))
+    }
+
+    func testHarnessSetsEachPurchaseState() throws {
+        let ledger = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "first-stir:pending,lens:failed,escapement:revoked"],
+                                                     release: false))
+        XCTAssertEqual(Pack.allCases.map(ledger.state), [.pending, .failed, .revoked])
+        let complete = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "complete:revoked", "UNSTIR_OWNED": "lens"],
+                                                       release: false))
+        XCTAssertEqual(Pack.allCases.map(complete.state), [.revoked, .owned, .revoked])
+        XCTAssertEqual(Harness.purchases(["UNSTIR_STORE": "lens:unowned"], release: false)?.state(.lens), .unowned)
+    }
+
+    /// UNSTIR_OWNED lasts the launch: nothing it grants is written anywhere.
+    @MainActor func testHarnessOwnedIsNeverStored() throws {
+        let before = UserDefaults.standard.dictionaryRepresentation().filter { $0.key != "unlock" }
+        let h = Harness(["UNSTIR_OWNED": "complete", "UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "5"])
+        let store = Store()
+        store.pretend(try XCTUnwrap(h.purchases))
+        XCTAssertEqual(h.level.id, "lens-5")
+        XCTAssertEqual(h.level.pack, .lens)
+        XCTAssertEqual(store.access(h.level), .owned)
+        XCTAssertEqual(store.state(.escapement), .owned)
+        XCTAssertEqual(store.ledger.owned, [], "the harness's packs are not StoreKit's")
+        let after = UserDefaults.standard.dictionaryRepresentation().filter { $0.key != "unlock" }
+        XCTAssertEqual(Set(after.keys), Set(before.keys))
+        XCTAssertEqual(Store().access(h.level), .needsCard)
+        XCTAssertEqual(Store().access(Harness(["UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "3"]).level), .taste)
+        Best.unlocked = false
+    }
 }
