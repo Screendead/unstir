@@ -55,10 +55,15 @@ final class ShareTests: XCTestCase {
     @MainActor func testMarksFollowThePlay() {
         let game = Game(level: Level(id: "daily-20261101", label: "", title: "", layout: .tri, scramble: .parse("2:+3,0:-5", in: .tri)),
                         tankTurned: true, bank: (10, nil))
-        game.commit(rod: 0, steps: +2)
         game.commit(rod: 2, steps: +1)
-        XCTAssertEqual(game.marks, [.merged, .pushed])
+        XCTAssertEqual(game.marks, [.pushed])
         game.undo()
+        XCTAssertEqual(game.marks, [])
+        game.commit(rod: 0, steps: +2)
+        // Turned back to nothing, rod 1's stir leaves no mark and shuts rod 0's, so its next turn is a stir of its own.
+        game.commit(rod: 1, steps: +1)
+        game.commit(rod: 1, steps: -1)
+        XCTAssertEqual(game.marks, [.merged])
         game.commit(rod: 0, steps: +3)
         game.commit(rod: 2, steps: -3)
         XCTAssertTrue(game.solved)
