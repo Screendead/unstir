@@ -14,7 +14,8 @@ enum Tank {
     static let step = Double.pi / 6
     static let coreRadius = 0.07
     /// Inside plateau * radius a disc turns rigidly; all shear lives in the ring out to its edge, so each twist leaves
-    /// one seam and the newest seam is the unbroken one. Every layout keeps its rigid cores clear of each other at 0.6.
+    /// one seam and the newest seam is the unbroken one. Every layout keeps its rigid cores clear of each other at 0.6,
+    /// but for a swirl's, which holds every other rod's.
     static let plateau = 0.6
     /// Pushes past this are refused: every pixel runs each shader tap through every entry, plus the live twist.
     static let maxStack = 36
@@ -60,6 +61,28 @@ enum Tank {
 /// Rod arrangements; `eye` is the mixed-sizes one. Every disc stays inside the tank, so nothing is stirred through the glass.
 enum Layout: String, CaseIterable {
     case tri, quad, eye, pent, hex
+    /// Each layout above with a swirl: one more rod, last, the size of the tank and at its centre. Its disc ends on the
+    /// glass's edge, which stays put, and holds every other rod's.
+    case triSwirl, quadSwirl, eyeSwirl, pentSwirl, hexSwirl
+
+    /// The layouts without a swirl. The frozen generator never deals a swirl, and the sandbox cycles these.
+    static var allCases: [Layout] { [.tri, .quad, .eye, .pent, .hex] }
+    static let swirls: [Layout] = [.triSwirl, .quadSwirl, .eyeSwirl, .pentSwirl, .hexSwirl]
+
+    /// A swirl layout's rods but its swirl; nil for a layout without one.
+    var base: Layout? {
+        switch self {
+        case .tri, .quad, .eye, .pent, .hex: nil
+        case .triSwirl: .tri
+        case .quadSwirl: .quad
+        case .eyeSwirl: .eye
+        case .pentSwirl: .pent
+        case .hexSwirl: .hex
+        }
+    }
+
+    /// The rod the size of the tank, if the layout has one.
+    var swirl: Int? { base.map { $0.rods.count } }
 
     /// (x, y, disc radius) per rod.
     var rods: [SIMD3<Double>] { Layout.table[self]! }
@@ -71,17 +94,20 @@ enum Layout: String, CaseIterable {
                 return SIMD3(r * cos(a), r * sin(a), radius)
             }
         }
-        return [
+        var table: [Layout: [SIMD3<Double>]] = [
             .tri: ring(3, 0.42, 0.58),
             .quad: ring(4, 0.5, 0.48, from: -45),
             .eye: [SIMD3(-0.4, 0, 0.58), SIMD3(0.4, 0, 0.58), SIMD3(0, -0.56, 0.44), SIMD3(0, 0.56, 0.44)],
             .pent: ring(5, 0.56, 0.44),
             .hex: [SIMD3(0, 0, 0.44)] + ring(6, 0.56, 0.44),
         ]
+        // Radius 1 exactly: the glass's edge is where its profile reaches 0, so the edge never moves against the bezel.
+        for layout in swirls { table[layout] = table[layout.base!]! + [SIMD3(0, 0, 1)] }
+        return table
     }()
 
-    /// Steps in one full turn of the tank. A step is the layout's rotational symmetry (hex's hub held still), so it sets
-    /// every rod's fluid down on a rod of the same size.
+    /// Steps in one full turn of the tank. A step is the layout's rotational symmetry (hex's hub and a swirl held still),
+    /// so it sets every rod's fluid down on a rod of the same size.
     var order: Int {
         switch self {
         case .tri: 3
@@ -89,6 +115,7 @@ enum Layout: String, CaseIterable {
         case .eye: 2
         case .pent: 5
         case .hex: 6
+        case .triSwirl, .quadSwirl, .eyeSwirl, .pentSwirl, .hexSwirl: base!.order
         }
     }
     var tankStep: Double { 2 * .pi / Double(order) }
@@ -101,6 +128,7 @@ enum Layout: String, CaseIterable {
         case .eye: [1, 0, 3, 2]
         case .pent: [4, 0, 1, 2, 3]
         case .hex: [0, 6, 1, 2, 3, 4, 5]
+        case .triSwirl, .quadSwirl, .eyeSwirl, .pentSwirl, .hexSwirl: base!.behind + [swirl!]
         }
     }
 

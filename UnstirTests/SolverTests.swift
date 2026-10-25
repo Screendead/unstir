@@ -7,7 +7,8 @@ final class SolverTests: XCTestCase {
     /// Plays `play` on a real `Game`, or nil when a knob is off the slot the play names or the tank off its position.
     @MainActor private func game(_ play: Play, _ layout: Layout, _ scramble: [Twist], seized: Set<Int> = []) -> Game? {
         let level = Level(id: "test-solver", label: "", title: "", layout: layout, scramble: scramble, seized: seized)
-        let game = Game(level: level)
+        // Flags set, so a play that turns the tank or stirs the swirl stores neither.
+        let game = Game(level: level, tankTurned: true, swirled: true)
         for move in play.moves {
             switch move {
             case let .stir(knob, slot, steps):
@@ -141,6 +142,86 @@ final class SolverTests: XCTestCase {
 
     func testTheOptimumMatchesAnExhaustiveSearchOnTheSmallestCase() {
         assertNothingBeatsTheOptimum([(.tri, "2:+3,0:-5", [1], Self.anySteps, 2)])
+    }
+
+    func testTheOptimumMatchesAnExhaustiveSearchOnTheSmallestSwirlCases() {
+        assertNothingBeatsTheOptimum([
+            (.triSwirl, "3:+2,0:-3", [1], Self.anySteps, 2), (.eyeSwirl, "4:+3,2:-2", [0], Self.anySteps, 2),
+            (.quadSwirl, "1:+4,4:+3", [1], Self.anySteps, 1),
+        ])
+    }
+
+    /// Hex's hub and its swirl, alone and with a ring rod, and swirl levels with a knob seized. The three-entry cases
+    /// commit at most 5 steps either way, which keeps them to seconds.
+    func testTheOptimumMatchesAnExhaustiveSearchOnSmallSwirlCases() throws {
+        try skipUnlessSlow()
+        let few = Array(-5...5).filter { $0 != 0 }
+        assertNothingBeatsTheOptimum([
+            (.quadSwirl, "0:+3,4:+4", [], Self.anySteps, 2), (.quadSwirl, "1:+4,4:+3", [1], Self.anySteps, 2),
+            (.hexSwirl, "0:+3,7:-4", [], Self.anySteps, 1), (.hexSwirl, "7:+2,0:-5,2:+3", [], few, 1),
+            (.hexSwirl, "0:+3,7:-4,2:+2", [3], few, 1), (.pentSwirl, "5:-3,2:+4,5:+5", [1], few, 1),
+        ])
+    }
+
+    /// The swirl's maps fail to commute with every rod's but a hub on its own centre: hex's hub and its swirl turn each
+    /// radius about one point, so they commute though their discs overlap. Between the other rods it is the overlap.
+    func testTheSwirlInteractsWithEveryRodButTheHub() {
+        for layout in Layout.swirls {
+            let solver = Solver(layout), rods = layout.rods
+            for i in rods.indices {
+                for j in rods.indices {
+                    let concentric = i != j && rods[i].x == rods[j].x && rods[i].y == rods[j].y
+                    XCTAssertEqual(solver.interacts[i][j], layout.overlaps(i, j) && !concentric, "\(layout) \(i) \(j)")
+                }
+            }
+        }
+        XCTAssertFalse(Solver(.hexSwirl).interacts[0][Layout.hexSwirl.swirl!])
+    }
+
+    /// Each players' plays on a swirl layout empty the stack on a real `Game` in the moves they count: the optimum, the
+    /// park rule under either parking and either tie, and no lookahead.
+    @MainActor private func assertEveryPlayEmpties(_ solver: Solver, _ stack: [Twist], seized: Set<Int>, optimum: Int,
+                                                   _ message: String, file: StaticString = #filePath, line: UInt = #line) {
+        let layout = solver.layout
+        XCTAssertEqual(solver.optimum(stack, seized: seized), optimum, message, file: file, line: line)
+        var plays = [solver.optimalPlay(stack, seized: seized), solver.noLookahead(stack, seized: seized)]
+        for parking in [Solver.Parking.fewest, .all] {
+            plays += [Solver.Tie.clockwise, .lowest].map { solver.park(stack, seized: seized, parking: parking, tie: $0) }
+            let ties = solver.parkTies(stack, seized: seized, parking: parking)
+            plays += [ties?.best, ties?.worst]
+        }
+        for play in plays { assertEmpties(play, layout, stack, seized: seized, message, file: file, line: line) }
+    }
+
+    /// With knobs seized as well, the swirl comes off at every position of the tank. On quad the seized knob's seam
+    /// needs a turn; on hex the hub and the swirl merge through each other while a ring knob is seized.
+    @MainActor func testSwirlPlaysWithSeizedKnobsEmptyTheStack() {
+        let cases: [(Layout, String, Set<Int>, Int)] = [
+            (.quadSwirl, "1:+4,4:+3", [1], 3), (.hexSwirl, "0:+3,7:-4,2:+2", [3], 3), (.hexSwirl, "7:+2,0:-5,2:+3", [2], 4),
+            (.eyeSwirl, "4:+3,2:-2", [0], 2), (.triSwirl, "3:+2,0:-3,1:+4", [0], 4),
+        ]
+        let solvers = Dictionary(uniqueKeysWithValues: Set(cases.map(\.0)).map { ($0, Solver($0)) })
+        for (layout, scramble, seized, optimum) in cases {
+            assertEveryPlayEmpties(solvers[layout]!, .parse(scramble, in: layout), seized: seized, optimum: optimum,
+                                   "\(layout) \(scramble)")
+        }
+    }
+
+    /// Each vortex level's par, its entry count, is the optimum: no detour beats plain untwisting, which reaches it. Every
+    /// player's play empties the stack on a real `Game` in the moves it counts, as dealt (the tank never turns, so the
+    /// park rule and no lookahead untwist too) and with knob 1 seized, as a harnessed launch can seize it. Slow, as
+    /// maelstrom's is: about 15 s in a Debug build, most of it the optimum's detour search on hex.
+    @MainActor func testVortexParIsTheOptimum() throws {
+        try skipUnlessSlow()
+        let solvers = Dictionary(uniqueKeysWithValues: Layout.swirls.map { ($0, Solver($0)) })
+        for level in Level.vortex {
+            let solver = solvers[level.layout]!, stack = level.scramble
+            XCTAssertEqual(level.par, stack.count, level.id)
+            XCTAssertEqual(solver.untwistingPlay(stack)?.count, level.par, level.id)
+            assertEveryPlayEmpties(solver, stack, seized: [], optimum: level.par, level.id)
+            assertEveryPlayEmpties(solver, stack, seized: [1], optimum: solver.optimum(stack, seized: [1]) ?? -1,
+                                   "\(level.id) seized [1]")
+        }
     }
 
     func testTheOptimumMatchesAnExhaustiveSearchOnSmallCases() throws {
