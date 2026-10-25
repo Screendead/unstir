@@ -1,8 +1,10 @@
-menu.png  Menu on first launch: only level 01 unlocked, whirlpool and maelstrom locked; daily and endless open after level 23.
+menu.png  Menu on first launch: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
 menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
-menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, maelstrom still locked.
-menu-maelstrom-locked.png  Menu looking at maelstrom, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par).
+menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, vortex still locked.
+menu-vortex-locked.png  Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par).
+menu-vortex-open.png  Menu on vortex, opened by every whirlpool tank at par: its level 01 playable, maelstrom still locked.
+menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
@@ -57,6 +59,8 @@ endless-spilled.png  The same, 6 s in: the picture stirred together, its finest 
 undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
+daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels.
+daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap).
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
 wave-0.8.png  Level 13 solved through the real commit path, solve wave held at radius 0.8 from the last-turned rod.
 wave-1.2.png  Level 13 solved through the real commit path, solve wave held at radius 1.2 from the last-turned rod.
@@ -106,10 +110,88 @@ lesson-quad-grid.png  Level 12 (square, grid) with knob 1 seized, the tank never
 lesson-hex-marbling.png  Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: the rim's arc and ghost finger over a live picture.
 lesson-shake.png  Level 12 (square) with knob 1 seized, a finger just down on it, 0.15 s in: the knob turned a few degrees, the rim's arc swollen.
 lesson-shake-turned.png  The same once the player has turned the tank before: no ghost, the arc back only for the pulse.
-lesson-turned.png  Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost.
+lesson-turned.png  Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost, only the knurled bezel.
 lesson-count.png  Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: rod 1 at the top turned +1 by a finger just below its knob, its count swung off the rim's arc.
 lesson-maelstrom01.png  Maelstrom 01 (square, coral twin) as the game loads it, the tank never turned: knob 1 seized, the rim's arc and ghost finger, and the note to turn the tank.
 seized-ring3-finished.png  Hex twin glass, 14 entries (1:+4,0:-3,2:+5,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3), none on rod 3: its ring is finished.
 seized-ring3-buried.png  The same with 3:+2 buried fourth from the bottom (1:+4,0:-3,2:+5,3:+2,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3): rod 3's ring is not finished.
 seized-hub-finished.png  Hex twin glass, 14 entries (2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4), none on the hub: its ring is finished.
 seized-hub-buried.png  The same with 0:+2 buried third from the bottom (2:+4,3:-3,0:+2,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4): the hub's ring is not finished.
+menu-vortex.png  Menu on vortex with every row unlocked.
+vortex01.png  Vortex level 01 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex02.png  Vortex level 02 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex03.png  Vortex level 03 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex04.png  Vortex level 04 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex05.png  Vortex level 05 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex06.png  Vortex level 06 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex07.png  Vortex level 07 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex08.png  Vortex level 08 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex09.png  Vortex level 09 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex10.png  Vortex level 10 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex11.png  Vortex level 11 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex12.png  Vortex level 12 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex13.png  Vortex level 13 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex14.png  Vortex level 14 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex15.png  Vortex level 15 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex16.png  Vortex level 16 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex17.png  Vortex level 17 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex18.png  Vortex level 18 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex19.png  Vortex level 19 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex20.png  Vortex level 20 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex21.png  Vortex level 21 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex22.png  Vortex level 22 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex23.png  Vortex level 23 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex24.png  Vortex level 24 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex25.png  Vortex level 25 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex26.png  Vortex level 26 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex27.png  Vortex level 27 with its full scramble, the swirl never stirred: the swirl's cyan lesson on its ticks inside the glass at the bottom.
+vortex01-swirled.png  Vortex 01 once the player has stirred with the swirl before: no lesson, only the swirl's ticks inside the glass's edge.
+vortex01-both.png  Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one on its ticks inside the glass at the bottom.
+vortex21-both.png  Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass.
+vortex-result.png  Vortex level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par), next in vortex's blue.
+vortex-plughole-01.png  Vortex level 01 with its full scramble on plughole's grid, the swirl never stirred.
+vortex-plughole-14.png  Vortex level 14 with its full scramble on plughole's grid, the swirl never stirred.
+vortex-plughole-27.png  Vortex level 27 with its full scramble on plughole's grid, the swirl never stirred.
+rim-knob-swirl.png  Rim cue knob: vortex 01, the swirl alone, its lesson learnt.
+rim-knob-swirl-lesson.png  Rim cue knob: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass.
+rim-knob-swirl-held.png  Rim cue knob: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
+rim-knob-seized.png  Rim cue knob: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
+rim-knob-seized-lesson.png  Rim cue knob: maelstrom 01, the tank never turned: its amber lesson too.
+rim-knob-both.png  Rim cue knob: vortex 01 with knob 1 seized, both lessons learnt.
+rim-knob-both-lesson.png  Rim cue knob: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring.
+rim-knob-both-swirl-held.png  Rim cue knob: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
+rim-knob-both-tank-held.png  Rim cue knob: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
+rim-bands-swirl.png  Rim cue bands: vortex 01, the swirl alone, its lesson learnt.
+rim-bands-swirl-lesson.png  Rim cue bands: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass.
+rim-bands-swirl-held.png  Rim cue bands: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
+rim-bands-seized.png  Rim cue bands: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
+rim-bands-seized-lesson.png  Rim cue bands: maelstrom 01, the tank never turned: its amber lesson too.
+rim-bands-both.png  Rim cue bands: vortex 01 with knob 1 seized, both lessons learnt.
+rim-bands-both-lesson.png  Rim cue bands: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring.
+rim-bands-both-swirl-held.png  Rim cue bands: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
+rim-bands-both-tank-held.png  Rim cue bands: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
+rim-glyphs-swirl.png  Rim cue glyphs: vortex 01, the swirl alone, its lesson learnt.
+rim-glyphs-swirl-lesson.png  Rim cue glyphs: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass.
+rim-glyphs-swirl-held.png  Rim cue glyphs: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
+rim-glyphs-seized.png  Rim cue glyphs: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
+rim-glyphs-seized-lesson.png  Rim cue glyphs: maelstrom 01, the tank never turned: its amber lesson too.
+rim-glyphs-both.png  Rim cue glyphs: vortex 01 with knob 1 seized, both lessons learnt.
+rim-glyphs-both-lesson.png  Rim cue glyphs: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring.
+rim-glyphs-both-swirl-held.png  Rim cue glyphs: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
+rim-glyphs-both-tank-held.png  Rim cue glyphs: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
+rim-knob-noseat-swirl.png  Rim cue knob, no seats: vortex 01, the swirl alone, its lesson learnt.
+rim-knob-noseat-both.png  Rim cue knob, no seats: vortex 01 with knob 1 seized, both lessons learnt.
+rim-knob-noseat-both-lesson.png  Rim cue knob, no seats: vortex 01 with knob 1 seized, neither ever used: both lessons too.
+rim-knob-swirl-held-low.png  Rim cue knob: vortex 01, the swirl held from the rim at six and carried 1.5 steps counterclockwise: -2 on the far side from the finger, inside the dashes, which run inside the ticks.
+rim-knob-swirl-turned.png  Rim cue knob: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the ticks at twelve.
+swirl-quad-one.png  Square with a swirl, one stir of it alone (4:+3): the core turned 90 degrees, the glass's edge still.
+swirl-quad.png  Square with a swirl (rod 4), 0:+3,4:+2,2:-4,1:+3,4:-3,3:+5.
+swirl-quad-live.png  The same held mid-drag from the rim, the swirl 1.5 steps clockwise.
+swirl-quad-seized.png  The same with knob 1 seized and the tank turned one step (90 degrees clockwise).
+swirl-tri.png  Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3.
+swirl-eye.png  Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3.
+swirl-pent.png  Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3.
+swirl-hex.png  Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3.
+icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
+icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
+icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.
