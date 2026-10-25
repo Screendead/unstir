@@ -31,7 +31,9 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, the workflow and
   `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
   inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
-  build system to ignore inode changes; the restored build then stays incremental. A hit saves about 30 s.
+  build system to ignore inode changes; the restored build then stays incremental. A hit saves compile work but not
+  time: `xcodebuild test` boots the simulator while it compiles, so the job's time is the boot, about 110 s, and the
+  tests, about 45 s.
   `.github/workflows/codeql.yml` scans the workflows on every PR to
   `master`, `*.md`-only ones too, in case the `master` ruleset requires code scanning. It scans Swift, which takes
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
