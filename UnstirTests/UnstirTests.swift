@@ -1270,9 +1270,10 @@ final class UnstirTests: XCTestCase {
     /// all repeating with the twin's minute; the glass's and the static web's twins can only check their delays.
     func testLiveDataRepeats() {
         typealias Builder = (Int, Double) -> [Float]
-        let builders: [(Picture, Builder)] = [(.chainmail, Picture.links), (.coral, Picture.kernels), (.marbling, Picture.drops)]
+        let builders: [(Picture, Builder)] = [(.chainmail, Picture.links), (.coral, Picture.kernels), (.marbling, Picture.drops),
+                                              (.ephemeris, { Picture.ephemeris(seed: $0, t: $1, period: Picture.ephemeris.period) })]
         let delays: Builder = { Picture.delays(t: $1) }
-        let twins: [(Picture, Builder)] = builders.map { picture, data in (picture.twin, { data($0, $1) + delays($0, $1) }) }
+        let twins: [(Picture, Builder)] = builders.dropLast().map { picture, data in (picture.twin, { data($0, $1) + delays($0, $1) }) }
             + [(.glassTwin, delays), (.neuronsTwin, delays)]
         for (picture, data) in builders + twins {
             for seed in [0, 12, 27] {
