@@ -408,6 +408,9 @@ struct LevelView: View {
     @State private var twist: (down: Date, trail: Trail<Double>)?
     /// The finger's latest point in tank units, kept after it lifts so a count left showing stays put.
     @State private var finger: SIMD2<Double>?
+    /// UNSTIR_FINGER: the fingertip drawn down where it landed, and what it turns about (the tank's centre for the rim
+    /// and the swirl).
+    @State private var ghost: (at: SIMD2<Double>, pivot: SIMD2<Double>, rim: Bool)?
     /// The knob, or `Game.tank`, touched last: its open stir's count stays up, faint, after letting go.
     @State private var counted: Int?
     @State private var grabs = 0
@@ -431,6 +434,7 @@ struct LevelView: View {
     private let still: Bool
     private let autoplay: Bool
     private let moves: [Twist]?
+    private let fingered: Bool
     private let bench: Bool
     /// UNSTIR_WAVE: the solve wave held at this radius.
     private let frozenWave: Double?
@@ -502,6 +506,7 @@ struct LevelView: View {
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
         moves = harness?.moves
+        fingered = harness?.finger ?? false
         brimDemo = harness?.brimDemo ?? false
         bench = harness?.bench ?? false
         frozenWave = harness?.wave
@@ -743,6 +748,7 @@ struct LevelView: View {
 
     /// UNSTIR_MOVES: a given line, at autoplay's pace and through the same releases.
     private func play(_ moves: [Twist]) async {
+        if fingered { await hand(moves); return }
         for m in moves {
             guard (try? await Task.sleep(for: .seconds(0.3))) != nil, !game.finished else { return }
             if m.rod == Game.tank {
@@ -754,6 +760,39 @@ struct LevelView: View {
             }
             guard (try? await Task.sleep(for: .seconds(0.4))) != nil else { return }
             if m.rod == Game.tank { releaseTank() } else { release(m.rod) }
+        }
+    }
+
+    /// UNSTIR_FINGER: the line at a hand's pace, after a rest to read the tank untouched: each fingertip lands, holds a
+    /// beat, turns at about a step a tenth of a second and lifts, and the next waits for the heal or push to show.
+    private func hand(_ moves: [Twist]) async {
+        func pause(_ s: Double) async -> Bool { (try? await Task.sleep(for: .seconds(s))) != nil && !game.finished }
+        guard await pause(2.0) else { return }
+        let layout = game.level.layout, both = layout.swirl != nil && !game.level.seized.isEmpty
+        for m in moves {
+            let rim = m.rod == Game.tank, swirl = m.rod == layout.swirl
+            // The tank's up and left, the swirl's up and right, so the two read apart where both share the rim; a knob's
+            // halfway out its disc.
+            let at: SIMD2<Double> = rim ? 1.04 * SIMD2(-0.7071, -0.7071)
+                : swirl ? (both ? 0.93 : 0.99) * SIMD2(0.7071, -0.7071)
+                : centre(m.rod) + 0.5 * rods[m.rod].z * SIMD2(0.7071, -0.7071)
+            let grab = Self.grab(layout, seized: game.level.seized, at: at)
+            if grab != (rim ? .rim : .rod(m.rod)) { Log.write("finger at \(Log.point(at)) holds \(grab), not \(m)") }
+            withAnimation(.easeOut(duration: 0.12)) { ghost = (at, rim || swirl ? .zero : centre(m.rod), rim) }
+            finger = at
+            guard await pause(0.45) else { return }
+            let d = rim ? 0.45 * Double(abs(m.steps)) + 0.2 : 0.1 * Double(abs(m.steps)) + 0.25
+            if rim {
+                liveTurn = 0
+                withAnimation(.easeInOut(duration: d)) { liveTurn = Double(m.steps) * layout.tankStep }
+            } else {
+                liveRod = m.rod; counted = m.rod
+                withAnimation(.easeInOut(duration: d)) { liveAngle = Double(m.steps) * Tank.step }
+            }
+            guard await pause(d + 0.25) else { return }
+            withAnimation(.easeIn(duration: 0.12)) { ghost = nil }
+            if rim { releaseTank() } else { release(m.rod) }
+            guard await pause(1.0) else { return }
         }
     }
 
@@ -995,6 +1034,16 @@ struct LevelView: View {
             }
             if let c = tankCount, c.steps != 0 {
                 countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side, avoid: glyphs))
+            }
+            if let ghost {
+                // Turned with the stir it holds, about its pivot, so it rides the same animation round the arc.
+                let a = ghost.rim ? held ?? 0 : liveAngle
+                Circle().fill(Color.white.opacity(0.28)).overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 1))
+                    .frame(width: 40, height: 40)
+                    .position(x: r + ghost.at.x * r, y: r + ghost.at.y * r)
+                    .frame(width: side, height: side)
+                    .rotationEffect(.radians(a), anchor: UnitPoint(x: (ghost.pivot.x + 1) / 2, y: (ghost.pivot.y + 1) / 2))
+                    .allowsHitTesting(false)
             }
         }
         .frame(width: side, height: side)

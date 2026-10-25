@@ -52,6 +52,9 @@ struct Harness {
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
     /// names it), as solve.sh prints a line.
     let moves: [Twist]?
+    /// UNSTIR_FINGER=1: with UNSTIR_MOVES, a hand's pace instead, each move a fingertip drawn landing where the grab rule
+    /// gives it the move's rod or the rim, carried round with the turn and lifted, for films.
+    let finger: Bool
     /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
     let brimDemo: Bool
     let bench: Bool
@@ -153,6 +156,7 @@ struct Harness {
                 return f.count == 2 && f[1] != 0 ? Twist(rod: f[0], steps: f[1]) : nil
             }
         }
+        finger = env["UNSTIR_FINGER"] == "1"
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
     }
 }

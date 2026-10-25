@@ -254,7 +254,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
   (`UNSTIR_BENCH`). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form, and `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
+  tank's (rod -1) in `parse`'s rod:steps form; with `UNSTIR_FINGER=1` it rests two seconds, then plays at a hand's
+  pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
+  round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
   lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too).
   `UNSTIR_RIM=knob|bands|glyphs` picks the rim's standing cue. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
   pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
