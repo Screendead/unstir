@@ -1116,7 +1116,8 @@ struct LevelView: View {
                 let p = at(k)
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                     RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                            size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k)
+                            size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
+                            lens: game.level.lenses.contains(game.slot(of: k)))
                 } keyframes: { _ in Self.jolt }
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
             }
@@ -1805,6 +1806,8 @@ struct RodView: View {
     let size: CGFloat
     var seized = false
     var grabbed = false
+    /// A lens's knob, whose cap carries an iris.
+    var lens = false
     @Environment(\.displayScale) private var scale
     private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }
@@ -1821,6 +1824,10 @@ struct RodView: View {
             Circle().strokeBorder(Color.black.opacity(0.8), lineWidth: 1.2)
             ticks(rim - px(2), rim - px(1 / 3)).stroke(lit.opacity(0.8), lineWidth: width)
             if grabbed { ticks(rim - px(2), rim - px(1 / 3)).stroke(Color.live, lineWidth: width) }
+            if lens {
+                iris.stroke(Color.magenta.opacity(0.3), lineWidth: 3)
+                iris.stroke(Color.magenta, lineWidth: 1)
+            }
             // Off-centre so a half turn reads as pointing down, not as untouched.
             Capsule().fill(lit.opacity(0.25)).frame(width: 6, height: size * 0.3 + 4).offset(y: -size * 0.3)
             Capsule().fill(lit).frame(width: 2, height: size * 0.3).offset(y: -size * 0.3)
@@ -1846,6 +1853,20 @@ struct RodView: View {
     static func band(_ colour: Color) -> some View { Circle().strokeBorder(colour, lineWidth: 1).padding(-3) }
 
     private func px(_ points: CGFloat) -> CGFloat { (points * scale).rounded() / scale }
+
+    /// Six blades, each swept from the cap's edge in to a corner of the aperture, so the iris turns with the knob.
+    private var iris: Path {
+        Path { p in
+            let c = CGPoint(x: size / 2, y: size / 2), outer = size * 0.4, inner = size * 0.14
+            func at(_ r: CGFloat, _ a: Double) -> CGPoint { CGPoint(x: c.x + r * sin(a), y: c.y - r * cos(a)) }
+            for i in 0..<6 {
+                let a = Double(i) * .pi / 3
+                p.move(to: at(outer, a))
+                p.addQuadCurve(to: at(inner, a + 1.3), control: at(outer * 0.62, a + 0.85))
+                p.addLine(to: at(inner, a + 1.3 + .pi / 3))
+            }
+        }
+    }
 
     /// One radial mark per 30-degree step, from radius `a` out to `b`.
     private func ticks(_ a: CGFloat, _ b: CGFloat) -> Path {
