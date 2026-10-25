@@ -20,7 +20,7 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | TestFlight | Prep merged 2026-10-25 (PR #23): version 1.0 (1), the export-compliance key, an asset catalog. The icon is candidate 1, the neon grid (Jack, 2026-10-25), already the placeholder in the catalog. No archive script until Jack's developer account is in Xcode |
 | CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s, #23 5m36s and #26 5m11s. Jack's calls (2026-10-25): watch it, then cache the build, and the line moves to 7 minutes. The cache merged 2026-10-25 (PR #29): `test.yml` keeps the StoreKit test build (`build/store`) between runs, keyed on the Xcode build and the sources, and stamps each file with a time drawn from its content, so a hit compiles nothing. It saves about 30 s, but the build is not where CI's time goes: the job ran 5m13s cold and 5m18s warm, as the simulator's boot, install and tests vary by about 90 s from run to run |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
-| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below; vortex, the swirl tier between whirlpool and maelstrom (Jack, 2026-10-24), with 27 provisional levels, merged 2026-10-25 (PR #22); Jack's calls on it (2026-10-25) are in "Vortex (provisional, 2026-10-24)"; vortex's own pictures (isobars, ephemeris, cords) merged 2026-10-25 (PR #28), and breath as the swirl's cue merged 2026-10-25 (PR #30) |
+| Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below; vortex, the swirl tier between whirlpool and maelstrom (Jack, 2026-10-24), with 27 provisional levels, merged 2026-10-25 (PR #22); Jack's calls on it (2026-10-25) are in "Vortex (provisional, 2026-10-24)"; vortex's own pictures (isobars, ephemeris, cords) merged 2026-10-25 (PR #28), and breath as the swirl's cue merged 2026-10-25 (PR #30); the swirl shears to its centre (W3, Jack 2026-10-25), on `swirl-map` |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
 | Architecture pass | Queued after the performance pass (Jack, 2026-09-28); see below |
 | Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
@@ -292,6 +292,12 @@ Round 4 (2026-10-25, on its own page after round 3's answers):
 | V3. Which layouts get a swirl | **All five**, the 27 levels as built |
 | B2. CI over 5 minutes | **Cache the build** (option A), **and move the line to 7 minutes**. The cache merged 2026-10-25 (PR #29) |
 
+Round 5 (2026-10-25, after a film of the swirl's map at plateaus 0.6, 0.3 and 0.0, and the swirl alone at 0.0):
+
+| Call | Jack's answer |
+|---|---|
+| W3. The whole-tank swirl's map | **D**: the swirl shears to the centre (plateau 0), knobs keep 0.6, chosen over keeping today's map (Claude's recommendation) and over softer maps for every disc (0.3, 0.0), which blurred every seam. Built on `swirl-map` (`Tank.swirlPlateau`) |
+
 **The charybdis rule (Jack's call, 2026-10-25, from V4).** Jack's words, and only these: "The tank edge being dragged
 should always swirl the tank. It'd make the locked rods harder because turning the tank has a side effect. I feel
 strongly about this." That is the call.
@@ -311,7 +317,8 @@ one gesture, not two bands. What it would mean for what is built, on that readin
 stir), never merged. To make it a tier:
 
 1. A go/no-go on the phone first: Jack plays the lab's two swirl levels, then a swirl on pent and hex, for whether the
-   swirl's seam reads (its rigid core is 0.6 of the tank, so its shear lies in the outer ring, under every other rod).
+   swirl's seam reads (its rigid core is 0.6 of the tank, so its shear lies in the outer ring, under every other rod;
+   since W3, 2026-10-25, it has no core).
 2. Jack's calls (2026-10-24): the rim's meaning must be visible before a move: whether it swirls the tank, turns the
    glass with its seized knobs, or both, which one level may have. There are no players yet, so nothing is
    grandfathered. The solver needs the swirl. A tank-sized stir's cost is fine; measuring it is optional.
@@ -1148,12 +1155,17 @@ Jack's calls (2026-10-25, round 3 under "Jack's calls on the pitch"):
 - **The 27 levels: accepted as provisional** (V5).
 - **Pictures: a family of its own** (V6, option C). Round 4 (P1): all three families, isobars, ephemeris and cords;
   merged 2026-10-25 (PR #28).
+- **W3. The whole-tank swirl's map**: D, the swirl shears to the centre (plateau 0), knobs keep 0.6 (Jack,
+  2026-10-25), chosen over keeping today's map (recommended) and over softer maps for every disc (0.3, 0.0), which
+  blurred every seam. Built on `swirl-map`: `Tank.swirlPlateau`, picked by the disc's radius in `Tank.twist` and the
+  shader.
 
 **What is built.**
-- **The swirl** (`Layout.swirls`: `triSwirl`, `quadSwirl`, `eyeSwirl`, `pentSwirl`, `hexSwirl`): the base layout's rods
-  plus one last rod of radius exactly 1 at the centre, so the glass's edge never moves. It merges like any rod, commutes
-  with nothing but hex's hub (same centre), turns with the tank onto itself, and is never seized. Left out of
-  `Layout.allCases`, so the frozen generator, the dailies and the sandbox never see it.
+- **The swirl** (`Layout.swirls`: `triSwirl`, `quadSwirl`, `eyeSwirl`, `pentSwirl`, `hexSwirl`): the base layout's
+  rods plus one last rod of radius exactly 1 at the centre, so the glass's edge never moves. It has no rigid core
+  (`Tank.swirlPlateau`, 0, W3): its turn fades from the full angle at the centre to 0 at the edge. It merges like any
+  rod, commutes with nothing but hex's hub (same centre), turns with the tank onto itself, and is never seized. Left
+  out of `Layout.allCases`, so the frozen generator, the dailies and the sandbox never see it.
 - **The grab.** Swirl only: from 0.93 of the radius out over the bezel to 25 pt beyond. Seized knobs only: unchanged.
   Both: the glass's own edge band (0.86 to 1.0) holds the swirl, the bezel and beyond turn the tank.
 - **The tier.** Whirlpool all at par opens vortex; vortex all at par opens maelstrom. Ids `V1`–`V27`. Its own menu
@@ -1199,7 +1211,11 @@ generator (`Layout.scramble`, unchanged; the dailies never pass it a swirl layou
 equals their entry count and which plain untwisting reaches, one band per depth and hidden-stir budget;
 `scripts/vortex-levels/pick.py` then takes, slot by slot, the lowest seed that meets the slot. Every row was then
 checked with `scripts/solve.sh`: optimum = entries, no detour, planning gap 0 (`testVortexParIsTheOptimum`, slow, pins
-it; `testVortexTable` pins the rest). Maelstrom's rules, translated:
+it; `testVortexTable` pins the rest). Re-run under the swirl's own map (W3, 2026-10-25), the pipeline picked the same
+27 seeds and scrambles, and every row still checks (optimum = untwisting = entries, the same hidden stirs, swirls, rods
+over the newest and undo), and the swirl still commutes only with hex's hub (`testTheSwirlInteractsWithEveryRodButTheHub`).
+Inferred, not checked: the generator and the solver judge stacks only by which entries cancel and commute, which the
+profile leaves alone. Maelstrom's rules, translated:
 - **Planning gap.** It doesn't apply: with no knob seized the tank never turns, so no lookahead is optimal and the gap is
   0 on every level. Vortex is a reading tier, like whirlpool, and climbs in depth, hidden stirs (`Layout.inversions`),
   swirls per level, hidden swirls and how many rods ride on the newest swirl.
