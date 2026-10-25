@@ -294,6 +294,7 @@ final class Analytics {
             started += tier.levels.filter { Best.started($0.id) }.count
         }
         p["started"] = .int(started)
+        // Only a daily solved on its first try keeps a best.
         p["dailies"] = .int(defaults.dictionaryRepresentation().keys.filter { $0.hasPrefix("best.daily-") }.count)
         let owned = Store.shared.ledger.owned
         for pack in Pack.allCases {

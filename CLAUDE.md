@@ -287,7 +287,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app was
   killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
   fires once a pack's taste levels all have bests, `purchased` on a verified purchase in `Store.purchase`. The snapshot
-  reads the bests, started flags, bank, endless best, dailies solved, packs owned and the tally. `Sender` posts batches
+  reads the bests, started flags, bank, endless best, dailies solved on the first try, packs owned and the tally. `Sender` posts batches
   of 25 to `/api/v0/events` from `Library/analytics-queue.json`; it is built at launch under a yes, so what an earlier
   launch left queued goes out with no new event to carry it. It keeps a batch on no answer, a 5xx or 429 and retries a
   minute later, drops one refused, and drops events over 23 hours old (the server refuses a day's). `Sender.body` is
