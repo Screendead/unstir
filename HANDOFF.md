@@ -51,7 +51,7 @@ for good because it is the marketing. Undos refill daily and are never sold.
 
 ### How Unstir makes money: options compared (Claude's recommendation, 2026-10-24; not a decision)
 
-Analysis only; no code changed. Every claim is tagged **E** (evidence, with its source: this file, the code, or a
+The analysis itself changed no code; the StoreKit layer, the share line and TestFlight prep it recommended are now merged on `master`. Every claim is tagged **E** (evidence, with its source: this file, the code, or a
 page found on 2026-10-24) or **G** (a guess, including platform facts Claude didn't check this session). There are no
 revenue figures here, by design (see "Thoughts").
 
@@ -205,7 +205,7 @@ under "Packs: the catalogue" below; items 3 to 7 carry into its defaults.
 **Jack's call (2026-10-24): packs ship at v1, and there is no hurry to market.** In his words: "I think we can handle
 making packs for v1. I'm not in a major hurry to get it to market." This section is Claude's answer to it: a
 catalogue of packs, the three for v1, what v1 sells beside them, and the work. Everything in it is a recommendation
-until Jack decides; Jack's answers to its four calls are under "Jack's calls on the pitch". Analysis only; no code changed.
+until Jack decides; Jack's answers to its four calls are under "Jack's calls on the pitch". The analysis changed no code; the StoreKit layer, the share line and TestFlight prep are now merged on `master`.
 "Checked" marks a claim checked against the code; "assumed" marks one that wasn't, platform facts included. No
 revenue figures.
 
@@ -282,14 +282,17 @@ Round 3 (2026-10-25, on the review page of the overnight builds, after all seven
 | D1. Daily #1 | **Launch day.** Until it is set, the share line shows the date instead of a number |
 | B1. CI time | **Watch it.** Since then #21 ran 5m44s and #23 5m36s, both over the 5-minute line |
 
-**The charybdis rule (Jack, 2026-10-25, from V4).** Dragging the tank's edge always swirls the tank. On a level with
-seized knobs, turning the glass to carry them round therefore swirls it too: the swirl is the turn's side effect, and
-that side effect is what makes the locked rods harder. It is one gesture, not two bands. What it means for what is
-built:
+**The charybdis rule (Jack's call, 2026-10-25, from V4).** Jack's words, and only these: "The tank edge being dragged
+should always swirl the tank. It'd make the locked rods harder because turning the tank has a side effect. I feel
+strongly about this." That is the call.
+
+**Claude's reading (not yet confirmed by Jack):** on a level with seized knobs, turning the glass to carry them round
+swirls it too; the swirl is the turn's side effect, and that side effect is what makes the locked rods harder; it is
+one gesture, not two bands. What it would mean for what is built, on that reading:
 - Vortex's "both" levels (a seized knob on a swirl layout, `UNSTIR_SEIZED` on a vortex level), the two-band grab
   (the glass's edge band 0.86 to 1.0 holds the swirl, the bezel and beyond turn the tank), both lessons side by side
-  and every rim cue's "both" shots were built on vortex as a proposal. They become charybdis's starting point, and
-  the two bands give way there to one gesture that turns and swirls together. Vortex itself has no seized knob, so
+  and every rim cue's "both" shots were built on vortex as a proposal. They would become charybdis's starting point, and
+  the two bands would give way there to one gesture that turns and swirls together (Claude's reading). Vortex itself has no seized knob, so
   nothing in its set changes.
 - Charybdis also takes the orbits (round 2). How the swirl-with-turn and the orbits sit together is not designed.
 
@@ -694,11 +697,11 @@ names and product ids, and Complete's promise to older owners.
    stir-N`, `lens-N`, `escapement-N`. Merged 2026-10-25 (PR #21).
 4. First Stir go/no-go first, since its art is the long pole: one harbour scene with three vignettes drawn in code,
    filmed and cold-read. Each heal must read as time stepping back, not the stir changing.
-   Built 2026-10-25, waiting for Jack: lab branch `lab-firststir` (local), a harbour scene on tri with three code-
+   Built 2026-10-25; Jack has called it (round 3, F1 and F2, below): lab branch `lab-firststir` (local), a harbour scene on tri with three code-
    drawn vignettes. Claude's verdict: go with changes; the art carries it. The cold read fixed a heal order whose
    vignette was smeared by a neighbour's shear ring, which gives a new rule: a vignette plays only after the rods
-   whose discs overlap it are healed. Open for Jack: whether heals read as time stepping back or as repair (an art
-   option for a stronger time cue is being built), and whether the opening shows the wrecked harbour.
+   whose discs overlap it are healed. Then open: whether heals read as time stepping back or as repair (answered by F2 below),
+   and whether the opening shows the wrecked harbour.
    Jack's calls (2026-10-25): go (F1); make time visible, the night winding back (`UNSTIR_FSTIME` on `lab-firststir`),
    plus the caption (F2). Still open: whether the opening shows the wrecked harbour.
 5. First Stir's story outline (25 scenes and their vignettes) for Jack's approval, then Claude draws all 25 scenes
@@ -707,14 +710,14 @@ names and product ids, and Complete's promise to older owners.
 6. Lens go/no-go: port the lab zoom onto a halftone test picture, film ±1 to ±3 steps on the phone and set the rate
    (1.2, or 1.25 to 1.33 if one step doesn't read); film a zoom seam over and under a twist seam and cold-read which
    is newest; compare shrunk cores against a supersampled reference for glitter, since zoom isn't area-preserving.
-   Built 2026-10-25, waiting for Jack: no-go as designed. The soft zoom leaves no seam, so the newest stir can't
+   Built 2026-10-25; Jack has called it (round 3, L1, below): no-go as designed. The soft zoom leaves no seam, so the newest stir can't
    be read, and shrinking reads as moire. A hard-edged lens (magnify only, x1.3, capped at +3, a rim inside the
    core) is on `lab-lens`: the order reads partly (a whole rim means the lens is newest), and the magnified area
    drops to 36% of the disc. Jack's call (2026-10-25, L1): the hard lens, with a phone test next. The reviewers had
    recommended shelving it; trying it is Jack's choice.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
-   Built 2026-10-25, waiting for Jack: `lab-escapement` (local). Claude's verdict: go with changes. Open for Jack:
+   Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
    warn before a losing lift (recommended: live preview), and what a sealed loss shows (recommended: freeze on
    +1). Harness switches `UNSTIR_ESCWARN` and `UNSTIR_ESCSEAL`. The loss card now reads "lost on move N".
    Jack's calls (2026-10-25): go with changes (E1); the standing hint, the clock's disc always with a dashed vermilion
@@ -746,7 +749,7 @@ names and product ids, and Complete's promise to older owners.
    Merged 2026-10-25 (PR #21).
 15. The pack shelf, apart from the tier strip and ungated: three working mock-ups for Jack to pick from, as with the
     tier switcher, then the chosen one built.
-   Built 2026-10-25, waiting for Jack: three working mock-ups on local branch `shelf-mockups`, switched by
+   Built 2026-10-25; Jack has called it (round 3, S2, below): three working mock-ups on local branch `shelf-mockups`, switched by
    `UNSTIR_SHELF=a|b|c`: a row under the strip, a place past maelstrom, or a dock of covers. Recommended: B.
    Jack's call (2026-10-25, S2): C, the dock of live covers along the bottom of the menu. Not yet built in the app.
 16. The pack card: a looping 7-second clip, what the pack assumes, the free taste, price, buy and restore; levels past
@@ -1129,7 +1132,7 @@ Jack's calls (2026-10-25, round 3 under "Jack's calls on the pitch"):
 - **Which layouts get a swirl** (V3): unanswered, still open.
 - **The swirl with seized knobs: charybdis** (V4, option B): "The tank edge being dragged should always swirl the
   tank. It'd make the locked rods harder because turning the tank has a side effect. I feel strongly about this."
-  See "The charybdis rule" under round 3: one gesture, not two bands.
+  See "The charybdis rule" under round 3, where one gesture, not two bands, is Claude's reading, pending Jack.
 - **The 27 levels: accepted as provisional** (V5).
 - **Pictures: a family of its own** (V6, option C). Not built.
 
@@ -1234,8 +1237,8 @@ shots, and the solver's plays empty a real `Game` with a knob seized on every vo
 - **B. Leave both for charybdis**, the tier past maelstrom, as its new skill.
 Claude recommended **B for now**: maelstrom's set has just been rebuilt and playtested (PR #17), and A would reopen it
 before vortex has had one playtest. **Jack's call (2026-10-25): B, charybdis**, with a rule: dragging the tank's edge
-always swirls the tank, so the "both" grab's two bands give way to one gesture there (see "The charybdis rule" under
-round 3). A is set aside (R10).
+always swirls the tank. Claude's reading, not yet confirmed by Jack, is that the "both" grab's two bands give way to one
+gesture there (see "The charybdis rule" under round 3). A is set aside (R10).
 
 **What the tier needs before it's final.**
 - **Jack's playtest** of the 27 levels on the phone; the titles are drafts.
@@ -1624,7 +1627,8 @@ Jack's calls, round 3 under "Jack's calls on the pitch".
 - **Maelstrom's last levels adding the swirl** (vortex's option A for the swirl with seized knobs): Jack chose
   charybdis.
 - **Two bands for swirl and turn** (the glass's edge swirls, the bezel turns the tank, as built for vortex's "both"):
-  superseded by the charybdis rule, one gesture that always swirls. Its code is charybdis's starting point.
+  superseded by Claude's reading of his note on the charybdis rule (one gesture that always swirls), pending his
+  confirmation; not an option he passed over. Its code is charybdis's starting point.
 - **The tick dial as the swirl's cue**, seated on dark strokes or as pure hairlines: "I actually don't like the ticks
   at all as a method of showing the tank will swirl."
 - **Bands and glyphs as the rim cue**: Jack picked knob.
