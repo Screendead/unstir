@@ -228,6 +228,8 @@ shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl befo
 shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one on its ticks inside the glass at the bottom." \
   TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
 shot vortex21-both "Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass." TIER=vortex LEVEL=21 SEIZED=2,5 CLOCK=3
+shot vortex-result "Vortex level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par), next in vortex's blue." \
+  TIER=vortex SCREEN=result LEVEL=5 CLOCK=3
 # Vortex on plughole's grid (UNSTIR_PICTURE) instead of whirlpool's live pictures, one of the options for its family.
 for n in 01 14 27; do
   shot "vortex-plughole-$n" "Vortex level $n with its full scramble on plughole's grid, the swirl never stirred." \

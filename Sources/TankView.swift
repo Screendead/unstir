@@ -1845,7 +1845,11 @@ struct ResultCard: View {
 
     var body: some View {
         let run = game.level.run
-        let accent = game.level.tier == .plughole ? Color.neonCyan : .blood
+        let accent: Color = switch game.level.tier {
+        case .plughole: .neonCyan
+        case .vortex: game.level.tier.glow
+        case .whirlpool, .maelstrom: .blood
+        }
         let next = run != nil ? game.nextTank : game.level.tier.levels.drop(while: { $0.id != game.level.id }).dropFirst().first
         let time = String(format: "%d:%02d", game.seconds / 60, game.seconds % 60)
         VStack(spacing: 26) {
