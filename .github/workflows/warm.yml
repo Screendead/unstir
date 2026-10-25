@@ -1,0 +1,50 @@
+name: Warm the build cache
+
+# Builds what the tests run on each merge and saves it, so a pull request's first run restores master's build
+# through test.yml's restore-keys instead of compiling cold. It runs no tests.
+on:
+  push:
+    branches: [master]
+    paths-ignore: ['**.md']
+
+# A burst of merges keeps only its last run: each waits before building, and the next merge cancels it.
+concurrency:
+  group: warm
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - name: Wait for further merges
+        run: sleep 120
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: |
+          curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+      # Must match test.yml's step of the same name, and the cache's key and paths with it, or a pull request's run
+      # restores a build it takes as edited.
+      - name: Prepare the build cache
+        id: xcode
+        run: |
+          defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+          git ls-files -s | perl -ne '/^\S+ (\S+) \S+\t(.*)$/ and utime 1e9 + hex(substr($1, 0, 7)), 1e9 + hex(substr($1, 0, 7)), $2'
+          echo "build=$(xcodebuild -version | awk '/Build version/ { print $3 }')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: |
+            build/store
+            !build/store/Index.noindex
+            !build/store/Logs
+          key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', '.github/workflows/test.yml', 'scripts/test-store.sh') }}
+          restore-keys: store-${{ steps.xcode.outputs.build }}-
+      - name: Build
+        run: |
+          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
+          UNSTIR_SIM=$udid scripts/test-store.sh build-for-testing -quiet COMPILER_INDEX_STORE_ENABLE=NO

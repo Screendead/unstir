@@ -32,6 +32,7 @@ jobs:
           defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
           git ls-files -s | perl -ne '/^\S+ (\S+) \S+\t(.*)$/ and utime 1e9 + hex(substr($1, 0, 7)), 1e9 + hex(substr($1, 0, 7)), $2'
           echo "build=$(xcodebuild -version | awk '/Build version/ { print $3 }')" >> "$GITHUB_OUTPUT"
+      # warm.yml saves master's build under the same key and paths after each merge, which restore-keys falls back to.
       - uses: actions/cache@v6
         with:
           path: |

@@ -32,6 +32,9 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
   inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
   build system to ignore inode changes; the restored build then stays incremental. A hit saves about 30 s.
+  `.github/workflows/warm.yml` builds the same (no tests) on each merge that changes more than `*.md` and saves it under
+  the same key, so a PR's first run restores master's build; it waits 2 minutes first and a later merge cancels it, so
+  a burst of merges builds once. Keep its cache steps the same as `test.yml`'s.
   `.github/workflows/codeql.yml` scans the workflows on every PR to
   `master`, `*.md`-only ones too, in case the `master` ruleset requires code scanning. It scans Swift, which takes
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
