@@ -221,6 +221,11 @@ struct RootView: View {
         .background(Color.black)
         .onChange(of: phase) { Log.write("phase \(phase)") }
         .task {
+            // A test host's listener would finish the transactions the StoreKit tests watch.
+            guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+            await Store.shared.start()
+        }
+        .task {
             guard harness?.tour == true else { return }
             try? await Task.sleep(for: .seconds(1.5))
             show(Level.plughole[0], keep: true)
