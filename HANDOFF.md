@@ -865,6 +865,13 @@ names and product ids, and Complete's promise to older owners.
    taste and purchase; `level` events carry the level, the outcome, moves, undos and resets. Every figure is a count over
    the players who said Yes. Free up to 20,000 events a month, US$10 for 200,000, and it pauses at the cap rather than
    billing over. Apple's App Analytics is a free cross-check. The research is on the local `archive/scratch` branch.
+   Per-player history, Jack's call (2026-10-25): no install ID, since a persistent ID makes the data personal under
+   GDPR and Aptabase's policy refuses deletion requests. Instead the phone builds each player's history from what it
+   already stores and sends one summary on days 2, 7 and 30, with no ID tying it to the player's other rows (e.g.
+   `snapshot`, day 7, days played 1,2,5, furthest V9, lens card seen, taste finished, not bought, 14 undos); grouping
+   rows by their contents answers questions such as whether players who finished a taste came back. Plus the send-log
+   button for full touch histories from testers who send one. Unchecked: whether Aptabase limits the properties an
+   event can carry.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
