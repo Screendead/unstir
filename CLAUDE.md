@@ -27,7 +27,12 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   call Jack hasn't made still waits for him.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
-  Pushing to a branch with no open PR builds nothing. `.github/workflows/codeql.yml` scans the workflows on every PR to
+  Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
+  runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, the workflow and
+  `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
+  inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
+  build system to ignore inode changes; the restored build then stays incremental. A hit saves about 30 s.
+  `.github/workflows/codeql.yml` scans the workflows on every PR to
   `master`, `*.md`-only ones too, in case the `master` ruleset requires code scanning. It scans Swift, which takes
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
   other branch: it builds every push, PR or not. Keep
@@ -93,6 +98,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
+- Picture lab: `scripts/picture-lab.sh render <picture> <out.png> [seed] [t] [side px] [layout stack]` draws a live
+  picture on the Mac's GPU, stirred by a stack if given; `scripts/picture-lab.sh bench <picture>...` times each
+  picture's fill against the glass and a stack entry of four-tap work. It knows the glass and vortex's family, and
+  builds `build/picture-lab/lab` with `swiftc` from Twist.swift, VortexPictures.swift, `SplitMix64` cut out of
+  Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
+  scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as
+  one sheet (needs Pillow).
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
@@ -165,7 +177,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   loses it unless the stored keys are remapped. Plughole has 27 hand-written
   levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
   deeper variants on live pictures that follow a table, vortex 27 provisional swirl levels (quad, tri, eye, pent,
-  then hex) on whirlpool's pictures, no knob seized, so the tank never turns and par is the entry count, which the
+  then hex) on its own family, nine levels each: no two neighbours alike, V1–V3 one of each, isobars opening each
+  layout and taking the finale, the ephemeris only to 14 stirs (`testVortexTable`), no knob seized, so the tank never turns and par is the entry count, which the
   solver's optimum matches and plain untwisting reaches (`testVortexParIsTheOptimum`, slow), and maelstrom 27 of its
   own (quad, then pent, then hex) on the twins, each with one or two seized knobs, never the hub, and a `fixedPar` that counts the tank's turns: the
   solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
@@ -206,11 +219,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   radius, overlapped or not, never the swirl; a seized winner is `.seized`, which holds nothing. The rim, from
   `LevelView.rim` (0.93) out over the bezel, turns the tank where knobs are seized and holds the swirl where the layout
   has one. Where it has both, the swirl holds the glass's own edge from `swirlBand` (0.86) and the tank the bezel and
-  beyond. The swirl has no knob: its dial is drawn just inside the bezel, as the tank's is, and its red ring on the
-  bezel. The held rod
+  beyond. The swirl has no knob: its dial is drawn just inside the bezel, as the tank's is. The held rod
   lights at once with a light tap, so the rod that lights is the rod that turns: its knob's ticks and a ring on the dark
   band round it, never past it, and one 0.5 pt hairline round its disc, dimmer until letting go would commit. On lift
-  the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red (the swirl's, a hairline on its cue's ring inside the glass), and one that cancels
+  the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red (the swirl's, a hairline `swirlFlash`, 5 pt, inside the glass's edge), and one that cancels
   sends a magenta hairline out from the knob. Every line a turn draws over the picture is a hairline but the count's
   dashes, 2 pt, and none has a glow or a dark band under it: the pictures are fine lines themselves, and whatever a
   heavy line covers the player cannot read. The opening replay's ring is not a hairline. A
@@ -220,17 +232,23 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   turn sets `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does.
   The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. A level with a swirl
   shows its own lesson the same way until the player's first stir of the swirl commits (`Game.swirled`,
-  `Best.swirled`): a thin cyan arc at the bottom on the swirl's ticks inside the glass's edge, seated on a dark stroke
+  `Best.swirled`): a thin cyan arc at the bottom 10 pt inside the glass's edge, seated on a dark stroke
   and without the tank arc's glow since it lies on the picture, and its ghost finger there, in the middle of the
   swirl's grab. So on a level with both, each lesson points at its own ring: the tank's at the bezel, the swirl's
-  inside the glass. It goes while the swirl is held. The lessons go once learnt, so `RimCues` keeps saying what the
-  rim does, three ways pending a new swirl cue (`RimCue`, picked by `UNSTIR_RIM`, `knob` without it): `knob` gives
-  the swirl a knob's ticks inside the glass's edge, each on a dark stroke, leaning as a shear leans them and further
-  the way a held turn goes, a longer pointer at twelve, all turning with its own turning, and a dark groove between
-  them and the bezel; it knurls the bezel wherever knobs are seized, faintly amber at rest, the knurl turning with the
-  glass; `bands` outlines the swirl's grab in cyan inside the glass and anodises the bezel amber, the lessons' own
-  colours; `glyphs` sets a spiral and a turning ring with a seized knob's slash over twelve, each once its lesson has
-  gone. Each lights while its control is held. A drag shows its own
+  inside the glass. It goes while the swirl is held. The lessons go once learnt, so two standing cues keep saying
+  what the rim does. `Knurl` mills the bezel wherever knobs are seized: dark grooves between ridges every 4 pt or so,
+  faintly amber at rest (the tank's colour, as its lesson), turning with the glass and brighter while the rim holds
+  it, gone under the result card unless the run spilled. `Breath` shows the swirl: while the tank rests, on a layout
+  with a swirl, the swirl sloshes the picture once through its own map and settles, a 12° sine damped by e^-t over
+  `length` (3.2 s), so it peaks near 8° and ends at 0. The first slosh comes `first` (1.5 s) after the tank becomes
+  the player's; after any lift the next waits `later` (10 s), so no move is answered by a slosh; then one every
+  `every` (12 s). The rest ends on a touch (a finger on the rim or a knob, two fingers, a drawn fingertip), the
+  opening, a win or Reduce Motion, which has no breath at all; a cut slosh fades out over `fade` (0.25 s) from where
+  it stood, under any live turn, so the picture never jumps. An undo does not restart the rest. It moves only the
+  picture: `Unstirred.breath` adds it to the shader's stack as one entry on top, only while its angle is off 0, and
+  the four-tap budget counts it, a drag or both at once as one entry over; nothing of it reaches `Game`. The picture's timeline
+  runs only while it moves, from `lead` (0.1 s) before each slosh (`testBreathSloshesFromRestAndBackToIt`,
+  `testBreathFadesFromWhereACutCaughtIt`, `testBreathMovesOnlyWhileItSloshes`). A drag shows its own
   count: a long mark on the disc's hairline (on one just inside the rim, for the tank) where its stir began, a dash per
   step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
@@ -266,7 +284,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
   twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's cells take the
-  raw clock; the neural web is static per seed, built once off the main actor.
+  raw clock; the neural web is static per seed, built once off the main actor. Vortex's own family (isobars, ephemeris,
+  cords; **VortexPictures.swift**, **Flow.metal**, **Sky.metal**, **Loom.metal**) is drawn live the same way, with no
+  twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. The sandbox's cycle
+  (`Picture.next`) takes plughole's pictures and whirlpool's only, so it skips the twins and vortex's family.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
@@ -278,11 +299,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   best or started flag (`Level.keepsProgress`), and
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
   in place of StoreKit's, never stored. `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form; with `UNSTIR_FINGER=1` it rests two seconds, then plays at a hand's
+  tank's (rod -1) in `parse`'s rod:steps form; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
   round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
-  lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too).
-  `UNSTIR_RIM=knob|bands|glyphs` picks the rim's standing cue. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
+  lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
+  and it holds the swirl's breath at 0. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
+  first slosh starts at 1.5 s, for stills, even under `UNSTIR_CLOCK`. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
   pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
   takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag or the swirl's: they
@@ -313,4 +335,4 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the stack in the moves the play counts.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
-Others check the level tables against the design tables (par, inversion counts, whirlpool's pictures).
+Others check the level tables against the design tables (par, inversion counts, whirlpool's and vortex's pictures).
