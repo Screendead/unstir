@@ -46,9 +46,10 @@ final class Store {
 
     func state(_ pack: Pack) -> Purchase { (harness ?? ledger).state(pack) }
 
-    /// Nil for a level in no pack.
+    /// Nil for a level in no pack. A pack's level whose id names no number of that pack needs the card.
     func access(_ level: Level) -> Pack.Access? {
-        guard let pack = level.pack, let number = pack.number(of: level.id) else { return nil }
+        guard let pack = level.pack else { return nil }
+        guard let number = pack.number(of: level.id) else { return .needsCard }
         return pack.access(number, owned: ledger.owned, harness: harness?.owned ?? [])
     }
 

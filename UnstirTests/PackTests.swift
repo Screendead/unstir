@@ -25,11 +25,21 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Pack.completeID, "com.screendead.Unstir.complete")
         XCTAssertEqual(Pack.productIDs.count, Set(Pack.productIDs).count)
         for pack in Pack.allCases {
-            for level in pack.levels {
+            for (i, level) in pack.levels.enumerated() {
                 XCTAssertEqual(level.pack, pack)
-                XCTAssertNotNil(pack.number(of: level.id), level.id)
+                XCTAssertEqual(level.id, pack.id(i + 1))
+                XCTAssertEqual(pack.number(of: level.id), i + 1)
             }
         }
+    }
+
+    /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
+    @MainActor func testAMistypedPackIdFailsClosed() {
+        for id in ["lens_7", "Lens-7", "lens-", "escapement-7"] {
+            let level = Level(id: id, pack: .lens, label: "", title: "", layout: .tri, scramble: [])
+            XCTAssertEqual(Store().access(level), .needsCard, id)
+        }
+        XCTAssertNil(Store().access(Level(id: "L7", label: "", title: "", layout: .tri, scramble: [])))
     }
 
     /// A pack's ids never read as another pack's or a tier's.

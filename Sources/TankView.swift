@@ -671,7 +671,7 @@ struct LevelView: View {
         .onAppear {
             let rules = game.level.run.map { "tank \($0.tank) brim \($0.brim)" } ?? "par \(game.par)"
             let pack = game.level.pack.map { p in
-                " \(p.rawValue) \(Store.shared.state(p)), \(Store.shared.access(game.level).map { "\($0)" } ?? "unnumbered")"
+                " \(p.rawValue) \(Store.shared.state(p)), \(Store.shared.access(game.level).map { "\($0)" } ?? "")"
             } ?? ""
             Log.write("level \(game.level.id) opens, \(rules)\(pack) \(game.stack)")
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
