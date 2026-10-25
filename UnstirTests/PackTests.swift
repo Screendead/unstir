@@ -33,6 +33,36 @@ final class PackTests: XCTestCase {
         }
     }
 
+    /// Progress is stored under these keys: renaming one loses it as renaming an id does. Each is written through its
+    /// own API and read back raw, and whatever was there is put back.
+    @MainActor func testStorageKeysNeverChange() throws {
+        let d = UserDefaults.standard, id = "pin-test"
+        let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
+                    "tank.turned", "endless.tanks"]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
+        for key in keys { d.removeObject(forKey: key) }
+
+        Best(over: 1, seconds: 9).save(id)
+        XCTAssertEqual(try JSONDecoder().decode(Best.self, from: try XCTUnwrap(d.data(forKey: "best.\(id)"))).over, 1)
+        Best.start(id)
+        XCTAssertTrue(d.bool(forKey: "started.\(id)"))
+        Tier.store(.whirlpool, open: { _ in true })
+        XCTAssertEqual(d.string(forKey: "tier"), "whirlpool")
+        Best.undos = 7
+        XCTAssertEqual(d.integer(forKey: "undos.spent"), 3)
+        Best.refilled = "2026-10-25"
+        XCTAssertEqual(d.string(forKey: "undos.day"), "2026-10-25")
+        Best.anchor = Best.Anchor(wall: Date(timeIntervalSince1970: 0), uptime: 5, boot: nil)
+        XCTAssertNotNil(d.data(forKey: "undos.anchor"))
+        Best.unlocked = true
+        XCTAssertTrue(d.bool(forKey: "unlock"))
+        Best.tankTurned = true
+        XCTAssertTrue(d.bool(forKey: "tank.turned"))
+        Best.tanks = 4
+        XCTAssertEqual(d.integer(forKey: "endless.tanks"), 4)
+    }
+
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
     @MainActor func testAMistypedPackIdFailsClosed() {
         for id in ["lens_7", "Lens-7", "lens-", "escapement-7"] {

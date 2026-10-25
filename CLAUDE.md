@@ -210,7 +210,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and, until its
   content lands, no levels; a `Level` names its `pack`. No pack best ever opens a tier. `PackTests` pins every stored
-  level id and product id as literals, so never rename one. `Pack.access` says whether a level plays: the taste
+  level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
   always, past it only a pack StoreKit grants, with `Best.unlocked` and the harness counted outside Release only.
   `Store` is StoreKit 2 with no server and nothing stored: entitlements from `Transaction.currentEntitlements` at
   launch, a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
