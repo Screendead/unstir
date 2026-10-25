@@ -12,7 +12,7 @@ enum Picture: String, CaseIterable {
     /// Maelstrom's twins of those, on the same data.
     case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
     /// Candidates for vortex's own family, a theme each, for Jack to pick from (UNSTIR_PICTURE). No level shows them yet.
-    case isobars
+    case isobars, cords
 
     var isLive: Bool { ![.grid, .sunset, .city].contains(self) }
 
@@ -52,6 +52,7 @@ enum Picture: String, CaseIterable {
         case .neurons, .glassTwin, .chainmailTwin, .coralTwin: 5
         case .neuronsTwin: 6
         case .isobars: 2
+        case .cords: 3
         }
     }
 
@@ -73,6 +74,7 @@ enum Picture: String, CaseIterable {
         case .neurons: Self.web(seed: seed)
         case .marbling: Self.drops(seed: seed, t: t)
         case .isobars: Self.gradients(seed: seed, salt: 0x464C_4F57, count: 2)
+        case .cords: Self.gradients(seed: seed, salt: 0x4C4F_4F4D, count: 2)
         default: nil
         }
         return sibling == self ? data : data.map { $0 + Self.delays(t: t) }
