@@ -778,11 +778,25 @@ names and product ids, and Complete's promise to older owners.
     tier switcher, then the chosen one built.
    Built 2026-10-25; Jack has called it (round 3, S2, below): three working mock-ups on local branch `shelf-mockups`, switched by
    `UNSTIR_SHELF=a|b|c`: a row under the strip, a place past maelstrom, or a dock of covers. Recommended: B.
-   Jack's call (2026-10-25, S2): C, the dock of live covers along the bottom of the menu. Not yet built in the app.
+   Jack's call (2026-10-25, S2): C, the dock of live covers along the bottom of the menu. Built 2026-10-25 on
+   `packs-shelf` (`PackDock`, Shelf.swift), ported from the mock-up, with Complete as the fourth cover. Left: each
+   pack's real cover art once its pictures exist (the covers are the mock-up's code-drawn placeholders); the dock's
+   cost on the phone (four live shader tanks at 30 Hz on the menu) is unmeasured.
 16. The pack card: a looping 7-second clip, what the pack assumes, the free taste, price, buy and restore; levels past
     the taste show it; Music Box's says "needs sound".
+   Built 2026-10-25 on `packs-shelf` (`PackCard`): the price is StoreKit's `displayPrice` (`Store.prices`), the levels
+   list shows once a pack has levels (shot with Debug placeholders, `UNSTIR_CARDLEVELS`), and `Store.card(for:)` sends
+   any level past the taste of an unowned pack to its card (`RootView.show`). Left: the clips themselves (to-do 50; the
+   slot plays `<pack>-clip.mp4` from the bundle once it exists, the cover's loop until then); Music Box's "needs sound"
+   waits on Music Box; the card's words ("holds 25 panels in four issues" and so on) follow the design tables and
+   change with them.
 17. Accessibility on the new screens: Dynamic Type and VoiceOver for the shelf, card and purchase flow; Reduce Motion
     for the vignettes' crossfades, the zooms, the clock's steps and the dive.
+   Shelf and card done 2026-10-25 on `packs-shelf`: Dynamic Type through text styles (the card scrolls and stacks at
+   accessibility sizes, the dock caps at xxxLarge with the large content viewer), VoiceOver labels, values and an
+   announcement on a purchase state's change, Reduce Motion stills the covers, clip and pending dot and fades the card.
+   Shots `shelf-menu-ax` and `card-lens-ax`. Not checked with VoiceOver running on the phone. The vignettes, zooms,
+   clock and dive wait on their packs.
 18. Harness: `UNSTIR_PACK`, `UNSTIR_OWNED` (one launch, never stored), First Stir's played vignettes, Escapement's
     provisional tick and lost state, with a shot and a film line per pack.
    Merged 2026-10-25 (PR #21) for the store side: `UNSTIR_PACK`, `UNSTIR_OWNED`, `UNSTIR_STORE`. The per-pack
