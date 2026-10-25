@@ -34,7 +34,9 @@ this is analysis. No code has changed for it.
 1. **TestFlight with 20–50 strangers.** Watch whether they get the goal without help, where they get stuck, and
    whether they come back for the daily. Day-2 return is the number to watch.
 2. **A share line for the daily result**, Wordle style (e.g. `Unstir #142 · 7 moves (par 6)`). The daily generator
-   already exists; the sharing does not.
+   already exists. Built on `daily-share` (2026-10-25, `Sources/Share.swift`): a share button on the daily's card, a
+   square per move in its flash's colour, practice named as such, no URL yet (`Share.url`). Open for Jack: the first day,
+   daily #1 (`Share.firstDay`, today as a placeholder; options in the PR).
 3. **3–5 short clips** of a picture snapping back, recorded with `scripts/film.sh`, posted to TikTok, Reels and Shorts.
    See whether anyone cares before spending money.
 4. **Choose the model from what testers do**, then set up the App Store page, preview video and a featuring request.
