@@ -1312,10 +1312,13 @@ final class UnstirTests: XCTestCase {
     }
 
     /// Against the design table. Coral reads only to 6 stirs and neurons to 14. The sandbox cycles every picture but
-    /// the twins.
+    /// the twins, vortex's after whirlpool's, and steps from a twin to the picture after its sibling.
     func testWhirlpoolPictures() {
-        XCTAssertEqual(Array(sequence(first: Picture.grid, next: \.next).prefix(9)),
-                       [.grid, .sunset, .city, .glass, .chainmail, .coral, .neurons, .marbling, .grid])
+        XCTAssertEqual(Array(sequence(first: Picture.grid, next: \.next).prefix(12)),
+                       [.grid, .sunset, .city, .glass, .chainmail, .coral, .neurons, .marbling, .isobars, .ephemeris,
+                        .cords, .grid])
+        XCTAssertEqual(Picture.coralTwin.next, .neurons)
+        XCTAssertEqual(Picture.marblingTwin.next, .isobars)
         let table: [(Picture, [Int])] = [(.glass, [1, 9, 14, 19, 23, 26, 27]), (.chainmail, [3, 10, 13, 18, 21, 24]),
                                          (.coral, [2, 5, 8, 16]), (.neurons, [4, 7, 11, 17, 20]), (.marbling, [6, 12, 15, 22, 25])]
         var want = [Picture?](repeating: nil, count: 27)
@@ -1679,6 +1682,32 @@ final class UnstirTests: XCTestCase {
         harnessed.commit(rod: 4, steps: -3)
         XCTAssertTrue(harnessed.swirled)
         XCTAssertFalse(Best.swirled)
+    }
+
+    /// The swirl breathes only until the player's first stir of it commits, the moment its lesson goes: a stir of another
+    /// rod or a turn of the tank leaves it breathing, and after that stir no level breathes again. A layout without a
+    /// swirl never does.
+    @MainActor func testBreathStopsOnceTheSwirlIsUsed() {
+        let saved = Best.swirled
+        defer { Best.swirled = saved }
+        Best.swirled = false
+        let level = Level(id: "test-breath", label: "", title: "", layout: .quadSwirl,
+                          scramble: [Twist(rod: 0, steps: 4), Twist(rod: 4, steps: 3)], seized: [1], fixedPar: 2)
+        let game = Game(level: level, tankTurned: true)
+        XCTAssertTrue(game.breathes)
+        game.commit(rod: 2, steps: 2)
+        game.turnTank(1)
+        XCTAssertTrue(game.breathes)
+        game.commit(rod: 4, steps: -3)
+        XCTAssertFalse(game.breathes)
+        XCTAssertFalse(Game(level: level).breathes)
+        XCTAssertFalse(Game(level: Level(id: "test-breath-pent", label: "", title: "", layout: .pentSwirl,
+                                         scramble: [Twist(rod: 5, steps: 2)])).breathes)
+
+        Best.swirled = false
+        XCTAssertFalse(Game(level: Level(id: "test-breath-quad", label: "", title: "", layout: .quad,
+                                         scramble: [Twist(rod: 0, steps: 2)])).breathes)
+        XCTAssertFalse(Game(level: level, swirled: true).breathes)
     }
 
     /// Par is one move per entry wherever no knob is seized; a level with seized knobs sets its own, counting its

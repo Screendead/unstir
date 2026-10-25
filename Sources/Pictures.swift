@@ -59,9 +59,9 @@ enum Picture: String, CaseIterable {
         }
     }
 
-    /// The sandbox's: plughole's pictures and whirlpool's, not the twins.
+    /// The sandbox's: plughole's pictures, whirlpool's and vortex's, not the twins.
     var next: Picture {
-        let all = Self.allCases.filter { !$0.isLive || $0.twin != $0 }
+        let all = Self.allCases.filter { $0.sibling == $0 }
         return all[((all.firstIndex(of: sibling) ?? -1) + 1) % all.count]
     }
 

@@ -179,7 +179,8 @@ for level in 27:glass 22:chainmail 8:coral 18:neurons 24:marbling; do
   shot "maelstrom$n-$picture" "Maelstrom level $n ($picture twin) with its full scramble." TIER=maelstrom LEVEL=$n CLOCK=3
 done
 # The turning tank: maelstrom levels on their twins, at home and turned one step, where every seam should sit
-# concentric on the knob it lands under. The bezel is knurled wherever knobs are seized (the rim-* shots compare cues).
+# concentric on the knob it lands under. The bezel is knurled wherever knobs are seized (the rim-* shots show it beside
+# the lessons).
 shot seized-m01-home "Maelstrom 01 (square, coral twin) with knob 1 seized, tank at home." TIER=maelstrom LEVEL=1 CLOCK=3
 shot seized-m01-turned "Maelstrom 01 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2." \
   TIER=maelstrom LEVEL=1 TANK=1 CLOCK=3
@@ -273,14 +274,15 @@ shot rim-swirl-held-low "Rim: vortex 01, the swirl held from the rim at six and 
 shot rim-swirl-turned "Rim: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the dashes at twelve." \
   TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 TURNED=4:+2
 # The swirl's breath (UNSTIR_BREATH), held 0.4 s into its first slosh, where it has turned the picture furthest: a still
-# of the tank at rest shows nothing. On vortex 01 (quad), 14 (pent) and 21 (hex), and on vortex 01 with knob 1 seized,
-# for the bezel's knurl beside it.
+# of the tank at rest shows nothing. It runs only until the swirl is first stirred, so these never set UNSTIR_SWIRLED
+# and its lesson shows with it. On vortex 01 (quad), 14 (pent) and 21 (hex), and on vortex 01 with knob 1 seized, for
+# the bezel's knurl beside it.
 for n in 01 14 21; do
-  shot "breath-$n" "Breath: vortex $n at rest, its lesson learnt, 0.4 s into the swirl's first slosh." \
-    TIER=vortex LEVEL=$n CLOCK=3 SWIRLED=1 BREATH=1.9
+  shot "breath-$n" "Breath: vortex $n at rest, the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass." \
+    TIER=vortex LEVEL=$n CLOCK=3 BREATH=1.9
 done
-shot breath-both "Breath: vortex 01 with knob 1 seized, both lessons learnt, 0.4 s into the swirl's first slosh: the knurl for the glass's turn beside it." \
-  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 BREATH=1.9
+shot breath-both "Breath: vortex 01 with knob 1 seized, the tank's lesson learnt and the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass: the knurl for the glass's turn beside it." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 TANKTURNED=1 BREATH=1.9
 # A sheet of what reads before a move, cut to the tank: the swirl alone, the glass's turn alone and both, learnt along
 # the top and with their lessons under. Not a shot, so not in the index.
 if [[ -z "$pattern" || "rim-" == *$pattern* ]]; then

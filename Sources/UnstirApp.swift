@@ -56,7 +56,7 @@ struct Harness {
     /// UNSTIR_REST=s: with UNSTIR_FINGER, the seconds at rest before the first fingertip lands (2 when unset).
     let rest: Double
     /// UNSTIR_BREATH=s: on a layout with a swirl, its breath held s seconds into the tank's first rest. Unset, it runs
-    /// live, or not at all while UNSTIR_CLOCK holds the clock.
+    /// live, or not at all while UNSTIR_CLOCK holds the clock. Never with UNSTIR_SWIRLED=1.
     let breath: Double?
     /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
     let brimDemo: Bool
@@ -67,7 +67,8 @@ struct Harness {
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
     /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change. It also stills
-    /// the swirl's breath, so a shot on a layout with a swirl that sets neither this nor UNSTIR_BREATH may catch a slosh.
+    /// the swirl's breath, so a shot on a layout with a swirl that sets none of this, UNSTIR_BREATH and UNSTIR_SWIRLED=1
+    /// may catch a slosh.
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
