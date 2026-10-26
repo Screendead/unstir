@@ -272,8 +272,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
-  Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and, until its
-  content lands, no levels: `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
+  Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
+  one so far; Lens and Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
@@ -286,6 +286,27 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it.
+- **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
+  place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
+  (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
+  its `tags`, and `Game.played` is the story's vignettes less every tag on the stack, so the picture is a function of
+  the stack alone: a pop plays what it carried, a vignette waits for every entry on its rod, a win the fine pass calls
+  plays the rest, and the pack's undo and a reset bring tags back with their entries. On a story, the heal ring
+  (magenta and the heavy tap) marks only a commit that plays a vignette; cancelling the player's own push flashes
+  white. `StoryLayer` draws it from baked layers, made as it appears: the storm's sky and the evening's, the bolt cut to
+  its box, and the scene with every vignette held back and with every one played, both transparent, under live rain
+  and moon (`Harbour.weather`). Each played core is cut in from the played scene over its own sky and fades in over
+  `Harbour.fade` (0.4 s) on the rewind's clock; an unplayed one snaps back at once, since a fade would show the played
+  state on a turned core. The night winds back a stage per vignette played (Jack's call, F2): over `Harbour.rewind`
+  the evening's sky fades in by a stage, the bolt goes in the first, the rain climbs back up its slant and thins, and
+  the moon, outside every disc, sinks. Only undo or reset winds it forward, and that snaps. The layers bake at the
+  screen's scale unless they would pass `Harbour.budget` (64 MB, not yet measured on the phone; about 51 MB at 3x on
+  the largest phone), then lower. Level 1 is the lab's harbour (`lab-firststir`), opening wrecked as dealt, with the
+  caption "Each heal turns the night back." as its note. `testNoVignetteShowsTheNextMove` renders each vignette's two
+  states, checks the difference stays inside its own core (so the cut clips no glow), and over every heal order that
+  `Layout.removable` allows, that no vignette's light reaches the core of a rod removable right after its heal and that
+  the entries left move none of it by half a pixel; the harbour's two known smears (the lantern's shards and the boat's
+  stern, in the cottage's ring) are pinned there as Jack's call.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
@@ -311,7 +332,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
-  (`UNSTIR_BENCH`). In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
+  (`UNSTIR_BENCH`). `UNSTIR_PACE=s` sets autoplay's and `UNSTIR_MOVES`' wait before each move (0.3 s unset), and
+  `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
   best or started flag (`Level.keepsProgress`), and
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
   in place of StoreKit's, never stored. `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
