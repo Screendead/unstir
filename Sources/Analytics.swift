@@ -41,9 +41,7 @@ struct Tally: Codable, Equatable {
     var installed: String?
     /// Day numbers the app came to the front on, day 1 the install's.
     var days: [Int] = []
-    /// The newest day `returned` went out for.
-    var returned = 1
-    /// Once-per-install events sent: "installed", "snapshot.7", "card.lens", "purchased.complete".
+    /// Events sent once: "installed", "returned.3", "snapshot.7", "card.lens", "purchased.complete".
     var sent: Set<String> = []
     /// What happened on the phone whether or not it was sent, for the snapshot: "card.lens", "taste.lens".
     var seen: Set<String> = []
@@ -71,24 +69,25 @@ struct Tally: Codable, Equatable {
         case installed(day: Int), returned(day: Int), snapshot(milestone: Int, day: Int)
     }
 
-    /// The app is at the front on local day `today`: records the day, and returns what is due if the player has said
-    /// yes. Each is marked sent here, so nothing comes due twice; a day reached with the clock set back is no return.
-    mutating func opened(today: String, consented: Bool) -> [Due] {
+    /// The app is at the front on local day `today`: records the day unless the player said no, and returns what is
+    /// due if they said yes. Each is marked sent here, so nothing comes due twice. A `returned` is due for any later day
+    /// number not yet sent, so a clock set ahead and back costs no real return; of the snapshots due at once (a late
+    /// yes, a clock set ahead), only the newest goes.
+    mutating func opened(today: String, consent: Consent) -> [Due] {
         if installed == nil { installed = today }
         guard let day = Tally.number(of: today, from: installed!), day >= 1 else { return [] }
-        if !days.contains(day) { days.append(day) }
-        guard consented else { return [] }
+        if consent != .no, !days.contains(day) { days.append(day) }
+        guard consent == .yes else { return [] }
         var due: [Due] = []
         if sent.insert("installed").inserted { due.append(.installed(day: day)) }
-        if day > returned {
-            returned = day
-            due.append(.returned(day: day))
-        }
-        for m in Tally.milestones where day >= m && sent.insert("snapshot.\(m)").inserted {
-            due.append(.snapshot(milestone: m, day: day))
-        }
+        if day > 1, sent.insert("returned.\(day)").inserted { due.append(.returned(day: day)) }
+        let snapshots = Tally.milestones.filter { day >= $0 && sent.insert("snapshot.\($0)").inserted }
+        if let m = snapshots.last { due.append(.snapshot(milestone: m, day: day)) }
         return due
     }
+
+    /// What a no leaves: the install's day, so later day numbers stay right, and nothing of play.
+    func forgotten() -> Tally { Tally(installed: installed) }
 }
 
 /// Anonymous counts for Aptabase, behind the player's consent. `shared` stays off until `start`, and a launch under the
@@ -158,17 +157,20 @@ final class Analytics {
         return true
     }
 
-    /// What the first-launch question and the settings switch set.
+    /// What the first-launch question and the settings switch set. A no forgets what the tally kept of play, so a
+    /// later yes starts clean; bests and started flags are the game's own and stay.
     func decide(_ yes: Bool) {
         consent = yes ? .yes : .no
         if stores { defaults.set(consent.rawValue, forKey: "analytics.consent") }
+        if !yes {
+            tally = tally.forgotten()
+            save()
+        }
         guard on else { return }
         if yes {
             wake()
             opened()
         } else {
-            tally.pending = nil
-            save()
             sender?.discard()
             sender = nil
             if case .send(_, let queue, _) = mode { try? FileManager.default.removeItem(at: queue) }
@@ -178,7 +180,7 @@ final class Analytics {
     /// The app came to the front.
     func opened(today: String? = nil) {
         guard on else { return }
-        let due = tally.opened(today: today ?? self.today(), consented: consent == .yes)
+        let due = tally.opened(today: today ?? self.today(), consent: consent)
         save()
         for d in due {
             switch d {
@@ -234,7 +236,7 @@ final class Analytics {
     }
 
     func undid() {
-        guard on else { return }
+        guard on, consent != .no else { return }
         tally.undos += 1
         save()
     }
@@ -274,7 +276,7 @@ final class Analytics {
     }
 
     private func once(_ event: String, _ product: String) {
-        guard on else { return }
+        guard on, consent != .no else { return }
         let key = "\(event).\(product)"
         tally.seen.insert(key)
         if consent == .yes, tally.sent.insert(key).inserted { send(event, ["pack": .text(product)]) }

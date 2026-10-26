@@ -88,7 +88,7 @@ final class AnalyticsTests: XCTestCase {
 
         a.decide(true)
         await settle(a)
-        XCTAssertEqual(wire.names, ["installed", "returned", "snapshot", "snapshot"])
+        XCTAssertEqual(wire.names, ["installed", "returned", "snapshot"])
         XCTAssertEqual(wire.requests.first?.value(forHTTPHeaderField: "App-Key"), "A-EU-0000000000")
         XCTAssertEqual(wire.requests.first?.url?.absoluteString, "https://eu.aptabase.com/api/v0/events")
     }
@@ -117,7 +117,7 @@ final class AnalyticsTests: XCTestCase {
         // Relaunched later the same day, with the install already sent: nothing comes due.
         defaults.set("yes", forKey: "analytics.consent")
         var tally = Tally()
-        _ = tally.opened(today: "2026-10-01", consented: true)
+        _ = tally.opened(today: "2026-10-01", consent: .yes)
         defaults.set(try JSONEncoder().encode(tally), forKey: "analytics")
         let wire = Wire()
         let a = analytics(wire)
@@ -145,15 +145,17 @@ final class AnalyticsTests: XCTestCase {
 
     func testReturnedOncePerDay() {
         var t = Tally()
-        XCTAssertEqual(t.opened(today: "2026-10-01", consented: true), [.installed(day: 1)])
-        XCTAssertEqual(t.opened(today: "2026-10-01", consented: true), [])
-        XCTAssertEqual(t.opened(today: "2026-10-02", consented: true), [.returned(day: 2), .snapshot(milestone: 2, day: 2)])
-        XCTAssertEqual(t.opened(today: "2026-10-02", consented: true), [])
-        XCTAssertEqual(t.opened(today: "2026-10-04", consented: true), [.returned(day: 4)])
-        // The clock set back.
-        XCTAssertEqual(t.opened(today: "2026-10-03", consented: true), [])
-        XCTAssertEqual(t.opened(today: "2026-09-20", consented: true), [])
-        XCTAssertEqual(t.opened(today: "2026-10-05", consented: true), [.returned(day: 5)])
+        XCTAssertEqual(t.opened(today: "2026-10-01", consent: .yes), [.installed(day: 1)])
+        XCTAssertEqual(t.opened(today: "2026-10-01", consent: .yes), [])
+        XCTAssertEqual(t.opened(today: "2026-10-02", consent: .yes), [.returned(day: 2), .snapshot(milestone: 2, day: 2)])
+        XCTAssertEqual(t.opened(today: "2026-10-02", consent: .yes), [])
+        XCTAssertEqual(t.opened(today: "2026-10-04", consent: .yes), [.returned(day: 4)])
+        // The clock set back: a day number not yet sent is a return, one before the install's is not.
+        XCTAssertEqual(t.opened(today: "2026-10-03", consent: .yes), [.returned(day: 3)])
+        XCTAssertEqual(t.opened(today: "2026-10-03", consent: .yes), [])
+        XCTAssertEqual(t.opened(today: "2026-09-20", consent: .yes), [])
+        XCTAssertEqual(t.opened(today: "2026-10-01", consent: .yes), [])
+        XCTAssertEqual(t.opened(today: "2026-10-05", consent: .yes), [.returned(day: 5)])
         XCTAssertEqual(t.days, [1, 2, 4, 3, 5])
         // Across a month, a year and a change of clocks.
         XCTAssertEqual(Tally.number(of: "2027-01-01", from: "2026-12-31"), 2)
@@ -166,21 +168,73 @@ final class AnalyticsTests: XCTestCase {
         var at: [Int: [Int]] = [:]
         for d in 0..<45 {
             let day = Best.day(Date(timeIntervalSince1970: 1_790_000_000 + Double(d) * 86400), in: TimeZone(identifier: "UTC")!)
-            for case .snapshot(let m, let n) in t.opened(today: day, consented: true) + t.opened(today: day, consented: true) {
+            for case .snapshot(let m, let n) in t.opened(today: day, consent: .yes) + t.opened(today: day, consent: .yes) {
                 at[n, default: []].append(m)
             }
         }
         XCTAssertEqual(at, [2: [2], 7: [7], 30: [30]])
 
-        // A yes given late sends each milestone passed, once, with the day it went out on.
+        // A yes given late sends only the newest milestone passed, with the day it went out on; the others never go.
         var late = Tally()
-        _ = late.opened(today: "2026-10-01", consented: false)
-        _ = late.opened(today: "2026-10-03", consented: false)
-        XCTAssertEqual(late.opened(today: "2026-10-09", consented: true),
-                       [.installed(day: 9), .returned(day: 9), .snapshot(milestone: 2, day: 9),
-                        .snapshot(milestone: 7, day: 9)])
-        XCTAssertEqual(late.opened(today: "2026-10-09", consented: true), [])
+        _ = late.opened(today: "2026-10-01", consent: .undecided)
+        _ = late.opened(today: "2026-10-03", consent: .undecided)
+        XCTAssertEqual(late.opened(today: "2026-10-09", consent: .yes),
+                       [.installed(day: 9), .returned(day: 9), .snapshot(milestone: 7, day: 9)])
+        XCTAssertEqual(late.opened(today: "2026-10-09", consent: .yes), [])
         XCTAssertEqual(late.days, [1, 3, 9])
+        XCTAssertEqual(late.opened(today: "2026-10-30", consent: .yes),
+                       [.returned(day: 30), .snapshot(milestone: 30, day: 30)])
+    }
+
+    func testAClockSetAheadCostsNoRealReturn() {
+        var t = Tally()
+        _ = t.opened(today: "2026-10-01", consent: .yes)
+        // 31 days ahead: one return and only the newest snapshot.
+        XCTAssertEqual(t.opened(today: "2026-11-01", consent: .yes),
+                       [.returned(day: 32), .snapshot(milestone: 30, day: 32)])
+        // Set right: each real day still returns once.
+        XCTAssertEqual(t.opened(today: "2026-10-02", consent: .yes), [.returned(day: 2)])
+        XCTAssertEqual(t.opened(today: "2026-10-03", consent: .yes), [.returned(day: 3)])
+        XCTAssertEqual(t.opened(today: "2026-10-03", consent: .yes), [])
+        // The faked day, reached for real, is already sent.
+        XCTAssertEqual(t.opened(today: "2026-11-01", consent: .yes), [])
+    }
+
+    func testNoRecordsNothingAndForgetsThePlayersTally() async {
+        let wire = Wire()
+        let a = analytics(wire)
+        a.opened(today: "2026-10-01")
+        a.opened(today: "2026-10-02")
+        a.cardSeen(.lens)
+        a.undid()
+        // Undecided records, since the question comes at the first launch.
+        XCTAssertEqual(a.tally.days, [1, 2])
+        XCTAssertEqual(a.tally.undos, 1)
+        XCTAssertEqual(a.tally.seen, ["card.lens"])
+
+        a.decide(false)
+        XCTAssertEqual(a.tally, Tally(installed: "2026-10-01"))
+        a.opened(today: "2026-10-03")
+        a.cardSeen(.escapement)
+        a.tasteFinished(.lens)
+        a.purchased(Pack.lens.productID)
+        a.undid()
+        XCTAssertEqual(a.tally, Tally(installed: "2026-10-01"))
+        // Stored too: a relaunch reads the forgotten tally back.
+        XCTAssertEqual(Analytics(defaults: defaults).tally, Tally(installed: "2026-10-01"))
+
+        // A later yes starts clean, its day numbers still counted from the install.
+        a.today = { "2026-10-09" }
+        a.decide(true)
+        a.cardSeen(.escapement)
+        await settle(a)
+        XCTAssertEqual(wire.names, ["installed", "returned", "snapshot", "card"])
+        XCTAssertEqual(a.tally.days, [9])
+        XCTAssertEqual(a.tally.undos, 0)
+        XCTAssertEqual(a.tally.seen, ["card.escapement"])
+        let snapshot = a.snapshot(milestone: 7, day: 9)
+        XCTAssertEqual(snapshot["days"], .text("9"))
+        XCTAssertEqual(snapshot["lens"], .text("none"))
     }
 
     func testPacksSendOncePerInstall() async {
