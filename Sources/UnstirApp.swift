@@ -79,6 +79,8 @@ struct Harness {
     let tierDemo: Bool
     /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
     let tierSpin: (spin: Double, fade: Double)?
+    /// UNSTIR_SETTINGS=1: the menu opens with the gear's sheet up. UNSTIR_CONSENT is read by `Analytics.configure`.
+    let settings: Bool
     /// UNSTIR_OWNED and UNSTIR_STORE, in place of StoreKit's for this launch; never stored, and nil in Release.
     let purchases: Ledger?
 
@@ -130,6 +132,7 @@ struct Harness {
         tierDemo = env["UNSTIR_TIERDEMO"] == "1"
         let spin = env["UNSTIR_TIERSPIN"]?.split(separator: ":").compactMap { Double($0) } ?? []
         tierSpin = spin.first.map { ($0, spin.count > 1 ? spin[1] : 0) }
+        settings = env["UNSTIR_SETTINGS"] == "1"
         bench = env["UNSTIR_BENCH"] == "1"
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
@@ -257,8 +260,10 @@ struct RootView: View {
     @Environment(\.scenePhase) private var phase
 
     init() {
-        let h = Harness(ProcessInfo.processInfo.environment)
+        let env = ProcessInfo.processInfo.environment
+        let h = Harness(env)
         harnessed = h.harnessed
+        Analytics.shared.configure(env: env, harnessed: h.harnessed)
         if let purchases = h.purchases { Store.shared.pretend(purchases) }
         _level = State(initialValue: h.screen == "menu" ? nil : h.level)
         _harness = State(initialValue: h)
@@ -278,7 +283,8 @@ struct RootView: View {
                     .id(level)
                     .transition(dip)
             } else {
-                MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin) {
+                MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
+                         settings: harness?.settings ?? false) {
                     show($0)
                 }
                 .transition(dip)

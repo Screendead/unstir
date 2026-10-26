@@ -92,7 +92,7 @@ struct Tally: Codable, Equatable {
 
 /// Anonymous counts for Aptabase, behind the player's consent. `shared` stays off until `start`, and a launch under the
 /// test runner never starts it.
-@MainActor
+@MainActor @Observable
 final class Analytics {
     static let shared = Analytics()
 
@@ -104,6 +104,9 @@ final class Analytics {
     }
 
     private(set) var consent: Consent
+    /// Whether the menu asks the question while it is undecided: on a plain launch, or a harnessed one with
+    /// UNSTIR_CONSENT=ask.
+    private(set) var asks = false
     private(set) var tally: Tally
     private var mode = Mode.off
     /// False for a harnessed or logging launch, whose consent and tally last only that launch.
@@ -125,17 +128,30 @@ final class Analytics {
         tally = defaults.data(forKey: "analytics").flatMap { try? JSONDecoder().decode(Tally.self, from: $0) } ?? Tally()
     }
 
-    /// The launch's mode: logging with UNSTIR_ANALYTICS=log, which counts as a yes and stores nothing; off under any
-    /// other harness flag or without an app key; otherwise sending.
+    /// Before the first frame, so the menu's question shows at once and an answer given before `start` is kept.
+    /// UNSTIR_ANALYTICS=log counts as a yes and stores nothing. Under any other harness flag nothing is stored either:
+    /// UNSTIR_CONSENT=yes or no answers for the launch, =ask asks.
+    func configure(env: [String: String], harnessed: Bool) {
+        if env["UNSTIR_ANALYTICS"] == "log" {
+            consent = .yes
+        } else if harnessed {
+            let c = env["UNSTIR_CONSENT"]
+            asks = c == "ask"
+            consent = asks ? .undecided : c.flatMap(Consent.init(rawValue:)) ?? consent
+        } else {
+            // Without a key the answer is still kept, for the build that has one.
+            stores = true
+            asks = true
+        }
+    }
+
+    /// The launch's mode: logging with UNSTIR_ANALYTICS=log; off under any other harness flag or without an app key;
+    /// otherwise sending.
     func start(env: [String: String], harnessed: Bool,
                key: String? = Bundle.main.object(forInfoDictionaryKey: "AptabaseKey") as? String) {
         if env["UNSTIR_ANALYTICS"] == "log" {
-            consent = .yes
             start(.log, stores: false)
-        } else if !harnessed {
-            // Without a key the answer is still kept, for the build that has one.
-            stores = true
-            guard let endpoint = key.flatMap(Sender.Endpoint.init(key:)) else { return }
+        } else if !harnessed, let endpoint = key.flatMap(Sender.Endpoint.init(key:)) {
             start(.send(endpoint, queue: URL.libraryDirectory.appending(path: "analytics-queue.json"),
                         transport: { try await URLSession.shared.data(for: $0) }), stores: true)
         }

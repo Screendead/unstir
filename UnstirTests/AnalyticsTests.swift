@@ -237,6 +237,29 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(snapshot["lens"], .text("none"))
     }
 
+    func testAnAnswerBeforeStartIsKept() async {
+        let a = Analytics(defaults: defaults)
+        a.today = { "2026-10-01" }
+        a.configure(env: [:], harnessed: false)
+        XCTAssertTrue(a.asks)
+        a.decide(true)
+        XCTAssertEqual(defaults.string(forKey: "analytics.consent"), "yes")
+        let wire = Wire()
+        a.start(.send(endpoint, queue: queue, transport: wire.transport), stores: true)
+        await settle(a)
+        XCTAssertEqual(wire.names, ["installed"])
+
+        let shot = Analytics(defaults: defaults)
+        shot.configure(env: ["UNSTIR_CONSENT": "ask"], harnessed: true)
+        XCTAssertTrue(shot.asks)
+        XCTAssertEqual(shot.consent, .undecided)
+        shot.decide(false)
+        XCTAssertEqual(defaults.string(forKey: "analytics.consent"), "yes")
+        let plain = Analytics(defaults: defaults)
+        plain.configure(env: ["UNSTIR_LEVEL": "3"], harnessed: true)
+        XCTAssertFalse(plain.asks)
+    }
+
     func testPacksSendOncePerInstall() async {
         let wire = Wire()
         let a = analytics(wire)
