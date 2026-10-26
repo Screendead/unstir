@@ -29,6 +29,11 @@ struct Ledger: Equatable, Sendable {
     }
 
     var owned: Set<Pack> { Set(Pack.allCases.filter { state($0) == .owned }) }
+
+    /// A failure belongs to the attempt, so it goes when the card that showed it closes.
+    mutating func forgetFailures() {
+        for (id, state) in products where state == .failed { products[id] = .unowned }
+    }
 }
 
 /// The App Store's side of the packs. Nothing here is stored: StoreKit keeps every purchase, and `start` reads them
@@ -56,6 +61,8 @@ final class Store {
     }
 
     func price(_ id: String) -> String? { prices[id] }
+
+    func forgetFailures() { ledger.forgetFailures() }
 
     /// Set before `start`, which then leaves StoreKit alone for the launch.
     func pretend(_ ledger: Ledger, prices: [String: String] = [:]) {
