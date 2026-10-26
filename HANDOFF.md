@@ -743,8 +743,13 @@ names and product ids, and Complete's promise to older owners.
    drops to 36% of the disc. Jack's call (2026-10-25, L1): the hard lens, with a phone test next. The reviewers had
    recommended shelving it; trying it is Jack's choice.
    The hard lens is built for real on `lens-pack` (2026-10-25, not merged), with `lens-1` to `lens-3` (the draft's
-   taste, tri) to play: a Debug install, `UNSTIR_PACK=lens UNSTIR_LEVEL=n UNSTIR_OPEN=1`, since no Release build opens a
-   pack level until the shelf exists. The phone test itself has not been run.
+   taste, tri) to play, each card's "next" going on to the next. No Release build opens a pack level until the shelf
+   exists, so it is a Debug install (`scripts/run-ios.sh Debug`), then
+   `xcrun devicectl device process launch --device "$UNSTIR_DEVICE" --terminate-existing --environment-variables
+   '{"UNSTIR_PACK":"lens","UNSTIR_LEVEL":"1","UNSTIR_OPEN":"1","UNSTIR_UNLOCK":"1"}' com.screendead.Unstir`
+   (`UNSTIR_UNLOCK` keeps the phone's developer unlock, which any other harness variable clears; the flag's name is
+   unchecked against this Xcode's `devicectl`). The first launch bakes the halftone, unoptimised, for 20 s or more;
+   later ones read it from Caches. The phone test itself has not been run.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
    Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:

@@ -75,8 +75,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
     -destination 'platform=iOS Simulator,name=Unstir iPhone 17 Pro Max' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
   ```
-  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds skip
-  unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
+  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds, and the
+  halftone's contrast test, skip unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
   `xcodebuild` to run them too (about a minute and a half more).
 - StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
@@ -140,7 +140,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   which magnifies the centre by 1.3 a step (`lensRate`) for positive steps and fixes the core's rim, so the picture
   draws a crisp circle there and nothing outside it moves. Steps sum and cancel, so a lens's entries merge and pop
   through the same `Array.commit`, and a lens never wraps: +k needs exactly -k. Every call that maps points
-  (`same`, `commutes`, `looksSolved`, `removable`, `landing`, `commit`, `parse`, `Layout.stir`) takes the lens set,
+  (`same`, `commutes`, `looksSolved`, `removable`, `landing`, `commit`, `parse`) takes the lens set,
   empty by default; a call that drops it treats a lens as a twist, which `testTheLensSetChangesHowAStackMerges` catches
   where it matters. Ported from the hard lens on local branch `lab-lens` (Jack's call, round 3, L1).
 - **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
