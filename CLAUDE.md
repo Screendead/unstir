@@ -291,12 +291,20 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it.
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
-  no deletes the queue. The first-launch question and the settings switch will call `Analytics.decide`. No ID leaves the
-  phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out once and an
-  undo count; its `opened` gives `installed` once, `returned` with the day number (day 1 the install's) on the first
-  opening of each later day, at launch or on coming to the front, and a `snapshot` once each on the first opening on or
-  after days 2, 7 and 30, each marked sent only as it goes, so a late yes still sends them. Days are plain `Best.day`,
-  not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved or quit, moves, par, undos, resets)
+  no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
+  the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
+  word it and settings say (`ConsentWords`; the wording is still Jack's open call): on a plain launch while undecided,
+  `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile), Yes and No the same
+  control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
+  analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
+  leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
+  once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
+  install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
+  bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
+  `returned` with the day number (day 1 the install's) on the first opening of any later day number not yet sent, at
+  launch or on coming to the front, so a clock set ahead and back costs no real return, and on the first opening on or
+  after days 2, 7 and 30 the newest `snapshot` due, every one due marked sent, so a late yes or a clock jumped ahead
+  sends one (Jack, 2026-10-26, K). Days are plain `Best.day`, not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved or quit, moves, par, undos, resets)
   as it is solved or left for the menu; endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox
   nothing. A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app
   was killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
@@ -353,7 +361,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_ANALYTICS=log` writes each analytics event to the
   flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
-  any other harness flag analytics is off. `UNSTIR_UNLOCK` alone
+  any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask`; `UNSTIR_CONSENT=yes`
+  or `=no` answers for the launch, never stored, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. This is how screenshots and films
   are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.

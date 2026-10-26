@@ -888,20 +888,19 @@ names and product ids, and Complete's promise to older owners.
    of up to 40 characters and event names of up to 60, and cuts string values at 180; it drops, still answering 200,
    events over a day old and any whose session began over 7 days ago.
    The analytics core is built on `analytics` (`Analytics.swift`, its own sender with a queue on disk rather than the
-   pre-1.0 SDK, which holds events only in memory); the consent question, settings switch and send-log button wait
-   on their mock-up.
-   Open for Jack, from review (2026-10-25); the code does neither yet:
-   - *The tally under No.* `days`, `undos` and `seen` build whatever the consent, so a player who says No, plays a
-     month and then says Yes sends snapshots covering the No month (the bests and started flags they read exist
-     anyway). Options: keep it; stop recording under No; or that and clear them in `decide(false)`. Claude recommends
-     the last, keeping only the install's day so day numbers stay right; undecided keeps recording, since the
-     question comes at first launch.
-   - *The clock set ahead.* `returned` goes out only for a day past the newest sent, so a clock 31 days ahead sends
-     `returned{32}` and all three snapshots, and once set right no `returned` comes for 31 real days; a late Yes also
-     sends snapshots 2, 7 and 30 at once, alike but for `day`. Options: keep it; send `returned` on the first opening
-     of any day number not yet in `days`, and only the newest snapshot due; or reckon the day from `Best.trustedNow`
-     (which moves the refill's anchor, so it would need a read-only form). Claude recommends the second: it heals
-     after a mistaken clock without touching the refill's code.
+   pre-1.0 SDK, which holds events only in memory).
+   Jack's calls (2026-10-26, round 8), built on `analytics` (PR #38):
+   - *Q = A:* the question is a card over the menu at first launch, and the menu waits for an answer; Yes and No are
+     the same control, same type, colour and size, neither preselected (mock-up style A, `consent-mockups`).
+   - *S = A:* a gear beside the menu's title opens a dark sheet with the analytics switch and "send log", which hands
+     the flight recorder to the share sheet.
+   - *N = C:* under No nothing is recorded for analytics and the tally is cleared but for the install's day, so day
+     numbers stay right; a later Yes starts clean. Bests and started flags stay. Undecided keeps recording.
+   - *K = B:* `returned` goes for any day number not yet sent, and when several snapshots are due at once only the
+     newest goes.
+   Still open: the question's wording (Jack: it needs workshopping; `ConsentWords` holds it all, with a placeholder
+   text). Under N, clearing the tally clears what was sent once too, so a player who says Yes, No, then Yes sends
+   `installed` (and any snapshot due) again and counts as a second install; keeping the sent marks would avoid that.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
