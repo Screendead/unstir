@@ -1892,7 +1892,7 @@ struct ResultCard: View {
         case .vortex: game.level.tier.glow
         case .whirlpool, .maelstrom: .blood
         }
-        let next = run != nil ? game.nextTank : game.level.tier.levels.drop(while: { $0.id != game.level.id }).dropFirst().first
+        let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
         let time = String(format: "%d:%02d", game.seconds / 60, game.seconds % 60)
         VStack(spacing: 26) {
             VStack(spacing: 8) {
