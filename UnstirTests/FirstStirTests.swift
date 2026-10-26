@@ -100,6 +100,79 @@ final class FirstStirTests: XCTestCase {
         }
     }
 
+    /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, past
+    /// the renderer's own noise (up to 6 in 255 where nothing changed).
+    @MainActor private func footprint(_ k: Int, side: Int) throws -> [SIMD2<Double>] {
+        func pixels(_ played: Set<Int>) throws -> [UInt8] {
+            let image = try XCTUnwrap(Harbour.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear)?.cgImage)
+            var bytes = [UInt8](repeating: 0, count: 4 * side * side)
+            let ctx = try XCTUnwrap(CGContext(data: &bytes, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 4 * side,
+                                              space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
+            return bytes
+        }
+        let held = try pixels([]), played = try pixels([k])
+        var marks: [SIMD2<Double>] = []
+        for i in 0..<side * side where (0..<4).contains(where: { abs(Int(held[4 * i + $0]) - Int(played[4 * i + $0])) > 8 }) {
+            let px = SIMD2(Double(i % side), Double(i / side)) + 0.5
+            marks.append(px / Double(side) * 2 - 1)
+        }
+        return marks
+    }
+
+    /// Each vignette changes nothing past a pixel outside its own core, so the core the layer cuts in clips none of it.
+    /// Over every heal order: no vignette's light reaches the core of a rod with an entry removable right after its heal,
+    /// so light never shows the next move; and the entries left move none of it by half a pixel, so it never plays
+    /// smeared (the lab's rule: a vignette plays only once every disc over it is still).
+    @MainActor func testNoVignetteShowsTheNextMove() throws {
+        let side = 256, pixel = 2.0 / Double(side)
+        // Jack's call: the harbour as the lab drew it plays the lantern's falling shards (5 px at most on the largest
+        // phone) and the boat's stern in the cottage's shear ring, still stirred.
+        let known: Set<String> = ["first-stir-1: vignette 0 plays smeared by rod 2", "first-stir-1: vignette 1 plays smeared by rod 2"]
+        var faults: Set<String> = []
+        for level in Level.firstStir {
+            let story = try XCTUnwrap(level.story)
+            let layout = level.layout, rods = layout.rods
+            func centre(_ rod: Int) -> SIMD2<Double> { SIMD2(rods[rod].x, rods[rod].y) }
+            var marks: [Int: [SIMD2<Double>]] = [:]
+            for k in story.vignettes {
+                let m = try footprint(k, side: side)
+                XCTAssertFalse(m.isEmpty, "\(level.id): vignette \(k) changes nothing")
+                let core = Tank.plateau * rods[k].z
+                XCTAssertTrue(m.allSatisfy { simd_distance($0, centre(k)) <= core + pixel }, "\(level.id): vignette \(k) leaves its core")
+                marks[k] = m
+            }
+            var seen: Set<[Twist]> = []
+            func heal(_ entries: [Game.Entry]) {
+                guard seen.insert(entries.map(\.twist)).inserted else { return }
+                let stack = entries.map(\.twist)
+                for i in layout.removable(stack) {
+                    var next = entries
+                    next.commit(Game.Entry(twist: Twist(rod: stack[i].rod, steps: -stack[i].steps), pushed: true), in: layout)
+                    let left = next.map(\.twist)
+                    for k in Set(entries.flatMap(\.tags)).subtracting(next.flatMap(\.tags)) {
+                        for j in layout.removable(left) {
+                            let rod = left[j].rod, core = Tank.plateau * rods[rod].z
+                            if marks[k]!.contains(where: { simd_distance($0, centre(rod)) < core + pixel }) {
+                                faults.insert("\(level.id): vignette \(k)'s light reaches rod \(rod)'s core, removable next")
+                            }
+                        }
+                        for rod in Set(left.map(\.rod)) {
+                            let word = left.filter { $0.rod == rod }
+                            let moved = marks[k]!.contains { p in
+                                simd_distance(word.reduce(p) { Tank.twist($0, rod: rods[rod], angle: Double($1.steps) * Tank.step) }, p) > Tank.halfPixel
+                            }
+                            if moved { faults.insert("\(level.id): vignette \(k) plays smeared by rod \(rod)") }
+                        }
+                    }
+                    heal(next)
+                }
+            }
+            heal(level.scramble.map { Game.Entry(twist: $0, pushed: false, tags: story.vignettes.intersection([$0.rod])) })
+        }
+        XCTAssertEqual(faults, known)
+    }
+
     /// The layers bake at the screen's scale on the largest phone, and at a lower one rather than pass the budget.
     func testTheLayersBakeWithinTheBudget() {
         // The Pro Max's tank: (440 points wide) / 1.045.

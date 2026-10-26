@@ -387,7 +387,8 @@ enum Harbour {
 
         // Vignette 2: the cottage door.
         if played.contains(2) {
-            neon(ctx, r: r, glows: [(0.035, 0.55), (0.009, 1)]) { g in
+            // Its glow held tight, so the core's edge never clips it beside the doorway.
+            neon(ctx, r: r, glows: [(0.022, 0.55), (0.009, 1)]) { g in
                 g.fill(window, with: .color(sodium.opacity(0.4)))
                 stroke(g, window, sodium)
                 stroke(g, seg(-0.515, 0.09, -0.515, 0.18), sodium)
