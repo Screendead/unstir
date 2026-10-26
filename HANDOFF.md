@@ -899,8 +899,8 @@ names and product ids, and Complete's promise to older owners.
    - *K = B:* `returned` goes for any day number not yet sent, and when several snapshots are due at once only the
      newest goes.
    Still open: the question's wording (Jack: it needs workshopping; `ConsentWords` holds it all, with a placeholder
-   text). Under N, a No keeps the marks of what already went out, so a Yes, No, Yes player never sends
-   `installed` or a snapshot twice.
+   text). Under N, clearing the tally clears what was sent once too, so a player who says Yes, No, then Yes sends
+   `installed` (and any snapshot due) again and counts as a second install; keeping the sent marks would avoid that.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that

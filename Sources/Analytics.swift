@@ -86,9 +86,8 @@ struct Tally: Codable, Equatable {
         return due
     }
 
-    /// What a no leaves: the install's day, so later day numbers stay right, and what has already left the phone, so a
-    /// later yes never counts the player twice. Nothing of play that wasn't sent.
-    func forgotten() -> Tally { Tally(installed: installed, sent: sent) }
+    /// What a no leaves: the install's day, so later day numbers stay right, and nothing of play.
+    func forgotten() -> Tally { Tally(installed: installed) }
 }
 
 /// Anonymous counts for Aptabase, behind the player's consent. `shared` stays off until `start`, and a launch under the
