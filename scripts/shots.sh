@@ -306,3 +306,21 @@ shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl 
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# First Stir 01, the harbour: 2:+5,1:-4,0:+3 on tri, a vignette in each rod's core (the lighthouse 0, the boat 1, the
+# cottage 2), the night winding back a stage with each. UNSTIR_BARE draws the picture unstirred, so the art shows as the
+# stack has played it. The last heal solves the tank, so a wave past the rim keeps the card away.
+fs="PACK=first-stir LEVEL=1"
+shot firststir-01 "First Stir 01 as dealt: the wrecked harbour in the storm, every core turned, the caption under the tank." $fs
+shot firststir-01-bare-0 "First Stir 01 drawn unstirred with every vignette held back: lantern smashed, boat capsized, door flung open, a lantern dropped; the storm at its height." \
+  $fs BARE=1
+shot firststir-01-bare-1 "First Stir 01 drawn unstirred after the lighthouse's heal: the lantern lit, no lightning, rain thinner, the moon lower." \
+  $fs BARE=1 STACK=2:+5,1:-4
+shot firststir-01-bare-2 "First Stir 01 drawn unstirred after the boat's heal: the boat moored upright, a third of the rain left, the sky warming." \
+  $fs BARE=1 STACK=2:+5
+shot firststir-01-bare-3 "First Stir 01 drawn unstirred after the last heal: someone in the lit doorway, no rain, an afterglow, the moon low over the roofs." \
+  $fs BARE=1 STACK="" WAVE=2
+shot firststir-01-healed-1 "First Stir 01 after the first heal (0:-3): the lantern lit in a still core, the other two cores still turned." \
+  $fs TURNED=0:-3
+shot firststir-01-healed-2 "First Stir 01 after the second heal (1:+4): the boat upright, the cottage's core still turned." \
+  $fs STACK=2:+5,1:-4 TURNED=1:+4
+shot firststir-01-solved "First Stir 01 solved (2:-5) on the calm evening, the card held off." $fs STACK=2:+5 TURNED=2:-5 WAVE=2

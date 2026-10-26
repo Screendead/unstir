@@ -498,6 +498,10 @@ struct LevelView: View {
     @Environment(\.scenePhase) private var phase
     private let still: Bool
     private let autoplay: Bool
+    /// UNSTIR_PACE: the seconds autoplay and UNSTIR_MOVES wait before each move.
+    private let pace: Double
+    /// UNSTIR_BARE: the picture drawn unstirred, as the stack has played it.
+    private let bare: Bool
     private let moves: [Twist]?
     private let fingered: Bool
     private let bench: Bool
@@ -581,6 +585,8 @@ struct LevelView: View {
         _eased = State(initialValue: game.solved)
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
+        pace = harness?.pace ?? 0.3
+        bare = harness?.bare ?? false
         moves = harness?.moves
         fingered = harness?.finger ?? false
         brimDemo = harness?.brimDemo ?? false
@@ -854,7 +860,7 @@ struct LevelView: View {
     private func play() async {
         while !game.finished {
             let t = game.reachable
-            guard (try? await Task.sleep(for: .seconds(0.3))) != nil else { return }
+            guard (try? await Task.sleep(for: .seconds(pace))) != nil else { return }
             if let t {
                 liveRod = t.rod
                 withAnimation(.easeInOut(duration: 0.4)) { liveAngle = Double(t.steps) * Tank.step }
@@ -871,7 +877,7 @@ struct LevelView: View {
     private func play(_ moves: [Twist]) async {
         if fingered { await hand(moves); return }
         for m in moves {
-            guard (try? await Task.sleep(for: .seconds(0.3))) != nil, !game.finished else { return }
+            guard (try? await Task.sleep(for: .seconds(pace))) != nil, !game.finished else { return }
             if m.rod == Game.tank {
                 liveTurn = 0
                 withAnimation(.easeInOut(duration: 0.4)) { liveTurn = Double(m.steps) * game.level.layout.tankStep }
@@ -998,7 +1004,7 @@ struct LevelView: View {
         let held = liveTurn.map { $0 + (spin ?? 0) }
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
-        let unstirred = Unstirred(stack: stack, layout: game.level.layout, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
+        let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
