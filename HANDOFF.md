@@ -835,8 +835,11 @@ names and product ids, and Complete's promise to older owners.
     Built 2026-10-25 on `escapement-pack` (not merged), ported from `lab-escapement` onto the groundwork: `Game.Clock`,
     `wait(on:)`, `liftTick`, `relandTick`, the tap (near the ratchet's centre; anything else on its disc shakes), the
     demonstration before the first stir (`Level.demo`, played on escapement 1), with a test for each case in
-    `EscapementTests`. Two rules the lab left open, as built: a wait is sealed as it is made, so a wait whose tick pushes
-    loses at once; a full stack refuses a move whose tick it would refuse. Left: Two Clocks and Wound Back (one clock a
+    `EscapementTests`. Claude's readings where the lab left the rule open, built but to confirm with Jack: a wait is
+    sealed as it is made, so a wait whose tick pushes loses at once; a knob's move that seals a pushed tick still
+    stirs, landing no tick; a full stack refuses a move whose tick it would refuse; the demonstration plays on every
+    opening of escapement 1, skippable, not once like the rim's lessons. The level's title, "The clock", is Claude's,
+    ahead of the table's review (to-do 39). Left: Two Clocks and Wound Back (one clock a
     level for now), the ratchet's sound (to-do 45).
 35. Escapement: the lost rule and its test (a pushed tick leaves a positive E entry that no continuation pops,
     property-tested on small cases) and the "lost." card with undo and again.
