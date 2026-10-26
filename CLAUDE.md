@@ -299,7 +299,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
   leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
-  install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
+  install's day and what has already gone out (`Tally.forgotten`), so day numbers stay right and a later yes starts
+  clean without counting the player twice;
   bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
   `returned` with the day number (day 1 the install's) on the first opening of any later day number not yet sent, at
   launch or on coming to the front, so a clock set ahead and back costs no real return, and on the first opening on or

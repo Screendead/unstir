@@ -237,6 +237,20 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(snapshot["lens"], .text("none"))
     }
 
+    func testAYesAfterANoNeverResendsWhatWasSent() async {
+        let wire = Wire()
+        let a = analytics(wire)
+        a.decide(true)
+        a.opened(today: "2026-10-01")
+        await settle(a)
+        XCTAssertEqual(wire.names, ["installed"])
+        a.decide(false)
+        a.decide(true)
+        a.opened(today: "2026-10-01")
+        await settle(a)
+        XCTAssertEqual(wire.names, ["installed"])
+    }
+
     func testAnAnswerBeforeStartIsKept() async {
         let a = Analytics(defaults: defaults)
         a.today = { "2026-10-01" }
