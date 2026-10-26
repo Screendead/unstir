@@ -29,7 +29,9 @@ A look that lets go where it began is no move and no tick. The clock can't be tu
 
 **The tick.** After every move, every running clock ticks one step: a forward clock clockwise, a wound-back clock
 anticlockwise. Its pawl drops a tooth and its core steps 30°. The tick lands on the clock's newest seam and takes one
-step off it, provided no stir on a knob crossing its dashed edge lies over that seam. A clock whose seams are all off
+step off it, provided no stir on a knob crossing its dashed edge lies over that seam. (That is how it looks to the player.
+The game's exact test is `Array.commit`'s: everything over the seam must commute with the clock, and now and then a
+word of stirs holds a disc still, as in problem 10. The proofs used the exact test.) A clock whose seams are all off
 stops, with a chime. With two or three clocks, they tick in turn, clockwise from twelve (open point J3).
 
 **Lost.** If a stir inside the dashed edge lies over the clock's newest seam, the tick can't reach it. It makes a new
@@ -48,9 +50,10 @@ whose seams were stirred the other way, ticking −1.
 This part is analysis. It is inferred from the rule, and the prover found it true on every line of the 30.
 
 - **A seam inside a dashed edge has a fixed move.** It can come off only once the clock seam over it has gone, and it
-  must come off on the very next move, or that move's tick lands on it. The dial sets which move that is: a clock seam
-  of k steps leaves k − 1 free moves before the inside seam under it falls due, since the inside seam itself takes the
-  move after the clock seam's last tick.
+  must come off on the very next move, or that move's tick finds the clock's next seam covered. The dial sets which
+  move that is. A clock seam of k steps that is bare when the problem opens leaves k free moves before the inside seam
+  under it falls due. Every seam below that leaves k − 1, because the tick of the inside heal that uncovered it has
+  already taken one step off.
 - **A wait is never a choice.** Every move ticks every clock alike, so taking off a loose seam outside every edge is
   never worse than a tap. A tap is right exactly when nothing can be taken off. Checked: at every wait in the 30 lines,
   no seam on the picture could be taken off whole.
@@ -383,7 +386,7 @@ triage: which loose seams to take in the moves the dial allows.
 
 Any rule that ticks every move alike keeps waits forced. B means giving moves different tempo, for example ticking by
 the steps turned, which breaks the "always the same +1, known before the first move" that answers R5. **Recommendation:
-A.** Triage under the dial reaches 5 to 6 bits on hex, and Jack approved this rule after playing the lab.
+A.** Triage under the dial reaches 5 to 6 bits on hex, and Jack called go on the lab's rule (E1).
 
 **J6. The finale.** Three clocks on hex cross every knob, so 25 and 30 have at most one safe turn a move: a reading test,
 2.0 bits.
