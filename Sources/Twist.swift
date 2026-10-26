@@ -181,10 +181,16 @@ enum Layout: String, CaseIterable {
 
 enum Commit { case pushed, reduced, cancelled, refused }
 
-/// What a stack holds: a twist, and whatever rides along with it. A turn that merges keeps the entry it lands on, so
-/// what rides with that entry stays.
+/// What a stack holds: a twist, and whatever rides along with it. A turn that merges keeps the entry it lands on, which
+/// takes in what rode with the turn through `absorb`.
 protocol Stacked {
     var twist: Twist { get set }
+    /// `other` has merged into this entry, before a pop at zero hands this one to `popped`.
+    mutating func absorb(_ other: Self)
+}
+
+extension Stacked {
+    mutating func absorb(_ other: Self) {}
 }
 
 extension Twist: Stacked {
@@ -210,6 +216,7 @@ extension Array where Element: Stacked {
             // entry and everything above go back on in order and merge wherever they now can.
             var rest = Array(self[i...])
             rest[0].twist.steps += entry.twist.steps
+            rest[0].absorb(entry)
             removeSubrange(i...)
             let merged: Commit
             if rest[0].twist.steps == 0 {

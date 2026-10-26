@@ -754,15 +754,26 @@ names and product ids, and Complete's promise to older owners.
    rim grab, the rim lesson, the bezel's hit area and the spin gesture key on motion; touch keys on kind, with new
    `Grab` cases for a ratchet tap and a cup dive; par's comment and the solver's turn moves key on motion; maelstrom's
    tests unchanged.
+   Built 2026-10-25 on `packs-ground` (not merged): `Level.motion` (none, tank, crank) and `Level.kind(of:)` (working,
+   seized, socket, ratchet, from `seized`, `sockets` and `ratchets`); maelstrom and `UNSTIR_SEIZED` set `.tank`, and a
+   test pins that every level turns its tank exactly where a knob is seized. `Grab.ratchet` holds nothing and calls
+   `Game.wait`, a stub. Cup is left out: The Well is cut (R9) and nothing else needs a dive. Left: the ratchet's tick
+   (to-do 34, Escapement), the socket and the crank (charybdis: no level has either, and a crank would turn the tank
+   until its planets are built), and a harness switch for ratchets and sockets.
 9. A `Pack` type outside `Tier` (name, id prefix, levels, free-taste count, product id, card), a `pack` field on
    `Level` as the lab branch's `lab` field is, bests by id, and a test that no pack best opens a tier.
    Merged 2026-10-25 (PR #21, `store`).
 10. A merge hook on `Stacked`, so an entry merging into another hands over its payload (First Stir's tag sets union;
     `Game.Entry`'s pushed mark stays the landing entry's), with tests that endless's brim behaves exactly as today.
+    Built 2026-10-25 on `packs-ground` (not merged): `Stacked.absorb`, called on every merge before a pop;
+    `Game.Entry.tags` unions. Left for to-do 40: the level's tags per scramble entry, which `Game` starts empty.
 11. Pack undo (the free tiers' rule, that an undo leaves the uncovered stir open, merged 2026-10-25, PR #19): a
     snapshot per move, restored by undo from the shared bank, with tests per pack (First Stir's tags,
     Escapement's tick, Lens's zoom entries).
-   Not built. The free tiers' undo rule is merged (PR #19).
+   Built 2026-10-25 on `packs-ground` (not merged): `Game` keeps the stack as each stir began, and a pack level's undo
+   restores it from the shared bank; the free tiers' undo rule is merged (PR #19) and unchanged. Tested on a stack
+   where the two differ. Left: the per-pack tests once each pack's state exists (First Stir's tags, Escapement's tick,
+   which must ride in the snapshot, Lens's zoom entries).
 12. StoreKit 2: a non-consumable per pack plus Complete; purchase, restore, the `Transaction.updates` listener,
     revocation and refunds, pending Ask to Buy; entitlements read at launch; a StoreKit configuration file and
     StoreKit test-session tests, all before the paid account exists.
