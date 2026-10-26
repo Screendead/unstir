@@ -194,11 +194,6 @@ enum Layout: String, CaseIterable {
             && same(stack, [], at: Tank.grid(Tank.pixelGrid), within: Tank.halfPixel, lenses: lenses)
     }
 
-    /// Where `steps` of `rod` (a fraction mid-drag) carry the fluid at p: a lens's magnify, any other rod's turn.
-    func stir(_ p: SIMD2<Double>, rod: Int, steps: Double, lenses: Set<Int> = []) -> SIMD2<Double> {
-        lenses.contains(rod) ? Tank.lens(p, rod: rods[rod], steps: steps) : Tank.twist(p, rod: rods[rod], angle: steps * Tank.step)
-    }
-
     /// Whether words a and b, each applied bottom first, send every point within `tolerance` of each other. `lenses`
     /// are the rods whose steps magnify rather than turn.
     func same(_ a: [Twist], _ b: [Twist], at points: some Sequence<SIMD2<Double>>, within tolerance: Double,
