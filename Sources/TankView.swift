@@ -1300,7 +1300,7 @@ struct LevelView: View {
             .clipShape(Circle())
             .opacity(1 - demoDip)
             if let clock, !game.finished {
-                ClockHint(radius: disc(clock)).position(at(clock)).allowsHitTesting(false)
+                ClockHint(radius: disc(clock)).position(at(clock)).opacity(1 - demoDip).allowsHitTesting(false)
             }
             if let k = liveRod, shown != nil {
                 glowRing(.magenta, 2.5, 6, under: .black.opacity(0.7))
