@@ -856,7 +856,8 @@ names and product ids, and Complete's promise to older owners.
 49. The daily share line (plan step 2), separate from sharing, before TestFlight.
    Merged 2026-10-25 (PR #24). Jack's call (2026-10-25, D1): daily #1 is launch day; until `Share.firstDay` is set,
    the line shows the date instead of a number.
-50. Clips and images: each pack's 7-second clip and promoted in-app purchase art, filmed with film.sh, plus a sound-on
+50. Jack (2026-10-26, on the phone): the placeholder loops "don't show off what it does". Each card's clip must show the pack's own mechanic: Lens's lenses zooming, Escapement's clock ticking, First Stir's picture changing as it unstirs. They wait on each pack's content merging, so the card can stir with the real code (no committed media).
+    Clips and images: each pack's 7-second clip and promoted in-app purchase art, filmed with film.sh, plus a sound-on
     cut for social video.
 51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
     agreement, tax and banking, and the in-app purchases with review screenshots and promoted purchases.
