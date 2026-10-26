@@ -774,6 +774,8 @@ names and product ids, and Complete's promise to older owners.
    restores it from the shared bank; the free tiers' undo rule is merged (PR #19) and unchanged. Tested on a stack
    where the two differ. Left: the per-pack tests once each pack's state exists (First Stir's tags, Escapement's tick,
    which must ride in the snapshot, Lens's zoom entries).
+   Escapement's built 2026-10-25 on `escapement-pack` (not merged): the snapshot holds the clock with the stack, and
+   `testUndoTakesTheMoveAndItsTickAndReopensTheStirItUncovers` undoes a loss, then a re-grab, tick and all.
 12. StoreKit 2: a non-consumable per pack plus Complete; purchase, restore, the `Transaction.updates` listener,
     revocation and refunds, pending Ask to Buy; entitlements read at launch; a StoreKit configuration file and
     StoreKit test-session tests, all before the paid account exists.
@@ -798,6 +800,9 @@ names and product ids, and Complete's promise to older owners.
     provisional tick and lost state, with a shot and a film line per pack.
    Merged 2026-10-25 (PR #21) for the store side: `UNSTIR_PACK`, `UNSTIR_OWNED`, `UNSTIR_STORE`. The per-pack
    shots and films wait on the packs.
+   Escapement's built 2026-10-25 on `escapement-pack` (not merged): `UNSTIR_PLAYED` (a line committed as the level
+   opens), a ratchet's move in `UNSTIR_MOVES` as a tap, `UNSTIR_LIVE` lifting the open stir's tick; six `escapement-1`
+   shots and four films (the demonstration, won, lost, a re-grab turned back).
 19. A shot per purchase state: unowned, owned, pending Ask to Buy, failed, revoked.
    Merged 2026-10-25 (PR #21, `UNSTIR_STORE`).
 20. A String Catalog for every new string (captions, the shelf and cards, purchase text, Escapement's stipulations),
@@ -827,13 +832,29 @@ names and product ids, and Complete's promise to older owners.
 34. Escapement: the ratchet knob kind and its tap, and the tick rule (lands on lift, lifts out on a re-grab of the
     open stir, sealed by the next commit of another knob or a ratchet tap, solves on the spot, the clock stopping once
     E is empty), with a test for each case.
+    Built 2026-10-25 on `escapement-pack` (not merged), ported from `lab-escapement` onto the groundwork: `Game.Clock`,
+    `wait(on:)`, `liftTick`, `relandTick`, the tap (near the ratchet's centre; anything else on its disc shakes), the
+    demonstration before the first stir (`Level.demo`, played on escapement 1), with a test for each case in
+    `EscapementTests`. Two rules the lab left open, as built: a wait is sealed as it is made, so a wait whose tick pushes
+    loses at once; a full stack refuses a move whose tick it would refuse. Left: Two Clocks and Wound Back (one clock a
+    level for now), the ratchet's sound (to-do 45).
 35. Escapement: the lost rule and its test (a pushed tick leaves a positive E entry that no continuation pops,
     property-tested on small cases) and the "lost." card with undo and again.
+    Built 2026-10-25 on `escapement-pack` (not merged): freeze on the +1 (E3), "lost." by the count, `LostCard` with
+    "lost on move N", undo (from the bank) and again; `testAPushedTickNeverPops` plays 40 random small tri and quad
+    stacks to a pushed tick, then every continuation of one move (two under `UNSTIR_SLOW_TESTS`, minutes).
 36. Escapement: the pruned prover (`exhaustive` with a forced tick after every move and a line dropped where a tick
     pushes), a meet-in-the-middle fallback for hex, and an escapement mode in solve.sh.
+    Built 2026-10-25 on `escapement-pack` (not merged): `Solver.escapement`, breadth first over (stack, slot just
+    stirred), a move a wait or one commit of a stir's net (±1 to ±11 or an entry's inverse), a line dropped where its
+    tick pushes; `scripts/solve.sh escapement <layout> <scramble> <clock> [limit]`. Escapement 1 proves at 3 over 4
+    stacks. Left: the meet-in-the-middle fallback, which waits on a hex problem the search can't reach.
 37. Escapement: the paper ground: dark-ink variants of the solve wave and the turn's hairlines, ink lines at least
     2 px wide, and shots that pin them.
 38. Escapement: ratchet art (a 12-tooth wheel and pawl), the vermilion sub-dial and the stipulation set in a serif.
+    Built 2026-10-25 on `escapement-pack` (not merged) as far as the ratchet (the lab's wheel and pawl), a vermilion
+    sub-dial round the wheel fixed to the glass, its index read against it, and the standing hint (E2). Left: the
+    stipulation in a serif, and the paper ground's look of all three (to-do 37).
 39. Escapement: 30 composed problems, each proved, to Jack before code.
 40. First Stir: vignettes as tag sets on the scramble's entries, played when their tags leave the stack (a pop, a
     merged pop, a fine-pass win), unplayed by undo and reset, crossfading 0.4 s under the stack.
