@@ -92,13 +92,32 @@ struct Level: Hashable, Sendable {
     /// Applied bottom first; the player unwinds from the top.
     var scramble: [Twist]
     var run: Run?
-    /// Knobs that ignore touch. The tank turns only on a level that has some, to carry their fluid to a working knob.
+    /// Knobs that refuse touch, with a thud.
     var seized: Set<Int> = []
-    /// Nil is one move per entry. A level with seized knobs also counts its turns of the tank.
+    /// Slots with no knob over them, which refuse touch as a seized knob does.
+    var sockets: Set<Int> = []
+    /// Escapement's clocks: a knob that can't be turned, and waits on a tap.
+    var ratchets: Set<Int> = []
+    /// What carries the knobs round without a stir, held by the rim. Maelstrom's turns the tank, to bring a seized
+    /// knob's fluid to a working one.
+    var motion = Motion.none
+    /// Nil is one move per entry. A level whose tank turns also counts its turns.
     var fixedPar: Int?
     var par: Int { fixedPar ?? scramble.count }
 
     var sandbox: Bool { id == "sandbox" }
+
+    enum Motion: Hashable, Sendable {
+        case none, tank
+        /// Charybdis's planets, not built.
+        case crank
+    }
+
+    enum Knob: Hashable, Sendable { case working, seized, socket, ratchet }
+
+    func kind(of knob: Int) -> Knob {
+        seized.contains(knob) ? .seized : sockets.contains(knob) ? .socket : ratchets.contains(knob) ? .ratchet : .working
+    }
 
     static let plughole: [Level] = ([
         (.tri, "0:+4", "Turn it back.", "Turn a rod to look. Let go where you started and nothing happens."),
@@ -246,7 +265,7 @@ struct Level: Hashable, Sendable {
     ] as [(Layout, String, Set<Int>, Int, Picture, String, String)]).enumerated().map { i, l in
         Level(id: Tier.maelstrom.prefix + "\(i + 1)", tier: .maelstrom, label: String(format: "%02d", i + 1),
               title: l.5, note: l.6, picture: l.4.twin, layout: l.0, scramble: .parse(l.1, in: l.0), seized: l.2,
-              fixedPar: l.3)
+              motion: .tank, fixedPar: l.3)
     }
 
     /// Everyone gets the same tank that day: seeded from yyyymmdd.

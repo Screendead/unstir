@@ -142,9 +142,10 @@ struct Harness {
         default: tier.levels[n - 1]
         }
         #if DEBUG
-        // UNSTIR_PACK=lens: that pack's level UNSTIR_LEVEL, a placeholder until the pack has levels.
+        // UNSTIR_PACK=lens: that pack's level UNSTIR_LEVEL, a placeholder past the levels it has.
         if let pack = env["UNSTIR_PACK"].flatMap(Pack.init(rawValue:)) {
-            level = pack.placeholder(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1))
+            let number = max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1)
+            level = pack.levels.indices.contains(number - 1) ? pack.levels[number - 1] : pack.placeholder(number)
         }
         #endif
         let picture = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:))
@@ -163,10 +164,11 @@ struct Harness {
         }
         // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
         if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }
-        // UNSTIR_SEIZED=1,4: those knobs seized, never the swirl, which has no knob.
+        // UNSTIR_SEIZED=1,4: those knobs seized on a turning tank, never the swirl, which has no knob.
         if let s = env["UNSTIR_SEIZED"] {
             level.seized = Set(s.split(separator: ",").compactMap { Int($0) }
                 .filter { level.layout.rods.indices.contains($0) && $0 != level.layout.swirl })
+            level.motion = level.seized.isEmpty ? .none : .tank
         }
         self.level = level
         tank = env["UNSTIR_TANK"].flatMap(Int.init) ?? 0

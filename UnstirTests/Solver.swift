@@ -290,19 +290,24 @@ final class Solver {
     }
 
     /// Nil when some seam can never come under a working knob. `home` also asks for the tank back at 0 at the end.
-    func optimum(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0, home: Bool = false) -> Int? {
-        optimalPlay(stack, seized: seized, from: position, home: home)?.count
+    /// `turns` is the level's motion: whether the tank turns, by default wherever a knob is seized, as on every level.
+    func optimum(_ stack: [Twist], seized: Set<Int> = [], turns: Bool? = nil, from position: Int = 0,
+                 home: Bool = false) -> Int? {
+        optimalPlay(stack, seized: seized, turns: turns, from: position, home: home)?.count
     }
 
     /// The untwisting play, unless a detour beats it.
-    func optimalPlay(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0, home: Bool = false) -> Play? {
-        guard let plain = untwistingPlay(stack, seized: seized, from: position, home: home) else { return nil }
-        return search(stack, seized: seized, from: position, home: home, below: plain.count) ?? plain
+    func optimalPlay(_ stack: [Twist], seized: Set<Int> = [], turns: Bool? = nil, from position: Int = 0,
+                     home: Bool = false) -> Play? {
+        let turns = turns ?? !seized.isEmpty
+        guard let plain = untwistingPlay(stack, seized: seized, turns: turns, from: position, home: home) else { return nil }
+        return search(stack, seized: seized, turns: turns, from: position, home: home, below: plain.count) ?? plain
     }
 
     /// Breadth-first over (stack, position), moving only by untwisting a whole seam or turning the tank.
-    func untwistingPlay(_ stack: [Twist], seized: Set<Int> = [], from position: Int = 0, home: Bool = false) -> Play? {
-        let order = layout.order, reach = self.reach(seized)
+    func untwistingPlay(_ stack: [Twist], seized: Set<Int> = [], turns: Bool? = nil, from position: Int = 0,
+                        home: Bool = false) -> Play? {
+        let order = layout.order, reach = self.reach(seized), turns = turns ?? !seized.isEmpty
         let start = id(stack) * order + wrap(position)
         func done(_ state: Int) -> Bool { stacks[state / order].isEmpty && (!home || state % order == 0) }
         var parent: [Int: (from: Int, move: [Move])] = [:]
@@ -327,7 +332,7 @@ final class Solver {
                             .map { ($0.to, moves + [.stir(knob: knob, slot: u.slot, steps: $0.steps)]) }
                     }
                 }
-                for q in 0..<order where q != p && !seized.isEmpty {
+                for q in 0..<order where q != p && turns {
                     visit(id * order + q, from: state, by: [.turn(steps: shortWay(p, q), to: q)])
                 }
             }
@@ -337,7 +342,8 @@ final class Solver {
     }
 
     /// The fewest moves under `bound`, detours too, breadth-first by cost: a stir turned straight back costs nothing.
-    private func search(_ stack: [Twist], seized: Set<Int>, from position: Int, home: Bool, below bound: Int) -> Play? {
+    private func search(_ stack: [Twist], seized: Set<Int>, turns: Bool, from position: Int, home: Bool,
+                        below bound: Int) -> Play? {
         let order = layout.order
         let start = id(stack) * order + wrap(position)
         func done(_ state: Int) -> Bool { stacks[state / order].isEmpty && (!home || state % order == 0) }
@@ -364,7 +370,7 @@ final class Solver {
                         visit(run.to * order + p, run.cost, run.commits.map { .stir(knob: knob, slot: slot, steps: $0) })
                     }
                 }
-                for q in 0..<order where q != p && !seized.isEmpty {
+                for q in 0..<order where q != p && turns {
                     visit(id * order + q, 1, [.turn(steps: shortWay(p, q), to: q)])
                 }
             }
@@ -472,17 +478,18 @@ final class Solver {
     /// The fewest moves up to `limit` when a move may be any commits to one slot under a working knob, up to `commits`
     /// of them joined, each by a count from `steps` or an entry's exact inverse: pushes and partial merges as well as
     /// untwists. Nil past the limit. Uncached and exponential, to check `optimum` on small cases.
-    func exhaustive(_ stack: [Twist], seized: Set<Int> = [], limit: Int, steps: [Int], commits: Int = 1) -> Int? {
+    func exhaustive(_ stack: [Twist], seized: Set<Int> = [], turns: Bool? = nil, limit: Int, steps: [Int],
+                    commits: Int = 1) -> Int? {
         struct State: Hashable {
             var stack: [Twist], position: Int
         }
-        let reach = self.reach(seized)
+        let reach = self.reach(seized), turns = turns ?? !seized.isEmpty
         guard !stack.isEmpty else { return 0 }
         var seen: Set<State> = [State(stack: stack, position: 0)], frontier = Array(seen)
         for depth in stride(from: 1, through: limit, by: 1) {
             var next: [State] = []
             for state in frontier {
-                var after = (0..<layout.order).filter { $0 != state.position && !seized.isEmpty }
+                var after = (0..<layout.order).filter { $0 != state.position && turns }
                     .map { State(stack: state.stack, position: $0) }
                 for slot in layout.rods.indices where reach[state.position][slot] {
                     var joined = [state.stack]
