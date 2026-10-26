@@ -750,6 +750,13 @@ names and product ids, and Complete's promise to older owners.
    and pent, the two lab levels, the rim band at +3 and +5, with a go/no-go. Not yet run: it needs Jack and the phone.
    The rim break is computed weak on quad and pent (1.7 and 1.1 dot pitches for a 1-step twist, against 6.2 on tri),
    which the test checks.
+   First phone session (2026-10-26, played, not the stills): Jack played hard lens 2 (quad) and found the lens rods
+   too small to make out their rims, so the order was very hard to read. His calls from it, built on `lab-lens`
+   (65c049b): a lens follows the finger up and down instead of turning, up zooming in ("way better"), and x2 a step,
+   good after x1.6. He suggested lenses only on big rods, or bigger steps, as two ways out; which one is open (eye's
+   two big rods as lenses, radius 0.58, are `eyeZoom`, lab entry `lens-hard-3`, where he judged x2). Not yet checked at x2: glitter in the rim band at +2 and +3, and whether the order
+   reads on eye's lenses. The count and order stills were not run. These change the draft's table (tri and quad
+   rows), its x1.3 and its "clockwise in", and the lens-pack PR's port.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
    Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
