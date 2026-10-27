@@ -565,7 +565,7 @@ enum HomeLight {
                 inside.fill(inside.rect(window.x0, window.y0, window.x1, window.y1), Rescue.torch, 0.22)
                 Cast.figure(inside.at(-0.385, -0.0, k: 0.2), .child,
                             arms: [[(0.1, -0.62), (0.3, -0.62), (0.4, -0.66)], [(-0.1, -0.62), (-0.13, -0.42)]])
-                Cast.dog(inside.at(-0.43, -0.068, k: 0.07))
+                Cast.dog(inside.at(-0.43, -0.06, k: 0.1))
                 Rescue.torchlight(pen, x: -0.335, y: -0.135, k: 0.035, beam: 0.02)
             } else {
                 Rescue.torchlight(pen, x: -0.38, y: window.y1 - 0.009, k: 0.035, beam: 0.04)
@@ -708,8 +708,8 @@ enum OffTheBreakwater {
             } else {
                 // Clear of the steps' disc, its stern to their foot.
                 Cast.lifeboat(pen.at(0.29, 0.15, k: 0.16))
-                Cast.figure(pen.at(0.235, 0.135, k: 0.085), .crew, arms: [[(-0.1, -0.74), (-0.22, -0.95), (-0.3, -1.1)]])
-                Cast.figure(pen.at(0.27, 0.135, k: 0.085), .crew, arms: [[(-0.1, -0.74), (-0.24, -0.92), (-0.34, -1.05)]])
+                Cast.figure(pen.at(0.235, 0.135, k: 0.12), .crew, arms: [[(-0.1, -0.74), (-0.22, -0.95), (-0.3, -1.1)]])
+                Cast.figure(pen.at(0.275, 0.135, k: 0.12), .crew, arms: [[(-0.1, -0.74), (-0.24, -0.92), (-0.34, -1.05)]])
             }
         }
 
@@ -813,7 +813,7 @@ enum LanternChain {
             // Farthest first, so a nearer bearer stands in front; every lantern over them all.
             var lanterns: [(x: Double, y: Double, lit: Bool)] = []
             for (i, (x, y)) in feet.enumerated().reversed() {
-                let k = 0.13 - 0.006 * Double(i)
+                let k = 0.13 - 0.003 * Double(i)
                 if played.contains(1), i < 2 {
                     // Running up the path, lantern swinging unlit.
                     Cast.figure(pen.at(x, y, k: k), .neighbour, arms: [[(0.1, -0.74), (0.24, -0.6), (0.3, -0.45)], [(-0.1, -0.74), (-0.24, -0.58)]],
@@ -835,7 +835,7 @@ enum LanternChain {
             if played.contains(3) {
                 Cast.lifeboat(pen.at(-0.53, -0.29, k: 0.1, flip: true, turn: -0.4))
                 for x in [-0.5, -0.47] {
-                    Cast.figure(pen.at(x, -0.3, k: 0.1, flip: true, turn: -0.35), .crew, arms: [[(0.1, -0.7), (0.3, -0.6), (0.42, -0.55)]])
+                    Cast.figure(pen.at(x, -0.3, k: 0.12, flip: true, turn: -0.35), .crew, arms: [[(0.1, -0.7), (0.3, -0.6), (0.42, -0.55)]])
                 }
             } else {
                 pen.fill(pen.rect(-0.545, -0.445, -0.455, -0.335), .black)
@@ -947,7 +947,7 @@ enum Stair {
             if !played.contains(1) {
                 for (i, x) in [0.49, 0.515, 0.54, 0.565, 0.59].enumerated() {
                     let y = 0.275 + 0.01 * Double(i)
-                    pen.fill(pen.circle(x, y, 0.007), Rescue.flame)
+                    pen.fill(pen.circle(x, y, 0.01), Rescue.flame)
                     pen.glow(x, y, 0.025, Rescue.torch, 0.55)
                 }
             }
