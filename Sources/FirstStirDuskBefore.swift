@@ -76,9 +76,9 @@ enum Dusk: Int, CaseIterable, Sendable, StoryScene {
         let pen = Brush(ctx: ctx, r: r)
         switch self {
         case .gift:
-            Self.room(pen, wall: Tone(0x4A2C78).scaled(0.22), window: Gift.window, horizon: horizon, west: west, minutes: minutes)
+            Self.room(pen, wall: Tone(0x4A2C78).scaled(0.22), windows: [Gift.window, Gift.pane], horizon: horizon, west: west, minutes: minutes)
         case .stir:
-            Self.room(pen, wall: Tone(0xFFC94A).scaled(0.16), window: Stir.window, horizon: horizon, west: west, minutes: minutes)
+            Self.room(pen, wall: Tone(0xFFC94A).scaled(0.16), windows: [Stir.window], horizon: horizon, west: west, minutes: minutes)
         default:
             Self.sea(pen, box: (-1, -1, 1, 1), horizon: horizon, west: west, minutes: minutes)
         }
@@ -146,11 +146,11 @@ enum Dusk: Int, CaseIterable, Sendable, StoryScene {
         }
     }
 
-    /// A room's wall in a flat tone, and the sky over the sea through its window.
-    static func room(_ pen: Brush, wall: Tone, window w: (x0: Double, y0: Double, x1: Double, y1: Double), horizon: Double,
+    /// A room's wall in a flat tone, and the sky over the sea through its windows.
+    static func room(_ pen: Brush, wall: Tone, windows: [(x0: Double, y0: Double, x1: Double, y1: Double)], horizon: Double,
                      west: Double, minutes: Double) {
         pen.fill(pen.rect(-1, -1, 1, 1), wall.color)
-        sea(pen, box: (w.x0, w.y0, w.x1, w.y1), horizon: horizon, west: west, minutes: minutes)
+        for w in windows { sea(pen, box: (w.x0, w.y0, w.x1, w.y1), horizon: horizon, west: west, minutes: minutes) }
     }
 
     // MARK: Things
@@ -598,7 +598,7 @@ extension Dusk {
     }
 
     /// Scene 24, 8:10 back to 7:55, on quad: the kitchen at sunset, its window over the sea on the left, the door with its
-    /// pegs on the right, the table between. Rod 3, the window: the float hanging in it, lit teal by the sunset, then bare,
+    /// pegs on the right, the sea through its glazed top, the table between. Rod 3, the window: the float hanging in it, lit teal by the sunset, then bare,
     /// its hook waiting. Rod 0, the door: the oilskin gone from its peg and the door ajar, then the oilskin on its peg, the
     /// boots below it. Rod 2, the gift: the child reaching up to the window, her hands empty, then the grandmother holding
     /// the float out to her in both hands.
@@ -607,6 +607,8 @@ extension Dusk {
         static let floor = 0.42
         static let door = (x0: 0.48, y0: -0.66, x1: 0.72, y1: 0.42)
         static let hook = (x: -0.3, y: -0.58)
+        /// The door's glazed upper panel, the sea's horizon through it in rod 0's core.
+        static let pane = (x0: door.x0 + 0.03, y0: door.y0 + 0.04, x1: door.x1 - 0.03, y1: -0.18)
 
         static func draw(_ pen: Brush, played: Set<Int>) {
             var room = Path()
@@ -618,7 +620,8 @@ extension Dusk {
             // The floor, the door and its pegs, a shelf under them for boots.
             room.addPath(pen.seg(-1, floor, 1, floor))
             room.addPath(pen.rect(door.x0, door.y0, door.x1, door.y1))
-            room.addPath(pen.rect(door.x0 + 0.03, door.y0 + 0.04, door.x1 - 0.03, -0.18))
+            room.addPath(pen.rect(pane.x0, pane.y0, pane.x1, pane.y1))
+            room.addPath(pen.seg((pane.x0 + pane.x1) / 2, pane.y0, (pane.x0 + pane.x1) / 2, pane.y1))
             room.addPath(pen.rect(door.x0 + 0.03, -0.12, door.x1 - 0.03, door.y1 - 0.04))
             room.addPath(pen.circle(door.x1 - 0.04, -0.15, 0.01))
             for x in [0.2, 0.29] { room.addPath(pen.seg(x, -0.52, x + 0.012, -0.535)) }
