@@ -619,7 +619,10 @@ struct PackCard: View {
         .accessibilityAddTraits(.isModal)
         .accessibilityAction(.escape, onBack)
         .task { await store.fetchPrices() }
-        .onAppear { Log.write("card \(offer.key) opens") }
+        .onAppear {
+            Log.write("card \(offer.key) opens")
+            if let pack = offer.pack { Analytics.shared.cardSeen(pack) }
+        }
         .onChange(of: state) {
             if let tag = state.tag { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
         }
