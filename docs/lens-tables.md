@@ -90,7 +90,7 @@ same depths. Level 3 teaches counting by +2, not +3. The same cap would apply to
 
 ## Table B: lenses on big rods only (`lens-levels-big`)
 
-Only tri and eye have big rods, so every level is on one of them: 11 on tri, 14 on eye. The draft's big-rod rows stay
+Only tri and eye have big rods, so every level is on one of them: 12 on tri, 13 on eye. The draft's big-rod rows stay
 (1 to 4, 6, 7, 10, 12, 16); the rest, its quad and hex rows and its eye rows with small lenses, are recomposed on tri
 and eye with their lenses on the big rods, at the draft's depth for the slot. Two things go with quad and hex: hex's
 hub lens (under all six ring twists, the draft's splash) and three or four lenses in one level (tri and eye have
