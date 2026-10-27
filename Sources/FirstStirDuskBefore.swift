@@ -455,10 +455,10 @@ extension Dusk {
     }
 
     /// Scene 23, 8:35 back to 8:10, on pent: the harbour at sunset from the quay, the cottage's gable on the left, the
-    /// harbourmaster's hut in front, the family's boat moored out on the right. Rod 1, the boat: its two lines out, lamps
-    /// lit, nobody aboard, then the father in the stern tying the second line. Rod 3, the barometer on the hut: its
-    /// needle on the storm glyph, then on the sun's. Rod 4, the cottage window: the float hanging in it, the lamp lit, then
-    /// the float hanging and the lamp unlit.
+    /// harbourmaster's hut in front, the family's boat moored out on the right, bow and stern to two buoys. Rod 1, the
+    /// boat: its two lines out, lamps lit, nobody aboard, then the father in the stern tying the second line. Rod 3, the
+    /// barometer on the hut: its needle on the storm glyph, then on the sun's. Rod 4, the cottage window: the float
+    /// hanging in it, the lamp lit, then the float hanging and the lamp unlit.
     enum Lines {
         static let window = (x0: -0.573, y0: -0.388, x1: -0.493, y1: -0.298)
         /// The barometer, drawn larger than life: its glyphs near the rim, its needle stopping short of them.
@@ -536,7 +536,8 @@ extension Dusk {
                 g.stroke(glyphs, Dusk.lamplight, 0.9)
             }
 
-            // The boat, moored bow to the left: its hull, wheelhouse and the mast at its stern, the bow line out.
+            // The boat, moored bow to the left: its hull, wheelhouse and the mast at its stern, the bow line out to its buoy,
+            // and the stern's buoy, its line in the vignette.
             let boat = pen.at(0.555, 0.0, k: 0.24)
             let hull = boat.path { b in
                 b.move(to: CGPoint(x: -0.5, y: -0.13))
@@ -552,19 +553,25 @@ extension Dusk {
             hulk.addPath(boat.rect(-0.18, -0.26, -0.06, -0.18))
             hulk.addPath(boat.seg(0.395, -0.1, 0.395, -0.45))
             hulk.addPath(boat.seg(-0.46, -0.04, 0.46, -0.04))
-            hulk.addPath(pen.seg(0.437, -0.03, 0.41, 0.02))
+            hulk.addPath(pen.curve(0.437, -0.03, 0.4, 0.004, 0.374, -0.001))
+            for b in [(x: 0.37, y: 0.018), (x: 0.692, y: 0.012)] {
+                let buoy = pen.ellipse(b.x, b.y, 0.014, 0.011)
+                pen.fill(buoy, .black)
+                hulk.addPath(buoy)
+                hulk.addPath(pen.circle(b.x, b.y - 0.016, 0.005))
+            }
             pen.lit { $0.stroke(hulk, ink) }
 
             // Vignette 1, the boat.
             pen.vignette(1) { pen in
                 if played.contains(1) {
-                    // The father in the stern, bent over the cleat with the second line, its end trailing to the water.
+                    // The father in the stern, bent over the cleat with the second line, slack from his hands to its buoy.
                     Cast.figure(pen.at(0.625, -0.03, k: 0.125, turn: 0.35), .father,
                                 arms: [[(0.1, -0.74), (0.3, -0.55), (0.36, -0.36)], [(-0.1, -0.74), (0.12, -0.5), (0.3, -0.38)]], colour: ink)
-                    pen.lit(Rescue.tight) { $0.stroke($0.curve(0.668, -0.035, 0.7, -0.01, 0.672, 0.01), ink) }
+                    pen.lit(Rescue.tight) { $0.stroke($0.curve(0.668, -0.035, 0.676, 0.012, 0.69, -0.004), ink) }
                 } else {
                     pen.lit(Rescue.tight) { g in
-                        g.stroke(g.seg(0.668, -0.03, 0.682, 0.008), ink)
+                        g.stroke(g.seg(0.668, -0.03, 0.69, -0.004), ink)
                         g.fill(g.circle(0.65, -0.112, 0.009), Dusk.cream)
                         g.fill(g.rect(0.515, -0.061, 0.54, -0.044), Dusk.lamplight, 0.9)
                     }
