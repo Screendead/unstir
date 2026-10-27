@@ -1,11 +1,28 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/sounds.sh   Renders the glass set from sound-src into Sounds/glass with Csound, then prints each
-# file's loudness, peaks, onset, phone-speaker loss and size, and each bed's seam; spectrograms go to build/sounds/spec.
-# Needs Homebrew's csound and ffmpeg. Everything is seeded, so a rerun writes the same bytes.
+# Usage: scripts/sounds.sh [sketch]   Renders the glass set from sound-src into Sounds/glass with Csound, then prints
+# each file's loudness, peaks, onset, phone-speaker loss and size, and each bed's seam; spectrograms go to
+# build/sounds/spec. Needs Homebrew's csound and ffmpeg. Everything is seeded, so a rerun writes the same bytes.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
+
+# sketch: the first glass sketch's files into Sounds/sketch (gitignored), from sound-src/sketch.py, for the temporary
+# switch. Needs numpy; about a minute and a half.
+if [ "${1:-}" = sketch ]; then
+    S=build/sounds/sketch
+    mkdir -p "$S"
+    cp sound-src/sketch.py "$S/make.py"
+    (cd "$S" && python3 -I make.py --no-film >make.log)
+    rm -rf Sounds/sketch
+    mkdir -p Sounds/sketch
+    for f in tick-1 tick-2 tick-3 tick-4 push heal-1 heal-2 heal-3 heal-4 heal-5 heal-6 tank seized solve spilled loop \
+        maelstrom; do
+        cp "$S/$f.wav" Sounds/sketch/
+    done
+    echo "Sounds/sketch: $(ls Sounds/sketch | wc -l | tr -d ' ') files"
+    exit 0
+fi
 SRC=sound-src
 OUT=Sounds/glass
 B=build/sounds

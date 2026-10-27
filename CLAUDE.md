@@ -104,7 +104,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
 - Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` and prints each file's
   loudness, peaks, onset, phone-speaker loss and size, and each bed's seam (needs Homebrew's `csound` and `ffmpeg`).
-  Every source is seeded, so a rerun writes the same bytes.
+  Every source is seeded, so a rerun writes the same bytes. `scripts/sounds.sh sketch` builds the first glass sketch
+  (`sound-src/sketch.py`, numpy) into `Sounds/sketch`, which git ignores, for the temporary `sketch` set; a build
+  without it plays nothing on that set.
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
@@ -377,7 +379,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   row taps only when it opens, the switch only when it picks, neither as a tier swipe lifts over it. Nothing sounds
   during a drag but the detent's tick, and a sound never tells the player anything the picture doesn't. The session is
   ambient, and while another app plays music the bed steps aside and the effects still sound. A harness launch or the
-  test host is silent unless `UNSTIR_SOUND=1`; the menu's `sound:` switch turns the set off.
+  test host is silent unless `UNSTIR_SOUND=1`; the menu's `sound:` switch picks the set or turns it off.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a

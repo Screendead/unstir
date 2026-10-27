@@ -5,3 +5,5 @@
 /Config/Local.xcconfig
 /shots/*
 !/shots/index.txt
+# The first glass sketch, built by scripts/sounds.sh sketch for the temporary switch.
+/Sounds/sketch/

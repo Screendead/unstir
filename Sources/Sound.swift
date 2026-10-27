@@ -3,9 +3,11 @@
 import AVFoundation
 import SwiftUI
 
-/// Each set is a folder under Sounds/ with the same file names.
+/// The sound sets on trial, each a folder under Sounds/ with the same file names. Sketch is glass as first played,
+/// built by `scripts/sounds.sh sketch`; it has no taps, undo, reset, switch or menu bed, and its loop stands in for the
+/// beds it lacks. Temporary, for comparing on the phone.
 enum SoundSet: String, CaseIterable {
-    case glass, off
+    case glass, sketch, off
 }
 
 extension Level {
@@ -139,8 +141,8 @@ final class Sound: @unchecked Sendable {
             self.buffers = [:]
             self.bedFiles = [:]
             self.beds = [:]
-            // Effects are CAF, beds AAC in .m4a or ALAC in CAF.
-            for ext in set == .off ? [] : ["caf", "m4a"] {
+            // Effects are CAF, beds AAC in .m4a or ALAC in CAF; the sketch is WAV.
+            for ext in set == .off ? [] : ["wav", "caf", "m4a"] {
                 for url in Bundle.main.urls(forResourcesWithExtension: ext, subdirectory: "Sounds/\(set.rawValue)") ?? [] {
                     let name = url.deletingPathExtension().lastPathComponent
                     if Bed(rawValue: name) == nil { self.buffers[name] = self.load(url) } else { self.bedFiles[name] = url }
