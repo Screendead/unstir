@@ -222,6 +222,21 @@ firststir-09-played.png  First Stir 9 drawn unstirred, every vignette played: th
 firststir-10.png  First Stir 10 as dealt: every core turned, the time under the tank.
 firststir-10-held.png  First Stir 10 drawn unstirred, held back. The lighthouse door: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair.
 firststir-10-played.png  First Stir 10 drawn unstirred, every vignette played: the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain.
+firststir-11.png  First Stir 11 as dealt: every core turned, the time under the tank.
+firststir-11-held.png  First Stir 11 drawn unstirred, held back. The breakwater path, 2:30 under the Rescue's last sky: the rope hitched to its ring on the quay end; the father halfway out, crouched into a wave; the hand-lamp in the gallery window.
+firststir-11-played.png  First Stir 11 drawn unstirred, every vignette played: the father kneeling at the ring, tying the rope; the path bare; the gallery window dark; the flood's deep blue sky, thicker rain.
+firststir-12.png  First Stir 12 as dealt: every core turned, the time under the tank.
+firststir-12-held.png  First Stir 12 drawn unstirred, held back. High street under water: the town clock at 2:05; the street lamp drowned to its crossbar, dark; the father and a neighbour rowing the dinghy down the street, a coil of rope aboard.
+firststir-12-played.png  First Stir 12 drawn unstirred, every vignette played: the clock at 1:40; the water at the lamp's foot, the lamp still lit and sparking; the dinghy tied to the drainpipe, empty.
+firststir-13.png  First Stir 13 as dealt: every core turned, the time under the tank.
+firststir-13-held.png  First Stir 13 drawn unstirred, held back. The upstairs window: the child and the dog at it, the torch shining out; the weathervane bent, pointing down; the door open, the water at its knocker, the float drifting out.
+firststir-13-played.png  First Stir 13 drawn unstirred, every vignette played: the window dark, a curtain blowing in; the weathervane upright, spinning; the water down at the step, the float on the threshold.
+firststir-14.png  First Stir 14 as dealt: every core turned, the time under the tank.
+firststir-14-held.png  First Stir 14 drawn unstirred, held back. The kitchen, flooded: the table sunk under the water, the cup floating off it on its saucer; the water up the stair, the child's boots on a step; the float drifting to the open door.
+firststir-14-played.png  First Stir 14 drawn unstirred, every vignette played: the table standing clear, the water at its legs, the cup on it with its spoon; the child carrying the dog up the stair; the float caught on the chair's leg.
+firststir-15.png  First Stir 15 as dealt: every core turned, the time under the tank.
+firststir-15-held.png  First Stir 15 drawn unstirred, held back. Over the quay: the boat capsized and awash; only the dropped lantern's bail ring on the stones; a wave breaking white over the wall.
+firststir-15-played.png  First Stir 15 drawn unstirred, every vignette played: the boat keel up, high in the water; the lantern on its side, its glass out; the sea a hand below the wall's top, slopping; the sky leaning to the storm's indigo, the rain at its thickest.
 firststir-01-healed-1.png  First Stir 01 after the first heal (1:-2): no vignette, the clock at 6:34 am.
 firststir-01-healed-2.png  First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am.
 shelf-menu.png  Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought.
