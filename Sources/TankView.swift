@@ -1568,7 +1568,7 @@ struct LevelView: View {
             if stopped && stopLook == .left {
                 let left = game.stack.count
                 Circle().stroke(Color.vermilion, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
-                badge("\(left) left").position(x: spot.x + 14 * out, y: spot.y)
+                badge("\(left) left").position(x: spot.x + 14 * out, y: spot.y - 14)
             }
             if stopped && stopLook == .rings {
                 ForEach(twisted.indices, id: \.self) { i in
