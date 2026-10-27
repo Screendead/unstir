@@ -379,7 +379,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   row taps only when it opens, the switch only when it picks, neither as a tier swipe lifts over it. Nothing sounds
   during a drag but the detent's tick, and a sound never tells the player anything the picture doesn't. The session is
   ambient, and while another app plays music the bed steps aside and the effects still sound. A harness launch or the
-  test host is silent unless `UNSTIR_SOUND=1`; the menu's `sound:` switch picks the set or turns it off.
+  test host is silent unless `UNSTIR_SOUND=1`; the menu's `sound:` switch picks the set or turns it off, and its `undo:` switch picks the undo as rendered in September or `early`
+  (`undo-early.caf`), whose body peaks at about 0.2 s instead of 0.5: both temporary, for Jack's listen.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a

@@ -62,6 +62,7 @@ tap-3 tap 2 0.7 1003 -28 yes
 tap-4 tap 3 0.7 1004 -28 yes
 switch switch 0 1.8 1100 -25 yes
 undo undo 0 1.0 1200 -24 yes
+undo-early undo_early 0 1.0 1201 -24 yes
 reset reset 0 2.4 1300 -22 yes
 "
 # Frames of each bed's own ends encoded round it, tried in turn (each shifts the AAC frame grid by a quarter frame).

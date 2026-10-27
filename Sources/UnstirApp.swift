@@ -286,6 +286,7 @@ struct RootView: View {
     private let harnessed: Bool
     @Environment(\.scenePhase) private var phase
     @AppStorage("soundSet") private var sound = SoundSet.glass
+    @AppStorage(Sound.undoKey) private var undoSound = UndoSound.late
     private let mute: Bool
 
     init() {
@@ -338,6 +339,7 @@ struct RootView: View {
             Sound.shared.foreground(phase != .background)
         }
         .onChange(of: sound, initial: true) { Sound.shared.use(mute ? .off : sound) }
+        .onChange(of: undoSound, initial: true) { Sound.shared.use(undoSound) }
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
         .task {

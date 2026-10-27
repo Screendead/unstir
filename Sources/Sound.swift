@@ -10,6 +10,12 @@ enum SoundSet: String, CaseIterable {
     case glass, sketch, off
 }
 
+/// Temporary, for Jack to hear both: the undo as rendered in September, whose body peaks about half a second after the
+/// press, or one that peaks at about a fifth of a second.
+enum UndoSound: String, CaseIterable {
+    case late = "as is", early
+}
+
 extension Level {
     /// Each tier's own bed; the daily, endless, the sandbox and the packs, which have none yet, are plughole's.
     var bed: Sound.Bed {
@@ -54,6 +60,8 @@ final class Sound: @unchecked Sendable {
     /// Named by file.
     enum Bed: String, Sendable { case menu, plughole = "loop", whirlpool, vortex, maelstrom }
 
+    static let undoKey = "soundUndo"
+
     /// A bed's player. There are two, so the old bed fades out while the new one fades in.
     private struct Deck {
         let player = AVAudioPlayerNode()
@@ -80,6 +88,7 @@ final class Sound: @unchecked Sendable {
     /// The set's beds. Each is 18 MB decoded, so only the wanted one and any still fading out are kept.
     private var bedFiles: [String: URL] = [:]
     private var beds: [String: AVAudioPCMBuffer] = [:]
+    private var undo = UndoSound.late
     private var ticks = 0
     private var taps = 0
     private var bed: Bed?
@@ -159,6 +168,10 @@ final class Sound: @unchecked Sendable {
         queue.async { self.start(effect) }
     }
 
+    func use(_ undo: UndoSound) {
+        queue.async { self.undo = undo }
+    }
+
     /// The bed under the menu or a level: a new one crossfades in over the old.
     func bed(_ bed: Bed) {
         queue.async {
@@ -204,7 +217,7 @@ final class Sound: @unchecked Sendable {
         case .seized: "seized"
         case .solve: "solve"
         case .spilled: "spilled"
-        case .undo: "undo"
+        case .undo: undo == .early ? "undo-early" : "undo"
         case .reset: "reset"
         case .tier: "switch"
         case .heal(let n): "heal-\(((n - 1) % 6 + 6) % 6 + 1)"

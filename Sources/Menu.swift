@@ -122,6 +122,7 @@ struct MenuView: View {
     @State private var settings: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("soundSet") private var sound = SoundSet.glass
+    @AppStorage(Sound.undoKey) private var undoSound = UndoSound.late
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -249,25 +250,34 @@ struct MenuView: View {
         show(nil)
     }
 
+    /// The set, and the undo, each heard both ways: temporary, for Jack's listen.
     private var sounds: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            choice("sound:", $sound)
+            choice("undo:", $undoSound)
+        }
+        .font(.mono(12))
+    }
+
+    private func choice<T: RawRepresentable<String> & CaseIterable & Hashable>(_ name: String, _ value: Binding<T>)
+        -> some View where T.AllCases: RandomAccessCollection {
         HStack(spacing: 0) {
-            Text("sound:").opacity(0.55)
-            ForEach(SoundSet.allCases, id: \.self) { set in
-                if set != SoundSet.allCases[0] { Text("\u{00B7}").opacity(0.35) }
+            Text(name).opacity(0.55)
+            ForEach(Array(T.allCases), id: \.self) { option in
+                if option != T.allCases.first { Text("\u{00B7}").opacity(0.35) }
                 Button {
                     guard !twisting else { return }
                     Sound.shared.play(.tap)
-                    sound = set
+                    value.wrappedValue = option
                 } label: {
-                    Text(set.rawValue).foregroundStyle(sound == set ? Color.text : .white.opacity(0.35))
+                    Text(option.rawValue).foregroundStyle(value.wrappedValue == option ? Color.text : .white.opacity(0.35))
                         .padding(.horizontal, 8).frame(minHeight: 44).contentShape(Rectangle())
                 }
                 // Plain and guarded, as a row is: a tier swipe can lift over it.
                 .buttonStyle(.plain)
-                .accessibilityAddTraits(sound == set ? .isSelected : [])
+                .accessibilityAddTraits(value.wrappedValue == option ? .isSelected : [])
             }
         }
-        .font(.mono(12))
     }
 
     /// While it turns, the list is drawn again, cut to the part on screen, over the scroll view, and that is what
