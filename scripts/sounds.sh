@@ -70,6 +70,7 @@ PADS="6144 6400 6656 6912 7168 7424 7680 7936"
 BEDS="
 loop plughole 800 -28
 whirlpool whirlpool 850 -28
+vortex vortex 875 -28
 maelstrom maelstrom 900 -28
 menu menu 950 -29
 "

@@ -1,5 +1,5 @@
 ; Copyright © 2026 Jack Lusher. All rights reserved.
-; The glass set's beds, one per run: scripts/sounds.sh passes the bed (BED: plughole, whirlpool, maelstrom or menu),
+; The glass set's beds, one per run: scripts/sounds.sh passes the bed (BED: plughole, whirlpool, vortex, maelstrom or menu),
 ; the seed (SEED), the output (OUT) and a second output for the hum alone at its level in the bed (STEM), for the
 ; phone check. Stereo, 48 kHz, 32-bit float, 48 s, seamless.
 ;
@@ -24,6 +24,7 @@ seed $SEED
 ; glass sits on it, and level with the rest in the menu's, where it is most of what there is.
 #define PLUG_HUM #0.53#
 #define WHIRL_HUM #0.63#
+#define VORT_HUM #0.65#
 #define MAEL_HUM #0.67#
 #define MENU_HUM #0.79#
 
@@ -182,7 +183,7 @@ instr tube
   gaTube += p4 * abz * (1 + afl)
 endin
 
-; Water (the sketch's band of noise; p4 kind: 0 breathing, 1 circling, 2 turbulent), p5 level, p6 centre, p7 width
+; Water (the sketch's band of noise; p4 kind: 0 breathing, 1 circling, 2 turbulent, 3 circling wider and faster), p5 level, p6 centre, p7 width
 ; (the sketch's Gaussian in octaves), p8 fizz. Each side reads the loop's noise half a loop apart. The first period
 ; measures the level; from the second on it is scaled to unit rms.
 instr water
@@ -195,6 +196,9 @@ instr water
     ; the sketch's 20 s excerpt turned 2, 7 and 3 times in 20 s: here 5, 17 and 7 times in 48
     kc = p6 * 2 ^ (1.1 * sin(2 * $M_PI * 5 * kt / giL) + 0.4 * sin(2 * $M_PI * 17 * kt / giL))
     kg = 0.7 + 0.3 * sin(2 * $M_PI * 7 * kt / giL)
+  elseif p4 == 3 then
+    kc = p6 * 2 ^ (0.8 * sin(2 * $M_PI * 3 * kt / giL))
+    kg = 0.7 + 0.3 * sin(2 * $M_PI * 3 * kt / giL)
   elseif p4 == 1 then
     kc = p6 * 2 ^ (0.7 * sin(2 * $M_PI * 2 * kt / giL))
     kg = 0.75 + 0.25 * sin(2 * $M_PI * 3 * kt / giL)
@@ -210,9 +214,9 @@ instr water
   aR = kg * a2 + p8 * az2
   if p4 >= 1 then
     ; it circles between the speakers
-    kturn = sin(2 * $M_PI * (p4 == 2 ? 7 : 2) * kt / giL)
-    aL *= (p4 == 2 ? 0.75 : 0.85) + (p4 == 2 ? 0.25 : 0.15) * kturn
-    aR *= (p4 == 2 ? 0.75 : 0.85) - (p4 == 2 ? 0.25 : 0.15) * kturn
+    kturn = sin(2 * $M_PI * (p4 == 2 ? 7 : (p4 == 3 ? 3 : 2)) * kt / giL)
+    aL *= (p4 >= 2 ? 0.75 : 0.85) + (p4 >= 2 ? 0.25 : 0.15) * kturn
+    aR *= (p4 >= 2 ? 0.75 : 0.85) - (p4 >= 2 ? 0.25 : 0.15) * kturn
   endif
   ksum init 0
   kgain init 1
@@ -381,6 +385,33 @@ instr whirlpool
   Pings 8, ipings, 1
   Drips 8, 0.75, 1
   schedule "water", 0, 3 * giL, 1, 0.09, 430, 0.6, 0.04
+  turnoff
+endin
+
+; vortex (new): wide and cold, the swirl's tier. Open fifths and a ninth in the drone (D3 A3 E4 A4), no third and no
+; seventh, so it sits between whirlpool's suspension and maelstrom's minor; high, sparse pings on D E A B that ring
+; longer, few drips, and a lower band of water circling the speakers three times a loop, the swirl turning; a 3.6 s room.
+instr vortex
+  giDroneLP = 1100
+  giHumCentre = 540
+  giHumDepth = 0.55
+  giHumQ = 2.4
+  giHumRate = 3
+  giFb = 0.89
+  giCo = 7000
+  giNorm = 1.66
+  idronen[] fillarray 50, 57, 64, 69
+  idronea[] fillarray 0.34, 0.30, 0.16, 0.12
+  Drone idronen, idronea
+  ihumn[] fillarray 38, 45, 50
+  ihuma[] fillarray 0.31, 0.27, 0.21
+  Hum ihumn, ihuma, 0.035, $VORT_HUM
+  iswells[] fillarray 57, 62, 64, 69, 76
+  Swells 8, iswells, 6.5, 10, 0.28
+  ipings[] fillarray 81, 86, 88, 93, 95
+  Pings 7, ipings, 0.9
+  Drips 6, 0.6, 1
+  schedule "water", 0, 3 * giL, 3, 0.11, 400, 0.5, 0.03
   turnoff
 endin
 

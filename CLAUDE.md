@@ -370,7 +370,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and the heal that solves sounds as the solve. An undo's negation that brings back one of the scramble's entries marks
   it the scramble's again. The `seized` sound plays with `Knock.thud` whenever a finger lands on a knob that can't be
   turned. Beds loop under the menu and each tier (`Level.bed`; daily, endless, the sandbox and the packs take
-  plughole's, as does vortex until it has one), and a new one crossfades in over the old at equal power across two
+  plughole's), and a new one crossfades in over the old at equal power across two
   decks. Only a bed that is playing stays decoded, and none in the background. `Sounding`, set on `RootView`, is the
   app's button style: a button taps as it acts, and undo and reset have sounds of their own. A button that sets its own
   `.plain` style has none, so every such button that acts takes `Sounding` instead: the gear, the consent card's answers
