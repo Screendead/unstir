@@ -862,8 +862,14 @@ names and product ids, and Complete's promise to older owners.
     stand"); then the privacy label.
    Merged 2026-10-25 (PR #20).
 53. The age-rating questionnaire.
+   Drafted 2026-10-27 on `store-page`: answers by content area in `docs/store-page.md`, to match to the live
+   questionnaire. Recommendation, not a decision.
 54. The store page: screenshots and a preview leading with the free game, then the packs, each pack labelled as a paid
     add-on, captioned for muted playback.
+   Drafted 2026-10-27 on `store-page`: `docs/store-page.md` holds the name, subtitle, promotional text, description,
+   keywords, category, screenshot set, preview plan and App Privacy label answers, each with options and one
+   recommendation, the open choices at its end; `docs/privacy-policy.md` is the policy, with its legal questions
+   marked for a lawyer. None of it is Jack's call yet.
 55. Check App Review's rules on Complete before naming or pricing it.
 56. ~~Offer codes for press and reviewers.~~ Dropped (Jack: "No.").
 57. TestFlight with 20 to 50 strangers and sandbox purchases. What it measures (shelf and card taps, free-taste
