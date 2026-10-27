@@ -906,7 +906,7 @@ enum OverTheQuay {
             if played.contains(1) {
                 OverTheQuay.keel(pen, depth: 0)
             } else {
-                OverTheQuay.keel(pen, depth: 0.045)
+                OverTheQuay.keel(pen, depth: 0.034)
             }
         }
 
@@ -944,26 +944,31 @@ enum OverTheQuay {
         }
     }
 
-    /// The family's boat capsized at its mooring, keel up: `depth` how far it has sunk from riding high.
+    /// The family's boat capsized at its mooring, keel up, seen side on: her bow on the mooring line at the left, the
+    /// stem curving up from the water into the keel, the square transom at the right; `depth` how far she has sunk from
+    /// riding high.
     static func keel(_ pen: Brush, depth: Double) {
-        let water = bow.y, x0 = bow.x, x1 = bow.x + 0.17
+        let water = bow.y, x0 = bow.x, x1 = bow.x + 0.2, d = depth
         let hull = pen.path { h in
-            h.move(to: CGPoint(x: x0, y: water + depth))
-            h.addQuadCurve(to: CGPoint(x: x0 + 0.085, y: water - 0.06 + depth), control: CGPoint(x: x0 + 0.01, y: water - 0.055 + depth))
-            h.addQuadCurve(to: CGPoint(x: x1, y: water + depth), control: CGPoint(x: x1 - 0.005, y: water - 0.06 + depth))
+            h.move(to: CGPoint(x: x0, y: water + d))
+            h.addQuadCurve(to: CGPoint(x: x0 + 0.055, y: water - 0.052 + d), control: CGPoint(x: x0 + 0.004, y: water - 0.046 + d))
+            h.addLine(to: CGPoint(x: x1 - 0.016, y: water - 0.058 + d))
+            h.addLine(to: CGPoint(x: x1, y: water + d))
             h.closeSubpath()
         }
         let above = pen.clipped(to: pen.rect(-1, -1, 1, water))
         above.fill(hull, .black)
         var lines = Path()
         lines.addPath(hull)
-        lines.addPath(pen.seg(x0 + 0.085, water - 0.06 + depth, x0 + 0.085, water - 0.08 + depth))
+        // The keel strip along her bottom, and the rubbing strake along her side.
+        lines.addPath(pen.seg(x0 + 0.06, water - 0.064 + d, x1 - 0.02, water - 0.07 + d))
+        lines.addPath(pen.seg(x0 + 0.03, water - 0.022 + d, x1 - 0.008, water - 0.024 + d))
         above.lit(Rescue.tight) { $0.stroke(lines, Flood.ink) }
         // The sea along her, washing over when she is awash.
         var wash = Path()
         wash.addPath(pen.seg(x0 - 0.01, water, x1 + 0.01, water))
         if depth > 0 {
-            for (x, w) in [(x0 + 0.05, 0.03), (x0 + 0.11, 0.035)] { wash.addPath(pen.curve(x - w / 2, water, x, water - 0.02, x + w / 2, water)) }
+            for (x, w) in [(x0 + 0.06, 0.03), (x0 + 0.13, 0.035)] { wash.addPath(pen.curve(x - w / 2, water, x, water - 0.02, x + w / 2, water)) }
         }
         pen.lit(Rescue.tight) { $0.stroke(wash, Flood.sea, 0.9) }
     }
