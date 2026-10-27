@@ -10,6 +10,7 @@
 		0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7898E0AEAFE90492DC3EB64C /* Neurons.metal */; };
 		1A5F105A934D627FC90E16AE /* SolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE69789D7FB741D6D04AA1A /* SolverTests.swift */; };
 		21DF6C200CBDE16E8AD4BA92 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A75F3E52CC7C2EE27C7DFE /* Log.swift */; };
+		2D70099B35E5AC7E8ED3C714 /* FirstStirEnding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680D4F9DC78E6890CAD80AE7 /* FirstStirEnding.swift */; };
 		2E38B1B5B55BE8B14D6D3B09 /* FirstStirDawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */; };
 		3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965EC2AB5B15FD9B3CA462DE /* Twist.swift */; };
 		3F40391B2B57058C26788864 /* Loom.metal in Sources */ = {isa = PBXBuildFile; fileRef = 536CF149EF97D4429DC2751F /* Loom.metal */; };
@@ -90,6 +91,7 @@
 		59B662DA049B8A76E76E38BF /* FirstStirTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirTests.swift; sourceTree = "<group>"; };
 		63330CD5793ABE158F314B89 /* Unstir.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Unstir.metal; sourceTree = "<group>"; };
 		6499D4977A88A7764419D373 /* Brim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brim.swift; sourceTree = "<group>"; };
+		680D4F9DC78E6890CAD80AE7 /* FirstStirEnding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirEnding.swift; sourceTree = "<group>"; };
 		6EE69789D7FB741D6D04AA1A /* SolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolverTests.swift; sourceTree = "<group>"; };
 		7147B0B195AAB46DE31D870D /* Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pictures.swift; sourceTree = "<group>"; };
 		7898E0AEAFE90492DC3EB64C /* Neurons.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Neurons.metal; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 				0B80E0606D266BF05C66786E /* FirstStir.swift */,
 				D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */,
 				EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */,
+				680D4F9DC78E6890CAD80AE7 /* FirstStirEnding.swift */,
 				EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */,
 				36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */,
 				E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */,
@@ -334,6 +337,7 @@
 				650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */,
 				2E38B1B5B55BE8B14D6D3B09 /* FirstStirDawn.swift in Sources */,
 				E40A904A8187FBF9CD6F33F4 /* FirstStirDuskBefore.swift in Sources */,
+				2D70099B35E5AC7E8ED3C714 /* FirstStirEnding.swift in Sources */,
 				FA7C0CC5ADD8583855C61026 /* FirstStirFlood.swift in Sources */,
 				64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */,
 				AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */,

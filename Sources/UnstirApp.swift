@@ -52,6 +52,9 @@ struct Harness {
     /// UNSTIR_BARE=1: the picture drawn unstirred whatever the stack, so a still shows a story's art as the stack has
     /// played it.
     let bare: Bool
+    /// UNSTIR_ENDING=s: First Stir's last scene opens solved with the night forwards held s seconds in, or running from
+    /// the start at -1, for films. Needs UNSTIR_SCREEN=clean.
+    let ending: Double?
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
     /// names it), as solve.sh prints a line. A ratchet's turn is a tap on it, a wait; a turn of the open stir's knob
     /// takes it up again.
@@ -228,6 +231,7 @@ struct Harness {
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
         pace = env["UNSTIR_PACE"].flatMap(Double.init) ?? 0.3
         bare = env["UNSTIR_BARE"] == "1"
+        ending = env["UNSTIR_ENDING"].flatMap(Double.init)
         func line(_ line: String) -> [Twist] {
             line.split(separator: ",").compactMap { move in
                 let f = move.split(separator: ":").compactMap { Int($0) }

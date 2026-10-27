@@ -416,6 +416,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the vignette, its arms alone inside it. Its levels are 21 to 25, the table's last five; its times run in the evening's own minutes (1290 back to 1180), a day on from the Storm's. The cup's one entry is the scene 25 scramble's bottom, so the stir is the pack's
   last heal. `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
   grandmother, child, neighbour, crew) and `Dog` build silhouettes from posed parts and outline their union.
+  **FirstStirEnding.swift** holds the ending, the night forwards (Jack, round 9, D1): when the pack's last scene
+  (`Level.endsFirstStir`) is solved, `NightForwardsFilm` plays over the glass before the card, every scene in story
+  order (`NightForwards.levels`, 25 back to 1), each `length` (4.6 s) from its played state at `early` to its
+  held-back one at `late`, the scramble's entries coming back bottom first, so every frame is a stack the game can
+  stand in, and the next scene crossfading in over `blend` at the same minute; about two minutes, a tap skips it,
+  Reduce Motion cuts instead of fading (`testTheNightForwardsPlaysTheNightInItsOwnOrder`). It draws through
+  `SceneComposite`, baking two scenes at a time at no more than 2x and letting each go once passed.
   `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a scene of chapters 1 to 3 on the Mac, held back, played
   and where they differ over the layout's cores and knobs, and prints each vignette's reach against its core less
   0.02, its nearest approach to the knob and the other discs it enters: the drawing loop, seconds a render. It counts a
@@ -499,7 +506,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
   (`UNSTIR_BENCH`). `UNSTIR_PACE=s` sets autoplay's and `UNSTIR_MOVES`' wait before each move (0.3 s unset), and
-  `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
+  `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. `UNSTIR_ENDING=s` with `UNSTIR_SCREEN=clean` opens First Stir's last scene solved with the night forwards held s seconds in (-1 runs it). In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
   best or started flag (`Level.keepsProgress`), and
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
   in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`).

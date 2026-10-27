@@ -1171,6 +1171,12 @@ names and product ids, and Complete's promise to older owners.
     live body at the glass's left edge (x -0.985 to -0.83), the one stretch of horizon clear of every disc, so it is
     no longer a departure; the sky uses the palette's three tones alone.
 44. First Stir: the "night forwards" end film.
+    Built 2026-10-27 on `firststir-content` (Jack's D1 default, round 9): after level 25's solve, all 25 scenes play
+    forwards in the glass, 4.6 s each with a 0.6 s crossfade, the time under it running on from 7:40 pm to 6:40 am,
+    about two minutes, ending held on scene 1 as the pack opened, then the card; a tap skips it. Every solve of 25
+    plays it (as Escapement's demo plays every time). Reduce Motion cuts instead of fading. No motif yet: the sound
+    branch is unmerged. Shots `firststir-ending-*`, film `firststir-ending`. Left: the memory and frame pacing of the
+    bake (main actor, two scenes at once, at most 2x) measured on the phone.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
     the finals in Csound.
