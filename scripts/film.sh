@@ -102,3 +102,6 @@ film firststir-01-solve 25 "$tank,fps=1.5,scale=200:-1,tile=9x4:padding=4" PACK=
 # The heal ring: a push on the boat's rod (red), turned back (white, nothing plays), then the lighthouse's heal (magenta,
 # its vignette).
 film firststir-01-ring 14 "$tank,fps=2,scale=200:-1,tile=11x2:padding=4" PACK=first-stir LEVEL=1 MOVES=1:+2,1:-2,0:-3 PACE=2.2
+# The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
+# (UNSTIR_SHELFDEMO, through the calls a finger makes).
+film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned

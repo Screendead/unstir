@@ -34,6 +34,14 @@ enum Pack: String, CaseIterable, Sendable {
     /// Levels 1 to `taste` play without the pack.
     var taste: Int { 3 }
 
+    /// How many levels its design plans; until it has them all, its card says more arrive in an update.
+    var planned: Int {
+        switch self {
+        case .firstStir, .lens: 25
+        case .escapement: 30
+        }
+    }
+
     /// Numbered from 1 by place, each the pack's own `id`; empty until the pack's content lands.
     var levels: [Level] {
         switch self {
