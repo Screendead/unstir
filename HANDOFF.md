@@ -1053,6 +1053,14 @@ names and product ids, and Complete's promise to older owners.
 50. Jack (2026-10-26, on the phone): the placeholder loops "don't show off what it does". Each card's clip must show the pack's own mechanic: Lens's lenses zooming, Escapement's clock ticking, First Stir's picture changing as it unstirs. They wait on each pack's content merging, so the card can stir with the real code (no committed media).
     Clips and images: each pack's 7-second clip and promoted in-app purchase art, filmed with film.sh, plus a sound-on
     cut for social video.
+    Built 2026-10-27 on `pack-clips` (`Clip.swift`): every card's clip is drawn live by the game on the real levels and
+    rules, about 7 s, seamless, Reduce Motion holding a still; the bundled-video path is gone. First Stir: level 1 healed,
+    each vignette playing as its time under the tank steps back (12:30 am to 11:40 pm, scene 16's window, a stand-in
+    until the level carries F3's clock). Lens: level 3 as dealt, the lens dragged down and back up, ending on the order
+    read. Escapement: problem 1 in three, each tick landing. Complete: the three in turn. The dock keeps its covers.
+    Two takes built where there were two good ideas; Claude's recommendations, for Jack to decide: Lens A (the zoom
+    and the read, as asked) over B (level 2 solved), and Complete A (the three whole, about 21 s) over B (a cut of
+    each one's first beat, about 8 s). Films `clip-*`, `shelf-dock`. Still open: the purchase art and the social cut.
 51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
     agreement, tax and banking, and the in-app purchases with review screenshots and promoted purchases.
 52. The privacy manifest, new work (no `PrivacyInfo.xcprivacy` exists): UserDefaults with reason CA92.1, the uptime

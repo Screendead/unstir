@@ -105,6 +105,21 @@ film firststir-01-ring 14 "$tank,fps=2,scale=200:-1,tile=11x2:padding=4" PACK=fi
 # The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
 # (UNSTIR_SHELFDEMO, through the calls a finger makes).
 film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned
+# Each card's clip (`Clip`), twice round its loop; UNSTIR_CLIPS=b plays the other take where a card has two.
+clip=crop=1100:1180:110:610  # the card's clip and First Stir's time under it
+# A Debug build bakes Lens's halftone some 20 s the first time a size is asked for; one launch caches it for the films.
+if [[ -z "$pattern" || clip-lens == *$pattern* || clip-complete == *$pattern* ]]; then
+  SIMCTL_CHILD_UNSTIR_CARD=lens xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
+  sleep 25
+fi
+film clip-first-stir 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=first-stir STORE=lens:unowned
+film clip-lens 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=lens STORE=lens:unowned
+film clip-lens-solve 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=lens STORE=lens:unowned CLIPS=b
+film clip-escapement 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=escapement STORE=lens:unowned
+film clip-complete 24 "$clip,fps=2,scale=200:-1,tile=12x4:padding=4" CARD=complete STORE=lens:unowned
+film clip-complete-cut 18 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=complete STORE=lens:unowned CLIPS=b
+# The menu's dock of covers, which keep their own loops.
+film shelf-dock 9 "crop=1320:420:0:2380,fps=2,scale=440:-1,tile=4x4:padding=4" STORE=lens:unowned
 # Escapement 1: the demonstration a first-time player sees before the first stir (a heal ticks the clock, a wait ticks it
 # again, then the problem winds in), and lines played by a drawn fingertip: won, and lost the moment a slip is let go.
 # A ratchet's move (0:1) is a tap on it.

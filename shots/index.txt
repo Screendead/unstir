@@ -218,6 +218,26 @@ card-lens-revoked.png  Lens's card, revoked.
 card-first-stir.png  First Stir's card, unowned.
 card-escapement.png  Escapement's card, unowned.
 card-complete.png  Complete's card, unowned.
+clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
+clip-first-stir-1.4.png  First Stir's clip 1.4 s in.
+clip-first-stir-2.1.png  First Stir's clip 2.1 s in.
+clip-first-stir-3.3.png  First Stir's clip 3.3 s in.
+clip-first-stir-5.4.png  First Stir's clip 5.4 s in.
+clip-first-stir-6.2.png  First Stir's clip 6.2 s in.
+clip-lens-still.png  Lens's clip on its still: level 3 as dealt, the lens newest, its rim whole through both twists.
+clip-lens-2.4.png  Lens's clip 2.4 s in, the lens dragged down and back up.
+clip-lens-3.2.png  Lens's clip 3.2 s in, the lens dragged down and back up.
+clip-lens-4.3.png  Lens's clip 4.3 s in, the lens dragged down and back up.
+clip-lens-solve-still.png  Lens's other clip on its still: level 2's twist taken off, the lens's rim whole.
+clip-lens-solve-1.6.png  Lens's other clip 1.6 s in.
+clip-lens-solve-3.4.png  Lens's other clip 3.4 s in.
+clip-lens-solve-4.4.png  Lens's other clip 4.4 s in.
+clip-escapement-still.png  Escapement's clip on its still: rod 2 +4 let go, its tick landed, the ratchet a tooth on.
+clip-escapement-1.6.png  Escapement's clip 1.6 s in.
+clip-escapement-2.2.png  Escapement's clip 2.2 s in.
+clip-escapement-3.6.png  Escapement's clip 3.6 s in.
+clip-escapement-5.1.png  Escapement's clip 5.1 s in.
+clip-escapement-5.9.png  Escapement's clip 5.9 s in.
 card-lens-complete-failed.png  Lens's card after Complete, bought from it, failed: the line under Complete's button says so.
 card-complete-owned.png  Complete's card, owned: every pack open.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, with no price.

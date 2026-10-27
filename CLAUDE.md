@@ -377,7 +377,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
   (Jack, 2026-10-26, S1), so today none and no dock; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
   (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a dot for its state. `PackCard` grows out
-  of its cover: the clip (`PackClip`: `<key>-clip.mp4` from the bundle once filmed, else the cover's loop), what it
+  of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
   purchase state, buy at the App Store's price, try free, Complete beside an unowned pack while Complete is on the
   shelf (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
@@ -388,6 +388,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and buttons at accessibility sizes; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
   reads each cover's state or price and each button's price, hides the menu under a card, and announces a change of
   state. Reduce Motion holds the covers and clip still, stills the pending dot and fades the card in.
+  **Clip.swift** draws each card's clip live, never a committed video (to-do 50): a `Clip` is one or more `Reel`s,
+  each a real level played by a drawn fingertip at `UNSTIR_FINGER`'s pace, every move through `Array.commit` and, on a
+  clock, its tick through `Game.tick`, the rule `Game` itself ticks by, so `ClipTests` checks every stack against a real
+  `Game`. A frame (`Reel.frame(at:)`) is a pure function of the clip's time, drawn by the level's own views (`Unstirred`,
+  `StoryLayer` or `PictureLayer`, `RodView`, `RatchetView`, `ClockHint`, `Bezel`) with the game's heal, push, tick and
+  stop rings and its solve wave timed as `LevelView`'s keyframes are; `ClipPlayer` loops it from when it appears, holds
+  it at `UNSTIR_CLOCK`, and under Reduce Motion holds `Clip.still`. A reel that dips is black at both ends, so the
+  seam never jumps. First Stir: level 1 healed top first, each heal playing its vignette, with the time under the tank
+  stepping back (F3), on the outline's scene 16 window (12:30 am to 11:40 pm) until the level carries its own clock.
+  Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
+  no dip on the order read (`UNSTIR_CLIPS=b`: level 2 solved instead). Escapement: problem 1 in its par of three.
+  Complete: the three whole in turn (`UNSTIR_CLIPS=b`: each one's first beat, about 8 s). Every reel stays drawn,
+  the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
   no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
@@ -453,7 +466,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
   in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`).
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
-  levels on a pack's card while it has none. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, and
+  levels on a pack's card while it has none; `UNSTIR_CLIPS=b` plays the cards' other clips, where there are two.
+  `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
   tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's

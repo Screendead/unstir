@@ -10,6 +10,8 @@
 		0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7898E0AEAFE90492DC3EB64C /* Neurons.metal */; };
 		1A5F105A934D627FC90E16AE /* SolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE69789D7FB741D6D04AA1A /* SolverTests.swift */; };
 		21DF6C200CBDE16E8AD4BA92 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A75F3E52CC7C2EE27C7DFE /* Log.swift */; };
+		2F4A4627C3976608D2D99D66 /* ClipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED6B7A35E47B3475841C4DC /* ClipTests.swift */; };
+		3A65E8F7E58F1DA384BE5ABC /* Clip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F14A8BD3536DD66979D13A /* Clip.swift */; };
 		3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965EC2AB5B15FD9B3CA462DE /* Twist.swift */; };
 		3F40391B2B57058C26788864 /* Loom.metal in Sources */ = {isa = PBXBuildFile; fileRef = 536CF149EF97D4429DC2751F /* Loom.metal */; };
 		402763F337DF9C5673C03A9A /* UnstirApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9BF77535C50E24D360E2ED /* UnstirApp.swift */; };
@@ -90,6 +92,7 @@
 		7FD78B993A35245B095AA159 /* EscapementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementTests.swift; sourceTree = "<group>"; };
 		8958A26903CC2506CCC43FBF /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		8C424A58661F8E2D8F67C740 /* VortexPictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VortexPictures.swift; sourceTree = "<group>"; };
+		90F14A8BD3536DD66979D13A /* Clip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clip.swift; sourceTree = "<group>"; };
 		92B7FCEFE279BF018CABD288 /* Unstir.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Unstir.xcconfig; sourceTree = "<group>"; };
 		944137441C4619E684D8CC15 /* LivePictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePictures.swift; sourceTree = "<group>"; };
 		965EC2AB5B15FD9B3CA462DE /* Twist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Twist.swift; sourceTree = "<group>"; };
@@ -107,6 +110,7 @@
 		D80A3010678E45A15B0543C3 /* Consent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Consent.swift; sourceTree = "<group>"; };
 		DB7B4A291F2734F1B961F3FE /* Shelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shelf.swift; sourceTree = "<group>"; };
 		E302013539F573E3F8C8FBC5 /* Chainmail.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Chainmail.metal; sourceTree = "<group>"; };
+		FED6B7A35E47B3475841C4DC /* ClipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipTests.swift; sourceTree = "<group>"; };
 		FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -132,6 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */,
+				FED6B7A35E47B3475841C4DC /* ClipTests.swift */,
 				7FD78B993A35245B095AA159 /* EscapementTests.swift */,
 				59B662DA049B8A76E76E38BF /* FirstStirTests.swift */,
 				3CB4A9DE240F63330597A189 /* LensTests.swift */,
@@ -172,6 +177,7 @@
 				D322AA44C06018F3A665792F /* Brim.metal */,
 				6499D4977A88A7764419D373 /* Brim.swift */,
 				E302013539F573E3F8C8FBC5 /* Chainmail.metal */,
+				90F14A8BD3536DD66979D13A /* Clip.swift */,
 				D80A3010678E45A15B0543C3 /* Consent.swift */,
 				27E5962A6708954A5E564099 /* Coral.metal */,
 				0B80E0606D266BF05C66786E /* FirstStir.swift */,
@@ -311,6 +317,7 @@
 				4C24D2DED659D4353BEA9998 /* Brim.metal in Sources */,
 				500060DF38B729F0EB090EBA /* Brim.swift in Sources */,
 				C3596BB291D30EF520836782 /* Chainmail.metal in Sources */,
+				3A65E8F7E58F1DA384BE5ABC /* Clip.swift in Sources */,
 				50B41DB91ADFEC633FAE5BB8 /* Consent.swift in Sources */,
 				F1D5DFB747CEEE7F2DC62166 /* Coral.metal in Sources */,
 				650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */,
@@ -344,6 +351,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */,
+				2F4A4627C3976608D2D99D66 /* ClipTests.swift in Sources */,
 				730654ACB29B80F0DED02225 /* EscapementTests.swift in Sources */,
 				F09FECAA611D270EE52C8307 /* FirstStirTests.swift in Sources */,
 				B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */,
