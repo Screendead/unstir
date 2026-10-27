@@ -951,7 +951,7 @@ names and product ids, and Complete's promise to older owners.
     Jack's calls (2026-10-26, round 9) that touch it: *F2 = A* (one night across the pack, about half an hour a
     picture) and *F5 = A* (the harbour as pictures 16 and 1) mean level 1's whole night, storm back to evening, is a
     stand-in: the art pass cuts each harbour picture to its own half hour. *F3 = A* (a clock under the tank stepping
-    back on every heal) replaces the caption "Each heal turns the night back."; not built yet. *D1 = A:* the cottage's
+    back on every heal) replaces the caption "Each heal turns the night back."; built with chapter 1 (to-do 43). *D1 = A:* the cottage's
     glow stays narrowed to its core (to-do 41).
 41. First Stir: a per-scene test that no vignette's light reaches the core of a rod with an entry removable right
     after its heal (`Layout.removable`), over every heal order.
@@ -1003,8 +1003,28 @@ names and product ids, and Complete's promise to older owners.
       (built). B: the outline's, the bow reaching the haulers' disc so the boat heals after them, which means
       redrawing the beach so the boat sits nearer rod 0 and rechecking it plays unsmeared. Recommend A for now:
       it plays clean under every order; B is the better story if Jack wants the order to carry it.
-    Left: Jack's review of the art at phone size (the figures are small on the quad scenes), the films, and
-    chapters 2 to 5.
+    Chapter 2, The Rescue (scenes 6 to 10), drawn 2026-10-27 on `firststir-ch2` in `FirstStirRescue.swift` and brought
+    onto chapter 1's engine on `firststir-content` (2026-10-27, pushed, no PR yet) as `Story.rescue` cases, levels
+    `first-stir-6` to `-10` (ids now stamped by place): home light (pent `1:+3,0:-4,2:+5,4:-3,3:+4,0:+2`), off the
+    breakwater (eye `0:+4,3:-3,1:+5,2:-4,1:-2,3:+3`), the lantern chain (quad `3:+4,0:-3,1:+5,2:-2,3:-5,0:+2,1:-3`), the
+    stair (tri `0:+4,1:-3,2:+5,1:+4,2:-3,1:-5,2:+2`) and the lighthouse door (pent `3:-4,1:+3,0:+5,4:-2,2:+4,1:-5,3:+2`),
+    each par the solver's optimum (`SolverTests.testFirstStirParIsTheOptimum`). On the engine its time steps per
+    scramble entry with the clock caption, 4:45 back to 2:30 am; its rain is drawn over the composite (`drawOver`), a
+    function of the time; its sky and sea open on Dawn After's 4:45 tones and turn to rescue amber's lit low cloud by
+    4:15, so the horizon brightens as scene 6 winds back. Its pen is `Brush` beside chapter 1's `Pen`. At the test's
+    512 px four vignettes reached a few thousandths past the art spec (scene 6's window pane by the knob, scene 8's
+    lifeboat and bearers, scene 10's door wave and lamp flashes) and were pulled in. Its review's fixes stand (flat
+    fills for glows and beams, scene 7's steps, scene 8's beats, scene 9's lamp and lantern, scene 6's searchlight).
+    **Open for Jack, chapter 2** (Claude's recommendations, not decided):
+    - Ink: the outline names no line ink for rescue amber; built with the rain's B7CEFF at full strength. The other
+      choice is chapter 3's 8F9CFF, carrying over into the flood. Recommend B7CEFF: it ties the lines to the rain.
+    - Scale on pent: figures are at the spec's 0.12 minimum and the lifeboat about 0.12 long between knob and margin.
+      If they read small on the phone: a smaller knob clearance on small rods, or closer-up drawing. Recommend judging
+      on the phone first.
+    - Two pens: `Pen` (chapter 1) and `Brush` (chapter 2) do the same job. Recommend folding `Pen` into `Brush` (the
+      more general: figure units, clips, one glow per vignette) before chapter 3, so later chapters draw with one.
+    Left: Jack's review of the art at phone size (the figures are small on the quad and pent scenes), the films, and
+    chapters 3 to 5.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render

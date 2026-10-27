@@ -297,7 +297,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
-  one so far; Lens and Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
+  ten so far, chapters 1 and 2; Lens and Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
@@ -335,21 +335,32 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   boat's stern, in the cottage's ring) are pinned there until the art pass redraws them (Jack, 2026-10-26, F4). A scene on the pack's night must also keep
   every change 0.02 inside its core and clear of the knob (0.085 from the rod's centre), the outline's art spec
   (`docs/first-stir-outline.md`).
-- **StoryScene.swift** and **FirstStirDawn.swift** hold the scenes on the pack's one night (Jack, F2). A `StoryScene`
-  draws, in tank units, a sky and sea at a time in minutes after midnight (`drawSky`), the scene with some vignettes
-  played (`draw`), and the bodies that move with the time where no disc reaches, their line and glow (`Dawn.bodyGlow`)
-  included (`drawLive`: the sunrise's sun and chimney smoke; `testTheBodiesStayClearOfEveryDisc`), between `late`, as the level opens, and `early`. `Story.scene` names it (`Story.dawn`); `SceneLayer`
-  draws it as `StoryLayer` does, from four baked layers (the sky at `late` and at `early`, cross-faded, and the scene
-  held back and played), the live bodies drawn over the sky. Its cores cut in through masks drawn without antialiasing
+- **StoryScene.swift**, **FirstStirDawn.swift** and **FirstStirRescue.swift** hold the scenes on the pack's one night
+  (Jack, F2). A `StoryScene` draws, in tank units, a sky and sea at a time in minutes after midnight (`drawSky`), the
+  scene with some vignettes played (`draw`), the bodies that move with the time where no disc reaches, their line and
+  glow (`Dawn.bodyGlow`) included (`drawLive`: the sunrise's sun and chimney smoke;
+  `testTheBodiesStayClearOfEveryDisc`), and the weather that falls over everything, played cores included (`drawOver`:
+  the Rescue's rain), between `late`, as the level opens, and `early`; `drawLive` and `drawOver` default to nothing.
+  A chapter is an enum of its scenes conforming to it, one `Story` case (`Story.dawn`, `Story.rescue`) and an arm in
+  `Story.scene` and `Story.vignettes`; `Level.firstStir` joins the chapters' levels and stamps each id and label from
+  its place. `SceneLayer` draws a scene as `StoryLayer` does, from four baked layers (the sky at `late` and at
+  `early`, cross-faded, and the scene held back and played), the live bodies drawn over the sky and the weather over
+  all. Its cores cut in through masks drawn without antialiasing
   (`SceneComposite.cores`): an antialiased edge showed a ring however it was composited, though both scenes held the
   same there (`testTheCutInCoresLeaveNoSeam`). Its time is a function of the stack: `Game.wound` counts
   the scramble's entries gone (the player's own pushes move no time; a solve has wound them all), and the scene stands
   that share of the way from `late` to `early`, winding there over `Harbour.rewind`. `Game.caption`, the line under
   the tank, is that time as a clock on a scene's level ("6:40 am", Jack's F3) and the note elsewhere. `Dawn` is
   chapter 1, Dawn After: five scenes, 6:40 back to 4:45 am, in dawn pewter, each scene's `early` the next one's `late`
-  (`testTheTable`). `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
+  (`testTheTable`). `Rescue` is chapter 2, The Rescue: five scenes, 4:45 back to 2:30 am, in rescue amber, its ink the
+  rain's B7CEFF at full strength. Its sky (low cloud lit from below, `Rescue.skyTones`) and sea open on Dawn After's
+  4:45 tones (`Dawn.tones`, mixed as `Tone`s) and turn to the chapter's own by the end of its first scene
+  (`testTheRescueOpensOnTheDawnsLastSky`); its rain climbs back up its slant and thickens as a function of the time.
+  Its vignettes draw through `Brush` (a pen in a figure's own units through `at`, each vignette laid down under one
+  tight glow by `Brush.vignette`) and `Cast` (the family and townsfolk told apart by outline alone, the dog, the
+  storm lantern, the lifeboat, a breaking wave). `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
   grandmother, child, neighbour, crew) and `Dog` build silhouettes from posed parts and outline their union.
-  `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a scene on the Mac, held back, played
+  `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a Dawn After scene on the Mac, held back, played
   and where they differ over the layout's cores and knobs, and prints each vignette's reach against its core less
   0.02, its nearest approach to the knob and the other discs it enters: the drawing loop, seconds a render. It counts a
   pixel changed past 14 in 255 (the Mac's renderer shifts bright glow by up to 12 when the rest of the drawing
