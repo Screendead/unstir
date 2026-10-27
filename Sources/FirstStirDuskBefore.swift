@@ -400,27 +400,27 @@ extension Dusk {
                 if played.contains(1) {
                     // Just out along the path, facing out, the lantern swinging behind her and her shawl's ends blowing.
                     let x = 0.265, y = top(0.265)
-                    Cast.figure(pen.at(x, y, k: 0.13), .grandmother, arms: [[(-0.1, -0.72), (-0.22, -0.5), (-0.3, -0.38)]], colour: ink)
+                    Cast.figure(pen.at(x, y, k: 0.155), .grandmother, arms: [[(-0.1, -0.72), (-0.22, -0.5), (-0.3, -0.38)]], colour: ink)
                     pen.lit(Rescue.tight) { g in
-                        g.stroke(g.curve(x - 0.012, y - 0.1, x - 0.035, y - 0.105, x - 0.05, y - 0.09), ink)
-                        g.stroke(g.curve(x - 0.012, y - 0.09, x - 0.03, y - 0.085, x - 0.045, y - 0.07), ink)
+                        g.stroke(g.curve(x - 0.014, y - 0.12, x - 0.042, y - 0.126, x - 0.06, y - 0.108), ink)
+                        g.stroke(g.curve(x - 0.014, y - 0.108, x - 0.036, y - 0.102, x - 0.054, y - 0.084), ink)
                     }
-                    Dusk.lantern(pen.at(x - 0.045, y - 0.03, k: 0.035, turn: 0.4), lit: true)
+                    Dusk.lantern(pen.at(x - 0.054, y - 0.036, k: 0.04, turn: 0.4), lit: true)
                 } else {
-                    Cast.figure(pen.at(0.548, 0.045, k: 0.13), .grandmother,
+                    Cast.figure(pen.at(0.548, 0.045, k: 0.155), .grandmother,
                                 arms: [[(0.1, -0.72), (0.2, -0.95), (0.3, -1.12)], [(-0.1, -0.72), (-0.12, -0.45)]], colour: ink)
-                    Dusk.lantern(pen.at(0.587, -0.104, k: 0.035), lit: true)
-                    pen.glow(0.587, -0.12, 0.05, Dusk.lamplight, 0.45)
+                    Dusk.lantern(pen.at(0.594, -0.13, k: 0.04), lit: true)
+                    pen.glow(0.594, -0.148, 0.05, Dusk.lamplight, 0.45)
                 }
             }
 
             // Vignette 0, the child.
             pen.vignette(0) { pen in
                 if played.contains(0) {
-                    Cast.figure(pen.at(-0.6, quay, k: 0.11), .child, arms: [[(0.1, -0.6), (0.2, -0.85), (0.24, -1.1)], [(-0.1, -0.6), (-0.24, -0.42)]],
+                    Cast.figure(pen.at(-0.6, quay, k: 0.13), .child, arms: [[(0.1, -0.6), (0.2, -0.85), (0.24, -1.1)], [(-0.1, -0.6), (-0.24, -0.42)]],
                                 legs: [[(-0.06, -0.32), (-0.22, -0.16), (-0.2, 0)], [(0.06, -0.32), (0.22, -0.18), (0.3, -0.04)]], colour: ink)
                 } else {
-                    Cast.figure(pen.at(-0.24, quay, k: 0.11), .child, arms: [[(0.1, -0.6), (0.26, -0.8), (0.2, -1.08)], [(-0.1, -0.6), (-0.14, -0.36)]],
+                    Cast.figure(pen.at(-0.25, quay, k: 0.13), .child, arms: [[(0.1, -0.6), (0.26, -0.8), (0.2, -1.08)], [(-0.1, -0.6), (-0.14, -0.36)]],
                                 colour: ink)
                 }
             }
@@ -444,7 +444,7 @@ extension Dusk {
     /// the float hanging and the lamp unlit.
     enum Lines {
         static let window = (x0: -0.573, y0: -0.388, x1: -0.493, y1: -0.298)
-        static let dial = (x: -0.45, y: 0.33, r: 0.058)
+        static let dial = (x: -0.45, y: 0.33, r: 0.07)
 
         static func draw(_ pen: Brush, played: Set<Int>) {
             // The far breakwater on the horizon and its lighthouse, dark.
@@ -485,7 +485,6 @@ extension Dusk {
 
             // The harbourmaster's hut on the quay in front, its barometer on the wall by the door.
             let hut = pen.poly([(-0.66, 0.78), (-0.66, 0.24), (-0.34, 0.12), (-0.02, 0.24), (-0.02, 0.78)])
-            pen.fill(hut, .black)
             var shed = Path()
             shed.addPath(hut)
             shed.addPath(pen.rect(-0.2, 0.5, -0.09, 0.78))
@@ -493,7 +492,7 @@ extension Dusk {
             shed.addPath(pen.circle(dial.x, dial.y, dial.r))
             shed.addPath(pen.circle(dial.x, dial.y, 0.005))
             // The glyphs: a cloud with a bolt under it upper left, a rayed sun upper right.
-            let storm = (x: dial.x - 0.025, y: dial.y - 0.026), fair = (x: dial.x + 0.025, y: dial.y - 0.026)
+            let storm = (x: dial.x - 0.03, y: dial.y - 0.03), fair = (x: dial.x + 0.03, y: dial.y - 0.03)
             var glyphs = Path()
             glyphs.addPath(pen.curve(storm.x - 0.014, storm.y, storm.x - 0.007, storm.y - 0.016, storm.x, storm.y - 0.004))
             glyphs.addPath(pen.curve(storm.x, storm.y - 0.004, storm.x + 0.01, storm.y - 0.016, storm.x + 0.014, storm.y))
@@ -510,6 +509,9 @@ extension Dusk {
                 g.stroke(cottage, ink)
                 g.stroke(flags, ink, 0.2)
                 g.stroke(wall, ink, 0.7)
+            }
+            pen.fill(hut, .black)
+            pen.lit { g in
                 g.stroke(shed, ink)
                 g.stroke(glyphs, Dusk.lamplight, 0.9)
             }
@@ -553,7 +555,7 @@ extension Dusk {
             // Vignette 3, the barometer's needle.
             pen.vignette(3) { pen in
                 let a = played.contains(3) ? -0.25 * Double.pi : -0.75 * Double.pi
-                pen.lit(Rescue.tight) { $0.stroke($0.seg(dial.x, dial.y, dial.x + 0.042 * cos(a), dial.y + 0.042 * sin(a)), Dusk.cream) }
+                pen.lit(Rescue.tight) { $0.stroke($0.seg(dial.x, dial.y, dial.x + 0.05 * cos(a), dial.y + 0.05 * sin(a)), Dusk.cream) }
             }
 
             // Vignette 4, the cottage window: the float hanging in it both ways, the lamp lit or not.
