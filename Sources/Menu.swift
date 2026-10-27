@@ -218,9 +218,6 @@ struct MenuView: View {
         }
         .task { if demo { await tour() } }
         .task { if shelfDemo { await shelfTour() } }
-        // A failure belongs to the card that showed it. On the phone a card shown again doesn't always appear anew, so
-        // its own onAppear can't be the hook.
-        .onChange(of: card) { Store.shared.forgetFailures() }
     }
 
     /// The card grows out of its cover, or fades in under Reduce Motion.

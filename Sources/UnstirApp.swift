@@ -320,6 +320,9 @@ struct RootView: View {
         }
         .background(Color.black)
         .modifier(TypeSize(size: typeSize))
+        // A failure belongs to the card that showed it, so every change of card forgets it: back, another pack, or a
+        // level's gate. Here, since the menu isn't up while a level is, and a card shown again doesn't always appear anew.
+        .onChange(of: card) { Store.shared.forgetFailures() }
         .onChange(of: phase) {
             Log.write("phase \(phase)")
             Analytics.shared.phase(phase)
