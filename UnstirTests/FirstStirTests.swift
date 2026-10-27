@@ -125,6 +125,22 @@ final class FirstStirTests: XCTestCase {
             time = scene.early
         }
         XCTAssertEqual(time, 150, "chapter 2 ends at 2:30")
+        // Chapter 3 carries on from it.
+        let flood = Array(Level.firstStir.dropFirst(dawn.count + rescue.count).prefix(Flood.allCases.count))
+        XCTAssertEqual(flood.map { $0.story }, Flood.allCases.map { .flood($0) })
+        XCTAssertEqual(flood.map(\.scramble.count), [7, 8, 8, 8, 9])
+        XCTAssertEqual(flood.map(\.layout), [.eye, .pent, .quad, .eye, .pent])
+        for level in flood {
+            let story = try XCTUnwrap(level.story, level.id), scene = try XCTUnwrap(story.scene, level.id)
+            XCTAssertEqual(level.layout, scene.layout, level.id)
+            XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty && level.ratchets.isEmpty, level.id)
+            XCTAssertEqual(story.vignettes.count, 3, level.id)
+            XCTAssertEqual(story.vignettes, story.vignettes.intersection(level.scramble.map(\.rod)), "\(level.id) opens with one played")
+            XCTAssertEqual(scene.late, time, level.id)
+            XCTAssertLessThan(scene.early, scene.late, level.id)
+            time = scene.early
+        }
+        XCTAssertEqual(time, 30, "chapter 3 ends at 12:30")
         XCTAssertEqual(Level.firstStir.map(\.id), (1...Level.firstStir.count).map { Pack.firstStir.id($0) })
         for level in Level.firstStir {
             let story = try XCTUnwrap(level.story, level.id)
@@ -142,6 +158,16 @@ final class FirstStirTests: XCTestCase {
         XCTAssertEqual(Rescue.skyTones(Rescue.homeLight.late), [dawn.zenith, dawn.middle, dawn.low])
         XCTAssertEqual(Rescue.seaTones(Rescue.homeLight.late)[0], dawn.sea)
         XCTAssertNotEqual(Rescue.skyTones(Rescue.homeLight.early), [dawn.zenith, dawn.middle, dawn.low])
+    }
+
+    /// Chapter 3 opens on the sky and rain chapter 2 ends on (F2): at 2:30 the Flood's sky, sea and rain are the Rescue's.
+    func testTheFloodOpensOnTheRescuesLastSky() {
+        XCTAssertEqual(Flood.path.late, Rescue.door.early)
+        XCTAssertEqual(Flood.skyTones(Flood.path.late), Rescue.skyTones(Rescue.door.early))
+        XCTAssertEqual(Flood.seaTones(Flood.path.late), Rescue.seaTones(Rescue.door.early))
+        XCTAssertEqual(Flood.rain(Flood.path.late), Rescue.rain(Rescue.door.early))
+        XCTAssertNotEqual(Flood.skyTones(Flood.path.early), Rescue.skyTones(Rescue.door.early))
+        XCTAssertLessThan(Flood.rain(Flood.quay.early), Double(Rescue.drops.count))
     }
 
     /// The caption is the scene's time (Jack, F3), stepping back a share of its window with each of the scramble's entries

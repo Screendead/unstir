@@ -110,7 +110,7 @@ enum Flood: Int, CaseIterable, Sendable {
         }
     }
 
-    var horizon: Double { [BreakwaterPath.horizon, HighStreet.water, -0.7, 0, -0.5][rawValue - 11] }
+    var horizon: Double { [BreakwaterPath.horizon, HighStreet.water, UpstairsWindow.water, Kitchen.water, OverTheQuay.horizon][rawValue - 11] }
 
     /// Low cloud in the chapter's ink.
     static func clouds(_ pen: Brush, _ banks: [(x0: Double, x1: Double, y: Double, h: Double)]) {
@@ -459,10 +459,481 @@ enum HighStreet {
         }
     }
 }
-enum UpstairsWindow { static func draw(_ pen: Brush, played: Set<Int>) {} }
-enum Kitchen {
-    static func windows(_ pen: Brush) -> Path { pen.rect(0.4, -0.6, 0.6, -0.4) }
-    static func sky(_ pen: Brush, minutes: Double) { pen.fill(pen.rect(-1, -1, 1, 1), .black) }
-    static func draw(_ pen: Brush, played: Set<Int>) {}
+/// Scene 13, 1:40 back to 1:15, on quad: the cottage from across the flooded street, the water up its front to the
+/// door's knocker, the child at the window above. Rod 3, the window: the child and the dog at it, the torch shining
+/// out, then dark, a curtain blowing in. Rod 0, the roof: the weathervane bent, pointing down, then upright and
+/// spinning. Rod 1, the door: open, the water at its knocker and the float drifting out, then the water down at the
+/// step and the float on the threshold.
+enum UpstairsWindow {
+    static let water = 0.28
+    static let eaves = -0.33, ridge = -0.5
+    static let window = (x0: -0.415, y0: -0.258, x1: -0.295, y1: -0.142)
+    static let door = (x0: 0.47, y0: 0.2, x1: 0.57, y1: 0.38)
+    static let vane = 0.4
+
+    static func draw(_ pen: Brush, played: Set<Int>) {
+        let ink = Flood.ink
+        Flood.clouds(pen, [(-1, -0.45, -0.78, 0.05), (0.55, 1, -0.7, 0.04), (-0.3, 0.3, -0.92, 0.04)])
+
+        // The neighbours' gables either side, behind.
+        let left = pen.poly([(-1, water), (-1, -0.2), (-0.86, -0.36), (-0.72, -0.2), (-0.72, water)])
+        let right = pen.poly([(0.74, water), (0.74, -0.24), (0.88, -0.4), (1, -0.28), (1, water)])
+        pen.fill(left, .black); pen.fill(right, .black)
+        var behind = Path()
+        behind.addPath(left); behind.addPath(right)
+        for (x, y) in [(-0.86, -0.12), (-0.86, 0.08), (0.87, -0.14), (0.87, 0.06)] { behind.addPath(pen.rect(x - 0.03, y, x + 0.03, y + 0.1)) }
+
+        // The cottage: its roof, the chimney on the left gable, the front down into the water.
+        let front = pen.poly([(-0.72, water), (-0.72, eaves), (0.74, eaves), (0.74, water)])
+        let roof = pen.poly([(-0.76, eaves), (-0.56, ridge), (0.58, ridge), (0.78, eaves)])
+        let chimney = pen.poly([(-0.62, -0.42), (-0.62, -0.6), (-0.52, -0.6), (-0.52, ridge)])
+        for p in [front, roof, chimney] { pen.fill(p, .black) }
+        var house = Path()
+        house.addPath(front)
+        house.addPath(roof)
+        house.addPath(chimney)
+        house.addPath(pen.seg(-0.64, -0.6, -0.5, -0.6))
+        // Slates in rows along the roof.
+        var slates = Path()
+        for y in [-0.45, -0.4, -0.36] {
+            let inset = (y - eaves) / (ridge - eaves) * 0.2
+            slates.addPath(pen.seg(-0.76 + inset, y, 0.78 - inset, y))
+        }
+        // The upstairs windows, the one on the left the child's; downstairs a window drowned to its sill.
+        house.addPath(pen.rect(window.x0, window.y0, window.x1, window.y1))
+        house.addPath(pen.seg(window.x0 - 0.012, window.y1 + 0.012, window.x1 + 0.012, window.y1 + 0.012))
+        for x in [0.0, 0.3] {
+            house.addPath(pen.rect(x - 0.06, -0.255, x + 0.06, -0.12))
+            house.addPath(pen.seg(x, -0.255, x, -0.12))
+        }
+        house.addPath(pen.rect(-0.52, 0.05, -0.36, 0.25))
+        house.addPath(pen.seg(-0.44, 0.05, -0.44, 0.25))
+        house.addPath(pen.rect(0.05, 0.05, 0.21, 0.25))
+        house.addPath(pen.seg(0.13, 0.05, 0.13, 0.25))
+        // The door's frame and porch hood, on posts down into the water.
+        house.addPath(pen.poly([(door.x0 - 0.03, door.y0 - 0.02), ((door.x0 + door.x1) / 2, door.y0 - 0.06), (door.x1 + 0.03, door.y0 - 0.02)]))
+        house.addPath(pen.seg(door.x0 - 0.02, door.y0 - 0.02, door.x0 - 0.02, water))
+        house.addPath(pen.seg(door.x1 + 0.02, door.y0 - 0.02, door.x1 + 0.02, water))
+        house.addPath(pen.poly([(door.x0, water), (door.x0, door.y0), (door.x1, door.y0), (door.x1, water)], closed: false))
+        // The weathervane's pole on the ridge.
+        house.addPath(pen.seg(vane, ridge, vane, ridge - 0.025))
+
+        // Railings and a gate's top out of the water in the foreground, in rod 2's core.
+        var rails = Path()
+        rails.addPath(pen.seg(-1, 0.5, 0.0, 0.5))
+        for x in Swift.stride(from: -0.96, through: -0.02, by: 0.06) {
+            rails.addPath(pen.poly([(x, 0.56), (x, 0.47), (x + 0.008, 0.455), (x + 0.016, 0.47)], closed: false))
+        }
+        pen.lit { g in
+            g.stroke(behind, ink, 0.6)
+            g.stroke(house, ink)
+            g.stroke(slates, ink, 0.4)
+        }
+        Flood.water(pen, water)
+        pen.lit { g in g.stroke(rails, ink, 0.8) }
+
+        // Vignette 3, the window.
+        pen.vignette(3) { pen in
+            let inside = pen.clipped(to: pen.rect(window.x0 + 0.004, window.y0 + 0.004, window.x1 - 0.004, window.y1 - 0.004))
+            if played.contains(3) {
+                // The curtain blown in off the sill, one corner caught up.
+                inside.stroke(inside.path { c in
+                    c.move(to: CGPoint(x: window.x0 + 0.01, y: window.y0 + 0.005))
+                    c.addQuadCurve(to: CGPoint(x: window.x1 - 0.015, y: window.y1 - 0.02), control: CGPoint(x: window.x0 + 0.02, y: window.y1 - 0.01))
+                    c.addQuadCurve(to: CGPoint(x: window.x0 + 0.05, y: window.y0 + 0.005), control: CGPoint(x: window.x1 - 0.02, y: window.y0 + 0.06))
+                }, ink, 0.8)
+            } else {
+                inside.fill(inside.rect(window.x0, window.y0, window.x1, window.y1), Flood.torch, 0.12)
+                Cast.figure(inside.at(-0.335, window.y1 + 0.02, k: 0.2), .child,
+                            arms: [[(0.1, -0.62), (0.22, -0.66), (0.3, -0.72)], [(-0.1, -0.62), (-0.13, -0.42)]], colour: ink)
+                Cast.dog(inside.at(-0.385, window.y1 - 0.002, k: 0.07, flip: true), colour: ink)
+                // The torch held up to the glass, its beam out into the rain.
+                pen.fill(pen.poly([(-0.27, -0.188), (-0.21, -0.215), (-0.21, -0.17), (-0.27, -0.18)]), Flood.torch, 0.25)
+                pen.fill(pen.circle(-0.275, -0.184, 0.006), Flood.torch)
+            }
+        }
+
+        // Vignette 0, the weathervane.
+        pen.vignette(0) { pen in
+            var vanes = Path()
+            if played.contains(0) {
+                let top = ridge - 0.055
+                vanes.addPath(pen.seg(vane, ridge - 0.025, vane, top - 0.01))
+                vanes.addPath(pen.seg(vane - 0.04, top, vane + 0.04, top))
+                vanes.addPath(pen.poly([(vane + 0.04, top), (vane + 0.025, top - 0.012), (vane + 0.025, top + 0.012)]))
+                vanes.addPath(pen.poly([(vane - 0.04, top), (vane - 0.05, top - 0.014), (vane - 0.03, top)], closed: false))
+                // Spinning.
+                vanes.addPath(pen.path { a in a.addArc(center: CGPoint(x: vane, y: top), radius: 0.046, startAngle: .degrees(200), endAngle: .degrees(250), clockwise: false) })
+                vanes.addPath(pen.path { a in a.addArc(center: CGPoint(x: vane, y: top), radius: 0.046, startAngle: .degrees(20), endAngle: .degrees(70), clockwise: false) })
+            } else {
+                // Bent over at the pole's head, hanging pointing down the roof.
+                let kink = (x: vane, y: ridge - 0.04), tip = (x: vane + 0.03, y: ridge + 0.03)
+                vanes.addPath(pen.poly([(vane, ridge - 0.025), (kink.x, kink.y), (kink.x + 0.02, kink.y + 0.005)], closed: false))
+                vanes.addPath(pen.seg(kink.x + 0.02, kink.y + 0.005, tip.x, tip.y))
+                vanes.addPath(pen.poly([(tip.x, tip.y), (tip.x - 0.012, tip.y - 0.016), (tip.x + 0.01, tip.y - 0.012)]))
+            }
+            pen.lit(Rescue.tight) { $0.stroke(vanes, ink) }
+        }
+
+        // Vignette 1, the door.
+        pen.vignette(1) { pen in
+            if played.contains(1) {
+                // The water down at the step: the porch dry between its posts, the door's foot and step clear of it.
+                let bay = pen.rect(door.x0 - 0.014, water - 0.004, door.x1 + 0.014, door.y1 + 0.03)
+                pen.fill(bay, .black)
+                var dry = Path()
+                dry.addPath(pen.seg(door.x0, water - 0.004, door.x0, door.y1))
+                dry.addPath(pen.seg(door.x1, water - 0.004, door.x1, door.y1))
+                dry.addPath(pen.rect(door.x0 - 0.01, door.y1, door.x1 + 0.01, door.y1 + 0.015))
+                dry.addPath(pen.seg(door.x0 - 0.016, door.y1 + 0.03, door.x1 + 0.016, door.y1 + 0.03))
+                pen.lit(Rescue.tight) { g in
+                    g.stroke(dry, ink)
+                    g.stroke(g.seg(door.x0 - 0.016, door.y1 + 0.03, door.x1 + 0.016, door.y1 + 0.03), Flood.sea, 0.9)
+                }
+                UpstairsWindow.float(pen, door.x0 + 0.05, door.y1 - 0.016)
+            } else {
+                // The door swung open on the dark hall, its knocker just over the water, the float riding out.
+                pen.fill(pen.poly([(door.x0, door.y0), (door.x0 + 0.03, door.y0 + 0.02), (door.x0 + 0.03, water), (door.x0, water)]), .black)
+                pen.stroke(pen.poly([(door.x0, door.y0), (door.x0 + 0.03, door.y0 + 0.02), (door.x0 + 0.03, water)], closed: false), ink)
+                pen.stroke(pen.circle(door.x0 + 0.016, water - 0.016, 0.007), ink)
+                UpstairsWindow.float(pen, door.x0 + 0.07, water + 0.012)
+            }
+        }
+    }
+
+    /// The green glass float, its net over it, at (x, y).
+    static func float(_ pen: Brush, _ x: Double, _ y: Double, radius: Double = 0.017) {
+        let ball = pen.circle(x, y, radius)
+        var net = Path()
+        net.addPath(pen.seg(x - radius, y, x + radius, y))
+        net.addPath(pen.curve(x, y - radius, x - radius * 0.7, y, x, y + radius))
+        net.addPath(pen.curve(x, y - radius, x + radius * 0.7, y, x, y + radius))
+        pen.fill(ball, Flood.float, 0.3)
+        pen.lit(Rescue.tight) { g in
+            g.stroke(ball, Flood.float)
+            g.stroke(net, Flood.float, 0.6)
+        }
+    }
 }
-enum OverTheQuay { static func draw(_ pen: Brush, played: Set<Int>) {} }
+/// Scene 14, 1:15 back to 12:55, on eye: the kitchen at night under water, the window over the sea at the top, the back
+/// door open on the flooded street, the table on the left, the stair climbing the right wall. Rod 0, the table: the
+/// water over it and the teacup floating off on its saucer, then the water down at the table's legs and the cup on the
+/// table, its spoon in it. Rod 1, the stair: the water up four steps and the child's boots left on a step above it, then
+/// the child on the stair carrying the dog up. Rod 3, the float: drifting towards the open door, then caught on a
+/// chair's leg.
+enum Kitchen {
+    /// The water's line on the back wall, and the earlier one at the table's legs.
+    static let water = 0.11, low = 0.24
+    static let window = (x0: -0.17, y0: -0.66, x1: 0.17, y1: -0.4)
+    static let door = (x0: -0.92, y0: -0.3, x1: -0.76, y1: water)
+    static let ceiling = -0.8
+    /// The table's ends and legs.
+    static let ends = (-0.58, -0.2)
+    static let legs = [-0.56, -0.49, -0.29, -0.22]
+    /// The stair's nosings, from its foot in the water up to the ceiling: y at x.
+    static func step(_ x: Double) -> Double { 0.3 - (x - 0.12) * 0.84 }
+    static let tread = 0.06
+
+    /// The window and the open door, where the night shows.
+    static func windows(_ pen: Brush) -> Path {
+        var p = Path()
+        p.addPath(pen.rect(window.x0, window.y0, window.x1, window.y1))
+        p.addPath(pen.rect(door.x0, door.y0, door.x1, door.y1))
+        return p
+    }
+
+    /// The dark kitchen, and through the openings the sky at `minutes` over the sea.
+    static func sky(_ pen: Brush, minutes: Double) {
+        pen.fill(pen.rect(-1, -1, 1, 1), Tone(0x0B2238).scaled(0.25).color)
+        for (o, horizon) in [((window.x0, window.y0, window.x1, window.y1), -0.47), ((door.x0, door.y0, door.x1, door.y1), -0.05)] {
+            pen.fill(pen.rect(o.0, o.1, o.2, horizon), .linearGradient(Gradient(stops: Flood.skyStops(minutes)),
+                                                                       startPoint: pen.point(0, o.1 - 0.3), endPoint: pen.point(0, horizon)))
+            pen.fill(pen.rect(o.0, horizon, o.2, o.3), .linearGradient(Gradient(colors: [Flood.seaTones(minutes)[0].color, .black]),
+                                                                       startPoint: pen.point(0, horizon), endPoint: pen.point(0, o.3 + 0.1)))
+        }
+    }
+
+    static func draw(_ pen: Brush, played: Set<Int>) {
+        let ink = Flood.ink
+        // The ceiling and its beams, the window's frame and bars, the door open on its hinges.
+        var room = Path()
+        room.addPath(pen.seg(-1, ceiling, 1, ceiling))
+        for x in [-0.7, -0.35, 0.35, 0.7] { room.addPath(pen.rect(x - 0.03, ceiling, x + 0.03, ceiling + 0.04)) }
+        room.addPath(pen.rect(window.x0, window.y0, window.x1, window.y1))
+        room.addPath(pen.seg(0, window.y0, 0, window.y1))
+        room.addPath(pen.seg(window.x0, -0.53, window.x1, -0.53))
+        room.addPath(pen.seg(window.x0 - 0.03, window.y1 + 0.015, window.x1 + 0.03, window.y1 + 0.015))
+        room.addPath(pen.poly([(door.x0, water), (door.x0, door.y0), (door.x1, door.y0), (door.x1, water)], closed: false))
+        let leaf = pen.poly([(door.x1, door.y0), (door.x1 + 0.07, door.y0 + 0.04), (door.x1 + 0.07, water), (door.x1, water)])
+        pen.fill(leaf, .black)
+        room.addPath(leaf)
+        // The dresser on the back wall, plates standing on its shelves.
+        room.addPath(pen.rect(-0.66, -0.5, -0.44, -0.12))
+        for y in [-0.38, -0.25] { room.addPath(pen.seg(-0.66, y, -0.44, y)) }
+        for x in [-0.62, -0.55, -0.48] {
+            room.addPath(pen.circle(x, -0.415, 0.025))
+            room.addPath(pen.circle(x, -0.285, 0.025))
+        }
+        // The stair up the right wall, through the ceiling: its nosings and treads, a rail above.
+        var stair = Path()
+        var pts: [(Double, Double)] = [(0.12, 0.36), (0.12, step(0.12))]
+        var x = 0.12
+        while step(x + tread) > ceiling + 0.01 {
+            pts.append((x + tread, step(x)))
+            pts.append((x + tread, step(x + tread)))
+            x += tread
+        }
+        stair.addPath(pen.poly(pts, closed: false))
+        stair.addPath(pen.seg(0.12, step(0.12) + 0.06, x, step(x) + 0.06))
+        stair.addPath(pen.curve(0.16, step(0.16) - 0.16, 0.5, step(0.5) - 0.17, x, step(x) - 0.15))
+        // The lamp hanging from the beam, lit.
+        let lampX = -0.25
+        var lamp = Path()
+        lamp.addPath(pen.seg(lampX, ceiling + 0.04, lampX, -0.66))
+        let shade = pen.poly([(lampX - 0.045, -0.6), (lampX - 0.02, -0.66), (lampX + 0.02, -0.66), (lampX + 0.045, -0.6)])
+        lamp.addPath(shade)
+        pen.lit { g in
+            g.stroke(room, ink, 0.85)
+            g.stroke(stair, ink)
+            g.stroke(lamp, ink)
+        }
+        pen.glow(lampX, -0.59, 0.12, Flood.sodium, 0.3)
+        pen.fill(pen.ellipse(lampX, -0.598, 0.04, 0.008), Flood.flame)
+        // The water over the floor, dimming all under it.
+        Flood.water(pen, water)
+
+        // A chair standing in the water in the foreground, in rod 3's core.
+        var chair = Path()
+        chair.addPath(pen.poly([(0.16, 0.3), (0.16, 0.48), (0.04, 0.48), (0.04, 0.62)], closed: false))
+        chair.addPath(pen.seg(0.16, 0.48, 0.16, 0.62))
+        for y in [0.34, 0.38, 0.42] { chair.addPath(pen.seg(0.16, y, 0.215, y - 0.015)) }
+        chair.addPath(pen.seg(0.215, 0.285, 0.215, 0.6))
+        pen.lit { $0.stroke(chair, ink) }
+        pen.lit([(0.02, 0.3), (0.007, 0.8)]) { g in
+            for x in [0.04, 0.16, 0.215] { g.stroke(g.ellipse(x, x == 0.215 ? 0.6 : 0.62, 0.025, 0.006), Flood.sea, 0.8) }
+        }
+
+        // Vignette 0, the table.
+        pen.vignette(0) { pen in
+            if played.contains(0) {
+                // The water down at the legs: the table standing clear of it, nearer than the back wall's line, the cup
+                // on its top with its spoon.
+                let (table, slab) = Kitchen.table(pen, top: 0.108, feet: low)
+                pen.fill(slab, .black)
+                pen.stroke(table, ink)
+                for x in Kitchen.legs { pen.stroke(pen.ellipse(x, low, 0.014, 0.004), Flood.sea, 0.8) }
+                Kitchen.cup(pen, -0.3, 0.108, spoon: true)
+            } else {
+                // Sunk under the water, dim, the cup floating off it.
+                pen.stroke(Kitchen.table(pen, top: 0.17, feet: 0.25).lines, ink, 0.3)
+                Kitchen.cup(pen, -0.21, water + 0.004, spoon: false)
+                pen.stroke(pen.ellipse(-0.21, water + 0.006, 0.045, 0.008), Flood.sea, 0.6)
+            }
+        }
+
+        // Vignette 1, the stair.
+        pen.vignette(1) { pen in
+            if played.contains(1) {
+                let x = 0.535
+                Cast.figure(pen.at(x, step(x - 0.01), k: 0.16), .child,
+                            arms: [[(0.1, -0.62), (0.26, -0.5), (0.3, -0.42)], [(-0.1, -0.62), (0.12, -0.48), (0.22, -0.44)]],
+                            legs: [[(-0.06, -0.32), (-0.06, 0)], [(0.06, -0.32), (0.14, -0.2), (0.16, -0.38)]], colour: ink)
+                Cast.dog(pen.at(x + 0.045, step(x - 0.01) - 0.045, k: 0.07, turn: -0.3), colour: ink)
+            } else {
+                // A pair of boots on a step, toes out.
+                for dx in [0.0, 0.026] {
+                    let bx = 0.6 + dx, by = step(0.6) + 0.0
+                    let boot = pen.poly([(bx, by), (bx, by - 0.035), (bx + 0.014, by - 0.035), (bx + 0.014, by - 0.01), (bx + 0.026, by - 0.005), (bx + 0.026, by)])
+                    pen.fill(boot, .black)
+                    pen.stroke(boot, ink)
+                }
+            }
+        }
+
+        // Vignette 3, the float.
+        pen.vignette(3) { pen in
+            if played.contains(3) {
+                UpstairsWindow.float(pen, 0.135, 0.645)
+            } else {
+                UpstairsWindow.float(pen, -0.15, 0.69)
+                // Its wake spreading behind it as it drifts to the door.
+                pen.stroke(pen.poly([(-0.075, 0.665), (-0.125, 0.688), (-0.075, 0.715)], closed: false), Flood.sea, 0.6)
+                pen.stroke(pen.poly([(-0.02, 0.66), (-0.1, 0.69), (-0.02, 0.725)], closed: false), Flood.sea, 0.35)
+            }
+        }
+    }
+
+    /// The kitchen table, front on, its top at `top` and its legs down to `feet`: its lines, and its top and apron to fill.
+    static func table(_ pen: Brush, top: Double, feet: Double) -> (lines: Path, slab: Path) {
+        var t = Path()
+        let slab = pen.rect(ends.0, top, ends.1, top + 0.04)
+        t.addPath(pen.rect(ends.0, top, ends.1, top + 0.015))
+        t.addPath(pen.poly([(ends.0 + 0.015, top + 0.015), (ends.0 + 0.015, top + 0.04), (ends.1 - 0.015, top + 0.04), (ends.1 - 0.015, top + 0.015)],
+                           closed: false))
+        for x in legs { t.addPath(pen.seg(x, top + 0.04, x, feet)) }
+        return (t, slab)
+    }
+
+    /// The teacup on its saucer at (x, y), the saucer's foot on y; the spoon standing in it when `spoon`.
+    static func cup(_ pen: Brush, _ x: Double, _ y: Double, spoon: Bool) {
+        let saucer = pen.ellipse(x, y - 0.004, 0.032, 0.006)
+        let bowl = pen.path { c in
+            c.move(to: CGPoint(x: x - 0.02, y: y - 0.036))
+            c.addQuadCurve(to: CGPoint(x: x + 0.02, y: y - 0.036), control: CGPoint(x: x, y: y + 0.008))
+            c.closeSubpath()
+        }
+        pen.fill(bowl, .black)
+        pen.lit(Rescue.tight) { g in
+            g.stroke(saucer, Flood.ink)
+            g.stroke(bowl, Flood.ink)
+            g.stroke(g.curve(x + 0.02, y - 0.03, x + 0.034, y - 0.026, x + 0.016, y - 0.016), Flood.ink)
+            if spoon { g.stroke(g.seg(x + 0.004, y - 0.03, x + 0.016, y - 0.062), Flood.ink) }
+        }
+    }
+}
+
+/// Scene 15, 12:55 back to 12:30, on pent: the quay running out from the near left towards the dark lighthouse, the sea
+/// up its side a hand below the top and white over it, bollards awash, the family's boat capsized at its mooring off it.
+/// Rod 1, the boat: awash, its hull barely showing, then keel up, high in the water. Rod 3, the dropped lantern: gone,
+/// its bail ring on the stones, then lying on its side, its glass out. Rod 4, the wall: a wave breaking white over it,
+/// then the sea a hand below its top, slopping.
+enum OverTheQuay {
+    static let horizon = -0.5
+    /// The quay's seaward edge, from the near foot of the picture out towards the horizon: x at height y.
+    static func edge(_ y: Double) -> Double { 0.15 - (1 - y) * 0.6127 }
+    /// How far below the edge the sea stands on the wall's face, shrinking with the distance.
+    static func freeboard(_ y: Double) -> Double { 0.006 + 0.04 * (y - horizon) / (1 - horizon) }
+    static let buoy = (x: 0.3, y: 0.12)
+    /// Where the boat's line is made fast, the same whichever way up it floats.
+    static let bow = (x: 0.44, y: 0.012)
+
+    static func draw(_ pen: Brush, played: Set<Int>) {
+        let ink = Flood.ink
+        Flood.clouds(pen, [(-1, -0.25, -0.8, 0.05), (0.2, 1, -0.86, 0.05), (-0.35, 0.3, -0.98, 0.04)])
+
+        // The lighthouse far out on the breakwater, dark since its lantern smashed.
+        var far = Path()
+        far.addPath(pen.seg(-0.2, horizon - 0.005, 0.35, horizon - 0.02))
+        far.addPath(pen.poly([(0.08, horizon - 0.015), (0.09, -0.66), (0.13, -0.66), (0.14, horizon - 0.017)], closed: false))
+        far.addPath(pen.rect(0.095, -0.7, 0.125, -0.66))
+        far.addPath(pen.seg(0.085, -0.66, 0.135, -0.66))
+        far.addPath(pen.curve(0.09, -0.7, 0.11, -0.73, 0.13, -0.7))
+        pen.fill(pen.poly([(0.08, horizon - 0.015), (0.09, -0.66), (0.13, -0.66), (0.14, horizon - 0.017)]), .black)
+
+        // The quay: its top, black, out from the near left to the horizon; its edge; the wall's face down to the sea.
+        let ys = Array(Swift.stride(from: horizon + 0.04, through: 1.05, by: 0.02))
+        let top = pen.poly([(-1, horizon + 0.04)] + ys.map { (edge($0), $0) } + [(-1, 1.05)])
+        let face = pen.poly(ys.map { (edge($0), $0) } + ys.reversed().map { (edge($0) + 0.01, $0 + freeboard($0)) })
+        pen.fill(top, .black)
+        pen.fill(face, .black)
+        var quay = Path()
+        quay.addPath(pen.poly(ys.map { (edge($0), $0) }, closed: false))
+        quay.addPath(pen.poly([(-1, horizon + 0.04), (edge(horizon + 0.04), horizon + 0.04)], closed: false))
+        // The flags, running out along it and across.
+        var flags = Path()
+        for k in 1...5 {
+            let f = Double(k) / 6
+            flags.addPath(pen.poly(ys.map { y in (edge(y) - f * (edge(y) + 1) * (y - horizon) / (1 - horizon) * 1.6, y) }.filter { $0.0 > -1.05 },
+                                   closed: false))
+        }
+        for y in [-0.3, -0.1, 0.15, 0.45, 0.8] { flags.addPath(pen.seg(-1, y, edge(y), y)) }
+        // Bollards near the edge, the sea swirling round their feet.
+        var bollards = Path(), swirl = Path()
+        for (y, k) in [(0.62, 0.05), (-0.3, 0.03)] {
+            let x = edge(y) - 0.08
+            let b = pen.poly([(x - 0.5 * k, y), (x - 0.5 * k, y - 0.9 * k), (x - 0.7 * k, y - 1.1 * k), (x + 0.7 * k, y - 1.1 * k),
+                              (x + 0.5 * k, y - 0.9 * k), (x + 0.5 * k, y)])
+            pen.fill(b, .black)
+            bollards.addPath(b)
+            swirl.addPath(pen.ellipse(x, y, 1.1 * k, 0.3 * k))
+            swirl.addPath(pen.curve(x - 1.6 * k, y + 0.3 * k, x - 0.2 * k, y + 0.6 * k, x + 1.4 * k, y + 0.2 * k))
+        }
+        // The buoy the boat is moored to, and its line from it.
+        var mooring = Path()
+        mooring.addPath(pen.seg(buoy.x, buoy.y, bow.x, bow.y))
+        let float = pen.circle(buoy.x, buoy.y - 0.012, 0.018)
+        pen.fill(float, .black)
+        pen.lit { g in
+            g.stroke(far, ink, 0.8)
+            g.stroke(flags, ink, 0.25)
+            g.stroke(quay, ink)
+            g.stroke(bollards, ink)
+            g.stroke(swirl, Flood.rain, 0.6)
+            g.stroke(mooring, Flood.sodium, 0.6)
+            g.stroke(float, ink)
+        }
+        // The sea along the wall's face, and breaking in the foreground.
+        pen.lit([(0.02, 0.3), (0.007, 0.8)]) { g in
+            g.stroke(g.poly(ys.map { (edge($0) + 0.01, $0 + freeboard($0)) }, closed: false), Flood.sea, 0.9)
+        }
+        for (x, y, k) in [(0.5, 0.5, 0.2), (0.78, 0.25, 0.18), (0.3, 0.84, 0.22), (0.72, 0.72, 0.2), (-0.3, -0.42, 0.12)] {
+            Cast.breaker(pen.at(x, y, k: k), colour: Flood.sea)
+        }
+
+        // Vignette 1, the boat.
+        pen.vignette(1) { pen in
+            if played.contains(1) {
+                OverTheQuay.keel(pen, depth: 0)
+            } else {
+                OverTheQuay.keel(pen, depth: 0.045)
+            }
+        }
+
+        // Vignette 4, the wall.
+        pen.vignette(4) { pen in
+            let y = -0.03, x = edge(y)
+            if played.contains(4) {
+                // Slopping against the face, a little short of the top.
+                for (dy, a) in [(-0.045, 0.0), (0.012, 0.6)] {
+                    let sx = edge(y + dy) + 0.02, sy = y + dy + freeboard(y + dy) - 0.004
+                    pen.stroke(pen.curve(sx, sy, sx + 0.016, sy - 0.022 - 0.01 * a, sx + 0.034, sy), Flood.sea, 0.8)
+                }
+            } else {
+                // A wave over the top, its white water spilling across the stones.
+                Cast.breaker(pen.at(x + 0.01, y + 0.005, k: 0.09, flip: true), glows: Rescue.tight, colour: Flood.rain)
+                for (dx, dy, l) in [(-0.04, 0.02, 0.05), (-0.03, 0.045, 0.045), (-0.05, -0.005, 0.04)] {
+                    pen.stroke(pen.seg(x + dx, y + dy, x + dx - l, y + dy + 0.01), Flood.rain, 0.7)
+                }
+            }
+        }
+
+        // Vignette 3, the dropped lantern.
+        pen.vignette(3) { pen in
+            let x = -0.455, y = 0.585
+            if played.contains(3) {
+                // On its side, the cage bent, its glass gone: shards by it.
+                Cast.lantern(pen.at(x, y, k: 0.08, turn: .pi / 2 - 0.15), lit: false, colours: (Flood.sodium, ink))
+                for (dx, dy, a) in [(-0.01, -0.045, 0.4), (0.03, 0.045, -0.6), (0.005, 0.035, 1.2)] {
+                    pen.stroke(pen.seg(x + dx, y + dy, x + dx + 0.016 * cos(a), y + dy + 0.016 * sin(a)), ink, 0.8)
+                }
+            } else {
+                // Only the bail ring, left where it fell.
+                pen.stroke(pen.ellipse(x + 0.09, y - 0.005, 0.022, 0.011), ink)
+            }
+        }
+    }
+
+    /// The family's boat capsized at its mooring, keel up: `depth` how far it has sunk from riding high.
+    static func keel(_ pen: Brush, depth: Double) {
+        let water = bow.y, x0 = bow.x, x1 = bow.x + 0.17
+        let hull = pen.path { h in
+            h.move(to: CGPoint(x: x0, y: water + depth))
+            h.addQuadCurve(to: CGPoint(x: x0 + 0.085, y: water - 0.06 + depth), control: CGPoint(x: x0 + 0.01, y: water - 0.055 + depth))
+            h.addQuadCurve(to: CGPoint(x: x1, y: water + depth), control: CGPoint(x: x1 - 0.005, y: water - 0.06 + depth))
+            h.closeSubpath()
+        }
+        let above = pen.clipped(to: pen.rect(-1, -1, 1, water))
+        above.fill(hull, .black)
+        var lines = Path()
+        lines.addPath(hull)
+        lines.addPath(pen.seg(x0 + 0.085, water - 0.06 + depth, x0 + 0.085, water - 0.08 + depth))
+        above.lit(Rescue.tight) { $0.stroke(lines, Flood.ink) }
+        // The sea along her, washing over when she is awash.
+        var wash = Path()
+        wash.addPath(pen.seg(x0 - 0.01, water, x1 + 0.01, water))
+        if depth > 0 {
+            for (x, w) in [(x0 + 0.05, 0.03), (x0 + 0.11, 0.035)] { wash.addPath(pen.curve(x - w / 2, water, x, water - 0.02, x + w / 2, water)) }
+        }
+        pen.lit(Rescue.tight) { $0.stroke(wash, Flood.sea, 0.9) }
+    }
+}
