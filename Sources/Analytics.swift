@@ -482,7 +482,8 @@ final class Sender {
     }
 
     /// Everything that goes over the wire. `osName` keeps the server from reading the event as a browser's; `isDebug`
-    /// files Debug builds apart; the versions tell TestFlight builds apart. No locale, device or OS version.
+    /// files Debug builds apart, and playtest builds (`AnalyticsPlaytest`, which scripts/run-ios.sh sets), Release ones
+    /// included; the versions tell TestFlight builds apart. No locale, device or OS version.
     static func body(_ events: [Event], release: Bool = Build.release, info: [String: Any]? = Bundle.main.infoDictionary)
         -> Data {
         struct System: Encodable {
@@ -491,7 +492,7 @@ final class Sender {
         struct Wire: Encodable {
             var timestamp: String, sessionId: String, eventName: String, systemProps: System, props: [String: Prop]
         }
-        let system = System(isDebug: !release, appVersion: info?["CFBundleShortVersionString"] as? String ?? "",
+        let system = System(isDebug: !release || info?["AnalyticsPlaytest"] as? String == "YES", appVersion: info?["CFBundleShortVersionString"] as? String ?? "",
                             appBuildNumber: info?["CFBundleVersion"] as? String ?? "")
         let time = ISO8601DateFormatter()
         let wire = events.map {

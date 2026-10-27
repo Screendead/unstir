@@ -283,6 +283,18 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(a.snapshot(milestone: 2, day: 2)["escapement"], .text("none"))
     }
 
+    /// A playtest build on the developer's phone files its events as Debug, Release or not; any other Release build doesn't.
+    func testAPlaytestBuildIsFiledAsDebug() throws {
+        let events = [Event(name: "level", props: [:], time: .now, session: Analytics.newSession())]
+        func debug(_ info: [String: Any]) throws -> Bool? {
+            let wire = try XCTUnwrap(JSONSerialization.jsonObject(with: Sender.body(events, release: true, info: info)) as? [[String: Any]])
+            return (wire.first?["systemProps"] as? [String: Any])?["isDebug"] as? Bool
+        }
+        XCTAssertEqual(try debug(["AnalyticsPlaytest": "YES"]), true)
+        XCTAssertEqual(try debug(["AnalyticsPlaytest": ""]), false)
+        XCTAssertEqual(try debug([:]), false)
+    }
+
     func testTheWireCarriesNoIdentifier() throws {
         let a = Analytics(defaults: defaults)
         a.start(.log, stores: false)
