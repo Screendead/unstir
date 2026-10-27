@@ -43,7 +43,7 @@ level06.png  Level 06 with its full scramble and its note.
 level10.png  Level 10 with its full scramble and its note.
 level16.png  Level 16 with its full scramble and its note.
 inversion-L12.png  Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers.
-inversion-L27.png  Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6.
+inversion-L27.png  Level 27 part-solved at its first inversion: 4:-7 sits on 3:+7.
 daily.png  Today's daily.
 endless.png  Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title.
 endless-brim.png  Endless, first tank, opened with 5 of the brim's 8 notches: the picture's own colours in the bezel up to the fifth tick on both sides, glowing onto the black; the tank where moves and par were, no undo or reset.

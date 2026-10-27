@@ -94,7 +94,7 @@ for n in 01 04 07 08 09 13 14 18 19 22 23 27 05 11 15 06 10 16; do
 done
 # Mid-solve, where an inversion is on top: the top rod should not read from the still.
 shot inversion-L12 "Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers." LEVEL=12 STACK=2:-3,0:+4,3:+7,0:-2
-shot inversion-L27 "Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6." LEVEL=27 STACK=2:+3,0:-5,5:+6,4:+3
+shot inversion-L27 "Level 27 part-solved at its first inversion: 4:-7 sits on 3:+7." LEVEL=27 STACK=2:+2,3:-5,1:+3,0:+6,3:+7,1:-3,4:-7
 shot daily "Today's daily." MODE=daily
 shot endless "Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title." \
   MODE=endless
