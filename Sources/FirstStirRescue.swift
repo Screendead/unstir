@@ -115,9 +115,8 @@ enum Rescue {
                 .init(color: mix(0x05050F, 0x3A3550, lit), location: 1)]
     }
 
-    static func draw(_ n: Int, _ ctx: GraphicsContext, r: CGFloat, layer: Harbour.Layer, only: Int? = nil) {
-        var pen = Pen(ctx: ctx, r: r)
-        pen.only = only
+    static func draw(_ n: Int, _ ctx: GraphicsContext, r: CGFloat, layer: Harbour.Layer) {
+        let pen = Pen(ctx: ctx, r: r)
         switch layer {
         case .bolt:
             return
@@ -137,19 +136,6 @@ enum Rescue {
             default: LighthouseDoor.draw(pen, played: played)
             }
         }
-    }
-
-    /// Vignette k of scene n alone in one of its states, on transparent black: what the tests measure, since how the
-    /// renderer lays down light near one drawing shifts with what else the canvas holds.
-    @MainActor
-    static func render(_ n: Int, vignette k: Int, played: Bool, side: CGFloat, colorMode: ColorRenderingMode) -> UIImage? {
-        let r = ImageRenderer(content: Canvas { ctx, _ in
-            draw(n, ctx, r: side / 2, layer: .scene(played: played ? [k] : []), only: k)
-        }
-        .frame(width: side, height: side))
-        r.scale = 1
-        r.colorMode = colorMode
-        return r.uiImage
     }
 
     static func horizon(_ n: Int) -> Double { [-0.66, -0.3, -0.62, 0, -0.70][n - 6] }
@@ -212,8 +198,6 @@ struct Pen {
     var clip: Path?
     /// Collects a vignette's drawing, to be laid down under one glow: see `vignette`.
     var sketch: Sketch?
-    /// The one vignette drawn, for the tests: nothing else is.
-    var only: Int?
 
     final class Sketch {
         var ops: [(path: Path, shading: GraphicsContext.Shading, stroke: Bool, clip: Path?)] = []
@@ -260,7 +244,6 @@ struct Pen {
             sketch.ops.append((path, shading, stroke, clip))
             return
         }
-        if only != nil { return }
         var c = ctx
         if let clip { c.clip(to: clip) }
         if stroke { c.stroke(path, with: shading, style: style) } else { c.fill(path, with: shading) }
@@ -285,7 +268,6 @@ struct Pen {
 
     /// Vignette `rod`'s state, laid down whole under one tight glow.
     func vignette(_ rod: Int, _ draw: (Pen) -> Void) {
-        if let only, only != rod { return }
         let sketch = Sketch()
         var q = self
         q.sketch = sketch

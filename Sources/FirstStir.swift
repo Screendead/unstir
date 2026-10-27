@@ -613,6 +613,9 @@ struct StoryLayer: View {
                             sky(layers, night: night)
                             Image(uiImage: layers.played)
                         }
+                        // Flattened before the mask, or the mask cuts each child alone and the sky shows through the
+                        // played layer's lines along the core's edge, a seam where nothing has changed.
+                        .compositingGroup()
                         .mask(Circle().frame(width: core, height: core).position(x: side / 2 * (1 + rod.x), y: side / 2 * (1 + rod.y)))
                         .opacity(playedAt[k].map { at in
                             let x = min(max(timeline.date.timeIntervalSince(at) / Harbour.fade, 0), 1)

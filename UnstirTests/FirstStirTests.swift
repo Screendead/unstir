@@ -100,16 +100,12 @@ final class FirstStirTests: XCTestCase {
         }
     }
 
-    /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, past
-    /// the renderer's own noise (up to 6 in 255 where nothing changed). A rescue scene's vignette is drawn alone, since
-    /// how the renderer lays down light near any drawing shifts with what else the canvas holds.
-    @MainActor private func footprint(_ k: Int, of story: Story, side: Int) throws -> [SIMD2<Double>] {
+    /// The pixels of a tank `side` pixels across, in tank units, where the two layers the game bakes, every vignette held
+    /// back and every one played, differ, glow included, past the renderer's own noise (up to 6 in 255 where nothing
+    /// changed).
+    @MainActor private func footprint(of story: Story, side: Int) throws -> [SIMD2<Double>] {
         func pixels(_ played: Set<Int>) throws -> [UInt8] {
-            let render = if case .rescue(let n) = story {
-                Rescue.render(n, vignette: k, played: !played.isEmpty, side: CGFloat(side), colorMode: .nonLinear)
-            } else {
-                story.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear)
-            }
+            let render = story.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear)
             let image = try XCTUnwrap(render?.cgImage)
             var bytes = [UInt8](repeating: 0, count: 4 * side * side)
             let ctx = try XCTUnwrap(CGContext(data: &bytes, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 4 * side,
@@ -117,7 +113,7 @@ final class FirstStirTests: XCTestCase {
             ctx.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
             return bytes
         }
-        let held = try pixels([]), played = try pixels([k])
+        let held = try pixels([]), played = try pixels(story.vignettes)
         var marks: [SIMD2<Double>] = []
         for i in 0..<side * side where (0..<4).contains(where: { abs(Int(held[4 * i + $0]) - Int(played[4 * i + $0])) > 8 }) {
             let px = SIMD2(Double(i % side), Double(i / side)) + 0.5
@@ -130,7 +126,8 @@ final class FirstStirTests: XCTestCase {
     /// radius, 0.07, and 0.015 more.
     private static let margin = 0.02, knob = 0.085
 
-    /// Each vignette changes nothing past a pixel outside its own core, so the core the layer cuts in clips none of it.
+    /// The layers differ nowhere past a pixel outside the vignettes' cores, so a core the played layer shows in clips none
+    /// of a change and shows nothing else changed. Its own core's part of that is a vignette's light.
     /// Over every heal order: no vignette's light reaches the core of a rod with an entry removable right after its heal,
     /// so light never shows the next move; and the entries left move none of it by half a pixel, so it never plays
     /// smeared (the lab's rule: a vignette plays only once every disc over it is still).
@@ -144,12 +141,15 @@ final class FirstStirTests: XCTestCase {
             let story = try XCTUnwrap(level.story)
             let layout = level.layout, rods = layout.rods
             func centre(_ rod: Int) -> SIMD2<Double> { SIMD2(rods[rod].x, rods[rod].y) }
+            func inside(_ p: SIMD2<Double>, _ rod: Int) -> Bool { simd_distance(p, centre(rod)) <= Tank.plateau * rods[rod].z + pixel }
+            let whole = try footprint(of: story, side: side)
+            let stray = whole.filter { p in !story.vignettes.contains { inside(p, $0) } }
+            XCTAssertTrue(stray.isEmpty, "\(level.id): the layers differ outside every vignette's core, at \(stray.prefix(3))")
             var marks: [Int: [SIMD2<Double>]] = [:]
             for k in story.vignettes {
-                let m = try footprint(k, of: story, side: side)
+                let m = whole.filter { inside($0, k) }
                 XCTAssertFalse(m.isEmpty, "\(level.id): vignette \(k) changes nothing")
                 let core = Tank.plateau * rods[k].z
-                XCTAssertTrue(m.allSatisfy { simd_distance($0, centre(k)) <= core + pixel }, "\(level.id): vignette \(k) leaves its core")
                 // The art spec, which the lab's harbour predates: a margin inside the core's edge, and clear of the knob.
                 if story != .harbour {
                     let far = m.max { simd_distance($0, centre(k)) < simd_distance($1, centre(k)) }!
