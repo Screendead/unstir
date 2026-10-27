@@ -440,9 +440,9 @@ enum StormHarbour {
 enum Bedroom {
     static let bay = (x0: 0.1, y0: -0.62, x1: 0.64, y1: -0.1)
     static let high = (x0: -0.6, y0: -0.5, x1: -0.44, y1: -0.28)
-    static let low = (x0: -0.66, y0: 0.0, x1: -0.4, y1: 0.18)
+    static let low = (x0: -0.64, y0: 0.04, x1: -0.22, y1: 0.2)
     static let floor = 0.54
-    static let seat = 0.3
+    static let seat = 0.27
 
     static func windows(_ pen: Brush) -> Path {
         var p = Path()
@@ -477,7 +477,7 @@ enum Bedroom {
         room.addPath(pen.seg(0.37, -0.29, 0.37, bay.y1))
         room.addPath(pen.seg(bay.x0, -0.36, 0.26, -0.36))
         room.addPath(pen.seg(0.48, -0.36, bay.x1, -0.36))
-        room.addPath(pen.seg(-0.53, low.y0, -0.53, low.y1))
+        room.addPath(pen.seg(-0.43, low.y0, -0.43, low.y1))
         // A bed in the right-hand corner, its quilt and pillow, so the corner reads as a floor.
         let bed = pen.poly([(0.18, 0.44), (0.86, 0.44), (0.86, floor), (0.18, floor)])
         pen.fill(bed, .black)
@@ -538,16 +538,18 @@ enum Bedroom {
         // Vignette 2, the child.
         pen.vignette(2) { pen in
             if played.contains(2) {
-                // Kneeling on the seat facing the low window, the dog's paws on the sill beside her.
-                Storm.figure(pen.at(-0.5, seat, k: 0.1, flip: true), .child,
-                             arms: [[(0.1, -0.6), (0.2, -0.75), (0.24, -0.9)]], legs: [[(-0.06, -0.32), (0.06, -0.12), (-0.18, 0)]])
-                Cast.dog(pen.at(-0.24, seat, k: 0.1, flip: true), ears: true, colour: ink)
+                // Kneeling on the seat, the dog up on it beside her, its nose raised to the glass, both heads against the
+                // low window's sky.
+                Storm.figure(pen.at(-0.48, seat, k: 0.1, flip: true), .child,
+                             arms: [[(0.1, -0.6), (0.2, -0.5), (0.3, -0.58)]], legs: [[(-0.06, -0.32), (0.06, -0.12), (-0.18, 0)]])
+                Cast.dog(pen.at(-0.26, seat, k: 0.1, flip: true), ears: true, nose: -0.12, colour: ink)
             } else {
-                // Her father standing on the boards holding her against his shoulder, her face hidden in it.
-                Storm.figure(pen.at(-0.22, floor, k: 0.2), .father,
-                             arms: [[(0.1, -0.74), (0.2, -0.6), (0.06, -0.52)], [(-0.1, -0.74), (-0.14, -0.62), (0.02, -0.56)]])
-                Storm.figure(pen.at(-0.21, floor - 0.088, k: 0.085, turn: -0.25), .child,
-                             arms: [[(-0.1, -0.6), (-0.04, -0.72)]], legs: [[(-0.06, -0.32), (-0.02, -0.12)], [(0.06, -0.32), (0.14, -0.14)]])
+                // Her father standing on the boards holding her up on his shoulder, her face turned into his neck: her
+                // bobble hat beside his brim, her outline over his chest, his arm round her legs.
+                Storm.figure(pen.at(-0.22, floor, k: 0.2), .father, arms: [[(-0.1, -0.74), (-0.14, -0.5), (-0.12, -0.36)]])
+                Storm.figure(pen.at(-0.18, floor - 0.07, k: 0.12, flip: true), .child,
+                             arms: [[(0.1, -0.6), (0.16, -0.7)]], legs: [[(-0.06, -0.32), (-0.1, -0.02)], [(0.06, -0.32), (0.02, -0.04)]])
+                pen.stroke(pen.poly([(-0.2, floor - 0.148), (-0.15, floor - 0.1), (-0.21, floor - 0.075)], closed: false), ink)
             }
         }
     }
