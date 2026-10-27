@@ -88,10 +88,7 @@ struct SceneLayer: View {
 
     var body: some View {
         TimelineView(.animation(paused: rewind == nil)) { timeline in
-            let f = rewind.map { rewind -> Double in
-                let x = min(max(timeline.date.timeIntervalSince(rewind.at) / Harbour.rewind, 0), 1)
-                return rewind.from + (night - rewind.from) * x * x * (3 - 2 * x)
-            } ?? rested
+            let f = shown(at: timeline.date)
             let minutes = scene.late - (scene.late - scene.early) * f
             ZStack {
                 if let layers {
@@ -130,8 +127,9 @@ struct SceneLayer: View {
             for k in old.subtracting(new) { playedAt[k] = nil }
         }
         // A vignette plays only as an entry goes, so the rewind's clock, which outlasts the fade, runs it too.
+        // A heal mid-rewind winds on from where the sky stands, not from where the last rewind began.
         .onChange(of: wound) { old, new in
-            if new > old { rewind = (rested, .now) } else { rewind = nil; rested = night }
+            if new > old { rewind = (shown(at: .now, toward: Double(old) / Double(max(count, 1))), .now) } else { rewind = nil; rested = night }
         }
         .task(id: rewind?.at) {
             guard rewind != nil, (try? await Task.sleep(for: .seconds(Harbour.rewind))) != nil else { return }
@@ -145,6 +143,13 @@ struct SceneLayer: View {
             else { return }
             layers = (late, early, held, played)
         }
+    }
+
+    /// The fraction of the window the time stands wound back at `date`, rewinding toward `target` (`night` unless given).
+    private func shown(at date: Date, toward target: Double? = nil) -> Double {
+        guard let rewind else { return rested }
+        let x = min(max(date.timeIntervalSince(rewind.at) / Harbour.rewind, 0), 1)
+        return rewind.from + ((target ?? night) - rewind.from) * x * x * (3 - 2 * x)
     }
 
     private func sky(_ layers: (late: UIImage, early: UIImage, held: UIImage, played: UIImage), _ f: Double) -> some View {
