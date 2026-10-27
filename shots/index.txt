@@ -237,6 +237,21 @@ firststir-14-played.png  First Stir 14 drawn unstirred, every vignette played: t
 firststir-15.png  First Stir 15 as dealt: every core turned, the time under the tank.
 firststir-15-held.png  First Stir 15 drawn unstirred, held back. Over the quay: the boat capsized and awash; only the dropped lantern's bail ring on the stones; a wave breaking white over the wall.
 firststir-15-played.png  First Stir 15 drawn unstirred, every vignette played: the boat keel up, high in the water; the lantern on its side, its glass out; the sea a hand below the wall's top, slopping; the flood's sky at its last, the rain at its thickest.
+firststir-16.png  First Stir 16 as dealt: every core turned, the time under the tank.
+firststir-16-held.png  First Stir 16 drawn unstirred, held back. The harbour, 12:30 am at the storm's peak: the lantern smashed and dark, shards falling past the gallery; the boat capsized, its rope snapped, the oar adrift; the cottage door flung open, the window dark, the lantern dropped on the quay; far lightning, driving rain.
+firststir-16-played.png  First Stir 16 drawn unstirred, every vignette played: the lantern whole and lit; the boat moored upright, its lamps lit; the father in the lit doorway holding the lantern up and out; 11:40 pm, the lightning fading, the rain thinner.
+firststir-17.png  First Stir 17 as dealt: every core turned, the time under the tank.
+firststir-17-held.png  First Stir 17 drawn unstirred, held back. Lightning: a fork of lightning to the sea in the bay window; a candle lit on the small window's sill, the ceiling lamp dark; the child in her father's arms.
+firststir-17-played.png  First Stir 17 drawn unstirred, every vignette played: the lighthouse beam sweeping in, no lightning; the ceiling lamp lit, the candle out; the child kneeling on the window seat beside the dog, both looking out.
+firststir-18.png  First Stir 18 as dealt: every core turned, the time under the tank.
+firststir-18-held.png  First Stir 18 drawn unstirred, held back. The bell buoy: spray up the lighthouse to its gallery; the buoy heeled hard over, its bell swinging; the hut's shutter torn off and hanging.
+firststir-18-played.png  First Stir 18 drawn unstirred, every vignette played: the lighthouse beam out, no spray; the buoy upright; the harbourmaster pulling the shutter to.
+firststir-19.png  First Stir 19 as dealt: every core turned, the time under the tank.
+firststir-19-held.png  First Stir 19 drawn unstirred, held back. High street, rain: the café's awning torn to strips; the bicycle blown over in the gutter, a wheel spinning; the cobbler's sign hanging by one chain.
+firststir-19-played.png  First Stir 19 drawn unstirred, every vignette played: the awning whole, the café's owner winding it in; the bicycle leaning on the lamp post; the sign hanging by two chains.
+firststir-20.png  First Stir 20 as dealt: every core turned, the time under the tank.
+firststir-20-held.png  First Stir 20 drawn unstirred, held back. Washing: the line snapped, a shirt flying off over the roofs; the neighbour's shutters shut and barred; the kennel's chain lying empty.
+firststir-20-played.png  First Stir 20 drawn unstirred, every vignette played: shirts pegged on the line, streaming hard; the neighbour leaning out to pull the shutters to; the child unclipping the dog; 9:30 pm, the sky warming to dusk, a few drops.
 firststir-01-healed-1.png  First Stir 01 after the first heal (1:-2): no vignette, the clock at 6:34 am.
 firststir-01-healed-2.png  First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am.
 shelf-menu.png  Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought.

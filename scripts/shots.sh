@@ -311,7 +311,8 @@ shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's s
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
 # First Stir's chapters 1, Dawn After (scenes 1 to 5, 6:40 back to 4:45 am), 2, The Rescue (6 to 10, 4:45 back to
-# 2:30 am), and 3, The Flood (11 to 15, 2:30 back to 12:30 am), three vignettes a scene. UNSTIR_BARE draws the picture unstirred, so the art shows as the stack has played
+# 2:30 am), 3, The Flood (11 to 15, 2:30 back to 12:30 am), and 4, The Storm (16 to 20, 12:30 am back to 9:30 pm),
+# three vignettes a scene. UNSTIR_BARE draws the picture unstirred, so the art shows as the stack has played
 # it: -held as dealt, at the scene's latest time, and -played with its last heal just made, at its earliest, a wave
 # past the rim keeping the card away (UNSTIR_STACK replaces the scramble, so it gives only the bottom entry, which that
 # heal clears). The pack is owned, so a level past its taste opens rather than its card.
@@ -329,7 +330,12 @@ held=("Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast s
       "High street under water: the town clock at 2:05; the street lamp drowned to its crossbar, dark; the father and a neighbour rowing the dinghy down the street, a coil of rope aboard."
       "The upstairs window: the child and the dog at it, the torch shining out; the weathervane bent, pointing down; the door open, the water at its knocker, the float drifting out."
       "The kitchen, flooded: the table sunk under the water, the cup floating off it on its saucer; the water up the stair, the child's boots on a step; the float drifting to the open door."
-      "Over the quay: the boat capsized and awash; only the dropped lantern's bail ring on the stones; a wave breaking white over the wall.")
+      "Over the quay: the boat capsized and awash; only the dropped lantern's bail ring on the stones; a wave breaking white over the wall."
+      "The harbour, 12:30 am at the storm's peak: the lantern smashed and dark, shards falling past the gallery; the boat capsized, its rope snapped, the oar adrift; the cottage door flung open, the window dark, the lantern dropped on the quay; far lightning, driving rain."
+      "Lightning: a fork of lightning to the sea in the bay window; a candle lit on the small window's sill, the ceiling lamp dark; the child in her father's arms."
+      "The bell buoy: spray up the lighthouse to its gallery; the buoy heeled hard over, its bell swinging; the hut's shutter torn off and hanging."
+      "High street, rain: the café's awning torn to strips; the bicycle blown over in the gutter, a wheel spinning; the cobbler's sign hanging by one chain."
+      "Washing: the line snapped, a shirt flying off over the roofs; the neighbour's shutters shut and barred; the kennel's chain lying empty.")
 played=("a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke."
         "the gallery empty, shards on the deck; spray over the bare rail; no smoke, one window lit by a candle."
         "the door open, the rope trailing over the rocks; the float alone in the pool; the dog sniffing."
@@ -344,9 +350,14 @@ played=("a neighbour on a stepladder nailing the first plank; the father bailing
         "the clock at 1:40; the water at the lamp's foot, the lamp still lit and sparking; the dinghy tied to the drainpipe, empty."
         "the window dark, a curtain blowing in; the weathervane upright, spinning; the water down at the step, the float on the threshold."
         "the table standing clear, the water at its legs, the cup on it with its spoon; the child carrying the dog up the stair; the float caught on the chair's leg."
-        "the boat keel up, high in the water; the lantern on its side, its glass out; the sea a hand below the wall's top, slopping; the sky leaning to the storm's indigo, the rain at its thickest.")
-bottom=(2:+5 3:+4 1:+4 0:+3 2:+4 1:+3 0:+4 3:+4 0:+4 3:-4 1:+4 0:+3 1:-4 0:+4 4:-3)
-for n in $(seq 1 15); do
+        "the boat keel up, high in the water; the lantern on its side, its glass out; the sea a hand below the wall's top, slopping; the sky leaning to the storm's indigo, the rain at its thickest."
+        "the lantern whole and lit; the boat moored upright, its lamps lit; the father in the lit doorway holding the lantern up and out; 11:40 pm, the lightning fading, the rain thinner."
+        "the lighthouse beam sweeping in, no lightning; the ceiling lamp lit, the candle out; the child kneeling on the window seat beside the dog, both looking out."
+        "the lighthouse beam out, no spray; the buoy upright; the harbourmaster pulling the shutter to."
+        "the awning whole, the café's owner winding it in; the bicycle leaning on the lamp post; the sign hanging by two chains."
+        "shirts pegged on the line, streaming hard; the neighbour leaning out to pull the shutters to; the child unclipping the dog; 9:30 pm, the sky warming to dusk, a few drops.")
+bottom=(2:+5 3:+4 1:+4 0:+3 2:+4 1:+3 0:+4 3:+4 0:+4 3:-4 1:+4 0:+3 1:-4 0:+4 4:-3 2:+5 3:+4 0:+4 0:+4 3:+4)
+for n in $(seq 1 20); do
   last=${bottom[$((n - 1))]} name=firststir-$(printf %02d "$n")
   fs="PACK=first-stir LEVEL=$n OWNED=first-stir"
   shot "$name" "First Stir $n as dealt: every core turned, the time under the tank." $fs

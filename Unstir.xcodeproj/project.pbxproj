@@ -35,6 +35,7 @@
 		A0D3E8882BD5D8BFC1B6B764 /* Flow.metal in Sources */ = {isa = PBXBuildFile; fileRef = BA733A070401C0AD2175FAC1 /* Flow.metal */; };
 		A381D1DEF77AFA6955900C8D /* StoryScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */; };
 		A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE72E9F1CCE362B73E2FA79 /* Solver.swift */; };
+		AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */; };
 		BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */ = {isa = PBXBuildFile; fileRef = D1F91870B1E87E24EFC084E0 /* Glass.metal */; };
 		C3596BB291D30EF520836782 /* Chainmail.metal in Sources */ = {isa = PBXBuildFile; fileRef = E302013539F573E3F8C8FBC5 /* Chainmail.metal */; };
 		CCD56B4404CDF1979D62B556 /* VortexPictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C424A58661F8E2D8F67C740 /* VortexPictures.swift */; };
@@ -106,6 +107,7 @@
 		D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirDawn.swift; sourceTree = "<group>"; };
 		D80A3010678E45A15B0543C3 /* Consent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Consent.swift; sourceTree = "<group>"; };
 		DB7B4A291F2734F1B961F3FE /* Shelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shelf.swift; sourceTree = "<group>"; };
+		E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirTheStorm.swift; sourceTree = "<group>"; };
 		E302013539F573E3F8C8FBC5 /* Chainmail.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Chainmail.metal; sourceTree = "<group>"; };
 		EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirFlood.swift; sourceTree = "<group>"; };
 		FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryScene.swift; sourceTree = "<group>"; };
@@ -178,6 +180,7 @@
 				D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */,
 				EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */,
 				36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */,
+				E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */,
 				BA733A070401C0AD2175FAC1 /* Flow.metal */,
 				D1F91870B1E87E24EFC084E0 /* Glass.metal */,
 				C45CEE9950106BAFE3A297A1 /* Icon.swift */,
@@ -320,6 +323,7 @@
 				2E38B1B5B55BE8B14D6D3B09 /* FirstStirDawn.swift in Sources */,
 				FA7C0CC5ADD8583855C61026 /* FirstStirFlood.swift in Sources */,
 				64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */,
+				AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */,
 				A0D3E8882BD5D8BFC1B6B764 /* Flow.metal in Sources */,
 				BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */,
 				973A9E11BF631BE4211EAA02 /* Icon.swift in Sources */,
