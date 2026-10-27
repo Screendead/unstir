@@ -715,6 +715,11 @@ extension Dusk {
         static let clock = (x: 0.5, y: 0.02, r: 0.08)
         static let table = 0.12
         static let cup = (x: -0.5, y: 0.39)
+        /// The child's wrist beside the saucer, her sleeve reaching it from the table's near edge: the same both ways, so
+        /// her hand, which changes, joins it inside the cup's core.
+        static let wrist = (x: -0.29, y: 0.44)
+        /// The forearm's slant, from the wrist towards the cup, as a turn of the hand's pen.
+        static let slant = -0.177
 
         static func draw(_ pen: Brush, played: Set<Int>) {
             let gold = Dusk.kitchen, cream = Dusk.cream
@@ -755,15 +760,19 @@ extension Dusk {
             let rim = pen.ellipse(cup.x, cup.y, 0.105, 0.03)
             var crockery = Path()
             crockery.addPath(saucer); crockery.addPath(body); crockery.addPath(rim)
-            crockery.addPath(pen.curve(cup.x + 0.095, cup.y + 0.03, cup.x + 0.17, cup.y + 0.03, cup.x + 0.08, cup.y + 0.08))
+            crockery.addPath(pen.curve(cup.x - 0.095, cup.y + 0.03, cup.x - 0.17, cup.y + 0.03, cup.x - 0.08, cup.y + 0.08))
             pen.fill(pot, .black)
             pen.fill(saucer, .black)
             pen.fill(body, .black)
             pen.fill(rim, Dusk.tea, 0.55)
+            // The child's sleeve, from the table's near edge to her wrist.
+            let sleeve = pen.poly([(wrist.x - 0.035, wrist.y - 0.006), (wrist.x + 0.035, wrist.y + 0.006), (-0.06, 1.02), (-0.27, 1.02)])
+            pen.fill(sleeve, .black)
             pen.lit { g in
                 g.stroke(room, gold)
                 g.stroke(marks, gold, 0.8)
                 g.stroke(crockery, cream)
+                g.stroke(sleeve, gold)
             }
 
             // Vignette 0, the sun over the sea in the window.
@@ -778,15 +787,6 @@ extension Dusk {
                     sky.lit(Rescue.tight) { g in
                         g.fill(g.circle(x, h, 0.034), Dusk.sun)
                     }
-                }
-                // The sun's path on the water.
-                pen.lit(Rescue.tight) { g in
-                    for (i, y) in [h + 0.018, h + 0.04, h + 0.065].enumerated() {
-                        let w = 0.03 - 0.006 * Double(i) - (played.contains(0) ? 0.008 : 0)
-                        g.stroke(g.seg(x - w, y, x + w, y), Dusk.sun, 0.7)
-                    }
-                }
-            }
                     // A small cloud drifting over the sun's glow: humps on a flat base, dark against the sky.
                     let cloud = sky.path { c in
                         c.move(to: CGPoint(x: -0.1, y: -0.578))
@@ -797,11 +797,22 @@ extension Dusk {
                     }
                     sky.fill(cloud, .black, 0.55)
                     sky.lit(Rescue.tight) { $0.stroke(cloud, cream, 0.8) }
+                }
+                // The sun's path on the water.
+                pen.lit(Rescue.tight) { g in
+                    for (i, y) in [h + 0.018, h + 0.04, h + 0.065].enumerated() {
+                        let w = 0.03 - 0.006 * Double(i) - (played.contains(0) ? 0.008 : 0)
+                        g.stroke(g.seg(x - w, y, x + w, y), Dusk.sun, 0.7)
+                    }
+                }
+            }
 
             // Vignette 1, the clock's hands.
             pen.vignette(1) { pen in
                 let (hour, minute) = played.contains(1) ? (7.0 + 40 / 60, 40.0) : (7.0 + 55 / 60, 55.0)
                 let a = hour / 12 * 2 * .pi, b = minute / 60 * 2 * .pi
+                // The hour hand short and broad, a leaf; the minute hand a long line, so the two read apart when they meet.
+                let short = pen.at(clock.x, clock.y, turn: a).poly([(0, 0.006), (0.009, -0.012), (0, -0.034), (-0.009, -0.012)])
                 pen.lit(Rescue.tight) { g in
                     g.stroke(short, cream)
                     g.stroke(g.seg(clock.x, clock.y, clock.x + 0.066 * sin(b), clock.y - 0.066 * cos(b)), cream)
@@ -811,8 +822,6 @@ extension Dusk {
 
             // Vignette 2, the cup.
             pen.vignette(2) { pen in
-                // The hour hand short and broad, a leaf; the minute hand a long line, so the two read apart when they meet.
-                let short = pen.at(clock.x, clock.y, turn: a).poly([(0, 0.006), (0.009, -0.012), (0, -0.034), (-0.009, -0.012)])
                 if played.contains(2) {
                     // The tea's swirl, and the child's hand on the spoon, stirring.
                     let swirl = pen.path { s in
@@ -822,16 +831,15 @@ extension Dusk {
                             if k == 0 { s.move(to: q) } else { s.addLine(to: q) }
                         }
                     }
-                    let spoon = pen.seg(cup.x - 0.01, cup.y + 0.005, cup.x - 0.085, cup.y - 0.09)
-                    // A small fist round the spoon's handle, thumb over it, the sleeve's cuff at the wrist.
-                    let fist = pen.at(cup.x - 0.1, cup.y - 0.11, turn: -0.65)
+                    let spoon = pen.seg(cup.x + 0.02, cup.y + 0.002, wrist.x - 0.024, wrist.y - 0.08)
+                    // Her fist round the spoon's end, knuckles up, thumb over it, at the end of her sleeve.
+                    let fist = pen.at(wrist.x, wrist.y, turn: slant - 0.35)
                     let hand = fist.path { h in
-                        h.addRoundedRect(in: CGRect(x: -0.045, y: -0.028, width: 0.075, height: 0.056), cornerSize: CGSize(width: 0.022, height: 0.022))
+                        h.addRoundedRect(in: CGRect(x: -0.034, y: -0.07, width: 0.066, height: 0.07), cornerSize: CGSize(width: 0.024, height: 0.024))
                     }
                     var fingers = Path()
-                    for x in [-0.015, 0.005] { fingers.addPath(fist.seg(x, 0.028, x, 0.012)) }
-                    fingers.addPath(fist.curve(-0.03, -0.028, 0.0, -0.05, 0.03, -0.022))
-                    fingers.addPath(fist.seg(-0.055, -0.032, -0.055, 0.032))
+                    for y in [-0.054, -0.037, -0.02] { fingers.addPath(fist.seg(-0.034, y, -0.016, y)) }
+                    fingers.addPath(fist.curve(0.032, -0.024, 0.016, -0.062, -0.008, -0.066))
                     pen.lit(Rescue.tight) { g in
                         g.stroke(swirl, Dusk.tea)
                         g.stroke(spoon, Dusk.cream)
@@ -842,7 +850,19 @@ extension Dusk {
                         g.stroke(fingers, Dusk.kitchen, 0.8)
                     }
                 } else {
-                    // Still, the spoon on the saucer, steam rising.
+                    // Still, the spoon on the saucer, steam rising; her hand flat on the table by the saucer.
+                    let palm = pen.at(wrist.x, wrist.y, turn: slant)
+                    let hand = palm.path { h in
+                        h.addRoundedRect(in: CGRect(x: -0.032, y: -0.085, width: 0.064, height: 0.085), cornerSize: CGSize(width: 0.024, height: 0.024))
+                    }
+                    var fingers = Path()
+                    for x in [-0.012, 0.0, 0.012] { fingers.addPath(palm.seg(x, -0.085, x, -0.055)) }
+                    fingers.addPath(palm.curve(-0.032, -0.035, -0.054, -0.05, -0.05, -0.07))
+                    pen.fill(hand, .black)
+                    pen.lit(Rescue.tight) { g in
+                        g.stroke(hand, Dusk.kitchen)
+                        g.stroke(fingers, Dusk.kitchen, 0.8)
+                    }
                     pen.lit(Rescue.tight) { g in
                         g.stroke(g.seg(cup.x + 0.04, cup.y + 0.1, cup.x + 0.13, cup.y + 0.092), Dusk.cream)
                         g.fill(g.ellipse(cup.x + 0.035, cup.y + 0.1, 0.014, 0.007), Dusk.cream)
