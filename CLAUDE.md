@@ -358,7 +358,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`testTheRescueOpensOnTheDawnsLastSky`); its rain climbs back up its slant and thickens as a function of the time.
   Its vignettes draw through `Brush` (a pen in a figure's own units through `at`, each vignette laid down under one
   tight glow by `Brush.vignette`) and `Cast` (the family and townsfolk told apart by outline alone, the dog, the
-  storm lantern, the lifeboat, a breaking wave). `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
+  storm lantern, the lifeboat, a breaking wave). `Dusk` (**FirstStirDuskBefore.swift**) is chapter 5, Dusk Before:
+  five scenes, 9:30 back to 7:40 pm, in dusk rose (ink B0A6E8), the last in kitchen gold, drawn through `Brush` and
+  `Cast` as the Rescue is, each scene's drawing a nested enum (`Dusk.Lamp`, `Walk`, `Lines`, `Gift`, `Stir`). Still
+  air, so no `drawOver` and no `drawLive`: its sky (`Dusk.skyTones`) climbs from night blue to the sunset's coral with
+  an afterglow over where the sun went down, the first scene's cloud bank is baked into its 9:30 sky only, so the
+  cross-fade sinks it, and the kitchens show the sky through their windows. Its levels follow the Rescue's in
+  `Level.firstStir` and take ids by place, so they become 21 to 25 once chapters 3 and 4 join; `testTheTable` finds
+  them as the table's last five. The cup's one entry is the scene 25 scramble's bottom, so the stir is the pack's
+  last heal. `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
   grandmother, child, neighbour, crew) and `Dog` build silhouettes from posed parts and outline their union.
   `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a Dawn After scene on the Mac, held back, played
   and where they differ over the layout's cores and knobs, and prints each vignette's reach against its core less

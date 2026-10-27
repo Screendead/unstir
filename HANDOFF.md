@@ -1025,6 +1025,24 @@ names and product ids, and Complete's promise to older owners.
       more general: figure units, clips, one glow per vignette) before chapter 3, so later chapters draw with one.
     Left: Jack's review of the art at phone size (the figures are small on the quad and pent scenes), the films, and
     chapters 3 to 5.
+    Chapter 5, Dusk Before (scenes 21 to 25), drawn 2026-10-27 on `firststir-ch5` (from `firststir-content`, pushed, no
+    PR) in `FirstStirDuskBefore.swift` on the scene engine as `Story.dusk` cases: lighting the lamp (quad
+    `3:+4,0:-3,1:+5,2:-2,3:-5,0:+2,1:-3,2:+4`), the path to the light (eye `0:+3,2:-4,1:+5,3:-2,0:-4,1:+3,2:+2,3:+4`),
+    doubling the lines (pent `4:+3,1:-4,3:+5,2:-3,0:+4,1:+2,4:-5`), the float (quad `0:+4,3:-3,2:+5,1:-2,0:-3,3:+2`) and
+    first stir (tri `2:+4,0:-3,1:+5,0:+2,1:-3`, the cup's entry at the bottom so the stir always heals last), each par
+    the solver's optimum and every vignette drawn clear of the other discs (the outline's "Clear" orders). The clock
+    runs 9:30 back to 7:40 pm. On this branch alone its levels are `first-stir-11` to `-15`; they become 21 to 25 when
+    chapters 3 and 4 join the table ahead of them. The Storm's scene 20 must end on `Dusk.skyTones(1290)` and
+    `Dusk.seaTone(1290)`, as the Rescue opens on the Dawn's last sky; add a test like
+    `testTheRescueOpensOnTheDawnsLastSky` when the two meet. Sheet: `scripts/first-stir-sheet.py 11 15` (21 25 after the
+    join). **Open for Jack, chapter 5** (Claude's recommendations, not decided):
+    - Scene 24's gift held back: the outline has the child holding the float up to the light while the same picture
+      shows it hanging in the window, two floats as the level opens. Built: the child's hands up to the window, empty,
+      so the opening and the end each show one float. The other choice is the outline's, as written.
+    - The cloud bank: built fading out over scene 21 (baked into the 9:30 sky only), not sinking as a live body, since
+      no stretch of the quad's horizon is clear of every disc wide enough to carry it. Recommend as built.
+    - The hand in scene 25 is a fist on the spoon with a cuff, no arm: a change may not cross its core's edge, so an arm
+      from the table's edge can't be drawn. Judge it at phone size.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
