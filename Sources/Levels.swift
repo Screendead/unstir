@@ -98,6 +98,8 @@ struct Level: Hashable, Sendable {
     var sockets: Set<Int> = []
     /// Escapement's clocks: a knob that can't be turned, and waits on a tap.
     var ratchets: Set<Int> = []
+    /// Escapement: a stack of the demonstration's own, played on the clock before the first stir.
+    var demo: [Twist] = []
     /// Lens's slots whose steps magnify (`Tank.lens`) rather than turn. Their knobs work as any other: only the map
     /// differs, so every merge, commutation and solve on the level takes this set.
     var lenses: Set<Int> = []
@@ -119,6 +121,9 @@ struct Level: Hashable, Sendable {
     }
 
     enum Knob: Hashable, Sendable { case working, seized, socket, ratchet }
+
+    /// Escapement's clock rod, which ticks +1 after every move while it holds an entry. One clock a level for now.
+    var clock: Int? { ratchets.min() }
 
     func kind(of knob: Int) -> Knob {
         seized.contains(knob) ? .seized : sockets.contains(knob) ? .socket : ratchets.contains(knob) ? .ratchet : .working

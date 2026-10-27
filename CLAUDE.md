@@ -91,7 +91,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   detour beats it), the park rule's fewest and most moves over every way its ties go under each parking, fair or over
   by the most, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It
   compiles `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut
-  out of Levels.swift, so that struct stays top-level there.
+  out of Levels.swift, so that struct stays top-level there. `scripts/solve.sh escapement <layout> <scramble> <clock
+  rod> [limit]` (e.g. `escapement tri 0:-1,1:+3,0:-2,2:-4 0`) runs the app's own prover for one clock
+  (`Solver.escapement`) instead: the fewest moves with the clock ticking after each, under the same rule, and a line,
+  waits and all.
 - Escapement's prover: `scripts/escapement.sh check <layout> <scramble> <clocks> [span] [quick]` (clocks as rods in tick
   order, each `+` or `-` for wound back, e.g. `hex <scramble> 1+,4-`) plays the pack's rule on `Array.commit`: every move
   (a turn, or `wait`) ticks each running clock one step, and a tick that pushes loses, as does the last clock stopping
@@ -242,7 +245,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   launch logs whether the session was read, the uptime and `kern.monotonicclock`. A `Level` has a `motion`, what the rim
   holds to carry the knobs round without a stir (`.none`; `.tank`, maelstrom's; `.crank`, charybdis's planets, not
   built), and a kind per knob (`kind(of:)`, from its `seized`, `sockets` and `ratchets`): a working knob stirs, a seized
-  one or a socket refuses touch, and a ratchet is Escapement's clock. Every level today turns its tank exactly where a
+  one or a socket refuses touch, and a ratchet is Escapement's clock (`Level.clock`, one a level for now), with a
+  `demo` stack for the demonstration before the first stir. Every level today turns its tank exactly where a
   knob is seized (`testTheRimKeysOnMotionAndADiscOnItsKind`), and `UNSTIR_SEIZED` sets both. `par` is `fixedPar`, else
   `scramble.count`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and
@@ -260,7 +264,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
   a finger holds where it lands, never by its motion: the rim first, else the disc whose centre is nearest in its own
   radius, overlapped or not, never the swirl; a seized winner or a socket is `.seized`, which holds nothing, and a
-  ratchet `.ratchet`, which holds nothing and on lift calls `Game.wait`, a stub until Escapement's tick. The rim, from
+  ratchet `.ratchet`, which holds nothing: a tap near its centre waits (`Game.wait`), and anything else on its disc
+  shakes it with a thud. The rim, from
   `LevelView.rim` (0.93) out over the bezel, holds the level's motion where it has one and the swirl where the layout
   has one. Where it has both, the swirl holds the glass's own edge from `swirlBand` (0.86) and the motion the bezel and
   beyond. The rim lesson, the knurl, the bezel's hit area and the two-finger spin key on the motion, and touch on the
@@ -304,9 +309,28 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   main actor and the fine pass off it. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
+  Escapement's clock lives in `Game` too (`Game.Clock`, `escapement`). After every move the clock rod ticks +1 through
+  the ordinary commit while it holds an entry, and the stack's last tick solves on the spot; once the rod is empty the
+  clock stops, and there is nothing to wait for. A move is one working knob's stir or a wait, a ratchet tap. Every
+  let-go is a move of its own and final (Jack's call E1, round 9): its tick lands with it, nothing joins it, and the
+  same knob grabbed again is the next move with its own tick, so a stir's dial always counts from zero. A tick that
+  pushes buries a positive clock entry, `overdue`, that no continuation pops (`testAPushedTickNeverPops`), so it loses
+  the tank at once (`lost`, which `finished` counts); so does a tick that stops the clock with twists still on the
+  picture (Jack's call E2, round 9). A full stack refuses a move whose tick it would refuse. Undo is the pack's, the
+  stack and the clock as the move found them, and works on a lost tank; reset starts the clock afresh. The view draws
+  the clock's knob as a 12-tooth `RatchetView` read against a vermilion sub-dial fixed to the glass, its pawl riding
+  out with each tick, each tick a beat after the lift turning the clock's core a step on screen (`Unstirred.tick`, one
+  entry over in the four-tap budget, like the drag) and the wheel a tooth; `ClockHint` dashes the clock's disc at all
+  times (Jack's call, 2026-10-25); a pushed tick flashes the ratchet red and stands as a vermilion +N; a
+  lost tank shows "lost." (`LostStamp`) by the clock, with or without a +N, and `LostCard`'s undo and again, whose
+  exit goes through `leave` as the result card's does. The clock stopping sends an amber ring out. A level with a
+  `demo` plays it before the problem opens, every time, unless the harness holds the tank still: a drawn fingertip
+  heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black
+  and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
-  one so far, Lens three; Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
+  one so far, Lens three, Escapement one, the packs mock-up's problem at par 3, proved by the prover,
+  `testEveryProblemsParIsTheProversOptimum`): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
@@ -380,8 +404,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `returned` with the day number (day 1 the install's) on the first opening of any later day number not yet sent, at
   launch or on coming to the front, so a clock set ahead and back costs no real return, and on the first opening on or
   after days 2, 7 and 30 the newest `snapshot` due, every one due marked sent, so a late yes or a clock jumped ahead
-  sends one (Jack, 2026-10-26, K). Days are plain `Best.day`, not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved or quit, moves, par, undos, resets)
-  as it is solved or left for the menu; endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox
+  sends one (Jack, 2026-10-26, K). Days are plain `Best.day`, not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved, lost (Escapement's clock) or quit, moves, par, undos, resets)
+  as it is solved, lost or left for the menu (a lost tank left is no quit); endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox
   nothing. A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app
   was killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
   fires once a pack's taste levels all have bests, `purchased` on a verified purchase in `Store.purchase`. The snapshot
@@ -431,7 +455,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
   levels on a pack's card while it has none. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
+  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
+  line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
   round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
   lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
@@ -473,7 +498,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   play. No lookahead (`noLookahead`) turns to the nearest, clockwise on a tie. A level is fair when the park rule's
   most moves over its ties is the optimum under both parkings; its planning gap is no lookahead minus the optimum.
   `home:` asks for the tank back at 0, the old end rule. Several tests replay plays on a real `Game`, which must empty
-  the stack in the moves the play counts.
+  the stack in the moves the play counts. Escapement's prover (`Solver.escapement`) is a breadth-first search over
+  stacks where a move is a wait or one commit to a working slot, by ±1 to ±11 or an entry's exact inverse, then the
+  clock's forced tick, a line dropped where that tick pushes or stops the clock with twists left; the same slot may be
+  stirred twice running, as every let-go is final. So its first line is a fewest, and no shorter line exists among
+  those counts: the proof each problem ships with. `Move.wait` is its tap.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's and vortex's pictures).

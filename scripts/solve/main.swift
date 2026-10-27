@@ -2,6 +2,7 @@
 
 import Foundation
 
+if CommandLine.arguments.dropFirst().first == "escapement" { escapement(CommandLine.arguments.dropFirst(2).map { $0 }) }
 // lenses=0,2 may come anywhere after the scramble.
 let all = CommandLine.arguments.dropFirst().map { $0 }
 let lensArg = all.dropFirst(2).first { $0.hasPrefix("lenses=") }
@@ -60,4 +61,28 @@ print("\(solver.stacksSeen) stacks, \(String(format: "%.2f", ms)) ms")
 
 extension String {
     func ifEmpty(_ other: String) -> String { isEmpty ? other : self }
+}
+
+/// solve.sh escapement <layout> <scramble> <clock rod> [limit]: the prover's fewest moves with the clock ticking after
+/// each, and the line, or none within the limit. Exits when done.
+func escapement(_ args: [String]) -> Never {
+    guard (3...4).contains(args.count), let layout = Layout(rawValue: args[0]), let clock = Int(args[2]),
+          layout.rods.indices.contains(clock), args.count < 4 || Int(args[3]) != nil else {
+        print("usage: scripts/solve.sh escapement <layout> <scramble, e.g. 0:-1,1:+3> <clock rod> [limit, default 8]")
+        exit(2)
+    }
+    let stack = [Twist].parse(args[1], in: layout), limit = args.count > 3 ? Int(args[3])! : 8
+    let clock0 = ContinuousClock()
+    var seen = 0, play: Play?
+    let took = clock0.measure { play = Solver(layout).escapement(stack, clock: clock, limit: limit, seen: &seen) }
+    print("entries \(stack.count), clock \(clock), counts \u{00B1}1 to \u{00B1}11 and each entry's inverse")
+    if let play {
+        print("optimum \(play.count): no shorter line exists among those counts; a line:")
+        for (i, move) in play.moves.enumerated() { print("  \(i + 1). \(move)") }
+    } else {
+        print("no line within \(limit) moves")
+    }
+    let ms = Double(took.components.seconds) * 1e3 + Double(took.components.attoseconds) / 1e15
+    print("\(seen) states, \(String(format: "%.2f", ms)) ms")
+    exit(play == nil ? 1 : 0)
 }

@@ -91,7 +91,14 @@ extension Level {
         return Level(id: Pack.lens.id(i + 1), pack: .lens, label: String(format: "%02d", i + 1), title: "Panel \(i + 1)",
                      picture: .halftone, layout: .tri, scramble: .parse(scramble, in: .tri, lenses: lenses), lenses: lenses)
     }
-    static let escapement: [Level] = []
+    /// Each problem's par is the prover's optimum (`Solver.escapement`), and its note the stipulation.
+    static let escapement: [Level] = [
+        // The packs mock-up's problem: rod 2 +4, a wait, rod 1 -3. Any other first move's tick pushes on the clock.
+        Level(id: Pack.escapement.id(1), pack: .escapement, label: "01", title: "The clock", note: "Unstir in 3.",
+              layout: .tri, scramble: .parse("0:-1,1:+3,0:-2,2:-4", in: .tri), ratchets: [0],
+              // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
+              demo: .parse("0:-3,1:+2", in: .tri), fixedPar: 3),
+    ]
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
     /// never leaves progress under an id a real level will take.

@@ -53,8 +53,12 @@ struct Harness {
     /// played it.
     let bare: Bool
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
-    /// names it), as solve.sh prints a line.
+    /// names it), as solve.sh prints a line. A ratchet's turn is a tap on it, a wait; a turn of the open stir's knob
+    /// takes it up again.
     let moves: [Twist]?
+    /// UNSTIR_PLAYED=2:4,0:1: a line in UNSTIR_MOVES's form, committed through the real path as the level opens, so a
+    /// still shows the tank part way through it.
+    let played: [Twist]
     /// UNSTIR_FINGER=1: with UNSTIR_MOVES, a hand's pace instead, each move a fingertip drawn landing where the grab rule
     /// gives it the move's rod or the rim, carried round with the turn and lifted, for films.
     let finger: Bool
@@ -224,12 +228,14 @@ struct Harness {
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
         pace = env["UNSTIR_PACE"].flatMap(Double.init) ?? 0.3
         bare = env["UNSTIR_BARE"] == "1"
-        moves = env["UNSTIR_MOVES"].map { line in
+        func line(_ line: String) -> [Twist] {
             line.split(separator: ",").compactMap { move in
                 let f = move.split(separator: ":").compactMap { Int($0) }
                 return f.count == 2 && f[1] != 0 ? Twist(rod: f[0], steps: f[1]) : nil
             }
         }
+        moves = env["UNSTIR_MOVES"].map(line)
+        played = env["UNSTIR_PLAYED"].map(line) ?? []
         finger = env["UNSTIR_FINGER"] == "1"
         rest = env["UNSTIR_REST"].flatMap(Double.init) ?? 2
         breath = env["UNSTIR_BREATH"].flatMap(Double.init)

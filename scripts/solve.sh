@@ -1,8 +1,10 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots, comma-separated]
+#        scripts/solve.sh escapement <layout> <scramble> <clock rod> [limit]
 # Prints the optimum, the park rule's fewest and most moves over every way its ties go under each reading, the
-# no-lookahead player's count, and the optimal moves.
+# no-lookahead player's count, and the optimal moves. Escapement's mode prints the prover's fewest moves with the clock
+# ticking after each, and a line.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/solve

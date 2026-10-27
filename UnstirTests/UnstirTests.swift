@@ -1242,8 +1242,10 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack, level.scramble)
         XCTAssertEqual(game.moves, 0)
         XCTAssertNil(game.reachable)
+        // A tap on the ratchet is a move of its own: the clock ticks its 2:-4 on to 2:-3.
         game.wait(on: 2)
-        XCTAssertEqual(game.moves, 0)
+        XCTAssertEqual(game.moves, 1)
+        XCTAssertEqual(game.stack, .parse("0:+3,1:+2,2:-3", in: .quad))
         // Every level today turns its tank exactly where a knob is seized, and only there counts the turns in par.
         for level in Tier.allCases.flatMap(\.levels) + [.sandbox, .endless(Run(seed: 1))] {
             XCTAssertEqual(level.motion == .tank, !level.seized.isEmpty, level.id)

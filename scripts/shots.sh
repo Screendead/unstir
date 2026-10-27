@@ -370,3 +370,14 @@ shot consent-sends "First launch: the analytics question with its link opened, t
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
 shot consent-settings-on "The gear's sheet: the analytics switch on, and send log." CONSENT=yes SETTINGS=1
 shot consent-settings-off "The gear's sheet: the analytics switch off, and send log." CONSENT=no SETTINGS=1
+
+# Escapement 1, the packs mock-up's problem: tri 0:-1,1:+3,0:-2,2:-4, rod 0 the clock with a ratchet for a knob, unstirred
+# in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
+shot escapement-1 "Escapement 1: rod 0 the clock, its disc dashed vermilion at all times, its ratchet read against the sub-dial; par 3." PACK=escapement
+shot escapement-1-ticked "Escapement 1 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on." \
+  PACK=escapement PLAYED=2:4
+shot escapement-1-lost "Escapement 1, then rod 1 -3: its tick finds no seam and pushes, so the move loses at once: the vermilion +1, lost. stamped by the clock, the card's undo and again." \
+  PACK=escapement PLAYED=2:4,1:-3
+shot escapement-1-stopped "Escapement's clock on 1:+3,0:-1 after a wait: the clock has stopped with rod 1's twist still on the picture, so lost., with no +1." \
+  PACK=escapement STACK=1:+3,0:-1 PLAYED=0:1
+shot escapement-1-won "Escapement 1 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement PLAYED=2:4,0:1,1:-3
