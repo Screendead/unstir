@@ -332,7 +332,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   states, checks the difference stays inside its own core (so the cut clips no glow), and over every heal order that
   `Layout.removable` allows, that no vignette's light reaches the core of a rod removable right after its heal and that
   the entries left move none of it by half a pixel; the harbour's two known smears (the lantern's shards and the boat's
-  stern, in the cottage's ring) are pinned there as Jack's call.
+  stern, in the cottage's ring) are pinned there until the art pass redraws them (Jack, 2026-10-26, F4).
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
   Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
