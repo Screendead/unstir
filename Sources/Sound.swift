@@ -51,6 +51,14 @@ struct Sounding: PrimitiveButtonStyle {
     }
 }
 
+extension ShareLink {
+    /// A share link taps as it opens, beside its own action rather than through `Sounding`, which has not been seen to
+    /// open the sheet.
+    @MainActor func shareTap() -> some View {
+        buttonStyle(.plain).simultaneousGesture(TapGesture().onEnded { Sound.shared.play(.tap) })
+    }
+}
+
 /// Effects on a pool of players, so quick ones overlap, and one looping bed under the menu or a level. Only `queue`
 /// touches the engine and the buffers: callers post to it, so the main actor never waits on a file load or an engine
 /// start. A bed decodes on it too, so a tick can wait behind one, but beds change only between screens.

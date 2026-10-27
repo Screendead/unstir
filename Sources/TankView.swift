@@ -1932,6 +1932,7 @@ struct ResultCard: View {
                 Button("\u{2039} levels", action: onExit)
                 if let share = game.shareText {
                     ShareLink(item: share) { Text("share \u{2197}") }
+                        .shareTap()
                         .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
                 }
                 if let next {

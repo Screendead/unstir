@@ -154,7 +154,7 @@ struct SettingsSheet: View {
                     .padding(.vertical, 12)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(Sounding())
+                .shareTap()
             }
         }
         .padding(.horizontal, 20)
