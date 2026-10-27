@@ -9,11 +9,12 @@ enum SoundSet: String, CaseIterable {
 }
 
 extension Level {
-    /// Each tier's own bed; the daily, endless and the sandbox are plughole's.
+    /// Each tier's own bed; the daily, endless, the sandbox and the packs, which have none yet, are plughole's.
     var bed: Sound.Bed {
         switch tier {
         case .plughole: .plughole
         case .whirlpool: .whirlpool
+        case .vortex: .vortex
         case .maelstrom: .maelstrom
         }
     }
@@ -49,7 +50,7 @@ final class Sound: @unchecked Sendable {
     }
 
     /// Named by file.
-    enum Bed: String, Sendable { case menu, plughole = "loop", whirlpool, maelstrom }
+    enum Bed: String, Sendable { case menu, plughole = "loop", whirlpool, vortex, maelstrom }
 
     /// A bed's player. There are two, so the old bed fades out while the new one fades in.
     private struct Deck {

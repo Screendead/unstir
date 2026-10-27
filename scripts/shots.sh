@@ -5,7 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 bundle=com.screendead.Unstir
 
-udid=$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
+# UNSTIR_SIM=<udid> picks the simulator; otherwise the first Pro Max, made if there is none.
+udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)}
 if [[ -z "$udid" ]]; then
   type=$(xcrun simctl list devicetypes | grep 'Pro Max' | head -1 | grep -oE 'com\.apple[^)]+')
   runtime=$(xcrun simctl list runtimes available | grep '^iOS' | tail -1 | grep -oE 'com\.apple\S+$')
@@ -40,16 +41,20 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch: only level 01 unlocked, whirlpool and maelstrom locked; daily and endless open after level 23."
-shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1
+shot menu "Menu on first launch, the analytics question answered: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
+shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
 shot menu-whirlpool-locked "Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
-shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, maelstrom still locked." \
+shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, vortex still locked." \
   TIER=whirlpool BESTS=plughole:$par27
-shot menu-maelstrom-locked "Menu looking at maelstrom, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par)." \
-  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$some
+shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par)." \
+  TIER=vortex BESTS=plughole:$par27,whirlpool:$some
+shot menu-vortex-open "Menu on vortex, opened by every whirlpool tank at par: its level 01 playable, maelstrom still locked." \
+  TIER=vortex BESTS=plughole:$par27,whirlpool:$par27
+shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit." \
+  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:01
 shot menu-maelstrom "Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK)." TIER=maelstrom UNLOCK=1
 shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN)." \
   TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33
@@ -63,25 +68,26 @@ done
 d2=${depths[1]}
 shot grid-d2-right-half "grid depth 2 ($d2), mid-drag: top rod 2 turned back +2 of its 4 steps." STACK="$d2" LIVE=2:+2
 shot grid-d2-right-almost "grid depth 2 ($d2), mid-drag: top rod 2 turned back +3.6 of 4 steps." STACK="$d2" LIVE=2:+3.6
-shot grid-d2-probe "grid depth 2 ($d2), mid-drag: rod 2 turned +0.4 steps. Dashed ring and start tick: letting go here commits nothing." \
+shot grid-d2-probe "grid depth 2 ($d2), mid-drag: rod 2 turned +0.4 steps. A dim hairline, its start mark and a short trace: letting go here commits nothing." \
   STACK="$d2" LIVE=2:+0.4
 shot grid-d2-wrong-rod "grid depth 2 ($d2), mid-drag: rod 1 turned -2.5 steps out of order (its undo is right, but only after rod 2)." \
   STACK="$d2" LIVE=1:-2.5
-shot quad-probe "Level 12 (square), mid-drag: rod 1 turned +0.3 steps. Dashed ring and start tick: letting go here commits nothing." \
+shot quad-probe "Level 12 (square), mid-drag: rod 1 turned +0.3 steps. A dim hairline, its start mark and a short trace: letting go here commits nothing." \
   LEVEL=12 LIVE=1:+0.3
-shot quad-commit "Level 12 (square), mid-drag: rod 1 turned +2 steps. Solid ring: letting go here commits." LEVEL=12 LIVE=1:+2
-# A drag's own count: a lit segment per step from where the stir began, and the signed count off the finger. UNSTIR_TOUCH
-# is where the finger went down (tank units), carried round by the turn; alone, a finger just down and not yet moved.
-shot count-tri-plus3 "Level 01 (tri), finger down at the top of rod 0 and carried +3 steps round to its right: three segments clockwise from the notch, +3 to the left." \
+shot quad-commit "Level 12 (square), mid-drag: rod 1 turned +2 steps. The hairline at full tone, two dashes: letting go here commits." LEVEL=12 LIVE=1:+2
+# A drag's own count: a dash per step inside the disc's hairline from where the stir began, and the signed count off
+# the finger. UNSTIR_TOUCH is where the finger went down (tank units), carried round by the turn; alone, a finger just
+# down and not yet moved.
+shot count-tri-plus3 "Level 01 (tri), finger down at the top of rod 0 and carried +3 steps round to its right: three dashes clockwise from the start mark, +3 to the left." \
   LEVEL=1 LIVE=0:+3 TOUCH=0,-0.8
-shot count-quad-minus2 "Level 12 (square), finger down below rod 1 and carried -2 steps round: two segments anticlockwise from the notch, -2 up and left, off the finger." \
+shot count-quad-minus2 "Level 12 (square), finger down below rod 1 and carried -2 steps round: two dashes anticlockwise from the start mark, -2 up and left, off the finger." \
   LEVEL=12 LIVE=1:-2 TOUCH=0.354,0.7
-shot count-let-go "Level 12 (square), rod 1 just let go at -2: its stir is still open, so the arc and count stay, faint." LEVEL=12 TURNED=1:-2
-shot count-regrab "Level 12 (square), rod 1 let go at -2, grabbed again and turned -1 more: the count carries on to -3, the notch where this drag began." \
+shot count-let-go "Level 12 (square), rod 1 just let go at -2: its stir is still open, so the hairline, its dashes and the count stay, faint." LEVEL=12 TURNED=1:-2
+shot count-regrab "Level 12 (square), rod 1 let go at -2, grabbed again and turned -1 more: the dashes and count carry on to -3 from where the stir began." \
   LEVEL=12 TURNED=1:-2 LIVE=1:-1 TOUCH=0.354,0.7
-shot grab-grid "Level 12 (square), a finger just down deep in rod 0, not yet moved: its disc and knob lit." LEVEL=12 TOUCH=0.4,-0.4
-shot grab-overlap-grid "Level 12 (square), a finger just down where rods 0 and 1 overlap, not yet moved: both lit dimly until the motion picks one." \
-  LEVEL=12 TOUCH=0.6,0
+shot grab-grid "Level 12 (square), a finger just down deep in rod 0, not yet moved: its knob lit, its disc a dim hairline." LEVEL=12 TOUCH=0.4,-0.4
+shot grab-overlap-grid "Level 12 (square), a finger just down where rods 0 and 1 overlap, nearer rod 0's centre: rod 0's knob lit and its disc a dim hairline at once, rod 1 not." \
+  LEVEL=12 TOUCH=0.5,-0.03
 # Each layout at its chapter's first and last level, the first two without a replay, then every level with a sunset or city.
 for n in 01 04 07 08 09 13 14 18 19 22 23 27 05 11 15 06 10 16; do
   shot "level$n" "Level $n with its full scramble and its note." LEVEL=$n
@@ -90,11 +96,43 @@ done
 shot inversion-L12 "Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers." LEVEL=12 STACK=2:-3,0:+4,3:+7,0:-2
 shot inversion-L27 "Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6." LEVEL=27 STACK=2:+3,0:-5,5:+6,4:+3
 shot daily "Today's daily." MODE=daily
-shot endless "Endless, first tank of the run seeded 7." MODE=endless
-shot hint-hex "Level 27 (hex, par 14) with a hint: the newest twist that can come off now, ringed, with its arrow." LEVEL=27 HINT=1
+shot endless "Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title." \
+  MODE=endless
+# UNSTIR_BRIM sets the notches endless opens with, for that launch only. UNSTIR_CLOCK holds the brim that many seconds after
+# its last change (the harness's TURNED), or after the launch where there is none.
+shot endless-brim "Endless, first tank, opened with 5 of the brim's 8 notches: the picture's own colours in the bezel up to the fifth tick on both sides, glowing onto the black; the tank where moves and par were, no undo or reset." \
+  MODE=endless BRIM=5
+shot endless-brim-7 "Endless opened at 7 notches, one from spilling, held 0.38 s into the brim pin's pulse, at its peak: the filled arc's bloom at its strongest, fading out on the black." \
+  MODE=endless BRIM=7 CLOCK=0.38
+shot endless-notch "Endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 arriving, held 0.2 s in, its colour spreading out across the bezel behind a glint." \
+  MODE=endless BRIM=4 TURNED=1:1 CLOCK=0.2
+shot endless-notch-surge "The same, 0.5 s in: the new arc filled, its light running on past the rim onto the black." \
+  MODE=endless BRIM=4 TURNED=1:1 CLOCK=0.5
+shot endless-heal "Endless opened at 5 notches, then rod 0 turned +3, which heals the tank's top stir: the level settling to the fourth tick, held 0.35 s in, a wet film where it stood." \
+  MODE=endless BRIM=5 TURNED=0:3 CLOCK=0.35
+shot endless-cleared "Endless, first tank opened at 5 notches and cleared by the harness after two wasted stirs (2 notches) and five heals: the card shows the brim at 2." \
+  SCREEN=result MODE=endless BRIM=5
+shot endless-spill-crest "Endless opened at 7 notches, then rod 1 turned +1, a push: the brim spills. Held 0.7 s in: the fronts have met at the brim pin, and a crest swells over the lip at twelve, the pin on top of it." \
+  MODE=endless BRIM=7 TURNED=1:1 CLOCK=0.7
+shot endless-spill-pour "The same, 1.1 s in: the crest has broken and the liquid pours down the outside of the rim either way, a wave behind a bead at each head; the picture starts to stir together." \
+  MODE=endless BRIM=7 TURNED=1:1 CLOCK=1.1
+shot endless-spill-drip "The same, 2 s in: the runs have slowed just past three and nine o'clock and a drop falls from each head onto the black." \
+  MODE=endless BRIM=7 TURNED=1:1 CLOCK=2
+shot endless-spilled "The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best." \
+  MODE=endless BRIM=7 TURNED=1:1 CLOCK=6
+shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch)." \
+  LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
+shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
+  SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
+shot tier-up-locked "The same with maelstrom still closed: the button dimmed with a lock, saying par every vortex level opens it." \
+  SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
+shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels." \
+  SCREEN=result MODE=daily
+hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
+  SCREEN=result MODE=daily SHARESHEET=1
 for w in 0.4 0.8 1.2; do
   shot "wave-$w" "Level 13 solved through the real commit path, solve wave held at radius $w from the last-turned rod." LEVEL=13 WAVE=$w
 done
@@ -122,15 +160,15 @@ shot whirlpool-probe-over "Whirlpool level 12 (square) on the glass, mid-drag: t
 for s in 1 2 3; do
   shot "whirlpool27-probe-$s" "Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back $s steps; it heals at 2." TIER=whirlpool LEVEL=27 LIVE=2:-$s CLOCK=3
 done
-shot whirlpool-grab-neurons "Whirlpool 20 (pentagon, neurons), a finger just down deep in rod 0: its disc and knob lit over the web." \
+shot whirlpool-grab-neurons "Whirlpool 20 (pentagon, neurons), a finger just down deep in rod 0: its knob lit, its disc a dim hairline over the web." \
   TIER=whirlpool LEVEL=20 TOUCH=0.05,-0.62 CLOCK=3
-shot whirlpool-grab-overlap-neurons "Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap: both lit dimly." \
-  TIER=whirlpool LEVEL=20 TOUCH=0.266,-0.366 CLOCK=3
-shot whirlpool-grab-marbling "Whirlpool 25 (hex, marbling), a finger just down deep in rod 1: its disc and knob lit." \
+shot whirlpool-grab-overlap-neurons "Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap, nearer rod 1's centre: rod 1's knob lit, its disc a dim hairline." \
+  TIER=whirlpool LEVEL=20 TOUCH=0.3,-0.34 CLOCK=3
+shot whirlpool-grab-marbling "Whirlpool 25 (hex, marbling), a finger just down deep in rod 1: its knob lit, its disc a dim hairline." \
   TIER=whirlpool LEVEL=25 TOUCH=0.05,-0.6 CLOCK=3
-shot whirlpool-grab-overlap-marbling "Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub: both lit dimly." \
-  TIER=whirlpool LEVEL=25 TOUCH=0.2425,-0.42 CLOCK=3
-shot whirlpool-count-marbling "Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four segments, +4 off the finger." \
+shot whirlpool-grab-overlap-marbling "Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub, nearer rod 2's centre: rod 2's knob lit, its disc a dim hairline." \
+  TIER=whirlpool LEVEL=25 TOUCH=0.27,-0.4 CLOCK=3
+shot whirlpool-count-marbling "Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four dashes, +4 off the finger." \
   TIER=whirlpool LEVEL=22 LIVE=2:+4 TOUCH=0.329,0.753 CLOCK=3
 shot whirlpool-count-hex-below "Whirlpool 25 (hex, marbling), finger down to the lower right of rod 4 and carried +2 steps round to just under it: +2 swung off the hub's knob straight above." \
   TIER=whirlpool LEVEL=25 LIVE=4:+2 TOUCH=0.2165,0.685 CLOCK=3
@@ -140,24 +178,25 @@ for level in 24:chainmail 16:coral 20:neurons 25:marbling; do
   n=${level%:*} picture=${level#*:}
   shot "whirlpool$n-$picture" "Whirlpool level $n ($picture) with its full scramble." TIER=whirlpool LEVEL=$n CLOCK=3
 done
-for level in 26:glass 24:chainmail 16:coral 20:neurons 25:marbling; do
+for level in 27:glass 22:chainmail 8:coral 18:neurons 24:marbling; do
   n=${level%:*} picture=${level#*:}
   shot "maelstrom$n-$picture" "Maelstrom level $n ($picture twin) with its full scramble." TIER=maelstrom LEVEL=$n CLOCK=3
 done
-# The turning tank: maelstrom scrambles on their twins with seized knobs, at home and turned one step, where every seam
-# should sit concentric on the knob it lands under.
-shot seized-m01-home "Maelstrom 01 (tri) with knob 0 seized, tank at home." TIER=maelstrom LEVEL=1 SEIZED=0 CLOCK=3
-shot seized-m01-turned "Maelstrom 01 (tri) with knob 0 seized, tank turned one step (120 degrees clockwise): the seams around knob 0 now ring knob 1." \
-  TIER=maelstrom LEVEL=1 SEIZED=0 TANK=1 CLOCK=3
-shot seized-m09-home "Maelstrom 09 (square) with knob 1 seized, tank at home." TIER=maelstrom LEVEL=9 SEIZED=1 CLOCK=3
-shot seized-m09-turned "Maelstrom 09 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2." \
-  TIER=maelstrom LEVEL=9 SEIZED=1 TANK=1 CLOCK=3
+# The turning tank: maelstrom levels on their twins, at home and turned one step, where every seam should sit
+# concentric on the knob it lands under. The bezel is knurled wherever knobs are seized (the rim-* shots show it beside
+# the lessons).
+shot seized-m01-home "Maelstrom 01 (square, coral twin) with knob 1 seized, tank at home." TIER=maelstrom LEVEL=1 CLOCK=3
+shot seized-m01-turned "Maelstrom 01 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2." \
+  TIER=maelstrom LEVEL=1 TANK=1 CLOCK=3
+shot seized-m09-home "Maelstrom 09 (pentagon, marbling twin) with knobs 0 and 4 seized, tank at home." TIER=maelstrom LEVEL=9 CLOCK=3
+shot seized-m09-turned "Maelstrom 09 (pentagon) with knobs 0 and 4 seized, tank turned one step (72 degrees clockwise): each seam moves one knob on." \
+  TIER=maelstrom LEVEL=9 TANK=1 CLOCK=3
 shot seized-m23-home "Maelstrom 23 (hex) with knobs 2 and 5 seized, tank at home." TIER=maelstrom LEVEL=23 SEIZED=2,5 CLOCK=3
 shot seized-m23-turned "Maelstrom 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANK=1 CLOCK=3
 shot seized-m23-half "Maelstrom 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=30 CLOCK=3
-shot seized-m23-count "Maelstrom 23 (hex) with knobs 2 and 5 seized, finger down on the rim at lower left and carried two tank steps (120 degrees) round: two segments round the rim, +2 off the finger." \
+shot seized-m23-count "Maelstrom 23 (hex) with knobs 2 and 5 seized, finger down on the rim at lower left and carried two tank steps (120 degrees) round: two dashes inside the rim's hairline, +2 off the finger." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=120 TOUCH=-0.5,0.84 CLOCK=3
 # How to turn the tank, shown on any level with seized knobs until the player has turned it once: a two-headed arc just
 # outside the rim and a ghost finger rocking on it. UNSTIR_TANKTURNED=1 is a player who has, for the launch only. The ghost
@@ -170,10 +209,10 @@ shot lesson-shake "Level 12 (square) with knob 1 seized, a finger just down on i
   LEVEL=12 SEIZED=1 TOUCH=0.38,0.37 SHAKE=0.15 CLOCK=3
 shot lesson-shake-turned "The same once the player has turned the tank before: no ghost, the arc back only for the pulse." \
   LEVEL=12 SEIZED=1 TOUCH=0.38,0.37 SHAKE=0.15 CLOCK=3 TANKTURNED=1
-shot lesson-turned "Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost." LEVEL=12 SEIZED=1 CLOCK=3 TANKTURNED=1
+shot lesson-turned "Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost, only the knurled bezel." LEVEL=12 SEIZED=1 CLOCK=3 TANKTURNED=1
 shot lesson-count "Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: rod 1 at the top turned +1 by a finger just below its knob, its count swung off the rim's arc." \
   TIER=whirlpool LEVEL=25 SEIZED=2,5 LIVE=1:+1 TOUCH=0,-0.3 CLOCK=3
-shot lesson-maelstrom01-free "Maelstrom 01 (tri) as the game loads it: no knob seized until maelstrom's own set, so no rim lesson and no note of seized knobs." \
+shot lesson-maelstrom01 "Maelstrom 01 (square, coral twin) as the game loads it, the tank never turned: knob 1 seized, the rim's arc and ghost finger, and the note to turn the tank." \
   TIER=maelstrom LEVEL=1 CLOCK=3
 # Can a finished ring be read on hex glass? 14 entries, as whirlpool 23 has, with one ring left without any, and the same
 # stack with a 2-step twist on that ring buried under its neighbours.
@@ -187,3 +226,118 @@ shot seized-ring3-buried "The same with 3:+2 buried fourth from the bottom ($rin
 shot seized-hub-finished "Hex twin glass, 14 entries ($hub), none on the hub: its ring is finished." TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hub" CLOCK=3
 shot seized-hub-buried "The same with 0:+2 buried third from the bottom ($hubburied): the hub's ring is not finished." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 STACK="$hubburied" CLOCK=3
+# Vortex: the swirl, a last rod the size of the tank at its centre, held from the rim. Its 27 levels are provisional. The
+# rim shows how to stir with the swirl until the player has once (UNSTIR_SWIRLED=1 is a player who has); with seized
+# knobs too, both lessons show. The swirl-* shots are of the picture, so they read as a player who has. UNSTIR_CLOCK
+# holds the swirl's breath still, so no shot catches it mid-slosh unless UNSTIR_BREATH asks.
+shot menu-vortex "Menu on vortex with every row unlocked." TIER=vortex UNLOCK=1
+for n in $(seq -w 1 27); do
+  shot "vortex$n" "Vortex level $n with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom." TIER=vortex LEVEL=$n CLOCK=3
+done
+shot vortex01-swirled "Vortex 01 once the player has stirred with the swirl before: no lesson." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1
+shot vortex01-both "Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one inside the glass at the bottom." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
+shot vortex21-both "Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass." TIER=vortex LEVEL=21 SEIZED=2,5 CLOCK=3
+shot vortex-result "Vortex level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par), next in vortex's blue." \
+  TIER=vortex SCREEN=result LEVEL=5 CLOCK=3
+# Vortex on plughole's grid (UNSTIR_PICTURE) instead of its own family, the option for its pictures set aside.
+for n in 01 14 27; do
+  shot "vortex-plughole-$n" "Vortex level $n with its full scramble on plughole's grid, the swirl never stirred." \
+    TIER=vortex LEVEL=$n CLOCK=3 PICTURE=grid
+done
+# Vortex's own family: each picture clean in the sandbox, then on the shallowest, a middle and the deepest of its levels.
+# scripts/vortex-family-sheet.py lays them out.
+for p in isobars ephemeris cords; do
+  shot "vortex-family-$p-clean" "Vortex's $p, clean: the sandbox's square with a swirl, nothing stirred." \
+    MODE=sandbox LAYOUT=quadSwirl STACK= PICTURE=$p CLOCK=3 SWIRLED=1
+done
+for pn in isobars:01 isobars:14 isobars:27 ephemeris:02 ephemeris:13 ephemeris:22 cords:03 cords:16 cords:26; do
+  p=${pn%:*} n=${pn#*:}
+  shot "vortex-family-$p-$n" "Vortex level $n with its full scramble on its own $p, its lesson learnt." TIER=vortex LEVEL=$n \
+    CLOCK=3 SWIRLED=1
+done
+# What the rim does, shown before it is touched: the swirl alone (vortex 01), the glass's turn alone (maelstrom 01, knob
+# 1 seized) and both (vortex 01 with knob 1 seized), each once its lessons are learnt and with them, then held: the
+# swirl from the rim, and where there are both, the swirl from the glass's edge and the tank from the bezel.
+shot rim-swirl "Rim: vortex 01, the swirl alone, its lesson learnt." TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1
+shot rim-swirl-lesson "Rim: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass." TIER=vortex LEVEL=1 CLOCK=3
+shot rim-swirl-held "Rim: vortex 01, the swirl held from the rim, 1.5 steps clockwise." \
+  TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 LIVE=4:1.5 TOUCH=0.7,-0.7
+shot rim-seized "Rim: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt." TIER=maelstrom LEVEL=1 CLOCK=3 TANKTURNED=1
+shot rim-seized-lesson "Rim: maelstrom 01, the tank never turned: its amber lesson too." TIER=maelstrom LEVEL=1 CLOCK=3
+shot rim-both "Rim: vortex 01 with knob 1 seized, both lessons learnt." TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1
+shot rim-both-lesson "Rim: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3
+shot rim-both-swirl-held "Rim: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 LIVE=4:1.5 TOUCH=0.66,-0.66
+shot rim-both-tank-held "Rim: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 SWIRLED=1 TANKTURNED=1 TANKLIVE=30 TOUCH=0,-1.03
+# The swirl's count, inside the glass on the far side from the finger, clear of its dashes.
+shot rim-swirl-held-low "Rim: vortex 01, the swirl held from the rim at six and carried 1.5 steps counterclockwise: -2 on the far side from the finger, inside the dashes." \
+  TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 LIVE=4:-1.5 TOUCH=0,0.97
+shot rim-swirl-turned "Rim: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the dashes at twelve." \
+  TIER=vortex LEVEL=1 CLOCK=3 SWIRLED=1 TURNED=4:+2
+# The swirl's breath (UNSTIR_BREATH), held 0.4 s into its first slosh, where it has turned the picture furthest: a still
+# of the tank at rest shows nothing. It runs only until the swirl is first stirred, so these never set UNSTIR_SWIRLED
+# and its lesson shows with it. On vortex 01 (quad), 14 (pent) and 21 (hex), and on vortex 01 with knob 1 seized, for
+# the bezel's knurl beside it.
+for n in 01 14 21; do
+  shot "breath-$n" "Breath: vortex $n at rest, the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass." \
+    TIER=vortex LEVEL=$n CLOCK=3 BREATH=1.9
+done
+shot breath-both "Breath: vortex 01 with knob 1 seized, the tank's lesson learnt and the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass: the knurl for the glass's turn beside it." \
+  TIER=vortex LEVEL=1 SEIZED=1 CLOCK=3 TANKTURNED=1 BREATH=1.9
+# A sheet of what reads before a move, cut to the tank: the swirl alone, the glass's turn alone and both, learnt along
+# the top and with their lessons under. Not a shot, so not in the index.
+if [[ -z "$pattern" || "rim-" == *$pattern* ]]; then
+  inputs=()
+  for s in swirl seized both swirl-lesson seized-lesson both-lesson; do inputs+=(-i "shots/rim-$s.png"); done
+  ffmpeg -loglevel error -y "${inputs[@]}" -filter_complex \
+    "concat=n=6:v=1,crop=iw:ih*0.56:0:ih*0.21,scale=440:-1,tile=3x2:padding=8:color=0x303030" -frames:v 1 "shots/vortex-rim.png"
+  echo "sheet vortex-rim"
+fi
+shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the glass's edge turned 90 degrees, sheared all the way in to the centre, which stays still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
+swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
+shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1 CLOCK=3
+shot swirl-quad-live "The same held mid-drag from the rim, the swirl 1.5 steps clockwise." LAYOUT=quadSwirl STACK="$swirl" LIVE=4:1.5 TOUCH=0.7,-0.7 SWIRLED=1 CLOCK=3
+shot swirl-quad-seized "The same with knob 1 seized and the tank turned one step (90 degrees clockwise)." LAYOUT=quadSwirl STACK="$swirl" \
+  SEIZED=1 TANK=1 SWIRLED=1 CLOCK=3
+shot swirl-tri "Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3." LAYOUT=triSwirl STACK=0:+3,3:+2,1:-4,3:-3 SWIRLED=1 CLOCK=3
+shot swirl-eye "Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3." LAYOUT=eyeSwirl STACK=0:+3,4:+2,2:-4,4:-3 SWIRLED=1 CLOCK=3
+shot swirl-pent "Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3." LAYOUT=pentSwirl STACK=0:+3,5:+2,2:-4,5:-3 SWIRLED=1 CLOCK=3
+shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl STACK=1:+3,7:+2,4:-4,7:-3 SWIRLED=1 CLOCK=3
+# App-icon candidates, each a 1024-pixel square centred on the screen; scripts/icon.sh crops them and lays out the sheet.
+shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
+shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
+shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
+# held 5.4 s in, one stir left. Prices are the StoreKit configuration's, as a US storefront shows them.
+shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
+shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot." \
+  OWNED=lens STORE=escapement:pending CLOCK=5.4
+for state in unowned owned pending failed revoked; do
+  shot card-lens-$state "Lens's card, $state." CARD=lens STORE=lens:$state CLOCK=5.4
+done
+shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
+shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
+shot card-complete "Complete's card, unowned." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
+  CARD=lens STORE=complete:failed CLOCK=5.4
+shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4
+shot card-lens-noprice "Lens's card before the App Store answers: buy, with no price." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
+  CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
+shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place." \
+  PACK=lens LEVEL=5 STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
+  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
+  CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+
+# The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
+shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
+shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends." CONSENT=sends
+shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
+shot consent-settings-on "The gear's sheet: the analytics switch on, and send log." CONSENT=yes SETTINGS=1
+shot consent-settings-off "The gear's sheet: the analytics switch off, and send log." CONSENT=no SETTINGS=1

@@ -4,7 +4,7 @@ import SwiftUI
 
 extension Level {
     /// Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
-    /// red through magenta to violet, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
+    /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
     /// magenta.
     var colour: Color {
         guard let n = Int(label) else { return sandbox ? .magenta : run == nil ? .amber : .neonCyan }
@@ -12,6 +12,7 @@ extension Level {
         return switch tier {
         case .plughole: oklch(0.639, 0.34, 190 + 240 * t)
         case .whirlpool: oklch(0.62, 0.3, 23 - 82 * t)
+        case .vortex: oklch(0.66, 0.24, 300 - 110 * t)
         case .maelstrom: oklch(0.64, 0.3, 24 + 76 * t)
         }
     }
@@ -22,6 +23,7 @@ extension Tier {
         let colours: [Color] = switch self {
         case .plughole: [.neonCyan, .magenta, .amber]
         case .whirlpool: [.blood, .magenta, .violet]
+        case .vortex: [.violet, Color(0x2F6BFF), Color(0x00D2C0)]
         case .maelstrom: [Color(0xFF1A2A), Color(0xD4200C), Color(0xB89A00)]
         }
         return LinearGradient(colors: colours, startPoint: .leading, endPoint: .trailing)
@@ -31,6 +33,7 @@ extension Tier {
         switch self {
         case .plughole: .magenta
         case .whirlpool: .blood
+        case .vortex: Color(0x3D5BFF)
         case .maelstrom: Color(0xE0101C)
         }
     }
@@ -66,9 +69,10 @@ struct Stirred: ViewModifier, Animatable {
     func body(content: Content) -> some View {
         content
             .layerEffect(
-                // A low plateau: the whole disc shears, where the tank's 0.6 would spin the middle rows as a block.
-                ShaderLibrary.unstir(.float2(centre), .float(radius), .floatArray([0, 0, 1, Float(angle)]),
-                                     .float(1), .float(30), .float(0.1), .float(Float(scale)), .float(Float(0.3 * fade)),
+                // A low plateau: the whole disc shears, where the tank's 0.6 would spin the middle rows as a block. The
+                // disc's radius stays under 1, which the shader would take for the swirl, turned inside out.
+                ShaderLibrary.unstir(.float2(centre), .float(radius), .floatArray([0, 0, 0.9999, Float(angle)]),
+                                     .float(1), .float(30), .float(0.1), .float(0.1), .float(Float(scale)), .float(Float(0.3 * fade)),
                                      .float3(0, 0, -1), .float(0)),
                 // Samples stay in the disc, which reaches past the view's edges by no more than this. The effect draws
                 // its margin too, so a wider one is wasted work.
@@ -82,6 +86,16 @@ struct MenuView: View {
     /// UNSTIR_TIERDEMO: switches tiers on a timer through the same calls a finger makes.
     let demo: Bool
     let onPick: (Level) -> Void
+    /// The pack card over the menu, opened from the dock or by a level that needs it.
+    @Binding var card: Offer?
+    /// Where the tapped cover sits, for the card to grow from.
+    @State private var cardFrom = UnitPoint.center
+    /// UNSTIR_CLOCK: the dock's and the card's clips held that many seconds in.
+    let clock: Double?
+    /// UNSTIR_CARDLEVELS: placeholder levels the card lists before its pack has any.
+    let placeholders: Int
+    /// UNSTIR_SHELFDEMO: opens Lens's card from the dock and back, through the calls a finger makes.
+    let shelfDemo: Bool
     /// The tier picked in the strip, open or not. `shown` trails it while the old list stirs away, and `listed`, the
     /// scroll view's own list, trails that to the end of the switch: rebuilding it stalls a frame (about 40 ms on the
     /// simulator), unseen once the stir has settled over it.
@@ -99,9 +113,13 @@ struct MenuView: View {
     @GestureState private var dragging = false
     /// The scroll view's height and its bottom safe area: the list draws on under the home indicator.
     @State private var viewport: CGFloat = 0
+    /// The pack dock's height: the scroll view counts it in its bottom safe area, but the list ends at it.
+    @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
     @State private var list = CGRect.zero
     @Namespace private var strip
+    /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
+    @State private var settings: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("soundSet") private var sound = SoundSet.glass
 
@@ -111,10 +129,16 @@ struct MenuView: View {
     private let dim = 0.55
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
-    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil,
+    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
+         card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          onPick: @escaping (Level) -> Void) {
         self.demo = demo
+        _settings = State(initialValue: settings)
         self.onPick = onPick
+        _card = card
+        self.clock = clock
+        self.placeholders = placeholders
+        self.shelfDemo = shelfDemo
         let tier = start ?? Tier.stored()
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
@@ -129,8 +153,21 @@ struct MenuView: View {
     var body: some View {
         // Daily and endless draw on every layout, so they open after the first hex level.
         let modes = Best.unlocked || Best.load(Level.plughole[22].id) != nil
+        let analytics = Analytics.shared
+        // The menu waits for the question's answer, for VoiceOver too.
+        let asking = analytics.asks && analytics.consent == .undecided
         VStack(alignment: .leading, spacing: 0) {
-            title.padding(.horizontal, 20).padding(.top, 28)
+            HStack(alignment: .center) {
+                title
+                Spacer(minLength: 8)
+                Button { settings = true } label: {
+                    Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(Sounding()).opacity(0.5)
+                .accessibilityLabel("Settings")
+            }
+            .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
             tiers.padding(.top, 6)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -138,7 +175,7 @@ struct MenuView: View {
                         .font(.mono(13)).opacity(0.55).padding(.top, 10)
                     LevelRow(level: Level.daily(), enabled: modes, pick: pick).padding(.top, 22)
                     LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                             detail: "deeper every tank \u{00B7} one over par ends it",
+                             detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
                              best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, pick: pick)
                     LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                              pick: pick)
@@ -155,8 +192,21 @@ struct MenuView: View {
             .overlay(alignment: .topLeading) { twisted }
             .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
             .simultaneousGesture(swipe)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !Offer.shelf().isEmpty {
+                    PackDock(open: { show($0, from: $1) }, held: clock, paused: card != nil)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
+                }
+            }
         }
         .foregroundStyle(Color.text)
+        .accessibilityHidden(card != nil || asking)
+        .overlay { cardView }
+        .overlay {
+            if asking { ConsentCard(tier: shown).transition(.opacity) }
+        }
+        .animation(.easeOut(duration: 0.25), value: asking)
+        .sheet(isPresented: $settings) { SettingsSheet() }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()
@@ -171,6 +221,32 @@ struct MenuView: View {
             }
         }
         .task { if demo { await tour() } }
+        .task { if shelfDemo { await shelfTour() } }
+    }
+
+    /// The card grows out of its cover, or fades in under Reduce Motion.
+    @ViewBuilder private var cardView: some View {
+        if let card {
+            PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), onBack: { show(nil) },
+                     onPlay: { onPick($0) })
+                .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
+                .zIndex(1)
+        }
+    }
+
+    private func show(_ offer: Offer?, from: UnitPoint = .center) {
+        Log.write(offer.map { "card \($0.key) shown" } ?? "card closed")
+        if offer != nil { cardFrom = from }
+        withAnimation(.snappy(duration: 0.42)) { card = offer }
+    }
+
+    /// The menu, Lens's cover tapped, its card's clip played through, then back.
+    private func shelfTour() async {
+        func pause(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
+        await pause(4.5)
+        show(.pack(.lens), from: UnitPoint(x: 0.375, y: 0.88))
+        await pause(7.2)
+        show(nil)
     }
 
     private var sounds: some View {
@@ -222,7 +298,7 @@ struct MenuView: View {
     /// The list's visible part, in its own space.
     private var band: ClosedRange<CGFloat> {
         let top = max(-list.minY, 0)
-        return top ... max(min(viewport - list.minY, list.height), top + 1)
+        return top ... max(min(viewport - dock - list.minY, list.height), top + 1)
     }
 
     /// The middle of the list's visible part, in the scroll view's space.
@@ -377,7 +453,7 @@ struct MenuView: View {
         }
     }
 
-    /// Plughole, swiped to whirlpool, swiped to maelstrom, then plughole tapped in the strip.
+    /// Plughole, swiped to whirlpool, swiped to vortex, then plughole tapped in the strip.
     private func tour() async {
         func pause(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
         // A finger's leftward swipe below the middle of the list, at 60 Hz, easing out, then let go.
@@ -473,6 +549,7 @@ private struct LevelRow: View {
 
     var body: some View {
         let result = Best.load(level.id)
+        let rods = level.layout.base.map { "\($0.rods.count) rods + swirl" } ?? "\(level.layout.rods.count) rods"
         return Button { pick(level) } label: {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 // A locked number stays bright enough that the hue walk still reads on first launch.
@@ -481,7 +558,7 @@ private struct LevelRow: View {
                     .frame(width: 34, alignment: .leading)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(level.title).font(.mono(14)).multilineTextAlignment(.leading)
-                    Text(detail ?? "\(level.layout.rods.count) rods \u{00B7} par \(level.par)").font(.mono(11)).opacity(0.32)
+                    Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.mono(11)).opacity(0.32)
                 }
                 .opacity(enabled ? 1 : 0.38)
                 Spacer(minLength: 8)
@@ -491,7 +568,6 @@ private struct LevelRow: View {
                     } else if let result, result.clean == true {
                         Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
                     } else if let result, result.over == 0 {
-                        // Hints aside, as the tier gate counts it.
                         Text("par").foregroundStyle(Color.amber)
                     } else if let result {
                         Text("+\(result.over)").foregroundStyle(Color.magenta)

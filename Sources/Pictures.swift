@@ -11,6 +11,8 @@ enum Picture: String, CaseIterable {
     case glass, chainmail, coral, neurons, marbling
     /// Maelstrom's twins of those, on the same data.
     case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
+    /// Vortex's own, drawn live the same way.
+    case isobars, ephemeris, cords
 
     var isLive: Bool { ![.grid, .sunset, .city].contains(self) }
 
@@ -36,6 +38,8 @@ enum Picture: String, CaseIterable {
         case .neurons: 12
         // A twin's heartbeat delays loop once a minute, and every sibling's period divides that.
         case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: 60
+        // Every planet goes round a whole number of times in it.
+        case .ephemeris: 30
         default: 10
         }
     }
@@ -49,13 +53,16 @@ enum Picture: String, CaseIterable {
         case .glass, .chainmail, .coral, .marblingTwin: 4
         case .neurons, .glassTwin, .chainmailTwin, .coralTwin: 5
         case .neuronsTwin: 6
+        case .isobars: 2
+        case .cords: 3
+        case .ephemeris: 6
         }
     }
 
-    /// The sandbox's: plughole's pictures and whirlpool's, not the twins.
+    /// The sandbox's: plughole's pictures, whirlpool's and vortex's, not the twins.
     var next: Picture {
-        let all = Self.allCases.filter { !$0.isLive || $0.twin != $0 }
-        return all[(all.firstIndex(of: sibling)! + 1) % all.count]
+        let all = Self.allCases.filter { $0.sibling == $0 }
+        return all[((all.firstIndex(of: sibling) ?? -1) + 1) % all.count]
     }
 
     /// A live picture's floats for its shader, `clock` seconds in; nil until `prepare` has built them. A twin's are its
@@ -69,6 +76,9 @@ enum Picture: String, CaseIterable {
         case .coral: Self.kernels(seed: seed, t: t)
         case .neurons: Self.web(seed: seed)
         case .marbling: Self.drops(seed: seed, t: t)
+        case .isobars: Self.gradients(seed: seed, salt: 0x464C_4F57, count: 2)
+        case .ephemeris: Self.ephemeris(seed: seed, t: t, period: period)
+        case .cords: Self.gradients(seed: seed, salt: 0x4C4F_4F4D, count: 2)
         default: nil
         }
         return sibling == self ? data : data.map { $0 + Self.delays(t: t) }
@@ -92,8 +102,46 @@ enum Picture: String, CaseIterable {
 
     /// The grid's colour at (x, y): hue sweeps cyan to orange left to right, lightness falls top to bottom.
     static func field(_ x: Double, _ y: Double) -> Color {
+        let v = fieldLinear(x, y)
+        return Color(.sRGBLinear, red: v.x, green: v.y, blue: v.z)
+    }
+
+    /// `field` in linear sRGB.
+    static func fieldLinear(_ x: Double, _ y: Double) -> SIMD3<Double> {
         let u = min(max((x + 0.9) / 1.8, 0), 1), v = min(max((y + 0.9) / 1.8, 0), 1)
-        return oklch(0.72 - 0.20 * v, 0.34, 190 + 240 * u)
+        return oklchLinear(0.72 - 0.20 * v, 0.34, 190 + 240 * u)
+    }
+
+    /// The baked grid's light at `p` (tank units), gamma-encoded sRGB: the nearest line each way, its stroke and its two
+    /// glows as `draw` lays them down. For work off the main actor that needs the picture's colours, such as the brim.
+    static func gridLight(_ p: SIMD2<Double>) -> SIMD3<Double> {
+        func line(_ d: Double) -> Double {
+            // A stroke 0.014 wide, then blurs of 0.008 at full strength and 0.022 at 0.3, added.
+            func blurred(_ sigma: Double) -> Double {
+                0.5 * (erf((d + 0.007) / (sigma * 2.0.squareRoot())) - erf((d - 0.007) / (sigma * 2.0.squareRoot())))
+            }
+            return min(max((0.007 - d) / 0.002 + 0.5, 0), 1) + blurred(0.008) + 0.3 * blurred(0.022)
+        }
+        func nearest(_ c: Double) -> Double { min(max(((c + 1) / 0.2).rounded(), 0), 10) * 0.2 - 1 }
+        let x = nearest(p.x), y = nearest(p.y)
+        let light = fieldNear(x, p.y) * line(abs(p.x - x)) + fieldNear(p.x, y) * line(abs(p.y - y))
+        return SIMD3(gamma(light.x), gamma(light.y), gamma(light.z))
+    }
+
+    /// `fieldLinear` on a 65-by-65 grid over the tank, each oklch solved once.
+    private static let fieldGrid: [SIMD3<Double>] = (0..<65 * 65).map { fieldLinear(Double($0 % 65) / 32 - 1, Double($0 / 65) / 32 - 1) }
+
+    /// `fieldLinear`, read bilinearly off `fieldGrid`.
+    private static func fieldNear(_ x: Double, _ y: Double) -> SIMD3<Double> {
+        let fx = min(max((x + 1) * 32, 0), 63.999), fy = min(max((y + 1) * 32, 0), 63.999)
+        let i = Int(fx), j = Int(fy), u = fx - Double(i), v = fy - Double(j)
+        func at(_ i: Int, _ j: Int) -> SIMD3<Double> { fieldGrid[j * 65 + i] }
+        return (at(i, j) * (1 - u) + at(i + 1, j) * u) * (1 - v) + (at(i, j + 1) * (1 - u) + at(i + 1, j + 1) * u) * v
+    }
+
+    private static func gamma(_ c: Double) -> Double {
+        let c = min(max(c, 0), 1)
+        return c <= 0.0031308 ? 12.92 * c : 1.055 * pow(c, 1 / 2.4) - 0.055
     }
 
     private func draw(_ ctx: GraphicsContext, r: CGFloat) {
@@ -253,8 +301,8 @@ enum Picture: String, CaseIterable {
 }
 
 /// Crisp strokes, then bloom and halo added over them, baked once so twisting shears the glow with the lines.
-private func neon(_ ctx: GraphicsContext, r: CGFloat, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.4), (0.008, 1.0)],
-                  _ draw: (inout GraphicsContext) -> Void) {
+func neon(_ ctx: GraphicsContext, r: CGFloat, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.4), (0.008, 1.0)],
+          _ draw: (inout GraphicsContext) -> Void) {
     var c = ctx
     draw(&c)
     for (blur, opacity) in glows {
@@ -268,6 +316,12 @@ private func neon(_ ctx: GraphicsContext, r: CGFloat, glows: [(blur: Double, opa
 
 /// Chroma is reduced until the colour fits sRGB, so hue and lightness hold.
 func oklch(_ L: Double, _ C: Double, _ h: Double) -> Color {
+    let v = oklchLinear(L, C, h)
+    return Color(.sRGBLinear, red: v.x, green: v.y, blue: v.z)
+}
+
+/// `oklch` in linear sRGB.
+func oklchLinear(_ L: Double, _ C: Double, _ h: Double) -> SIMD3<Double> {
     func rgb(_ c: Double) -> SIMD3<Double> {
         let a = c * cos(h * .pi / 180), b = c * sin(h * .pi / 180)
         let l = L + 0.3963377774 * a + 0.2158037573 * b, m = L - 0.1055613458 * a - 0.0638541728 * b
@@ -282,6 +336,5 @@ func oklch(_ L: Double, _ C: Double, _ h: Double) -> Color {
         let mid = (lo + hi) / 2, v = rgb(mid)
         if v.min() >= 0 && v.max() <= 1 { lo = mid } else { hi = mid }
     }
-    let v = rgb(lo)
-    return Color(.sRGBLinear, red: v.x, green: v.y, blue: v.z)
+    return rgb(lo)
 }

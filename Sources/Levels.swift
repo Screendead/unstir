@@ -5,28 +5,36 @@ import Foundation
 struct Run: Hashable, Sendable {
     var seed: UInt64
     var tank = 0
+    /// Notches on the brim as this tank opens, as the tank before left them.
+    var brim = 0
+
+    /// Notches the brim holds: the one that fills it spills the run. A guess until TestFlight.
+    static let room = 8
 }
 
 /// The difficulty ladder, easiest first: declaration order is the ladder, so a new tier goes in where it belongs. The
 /// raw value is stored as the menu's choice, so it never changes.
 enum Tier: String, CaseIterable {
-    case plughole, whirlpool, maelstrom
+    case plughole, whirlpool, vortex, maelstrom
 
     var name: String {
         switch self {
         case .plughole: "Plughole"
         case .whirlpool: "Whirlpool"
+        case .vortex: "Vortex"
         case .maelstrom: "Maelstrom"
         }
     }
 
-    /// Starts each of the tier's level ids. Whirlpool's and maelstrom's are from their old names, nightmare and
-    /// nightmare+: progress is stored by id, so changing a prefix loses it unless the stored keys are remapped.
+    /// Starts each of the tier's level ids. Progress is stored by id, so changing a prefix loses it unless the stored
+    /// keys are remapped. Whirlpool's is from its old name, nightmare; maelstrom's levels replaced nightmare+'s, so
+    /// its N+ became M and their bests never land on the new levels.
     var prefix: String {
         switch self {
         case .plughole: "L"
         case .whirlpool: "N"
-        case .maelstrom: "N+"
+        case .vortex: "V"
+        case .maelstrom: "M"
         }
     }
 
@@ -40,11 +48,12 @@ enum Tier: String, CaseIterable {
         switch self {
         case .plughole: Level.plughole
         case .whirlpool: Level.whirlpool
+        case .vortex: Level.vortex
         case .maelstrom: Level.maelstrom
         }
     }
 
-    /// Per level, whether its best is at or under par. Hints don't count against it.
+    /// Per level, whether its best is at or under par.
     func atPar(_ best: (String) -> Best? = Best.load) -> [Bool] {
         levels.map { best($0.id).map { $0.over == 0 } ?? false }
     }
@@ -70,6 +79,8 @@ struct Level: Hashable, Sendable {
     var id: String
     /// Daily, endless and the sandbox are plughole's.
     var tier = Tier.plughole
+    /// A pack's level belongs to no tier: its `tier` is plughole's default and never gates it.
+    var pack: Pack?
     var label: String
     var title: String
     /// One line under the tank, for levels that teach something the title cannot.
@@ -81,13 +92,32 @@ struct Level: Hashable, Sendable {
     /// Applied bottom first; the player unwinds from the top.
     var scramble: [Twist]
     var run: Run?
-    /// Knobs that ignore touch. The tank turns only on a level that has some, to carry their fluid to a working knob.
+    /// Knobs that refuse touch, with a thud.
     var seized: Set<Int> = []
-    /// Nil is one move per entry. A level with seized knobs also counts its turns of the tank.
+    /// Slots with no knob over them, which refuse touch as a seized knob does.
+    var sockets: Set<Int> = []
+    /// Escapement's clocks: a knob that can't be turned, and waits on a tap.
+    var ratchets: Set<Int> = []
+    /// What carries the knobs round without a stir, held by the rim. Maelstrom's turns the tank, to bring a seized
+    /// knob's fluid to a working one.
+    var motion = Motion.none
+    /// Nil is one move per entry. A level whose tank turns also counts its turns.
     var fixedPar: Int?
     var par: Int { fixedPar ?? scramble.count }
 
     var sandbox: Bool { id == "sandbox" }
+
+    enum Motion: Hashable, Sendable {
+        case none, tank
+        /// Charybdis's planets, not built.
+        case crank
+    }
+
+    enum Knob: Hashable, Sendable { case working, seized, socket, ratchet }
+
+    func kind(of knob: Int) -> Knob {
+        seized.contains(knob) ? .seized : sockets.contains(knob) ? .socket : ratchets.contains(knob) ? .ratchet : .working
+    }
 
     static let plughole: [Level] = ([
         (.tri, "0:+4", "Turn it back.", "Turn a rod to look. Let go where you started and nothing happens."),
@@ -126,7 +156,7 @@ struct Level: Hashable, Sendable {
 
     /// Twice the stirs of the same-numbered level, more of them hidden under louder ones, live pictures, nothing replayed.
     static let whirlpool: [Level] = ([
-        (.tri, "0:-5,1:+3", "Turn them back.", "Same rules, twice the stirs, no replays. This is the last note."),
+        (.tri, "0:-5,1:+3", "Turn them back.", "Same rules, twice the stirs, no replays."),
         (.tri, "2:+7,0:-7", "Both went further than they look.", ""),
         (.tri, "1:-6,2:+3,0:-4,1:+4", "Four stirs. Undo the fourth one first.", ""),
         (.tri, "2:-5,1:+4,2:+2,0:-5", "The newest seam is never broken.", ""),
@@ -164,14 +194,78 @@ struct Level: Hashable, Sendable {
               layout: l.0, scramble: .parse(l.1, in: l.0))
     }
 
-    /// Until maelstrom has levels of its own: whirlpool's scrambles under ids of their own, so a whirlpool best or
-    /// start never opens a level here or spends its first try, each on its whirlpool picture's twin.
-    static let maelstrom: [Level] = whirlpool.enumerated().map { i, level in
-        var level = level
-        level.id = Tier.maelstrom.prefix + "\(i + 1)"
-        level.tier = .maelstrom
-        level.picture = level.picture.twin
-        return level
+    /// The swirl: a rod the size of the tank, held from the rim. PROVISIONAL (2026-10-24), for Jack's playtest: quad
+    /// teaches it, then tri, eye, pent and hex, each opening easier than the last one's showpiece. No knob seizes, so
+    /// par is the entry count, the solver's optimum (SolverTests). Picked by scripts/vortex-levels/pick.py.
+    static let vortex: [Level] = ([
+        (.quadSwirl, "0:+3,4:+4", Picture.isobars, "The rim is a rod too.", "Turn the glass's edge. Everything inside it stirs."),
+        (.quadSwirl, "0:+4,4:-7,3:-8", .ephemeris, "Something stirred after the rim.", ""),
+        (.quadSwirl, "4:+4,3:-5,2:-8,0:+2", .cords, "The rim went first.", ""),
+        (.quadSwirl, "3:-2,4:+3,1:-5,0:+6,4:+7", .ephemeris, "Twice round the rim.", ""),
+        (.quadSwirl, "0:-4,4:-7,1:+8,3:+3,4:-4,0:+5", .cords, "Quiet at the edge.", ""),
+        (.quadSwirl, "4:-4,3:+6,4:-7,3:+8,1:+4,2:-8,0:-3,4:-2", .ephemeris, "Taylor turned the outer cylinder too.", ""),
+        (.triSwirl, "1:+4,3:-5,0:-8,1:-4,3:+6", .isobars, "Three rods, and the rim makes four.", ""),
+        (.triSwirl, "2:-4,3:-5,2:-6,0:+8,2:+8,3:-5", .ephemeris, "Every disc reaches the rim.", ""),
+        (.triSwirl, "3:+2,2:+3,1:-6,0:+7,2:-8,3:-6,1:-8,3:-6", .cords, "The rim carries every seam with it.", ""),
+        (.eyeSwirl, "0:-2,4:+4,2:+6,0:-4,4:+7,0:-8,2:-6", .isobars, "Big rods, small rods, one rim.", ""),
+        (.eyeSwirl, "0:-2,4:+4,2:+7,4:+6,0:+7,3:-8,2:-2,4:-3", .ephemeris, "Free vortex, forced vortex.", ""),
+        (.eyeSwirl, "3:-4,4:-4,1:+7,3:-8,2:-3,4:+7,0:+8,3:+4,4:+5,0:+6", .cords, "Read the edge before the middle.", ""),
+        (.eyeSwirl, "4:+4,1:+6,3:-7,4:+8,0:+5,2:-8,3:-2,1:-8,4:-6,1:-8,4:-5,2:+6", .ephemeris, "Small on big, inside the biggest.", ""),
+        (.pentSwirl, "2:-3,5:+4,4:-5,3:-7,5:+4,4:-5,3:+4,4:-6", .isobars, "Five rods and a rim. Still no middle.", ""),
+        (.pentSwirl, "3:+4,2:-7,1:+2,5:-3,4:+5,5:-5,4:+7,5:+8,3:-8,1:-2", .ephemeris, "Angular momentum, handed back.", ""),
+        (.pentSwirl, "4:+2,0:-2,5:-2,4:+3,3:+5,0:-3,5:-6,0:+7,5:-8,4:-2,1:-2,3:+5", .cords, "Under the rim, over the rim.", ""),
+        (.pentSwirl, "2:+3,5:-3,3:-2,0:-2,5:+4,1:-7,0:+3,5:-4,3:+6,2:-7,5:+8,3:-5,2:+7", .ephemeris, "Kelvin would like his circulation back.", ""),
+        (.pentSwirl, "2:+4,5:-6,3:+8,2:-8,0:-4,4:-5,5:+8,4:-4,5:-5,4:+8,2:-4,1:+7,2:-8,5:-4", .cords, "Quiet at the edge, loud in the middle.", ""),
+        (.pentSwirl, "5:-4,3:-3,4:-3,2:+2,1:-2,5:-4,1:+6,2:-7,5:+6,4:+7,1:-2,5:-8,4:+8,2:+3,1:+4,2:+6", .isobars, "Ekman layers, politely ignored.", ""),
+        (.pentSwirl, "4:+2,0:-2,2:+2,4:+4,5:+2,2:-5,0:+2,5:-3,1:-6,5:+7,3:-8,1:-2,5:-8,4:-8,2:+4,1:-6,2:+8,5:+7", .cords, "Rankine vortex, by hand.", ""),
+        (.hexSwirl, "7:+4,1:-7,7:+4,3:+5,5:+2,0:+2,6:+4,4:-2,7:-4,0:-6,3:-8,6:-3", .isobars, "The hub and the rim keep out of each other's way.", ""),
+        (.hexSwirl, "3:-3,2:+6,4:+2,7:-5,1:-8,7:-2,3:-5,1:-4,4:+7,0:+8,6:+7,7:-8,3:-2,1:-3", .ephemeris, "Seven rods and a rim. Same rule.", ""),
+        (.hexSwirl, "1:+4,0:-5,7:-7,5:-8,2:-4,4:+3,3:+3,0:+6,7:-7,5:+8,4:-5,7:-6,3:+8,5:+2,7:+4,6:-5", .isobars, "Bathtub vortex, either hemisphere.", ""),
+        (.hexSwirl, "2:-4,6:+2,7:-6,5:+2,7:+2,2:+5,7:+3,6:-6,3:-3,4:+5,1:+7,3:-8,5:+2,6:-8,2:+8,4:-2,7:-4,2:+6", .cords, "Forced core, free edge.", ""),
+        (.hexSwirl, "1:+4,6:-2,7:-4,3:-7,7:-8,5:+3,6:+5,0:+8,7:-6,5:+3,3:+3,7:-5,5:-8,2:+3,1:+5,2:+8,3:-7,1:+4,2:-8,7:+6", .isobars, "Spin-down takes longer.", ""),
+        (.hexSwirl, "6:-4,3:-4,5:+5,0:+6,7:+7,5:+8,3:-2,6:-4,7:-3,1:-3,7:-6,6:+8,3:+2,7:+7,6:-8,4:+4,2:+3,3:+6,7:-8,0:-8,2:-3,5:-3", .cords, "Stir the stirrer.", ""),
+        (.hexSwirl, "4:+3,1:-2,7:-6,1:-3,7:-2,0:-4,2:+6,1:+4,6:+5,1:+7,0:-8,6:+4,7:-3,0:+6,5:-7,3:+3,7:-8,0:+6,1:+3,7:-4,1:-7,3:-3,7:+8,5:-8", .isobars, "The vortex, unstirred.", ""),
+    ] as [(Layout, String, Picture, String, String)]).enumerated().map { i, l in
+        // Vortex's own family. Isobars open each layout and take the deepest; the ephemeris dims with depth, so it
+        // reads only to 14 stirs.
+        Level(id: Tier.vortex.prefix + "\(i + 1)", tier: .vortex, label: String(format: "%02d", i + 1), title: l.3,
+              note: l.4, picture: l.2, layout: l.0, scramble: .parse(l.1, in: l.0))
+    }
+
+    /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum, and the park rule
+    /// reaches it however its ties go (UnstirTests). Each shows the twin of the picture its row names.
+    static let maelstrom: [Level] = ([
+        (.quad, "3:-4,2:+7,1:-8", [1], 4, .coral, "Something has set.", "One knob has seized. Turn the tank."),
+        (.quad, "0:-3,2:+4,1:+5,2:+8", [2], 5, .neurons, "The tank turns the other way too.", ""),
+        (.quad, "1:+2,2:-5,1:-5,0:-6,1:+8", [1], 6, .coral, "Park the dead knob where the work is done.", ""),
+        (.quad, "3:+2,0:+4,3:-5,0:+6,1:-8", [0,3], 6, .chainmail, "Two knobs, one reason to turn.", ""),
+        (.quad, "1:+3,2:+3,1:-5,2:-7,3:-8,0:+2", [0,1], 8, .coral, "A step back, then half round.", ""),
+        (.quad, "3:-2,0:+2,1:-5,2:+8,0:-2,3:+7,1:+2,0:-8,2:-2,1:-6", [1,2], 14, .glass, "Round in circles, on purpose.", ""),
+        (.pent, "0:+4,2:-2,4:+2,3:+4,2:-7,3:-8,1:+4,0:-6", [0,4], 11, .chainmail, "Five rods. No half turns.", ""),
+        (.pent, "0:+4,2:-3,3:-3,1:-5,2:-7,3:-8,0:-4,4:+4", [0,4], 10, .neurons, "Look two turns ahead.", ""),
+        (.pent, "4:-2,0:-2,1:-4,0:-3,4:+4,2:+2,3:-6,2:+7,1:+8,3:-2", [0,1], 12, .marbling, "Couette flow, interrupted.", ""),
+        (.pent, "0:-4,4:-7,0:+8,4:-4,3:+7,2:+8,1:+7,0:-8,4:+3", [3,4], 12, .glass, "The near turn is a trap.", ""),
+        (.pent, "2:-2,3:+5,2:-7,1:+8,0:-2,4:+5,3:-6,4:-7,0:+8,1:+3,0:+6,4:-8,1:+3,2:+4", [3,4], 17, .chainmail, "Turn, turn, unstir.", ""),
+        (.pent, "4:+2,3:+5,4:+8,0:+7,1:-8,2:+5,3:-6,2:+7,1:+8,0:-4,2:-4,1:-6,2:+8,1:-6", [2,3], 17, .glass, "Never park on wet paint.", ""),
+        (.pent, "3:+2,4:+3,2:-2,3:+5,2:+6,1:-2,0:+4,4:+7,2:-2,1:+5,0:+8,1:-3,2:+5,4:-4,0:-4,4:+7,1:-7,0:-8,4:-3,2:-4", [3,4], 24, .marbling, "Forward, back, forward, round.", ""),
+        (.pent, "4:-3,0:-5,4:-2,3:+3,2:+6,1:-8,0:-5,1:-6,4:-3,2:-7,0:+6,3:+8,1:-8,0:-7,4:-3,0:+4,4:-3,3:+2", [0,1], 22, .glass, "Two seized, five rods, no hurry.", ""),
+        (.hex, "2:-2,3:+3,4:+5,1:+3,6:+2,3:-8,1:+2,5:-2,0:-7", [4,5], 11, .chainmail, "The hub holds still. The rest go round.", ""),
+        (.hex, "1:-4,0:-6,4:+8,3:+4,2:+7,4:+2,1:-8,3:-3,2:-6,6:+3,0:-4", [1,6], 13, .neurons, "Seven rods, two sulking.", ""),
+        (.hex, "1:-4,6:-6,5:-7,4:+8,3:+5,2:+8,0:+8,6:+6,5:-8,3:-2", [4,5], 13, .marbling, "Lend it a step first.", ""),
+        (.hex, "5:+4,0:-2,1:+4,2:+7,0:+8,6:+8,5:+4,3:-4,0:-7,1:-3,0:-6,5:+7", [5,6], 15, .neurons, "Two stops past the obvious one.", ""),
+        (.hex, "4:-3,3:+5,2:-5,1:+6,3:+4,5:-3,0:+8,6:+4,4:-4,0:-6,3:+4,2:+7,0:-8,5:+6,6:+7", [1,2], 18, .chainmail, "Spin-up takes a while.", ""),
+        (.hex, "3:+3,2:+5,1:+2,2:+2,0:+4,6:-5,0:+6,2:+7,0:+8,6:-5,4:+2,0:-8,2:+3,6:+4,0:-7,6:-8,4:-2,0:-5", [1,6], 21, .glass, "Commit to the turn.", ""),
+        (.hex, "2:-2,3:+4,0:-7,4:-8,1:+3,0:-3,2:-5,1:+7,5:+3,0:-8,3:-6,0:-7,1:-8,5:-2,0:-6,5:+7,4:-8,3:+8", [2,3], 22, .marbling, "The second turn is the one that counts.", ""),
+        (.hex, "3:-2,0:+3,1:+6,2:+7,0:-8,1:+5,6:-7,0:-8,2:+7,0:-8,6:+5,4:-4,0:-8,2:+4,6:+3,0:+5,6:+6,2:+3,3:-5", [1,6], 22, .chainmail, "Back and forth, and back again.", ""),
+        (.hex, "3:-3,4:-3,0:+6,2:+7,3:-8,2:+8,1:+6,0:-7,1:+8,0:-7,3:-8,0:-8,4:+8,0:+4,5:-5,0:+6,2:-7,3:+8,2:+4,1:+6,6:+8,1:+5", [5,6], 25, .glass, "Rigid-body rotation, mostly.", ""),
+        (.hex, "5:+3,6:+5,5:-8,3:-3,4:+8,0:-7,3:-8,0:-8,6:-8,0:+6,4:+7,0:-8,6:+8,0:-8,1:+4,0:+5,2:+8,5:-3,0:+5,3:+6,2:-7,5:+3,3:+8", [1,2], 26, .marbling, "Taylor-Couette, by hand.", ""),
+        (.hex, "6:-4,0:-5,6:-4,5:+7,4:-8,0:-4,6:+4,0:+6,1:-7,0:-3,5:+6,0:-8,4:+8,3:-5,5:-3,2:+8,1:-6,2:+7,0:-8,5:+2,0:-4,1:-7,6:-8", [4,5], 26, .chainmail, "No second chances.", ""),
+        (.hex, "2:+2,3:-4,4:-5,0:-6,2:+8,4:-3,0:+5,1:-6,3:-4,0:-2,3:-5,4:-7,0:-8,2:-6,0:-8,5:-5,0:+6,2:+8,3:-3,0:-4,6:+5,0:+6,3:-8,1:-2", [5,6], 27, .glass, "The long way is the short way.", ""),
+        (.hex, "1:+4,6:-3,1:+4,2:+4,0:+7,3:+8,1:+4,0:-6,1:-7,6:+8,0:-4,2:-7,3:+8,0:-5,4:+6,5:-8,6:-3,0:-5,5:-7,6:-3,0:-5,2:-7,0:+8,6:+3,0:+4,6:+6", [2,3], 29, .marbling, "The maelstrom, unstirred.", ""),
+    ] as [(Layout, String, Set<Int>, Int, Picture, String, String)]).enumerated().map { i, l in
+        Level(id: Tier.maelstrom.prefix + "\(i + 1)", tier: .maelstrom, label: String(format: "%02d", i + 1),
+              title: l.5, note: l.6, picture: l.4.twin, layout: l.0, scramble: .parse(l.1, in: l.0), seized: l.2,
+              motion: .tank, fixedPar: l.3)
     }
 
     /// Everyone gets the same tank that day: seeded from yyyymmdd.
@@ -185,12 +279,20 @@ struct Level: Hashable, Sendable {
                      layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng))
     }
 
+    /// Tank n of a run: 5 + 5n/4 stirs, n/2 of them hidden under louder ones (more where no rod can go louder), up to half
+    /// the stirs: asked to hide many more, the generator makes nearly every stir 60°. No par: the run goes on until the
+    /// brim spills.
     static func endless(_ run: Run) -> Level {
-        // Wrapping, to match the prototype's 64-bit arithmetic.
+        var level = Level(id: "endless", label: "\u{221E}", title: "Endless", layout: generated[run.tank % 4], scramble: [],
+                          run: run)
+        // No deeper than keeps the tank four taps as dealt, or than leaves room under the stack's limit for every push
+        // the brim takes before it spills: the stack holds at most the scramble plus the brim's notches, and the push
+        // that spills must never be refused.
+        let depth = min(5 + 5 * run.tank / 4, Tank.fourTaps - level.picture.fillEntries, Tank.maxStack - Run.room)
+        // Wrapping, as a random seed overflows.
         var rng = SplitMix64(state: run.seed &* 1000 &+ UInt64(run.tank))
-        let layout = generated[run.tank % 4]
-        return Level(id: "endless", label: "\u{221E}", title: "Endless", layout: layout,
-                     scramble: layout.scramble(depth: min(4 + run.tank, 24), inversions: run.tank / 3, rng: &rng), run: run)
+        level.scramble = level.layout.scramble(depth: depth, inversions: min(run.tank / 2, depth / 2), rng: &rng)
+        return level
     }
 
     static let sandbox = Level(id: "sandbox", label: "box", title: "Sandbox", layout: .tri, scramble: [])
@@ -202,7 +304,8 @@ struct Level: Hashable, Sendable {
 
 extension Layout {
     /// Push-only scramble of `depth` entries, `inversions` of them no louder than an undo-able twist they cover.
-    /// Ported draw for draw from the prototype, so the dailies match it.
+    /// Ported draw for draw from the prototype, so the dailies match it. Every past daily is this function's output, so
+    /// it never changes: endless changes only what it asks for, and a new generator goes beside this one.
     func scramble(depth: Int, inversions: Int, rng: inout SplitMix64) -> [Twist] {
         var stack: [Twist] = [], inv = inversions
         for i in 0..<depth {
@@ -259,8 +362,9 @@ struct SplitMix64: RandomNumberGenerator {
     mutating func below(_ n: Int) -> Int { Int(next() % UInt64(n)) }
 }
 
+/// Saves from before hints went also hold a `hints` count, which decoding ignores, so those bests still load and count.
 struct Best: Codable {
-    var over: Int, hints: Int, seconds: Int
+    var over: Int, seconds: Int
     /// Stored, because only a first try can be clean and a later one can match its numbers. Optional so saves from the
     /// test builds that predate it still decode and keep the next level open; v1 saves never decode, as they lack `over`.
     var clean: Bool?
@@ -274,22 +378,135 @@ struct Best: Codable {
         if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.register(defaults: ["best.\(id)": data]) }
     }
 
-    /// Keeps the better of this and the stored result: clean, then fewer over par, then fewer hints, then faster.
+    /// Keeps the better of this and the stored result: clean, then fewer over par, then faster.
     func save(_ id: String) {
-        func rank(_ b: Best) -> (Int, Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.hints, b.seconds) }
+        func rank(_ b: Best) -> (Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.seconds) }
         if let old = Best.load(id), rank(old) <= rank(self) { return }
         UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)")
     }
 
-    /// Set when a rod is first touched or a hint shown: probing counts as trying, only studying the still is free.
+    /// Set when a rod is first touched: probing counts as trying, only studying the still is free.
     static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
     static func start(_ id: String) { if !started(id) { UserDefaults.standard.set(true, forKey: "started.\(id)") } }
 
-    /// Banked undos, shared by every level and mode: 10 to start, and nothing refills them yet. Stored as the number
-    /// spent, so a fresh install reads 10.
+    /// Banked undos, shared by every level and mode: 10 to start, and `refill` adds 2 a day played, up to 10. Stored as
+    /// the number spent, so a fresh install reads 10.
     static var undos: Int {
         get { 10 - UserDefaults.standard.integer(forKey: "undos.spent") }
         set { UserDefaults.standard.set(10 - newValue, forKey: "undos.spent") }
+    }
+
+    /// The day of the bank's last refill, as `day` writes it; nil until a level that counts has opened.
+    static var refilled: String? {
+        get { UserDefaults.standard.string(forKey: "undos.day") }
+        set { UserDefaults.standard.set(newValue, forKey: "undos.day") }
+    }
+
+    /// A calendar day in `zone` as yyyy-MM-dd, so days compare as strings. Gregorian whatever the phone's calendar, so a
+    /// change of that setting can't put today before a stored day.
+    static func day(_ date: Date = .now, in zone: TimeZone = .current) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let d = calendar.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", d.year!, d.month!, d.day!)
+    }
+
+    /// The last instant the refill vouched for, with the uptime and boot session read then: a wall time it believed,
+    /// or its reckoning plus the most drift could explain.
+    struct Anchor: Codable, Equatable {
+        var wall: Date
+        var uptime: TimeInterval
+        var boot: String?
+    }
+
+    /// `trustedNow`'s anchor; nil until a level that counts has opened.
+    static var anchor: Anchor? {
+        get {
+            UserDefaults.standard.data(forKey: "undos.anchor").flatMap { try? JSONDecoder().decode(Anchor.self, from: $0) }
+        }
+        set { UserDefaults.standard.set(newValue.flatMap { try? JSONEncoder().encode($0) }, forKey: "undos.anchor") }
+    }
+
+    /// Seconds since boot, asleep or not. CLOCK_MONOTONIC_RAW is mach_continuous_time, which setting the date or time
+    /// never moves; CLOCK_MONOTONIC is the wall clock less kern.boottime, and CLOCK_UPTIME_RAW stops during sleep.
+    static func uptime() -> TimeInterval { Double(clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)) / 1e9 }
+
+    /// This boot's id, or nil where the sandbox refuses it: an app in macOS's App Sandbox reads it, but container.sb
+    /// leaves it off its sysctl allow list, and iOS's profile is unpublished. kern.boottime would be readable, but
+    /// setting the clock moves it by the same step.
+    static let bootSession: String? = {
+        var size = 0
+        guard sysctlbyname("kern.bootsessionuuid", nil, &size, nil, 0) == 0, size > 1 else { return nil }
+        var bytes = [UInt8](repeating: 0, count: size)
+        guard sysctlbyname("kern.bootsessionuuid", &bytes, &size, nil, 0) == 0 else { return nil }
+        let id = String(decoding: bytes.prefix { $0 != 0 }, as: UTF8.self)
+        return id.isEmpty ? nil : id
+    }()
+
+    /// kern.monotonicclock in seconds, or nil where it can't be read. XNU's clock.c says nothing can set it, and on a
+    /// Mac it runs on across restarts; whether an iOS app can read it, and whether setting the date moves it there, is
+    /// unchecked, so the launch logs it.
+    static func monotonicClock() -> TimeInterval? {
+        var latched: (usecs: UInt64, machTime: UInt64) = (0, 0)
+        var size = MemoryLayout.size(ofValue: latched)
+        guard sysctlbyname("kern.monotonicclock_usecs", &latched, &size, nil, 0) == 0 else { return nil }
+        return Double(latched.usecs) / 1e6
+    }
+
+    /// How far the wall clock may run ahead of the anchor's reckoning before it counts as set ahead: the uptime clock
+    /// drifts from true time by parts per million, and the wall clock takes small corrections.
+    static let slack: TimeInterval = 5 * 60
+
+    /// How far past the anchor's reckoning the anchor may move, per second of uptime since, on top of a second for a
+    /// leap second or a small correction: a generous bound on the uptime clock's drift, and small enough that stepping
+    /// the clock ahead at each opening gains next to nothing.
+    static let drift = 1e-4
+
+    /// The instant the refill's day comes from, given the wall clock, `uptime()` and `bootSession` read now; `ahead` is
+    /// how far the wall clock ran past it, where it gave way. Within one boot, the anchor's wall time plus the uptime
+    /// since is a clock the player can't set: a wall clock more than `slack` ahead of it gives way to it, and the
+    /// anchor stays put. Otherwise the wall clock is believed, and the anchor moves to it, but never further past the
+    /// reckoning than a second plus `drift`: so a clock crept ahead a few minutes at a time gains about a second an
+    /// opening past `slack`, and an honest correction ahead is taken in slowly. A new boot has nothing to check
+    /// against, so the wall clock is believed, and anchors afresh unless it reads more than `slack` before the anchor's
+    /// wall time, as a clock reset at boot would: then the anchor stays, so setting the clock right later in that boot
+    /// still reads as a new boot. With the session unread, the uptime going back shows a new boot, and a jump of at
+    /// least the anchor's uptime might be one, as a restart since the anchor would explain it, so it is believed too.
+    static func trustedNow(wall: Date, uptime: TimeInterval, boot: String?, anchor: inout Anchor?)
+        -> (now: Date, ahead: TimeInterval?) {
+        let here = Anchor(wall: wall, uptime: uptime, boot: boot)
+        guard let a = anchor else { anchor = here; return (wall, nil) }
+        let known = boot != nil && a.boot != nil
+        let since = uptime - a.uptime
+        let reckoned = a.wall.addingTimeInterval(since)
+        let ahead = wall.timeIntervalSince(reckoned)
+        let rebooted = since < 0 || (known ? boot != a.boot : ahead >= a.uptime)
+        if rebooted {
+            if wall.timeIntervalSince(a.wall) >= -slack { anchor = here }
+            return (wall, nil)
+        }
+        if ahead > slack { return (reckoned, ahead) }
+        if ahead >= -slack {
+            anchor = Anchor(wall: min(wall, reckoned.addingTimeInterval(1 + drift * since)), uptime: uptime, boot: boot)
+        }
+        return (wall, nil)
+    }
+
+    /// The undo bank's refill, as a level that counts (any but the sandbox) opens on the local calendar day `today`:
+    /// the first such opening on a day later than `last`, the day of the last refill, adds 2 to `bank`, up to 10, and
+    /// makes today `last`, even when a full bank takes nothing. So each day played refills once, and a long absence
+    /// refills once. With no `last`, as on a fresh install, whose bank starts full, today becomes `last` and nothing is
+    /// added. Moving the clock back never refills. `today` comes from `trustedNow`, so within a boot a clock set ahead
+    /// refills nothing until real time reaches the next day, give or take `slack`; after a restart the clock set ahead
+    /// refills once, and set back again, nothing refills until real time passes the day it reached. Returns what was
+    /// added, or nil when none was due.
+    static func refill(_ bank: inout Int, last: inout String?, today: String) -> Int? {
+        guard let from = last else { last = today; return nil }
+        guard today > from else { return nil }
+        let added = max(min(bank + 2, 10) - bank, 0)
+        bank += added
+        last = today
+        return added
     }
 
     /// The developer unlock, set by a launch with UNSTIR_UNLOCK=1 and cleared by one with UNSTIR_UNLOCK=0: every tier
@@ -303,6 +520,12 @@ struct Best: Codable {
     static var tankTurned: Bool {
         get { UserDefaults.standard.bool(forKey: "tank.turned") }
         set { UserDefaults.standard.set(newValue, forKey: "tank.turned") }
+    }
+
+    /// Set once a stir of the swirl commits, on any level: the rim then stops showing how.
+    static var swirled: Bool {
+        get { UserDefaults.standard.bool(forKey: "swirled") }
+        set { UserDefaults.standard.set(newValue, forKey: "swirled") }
     }
 
     /// Endless: most tanks cleared in one run.

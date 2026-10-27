@@ -6,11 +6,12 @@ using namespace metal;
 
 // twists: n entries of (rod centre x, y, disc radius, angle) in tank-normalized units, bottom of the stack first.
 // Tank.profile / Tank.twist in Twist.swift are the Swift copy the tests check; the tests do not reach this shader.
+// plateau is a knob's, swirlPlateau a disc's of radius 1 or more (the swirl's, or the breath's through it).
 // turn: the glass's clockwise turn about the centre. The stack names the glass's own rods, so the point turns back
 // first. Swift has no copy of the turn: the seized-* harness shots pin its sign.
 [[ stitchable ]] half4 unstir(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
                               device const float *twists, int count, float n, float fourTaps, float plateau,
-                              float scale, float haze, float3 wave, float turn) {
+                              float swirlPlateau, float scale, float haze, float3 wave, float turn) {
     // Four taps a quarter device pixel off centre, each through the whole inverse chain: the stretching is in the
     // map, so a filament thinner than a pixel keeps its light as coverage. Past fourTaps entries only the diagonal pair
     // runs: on an iPhone 13 Pro Max, hex's hub and a neighbour alternating hold 120 Hz at 31 entries with four taps, not 32.
@@ -26,7 +27,9 @@ using namespace metal;
             float s = length(d) / twists[4 * i + 2];
             // Outside the rod's disc the map is exactly the identity.
             if (s >= 1.0) continue;
-            float a = -twists[4 * i + 3] * (1.0 - smoothstep(plateau, 1.0, s));
+            // A knob turns its core and lets go towards its edge; the swirl holds the glass's edge and lets go towards its centre.
+            float t = smoothstep(twists[4 * i + 2] >= 1.0 ? swirlPlateau : plateau, 1.0, s);
+            float a = -twists[4 * i + 3] * (twists[4 * i + 2] >= 1.0 ? t : 1.0 - t);
             float cs = cos(a), sn = sin(a);
             q = c + float2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
         }

@@ -1,0 +1,77 @@
+{
+  "identifier": "4F1C2B7A",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "6740000001",
+      "localizations": [
+        {
+          "description": "A story told backwards.",
+          "displayName": "First Stir",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.screendead.Unstir.pack.firststir",
+      "referenceName": "First Stir",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "6740000002",
+      "localizations": [
+        {
+          "description": "Rods that zoom.",
+          "displayName": "Lens",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.screendead.Unstir.pack.lens",
+      "referenceName": "Lens",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "6740000003",
+      "localizations": [
+        {
+          "description": "A clock rod that ticks.",
+          "displayName": "Escapement",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.screendead.Unstir.pack.escapement",
+      "referenceName": "Escapement",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "5.99",
+      "familyShareable": true,
+      "internalID": "6740000004",
+      "localizations": [
+        {
+          "description": "Every pack.",
+          "displayName": "Complete",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.screendead.Unstir.complete",
+      "referenceName": "Complete",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storeKitErrors": [],
+    "_storefront": "USA"
+  },
+  "subscriptionGroups": [],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

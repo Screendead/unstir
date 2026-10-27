@@ -13,14 +13,19 @@ struct Twist: Hashable {
 enum Tank {
     static let step = Double.pi / 6
     static let coreRadius = 0.07
-    /// Inside plateau * radius a disc turns rigidly; all shear lives in the ring out to its edge, so each twist leaves
-    /// one seam and the newest seam is the unbroken one. Every layout keeps its rigid cores clear of each other at 0.6.
+    /// Inside plateau * radius a knob's disc turns rigidly; all shear lives in the ring out to its edge, so each twist
+    /// leaves one seam and the newest seam is the unbroken one. Every layout keeps its rigid cores clear of each other.
     static let plateau = 0.6
+    /// The swirl has no rigid core: its turn fades smoothly from the full angle at the centre to 0 at the glass's edge,
+    /// so it shears through every knob's core rather than carrying them round as a block.
+    static let swirlPlateau = 0.0
     /// Pushes past this are refused: every pixel runs each shader tap through every entry, plus the live twist.
     static let maxStack = 36
+    /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two.
+    static let fourTaps = 30
 
     /// Rotation fraction at s = |p - c| / radius. The Metal shader carries the same function.
-    static func profile(_ s: Double) -> Double {
+    static func profile(_ s: Double, plateau: Double = plateau) -> Double {
         let t = min(max((s - plateau) / (1 - plateau), 0), 1)
         return 1 - t * t * (3 - 2 * t)
     }
@@ -32,7 +37,9 @@ enum Tank {
         let s = simd_length(d) / rod.z
         // Untouched outside the disc, as the shader leaves it: merges rely on rods that miss a point fixing it exactly.
         guard s < 1 else { return p }
-        let a = angle * profile(s)
+        // Only the swirl is the size of the tank (`Layout.table`), so the radius picks its profile; the shader does the same.
+        // The swirl's is turned inside out: the fluid sticks to the rim it turns and lets go towards the centre.
+        let a = angle * (rod.z >= 1 ? 1 - profile(s, plateau: swirlPlateau) : profile(s))
         return c + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a))
     }
 
@@ -58,6 +65,28 @@ enum Tank {
 /// Rod arrangements; `eye` is the mixed-sizes one. Every disc stays inside the tank, so nothing is stirred through the glass.
 enum Layout: String, CaseIterable {
     case tri, quad, eye, pent, hex
+    /// Each layout above with a swirl: one more rod, last, the size of the tank and at its centre. Its disc ends on the
+    /// glass's edge, which stays put, and holds every other rod's; it shears to its centre (`Tank.swirlPlateau`).
+    case triSwirl, quadSwirl, eyeSwirl, pentSwirl, hexSwirl
+
+    /// The layouts without a swirl. The frozen generator never deals a swirl, and the sandbox cycles these.
+    static var allCases: [Layout] { [.tri, .quad, .eye, .pent, .hex] }
+    static let swirls: [Layout] = [.triSwirl, .quadSwirl, .eyeSwirl, .pentSwirl, .hexSwirl]
+
+    /// A swirl layout's rods but its swirl; nil for a layout without one.
+    var base: Layout? {
+        switch self {
+        case .tri, .quad, .eye, .pent, .hex: nil
+        case .triSwirl: .tri
+        case .quadSwirl: .quad
+        case .eyeSwirl: .eye
+        case .pentSwirl: .pent
+        case .hexSwirl: .hex
+        }
+    }
+
+    /// The rod the size of the tank, if the layout has one.
+    var swirl: Int? { base.map { $0.rods.count } }
 
     /// (x, y, disc radius) per rod.
     var rods: [SIMD3<Double>] { Layout.table[self]! }
@@ -69,17 +98,20 @@ enum Layout: String, CaseIterable {
                 return SIMD3(r * cos(a), r * sin(a), radius)
             }
         }
-        return [
+        var table: [Layout: [SIMD3<Double>]] = [
             .tri: ring(3, 0.42, 0.58),
             .quad: ring(4, 0.5, 0.48, from: -45),
             .eye: [SIMD3(-0.4, 0, 0.58), SIMD3(0.4, 0, 0.58), SIMD3(0, -0.56, 0.44), SIMD3(0, 0.56, 0.44)],
             .pent: ring(5, 0.56, 0.44),
             .hex: [SIMD3(0, 0, 0.44)] + ring(6, 0.56, 0.44),
         ]
+        // Radius 1 exactly: the glass's edge is where its profile reaches 0, so the edge never moves against the bezel.
+        for layout in swirls { table[layout] = table[layout.base!]! + [SIMD3(0, 0, 1)] }
+        return table
     }()
 
-    /// Steps in one full turn of the tank. A step is the layout's rotational symmetry (hex's hub held still), so it sets
-    /// every rod's fluid down on a rod of the same size.
+    /// Steps in one full turn of the tank. A step is the layout's rotational symmetry (hex's hub and a swirl held still),
+    /// so it sets every rod's fluid down on a rod of the same size.
     var order: Int {
         switch self {
         case .tri: 3
@@ -87,6 +119,7 @@ enum Layout: String, CaseIterable {
         case .eye: 2
         case .pent: 5
         case .hex: 6
+        case .triSwirl, .quadSwirl, .eyeSwirl, .pentSwirl, .hexSwirl: base!.order
         }
     }
     var tankStep: Double { 2 * .pi / Double(order) }
@@ -99,6 +132,7 @@ enum Layout: String, CaseIterable {
         case .eye: [1, 0, 3, 2]
         case .pent: [4, 0, 1, 2, 3]
         case .hex: [0, 6, 1, 2, 3, 4, 5]
+        case .triSwirl, .quadSwirl, .eyeSwirl, .pentSwirl, .hexSwirl: base!.behind + [swirl!]
         }
     }
 
@@ -121,8 +155,8 @@ enum Layout: String, CaseIterable {
     }
 
     /// Whether the entries above index i commute with a turn of `rod` by `steps`, so the turn can merge into entry i.
-    func commutes(_ stack: [Twist], above i: Int, rod: Int, steps: Int) -> Bool {
-        let above = Array(stack[(i + 1)...])
+    func commutes(_ stack: [some Stacked], above i: Int, rod: Int, steps: Int) -> Bool {
+        let above = stack[(i + 1)...].map(\.twist)
         if above.allSatisfy({ !overlaps($0.rod, rod) }) { return true }
         // Overlapping rods can still commute exactly (a word can hold a whole disc still), and only the maps show it.
         let turn = Twist(rod: rod, steps: steps)
@@ -148,29 +182,63 @@ enum Layout: String, CaseIterable {
 
 enum Commit { case pushed, reduced, cancelled, refused }
 
-extension Array where Element == Twist {
+/// What a stack holds: a twist, and whatever rides along with it. A turn that merges keeps the entry it lands on, which
+/// takes in what rode with the turn through `absorb`.
+protocol Stacked {
+    var twist: Twist { get set }
+    /// `other` has merged into this entry, before a pop at zero hands this one to `popped`.
+    mutating func absorb(_ other: Self)
+}
+
+extension Stacked {
+    mutating func absorb(_ other: Self) {}
+}
+
+extension Twist: Stacked {
+    var twist: Twist {
+        get { self }
+        set { self = newValue }
+    }
+}
+
+extension Array where Element: Stacked {
     /// The rod's newest entry that everything above it commutes with the turn: where the turn merges.
     func landing(rod: Int, steps: Int, in layout: Layout) -> Int? {
-        indices.reversed().first { self[$0].rod == rod && layout.commutes(self, above: $0, rod: rod, steps: steps) }
+        indices.reversed().first { self[$0].twist.rod == rod && layout.commutes(self, above: $0, rod: rod, steps: steps) }
     }
 
-    /// Merges into the landing entry, popping at zero; otherwise pushes.
+    /// Merges into the landing entry, popping at zero; otherwise pushes. `popped` is handed every entry that merges to
+    /// nothing, whether the turn lands on it or an entry the merge lets fall does.
     @discardableResult
-    mutating func commit(rod: Int, steps: Int, in layout: Layout) -> Commit {
-        guard steps != 0 else { return .refused }
-        if let i = landing(rod: rod, steps: steps, in: layout) {
+    mutating func commit(_ entry: Element, in layout: Layout, popped: (Element) -> Void = { _ in }) -> Commit {
+        guard entry.twist.steps != 0 else { return .refused }
+        if let i = landing(rod: entry.twist.rod, steps: entry.twist.steps, in: layout) {
             // A merge under an overlapping rod changes what the entries above it were checked against, so the merged
             // entry and everything above go back on in order and merge wherever they now can.
             var rest = Array(self[i...])
-            rest[0].steps += steps
+            rest[0].twist.steps += entry.twist.steps
+            rest[0].absorb(entry)
             removeSubrange(i...)
-            let merged = rest[0].steps == 0 ? .cancelled : commit(rod: rest[0].rod, steps: rest[0].steps, in: layout)
-            for t in rest.dropFirst() { commit(rod: t.rod, steps: t.steps, in: layout) }
+            let merged: Commit
+            if rest[0].twist.steps == 0 {
+                popped(rest[0])
+                merged = .cancelled
+            } else {
+                merged = commit(rest[0], in: layout, popped: popped)
+            }
+            for t in rest.dropFirst() { commit(t, in: layout, popped: popped) }
             return merged == .cancelled ? .cancelled : .reduced
         }
         guard count < Tank.maxStack else { return .refused }
-        append(Twist(rod: rod, steps: steps))
+        append(entry)
         return .pushed
+    }
+}
+
+extension Array where Element == Twist {
+    @discardableResult
+    mutating func commit(rod: Int, steps: Int, in layout: Layout) -> Commit {
+        commit(Twist(rod: rod, steps: steps), in: layout)
     }
 
     /// "0:+3,1:-6" -> [(0,3),(1,-6)], committed in order so entries that can merge do.
