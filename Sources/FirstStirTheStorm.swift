@@ -111,7 +111,8 @@ enum Storm: Int, CaseIterable, Sendable {
         }
     }
 
-    var horizon: Double { [0, -0.3, -0.3, -0.62, -0.5][rawValue - 16] }
+    /// Where the sea meets the sky; the high street's and the yard's lie behind their buildings, so only sky shows.
+    var horizon: Double { [0, -0.3, -0.3, 0.3, 0.3][rawValue - 16] }
 
     func drawSky(_ ctx: GraphicsContext, r: CGFloat, minutes: Double) {
         let pen = Brush(ctx: ctx, r: r)
@@ -728,6 +729,7 @@ enum HighStreet {
         // The shop on the right with its window, the lamp post in front of it.
         fronts.addPath(pen.rect(0.3, -0.12, 0.56, 0.08))
         fronts.addPath(pen.rect(0.06, -0.08, 0.16, pavement))
+        pen.fill(pen.rect(-1, pavement, 1, 1), .black)
         var street = Path()
         street.addPath(pen.seg(-1, kerb, 1, kerb))
         for x in Swift.stride(from: -1.6, through: 1.6, by: 0.4) { street.addPath(pen.seg(x * 0.5, kerb, x, 1)) }
@@ -840,12 +842,17 @@ enum Washing {
     static func draw(_ pen: Brush, played: Set<Int>) {
         let ink = Storm.ink
         // The roofs over the yard's walls against the sky, and the neighbour's house wall up the right.
-        let roofs = pen.poly([(-1, -0.42), (-0.7, -0.42), (-0.55, -0.56), (-0.4, -0.42), (-0.3, -0.42), (-0.3, -0.36), (0.3, -0.36),
-                              (0.3, -0.5), (1, -0.5), (1, 1), (-1, 1)])
+        // The town's roofs beyond the yard wall, low enough that the line and its washing stand against the sky.
+        let skyline: [(Double, Double)] = [(-0.3, -0.02), (-0.2, -0.1), (-0.1, -0.02), (0.0, -0.02), (0.0, -0.08), (0.12, -0.08),
+                                           (0.12, -0.02), (0.2, -0.12), (0.3, -0.02)]
+        let roofs = pen.poly([(-1, -0.42), (-0.7, -0.42), (-0.55, -0.56), (-0.4, -0.42), (-0.3, -0.42)] + skyline + [(0.3, -0.5), (1, -0.5), (1, 1), (-1, 1)])
         pen.fill(roofs, .black)
         var yard = Path()
-        yard.addPath(pen.poly([(-1, -0.42), (-0.7, -0.42), (-0.55, -0.56), (-0.4, -0.42), (-0.3, -0.42), (-0.3, -0.36), (0.3, -0.36)],
-                              closed: false))
+        yard.addPath(pen.poly([(-1, -0.42), (-0.7, -0.42), (-0.55, -0.56), (-0.4, -0.42), (-0.3, -0.42), (-0.3, ground)], closed: false))
+        yard.addPath(pen.seg(-0.3, 0.3, 0.3, 0.3))
+        yard.addPath(pen.seg(-0.3, 0.33, 0.3, 0.33))
+        yard.addPath(pen.rect(-0.78, -0.32, -0.66, -0.2))
+        pen.lit { $0.stroke($0.poly(skyline, closed: false), ink, 0.5) }
         yard.addPath(pen.poly([(0.3, ground), (0.3, -0.5), (1, -0.5)], closed: false))
         yard.addPath(pen.rect(-0.6, -0.62, -0.56, -0.5))
         yard.addPath(pen.seg(-1, ground, 1, ground))
@@ -880,13 +887,13 @@ enum Washing {
             if played.contains(0) {
                 pen.stroke(pen.seg(-0.12, line, 0.12, line), ink)
                 // Shirts pegged on it, streaming hard downwind.
-                for x in [-0.1, 0.0] {
-                    let shirt = pen.at(x, line, k: 0.1, turn: -1.2).poly([(0, 0), (0.5, 0), (0.55, 0.3), (0.75, 0.35), (0.7, 0.55), (0.5, 0.5),
+                for x in [-0.11, 0.0] {
+                    let shirt = pen.at(x, line, k: 0.11, turn: -1.2).poly([(0, 0), (0.5, 0), (0.55, 0.3), (0.75, 0.35), (0.7, 0.55), (0.5, 0.5),
                                                                             (0.5, 1), (0, 1), (0, 0.5), (-0.2, 0.55), (-0.25, 0.35), (-0.05, 0.3)])
                     pen.fill(shirt, .black)
                     pen.stroke(shirt, ink)
                 }
-                for x in [-0.1, -0.05, 0.0, 0.05] { pen.stroke(pen.seg(x, line - 0.012, x, line + 0.012), Storm.sodium) }
+                for x in [-0.11, -0.055, 0.0, 0.055] { pen.stroke(pen.seg(x, line - 0.012, x, line + 0.012), Storm.sodium) }
             } else {
                 // Snapped: its ends hanging off the posts, and a shirt torn off and flying away over the roofs.
                 pen.stroke(pen.curve(-0.12, line, -0.1, line + 0.03, -0.1, line + 0.05), ink)
