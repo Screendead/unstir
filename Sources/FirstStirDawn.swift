@@ -1058,8 +1058,9 @@ extension Dawn {
             pen.line([(lamp, Self.light, 1), (coil, Self.glow, 0.9)], glows: [(0.02, 0.45), (0.007, 0.9)])
             pen.fill(pen.rect(-0.401, -0.556, -0.384, -0.542), Self.light)
         } else {
-            pen.line([(pen.ellipse(-0.205, -0.47, 0.022, 0.006), Self.glow, 0.9), (pen.ellipse(-0.205, -0.474, 0.014, 0.004), Self.glow, 0.9)],
-                     glows: [(0.02, 0.4), (0.007, 0.9)])
+            // The rope coiled unlit, in ink, so nothing on the boat reads as a light.
+            pen.line([(pen.ellipse(-0.205, -0.47, 0.022, 0.006), ink, 0.7), (pen.ellipse(-0.205, -0.474, 0.014, 0.004), ink, 0.7)],
+                     glows: [(0.02, 0.3), (0.007, 0.8)])
         }
 
         // Vignette 2: the bench.
