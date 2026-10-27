@@ -23,6 +23,7 @@ protocol StoryScene: Sendable {
 
 extension Dawn: StoryScene {}
 extension Rescue: StoryScene {}
+extension Flood: StoryScene {}
 
 extension StoryScene {
     func drawLive(_ ctx: GraphicsContext, r: CGFloat, minutes: Double) {}
@@ -58,6 +59,7 @@ extension Story {
         case .harbour: nil
         case .dawn(let scene): scene
         case .rescue(let scene): scene
+        case .flood(let scene): scene
         }
     }
 }

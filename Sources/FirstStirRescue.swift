@@ -57,10 +57,11 @@ enum Rescue: Int, CaseIterable, Sendable {
 
     // MARK: The time layer
 
-    /// The rain, one field over everything but a roof: in a random order, so the first n are an even thickening.
+    /// The rain, one field over everything but a roof: in a random order, so the first n are an even thickening. The
+    /// Flood carries the same field on, thicker.
     static let drops: [(x: Double, y: Double, l: Double)] = {
         var drops = SplitMix64(state: 61)
-        return (0..<340).map { _ in
+        return (0..<420).map { _ in
             (Double.random(in: -1.1..<1.1, using: &drops), Double.random(in: -1.1..<1.0, using: &drops),
              Double.random(in: 0.035..<0.08, using: &drops))
         }
@@ -75,13 +76,19 @@ enum Rescue: Int, CaseIterable, Sendable {
     /// The rain over the whole picture, played cores and all, at `minutes`: it climbs back up its slant as the night
     /// winds back, so a rewind moves it, and thickens.
     func drawOver(_ ctx: GraphicsContext, r: CGFloat, minutes: Double) {
+        Self.rain(ctx, r: r, minutes: minutes, drops: Self.rain(minutes), through: indoors)
+    }
+
+    /// `shown` of the rain's drops at `minutes`, the last one partly, clipped to `through` where a roof keeps it out. It
+    /// climbs back up its slant from where it stood at 4:45, so it carries on unbroken from one chapter into the next.
+    static func rain(_ ctx: GraphicsContext, r: CGFloat, minutes: Double, drops shown: Double, through roofed: ((Brush) -> Path)?) {
         func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r + x * r, y: r + y * r) }
         let style = StrokeStyle(lineWidth: Self.line * r, lineCap: .round, lineJoin: .round)
         var c = ctx
-        if let roofed = indoors {
+        if let roofed {
             c.clip(to: roofed(Brush(ctx: ctx, r: r)))
         }
-        let climbed = Self.climb * (Self.times[0] - minutes), shown = Self.rain(minutes), whole = Int(shown)
+        let climbed = Self.climb * (Self.times[0] - minutes), whole = min(Int(shown), Self.drops.count - 1)
         func wrap(_ v: Double) -> Double { (v + 1.1).truncatingRemainder(dividingBy: 2.2) + (v + 1.1 < 0 ? 2.2 : 0) - 1.1 }
         var steady = Path(), last = Path()
         for (i, d) in Self.drops.prefix(whole + 1).enumerated() {
@@ -129,7 +136,7 @@ enum Rescue: Int, CaseIterable, Sendable {
         if self == .stair {
             Stair.sky(pen, minutes: minutes)
         } else {
-            Self.outside(pen, minutes: minutes, horizon: horizon)
+            Self.outside(pen, horizon: horizon, sky: Self.skyStops(minutes), sea: Self.seaTones(minutes), swell: Self.ink)
         }
     }
 
@@ -147,12 +154,12 @@ enum Rescue: Int, CaseIterable, Sendable {
     var horizon: Double { [-0.66, -0.3, -0.62, 0, -0.70][rawValue - 6] }
 
     /// The sky over the sea, the night's swell under it, darkening towards the viewer.
-    static func outside(_ pen: Brush, minutes: Double, horizon: Double) {
+    static func outside(_ pen: Brush, horizon: Double, sky: [Gradient.Stop], sea: [Tone], swell ink: Color) {
         pen.fill(pen.rect(-1, -1, 1, 1), .black)
-        pen.fill(pen.rect(-1, -1, 1, horizon), .linearGradient(Gradient(stops: skyStops(minutes)),
+        pen.fill(pen.rect(-1, -1, 1, horizon), .linearGradient(Gradient(stops: sky),
                                                                          startPoint: pen.point(0, -1), endPoint: pen.point(0, horizon)))
         pen.fill(pen.rect(-1, horizon, 1, 1), .linearGradient(
-            Gradient(colors: seaTones(minutes).map(\.color)), startPoint: pen.point(0, horizon), endPoint: pen.point(0, 1)))
+            Gradient(colors: sea.map(\.color)), startPoint: pen.point(0, horizon), endPoint: pen.point(0, 1)))
         var swell = Path()
         var rng = SplitMix64(state: 43)
         for k in 1...10 {
@@ -175,7 +182,7 @@ enum Rescue: Int, CaseIterable, Sendable {
     }
 
     /// Low cloud, flat-bellied and heaped on top, so a core of sky knows which way is up.
-    static func clouds(_ pen: Brush, _ banks: [(x0: Double, x1: Double, y: Double, h: Double)]) {
+    static func clouds(_ pen: Brush, _ banks: [(x0: Double, x1: Double, y: Double, h: Double)], colour: Color = cloud) {
         var clouds = Path()
         for (x0, x1, y, h) in banks {
             clouds.addPath(pen.path { c in
@@ -190,7 +197,7 @@ enum Rescue: Int, CaseIterable, Sendable {
             })
         }
         pen.fill(clouds, .black, 0.5)
-        pen.lit([(0.03, 0.3), (0.008, 0.6)]) { $0.stroke(clouds, cloud, 0.9) }
+        pen.lit([(0.03, 0.3), (0.008, 0.6)]) { $0.stroke(clouds, colour, 0.9) }
     }
 }
 
@@ -376,7 +383,8 @@ enum Cast {
     }
 
     /// A storm lantern on its base at (0, 0), 1 tall.
-    static func lantern(_ pen: Brush, lit: Bool, glows: [(blur: Double, opacity: Double)] = Rescue.tight) {
+    static func lantern(_ pen: Brush, lit: Bool, glows: [(blur: Double, opacity: Double)] = Rescue.tight,
+                        colours: (cage: Color, dark: Color) = (Rescue.torch, Rescue.ink)) {
         var cage = Path()
         cage.addPath(pen.seg(-0.32, 0, 0.32, 0))
         cage.addPath(pen.poly([(-0.26, 0), (-0.22, -0.62), (0.22, -0.62), (0.26, 0)], closed: false))
@@ -384,7 +392,7 @@ enum Cast {
         cage.addPath(pen.curve(-0.2, -0.84, 0, -1.12, 0.2, -0.84))
         pen.lit(glows) { g in
             if lit { g.fill(g.ellipse(0, -0.3, 0.17, 0.21), Rescue.flame) }
-            g.stroke(cage, lit ? Rescue.torch : Rescue.ink)
+            g.stroke(cage, lit ? colours.cage : colours.dark)
         }
     }
 
@@ -423,7 +431,7 @@ enum Cast {
 
     /// A wave breaking towards the right, 1 wide on the water at y = 0: its back, the crest and the lip curling over a
     /// dark hollow, and spray thrown off it.
-    static func breaker(_ pen: Brush, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.35), (0.008, 0.9)]) {
+    static func breaker(_ pen: Brush, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.35), (0.008, 0.9)], colour: Color = Rescue.ink) {
         let face = pen.path { b in
             b.move(to: CGPoint(x: -0.5, y: 0))
             b.addQuadCurve(to: CGPoint(x: 0.12, y: -0.3), control: CGPoint(x: -0.12, y: -0.04))
@@ -437,7 +445,7 @@ enum Cast {
             lines.addPath(pen.seg(x, y, x + 0.07 * cos(a), y + 0.07 * sin(a)))
         }
         pen.fill(face, .black, 0.6)
-        pen.lit(glows) { $0.stroke(lines, Rescue.ink, 0.8) }
+        pen.lit(glows) { $0.stroke(lines, colour, 0.8) }
     }
 }
 
@@ -992,7 +1000,7 @@ enum Stair {
 extension Rescue {
     /// The grandmother's hand-lamp, standing lit on a step at (x, y): a wide base with a finger loop, a tall glass
     /// chimney open at the top, and a pointed flame low in it, so it reads as a lamp and not a numeral.
-    static func handLamp(_ pen: Brush, x: Double, y: Double) {
+    static func handLamp(_ pen: Brush, x: Double, y: Double, glass: Color = torch) {
         var lamp = Path()
         lamp.addPath(pen.poly([(x - 0.026, y), (x - 0.018, y - 0.014), (x + 0.018, y - 0.014), (x + 0.026, y)]))
         lamp.addPath(pen.path { c in
@@ -1007,9 +1015,9 @@ extension Rescue {
             f.addQuadCurve(to: CGPoint(x: x, y: y - 0.02), control: CGPoint(x: x + 0.012, y: y - 0.024))
             f.addQuadCurve(to: CGPoint(x: x, y: y - 0.046), control: CGPoint(x: x - 0.012, y: y - 0.024))
         }
-        pen.glow(x, y - 0.03, 0.05, torch, 0.5)
+        pen.glow(x, y - 0.03, 0.05, glass, 0.5)
         pen.fill(flame, Rescue.flame)
-        pen.lit(tight) { $0.stroke(lamp, torch) }
+        pen.lit(tight) { $0.stroke(lamp, glass) }
     }
 }
 

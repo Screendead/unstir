@@ -3,7 +3,7 @@
 import AppKit
 import SwiftUI
 
-// Usage: lab <scene 1-5> <out.png> [side px] [crop: x y half-width, tank units]
+// Usage: lab <scene 1-15> <out.png> [side px] [crop: x y half-width, tank units]
 // Writes the scene held back at its late time, played at its early time, and where the two scene layers differ over a
 // guide of the layout (white), side by side. The guide: each disc's edge (grey), each core less 0.02 (green), the knob
 // and its margin (red), and the parts of each core another disc reaches (red tint).
@@ -28,8 +28,9 @@ if args.count >= 3, args[1] == "figures" {
     }
     exit(0)
 }
-guard args.count >= 3, let n = Int(args[1]), let scene = Dawn(rawValue: n) else {
-    print("usage: lab <scene 1-5> <out.png> [side px]"); exit(2)
+guard args.count >= 3, let n = Int(args[1]),
+      let scene: any StoryScene = Dawn(rawValue: n) ?? Rescue(rawValue: n) ?? Flood(rawValue: n) else {
+    print("usage: lab <scene 1-15> <out.png> [side px]"); exit(2)
 }
 let side = args.count > 3 ? Int(args[3])! : 600
 let crop = args.count > 6 ? (x: Double(args[4])!, y: Double(args[5])!, w: Double(args[6])!) : nil
@@ -53,10 +54,12 @@ func pixels(_ image: CGImage) -> [UInt8] {
 MainActor.assumeIsolated {
     let held = render({ ctx, r in
         scene.drawSky(ctx, r: r, minutes: scene.late); scene.drawLive(ctx, r: r, minutes: scene.late); scene.draw(ctx, r: r, played: [])
+        scene.drawOver(ctx, r: r, minutes: scene.late)
     }, opaque: true)
     let played = render({ ctx, r in
         scene.drawSky(ctx, r: r, minutes: scene.early); scene.drawLive(ctx, r: r, minutes: scene.early)
         scene.draw(ctx, r: r, played: scene.vignettes)
+        scene.drawOver(ctx, r: r, minutes: scene.early)
     }, opaque: true)
     let a = pixels(render({ ctx, r in scene.draw(ctx, r: r, played: []) }, opaque: false))
     let b = pixels(render({ ctx, r in scene.draw(ctx, r: r, played: scene.vignettes) }, opaque: false))
@@ -101,7 +104,7 @@ MainActor.assumeIsolated {
             ctx.stroke(pen.circle(rod.x, rod.y, core - 0.02), with: .color(.green), lineWidth: 1)
             ctx.fill(pen.circle(rod.x, rod.y, Tank.coreRadius + 0.015), with: .color(.red.opacity(0.6)))
         }
-        for b in scene.bodies { ctx.stroke(pen.circle(b.x, b.y, b.radius), with: .color(.yellow), lineWidth: 1) }
+        for b in (scene as? Dawn)?.bodies ?? [] { ctx.stroke(pen.circle(b.x, b.y, b.radius), with: .color(.yellow), lineWidth: 1) }
         ctx.stroke(pen.circle(0, 0, 1), with: .color(.white.opacity(0.5)), lineWidth: 1)
     }, opaque: true)
     var g = pixels(guide)
