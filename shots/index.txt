@@ -60,7 +60,8 @@ undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refi
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
 tier-up.png  Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing.
-tier-up-locked.png  The same with maelstrom still closed: the button dimmed with a lock, saying par every vortex level opens it.
+tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying par every vortex level opens it; it opens the menu on maelstrom's gate.
+tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over).
 daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels.
 daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap).
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
