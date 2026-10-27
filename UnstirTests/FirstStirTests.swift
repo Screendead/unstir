@@ -88,11 +88,13 @@ final class FirstStirTests: XCTestCase {
     /// Every level of the pack is its story's: plughole rules, every vignette held back by the scramble as it opens, three
     /// to a scene (Jack, F1), the stirs the outline gives, and the night carried on from each scene to the next (F2).
     func testTheTable() throws {
-        XCTAssertEqual(Level.firstStir.map { $0.story }, Dawn.allCases.map { .dawn($0) })
-        XCTAssertEqual(Level.firstStir.map(\.scramble.count), [4, 4, 5, 5, 6])
-        XCTAssertEqual(Level.firstStir.map(\.layout), [.tri, .quad, .tri, .eye, .quad])
+        // Chapter 1 opens the pack; the other chapters' levels follow it.
+        let dawn = Array(Level.firstStir.prefix(Dawn.allCases.count))
+        XCTAssertEqual(dawn.map { $0.story }, Dawn.allCases.map { .dawn($0) })
+        XCTAssertEqual(dawn.map(\.scramble.count), [4, 4, 5, 5, 6])
+        XCTAssertEqual(dawn.map(\.layout), [.tri, .quad, .tri, .eye, .quad])
         var time = 400.0
-        for level in Level.firstStir {
+        for level in dawn {
             let story = try XCTUnwrap(level.story, level.id), scene = try XCTUnwrap(story.scene, level.id)
             XCTAssertEqual(level.pack, .firstStir)
             XCTAssertEqual(level.layout, scene.layout, level.id)
@@ -107,6 +109,13 @@ final class FirstStirTests: XCTestCase {
             time = scene.early
         }
         XCTAssertEqual(time, 285, "chapter 1 ends at 4:45")
+        for level in Level.firstStir {
+            let story = try XCTUnwrap(level.story, level.id)
+            XCTAssertEqual(level.pack, .firstStir)
+            XCTAssertEqual(level.motion, .none, level.id)
+            XCTAssertEqual(level.par, level.scramble.count, level.id)
+            XCTAssertTrue(story.vignettes.isSubset(of: level.layout.rods.indices), level.id)
+        }
     }
 
     /// Each scene's par is the optimum: no detour beats untwisting.
