@@ -1032,14 +1032,18 @@ names and product ids, and Complete's promise to older owners.
     "A after rod 1" asks) and over the quay (pent `4:-3,1:+4,3:+5,0:-2,4:+3,2:-4,1:-5,3:+2,0:+3`); each par the solver's
     optimum, and every change 0.02 inside its core, clear of its knob, and unsmeared over every heal order (tested at
     512 px). 2:30 back to 12:30 am in flood teal, ink 8F9CFF (the outline's), opening on the Rescue's 2:30 sky, sea and
-    rain (tested) and thickening the same rain field from 320 drops to 400 towards the storm; the sky leans to storm
-    indigo. Each scene's floodwater line is fixed outside its cores (the spec lets only sky, rain and lightning move
+    rain (tested) and thickening the same rain field from 320 drops to 400 towards the storm; the sky stays in the
+    flood's palette, taking a little of its ink (chapter 4 turns from it to storm indigo, as this one turns from the
+    Rescue's). The father's rope is drawn only in scene 11's vignettes, out to him and the coil on his shoulder at 2:30
+    as scene 10 leaves him, and absent at 2:05 while he ties it; a wave over the path stands where it would cross
+    between the cores. Each scene's floodwater line is fixed outside its cores (the spec lets only sky, rain and lightning move
     there); the vignettes that lower the water draw their own line inside the core: the lamp's foot, the cottage
     door's step between its porch posts, the kitchen table standing clear with ripples at its legs. The float keeps
     3FE0B0. `scripts/first-stir-lab.sh` now draws chapters 1 to 3. Shots `firststir-11` to `-15`, `-held`, `-played`;
     sheet in the tools folder (`round10/firststir/ch3-sheet.png`).
     **Open for Jack, chapter 3** (Claude's recommendations, not decided):
-    - The water inside a core. Where a vignette lowers the water (scenes 13 and 14), the played core shows a lower
+    - The water inside a core. Where a vignette lowers the water (scenes 12, the street lamp; 13, the door; 14, the
+      table), the played core shows a lower
       line than the scene around it, since the scene's own line may not move. A: as built. B: put each lowering in the
       time layer instead, the water a function of the time like the rain (a spec change: the water would cross discs).
       Recommend A: it keeps the spec's rule that only sky, rain and lightning cross discs, and every other beat already
