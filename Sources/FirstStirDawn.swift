@@ -820,7 +820,7 @@ extension Dawn {
         // A marker post at the pool's far side, upright whatever happens round it.
         let post = pen.rect(0.585, 0.2, 0.605, 0.44)
         pen.fill(post)
-        pen.line([(rocks, ink, 0.85), (weed, Self.float.opacity(0.6), 1), (ripples, Self.sea, 0.9), (post, ink, 1),
+        pen.line([(rocks, ink, 0.85), (weed, ink, 0.5), (ripples, Self.sea, 0.9), (post, ink, 1),
                   (pen.seg(0.575, 0.2, 0.615, 0.2), ink, 1)])
 
         // Vignette 0: the door.
