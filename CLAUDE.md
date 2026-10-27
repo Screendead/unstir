@@ -327,12 +327,33 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the evening's sky fades in by a stage, the bolt goes in the first, the rain climbs back up its slant and thins, and
   the moon, outside every disc, sinks. Only undo or reset winds it forward, and that snaps. The layers bake at the
   screen's scale unless they would pass `Harbour.budget` (64 MB, not yet measured on the phone; about 51 MB at 3x on
-  the largest phone), then lower. Level 1 is the lab's harbour (`lab-firststir`), opening wrecked as dealt, with the
-  caption "Each heal turns the night back." as its note. `testNoVignetteShowsTheNextMove` renders each vignette's two
-  states, checks the difference stays inside its own core (so the cut clips no glow), and over every heal order that
-  `Layout.removable` allows, that no vignette's light reaches the core of a rod removable right after its heal and that
-  the entries left move none of it by half a pixel; the harbour's two known smears (the lantern's shards and the boat's
-  stern, in the cottage's ring) are pinned there until the art pass redraws them (Jack, 2026-10-26, F4).
+  the largest phone), then lower. The harbour (`Story.harbour`, the lab's storm) is the outline's scene 16 and has no level until
+  that chapter is drawn; the tests play it under a test id. `testNoVignetteShowsTheNextMove` renders each vignette's
+  two states, checks the difference stays inside its own core (so the cut clips no glow), and over every heal order
+  that `Layout.removable` allows, that no vignette's light reaches the core of a rod removable right after its heal and
+  that the entries left move none of it by half a pixel; the harbour's two known smears (the lantern's shards and the
+  boat's stern, in the cottage's ring) are pinned there until the art pass redraws them (Jack, 2026-10-26, F4). A scene on the pack's night must also keep
+  every change 0.02 inside its core and clear of the knob (0.085 from the rod's centre), the outline's art spec
+  (`docs/first-stir-outline.md`).
+- **StoryScene.swift** and **FirstStirDawn.swift** hold the scenes on the pack's one night (Jack, F2). A `StoryScene`
+  draws, in tank units, a sky and sea at a time in minutes after midnight (`drawSky`), the scene with some vignettes
+  played (`draw`), and the bodies that move with the time where no disc reaches, their line and glow (`Dawn.bodyGlow`)
+  included (`drawLive`: the sunrise's sun and chimney smoke; `testTheBodiesStayClearOfEveryDisc`), between `late`, as the level opens, and `early`. `Story.scene` names it (`Story.dawn`); `SceneLayer`
+  draws it as `StoryLayer` does, from four baked layers (the sky at `late` and at `early`, cross-faded, and the scene
+  held back and played), the live bodies drawn over the sky. Its cores cut in through masks drawn without antialiasing
+  (`SceneComposite.cores`): an antialiased edge showed a ring however it was composited, though both scenes held the
+  same there (`testTheCutInCoresLeaveNoSeam`). Its time is a function of the stack: `Game.wound` counts
+  the scramble's entries gone (the player's own pushes move no time; a solve has wound them all), and the scene stands
+  that share of the way from `late` to `early`, winding there over `Harbour.rewind`. `Game.caption`, the line under
+  the tank, is that time as a clock on a scene's level ("6:40 am", Jack's F3) and the note elsewhere. `Dawn` is
+  chapter 1, Dawn After: five scenes, 6:40 back to 4:45 am, in dawn pewter, each scene's `early` the next one's `late`
+  (`testTheTable`). `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
+  grandmother, child, neighbour, crew) and `Dog` build silhouettes from posed parts and outline their union.
+  `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a scene on the Mac, held back, played
+  and where they differ over the layout's cores and knobs, and prints each vignette's reach against its core less
+  0.02, its nearest approach to the knob and the other discs it enters: the drawing loop, seconds a render. It counts a
+  pixel changed past 14 in 255 (the Mac's renderer shifts bright glow by up to 12 when the rest of the drawing
+  changes), the test past 8 at 512 px; the test is the judge.
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
   Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there

@@ -6,10 +6,11 @@ import simd
 @testable import Unstir
 
 final class FirstStirTests: XCTestCase {
-    /// First Stir's harbour under an id no level has, so solving it saves no best.
+    /// The lab's harbour in the storm under an id no level has, so solving it saves no best.
     private func harbour(_ scramble: String = "2:+5,1:-4,0:+3", layout: Unstir.Layout = .tri) -> Level {
         var level = Level.firstStir[0]
         level.id = "first-stir-test"
+        level.story = .harbour
         level.layout = layout
         level.scramble = .parse(scramble, in: layout)
         return level
@@ -84,27 +85,88 @@ final class FirstStirTests: XCTestCase {
         XCTAssertEqual(game.played, [0, 1, 2])
     }
 
-    /// Every level of the pack is its story's: plughole rules, every vignette held back by the scramble as it opens.
+    /// Every level of the pack is its story's: plughole rules, every vignette held back by the scramble as it opens, three
+    /// to a scene (Jack, F1), the stirs the outline gives, and the night carried on from each scene to the next (F2).
     func testTheTable() throws {
-        XCTAssertFalse(Level.firstStir.isEmpty)
-        for level in Level.firstStir {
-            let story = try XCTUnwrap(level.story, level.id)
+        // Chapter 1 opens the pack; the other chapters' levels follow it.
+        let dawn = Array(Level.firstStir.prefix(Dawn.allCases.count))
+        XCTAssertEqual(dawn.map { $0.story }, Dawn.allCases.map { .dawn($0) })
+        XCTAssertEqual(dawn.map(\.scramble.count), [4, 4, 5, 5, 6])
+        XCTAssertEqual(dawn.map(\.layout), [.tri, .quad, .tri, .eye, .quad])
+        var time = 400.0
+        for level in dawn {
+            let story = try XCTUnwrap(level.story, level.id), scene = try XCTUnwrap(story.scene, level.id)
             XCTAssertEqual(level.pack, .firstStir)
-            XCTAssertEqual(level.layout, Harbour.layout, level.id)
+            XCTAssertEqual(level.layout, scene.layout, level.id)
             XCTAssertEqual(level.motion, .none, level.id)
             XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty && level.ratchets.isEmpty, level.id)
             XCTAssertEqual(level.par, level.scramble.count, level.id)
-            XCTAssertFalse(level.note.isEmpty, level.id)
+            XCTAssertEqual(story.vignettes.count, 3, level.id)
             XCTAssertTrue(story.vignettes.isSubset(of: level.layout.rods.indices), level.id)
             XCTAssertEqual(story.vignettes, story.vignettes.intersection(level.scramble.map(\.rod)), "\(level.id) opens with one played")
+            XCTAssertEqual(scene.late, time, level.id)
+            XCTAssertLessThan(scene.early, scene.late, level.id)
+            time = scene.early
+        }
+        XCTAssertEqual(time, 285, "chapter 1 ends at 4:45")
+        for level in Level.firstStir {
+            let story = try XCTUnwrap(level.story, level.id)
+            XCTAssertEqual(level.pack, .firstStir)
+            XCTAssertEqual(level.motion, .none, level.id)
+            XCTAssertEqual(level.par, level.scramble.count, level.id)
+            XCTAssertTrue(story.vignettes.isSubset(of: level.layout.rods.indices), level.id)
         }
     }
 
-    /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, past
-    /// the renderer's own noise (up to 6 in 255 where nothing changed).
-    @MainActor private func footprint(_ k: Int, side: Int) throws -> [SIMD2<Double>] {
-        func pixels(_ played: Set<Int>) throws -> [UInt8] {
-            let image = try XCTUnwrap(Harbour.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear)?.cgImage)
+    /// Each scene's par is the optimum: no detour beats untwisting.
+    func testFirstStirParIsTheOptimum() {
+        for level in Level.firstStir {
+            XCTAssertEqual(Solver(level.layout).optimum(level.scramble), level.par, level.id)
+        }
+    }
+
+    /// The caption is the scene's time (Jack, F3), stepping back a share of its window with each of the scramble's entries
+    /// gone: never for a push of the player's own, back again on an undo, at the window's start once solved.
+    @MainActor func testTheCaptionTellsTheTimeGoingBack() {
+        var level = Level.firstStir[0]
+        level.id = "first-stir-test"
+        let game = Game(level: level, bank: (undos: 10, refilled: nil))
+        XCTAssertEqual(game.caption, "6:40 am")
+        game.commit(rod: 0, steps: 2)
+        XCTAssertEqual(game.caption, "6:40 am")
+        game.commit(rod: 0, steps: -2)
+        game.commit(rod: 1, steps: -2)
+        XCTAssertEqual(game.caption, "6:34 am")
+        game.undo()
+        XCTAssertEqual(game.caption, "6:40 am")
+        for (rod, steps) in [(1, -2), (0, -3), (1, 4), (2, -5)] { game.commit(rod: rod, steps: steps) }
+        XCTAssertTrue(game.solved)
+        XCTAssertEqual(game.caption, "6:15 am")
+        XCTAssertEqual(Dawn.clock(12 * 60 + 5), "12:05 pm")
+        XCTAssertEqual(Dawn.clock(5), "12:05 am")
+    }
+
+    /// What moves with the time as a body never lies in a disc, its line and glow included, so no rod ever stirs it.
+    func testTheBodiesStayClearOfEveryDisc() {
+        let margin = Dawn.bodyGlow + Pen.line / 2
+        for scene in Dawn.allCases {
+            for b in scene.bodies {
+                for rod in scene.layout.rods {
+                    XCTAssertGreaterThan(simd_distance(SIMD2(b.x, b.y), SIMD2(rod.x, rod.y)), rod.z + b.radius + margin, "\(scene)")
+                }
+                XCTAssertLessThan(simd_length(SIMD2(b.x, b.y)) + b.radius, 1, "\(scene)")
+            }
+        }
+    }
+
+    /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, by
+    /// more than 8 in 255, past the renderer's own noise (up to 6 where nothing changed).
+    @MainActor private func footprint(_ story: Story, _ k: Int, side: Int) throws -> [SIMD2<Double>] {
+        // Each render in its own pool: without them the test host was killed (signal kill) in a later test of the suite.
+        func pixels(_ played: Set<Int>) throws -> [UInt8] { try autoreleasepool { try render(played) } }
+        func render(_ played: Set<Int>) throws -> [UInt8] {
+            let image = try XCTUnwrap((story.scene.map { $0.render(played: played, side: CGFloat(side), scale: 1, colorMode: .nonLinear) }
+                                       ?? Harbour.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear))?.cgImage)
             var bytes = [UInt8](repeating: 0, count: 4 * side * side)
             let ctx = try XCTUnwrap(CGContext(data: &bytes, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 4 * side,
                                               space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
@@ -125,21 +187,27 @@ final class FirstStirTests: XCTestCase {
     /// so light never shows the next move; and the entries left move none of it by half a pixel, so it never plays
     /// smeared (the lab's rule: a vignette plays only once every disc over it is still).
     @MainActor func testNoVignetteShowsTheNextMove() throws {
-        let side = 256, pixel = 2.0 / Double(side)
+        let side = 512, pixel = 2.0 / Double(side)
         // Jack's call: the harbour as the lab drew it plays the lantern's falling shards (5 px at most on the largest
-        // phone) and the boat's stern in the cottage's shear ring, still stirred.
-        let known: Set<String> = ["first-stir-1: vignette 0 plays smeared by rod 2", "first-stir-1: vignette 1 plays smeared by rod 2"]
+        // phone) and the boat's stern in the cottage's shear ring, still stirred. Its scene 16 is to be redrawn (F4).
+        let known: Set<String> = ["first-stir-test: vignette 0 plays smeared by rod 2", "first-stir-test: vignette 1 plays smeared by rod 2"]
         var faults: Set<String> = []
-        for level in Level.firstStir {
+        for level in Level.firstStir + [harbour()] {
             let story = try XCTUnwrap(level.story)
             let layout = level.layout, rods = layout.rods
             func centre(_ rod: Int) -> SIMD2<Double> { SIMD2(rods[rod].x, rods[rod].y) }
             var marks: [Int: [SIMD2<Double>]] = [:]
             for k in story.vignettes {
-                let m = try footprint(k, side: side)
+                let m = try footprint(story, k, side: side)
                 XCTAssertFalse(m.isEmpty, "\(level.id): vignette \(k) changes nothing")
                 let core = Tank.plateau * rods[k].z
                 XCTAssertTrue(m.allSatisfy { simd_distance($0, centre(k)) <= core + pixel }, "\(level.id): vignette \(k) leaves its core")
+                if story.scene != nil {
+                    // The art spec: 0.02 inside the core's edge, so no glow clips there, and clear of the knob.
+                    let far = m.map { simd_distance($0, centre(k)) }.max()!, near = m.map { simd_distance($0, centre(k)) }.min()!
+                    XCTAssertLessThanOrEqual(far, core - 0.02 + pixel, "\(level.id): vignette \(k) comes within 0.02 of its core's edge")
+                    XCTAssertGreaterThanOrEqual(near, Tank.coreRadius + 0.015 - pixel, "\(level.id): vignette \(k) reaches its knob")
+                }
                 marks[k] = m
             }
             var seen: Set<[Twist]> = []
@@ -173,6 +241,39 @@ final class FirstStirTests: XCTestCase {
         XCTAssertEqual(faults, known)
     }
 
+    /// With every vignette played, the composite is the played scene over the sky: where the held-back and played scenes
+    /// agree, no core's edge shows where it is cut in.
+    @MainActor func testTheCutInCoresLeaveNoSeam() throws {
+        let side = 384
+        for scene in Dawn.allCases {
+            func layer(sky minutes: Double? = nil, played: Set<Int> = []) throws -> UIImage {
+                try XCTUnwrap(scene.render(sky: minutes, played: played, side: CGFloat(side), scale: 1))
+            }
+            let late = try layer(sky: scene.late), early = try layer(sky: scene.early)
+            let held = try layer(), played = try layer(played: scene.vignettes)
+            func pixels(_ layers: SceneLayers, _ shown: [Int: Double]) throws -> [UInt8] {
+                try autoreleasepool {
+                    let r = ImageRenderer(content: SceneComposite(scene: scene, layers: layers, sky: 0.5, minutes: scene.late, side: CGFloat(side),
+                                                                  shown: shown).drawingGroup(colorMode: .extendedLinear))
+                    r.scale = 1
+                    let image = try XCTUnwrap(r.cgImage)
+                    var bytes = [UInt8](repeating: 0, count: 4 * side * side)
+                    let ctx = try XCTUnwrap(CGContext(data: &bytes, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 4 * side,
+                                                      space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+                    ctx.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
+                    return bytes
+                }
+            }
+            let cores = SceneComposite.cores(scene, side: CGFloat(side), scale: 1)
+            let cut = try pixels((late, early, held, played, cores), Dictionary(uniqueKeysWithValues: scene.vignettes.map { ($0, 1.0) }))
+            let whole = try pixels((late, early, played, played, cores), [:]), none = try pixels((late, early, held, held, cores), [:])
+            // Only where the two scenes agree: a vignette's faint glow tail can cross its core's edge, and steps there.
+            var worst = 0
+            for i in cut.indices where abs(Int(whole[i]) - Int(none[i])) <= 1 { worst = max(worst, abs(Int(cut[i]) - Int(whole[i]))) }
+            XCTAssertLessThanOrEqual(worst, 1, "\(scene): a core's edge shows")
+        }
+    }
+
     /// The layers bake at the screen's scale on the largest phone, and at a lower one rather than pass the budget.
     func testTheLayersBakeWithinTheBudget() {
         // The Pro Max's tank: (440 points wide) / 1.045.
@@ -182,5 +283,11 @@ final class FirstStirTests: XCTestCase {
         let huge = Harbour.bakeScale(side: 2 * side, scale: 3)
         XCTAssertLessThan(huge, 3)
         XCTAssertLessThanOrEqual(Harbour.layerBytes(side: 2 * side, scale: huge), Harbour.budget)
+        // A scene's four layers, the two skies and the scene held back and played.
+        XCTAssertEqual(SceneLayer.bakeScale(side: side, scale: 3), 3)
+        XCTAssertLessThanOrEqual(SceneLayer.layerBytes(side: side, scale: 3), Harbour.budget)
+        let large = SceneLayer.bakeScale(side: 2 * side, scale: 3)
+        XCTAssertLessThan(large, 3)
+        XCTAssertLessThanOrEqual(SceneLayer.layerBytes(side: 2 * side, scale: large), Harbour.budget)
     }
 }

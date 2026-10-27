@@ -310,24 +310,34 @@ shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl 
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
-# First Stir 01, the harbour: 2:+5,1:-4,0:+3 on tri, a vignette in each rod's core (the lighthouse 0, the boat 1, the
-# cottage 2), the night winding back a stage with each. UNSTIR_BARE draws the picture unstirred, so the art shows as the
-# stack has played it. The last heal solves the tank, so a wave past the rim keeps the card away.
+# First Stir's chapter 1, Dawn After (scenes 1 to 5, 6:40 back to 4:45 am), three vignettes a scene. UNSTIR_BARE draws
+# the picture unstirred, so the art shows as the stack has played it: -held as dealt, at the scene's latest time, and
+# -played with its last heal just made, at its earliest, a wave past the rim keeping the card away (UNSTIR_STACK
+# replaces the scramble, so it gives only the bottom entry, which that heal clears).
+dawn=("Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney."
+      "The gallery: a neighbour measuring the smashed panes with a rule; three gulls on the rail; smoke from three chimneys."
+      "The rock pool: the lighthouse door shut, rope coiled on its hook; the child kneeling at the pool, holding up the float; the dog sitting."
+      "Righting the boat: three townsfolk, the rope slack, one waving; the boat upright on the sand; gulls coming back."
+      "Tea on the quay: the lifeboat moored, crew gone, lamp out; the three on the bench under one blanket, the child asleep; three cups steaming on a crate.")
+undone=("a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke."
+        "the gallery empty, shards on the deck; spray over the bare rail; no smoke, one window lit by a candle."
+        "the door open, the rope trailing over the rocks; the float alone in the pool; the dog sniffing."
+        "the three leaning back, hauling; the boat keel up, dark; the last stars, a gull asleep on the beacon."
+        "a crewman coiling rope, the searchlight on; the child standing on the bench, pointing; a neighbour pouring from a flask.")
+bottom=(2:+5 3:+4 1:+4 0:+3 2:+4)
+for n in 1 2 3 4 5; do
+  last=${bottom[$((n - 1))]}
+  fs="PACK=first-stir LEVEL=$n"
+  shot "firststir-0$n" "First Stir 0$n as dealt: every core turned, the time under the tank." $fs
+  shot "firststir-0$n-held" "First Stir 0$n drawn unstirred, held back. ${dawn[$((n - 1))]}" $fs BARE=1
+  shot "firststir-0$n-played" "First Stir 0$n drawn unstirred, every vignette played: ${undone[$((n - 1))]}" $fs BARE=1 STACK="$last" TURNED="${last%%:*}:$((-${last#*:}))" WAVE=2
+done
+# Sunrise (2:+5,1:-4,0:+3,1:+2) part healed: the first heal plays nothing and steps the clock back; the second plays the
+# lantern.
 fs="PACK=first-stir LEVEL=1"
-shot firststir-01 "First Stir 01 as dealt: the wrecked harbour in the storm, every core turned, the caption under the tank." $fs
-shot firststir-01-bare-0 "First Stir 01 drawn unstirred with every vignette held back: lantern smashed, boat capsized, door flung open, a lantern dropped; the storm at its height." \
-  $fs BARE=1
-shot firststir-01-bare-1 "First Stir 01 drawn unstirred after the lighthouse's heal: the lantern lit, no lightning, rain thinner, the moon lower." \
-  $fs BARE=1 STACK=2:+5,1:-4
-shot firststir-01-bare-2 "First Stir 01 drawn unstirred after the boat's heal: the boat moored upright, a third of the rain left, the sky warming." \
-  $fs BARE=1 STACK=2:+5
-shot firststir-01-bare-3 "First Stir 01 drawn unstirred after the last heal: someone in the lit doorway, no rain, an afterglow, the moon low over the roofs." \
-  $fs BARE=1 STACK="" WAVE=2
-shot firststir-01-healed-1 "First Stir 01 after the first heal (0:-3): the lantern lit in a still core, the other two cores still turned." \
-  $fs TURNED=0:-3
-shot firststir-01-healed-2 "First Stir 01 after the second heal (1:+4): the boat upright, the cottage's core still turned." \
-  $fs STACK=2:+5,1:-4 TURNED=1:+4
-shot firststir-01-solved "First Stir 01 solved (2:-5) on the calm evening, the card held off." $fs STACK=2:+5 TURNED=2:-5 WAVE=2
+shot firststir-01-healed-1 "First Stir 01 after the first heal (1:-2): no vignette, the clock at 6:34 am." $fs TURNED=1:-2
+hold=9 shot firststir-01-healed-2 "First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am." \
+  $fs MOVES=1:-2,0:-3
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in, one stir left. Prices are the StoreKit configuration's, as a US storefront shows them.
 shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
