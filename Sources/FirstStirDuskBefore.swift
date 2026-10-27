@@ -5,7 +5,7 @@ import SwiftUI
 /// First Stir's chapter 5, Dusk Before: scenes 21 to 25 of the outline, from 9:30 back to 7:40 pm, in dusk rose ending in
 /// kitchen gold. The grandmother lights the lamp, then walks back along the breakwater before she has; the father doubles
 /// the boat's lines; the float is given; and the last tank is the kitchen at golden dusk, where the swirl in the child's
-/// cup is the night's first stir. Still air: no rain, and the one cloud bank on the horizon is gone by 9:00. The sky
+/// cup is the night's first stir. Still air: no rain, and the one cloud bank on the horizon has sunk by 9:00. The sky
 /// climbs back from night to sunset, and the sun is up again in the last scene's window.
 ///
 /// Drawn as the Rescue is, through `Brush` and `Cast`: single-weight line on black, baked held back and played, every
@@ -82,7 +82,22 @@ enum Dusk: Int, CaseIterable, Sendable, StoryScene {
         default:
             Self.sea(pen, box: (-1, -1, 1, 1), horizon: horizon, west: west, minutes: minutes)
         }
-        if self == .lamp { Lamp.bank(pen, minutes: minutes) }
+    }
+
+    func drawLive(_ ctx: GraphicsContext, r: CGFloat, minutes: Double) {
+        if self == .lamp { Lamp.bank(Brush(ctx: ctx, r: r), minutes: minutes) }
+    }
+
+    /// The bodies `drawLive` draws, as points along their outlines where they stand highest, for the test that keeps them
+    /// clear of every disc: the bank only sinks from there.
+    var bodies: [(x: Double, y: Double, radius: Double)] {
+        guard self == .lamp else { return [] }
+        return Lamp.bumps.flatMap { q in
+            (0...16).map { k -> (x: Double, y: Double, radius: Double) in
+                let t = Double(k) / 16, u = 1 - t, h = Dusk.lamp.horizon
+                return (u * u * q.x0 + 2 * t * u * (q.x0 + q.x1) / 2 + t * t * q.x1, h - 4 * t * u * q.peak, 0)
+            }
+        }
     }
 
     func draw(_ ctx: GraphicsContext, r: CGFloat, played: Set<Int>) {
@@ -203,24 +218,25 @@ extension Dusk {
         static let room = (x0: 0.29, y0: -0.6, x1: 0.418, y1: -0.468)
         static let lampAt = (x: 0.385, y: -0.53)
 
-        /// The cloud bank on the horizon, faded out by 9:00: baked into the sky at 9:30 and gone from the 9:00 sky, so the
-        /// cross-fade between them sinks it.
+        /// The cloud bank's humps along the horizon, at the glass's left edge: the only stretch of the quad's horizon that no
+        /// disc reaches (`testTheBodiesStayClearOfEveryDisc`).
+        static let bumps: [(x0: Double, x1: Double, peak: Double)] = [(-0.985, -0.93, 0.03), (-0.93, -0.875, 0.045), (-0.875, -0.83, 0.03)]
+
+        /// The cloud bank low on the sea, sunk out of sight by 9:00: drawn live, as Dawn's sun is, and cut off at the horizon.
         static func bank(_ pen: Brush, minutes: Double) {
-            let o = min(max((minutes - 1260) / 30, 0), 1)
-            guard o > 0 else { return }
-            let h = Dusk.lamp.horizon
+            let up = min(max((minutes - 1260) / 30, 0), 1)
+            guard up > 0 else { return }
+            let h = Dusk.lamp.horizon, sink = (1 - up) * 0.05
             let bank = pen.path { c in
-                c.move(to: CGPoint(x: -1, y: h))
-                var x = -1.0, k = 0
-                while x < 0.99 {
-                    let w = min([0.13, 0.19, 0.1, 0.16][k % 4], 1 - x)
-                    c.addQuadCurve(to: CGPoint(x: x + w, y: h), control: CGPoint(x: x + w / 2, y: h - [0.06, 0.085, 0.05, 0.07][k % 4]))
-                    x += w; k += 1
+                c.move(to: CGPoint(x: bumps[0].x0, y: h + sink))
+                for b in bumps {
+                    c.addQuadCurve(to: CGPoint(x: b.x1, y: h + sink), control: CGPoint(x: (b.x0 + b.x1) / 2, y: h + sink - 2 * b.peak))
                 }
                 c.closeSubpath()
             }
-            pen.fill(bank, .black, 0.55 * o)
-            pen.lit([(0.03, 0.3), (0.008, 0.6)]) { $0.stroke(bank, ink, 0.5 * o) }
+            let sky = pen.clipped(to: pen.rect(-1, -1, 1, h))
+            sky.fill(bank, .black, 0.7)
+            sky.lit([(Dawn.bodyGlow, 0.4), (0.007, 0.8)]) { $0.stroke(bank, ink, 0.6) }
         }
 
         static func draw(_ pen: Brush, played: Set<Int>) {

@@ -189,12 +189,15 @@ final class FirstStirTests: XCTestCase {
     /// What moves with the time as a body never lies in a disc, its line and glow included, so no rod ever stirs it.
     func testTheBodiesStayClearOfEveryDisc() {
         let margin = Dawn.bodyGlow + Pen.line / 2
-        for scene in Dawn.allCases {
-            for b in scene.bodies {
-                for rod in scene.layout.rods {
-                    XCTAssertGreaterThan(simd_distance(SIMD2(b.x, b.y), SIMD2(rod.x, rod.y)), rod.z + b.radius + margin, "\(scene)")
+        let scenes: [(String, Unstir.Layout, [(x: Double, y: Double, radius: Double)])] =
+            Dawn.allCases.map { ("\($0)", $0.layout, $0.bodies) } + Dusk.allCases.map { ("\($0)", $0.layout, $0.bodies) }
+        XCTAssertFalse(Dusk.lamp.bodies.isEmpty)
+        for (scene, layout, bodies) in scenes {
+            for b in bodies {
+                for rod in layout.rods {
+                    XCTAssertGreaterThan(simd_distance(SIMD2(b.x, b.y), SIMD2(rod.x, rod.y)), rod.z + b.radius + margin, scene)
                 }
-                XCTAssertLessThan(simd_length(SIMD2(b.x, b.y)) + b.radius, 1, "\(scene)")
+                XCTAssertLessThan(simd_length(SIMD2(b.x, b.y)) + b.radius, 1, scene)
             }
         }
     }
