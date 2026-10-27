@@ -23,6 +23,7 @@ protocol StoryScene: Sendable {
 
 extension Dawn: StoryScene {}
 extension Rescue: StoryScene {}
+extension Storm: StoryScene {}
 
 extension StoryScene {
     func drawLive(_ ctx: GraphicsContext, r: CGFloat, minutes: Double) {}
@@ -52,12 +53,12 @@ extension StoryScene {
 }
 
 extension Story {
-    /// The scene this story draws on the pack's night, where it has one; the harbour in the storm is the lab's own.
+    /// The scene this story draws on the pack's night.
     var scene: (any StoryScene)? {
         switch self {
-        case .harbour: nil
         case .dawn(let scene): scene
         case .rescue(let scene): scene
+        case .storm(let scene): scene
         }
     }
 }
@@ -77,7 +78,7 @@ extension Game {
 }
 
 /// A scene as the stack has played it: the held-back scene over the sky, each played core cut in from the all-played
-/// scene and cross-faded as it plays (snapping back on an undo, as `StoryLayer` does), the sky and the live bodies wound
+/// scene and cross-faded as it plays (snapping back on an undo, so a turned core never shows the played state), the sky and the live bodies wound
 /// back as the scramble's entries go. Four layers and the cores' masks bake as it appears, within `Harbour.budget`.
 struct SceneLayer: View {
     let scene: any StoryScene

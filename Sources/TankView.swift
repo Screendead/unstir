@@ -1065,8 +1065,6 @@ struct LevelView: View {
                     if let scene = game.level.story?.scene {
                         SceneLayer(scene: scene, played: game.played, wound: game.wound, count: game.level.scramble.count, side: side,
                                    onStrike: { struck = true })
-                    } else if let story = game.level.story {
-                        StoryLayer(story: story, played: game.played, side: side, onStrike: { struck = true })
                     } else {
                         PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                                      clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
