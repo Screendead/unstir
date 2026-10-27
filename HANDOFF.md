@@ -734,6 +734,25 @@ names and product ids, and Complete's promise to older owners.
 5. First Stir's story outline (25 scenes and their vignettes) for Jack's approval, then Claude draws all 25 scenes
    (Jack's call 3, no illustrator) to an art spec: single-weight neon line, the chapter palettes, up readable in every
    lit core, each figure change inside its own rod's core.
+   Written 2026-10-25 on `firststir-outline`: `docs/first-stir-outline.md` holds the story (one night
+   told backwards, dawn to the teacup), the five chapters with their palettes and time windows, 25 scenes of three
+   vignettes each (layout, rods, held back and played, heal order), the art spec, and eight open points with Claude's
+   recommendations (approve the story; three vignettes a scene; the night tiled across the pack; the time alone as the
+   caption; a plain heal steps the time back; the lab's light rule; the lab harbour as scenes 16 and 1; the end film
+   from the baked states). `scripts/first-stir-compositions.py` draws composition plans for scenes 1, 12 and 14. Left:
+   Jack's answers, then the art and scrambles (43).
+   Jack's calls (2026-10-26, round 9), recorded in the outline under each open point (PR #41):
+   - *FS = A:* the story approved as written; the art for all 25 pictures starts next.
+   - *F1 = A:* three changes (vignettes) per picture, 75 in the pack, 150 drawings (point 2).
+   - *F2 = A:* one night across the pack, each picture about half an hour, the sky carrying on from one to the next
+     (point 3).
+   - *F3 = A:* a clock, a time under the tank like "4:10 am" that steps back every time the player undoes a twist
+     (point 4). The outline had the time under the title; Jack's question put it under the tank, so it goes there.
+   - *F4 = A:* each change inside its own core, checked by a test over every picture; level 1's boat stern and lamp
+     shards, which break it, are redrawn in the art pass (point 6).
+   - *F5 = A:* the lab harbour twice, as picture 16 (midnight) and its dawn view as picture 1 (point 7).
+   Still open: point 5 (whether a heal with no vignette also steps the sky and rain back, beyond F3's clock) and point
+   8 (the night forwards film). Left: the art and scrambles (43).
 6. Lens go/no-go: port the lab zoom onto a halftone test picture, film ±1 to ±3 steps on the phone and set the rate
    (1.2, or 1.25 to 1.33 if one step doesn't read); film a zoom seam over and under a twist seam and cold-read which
    is newest; compare shrunk cores against a supersampled reference for glitter, since zoom isn't area-preserving.
@@ -867,6 +886,8 @@ names and product ids, and Complete's promise to older owners.
     after its heal (`Layout.removable`), over every heal order.
 42. First Stir: vignettes baked on demand within a memory budget measured on the phone.
 43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
+   The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), approved by Jack (2026-10-26, round 9);
+   no art or scrambles yet.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
