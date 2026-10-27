@@ -112,6 +112,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
   scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as
   one sheet (needs Pillow).
+- Lens's draft table: `scripts/lens-table.py [docs/lens-design.md] [--pitches 4]` reads the level rows of
+  `docs/lens-design.md` and checks each against the hard lens's rules with no app code (a lens moves only its core, so
+  overlap decides commutation): depth after the parse, dealt lens steps and nets, and how far each twist dealt over a
+  lens drags its rim, in dot pitches. It exits non-zero on a break.
 - First Stir's outline: `docs/first-stir-outline.md` is the pack's story, scene table and art spec, approved by Jack
   (2026-10-26) with his answers marked under its open points. `scripts/first-stir-compositions.py` draws plans of three of its scenes (each rod's disc and core,
   the part of a core another disc reaches, where each vignette sits) to `shots/first-stir-composition-*.png` (needs

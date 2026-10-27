@@ -431,6 +431,10 @@ until the last tank is a child stirring a cup of tea.
 Some rods zoom instead of turning, so you read how big a core has grown against a halftone dot screen that never lies
 about scale.
 
+Superseded in part by Jack's call L1 (round 3: the hard lens, magnify only, x1.3, a rim inside the core) and by the
+drafts in `docs/lens-design.md` (branch `lens-design`), which drop the spiral and pent; the entry below is the
+original pitch.
+
 - **Role.** Built first, because its map already runs in Swift and Metal on the lab branch, so it proves the pack
   pipeline (the `Pack` type, StoreKit, the shelf and card) for the others.
 - **Buyer.** The comic and pop-art reader (halftone, Ben-Day dots, risograph prints), who is also the core Unstir
@@ -761,6 +765,20 @@ names and product ids, and Complete's promise to older owners.
    core) is on `lab-lens`: the order reads partly (a whole rim means the lens is newest), and the magnified area
    drops to 36% of the disc. Jack's call (2026-10-25, L1): the hard lens, with a phone test next. The reviewers had
    recommended shelving it; trying it is Jack's choice.
+   Phone test planned 2026-10-25 (`docs/lens-design.md` section 3, branch `lens-design`): count, order on tri, quad
+   and pent, the two lab levels, the rim band at +3 and +5, with a go/no-go. Not yet run: it needs Jack and the phone.
+   The rim break is computed weak on quad and pent (1.7 and 1.1 dot pitches for a 1-step twist, against 6.2 on tri),
+   which the test checks.
+   First phone session (2026-10-26, played, not the stills): Jack played hard lens 2 (quad) and found the lens rods
+   too small to make out their rims, so the order was very hard to read. His calls from it, built on `lab-lens`
+   (65c049b): a lens follows the finger up and down instead of turning, up zooming in ("way better"), and x2 a step,
+   good after x1.6. He suggested lenses only on big rods, or bigger steps, as two ways out; which one is open (eye's
+   two big rods as lenses, radius 0.58, are `eyeZoom`, lab entry `lens-hard-3`, where he judged x2). Not yet checked at x2: glitter in the rim band at +2 and +3, and whether the order
+   reads on eye's lenses. The count and order stills were not run. These change the draft's table (tri and quad
+   rows), its x1.3 and its "clockwise in", and the lens-pack PR's port.
+   Jack's call (2026-10-26, round 9, L1 = A): the phone test before any of Lens's art is drawn; the story and levels
+   wait for its result. The session above is its first part. `docs/lens-design.md` now opens with what the session
+   decided and which parts of the draft it supersedes (PR #42); the table itself is not redone.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
    Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
@@ -868,7 +886,12 @@ names and product ids, and Complete's promise to older owners.
     `testVisibleSmudgeIsNotSolved` that every step of every rod moves contrasting pixels.
 31. Lens: iris and nautilus knobs, the drag's count reading zoom steps, and haptic detents.
 32. Lens: 25 panels of art (an original wordless heist in pop-art objects) and the issue pages.
+   Story drafted 2026-10-25 (`docs/lens-design.md` section 1, branch `lens-design`): "The Switch", a reverse heist,
+   each panel's beat and the clue its lens core holds. Waits on Jack (open point 2); no art drawn.
 33. Lens: the level table (25), solver-checked, to Jack before it goes into code.
+   Drafted 2026-10-25 (`docs/lens-design.md` section 2, branch `lens-design`): layouts, lens rods and scrambles as
+   design intent, checked against the hard lens's rules by `scripts/lens-table.py`; no spiral (open point 1), no pent
+   (open point 3). Every par TBD until rod kinds land (27 to 29); par is at most the depth.
 34. Escapement: the ratchet knob kind and its tap, and the tick rule (lands on lift, lifts out on a re-grab of the
     open stir, sealed by the next commit of another knob or a ratchet tap, solves on the spot, the clock stopping once
     E is empty), with a test for each case.
@@ -893,6 +916,8 @@ names and product ids, and Complete's promise to older owners.
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
     the finals in Csound.
 46. Free taste: the first three levels of each pack teach its rule without words; cold-read each on a new player.
+   Lens's taste drafted 2026-10-25 (`docs/lens-design.md`, levels 1 to 3, all tri): the knob and the dot ruler, a
+   broken rim, a whole rim. Not built or cold-read.
 47. The daily archive: a calendar screen, bests under `daily-yyyymmdd` ids, back-filled to Jack's date, opened by any
     purchase.
    Jack's call (2026-10-25, round 6): back-filled to 30 days before launch day (`Share.firstDay`).
