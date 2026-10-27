@@ -484,7 +484,10 @@ enum HighStreet {
 enum UpstairsWindow {
     static let water = 0.28
     static let eaves = -0.33, ridge = -0.5
-    static let window = (x0: -0.415, y0: -0.258, x1: -0.295, y1: -0.142)
+    /// The child's window: as tall as the others, wider, so the child shows head and shoulders above its sill.
+    static let window = (x0: -0.44, y0: -0.255, x1: -0.27, y1: -0.12)
+    /// Its glazing bar: below it the pane is dark in both states, since rod 2's disc reaches up to the sill.
+    static let bar = -0.15
     static let door = (x0: 0.47, y0: 0.2, x1: 0.57, y1: 0.38)
     static let vane = 0.4
 
@@ -519,6 +522,7 @@ enum UpstairsWindow {
         // The upstairs windows, the one on the left the child's; downstairs a window drowned to its sill.
         house.addPath(pen.rect(window.x0, window.y0, window.x1, window.y1))
         house.addPath(pen.seg(window.x0 - 0.012, window.y1 + 0.012, window.x1 + 0.012, window.y1 + 0.012))
+        house.addPath(pen.seg(window.x0, bar, window.x1, bar))
         for x in [0.0, 0.3] {
             house.addPath(pen.rect(x - 0.06, -0.255, x + 0.06, -0.12))
             house.addPath(pen.seg(x, -0.255, x, -0.12))
@@ -551,22 +555,25 @@ enum UpstairsWindow {
 
         // Vignette 3, the window.
         pen.vignette(3) { pen in
-            let inside = pen.clipped(to: pen.rect(window.x0 + 0.004, window.y0 + 0.004, window.x1 - 0.004, window.y1 - 0.004))
+            let inside = pen.clipped(to: pen.rect(window.x0 + 0.004, window.y0 + 0.004, window.x1 - 0.004, bar - 0.004))
             if played.contains(3) {
                 // The curtain blown in off the sill, one corner caught up.
                 inside.stroke(inside.path { c in
                     c.move(to: CGPoint(x: window.x0 + 0.01, y: window.y0 + 0.005))
-                    c.addQuadCurve(to: CGPoint(x: window.x1 - 0.015, y: window.y1 - 0.02), control: CGPoint(x: window.x0 + 0.02, y: window.y1 - 0.01))
+                    c.addQuadCurve(to: CGPoint(x: window.x1 - 0.015, y: bar - 0.01), control: CGPoint(x: window.x0 + 0.02, y: bar))
                     c.addQuadCurve(to: CGPoint(x: window.x0 + 0.05, y: window.y0 + 0.005), control: CGPoint(x: window.x1 - 0.02, y: window.y0 + 0.06))
                 }, ink, 0.8)
             } else {
-                inside.fill(inside.rect(window.x0, window.y0, window.x1, window.y1), Flood.torch, 0.12)
-                Cast.figure(inside.at(-0.335, window.y1 + 0.02, k: 0.2), .child,
-                            arms: [[(0.1, -0.62), (0.22, -0.66), (0.3, -0.72)], [(-0.1, -0.62), (-0.13, -0.42)]], colour: ink)
-                Cast.dog(inside.at(-0.385, window.y1 - 0.002, k: 0.07, flip: true), colour: ink)
+                inside.fill(inside.rect(window.x0, window.y0, window.x1, bar), Flood.torch, 0.12)
+                // The child from the waist up, head and hat clear of the frame, the dog's head and ears at the sill.
+                Cast.figure(inside.at(-0.35, bar + 0.07, k: 0.16), .child,
+                            arms: [[(0.1, -0.62), (0.3, -0.66), (0.44, -0.72)], [(-0.1, -0.62), (-0.14, -0.42)]], colour: ink)
+                Cast.dog(inside.at(-0.43, bar + 0.04, k: 0.09), colour: ink)
                 // The torch held up to the glass, its beam out into the rain.
-                pen.fill(pen.poly([(-0.27, -0.188), (-0.21, -0.215), (-0.21, -0.17), (-0.27, -0.18)]), Flood.torch, 0.25)
-                pen.fill(pen.circle(-0.275, -0.184, 0.006), Flood.torch)
+                let torch = (x: window.x1 - 0.008, y: -0.185)
+                pen.fill(pen.poly([(torch.x, torch.y - 0.004), (torch.x + 0.06, torch.y - 0.03), (torch.x + 0.06, torch.y + 0.015), (torch.x, torch.y + 0.004)]),
+                         Flood.torch, 0.25)
+                pen.fill(pen.circle(torch.x, torch.y, 0.006), Flood.torch)
             }
         }
 
