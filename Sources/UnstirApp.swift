@@ -79,6 +79,8 @@ struct Harness {
     let tierDemo: Bool
     /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
     let tierSpin: (spin: Double, fade: Double)?
+    /// UNSTIR_SETTINGS=1: the menu opens with the gear's sheet up. UNSTIR_CONSENT is read by `Analytics.configure`.
+    let settings: Bool
     /// UNSTIR_OWNED and UNSTIR_STORE, in place of StoreKit's for this launch; never stored, and nil in Release.
     let purchases: Ledger?
 
@@ -102,16 +104,32 @@ struct Harness {
         return ledger
     }
 
+    /// With `purchases`, the prices StoreKit/Unstir.storekit sets, as the App Store would show them on a US storefront;
+    /// none with UNSTIR_PRICES=0, as before StoreKit answers.
+    let prices: [String: String]
+
     /// UNSTIR_ICON=n: app-icon candidate n alone on the screen (`IconView`).
     let icon: Int?
+    /// UNSTIR_CARD=lens (a pack's prefix, or complete): that pack's card open over the menu.
+    let card: Offer?
+    /// UNSTIR_CARDLEVELS=n: in Debug, the card lists n placeholder levels while its pack has none.
+    let cardLevels: Int
+    /// UNSTIR_SHELFDEMO=1: the menu opens Lens's card from the dock and closes it, through the calls a finger makes.
+    let shelfDemo: Bool
+    /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
+    let typeSize: DynamicTypeSize?
+    /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
+    /// logs it, and stores nothing either way.
+    let harnessed: Bool
 
     init(_ env: [String: String]) {
         // UNSTIR_LEVEL counts in UNSTIR_TIER too.
         let tier = env["UNSTIR_TIER"].flatMap(Tier.init(rawValue:)) ?? .plughole
         // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
-        // one unlocked.
-        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && $0 != "UNSTIR_UNLOCK" }
+        // one unlocked. UNSTIR_ANALYTICS is for the phone too, and leaves the launch a plain one.
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS"].contains($0) }
+        self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
         menuTier = harnessed ? tier : nil
         // UNSTIR_BESTS=plughole:00-1,whirlpool:0: a best for each of a tier's levels from 01, one character each: a
@@ -126,11 +144,14 @@ struct Harness {
         tierDemo = env["UNSTIR_TIERDEMO"] == "1"
         let spin = env["UNSTIR_TIERSPIN"]?.split(separator: ":").compactMap { Double($0) } ?? []
         tierSpin = spin.first.map { ($0, spin.count > 1 ? spin[1] : 0) }
+        settings = env["UNSTIR_SETTINGS"] == "1"
         bench = env["UNSTIR_BENCH"] == "1"
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
         purchases = Harness.purchases(env)
+        prices = env["UNSTIR_PRICES"] == "0" ? [:]
+            : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, $0 == Pack.completeID ? "$5.99" : "$2.99") })
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE", "PACK"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
@@ -142,9 +163,10 @@ struct Harness {
         default: tier.levels[n - 1]
         }
         #if DEBUG
-        // UNSTIR_PACK=lens: that pack's level UNSTIR_LEVEL, a placeholder until the pack has levels.
+        // UNSTIR_PACK=lens: that pack's level UNSTIR_LEVEL, a placeholder past the levels it has.
         if let pack = env["UNSTIR_PACK"].flatMap(Pack.init(rawValue:)) {
-            level = pack.placeholder(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1))
+            let number = max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1)
+            level = pack.levels.indices.contains(number - 1) ? pack.levels[number - 1] : pack.placeholder(number)
         }
         #endif
         let picture = env["UNSTIR_PICTURE"].flatMap(Picture.init(rawValue:))
@@ -163,10 +185,11 @@ struct Harness {
         }
         // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
         if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }
-        // UNSTIR_SEIZED=1,4: those knobs seized, never the swirl, which has no knob.
+        // UNSTIR_SEIZED=1,4: those knobs seized on a turning tank, never the swirl, which has no knob.
         if let s = env["UNSTIR_SEIZED"] {
             level.seized = Set(s.split(separator: ",").compactMap { Int($0) }
                 .filter { level.layout.rods.indices.contains($0) && $0 != level.layout.swirl })
+            level.motion = level.seized.isEmpty ? .none : .tank
         }
         self.level = level
         tank = env["UNSTIR_TANK"].flatMap(Int.init) ?? 0
@@ -201,6 +224,10 @@ struct Harness {
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
+        card = env["UNSTIR_CARD"].flatMap(Offer.init(name:))
+        cardLevels = env["UNSTIR_CARDLEVELS"].flatMap(Int.init).map { min(max($0, 0), 30) } ?? 0
+        shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
+        typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
     }
 }
 
@@ -246,13 +273,27 @@ final class Bench: NSObject {
 struct RootView: View {
     @State private var level: Level?
     @State private var harness: Harness?
+    /// The pack card over the menu: a level past its pack's taste opens it in the level's place.
+    @State private var card: Offer?
+    /// UNSTIR_CARDLEVELS, kept past the harness's first launch so the card's list stays while it is played from.
+    @State private var placeholders = 0
+    @State private var typeSize: DynamicTypeSize?
+    /// Kept apart from `harness`, which a first move to another screen drops.
+    private let harnessed: Bool
     @Environment(\.scenePhase) private var phase
 
     init() {
-        let h = Harness(ProcessInfo.processInfo.environment)
-        if let purchases = h.purchases { Store.shared.pretend(purchases) }
-        _level = State(initialValue: h.screen == "menu" ? nil : h.level)
+        let env = ProcessInfo.processInfo.environment
+        let h = Harness(env)
+        harnessed = h.harnessed
+        Analytics.shared.configure(env: env, harnessed: h.harnessed)
+        if let purchases = h.purchases { Store.shared.pretend(purchases, prices: h.prices) }
+        let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
+        _level = State(initialValue: h.screen == "menu" || gate != nil ? nil : h.level)
         _harness = State(initialValue: h)
+        _card = State(initialValue: gate.map(Offer.pack) ?? h.card)
+        _placeholders = State(initialValue: h.cardLevels)
+        _typeSize = State(initialValue: h.typeSize)
     }
 
     var body: some View {
@@ -269,18 +310,31 @@ struct RootView: View {
                     .id(level)
                     .transition(dip)
             } else {
-                MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin) {
+                MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
+                         settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
+                         shelfDemo: harness?.shelfDemo ?? false) {
                     show($0)
                 }
                 .transition(dip)
             }
         }
         .background(Color.black)
-        .onChange(of: phase) { Log.write("phase \(phase)") }
+        .modifier(TypeSize(size: typeSize))
+        // A failure belongs to the card that showed it, so every change of card forgets it: back, another pack, or a
+        // level's gate. Here, since the menu isn't up while a level is, and a card shown again doesn't always appear anew.
+        .onChange(of: card) { Store.shared.forgetFailures() }
+        .onChange(of: phase) {
+            Log.write("phase \(phase)")
+            Analytics.shared.phase(phase)
+        }
         .task {
-            // A test host's listener would finish the transactions the StoreKit tests watch.
-            guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+            // A test host's listener would finish the transactions the StoreKit tests watch, and its analytics would
+            // count the tests.
+            let env = ProcessInfo.processInfo.environment
+            guard env["XCTestConfigurationFilePath"] == nil else { return }
             await Store.shared.start()
+            // After the store, so a snapshot sees the packs owned.
+            Analytics.shared.start(env: env, harnessed: harnessed)
         }
         .task {
             guard harness?.tour == true else { return }
@@ -291,8 +345,19 @@ struct RootView: View {
         }
     }
 
+    /// A level past its pack's taste that the player doesn't own shows the pack's card over the menu instead.
     private func show(_ next: Level?, keep: Bool = false) {
         if !keep { harness = nil }
-        withAnimation(.easeInOut(duration: 0.25)) { level = next }
+        let gate = next.flatMap { Store.shared.card(for: $0) }
+        if gate != nil { card = gate.map(Offer.pack) }
+        withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil ? next : nil }
+    }
+}
+
+private struct TypeSize: ViewModifier {
+    let size: DynamicTypeSize?
+
+    func body(content: Content) -> some View {
+        if let size { content.dynamicTypeSize(size) } else { content }
     }
 }

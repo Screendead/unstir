@@ -95,3 +95,6 @@ for p in isobars ephemeris cords; do
   film "vortex-family-$p" 10 "$tank,fps=3,scale=220:-1,tile=8x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 FINGER=1 PICTURE=$p \
     MOVES=4:-4,4:-4,4:+4,4:+6
 done
+# The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
+# (UNSTIR_SHELFDEMO, through the calls a finger makes).
+film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned

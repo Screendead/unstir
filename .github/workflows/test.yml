@@ -38,7 +38,7 @@ jobs:
             build/store
             !build/store/Index.noindex
             !build/store/Logs
-          key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', '.github/workflows/test.yml', 'scripts/test-store.sh') }}
+          key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', 'Config/**', '.github/workflows/test.yml', 'scripts/test-store.sh') }}
           restore-keys: store-${{ steps.xcode.outputs.build }}-
       # Signed ad hoc by the script, so the StoreKit tests run too.
       - name: Test

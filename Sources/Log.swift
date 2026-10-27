@@ -6,8 +6,8 @@ import Foundation
 /// kept across launches. scripts/pull-log.sh copies it off.
 @MainActor
 enum Log {
+    static let url = URL.libraryDirectory.appending(path: "unstir-log.txt")
     private static let file: FileHandle? = {
-        let url = URL.libraryDirectory.appending(path: "unstir-log.txt")
         let kept = ((try? String(contentsOf: url, encoding: .utf8)) ?? "").split(separator: "\n").suffix(3000)
         FileManager.default.createFile(atPath: url.path, contents: Data(kept.map { $0 + "\n" }.joined().utf8))
         let file = try? FileHandle(forWritingTo: url)
