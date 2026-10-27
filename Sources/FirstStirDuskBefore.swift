@@ -707,7 +707,7 @@ extension Dusk {
 
     /// Scene 25, 7:55 back to 7:40, on tri: the kitchen table at golden dusk from the child's seat, the window over the
     /// sea above it, the clock on the wall, the teapot, and her cup. Rod 0, the window: the sun touching the sea with one
-    /// small curl of cloud, then a hand above it, clear. Rod 1, the clock: 7:55, then 7:40. Rod 2, the cup: the spoon in
+    /// small cloud, then a hand above it, clear. Rod 1, the clock: 7:55, then 7:40. Rod 2, the cup: the spoon in
     /// the saucer and the tea still, steaming, then the child's hand stirring it, the tea's swirl: the night's first stir.
     /// Every entry of the cup's rod lies under the others, so it always plays last.
     enum Stir {
@@ -777,8 +777,6 @@ extension Dusk {
                     sky.glow(x, h, 0.1, Dusk.sun, 0.5)
                     sky.lit(Rescue.tight) { g in
                         g.fill(g.circle(x, h, 0.034), Dusk.sun)
-                        g.stroke(g.curve(-0.07, -0.585, -0.04, -0.61, -0.01, -0.588), cream, 0.8)
-                        g.stroke(g.curve(-0.01, -0.588, 0.015, -0.6, 0.02, -0.58), cream, 0.8)
                     }
                 }
                 // The sun's path on the water.
@@ -789,6 +787,16 @@ extension Dusk {
                     }
                 }
             }
+                    // A small cloud drifting over the sun's glow: humps on a flat base, dark against the sky.
+                    let cloud = sky.path { c in
+                        c.move(to: CGPoint(x: -0.1, y: -0.578))
+                        c.addQuadCurve(to: CGPoint(x: -0.06, y: -0.592), control: CGPoint(x: -0.09, y: -0.598))
+                        c.addQuadCurve(to: CGPoint(x: 0.0, y: -0.594), control: CGPoint(x: -0.03, y: -0.63))
+                        c.addQuadCurve(to: CGPoint(x: 0.05, y: -0.578), control: CGPoint(x: 0.04, y: -0.6))
+                        c.closeSubpath()
+                    }
+                    sky.fill(cloud, .black, 0.55)
+                    sky.lit(Rescue.tight) { $0.stroke(cloud, cream, 0.8) }
 
             // Vignette 1, the clock's hands.
             pen.vignette(1) { pen in
