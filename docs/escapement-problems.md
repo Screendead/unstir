@@ -1,8 +1,10 @@
-# Escapement: the problem book (draft for Jack, 2026-10-25)
+# Escapement: the problem book (draft for Jack, 2026-10-25; Jack's round 9 calls, 2026-10-26)
 
 Escapement's 30 problems, to-do 39, for Jack before any code. Nothing here is built in the app. Every problem was played
 through the game's own `Array.commit` by the prover in `scripts/escapement.sh`, under Jack's calls: go with changes (E1),
-the standing hint (E2), freeze on the +1 (E3), and the tick final once a move is made (round 2). The table behind this
+the standing hint (E2), freeze on the +1 (E3), and the tick final once a move is made (round 2), and since round 9:
+every let-go final, its loss shown on that lift (round 9 E1, open points J1 and J2), and the problem lost when the last
+clock stops with twists still on the picture (round 9 E2, open point J4). The table behind this
 page is `scripts/escapement/problems.tsv`; `scripts/escapement.sh book scripts/escapement/problems.tsv` proves it again
 (about eight minutes).
 
@@ -37,10 +39,12 @@ stops, with a chime. With two or three clocks, they tick in turn, clockwise from
 **Lost.** If a stir inside the dashed edge lies over the clock's newest seam, the tick can't reach it. It makes a new
 +1 seam instead, which nothing can ever take off: the problem is lost. The +1 freezes on the clock's core in vermilion,
 the ratchet flashes red and "lost." stamps the page (E3), over a card with undo (if the bank has one) and again. The
-tick lands on the lift, so the loss shows on that lift (open point J2).
+tick lands on the lift, so the loss shows on that lift, and no re-grab takes it back (Jack, round 9 E1).
 
-**Solved** when the picture is whole. A tick that empties the stack solves on the spot. If the clock stops with seams
-still on the picture, the rest is plain unstirring, over par (open point J4).
+**Solved** when the picture is whole. A tick that empties the stack solves on the spot. If the last clock stops with
+seams still on the picture, the problem is lost, shown as "lost." as for a bad click (Jack, round 9 E2). So a problem
+is solved at par or lost: the clock that owes most ticks once a move until it stops, and nothing else turns it
+(inferred from the rule; checked on all 30: no line of whole heals and waits solves in up to six moves past par).
 
 **Variants.** Two Clocks and three: each move ticks every running clock, and either ratchet waits. Wound Back: a clock
 whose seams were stirred the other way, ticking −1.
@@ -59,7 +63,7 @@ This part is analysis. It is inferred from the rule, and the prover found it tru
   no seam on the picture could be taken off whole.
 - **So the puzzle is triage.** Before each inside seam falls due, the seams that lie over it must be off, in the free
   moves the dial allows. Taking off a loose seam that isn't in the way spends a move the dial counted for one that is.
-  Waiting where a seam was due misses par or loses.
+  Waiting where a seam was due loses.
 - **Par is the dial.** Each move takes exactly one step off each running clock, and nothing else turns a clock, so a
   problem can't be solved in fewer moves than its clocks owe. Every par below equals what its clocks owe, so every
   "none shorter" is a proof, not the end of a search.
@@ -89,11 +93,15 @@ Problems 1 to 3 are the free taste (to-do 46): the tick, the wait, the dashed ed
 **Proof, for every problem.** *Exists*: the line, replayed through `Array.commit`. *None shorter*: absolute, because par
 equals the steps the clocks owe. *Key and line*: a search over every turn of up to ±6 steps on every knob, and the wait,
 at each move, found one first move that reaches par and one line. The two exceptions (9 and 11) are noted. *Lost is
-lost*: playing on past a pushed tick, no line of whole heals and waits reaches par on any of the 30.
+lost*: playing on past a pushed tick, no line of whole heals and waits reaches par on any of the 30. Proved again
+under round 9's E2 (2026-10-26): every par, key, line and count of lines at par is as before, since a line at par ends
+on the last clock's last tick.
 
 **Difficulty** is 1 to 5, Claude's grade. It is set from *bits*: minus log2 of the chance that a player who picks
 uniformly among the whole heals and waits that don't lose at once solves at par. Seam count is weighed in too. Bits
-measure planning only. Reading the seams, which is most of what makes a tank hard, is not in them.
+measure planning only. Reading the seams, which is most of what makes a tank hard, is not in them. Under E2 a tap on
+the last move, where only a heal finishes, can now lose at once (the last clock stops) where before it lost a move
+later, so it drops out of the count: 15 problems measure one bit less than in the first draft. The grades are as drafted.
 
 ### Chapter 1. The Clock
 
@@ -120,19 +128,19 @@ needed: that seam lies over knob 1's, which falls due on move 2. Difficulty 1 (1
 Line: `2:+2` · `1:+3` · `2:+4` · `3:-2`.
 The dial is the budget. The clock's top seam is one step, so knob 1 falls due on move 2, and knob 2's top seam lies over
 it: knob 2 takes move 1. The next clock seam owes two, so knob 3 falls due on move 4, and knob 2's second seam covers
-it: knob 2 takes move 3. A tap anywhere misses par. Difficulty 2 (2.0 bits, 7 seams).
+it: knob 2 takes move 3. A tap anywhere loses. Difficulty 2 (2.0 bits, 7 seams).
 
 **5.** eye, clock knob 2 (top). `2:-2,3:-2,1:-4,2:-2,3:-3,1:+3,2:-1,3:-5`. **Unstir in 5.**
 Line: `3:+5` · `1:-3` · `3:+3` · `1:+4` · `3:+2`.
 The bottom knob is outside the clock's edge, and knob 1 crosses it. Their seams alternate under clock seams of one, two
 and two steps, and each bottom seam lies over the next of knob 1's, so the order is bottom, 1, bottom, 1, bottom. A tap
-breaks it. Difficulty 3 (3.0 bits, 8 seams).
+breaks it. Difficulty 3 (2.0 bits, 8 seams).
 
 **6.** hex, clock knob 1. `1:-3,4:-2,3:-4,6:+3,1:-2,5:+3,2:-3,1:-1,3:+2`. **Unstir in 6.**
 Line: `3:-2` · `2:+3` · `5:-3` · `6:-3` · `3:+4` · `4:+2`.
 Two loose seams outside the edge, one free move. Knob 5's seam is loose from the start, but knob 3's covers knob 2's,
 which falls due on move 2, so knob 3 goes first. The same choice comes again on move 3, the other way round: knob 5's
-seam now covers knob 6's, due on move 4, and knob 3's second seam doesn't. Difficulty 5 (5.2 bits, 9 seams).
+seam now covers knob 6's, due on move 4, and knob 3's second seam doesn't. Difficulty 5 (4.2 bits, 9 seams).
 
 ### Chapter 2. The Waiting Move
 
@@ -141,8 +149,8 @@ Slack to burn, and each tap is placed where nothing can be taken off (see "A wai
 **7. The quiet first move** (*teaches*). quad, clock knob 0. `0:-2,2:+3,1:-2,0:-1`. **Unstir in 3.**
 Line: `wait` · `1:+2` · `2:-3`.
 Nothing is loose: knob 1's seam lies under the clock's, and knob 2's under knob 1's. The first move is a tap. Decoys:
-knob 1 first loses at once; turning knob 2 back by its seam's steps lays a new seam instead and misses par. Difficulty 1
-(1.0 bit, 4 seams).
+knob 1 first loses at once; turning knob 2 back by its seam's steps lays a new seam instead and loses. Difficulty 1
+(0.0 bits, 4 seams).
 
 **8.** pent, clock knob 0. `0:-1,1:+4,0:-3,2:-4,3:-3,4:-5,0:-1`. **Unstir in 5.**
 Line: `wait` · `4:+5` · `3:+3` · `2:+4` · `1:-4`.
@@ -160,7 +168,7 @@ stand in for the two taps (one step on the bottom knob and back). Difficulty 2 (
 Line: `2:-3` · `1:+4` · `wait` · `1:+2` · `2:+3` · `3:-3`.
 Knob 3's seam is loose at the start, since the stirs over it hold its disc still, but knob 2's covers knob 1's, due on
 move 2. Knob 2 goes first. After knob 1 nothing is loose for a move: tap, then knob 1 again, knob 2, knob 3. Difficulty
-3 (3.6 bits, 8 seams).
+3 (2.6 bits, 8 seams).
 
 **11.** pent, clock knob 0. `0:-3,1:+2,0:-2,2:+3,4:+5,0:-2,3:+2,4:-3,0:-1,3:-2`. **Unstir in 8.**
 Line: `3:+2` · `4:+3` · `3:-2` · `4:-5` · `2:-3` · `1:-2` · `wait` · `wait`.
@@ -173,7 +181,7 @@ seams).
 Line: `wait` · `0:+5` · `3:+4` · `2:+3` · `3:-3` · `2:-5` · `5:-4`.
 The hub's seam lies under the clock's one step: tap first. From move 3 knob 5's seam is loose on every move and wrong
 until the last one. Each free move belongs to the knob 3 seam over knob 2's next. Knob 5 is the decoy four times.
-Difficulty 4 (4.2 bits, 10 seams).
+Difficulty 4 (3.2 bits, 10 seams).
 
 ### Chapter 3. Two Clocks
 
@@ -201,21 +209,21 @@ Difficulty 2 (1.0 bit, 8 seams).
 Line: `3:-2` · `5:-2` · `wait` · `6:-4` · `5:+3` · `2:-5`.
 The two clocks share no knob: 3 and 5 cross the clock at six, 2 and 6 the one at twelve. The clock at six owes its seams
 in short pieces, so knobs 3 and 5 open while the clock at twelve, one long seam, runs down in the background. A tap lets
-it stop, and then 6, 5, 2 against the clock at six's last seams. Difficulty 3 (2.6 bits, 9 seams).
+it stop, and then 6, 5, 2 against the clock at six's last seams. Difficulty 3 (1.6 bits, 9 seams).
 
 **17.** pent, clocks knobs 0 and 1 (neighbours). `1:-3,3:+4,4:-3,0:-1,3:-5,1:-1,0:-1,4:+2,1:-1,0:-1,3:+5`.
 **Unstir in 5.**
 Line: `3:-5` · `4:-2` · `3:+5` · `4:+3` · `3:-4`.
 The clocks overlap, with each of clock 1's seams under one of clock 0's. On each move clock 0 ticks first and takes its
 top seam off, which uncovers clock 1's for its tick on the same move. Knobs 3 and 4 alternate; a tap anywhere leaves a
-seam due with nothing ready. With the tick order reversed it can't be solved (J3). Difficulty 4 (4.0 bits, 11 seams).
+seam due with nothing ready. With the tick order reversed it can't be solved (J3). Difficulty 4 (3.0 bits, 11 seams).
 
 **18.** hex, clocks knobs 1 and 2 (twelve and two). `2:-2,6:+2,3:-4,2:-2,4:-2,1:-1,5:+2,2:-1,1:-1,4:+4,2:-1,1:-1,5:-4`.
 **Unstir in 6.**
 Line: `5:+4` · `4:-4` · `5:-2` · `4:+2` · `3:+4` · `6:-2`.
 Paired clocks, the one at twelve uncovering the one at two on every move. Knobs 4 and 5 are outside both and feed four
 moves, in the one alternation that keeps both dials' seams bare. Then knob 3 (crossing the clock at two) and knob 6
-(crossing twelve) finish. On move 4 knob 6's seam is loose and wrong. Order-dependent like 17. Difficulty 5 (5.6 bits,
+(crossing twelve) finish. On move 4 knob 6's seam is loose and wrong. Order-dependent like 17. Difficulty 5 (4.6 bits,
 13 seams).
 
 ### Chapter 4. Wound Back
@@ -240,24 +248,24 @@ Difficulty 2 (0.0 bits, 10 seams).
 Line: `wait` · `3:+4` · `4:+3` · `3:-3` · `4:-5` · `3:-2`.
 A quiet key under mixed dials. Knob 3's top seam lies under the forward clock's last step, so tap first, and both dials
 step, in opposite senses. Then knobs 3 and 4 alternate: 4 crosses the wound-back clock at twelve, 3 the forward one.
-Difficulty 3 (2.0 bits, 10 seams).
+Difficulty 3 (1.0 bit, 10 seams).
 
 **22.** hex, clock knob 1 forward and knob 4 wound back. `4:+2,2:-2,5:+3,4:+2,6:-5,1:-2,3:-2,4:+3,6:-5,1:-2,5:+3`.
 **Unstir in 7.**
 Line: `5:-3` · `wait` · `6:+5` · `3:+2` · `6:+5` · `5:-3` · `2:+2`.
 Knob 5's seam covers the clock at six: first. After a tap, knob 6's two seams fall due on the clock at twelve's schedule
-and knob 3's on six's, interleaved. Knob 2's seam is loose from move 5 and is the last move. Difficulty 3 (2.6 bits, 11
+and knob 3's on six's, interleaved. Knob 2's seam is loose from move 5 and is the last move. Difficulty 3 (1.6 bits, 11
 seams).
 
 **23.** pent, clock knob 0 wound back. `0:+2,3:-5,4:-5,0:+3,2:-2,3:+4,4:-3,0:+1,3:-4`. **Unstir in 6.**
 Line: `3:+4` · `4:+3` · `3:-4` · `2:+2` · `4:+5` · `3:+5`.
 Wound back, counted as ever. Knob 2's seam is loose at the start, but knob 3's covers knob 4's, due on move 2. The order
-is 3, 4, 3, then knob 2 in its one free move, then 4, 3. Difficulty 4 (4.6 bits, 9 seams).
+is 3, 4, 3, then knob 2 in its one free move, then 4, 3. Difficulty 4 (3.6 bits, 9 seams).
 
 **24.** hex, clock knob 1 wound back. `1:+3,4:-2,5:+4,2:+2,1:+2,3:+3,2:-5,1:+2,3:+2,6:-2`. **Unstir in 7.**
 Line: `6:+2` · `3:-2` · `2:+5` · `3:-3` · `2:-2` · `5:-4` · `4:+2`.
 Knob 6's seam covers the clock, so it goes first, though knob 3's looks newer and is loose: knob 3 first loses at once.
-Then knobs 3 and 2 alternate. Knob 5 is loose on every move from the second and wrong until the sixth. Difficulty 5 (5.2
+Then knobs 3 and 2 alternate. Knob 5 is loose on every move from the second and wrong until the sixth. Difficulty 5 (4.2
 bits, 10 seams).
 
 ### Chapter 5. Grand Complication
@@ -272,13 +280,13 @@ o'clock, then twelve, then eight. Difficulty 1 (0.0 bits, 4 seams).
 **26.** pent, clocks knobs 0 and 2. `2:-2,4:-3,3:+2,2:-2,4:+3,3:+5,2:-3,0:-2,4:+2,0:-2,3:+3,2:-1,1:+2`. **Unstir in 8.**
 Line: `1:-2` · `3:-3` · `4:-2` · `wait` · `3:-5` · `4:-3` · `3:-2` · `4:+3`.
 Knob 1 sits between the clocks and covers both: first. The clock at twelve stops on the fourth move, a tap, and from
-there knobs 3 and 4 alternate against the other clock alone. Difficulty 3 (2.0 bits, 13 seams).
+there knobs 3 and 4 alternate against the other clock alone. Difficulty 3 (1.0 bit, 13 seams).
 
 **27.** pent, clock knob 0. `0:-3,3:-4,2:-5,1:-5,0:-2,1:+2,0:-1,1:+2,0:-2,2:+5,1:-2,0:-1,2:+2`. **Unstir in 9.**
 Line: `2:-2` · `1:+2` · `2:-5` · `1:-2` · `1:-2` · `wait` · `1:+5` · `2:+5` · `3:+4`.
 Thirteen seams in nine moves. Knob 1's four seams are spaced by one-step clock seams. Twice they fall due on
 consecutive moves, so knob 1 turns twice running. A tap on move 6, when nothing is loose. Knob 3's seam can come off
-from move 2 and is the last move. Needs the final tick (J1). Difficulty 4 (4.6 bits, 13 seams).
+from move 2 and is the last move. Needs the final tick (J1). Difficulty 4 (3.6 bits, 13 seams).
 
 **28.** hex, clock knob 1. `1:-2,0:+5,1:-3,4:-5,3:+3,6:+4,1:-2,5:-4,2:+3,1:-2,4:+5,2:+4`. **Unstir in 9.**
 Line: `2:-4` · `4:-5` · `2:-3` · `5:+4` · `6:-4` · `3:-3` · `4:+5` · `0:-5` · `wait`.
@@ -290,7 +298,7 @@ Difficulty 4 (4.6 bits, 12 seams).
 **Unstir in 8.**
 Line: `0:-2` · `5:+3` · `4:-5` · `5:+4` · `6:+4` · `5:-3` · `4:-2` · `5:-2`.
 The hub's seam covers both clocks: first. Knob 5 is outside both and has four seams. They are the tempo between knob 4's
-seams (crossing four o'clock) and knob 6's (crossing twelve), each taken in the one move that fits. Difficulty 5 (5.0
+seams (crossing four o'clock) and knob 6's (crossing twelve), each taken in the one move that fits. Difficulty 5 (4.0
 bits, 12 seams).
 
 **30. Finale.** hex, clocks knobs 1, 3 and 5. `5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3`.
@@ -354,11 +362,16 @@ Under B, 27 of the 30 keep their par and line. 15, 20 and 27 can't be solved, be
 running. B is also free turn-backs by another name, which round 2 ruled out. **Recommendation: A**, and take the lab's
 lift-out out when the pack is built (to-do 34 still describes it).
 
+**Jack's call (2026-10-26, round 9 E1): A.** Every let-go is final: the clock clicks on the lift, and no re-grab takes
+it back.
+
 **J2. When a loss shows.** The tick lands on the lift, final.
 - A: "lost." stamps on the lift whose tick pushes, frozen on the +1.
 - B: it stamps on the next move, as the lab plays (there, a re-grab could still lift the tick out).
 
 Under J1's A there is nothing the next move can undo, so B only delays the news. **Recommendation: A.**
+
+**Jack's call (2026-10-26, round 9 E1): A.** A losing click shows "lost." at once.
 
 **J3. Tick order with two or three clocks.** "The clock nearer twelve first" ties on every layout: quad's 0 and 3, pent's
 1 and 4, hex's 2 and 6, 3 and 5.
@@ -378,6 +391,10 @@ seams still on the picture.
 
 **Recommendation: A.** The pack already has one harsh end, and over par reads the same as everywhere else in the game.
 
+**Jack's call (2026-10-26, round 9 E2): B.** If the last clock stops with twists still on the picture, the problem
+fails, shown as lost like a bad click. Re-proved under it: every par, key and line stands; every problem is now solved
+at par or lost, and 15 measure one bit less (see Difficulty).
+
 **J5. Waits are forced, never chosen.** Every move ticks every clock alike, so a tap is right exactly when nothing can be
 taken off. The pitch's "knowing when to wait" is really knowing when nothing is loose. The decision the rule leaves is
 triage: which loose seams to take in the moves the dial allows.
@@ -386,14 +403,16 @@ triage: which loose seams to take in the moves the dial allows.
 
 Any rule that ticks every move alike keeps waits forced. B means giving moves different tempo, for example ticking by
 the steps turned, which breaks the "always the same +1, known before the first move" that answers R5. **Recommendation:
-A.** Triage under the dial reaches 5 to 6 bits on hex, and Jack called go on the lab's rule (E1).
+A.** Triage under the dial reaches 4 to 5 bits on hex (5 to 6 in the first draft, before E2), and Jack called go on the lab's rule (E1).
 
 **J6. The finale.** Three clocks on hex cross every knob, so 25 and 30 have at most one safe turn a move: a reading test,
 2.0 bits.
 - A: end on 30, the three-clock hex, as the pitch planned.
-- B: end on 29, two clocks on hex at 5.0 bits, with the three-clock problem as 29.
+- B: end on 29, two clocks on hex at 4.0 bits, with the three-clock problem as 29.
 
 **Recommendation: B.** A book should end on its hardest problem, and three dials still get their moment one page before.
+Since E2, 29 measures 4.0 bits (5.0 in the first draft) and 28 4.6, so by bits alone 28 is now the chapter's hardest;
+Jack's play of the book (E3) settles the order of the last problems.
 
 **J7. Wound Back mirrors The Clock.** A wound-back clock alone plays exactly as a forward one with every sign flipped
 (19 is 2 mirrored).
@@ -418,3 +437,6 @@ detour may stand in for two taps (one step on a free knob and back).
 
 B costs days for problems the prover already shows are sound. **Recommendation: A**, with the cold read of 1 to 3 on a new
 player (to-do 46) before the free taste is fixed.
+
+**Jack's call (2026-10-26, round 9 E3): A.** Searched problems are fine once Jack has played them on the phone and
+vetoed any that feel random; replacements come from the same search.
