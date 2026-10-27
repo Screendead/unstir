@@ -31,6 +31,7 @@ targets:
         CADisableMinimumFrameDurationOnPhone: true
         UIUserInterfaceStyle: Dark
         AptabaseKey: $(APTABASE_KEY)
+        AnalyticsPlaytest: $(ANALYTICS_PLAYTEST)
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
   UnstirTests:
     type: bundle.unit-test

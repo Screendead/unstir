@@ -69,9 +69,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result).
   It passes the shell's `APTABASE_KEY`, Aptabase's app key, into Info.plist's `AptabaseKey`, over
   `Config/Local.xcconfig` (gitignored), which `Config/Unstir.xcconfig` includes for Xcode's own builds and archives;
-  with neither analytics is off.
+  with neither analytics is off. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
+  build's events as Debug.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
-  UDID, set in the shell). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level on the phone
+  UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
+  numbers (Jack, 2026-10-27). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level on the phone
   until a run with `UNSTIR_UNLOCK=0`.
 - Tests (XCTest, on a simulator):
   ```
@@ -317,7 +319,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   yes, so what an earlier launch left queued goes out with no new event to carry it. It keeps a batch on no answer, a
   5xx or 429 and retries a minute later, drops one refused, and drops events over 23 hours old (the server refuses a
   day's). `Sender.body` is everything on the wire: name, props, time, a session renewed after an hour with no event, as
-  Aptabase's SDK does (the snapshot its own) and `isDebug`, `osName`, the app's versions and `sdkVersion`. The server
+  Aptabase's SDK does (the snapshot its own) and `isDebug` (a Debug or playtest build), `osName`, the app's versions and `sdkVersion`. The server
   takes property keys of up to 40 characters and event names of up to 60, cuts strings at 180, and drops without an
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
