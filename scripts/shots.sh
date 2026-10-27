@@ -324,7 +324,12 @@ held=("Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast s
       "Off the breakwater: the steps empty, a rope hanging, surf over the lower steps; the lifeboat alongside their foot, two crew reaching up them; the lighthouse dark."
       "The lantern chain: the lifeboat house open on an empty slip; the chain of lights reaching the lighthouse door; four bearers with lanterns held high."
       "The stair: the hand-lamp burning on the stair's turn; the lantern chain's lights far below the window; the storm lantern on the bottom step by the open door."
-      "The lighthouse door: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair.")
+      "The lighthouse door: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair."
+      "Lighting the lamp, 9:30 pm, night blue, a cloud bank low on the sea: the lantern lit, its first beam out; gulls flocking inland; four of the town's windows lit."
+      "The path to the light: the grandmother at the lighthouse door, lantern raised; the child at the quay rail, waving; a thin moon beside the evening star."
+      "Doubling the lines: the boat's two lines out, its lamps lit, nobody aboard; the barometer's needle on the storm glyph; the float in the cottage window, the lamp lit."
+      "The float, the kitchen at sunset: the float hanging in the window, lit teal; the oilskin gone, the door ajar on the sunset; the child reaching up to the window, hands empty."
+      "First stir, the kitchen at golden dusk: the sun touching the sea with a curl of cloud; the clock at 7:55; the tea still and steaming, the spoon in the saucer.")
 played=("a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke."
         "the gallery empty, shards on the deck; spray over the bare rail; no smoke, one window lit by a candle."
         "the door open, the rope trailing over the rocks; the float alone in the pool; the dog sniffing."
@@ -334,9 +339,14 @@ played=("a neighbour on a stepladder nailing the first plank; the father bailing
         "the father helping the grandmother down the steps; the lifeboat further off, bow high on a wave; a glow at the lighthouse's stair window; heavier rain."
         "the crew pushing the lifeboat out of the house and down the slip; the chain ending short of the lighthouse, one light at the door; two bearers, two more running up unlit; heavier rain."
         "the grandmother sitting at the turn, her ankle bound, the lamp beside her; the window dark; the father at the foot, lantern raised, looking up; heavier rain at the window and door."
-        "the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain.")
-bottom=(2:+5 3:+4 1:+4 0:+3 2:+4 1:+3 0:+4 3:+4 0:+4 3:-4)
-for n in $(seq 1 10); do
+        "the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain."
+        "the lantern dark, the grandmother reaching a taper to the lamp; the evening star; one window lit; the cloud bank gone, the afterglow rising."
+        "the grandmother just out on the path, lantern swinging, shawl blowing; the child running along the quay, arm up; the afterglow alone."
+        "the father in the stern tying the second line; the needle on the sun glyph; the window dark, the float still hanging."
+        "the hook bare; the oilskin and hat on their pegs, boots below, the door shut; the grandmother holding the float out to the child."
+        "the sun a hand above the sea, clear; the clock at 7:40; the child's hand stirring, the tea's swirl.")
+bottom=(2:+5 3:+4 1:+4 0:+3 2:+4 1:+3 0:+4 3:+4 0:+4 3:-4 3:+4 0:+3 4:+3 0:+4 2:+4)
+for n in $(seq 1 15); do
   last=${bottom[$((n - 1))]} name=firststir-$(printf %02d "$n")
   fs="PACK=first-stir LEVEL=$n OWNED=first-stir"
   shot "$name" "First Stir $n as dealt: every core turned, the time under the tank." $fs

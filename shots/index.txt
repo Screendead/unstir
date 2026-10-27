@@ -222,6 +222,21 @@ firststir-09-played.png  First Stir 9 drawn unstirred, every vignette played: th
 firststir-10.png  First Stir 10 as dealt: every core turned, the time under the tank.
 firststir-10-held.png  First Stir 10 drawn unstirred, held back. The lighthouse door: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair.
 firststir-10-played.png  First Stir 10 drawn unstirred, every vignette played: the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain.
+firststir-11.png  First Stir 11 as dealt: every core turned, the time under the tank.
+firststir-11-held.png  First Stir 11 drawn unstirred, held back. Lighting the lamp, 9:30 pm, night blue, a cloud bank low on the sea: the lantern lit, its first beam out; gulls flocking inland; four of the town's windows lit.
+firststir-11-played.png  First Stir 11 drawn unstirred, every vignette played: the lantern dark, the grandmother reaching a taper to the lamp; the evening star; one window lit; the cloud bank gone, the afterglow rising.
+firststir-12.png  First Stir 12 as dealt: every core turned, the time under the tank.
+firststir-12-held.png  First Stir 12 drawn unstirred, held back. The path to the light: the grandmother at the lighthouse door, lantern raised; the child at the quay rail, waving; a thin moon beside the evening star.
+firststir-12-played.png  First Stir 12 drawn unstirred, every vignette played: the grandmother just out on the path, lantern swinging, shawl blowing; the child running along the quay, arm up; the afterglow alone.
+firststir-13.png  First Stir 13 as dealt: every core turned, the time under the tank.
+firststir-13-held.png  First Stir 13 drawn unstirred, held back. Doubling the lines: the boat's two lines out, its lamps lit, nobody aboard; the barometer's needle on the storm glyph; the float in the cottage window, the lamp lit.
+firststir-13-played.png  First Stir 13 drawn unstirred, every vignette played: the father in the stern tying the second line; the needle on the sun glyph; the window dark, the float still hanging.
+firststir-14.png  First Stir 14 as dealt: every core turned, the time under the tank.
+firststir-14-held.png  First Stir 14 drawn unstirred, held back. The float, the kitchen at sunset: the float hanging in the window, lit teal; the oilskin gone, the door ajar on the sunset; the child reaching up to the window, hands empty.
+firststir-14-played.png  First Stir 14 drawn unstirred, every vignette played: the hook bare; the oilskin and hat on their pegs, boots below, the door shut; the grandmother holding the float out to the child.
+firststir-15.png  First Stir 15 as dealt: every core turned, the time under the tank.
+firststir-15-held.png  First Stir 15 drawn unstirred, held back. First stir, the kitchen at golden dusk: the sun touching the sea with a curl of cloud; the clock at 7:55; the tea still and steaming, the spoon in the saucer.
+firststir-15-played.png  First Stir 15 drawn unstirred, every vignette played: the sun a hand above the sea, clear; the clock at 7:40; the child's hand stirring, the tea's swirl.
 firststir-01-healed-1.png  First Stir 01 after the first heal (1:-2): no vignette, the clock at 6:34 am.
 firststir-01-healed-2.png  First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am.
 shelf-menu.png  Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought.
