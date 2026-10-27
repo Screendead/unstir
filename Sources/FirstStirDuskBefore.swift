@@ -679,19 +679,27 @@ extension Dusk {
                 }
             }
 
-            // Vignette 2, the gift.
+            // Vignette 2, the gift: the two stand in front of the table, the child under the window and the grandmother facing
+            // her, scaled to the table and chair. Their bodies are the same both ways and may leave the core; only their
+            // arms and the float change, inside it.
+            func gran(_ pen: Brush) -> Brush { pen.at(-0.2, 0.79, k: 0.56, flip: true) }
+            func child(_ pen: Brush) -> Brush { pen.at(-0.5, 0.7, k: 0.4) }
+            Cast.figure(gran(pen), .grandmother, arms: [], colour: ink)
+            Cast.figure(child(pen), .child, arms: [], colour: ink)
+            func arms(_ pen: Brush, _ limbs: [Cast.Limb]) {
+                var p = Path()
+                for limb in limbs { p.addPath(pen.poly(limb, closed: false)) }
+                pen.lit(Rescue.tight) { $0.stroke(p, ink) }
+            }
             pen.vignette(2) { pen in
-                let ground = 0.55
                 if played.contains(2) {
-                    Cast.figure(pen.at(-0.51, ground, k: 0.2), .grandmother,
-                                arms: [[(0.1, -0.72), (0.38, -0.5), (0.62, -0.32)], [(0.1, -0.68), (0.36, -0.46), (0.6, -0.28)]], colour: ink)
-                    Cast.figure(pen.at(-0.21, ground, k: 0.14, flip: true), .child,
-                                arms: [[(0.1, -0.6), (0.3, -0.62), (0.5, -0.66)], [(-0.1, -0.6), (-0.14, -0.36)]], colour: ink)
-                    Dusk.glassFloat(pen, x: -0.37, y: ground - 0.06, radius: 0.024, string: 0)
+                    arms(gran(pen), [[(0.1, -0.72), (0.16, -0.55), (0.26, -0.47)], [(-0.1, -0.72), (0.03, -0.55), (0.235, -0.49)]])
+                    arms(child(pen), [[(0.1, -0.6), (0.2, -0.58), (0.275, -0.5)], [(-0.1, -0.6), (0.1, -0.54), (0.25, -0.48)]])
+                    Dusk.glassFloat(pen, x: -0.365, y: 0.5, radius: 0.026, string: 0)
                 } else {
-                    Cast.figure(pen.at(-0.51, ground, k: 0.2), .grandmother, colour: ink)
-                    Cast.figure(pen.at(-0.21, ground, k: 0.14, flip: true), .child,
-                                arms: [[(0.1, -0.6), (0.2, -0.85), (0.3, -1.05)], [(-0.1, -0.6), (0.06, -0.85), (0.16, -1.05)]], colour: ink)
+                    arms(gran(pen), [[(0.1, -0.72), (0.14, -0.55), (0.08, -0.45)], [(-0.1, -0.72), (-0.06, -0.55), (0.06, -0.46)]])
+                    // Both arms up to the window over her, her hands empty.
+                    arms(child(pen), [[(0.1, -0.6), (0.11, -0.8), (0.1, -1.0)], [(-0.1, -0.6), (-0.14, -0.8), (-0.17, -1.0)]])
                 }
             }
         }
