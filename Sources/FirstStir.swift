@@ -6,22 +6,35 @@ import SwiftUI
 /// held back (later in the night) and played (earlier). A vignette is named by its rod, and every one of the scramble's
 /// entries on that rod holds it back, so it plays once its core is still.
 enum Story: Hashable, Sendable {
+    /// The lab's harbour in the storm: the outline's scene 16, with no level until that chapter is drawn.
     case harbour
+    /// Chapter 1, Dawn After: scenes 1 to 5.
+    case dawn(Dawn)
 
     var vignettes: Set<Int> {
         switch self {
         case .harbour: [0, 1, 2]
+        case .dawn(let scene): scene.vignettes
         }
     }
 }
 
 extension Level {
+    /// The pack's scenes in the outline's order, the night told backwards. A scene's caption is its time.
     static let firstStir: [Level] = [
-        // One entry per rod, so the overlapping tri rods heal the lighthouse (0), the boat (1), then the cottage (2): the
-        // doorway lies in the boat's shear ring, so the cottage plays once the boat is still.
-        Level(id: Pack.firstStir.id(1), pack: .firstStir, label: "01", title: "The harbour",
-              note: "Each heal turns the night back.", layout: .tri, scramble: .parse("2:+5,1:-4,0:+3", in: .tri),
-              story: .harbour),
+        // Chapter 1, Dawn After (FirstStirDawn.swift). Tri's rods all overlap, so its stack orders every heal: the
+        // cottage's doorway lies in the boat's disc, so the cottage's one entry is the bottom.
+        Level(id: Pack.firstStir.id(1), pack: .firstStir, label: "01", title: "Sunrise", note: "", layout: .tri,
+              scramble: .parse("2:+5,1:-4,0:+3,1:+2", in: .tri), story: .dawn(.sunrise)),
+        Level(id: Pack.firstStir.id(2), pack: .firstStir, label: "02", title: "The gallery", note: "", layout: .quad,
+              scramble: .parse("3:+4,0:-3,1:+5,2:-2", in: .quad), story: .dawn(.gallery)),
+        // The child kneels in the dog's disc, so the pool's bottom entry lies under both of the dog's.
+        Level(id: Pack.firstStir.id(3), pack: .firstStir, label: "03", title: "The rock pool", note: "", layout: .tri,
+              scramble: .parse("1:+4,2:-3,0:+5,1:-2,2:+3", in: .tri), story: .dawn(.rockPool)),
+        Level(id: Pack.firstStir.id(4), pack: .firstStir, label: "04", title: "Righting the boat", note: "", layout: .eye,
+              scramble: .parse("0:+3,1:-4,2:+5,3:-2,1:+2", in: .eye), story: .dawn(.righting)),
+        Level(id: Pack.firstStir.id(5), pack: .firstStir, label: "05", title: "Tea on the quay", note: "", layout: .quad,
+              scramble: .parse("2:+4,3:-3,1:+5,0:-2,3:+2,2:-5", in: .quad), story: .dawn(.tea)),
     ]
 }
 

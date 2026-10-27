@@ -653,7 +653,7 @@ struct LevelView: View {
                     }
                 // The play controls fade rather than leave, and the result is an overlay, so the solved tank stays
                 // exactly where it was played.
-                Text(shown == nil ? game.counts ? game.level.note : "Practice: only the first try counts."
+                Text(shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip")
                     .font(.mono(12)).opacity(showResult ? 0 : 0.55).multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
@@ -1050,7 +1050,10 @@ struct LevelView: View {
                 } ?? []
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
                 Group {
-                    if let story = game.level.story {
+                    if let scene = game.level.story?.scene {
+                        SceneLayer(scene: scene, played: game.played, wound: game.wound, count: game.level.scramble.count, side: side,
+                                   onStrike: { struck = true })
+                    } else if let story = game.level.story {
                         StoryLayer(story: story, played: game.played, side: side, onStrike: { struck = true })
                     } else {
                         PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
