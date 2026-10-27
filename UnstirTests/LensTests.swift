@@ -17,13 +17,14 @@ final class LensTests: XCTestCase {
     /// as it does a twist's.
     func testLensStepsSumAndCancel() {
         let layout = Layout.tri, lenses: Set<Int> = [0]
-        func same(_ a: String, _ b: String) -> Bool {
-            layout.same(a.isEmpty ? [] : word(a), b.isEmpty ? [] : word(b), at: Tank.samples, within: 1e-9, lenses: lenses)
+        func same(_ a: String, _ b: String, within tolerance: Double = 1e-9) -> Bool {
+            layout.same(a.isEmpty ? [] : word(a), b.isEmpty ? [] : word(b), at: Tank.samples, within: tolerance, lenses: lenses)
         }
         XCTAssertTrue(same("0:2,0:1", "0:3"))
         XCTAssertTrue(same("0:-2,0:3", "0:1"))
         XCTAssertTrue(same("0:3,0:-3", ""))
-        XCTAssertTrue(same("0:12,0:-12", ""))
+        // x4096 and back: rounding just inside the rim comes back 2^24 times over, still far under the merges' 1e-6.
+        XCTAssertTrue(same("0:12,0:-12", "", within: 1e-7))
         XCTAssertFalse(same("0:12", ""), "a lens never wraps")
         var stack = [Twist]()
         XCTAssertEqual(stack.commit(rod: 0, steps: 1, in: layout, lenses: lenses), .pushed)
@@ -34,8 +35,8 @@ final class LensTests: XCTestCase {
     }
 
     /// A lens moves nothing from its core's rim out, so it fixes every point there exactly; inside, a step scales the
-    /// centre by 1.3, and a positive one magnifies: the fluid moves outward.
-    func testLensMovesOnlyItsCoreAndMagnifiesClockwise() {
+    /// centre by 2, and a positive one magnifies: the fluid moves outward.
+    func testLensMovesOnlyItsCoreAndMagnifiesOnAPositiveStep() {
         for layout in Layout.allCases {
             for rod in layout.rods {
                 let c = SIMD2(rod.x, rod.y)
@@ -43,9 +44,10 @@ final class LensTests: XCTestCase {
                     for u in [Tank.plateau, 0.61, 0.7, 0.95, 1.2] {
                         for a in stride(from: 0.0, to: 2 * .pi, by: 0.7) {
                             let p = c + u * rod.z * SIMD2(cos(a), sin(a)), q = Tank.lens(p, rod: rod, steps: steps)
-                            // The rim itself is fixed by the flow, to rounding; beyond it, nothing is computed.
+                            // The rim itself is fixed by the flow, to rounding, which the flow scales by 2^(2|steps|)
+                            // there; beyond it, nothing is computed.
                             if u == Tank.plateau {
-                                XCTAssertEqual(simd_distance(q, p), 0, accuracy: 1e-12, "\(layout) on the rim, steps \(steps)")
+                                XCTAssertEqual(simd_distance(q, p), 0, accuracy: 1e-15 * pow(2, 2 * abs(steps)), "\(layout) on the rim, steps \(steps)")
                             } else {
                                 XCTAssertEqual(q, p, "\(layout) u \(u) steps \(steps)")
                             }
@@ -59,7 +61,7 @@ final class LensTests: XCTestCase {
                     }
                 }
                 let p = c + SIMD2(1e-4 * rod.z, 0)
-                XCTAssertEqual(simd_distance(Tank.lens(p, rod: rod, steps: 1), c) / (1e-4 * rod.z), 1.3, accuracy: 1e-4)
+                XCTAssertEqual(simd_distance(Tank.lens(p, rod: rod, steps: 1), c) / (1e-4 * rod.z), 2, accuracy: 1e-4)
             }
         }
     }

@@ -3,7 +3,7 @@
 import Foundation
 import simd
 
-/// One stack entry: `steps` is a nonzero count of 30-degree turns on `rod`, or of x1.3 steps where `rod` is a lens.
+/// One stack entry: `steps` is a nonzero count of 30-degree turns on `rod`, or of x2 steps where `rod` is a lens.
 struct Twist: Hashable {
     var rod: Int
     var steps: Int
@@ -43,14 +43,14 @@ enum Tank {
         return c + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a))
     }
 
-    /// A lens's growth a step, as a log: x1.3 (Jack's call, 2026-10-25, L1).
-    static let lensRate = log(1.3)
-    /// A lens's rim sharpness: just inside the rim a step scales by 1.3^-edge, against 1 just outside. 2 reads at +1 on
+    /// A lens's growth a step, as a log: x2 (Jack, 2026-10-26, from the phone, after x1.3 and x1.6).
+    static let lensRate = log(2.0)
+    /// A lens's rim sharpness: just inside the rim a step scales by 2^-edge, against 1 just outside. 2 reads at +1 on
     /// the halftone, where 1 barely does.
     static let lensEdge = 2.0
 
     /// A lens's map: `steps` of the flow of the field u (1 - (u / plateau)^edge) inside the rigid core, which scales the
-    /// centre by 1.3 a step and fixes the core's rim, and nothing outside it. The rim is fixed by every step, so steps
+    /// centre by 2 a step and fixes the core's rim, and nothing outside it. The rim is fixed by every step, so steps
     /// sum exactly and +k needs exactly -k: a lens never wraps. Positive steps magnify. The Metal shader carries the
     /// same function.
     static func lens(_ p: SIMD2<Double>, rod: SIMD3<Double>, steps: Double) -> SIMD2<Double> {
