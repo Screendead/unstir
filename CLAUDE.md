@@ -294,12 +294,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
   opens without one, and a card with none says "buy" alone.
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
-  Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu, ungated: a cover per offer
-  (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
+  Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
+  `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
+  (Jack, 2026-10-26, S1), so today none and no dock; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
   (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a dot for its state. `PackCard` grows out
   of its cover: the clip (`PackClip`: `<key>-clip.mp4` from the bundle once filmed, else the cover's loop), what it
-  assumes, the taste, holds, the purchase state, buy at the App Store's price, try free, Complete beside an unowned
-  pack, restore, then the pack's levels, those past the taste locked. `Store.card(for:)` is the gate: `RootView.show`
+  assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
+  purchase state, buy at the App Store's price, try free, Complete beside an unowned pack while Complete is on the
+  shelf (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
+  locked. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  card (`Store.forgetFailures`), and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from a row or
   from the level before it. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
   and buttons at accessibility sizes; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver

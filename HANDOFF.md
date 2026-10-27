@@ -793,6 +793,18 @@ names and product ids, and Complete's promise to older owners.
    `packs-shelf` (`PackDock`, Shelf.swift), ported from the mock-up, with Complete as the fourth cover. Left: each
    pack's real cover art once its pictures exist (the covers are the mock-up's code-drawn placeholders); the dock's
    cost on the phone (four live shader tanks at 30 Hz on the menu) is unmeasured.
+   Jack's calls (2026-10-26, round 9), built on `packs-shelf` (PR #40):
+   - *S1 = C, not until its levels ship:* in Release a pack's cover shows only once `Pack.levels` holds more than its
+     taste, and Complete's only once all three packs' do (Claude's reading of "its levels are in the game"); with none,
+     the dock is gone. Debug shows every cover. Backstop kept from B: any card whose levels aren't all in
+     (`Pack.planned`) says "More levels arrive in an update." (`testAPackGoesOnTheShelfOnceItsLevelsAreIn`).
+   - *D1 = A, the defaults as built:* the buy button above the list of levels; leaving a free level opened from a card
+     goes back to the card; Complete the fourth cover, labelled "Bundle"; the covers move while the menu is up, their
+     battery cost still to measure on the phone.
+   - Jack (2026-10-26, on the phone): a failed purchase's "didn't go through" stayed after back, even on another pack's
+     card. Fixed on `packs-shelf`: every change of card forgets it, one that lands after its card changed is dropped,
+     and Complete's failure, bought from a pack's card, shows under Complete's line there, not as the pack's state.
+     Unchecked on the phone.
 16. The pack card: a looping 7-second clip, what the pack assumes, the free taste, price, buy and restore; levels past
     the taste show it; Music Box's says "needs sound".
    Built 2026-10-25 on `packs-shelf` (`PackCard`): the price is StoreKit's `displayPrice` (`Store.prices`), the levels
