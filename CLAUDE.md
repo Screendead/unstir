@@ -359,7 +359,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Flood` is chapter 3, The Flood: five scenes, 2:30 back to 12:30 am, in flood teal, its ink 8F9CFF, drawn with the
   Rescue's `Brush` and `Cast`. It opens on the Rescue's 2:30 sky, sea and rain (`testTheFloodOpensOnTheRescuesLastSky`)
   and carries the same rain field on (`Rescue.rain(_:r:minutes:drops:through:)`, from 320 drops to 400), the sky
-  leaning to the storm's indigo. Each scene's floodwater line is fixed outside the cores; a vignette that lowers it
+  kept to the flood's palette (chapter 4 turns it to storm indigo, as this chapter turns the Rescue's). Each scene's floodwater line is fixed outside the cores; a vignette that lowers it
   (the street lamp, the cottage door, the kitchen table) draws its own lower line inside its core. The kitchen's rain
   falls only through its window and back door (`Kitchen.windows`).
   Its vignettes draw through `Brush` (a pen in a figure's own units through `at`, each vignette laid down under one
