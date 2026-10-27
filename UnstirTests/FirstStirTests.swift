@@ -152,7 +152,9 @@ final class FirstStirTests: XCTestCase {
     /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, past
     /// the renderer's own noise (up to 6 in 255 where nothing changed).
     @MainActor private func footprint(_ story: Story, _ k: Int, side: Int) throws -> [SIMD2<Double>] {
-        func pixels(_ played: Set<Int>) throws -> [UInt8] {
+        // Each render in its own pool: without them the test host was killed (signal kill) in a later test of the suite.
+        func pixels(_ played: Set<Int>) throws -> [UInt8] { try autoreleasepool { try render(played) } }
+        func render(_ played: Set<Int>) throws -> [UInt8] {
             let image = try XCTUnwrap((story.scene.map { $0.render(played: played, side: CGFloat(side), scale: 1, colorMode: .nonLinear) }
                                        ?? Harbour.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear))?.cgImage)
             var bytes = [UInt8](repeating: 0, count: 4 * side * side)
