@@ -898,8 +898,12 @@ names and product ids, and Complete's promise to older owners.
      numbers stay right; a later Yes starts clean. Bests and started flags stay. Undecided keeps recording.
    - *K = B:* `returned` goes for any day number not yet sent, and when several snapshots are due at once only the
      newest goes.
-   Still open: the question's wording (Jack: it needs workshopping; `ConsentWords` holds it all, with a placeholder
-   text). Under N, clearing the tally clears what was sent once too, so a player who says Yes, No, then Yes sends
+   Jack's call (2026-10-26, round 9), built on `analytics` (PR #38):
+   - *C1 = C, one line and a link:* the card reads "Help improve Unstir?", then "Let the game tell us how you play.
+     Never who you are.", then a cyan link "What does it send? ›" that opens round 9's option A, the full list of what
+     is sent, under the line (Claude recommended B, the shorter text). Yes and No stay equal. Shots `consent-ask` and
+     `consent-sends` (`UNSTIR_CONSENT=sends`).
+   Still open: under N, clearing the tally clears what was sent once too, so a player who says Yes, No, then Yes sends
    `installed` (and any snapshot due) again and counts as a second install; keeping the sent marks would avoid that.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.

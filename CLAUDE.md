@@ -295,8 +295,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
   no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
   the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
-  word it and settings say (`ConsentWords`; the wording is still Jack's open call): on a plain launch while undecided,
-  `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile), Yes and No the same
+  word it and settings say (`ConsentWords`): on a plain launch while undecided,
+  `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
+  link, "What does it send?", that opens the full list of what is sent under the line; Yes and No the same
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
   analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
   leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
@@ -363,7 +364,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_ANALYTICS=log` writes each analytics event to the
   flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
-  any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask`; `UNSTIR_CONSENT=yes`
+  any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
+  opens the card's list); `UNSTIR_CONSENT=yes`
   or `=no` answers for the launch, never stored, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. This is how screenshots and films
