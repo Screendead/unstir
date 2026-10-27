@@ -349,8 +349,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   par the solver's optimum (`testLensLevels`). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
   (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
   one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
-  through the rod's own `liveAngle` and detent, so its count, dashes, clicks and the iris's turn are a rod's, a step
-  at a time, the dashes running clockwise round the disc for a zoom in.
+  through the rod's own `liveAngle` and detent, so its count, clicks and the iris's turn are a rod's, a step at a time,
+  but its dashes run up a short vertical track beside the knob for a zoom in and down it for out (`track`, on the side
+  away from the finger), not round the disc. A drawn fingertip (`UNSTIR_FINGER`) on a lens rides up and down too.
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
   (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in

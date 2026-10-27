@@ -315,7 +315,7 @@ for n in 1 2 3; do
 done
 hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 STACK=1:+2,0:+2
 hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 STACK=0:+2,1:+2
-hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step." \
+hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger." \
   PACK=lens LEVEL=1 LIVE=0:+1.4 TOUCH=0,-0.42
 # App-icon candidates, each a 1024-pixel square centred on the screen; scripts/icon.sh crops them and lays out the sheet.
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
