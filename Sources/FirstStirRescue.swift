@@ -849,6 +849,8 @@ enum Stair {
     static let window = (x0: 0.47, y0: 0.1, x1: 0.62, y1: 0.34)
     static let door = (x0: -0.74, y0: 0.13, x1: -0.62, y1: 0.42)
     static let floor = 0.42, turn = -0.53
+    /// The bottom step's tread, the first of the nine that climb from the floor to the landing.
+    static let bottom = floor - 0.4 / 9
 
     /// The window and the open door, where the night shows.
     static func windows(_ pen: Pen) -> Path {
@@ -956,8 +958,9 @@ enum Stair {
                 Cast.lantern(pen.at(-0.555, floor - 0.17, k: 0.045), lit: true)
                 pen.glow(-0.555, floor - 0.185, 0.06, Rescue.torch, 0.4)
             } else {
-                Cast.lantern(pen.at(-0.42, floor, k: 0.05), lit: true)
-                pen.glow(-0.42, floor - 0.02, 0.06, Rescue.torch, 0.4)
+                // On the bottom step's tread.
+                Cast.lantern(pen.at(-0.26, bottom, k: 0.05), lit: true)
+                pen.glow(-0.26, bottom - 0.02, 0.06, Rescue.torch, 0.4)
             }
         }
     }
@@ -980,19 +983,25 @@ enum Stair {
 }
 
 extension Rescue {
-    /// The grandmother's hand-lamp, standing lit on a step at (x, y): a squat glass chimney on a base, with a ring.
+    /// The grandmother's hand-lamp, standing lit on a step at (x, y): a wide base with a finger loop, a tall glass
+    /// chimney open at the top, and a pointed flame low in it, so it reads as a lamp and not a numeral.
     static func handLamp(_ pen: Pen, x: Double, y: Double) {
         var lamp = Path()
-        lamp.addPath(pen.poly([(x - 0.025, y), (x - 0.02, y - 0.012), (x + 0.02, y - 0.012), (x + 0.025, y)]))
+        lamp.addPath(pen.poly([(x - 0.026, y), (x - 0.018, y - 0.014), (x + 0.018, y - 0.014), (x + 0.026, y)]))
         lamp.addPath(pen.path { c in
-            c.move(to: CGPoint(x: x - 0.012, y: y - 0.012))
-            c.addQuadCurve(to: CGPoint(x: x - 0.008, y: y - 0.055), control: CGPoint(x: x - 0.024, y: y - 0.03))
-            c.addLine(to: CGPoint(x: x + 0.008, y: y - 0.055))
-            c.addQuadCurve(to: CGPoint(x: x + 0.012, y: y - 0.012), control: CGPoint(x: x + 0.024, y: y - 0.03))
+            c.move(to: CGPoint(x: x - 0.01, y: y - 0.014))
+            c.addQuadCurve(to: CGPoint(x: x - 0.006, y: y - 0.062), control: CGPoint(x: x - 0.024, y: y - 0.034))
+            c.move(to: CGPoint(x: x + 0.006, y: y - 0.062))
+            c.addQuadCurve(to: CGPoint(x: x + 0.01, y: y - 0.014), control: CGPoint(x: x + 0.024, y: y - 0.034))
         })
-        lamp.addPath(pen.curve(x + 0.022, y - 0.004, x + 0.04, y - 0.01, x + 0.024, y - 0.016))
+        lamp.addPath(pen.curve(x + 0.024, y - 0.004, x + 0.046, y - 0.008, x + 0.022, y - 0.014))
+        let flame = pen.path { f in
+            f.move(to: CGPoint(x: x, y: y - 0.046))
+            f.addQuadCurve(to: CGPoint(x: x, y: y - 0.02), control: CGPoint(x: x + 0.012, y: y - 0.024))
+            f.addQuadCurve(to: CGPoint(x: x, y: y - 0.046), control: CGPoint(x: x - 0.012, y: y - 0.024))
+        }
         pen.glow(x, y - 0.03, 0.05, torch, 0.5)
-        pen.fill(pen.ellipse(x, y - 0.03, 0.007, 0.012), flame)
+        pen.fill(flame, Rescue.flame)
         pen.lit(tight) { $0.stroke(lamp, torch) }
     }
 }
