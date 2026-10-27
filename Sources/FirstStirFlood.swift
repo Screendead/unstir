@@ -74,9 +74,10 @@ enum Flood: Int, CaseIterable, Sendable {
     }
 
     /// The sky's tones from the zenith down to the horizon at `minutes`: the town's lit cloud gone, the deep sea's blue
-    /// low down, leaning towards the storm's indigo as the night winds back; turned from the Rescue's at 2:30.
+    /// low down, taking a little of the ink as the night winds back; turned from the Rescue's at 2:30. Only the flood's
+    /// palette: the storm's indigo is chapter 4's to turn to, from this sky, as this chapter turns from the Rescue's.
     static func skyTones(_ minutes: Double) -> [Tone] {
-        let night = Tone(0x05050F), low = Tone(0x0B2238).mix(Tone(0x1E1960), 0.7 * back(minutes))
+        let night = Tone(0x05050F), low = Tone(0x0B2238).mix(Tone(0x8F9CFF).scaled(0.22), 0.5 * back(minutes))
         return zip(Rescue.skyTones(times[0]), [night, night.mix(low, 0.4), low]).map { $0.mix($1, turned(minutes)) }
     }
 
