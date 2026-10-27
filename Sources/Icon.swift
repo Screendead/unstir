@@ -66,6 +66,7 @@ struct IconView: View {
         return PictureLayer(picture: picture, side: side, seed: 3, clock: clock)
             .layerEffect(ShaderLibrary.unstir(.float2(side / 2, side / 2), .float(side / 2), .floatArray(floats),
                                               .float(Float(discs.count)), .float(30), .float(Float(plateau)), .float(Float(plateau)),
+                                              .float(Float(Tank.lensEdge)),
                                               .float(Float(scale)), .float(0), .float3(0, 0, -1), .float(0)),
                          maxSampleOffset: CGSize(width: side, height: side))
     }

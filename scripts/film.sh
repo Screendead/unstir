@@ -105,3 +105,9 @@ film firststir-01-ring 14 "$tank,fps=2,scale=200:-1,tile=11x2:padding=4" PACK=fi
 # The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
 # (UNSTIR_SHELFDEMO, through the calls a finger makes).
 film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned
+# Escapement 1: the demonstration a first-time player sees before the first stir (a heal ticks the clock, a wait ticks it
+# again, then the problem winds in), and lines played by a drawn fingertip: won, and lost the moment a slip is let go.
+# A ratchet's move (0:1) is a tap on it.
+film escapement-demo 14 "$tank,fps=3,scale=200:-1,tile=8x6:padding=4" PACK=escapement OPEN=1
+film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
+film escapement-lost 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,1:-3

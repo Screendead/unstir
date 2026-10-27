@@ -23,6 +23,7 @@
 		6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */; };
 		64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */; };
 		650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B80E0606D266BF05C66786E /* FirstStir.swift */; };
+		730654ACB29B80F0DED02225 /* EscapementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD78B993A35245B095AA159 /* EscapementTests.swift */; };
 		79D52A8EF45A795194455A50 /* Sky.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2926E44D61C37EEF53C771BA /* Sky.metal */; };
 		880003D42E6629AE7D665B1C /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBF51F07B822677549432BB /* StoreTests.swift */; };
 		89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */; };
@@ -34,8 +35,10 @@
 		9F25E1385928C5125BE5CD40 /* Unstir.metal in Sources */ = {isa = PBXBuildFile; fileRef = 63330CD5793ABE158F314B89 /* Unstir.metal */; };
 		A0D3E8882BD5D8BFC1B6B764 /* Flow.metal in Sources */ = {isa = PBXBuildFile; fileRef = BA733A070401C0AD2175FAC1 /* Flow.metal */; };
 		A381D1DEF77AFA6955900C8D /* StoryScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */; };
+		A3FE9653504683BB8858E5DA /* Halftone.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2393BC9A530BA08FB39DD5F /* Halftone.swift */; };
 		A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE72E9F1CCE362B73E2FA79 /* Solver.swift */; };
 		AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */; };
+		B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB4A9DE240F63330597A189 /* LensTests.swift */; };
 		BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */ = {isa = PBXBuildFile; fileRef = D1F91870B1E87E24EFC084E0 /* Glass.metal */; };
 		C3596BB291D30EF520836782 /* Chainmail.metal in Sources */ = {isa = PBXBuildFile; fileRef = E302013539F573E3F8C8FBC5 /* Chainmail.metal */; };
 		CCD56B4404CDF1979D62B556 /* VortexPictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C424A58661F8E2D8F67C740 /* VortexPictures.swift */; };
@@ -79,6 +82,7 @@
 		31807869E592C189FDCC0657 /* UnstirTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = UnstirTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirRescue.swift; sourceTree = "<group>"; };
 		39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		3CB4A9DE240F63330597A189 /* LensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensTests.swift; sourceTree = "<group>"; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
 		536CF149EF97D4429DC2751F /* Loom.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Loom.metal; sourceTree = "<group>"; };
 		551B7907E2001DBDBAC8A1B9 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
@@ -90,12 +94,14 @@
 		7147B0B195AAB46DE31D870D /* Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pictures.swift; sourceTree = "<group>"; };
 		7898E0AEAFE90492DC3EB64C /* Neurons.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Neurons.metal; sourceTree = "<group>"; };
 		7DE72E9F1CCE362B73E2FA79 /* Solver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Solver.swift; sourceTree = "<group>"; };
+		7FD78B993A35245B095AA159 /* EscapementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementTests.swift; sourceTree = "<group>"; };
 		8958A26903CC2506CCC43FBF /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		8C424A58661F8E2D8F67C740 /* VortexPictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VortexPictures.swift; sourceTree = "<group>"; };
 		92B7FCEFE279BF018CABD288 /* Unstir.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Unstir.xcconfig; sourceTree = "<group>"; };
 		944137441C4619E684D8CC15 /* LivePictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePictures.swift; sourceTree = "<group>"; };
 		965EC2AB5B15FD9B3CA462DE /* Twist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Twist.swift; sourceTree = "<group>"; };
 		A96E4651A2353A1299E6FE49 /* Unstir.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Unstir.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2393BC9A530BA08FB39DD5F /* Halftone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Halftone.swift; sourceTree = "<group>"; };
 		B3380A991210C9195237AA14 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BA733A070401C0AD2175FAC1 /* Flow.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Flow.metal; sourceTree = "<group>"; };
 		BD430ED66CD5CE54E0F67F72 /* Levels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Levels.swift; sourceTree = "<group>"; };
@@ -138,7 +144,9 @@
 			isa = PBXGroup;
 			children = (
 				FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */,
+				7FD78B993A35245B095AA159 /* EscapementTests.swift */,
 				59B662DA049B8A76E76E38BF /* FirstStirTests.swift */,
+				3CB4A9DE240F63330597A189 /* LensTests.swift */,
 				D692C82FAF648856F00B09E0 /* PackTests.swift */,
 				2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */,
 				7DE72E9F1CCE362B73E2FA79 /* Solver.swift */,
@@ -186,6 +194,7 @@
 				E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */,
 				BA733A070401C0AD2175FAC1 /* Flow.metal */,
 				D1F91870B1E87E24EFC084E0 /* Glass.metal */,
+				B2393BC9A530BA08FB39DD5F /* Halftone.swift */,
 				C45CEE9950106BAFE3A297A1 /* Icon.swift */,
 				B3380A991210C9195237AA14 /* Info.plist */,
 				BD430ED66CD5CE54E0F67F72 /* Levels.swift */,
@@ -330,6 +339,7 @@
 				AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */,
 				A0D3E8882BD5D8BFC1B6B764 /* Flow.metal in Sources */,
 				BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */,
+				A3FE9653504683BB8858E5DA /* Halftone.swift in Sources */,
 				973A9E11BF631BE4211EAA02 /* Icon.swift in Sources */,
 				98526A3AA7420D378D76C241 /* Levels.swift in Sources */,
 				5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */,
@@ -358,7 +368,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */,
+				730654ACB29B80F0DED02225 /* EscapementTests.swift in Sources */,
 				F09FECAA611D270EE52C8307 /* FirstStirTests.swift in Sources */,
+				B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */,
 				E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */,
 				89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */,
 				A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */,

@@ -18,6 +18,7 @@ final class SolverTests: XCTestCase {
             case let .turn(steps, to):
                 game.turnTank(steps)
                 guard (game.position % layout.order + layout.order) % layout.order == to else { return nil }
+            case .wait: return nil
             }
         }
         return game
@@ -325,6 +326,7 @@ final class SolverTests: XCTestCase {
             for move in play.moves {
                 switch move {
                 case .turn: runs.append(0); last = nil
+                case .wait: last = nil
                 case let .stir(_, slot, _):
                     if slot != last { runs[runs.count - 1] += 1 }
                     last = slot
