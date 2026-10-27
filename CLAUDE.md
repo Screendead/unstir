@@ -323,7 +323,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   grandmother, child, neighbour, crew) and `Dog` build silhouettes from posed parts and outline their union.
   `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a scene on the Mac, held back, played
   and where they differ over the layout's cores and knobs, and prints each vignette's reach against its core less
-  0.02, its nearest approach to the knob and the other discs it enters: the drawing loop, seconds a render.
+  0.02, its nearest approach to the knob and the other discs it enters: the drawing loop, seconds a render. It counts a
+  pixel changed past 14 in 255 (the Mac's renderer shifts bright glow by up to 12 when the rest of the drawing
+  changes), the test past 8 at 512 px; the test is the judge.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
