@@ -69,8 +69,9 @@ struct Stirred: ViewModifier, Animatable {
     func body(content: Content) -> some View {
         content
             .layerEffect(
-                // A low plateau: the whole disc shears, where the tank's 0.6 would spin the middle rows as a block.
-                ShaderLibrary.unstir(.float2(centre), .float(radius), .floatArray([0, 0, 1, Float(angle)]),
+                // A low plateau: the whole disc shears, where the tank's 0.6 would spin the middle rows as a block. The
+                // disc's radius stays under 1, which the shader would take for the swirl, turned inside out.
+                ShaderLibrary.unstir(.float2(centre), .float(radius), .floatArray([0, 0, 0.9999, Float(angle)]),
                                      .float(1), .float(30), .float(0.1), .float(0.1), .float(Float(scale)), .float(Float(0.3 * fade)),
                                      .float3(0, 0, -1), .float(0)),
                 // Samples stay in the disc, which reaches past the view's edges by no more than this. The effect draws
@@ -117,6 +118,8 @@ struct MenuView: View {
     /// The tier's list in the scroll view's space.
     @State private var list = CGRect.zero
     @Namespace private var strip
+    /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
+    @State private var settings: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
@@ -125,9 +128,11 @@ struct MenuView: View {
     private let dim = 0.55
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
-    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, card: Binding<Offer?>,
-         clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false, onPick: @escaping (Level) -> Void) {
+    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
+         card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
+         onPick: @escaping (Level) -> Void) {
         self.demo = demo
+        _settings = State(initialValue: settings)
         self.onPick = onPick
         _card = card
         self.clock = clock
@@ -147,8 +152,21 @@ struct MenuView: View {
     var body: some View {
         // Daily and endless draw on every layout, so they open after the first hex level.
         let modes = Best.unlocked || Best.load(Level.plughole[22].id) != nil
+        let analytics = Analytics.shared
+        // The menu waits for the question's answer, for VoiceOver too.
+        let asking = analytics.asks && analytics.consent == .undecided
         VStack(alignment: .leading, spacing: 0) {
-            title.padding(.horizontal, 20).padding(.top, 28)
+            HStack(alignment: .center) {
+                title
+                Spacer(minLength: 8)
+                Button { settings = true } label: {
+                    Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain).opacity(0.5)
+                .accessibilityLabel("Settings")
+            }
+            .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
             tiers.padding(.top, 6)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -178,8 +196,13 @@ struct MenuView: View {
             }
         }
         .foregroundStyle(Color.text)
-        .accessibilityHidden(card != nil)
+        .accessibilityHidden(card != nil || asking)
         .overlay { cardView }
+        .overlay {
+            if asking { ConsentCard(tier: shown).transition(.opacity) }
+        }
+        .animation(.easeOut(duration: 0.25), value: asking)
+        .sheet(isPresented: $settings) { SettingsSheet() }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()

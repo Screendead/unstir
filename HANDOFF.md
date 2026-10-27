@@ -754,15 +754,26 @@ names and product ids, and Complete's promise to older owners.
    rim grab, the rim lesson, the bezel's hit area and the spin gesture key on motion; touch keys on kind, with new
    `Grab` cases for a ratchet tap and a cup dive; par's comment and the solver's turn moves key on motion; maelstrom's
    tests unchanged.
+   Built 2026-10-25 on `packs-ground` (not merged): `Level.motion` (none, tank, crank) and `Level.kind(of:)` (working,
+   seized, socket, ratchet, from `seized`, `sockets` and `ratchets`); maelstrom and `UNSTIR_SEIZED` set `.tank`, and a
+   test pins that every level turns its tank exactly where a knob is seized. `Grab.ratchet` holds nothing and calls
+   `Game.wait`, a stub. Cup is left out: The Well is cut (R9) and nothing else needs a dive. Left: the ratchet's tick
+   (to-do 34, Escapement), the socket and the crank (charybdis: no level has either, and a crank would turn the tank
+   until its planets are built), and a harness switch for ratchets and sockets.
 9. A `Pack` type outside `Tier` (name, id prefix, levels, free-taste count, product id, card), a `pack` field on
    `Level` as the lab branch's `lab` field is, bests by id, and a test that no pack best opens a tier.
    Merged 2026-10-25 (PR #21, `store`).
 10. A merge hook on `Stacked`, so an entry merging into another hands over its payload (First Stir's tag sets union;
     `Game.Entry`'s pushed mark stays the landing entry's), with tests that endless's brim behaves exactly as today.
+    Built 2026-10-25 on `packs-ground` (not merged): `Stacked.absorb`, called on every merge before a pop;
+    `Game.Entry.tags` unions. Left for to-do 40: the level's tags per scramble entry, which `Game` starts empty.
 11. Pack undo (the free tiers' rule, that an undo leaves the uncovered stir open, merged 2026-10-25, PR #19): a
     snapshot per move, restored by undo from the shared bank, with tests per pack (First Stir's tags,
     Escapement's tick, Lens's zoom entries).
-   Not built. The free tiers' undo rule is merged (PR #19).
+   Built 2026-10-25 on `packs-ground` (not merged): `Game` keeps the stack as each stir began, and a pack level's undo
+   restores it from the shared bank; the free tiers' undo rule is merged (PR #19) and unchanged. Tested on a stack
+   where the two differ. Left: the per-pack tests once each pack's state exists (First Stir's tags, Escapement's tick,
+   which must ride in the snapshot, Lens's zoom entries).
 12. StoreKit 2: a non-consumable per pack plus Complete; purchase, restore, the `Transaction.updates` listener,
     revocation and refunds, pending Ask to Buy; entitlements read at launch; a StoreKit configuration file and
     StoreKit test-session tests, all before the paid account exists.
@@ -865,6 +876,9 @@ names and product ids, and Complete's promise to older owners.
     clock with 35F9.1, and whether reading `kern.monotonicclock` needs a reason (the open question in "Where things
     stand"); then the privacy label.
    Merged 2026-10-25 (PR #20).
+   With analytics (branch `analytics`) the manifest also declares product interaction, coarse location and purchase
+   history (the `purchased` event and the snapshot's packs owned), each unlinked, not tracking, for analytics; the
+   App Store privacy label must say the same.
 53. The age-rating questionnaire.
 54. The store page: screenshots and a preview leading with the free game, then the packs, each pack labelled as a paid
     add-on, captioned for muted playback.
@@ -885,8 +899,27 @@ names and product ids, and Complete's promise to older owners.
    already stores and sends one summary on days 2, 7 and 30, with no ID tying it to the player's other rows (e.g.
    `snapshot`, day 7, days played 1,2,5, furthest V9, lens card seen, taste finished, not bought, 14 undos); grouping
    rows by their contents answers questions such as whether players who finished a taste came back. Plus the send-log
-   button for full touch histories from testers who send one. Unchecked: whether Aptabase limits the properties an
-   event can carry.
+   button for full touch histories from testers who send one. Aptabase's server (`EventBody.cs`) takes property keys
+   of up to 40 characters and event names of up to 60, and cuts string values at 180; it drops, still answering 200,
+   events over a day old and any whose session began over 7 days ago.
+   The analytics core is built on `analytics` (`Analytics.swift`, its own sender with a queue on disk rather than the
+   pre-1.0 SDK, which holds events only in memory).
+   Jack's calls (2026-10-26, round 8), built on `analytics` (PR #38):
+   - *Q = A:* the question is a card over the menu at first launch, and the menu waits for an answer; Yes and No are
+     the same control, same type, colour and size, neither preselected (mock-up style A, `consent-mockups`).
+   - *S = A:* a gear beside the menu's title opens a dark sheet with the analytics switch and "send log", which hands
+     the flight recorder to the share sheet.
+   - *N = C:* under No nothing is recorded for analytics and the tally is cleared but for the install's day, so day
+     numbers stay right; a later Yes starts clean. Bests and started flags stay. Undecided keeps recording.
+   - *K = B:* `returned` goes for any day number not yet sent, and when several snapshots are due at once only the
+     newest goes.
+   Jack's call (2026-10-26, round 9), built on `analytics` (PR #38):
+   - *C1 = C, one line and a link:* the card reads "Help improve Unstir?", then "Let the game tell us how you play.
+     Never who you are.", then a cyan link "What does it send? ›" that opens round 9's option A, the full list of what
+     is sent, under the line (Claude recommended B, the shorter text). Yes and No stay equal. Shots `consent-ask` and
+     `consent-sends` (`UNSTIR_CONSENT=sends`).
+   Still open: under N, clearing the tally clears what was sent once too, so a player who says Yes, No, then Yes sends
+   `installed` (and any snapshot due) again and counts as a second install; keeping the sent marks would avoid that.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that

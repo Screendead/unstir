@@ -6,7 +6,8 @@ import XCTest
 final class SolverTests: XCTestCase {
     /// Plays `play` on a real `Game`, or nil when a knob is off the slot the play names or the tank off its position.
     @MainActor private func game(_ play: Play, _ layout: Layout, _ scramble: [Twist], seized: Set<Int> = []) -> Game? {
-        let level = Level(id: "test-solver", label: "", title: "", layout: layout, scramble: scramble, seized: seized)
+        let level = Level(id: "test-solver", label: "", title: "", layout: layout, scramble: scramble, seized: seized,
+                          motion: seized.isEmpty ? .none : .tank)
         // Flags set, so a play that turns the tank or stirs the swirl stores neither.
         let game = Game(level: level, tankTurned: true, swirled: true)
         for move in play.moves {

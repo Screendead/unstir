@@ -41,8 +41,8 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23."
-shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1
+shot menu "Menu on first launch, the analytics question answered: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
+shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
@@ -125,6 +125,10 @@ shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank ref
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
+shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
+  SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
+shot tier-up-locked "The same with maelstrom still closed: the button dimmed with a lock, saying par every vortex level opens it." \
+  SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
 shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels." \
   SCREEN=result MODE=daily
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
@@ -292,7 +296,7 @@ if [[ -z "$pattern" || "rim-" == *$pattern* ]]; then
     "concat=n=6:v=1,crop=iw:ih*0.56:0:ih*0.21,scale=440:-1,tile=3x2:padding=8:color=0x303030" -frames:v 1 "shots/vortex-rim.png"
   echo "sheet vortex-rim"
 fi
-shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the centre turned 90 degrees, sheared all the way out to the glass's edge, which stays still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
+shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the glass's edge turned 90 degrees, sheared all the way in to the centre, which stays still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
 swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
 shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1 CLOCK=3
 shot swirl-quad-live "The same held mid-drag from the rim, the swirl 1.5 steps clockwise." LAYOUT=quadSwirl STACK="$swirl" LIVE=4:1.5 TOUCH=0.7,-0.7 SWIRLED=1 CLOCK=3
@@ -328,3 +332,10 @@ shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPE
   STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
 shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
   CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+
+# The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
+shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
+shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends." CONSENT=sends
+shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
+shot consent-settings-on "The gear's sheet: the analytics switch on, and send log." CONSENT=yes SETTINGS=1
+shot consent-settings-off "The gear's sheet: the analytics switch off, and send log." CONSENT=no SETTINGS=1
