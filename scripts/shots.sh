@@ -386,9 +386,9 @@ shot escapement-2-lost "Escapement 2, then rod 1 -3: its tick finds no seam and 
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
 # Lost to the clock stopping with twists left (Jack's call E2), each of the three looks (UNSTIR_STOPLOOK): on 3, the
-# book's decoy, a tap then knob 1, leaving knob 2's seam; on 17, two clocks, a tap where the last heal was due.
+# book's decoy, a tap then knob 1, which pushes under knob 2's seam; on 17, two clocks, a tap where the last heal was due.
 for look in stamp left rings; do
-  shot "escapement-stopped-3-$look" "Escapement 3 after a wait and 1:-3: the clock stopped with knob 2's twist left, lost; look $look." \
+  shot "escapement-stopped-3-$look" "Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, lost; look $look." \
     PACK=escapement LEVEL=3 PLAYED=0:1,1:-3 STOPLOOK=$look
   shot "escapement-stopped-17-$look" "Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, lost; look $look." \
     PACK=escapement OWNED=escapement LEVEL=17 PLAYED=3:-5,4:-2,3:5,4:3,0:1 STOPLOOK=$look
