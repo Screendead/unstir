@@ -180,7 +180,7 @@ enum BreakwaterPath {
 
     static func draw(_ pen: Brush, played: Set<Int>) {
         let ink = Flood.ink
-        Flood.clouds(pen, [(-1, -0.4, -0.78, 0.05), (0.3, 1, -0.84, 0.05), (-0.55, -0.05, -0.95, 0.04)])
+        Flood.clouds(pen, [(-1, -0.4, -0.78, 0.05), (0.32, 0.72, -0.82, 0.05), (-0.55, -0.05, -0.95, 0.04)])
 
         // The breakwater: its path's far edge, its near edge and the wall down to the sea, black inside.
         let ts = Array(Swift.stride(from: 0.0, through: 1.0, by: 0.02))
