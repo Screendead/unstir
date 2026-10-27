@@ -657,6 +657,8 @@ enum Kitchen {
     /// The stair's nosings, from its foot in the water up to the ceiling: y at x.
     static func step(_ x: Double) -> Double { 0.3 - (x - 0.12) * 0.84 }
     static let tread = 0.06
+    /// The chair's front legs and back.
+    static let chairFront = 0.11, chairBack = 0.22
 
     /// The window and the open door, where the night shows.
     static func windows(_ pen: Brush) -> Path {
@@ -726,15 +728,16 @@ enum Kitchen {
         // The water over the floor, dimming all under it.
         Flood.water(pen, water)
 
-        // A chair standing in the water in the foreground, in rod 3's core.
+        // A chair standing in the water in the foreground, side on and facing left, in rod 3's core beside its knob and
+        // clear of the stair's foot: its upright the core's "up".
         var chair = Path()
-        chair.addPath(pen.poly([(0.16, 0.3), (0.16, 0.48), (0.04, 0.48), (0.04, 0.62)], closed: false))
-        chair.addPath(pen.seg(0.16, 0.48, 0.16, 0.62))
-        for y in [0.34, 0.38, 0.42] { chair.addPath(pen.seg(0.16, y, 0.215, y - 0.015)) }
-        chair.addPath(pen.seg(0.215, 0.285, 0.215, 0.6))
+        chair.addPath(pen.seg(chairBack, 0.4, chairBack, 0.68))
+        chair.addPath(pen.poly([(chairBack, 0.53), (chairFront, 0.53), (chairFront, 0.68)], closed: false))
+        chair.addPath(pen.seg(chairFront, 0.62, chairBack, 0.62))
+        chair.addPath(pen.seg(chairBack - 0.016, 0.4, chairBack + 0.012, 0.4))
         pen.lit { $0.stroke(chair, ink) }
         pen.lit([(0.02, 0.3), (0.007, 0.8)]) { g in
-            for x in [0.04, 0.16, 0.215] { g.stroke(g.ellipse(x, x == 0.215 ? 0.6 : 0.62, 0.025, 0.006), Flood.sea, 0.8) }
+            for x in [chairFront, chairBack] { g.stroke(g.ellipse(x, 0.68, 0.025, 0.006), Flood.sea, 0.8) }
         }
 
         // Vignette 0, the table.
@@ -778,7 +781,7 @@ enum Kitchen {
         // Vignette 3, the float.
         pen.vignette(3) { pen in
             if played.contains(3) {
-                UpstairsWindow.float(pen, 0.135, 0.645)
+                UpstairsWindow.float(pen, chairFront - 0.018, 0.668)
             } else {
                 UpstairsWindow.float(pen, -0.15, 0.69)
                 // Its wake spreading behind it as it drifts to the door.
