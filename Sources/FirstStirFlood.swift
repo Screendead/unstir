@@ -434,10 +434,12 @@ enum HighStreet {
         // Vignette 3, the dinghy.
         pen.vignette(3) { pen in
             if played.contains(3) {
-                HighStreet.dinghy(pen.at(-0.29, water + 0.035, k: 0.15), crew: false)
-                pen.stroke(pen.curve(-0.36, water + 0.012, -0.4, water + 0.01, drain + 0.008, water - 0.005), Flood.sodium, 0.8)
+                // Afloat at the fronts' foot, its own waterline on theirs, its painter made fast round the drainpipe.
+                HighStreet.dinghy(pen.at(-0.3, water, k: 0.13), crew: false)
+                pen.stroke(pen.curve(-0.36, water - 0.022, -0.4, water - 0.026, drain + 0.008, water - 0.006), Flood.sodium, 0.8)
             } else {
-                HighStreet.dinghy(pen.at(-0.33, 0.645, k: 0.14, flip: true), crew: true)
+                // Close in under the knob and large, so the two hats tell father from neighbour.
+                HighStreet.dinghy(pen.at(-0.345, 0.66, k: 0.22, flip: true), crew: true)
             }
         }
     }
@@ -453,23 +455,23 @@ enum HighStreet {
         }
         if crew {
             let seat = pen.clipped(to: pen.rect(-1, -2, 1, -0.17))
-            Cast.figure(seat.at(-0.18, 0.14, k: 0.75), .father,
-                        arms: [[(0.1, -0.74), (0.3, -0.56), (0.42, -0.5)]], colour: Flood.ink)
-            Cast.figure(seat.at(0.2, 0.14, k: 0.72), .neighbour,
-                        arms: [[(0.1, -0.74), (0.3, -0.56), (0.42, -0.5)]], colour: Flood.ink)
+            Cast.figure(seat.at(-0.26, 0.17, k: 0.66), .father,
+                        arms: [[(0.1, -0.74), (0.2, -0.6), (0.26, -0.5)]], colour: Flood.ink)
+            Cast.figure(seat.at(0.2, 0.17, k: 0.64), .neighbour,
+                        arms: [[(0.1, -0.74), (0.2, -0.6), (0.26, -0.5)]], colour: Flood.ink)
         }
         pen.fill(hull, .black)
         var lines = Path()
         lines.addPath(hull)
         if crew {
-            for x in [-0.12, 0.27] { lines.addPath(pen.seg(x + 0.06, -0.24, x - 0.12, 0.1)) }
-            lines.addPath(pen.ellipse(0.38, -0.21, 0.07, 0.025))
+            for x in [-0.13, 0.32] { lines.addPath(pen.seg(x + 0.06, -0.24, x - 0.08, 0.03)) }
+            lines.addPath(pen.ellipse(0.43, -0.2, 0.05, 0.02))
         }
         pen.lit(Rescue.tight) { g in
             g.stroke(hull, Flood.ink)
             if crew {
-                for x in [-0.12, 0.27] { g.stroke(g.seg(x + 0.06, -0.24, x - 0.12, 0.1), Flood.ink) }
-                g.stroke(g.ellipse(0.38, -0.21, 0.07, 0.025), Flood.sodium)
+                for x in [-0.13, 0.32] { g.stroke(g.seg(x + 0.06, -0.24, x - 0.08, 0.03), Flood.ink) }
+                g.stroke(g.ellipse(0.43, -0.2, 0.05, 0.02), Flood.sodium)
             }
         }
     }
