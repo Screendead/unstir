@@ -28,7 +28,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
-  runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, the workflow and
+  runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, `Config/`, the workflow and
   `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
   inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
   build system to ignore inode changes; the restored build then stays incremental. A hit saves compile work but not
@@ -66,29 +66,44 @@ Once Jack has heard the argument and still decides, carry out his decision.
 `project.yml` is the source of truth for the Xcode project; the scripts run `xcodegen generate` before building, so
 edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitignored).
 
-- Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result)
+- Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result).
+  It passes the shell's `APTABASE_KEY`, Aptabase's app key, into Info.plist's `AptabaseKey`, over
+  `Config/Local.xcconfig` (gitignored), which `Config/Unstir.xcconfig` includes for Xcode's own builds and archives;
+  with neither analytics is off. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
+  build's events as Debug.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
-  UDID, set in the shell). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level on the phone
+  UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
+  numbers (Jack, 2026-10-27). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level on the phone
   until a run with `UNSTIR_UNLOCK=0`.
 - Tests (XCTest, on a simulator):
   ```
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
     -destination 'platform=iOS Simulator,name=Unstir iPhone 17 Pro Max' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
   ```
-  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds skip
-  unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
+  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds, and the
+  halftone's contrast test, skip unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
   `xcodebuild` to run them too (about a minute and a half more).
 - StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
-- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`; a swirl
-  layout by its name, `quadSwirl`, its swirl never seized) prints the optimum (and what untwisting alone takes when a
+- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots]` (e.g. `quad 0:+3,2:-4 0`,
+  or `tri 1:-2,2:+4,0:+3 lenses=0`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
   detour beats it), the park rule's fewest and most moves over every way its ties go under each parking, fair or over
   by the most, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It
   compiles `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut
   out of Levels.swift, so that struct stays top-level there. `scripts/solve.sh escapement <layout> <scramble> <clock
-  rod> [limit]` (e.g. `escapement tri 0:-1,1:+3,0:-2,2:-4 0`) runs Escapement's prover instead: the fewest moves with
-  the clock ticking after each, and a line, waits and all.
+  rod> [limit]` (e.g. `escapement tri 0:-1,1:+3,0:-2,2:-4 0`) runs the app's own prover for one clock
+  (`Solver.escapement`) instead: the fewest moves with the clock ticking after each, under the same rule, and a line,
+  waits and all.
+- Escapement's prover: `scripts/escapement.sh check <layout> <scramble> <clocks> [span] [quick]` (clocks as rods in tick
+  order, each `+` or `-` for wound back, e.g. `hex <scramble> 1+,4-`) plays the pack's rule on `Array.commit`: every move
+  (a turn, or `wait`) ticks each running clock one step, and a tick that pushes loses, as does the last clock stopping
+  with twists still on the picture (Jack, round 9), so no line takes more moves than the clocks owe. It prints the
+  optimum and its proof, which is absolute when par is what the clocks owe, the lines and keys at par over turns of up
+  to `span` steps, and each move of the line with the alternatives that would lose. `build` deals problems backwards from a line,
+  and `book scripts/escapement/problems.tsv` proves the draft book (`docs/escapement-problems.md`, about eight
+  minutes). `ESC_RULE=lab` plays the lab's re-grab instead of the final tick, and `ESC_PUSHED=1` plays on past a pushed
+  tick. It compiles `build/escapement/prove` from Twist.swift and `SplitMix64`, as `solve.sh` does.
 - Vortex's levels: `scripts/vortex-levels/pools.sh <dir>` deals seeded scrambles on the swirl layouts with the frozen
   generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
   Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py
@@ -109,6 +124,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
   scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as
   one sheet (needs Pillow).
+- Lens's draft table: `scripts/lens-table.py [docs/lens-design.md] [--pitches 4]` reads the level rows of
+  `docs/lens-design.md` and checks each against the hard lens's rules with no app code (a lens moves only its core, so
+  overlap decides commutation): depth after the parse, dealt lens steps and nets, and how far each twist dealt over a
+  lens drags its rim, in dot pitches. It exits non-zero on a break.
+- First Stir's outline: `docs/first-stir-outline.md` is the pack's story, scene table and art spec, approved by Jack
+  (2026-10-26) with his answers marked under its open points. `scripts/first-stir-compositions.py` draws plans of three of its scenes (each rod's disc and core,
+  the part of a core another disc reaches, where each vignette sits) to `shots/first-stir-composition-*.png` (needs
+  Pillow).
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
@@ -120,7 +143,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Twist.swift** holds the core model and has no UI. A scramble is a stack of `Twist(rod, steps)` entries (30° per
   step), applied bottom first. `Tank.twist`/`Tank.profile` is the point map: a rigid disc core out to `plateau` (0.6),
   then a smoothstep shear ring; the swirl's (`swirlPlateau`, 0, picked by its radius of 1) has no core and shears from
-  its centre to its edge. `Array.commit` is the one rule for every rod stir. A turn merges into the rod's
+  its edge, turned whole, to its still centre. `Array.commit` is the one rule for every rod stir. A turn merges into the rod's
   newest entry when everything above that entry commutes with the turn, and pushes a new entry otherwise. It runs on any
   `Stacked` entries, so what rides with an entry (`Game.Entry`'s mark of the player's push, and its tags, First Stir's
   vignettes) stays with it: the entry a turn lands on keeps its own and takes in what rode with the turn through
@@ -133,14 +156,25 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   touches it: `Layout.order`/`tankStep` are the layout's rotational symmetry (hex's hub held still), which sets each
   rod's twist exactly on a rod of the same size, and `slot(of:at:)`/`knob(over:at:)` map a physical knob to the slot
   under it at a tank position. Each layout has a swirl variant (`Layout.swirls`, `quadSwirl` and so on, for vortex):
-  its base's rods, then one more (`Layout.swirl`) of radius 1 at the centre, so the glass's edge, where its profile
-  reaches 0, never moves. It stacks and merges like any rod, decided by sampling as it overlaps every rod, and every
+  its base's rods, then one more (`Layout.swirl`) of radius 1 at the centre, its profile turned inside out (Jack,
+  2026-10-26): the fluid sticks to the rim the finger turns, so the glass's edge goes round whole and the swirl lets go
+  towards its centre, which stays put (`testASwirlTurnsTheGlassEdgeWhole`). The shader takes any disc of radius 1 or
+  more for the swirl, so the menu's `Stirred` keeps its disc just under 1. It stacks and merges like any rod, decided by sampling as it overlaps every rod, and every
   turn of the tank leaves it on itself. On hex it commutes exactly with the hub, which shares its centre. It has no
   rigid core (`Tank.swirlPlateau`), so it shears through every other rod's and the core-clearance rule exempts it. `Layout.allCases` leaves the swirls out, so the
-  frozen generator never deals one and the sandbox never cycles to one.
+  frozen generator never deals one and the sandbox never cycles to one. A rod may instead be a lens (Lens's pack,
+  `Level.lenses`, by slot): `Tank.lens` moves only its rigid core, on the flow of u (1 - (u / 0.6)^2) (`lensEdge`, 2),
+  which magnifies the centre by 2 a step (`lensRate`, Jack's from the phone, 2026-10-26) for positive steps and fixes the core's rim, so the picture
+  draws a crisp circle there and nothing outside it moves. Steps sum and cancel, so a lens's entries merge and pop
+  through the same `Array.commit`, and a lens never wraps: +k needs exactly -k. Every call that maps points
+  (`same`, `commutes`, `looksSolved`, `removable`, `landing`, `commit`, `parse`) takes the lens set,
+  empty by default; a call that drops it treats a lens as a twist, which `testTheLensSetChangesHowAStackMerges` catches
+  where it matters. Ported from the hard lens on local branch `lab-lens` (Jack's call, round 3, L1).
 - **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
-  the stack's inverses to sample the picture. The tests only reach the Swift copy (`Tank.profile`/`Tank.twist`), so
-  change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
+  the stack's inverses to sample the picture. A lens's entry carries a negative radius and its flow's time
+  (`steps * Tank.lensRate`) for the angle, and the rim's sharpness comes in as a uniform. The tests reach the Swift copy
+  (`Tank.profile`/`Tank.twist`/`Tank.lens`) and only the shader's `lensFlow`, compiled on its own
+  (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
   The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (30) limits are tuned against 120 Hz on an
   iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone.
@@ -224,7 +258,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   magenta ring and heavy tap, which in a run mark only a commit that pops one of the scramble's entries; a win the fine pass calls also settles one, as the tank's
   last heal, while one of the scramble's entries is left and unless its move healed one. `Game.nextTank` carries it to
   the next tank. `Game.turnTank` is a move that pushes no entry: turns in a row join, and one netting a whole turn
-  drops. `Game.history` holds rod stirs by slot and
+  drops. The result card of a tier's last level goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or dimmed with a lock while that tier is closed, going back to the levels. `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where the level's motion is the tank, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
@@ -277,29 +311,27 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
   Escapement's clock lives in `Game` too (`Game.Clock`, `escapement`). After every move the clock rod ticks +1 through
   the ordinary commit while it holds an entry, and the stack's last tick solves on the spot; once the rod is empty the
-  clock stops, and there is nothing to wait for. A move is one working knob's stir or a wait, a ratchet tap, which is
-  a move of its own and never joins. A stir is one commit of its net from where it began: the tick lands on lift and
-  stays provisional while the stir is open, a re-grab of its knob (`liftTick`, from `hold`) takes it back out for the
-  drag, and the lift replays the stir from the stack it began on at its new net (`relandTick` when let go in place),
-  so turned back to nothing it drops move and tick together. The next commit of another knob, or a wait, seals the
-  open move. A tick that pushes buries a positive clock entry, `overdue`, that no continuation pops
-  (`testAPushedTickNeverPops`); sealed, it loses the tank (`lost`, which `finished` counts), and the sealing move lands
-  no tick, so the +1 stands frozen (Jack's call, 2026-10-25, E3). A wait is sealed as it is made, so one whose tick
-  pushes loses at once. A full stack refuses a move whose tick it would refuse. Undo is the pack's, the stack and the
-  clock as the move found them, and works on a lost tank; reset starts the clock afresh. The view draws the clock's
-  knob as a 12-tooth `RatchetView` read against a vermilion sub-dial fixed to the glass, its pawl lifting while a
-  tick is out, each tick a beat after the lift turning the clock's core a step on screen (`Unstirred.tick`, one entry
-  over in the four-tap budget, like the drag) and the wheel a tooth; `ClockHint` dashes the clock's disc at all times
-  (Jack's call, E2); a pushed tick flashes the ratchet red and stands as a vermilion +N until sealed, then "lost."
-  (`LostStamp`) by it and `LostCard`'s undo and again; the clock stopping sends an amber ring out. A level with a
-  `demo` plays it before the problem opens, unless the harness holds the tank still: a drawn fingertip heals the demo
-  stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black and the problem
-  winds in; a tap skips it.
+  clock stops, and there is nothing to wait for. A move is one working knob's stir or a wait, a ratchet tap. Every
+  let-go is a move of its own and final (Jack's call E1, round 9): its tick lands with it, nothing joins it, and the
+  same knob grabbed again is the next move with its own tick, so a stir's dial always counts from zero. A tick that
+  pushes buries a positive clock entry, `overdue`, that no continuation pops (`testAPushedTickNeverPops`), so it loses
+  the tank at once (`lost`, which `finished` counts); so does a tick that stops the clock with twists still on the
+  picture (Jack's call E2, round 9). A full stack refuses a move whose tick it would refuse. Undo is the pack's, the
+  stack and the clock as the move found them, and works on a lost tank; reset starts the clock afresh. The view draws
+  the clock's knob as a 12-tooth `RatchetView` read against a vermilion sub-dial fixed to the glass, its pawl riding
+  out with each tick, each tick a beat after the lift turning the clock's core a step on screen (`Unstirred.tick`, one
+  entry over in the four-tap budget, like the drag) and the wheel a tooth; `ClockHint` dashes the clock's disc at all
+  times (Jack's call, 2026-10-25); a pushed tick flashes the ratchet red and stands as a vermilion +N; a
+  lost tank shows "lost." (`LostStamp`) by the clock, with or without a +N, and `LostCard`'s undo and again, whose
+  exit goes through `leave` as the result card's does. The clock stopping sends an amber ring out. A level with a
+  `demo` plays it before the problem opens, every time, unless the harness holds the tank still: a drawn fingertip
+  heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black
+  and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
-  Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and, until its
-  content lands, no levels: `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
-  1 by place under `Pack.id`; a `Level` names its `pack`. Escapement has its first problem, the packs mock-up's, at par
-  3, proved by the prover (`testEveryProblemsParIsTheProversOptimum`). A pack's undo spends the shared bank like any other, but
+  Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
+  one so far, Lens three, Escapement one, the packs mock-up's problem at par 3, proved by the prover,
+  `testEveryProblemsParIsTheProversOptimum`): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
+  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
@@ -310,7 +342,81 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
-  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it.
+  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it. Prices are
+  never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
+  opens without one, and a card with none says "buy" alone.
+  `Level.lens` holds three levels for the hard lens's phone test, the draft table's free taste (`docs/lens-design.md`): tri, rod 0 a lens, on the halftone, each dealt lens entry +1 to +3 and each lens netting at most +3,
+  par the solver's optimum (`testLensLevels`). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
+  (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
+  one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
+  through the rod's own `liveAngle` and detent, so its count, dashes, clicks and the iris's turn are a rod's, a step
+  at a time, the dashes running clockwise round the disc for a zoom in.
+- **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
+  place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
+  (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
+  its `tags`, and `Game.played` is the story's vignettes less every tag on the stack, so the picture is a function of
+  the stack alone: a pop plays what it carried, a vignette waits for every entry on its rod, a win the fine pass calls
+  plays the rest, and the pack's undo and a reset bring tags back with their entries. On a story, the heal ring
+  (magenta and the heavy tap) marks only a commit that plays a vignette; cancelling the player's own push flashes
+  white. `StoryLayer` draws it from baked layers, made as it appears: the storm's sky and the evening's, the bolt cut to
+  its box, and the scene with every vignette held back and with every one played, both transparent, under live rain
+  and moon (`Harbour.weather`). Each played core is cut in from the played scene over its own sky and fades in over
+  `Harbour.fade` (0.4 s) on the rewind's clock; an unplayed one snaps back at once, since a fade would show the played
+  state on a turned core. The night winds back a stage per vignette played (Jack's call, F2): over `Harbour.rewind`
+  the evening's sky fades in by a stage, the bolt goes in the first, the rain climbs back up its slant and thins, and
+  the moon, outside every disc, sinks. Only undo or reset winds it forward, and that snaps. The layers bake at the
+  screen's scale unless they would pass `Harbour.budget` (64 MB, not yet measured on the phone; about 51 MB at 3x on
+  the largest phone), then lower. Level 1 is the lab's harbour (`lab-firststir`), opening wrecked as dealt, with the
+  caption "Each heal turns the night back." as its note. `testNoVignetteShowsTheNextMove` renders each vignette's two
+  states, checks the difference stays inside its own core (so the cut clips no glow), and over every heal order that
+  `Layout.removable` allows, that no vignette's light reaches the core of a rod removable right after its heal and that
+  the entries left move none of it by half a pixel; the harbour's two known smears (the lantern's shards and the boat's
+  stern, in the cottage's ring) are pinned there until the art pass redraws them (Jack, 2026-10-26, F4).
+- **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
+  Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
+  `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
+  (Jack, 2026-10-26, S1), so today none and no dock; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
+  (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a dot for its state. `PackCard` grows out
+  of its cover: the clip (`PackClip`: `<key>-clip.mp4` from the bundle once filmed, else the cover's loop), what it
+  assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
+  purchase state, buy at the App Store's price, try free, Complete beside an unowned pack while Complete is on the
+  shelf (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
+  locked. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  card (`Store.forgetFailures`), and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
+  opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from a row or
+  from the level before it. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
+  and buttons at accessibility sizes; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
+  reads each cover's state or price and each button's price, hides the menu under a card, and announces a change of
+  state. Reduce Motion holds the covers and clip still, stills the pending dot and fades the card in.
+- **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
+  (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
+  no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
+  the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
+  word it and settings say (`ConsentWords`): on a plain launch while undecided,
+  `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
+  link, "What does it send?", that opens the full list of what is sent under the line; Yes and No the same
+  control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
+  analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
+  leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
+  once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
+  install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
+  bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
+  `returned` with the day number (day 1 the install's) on the first opening of any later day number not yet sent, at
+  launch or on coming to the front, so a clock set ahead and back costs no real return, and on the first opening on or
+  after days 2, 7 and 30 the newest `snapshot` due, every one due marked sent, so a late yes or a clock jumped ahead
+  sends one (Jack, 2026-10-26, K). Days are plain `Best.day`, not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved or quit, moves, par, undos, resets)
+  as it is solved or left for the menu; endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox
+  nothing. A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app
+  was killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
+  fires once a pack's taste levels all have bests, `purchased` on a verified purchase in `Store.purchase`. The snapshot
+  reads the bests, started flags, bank, endless best, dailies solved on the first try, packs owned and the tally.
+  `Sender` posts batches of 25 to `/api/v0/events` from `Library/analytics-queue.json`; it is built at launch under a
+  yes, so what an earlier launch left queued goes out with no new event to carry it. It keeps a batch on no answer, a
+  5xx or 429 and retries a minute later, drops one refused, and drops events over 23 hours old (the server refuses a
+  day's). `Sender.body` is everything on the wire: name, props, time, a session renewed after an hour with no event, as
+  Aptabase's SDK does (the snapshot its own) and `isDebug` (a Debug or playtest build), `osName`, the app's versions and `sdkVersion`. The server
+  takes property keys of up to 40 characters and event names of up to 60, cuts strings at 180, and drops without an
+  error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
@@ -320,7 +426,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   again over the scroll view, cut to its visible part, and that copy is what stirs; the scroll view's own list
   (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. A locked tier can be
   looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par. A hidden stir in
-  the background builds the shader's pipeline before the first switch.
+  the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
+  the list, and the card (`RootView`'s, bound in) lies over the whole menu.
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
@@ -328,21 +435,28 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   raw clock; the neural web is static per seed, built once off the main actor. Vortex's own family (isobars, ephemeris,
   cords; **VortexPictures.swift**, **Flow.metal**, **Sky.metal**, **Loom.metal**) is drawn live the same way, with no
   twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. The sandbox's cycle
-  (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins.
+  (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's
+  halftone. The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
+  screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
+  outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
+  It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
-  even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
+  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
-  (`UNSTIR_BENCH`). In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
+  (`UNSTIR_BENCH`). `UNSTIR_PACE=s` sets autoplay's and `UNSTIR_MOVES`' wait before each move (0.3 s unset), and
+  `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
   best or started flag (`Level.keepsProgress`), and
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
-  in place of StoreKit's, never stored. `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait) and a turn of the open stir's
-  knob a re-grab; `UNSTIR_PLAYED` commits such a line through the real path as the level opens, for stills (with
-  `UNSTIR_LIVE` on the open stir's knob, its tick lifted out); with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
+  in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`).
+  `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
+  levels on a pack's card while it has none. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, and
+  `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
+  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
+  line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
   round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
   lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
@@ -354,7 +468,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch, so shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
-  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_UNLOCK` alone
+  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_ANALYTICS=log` writes each analytics event to the
+  flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
+  `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
+  any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
+  opens the card's list); `UNSTIR_CONSENT=yes`
+  or `=no` answers for the launch, never stored, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. This is how screenshots and films
   are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
@@ -367,7 +486,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   disc still, and save a move). It tries only the detours its class comment lists, so it is a bounded search, not a
   proof; `exhaustive` checks it on small cases. Its pruning reads which rods interact (`interacts`: discs that overlap
   and maps that fail to commute, judged by the maps), so a swirl interacts with every rod but hex's hub, which shares
-  its centre; whether a word commutes is still `Layout.commutes`'s call. The swirl is a slot like any other, held at
+  its centre; whether a word commutes is still `Layout.commutes`'s call. `Solver(layout, lenses:)` maps a lens's slots
+  as the game does, so on tri a lens interacts with both its neighbours, and two lenses, whose cores never meet, never
+  interact. The swirl is a slot like any other, held at
   every position and never seized. With no knob seized, as on every vortex level, the tank never turns, so every
   player untwists and the planning gap is 0: there the solver's job is the optimum, and whether a detour beats
   untwisting. The park rule (`park`) untwists the newest whole seam a working knob
@@ -378,10 +499,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   most moves over its ties is the optimum under both parkings; its planning gap is no lookahead minus the optimum.
   `home:` asks for the tank back at 0, the old end rule. Several tests replay plays on a real `Game`, which must empty
   the stack in the moves the play counts. Escapement's prover (`Solver.escapement`) is a breadth-first search over
-  (stack, the slot just stirred) where a move is a wait or one commit of a stir's net, by ±1 to ±11 or an entry's exact
-  inverse, then the clock's forced tick, a line dropped where that tick pushes; a slot is never stirred twice running,
-  as that is one stir. So its first line is a fewest, and no shorter line exists among those counts: the proof each
-  problem ships with. `Move.wait` is its tap.
+  stacks where a move is a wait or one commit to a working slot, by ±1 to ±11 or an entry's exact inverse, then the
+  clock's forced tick, a line dropped where that tick pushes or stops the clock with twists left; the same slot may be
+  stirred twice running, as every let-go is final. So its first line is a fewest, and no shorter line exists among
+  those counts: the proof each problem ships with. `Move.wait` is its tap.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's and vortex's pictures).

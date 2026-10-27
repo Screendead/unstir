@@ -13,8 +13,10 @@ enum Picture: String, CaseIterable {
     case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
     /// Vortex's own, drawn live the same way.
     case isobars, ephemeris, cords
+    /// Lens's halftone test panel (`Halftone`), baked a pixel at a time.
+    case halftone
 
-    var isLive: Bool { ![.grid, .sunset, .city].contains(self) }
+    var isLive: Bool { ![.grid, .sunset, .city, .halftone].contains(self) }
 
     /// Maelstrom's picture where whirlpool shows this one.
     var twin: Picture {
@@ -48,7 +50,7 @@ enum Picture: String, CaseIterable {
     /// microbench); the others are the glass's scaled by their Mac GPU cost against it, not yet confirmed on the phone.
     var fillEntries: Int {
         switch self {
-        case .grid, .sunset, .city: 0
+        case .grid, .sunset, .city, .halftone: 0
         case .marbling: 3
         case .glass, .chainmail, .coral, .marblingTwin: 4
         case .neurons, .glassTwin, .chainmailTwin, .coralTwin: 5
@@ -59,9 +61,9 @@ enum Picture: String, CaseIterable {
         }
     }
 
-    /// The sandbox's: plughole's pictures, whirlpool's and vortex's, not the twins.
+    /// The sandbox's: plughole's pictures, whirlpool's and vortex's, not the twins or the packs'.
     var next: Picture {
-        let all = Self.allCases.filter { $0.sibling == $0 }
+        let all = Self.allCases.filter { $0.sibling == $0 && $0 != .halftone }
         return all[((all.firstIndex(of: sibling) ?? -1) + 1) % all.count]
     }
 
@@ -90,7 +92,11 @@ enum Picture: String, CaseIterable {
     }
 
     @MainActor
-    func render(side: CGFloat, scale: CGFloat) -> UIImage? {
+    func render(side: CGFloat, scale: CGFloat) async -> UIImage? {
+        if self == .halftone {
+            let n = Int((side * scale).rounded())
+            return await Task.detached(priority: .userInitiated) { Self.halftone(n, scale: scale) }.value
+        }
         let r = ImageRenderer(content: Canvas { ctx, size in draw(ctx, r: size.width / 2) }
             .frame(width: side, height: side))
         r.scale = scale
@@ -98,6 +104,33 @@ enum Picture: String, CaseIterable {
         // Float storage, so the glow adds in linear light as the design renders did; 8-bit .linear bands the dark skies.
         r.colorMode = .extendedLinear
         return r.uiImage
+    }
+
+    /// The halftone panel, `n` pixels a side, since its dots are geometry the tests read too.
+    nonisolated private static func halftone(_ n: Int, scale: CGFloat) -> UIImage? {
+        guard let provider = CGDataProvider(data: halftonePixels(n) as CFData),
+              let image = CGImage(width: n, height: n, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: 4 * n,
+                                  space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                  bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
+                                  provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent) else { return nil }
+        return UIImage(cgImage: image, scale: scale, orientation: .up)
+    }
+
+    /// The panel's pixels. An unoptimised build takes some 20 s to bake them, so it keeps them in Caches under the
+    /// build's own timestamp, which a rebuild changes, so an edit to the panel never shows a stale bake.
+    nonisolated private static func halftonePixels(_ n: Int) -> Data {
+        #if DEBUG
+        let built = Bundle.main.executableURL.flatMap { try? $0.resourceValues(forKeys: [.contentModificationDateKey]) }?
+            .contentModificationDate?.timeIntervalSince1970 ?? 0
+        let file = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("halftone-\(n)-\(Int(built)).rgba")
+        if let data = try? Data(contentsOf: file), data.count == 4 * n * n { return data }
+        let data = Data(Halftone.pixels(n))
+        try? data.write(to: file)
+        return data
+        #else
+        return Data(Halftone.pixels(n))
+        #endif
     }
 
     /// The grid's colour at (x, y): hue sweeps cyan to orange left to right, lightness falls top to bottom.
@@ -301,8 +334,8 @@ enum Picture: String, CaseIterable {
 }
 
 /// Crisp strokes, then bloom and halo added over them, baked once so twisting shears the glow with the lines.
-private func neon(_ ctx: GraphicsContext, r: CGFloat, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.4), (0.008, 1.0)],
-                  _ draw: (inout GraphicsContext) -> Void) {
+func neon(_ ctx: GraphicsContext, r: CGFloat, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.4), (0.008, 1.0)],
+          _ draw: (inout GraphicsContext) -> Void) {
     var c = ctx
     draw(&c)
     for (blur, opacity) in glows {

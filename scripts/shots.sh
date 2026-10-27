@@ -41,8 +41,8 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23."
-shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1
+shot menu "Menu on first launch, the analytics question answered: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
+shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
@@ -125,6 +125,10 @@ shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank ref
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
+shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
+  SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
+shot tier-up-locked "The same with maelstrom still closed: the button dimmed with a lock, saying par every vortex level opens it." \
+  SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
 shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels." \
   SCREEN=result MODE=daily
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
@@ -292,7 +296,7 @@ if [[ -z "$pattern" || "rim-" == *$pattern* ]]; then
     "concat=n=6:v=1,crop=iw:ih*0.56:0:ih*0.21,scale=440:-1,tile=3x2:padding=8:color=0x303030" -frames:v 1 "shots/vortex-rim.png"
   echo "sheet vortex-rim"
 fi
-shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the centre turned 90 degrees, sheared all the way out to the glass's edge, which stays still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
+shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the glass's edge turned 90 degrees, sheared all the way in to the centre, which stays still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
 swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
 shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1 CLOCK=3
 shot swirl-quad-live "The same held mid-drag from the rim, the swirl 1.5 steps clockwise." LAYOUT=quadSwirl STACK="$swirl" LIVE=4:1.5 TOUCH=0.7,-0.7 SWIRLED=1 CLOCK=3
@@ -302,10 +306,71 @@ shot swirl-tri "Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3." LAYOUT=triS
 shot swirl-eye "Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3." LAYOUT=eyeSwirl STACK=0:+3,4:+2,2:-4,4:-3 SWIRLED=1 CLOCK=3
 shot swirl-pent "Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3." LAYOUT=pentSwirl STACK=0:+3,5:+2,2:-4,5:-3 SWIRLED=1 CLOCK=3
 shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl STACK=1:+3,7:+2,4:-4,7:-3 SWIRLED=1 CLOCK=3
+# Lens: rod 0 of tri is a lens on the halftone panel. The first shot waits out its Debug bake, which the rest reuse.
+hold=30 shot lens-plus "Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies." \
+  PACK=lens LEVEL=1 STACK=0:+3
+hold=5 shot lens-minus "Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim." PACK=lens LEVEL=1 STACK=0:-2
+for n in 1 2 3; do
+  hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone, rod 0 a lens." PACK=lens LEVEL=$n
+done
+hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 STACK=1:+2,0:+2
+hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 STACK=0:+2,1:+2
+hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step." \
+  PACK=lens LEVEL=1 LIVE=0:+1.4 TOUCH=0,-0.42
 # App-icon candidates, each a 1024-pixel square centred on the screen; scripts/icon.sh crops them and lays out the sheet.
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# First Stir 01, the harbour: 2:+5,1:-4,0:+3 on tri, a vignette in each rod's core (the lighthouse 0, the boat 1, the
+# cottage 2), the night winding back a stage with each. UNSTIR_BARE draws the picture unstirred, so the art shows as the
+# stack has played it. The last heal solves the tank, so a wave past the rim keeps the card away.
+fs="PACK=first-stir LEVEL=1"
+shot firststir-01 "First Stir 01 as dealt: the wrecked harbour in the storm, every core turned, the caption under the tank." $fs
+shot firststir-01-bare-0 "First Stir 01 drawn unstirred with every vignette held back: lantern smashed, boat capsized, door flung open, a lantern dropped; the storm at its height." \
+  $fs BARE=1
+shot firststir-01-bare-1 "First Stir 01 drawn unstirred after the lighthouse's heal: the lantern lit, no lightning, rain thinner, the moon lower." \
+  $fs BARE=1 STACK=2:+5,1:-4
+shot firststir-01-bare-2 "First Stir 01 drawn unstirred after the boat's heal: the boat moored upright, a third of the rain left, the sky warming." \
+  $fs BARE=1 STACK=2:+5
+shot firststir-01-bare-3 "First Stir 01 drawn unstirred after the last heal: someone in the lit doorway, no rain, an afterglow, the moon low over the roofs." \
+  $fs BARE=1 STACK="" WAVE=2
+shot firststir-01-healed-1 "First Stir 01 after the first heal (0:-3): the lantern lit in a still core, the other two cores still turned." \
+  $fs TURNED=0:-3
+shot firststir-01-healed-2 "First Stir 01 after the second heal (1:+4): the boat upright, the cottage's core still turned." \
+  $fs STACK=2:+5,1:-4 TURNED=1:+4
+shot firststir-01-solved "First Stir 01 solved (2:-5) on the calm evening, the card held off." $fs STACK=2:+5 TURNED=2:-5 WAVE=2
+# The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
+# held 5.4 s in, one stir left. Prices are the StoreKit configuration's, as a US storefront shows them.
+shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
+shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot." \
+  OWNED=lens STORE=escapement:pending CLOCK=5.4
+for state in unowned owned pending failed revoked; do
+  shot card-lens-$state "Lens's card, $state." CARD=lens STORE=lens:$state CLOCK=5.4
+done
+shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
+shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
+shot card-complete "Complete's card, unowned." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
+  CARD=lens STORE=complete:failed CLOCK=5.4
+shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4
+shot card-lens-noprice "Lens's card before the App Store answers: buy, with no price." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
+  CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
+shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place." \
+  PACK=lens LEVEL=5 STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
+  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
+  CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+
+# The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
+shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
+shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends." CONSENT=sends
+shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
+shot consent-settings-on "The gear's sheet: the analytics switch on, and send log." CONSENT=yes SETTINGS=1
+shot consent-settings-off "The gear's sheet: the analytics switch off, and send log." CONSENT=no SETTINGS=1
+
 # Escapement 1, the packs mock-up's problem: tri 0:-1,1:+3,0:-2,2:-4, rod 0 the clock with a ratchet for a knob, unstirred
 # in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
 shot escapement-1 "Escapement 1: rod 0 the clock, its disc dashed vermilion at all times, its ratchet read against the sub-dial; par 3." PACK=escapement

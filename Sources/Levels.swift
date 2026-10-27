@@ -100,11 +100,16 @@ struct Level: Hashable, Sendable {
     var ratchets: Set<Int> = []
     /// Escapement: a stack of the demonstration's own, played on the clock before the first stir.
     var demo: [Twist] = []
+    /// Lens's slots whose steps magnify (`Tank.lens`) rather than turn. Their knobs work as any other: only the map
+    /// differs, so every merge, commutation and solve on the level takes this set.
+    var lenses: Set<Int> = []
     /// What carries the knobs round without a stir, held by the rim. Maelstrom's turns the tank, to bring a seized
     /// knob's fluid to a working one.
     var motion = Motion.none
     /// Nil is one move per entry. A level whose tank turns also counts its turns.
     var fixedPar: Int?
+    /// First Stir's scene, drawn in place of `picture`; each of its vignettes plays once no entry holds it back.
+    var story: Story?
     var par: Int { fixedPar ?? scramble.count }
 
     var sandbox: Bool { id == "sandbox" }

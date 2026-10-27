@@ -34,6 +34,14 @@ enum Pack: String, CaseIterable, Sendable {
     /// Levels 1 to `taste` play without the pack.
     var taste: Int { 3 }
 
+    /// How many levels its design plans; until it has them all, its card says more arrive in an update.
+    var planned: Int {
+        switch self {
+        case .firstStir, .lens: 25
+        case .escapement: 30
+        }
+    }
+
     /// Numbered from 1 by place, each the pack's own `id`; empty until the pack's content lands.
     var levels: [Level] {
         switch self {
@@ -72,8 +80,17 @@ enum Pack: String, CaseIterable, Sendable {
 }
 
 extension Level {
-    static let firstStir: [Level] = []
-    static let lens: [Level] = []
+    /// The hard lens's phone test (Jack's call, 2026-10-25, L1): the draft table's free taste, all on tri with rod 0 a
+    /// lens, on the halftone test panel. Every dealt lens entry magnifies by 1 to 3 steps and each lens nets at most +3.
+    static let lens: [Level] = [
+        "0:+2",
+        "0:+1,1:+3",
+        "1:-2,2:+4,0:+3",
+    ].enumerated().map { i, scramble in
+        let lenses: Set<Int> = [0]
+        return Level(id: Pack.lens.id(i + 1), pack: .lens, label: String(format: "%02d", i + 1), title: "Panel \(i + 1)",
+                     picture: .halftone, layout: .tri, scramble: .parse(scramble, in: .tri, lenses: lenses), lenses: lenses)
+    }
     /// Each problem's par is the prover's optimum (`Solver.escapement`), and its note the stipulation.
     static let escapement: [Level] = [
         // The packs mock-up's problem: rod 2 +4, a wait, rod 1 -3. Any other first move's tick pushes on the clock.

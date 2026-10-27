@@ -2,20 +2,28 @@
 
 import Foundation
 
-let args = CommandLine.arguments.dropFirst().map { $0 }
-if args.first == "escapement" { escapement(Array(args.dropFirst())) }
+if CommandLine.arguments.dropFirst().first == "escapement" { escapement(CommandLine.arguments.dropFirst(2).map { $0 }) }
+// lenses=0,2 may come anywhere after the scramble.
+let all = CommandLine.arguments.dropFirst().map { $0 }
+let lensArg = all.dropFirst(2).first { $0.hasPrefix("lenses=") }
+let args = all.filter { $0 != lensArg }
 guard (2...3).contains(args.count), let layout = Layout(rawValue: args[0]) else {
     let layouts = (Layout.allCases + Layout.swirls).map(\.rawValue).joined(separator: "|")
-    print("usage: scripts/solve.sh <layout: \(layouts)> <scramble, e.g. 0:+3,2:-4> [seized knobs, e.g. 1,4]")
+    print("usage: scripts/solve.sh <layout: \(layouts)> <scramble, e.g. 0:+3,2:-4> [seized knobs, e.g. 1,4] [lenses=0,2]")
     exit(2)
 }
 let seized = Set((args.count > 2 ? args[2] : "").split(separator: ",").compactMap { Int($0) })
+let lenses = Set((lensArg?.dropFirst("lenses=".count) ?? "").split(separator: ",").compactMap { Int($0) })
+if let swirl = layout.swirl, lenses.contains(swirl) {
+    print("rod \(swirl) is the swirl, which is never a lens")
+    exit(2)
+}
 if let swirl = layout.swirl, seized.contains(swirl) {
     print("rod \(swirl) is the swirl, held from the rim, and is never seized")
     exit(2)
 }
-let stack = [Twist].parse(args[1], in: layout)
-let solver = Solver(layout)
+let stack = [Twist].parse(args[1], in: layout, lenses: lenses)
+let solver = Solver(layout, lenses: lenses)
 let readings: [(String, Solver.Parking)] = [
     ("fewest seized knobs over unfinished rings", .fewest),
     ("every seized knob over a finished ring or no preference", .all),
@@ -33,7 +41,8 @@ guard let optimal, let untwisting, let lazy else {
     exit(1)
 }
 let optimum = optimal.count
-print("entries \(stack.count), seized \(seized.sorted().map(String.init).joined(separator: ",").ifEmpty("none"))")
+print("entries \(stack.count), seized \(seized.sorted().map(String.init).joined(separator: ",").ifEmpty("none"))"
+      + (lenses.isEmpty ? "" : ", lenses \(lenses.sorted().map(String.init).joined(separator: ","))"))
 print("optimum \(optimum)" + (untwisting.count > optimum ? ", where untwisting alone takes \(untwisting.count)" : ""))
 for ((reading, _), park) in zip(readings, parks) {
     guard let park else {

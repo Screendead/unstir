@@ -4,14 +4,21 @@
 #include <SwiftUI/SwiftUI_Metal.h>
 using namespace metal;
 
-// twists: n entries of (rod centre x, y, disc radius, angle) in tank-normalized units, bottom of the stack first.
-// Tank.profile / Tank.twist in Twist.swift are the Swift copy the tests check; the tests do not reach this shader.
+// A lens's flow from radius u < a (its rigid core) for time t and rim sharpness e: Tank.lensFlow's copy.
+static float lensFlow(float u, float t, float a, float e) {
+    return a * pow(1.0 + (pow(a / u, e) - 1.0) * exp(-e * t), -1.0 / e);
+}
+
+// twists: n entries of (rod centre x, y, disc radius, angle) in tank-normalized units, bottom of the stack first. A
+// lens's entry has a negative radius and its flow's time (steps * Tank.lensRate) for the angle.
+// Tank.profile / Tank.twist / Tank.lens in Twist.swift are the Swift copy the tests check; the tests reach only
+// lensFlow here.
 // plateau is a knob's, swirlPlateau a disc's of radius 1 or more (the swirl's, or the breath's through it).
 // turn: the glass's clockwise turn about the centre. The stack names the glass's own rods, so the point turns back
 // first. Swift has no copy of the turn: the seized-* harness shots pin its sign.
 [[ stitchable ]] half4 unstir(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
                               device const float *twists, int count, float n, float fourTaps, float plateau,
-                              float swirlPlateau, float scale, float haze, float3 wave, float turn) {
+                              float swirlPlateau, float lensEdge, float scale, float haze, float3 wave, float turn) {
     // Four taps a quarter device pixel off centre, each through the whole inverse chain: the stretching is in the
     // map, so a filament thinner than a pixel keeps its light as coverage. Past fourTaps entries only the diagonal pair
     // runs: on an iPhone 13 Pro Max, hex's hub and a neighbour alternating hold 120 Hz at 31 entries with four taps, not 32.
@@ -24,10 +31,18 @@ using namespace metal;
         for (int i = min(int(n), count / 4) - 1; i >= 0; i--) {
             float2 c = float2(twists[4 * i], twists[4 * i + 1]);
             float2 d = q - c;
-            float s = length(d) / twists[4 * i + 2];
+            float z = twists[4 * i + 2];
+            float s = length(d) / abs(z);
             // Outside the rod's disc the map is exactly the identity.
             if (s >= 1.0) continue;
-            float a = -twists[4 * i + 3] * (1.0 - smoothstep(twists[4 * i + 2] >= 1.0 ? swirlPlateau : plateau, 1.0, s));
+            if (z < 0.0) {
+                // A lens moves nothing outside its rigid core.
+                if (s < plateau && s > 1e-6) q = c + d * (lensFlow(s, -twists[4 * i + 3], plateau, lensEdge) / s);
+                continue;
+            }
+            // A knob turns its core and lets go towards its edge; the swirl holds the glass's edge and lets go towards its centre.
+            float t = smoothstep(z >= 1.0 ? swirlPlateau : plateau, 1.0, s);
+            float a = -twists[4 * i + 3] * (z >= 1.0 ? t : 1.0 - t);
             float cs = cos(a), sn = sin(a);
             q = c + float2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
         }

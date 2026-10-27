@@ -892,13 +892,14 @@ final class UnstirTests: XCTestCase {
     /// A swirl has no rigid core: it turns each radius by its own angle, the full angle only at the centre, falling
     /// smoothly to the glass's edge, which it leaves where it was, and everything past it, as the shader does: a turn of
     /// the swirl never moves the picture against the bezel. A knob keeps its rigid core.
-    func testASwirlKeepsTheGlassEdgeStill() {
+    /// The fluid sticks to the rim the swirl turns: the glass's edge goes round whole, the centre stays put, and what lies
+    /// between turns further the further out it lies. Beyond the glass nothing moves.
+    func testASwirlTurnsTheGlassEdgeWhole() {
         let swirl = Layout.quadSwirl.rods[Layout.quadSwirl.swirl!], a = 5 * Tank.step
         for i in 0..<360 {
-            let t = Double(i) * .pi / 180, u = SIMD2(cos(t), sin(t))
-            XCTAssertLessThan(simd_distance(Tank.twist(u, rod: swirl, angle: a), u), 1e-12)
+            let t = Double(i) * .pi / 180, u = SIMD2(cos(t), sin(t)), turned = SIMD2(cos(t + a), sin(t + a))
+            XCTAssertLessThan(simd_distance(Tank.twist(0.999999 * u, rod: swirl, angle: a), 0.999999 * turned), 1e-6)
             XCTAssertEqual(Tank.twist(1.2 * u, rod: swirl, angle: a), 1.2 * u)
-            XCTAssertLessThan(simd_distance(Tank.twist(0.999 * u, rod: swirl, angle: a), 0.999 * u), 1e-4)
             XCTAssertGreaterThan(simd_distance(Tank.twist(0.8 * u, rod: swirl, angle: a), 0.8 * u), 0.1)
         }
         func turned(_ r: Double) -> Double {
@@ -906,8 +907,8 @@ final class UnstirTests: XCTestCase {
             XCTAssertEqual(simd_length(q), r, accuracy: 1e-12)
             return atan2(q.y, q.x)
         }
-        XCTAssertEqual(turned(1e-6), a, accuracy: 1e-9)
-        for i in 1..<100 { XCTAssertLessThan(turned(Double(i + 1) / 100), turned(Double(i) / 100), "\(i)") }
+        XCTAssertEqual(turned(1e-6), 0, accuracy: 1e-9)
+        for i in 1..<99 { XCTAssertGreaterThan(turned(Double(i + 1) / 100), turned(Double(i) / 100), "\(i)") }
         let knob = Layout.quad.rods[0], p = SIMD2(knob.x, knob.y) + SIMD2(0.5 * knob.z, 0)
         let q = Tank.twist(p, rod: knob, angle: a) - SIMD2(knob.x, knob.y)
         XCTAssertEqual(atan2(q.y, q.x), a, accuracy: 1e-12)
