@@ -346,8 +346,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
   opens without one, and a card with none says "buy" alone.
-  `Level.lens` holds three levels for the hard lens's phone test, the draft table's free taste (`docs/lens-design.md`): tri, rod 0 a lens, on the halftone, each dealt lens entry +1 to +3 and each lens netting at most +3,
-  par the solver's optimum (`testLensLevels`). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
+  `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
+  rods only, is the alternative on branch `lens-levels-big`), on the halftone: each dealt lens entry +1 to +3, each lens
+  netting at most +3, no entry merging as it is dealt, and par the depth (`testLensLevels`, which pins the table), the
+  solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks a
+  table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
   (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
   one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
   through the rod's own `liveAngle` and detent, so its count, clicks and the iris's turn are a rod's, a step at a time,

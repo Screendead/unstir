@@ -135,10 +135,54 @@ final class LensTests: XCTestCase {
         }
     }
 
-    /// The pack's levels: each on the halftone with a lens, every dealt lens entry magnifying by 1 to 3 steps and each
-    /// lens netting at most +3; par is the solver's optimum, and untwisting reaches it on a real game.
+    /// The pack's table as `docs/lens-tables.md` gives it (table A, lenses on every rod size), pinned: a level's id
+    /// keeps its best, so a row changes only on purpose.
+    static let table: [(Layout, Set<Int>, String)] = [
+        (.tri, [0], "0:+2"),
+        (.tri, [0], "0:+1,1:+3"),
+        (.tri, [0], "1:-2,2:+4,0:+3"),
+        (.tri, [1], "0:+3,1:+2,2:-4,1:+1"),
+        (.eye, [2], "0:-4,2:+2,1:+5,3:-3"),
+        (.eye, [0], "2:+3,0:+2,1:-4,3:+5,0:+1"),
+        (.tri, [0, 1], "2:+4,0:+2,1:+1"),
+        (.quad, [0, 2], "1:+4,0:+2,3:-3,2:+3,1:-5,0:+1"),
+        (.eye, [2, 3], "0:+3,2:+2,1:-4,3:+3,0:+2,2:+1"),
+        (.tri, [2], "0:+3,2:+2,1:-5,0:-2,2:+1,1:+4"),
+        (.quad, [1, 3], "0:+3,1:+3,2:-4,3:+2,0:-3,3:+1,2:+5"),
+        (.eye, [0, 1], "2:+3,0:+2,3:-4,1:+3,2:-2,0:+1,3:+5"),
+        (.hex, [1, 4], "0:+3,1:+2,2:-4,4:+3,6:+2,0:-2,5:+4"),
+        (.hex, [2, 5], "3:-3,2:+2,0:+4,5:+1,6:-3,2:+1,4:+5,5:+2"),
+        (.eye, [2], "1:+4,2:+1,0:-5,3:+3,2:+2,1:-3,0:+4,3:-2"),
+        (.tri, [0], "1:+3,0:+1,2:-4,1:-2,0:+1,2:+5,1:+4,0:+1"),
+        (.hex, [1, 3, 5], "0:+2,1:+3,2:-4,3:+2,4:+3,5:+1,6:-5,0:+4,5:+2"),
+        (.quad, [0, 2], "1:+3,0:+1,3:-4,2:+2,1:+5,0:+2,3:+3,2:+1,1:-4"),
+        (.hex, [0], "1:+3,0:+2,4:-3,2:+4,0:+1,5:-3,3:+2,6:+4"),
+        (.hex, [0, 1, 4], "2:+3,0:+2,1:+3,5:-4,4:+2,3:+4,0:+1,6:-3,2:-2"),
+        (.eye, [0, 3], "2:+4,0:+2,1:-5,3:+2,2:-3,0:+1,1:+4,3:+1,2:+3"),
+        (.hex, [0, 2, 5], "1:+3,0:+1,2:+2,3:-4,6:+5,5:+3,4:-3,0:+2,1:-3,2:+1"),
+        (.hex, [0], "3:+4,0:+1,6:-3,1:+5,0:+1,2:-4,4:+3,0:+1,5:-5,3:+2"),
+        (.eye, [2, 3], "0:+4,2:+2,1:-3,3:+1,0:-4,3:+2,1:+5,2:+1,0:+3,1:-2"),
+        (.hex, [0, 1, 3, 5], "2:+3,0:+1,1:+2,4:-4,3:+3,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,0:+1"),
+    ]
+
+    /// The pack's levels: the pinned table, each on the halftone with a lens, every dealt entry kept as dealt, every
+    /// dealt lens entry magnifying by 1 to 3 steps and each lens netting at most +3, each lens in reach of a twist; par
+    /// is the depth, and untwisting reaches it on a real game.
     @MainActor func testLensLevels() {
-        XCTAssertEqual(Level.lens.count, 3)
+        XCTAssertEqual(Level.lens.count, 25)
+        XCTAssertEqual(Level.lens.map(\.id), (1...25).map { "lens-\($0)" })
+        for (level, (layout, lenses, scramble)) in zip(Level.lens, Self.table) {
+            XCTAssertEqual(level.layout, layout, level.id)
+            XCTAssertEqual(level.lenses, lenses, level.id)
+            XCTAssertEqual(level.scramble, .parse(scramble, in: layout, lenses: lenses), level.id)
+            XCTAssertEqual(level.scramble.count, scramble.split(separator: ",").count, "\(level.id) merges as it is dealt")
+            XCTAssertEqual(level.par, level.scramble.count, level.id)
+            let solver = Solver(layout, lenses: lenses)
+            for lens in lenses {
+                XCTAssertTrue(layout.rods.indices.contains { !lenses.contains($0) && solver.interacts[lens][$0] },
+                              "\(level.id): no twist reaches lens \(lens)")
+            }
+        }
         for level in Level.lens {
             XCTAssertEqual(level.pack, .lens)
             XCTAssertEqual(level.picture, .halftone)
@@ -150,8 +194,6 @@ final class LensTests: XCTestCase {
                 XCTAssertLessThanOrEqual(entries.reduce(0, +), 3, level.id)
             }
             XCTAssertFalse(level.layout.looksSolved(level.scramble, lenses: level.lenses), level.id)
-            let solver = Solver(level.layout, lenses: level.lenses)
-            XCTAssertEqual(solver.optimum(level.scramble), level.par, level.id)
             let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
             while let t = game.reachable, !game.finished { game.commit(rod: t.rod, steps: t.steps) }
             XCTAssertTrue(game.solved, level.id)
@@ -159,9 +201,19 @@ final class LensTests: XCTestCase {
         }
     }
 
+    /// Every Lens level's par, its depth, is the solver's optimum: no detour beats untwisting. Over a minute unoptimised,
+    /// so slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks the same in seconds.
+    func testLensParIsTheOptimum() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
+                          "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
+        for level in Level.lens {
+            XCTAssertEqual(Solver(level.layout, lenses: level.lenses).optimum(level.scramble), level.par, level.id)
+        }
+    }
+
     /// A pack's undo puts a lens's entry back as the stir found it: a magnified core un-shrunk, a push taken off.
     @MainActor func testAPackUndoPutsALensBack() throws {
-        let level = try XCTUnwrap(Level.lens.last)
+        let level = Level.lens[2]
         let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
         let dealt = game.stack
         game.commit(rod: 0, steps: -1)
