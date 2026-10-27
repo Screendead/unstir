@@ -723,7 +723,7 @@ enum HighStreet {
         }
         fronts.addPath(pen.rect(-0.5, roofs - 0.09, -0.44, roofs))
         fronts.addPath(pen.rect(0.46, roofs - 0.06, 0.52, roofs + 0.03))
-        fronts.addPath(pen.rect(-0.16, -0.86, -0.1, -0.76))
+        fronts.addPath(pen.rect(0.09, -0.83, 0.15, -0.75))
         // The café: its door and the big window under where the awning goes.
         fronts.addPath(pen.rect(-0.74, -0.08, -0.48, 0.12))
         fronts.addPath(pen.rect(-0.38, -0.06, -0.28, pavement))
@@ -743,7 +743,7 @@ enum HighStreet {
             g.fill(g.rect(0.305, -0.115, 0.555, 0.075), Storm.sodium, 0.14)
         }
         // Sodium lamps along the kerb, their pools on the wet road.
-        for (x, top) in [(0.66, -0.3), (-0.9, -0.3)] {
+        for (x, top) in [(0.64, -0.3), (-0.9, -0.3)] {
             pen.lit { g in
                 g.stroke(g.seg(x, kerb, x, top), ink)
                 g.stroke(g.curve(x, top, x - 0.01, top - 0.05, x - 0.06, top - 0.04), ink)
@@ -779,29 +779,48 @@ enum HighStreet {
         // Vignette 1, the bicycle.
         pen.vignette(1) { pen in
             if played.contains(1) {
-                Self.bicycle(pen.at(0.555, pavement - 0.004, k: 0.17, turn: -0.08))
+                Self.bicycle(pen.at(0.555, kerb - 0.012, k: 0.17, turn: 0.06))
             } else {
                 Self.fallen(pen)
             }
         }
 
-        // Vignette 2, the sign, on its bracket out from the shopfront.
+        // Vignette 2, the sign, a cobbler's boot cut out of board, on its bracket out from the gable: the chain at its cuff
+        // and the top of the toe's, which snaps, are the same in both, so only the boot and the toe's lower chain change.
+        let cuff = (x: -0.134, y: -0.714), toe = (x: -0.086, y: -0.658), bracket = -0.77, snap = -0.73
         pen.lit { g in
-            g.stroke(g.seg(-0.2, -0.68, -0.08, -0.68), ink)
-            g.stroke(g.seg(-0.2, -0.72, -0.16, -0.68), ink)
+            g.stroke(g.seg(-0.2, bracket, -0.06, bracket), ink)
+            g.stroke(g.seg(-0.2, bracket - 0.04, -0.16, bracket), ink)
+            g.stroke(g.seg(cuff.x, bracket, cuff.x, cuff.y), ink)
+            g.stroke(g.seg(toe.x, bracket, toe.x, snap), ink)
         }
         pen.vignette(2) { pen in
-            // The board hangs from its top left corner by one chain, or level by two.
-            let board = played.contains(2) ? pen.at(-0.17, -0.665) : pen.at(-0.17, -0.665, turn: 1.2)
-            let w = 0.08, h = 0.04
-            let edge = board.rect(0, 0, w, h)
-            pen.fill(edge, .black)
-            pen.stroke(edge, Storm.sodium)
-            // A boot on it, the cobbler's shape.
-            pen.stroke(board.at(w / 2, h / 2, k: 0.03).poly([(-0.4, -0.5), (-0.4, 0.4), (0.6, 0.4), (0.6, 0.1), (0.1, 0), (0.1, -0.5)]), Storm.sodium)
-            pen.stroke(pen.seg(-0.165, -0.68, -0.165, -0.665), ink)
-            if played.contains(2) { pen.stroke(pen.seg(-0.095, -0.68, -0.095, -0.665), ink) }
+            if played.contains(2) {
+                Self.boot(pen.at(cuff.x, cuff.y, k: 0.08))
+                pen.stroke(pen.seg(toe.x, snap, toe.x, toe.y), ink)
+            } else {
+                // The toe's chain snapped, the boot swung down toe first from its cuff.
+                Self.boot(pen.at(cuff.x, cuff.y, k: 0.08, turn: 0.6))
+            }
         }
+    }
+
+    /// The cobbler's sign, a boot hung from (0, 0) at the top of its cuff, 1 long from heel to toe, the toe to the right.
+    static func boot(_ pen: Brush) {
+        let shape = pen.path { b in
+            b.move(to: CGPoint(x: -0.2, y: 0))
+            b.addLine(to: CGPoint(x: 0.22, y: 0))
+            b.addLine(to: CGPoint(x: 0.24, y: 0.55))
+            b.addQuadCurve(to: CGPoint(x: 0.72, y: 0.78), control: CGPoint(x: 0.35, y: 0.68))
+            b.addQuadCurve(to: CGPoint(x: 0.76, y: 1.0), control: CGPoint(x: 0.86, y: 0.86))
+            b.addLine(to: CGPoint(x: 0.12, y: 1.0))
+            b.addLine(to: CGPoint(x: 0.1, y: 1.12))
+            b.addLine(to: CGPoint(x: -0.18, y: 1.12))
+            b.closeSubpath()
+        }
+        pen.fill(shape, .black)
+        pen.stroke(shape, Storm.sodium)
+        pen.stroke(pen.seg(-0.2, 0.16, 0.22, 0.16), Storm.sodium)
     }
 
     /// The bicycle blown over in the gutter on its side, seen from the pavement: the back wheel flat on the road, the
