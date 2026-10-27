@@ -891,11 +891,11 @@ extension Dawn {
         let rope = pen.smooth([(-0.335, 0.21), (-0.1, 0.17), (0.1, 0.02), (0.26, -0.1), (0.3, -0.14)])
         pen.line([(pen.seg(-1, shore, 1, shore), Self.sea, 0.9), (ripples, ink, 0.35), (beacon, ink, 1), (rope, Self.glow, 0.85)])
 
-        // Rod 3: a lantern and a bucket left on the sand.
+        // Rod 3: a lantern and a bucket left on the sand either side of its knob, so up reads in its core.
         var kit = Path()
-        kit.addPath(pen.lantern(-0.06, 0.66, size: 0.09))
-        kit.addPath(pen.poly([(0.05, 0.6), (0.11, 0.6), (0.1, 0.66), (0.06, 0.66)]))
-        kit.addPath(pen.quad(0.05, 0.6, 0.08, 0.565, 0.11, 0.6))
+        kit.addPath(pen.lantern(-0.15, 0.7, size: 0.11))
+        kit.addPath(pen.poly([(0.11, 0.63), (0.19, 0.63), (0.18, 0.7), (0.12, 0.7)]))
+        kit.addPath(pen.quad(0.11, 0.63, 0.15, 0.59, 0.19, 0.63))
         pen.line([(kit, ink, 0.9)])
 
         // Vignette 1: the boat, above its knob.
