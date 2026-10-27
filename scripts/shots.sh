@@ -311,10 +311,6 @@ shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl in
 shot escapement-1 "Escapement 1: rod 0 the clock, its disc dashed vermilion at all times, its ratchet read against the sub-dial; par 3." PACK=escapement
 shot escapement-1-ticked "Escapement 1 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on." \
   PACK=escapement PLAYED=2:4
-shot escapement-1-slip "Escapement 1, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1 standing while the move is open." \
+shot escapement-1-lost "Escapement 1, then rod 1 -3: its tick finds no seam and pushes, so the move loses at once: the vermilion +1, lost. stamped by the clock, the card's undo and again." \
   PACK=escapement PLAYED=2:4,1:-3
-shot escapement-1-regrab "Escapement 1, the slip re-grabbed and turned halfway back: its tick lifted out, the pawl up, no +1." \
-  PACK=escapement PLAYED=2:4,1:-3 LIVE=1:1.5
-shot escapement-1-lost "Escapement 1, the slip sealed by a wait: frozen on the +1, lost. stamped by it, the card's undo and again." \
-  PACK=escapement PLAYED=2:4,1:-3,0:1
 shot escapement-1-won "Escapement 1 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement PLAYED=2:4,0:1,1:-3

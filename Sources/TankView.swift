@@ -138,23 +138,19 @@ final class Game {
     /// Every change of `brim`, for the rim to play.
     private(set) var brimEvents: [Brim.Event] = []
 
-    /// Escapement's clock between moves. A move's tick lands as its stir is let go, and stays provisional while the stir
-    /// is open: a re-grab of its knob lifts it out for the drag.
+    /// Escapement's clock between moves. Every let-go is a move of its own and final: its tick lands with it, and a
+    /// grab of the same knob again is the next move (Jack's call E1, round 9).
     struct Clock {
         /// Ticks standing, for the ratchet wheel.
         var ticks = 0
-        /// The entries before the open stir's tick landed, while a re-grab may still lift it out.
-        var landed: [Entry]?
-        /// That tick is out, its knob held again.
-        var lifted = false
-        /// A move sealed a tick that pushed, so the stack can never empty.
+        /// A tick pushed, so the stack can never empty.
         var lost = false
     }
     private(set) var escapement = Clock()
-    /// Escapement: the latest tick landing (+1) or lifting out (-1) and the stack it changed, for the view to play.
-    private(set) var tick: (from: [Twist], dir: Int)?
-    /// Escapement: every tick landing or lifting out, every one that pushed (the ratchet's red flash), and every one
-    /// that emptied the clock rod, which then stops.
+    /// Escapement: the stack the latest tick changed, for the view to play the tick over it.
+    private(set) var tick: [Twist]?
+    /// Escapement: every tick, every one that pushed (the ratchet's red flash), and every one that emptied the clock
+    /// rod, which then stops.
     private(set) var tickEvents = 0
     private(set) var tickPushes = 0
     private(set) var clockStops = 0
@@ -296,120 +292,60 @@ final class Game {
         settle()
     }
 
-    /// Escapement: a stir is one commit of its net from where it began, so a turn of the open stir's knob replays the
-    /// stir at its new net, the tick it landed taken back, and at zero drops move and tick together. Any other knob's
-    /// turn seals the open move first: if that move's tick pushed, the tank is lost, and the sealing turn lands no tick
-    /// (Jack's call, 2026-10-25: freeze on the +1).
+    /// Escapement: a let-go is a move, a commit of its turn and then the clock's tick, and it is final: the same knob
+    /// turned again is another move with its own tick (Jack's call E1, round 9). A tick that pushes loses at once.
     private func clockCommit(knob: Int, steps: Int) {
         let slot = self.slot(of: knob)
-        guard level.kind(of: knob) == .working else { Log.write("commit \(Twist(rod: knob, steps: steps)) refused"); return }
-        let again = open && history.last?.rod == slot
-        if !again {
-            relandTick()
-            guard !finished else { return }
-        }
-        var next = again ? before.last!.entries : entries
-        let net = steps + (again ? history.last!.steps : 0)
-        if net == 0 {
-            entries = next
-            escapement = before.removeLast().clock
-            escapement.landed = nil
-            history.removeLast()
-            openBefore.removeLast()
-            open = false
-            tick = nil
-            lastCommit = (knob, .reduced)
-            turns += 1
-            Log.write("commit \(Twist(rod: knob, steps: steps)) turned back moves=\(moves) stack=\(stack)")
-            settle()
-            return
-        }
-        let seals = !again && overdue > 0
-        let result = next.commit(Entry(twist: Twist(rod: slot, steps: net), pushed: true), in: level.layout)
+        var next = entries
+        let result = level.kind(of: knob) != .working ? .refused
+            : next.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout)
         // A full stack refuses the tick as it would a push, so it refuses the move.
-        guard result != .refused, seals || !tickRefused(next) else {
+        guard result != .refused, !tickRefused(next) else {
             Log.write("commit \(Twist(rod: knob, steps: steps)) refused")
             return
         }
-        if again {
-            escapement = before.last!.clock
-            history[history.count - 1].steps = net
-        } else {
-            before.append((entries, escapement))
-            openBefore.append(open)
-            history.append(Twist(rod: slot, steps: net))
-        }
+        before.append((entries, escapement))
+        openBefore.append(open)
+        history.append(Twist(rod: slot, steps: steps))
         entries = next
-        open = true
+        // Final, so no later turn joins it.
+        open = false
         lastCommit = (knob, result)
         turns += 1
         if result == .pushed { pushes += 1 }
         if result == .cancelled { cancels += 1; cancelledRod = knob }
-        if seals {
-            escapement.lost = true
-            escapement.landed = nil
-            tick = nil
-        } else {
-            landTick()
-        }
-        Log.write("commit \(Twist(rod: knob, steps: steps)) net=\(net) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        landTick()
+        Log.write("commit \(Twist(rod: knob, steps: steps)) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
         settle()
     }
 
-    /// Escapement's waiting move, a tap on the ratchet: it seals the open move, then ticks. A wait is sealed at once, so
-    /// one whose tick pushes is lost there and then. Once the clock has stopped there is nothing to wait for.
+    /// Escapement's waiting move, a tap on the ratchet: it only ticks. Once the clock has stopped there is nothing to
+    /// wait for.
     func wait(on ratchet: Int) {
-        guard !finished, let e = level.clock, slot(of: ratchet) == e,
-              escapement.lifted || entries.contains(where: { $0.twist.rod == e }) else { return }
-        relandTick()
-        guard !finished else { return }
-        let seals = overdue > 0
-        guard seals || !tickRefused(entries) else { Log.write("wait refused"); return }
+        guard !finished, let e = level.clock, slot(of: ratchet) == e, entries.contains(where: { $0.twist.rod == e })
+        else { return }
+        guard !tickRefused(entries) else { Log.write("wait refused"); return }
         before.append((entries, escapement))
         openBefore.append(open)
         history.append(Twist(rod: e, steps: 1))
         open = false
         lastCommit = (ratchet, .reduced)
         turns += 1
-        if seals { tick = nil } else { landTick() }
-        escapement.landed = nil
-        escapement.lost = overdue > 0
+        landTick()
         Log.write("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
         settle()
     }
 
-    /// Escapement: a finger takes up knob `k` again. If it holds the open stir, that stir's tick lifts out for the drag.
-    func liftTick(knob k: Int) {
-        guard !finished, !escapement.lifted, let landed = escapement.landed, open, history.last?.rod == slot(of: k)
-        else { return }
-        tick = (stack, -1)
-        tickEvents += 1
-        entries = landed
-        escapement.ticks -= 1
-        escapement.lifted = true
-        Log.write("tick lifted stack=\(stack)")
-    }
-
-    /// Escapement: a re-grab let go where it began, or dropped: the tick it lifted lands again.
-    func relandTick() {
-        guard escapement.lifted else { return }
-        landTick()
-        settle()
-    }
-
-    /// Escapement: the clock's tick after a move, while the clock rod holds an entry.
+    /// Escapement: the clock's tick after a move, while the clock rod holds an entry. It loses the tank if it pushes.
     private func landTick() {
-        escapement.lifted = false
-        escapement.landed = nil
         guard let e = level.clock, entries.contains(where: { $0.twist.rod == e }) else { return }
-        let from = stack, was = entries
+        let from = stack
         let result = entries.commit(Entry(twist: Twist(rod: e, steps: 1), pushed: true), in: level.layout)
         guard result != .refused else { return }
-        escapement.landed = was
         escapement.ticks += 1
-        tick = (from, 1)
+        tick = from
         tickEvents += 1
-        if result == .pushed { tickPushes += 1 }
+        if result == .pushed { tickPushes += 1; escapement.lost = true }
         if !entries.contains(where: { $0.twist.rod == e }) { clockStops += 1 }
         Log.write("tick \(result) stack=\(stack)")
     }
@@ -720,7 +656,6 @@ struct LevelView: View {
         for m in harness?.played ?? [] {
             if level.kind(of: m.rod) == .ratchet { game.wait(on: m.rod) } else { game.commit(rod: m.rod, steps: m.steps) }
         }
-        if let k = harness?.live?.rod { game.liftTick(knob: k) }
         _game = State(initialValue: game)
         let live = harness?.live, angle = (live?.steps ?? 0) * Tank.step, turn = harness?.tankLive.map { $0 * .pi / 180 }
         _liveRod = State(initialValue: live?.rod)
@@ -945,7 +880,6 @@ struct LevelView: View {
         .onChange(of: phase) {
             guard phase != .active else { return }
             endPath(); endTwist()
-            game.relandTick()
             if drag != nil || spun {
                 Log.write("\(phase) drops drag \(state)"); drag = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; spun = false
             }
@@ -1058,7 +992,6 @@ struct LevelView: View {
                 liveTurn = 0
                 withAnimation(.easeInOut(duration: 0.4)) { liveTurn = Double(m.steps) * game.level.layout.tankStep }
             } else {
-                game.liftTick(knob: m.rod)
                 liveRod = m.rod
                 withAnimation(.easeInOut(duration: 0.4)) { liveAngle = Double(m.steps) * Tank.step }
             }
@@ -1110,7 +1043,6 @@ struct LevelView: View {
             liveTurn = 0
             withAnimation(.easeInOut(duration: d)) { liveTurn = Double(m.steps) * layout.tankStep }
         } else {
-            game.liftTick(knob: m.rod)
             liveRod = m.rod; counted = m.rod
             withAnimation(.easeInOut(duration: d)) { liveAngle = Double(m.steps) * Tank.step }
         }
@@ -1285,8 +1217,8 @@ struct LevelView: View {
                             u.breath = swirlBreath
                             // Escapement: a tick in flight, turned part way on the stack it changed.
                             if let t = tickNow, let clock, p < 1, playable {
-                                u.stack = t.from
-                                u.tick = (clock, Double(t.dir) * p * Tank.step)
+                                u.stack = t
+                                u.tick = (clock, p * Tank.step)
                             }
                             return picture.modifier(u).modifier(Murk(stirs: murk, side: side))
                         } keyframes: { _ in
@@ -1373,12 +1305,12 @@ struct LevelView: View {
                 let p = at(k)
                 if k == clock {
                     KeyframeAnimator(initialValue: 1.0, trigger: game.tickEvents) { t in
-                        let flight = game.tick.map { t < 1 ? Double($0.dir) * (1 - t) : 0 } ?? 0
-                        let ride = game.tick?.dir == 1 && t < 1 ? sin(.pi * t) : 0
+                        let flight = game.tick != nil && t < 1 ? 1 - t : 0
+                        let ride = game.tick != nil && t < 1 ? sin(.pi * t) : 0
                         KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                             RatchetView(angle: (Double(game.escapement.ticks) - flight) * Tank.step
                                             + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                                        size: Self.ratchetSize(core), pawl: game.escapement.lifted ? 1 : ride, lit: pressing,
+                                        size: Self.ratchetSize(core), pawl: ride, lit: pressing,
                                         stopped: !game.stack.contains { $0.rod == k } && shown == nil && !demoing)
                         } keyframes: { _ in Self.jolt }
                     } keyframes: { _ in Self.tickKeys }
@@ -1467,8 +1399,8 @@ struct LevelView: View {
     private static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
 
     /// Escapement: what the clock at `c` shows round its ratchet: a red flash for a tick that pushed; while a pushed tick
-    /// stands, a pulsing ring and its vermilion count, which once sealed stays still with "lost." stamped by it; the
-    /// clock's disc lighting as it ticks; and a ring going out as the clock stops.
+    /// stands, a ring and its vermilion count, with "lost." stamped by it; the clock's disc
+    /// lighting as it ticks; and a ring going out as the clock stops.
     private func clockMarks(_ c: CGPoint, disc: CGFloat, size: CGFloat) -> some View {
         let overdue = game.overdue, showing = shown == nil
         let badge = CGPoint(x: c.x + size / 2 + 30, y: c.y)
@@ -1483,12 +1415,7 @@ struct LevelView: View {
                 }
                 .position(c)
             if overdue > 0 && showing {
-                TimelineView(.animation(minimumInterval: 1.0 / 30, paused: frozenClock != nil || game.lost)) { tl in
-                    let s = frozenClock ?? tl.date.timeIntervalSinceReferenceDate
-                    Circle().stroke(Color.vermilion, lineWidth: 1.5).frame(width: size + 8, height: size + 8)
-                        .opacity(game.lost ? 1 : 0.55 + 0.45 * cos(2 * .pi * s / 0.9))
-                }
-                .position(c)
+                Circle().stroke(Color.vermilion, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
                 Text("+\(overdue)").font(.system(size: 20, weight: .bold, design: .serif))
                     .foregroundStyle(Color.vermilion)
                     .padding(.horizontal, 7).padding(.vertical, 1)
@@ -1598,8 +1525,6 @@ struct LevelView: View {
                 // Keyed on the start point because a cancelled drag never reaches onEnded; a new touch starts afresh.
                 if drag?.start != v.startLocation {
                     endPath()
-                    // A re-grab dropped without onEnded lands its tick again.
-                    if drag != nil { game.relandTick() }
                     drag = nil; liveRod = nil; liveAngle = 0; pressing = false
                     // A twist cancelled without onEnded leaves its turn behind.
                     if spin == nil { liveTurn = nil; spun = false; endTwist() }
@@ -1685,7 +1610,6 @@ struct LevelView: View {
         let d = point - pivot
         drag!.last = atan2(d.y, d.x)
         if case .rod(let k) = g.grab {
-            game.liftTick(knob: k)
             liveRod = k; counted = k; grabs += 1; detent = Detent(step: Tank.step)
         } else {
             liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
@@ -1814,7 +1738,7 @@ struct LevelView: View {
             liveRod = nil
             liveAngle = 0
             settling = false
-            guard steps != 0 else { game.relandTick(); return }
+            guard steps != 0 else { return }
             game.commit(rod: k, steps: steps)
         }
     }
@@ -1986,7 +1910,7 @@ struct Unstirred: ViewModifier, Animatable {
         // A live picture keeps four taps only to `Tank.fourTaps` entries less its fill: the same budget as without it.
         // Counted in committed entries, so a touch never changes the taps; the drag, the breath or a tick in flight rides
         // one over, within the 31 the shader's comment measured. Two at once, for the `Breath.fade` a touch takes to cut a
-        // slosh or a re-grab within a tick's flight, drop to two taps at the budget's edge rather than run 32.
+        // slosh or a grab within a tick's flight, drop to two taps at the budget's edge rather than run 32.
         let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
@@ -2284,7 +2208,7 @@ struct ClockHint: View {
 
 /// Escapement's clock knob: a 12-tooth ratchet wheel that turns clockwise only, a tooth a tick, its index read against a
 /// vermilion sub-dial fixed to the glass, and the pawl that drops into it. `pawl` 0 rests in a gap, 1 is lifted clear
-/// (the open stir's tick lifted out). Stopped, it dims.
+/// as a tick rides it out. Stopped, it dims.
 struct RatchetView: View {
     let angle: Double
     let size: CGFloat
@@ -2343,7 +2267,7 @@ struct RatchetView: View {
     }
 }
 
-/// Escapement: "lost." stamped by the clock's count once a move seals a tick that pushed.
+/// Escapement: "lost." stamped by the clock's count once a tick pushes.
 struct LostStamp: View {
     var size: CGFloat = 76
     @State private var landed = false

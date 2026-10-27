@@ -524,49 +524,45 @@ final class Solver {
 
 extension Solver {
     /// Escapement's prover: the fewest moves that empty `stack` when, after every move, the clock rod `clock` ticks +1
-    /// while it holds an entry. A move is a wait or one commit to a working slot of its net, by a count from `steps` or
-    /// an entry's exact inverse, since `Game` replays a stir from where it began at its net however it was turned; a
-    /// slot stirred again straight after is the same stir, so never a move. A line whose tick pushes is dropped: that
-    /// entry never pops (`testAPushedTickNeverPops`). Breadth first over (stack, the slot just stirred), so the first
-    /// line found is a fewest, and every line of those counts up to `limit` is tried: no shorter one exists among them.
-    /// Nil past `limit`, with the stacks seen in `seen`.
+    /// while it holds an entry. A move is a wait or one commit to a working slot, by a count from `steps` or an entry's
+    /// exact inverse; every let-go is final, so the same slot stirred again is another move (Jack's call E1). A line is
+    /// dropped where a tick pushes, since that entry never pops (`testAPushedTickNeverPops`). Breadth first over
+    /// stacks, so the first line found is a fewest, and every line of those counts up to `limit` is tried: no shorter
+    /// one exists among them. Nil past `limit`, with the stacks seen in `seen`.
     func escapement(_ stack: [Twist], clock: Int, limit: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] },
                     seen: inout Int) -> Play? {
-        struct State: Hashable {
-            var stack: [Twist], last: Int?
-        }
         func tick(_ s: inout [Twist]) -> Bool {
             guard s.contains(where: { $0.rod == clock }) else { return true }
             let r = s.commit(rod: clock, steps: 1, in: layout)
             return r == .reduced || r == .cancelled
         }
-        let start = State(stack: stack, last: nil)
+        let start = stack
         guard !stack.isEmpty else { return Play() }
-        var parent: [State: (from: State, move: Move)] = [:], frontier = [start]
-        var visited: Set<State> = [start]
-        func line(to state: State) -> Play {
+        var parent: [[Twist]: (from: [Twist], move: Move)] = [:], frontier = [start]
+        var visited: Set<[Twist]> = [start]
+        func line(to state: [Twist]) -> Play {
             var moves: [Move] = [], at = state
             while let p = parent[at] { moves.append(p.move); at = p.from }
             return Play(moves: moves.reversed())
         }
         for _ in 0..<limit {
-            var next: [State] = []
+            var next: [[Twist]] = []
             for state in frontier {
-                var after: [(State, Move)] = []
-                for slot in layout.rods.indices where slot != clock && slot != state.last {
-                    for k in Set(steps + state.stack.filter { $0.rod == slot }.map { -$0.steps }) {
-                        var s = state.stack
+                var after: [([Twist], Move)] = []
+                for slot in layout.rods.indices where slot != clock {
+                    for k in Set(steps + state.filter { $0.rod == slot }.map { -$0.steps }) {
+                        var s = state
                         guard s.commit(rod: slot, steps: k, in: layout) != .refused, tick(&s) else { continue }
-                        after.append((State(stack: s, last: slot), .stir(knob: slot, slot: slot, steps: k)))
+                        after.append((s, .stir(knob: slot, slot: slot, steps: k)))
                     }
                 }
-                if state.stack.contains(where: { $0.rod == clock }) {
-                    var s = state.stack
-                    if tick(&s) { after.append((State(stack: s, last: nil), .wait)) }
+                if state.contains(where: { $0.rod == clock }) {
+                    var s = state
+                    if tick(&s) { after.append((s, .wait)) }
                 }
                 for (to, move) in after where visited.insert(to).inserted {
                     parent[to] = (state, move)
-                    if to.stack.isEmpty { seen = visited.count; return line(to: to) }
+                    if to.isEmpty { seen = visited.count; return line(to: to) }
                     next.append(to)
                 }
             }

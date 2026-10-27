@@ -40,7 +40,7 @@ import XCTest
         XCTAssertEqual(g.moves, 2)
         XCTAssertFalse(g.finished)
         g.commit(rod: 1, steps: -3)
-        // The last move's tick empties the stack: solved on the spot, no seal needed.
+        // The last move's tick empties the stack: solved on the spot.
         XCTAssertEqual(g.stack, [])
         XCTAssertTrue(g.solved)
         XCTAssertEqual(g.moves, 3)
@@ -50,46 +50,26 @@ import XCTest
         XCTAssertFalse(g.lost)
     }
 
-    /// Jack's call (2026-10-25, E3): the sealing move lands no tick, so the +1 freezes.
-    func testAPushedTickIsProvisionalUntilAWaitSealsIt() {
+    /// Jack's call E1 (round 9): every let-go is final, so a tick that pushes loses on the move that made it.
+    func testAPushedTickLosesAtOnce() {
         let g = game()
         g.commit(rod: 2, steps: 4)
         g.commit(rod: 1, steps: -3)
         // Rod 1 buries the clock's newest seam, so its tick pushes a +1 that nothing can ever pop.
-        let slipped = g.stack, ticks = g.escapement.ticks
+        let slipped = g.stack
         XCTAssertEqual(slipped, tri("0:-1,1:+3,0:-1,1:-3") + [Twist(rod: 0, steps: 1)])
         XCTAssertEqual(g.overdue, 1)
         XCTAssertEqual(g.tickPushes, 1)
-        XCTAssertFalse(g.lost)
-        XCTAssertFalse(g.finished)
-        g.wait(on: 0)
         XCTAssertTrue(g.lost)
         XCTAssertTrue(g.finished)
-        XCTAssertEqual(g.stack, slipped)
-        XCTAssertEqual(g.overdue, 1)
-        XCTAssertEqual(g.escapement.ticks, ticks)
-        XCTAssertEqual(g.moves, 3)
+        XCTAssertEqual(g.moves, 2)
         // Lost, nothing more is taken.
-        g.commit(rod: 2, steps: 1)
+        g.commit(rod: 1, steps: 3)
         g.wait(on: 0)
         XCTAssertEqual(g.stack, slipped)
-        XCTAssertEqual(g.moves, 3)
-    }
-
-    func testAnotherKnobSealsTheLossToo() {
-        let g = game()
-        g.commit(rod: 1, steps: 1)
-        XCTAssertEqual(g.overdue, 1)
-        XCTAssertFalse(g.lost)
-        let ticks = g.escapement.ticks
-        g.commit(rod: 2, steps: 4)
-        XCTAssertTrue(g.lost)
-        XCTAssertEqual(g.overdue, 1)
-        XCTAssertEqual(g.escapement.ticks, ticks)
         XCTAssertEqual(g.moves, 2)
     }
 
-    /// A wait is sealed as it is made, so one whose tick pushes loses there and then.
     func testAWaitWhoseTickPushesIsLostAtOnce() {
         let g = game("0:-1,1:+3,0:-1")
         g.wait(on: 0)
@@ -101,78 +81,18 @@ import XCTest
         XCTAssertEqual(g.moves, 2)
     }
 
-    func testARegrabLiftsTheTickOutAndTurningBackCostsNothing() {
+    /// Jack's call E1: grabbing the knob just let go again is the next move, with a tick of its own, and takes nothing
+    /// back: turning it straight back is two moves and two ticks, not none.
+    func testTheSameKnobAgainIsAnotherMoveWithItsOwnTick() {
         let g = game()
         g.commit(rod: 2, steps: 4)
-        let s1 = g.stack
-        g.commit(rod: 1, steps: -3)
+        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1"))
+        XCTAssertEqual(g.openStir, nil)
+        g.commit(rod: 2, steps: -4)
+        XCTAssertEqual(g.history, [Twist(rod: 2, steps: 4), Twist(rod: 2, steps: -4)])
         XCTAssertEqual(g.escapement.ticks, 2)
-        g.liftTick(knob: 1)
-        XCTAssertTrue(g.escapement.lifted)
-        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1,1:-3"))
-        XCTAssertEqual(g.escapement.ticks, 1)
-        XCTAssertEqual(g.overdue, 0)
-        g.commit(rod: 1, steps: 3)
-        // Move and tick gone together.
-        XCTAssertEqual(g.stack, s1)
-        XCTAssertEqual(g.moves, 1)
-        XCTAssertEqual(g.escapement.ticks, 1)
-        XCTAssertFalse(g.escapement.lifted)
-        XCTAssertFalse(g.lost)
-        // And the line still wins in three.
-        g.wait(on: 0)
-        g.commit(rod: 1, steps: -3)
-        XCTAssertTrue(g.solved)
-        XCTAssertEqual(g.moves, 3)
-    }
-
-    func testARegrabLetGoInPlaceLandsTheTickAgain() {
-        let g = game()
-        g.commit(rod: 2, steps: 4)
-        let landed = g.stack
-        g.liftTick(knob: 2)
-        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-2"))
-        g.relandTick()
-        XCTAssertEqual(g.stack, landed)
-        XCTAssertEqual(g.moves, 1)
-        XCTAssertEqual(g.escapement.ticks, 1)
-        XCTAssertFalse(g.escapement.lifted)
-    }
-
-    func testARegrabTurnedFurtherLandsItsTickOnTheNewNet() {
-        let g = game()
-        g.commit(rod: 2, steps: 3)
-        // Rod 2 at +3 leaves its seam at -1, over the clock: the tick pushes.
-        XCTAssertEqual(g.overdue, 1)
-        g.liftTick(knob: 2)
-        XCTAssertEqual(g.overdue, 0)
-        g.commit(rod: 2, steps: 1)
-        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1"))
-        XCTAssertEqual(g.overdue, 0)
-        XCTAssertEqual(g.moves, 1)
-        XCTAssertEqual(g.history, [Twist(rod: 2, steps: 4)])
-    }
-
-    /// A turn of the open stir's knob replays it from where it began, whether or not a finger lifted the tick first.
-    func testAJoinedTurnReplaysTheStirWithoutALift() {
-        let g = game()
-        g.commit(rod: 2, steps: 3)
-        g.commit(rod: 2, steps: 1)
-        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1"))
-        XCTAssertEqual(g.escapement.ticks, 1)
-        XCTAssertEqual(g.moves, 1)
-    }
-
-    func testOnlyTheOpenStirsKnobLiftsATick() {
-        let g = game()
-        g.commit(rod: 2, steps: 4)
-        g.liftTick(knob: 1)
-        XCTAssertFalse(g.escapement.lifted)
-        g.wait(on: 0)
-        // A wait is sealed at once: nothing lifts its tick.
-        g.liftTick(knob: 2)
-        g.liftTick(knob: 0)
-        XCTAssertFalse(g.escapement.lifted)
+        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1,2:-4") + [Twist(rod: 0, steps: 1)])
+        XCTAssertTrue(g.lost)
     }
 
     func testTheClockRodIsNeverTurned() {
@@ -181,16 +101,6 @@ import XCTest
         XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-2,2:-4"))
         XCTAssertEqual(g.moves, 0)
         XCTAssertEqual(g.escapement.ticks, 0)
-    }
-
-    func testALookThatLetsGoWhereItStartedIsNoMoveAndNoTick() {
-        let g = game()
-        // A turn let go at zero never reaches the game: the view relands a lifted tick and commits nothing.
-        g.liftTick(knob: 2)
-        g.relandTick()
-        XCTAssertEqual(g.escapement.ticks, 0)
-        XCTAssertEqual(g.moves, 0)
-        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-2,2:-4"))
     }
 
     /// Once the clock holds no entry it stops: no more ticks, and nothing to wait for.
@@ -207,45 +117,40 @@ import XCTest
         XCTAssertFalse(g.lost)
     }
 
-    /// The pack's undo: the move and its tick together, from the shared bank, the stir it uncovers as open as it was.
-    func testUndoTakesTheMoveAndItsTickAndReopensTheStirItUncovers() {
+    /// The pack's undo: the move and its tick together, from the shared bank, on a lost tank too.
+    func testUndoTakesTheMoveAndItsTick() {
         let g = game()
         g.commit(rod: 2, steps: 4)
+        let s1 = g.stack
         g.commit(rod: 1, steps: -3)
-        let slipped = g.stack
-        g.wait(on: 0)
         XCTAssertTrue(g.lost)
         g.undo()
         XCTAssertFalse(g.lost)
-        XCTAssertEqual(g.stack, slipped)
-        XCTAssertEqual(g.overdue, 1)
-        XCTAssertEqual(g.escapement.ticks, 2)
-        XCTAssertEqual(g.moves, 2)
-        XCTAssertEqual(g.bank, 2)
-        // The slip is open again, so its tick can still lift out and the slip turn back free.
-        g.liftTick(knob: 1)
-        g.commit(rod: 1, steps: 3)
-        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1"))
+        XCTAssertEqual(g.stack, s1)
+        XCTAssertEqual(g.overdue, 0)
+        XCTAssertEqual(g.escapement.ticks, 1)
         XCTAssertEqual(g.moves, 1)
-        g.undo()
-        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-2,2:-4"))
-        XCTAssertEqual(g.escapement.ticks, 0)
-        XCTAssertEqual(g.bank, 1)
+        XCTAssertEqual(g.bank, 2)
+        // And the line still wins in three.
+        g.wait(on: 0)
+        g.commit(rod: 1, steps: -3)
+        XCTAssertTrue(g.solved)
+        XCTAssertEqual(g.moves, 3)
+        XCTAssertEqual(g.over, 0)
     }
 
     func testAnEmptyBankLeavesTheLossStanding() {
         let g = game(bank: 0)
         g.commit(rod: 1, steps: 1)
-        g.wait(on: 0)
+        XCTAssertTrue(g.lost)
         g.undo()
         XCTAssertTrue(g.lost)
-        XCTAssertEqual(g.moves, 2)
+        XCTAssertEqual(g.moves, 1)
     }
 
     func testResetStartsTheClockAfresh() {
         let g = game()
         g.commit(rod: 1, steps: 1)
-        g.wait(on: 0)
         XCTAssertTrue(g.lost)
         XCTAssertTrue(g.reset())
         XCTAssertFalse(g.lost)
@@ -309,6 +214,7 @@ import XCTest
         var seen = 0
         let solver = Solver(.tri)
         XCTAssertNil(solver.escapement(tri("0:-1,1:+3,0:-2,2:-4"), clock: 0, limit: 2, seen: &seen))
+        XCTAssertEqual(solver.escapement(tri("0:-1,1:+3,0:-2,2:-4"), clock: 0, limit: 3, seen: &seen)?.count, 3)
         XCTAssertEqual(solver.escapement(tri("0:-1,1:+3"), clock: 0, limit: 4, seen: &seen)?.count, 1)
         let play = solver.escapement(tri("1:+3,0:-1"), clock: 0, limit: 4, seen: &seen)
         XCTAssertEqual(play?.count, 2)

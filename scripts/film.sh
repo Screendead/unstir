@@ -96,9 +96,8 @@ for p in isobars ephemeris cords; do
     MOVES=4:-4,4:-4,4:+4,4:+6
 done
 # Escapement 1: the demonstration a first-time player sees before the first stir (a heal ticks the clock, a wait ticks it
-# again, then the problem winds in), and lines played by a drawn fingertip: won, lost, and a slip re-grabbed and turned
-# back for free. A ratchet's move (0:1) is a tap on it.
+# again, then the problem winds in), and lines played by a drawn fingertip: won, and lost the moment a slip is let go.
+# A ratchet's move (0:1) is a tap on it.
 film escapement-demo 14 "$tank,fps=3,scale=200:-1,tile=8x6:padding=4" PACK=escapement OPEN=1
 film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
-film escapement-lost 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,1:-3,0:1
-film escapement-regrab 16 "$tank,fps=3,scale=200:-1,tile=9x6:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,1:-3,1:3,0:1,1:-3
+film escapement-lost 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,1:-3
