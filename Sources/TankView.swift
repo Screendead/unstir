@@ -579,6 +579,8 @@ struct LevelView: View {
     @State private var wind = 1.0
     /// The touch it belongs to, what it holds, and the finger's last angle about that.
     @State private var drag: (start: CGPoint, grab: Grab, last: Double)?
+    /// A finger is down on the tank. It resets when the system cancels the touch too, which `drag` alone never sees.
+    @GestureState private var holding = false
     /// Where the finger has been since it landed, timed from when the drag was taken up, and what it held there, for
     /// the log's one line when the drag ends.
     @State private var path: (grab: Grab, down: Date, trail: Trail<SIMD2<Double>>)?
@@ -808,7 +810,7 @@ struct LevelView: View {
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
-                .disabled(settling || game.finished || shown != nil || demoing || game.level.run != nil)
+                .disabled(settling || game.finished || shown != nil || demoing || game.level.run != nil || holding)
                 .opacity(showResult || game.level.run != nil ? 0 : 1)
                 .accessibilityHidden(game.level.run != nil)
                 .padding(.bottom, 8)
@@ -1415,6 +1417,7 @@ struct LevelView: View {
         // A level that turns, or swirls, reaches a finger on the bezel or just beyond it.
         .contentShape(Circle().inset(by: game.level.motion == .none && game.level.layout.swirl == nil ? 0 : -25))
         .gesture(twistGesture(r))
+        .onChange(of: holding) { _, now in if !now, let g = drag { cut(g) } }
         // Not .none: that also switches off the gesture above.
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
@@ -1564,12 +1567,15 @@ struct LevelView: View {
     private func twistGesture(_ r: CGFloat) -> some Gesture {
         func norm(_ p: CGPoint) -> SIMD2<Double> { SIMD2(Double(p.x / r - 1), Double(p.y / r - 1)) }
         return DragGesture(minimumDistance: 0)
+            .updating($holding) { _, holding, _ in holding = true }
             .onChanged { v in
                 guard !settling, !game.finished, shown == nil, !demoing else { return }
                 let q = norm(v.location)
                 let level = game.level
                 // Keyed on the start point because a cancelled drag never reaches onEnded; a new touch starts afresh.
                 if drag?.start != v.startLocation {
+                    // A touch cut off without onEnded keeps the turn it showed; this one is taken up once that settles.
+                    if let g = drag, cut(g) { return }
                     endPath()
                     drag = nil; liveRod = nil; liveAngle = 0; pressing = false
                     // A twist cancelled without onEnded leaves its turn behind.
@@ -1783,6 +1789,20 @@ struct LevelView: View {
             liveTurn = nil
             settling = false
             game.turnTank(steps)
+        }
+    }
+
+    /// A drag the system cut off, or a second finger took over, before the lift lets go as the lift would, so a turn
+    /// shown whole never snaps back uncommitted (Jack, V26 on the phone, 2026-10-27). True when it has a turn to settle.
+    @discardableResult private func cut(_ g: (start: CGPoint, grab: Grab, last: Double)) -> Bool {
+        Log.write("cut \(state)")
+        endPath()
+        drag = nil
+        switch g.grab {
+        case .rod(let k): release(k); return true
+        case .rim where !spun && liveTurn != nil: releaseTank(); return true
+        case .ratchet: pressing = false; return false
+        default: return false
         }
     }
 
