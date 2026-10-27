@@ -159,8 +159,8 @@ final class FirstStirTests: XCTestCase {
         }
     }
 
-    /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, past
-    /// the renderer's own noise (up to 6 in 255 where nothing changed).
+    /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, by
+    /// more than 8 in 255, past the renderer's own noise (up to 6 where nothing changed).
     @MainActor private func footprint(_ story: Story, _ k: Int, side: Int) throws -> [SIMD2<Double>] {
         // Each render in its own pool: without them the test host was killed (signal kill) in a later test of the suite.
         func pixels(_ played: Set<Int>) throws -> [UInt8] { try autoreleasepool { try render(played) } }
