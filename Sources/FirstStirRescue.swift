@@ -608,14 +608,19 @@ extension Level {
 }
 
 /// Scene 7, 4:15 back to 3:50, on eye: the breakwater's end in surf, its seaward face with steps cut down it to the
-/// water, the lighthouse dark on its end. Rod 0, the steps: empty, a rope hanging and the surf over their foot, then the
-/// father helping the grandmother down. Rod 1, the lifeboat: alongside the steps, two crew reaching up, then further off,
+/// water, the lighthouse dark on its end. Rod 0, the steps: empty, a rope hanging and the surf over the lower steps, then the
+/// father helping the grandmother down. Rod 1, the lifeboat: alongside the steps' foot, two crew reaching up, then further off,
 /// bow high on a wave. Rod 2, the lighthouse: dark, then a glow at the stair window from the lamp she left.
 enum OffTheBreakwater {
     static let top = -0.36, water = 0.12
 
-    /// The steps' nosings, top left to the water.
-    static func step(_ x: Double) -> Double { top + 0.06 + (x + 0.64) * 0.8 }
+    /// The steps' foot, at the water inside the lifeboat's core, so the boat waiting there lies alongside them, clear of
+    /// the steps' disc.
+    static let foot = 0.17
+    /// The steps' nosings, top left down to the foot.
+    static func step(_ x: Double) -> Double { water + (x - foot) * 0.45 }
+    /// Where the steps leave the breakwater's top.
+    static let head = foot - (water - top - 0.06) / 0.45
 
     static func draw(_ pen: Pen, played: Set<Int>) {
         let ink = Rescue.ink
@@ -635,12 +640,13 @@ enum OffTheBreakwater {
         }
         // The steps, cut into the face from the top down to the water, a rail post at their head.
         var steps = Path()
-        steps.addPath(pen.seg(-0.64, step(-0.64), -0.06, step(-0.06)))
-        for x in Swift.stride(from: -0.64, to: -0.07, by: 0.05) {
-            steps.addPath(pen.poly([(x, step(x)), (x + 0.05, step(x)), (x + 0.05, step(x + 0.05))], closed: false))
+        let tread = (foot - head) / 18
+        steps.addPath(pen.seg(head, step(head), foot, step(foot)))
+        for x in (0..<18).map({ head + tread * Double($0) }) {
+            steps.addPath(pen.poly([(x, step(x)), (x + tread, step(x)), (x + tread, step(x + tread))], closed: false))
         }
-        steps.addPath(pen.poly([(-0.66, top), (-0.66, top - 0.06), (-0.6, top - 0.06)], closed: false))
-        pen.fill(pen.poly([(-0.64, step(-0.64)), (-0.06, step(-0.06)), (-0.06, step(-0.06) + 0.06), (-0.64, step(-0.64) + 0.06)]), .black)
+        steps.addPath(pen.poly([(head - 0.02, top), (head - 0.02, top - 0.06), (head + 0.04, top - 0.06)], closed: false))
+        pen.fill(pen.poly([(head, step(head)), (foot, step(foot)), (foot, step(foot) + 0.04), (head, step(head) + 0.04)]), .black)
         pen.lit { g in
             g.stroke(stone, ink, 0.55)
             g.stroke(steps, ink)
@@ -671,13 +677,13 @@ enum OffTheBreakwater {
         // Vignette 0, the steps.
         pen.vignette(0) { pen in
             if played.contains(0) {
-                Cast.figure(pen.at(-0.26, step(-0.26), k: 0.13), .grandmother, arms: [[(0.1, -0.72), (0.3, -0.74), (0.5, -0.66)]])
-                Cast.figure(pen.at(-0.16, step(-0.16), k: 0.15, flip: true), .father,
+                Cast.figure(pen.at(-0.31, step(-0.31), k: 0.13), .grandmother, arms: [[(0.1, -0.72), (0.3, -0.74), (0.5, -0.66)]])
+                Cast.figure(pen.at(-0.2, step(-0.2), k: 0.15, flip: true), .father,
                             arms: [[(0.1, -0.74), (0.32, -0.66), (0.62, -0.62)], [(-0.1, -0.74), (-0.14, -0.5)]])
             } else {
-                // A rope hanging off the post's ring down the face, and the surf over the steps' foot.
-                pen.stroke(pen.curve(-0.2, step(-0.2) - 0.01, -0.24, step(-0.2) + 0.06, -0.21, step(-0.2) + 0.11), ink)
-                Cast.breaker(pen.at(-0.16, water - 0.005, k: 0.12))
+                // A rope hanging off the post's ring down the face, and the surf breaking up over the lower steps.
+                pen.stroke(pen.curve(-0.24, step(-0.24) - 0.01, -0.28, step(-0.24) + 0.06, -0.25, step(-0.24) + 0.11), ink)
+                Cast.breaker(pen.at(-0.17, step(-0.17) + 0.012, k: 0.1))
             }
         }
 
@@ -687,10 +693,11 @@ enum OffTheBreakwater {
                 Rescue.swellUnder(pen, x: 0.6, y: 0.035, w: 0.2)
                 Cast.lifeboat(pen.at(0.6, 0.02, k: 0.17, flip: true, turn: 0.3))
             } else {
-                // Clear of the steps' disc, its stern to their foot.
-                Cast.lifeboat(pen.at(0.29, 0.15, k: 0.16))
-                Cast.figure(pen.at(0.235, 0.135, k: 0.12), .crew, arms: [[(-0.1, -0.74), (-0.22, -0.95), (-0.3, -1.1)]])
-                Cast.figure(pen.at(0.275, 0.135, k: 0.12), .crew, arms: [[(-0.1, -0.74), (-0.24, -0.92), (-0.34, -1.05)]])
+                // Its stern at the steps' foot, the crew reaching up them for her, all clear of the steps' disc and the
+                // surf's, so it plays still whichever heals first.
+                Cast.lifeboat(pen.at(0.285, 0.15, k: 0.16))
+                Cast.figure(pen.at(0.225, 0.135, k: 0.12), .crew, arms: [[(-0.1, -0.74), (-0.14, -0.95), (-0.12, -1.12)]])
+                Cast.figure(pen.at(0.265, 0.135, k: 0.12), .crew, arms: [[(-0.1, -0.74), (-0.18, -0.92), (-0.2, -1.08)]])
             }
         }
 
