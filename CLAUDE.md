@@ -394,7 +394,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
   word it and settings say (`ConsentWords`): on a plain launch while undecided,
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
-  link, "What does it send?", that opens the full list of what is sent under the line; Yes and No the same
+  link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
   analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
   leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out

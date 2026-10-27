@@ -366,7 +366,7 @@ shot card-lens-ax "Lens's card at the largest accessibility text size, its facts
 
 # The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
-shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends." CONSENT=sends
+shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again." CONSENT=sends
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
 shot consent-settings-on "The gear's sheet: the analytics switch on, and send log." CONSENT=yes SETTINGS=1
 shot consent-settings-off "The gear's sheet: the analytics switch off, and send log." CONSENT=no SETTINGS=1
