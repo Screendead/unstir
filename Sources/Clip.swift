@@ -419,10 +419,11 @@ struct ClipPlayer: View {
     }
 
     /// Every reel stays drawn, the others clear and held at their start, so a cut never waits on a picture's bake or
-    /// strike.
+    /// strike. Only First Stir's reel has a caption under its tank, so the reels share a top, not a centre, or a
+    /// Complete clip's tank would jump at each cut to or from it.
     private func frame(_ t: Double) -> some View {
         let (_, i, u) = clip.reel(at: t)
-        return ZStack {
+        return ZStack(alignment: .top) {
             ForEach(clip.reels.indices, id: \.self) { j in
                 ClipTank(reel: clip.reels[j], t: j == i ? u : clip.reels[j].from, side: side).opacity(j == i ? 1 : 0)
             }
