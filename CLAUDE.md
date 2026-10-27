@@ -365,7 +365,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   shards falling inside the lantern's core and its boat right of the cottage's disc. Its sky (`Storm.tones`) is the
   lab's storm at 12:30 and warms late towards the lab's dusk at 9:30, where Dusk Before's first scene opens. Its rain thins as the night winds back and its far lightning
   (`Storm.flash`, drawn over all in scenes 16 and 18) is gone by about 10:50; scene 17 is indoors, its rain only
-  through its windows. Its vignettes draw through the Rescue's `Brush` and `Cast` in the Storm's ink. `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
+  through its windows. Its vignettes draw through the Rescue's `Brush` and `Cast` in the Storm's ink.
+  `Dusk` (**FirstStirDuskBefore.swift**) is chapter 5, Dusk Before: five scenes, 9:30 back to 7:40 pm, in dusk rose (ink B0A6E8), the last in kitchen gold, drawn through `Brush` and
+  `Cast` as the Rescue is, each scene's drawing a nested enum (`Dusk.Lamp`, `Walk`, `Lines`, `Gift`, `Stir`). Still
+  air, so no `drawOver`: its sky (`Dusk.skyTones`, the palette's three sky tones and nothing between) climbs from
+  night blue to the sunset's coral with an afterglow over where the sun went down, and the kitchens show the sky
+  through their windows. Its one live body is the first scene's cloud bank (`Lamp.bank`), sinking below the horizon
+  by 9:00 at the glass's left edge, the one stretch of the quad's horizon no disc reaches; `Dusk.bodies` feeds
+  `testTheBodiesStayClearOfEveryDisc` as Dawn's do. A figure too tall for its core (scene 24's) is drawn whole outside
+  the vignette, its arms alone inside it. Its levels are 21 to 25, the table's last five; its times run in the evening's own minutes (1290 back to 1180), a day on from the Storm's. The cup's one entry is the scene 25 scramble's bottom, so the stir is the pack's
+  last heal. `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
   grandmother, child, neighbour, crew) and `Dog` build silhouettes from posed parts and outline their union.
   `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a scene of chapters 1 to 3 on the Mac, held back, played
   and where they differ over the layout's cores and knobs, and prints each vignette's reach against its core less

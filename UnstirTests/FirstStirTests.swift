@@ -160,6 +160,29 @@ final class FirstStirTests: XCTestCase {
         // The harbour heals as the lab did: the cottage's entry is the bottom one, under every other rod's.
         XCTAssertEqual(storm[0].scramble.first?.rod, 2)
         XCTAssertEqual(storm[0].scramble.filter { $0.rod == 2 }.count, 2)
+        // Chapter 5 carries on from it and closes the pack, its times in the evening's own minutes.
+        let dusk = Array(Level.firstStir.suffix(Dusk.allCases.count))
+        XCTAssertEqual(Level.firstStir.count, dawn.count + rescue.count + flood.count + storm.count + dusk.count)
+        XCTAssertEqual(dusk.map { $0.story }, Dusk.allCases.map { .dusk($0) })
+        XCTAssertEqual(dusk.map(\.scramble.count), [8, 8, 7, 6, 5])
+        XCTAssertEqual(dusk.map(\.layout), [.quad, .eye, .pent, .quad, .tri])
+        XCTAssertEqual(time + 24 * 60, 21 * 60 + 30, "chapter 5 opens at 9:30 pm")
+        time = 21 * 60 + 30
+        for level in dusk {
+            let story = try XCTUnwrap(level.story, level.id), scene = try XCTUnwrap(story.scene, level.id)
+            XCTAssertEqual(level.layout, scene.layout, level.id)
+            XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty && level.ratchets.isEmpty, level.id)
+            XCTAssertEqual(story.vignettes.count, 3, level.id)
+            XCTAssertEqual(story.vignettes, story.vignettes.intersection(level.scramble.map(\.rod)), "\(level.id) opens with one played")
+            XCTAssertEqual(scene.late, time, level.id)
+            XCTAssertLessThan(scene.early, scene.late, level.id)
+            time = scene.early
+        }
+        XCTAssertEqual(time, 19 * 60 + 40, "chapter 5 ends at 7:40 pm")
+        // The stir is the pack's last heal: the cup's one entry lies under every other, on tri, where every disc meets.
+        let stir = try XCTUnwrap(dusk.last)
+        XCTAssertEqual(stir.scramble.first?.rod, 2)
+        XCTAssertEqual(stir.scramble.filter { $0.rod == 2 }.count, 1)
         XCTAssertEqual(Level.firstStir.map(\.id), (1...Level.firstStir.count).map { Pack.firstStir.id($0) })
         for level in Level.firstStir {
             let story = try XCTUnwrap(level.story, level.id)
@@ -226,12 +249,15 @@ final class FirstStirTests: XCTestCase {
     /// What moves with the time as a body never lies in a disc, its line and glow included, so no rod ever stirs it.
     func testTheBodiesStayClearOfEveryDisc() {
         let margin = Dawn.bodyGlow + Pen.line / 2
-        for scene in Dawn.allCases {
-            for b in scene.bodies {
-                for rod in scene.layout.rods {
-                    XCTAssertGreaterThan(simd_distance(SIMD2(b.x, b.y), SIMD2(rod.x, rod.y)), rod.z + b.radius + margin, "\(scene)")
+        let scenes: [(String, Unstir.Layout, [(x: Double, y: Double, radius: Double)])] =
+            Dawn.allCases.map { ("\($0)", $0.layout, $0.bodies) } + Dusk.allCases.map { ("\($0)", $0.layout, $0.bodies) }
+        XCTAssertFalse(Dusk.lamp.bodies.isEmpty)
+        for (scene, layout, bodies) in scenes {
+            for b in bodies {
+                for rod in layout.rods {
+                    XCTAssertGreaterThan(simd_distance(SIMD2(b.x, b.y), SIMD2(rod.x, rod.y)), rod.z + b.radius + margin, scene)
                 }
-                XCTAssertLessThan(simd_length(SIMD2(b.x, b.y)) + b.radius, 1, "\(scene)")
+                XCTAssertLessThan(simd_length(SIMD2(b.x, b.y)) + b.radius, 1, scene)
             }
         }
     }

@@ -42,6 +42,7 @@
 		D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0CD5709FED7976550A2E52 /* TankView.swift */; };
 		D7B47E903167691787C1EB50 /* Marbling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0D958FCA92212546745A433D /* Marbling.metal */; };
 		D90B92AEBB41C6429CB55D32 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551B7907E2001DBDBAC8A1B9 /* Store.swift */; };
+		E40A904A8187FBF9CD6F33F4 /* FirstStirDuskBefore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */; };
 		E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D692C82FAF648856F00B09E0 /* PackTests.swift */; };
 		ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283B1A56B07119D483F58617 /* Pack.swift */; };
 		F09FECAA611D270EE52C8307 /* FirstStirTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B662DA049B8A76E76E38BF /* FirstStirTests.swift */; };
@@ -109,6 +110,7 @@
 		DB7B4A291F2734F1B961F3FE /* Shelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shelf.swift; sourceTree = "<group>"; };
 		E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirTheStorm.swift; sourceTree = "<group>"; };
 		E302013539F573E3F8C8FBC5 /* Chainmail.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Chainmail.metal; sourceTree = "<group>"; };
+		EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirDuskBefore.swift; sourceTree = "<group>"; };
 		EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirFlood.swift; sourceTree = "<group>"; };
 		FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryScene.swift; sourceTree = "<group>"; };
 		FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
@@ -178,6 +180,7 @@
 				27E5962A6708954A5E564099 /* Coral.metal */,
 				0B80E0606D266BF05C66786E /* FirstStir.swift */,
 				D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */,
+				EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */,
 				EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */,
 				36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */,
 				E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */,
@@ -321,6 +324,7 @@
 				F1D5DFB747CEEE7F2DC62166 /* Coral.metal in Sources */,
 				650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */,
 				2E38B1B5B55BE8B14D6D3B09 /* FirstStirDawn.swift in Sources */,
+				E40A904A8187FBF9CD6F33F4 /* FirstStirDuskBefore.swift in Sources */,
 				FA7C0CC5ADD8583855C61026 /* FirstStirFlood.swift in Sources */,
 				64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */,
 				AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */,

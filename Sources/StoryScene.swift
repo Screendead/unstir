@@ -61,6 +61,7 @@ extension Story {
         case .rescue(let scene): scene
         case .flood(let scene): scene
         case .storm(let scene): scene
+        case .dusk(let scene): scene
         }
     }
 }

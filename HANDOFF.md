@@ -1089,6 +1089,26 @@ names and product ids, and Complete's promise to older owners.
       beats stand, and an attic room with three windows reads as one room.
     Left: Jack's review of the art at phone size (the figures are small on the quad and pent scenes; on the Storm's pent
     and quad scenes the adults are near the spec's 0.12 minimum), the films, and chapters 3 and 5.
+    Chapter 5, Dusk Before (scenes 21 to 25), drawn 2026-10-27 on `firststir-ch5` (from `firststir-content`, pushed, no
+    PR) in `FirstStirDuskBefore.swift` on the scene engine as `Story.dusk` cases: lighting the lamp (quad
+    `3:+4,0:-3,1:+5,2:-2,3:-5,0:+2,1:-3,2:+4`), the path to the light (eye `0:+3,2:-4,1:+5,3:-2,0:-4,1:+3,2:+2,3:+4`),
+    doubling the lines (pent `4:+3,1:-4,3:+5,2:-3,0:+4,1:+2,4:-5`), the float (quad `0:+4,3:-3,2:+5,1:-2,0:-3,3:+2`) and
+    first stir (tri `2:+4,0:-3,1:+5,0:+2,1:-3`, the cup's entry at the bottom so the stir always heals last), each par
+    the solver's optimum and every vignette drawn clear of the other discs (the outline's "Clear" orders). The clock
+    runs 9:30 back to 7:40 pm. Its levels are `first-stir-21` to `-25`. The Storm's scene 20 must end on `Dusk.skyTones(1290)` and
+    `Dusk.seaTone(1290)`, as the Rescue opens on the Dawn's last sky; add a test like
+    `testTheRescueOpensOnTheDawnsLastSky` when the two meet. Sheet: `scripts/first-stir-sheet.py 21 25`. **Open for Jack, chapter 5** (Claude's recommendations, not decided):
+    - Scene 24's gift held back: the outline has the child holding the float up to the light while the same picture
+      shows it hanging in the window, two floats as the level opens. Built: the child's hands up to the window, empty,
+      so the opening and the end each show one float, the child standing under the window with both arms up to it.
+      The other choice is the outline's, as written.
+    Review fixes (2026-10-27, same branch): the quay runs under scene 23's hut and the boat is moored to two buoys; its
+    barometer is larger, the needle short of the glyphs; scene 24's figures are scaled to the kitchen (bodies drawn
+    outside the vignette, only arms and float inside the core) and its door is glazed, a horizon in rod 0's core;
+    scene 21's grandmother is 0.125 tall; scene 25 has a cloud, not a gull, a leaf hour hand, and the child's hand
+    joined to a sleeve from the table's near edge (static, so it may leave the core). The cloud bank now sinks as a
+    live body at the glass's left edge (x -0.985 to -0.83), the one stretch of horizon clear of every disc, so it is
+    no longer a departure; the sky uses the palette's three tones alone.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
