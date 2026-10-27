@@ -240,6 +240,39 @@ final class FirstStirTests: XCTestCase {
         XCTAssertEqual(faults, known)
     }
 
+    /// With every vignette played, the composite is the played scene over the sky: where the held-back and played scenes
+    /// agree, no core's edge shows where it is cut in.
+    @MainActor func testTheCutInCoresLeaveNoSeam() throws {
+        let side = 384
+        for scene in Dawn.allCases {
+            func layer(sky minutes: Double? = nil, played: Set<Int> = []) throws -> UIImage {
+                try XCTUnwrap(scene.render(sky: minutes, played: played, side: CGFloat(side), scale: 1))
+            }
+            let late = try layer(sky: scene.late), early = try layer(sky: scene.early)
+            let held = try layer(), played = try layer(played: scene.vignettes)
+            func pixels(_ layers: SceneLayers, _ shown: [Int: Double]) throws -> [UInt8] {
+                try autoreleasepool {
+                    let r = ImageRenderer(content: SceneComposite(scene: scene, layers: layers, sky: 0.5, minutes: scene.late, side: CGFloat(side),
+                                                                  shown: shown).drawingGroup(colorMode: .extendedLinear))
+                    r.scale = 1
+                    let image = try XCTUnwrap(r.cgImage)
+                    var bytes = [UInt8](repeating: 0, count: 4 * side * side)
+                    let ctx = try XCTUnwrap(CGContext(data: &bytes, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 4 * side,
+                                                      space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+                    ctx.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
+                    return bytes
+                }
+            }
+            let cores = SceneComposite.cores(scene, side: CGFloat(side), scale: 1)
+            let cut = try pixels((late, early, held, played, cores), Dictionary(uniqueKeysWithValues: scene.vignettes.map { ($0, 1.0) }))
+            let whole = try pixels((late, early, played, played, cores), [:]), none = try pixels((late, early, held, held, cores), [:])
+            // Only where the two scenes agree: a vignette's faint glow tail can cross its core's edge, and steps there.
+            var worst = 0
+            for i in cut.indices where abs(Int(whole[i]) - Int(none[i])) <= 1 { worst = max(worst, abs(Int(cut[i]) - Int(whole[i]))) }
+            XCTAssertLessThanOrEqual(worst, 1, "\(scene): a core's edge shows")
+        }
+    }
+
     /// The layers bake at the screen's scale on the largest phone, and at a lower one rather than pass the budget.
     func testTheLayersBakeWithinTheBudget() {
         // The Pro Max's tank: (440 points wide) / 1.045.

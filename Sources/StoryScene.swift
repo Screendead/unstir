@@ -68,7 +68,7 @@ extension Game {
 
 /// A scene as the stack has played it: the held-back scene over the sky, each played core cut in from the all-played
 /// scene and cross-faded as it plays (snapping back on an undo, as `StoryLayer` does), the sky and the live bodies wound
-/// back as the scramble's entries go. Four layers bake as it appears, within `Harbour.budget`.
+/// back as the scramble's entries go. Four layers and the cores' masks bake as it appears, within `Harbour.budget`.
 struct SceneLayer: View {
     let scene: any StoryScene
     let played: Set<Int>
@@ -78,7 +78,7 @@ struct SceneLayer: View {
     let side: CGFloat
     var onStrike: () -> Void = {}
     @Environment(\.displayScale) private var scale
-    @State private var layers: (late: UIImage, early: UIImage, held: UIImage, played: UIImage)?
+    @State private var layers: SceneLayers?
     /// The fraction of the window the time is wound back from, and when the rewind began.
     @State private var rewind: (from: Double, at: Date)?
     @State private var rested = 0.0
@@ -90,26 +90,13 @@ struct SceneLayer: View {
         TimelineView(.animation(paused: rewind == nil)) { timeline in
             let f = shown(at: timeline.date)
             let minutes = scene.late - (scene.late - scene.early) * f
-            ZStack {
-                if let layers {
-                    sky(layers, f)
-                    Canvas { ctx, size in scene.drawLive(ctx, r: size.width / 2, minutes: minutes) }
-                    Image(uiImage: layers.held)
-                    ForEach(scene.layout.rods.indices.filter(scene.vignettes.contains), id: \.self) { k in
-                        let rod = scene.layout.rods[k], core = Tank.plateau * rod.z * side
-                        ZStack {
-                            sky(layers, f)
-                            Image(uiImage: layers.played)
-                        }
-                        .mask(Circle().frame(width: core, height: core).position(x: side / 2 * (1 + rod.x), y: side / 2 * (1 + rod.y)))
-                        .opacity(playedAt[k].map { at in
-                            let x = min(max(timeline.date.timeIntervalSince(at) / Harbour.fade, 0), 1)
-                            return x * x * (3 - 2 * x)
-                        } ?? 0)
-                    }
-                } else {
-                    Color.black
-                }
+            if let layers {
+                SceneComposite(scene: scene, layers: layers, sky: f, minutes: minutes, side: side, shown: playedAt.mapValues { at in
+                    let x = min(max(timeline.date.timeIntervalSince(at) / Harbour.fade, 0), 1)
+                    return x * x * (3 - 2 * x)
+                })
+            } else {
+                Color.black
             }
         }
         .frame(width: side, height: side)
@@ -141,7 +128,7 @@ struct SceneLayer: View {
             guard let late = scene.render(sky: scene.late, side: side, scale: s), let early = scene.render(sky: scene.early, side: side, scale: s),
                   let held = scene.render(side: side, scale: s), let played = scene.render(played: scene.vignettes, side: side, scale: s)
             else { return }
-            layers = (late, early, held, played)
+            layers = (late, early, held, played, SceneComposite.cores(scene, side: side, scale: s))
         }
     }
 
@@ -152,21 +139,82 @@ struct SceneLayer: View {
         return rewind.from + ((target ?? night) - rewind.from) * x * x * (3 - 2 * x)
     }
 
-    private func sky(_ layers: (late: UIImage, early: UIImage, held: UIImage, played: UIImage), _ f: Double) -> some View {
-        ZStack {
-            Image(uiImage: layers.late)
-            Image(uiImage: layers.early).opacity(f)
-        }
-        .frame(width: side, height: side)
-    }
-
-    /// The scale to bake at: the screen's, unless four tank-sized float layers would pass `Harbour.budget`.
+    /// The scale to bake at: the screen's, unless four tank-sized float layers and the cores' masks would pass
+    /// `Harbour.budget`.
     static func bakeScale(side: CGFloat, scale: CGFloat) -> CGFloat {
         min(scale, ((Double(Harbour.budget) / Double(layerBytes(side: side, scale: 1))).squareRoot() * 100).rounded(.down) / 100)
     }
 
     static func layerBytes(side: CGFloat, scale: CGFloat) -> Int {
         let px = side * scale
-        return Int(8 * px * px * 4)
+        // The masks: at most three cores of 0.6 × 0.58 in radius, 4 bytes a pixel, under 1.5 bytes a tank pixel.
+        return Int(px * px * (8 * 4 + 1.5))
+    }
+}
+
+/// A scene's baked layers: the sky as the level opens and once every entry has gone, the scene held back and played, and
+/// each vignette's core.
+typealias SceneLayers = (late: UIImage, early: UIImage, held: UIImage, played: UIImage, cores: [Int: UIImage])
+
+/// The layers composited: the sky `sky` of the way to the early one, the live bodies at `minutes`, and the held-back scene
+/// with each vignette's core cut in from the played one at its opacity in `shown`.
+struct SceneComposite: View {
+    let scene: any StoryScene
+    let layers: SceneLayers
+    let sky: Double
+    let minutes: Double
+    let side: CGFloat
+    let shown: [Int: Double]
+
+    var body: some View {
+        ZStack {
+            skies
+            Canvas { ctx, size in scene.drawLive(ctx, r: size.width / 2, minutes: minutes) }
+            Image(uiImage: layers.held)
+            ForEach(cut, id: \.self) { k in
+                ZStack {
+                    skies
+                    Image(uiImage: layers.played)
+                }
+                .mask(core(k))
+                .opacity(shown[k] ?? 0)
+            }
+        }
+        .frame(width: side, height: side)
+    }
+
+    private var cut: [Int] { scene.layout.rods.indices.filter(scene.vignettes.contains) }
+
+    private var skies: some View {
+        ZStack {
+            Image(uiImage: layers.late)
+            Image(uiImage: layers.early).opacity(sky)
+        }
+        .frame(width: side, height: side)
+    }
+
+    /// The core's mask, its pixels wholly in or out: where its cover fell partway, the cut-in edge drew a ring however
+    /// it was composited, though both layers held the same there.
+    private func core(_ k: Int) -> some View {
+        let rod = scene.layout.rods[k], d = Tank.plateau * rod.z * side
+        return Image(uiImage: layers.cores[k]!).interpolation(.none).resizable()
+            .frame(width: d, height: d).position(x: side / 2 * (1 + rod.x), y: side / 2 * (1 + rod.y))
+    }
+
+    /// Each vignette's core as a mask `side` points across at `scale`, drawn without antialiasing.
+    static func cores(_ scene: any StoryScene, side: CGFloat, scale: CGFloat) -> [Int: UIImage] {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = scale
+        format.preferredRange = .standard
+        var masks: [Int: UIImage] = [:]
+        for k in scene.vignettes {
+            let d = Tank.plateau * scene.layout.rods[k].z * side
+            masks[k] = UIGraphicsImageRenderer(size: CGSize(width: d, height: d), format: format).image { c in
+                c.cgContext.setShouldAntialias(false)
+                c.cgContext.setFillColor(UIColor.white.cgColor)
+                c.cgContext.fillEllipse(in: CGRect(x: 0, y: 0, width: d, height: d))
+            }
+        }
+        return masks
     }
 }

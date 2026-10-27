@@ -314,7 +314,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   played (`draw`), and the bodies that move with the time where no disc reaches (`drawLive`: the sunrise's sun and
   chimney smoke), between `late`, as the level opens, and `early`. `Story.scene` names it (`Story.dawn`); `SceneLayer`
   draws it as `StoryLayer` does, from four baked layers (the sky at `late` and at `early`, cross-faded, and the scene
-  held back and played), the live bodies drawn over the sky. Its time is a function of the stack: `Game.wound` counts
+  held back and played), the live bodies drawn over the sky. Its cores cut in through masks drawn without antialiasing
+  (`SceneComposite.cores`): an antialiased edge showed a ring however it was composited, though both scenes held the
+  same there (`testTheCutInCoresLeaveNoSeam`). Its time is a function of the stack: `Game.wound` counts
   the scramble's entries gone (the player's own pushes move no time; a solve has wound them all), and the scene stands
   that share of the way from `late` to `early`, winding there over `Harbour.rewind`. `Game.caption`, the line under
   the tank, is that time as a clock on a scene's level ("6:40 am", Jack's F3) and the note elsewhere. `Dawn` is
