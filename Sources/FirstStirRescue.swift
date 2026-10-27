@@ -759,11 +759,16 @@ enum LanternChain {
             rope.addPath(pen.seg(x, y, x, y - h - 0.01))
         }
 
-        // The lifeboat house on the harbour side, its doors open, and the slip down from them to the water.
+        // The lifeboat house on the harbour side, its doors swung open on the dark inside, the slip's rails running in to
+        // its back wall, and the slip down from them to the water.
         let shed = pen.poly([(-0.6, -0.33), (-0.6, -0.47), (-0.5, -0.55), (-0.4, -0.47), (-0.4, -0.33)])
+        let leaves = [pen.poly([(-0.55, -0.45), (-0.585, -0.43), (-0.585, -0.315), (-0.55, -0.33)]),
+                      pen.poly([(-0.45, -0.45), (-0.415, -0.43), (-0.415, -0.315), (-0.45, -0.33)])]
         pen.fill(shed, .black)
         house.addPath(shed)
         house.addPath(pen.rect(-0.55, -0.45, -0.45, -0.33))
+        for leaf in leaves { pen.fill(leaf, .black); house.addPath(leaf) }
+        house.addPath(pen.poly([(-0.535, -0.33), (-0.515, -0.39), (-0.485, -0.39), (-0.465, -0.33)], closed: false))
         house.addPath(pen.poly([(-0.45, -0.33), (-0.56, -0.2), (-0.68, -0.2), (-0.55, -0.33)], closed: false))
         house.addPath(pen.seg(-0.5, -0.265, -0.62, -0.265))
 
@@ -792,42 +797,43 @@ enum LanternChain {
 
         // Vignette 0, the far end.
         pen.vignette(0) { pen in
-            for y in played.contains(0) ? [-0.13, -0.21, -0.415] : [-0.13, -0.21, -0.28, -0.35, -0.415] { far(pen, y) }
+            // Played, the chain stops short of this core and leaves the last stretch of path dark.
+            for y in played.contains(0) ? [-0.415] : [-0.13, -0.21, -0.28, -0.35, -0.415] { far(pen, y) }
         }
 
-        // Vignette 1, the bearers on the near path.
+        // Vignette 1, the bearers on the near path: a row across it, shoulder to shoulder, the lanterns hung from hands
+        // raised over their heads.
         pen.vignette(1) { pen in
-            let feet: [(Double, Double)] = [(0.175, 0.5), (0.205, 0.42), (0.235, 0.34), (0.26, 0.27)]
-            // Farthest first, so a nearer bearer stands in front; every lantern over them all.
+            let k = 0.12, lantern = 0.03
             var lanterns: [(x: Double, y: Double, lit: Bool)] = []
-            for (i, (x, y)) in feet.enumerated().reversed() {
-                let k = 0.13 - 0.003 * Double(i)
+            for (i, x) in [0.135, 0.17, 0.205, 0.24].enumerated() {
+                let y = 0.44 - 0.01 * Double(i)
                 if played.contains(1), i < 2 {
                     // Running up the path, lantern swinging unlit.
                     Cast.figure(pen.at(x, y, k: k), .neighbour, arms: [[(0.1, -0.74), (0.24, -0.6), (0.3, -0.45)], [(-0.1, -0.74), (-0.24, -0.58)]],
                                 legs: [[(-0.05, -0.4), (-0.22, -0.18), (-0.2, 0)], [(0.05, -0.4), (0.2, -0.2), (0.3, -0.06)]])
-                    lanterns.append((x + 0.3 * k, y - 0.45 * k + 0.03, false))
+                    lanterns.append((x + 0.3 * k, y - 0.45 * k + lantern, false))
                 } else {
-                    Cast.figure(pen.at(x, y, k: k), .neighbour, arms: [[(0.1, -0.74), (0.22, -0.95), (0.24, -1.12)]])
-                    lanterns.append((x + 0.24 * k, y - 1.12 * k + 0.035, true))
+                    Cast.figure(pen.at(x, y, k: k), .neighbour, arms: [[(0.1, -0.74), (0.14, -1.0), (0.12, -1.32)]])
+                    lanterns.append((x + 0.12 * k, y - 1.32 * k + lantern * 1.12, true))
                 }
             }
             for l in lanterns {
-                Cast.lantern(pen.at(l.x, l.y, k: 0.035), lit: l.lit)
-                if l.lit { pen.glow(l.x, l.y - 0.015, 0.03, Rescue.torch, 0.45) }
+                Cast.lantern(pen.at(l.x, l.y, k: lantern), lit: l.lit)
+                if l.lit { pen.glow(l.x, l.y - 0.4 * lantern, 0.035, Rescue.torch, 0.5) }
             }
         }
 
         // Vignette 3, the lifeboat house.
         pen.vignette(3) { pen in
+            // Held back, the slip empty, as the house draws it. Played, the lifeboat out on the slip, bow down to the water,
+            // one of the crew walking it down beyond its hull and one leaning on its stern.
             if played.contains(3) {
-                Cast.lifeboat(pen.at(-0.53, -0.29, k: 0.1, flip: true, turn: -0.4))
-                for x in [-0.5, -0.47] {
-                    Cast.figure(pen.at(x, -0.3, k: 0.12, flip: true, turn: -0.35), .crew, arms: [[(0.1, -0.7), (0.3, -0.6), (0.42, -0.55)]])
-                }
-            } else {
-                pen.fill(pen.rect(-0.545, -0.445, -0.455, -0.335), .black)
-                pen.stroke(pen.seg(-0.5, -0.445, -0.5, -0.335), Rescue.ink, 0.5)
+                Cast.figure(pen.at(-0.565, -0.275, k: 0.12, flip: true), .crew, arms: [[(0.1, -0.7), (0.2, -0.55), (0.26, -0.42)]])
+                Cast.lifeboat(pen.at(-0.525, -0.25, k: 0.11, flip: true, turn: -0.35))
+                Cast.figure(pen.at(-0.44, -0.235, k: 0.12, flip: true, turn: -0.35), .crew,
+                            arms: [[(0.1, -0.7), (0.25, -0.54), (0.38, -0.44)], [(-0.1, -0.7), (0.16, -0.52), (0.3, -0.4)]],
+                            legs: [[(-0.06, -0.46), (-0.12, -0.24), (-0.22, 0)], [(0.06, -0.46), (0.04, -0.2), (-0.06, 0)]])
             }
         }
     }
