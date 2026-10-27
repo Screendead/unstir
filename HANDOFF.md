@@ -1011,8 +1011,8 @@ names and product ids, and Complete's promise to older owners.
     each par the solver's optimum (`SolverTests.testFirstStirParIsTheOptimum`). On the engine its time steps per
     scramble entry with the clock caption, 4:45 back to 2:30 am; its rain is drawn over the composite (`drawOver`), a
     function of the time; its sky and sea open on Dawn After's 4:45 tones and turn to rescue amber's lit low cloud by
-    4:15, so the horizon brightens as scene 6 winds back. Its pen is `Brush` beside chapter 1's `Pen`. At the test's
-    512 px four vignettes reached a few thousandths past the art spec (scene 6's window pane by the knob, scene 8's
+    4:15, so the horizon brightens as scene 6 winds back. Its pen is `Brush` beside chapter 1's `Pen`. Chapter 2's `.compositingGroup()` fix to `StoryLayer`'s cut-in was not carried: the storm harbour (scene 16, no level) still cuts its cores the old way until it moves onto the engine. At the test's
+    512 px five vignettes reached a few thousandths past the art spec (scene 6's window pane by the knob, scene 8's
     lifeboat and bearers, scene 10's door wave and lamp flashes) and were pulled in. Its review's fixes stand (flat
     fills for glows and beams, scene 7's steps, scene 8's beats, scene 9's lamp and lantern, scene 6's searchlight).
     **Open for Jack, chapter 2** (Claude's recommendations, not decided):
