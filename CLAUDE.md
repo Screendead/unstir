@@ -161,7 +161,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   rigid core (`Tank.swirlPlateau`), so it shears through every other rod's and the core-clearance rule exempts it. `Layout.allCases` leaves the swirls out, so the
   frozen generator never deals one and the sandbox never cycles to one. A rod may instead be a lens (Lens's pack,
   `Level.lenses`, by slot): `Tank.lens` moves only its rigid core, on the flow of u (1 - (u / 0.6)^2) (`lensEdge`, 2),
-  which magnifies the centre by 1.3 a step (`lensRate`) for positive steps and fixes the core's rim, so the picture
+  which magnifies the centre by 2 a step (`lensRate`, Jack's from the phone, 2026-10-26) for positive steps and fixes the core's rim, so the picture
   draws a crisp circle there and nothing outside it moves. Steps sum and cancel, so a lens's entries merge and pop
   through the same `Array.commit`, and a lens never wraps: +k needs exactly -k. Every call that maps points
   (`same`, `commutes`, `looksSolved`, `removable`, `landing`, `commit`, `parse`) takes the lens set,
@@ -306,7 +306,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
-  one so far; Lens and Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
+  one so far, Lens three; Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
@@ -321,10 +321,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
   opens without one, and a card with none says "buy" alone.
-  `Level.lens` holds three levels for the hard lens's phone test, the draft table's free taste (`docs/lens-design.md` on
-  `lens-design`): tri, rod 0 a lens, on the halftone, each dealt lens entry +1 to +3 and each lens netting at most +3,
-  par the solver's optimum (`testLensLevels`). A lens's knob carries a magenta iris (`RodView.lens`); its drag's count,
-  dashes and clicks are a rod's, a step at a time.
+  `Level.lens` holds three levels for the hard lens's phone test, the draft table's free taste (`docs/lens-design.md`): tri, rod 0 a lens, on the halftone, each dealt lens entry +1 to +3 and each lens netting at most +3,
+  par the solver's optimum (`testLensLevels`). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
+  (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
+  one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
+  through the rod's own `liveAngle` and detent, so its count, dashes, clicks and the iris's turn are a rod's, a step
+  at a time, the dashes running clockwise round the disc for a zoom in.
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
   (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
