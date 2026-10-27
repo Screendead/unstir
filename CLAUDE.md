@@ -311,8 +311,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`docs/first-stir-outline.md` on `firststir-outline`).
 - **StoryScene.swift** and **FirstStirDawn.swift** hold the scenes on the pack's one night (Jack, F2). A `StoryScene`
   draws, in tank units, a sky and sea at a time in minutes after midnight (`drawSky`), the scene with some vignettes
-  played (`draw`), and the bodies that move with the time where no disc reaches (`drawLive`: the sunrise's sun and
-  chimney smoke), between `late`, as the level opens, and `early`. `Story.scene` names it (`Story.dawn`); `SceneLayer`
+  played (`draw`), and the bodies that move with the time where no disc reaches, their line and glow (`Dawn.bodyGlow`)
+  included (`drawLive`: the sunrise's sun and chimney smoke; `testTheBodiesStayClearOfEveryDisc`), between `late`, as the level opens, and `early`. `Story.scene` names it (`Story.dawn`); `SceneLayer`
   draws it as `StoryLayer` does, from four baked layers (the sky at `late` and at `early`, cross-faded, and the scene
   held back and played), the live bodies drawn over the sky. Its cores cut in through masks drawn without antialiasing
   (`SceneComposite.cores`): an antialiased edge showed a ring however it was composited, though both scenes held the

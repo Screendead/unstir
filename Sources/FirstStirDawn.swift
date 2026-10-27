@@ -53,21 +53,42 @@ enum Dawn: Int, CaseIterable, Sendable {
     /// How far the dawn has come at `minutes`: 0 at 4:45, 1 at 6:40.
     static func dawn(_ minutes: Double) -> Double { min(max((minutes - times.last!) / (times[0] - times.last!), 0), 1) }
 
+    /// The widest glow a body is drawn with, which keeps that far from every disc as well as its line's half-width.
+    static let bodyGlow = 0.02
+
     /// The sun: its centre at `minutes` and its radius, rising out of the sea at the right edge of the sunrise, where
     /// no disc reaches. It is under the sea at every other scene's times.
     static func sun(_ minutes: Double) -> (x: Double, y: Double, radius: Double) {
-        (0.955, 0.034 - 0.046 * (minutes - times[1]) / (times[0] - times[1]), 0.03)
+        (0.97, 0.03 - 0.05 * (minutes - times[1]) / (times[0] - times[1]), 0.022)
     }
 
-    /// The neighbour's chimney smoke on the sunrise, outside every disc: puffs from the chimney pot up into the sky,
-    /// thinning as the night winds back to before the fire was lit.
+    /// The neighbour's chimney smoke on the sunrise, outside every disc: puffs from above the chimney pot up into the
+    /// sky, thinning as the night winds back to before the fire was lit.
     static let smoke: [(x: Double, y: Double, radius: Double)] =
-        [(-0.83, -0.19, 0.015), (-0.85, -0.24, 0.02), (-0.86, -0.3, 0.024), (-0.86, -0.36, 0.028)]
+        [(-0.835, -0.2, 0.015), (-0.855, -0.25, 0.02), (-0.865, -0.31, 0.024), (-0.865, -0.37, 0.028)]
 
-    /// The bodies `live` draws, as circles, for the test that keeps them clear of every disc.
+    /// The smoke's two strands, the second a little further from the discs, as a curve per puff: start, control, end.
+    static let strands: [[(a: (Double, Double), c: (Double, Double), b: (Double, Double))]] = [0, -0.012].map { o in
+        var at = (smoke[0].x + o, smoke[0].y + smoke[0].radius)
+        return smoke.enumerated().map { i, puff in
+            let side = i % 2 == 0 ? 1.0 : -1
+            let b = (puff.x + o - 0.6 * side * puff.radius, puff.y - puff.radius * 0.5)
+            defer { at = b }
+            return (at, (puff.x + o + 0.7 * side * puff.radius, puff.y + puff.radius), b)
+        }
+    }
+
+    /// The bodies `live` draws, as circles (the smoke as points along its strands), for the test that keeps them clear
+    /// of every disc.
     var bodies: [(x: Double, y: Double, radius: Double)] {
         guard self == .sunrise else { return [] }
-        return Self.smoke + [late, early].map { Self.sun($0) }
+        let smoke = Self.strands.joined().flatMap { q in
+            (0...16).map { k -> (x: Double, y: Double, radius: Double) in
+                let t = Double(k) / 16, u = 1 - t
+                return (u * u * q.a.0 + 2 * t * u * q.c.0 + t * t * q.b.0, u * u * q.a.1 + 2 * t * u * q.c.1 + t * t * q.b.1, 0)
+            }
+        }
+        return smoke + [late, early].map { Self.sun($0) }
     }
 
     func drawSky(_ ctx: GraphicsContext, r: CGFloat, minutes: Double) {
@@ -120,7 +141,7 @@ enum Dawn: Int, CaseIterable, Sendable {
         guard self == .sunrise else { return }
         let pen = Pen(ctx: ctx, r: r), d = Self.dawn(minutes)
         let s = Self.sun(minutes)
-        neon(ctx, r: r, glows: [(0.03, 0.6), (0.008, 1)]) { g in
+        neon(ctx, r: r, glows: [(Self.bodyGlow, 0.6), (0.008, 1)]) { g in
             var c = g
             c.clip(to: pen.rect(-1, -1, 1, horizon))
             c.fill(pen.circle(s.x, s.y, s.radius), with: .color(Self.light))
@@ -128,16 +149,13 @@ enum Dawn: Int, CaseIterable, Sendable {
         // The fire was lit a little after six: by 6:15 the smoke is gone.
         let lit = min(max((minutes - Self.times[1]) / (Self.times[0] - Self.times[1]) * 1.6, 0), 1)
         guard lit > 0 else { return }
-        neon(ctx, r: r) { g in
-            for strand in 0..<2 {
-                let o = 0.012 * Double(strand)
+        neon(ctx, r: r, glows: [(Self.bodyGlow, 0.4), (0.007, 0.9)]) { g in
+            for (strand, curves) in Self.strands.enumerated() {
                 var curl = Path()
-                curl.move(to: pen.p(Self.smoke[0].x + o, Self.smoke[0].y + Self.smoke[0].radius))
-                for (i, puff) in Self.smoke.enumerated() {
-                    let shown = min(max(lit * Double(Self.smoke.count) - Double(i), 0), 1)
-                    guard shown > 0 else { break }
-                    let x = puff.x + o + (i % 2 == 0 ? -0.6 : 0.6) * puff.radius, y = puff.y - puff.radius * 0.5
-                    curl.addQuadCurve(to: pen.p(x, y), control: pen.p(puff.x + o + (i % 2 == 0 ? 0.7 : -0.7) * puff.radius, puff.y + puff.radius))
+                curl.move(to: pen.p(curves[0].a.0, curves[0].a.1))
+                for (i, q) in curves.enumerated() {
+                    guard lit * Double(curves.count) - Double(i) > 0 else { break }
+                    curl.addQuadCurve(to: pen.p(q.b.0, q.b.1), control: pen.p(q.c.0, q.c.1))
                 }
                 g.stroke(curl, with: .color(Self.ink.opacity(0.5 * (0.5 + 0.5 * d) * (strand == 0 ? 1 : 0.6))), style: pen.style)
             }
