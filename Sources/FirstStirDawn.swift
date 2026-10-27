@@ -1034,7 +1034,7 @@ extension Dawn {
             who.head = (0.1, 0.84)
             who.neck = (0.07, 0.74)
             who.arms = [[(0.12, 0.72), (0.24, 0.6), (0.3, 0.5)], [(0.0, 0.72), (0.14, 0.58), (0.26, 0.48)]]
-            pen.solid(who.path(pen, x: -0.275, y: -0.468, h: 0.11), ink)
+            pen.solid(who.path(pen, x: -0.275, y: -0.468, h: 0.12), ink)
             var coil = Path()
             for k in 0..<3 { coil.addPath(pen.ellipse(-0.235, -0.515 + 0.004 * Double(k), 0.016 - 0.003 * Double(k), 0.022)) }
             coil.addPath(pen.ellipse(-0.205, -0.47, 0.022, 0.006))
