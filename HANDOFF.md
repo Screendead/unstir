@@ -1040,10 +1040,16 @@ names and product ids, and Complete's promise to older owners.
     Combine step: the Flood's last sky should end on `Storm.tones(30)`, and Dusk Before's first should open on
     `Storm.tones(-150)`, with a test like `testTheRescueOpensOnTheDawnsLastSky` at each seam; `testTheTable` starts the
     Storm at 12:30 on its own until the Flood carries the time to it. `testTheStormsSkyMeetsItsNeighbours` pins both
-    ends as literals. Scene 19's sign is a cobbler's boot on a board high on a gable, where the small rod's core is
-    clear of the big rods' discs (the outline fixes no place for it). A renderer quirk: retouching scene 20 once showed
-    two single-pixel strays outside every core in vignette 0's footprint (the neighbour's lit window corner, the
-    chain's end), gone after nudging the flying shirt by 0.01; if they come back, nudge it again.
+    ends as literals. Scene 19's sign is a cut-out cobbler's boot (no board, so nothing in it reads as a letter) high
+    on a gable, where the small rod's core is clear of the big rods' discs (the outline fixes no place for it); its
+    cuff chain and the top of its toe chain are the same in both states, the toe chain snapped below. Review fixes
+    (2026-10-27): the tinted room fills are black; scene 17's low window is wider so the child and the dog both kneel
+    under it, heads against its sky, and the held child is larger, her hat beside her father's brim; scene 19's bicycle
+    stands on the pavement, its front wheel against the lamp post (moved to x 0.64); scene 20's corner line stops at the
+    back wall's top, the shirts hang by their shoulders, sheared downwind, pegged at the corners, the neighbour's window
+    is larger and she leans out to her waist, and a lit window with a sill under it gives rod 1's core its up.
+    `testNoVignetteShowsTheNextMove` now also checks the baked layers for strays at the phone's own pixels, where
+    scene 20 once showed two single-pixel strays at 512 px that went away on a 0.01 nudge.
     **Open for Jack, chapter 4** (Claude's recommendation, not decided):
     - S1, scene 17's windows. The outline gives the upstairs room one window over the bay, with the candle on its sill
       and the child on its window seat, but quad puts the three vignette rods in three corners (view top right, light
