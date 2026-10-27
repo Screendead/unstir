@@ -1,7 +1,7 @@
 # First Stir: the story outline
 
-Claude's outline for Jack's approval (2026-10-25). Nothing here is decided until Jack says so; his calls so far are
-marked as his. It holds the story, the chapters and their palettes, the 25 scenes with their vignettes, the art spec,
+Claude's outline for Jack's approval (2026-10-25). Jack approved the story as written and answered five of the open
+points (2026-10-26, round 9, all A); section 5 marks each as decided. Points 5 and 8 are still open. It holds the story, the chapters and their palettes, the 25 scenes with their vignettes, the art spec,
 and the points still open. It changes no code. The scrambles come later, solver-checked, with the art (to-do 43).
 
 Jack's calls this outline builds on: Claude draws all 25 scenes (call 3); go (F1); time is made visible, the night
@@ -160,18 +160,21 @@ image with each played core cut in from the played image.
 
 ## 5. Open points for Jack
 
-Each has options and one recommendation. None is built before Jack answers.
+Each has options and one recommendation. None is built before Jack answers. Jack's round 9 answers (2026-10-26) are
+marked **Decided** under each point, in his question's words.
 
 1. **The story.** A: approve it as written. B: approve with changes to named scenes. C: a different spine (for
    example no one in danger, only the town weathering the storm).
    **Recommended: A.** It keeps the pack's arc (the wrecked dawn first, the stir last), every scene has a figure the
    player follows across tanks, and its peril stays gentle: a sprained ankle, a swamped boat, a flooded kitchen.
+   **Decided (Jack, 2026-10-26, FS): A, approve as written.** The art for all 25 pictures starts next.
 
 2. **Vignettes per scene.** A: three (75 in all), the rest of the scramble plain puzzle. B: one per rod (3 to 5, 102 in
    all). C: one per scramble entry (4 to 10, about 180), as the pack entry first had it.
    **Recommended: A.** It is what the lab proved reads at phone size; each beat gets a core of its own with room to be
    drawn well; it holds Claude's art to 150 drawings (two states each) instead of about 350. C puts several beats in
    one core, where only the rod's last heal can show one.
+   **Decided (Jack, 2026-10-26, F1): A, three changes per picture.** 75 in the pack, 150 drawings.
 
 3. **How time runs across the pack.** A: the night tiled, each scene a 15 to 50 minute slice, the sky continuous from
    tank to tank. B: every scene winds a whole night back, as the lab does in three heals. C: A, plus a clock drawn in
@@ -179,12 +182,16 @@ Each has options and one recommendation. None is built before Jack answers.
    **Recommended: A.** B repeats the same arc 25 times, so "told backwards" is lost; C spends a core on a clock in
    every scene. Under A a short slice moves the sky little, so each chapter's own cue (the second table's last column)
    carries it, with clocks only where they are part of the story (scenes 12 and 25).
+   **Decided (Jack, 2026-10-26, F2): A, one night across the pack.** Each picture covers about half an hour; where one
+   picture ends, the next begins, and the sky carries on.
 
 4. **The caption.** No caption text exists yet on any branch. A: the time alone, under the title, stepping back with
    each of the scramble's entries healed ("6:40", then "6:34"...). B: a short line per scene in words ("the lighthouse
    goes dark"). C: none in the level; the pack card's one line only.
    **Recommended: A.** Numerals keep the story wordless and need no translation, and a clock going backwards says
    "earlier" where a still sky can't (the go/no-go's cold reader got "earlier" only from a caption).
+   **Decided (Jack, 2026-10-26, F3): A, a clock.** A time under the tank, like "4:10 am", that steps back every time
+   the player undoes a twist. Jack's question put it under the tank, where this point had it under the title.
 
 5. **What a heal with no vignette does.** Under 2A most heals carry no tag. A: it steps the time back (caption, sky,
    rain) and flashes white. B: it flashes white and nothing else moves.
@@ -192,6 +199,8 @@ Each has options and one recommendation. None is built before Jack answers.
    unchanged), and the time stays a function of the stack. The cost stays two baked images a scene: the sky,
    rain and caption are drawn live over them, as the lab already draws its rain and moon, so a 10-stir scene is not
    11 sky stages times two bakes against to-do 42's memory budget.
+   Still open. F3's clock already steps back on every undone twist; whether the sky and rain step with it is this
+   point's call.
 
 6. **Where light may fall.** The pack entry lets a vignette's light reach anywhere, with a test that it never reaches a
    core that can heal next. The lab keeps every difference, glow included, inside its own core. A: the lab's rule. B:
@@ -199,13 +208,17 @@ Each has options and one recommendation. None is built before Jack answers.
    **Recommended: A.** Cores never overlap, so under A no beat can hint at a move, the picture is just cores cut in, the
    baking is simplest and the test is a geometry check. B buys bigger glows at the cost of a test over every heal order
    that can fail late in drawing.
+   **Decided (Jack, 2026-10-26, F4): A, each change inside its own core,** with a test over every picture. Level 1's
+   boat stern and lamp shards, which break it, are redrawn in the art pass.
 
 7. **The lab harbour.** A: it becomes scene 16, and its dawn view scene 1. B: scene 16 only. C: both drawn new.
    **Recommended: A.** The lab's drawing is already judged at phone size, and the same view at both ends of the night
    (wrecked dawn first, the wrecking itself at the storm's peak) is the clearest way to show the player they are going
    back in time.
+   **Decided (Jack, 2026-10-26, F5): A, yes, twice:** as picture 16 (midnight), and the same view at dawn as picture 1.
 
 8. **The night forwards film.** A: the 25 scenes' baked states played in story order (scene 25 played to scene 1 held
    back), each beat crossfading in its own order, about two minutes, the motif forwards over it. B: a new drawing of
    the whole night as one continuous pan. **Recommended: A.** It needs no new art, every frame is one the player has
    earned, and its last frame is the town at sunrise, the pack's first picture.
+   Still open.
