@@ -27,7 +27,9 @@ using namespace metal;
             float s = length(d) / twists[4 * i + 2];
             // Outside the rod's disc the map is exactly the identity.
             if (s >= 1.0) continue;
-            float a = -twists[4 * i + 3] * (1.0 - smoothstep(twists[4 * i + 2] >= 1.0 ? swirlPlateau : plateau, 1.0, s));
+            // A knob turns its core and lets go towards its edge; the swirl holds the glass's edge and lets go towards its centre.
+            float t = smoothstep(twists[4 * i + 2] >= 1.0 ? swirlPlateau : plateau, 1.0, s);
+            float a = -twists[4 * i + 3] * (twists[4 * i + 2] >= 1.0 ? t : 1.0 - t);
             float cs = cos(a), sn = sin(a);
             q = c + float2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
         }

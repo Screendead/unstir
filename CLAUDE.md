@@ -121,7 +121,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Twist.swift** holds the core model and has no UI. A scramble is a stack of `Twist(rod, steps)` entries (30° per
   step), applied bottom first. `Tank.twist`/`Tank.profile` is the point map: a rigid disc core out to `plateau` (0.6),
   then a smoothstep shear ring; the swirl's (`swirlPlateau`, 0, picked by its radius of 1) has no core and shears from
-  its centre to its edge. `Array.commit` is the one rule for every rod stir. A turn merges into the rod's
+  its edge, turned whole, to its still centre. `Array.commit` is the one rule for every rod stir. A turn merges into the rod's
   newest entry when everything above that entry commutes with the turn, and pushes a new entry otherwise. It runs on any
   `Stacked` entries, so what rides with an entry (`Game.Entry`'s mark of the player's push, and its tags, First Stir's
   vignettes) stays with it: the entry a turn lands on keeps its own and takes in what rode with the turn through
@@ -134,8 +134,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   touches it: `Layout.order`/`tankStep` are the layout's rotational symmetry (hex's hub held still), which sets each
   rod's twist exactly on a rod of the same size, and `slot(of:at:)`/`knob(over:at:)` map a physical knob to the slot
   under it at a tank position. Each layout has a swirl variant (`Layout.swirls`, `quadSwirl` and so on, for vortex):
-  its base's rods, then one more (`Layout.swirl`) of radius 1 at the centre, so the glass's edge, where its profile
-  reaches 0, never moves. It stacks and merges like any rod, decided by sampling as it overlaps every rod, and every
+  its base's rods, then one more (`Layout.swirl`) of radius 1 at the centre, its profile turned inside out (Jack,
+  2026-10-26): the fluid sticks to the rim the finger turns, so the glass's edge goes round whole and the swirl lets go
+  towards its centre, which stays put (`testASwirlTurnsTheGlassEdgeWhole`). The shader takes any disc of radius 1 or
+  more for the swirl, so the menu's `Stirred` keeps its disc just under 1. It stacks and merges like any rod, decided by sampling as it overlaps every rod, and every
   turn of the tank leaves it on itself. On hex it commutes exactly with the hub, which shares its centre. It has no
   rigid core (`Tank.swirlPlateau`), so it shears through every other rod's and the core-clearance rule exempts it. `Layout.allCases` leaves the swirls out, so the
   frozen generator never deals one and the sandbox never cycles to one.
@@ -224,7 +226,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   magenta ring and heavy tap, which in a run mark only a commit that pops one of the scramble's entries; a win the fine pass calls also settles one, as the tank's
   last heal, while one of the scramble's entries is left and unless its move healed one. `Game.nextTank` carries it to
   the next tank. `Game.turnTank` is a move that pushes no entry: turns in a row join, and one netting a whole turn
-  drops. `Game.history` holds rod stirs by slot and
+  drops. The result card of a tier's last level goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or dimmed with a lock while that tier is closed, going back to the levels. `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where the level's motion is the tank, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what

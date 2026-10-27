@@ -125,6 +125,10 @@ shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank ref
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
+shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
+  SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
+shot tier-up-locked "The same with maelstrom still closed: the button dimmed with a lock, saying par every vortex level opens it." \
+  SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
 shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels." \
   SCREEN=result MODE=daily
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
@@ -292,7 +296,7 @@ if [[ -z "$pattern" || "rim-" == *$pattern* ]]; then
     "concat=n=6:v=1,crop=iw:ih*0.56:0:ih*0.21,scale=440:-1,tile=3x2:padding=8:color=0x303030" -frames:v 1 "shots/vortex-rim.png"
   echo "sheet vortex-rim"
 fi
-shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the centre turned 90 degrees, sheared all the way out to the glass's edge, which stays still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
+shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the glass's edge turned 90 degrees, sheared all the way in to the centre, which stays still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
 swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
 shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1 CLOCK=3
 shot swirl-quad-live "The same held mid-drag from the rim, the swirl 1.5 steps clockwise." LAYOUT=quadSwirl STACK="$swirl" LIVE=4:1.5 TOUCH=0.7,-0.7 SWIRLED=1 CLOCK=3
