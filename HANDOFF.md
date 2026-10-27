@@ -948,8 +948,10 @@ names and product ids, and Complete's promise to older owners.
     Claude's two readings about sealing are gone. Jack's round 9 D1 = A keeps the rest as built: a move a full stack
     would refuse the tick of is refused (no problem comes near 36 entries); the demonstration plays on every opening
     of escapement 1 and a tap skips it; escapement 1 is called "The clock"; several clocks will tick in turn
-    clockwise from twelve. Left: Two Clocks and Wound Back (one clock a level for now, so that tick order is not
-    built yet), the ratchet's sound (to-do 45).
+    clockwise from twelve. Left: the ratchet's sound (to-do 45).
+    Several clocks and wound-back clocks built on `escapement-book` (2026-10-27, round 10): each running clock ticks
+    in turn, clockwise from twelve, a wound-back one -1 with a mirrored ratchet; a pushed tick stops the turn and
+    loses; one clock stopping while another runs loses nothing; a tap on any ratchet waits.
 35. Escapement: the lost rule and its test (a pushed tick leaves a positive E entry that no continuation pops,
     property-tested on small cases) and the "lost." card with undo and again.
     Built on `escapement-pack` and merged 2026-10-27 (PR #46): a tick that pushes loses on the move that made it
@@ -968,8 +970,10 @@ names and product ids, and Complete's promise to older owners.
     app's, `Solver.escapement` (PR #46, one clock), is breadth first over stacks, a move a wait or one commit of
     ±1 to ±11 or an entry's inverse, the same slot allowed twice running (E1), a line dropped where its tick pushes
     or stops the clock with twists left (E2); `scripts/solve.sh escapement <layout> <scramble> <clock> [limit]`.
-    `testEveryProblemsParIsTheProversOptimum` replays each shipped problem's line on a real `Game` at par. Left: the
-    app's prover takes one clock; the book's problems with two or three need it to take several before they ship.
+    `testEveryProblemsParIsTheProversOptimum` replays each shipped problem's line on a real `Game` at par. The app's
+    prover takes several clocks since `escapement-book` (2026-10-27): depth first from the clocks' bound with failed
+    states remembered, `solve.sh escapement <layout> <scramble> 1+,4-`. On all 30 it finds the book's par and, over
+    every turn of ±1 to ±11 steps, exactly the book's key (about 70 s optimised; the test of it is slow-only).
 37. Escapement: the paper ground: dark-ink variants of the solve wave and the turn's hairlines, ink lines at least
     2 px wide, and shots that pin them.
 38. Escapement: ratchet art (a 12-tooth wheel and pawl), the vermilion sub-dial and the stipulation set in a serif.
@@ -997,7 +1001,15 @@ names and product ids, and Complete's promise to older owners.
      replacements come from the same search (J9 A). He also judges the order of the last two then (J6).
    Still open: J3 and J5 to J8. Left: Jack's play of the book on the phone.
    E1 and E2 are built in the app and merged 2026-10-27 (PR #46, to-dos 34 to 36), with the D1 defaults that touch
-   Escapement kept as built (D1 = A, round 9). Only problem 1 ships so far.
+   Escapement kept as built (D1 = A, round 9).
+   All 30 built on `escapement-book` (2026-10-27, round 10), waiting on Jack's play of the book on the phone (E3): the
+   book's order and five chapters, headed in the card's list; each par what its clocks owe, reached by the app's prover
+   and replayed on a real `Game`; each key pinned. Problem 1 is the book's "The tick" under D1's title "The clock" (so
+   the old escapement-1, the mock-up, is now 2, "The wait"); the 22 untitled problems are "Problem N". Escapement now
+   has levels past its taste, so it goes on sale on the shelf and its card no longer says more arrive.
+   Open for Jack (round 10): J6, the finale's order, A as the book (30 last) or B (29 last, the three-clock hex as 29),
+   a reorder of two rows; and what a tank lost to its last clock stopping shows (`UNSTIR_STOPLOOK`: stamp as built,
+   left, rings; recommended: left). Still open from the book: J3 (built as A, D1), J5, J7 (built as A), J8.
 40. First Stir: vignettes as tag sets on the scramble's entries, played when their tags leave the stack (a pop, a
     merged pop, a fine-pass win), unplayed by undo and reset, crossfading 0.4 s under the stack.
     Built 2026-10-26 on `firststir-pack`, merged 2026-10-27 (PR #44): `Level.story` and `Story.vignettes`, each of
