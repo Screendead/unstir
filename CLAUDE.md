@@ -363,7 +363,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Cast` as the Rescue is, each scene's drawing a nested enum (`Dusk.Lamp`, `Walk`, `Lines`, `Gift`, `Stir`). Still
   air, so no `drawOver` and no `drawLive`: its sky (`Dusk.skyTones`) climbs from night blue to the sunset's coral with
   an afterglow over where the sun went down, the first scene's cloud bank is baked into its 9:30 sky only, so the
-  cross-fade sinks it, and the kitchens show the sky through their windows. Its levels follow the Rescue's in
+  cross-fade fades it out, and the kitchens show the sky through their windows. Its levels follow the Rescue's in
   `Level.firstStir` and take ids by place, so they become 21 to 25 once chapters 3 and 4 join; `testTheTable` finds
   them as the table's last five. The cup's one entry is the scene 25 scramble's bottom, so the stir is the pack's
   last heal. `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
