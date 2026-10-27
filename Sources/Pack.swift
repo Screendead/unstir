@@ -80,7 +80,6 @@ enum Pack: String, CaseIterable, Sendable {
 }
 
 extension Level {
-    static let firstStir: [Level] = []
     static let lens: [Level] = []
     static let escapement: [Level] = []
 

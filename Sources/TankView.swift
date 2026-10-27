@@ -138,7 +138,7 @@ final class Game {
 
     init(level: Level, tankTurned: Bool? = nil, swirled: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil) {
         self.level = level
-        entries = level.scramble.map { Entry(twist: $0, pushed: false) }
+        entries = Self.dealt(level)
         brim = level.run?.brim ?? 0
         firstTry = level.run != nil || !Best.started(level.id)
         self.tankTurned = tankTurned ?? Best.tankTurned
@@ -154,6 +154,17 @@ final class Game {
             anchor = Best.anchor
         }
         storesBank = bank == nil
+    }
+
+    /// The scramble's entries. In a story each holds back the vignette in its own rod's core, if that core has one.
+    private static func dealt(_ level: Level) -> [Entry] {
+        level.scramble.map { Entry(twist: $0, pushed: false, tags: level.story?.vignettes.intersection([$0.rod]) ?? []) }
+    }
+
+    /// The story's vignettes played: each once no entry holds it back. A function of the stack alone, so undo and reset
+    /// unplay them, and a win the fine pass calls on a stack that only looks solved plays the rest.
+    var played: Set<Int> {
+        level.story.map { $0.vignettes.subtracting(entries.flatMap(\.tags)) } ?? []
     }
 
     /// Practice saves nothing.
@@ -191,7 +202,7 @@ final class Game {
     /// A turn of knob `rod`, which stirs whatever fluid the tank has brought under it.
     func commit(rod: Int, steps: Int) {
         guard !finished else { return }
-        let slot = self.slot(of: rod), was = entries
+        let slot = self.slot(of: rod), was = entries, playedWas = played
         // Every entry of the scramble's that pops is a heal, even where an entry that the merge lets fall cancels it.
         var healed = 0
         let result = level.kind(of: rod) != .working ? .refused
@@ -219,8 +230,10 @@ final class Game {
             pushes += 1
             if level.run != nil { brim += 1 }
         }
-        // A run's heal ring marks only what settles the brim: cancelling the player's own push flashes white, as a merge.
-        if level.run == nil ? result == .cancelled : healed > 0 { cancels += 1; cancelledRod = rod }
+        // A run's heal ring marks only what settles the brim, and a story's only a commit that plays a vignette:
+        // cancelling the player's own push flashes white, as a merge.
+        let heals = level.story != nil ? !played.isSubset(of: playedWas) : level.run == nil ? result == .cancelled : healed > 0
+        if heals { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
         Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
@@ -305,7 +318,7 @@ final class Game {
     /// has already settled on.
     @discardableResult func reset() -> Bool {
         guard !checking, level.run == nil else { return false }
-        entries = level.scramble.map { Entry(twist: $0, pushed: false) }
+        entries = Self.dealt(level)
         history = []
         openBefore = []
         before = []
@@ -403,6 +416,7 @@ final class Game {
                         self.settleBrim(1)
                         self.noteBrim(from: was)
                     }
+                    // A story's vignettes left play with the solve wave, which rings for them.
                     self.entries = []
                 }
                 self.finish()
@@ -486,6 +500,10 @@ struct LevelView: View {
     @Environment(\.scenePhase) private var phase
     private let still: Bool
     private let autoplay: Bool
+    /// UNSTIR_PACE: the seconds autoplay and UNSTIR_MOVES wait before each move.
+    private let pace: Double
+    /// UNSTIR_BARE: the picture drawn unstirred, as the stack has played it.
+    private let bare: Bool
     private let moves: [Twist]?
     private let fingered: Bool
     private let bench: Bool
@@ -569,6 +587,8 @@ struct LevelView: View {
         _eased = State(initialValue: game.solved)
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
+        pace = harness?.pace ?? 0.3
+        bare = harness?.bare ?? false
         moves = harness?.moves
         fingered = harness?.finger ?? false
         brimDemo = harness?.brimDemo ?? false
@@ -852,7 +872,7 @@ struct LevelView: View {
     private func play() async {
         while !game.finished {
             let t = game.reachable
-            guard (try? await Task.sleep(for: .seconds(0.3))) != nil else { return }
+            guard (try? await Task.sleep(for: .seconds(pace))) != nil else { return }
             if let t {
                 liveRod = t.rod
                 withAnimation(.easeInOut(duration: 0.4)) { liveAngle = Double(t.steps) * Tank.step }
@@ -869,7 +889,7 @@ struct LevelView: View {
     private func play(_ moves: [Twist]) async {
         if fingered { await hand(moves); return }
         for m in moves {
-            guard (try? await Task.sleep(for: .seconds(0.3))) != nil, !game.finished else { return }
+            guard (try? await Task.sleep(for: .seconds(pace))) != nil, !game.finished else { return }
             if m.rod == Game.tank {
                 liveTurn = 0
                 withAnimation(.easeInOut(duration: 0.4)) { liveTurn = Double(m.steps) * game.level.layout.tankStep }
@@ -996,7 +1016,7 @@ struct LevelView: View {
         let held = liveTurn.map { $0 + (spin ?? 0) }
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
-        let unstirred = Unstirred(stack: stack, layout: game.level.layout, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
+        let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
@@ -1041,8 +1061,14 @@ struct LevelView: View {
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
-                PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
-                             clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
+                Group {
+                    if let story = game.level.story {
+                        StoryLayer(story: story, played: game.played, side: side, onStrike: { struck = true })
+                    } else {
+                        PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
+                                     clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
+                    }
+                }
                     .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
                         var u = unstirred
                         u.wave = SIMD3(Float(source.x), Float(source.y), Float(frozenWave ?? w))

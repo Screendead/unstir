@@ -735,6 +735,7 @@ names and product ids, and Complete's promise to older owners.
    and whether the opening shows the wrecked harbour.
    Jack's calls (2026-10-25): go (F1); make time visible, the night winding back (`UNSTIR_FSTIME` on `lab-firststir`),
    plus the caption (F2). Jack's call (2026-10-25, round 6): the opening shows the wrecked harbour, as built.
+   Ported 2026-10-26 to `firststir-pack` as First Stir's level 1 (to-do 40), the night winding back by default.
 5. First Stir's story outline (25 scenes and their vignettes) for Jack's approval, then Claude draws all 25 scenes
    (Jack's call 3, no illustrator) to an art spec: single-weight neon line, the chapter palettes, up readable in every
    lit core, each figure change inside its own rod's core.
@@ -813,6 +814,8 @@ names and product ids, and Complete's promise to older owners.
    restores it from the shared bank; the free tiers' undo rule is merged (PR #19) and unchanged. Tested on a stack
    where the two differ. Left: the per-pack tests once each pack's state exists (First Stir's tags, Escapement's tick,
    which must ride in the snapshot, Lens's zoom entries).
+   First Stir's tags: tested on `firststir-pack` (`testAHealPlaysItsVignette`, an undo of a heal brings its entry and
+   tag back whole).
 12. StoreKit 2: a non-consumable per pack plus Complete; purchase, restore, the `Transaction.updates` listener,
     revocation and refunds, pending Ask to Buy; entitlements read at launch; a StoreKit configuration file and
     StoreKit test-session tests, all before the paid account exists.
@@ -863,6 +866,8 @@ names and product ids, and Complete's promise to older owners.
     provisional tick and lost state, with a shot and a film line per pack.
    Merged 2026-10-25 (PR #21) for the store side: `UNSTIR_PACK`, `UNSTIR_OWNED`, `UNSTIR_STORE`. The per-pack
    shots and films wait on the packs.
+   First Stir's built on `firststir-pack` (2026-10-26): its played vignettes follow `UNSTIR_STACK` and
+   `UNSTIR_TURNED`, `UNSTIR_BARE` draws the art unstirred and `UNSTIR_PACE` slows autoplay and `UNSTIR_MOVES` for films.
 19. A shot per purchase state: unowned, owned, pending Ask to Buy, failed, revoked.
    Merged 2026-10-25 (PR #21, `UNSTIR_STORE`).
 20. A String Catalog for every new string (captions, the shelf and cards, purchase text, Escapement's stipulations),
@@ -934,9 +939,37 @@ names and product ids, and Complete's promise to older owners.
    Still open: J3 and J5 to J8. Left: Jack's play of the book on the phone.
 40. First Stir: vignettes as tag sets on the scramble's entries, played when their tags leave the stack (a pop, a
     merged pop, a fine-pass win), unplayed by undo and reset, crossfading 0.4 s under the stack.
+    Built 2026-10-26 on `firststir-pack`, merged 2026-10-27 (PR #44): `Level.story` and `Story.vignettes`, each of
+    the scramble's entries tagged with its rod where that core has a vignette, `Game.played` a function of the stack,
+    the heal ring magenta only for a commit that plays a vignette, and `StoryLayer`, which cross-fades each core 0.4 s
+    and winds the night back a stage per vignette (F2) under the live rain and moon. Level 1 is the lab's harbour, as
+    a real level of the pack (`first-stir-1`), opening wrecked (round 6), its caption the note "Each heal turns the
+    night back." Shots `firststir-01*` and films `firststir-01-solve` and `firststir-01-ring`. Left: tags are the
+    entry's rod, so the outline's "Last" order (a vignette held by one chosen entry) needs a per-entry tag on the level
+    when a scene asks for it. Outside Release the shelf's First Stir card lists level 1; in Release the pack has no
+    cover until its levels past the taste are in (S1).
+    Jack's calls (2026-10-26, round 9) that touch it: *F2 = A* (one night across the pack, about half an hour a
+    picture) and *F5 = A* (the harbour as pictures 16 and 1) mean level 1's whole night, storm back to evening, is a
+    stand-in: the art pass cuts each harbour picture to its own half hour. *F3 = A* (a clock under the tank stepping
+    back on every heal) replaces the caption "Each heal turns the night back."; not built yet. *D1 = A:* the cottage's
+    glow stays narrowed to its core (to-do 41).
 41. First Stir: a per-scene test that no vignette's light reaches the core of a rod with an entry removable right
     after its heal (`Layout.removable`), over every heal order.
+    Built 2026-10-26 on `firststir-pack`: `testNoVignetteShowsTheNextMove` renders each vignette's two states and
+    takes where they differ as its light. It also checks that light stays inside its own core (the lab's cottage glow
+    spilled past it and was clipped: tightened to the lantern's) and the lab's smear rule, that the entries left move
+    none of it by half a pixel. The harbour passes the light rule and breaks the smear rule twice, pinned in the test
+    as Jack's call: the lantern's falling shards (5 px at most at 3x) and the boat's stern, both in the cottage's shear
+    ring when they play. Tri's cores all lie in each other's discs, so no heal order avoids it; only the art can.
+    Jack's call (2026-10-26, round 9, F4 = A): every change stays inside its own core, checked by the test over every
+    picture, and the boat's stern and the lantern's shards are redrawn in the art pass; the two smears stay pinned in
+    the test until then. Merged 2026-10-27 (PR #44).
 42. First Stir: vignettes baked on demand within a memory budget measured on the phone.
+    Built 2026-10-26 on `firststir-pack`: the layers bake as the level appears, five in all whatever the number of
+    stages (two skies, the bolt's box, the scene held back and played), against the lab's two per stage; about 51 MB
+    at 3x on the Pro Max, under `Harbour.budget` (64 MB), past which they bake at a lower scale
+    (`testTheLayersBakeWithinTheBudget`). Merged 2026-10-27 (PR #44). Left: measure the budget on the phone; it is a
+    guess until then.
 43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
    The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), approved by Jack (2026-10-26, round 9);
    no art or scrambles yet.

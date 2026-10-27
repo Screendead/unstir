@@ -47,6 +47,11 @@ struct Harness {
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
     let autoplay: Bool
+    /// UNSTIR_PACE=s: autoplay and UNSTIR_MOVES wait this long before each move (0.3 s unset).
+    let pace: Double
+    /// UNSTIR_BARE=1: the picture drawn unstirred whatever the stack, so a still shows a story's art as the stack has
+    /// played it.
+    let bare: Bool
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
     /// names it), as solve.sh prints a line.
     let moves: [Twist]?
@@ -212,6 +217,8 @@ struct Harness {
         }
         still = harnessed && env["UNSTIR_OPEN"] != "1" && env["UNSTIR_STIR"] != "1"
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
+        pace = env["UNSTIR_PACE"].flatMap(Double.init) ?? 0.3
+        bare = env["UNSTIR_BARE"] == "1"
         moves = env["UNSTIR_MOVES"].map { line in
             line.split(separator: ",").compactMap { move in
                 let f = move.split(separator: ":").compactMap { Int($0) }
