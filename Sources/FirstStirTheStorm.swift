@@ -247,7 +247,7 @@ enum StormHarbour {
         dome.closeSubpath()
         pen.fill(dome, .black)
         pen.fill(pen.rect(-0.132, -0.564, 0.132, -0.51), .black)
-        pen.fill(room, Color(0x05041A))
+        pen.fill(room, .black)
         house.addPath(pen.seg(-0.132, -0.51, 0.132, -0.51))
         house.addPath(pen.seg(-0.132, -0.51, -0.074, -0.474))
         house.addPath(pen.seg(0.132, -0.51, 0.074, -0.474))
@@ -452,7 +452,7 @@ enum Bedroom {
 
     /// The room dark, and the night through each window, its horizon a little below the bay's middle.
     static func sky(_ pen: Brush, minutes: Double) {
-        pen.fill(pen.rect(-1, -1, 1, 1), Color(0x04031C))
+        pen.fill(pen.rect(-1, -1, 1, 1), .black)
         for o in [bay, high, low] {
             Storm.outside(pen, minutes: minutes, box: pen.rect(o.x0, o.y0, o.x1, o.y1), horizon: o.y0 + (o.y1 - o.y0) * 0.55)
         }
