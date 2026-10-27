@@ -25,10 +25,16 @@ struct Ledger: Equatable, Sendable {
     func state(_ pack: Pack) -> Purchase {
         let own = products[pack.productID] ?? .unowned, complete = products[Pack.completeID] ?? .unowned
         if own == .owned || complete == .owned { return .owned }
-        return own != .unowned ? own : complete
+        // Complete's failed attempt was made on Complete's card, and says nothing about this pack.
+        return own != .unowned ? own : complete == .failed ? .unowned : complete
     }
 
     var owned: Set<Pack> { Set(Pack.allCases.filter { state($0) == .owned }) }
+
+    /// A failure belongs to the attempt, so it goes when the card that showed it closes.
+    mutating func forgetFailures() {
+        for (id, state) in products where state == .failed { products[id] = .unowned }
+    }
 }
 
 /// The App Store's side of the packs. Nothing here is stored: StoreKit keeps every purchase, and `start` reads them
@@ -41,8 +47,11 @@ final class Store {
     private(set) var ledger = Ledger()
     /// The harness's states for this launch, in place of StoreKit's; always nil in Release.
     private(set) var harness: Ledger?
+    /// Each product's price as the App Store gives it, for the player's storefront; missing until it is fetched.
+    private(set) var prices: [String: String] = [:]
     @ObservationIgnored private var products: [String: Product] = [:]
     @ObservationIgnored private var updates: Task<Void, Never>?
+    @ObservationIgnored private var attempt = 0
 
     func state(_ pack: Pack) -> Purchase { (harness ?? ledger).state(pack) }
 
@@ -53,10 +62,19 @@ final class Store {
         return pack.access(number, owned: ledger.owned, harness: harness?.owned ?? [])
     }
 
+    func price(_ id: String) -> String? { prices[id] }
+
+    /// Forgets every failed attempt, and any still running, so a card never opens on an error it didn't see happen.
+    func forgetFailures() {
+        attempt += 1
+        ledger.forgetFailures()
+    }
+
     /// Set before `start`, which then leaves StoreKit alone for the launch.
-    func pretend(_ ledger: Ledger) {
+    func pretend(_ ledger: Ledger, prices: [String: String] = [:]) {
         guard !Build.release else { return }
         harness = ledger
+        self.prices = prices
     }
 
     /// Listens for purchases made or revoked elsewhere (Ask to Buy approvals, refunds, other devices, Family Sharing) and
@@ -67,6 +85,17 @@ final class Store {
             for await result in Transaction.updates { await self?.apply(result) }
         }
         await refresh()
+        await fetchPrices()
+    }
+
+    /// A failed fetch leaves the prices missing, and the card asks again when it opens.
+    func fetchPrices() async {
+        guard harness == nil, Pack.productIDs.contains(where: { prices[$0] == nil }) else { return }
+        do {
+            try await fetch()
+        } catch {
+            Log.write("products failed: \(error)")
+        }
     }
 
     func refresh() async {
@@ -92,21 +121,25 @@ final class Store {
     func purchase(_ pack: Pack) async { await purchase(pack.productID) }
 
     func purchase(_ id: String) async {
+        let started = attempt
+        func failed(_ why: String) {
+            Log.write("purchase \(id) failed: \(why)\(attempt == started ? "" : ", its card closed")")
+            if attempt == started { ledger.record(id, .failed) }
+        }
         do {
-            guard let product = try await product(id) else { return ledger.record(id, .failed) }
+            guard let product = try await product(id) else { return failed("no such product") }
             switch try await product.purchase() {
             case .success(let result):
-                guard case .verified(let t) = result else { return ledger.record(id, .failed) }
+                guard case .verified(let t) = result else { return failed("unverified") }
                 // Not in `apply`, which also sees a reinstall's restore: only a purchase made here counts.
                 if t.revocationDate == nil { Analytics.shared.purchased(t.productID) }
                 await apply(result)
             case .pending: ledger.record(id, .pending)
             case .userCancelled: ledger.record(id, .unowned)
-            @unknown default: ledger.record(id, .failed)
+            @unknown default: failed("unknown result")
             }
         } catch {
-            Log.write("purchase \(id) failed: \(error)")
-            ledger.record(id, .failed)
+            failed("\(error)")
         }
     }
 
@@ -125,9 +158,14 @@ final class Store {
 
     /// Fetched again for an id the last fetch lacked, so a product missing once is not missing all launch.
     private func product(_ id: String) async throws -> Product? {
-        if products[id] == nil {
-            for p in try await Product.products(for: Pack.productIDs) { products[p.id] = p }
-        }
+        if products[id] == nil { try await fetch() }
         return products[id]
+    }
+
+    private func fetch() async throws {
+        for p in try await Product.products(for: Pack.productIDs) {
+            products[p.id] = p
+            prices[p.id] = p.displayPrice
+        }
     }
 }

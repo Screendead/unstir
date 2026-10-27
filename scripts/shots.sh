@@ -310,6 +310,31 @@ shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl 
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
+# held 5.4 s in, one stir left. Prices are the StoreKit configuration's, as a US storefront shows them.
+shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
+shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot." \
+  OWNED=lens STORE=escapement:pending CLOCK=5.4
+for state in unowned owned pending failed revoked; do
+  shot card-lens-$state "Lens's card, $state." CARD=lens STORE=lens:$state CLOCK=5.4
+done
+shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
+shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
+shot card-complete "Complete's card, unowned." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
+  CARD=lens STORE=complete:failed CLOCK=5.4
+shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4
+shot card-lens-noprice "Lens's card before the App Store answers: buy, with no price." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
+  CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
+shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place." \
+  PACK=lens LEVEL=5 STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
+  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
+  CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+
 # The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
 shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends." CONSENT=sends

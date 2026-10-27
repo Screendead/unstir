@@ -78,7 +78,58 @@ final class PackTests: XCTestCase {
         XCTAssertNil(Store().access(Level(id: "L7", label: "", title: "", layout: .tri, scramble: [])))
     }
 
+    /// Opening a level past the taste of a pack the player doesn't own shows the pack's card in its place, from the menu
+    /// or from the level before it; the taste and an owned pack play, and so does a level in no pack.
+    @MainActor func testALevelPastTheTasteShowsItsCard() {
+        let unlocked = Best.unlocked
+        defer { Best.unlocked = unlocked }
+        Best.unlocked = false
+        func level(_ pack: Pack, _ n: Int) -> Level {
+            Level(id: pack.id(n), pack: pack, label: "", title: "", layout: .tri, scramble: [])
+        }
+        let store = Store()
+        XCTAssertNil(store.card(for: level(.lens, 3)))
+        XCTAssertEqual(store.card(for: level(.lens, 4)), .lens)
+        XCTAssertNil(store.card(for: Level.plughole[5]))
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .owned)
+        store.pretend(ledger)
+        XCTAssertNil(store.card(for: level(.lens, 4)))
+        XCTAssertEqual(store.card(for: level(.escapement, 4)), .escapement)
+        ledger.record(Pack.lens.productID, .revoked)
+        store.pretend(ledger)
+        XCTAssertEqual(store.card(for: level(.lens, 4)), .lens)
+    }
+
+    /// Complete reads as owned once every pack is, however they were bought.
+    @MainActor func testCompleteIsOwnedOnceEveryPackIs() {
+        let store = Store()
+        var ledger = Ledger()
+        for pack in Pack.allCases.dropLast() { ledger.record(pack.productID, .owned) }
+        store.pretend(ledger)
+        XCTAssertEqual(store.state(.complete), .unowned)
+        ledger.record(Pack.allCases.last!.productID, .owned)
+        store.pretend(ledger)
+        XCTAssertEqual(store.state(.complete), .owned)
+        XCTAssertEqual(Offer.all.map(\.key), Pack.allCases.map(\.rawValue) + ["complete"])
+        XCTAssertEqual(Offer.all.map { Offer(name: $0.key) }, Offer.all)
+    }
+
     /// A pack's ids never read as another pack's or a tier's.
+    /// A Release shelf shows a pack once it has levels past its taste, and Complete once it shows every pack; a build
+    /// outside Release shows them all.
+    func testAPackGoesOnTheShelfOnceItsLevelsAreIn() {
+        XCTAssertEqual(Offer.shelf(release: false, ready: { _ in false }), Offer.all)
+        XCTAssertEqual(Offer.shelf(release: true, ready: { _ in false }), [])
+        XCTAssertEqual(Offer.shelf(release: true, ready: { $0 != .lens }), [.pack(.firstStir), .pack(.escapement)])
+        XCTAssertEqual(Offer.shelf(release: true, ready: { _ in true }), Offer.all)
+        for pack in Pack.allCases {
+            XCTAssertEqual(Offer.shelf(release: true).contains(.pack(pack)), pack.levels.count > pack.taste, pack.name)
+            XCTAssertEqual(Offer.pack(pack).arriving, pack.levels.count < pack.planned, pack.name)
+        }
+        XCTAssertEqual(Offer.complete.arriving, Pack.allCases.contains { $0.levels.count < $0.planned })
+    }
+
     func testPackIdsBelongToOnePack() {
         let tierIds = Tier.allCases.flatMap { $0.levels.map(\.id) } + ["endless", "sandbox", "daily-20261025"]
         for pack in Pack.allCases {

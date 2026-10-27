@@ -292,7 +292,25 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
-  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it.
+  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it. Prices are
+  never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
+  opens without one, and a card with none says "buy" alone.
+- **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
+  Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
+  `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
+  (Jack, 2026-10-26, S1), so today none and no dock; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
+  (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a dot for its state. `PackCard` grows out
+  of its cover: the clip (`PackClip`: `<key>-clip.mp4` from the bundle once filmed, else the cover's loop), what it
+  assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
+  purchase state, buy at the App Store's price, try free, Complete beside an unowned pack while Complete is on the
+  shelf (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
+  locked. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  card (`Store.forgetFailures`), and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
+  opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from a row or
+  from the level before it. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
+  and buttons at accessibility sizes; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
+  reads each cover's state or price and each button's price, hides the menu under a card, and announces a change of
+  state. Reduce Motion holds the covers and clip still, stills the pending dot and fades the card in.
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
   no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
@@ -331,7 +349,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   again over the scroll view, cut to its visible part, and that copy is what stirs; the scroll view's own list
   (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. A locked tier can be
   looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par. A hidden stir in
-  the background builds the shader's pipeline before the first switch.
+  the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
+  the list, and the card (`RootView`'s, bound in) lies over the whole menu.
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
@@ -350,7 +369,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`UNSTIR_BENCH`). In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
   best or started flag (`Level.keepsProgress`), and
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
-  in place of StoreKit's, never stored. `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
+  in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`).
+  `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
+  levels on a pack's card while it has none. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, and
+  `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
   tank's (rod -1) in `parse`'s rod:steps form; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
   round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim

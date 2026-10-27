@@ -25,6 +25,7 @@
 		89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */; };
 		8BFF4453C3E95A10C25C1E85 /* UnstirTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29729248161A1B61CE6D4E36 /* UnstirTests.swift */; };
 		8FA114073682AA90E96A457F /* Unstir.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 2DF7981B1F96D77FDEB85C68 /* Unstir.storekit */; };
+		90101FC5060304F2B0AA3F01 /* Shelf.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7B4A291F2734F1B961F3FE /* Shelf.swift */; };
 		973A9E11BF631BE4211EAA02 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45CEE9950106BAFE3A297A1 /* Icon.swift */; };
 		98526A3AA7420D378D76C241 /* Levels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD430ED66CD5CE54E0F67F72 /* Levels.swift */; };
 		9F25E1385928C5125BE5CD40 /* Unstir.metal in Sources */ = {isa = PBXBuildFile; fileRef = 63330CD5793ABE158F314B89 /* Unstir.metal */; };
@@ -94,6 +95,7 @@
 		D322AA44C06018F3A665792F /* Brim.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Brim.metal; sourceTree = "<group>"; };
 		D692C82FAF648856F00B09E0 /* PackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackTests.swift; sourceTree = "<group>"; };
 		D80A3010678E45A15B0543C3 /* Consent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Consent.swift; sourceTree = "<group>"; };
+		DB7B4A291F2734F1B961F3FE /* Shelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shelf.swift; sourceTree = "<group>"; };
 		E302013539F573E3F8C8FBC5 /* Chainmail.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Chainmail.metal; sourceTree = "<group>"; };
 		FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -174,6 +176,7 @@
 				7147B0B195AAB46DE31D870D /* Pictures.swift */,
 				39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */,
 				02DCBCEAE9EA5C16D6101548 /* Share.swift */,
+				DB7B4A291F2734F1B961F3FE /* Shelf.swift */,
 				2926E44D61C37EEF53C771BA /* Sky.metal */,
 				551B7907E2001DBDBAC8A1B9 /* Store.swift */,
 				4C0CD5709FED7976550A2E52 /* TankView.swift */,
@@ -308,6 +311,7 @@
 				ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */,
 				F40291CB604E0F77378217A9 /* Pictures.swift in Sources */,
 				FF92A9DDE01E5F17039DBCBB /* Share.swift in Sources */,
+				90101FC5060304F2B0AA3F01 /* Shelf.swift in Sources */,
 				79D52A8EF45A795194455A50 /* Sky.metal in Sources */,
 				D90B92AEBB41C6429CB55D32 /* Store.swift in Sources */,
 				D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */,
