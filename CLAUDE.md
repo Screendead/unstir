@@ -94,9 +94,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   out of Levels.swift, so that struct stays top-level there.
 - Escapement's prover: `scripts/escapement.sh check <layout> <scramble> <clocks> [span] [quick]` (clocks as rods in tick
   order, each `+` or `-` for wound back, e.g. `hex <scramble> 1+,4-`) plays the pack's rule on `Array.commit`: every move
-  (a turn, or `wait`) ticks each running clock one step, and a tick that pushes loses. It prints the optimum and its
-  proof, which is absolute when par is what the clocks owe, the lines and keys at par over turns of up to `span` steps,
-  and each move of the line with the alternatives that would miss par. `build` deals problems backwards from a line,
+  (a turn, or `wait`) ticks each running clock one step, and a tick that pushes loses, as does the last clock stopping
+  with twists still on the picture (Jack, round 9), so no line takes more moves than the clocks owe. It prints the
+  optimum and its proof, which is absolute when par is what the clocks owe, the lines and keys at par over turns of up
+  to `span` steps, and each move of the line with the alternatives that would lose. `build` deals problems backwards from a line,
   and `book scripts/escapement/problems.tsv` proves the draft book (`docs/escapement-problems.md`, about eight
   minutes). `ESC_RULE=lab` plays the lab's re-grab instead of the final tick, and `ESC_PUSHED=1` plays on past a pushed
   tick. It compiles `build/escapement/prove` from Twist.swift and `SplitMix64`, as `solve.sh` does.

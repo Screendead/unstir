@@ -44,14 +44,15 @@ struct Problem {
         return max(owed(s), net.values.filter { $0 != 0 }.count)
     }
 
-    /// The move and its ticks, or nil where a tick pushes: that entry can never pop, so the problem is lost.
+    /// The move and its ticks, or nil where the problem is lost: a tick pushes, so that entry can never pop, or the last
+    /// clock stops with twists still on the picture (Jack's call E2, round 9).
     func play(_ s: [Twist], _ m: Move) -> [Twist]? {
         var s = s
         if case let .turn(r, n) = m { s.commit(rod: r, steps: n, in: layout) }
         for c in clocks where s.contains(where: { $0.rod == c.rod }) {
             if s.commit(rod: c.rod, steps: c.dir, in: layout) == .pushed, !keepsPushed { return nil }
         }
-        return s
+        return s.isEmpty || running(s) ? s : nil
     }
 
     /// Waits and whole heals: turns that land on one entry and pop it.
@@ -248,7 +249,7 @@ func report(_ p: Problem, span: Int, quick: Bool) {
         for (i, m) in line.enumerated() {
             let others = p.cleanMoves(s, after: last).filter { $0 != m }
             let fates = others.map { o -> String in
-                guard let t = p.play(s, o) else { return "\(o) pushes" }
+                guard let t = p.play(s, o) else { return "\(o) loses" }
                 return clean.count(t, last: o, left: par - i - 1) > 0 ? "\(o) also" : "\(o) dooms"
             }
             let t = p.play(s, m)!
