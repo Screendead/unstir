@@ -321,6 +321,8 @@ done
 shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
 shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
 shot card-complete "Complete's card, unowned." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
+  CARD=lens STORE=complete:failed CLOCK=5.4
 shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4
 shot card-lens-noprice "Lens's card before the App Store answers: buy, with no price." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
 shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \

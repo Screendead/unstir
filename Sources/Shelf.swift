@@ -758,20 +758,27 @@ struct PackCard: View {
         .buttonStyle(.plain)
     }
 
+    /// Complete's failure stays off the pack's own status, so it is said here, beside the button that tried.
     private var completeLine: some View {
         let complete = store.price(Pack.completeID)
-        return Button { buy(.complete) } label: {
-            HStack(spacing: 6) {
-                Text("or all three in Complete").opacity(0.55)
-                if let complete { Text(complete).opacity(0.75) }
-                Text("\u{203A}").opacity(0.55)
+        return VStack(alignment: .leading, spacing: 6) {
+            Button { buy(.complete) } label: {
+                HStack(spacing: 6) {
+                    Text("or all three in Complete").opacity(0.55)
+                    if let complete { Text(complete).opacity(0.75) }
+                    Text("\u{203A}").opacity(0.55)
+                }
+                .font(.mono(.caption))
             }
-            .font(.mono(.caption))
+            .buttonStyle(.plain)
+            .disabled(buying || store.state(.complete) == .pending)
+            .accessibilityLabel("Buy Complete, every pack")
+            .accessibilityValue(complete ?? "")
+            if store.state(.complete) == .failed {
+                Text("Complete's purchase didn't go through").font(.mono(.caption, .semibold)).foregroundStyle(Color.magenta)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .buttonStyle(.plain)
-        .disabled(buying || store.state(.complete) == .pending)
-        .accessibilityLabel("Buy Complete, every pack")
-        .accessibilityValue(complete ?? "")
     }
 
     private var restore: some View {

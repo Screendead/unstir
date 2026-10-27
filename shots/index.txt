@@ -202,6 +202,7 @@ card-lens-revoked.png  Lens's card, revoked.
 card-first-stir.png  First Stir's card, unowned.
 card-escapement.png  Escapement's card, unowned.
 card-complete.png  Complete's card, unowned.
+card-lens-complete-failed.png  Lens's card after Complete, bought from it, failed: the line under Complete's button says so.
 card-complete-owned.png  Complete's card, owned: every pack open.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, with no price.
 card-lens-levels.png  Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked.
