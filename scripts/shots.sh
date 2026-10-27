@@ -31,7 +31,10 @@ shot() {  # name description KEY=VALUE...
   [[ -n "${pattern:-}" && "$name" != *$pattern* ]] && return
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   env ${vars[@]+"${vars[@]}"} xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
-  sleep "${hold:-$settle}"
+  local wait=${hold:-$settle}
+  # Lens's halftone bakes for 20 s or more the first time a Debug install draws it; the shots after read it from Caches.
+  if [[ " $* " == *" PACK=lens "* && -z "${baked:-}" ]]; then wait=30; baked=1; fi
+  sleep "$wait"
   settle=3
   xcrun simctl io "$udid" screenshot "shots/$name.png" >/dev/null 2>&1
   echo "shot $name"
@@ -306,8 +309,8 @@ shot swirl-tri "Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3." LAYOUT=triS
 shot swirl-eye "Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3." LAYOUT=eyeSwirl STACK=0:+3,4:+2,2:-4,4:-3 SWIRLED=1 CLOCK=3
 shot swirl-pent "Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3." LAYOUT=pentSwirl STACK=0:+3,5:+2,2:-4,5:-3 SWIRLED=1 CLOCK=3
 shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl STACK=1:+3,7:+2,4:-4,7:-3 SWIRLED=1 CLOCK=3
-# Lens: rod 0 of tri is a lens on the halftone panel. The first shot waits out its Debug bake, which the rest reuse.
-hold=30 shot lens-plus "Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies." \
+# Lens: rod 0 of tri is a lens on the halftone panel.
+hold=5 shot lens-plus "Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies." \
   PACK=lens LEVEL=1 STACK=0:+3
 hold=5 shot lens-minus "Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim." PACK=lens LEVEL=1 STACK=0:-2
 for n in 1 2 3; do
@@ -317,6 +320,37 @@ hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's 
 hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 STACK=0:+2,1:+2
 hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger." \
   PACK=lens LEVEL=1 LIVE=0:+1.4 TOUCH=0,-0.42
+# The rim band at each dealt step on each rod size, for glitter: tri's big rod 0 (0.58), quad's rod 0 (0.48) and eye's
+# small top rod 2 (0.44), each beside a neighbour that overlaps it. Still, the lens held half a step short, and the
+# neighbour held mid-twist over the lens.
+for size in "big tri 0 1 0,-0.42" "mid quad 0 1 -0.35,-0.35" "small eye 2 0 0,-0.56"; do
+  read -r name layout lens twist touch <<< "$size"
+  for n in 1 2 3; do
+    hold=5 shot "lens-glitter-$name-$n" "Lens on $layout rod $lens at +$n, still." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+$n
+    below=$( ((n > 1)) && echo "$lens:+$((n - 1))" || true )
+    hold=5 shot "lens-glitter-$name-$n-drag" "Lens on $layout rod $lens held at +$((n - 1)).5, mid-drag up." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$below LIVE=$lens:+0.5 TOUCH=$touch
+    hold=5 shot "lens-glitter-$name-$n-twist" "Lens on $layout rod $lens at +$n, rod $twist held 1.5 steps into a twist over it." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+$n LIVE=$twist:+1.5
+  done
+  # A flip book at the screen's own pixels, for glitter in motion (a film records at half size): the lens dragged from
+  # +2 to +3, then the neighbour twisted a step over it at +3, a tenth of a step a frame.
+  for i in 00 01 02 03 04 05 06 07 08 09 10; do
+    f=$((10#$i / 10)).$((10#$i % 10))
+    hold=3 shot "lens-flip-$name-zoom-$i" "Lens on $layout rod $lens held at +2 and $f steps." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+2 LIVE=$lens:+$f
+    hold=3 shot "lens-flip-$name-twist-$i" "Lens on $layout rod $lens at +3, rod $twist held $f steps into a twist." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+3 LIVE=$twist:+$f
+  done
+  # The order read at x2: the lens at +2 newest (its rim whole) or under a twist of 1 or 3 steps (its rim dragged).
+  for k in 1 3; do
+    hold=5 shot "lens-order-$name-over-$k" "Lens on $layout rod $lens, $twist:+$k,$lens:+2: the lens newest." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$twist:+$k,$lens:+2
+    hold=5 shot "lens-order-$name-under-$k" "Lens on $layout rod $lens, $lens:+2,$twist:+$k: the twist newest." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+2,$twist:+$k
+  done
+done
 # App-icon candidates, each a 1024-pixel square centred on the screen; scripts/icon.sh crops them and lays out the sheet.
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2

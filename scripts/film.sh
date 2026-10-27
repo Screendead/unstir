@@ -111,3 +111,16 @@ film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=le
 film escapement-demo 14 "$tank,fps=3,scale=200:-1,tile=8x6:padding=4" PACK=escapement OPEN=1
 film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
 film escapement-lost 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,1:-3
+# Lens: a launch first bakes the halftone into Caches, which takes 20 s or more in Debug; the films then read it.
+if [[ -z "$pattern" || lens == *$pattern* || "$pattern" == lens* ]]; then
+  xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
+  SIMCTL_CHILD_UNSTIR_PACK=lens xcrun simctl launch "$udid" "$bundle" >/dev/null
+  sleep 35
+fi
+# The rim band on each rod size while it moves, for glitter: a drawn fingertip zooms the lens in a step at a time to +3,
+# twists its neighbour two steps over it and back, zooms it out and heals the neighbour.
+for size in "big tri 0 1" "mid quad 0 1" "small eye 2 0"; do
+  read -r name layout lens twist <<< "$size"
+  film "lens-glitter-$name" 15 "$tank,fps=3,scale=220:-1,tile=9x5:padding=4" PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens \
+    STACK=$twist:+4 FINGER=1 REST=1 MOVES=$lens:+1,$lens:+1,$lens:+1,$twist:+2,$twist:-2,$lens:-3,$twist:-4
+done
