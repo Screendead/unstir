@@ -1,8 +1,9 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/sounds.sh [sketch]   Renders the glass set from sound-src into Sounds/glass with Csound, then prints
-# each file's loudness, peaks, onset, phone-speaker loss and size, and each bed's seam; spectrograms go to
-# build/sounds/spec. Needs Homebrew's csound and ffmpeg. Everything is seeded, so a rerun writes the same bytes.
+# Usage: scripts/sounds.sh [sketch | listen <dir>]   Renders the glass set from sound-src into Sounds/glass with
+# Csound, then prints each file's loudness, peaks, onset, phone-speaker loss and size, and each bed's seam;
+# spectrograms go to build/sounds/spec. Needs Homebrew's csound and ffmpeg. Everything is seeded, so a rerun writes
+# the same bytes.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
@@ -21,6 +22,72 @@ if [ "${1:-}" = sketch ]; then
         cp "$S/$f.wav" Sounds/sketch/
     done
     echo "Sounds/sketch: $(ls Sounds/sketch | wc -l | tr -d ' ') files"
+    exit 0
+fi
+
+# listen <dir>: every effect and bed in Sounds/glass as m4a in <dir>, and each open choice played both ways, one after
+# the other: the undo alone and after a push, and a heal undone with the notes kept or stepped back. An effect plays on
+# both channels at its full level, as the app plays it, and the plays sit on plughole's bed at its own level.
+if [ "${1:-}" = listen ]; then
+    D=${2:?usage: scripts/sounds.sh listen <dir>}
+    L=build/sounds/listen
+    mkdir -p "$D" "$L"
+    G=Sounds/glass
+    aac() { afconvert -f m4af -d aac -b 256000 "$1" "$2"; }
+    for f in "$G"/*.caf; do
+        n=$(basename "$f" .caf)
+        [ "$n" = maelstrom ] && continue
+        afconvert -f WAVE -d LEF32 "$f" "$L/$n.wav"
+        aac "$L/$n.wav" "$D/$n.m4a"
+    done
+    for bed in menu loop whirlpool vortex maelstrom; do
+        f=$G/$bed.m4a
+        [ -f "$f" ] || f=$G/$bed.caf
+        afconvert -f WAVE -d LEF32 "$f" "$L/bed-$bed.wav"
+        name=$([ "$bed" = loop ] && echo plughole || echo "$bed")
+        aac "$L/bed-$bed.wav" "$D/bed-$name.m4a"
+    done
+    # A bed played twice through, as the game loops it, to hear the seam.
+    ffmpeg -hide_banner -nostdin -v error -y -i "$L/bed-vortex.wav" -af "aloop=loop=1:size=2304000" \
+        -c:a pcm_f32le "$L/bed-vortex-twice.wav"
+    aac "$L/bed-vortex-twice.wav" "$D/bed-vortex-twice.m4a"
+    # play out seconds "effect@time ..." [bed]: the effects at those times over the first seconds of a bed (plughole's
+    # unless given), faded.
+    play() {
+        local out=$1 secs=$2
+        local inputs=(-i "$L/bed-${4:-loop}.wav") chain="[0]atrim=0:$secs,afade=t=out:st=$((secs - 2)):d=2[b];"
+        local mix="[b]" k=1
+        for ev in $3; do
+            inputs+=(-i "$L/${ev%@*}.wav")
+            local ms
+            ms=$(awk -v t="${ev#*@}" 'BEGIN { printf "%d", t * 1000 }')
+            chain="$chain[$k]pan=stereo|c0=c0|c1=c0,adelay=$ms|$ms[e$k];"
+            mix="$mix[e$k]"
+            k=$((k + 1))
+        done
+        ffmpeg -hide_banner -nostdin -v error -y "${inputs[@]}" \
+            -filter_complex "$chain${mix}amix=inputs=$k:normalize=0:duration=first" -c:a pcm_f32le "$L/$out.wav"
+    }
+    # pair a b out: a, a second and a half of silence, then b.
+    pair() {
+        ffmpeg -hide_banner -nostdin -v error -y -i "$L/$1.wav" -i "$L/$2.wav" -filter_complex \
+            "[0]aformat=channel_layouts=stereo,apad=pad_dur=1.5[a];[1]aformat=channel_layouts=stereo[b];[a][b]concat=n=2:v=0:a=1" \
+            -c:a pcm_f32le "$L/$3.wav"
+        aac "$L/$3.wav" "$D/$3.m4a"
+    }
+    pair undo undo-early pair-undo-as-is-then-early
+    play undo-after-push-as-is 6 "push@1 undo@2.6"
+    play undo-after-push-early 6 "push@1 undo-early@2.6"
+    pair undo-after-push-as-is undo-after-push-early pair-undo-after-a-push-as-is-then-early
+    # Two heals, the second undone and healed again, one more heal, then the move that solves, which sounds as the solve.
+    play heal-undo-keep 14 "heal-1@1 heal-2@3 undo@5 heal-3@6.6 heal-4@8.6 solve@10.6"
+    play heal-undo-step-back 14 "heal-1@1 heal-2@3 undo@5 heal-2@6.6 heal-3@8.6 solve@10.6"
+    for f in heal-undo-keep heal-undo-step-back; do aac "$L/$f.wav" "$D/$f.m4a"; done
+    pair heal-undo-keep heal-undo-step-back pair-heal-undo-keep-then-step-back
+    # The new bed under play: heals, a push and the solve.
+    play vortex-with-play 14 "heal-1@2 push@4 heal-2@6 heal-3@8 solve@10.5" vortex
+    aac "$L/vortex-with-play.wav" "$D/vortex-with-play.m4a"
+    ls "$D"
     exit 0
 fi
 SRC=sound-src

@@ -106,7 +106,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   loudness, peaks, onset, phone-speaker loss and size, and each bed's seam (needs Homebrew's `csound` and `ffmpeg`).
   Every source is seeded, so a rerun writes the same bytes. `scripts/sounds.sh sketch` builds the first glass sketch
   (`sound-src/sketch.py`, numpy) into `Sounds/sketch`, which git ignores, for the temporary `sketch` set; a build
-  without it plays nothing on that set.
+  without it plays nothing on that set. `scripts/sounds.sh listen <dir>` writes every effect and bed as m4a to `<dir>`,
+  with each open choice played both ways one after the other over plughole's bed, for listening off the phone.
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
