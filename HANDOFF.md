@@ -864,6 +864,23 @@ names and product ids, and Complete's promise to older owners.
     at 3x on the Pro Max, under `Harbour.budget` (64 MB), past which they bake at a lower scale
     (`testTheLayersBakeWithinTheBudget`). Left: measure the budget on the phone; it is a guess until then.
 43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
+    Chapter 1, Dawn After (scenes 1 to 5), built 2026-10-27 on `firststir-ch1` (off `firststir-pack`; not merged), to
+    the outline (FS=A) and round 9's answers (F1 to F5, all A): `FirstStirDawn.swift` draws the five scenes, three
+    vignettes each, in dawn pewter, 6:40 back to 4:45 am; `StoryScene.swift` plays them on the pack's one night, the
+    time stepping back with each of the scramble's entries gone and shown as a clock under the tank ("6:40 am"). Levels
+    `first-stir-1` to `-5`: sunrise (tri `2:+5,1:-4,0:+3,1:+2`), the gallery (quad `3:+4,0:-3,1:+5,2:-2`), the rock pool
+    (tri `1:+4,2:-3,0:+5,1:-2,2:+3`), righting the boat (eye `0:+3,1:-4,2:+5,3:-2,1:+2`), tea on the quay (quad
+    `2:+4,3:-3,1:+5,0:-2,3:+2,2:-5`); each par the solver's optimum. Every change keeps 0.02 inside its core and clear of
+    its knob, and no vignette plays smeared over any heal order (tested). Level 1 was the lab's storm harbour, the
+    outline's scene 16: per F5 it is now the same view at sunrise, redrawn, and the storm harbour waits, with no level,
+    for chapter 4. Shots `firststir-0N`, `-held`, `-played`, `firststir-01-healed-1` and `-2`; `scripts/first-stir-lab.sh`
+    is the drawing loop. Departures from the outline, for Jack: the sunrise's chimney smoke comes from the neighbour's
+    chimney, as the time layer outside every disc (the cottage's chimney lies outside its core); the sunrise's cottage
+    plays after the boat because its doorway lies in the boat's disc (as the outline says) and its door was moved a
+    little left so the change keeps 0.02 inside the core; on the rock pool the dog sits a little up the rocks from the
+    child, not by her boots, so its change stays clear; righting the boat's boat lies clear of the haulers' disc (the
+    outline had it heal after them), with the boat above its knob and the haulers below theirs. Left: Jack's review of
+    the art at phone size (the figures are small on the quad scenes), the films, and chapters 2 to 5.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
