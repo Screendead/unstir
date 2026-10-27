@@ -1314,11 +1314,13 @@ struct LevelView: View {
                 guard let g = drag, let pivot = pivot(g.grab) else { return }
                 let d = q - pivot
                 let a = atan2(d.y, d.x)
-                drag!.last = a
+                let lens = lensHeld(g.grab)
+                drag!.last = lens ? q.y : a
                 // Two fingers turn the tank while they are down.
                 guard !spun else { return }
                 // Near the pivot the angle is noise; track it without turning.
-                let da = simd_length(d) > 0.1 ? atan2(sin(a - g.last), cos(a - g.last)) : 0
+                let da = lens ? Self.lensTurn(from: g.last, to: q.y)
+                    : simd_length(d) > 0.1 ? atan2(sin(a - g.last), cos(a - g.last)) : 0
                 if g.grab != .rim {
                     liveAngle += da
                     ticks += detent.turn(to: liveAngle)
@@ -1348,6 +1350,17 @@ struct LevelView: View {
             }
     }
 
+    /// The finger's travel up or down, in tank units, for one step of a lens (Jack, 2026-10-26).
+    static let lensPitch = 0.15
+
+    /// A lens follows the finger up and down, not round: the angle the detent counts for a finger gone from height `y0`
+    /// to `y` (tank units, down positive). Up zooms in, a positive step (Jack, 2026-10-26).
+    static func lensTurn(from y0: Double, to y: Double) -> Double { (y0 - y) / lensPitch * Tank.step }
+
+    private func lensHeld(_ grab: Grab) -> Bool {
+        if case .rod(let k) = grab { game.level.lenses.contains(game.slot(of: k)) } else { false }
+    }
+
     private func pivot(_ grab: Grab) -> SIMD2<Double>? {
         switch grab {
         case .rod(let k): centre(k)
@@ -1366,7 +1379,7 @@ struct LevelView: View {
         }
         guard let g = drag, let pivot = pivot(g.grab) else { return }
         let d = point - pivot
-        drag!.last = atan2(d.y, d.x)
+        drag!.last = lensHeld(g.grab) ? point.y : atan2(d.y, d.x)
         if case .rod(let k) = g.grab {
             liveRod = k; counted = k; grabs += 1; detent = Detent(step: Tank.step)
         } else {

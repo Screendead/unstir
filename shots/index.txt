@@ -196,7 +196,7 @@ lens-2.png  Lens 2 as dealt, on the halftone, rod 0 a lens.
 lens-3.png  Lens 3 as dealt, on the halftone, rod 0 a lens.
 lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
-lens-live.png  Lens 1 held mid-drag, the lens 1.4 steps anticlockwise: its count reads the zoom's steps (-1), a dash a step.
+lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step.
 icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
 icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
 icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.

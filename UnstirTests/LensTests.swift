@@ -66,6 +66,14 @@ final class LensTests: XCTestCase {
         }
     }
 
+    /// A lens's drag runs up and down: a finger gone up by `lensPitch` (y falls) is one positive step, which magnifies,
+    /// and down the same is one negative; across, it does nothing.
+    func testALensDraggedUpZoomsIn() {
+        XCTAssertEqual(LevelView.lensTurn(from: 0.2, to: 0.2 - LevelView.lensPitch), Tank.step, accuracy: 1e-12)
+        XCTAssertEqual(LevelView.lensTurn(from: -0.1, to: -0.1 + 2 * LevelView.lensPitch), -2 * Tank.step, accuracy: 1e-12)
+        XCTAssertEqual(LevelView.lensTurn(from: 0.3, to: 0.3), 0)
+    }
+
     /// The lens set reaches every merge: on tri, two lenses' cores never meet, so rod 0's second stir merges past rod
     /// 1's; as twists their discs overlap, and it pushes. A game on the level merges as `parse` does.
     @MainActor func testTheLensSetChangesHowAStackMerges() {
