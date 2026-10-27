@@ -1034,6 +1034,10 @@ names and product ids, and Complete's promise to older owners.
     (`testTheLayersBakeWithinTheBudget`). Merged 2026-10-27 (PR #44). Left: measure the budget on the phone; it is a
     guess until then.
 43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
+    All five chapters joined on `firststir-content` (2026-10-27), levels `first-stir-1` to `-25` in the outline's
+    order, with master's Lens and Escapement; First Stir is now on the Release shelf, nothing left to arrive, the taste
+    of 3 then the card (`testFirstStirPlaysInOrderFromTheShelf`). The Flood's and the Storm's `HighStreet` clashed; the
+    Storm's is `StreetInRain`. Sheets `round10/firststir/ch1-sheet.png` to `ch5-sheet.png` in the tools folder.
     The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), approved by Jack (2026-10-26, round 9).
     Chapter 1, Dawn After (scenes 1 to 5), built 2026-10-27 on `firststir-ch1`, merged into `firststir-content` (off `master`, not yet a PR), to
     the outline (FS=A) and round 9's answers (F1 to F5, all A): `FirstStirDawn.swift` draws the five scenes, three
