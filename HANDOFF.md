@@ -864,6 +864,17 @@ names and product ids, and Complete's promise to older owners.
     at 3x on the Pro Max, under `Harbour.budget` (64 MB), past which they bake at a lower scale
     (`testTheLayersBakeWithinTheBudget`). Left: measure the budget on the phone; it is a guess until then.
 43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
+    Chapter 2, The Rescue (scenes 6 to 10), drawn 2026-10-27 on `firststir-ch2` (off `firststir-pack`; not merged), in
+    `Sources/FirstStirRescue.swift`: home light (pent, 6), off the breakwater (eye, 6), the lantern chain (quad, 7),
+    the stair (tri, 7) and the lighthouse door (pent, 7), each solver-checked (par is the optimum, untwisting reaches
+    it), three vignettes each as the outline says, every change inside its own core, 0.02 off its edge and clear of
+    the knob (`testNoVignetteShowsTheNextMove`). Shots `firststir-06` to `firststir-10`, each as dealt, `-held` and
+    `-played`. The levels sit at places 2 to 6 of the table on this branch; chapter 1's scenes 2 to 5 go before them,
+    and `rescue` in `scripts/shots.sh` then becomes 6. Open for Jack: the outline gives rescue amber no line ink, so
+    the rain's colour (B7CEFF) at full strength is the chapter's ink; the clock caption (F3) and per-entry time steps
+    are not built on either chapter branch, so the night steps per vignette as level 1's does; at pent's core size
+    (0.264) a vignette's change has a ring 0.12 wide between the knob and the margin, so figures are near the spec's
+    0.12 minimum and the lifeboat about 0.12 long.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render

@@ -273,7 +273,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
-  one so far; Lens and Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
+  the harbour and chapter 2 so far; Lens and Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
@@ -306,7 +306,22 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   states, checks the difference stays inside its own core (so the cut clips no glow), and over every heal order that
   `Layout.removable` allows, that no vignette's light reaches the core of a rod removable right after its heal and that
   the entries left move none of it by half a pixel; the harbour's two known smears (the lantern's shards and the boat's
-  stern, in the cottage's ring) are pinned there as Jack's call.
+  stern, in the cottage's ring) are pinned there as Jack's call. `Story` routes everything a scene draws (`layout`,
+  `draw`, `weather`, `render`, an optional `boltBox`), so a chapter plugs in as a case; `Level.firstStir` stamps each
+  level's id and label from its place, so a chapter's levels are numbered where they land in the table.
+- **FirstStirRescue.swift** holds First Stir's chapter 2, The Rescue (`Story.rescue(n)`, the outline's scenes 6 to 10,
+  4:45 back to 2:30 am in rescue amber), and the pieces it draws with: `Pen`, a pen on tank units that draws a figure
+  or a boat in its own units through `at`, and `Cast`, the family and townsfolk told apart by outline alone (the
+  father's oilskin and brimmed hat, the grandmother's shawl and bun, the child's bobble hat, a neighbour's cap, a
+  crewman's hood), the dog, the storm lantern, the lifeboat and a breaking wave. Each scene's held-back and played times
+  are `Rescue.window`; the sky (low cloud lit from below, `Rescue.skyStops`) and the rain (`Rescue.rain`, thickening
+  as the night winds back) are functions of the time, so one scene's played sky is the next one's held back. The night
+  still steps a stage per vignette played, as the harbour's does. Each vignette's state is laid down under one glow by
+  `Pen.vignette`, and the test draws each vignette alone (`Rescue.render(_:vignette:played:)`): the renderer lays down
+  light near any drawing a few levels differently with what else the canvas holds, enough to read as a change in
+  another core. Beyond the harbour's checks, a rescue vignette's change keeps 0.02 inside its core's edge and clear of
+  its knob (0.085), the art spec's limits. Scene 7's steps and scene 9's turn of the stair sit on the scramble's
+  bottom entry, so they play last; every other vignette is drawn where no other disc reaches.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
