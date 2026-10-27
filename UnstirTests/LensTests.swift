@@ -135,38 +135,38 @@ final class LensTests: XCTestCase {
         }
     }
 
-    /// The pack's table as `docs/lens-tables.md` gives it (table A, lenses on every rod size), pinned: a level's id
+    /// The pack's table as `docs/lens-tables.md` gives it (table A capped at +2, lenses on every rod size), pinned: a level's id
     /// keeps its best, so a row changes only on purpose.
     static let table: [(Layout, Set<Int>, String)] = [
         (.tri, [0], "0:+2"),
         (.tri, [0], "0:+1,1:+3"),
-        (.tri, [0], "1:-2,2:+4,0:+3"),
-        (.tri, [1], "0:+3,1:+2,2:-4,1:+1"),
+        (.tri, [0], "1:-2,2:+4,0:+2"),
+        (.tri, [1], "0:+3,1:+1,2:-4,1:+1"),
         (.eye, [2], "0:-4,2:+2,1:+5,3:-3"),
-        (.eye, [0], "2:+3,0:+2,1:-4,3:+5,0:+1"),
+        (.eye, [0], "2:+3,0:+1,1:-4,3:+5,0:+1"),
         (.tri, [0, 1], "2:+4,0:+2,1:+1"),
-        (.quad, [0, 2], "1:+4,0:+2,3:-3,2:+3,1:-5,0:+1"),
-        (.eye, [2, 3], "0:+3,2:+2,1:-4,3:+3,0:+2,2:+1"),
-        (.tri, [2], "0:+3,2:+2,1:-5,0:-2,2:+1,1:+4"),
-        (.quad, [1, 3], "0:+3,1:+3,2:-4,3:+2,0:-3,3:+1,2:+5"),
-        (.eye, [0, 1], "2:+3,0:+2,3:-4,1:+3,2:-2,0:+1,3:+5"),
-        (.hex, [1, 4], "0:+3,1:+2,2:-4,4:+3,6:+2,0:-2,5:+4"),
-        (.hex, [2, 5], "3:-3,2:+2,0:+4,5:+1,6:-3,2:+1,4:+5,5:+2"),
-        (.eye, [2], "1:+4,2:+1,0:-5,3:+3,2:+2,1:-3,0:+4,3:-2"),
-        (.tri, [0], "1:+3,0:+1,2:-4,1:-2,0:+1,2:+5,1:+4,0:+1"),
-        (.hex, [1, 3, 5], "0:+2,1:+3,2:-4,3:+2,4:+3,5:+1,6:-5,0:+4,5:+2"),
-        (.quad, [0, 2], "1:+3,0:+1,3:-4,2:+2,1:+5,0:+2,3:+3,2:+1,1:-4"),
-        (.hex, [0], "1:+3,0:+2,4:-3,2:+4,0:+1,5:-3,3:+2,6:+4"),
-        (.hex, [0, 1, 4], "2:+3,0:+2,1:+3,5:-4,4:+2,3:+4,0:+1,6:-3,2:-2"),
-        (.eye, [0, 3], "2:+4,0:+2,1:-5,3:+2,2:-3,0:+1,1:+4,3:+1,2:+3"),
-        (.hex, [0, 2, 5], "1:+3,0:+1,2:+2,3:-4,6:+5,5:+3,4:-3,0:+2,1:-3,2:+1"),
-        (.hex, [0], "3:+4,0:+1,6:-3,1:+5,0:+1,2:-4,4:+3,0:+1,5:-5,3:+2"),
-        (.eye, [2, 3], "0:+4,2:+2,1:-3,3:+1,0:-4,3:+2,1:+5,2:+1,0:+3,1:-2"),
-        (.hex, [0, 1, 3, 5], "2:+3,0:+1,1:+2,4:-4,3:+3,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,0:+1"),
+        (.quad, [0, 2], "1:+4,0:+1,3:-3,2:+2,1:-5,0:+1"),
+        (.eye, [2, 3], "0:+3,2:+1,1:-4,3:+2,0:+2,2:+1"),
+        (.tri, [2], "0:+3,2:+1,1:-5,0:-2,2:+1,1:+4"),
+        (.quad, [1, 3], "0:+3,1:+2,2:-4,3:+1,0:-3,3:+1,2:+5"),
+        (.eye, [0, 1], "2:+3,0:+1,3:-4,1:+2,2:-2,0:+1,3:+5"),
+        (.hex, [1, 4], "0:+3,1:+2,2:-4,4:+2,6:+2,0:-2,5:+4"),
+        (.hex, [2, 5], "3:-3,2:+1,0:+4,5:+1,6:-3,2:+1,4:+5,5:+1"),
+        (.eye, [2], "1:+4,2:+1,0:-5,3:+3,2:+1,1:-3,0:+4,3:-2"),
+        (.tri, [0], "1:+3,0:+1,2:-4,1:-2,0:+1,2:+5,1:+4,2:-3"),
+        (.hex, [1, 3, 5], "0:+2,1:+2,2:-4,3:+2,4:+3,5:+1,6:-5,0:+4,5:+1"),
+        (.quad, [0, 2], "1:+3,0:+1,3:-4,2:+1,1:+5,0:+1,3:+3,2:+1,1:-4"),
+        (.hex, [0], "1:+3,0:+1,4:-3,2:+4,0:+1,5:-3,3:+2,6:+4"),
+        (.hex, [0, 1, 4], "2:+3,0:+1,1:+2,5:-4,4:+2,3:+4,0:+1,6:-3,2:-2"),
+        (.eye, [0, 3], "2:+4,0:+1,1:-5,3:+1,2:-3,0:+1,1:+4,3:+1,2:+3"),
+        (.hex, [0, 2, 5], "1:+3,0:+1,2:+1,3:-4,6:+5,5:+2,4:-3,0:+1,1:-3,2:+1"),
+        (.hex, [0], "3:+4,0:+1,6:-3,1:+5,0:+1,2:-4,4:+3,5:-5,3:+2,1:-2"),
+        (.eye, [2, 3], "0:+4,2:+1,1:-3,3:+1,0:-4,3:+1,1:+5,2:+1,0:+3,1:-2"),
+        (.hex, [0, 1, 3, 5], "2:+3,0:+1,1:+1,4:-4,3:+1,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,3:+1"),
     ]
 
     /// The pack's levels: the pinned table, each on the halftone with a lens, every dealt entry kept as dealt, every
-    /// dealt lens entry magnifying by 1 to 3 steps and each lens netting at most +3, each lens in reach of a twist; par
+    /// dealt lens entry magnifying by 1 or 2 steps and each lens netting at most +2, each lens in reach of a twist; par
     /// is the depth, and untwisting reaches it on a real game.
     @MainActor func testLensLevels() {
         XCTAssertEqual(Level.lens.count, 25)
@@ -190,8 +190,8 @@ final class LensTests: XCTestCase {
             XCTAssertFalse(level.lenses.isEmpty, level.id)
             for lens in level.lenses {
                 let entries = level.scramble.filter { $0.rod == lens }.map(\.steps)
-                XCTAssertTrue(entries.allSatisfy { (1...3).contains($0) }, "\(level.id) lens \(lens): \(entries)")
-                XCTAssertLessThanOrEqual(entries.reduce(0, +), 3, level.id)
+                XCTAssertTrue(entries.allSatisfy { (1...2).contains($0) }, "\(level.id) lens \(lens): \(entries)")
+                XCTAssertLessThanOrEqual(entries.reduce(0, +), 2, level.id)
             }
             XCTAssertFalse(level.layout.looksSolved(level.scramble, lenses: level.lenses), level.id)
             let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
@@ -217,7 +217,7 @@ final class LensTests: XCTestCase {
         let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
         let dealt = game.stack
         game.commit(rod: 0, steps: -1)
-        XCTAssertEqual(game.stack.last, Twist(rod: 0, steps: 2))
+        XCTAssertEqual(game.stack.last, Twist(rod: 0, steps: 1))
         game.commit(rod: 1, steps: 2)
         game.undo()
         game.undo()

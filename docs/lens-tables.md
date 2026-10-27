@@ -52,6 +52,42 @@ and every hex rod (0.44).
 | 24 | Splash | eye | 2, 3 | `0:+4,2:+2,1:-3,3:+1,0:-4,3:+2,1:+5,2:+1,0:+3,1:-2` | 10 | 1 |  | 10 |
 | 25 | Splash page | hex | 0, 1, 3, 5 | `2:+3,0:+1,1:+2,4:-4,3:+3,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,0:+1` | 12 | 2 | Four lenses, seven of the twelve entries | 12 |
 
+## Table A capped at +2 (`lens-levels-cap2`)
+
+The glitter check at x2 (2026-10-27, simulator stills at the screen's own pixels): at +3 the band just inside a lens's
+rim squashes the dots to stripes finer than a pixel, a band a few points wide that shimmers as the lens or a
+neighbour's twist moves; at +2 the dots there still read as slivers. This is table A with every dealt lens entry +1 or
++2 and each lens netting at most +2 (x4 at the centre at most), the rows recomposed only where a +3 forced it, at the
+same depths. Level 3 teaches counting by +2, not +3. The same cap would apply to table B.
+
+| # | Issue | Layout | Lens rods | Scramble | Depth | Free | Par |
+|---|---|---|---|---|---|---|---|
+| 1 | Close-up | tri | 0 | `0:+2` | 1 | 1 | 1 |
+| 2 | Close-up | tri | 0 | `0:+1,1:+3` | 2 | 1 | 2 |
+| 3 | Close-up | tri | 0 | `1:-2,2:+4,0:+2` | 3 | 1 | 3 |
+| 4 | Close-up | tri | 1 | `0:+3,1:+1,2:-4,1:+1` | 4 | 1 | 4 |
+| 5 | Close-up | eye | 2 | `0:-4,2:+2,1:+5,3:-3` | 4 | 1 | 4 |
+| 6 | Close-up | eye | 0 | `2:+3,0:+1,1:-4,3:+5,0:+1` | 5 | 1 | 5 |
+| 7 | Cut-in | tri | 0, 1 | `2:+4,0:+2,1:+1` | 3 | 2 | 3 |
+| 8 | Cut-in | quad | 0, 2 | `1:+4,0:+1,3:-3,2:+2,1:-5,0:+1` | 6 | 1 | 6 |
+| 9 | Cut-in | eye | 2, 3 | `0:+3,2:+1,1:-4,3:+2,0:+2,2:+1` | 6 | 1 | 6 |
+| 10 | Cut-in | tri | 2 | `0:+3,2:+1,1:-5,0:-2,2:+1,1:+4` | 6 | 1 | 6 |
+| 11 | Cut-in | quad | 1, 3 | `0:+3,1:+2,2:-4,3:+1,0:-3,3:+1,2:+5` | 7 | 1 | 7 |
+| 12 | Cut-in | eye | 0, 1 | `2:+3,0:+1,3:-4,1:+2,2:-2,0:+1,3:+5` | 7 | 1 | 7 |
+| 13 | Double-take | hex | 1, 4 | `0:+3,1:+2,2:-4,4:+2,6:+2,0:-2,5:+4` | 7 | 1 | 7 |
+| 14 | Double-take | hex | 2, 5 | `3:-3,2:+1,0:+4,5:+1,6:-3,2:+1,4:+5,5:+1` | 8 | 2 | 8 |
+| 15 | Double-take | eye | 2 | `1:+4,2:+1,0:-5,3:+3,2:+1,1:-3,0:+4,3:-2` | 8 | 1 | 8 |
+| 16 | Double-take | tri | 0 | `1:+3,0:+1,2:-4,1:-2,0:+1,2:+5,1:+4,2:-3` | 8 | 1 | 8 |
+| 17 | Double-take | hex | 1, 3, 5 | `0:+2,1:+2,2:-4,3:+2,4:+3,5:+1,6:-5,0:+4,5:+1` | 9 | 1 | 9 |
+| 18 | Double-take | quad | 0, 2 | `1:+3,0:+1,3:-4,2:+1,1:+5,0:+1,3:+3,2:+1,1:-4` | 9 | 1 | 9 |
+| 19 | Splash | hex | 0 | `1:+3,0:+1,4:-3,2:+4,0:+1,5:-3,3:+2,6:+4` | 8 | 2 | 8 |
+| 20 | Splash | hex | 0, 1, 4 | `2:+3,0:+1,1:+2,5:-4,4:+2,3:+4,0:+1,6:-3,2:-2` | 9 | 2 | 9 |
+| 21 | Splash | eye | 0, 3 | `2:+4,0:+1,1:-5,3:+1,2:-3,0:+1,1:+4,3:+1,2:+3` | 9 | 2 | 9 |
+| 22 | Splash | hex | 0, 2, 5 | `1:+3,0:+1,2:+1,3:-4,6:+5,5:+2,4:-3,0:+1,1:-3,2:+1` | 10 | 1 | 10 |
+| 23 | Splash | hex | 0 | `3:+4,0:+1,6:-3,1:+5,0:+1,2:-4,4:+3,5:-5,3:+2,1:-2` | 10 | 3 | 10 |
+| 24 | Splash | eye | 2, 3 | `0:+4,2:+1,1:-3,3:+1,0:-4,3:+1,1:+5,2:+1,0:+3,1:-2` | 10 | 1 | 10 |
+| 25 | Splash page | hex | 0, 1, 3, 5 | `2:+3,0:+1,1:+1,4:-4,3:+1,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,3:+1` | 12 | 2 | 12 |
+
 ## Table B: lenses on big rods only (`lens-levels-big`)
 
 Only tri and eye have big rods, so every level is on one of them: 11 on tri, 14 on eye. The draft's big-rod rows stay
