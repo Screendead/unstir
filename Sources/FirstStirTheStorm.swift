@@ -869,7 +869,8 @@ enum Washing {
         let roofs = pen.poly([(-1, -0.42), (-0.7, -0.42), (-0.55, -0.56), (-0.4, -0.42), (-0.3, -0.42)] + skyline + [(0.3, -0.5), (1, -0.5), (1, 1), (-1, 1)])
         pen.fill(roofs, .black)
         var yard = Path()
-        yard.addPath(pen.poly([(-1, -0.42), (-0.7, -0.42), (-0.55, -0.56), (-0.4, -0.42), (-0.3, -0.42), (-0.3, ground)], closed: false))
+        // The yard's corner stops at the back wall's top, clear of the kennel's beat.
+        yard.addPath(pen.poly([(-1, -0.42), (-0.7, -0.42), (-0.55, -0.56), (-0.4, -0.42), (-0.3, -0.42), (-0.3, 0.3)], closed: false))
         yard.addPath(pen.seg(-0.3, 0.3, 0.3, 0.3))
         yard.addPath(pen.seg(-0.3, 0.33, 0.3, 0.33))
         yard.addPath(pen.rect(-0.78, -0.32, -0.66, -0.2))
@@ -879,8 +880,12 @@ enum Washing {
         yard.addPath(pen.seg(-1, ground, 1, ground))
         for x in Swift.stride(from: -1.4, through: 1.4, by: 0.28) { yard.addPath(pen.seg(x * 0.6, ground, x, 1)) }
         yard.addPath(pen.seg(-1, 0.8, 1, 0.8))
-        // The neighbour's window and its shutters' hinges, and a drainpipe.
+        // The neighbour's window and its sill, a lit window under it with its sill, and a drainpipe.
         yard.addPath(pen.rect(Self.pane.x0, Self.pane.y0, Self.pane.x1, Self.pane.y1))
+        yard.addPath(pen.seg(Self.pane.x0 - 0.015, Self.pane.y1 + 0.012, Self.pane.x1 + 0.015, Self.pane.y1 + 0.012))
+        yard.addPath(pen.rect(0.47, -0.04, 0.6, 0.06))
+        yard.addPath(pen.seg(0.535, -0.04, 0.535, 0.06))
+        yard.addPath(pen.seg(0.455, 0.072, 0.615, 0.072))
         yard.addPath(pen.seg(0.86, -0.5, 0.86, ground))
         yard.addPath(pen.rect(0.7, 0.2, 0.84, 0.42))
         // The cottage's back wall on the left, its back door, the line's two posts.
@@ -901,20 +906,22 @@ enum Washing {
             a.addQuadCurve(to: CGPoint(x: -0.56, y: 0.59), control: CGPoint(x: -0.59, y: 0.55)); a.addLine(to: CGPoint(x: -0.56, y: ground))
         })
         pen.lit { $0.stroke(yard, ink) }
-        pen.lit { $0.fill($0.rect(0.705, 0.205, 0.835, 0.415), Storm.sodium, 0.3) }
+        pen.lit { g in
+            g.fill(g.rect(0.705, 0.205, 0.835, 0.415), Storm.sodium, 0.3)
+            g.fill(g.rect(0.475, -0.035, 0.595, 0.055), Storm.sodium, 0.3)
+        }
 
         // Vignette 0, the line.
         pen.vignette(0) { pen in
             if played.contains(0) {
                 pen.stroke(pen.seg(-0.12, line, 0.12, line), ink)
-                // Shirts pegged on it, streaming hard downwind.
-                for x in [-0.11, 0.0] {
-                    let shirt = pen.at(x, line, k: 0.11, turn: -1.2).poly([(0, 0), (0.5, 0), (0.55, 0.3), (0.75, 0.35), (0.7, 0.55), (0.5, 0.5),
-                                                                            (0.5, 1), (0, 1), (0, 0.5), (-0.2, 0.55), (-0.25, 0.35), (-0.05, 0.3)])
+                // Shirts pegged on it by their shoulders, blown out sideways downwind.
+                for x in [-0.09, -0.02] {
+                    let shirt = Self.shirt(pen, x: x, k: 0.052, blown: 0.4)
                     pen.fill(shirt, .black)
                     pen.stroke(shirt, ink)
+                    for peg in [x, x + 0.052] { pen.stroke(pen.seg(peg, line - 0.014, peg, line + 0.01), Storm.sodium) }
                 }
-                for x in [-0.11, -0.055, 0.0, 0.055] { pen.stroke(pen.seg(x, line - 0.012, x, line + 0.012), Storm.sodium) }
             } else {
                 // Snapped: its ends hanging off the posts, and a shirt torn off and flying away over the roofs.
                 pen.stroke(pen.curve(-0.12, line, -0.1, line + 0.03, -0.1, line + 0.05), ink)
@@ -930,13 +937,13 @@ enum Washing {
         pen.vignette(1) { pen in
             let p = Self.pane, mid = (p.x0 + p.x1) / 2
             if played.contains(1) {
-                // Open, lit inside, the neighbour leaning out to pull them to.
+                // Open, lit inside, the neighbour leaning out to her waist, a hand on each shutter, pulling them to.
                 pen.fill(pen.rect(p.x0, p.y0, p.x1, p.y1), Storm.sodium, 0.35)
                 let left = pen.poly([(p.x0, p.y0), (p.x0 - 0.03, p.y0 + 0.012), (p.x0 - 0.03, p.y1 - 0.012), (p.x0, p.y1)])
                 let right = pen.poly([(p.x1, p.y0), (p.x1 + 0.03, p.y0 + 0.012), (p.x1 + 0.03, p.y1 - 0.012), (p.x1, p.y1)])
                 for s in [left, right] { pen.fill(s, .black); pen.stroke(s, ink) }
-                Storm.figure(pen.clipped(to: pen.rect(p.x0 - 0.1, p.y0 - 0.1, p.x1 + 0.1, p.y1)).at(mid, p.y1 + 0.06, k: 0.12), .neighbour,
-                             arms: [[(0.1, -0.72), (0.26, -0.7), (0.36, -0.64)], [(-0.1, -0.72), (-0.26, -0.7), (-0.36, -0.64)]])
+                Storm.figure(pen.clipped(to: pen.rect(p.x0 - 0.1, p.y0 - 0.1, p.x1 + 0.1, p.y1)).at(mid, p.y1 + 0.075, k: 0.17), .neighbour,
+                             arms: [[(0.1, -0.72), (0.24, -0.66), (0.33, -0.7)], [(-0.1, -0.72), (-0.24, -0.66), (-0.33, -0.7)]])
                 pen.stroke(pen.rect(p.x0, p.y0, p.x1, p.y1), Storm.sodium)
             } else {
                 // Shut, barred across.
@@ -965,5 +972,13 @@ enum Washing {
         }
     }
 
-    static let pane = (x0: 0.495, y0: -0.39, x1: 0.575, y1: -0.31)
+    static let pane = (x0: 0.483, y0: -0.385, x1: 0.583, y1: -0.29)
+
+    /// A shirt pegged at its shoulders on the line from x, `k` across them, its body blown downwind by `blown` of its
+    /// length.
+    static func shirt(_ pen: Brush, x: Double, k: Double, blown: Double) -> Path {
+        let pts: [(Double, Double)] = [(0, 0), (0.5, 0), (0.55, 0.3), (0.75, 0.35), (0.7, 0.55), (0.5, 0.5), (0.5, 1), (0, 1), (0, 0.5),
+                                       (-0.2, 0.55), (-0.25, 0.35), (-0.05, 0.3)]
+        return pen.poly(pts.map { (x + k * (2 * $0.0 + blown * $0.1), line + k * $0.1) })
+    }
 }
