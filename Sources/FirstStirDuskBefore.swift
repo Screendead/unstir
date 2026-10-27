@@ -461,7 +461,9 @@ extension Dusk {
     /// the float hanging and the lamp unlit.
     enum Lines {
         static let window = (x0: -0.573, y0: -0.388, x1: -0.493, y1: -0.298)
-        static let dial = (x: -0.45, y: 0.33, r: 0.07)
+        /// The barometer, drawn larger than life: its glyphs near the rim, its needle stopping short of them.
+        static let dial = (x: -0.46, y: 0.32, r: 0.09)
+        static let needle = 0.03
 
         static func draw(_ pen: Brush, played: Set<Int>) {
             // The far breakwater on the horizon and its lighthouse, dark.
@@ -508,18 +510,19 @@ extension Dusk {
             shed.addPath(pen.rect(-0.6, 0.55, -0.5, 0.65))
             shed.addPath(pen.circle(dial.x, dial.y, dial.r))
             shed.addPath(pen.circle(dial.x, dial.y, 0.005))
-            // The glyphs: a cloud with a bolt under it upper left, a rayed sun upper right.
-            let storm = (x: dial.x - 0.03, y: dial.y - 0.03), fair = (x: dial.x + 0.03, y: dial.y - 0.03)
+            // The glyphs: a cloud with a bolt under it upper left, a rayed sun upper right, each where the needle points.
+            let reach = 0.058, storm = (x: dial.x - reach * 0.7071, y: dial.y - reach * 0.7071)
+            let fair = (x: dial.x + reach * 0.7071, y: dial.y - reach * 0.7071)
             var glyphs = Path()
-            glyphs.addPath(pen.curve(storm.x - 0.014, storm.y, storm.x - 0.007, storm.y - 0.016, storm.x, storm.y - 0.004))
-            glyphs.addPath(pen.curve(storm.x, storm.y - 0.004, storm.x + 0.01, storm.y - 0.016, storm.x + 0.014, storm.y))
-            glyphs.addPath(pen.seg(storm.x - 0.014, storm.y, storm.x + 0.014, storm.y))
-            glyphs.addPath(pen.poly([(storm.x + 0.002, storm.y + 0.002), (storm.x - 0.005, storm.y + 0.011), (storm.x + 0.004, storm.y + 0.011),
-                                     (storm.x - 0.003, storm.y + 0.02)], closed: false))
-            glyphs.addPath(pen.circle(fair.x, fair.y, 0.006))
+            glyphs.addPath(pen.curve(storm.x - 0.02, storm.y, storm.x - 0.01, storm.y - 0.022, storm.x, storm.y - 0.006))
+            glyphs.addPath(pen.curve(storm.x, storm.y - 0.006, storm.x + 0.014, storm.y - 0.022, storm.x + 0.02, storm.y))
+            glyphs.addPath(pen.seg(storm.x - 0.02, storm.y, storm.x + 0.02, storm.y))
+            glyphs.addPath(pen.poly([(storm.x + 0.003, storm.y + 0.003), (storm.x - 0.007, storm.y + 0.014), (storm.x + 0.005, storm.y + 0.014),
+                                     (storm.x - 0.004, storm.y + 0.024)], closed: false))
+            glyphs.addPath(pen.circle(fair.x, fair.y, 0.008))
             for k in 0..<8 {
                 let a = Double(k) * .pi / 4
-                glyphs.addPath(pen.seg(fair.x + 0.01 * cos(a), fair.y + 0.01 * sin(a), fair.x + 0.016 * cos(a), fair.y + 0.016 * sin(a)))
+                glyphs.addPath(pen.seg(fair.x + 0.013 * cos(a), fair.y + 0.013 * sin(a), fair.x + 0.021 * cos(a), fair.y + 0.021 * sin(a)))
             }
             pen.lit { g in
                 g.stroke(distance, ink, 0.6)
@@ -572,7 +575,7 @@ extension Dusk {
             // Vignette 3, the barometer's needle.
             pen.vignette(3) { pen in
                 let a = played.contains(3) ? -0.25 * Double.pi : -0.75 * Double.pi
-                pen.lit(Rescue.tight) { $0.stroke($0.seg(dial.x, dial.y, dial.x + 0.05 * cos(a), dial.y + 0.05 * sin(a)), Dusk.cream) }
+                pen.lit(Rescue.tight) { $0.stroke($0.seg(dial.x, dial.y, dial.x + needle * cos(a), dial.y + needle * sin(a)), Dusk.cream) }
             }
 
             // Vignette 4, the cottage window: the float hanging in it both ways, the lamp lit or not.
