@@ -776,6 +776,9 @@ names and product ids, and Complete's promise to older owners.
    two big rods as lenses, radius 0.58, are `eyeZoom`, lab entry `lens-hard-3`, where he judged x2). Not yet checked at x2: glitter in the rim band at +2 and +3, and whether the order
    reads on eye's lenses. The count and order stills were not run. These change the draft's table (tri and quad
    rows), its x1.3 and its "clockwise in", and the lens-pack PR's port.
+   Jack's call (2026-10-26, round 9, L1 = A): the phone test before any of Lens's art is drawn; the story and levels
+   wait for its result. The session above is its first part. `docs/lens-design.md` now opens with what the session
+   decided and which parts of the draft it supersedes (PR #42); the table itself is not redone.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
    Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
