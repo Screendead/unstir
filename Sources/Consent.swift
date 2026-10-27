@@ -2,10 +2,12 @@
 
 import SwiftUI
 
-/// Every word the question and the settings sheet say. The question's wording is still Jack's open call.
+/// Every word the question and the settings sheet say.
 enum ConsentWords {
     static let title = "Help improve Unstir?"
-    static let body = "If you say yes, the game tells us how you play: which puzzles you finish, how many moves and "
+    static let body = "Let the game tell us how you play. Never who you are."
+    static let sendsLink = "What does it send? \u{203A}"
+    static let sends = "If you say yes, the game tells us how you play: which puzzles you finish, how many moves and "
         + "undos they take, which days you play, which packs you buy, and roughly which country you're in. It never "
         + "sends your name, your Apple ID, or anything that tells us who you are. You can change your mind any time in "
         + "settings."
@@ -24,6 +26,9 @@ enum ConsentWords {
 /// colour, size and weight in the row, neither one picked out.
 struct ConsentCard: View {
     let tier: Tier
+    /// The link's list, under the line once tapped; UNSTIR_CONSENT=sends opens with it shown.
+    @State private var sends = Analytics.shared.opensSends
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -47,6 +52,21 @@ struct ConsentCard: View {
             Text(ConsentWords.body)
                 .font(.mono(12)).opacity(0.6).lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
+            if sends {
+                Text(ConsentWords.sends)
+                    .font(.mono(12)).opacity(0.6).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.opacity)
+            } else {
+                Button {
+                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { sends = true }
+                } label: {
+                    Text(ConsentWords.sendsLink).font(.mono(12)).foregroundStyle(Color.neonCyan)
+                        .frame(minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
             HStack(spacing: 14) {
                 answer(ConsentWords.yes, true)
                 answer(ConsentWords.no, false)

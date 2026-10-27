@@ -107,6 +107,8 @@ final class Analytics {
     /// Whether the menu asks the question while it is undecided: on a plain launch, or a harnessed one with
     /// UNSTIR_CONSENT=ask.
     private(set) var asks = false
+    /// UNSTIR_CONSENT=sends: the question asks with its list of what is sent already open.
+    private(set) var opensSends = false
     private(set) var tally: Tally
     private var mode = Mode.off
     /// False for a harnessed or logging launch, whose consent and tally last only that launch.
@@ -130,13 +132,14 @@ final class Analytics {
 
     /// Before the first frame, so the menu's question shows at once and an answer given before `start` is kept.
     /// UNSTIR_ANALYTICS=log counts as a yes and stores nothing. Under any other harness flag nothing is stored either:
-    /// UNSTIR_CONSENT=yes or no answers for the launch, =ask asks.
+    /// UNSTIR_CONSENT=yes or no answers for the launch, =ask asks, =sends asks with the list open.
     func configure(env: [String: String], harnessed: Bool) {
         if env["UNSTIR_ANALYTICS"] == "log" {
             consent = .yes
         } else if harnessed {
             let c = env["UNSTIR_CONSENT"]
-            asks = c == "ask"
+            opensSends = c == "sends"
+            asks = c == "ask" || opensSends
             consent = asks ? .undecided : c.flatMap(Consent.init(rawValue:)) ?? consent
         } else {
             // Without a key the answer is still kept, for the build that has one.

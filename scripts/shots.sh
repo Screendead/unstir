@@ -311,7 +311,8 @@ shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's s
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
 # The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
-shot consent-ask "First launch: the analytics question over the dimmed menu, which waits for yes or no." CONSENT=ask
+shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
+shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends." CONSENT=sends
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
 shot consent-settings-on "The gear's sheet: the analytics switch on, and send log." CONSENT=yes SETTINGS=1
 shot consent-settings-off "The gear's sheet: the analytics switch off, and send log." CONSENT=no SETTINGS=1

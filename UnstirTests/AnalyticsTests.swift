@@ -252,12 +252,18 @@ final class AnalyticsTests: XCTestCase {
         let shot = Analytics(defaults: defaults)
         shot.configure(env: ["UNSTIR_CONSENT": "ask"], harnessed: true)
         XCTAssertTrue(shot.asks)
+        XCTAssertFalse(shot.opensSends)
         XCTAssertEqual(shot.consent, .undecided)
         shot.decide(false)
         XCTAssertEqual(defaults.string(forKey: "analytics.consent"), "yes")
         let plain = Analytics(defaults: defaults)
         plain.configure(env: ["UNSTIR_LEVEL": "3"], harnessed: true)
         XCTAssertFalse(plain.asks)
+        let sends = Analytics(defaults: defaults)
+        sends.configure(env: ["UNSTIR_CONSENT": "sends"], harnessed: true)
+        XCTAssertTrue(sends.asks)
+        XCTAssertTrue(sends.opensSends)
+        XCTAssertEqual(sends.consent, .undecided)
     }
 
     func testPacksSendOncePerInstall() async {
