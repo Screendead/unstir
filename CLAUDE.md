@@ -361,9 +361,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   storm lantern, the lifeboat, a breaking wave). `Dusk` (**FirstStirDuskBefore.swift**) is chapter 5, Dusk Before:
   five scenes, 9:30 back to 7:40 pm, in dusk rose (ink B0A6E8), the last in kitchen gold, drawn through `Brush` and
   `Cast` as the Rescue is, each scene's drawing a nested enum (`Dusk.Lamp`, `Walk`, `Lines`, `Gift`, `Stir`). Still
-  air, so no `drawOver` and no `drawLive`: its sky (`Dusk.skyTones`) climbs from night blue to the sunset's coral with
-  an afterglow over where the sun went down, the first scene's cloud bank is baked into its 9:30 sky only, so the
-  cross-fade fades it out, and the kitchens show the sky through their windows. Its levels follow the Rescue's in
+  air, so no `drawOver`: its sky (`Dusk.skyTones`, the palette's three sky tones and nothing between) climbs from
+  night blue to the sunset's coral with an afterglow over where the sun went down, and the kitchens show the sky
+  through their windows. Its one live body is the first scene's cloud bank (`Lamp.bank`), sinking below the horizon
+  by 9:00 at the glass's left edge, the one stretch of the quad's horizon no disc reaches; `Dusk.bodies` feeds
+  `testTheBodiesStayClearOfEveryDisc` as Dawn's do. A figure too tall for its core (scene 24's) is drawn whole outside
+  the vignette, its arms alone inside it. Its levels follow the Rescue's in
   `Level.firstStir` and take ids by place, so they become 21 to 25 once chapters 3 and 4 join; `testTheTable` finds
   them as the table's last five. The cup's one entry is the scene 25 scramble's bottom, so the stir is the pack's
   last heal. `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,

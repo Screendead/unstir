@@ -1038,11 +1038,15 @@ names and product ids, and Complete's promise to older owners.
     join). **Open for Jack, chapter 5** (Claude's recommendations, not decided):
     - Scene 24's gift held back: the outline has the child holding the float up to the light while the same picture
       shows it hanging in the window, two floats as the level opens. Built: the child's hands up to the window, empty,
-      so the opening and the end each show one float. The other choice is the outline's, as written.
-    - The cloud bank: built fading out over scene 21 (baked into the 9:30 sky only), not sinking as a live body, since
-      no stretch of the quad's horizon is clear of every disc wide enough to carry it. Recommend as built.
-    - The hand in scene 25 is a fist on the spoon with a cuff, no arm: a change may not cross its core's edge, so an arm
-      from the table's edge can't be drawn. Judge it at phone size.
+      so the opening and the end each show one float, the child standing under the window with both arms up to it.
+      The other choice is the outline's, as written.
+    Review fixes (2026-10-27, same branch): the quay runs under scene 23's hut and the boat is moored to two buoys; its
+    barometer is larger, the needle short of the glyphs; scene 24's figures are scaled to the kitchen (bodies drawn
+    outside the vignette, only arms and float inside the core) and its door is glazed, a horizon in rod 0's core;
+    scene 21's grandmother is 0.125 tall; scene 25 has a cloud, not a gull, a leaf hour hand, and the child's hand
+    joined to a sleeve from the table's near edge (static, so it may leave the core). The cloud bank now sinks as a
+    live body at the glass's left edge (x -0.985 to -0.83), the one stretch of horizon clear of every disc, so it is
+    no longer a departure; the sky uses the palette's three tones alone.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
