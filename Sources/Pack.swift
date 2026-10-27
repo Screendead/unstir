@@ -34,8 +34,22 @@ enum Pack: String, CaseIterable, Sendable {
     /// Levels 1 to `taste` play without the pack.
     var taste: Int { 3 }
 
-    /// Empty until the pack's content lands.
-    var levels: [Level] { [] }
+    /// How many levels its design plans; until it has them all, its card says more arrive in an update.
+    var planned: Int {
+        switch self {
+        case .firstStir, .lens: 25
+        case .escapement: 30
+        }
+    }
+
+    /// Numbered from 1 by place, each the pack's own `id`; empty until the pack's content lands.
+    var levels: [Level] {
+        switch self {
+        case .firstStir: Level.firstStir
+        case .lens: Level.lens
+        case .escapement: Level.escapement
+        }
+    }
 
     func id(_ number: Int) -> String { "\(prefix)-\(number)" }
 
@@ -66,6 +80,10 @@ enum Pack: String, CaseIterable, Sendable {
 }
 
 extension Level {
+    static let firstStir: [Level] = []
+    static let lens: [Level] = []
+    static let escapement: [Level] = []
+
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
     /// never leaves progress under an id a real level will take.
     var keepsProgress: Bool { pack.map { p in p.levels.contains { $0.id == id } } ?? true }

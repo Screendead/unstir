@@ -1,0 +1,8 @@
+// Aptabase's app key stays out of the repo: put `APTABASE_KEY = A-EU-...` in Config/Local.xcconfig (gitignored), which
+// Xcode's own builds and archives read, or set APTABASE_KEY in the shell for scripts/build-ios.sh. Empty leaves
+// analytics off.
+APTABASE_KEY =
+// YES files a Release build's events as Debug in Aptabase, so playtests on the developer's phone stay out of real
+// players' numbers. scripts/run-ios.sh sets it for every build it installs.
+ANALYTICS_PLAYTEST =
+#include? "Local.xcconfig"

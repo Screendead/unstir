@@ -431,6 +431,10 @@ until the last tank is a child stirring a cup of tea.
 Some rods zoom instead of turning, so you read how big a core has grown against a halftone dot screen that never lies
 about scale.
 
+Superseded in part by Jack's call L1 (round 3: the hard lens, magnify only, x1.3, a rim inside the core) and by the
+drafts in `docs/lens-design.md` (branch `lens-design`), which drop the spiral and pent; the entry below is the
+original pitch.
+
 - **Role.** Built first, because its map already runs in Swift and Metal on the lab branch, so it proves the pack
   pipeline (the `Pack` type, StoreKit, the shelf and card) for the others.
 - **Buyer.** The comic and pop-art reader (halftone, Ben-Day dots, risograph prints), who is also the core Unstir
@@ -734,6 +738,25 @@ names and product ids, and Complete's promise to older owners.
 5. First Stir's story outline (25 scenes and their vignettes) for Jack's approval, then Claude draws all 25 scenes
    (Jack's call 3, no illustrator) to an art spec: single-weight neon line, the chapter palettes, up readable in every
    lit core, each figure change inside its own rod's core.
+   Written 2026-10-25 on `firststir-outline`: `docs/first-stir-outline.md` holds the story (one night
+   told backwards, dawn to the teacup), the five chapters with their palettes and time windows, 25 scenes of three
+   vignettes each (layout, rods, held back and played, heal order), the art spec, and eight open points with Claude's
+   recommendations (approve the story; three vignettes a scene; the night tiled across the pack; the time alone as the
+   caption; a plain heal steps the time back; the lab's light rule; the lab harbour as scenes 16 and 1; the end film
+   from the baked states). `scripts/first-stir-compositions.py` draws composition plans for scenes 1, 12 and 14. Left:
+   Jack's answers, then the art and scrambles (43).
+   Jack's calls (2026-10-26, round 9), recorded in the outline under each open point (PR #41):
+   - *FS = A:* the story approved as written; the art for all 25 pictures starts next.
+   - *F1 = A:* three changes (vignettes) per picture, 75 in the pack, 150 drawings (point 2).
+   - *F2 = A:* one night across the pack, each picture about half an hour, the sky carrying on from one to the next
+     (point 3).
+   - *F3 = A:* a clock, a time under the tank like "4:10 am" that steps back every time the player undoes a twist
+     (point 4). The outline had the time under the title; Jack's question put it under the tank, so it goes there.
+   - *F4 = A:* each change inside its own core, checked by a test over every picture; level 1's boat stern and lamp
+     shards, which break it, are redrawn in the art pass (point 6).
+   - *F5 = A:* the lab harbour twice, as picture 16 (midnight) and its dawn view as picture 1 (point 7).
+   Still open: point 5 (whether a heal with no vignette also steps the sky and rain back, beyond F3's clock) and point
+   8 (the night forwards film). Left: the art and scrambles (43).
 6. Lens go/no-go: port the lab zoom onto a halftone test picture, film ±1 to ±3 steps on the phone and set the rate
    (1.2, or 1.25 to 1.33 if one step doesn't read); film a zoom seam over and under a twist seam and cold-read which
    is newest; compare shrunk cores against a supersampled reference for glitter, since zoom isn't area-preserving.
@@ -742,6 +765,20 @@ names and product ids, and Complete's promise to older owners.
    core) is on `lab-lens`: the order reads partly (a whole rim means the lens is newest), and the magnified area
    drops to 36% of the disc. Jack's call (2026-10-25, L1): the hard lens, with a phone test next. The reviewers had
    recommended shelving it; trying it is Jack's choice.
+   Phone test planned 2026-10-25 (`docs/lens-design.md` section 3, branch `lens-design`): count, order on tri, quad
+   and pent, the two lab levels, the rim band at +3 and +5, with a go/no-go. Not yet run: it needs Jack and the phone.
+   The rim break is computed weak on quad and pent (1.7 and 1.1 dot pitches for a 1-step twist, against 6.2 on tri),
+   which the test checks.
+   First phone session (2026-10-26, played, not the stills): Jack played hard lens 2 (quad) and found the lens rods
+   too small to make out their rims, so the order was very hard to read. His calls from it, built on `lab-lens`
+   (65c049b): a lens follows the finger up and down instead of turning, up zooming in ("way better"), and x2 a step,
+   good after x1.6. He suggested lenses only on big rods, or bigger steps, as two ways out; which one is open (eye's
+   two big rods as lenses, radius 0.58, are `eyeZoom`, lab entry `lens-hard-3`, where he judged x2). Not yet checked at x2: glitter in the rim band at +2 and +3, and whether the order
+   reads on eye's lenses. The count and order stills were not run. These change the draft's table (tri and quad
+   rows), its x1.3 and its "clockwise in", and the lens-pack PR's port.
+   Jack's call (2026-10-26, round 9, L1 = A): the phone test before any of Lens's art is drawn; the story and levels
+   wait for its result. The session above is its first part. `docs/lens-design.md` now opens with what the session
+   decided and which parts of the draft it supersedes (PR #42); the table itself is not redone.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
    Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
@@ -756,15 +793,26 @@ names and product ids, and Complete's promise to older owners.
    rim grab, the rim lesson, the bezel's hit area and the spin gesture key on motion; touch keys on kind, with new
    `Grab` cases for a ratchet tap and a cup dive; par's comment and the solver's turn moves key on motion; maelstrom's
    tests unchanged.
+   Built 2026-10-25 on `packs-ground` (not merged): `Level.motion` (none, tank, crank) and `Level.kind(of:)` (working,
+   seized, socket, ratchet, from `seized`, `sockets` and `ratchets`); maelstrom and `UNSTIR_SEIZED` set `.tank`, and a
+   test pins that every level turns its tank exactly where a knob is seized. `Grab.ratchet` holds nothing and calls
+   `Game.wait`, a stub. Cup is left out: The Well is cut (R9) and nothing else needs a dive. Left: the ratchet's tick
+   (to-do 34, Escapement), the socket and the crank (charybdis: no level has either, and a crank would turn the tank
+   until its planets are built), and a harness switch for ratchets and sockets.
 9. A `Pack` type outside `Tier` (name, id prefix, levels, free-taste count, product id, card), a `pack` field on
    `Level` as the lab branch's `lab` field is, bests by id, and a test that no pack best opens a tier.
    Merged 2026-10-25 (PR #21, `store`).
 10. A merge hook on `Stacked`, so an entry merging into another hands over its payload (First Stir's tag sets union;
     `Game.Entry`'s pushed mark stays the landing entry's), with tests that endless's brim behaves exactly as today.
+    Built 2026-10-25 on `packs-ground` (not merged): `Stacked.absorb`, called on every merge before a pop;
+    `Game.Entry.tags` unions. Left for to-do 40: the level's tags per scramble entry, which `Game` starts empty.
 11. Pack undo (the free tiers' rule, that an undo leaves the uncovered stir open, merged 2026-10-25, PR #19): a
     snapshot per move, restored by undo from the shared bank, with tests per pack (First Stir's tags,
     Escapement's tick, Lens's zoom entries).
-   Not built. The free tiers' undo rule is merged (PR #19).
+   Built 2026-10-25 on `packs-ground` (not merged): `Game` keeps the stack as each stir began, and a pack level's undo
+   restores it from the shared bank; the free tiers' undo rule is merged (PR #19) and unchanged. Tested on a stack
+   where the two differ. Left: the per-pack tests once each pack's state exists (First Stir's tags, Escapement's tick,
+   which must ride in the snapshot, Lens's zoom entries).
 12. StoreKit 2: a non-consumable per pack plus Complete; purchase, restore, the `Transaction.updates` listener,
     revocation and refunds, pending Ask to Buy; entitlements read at launch; a StoreKit configuration file and
     StoreKit test-session tests, all before the paid account exists.
@@ -780,11 +828,37 @@ names and product ids, and Complete's promise to older owners.
     tier switcher, then the chosen one built.
    Built 2026-10-25; Jack has called it (round 3, S2, below): three working mock-ups on local branch `shelf-mockups`, switched by
    `UNSTIR_SHELF=a|b|c`: a row under the strip, a place past maelstrom, or a dock of covers. Recommended: B.
-   Jack's call (2026-10-25, S2): C, the dock of live covers along the bottom of the menu. Not yet built in the app.
+   Jack's call (2026-10-25, S2): C, the dock of live covers along the bottom of the menu. Built 2026-10-25 on
+   `packs-shelf` (`PackDock`, Shelf.swift), ported from the mock-up, with Complete as the fourth cover. Left: each
+   pack's real cover art once its pictures exist (the covers are the mock-up's code-drawn placeholders); the dock's
+   cost on the phone (four live shader tanks at 30 Hz on the menu) is unmeasured.
+   Jack's calls (2026-10-26, round 9), built on `packs-shelf` (PR #40):
+   - *S1 = C, not until its levels ship:* in Release a pack's cover shows only once `Pack.levels` holds more than its
+     taste, and Complete's only once all three packs' do (Claude's reading of "its levels are in the game"); with none,
+     the dock is gone. Debug shows every cover. Backstop kept from B: any card whose levels aren't all in
+     (`Pack.planned`) says "More levels arrive in an update." (`testAPackGoesOnTheShelfOnceItsLevelsAreIn`).
+   - *D1 = A, the defaults as built:* the buy button above the list of levels; leaving a free level opened from a card
+     goes back to the card; Complete the fourth cover, labelled "Bundle"; the covers move while the menu is up, their
+     battery cost still to measure on the phone.
+   - Jack (2026-10-26, on the phone): a failed purchase's "didn't go through" stayed after back, even on another pack's
+     card. Fixed on `packs-shelf`: every change of card forgets it, one that lands after its card changed is dropped,
+     and Complete's failure, bought from a pack's card, shows under Complete's line there, not as the pack's state.
+     Unchecked on the phone.
 16. The pack card: a looping 7-second clip, what the pack assumes, the free taste, price, buy and restore; levels past
     the taste show it; Music Box's says "needs sound".
+   Built 2026-10-25 on `packs-shelf` (`PackCard`): the price is StoreKit's `displayPrice` (`Store.prices`), the levels
+   list shows once a pack has levels (shot with Debug placeholders, `UNSTIR_CARDLEVELS`), and `Store.card(for:)` sends
+   any level past the taste of an unowned pack to its card (`RootView.show`). Left: the clips themselves (to-do 50; the
+   slot plays `<pack>-clip.mp4` from the bundle once it exists, the cover's loop until then); Music Box's "needs sound"
+   waits on Music Box; the card's words ("holds 25 panels in four issues" and so on) follow the design tables and
+   change with them.
 17. Accessibility on the new screens: Dynamic Type and VoiceOver for the shelf, card and purchase flow; Reduce Motion
     for the vignettes' crossfades, the zooms, the clock's steps and the dive.
+   Shelf and card done 2026-10-25 on `packs-shelf`: Dynamic Type through text styles (the card scrolls and stacks at
+   accessibility sizes, the dock caps at xxxLarge with the large content viewer), VoiceOver labels, values and an
+   announcement on a purchase state's change, Reduce Motion stills the covers, clip and pending dot and fades the card.
+   Shots `shelf-menu-ax` and `card-lens-ax`. Not checked with VoiceOver running on the phone. The vignettes, zooms,
+   clock and dive wait on their packs.
 18. Harness: `UNSTIR_PACK`, `UNSTIR_OWNED` (one launch, never stored), First Stir's played vignettes, Escapement's
     provisional tick and lost state, with a shot and a film line per pack.
    Merged 2026-10-25 (PR #21) for the store side: `UNSTIR_PACK`, `UNSTIR_OWNED`, `UNSTIR_STORE`. The per-pack
@@ -814,7 +888,12 @@ names and product ids, and Complete's promise to older owners.
     `testVisibleSmudgeIsNotSolved` that every step of every rod moves contrasting pixels.
 31. Lens: iris and nautilus knobs, the drag's count reading zoom steps, and haptic detents.
 32. Lens: 25 panels of art (an original wordless heist in pop-art objects) and the issue pages.
+   Story drafted 2026-10-25 (`docs/lens-design.md` section 1, branch `lens-design`): "The Switch", a reverse heist,
+   each panel's beat and the clue its lens core holds. Waits on Jack (open point 2); no art drawn.
 33. Lens: the level table (25), solver-checked, to Jack before it goes into code.
+   Drafted 2026-10-25 (`docs/lens-design.md` section 2, branch `lens-design`): layouts, lens rods and scrambles as
+   design intent, checked against the hard lens's rules by `scripts/lens-table.py`; no spiral (open point 1), no pent
+   (open point 3). Every par TBD until rod kinds land (27 to 29); par is at most the depth.
 34. Escapement: the ratchet knob kind and its tap, and the tick rule (lands on lift, lifts out on a re-grab of the
     open stir, sealed by the next commit of another knob or a ratchet tap, solves on the spot, the clock stopping once
     E is empty), with a test for each case.
@@ -849,6 +928,8 @@ names and product ids, and Complete's promise to older owners.
     after its heal (`Layout.removable`), over every heal order.
 42. First Stir: vignettes baked on demand within a memory budget measured on the phone.
 43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
+   The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), approved by Jack (2026-10-26, round 9);
+   no art or scrambles yet.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
@@ -856,6 +937,8 @@ names and product ids, and Complete's promise to older owners.
 46. Free taste: the first three levels of each pack teach its rule without words; cold-read each on a new player.
    Escapement's three drafted on `escapement-design` (2026-10-25): 1 the tick, 2 the wait (the mock-up), 3 the dashed
    edge, after the lab's demonstration. The cold read waits on the pack's build.
+   Lens's taste drafted 2026-10-25 (`docs/lens-design.md`, levels 1 to 3, all tri): the knob and the dot ruler, a
+   broken rim, a whole rim. Not built or cold-read.
 47. The daily archive: a calendar screen, bests under `daily-yyyymmdd` ids, back-filled to Jack's date, opened by any
     purchase.
    Jack's call (2026-10-25, round 6): back-filled to 30 days before launch day (`Share.firstDay`).
@@ -863,7 +946,8 @@ names and product ids, and Complete's promise to older owners.
 49. The daily share line (plan step 2), separate from sharing, before TestFlight.
    Merged 2026-10-25 (PR #24). Jack's call (2026-10-25, D1): daily #1 is launch day; until `Share.firstDay` is set,
    the line shows the date instead of a number.
-50. Clips and images: each pack's 7-second clip and promoted in-app purchase art, filmed with film.sh, plus a sound-on
+50. Jack (2026-10-26, on the phone): the placeholder loops "don't show off what it does". Each card's clip must show the pack's own mechanic: Lens's lenses zooming, Escapement's clock ticking, First Stir's picture changing as it unstirs. They wait on each pack's content merging, so the card can stir with the real code (no committed media).
+    Clips and images: each pack's 7-second clip and promoted in-app purchase art, filmed with film.sh, plus a sound-on
     cut for social video.
 51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
     agreement, tax and banking, and the in-app purchases with review screenshots and promoted purchases.
@@ -871,6 +955,9 @@ names and product ids, and Complete's promise to older owners.
     clock with 35F9.1, and whether reading `kern.monotonicclock` needs a reason (the open question in "Where things
     stand"); then the privacy label.
    Merged 2026-10-25 (PR #20).
+   With analytics (branch `analytics`) the manifest also declares product interaction, coarse location and purchase
+   history (the `purchased` event and the snapshot's packs owned), each unlinked, not tracking, for analytics; the
+   App Store privacy label must say the same.
 53. The age-rating questionnaire.
 54. The store page: screenshots and a preview leading with the free game, then the packs, each pack labelled as a paid
     add-on, captioned for muted playback.
@@ -891,8 +978,27 @@ names and product ids, and Complete's promise to older owners.
    already stores and sends one summary on days 2, 7 and 30, with no ID tying it to the player's other rows (e.g.
    `snapshot`, day 7, days played 1,2,5, furthest V9, lens card seen, taste finished, not bought, 14 undos); grouping
    rows by their contents answers questions such as whether players who finished a taste came back. Plus the send-log
-   button for full touch histories from testers who send one. Unchecked: whether Aptabase limits the properties an
-   event can carry.
+   button for full touch histories from testers who send one. Aptabase's server (`EventBody.cs`) takes property keys
+   of up to 40 characters and event names of up to 60, and cuts string values at 180; it drops, still answering 200,
+   events over a day old and any whose session began over 7 days ago.
+   The analytics core is built on `analytics` (`Analytics.swift`, its own sender with a queue on disk rather than the
+   pre-1.0 SDK, which holds events only in memory).
+   Jack's calls (2026-10-26, round 8), built on `analytics` (PR #38):
+   - *Q = A:* the question is a card over the menu at first launch, and the menu waits for an answer; Yes and No are
+     the same control, same type, colour and size, neither preselected (mock-up style A, `consent-mockups`).
+   - *S = A:* a gear beside the menu's title opens a dark sheet with the analytics switch and "send log", which hands
+     the flight recorder to the share sheet.
+   - *N = C:* under No nothing is recorded for analytics and the tally is cleared but for the install's day, so day
+     numbers stay right; a later Yes starts clean. Bests and started flags stay. Undecided keeps recording.
+   - *K = B:* `returned` goes for any day number not yet sent, and when several snapshots are due at once only the
+     newest goes.
+   Jack's call (2026-10-26, round 9), built on `analytics` (PR #38):
+   - *C1 = C, one line and a link:* the card reads "Help improve Unstir?", then "Let the game tell us how you play.
+     Never who you are.", then a cyan link "What does it send? ›" that opens round 9's option A, the full list of what
+     is sent, under the line (Claude recommended B, the shorter text). Yes and No stay equal. Shots `consent-ask` and
+     `consent-sends` (`UNSTIR_CONSENT=sends`).
+   Still open: under N, clearing the tally clears what was sent once too, so a player who says Yes, No, then Yes sends
+   `installed` (and any snapshot due) again and counts as a second install; keeping the sent marks would avoid that.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
