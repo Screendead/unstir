@@ -200,7 +200,7 @@ struct Pen {
     var sketch: Sketch?
 
     final class Sketch {
-        var ops: [(path: Path, shading: GraphicsContext.Shading, stroke: Bool, clip: Path?)] = []
+        var ops: [(path: Path, shading: GraphicsContext.Shading, stroke: Bool, clip: Path?, blur: Double)] = []
     }
 
     private var px: CGAffineTransform { t.concatenating(CGAffineTransform(a: r, b: 0, c: 0, d: r, tx: r, ty: r)) }
@@ -239,13 +239,19 @@ struct Pen {
     func fill(_ path: Path, _ shading: GraphicsContext.Shading) { put(path, shading, stroke: false) }
     func stroke(_ path: Path, _ colour: Color, _ opacity: Double = 1) { put(path, .color(colour.opacity(opacity)), stroke: true) }
 
-    private func put(_ path: Path, _ shading: GraphicsContext.Shading, stroke: Bool) {
+    private func put(_ path: Path, _ shading: GraphicsContext.Shading, stroke: Bool, blur: Double = 0) {
         if let sketch {
-            sketch.ops.append((path, shading, stroke, clip))
+            sketch.ops.append((path, shading, stroke, clip, blur))
             return
         }
+        Self.lay(ctx, path, shading, stroke: stroke, clip: clip, blur: blur * r, style: style)
+    }
+
+    private static func lay(_ ctx: GraphicsContext, _ path: Path, _ shading: GraphicsContext.Shading, stroke: Bool, clip: Path?,
+                            blur: CGFloat, style: StrokeStyle) {
         var c = ctx
         if let clip { c.clip(to: clip) }
+        if blur > 0 { c.addFilter(.blur(radius: blur)) }
         if stroke { c.stroke(path, with: shading, style: style) } else { c.fill(path, with: shading) }
     }
 
@@ -273,19 +279,16 @@ struct Pen {
         q.sketch = sketch
         draw(q)
         neon(ctx, r: r, glows: Rescue.tight) { g in
-            for op in sketch.ops {
-                var c = g
-                if let clip = op.clip { c.clip(to: clip) }
-                if op.stroke { c.stroke(op.path, with: op.shading, style: style) } else { c.fill(op.path, with: op.shading) }
-            }
+            for op in sketch.ops where op.blur == 0 { Self.lay(g, op.path, op.shading, stroke: op.stroke, clip: op.clip, blur: 0, style: style) }
         }
+        for op in sketch.ops where op.blur > 0 { Self.lay(ctx, op.path, op.shading, stroke: op.stroke, clip: op.clip, blur: op.blur * r, style: style) }
     }
-    /// A soft round of light, `radius` across, fading out from (x, y).
+
+    /// A soft round of light about `radius` across at (x, y): a flat fill under a blur, as the neon glow is, since the art
+    /// spec allows no gradient but the sky and sea.
     func glow(_ x: Double, _ y: Double, _ radius: Double, _ colour: Color, _ strength: Double) {
-        fill(circle(x, y, radius), .radialGradient(
-            Gradient(stops: [.init(color: colour.opacity(strength), location: 0), .init(color: colour.opacity(strength * 0.35), location: 0.4),
-                             .init(color: colour.opacity(0), location: 1)]),
-            center: point(x, y), startRadius: 0, endRadius: radius * r * (t.a * t.a + t.b * t.b).squareRoot()))
+        put(circle(x, y, radius * 0.4), .color(colour.opacity(strength)), stroke: false,
+            blur: radius * 0.28 * (t.a * t.a + t.b * t.b).squareRoot())
     }
 }
 
@@ -408,9 +411,7 @@ enum Cast {
         }
         if beam {
             let tip = 0.08 + reach
-            pen.fill(pen.poly([(0.08, -0.43), (tip, -0.43 - reach * 0.25), (tip, -0.38 + reach * 0.25), (0.08, -0.38)]),
-                     .linearGradient(Gradient(colors: [Rescue.flame.opacity(0.55), Rescue.flame.opacity(0)]),
-                                     startPoint: pen.point(0.08, -0.4), endPoint: pen.point(tip, -0.4)))
+            pen.fill(pen.poly([(0.08, -0.43), (tip, -0.43 - reach * 0.25), (tip, -0.38 + reach * 0.25), (0.08, -0.38)]), Rescue.flame, 0.3)
         }
     }
 
@@ -509,8 +510,7 @@ enum HomeLight {
         let shed = pen.poly([(0.42, ground), (0.42, 0.3), (0.72, 0.22), (1, 0.3), (1, ground)])
         let door = pen.rect(0.44, 0.38, 0.54, ground)
         pen.fill(shed, .black)
-        pen.fill(door, .linearGradient(Gradient(colors: [Rescue.torch.opacity(0.55), Rescue.torch.opacity(0.2)]),
-                                                  startPoint: pen.point(0, 0.38), endPoint: pen.point(0, ground)))
+        pen.fill(door, Rescue.torch, 0.35)
         quayside.addPath(pen.seg(-1, ground, 1, ground))
         // A crate of blankets waiting by a bollard, its rope coiled, in rod 3's core.
         quayside.addPath(pen.rect(-0.3, 0.47, -0.17, 0.53))
@@ -580,8 +580,7 @@ extension Rescue {
     static func torchlight(_ pen: Pen, x: Double, y: Double, k: Double, beam: Double) {
         let body = pen.rect(x - k, y - k * 0.3, x, y + k * 0.3)
         pen.fill(pen.poly([(x, y - k * 0.3), (x + beam, y - k * 0.3 - beam * 0.35), (x + beam, y + k * 0.3 + beam * 0.35), (x, y + k * 0.3)]),
-                     .linearGradient(Gradient(colors: [torch.opacity(0.6), torch.opacity(0)]), startPoint: pen.point(x, y),
-                                           endPoint: pen.point(x + beam, y)))
+                 torch, 0.3)
         pen.fill(body, .black)
         pen.lit(tight) { g in
             g.stroke(body, ink)
