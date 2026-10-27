@@ -119,8 +119,9 @@ struct Level: Hashable, Sendable {
         seized.contains(knob) ? .seized : sockets.contains(knob) ? .socket : ratchets.contains(knob) ? .ratchet : .working
     }
 
-    /// 19 to 27 eased (2026-10-27): the frozen generator dealt them from seeds 1, 3, 36, 8, 249, 374, 4, 12 and 46, picked
-    /// with scripts/plughole-levels.sh so each layout's curve rises.
+    /// 19 to 27 eased (2026-10-27), dealt by the frozen generator as layout-depth-inversions #seed: pent-5-0 #1,
+    /// pent-6-0 #3, pent-6-1 #36, pent-7-1 #8, hex-6-0 #249, hex-7-0 #374, hex-8-1 #4, hex-9-1 #12, hex-9-2 #46, picked by
+    /// scripts/plughole-levels/pick.py so each layout's curve rises.
     static let plughole: [Level] = ([
         (.tri, "0:+4", "Turn it back.", "Turn a rod to look. Let go where you started and nothing happens."),
         (.tri, "1:-7", "Further than it looks.", ""),

@@ -6,6 +6,7 @@
 # Prints a TSV line per level or scramble: level, layout, entries, optimum, untwisting, hidden, whole as dealt, right
 # moves per step, forced steps, scramble. `search` deals seeded scrambles with the frozen generator and keeps those whose optimum is
 # their entry count. See scripts/plughole-levels/main.swift for what each measure means.
+# scripts/plughole-levels/pick.py <pool dir> <Levels.swift> picks 19-27 from a pool of `search` TSVs.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/plughole-levels
