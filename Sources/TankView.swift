@@ -1963,7 +1963,7 @@ private struct TierUp: View {
             .background { Capsule().strokeBorder(to.sweep, lineWidth: 1.5).shadow(color: to.glow, radius: glint ? 10 : 5) }
             .opacity(open ? 1 : 0.45)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Sounding())
         .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. Par every \(from.name) level to open it")
         .onAppear {
             guard open, !reduceMotion else { return }

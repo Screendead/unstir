@@ -370,12 +370,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   turned. Beds loop under the menu and each tier (`Level.bed`; daily, endless, the sandbox and the packs take
   plughole's, as does vortex until it has one), and a new one crossfades in over the old at equal power across two
   decks. Only a bed that is playing stays decoded, and none in the background. `Sounding`, set on `RootView`, is the
-  app's button style: a button taps as it acts, and undo and reset have sounds of their own. The menu's tier names, rows
-  and `sound:` switch stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when
-  it opens, the switch only when it picks, neither as a tier swipe lifts over it. Nothing sounds during a drag but the
-  detent's tick, and a sound never tells the player anything the picture doesn't. The session is ambient, and while
-  another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
-  unless `UNSTIR_SOUND=1`; the menu's `sound:` switch turns the set off.
+  app's button style: a button taps as it acts, and undo and reset have sounds of their own. A button that sets its own
+  `.plain` style has none, so every such button that acts takes `Sounding` instead: the gear, the consent card's answers
+  and its link, the settings sheet's switch and log, the pack cards' and the dock's buttons and the tier-up. The menu's
+  tier names, rows and `sound:` switch stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a
+  row taps only when it opens, the switch only when it picks, neither as a tier swipe lifts over it. Nothing sounds
+  during a drag but the detent's tick, and a sound never tells the player anything the picture doesn't. The session is
+  ambient, and while another app plays music the bed steps aside and the effects still sound. A harness launch or the
+  test host is silent unless `UNSTIR_SOUND=1`; the menu's `sound:` switch turns the set off.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a

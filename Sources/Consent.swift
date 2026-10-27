@@ -65,7 +65,7 @@ struct ConsentCard: View {
                         .frame(minHeight: 44, alignment: .leading)
                         .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(Sounding())
             }
             HStack(spacing: 14) {
                 answer(ConsentWords.yes, true)
@@ -89,7 +89,7 @@ struct ConsentCard: View {
                 .overlay(Capsule().strokeBorder(Color.text.opacity(0.4), lineWidth: 1))
                 .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Sounding())
     }
 }
 
@@ -104,7 +104,7 @@ struct NeonToggle: ToggleStyle {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Sounding())
         .accessibilityAddTraits(.isToggle)
         .accessibilityValue(configuration.isOn ? "on" : "off")
     }
@@ -154,7 +154,7 @@ struct SettingsSheet: View {
                     .padding(.vertical, 12)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(Sounding())
             }
         }
         .padding(.horizontal, 20)
