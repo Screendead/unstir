@@ -106,6 +106,8 @@ struct Level: Hashable, Sendable {
     var motion = Motion.none
     /// Nil is one move per entry. A level whose tank turns also counts its turns.
     var fixedPar: Int?
+    /// First Stir's scene, drawn in place of `picture`; each of its vignettes plays once no entry holds it back.
+    var story: Story?
     var par: Int { fixedPar ?? scramble.count }
 
     var sandbox: Bool { id == "sandbox" }

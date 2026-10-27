@@ -40,7 +40,9 @@ static float lensFlow(float u, float t, float a, float e) {
                 if (s < plateau && s > 1e-6) q = c + d * (lensFlow(s, -twists[4 * i + 3], plateau, lensEdge) / s);
                 continue;
             }
-            float a = -twists[4 * i + 3] * (1.0 - smoothstep(twists[4 * i + 2] >= 1.0 ? swirlPlateau : plateau, 1.0, s));
+            // A knob turns its core and lets go towards its edge; the swirl holds the glass's edge and lets go towards its centre.
+            float t = smoothstep(z >= 1.0 ? swirlPlateau : plateau, 1.0, s);
+            float a = -twists[4 * i + 3] * (z >= 1.0 ? t : 1.0 - t);
             float cs = cos(a), sn = sin(a);
             q = c + float2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
         }

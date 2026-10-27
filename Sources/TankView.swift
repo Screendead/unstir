@@ -138,7 +138,7 @@ final class Game {
 
     init(level: Level, tankTurned: Bool? = nil, swirled: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil) {
         self.level = level
-        entries = level.scramble.map { Entry(twist: $0, pushed: false) }
+        entries = Self.dealt(level)
         brim = level.run?.brim ?? 0
         firstTry = level.run != nil || !Best.started(level.id)
         self.tankTurned = tankTurned ?? Best.tankTurned
@@ -154,6 +154,17 @@ final class Game {
             anchor = Best.anchor
         }
         storesBank = bank == nil
+    }
+
+    /// The scramble's entries. In a story each holds back the vignette in its own rod's core, if that core has one.
+    private static func dealt(_ level: Level) -> [Entry] {
+        level.scramble.map { Entry(twist: $0, pushed: false, tags: level.story?.vignettes.intersection([$0.rod]) ?? []) }
+    }
+
+    /// The story's vignettes played: each once no entry holds it back. A function of the stack alone, so undo and reset
+    /// unplay them, and a win the fine pass calls on a stack that only looks solved plays the rest.
+    var played: Set<Int> {
+        level.story.map { $0.vignettes.subtracting(entries.flatMap(\.tags)) } ?? []
     }
 
     /// Practice saves nothing.
@@ -191,7 +202,7 @@ final class Game {
     /// A turn of knob `rod`, which stirs whatever fluid the tank has brought under it.
     func commit(rod: Int, steps: Int) {
         guard !finished else { return }
-        let slot = self.slot(of: rod), was = entries
+        let slot = self.slot(of: rod), was = entries, playedWas = played
         // Every entry of the scramble's that pops is a heal, even where an entry that the merge lets fall cancels it.
         var healed = 0
         let result = level.kind(of: rod) != .working ? .refused
@@ -219,8 +230,10 @@ final class Game {
             pushes += 1
             if level.run != nil { brim += 1 }
         }
-        // A run's heal ring marks only what settles the brim: cancelling the player's own push flashes white, as a merge.
-        if level.run == nil ? result == .cancelled : healed > 0 { cancels += 1; cancelledRod = rod }
+        // A run's heal ring marks only what settles the brim, and a story's only a commit that plays a vignette:
+        // cancelling the player's own push flashes white, as a merge.
+        let heals = level.story != nil ? !played.isSubset(of: playedWas) : level.run == nil ? result == .cancelled : healed > 0
+        if heals { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
         Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
@@ -296,6 +309,7 @@ final class Game {
             undos += 1
             bank -= 1
             if storesBank { Best.undos = bank }
+            Analytics.shared.undid()
         }
         Log.write("undo \(last) moves=\(moves) bank=\(bank) pushes=\(pushes) stack=\(stack.count) \(stack)")
         settle()
@@ -305,7 +319,7 @@ final class Game {
     /// has already settled on.
     @discardableResult func reset() -> Bool {
         guard !checking, level.run == nil else { return false }
-        entries = level.scramble.map { Entry(twist: $0, pushed: false) }
+        entries = Self.dealt(level)
         history = []
         openBefore = []
         before = []
@@ -403,6 +417,7 @@ final class Game {
                         self.settleBrim(1)
                         self.noteBrim(from: was)
                     }
+                    // A story's vignettes left play with the solve wave, which rings for them.
                     self.entries = []
                 }
                 self.finish()
@@ -422,6 +437,7 @@ final class Game {
         } else if solved && counts && level.keepsProgress {
             Best(over: over, seconds: seconds, clean: clean).save(level.id)
         }
+        Analytics.shared.finished(self)
     }
 }
 
@@ -485,6 +501,10 @@ struct LevelView: View {
     @Environment(\.scenePhase) private var phase
     private let still: Bool
     private let autoplay: Bool
+    /// UNSTIR_PACE: the seconds autoplay and UNSTIR_MOVES wait before each move.
+    private let pace: Double
+    /// UNSTIR_BARE: the picture drawn unstirred, as the stack has played it.
+    private let bare: Bool
     private let moves: [Twist]?
     private let fingered: Bool
     private let bench: Bool
@@ -568,6 +588,8 @@ struct LevelView: View {
         _eased = State(initialValue: game.solved)
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
+        pace = harness?.pace ?? 0.3
+        bare = harness?.bare ?? false
         moves = harness?.moves
         fingered = harness?.finger ?? false
         brimDemo = harness?.brimDemo ?? false
@@ -590,7 +612,7 @@ struct LevelView: View {
             let side = min(geo.size.width, geo.size.height - 290) / 1.045
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
-                    Button("\u{2039} levels", action: onExit)
+                    Button("\u{2039} levels", action: leave)
                     Spacer()
                     if game.level.sandbox {
                         control(game.level.picture.rawValue, game.nextPicture)
@@ -641,7 +663,7 @@ struct LevelView: View {
                     .padding(.top, 14)
                     .overlay(alignment: .top) {
                         if showResult {
-                            ResultCard(game: game, onExit: onExit, onNext: onNext)
+                            ResultCard(game: game, onExit: leave, onNext: onNext)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
@@ -772,7 +794,17 @@ struct LevelView: View {
             // Where there is no opening, onChange's initial call may run before the refill.
             if shown == nil { badge = game.refilled }
         }
+        .onChange(of: phase) {
+            if phase == .background { Analytics.shared.suspended(game) }
+            if phase == .active { Analytics.shared.resumed() }
+        }
         .onDisappear { endPath(); endTwist(); Log.write("level \(game.level.id) exits \(state)") }
+    }
+
+    /// Back to the menu, the only way out short of a finish or the next tank.
+    private func leave() {
+        Analytics.shared.left(game)
+        onExit()
     }
 
     /// Everything that decides what the tank draws, as the log shows it.
@@ -841,7 +873,7 @@ struct LevelView: View {
     private func play() async {
         while !game.finished {
             let t = game.reachable
-            guard (try? await Task.sleep(for: .seconds(0.3))) != nil else { return }
+            guard (try? await Task.sleep(for: .seconds(pace))) != nil else { return }
             if let t {
                 liveRod = t.rod
                 withAnimation(.easeInOut(duration: 0.4)) { liveAngle = Double(t.steps) * Tank.step }
@@ -858,7 +890,7 @@ struct LevelView: View {
     private func play(_ moves: [Twist]) async {
         if fingered { await hand(moves); return }
         for m in moves {
-            guard (try? await Task.sleep(for: .seconds(0.3))) != nil, !game.finished else { return }
+            guard (try? await Task.sleep(for: .seconds(pace))) != nil, !game.finished else { return }
             if m.rod == Game.tank {
                 liveTurn = 0
                 withAnimation(.easeInOut(duration: 0.4)) { liveTurn = Double(m.steps) * game.level.layout.tankStep }
@@ -985,7 +1017,7 @@ struct LevelView: View {
         let held = liveTurn.map { $0 + (spin ?? 0) }
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
-        let unstirred = Unstirred(stack: stack, layout: game.level.layout, lenses: game.level.lenses, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
+        let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
@@ -1030,8 +1062,14 @@ struct LevelView: View {
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
-                PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
-                             clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
+                Group {
+                    if let story = game.level.story {
+                        StoryLayer(story: story, played: game.played, side: side, onStrike: { struck = true })
+                    } else {
+                        PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
+                                     clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
+                    }
+                }
                     .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
                         var u = unstirred
                         u.wave = SIMD3(Float(source.x), Float(source.y), Float(frozenWave ?? w))
@@ -1925,6 +1963,46 @@ struct ResultCard: View {
                 }
             }
             .font(.mono(15, .medium))
+            if game.level.id == game.level.tier.levels.last?.id, let up = game.level.tier.step(1) {
+                TierUp(from: game.level.tier, to: up, onNext: onNext, onExit: onExit)
+            }
+        }
+    }
+}
+
+/// The last level of a tier goes on up the ladder, in the next tier's own colours. A tier still closed shows what
+/// opens it and goes back to the levels.
+private struct TierUp: View {
+    let from: Tier
+    let to: Tier
+    let onNext: (Level) -> Void
+    let onExit: () -> Void
+    @State private var glint = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        let open = to.isOpen()
+        Button { open ? onNext(to.levels[0]) : onExit() } label: {
+            VStack(spacing: 6) {
+                Text(open ? "up a notch" : "par every \(from.name.lowercased()) level to open")
+                    .font(.mono(11, .semibold)).tracking(open ? 3 : 0.5).textCase(open ? .uppercase : nil).opacity(0.6)
+                HStack(spacing: 10) {
+                    if !open { Image(systemName: "lock.fill").font(.system(size: 16, weight: .semibold)) }
+                    Text(to.name.uppercased()).font(.system(size: 26, weight: .black).width(.expanded)).tracking(5)
+                    if open { Text("\u{203A}").font(.system(size: 26, weight: .black)) }
+                }
+                .foregroundStyle(to.sweep)
+                .shadow(color: to.glow.opacity(glint ? 0.9 : 0.5), radius: glint ? 16 : 9)
+            }
+            .padding(.horizontal, 26).padding(.vertical, 14)
+            .background { Capsule().strokeBorder(to.sweep, lineWidth: 1.5).shadow(color: to.glow, radius: glint ? 10 : 5) }
+            .opacity(open ? 1 : 0.45)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. Par every \(from.name) level to open it")
+        .onAppear {
+            guard open, !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 1.1).repeatForever()) { glint = true }
         }
     }
 }

@@ -38,7 +38,8 @@ enum Tank {
         // Untouched outside the disc, as the shader leaves it: merges rely on rods that miss a point fixing it exactly.
         guard s < 1 else { return p }
         // Only the swirl is the size of the tank (`Layout.table`), so the radius picks its profile; the shader does the same.
-        let a = angle * profile(s, plateau: rod.z >= 1 ? swirlPlateau : plateau)
+        // The swirl's is turned inside out: the fluid sticks to the rim it turns and lets go towards the centre.
+        let a = angle * (rod.z >= 1 ? 1 - profile(s, plateau: swirlPlateau) : profile(s))
         return c + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a))
     }
 
