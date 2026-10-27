@@ -1039,10 +1039,18 @@ names and product ids, and Complete's promise to older owners.
     lightning crosses the sky in scenes 16 and 18 until about 10:50; scene 17 is indoors, rain only in its windows.
     Combine step: the Flood's last sky should end on `Storm.tones(30)`, and Dusk Before's first should open on
     `Storm.tones(-150)`, with a test like `testTheRescueOpensOnTheDawnsLastSky` at each seam; `testTheTable` starts the
-    Storm at 12:30 on its own until the Flood carries the time to it. Departures from the outline (Claude's calls within
-    it, not Jack's): scene 17 has three windows (a bay window for the view, a small one whose sill holds the candle, a low
-    one over the window seat), since the three vignettes' rods sit in three corners; scene 19's sign is a cobbler's boot
-    on a board high on a gable, where the small rod's core is clear of the big rods' discs.
+    Storm at 12:30 on its own until the Flood carries the time to it. `testTheStormsSkyMeetsItsNeighbours` pins both
+    ends as literals. Scene 19's sign is a cobbler's boot on a board high on a gable, where the small rod's core is
+    clear of the big rods' discs (the outline fixes no place for it). A renderer quirk: retouching scene 20 once showed
+    two single-pixel strays outside every core in vignette 0's footprint (the neighbour's lit window corner, the
+    chain's end), gone after nudging the flying shirt by 0.01; if they come back, nudge it again.
+    **Open for Jack, chapter 4** (Claude's recommendation, not decided):
+    - S1, scene 17's windows. The outline gives the upstairs room one window over the bay, with the candle on its sill
+      and the child on its window seat, but quad puts the three vignette rods in three corners (view top right, light
+      top left, child bottom left). A: three windows, the bay window for the view, a small high one whose sill holds the
+      candle, a low one over the window seat (built). B: one wide window, which means re-planning which rods hold which
+      beat (the light and the child would move off the outline's rods 3 and 2). Recommend A: the outline's rods and
+      beats stand, and an attic room with three windows reads as one room.
     Left: Jack's review of the art at phone size (the figures are small on the quad and pent scenes; on the Storm's pent
     and quad scenes the adults are near the spec's 0.12 minimum), the films, and chapters 3 and 5.
 44. First Stir: the "night forwards" end film.

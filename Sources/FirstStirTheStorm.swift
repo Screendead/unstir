@@ -479,13 +479,13 @@ enum Bedroom {
         room.addPath(pen.seg(0.48, -0.36, bay.x1, -0.36))
         room.addPath(pen.seg(-0.53, low.y0, -0.53, low.y1))
         // A bed in the right-hand corner, its quilt and pillow, so the corner reads as a floor.
-        let bed = pen.poly([(0.18, 0.5), (0.86, 0.5), (0.86, floor), (0.18, floor)])
+        let bed = pen.poly([(0.18, 0.44), (0.86, 0.44), (0.86, floor), (0.18, floor)])
         pen.fill(bed, .black)
         room.addPath(bed)
-        room.addPath(pen.seg(0.18, 0.4, 0.18, floor + 0.04))
-        room.addPath(pen.seg(0.86, 0.44, 0.86, floor + 0.04))
-        room.addPath(pen.ellipse(0.28, 0.48, 0.07, 0.025))
-        room.addPath(pen.curve(0.4, 0.5, 0.6, 0.46, 0.84, 0.5))
+        room.addPath(pen.seg(0.18, 0.34, 0.18, floor + 0.04))
+        room.addPath(pen.seg(0.86, 0.38, 0.86, floor + 0.04))
+        room.addPath(pen.ellipse(0.28, 0.42, 0.07, 0.025))
+        room.addPath(pen.curve(0.4, 0.44, 0.6, 0.4, 0.84, 0.44))
         // The ceiling lamp's flex, down to where its shade hangs in rod 3's core.
         room.addPath(pen.seg(-0.24, -0.76, -0.24, -0.56))
         pen.lit { $0.stroke(room, ink) }

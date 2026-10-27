@@ -165,6 +165,14 @@ final class FirstStirTests: XCTestCase {
         XCTAssertNotEqual(Rescue.skyTones(Rescue.homeLight.early), [dawn.zenith, dawn.middle, dawn.low])
     }
 
+    /// The Storm's seams as literals for the chapters either side to meet (F2): the lab's storm at 12:30, where the Flood
+    /// ends, and the lab's dusk at 9:30 pm, where Dusk Before opens.
+    func testTheStormsSkyMeetsItsNeighbours() {
+        let peak = Storm.tones(Storm.harbour.late), dusk = Storm.tones(Storm.washing.early)
+        XCTAssertEqual([peak.zenith, peak.middle, peak.low, peak.sea], [Tone(0x000000), Tone(0x0E0B3C), Tone(0x1E1960), Tone(0x0B2238)])
+        XCTAssertEqual([dusk.zenith, dusk.middle, dusk.low, dusk.sea], [Tone(0x03062A), Tone(0x4A2C78), Tone(0xC8605A), Tone(0x2A3E6A)])
+    }
+
     /// The caption is the scene's time (Jack, F3), stepping back a share of its window with each of the scramble's entries
     /// gone: never for a push of the player's own, back again on an undo, at the window's start once solved.
     @MainActor func testTheCaptionTellsTheTimeGoingBack() {
