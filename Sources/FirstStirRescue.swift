@@ -29,7 +29,7 @@ enum Rescue {
 
     static func layout(_ n: Int) -> Layout { [.pent, .eye, .quad, .tri, .pent][n - 6] }
 
-    /// Solver-checked: par, the entry count, is each one's optimum, and plain untwisting reaches it.
+    /// Par, the entry count, is each one's optimum, and plain untwisting reaches it (`testFirstStirParIsTheOptimum`).
     static func scramble(_ n: Int) -> String {
         [
             // Every vignette clear of the other discs, so any order plays them whole.
