@@ -10,30 +10,42 @@ enum Story: Hashable, Sendable {
     case harbour
     /// Chapter 1, Dawn After: scenes 1 to 5.
     case dawn(Dawn)
+    /// Chapter 2, The Rescue: scenes 6 to 10.
+    case rescue(Rescue)
 
     var vignettes: Set<Int> {
         switch self {
         case .harbour: [0, 1, 2]
         case .dawn(let scene): scene.vignettes
+        case .rescue(let scene): scene.vignettes
         }
     }
 }
 
 extension Level {
-    /// The pack's scenes in the outline's order, the night told backwards. A scene's caption is its time.
-    static let firstStir: [Level] = [
-        // Chapter 1, Dawn After (FirstStirDawn.swift). Tri's rods all overlap, so its stack orders every heal: the
-        // cottage's doorway lies in the boat's disc, so the cottage's one entry is the bottom.
-        Level(id: Pack.firstStir.id(1), pack: .firstStir, label: "01", title: "Sunrise", note: "", layout: .tri,
+    /// The pack's scenes in the outline's order, the night told backwards, numbered by place as `Pack.levels` reads
+    /// them. A scene's caption is its time.
+    static let firstStir: [Level] = (dawn + rescue).enumerated().map { i, level in
+        var level = level
+        level.id = Pack.firstStir.id(i + 1)
+        level.label = String(format: "%02d", i + 1)
+        return level
+    }
+
+    /// Chapter 1, Dawn After (FirstStirDawn.swift).
+    private static let dawn: [Level] = [
+        // Tri's rods all overlap, so its stack orders every heal: the cottage's doorway lies in the boat's disc, so the
+        // cottage's one entry is the bottom.
+        Level(id: "", pack: .firstStir, label: "", title: "Sunrise", note: "", layout: .tri,
               scramble: .parse("2:+5,1:-4,0:+3,1:+2", in: .tri), story: .dawn(.sunrise)),
-        Level(id: Pack.firstStir.id(2), pack: .firstStir, label: "02", title: "The gallery", note: "", layout: .quad,
+        Level(id: "", pack: .firstStir, label: "", title: "The gallery", note: "", layout: .quad,
               scramble: .parse("3:+4,0:-3,1:+5,2:-2", in: .quad), story: .dawn(.gallery)),
         // The child kneels in the dog's disc, so the pool's bottom entry lies under both of the dog's.
-        Level(id: Pack.firstStir.id(3), pack: .firstStir, label: "03", title: "The rock pool", note: "", layout: .tri,
+        Level(id: "", pack: .firstStir, label: "", title: "The rock pool", note: "", layout: .tri,
               scramble: .parse("1:+4,2:-3,0:+5,1:-2,2:+3", in: .tri), story: .dawn(.rockPool)),
-        Level(id: Pack.firstStir.id(4), pack: .firstStir, label: "04", title: "Righting the boat", note: "", layout: .eye,
+        Level(id: "", pack: .firstStir, label: "", title: "Righting the boat", note: "", layout: .eye,
               scramble: .parse("0:+3,1:-4,2:+5,3:-2,1:+2", in: .eye), story: .dawn(.righting)),
-        Level(id: Pack.firstStir.id(5), pack: .firstStir, label: "05", title: "Tea on the quay", note: "", layout: .quad,
+        Level(id: "", pack: .firstStir, label: "", title: "Tea on the quay", note: "", layout: .quad,
               scramble: .parse("2:+4,3:-3,1:+5,0:-2,3:+2,2:-5", in: .quad), story: .dawn(.tea)),
     ]
 }

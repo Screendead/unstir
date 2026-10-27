@@ -11,14 +11,23 @@ protocol StoryScene: Sendable {
     /// Minutes after midnight as the level opens, and once every entry has gone.
     var late: Double { get }
     var early: Double { get }
+    /// The sky and sea at `minutes`, opaque: baked at `late` and `early` and cross-faded between them.
     func drawSky(_ ctx: GraphicsContext, r: CGFloat, minutes: Double)
+    /// The bodies that move with the time, where no disc reaches: drawn live over the sky, under the scene.
     func drawLive(_ ctx: GraphicsContext, r: CGFloat, minutes: Double)
+    /// The scene with the vignettes in `played` played, over nothing: baked held back and all played.
     func draw(_ ctx: GraphicsContext, r: CGFloat, played: Set<Int>)
+    /// The weather that falls over everything, played cores and all (the rain): drawn live on top.
+    func drawOver(_ ctx: GraphicsContext, r: CGFloat, minutes: Double)
 }
 
 extension Dawn: StoryScene {}
+extension Rescue: StoryScene {}
 
 extension StoryScene {
+    func drawLive(_ ctx: GraphicsContext, r: CGFloat, minutes: Double) {}
+    func drawOver(_ ctx: GraphicsContext, r: CGFloat, minutes: Double) {}
+
     func minutes(wound n: Int, of count: Int) -> Double { late - (late - early) * Double(n) / Double(max(count, 1)) }
 
     /// The time as the caption shows it (Jack, F3): "6:40 am".
@@ -48,6 +57,7 @@ extension Story {
         switch self {
         case .harbour: nil
         case .dawn(let scene): scene
+        case .rescue(let scene): scene
         }
     }
 }
@@ -179,6 +189,7 @@ struct SceneComposite: View {
                 .mask(core(k))
                 .opacity(shown[k] ?? 0)
             }
+            Canvas { ctx, size in scene.drawOver(ctx, r: size.width / 2, minutes: minutes) }
         }
         .frame(width: side, height: side)
     }
@@ -217,4 +228,18 @@ struct SceneComposite: View {
         }
         return masks
     }
+}
+
+/// A colour as sRGB components, for a sky that mixes from one time to another and from one chapter's into the next.
+struct Tone: Equatable, Sendable {
+    var red, green, blue: Double
+
+    init(red: Double, green: Double, blue: Double) { (self.red, self.green, self.blue) = (red, green, blue) }
+    init(_ hex: UInt32) { self.init(red: Double(hex >> 16 & 0xFF) / 255, green: Double(hex >> 8 & 0xFF) / 255, blue: Double(hex & 0xFF) / 255) }
+
+    func scaled(_ k: Double) -> Tone { Tone(red: red * k, green: green * k, blue: blue * k) }
+    func mix(_ other: Tone, _ t: Double) -> Tone {
+        Tone(red: red + (other.red - red) * t, green: green + (other.green - green) * t, blue: blue + (other.blue - blue) * t)
+    }
+    var color: Color { Color(red: red, green: green, blue: blue) }
 }

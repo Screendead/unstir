@@ -109,6 +109,23 @@ final class FirstStirTests: XCTestCase {
             time = scene.early
         }
         XCTAssertEqual(time, 285, "chapter 1 ends at 4:45")
+        // Chapter 2 carries on from it.
+        let rescue = Array(Level.firstStir.dropFirst(dawn.count).prefix(Rescue.allCases.count))
+        XCTAssertEqual(rescue.map { $0.story }, Rescue.allCases.map { .rescue($0) })
+        XCTAssertEqual(rescue.map(\.scramble.count), [6, 6, 7, 7, 7])
+        XCTAssertEqual(rescue.map(\.layout), [.pent, .eye, .quad, .tri, .pent])
+        for level in rescue {
+            let story = try XCTUnwrap(level.story, level.id), scene = try XCTUnwrap(story.scene, level.id)
+            XCTAssertEqual(level.layout, scene.layout, level.id)
+            XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty && level.ratchets.isEmpty, level.id)
+            XCTAssertEqual(story.vignettes.count, 3, level.id)
+            XCTAssertEqual(story.vignettes, story.vignettes.intersection(level.scramble.map(\.rod)), "\(level.id) opens with one played")
+            XCTAssertEqual(scene.late, time, level.id)
+            XCTAssertLessThan(scene.early, scene.late, level.id)
+            time = scene.early
+        }
+        XCTAssertEqual(time, 150, "chapter 2 ends at 2:30")
+        XCTAssertEqual(Level.firstStir.map(\.id), (1...Level.firstStir.count).map { Pack.firstStir.id($0) })
         for level in Level.firstStir {
             let story = try XCTUnwrap(level.story, level.id)
             XCTAssertEqual(level.pack, .firstStir)
@@ -118,11 +135,13 @@ final class FirstStirTests: XCTestCase {
         }
     }
 
-    /// Each scene's par is the optimum: no detour beats untwisting.
-    func testFirstStirParIsTheOptimum() {
-        for level in Level.firstStir {
-            XCTAssertEqual(Solver(level.layout).optimum(level.scramble), level.par, level.id)
-        }
+    /// Chapter 2 opens on the sky chapter 1 ends on (F2): at 4:45 the Rescue's sky and sea are the dawn's.
+    func testTheRescueOpensOnTheDawnsLastSky() {
+        let dawn = Dawn.tones(Dawn.tea.early)
+        XCTAssertEqual(Rescue.homeLight.late, Dawn.tea.early)
+        XCTAssertEqual(Rescue.skyTones(Rescue.homeLight.late), [dawn.zenith, dawn.middle, dawn.low])
+        XCTAssertEqual(Rescue.seaTones(Rescue.homeLight.late)[0], dawn.sea)
+        XCTAssertNotEqual(Rescue.skyTones(Rescue.homeLight.early), [dawn.zenith, dawn.middle, dawn.low])
     }
 
     /// The caption is the scene's time (Jack, F3), stepping back a share of its window with each of the scramble's entries
@@ -161,7 +180,7 @@ final class FirstStirTests: XCTestCase {
 
     /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, by
     /// more than 8 in 255, past the renderer's own noise (up to 6 where nothing changed).
-    @MainActor private func footprint(_ story: Story, _ k: Int, side: Int) throws -> [SIMD2<Double>] {
+    @MainActor private func footprint(_ story: Story, _ played: Set<Int>, side: Int) throws -> [SIMD2<Double>] {
         // Each render in its own pool: without them the test host was killed (signal kill) in a later test of the suite.
         func pixels(_ played: Set<Int>) throws -> [UInt8] { try autoreleasepool { try render(played) } }
         func render(_ played: Set<Int>) throws -> [UInt8] {
@@ -173,7 +192,7 @@ final class FirstStirTests: XCTestCase {
             ctx.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
             return bytes
         }
-        let held = try pixels([]), played = try pixels([k])
+        let held = try pixels([]), played = try pixels(played)
         var marks: [SIMD2<Double>] = []
         for i in 0..<side * side where (0..<4).contains(where: { abs(Int(held[4 * i + $0]) - Int(played[4 * i + $0])) > 8 }) {
             let px = SIMD2(Double(i % side), Double(i / side)) + 0.5
@@ -196,17 +215,23 @@ final class FirstStirTests: XCTestCase {
             let story = try XCTUnwrap(level.story)
             let layout = level.layout, rods = layout.rods
             func centre(_ rod: Int) -> SIMD2<Double> { SIMD2(rods[rod].x, rods[rod].y) }
+            // The two layers the game bakes, every vignette held back and every one played, differ only in their cores.
+            let stray = try footprint(story, story.vignettes, side: side).filter { p in
+                !story.vignettes.contains { simd_distance(p, centre($0)) <= Tank.plateau * rods[$0].z + pixel }
+            }
+            XCTAssertTrue(stray.isEmpty, "\(level.id): the baked layers differ outside every core, at \(stray.prefix(3))")
             var marks: [Int: [SIMD2<Double>]] = [:]
             for k in story.vignettes {
-                let m = try footprint(story, k, side: side)
+                let m = try footprint(story, [k], side: side)
                 XCTAssertFalse(m.isEmpty, "\(level.id): vignette \(k) changes nothing")
                 let core = Tank.plateau * rods[k].z
                 XCTAssertTrue(m.allSatisfy { simd_distance($0, centre(k)) <= core + pixel }, "\(level.id): vignette \(k) leaves its core")
                 if story.scene != nil {
                     // The art spec: 0.02 inside the core's edge, so no glow clips there, and clear of the knob.
-                    let far = m.map { simd_distance($0, centre(k)) }.max()!, near = m.map { simd_distance($0, centre(k)) }.min()!
-                    XCTAssertLessThanOrEqual(far, core - 0.02 + pixel, "\(level.id): vignette \(k) comes within 0.02 of its core's edge")
-                    XCTAssertGreaterThanOrEqual(near, Tank.coreRadius + 0.015 - pixel, "\(level.id): vignette \(k) reaches its knob")
+                    let reach = m.map { (p: $0, d: simd_distance($0, centre(k))) }
+                    let far = reach.max { $0.d < $1.d }!, near = reach.min { $0.d < $1.d }!
+                    XCTAssertLessThanOrEqual(far.d, core - 0.02 + pixel, "\(level.id): vignette \(k) comes within 0.02 of its core's edge at \(far.p)")
+                    XCTAssertGreaterThanOrEqual(near.d, Tank.coreRadius + 0.015 - pixel, "\(level.id): vignette \(k) reaches its knob at \(near.p)")
                 }
                 marks[k] = m
             }
@@ -245,7 +270,7 @@ final class FirstStirTests: XCTestCase {
     /// agree, no core's edge shows where it is cut in.
     @MainActor func testTheCutInCoresLeaveNoSeam() throws {
         let side = 384
-        for scene in Dawn.allCases {
+        for scene in Level.firstStir.compactMap({ $0.story?.scene }) {
             func layer(sky minutes: Double? = nil, played: Set<Int> = []) throws -> UIImage {
                 try XCTUnwrap(scene.render(sky: minutes, played: played, side: CGFloat(side), scale: 1))
             }

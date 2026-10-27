@@ -91,21 +91,24 @@ enum Dawn: Int, CaseIterable, Sendable {
         return smoke + [late, early].map { Self.sun($0) }
     }
 
+    /// Where the sky's middle tone sits, from the top of the tank (0) to the horizon (1).
+    static let middle = 0.6
+
+    /// The sky's tones at `minutes`, from the zenith to the horizon, and the sea's at the horizon: the zenith greys from
+    /// near black to pewter, the horizon from a dim pewter to the first light's warm band.
+    static func tones(_ minutes: Double) -> (zenith: Tone, middle: Tone, low: Tone, sea: Tone) {
+        let d = dawn(minutes), sky = Tone(0x2B3550)
+        let low = d < 0.6 ? sky.scaled(0.4).mix(sky, d / 0.6) : sky.mix(Tone(0xF2B48C), (d - 0.6) / 0.4)
+        return (sky.scaled(0.12).mix(sky.scaled(0.75), d), sky.scaled(0.12 + 0.63 * d).mix(sky.scaled(d < 0.6 ? 0.4 + d : 1), 0.5), low,
+                sky.scaled(0.25).mix(Tone(0x7D8FA6).scaled(0.35), d))
+    }
+
     func drawSky(_ ctx: GraphicsContext, r: CGFloat, minutes: Double) {
-        let pen = Pen(ctx: ctx, r: r), d = Self.dawn(minutes), h = horizon
-        func shade(_ c: UInt32, _ k: Double) -> (Double, Double, Double) {
-            (Double(c >> 16 & 0xFF) / 255 * k, Double(c >> 8 & 0xFF) / 255 * k, Double(c & 0xFF) / 255 * k)
-        }
-        func mix(_ a: (Double, Double, Double), _ b: (Double, Double, Double), _ t: Double) -> Color {
-            Color(red: a.0 + (b.0 - a.0) * t, green: a.1 + (b.1 - a.1) * t, blue: a.2 + (b.2 - a.2) * t)
-        }
-        // The zenith greys from near black to pewter; the horizon from a dim pewter to the first light's warm band.
-        let zenith = mix(shade(0x2B3550, 0.12), shade(0x2B3550, 0.75), d)
-        let low = d < 0.6 ? mix(shade(0x2B3550, 0.4), shade(0x2B3550, 1), d / 0.6) : mix(shade(0x2B3550, 1), shade(0xF2B48C, 1), (d - 0.6) / 0.4)
-        let middle = mix(shade(0x2B3550, 0.12 + 0.63 * d), shade(0x2B3550, d < 0.6 ? 0.4 + d : 1), 0.5)
+        let pen = Pen(ctx: ctx, r: r), d = Self.dawn(minutes), h = horizon, tones = Self.tones(minutes)
         ctx.fill(pen.rect(-1, -1, 1, 1), with: .color(.black))
         ctx.fill(pen.rect(-1, -1, 1, h), with: .linearGradient(
-            Gradient(stops: [.init(color: zenith, location: 0), .init(color: middle, location: 0.6), .init(color: low, location: 1)]),
+            Gradient(stops: [.init(color: tones.zenith.color, location: 0), .init(color: tones.middle.color, location: Self.middle),
+                             .init(color: tones.low.color, location: 1)]),
             startPoint: pen.p(0, -1), endPoint: pen.p(0, h)))
         // The sun's glow over the sea's edge on the right, already up at sunrise and sunk an hour before.
         let g = d * d * d
@@ -117,7 +120,7 @@ enum Dawn: Int, CaseIterable, Sendable {
             center: pen.p(0.95, h), startRadius: 0, endRadius: 0.9 * r))
         // The sea, darkening towards the viewer, its swell catching the sky.
         ctx.fill(pen.rect(-1, h, 1, 1), with: .linearGradient(
-            Gradient(stops: [.init(color: mix(shade(0x2B3550, 0.25), shade(0x7D8FA6, 0.35), d), location: 0),
+            Gradient(stops: [.init(color: tones.sea.color, location: 0),
                              .init(color: .black, location: 1)]),
             startPoint: pen.p(0, h), endPoint: pen.p(0, 1)))
         var swell = Path()
