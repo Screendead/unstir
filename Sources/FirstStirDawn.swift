@@ -39,7 +39,7 @@ enum Dawn: Int, CaseIterable, Sendable {
         case .sunrise: 0
         case .gallery: 0.02
         case .rockPool, .righting: -0.3
-        case .tea: -0.16
+        case .tea: -0.5
         }
     }
 
@@ -151,7 +151,7 @@ enum Dawn: Int, CaseIterable, Sendable {
         case .gallery: Self.gallery(pen, played)
         case .rockPool: Self.rockPool(pen, played)
         case .righting: Self.righting(pen, played)
-        case .tea: break
+        case .tea: Self.tea(pen, played)
         }
     }
 }
@@ -954,6 +954,142 @@ extension Dawn {
                 gulls.addPath(pen.flying(x, y, w))
             }
             pen.line([(gulls, ink, 1)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        }
+    }
+}
+
+extension Figure {
+    /// Sitting on a seat at 0.4 of the figure's standing height, hands in its lap.
+    static func seated(_ who: Who) -> Figure {
+        Figure(who: who, head: (0, 0.79), neck: (0, 0.68), hip: (0, 0.42),
+               legs: [[(0.03, 0.4), (0.22, 0.4), (0.24, 0.03)], [(-0.03, 0.4), (0.18, 0.4), (0.18, 0.03)]],
+               arms: [[(0.08, 0.64), (0.12, 0.5), (0.2, 0.44)], [(-0.08, 0.64), (-0.02, 0.5), (0.14, 0.44)]])
+    }
+}
+
+extension Dawn {
+    // MARK: Scene 5, tea on the quay (5:05 to 4:45): the quay at first grey light, the harbour high behind it.
+
+    /// Rod 3 (top left): the lifeboat moored, its crew gone and its lamp out; earlier, a crewman coiling rope on deck,
+    /// the searchlight still on. Rod 2 (bottom left): the three on a bench under one blanket, the child asleep against
+    /// her father; earlier, the child awake, standing on the bench and pointing out to sea. Rod 1 (bottom right): three
+    /// cups steaming on a crate; earlier, a neighbour pouring from a flask into the first. Rod 0 holds the dark
+    /// lighthouse on its breakwater, still.
+    static func tea(_ pen: Pen, _ played: Set<Int>) {
+        let ink = Self.ink, quay = 0.14, ground = 0.585
+        // The breakwater along the horizon and the lighthouse at its end, dark.
+        let wall = pen.poly([(-0.2, -0.5), (0.7, -0.5), (0.72, -0.475), (-0.2, -0.485)])
+        let tower = pen.poly([(0.34, -0.5), (0.355, -0.74), (0.425, -0.74), (0.44, -0.5)])
+        let lantern = pen.rect(0.36, -0.8, 0.42, -0.74)
+        for path in [wall, tower, lantern] { pen.fill(path) }
+        var light = Path()
+        for path in [wall, tower, lantern] { light.addPath(path) }
+        light.addPath(pen.quad(0.35, -0.8, 0.39, -0.84, 0.43, -0.8))
+        light.addPath(pen.seg(0.39, -0.8, 0.39, -0.74))
+
+        // The lifeboat on its mooring: hull, cabin and the searchlight on its roof.
+        let hull = Path { h in
+            h.move(to: pen.p(-0.53, -0.485)); h.addLine(to: pen.p(-0.17, -0.48))
+            h.addQuadCurve(to: pen.p(-0.22, -0.43), control: pen.p(-0.18, -0.44))
+            h.addLine(to: pen.p(-0.48, -0.43))
+            h.addQuadCurve(to: pen.p(-0.53, -0.485), control: pen.p(-0.52, -0.44))
+        }
+        let cabin = pen.rect(-0.43, -0.535, -0.32, -0.485)
+        let lamp = pen.rect(-0.405, -0.56, -0.38, -0.538)
+        for path in [hull, cabin, lamp] { pen.fill(path) }
+        var boat = Path()
+        for path in [hull, cabin, lamp] { boat.addPath(path) }
+        boat.addPath(pen.seg(-0.52, -0.465, -0.19, -0.462))
+        boat.addPath(pen.rect(-0.415, -0.525, -0.39, -0.5))
+        boat.addPath(pen.rect(-0.365, -0.525, -0.34, -0.5))
+        let mooring = pen.quad(-0.53, -0.475, -0.6, -0.4, -0.66, -0.2)
+        pen.line([(light, ink, 0.8), (boat, ink, 1), (mooring, ink, 0.6)])
+
+        // The quay: its edge, a bollard, the bench and the crate on it.
+        pen.fill(pen.rect(-1, quay, 1, 1))
+        var stone = Path()
+        stone.addPath(pen.seg(-1, quay, 1, quay))
+        stone.addPath(pen.seg(-1, quay + 0.05, 1, quay + 0.05))
+        for x in stride(from: -0.95, through: 0.95, by: 0.14) { stone.addPath(pen.seg(x, quay, x, quay + 0.05)) }
+        stone.addPath(pen.seg(-1, ground, 1, ground))
+        let bollard = pen.poly([(0.0, quay), (0.0, quay - 0.05), (-0.01, quay - 0.06), (0.06, quay - 0.06), (0.05, quay - 0.05), (0.05, quay)])
+        pen.fill(bollard)
+        var bench = Path()
+        bench.addPath(pen.seg(-0.56, 0.522, -0.22, 0.522))
+        bench.addPath(pen.seg(-0.53, 0.522, -0.53, ground))
+        bench.addPath(pen.seg(-0.25, 0.522, -0.25, ground))
+        let crate = pen.rect(0.46, 0.42, 0.6, 0.505)
+        pen.fill(crate)
+        var box = Path()
+        box.addPath(crate)
+        box.addPath(pen.seg(0.46, 0.462, 0.6, 0.462))
+        pen.line([(stone, ink, 0.55), (bollard, ink, 0.9), (bench, ink, 1), (box, ink, 1)])
+
+        // Vignette 3: the lifeboat's deck.
+        if played.contains(3) {
+            let beam = pen.poly([(-0.405, -0.553), (-0.5, -0.58), (-0.5, -0.53), (-0.405, -0.545)])
+            pen.ctx.fill(beam, with: .linearGradient(Gradient(colors: [Self.light.opacity(0.55), Self.light.opacity(0)]),
+                                                     startPoint: pen.p(-0.405, -0.55), endPoint: pen.p(-0.5, -0.55)))
+            var who = Figure.standing(.crew)
+            who.head = (0.1, 0.84)
+            who.neck = (0.07, 0.74)
+            who.arms = [[(0.12, 0.72), (0.24, 0.6), (0.3, 0.5)], [(0.0, 0.72), (0.14, 0.58), (0.26, 0.48)]]
+            pen.solid(who.path(pen, x: -0.275, y: -0.468, h: 0.11), ink)
+            var coil = Path()
+            for k in 0..<3 { coil.addPath(pen.ellipse(-0.235, -0.515 + 0.004 * Double(k), 0.016 - 0.003 * Double(k), 0.022)) }
+            coil.addPath(pen.ellipse(-0.205, -0.47, 0.022, 0.006))
+            pen.line([(lamp, Self.light, 1), (coil, Self.glow, 0.9)], glows: [(0.02, 0.45), (0.007, 0.9)])
+            pen.fill(pen.rect(-0.401, -0.556, -0.384, -0.542), Self.light)
+        } else {
+            pen.line([(pen.ellipse(-0.205, -0.47, 0.022, 0.006), Self.glow, 0.9), (pen.ellipse(-0.205, -0.474, 0.014, 0.004), Self.glow, 0.9)],
+                     glows: [(0.02, 0.4), (0.007, 0.9)])
+        }
+
+        // Vignette 2: the bench.
+        let seat = 0.522, h = 0.15
+        var family = Path()
+        family.addPath(Figure.seated(.grandmother).path(pen, x: -0.49, y: ground, h: h))
+        family.addPath(Figure.seated(.father).path(pen, x: -0.4, y: ground, h: h))
+        if played.contains(2) {
+            var child = Figure.standing(.child)
+            child.arms = [[(0.1, 0.76), (0.24, 0.92), (0.36, 1.08)], [(-0.1, 0.76), (-0.15, 0.6), (-0.16, 0.46)]]
+            family.addPath(child.path(pen, x: -0.25, y: seat, h: 0.11))
+            pen.solid(family, ink)
+            let blanket = pen.smooth([(-0.53, seat), (-0.535, 0.49), (-0.49, 0.485), (-0.445, 0.493), (-0.4, 0.485), (-0.355, 0.494),
+                                      (-0.35, seat), (-0.53, seat)])
+            pen.fill(blanket)
+            pen.line([(blanket, Self.glow, 0.9)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        } else {
+            var child = Figure.seated(.child)
+            child.head = (-0.14, 0.74)
+            child.neck = (-0.06, 0.64)
+            family.addPath(child.path(pen, x: -0.322, y: ground, h: 0.12))
+            pen.solid(family, ink)
+            let blanket = pen.smooth([(-0.53, seat), (-0.535, 0.49), (-0.49, 0.485), (-0.445, 0.493), (-0.4, 0.485), (-0.35, 0.497),
+                                      (-0.31, 0.5), (-0.28, 0.5), (-0.275, seat), (-0.53, seat)])
+            pen.fill(blanket)
+            pen.line([(blanket, Self.glow, 0.9)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        }
+
+        // Vignette 1: the crate.
+        let cups: [Double] = [0.49, 0.53, 0.57]
+        var mugs = Path()
+        for x in cups {
+            mugs.addPath(pen.rect(x - 0.012, 0.395, x + 0.012, 0.42))
+            mugs.addPath(pen.quad(x + 0.012, 0.4, x + 0.024, 0.407, x + 0.012, 0.414))
+        }
+        if played.contains(1) {
+            var who = Figure.standing(.neighbour)
+            who.arms = [[(0.1, 0.76), (0.4, 0.84), (0.66, 0.92)], [(-0.1, 0.76), (-0.12, 0.6), (-0.1, 0.45)]]
+            pen.solid(who.path(pen, x: 0.39, y: ground, h: 0.13), ink)
+            let flask = pen.poly([(0.465, 0.35), (0.482, 0.338), (0.51, 0.37), (0.493, 0.382)])
+            pen.fill(flask)
+            pen.line([(mugs, ink, 1), (flask, ink, 1), (pen.seg(0.496, 0.36, 0.49, 0.393), Self.glow, 0.9)],
+                     glows: [(0.02, 0.4), (0.007, 0.9)])
+        } else {
+            var steam = Path()
+            for x in cups { steam.addPath(pen.smooth([(x, 0.385), (x - 0.01, 0.37), (x + 0.008, 0.355), (x - 0.004, 0.34)])) }
+            pen.line([(mugs, ink, 1), (steam, ink, 0.6)], glows: [(0.02, 0.4), (0.007, 0.9)])
         }
     }
 }
