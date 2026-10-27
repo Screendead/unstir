@@ -1036,11 +1036,11 @@ extension Dawn {
         bench.addPath(pen.seg(-0.56, 0.522, -0.22, 0.522))
         bench.addPath(pen.seg(-0.53, 0.522, -0.53, ground))
         bench.addPath(pen.seg(-0.25, 0.522, -0.25, ground))
-        let crate = pen.rect(0.46, 0.42, 0.6, 0.505)
+        let crate = pen.rect(0.46, 0.5, 0.6, ground)
         pen.fill(crate)
         var box = Path()
         box.addPath(crate)
-        box.addPath(pen.seg(0.46, 0.462, 0.6, 0.462))
+        box.addPath(pen.seg(0.46, 0.542, 0.6, 0.542))
         pen.line([(stone, ink, 0.55), (bollard, ink, 0.9), (bench, ink, 1), (box, ink, 1)])
 
         // Vignette 3: the lifeboat's deck.
@@ -1093,20 +1093,21 @@ extension Dawn {
         let cups: [Double] = [0.49, 0.53, 0.57]
         var mugs = Path()
         for x in cups {
-            mugs.addPath(pen.rect(x - 0.012, 0.395, x + 0.012, 0.42))
-            mugs.addPath(pen.quad(x + 0.012, 0.4, x + 0.024, 0.407, x + 0.012, 0.414))
+            mugs.addPath(pen.rect(x - 0.012, 0.475, x + 0.012, 0.5))
+            mugs.addPath(pen.quad(x + 0.012, 0.48, x + 0.024, 0.487, x + 0.012, 0.494))
         }
         if played.contains(1) {
             var who = Figure.standing(.neighbour)
-            who.arms = [[(0.1, 0.76), (0.4, 0.84), (0.66, 0.92)], [(-0.1, 0.76), (-0.12, 0.6), (-0.1, 0.45)]]
+            // The pouring hand holds the flask's neck over the first cup.
+            who.arms = [[(0.1, 0.76), (0.36, 1.0), (0.6, 1.18)], [(-0.1, 0.76), (-0.12, 0.6), (-0.1, 0.45)]]
             pen.solid(who.path(pen, x: 0.39, y: ground, h: 0.13), ink)
-            let flask = pen.poly([(0.465, 0.35), (0.482, 0.338), (0.51, 0.37), (0.493, 0.382)])
+            let flask = pen.poly([(0.465, 0.42), (0.482, 0.408), (0.51, 0.44), (0.493, 0.452)])
             pen.fill(flask)
-            pen.line([(mugs, ink, 1), (flask, ink, 1), (pen.seg(0.496, 0.36, 0.49, 0.393), Self.glow, 0.9)],
+            pen.line([(mugs, ink, 1), (flask, ink, 1), (pen.seg(0.496, 0.445, 0.49, 0.473), Self.glow, 0.9)],
                      glows: [(0.02, 0.4), (0.007, 0.9)])
         } else {
             var steam = Path()
-            for x in cups { steam.addPath(pen.smooth([(x, 0.385), (x - 0.01, 0.37), (x + 0.008, 0.355), (x - 0.004, 0.34)])) }
+            for x in cups { steam.addPath(pen.smooth([(x, 0.465), (x - 0.01, 0.45), (x + 0.008, 0.435), (x - 0.004, 0.42)])) }
             pen.line([(mugs, ink, 1), (steam, ink, 0.6)], glows: [(0.02, 0.4), (0.007, 0.9)])
         }
     }
