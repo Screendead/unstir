@@ -861,10 +861,11 @@ enum OverTheQuay {
         quay.addPath(pen.poly([(-1, horizon + 0.04), (edge(horizon + 0.04), horizon + 0.04)], closed: false))
         // The flags, running out along it and across.
         var flags = Path()
+        // Straight, as the seaward edge is, all running to the quay's far end.
+        let end = (x: edge(horizon), y: horizon)
         for k in 1...5 {
-            let f = Double(k) / 6
-            flags.addPath(pen.poly(ys.map { y in (edge(y) - f * (edge(y) + 1) * (y - horizon) / (1 - horizon) * 1.6, y) }.filter { $0.0 > -1.05 },
-                                   closed: false))
+            let x = edge(1.05) - Double(k) / 6 * (edge(1.05) + 1) * 1.6
+            flags.addPath(pen.seg(end.x + (x - end.x) * 0.04 / (1.05 - end.y), horizon + 0.04, x, 1.05))
         }
         for y in [-0.3, -0.1, 0.15, 0.45, 0.8] { flags.addPath(pen.seg(-1, y, edge(y), y)) }
         // Bollards near the edge, the sea swirling round their feet.
