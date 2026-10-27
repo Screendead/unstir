@@ -803,14 +803,16 @@ extension Dusk {
                 let (hour, minute) = played.contains(1) ? (7.0 + 40 / 60, 40.0) : (7.0 + 55 / 60, 55.0)
                 let a = hour / 12 * 2 * .pi, b = minute / 60 * 2 * .pi
                 pen.lit(Rescue.tight) { g in
-                    g.stroke(g.seg(clock.x, clock.y, clock.x + 0.04 * sin(a), clock.y - 0.04 * cos(a)), cream)
-                    g.stroke(g.seg(clock.x, clock.y, clock.x + 0.06 * sin(b), clock.y - 0.06 * cos(b)), cream)
+                    g.stroke(short, cream)
+                    g.stroke(g.seg(clock.x, clock.y, clock.x + 0.066 * sin(b), clock.y - 0.066 * cos(b)), cream)
                     g.fill(g.circle(clock.x, clock.y, 0.006), cream)
                 }
             }
 
             // Vignette 2, the cup.
             pen.vignette(2) { pen in
+                // The hour hand short and broad, a leaf; the minute hand a long line, so the two read apart when they meet.
+                let short = pen.at(clock.x, clock.y, turn: a).poly([(0, 0.006), (0.009, -0.012), (0, -0.034), (-0.009, -0.012)])
                 if played.contains(2) {
                     // The tea's swirl, and the child's hand on the spoon, stirring.
                     let swirl = pen.path { s in
