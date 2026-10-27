@@ -313,4 +313,6 @@ shot escapement-1-ticked "Escapement 1 after rod 2 +4 heals: its tick has taken 
   PACK=escapement PLAYED=2:4
 shot escapement-1-lost "Escapement 1, then rod 1 -3: its tick finds no seam and pushes, so the move loses at once: the vermilion +1, lost. stamped by the clock, the card's undo and again." \
   PACK=escapement PLAYED=2:4,1:-3
+shot escapement-1-stopped "Escapement's clock on 1:+3,0:-1 after a wait: the clock has stopped with rod 1's twist still on the picture, so lost., with no +1." \
+  PACK=escapement STACK=1:+3,0:-1 PLAYED=0:1
 shot escapement-1-won "Escapement 1 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement PLAYED=2:4,0:1,1:-3

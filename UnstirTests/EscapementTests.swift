@@ -103,18 +103,22 @@ import XCTest
         XCTAssertEqual(g.escapement.ticks, 0)
     }
 
-    /// Once the clock holds no entry it stops: no more ticks, and nothing to wait for.
-    func testTheClockStopsOnceItsRodIsEmpty() {
+    /// Jack's call E2 (round 9): once the clock's own twists are gone it stops, and a picture still twisted then is lost.
+    func testAClockThatStopsWithTwistsLeftIsLost() {
         let g = game("1:+3,0:-1")
         g.wait(on: 0)
         XCTAssertEqual(g.stack, tri("1:+3"))
         XCTAssertEqual(g.clockStops, 1)
-        g.wait(on: 0)
+        XCTAssertEqual(g.overdue, 0)
+        XCTAssertTrue(g.lost)
+        XCTAssertTrue(g.finished)
+        // Lost, nothing more is taken.
+        g.commit(rod: 1, steps: -3)
+        XCTAssertEqual(g.stack, tri("1:+3"))
         XCTAssertEqual(g.moves, 1)
-        g.commit(rod: 2, steps: 2)
-        XCTAssertEqual(g.stack, tri("1:+3,2:+2"))
-        XCTAssertEqual(g.escapement.ticks, 1)
+        g.undo()
         XCTAssertFalse(g.lost)
+        XCTAssertEqual(g.stack, tri("1:+3,0:-1"))
     }
 
     /// The pack's undo: the move and its tick together, from the shared bank, on a lost tank too.
@@ -208,17 +212,15 @@ import XCTest
         }
     }
 
-    /// The prover finds nothing shorter than the composed line, and drops the lines whose tick pushes: on 1:+3,0:-1,
-    /// taking rod 1 off first, which a clock without ticks would do, buries the clock's seam.
-    func testTheProverDropsLinesWhoseTickPushes() {
+    /// The prover finds nothing shorter than the composed line, and drops the lost lines: on 1:+3,0:-1, taking rod 1
+    /// off first buries the clock's seam, so its tick pushes, and waiting first stops the clock with rod 1 still on.
+    func testTheProverDropsLostLines() {
         var seen = 0
         let solver = Solver(.tri)
         XCTAssertNil(solver.escapement(tri("0:-1,1:+3,0:-2,2:-4"), clock: 0, limit: 2, seen: &seen))
         XCTAssertEqual(solver.escapement(tri("0:-1,1:+3,0:-2,2:-4"), clock: 0, limit: 3, seen: &seen)?.count, 3)
         XCTAssertEqual(solver.escapement(tri("0:-1,1:+3"), clock: 0, limit: 4, seen: &seen)?.count, 1)
-        let play = solver.escapement(tri("1:+3,0:-1"), clock: 0, limit: 4, seen: &seen)
-        XCTAssertEqual(play?.count, 2)
-        XCTAssertEqual(play?.moves.first.map { "\($0)" }, "wait")
+        XCTAssertNil(solver.escapement(tri("1:+3,0:-1"), clock: 0, limit: 4, seen: &seen))
     }
 
     /// The lost rule: once a tick pushes, the clock holds a positive entry that no continuation pops, so the stack can

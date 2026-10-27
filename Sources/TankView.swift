@@ -143,7 +143,8 @@ final class Game {
     struct Clock {
         /// Ticks standing, for the ratchet wheel.
         var ticks = 0
-        /// A tick pushed, so the stack can never empty.
+        /// A tick pushed, so the stack can never empty, or the clock stopped with twists still on the picture (Jack's
+        /// call E2, round 9).
         var lost = false
     }
     private(set) var escapement = Clock()
@@ -336,7 +337,8 @@ final class Game {
         settle()
     }
 
-    /// Escapement: the clock's tick after a move, while the clock rod holds an entry. It loses the tank if it pushes.
+    /// Escapement: the clock's tick after a move, while the clock rod holds an entry. It loses the tank if it pushes, or
+    /// if it stops the clock with twists still on the picture.
     private func landTick() {
         guard let e = level.clock, entries.contains(where: { $0.twist.rod == e }) else { return }
         let from = stack
@@ -346,7 +348,10 @@ final class Game {
         tick = from
         tickEvents += 1
         if result == .pushed { tickPushes += 1; escapement.lost = true }
-        if !entries.contains(where: { $0.twist.rod == e }) { clockStops += 1 }
+        if !entries.contains(where: { $0.twist.rod == e }) {
+            clockStops += 1
+            if !entries.isEmpty { escapement.lost = true }
+        }
         Log.write("tick \(result) stack=\(stack)")
     }
 
@@ -1399,7 +1404,7 @@ struct LevelView: View {
     private static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
 
     /// Escapement: what the clock at `c` shows round its ratchet: a red flash for a tick that pushed; while a pushed tick
-    /// stands, a ring and its vermilion count, with "lost." stamped by it; the clock's disc
+    /// stands, a ring and its vermilion count; "lost." stamped by the clock once the tank is lost; the clock's disc
     /// lighting as it ticks; and a ring going out as the clock stops.
     private func clockMarks(_ c: CGPoint, disc: CGFloat, size: CGFloat) -> some View {
         let overdue = game.overdue, showing = shown == nil
@@ -1423,8 +1428,9 @@ struct LevelView: View {
                     .overlay(Capsule().stroke(Color.vermilion, lineWidth: 1.5))
                     .position(badge)
                     .transition(.opacity)
-                if game.lost { LostStamp(size: 50).position(x: badge.x - 6, y: badge.y + 30) }
             }
+            // A clock stopped with twists left has no +1 to stamp beside, so the stamp keeps its place by the clock.
+            if game.lost && showing { LostStamp(size: 50).position(x: badge.x - 6, y: badge.y + 30) }
             // The clock's disc lights as it ticks, so the eye goes where the tick acts.
             Circle().stroke(Color.vermilion, lineWidth: Self.hairline)
                 .frame(width: 2 * disc, height: 2 * disc)
@@ -2267,7 +2273,7 @@ struct RatchetView: View {
     }
 }
 
-/// Escapement: "lost." stamped by the clock's count once a tick pushes.
+/// Escapement: "lost." stamped by the clock once a tick pushes or the clock stops with twists left.
 struct LostStamp: View {
     var size: CGFloat = 76
     @State private var landed = false

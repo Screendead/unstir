@@ -526,15 +526,16 @@ extension Solver {
     /// Escapement's prover: the fewest moves that empty `stack` when, after every move, the clock rod `clock` ticks +1
     /// while it holds an entry. A move is a wait or one commit to a working slot, by a count from `steps` or an entry's
     /// exact inverse; every let-go is final, so the same slot stirred again is another move (Jack's call E1). A line is
-    /// dropped where a tick pushes, since that entry never pops (`testAPushedTickNeverPops`). Breadth first over
-    /// stacks, so the first line found is a fewest, and every line of those counts up to `limit` is tried: no shorter
-    /// one exists among them. Nil past `limit`, with the stacks seen in `seen`.
+    /// dropped where a tick pushes, since that entry never pops (`testAPushedTickNeverPops`), or where the clock stops
+    /// with twists still on the picture (Jack's call E2). Breadth first over stacks, so the first line found is a
+    /// fewest, and every line of those counts up to `limit` is tried: no shorter one exists among them. Nil past
+    /// `limit`, with the stacks seen in `seen`.
     func escapement(_ stack: [Twist], clock: Int, limit: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] },
                     seen: inout Int) -> Play? {
         func tick(_ s: inout [Twist]) -> Bool {
-            guard s.contains(where: { $0.rod == clock }) else { return true }
+            guard s.contains(where: { $0.rod == clock }) else { return s.isEmpty }
             let r = s.commit(rod: clock, steps: 1, in: layout)
-            return r == .reduced || r == .cancelled
+            return (r == .reduced || r == .cancelled) && (s.isEmpty || s.contains { $0.rod == clock })
         }
         let start = stack
         guard !stack.isEmpty else { return Play() }
