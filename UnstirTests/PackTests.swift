@@ -116,6 +116,20 @@ final class PackTests: XCTestCase {
     }
 
     /// A pack's ids never read as another pack's or a tier's.
+    /// A Release shelf shows a pack once it has levels past its taste, and Complete once it shows every pack; a build
+    /// outside Release shows them all.
+    func testAPackGoesOnTheShelfOnceItsLevelsAreIn() {
+        XCTAssertEqual(Offer.shelf(release: false, ready: { _ in false }), Offer.all)
+        XCTAssertEqual(Offer.shelf(release: true, ready: { _ in false }), [])
+        XCTAssertEqual(Offer.shelf(release: true, ready: { $0 != .lens }), [.pack(.firstStir), .pack(.escapement)])
+        XCTAssertEqual(Offer.shelf(release: true, ready: { _ in true }), Offer.all)
+        for pack in Pack.allCases {
+            XCTAssertEqual(Offer.shelf(release: true).contains(.pack(pack)), pack.levels.count > pack.taste, pack.name)
+            XCTAssertEqual(Offer.pack(pack).arriving, pack.levels.count < pack.planned, pack.name)
+        }
+        XCTAssertEqual(Offer.complete.arriving, Pack.allCases.contains { $0.levels.count < $0.planned })
+    }
+
     func testPackIdsBelongToOnePack() {
         let tierIds = Tier.allCases.flatMap { $0.levels.map(\.id) } + ["endless", "sandbox", "daily-20261025"]
         for pack in Pack.allCases {

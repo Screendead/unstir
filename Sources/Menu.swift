@@ -191,8 +191,10 @@ struct MenuView: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                PackDock(open: { show($0, from: $1) }, held: clock, paused: card != nil)
-                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
+                if !Offer.shelf().isEmpty {
+                    PackDock(open: { show($0, from: $1) }, held: clock, paused: card != nil)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
+                }
             }
         }
         .foregroundStyle(Color.text)

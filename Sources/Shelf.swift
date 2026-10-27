@@ -10,6 +10,17 @@ enum Offer: Hashable, Sendable {
 
     static let all: [Offer] = Pack.allCases.map(Offer.pack) + [.complete]
 
+    /// The covers the dock shows. A pack goes on sale only once it has levels past its taste, and Complete only once every
+    /// pack is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the shop can be looked at.
+    static func shelf(release: Bool = Build.release, ready: (Pack) -> Bool = { $0.levels.count > $0.taste }) -> [Offer] {
+        guard release else { return all }
+        let packs = Pack.allCases.filter(ready)
+        return packs.map(Offer.pack) + (packs.count == Pack.allCases.count ? [.complete] : [])
+    }
+
+    /// Some of what it sells is still to come.
+    var arriving: Bool { (pack.map { [$0] } ?? Pack.allCases).contains { $0.levels.count < $0.planned } }
+
     /// A pack's prefix, or "complete", as the harness names it and the clip's file is named.
     init?(name: String) {
         if name == "complete" { self = .complete } else if let p = Pack(rawValue: name) { self = .pack(p) } else { return nil }
@@ -49,19 +60,10 @@ enum Offer: Hashable, Sendable {
 
     var holds: String {
         switch self {
-        case .pack(.firstStir): "\(Self.count(.firstStir)) scenes in five chapters"
-        case .pack(.lens): "\(Self.count(.lens)) panels in four issues"
-        case .pack(.escapement): "\(Self.count(.escapement)) problems in five chapters"
-        case .complete: "First Stir, Lens and Escapement \u{00B7} \(Pack.allCases.map(Self.count).reduce(0, +)) levels"
-        }
-    }
-
-    /// The pack's levels once it has them, else the count its design plans.
-    private static func count(_ pack: Pack) -> Int {
-        if !pack.levels.isEmpty { return pack.levels.count }
-        return switch pack {
-        case .firstStir, .lens: 25
-        case .escapement: 30
+        case .pack(.firstStir): "\(Pack.firstStir.planned) scenes in five chapters"
+        case .pack(.lens): "\(Pack.lens.planned) panels in four issues"
+        case .pack(.escapement): "\(Pack.escapement.planned) problems in five chapters"
+        case .complete: "First Stir, Lens and Escapement \u{00B7} \(Pack.allCases.map(\.planned).reduce(0, +)) levels"
         }
     }
 
@@ -599,11 +601,15 @@ struct PackCard: View {
                         fact("holds", offer.holds)
                     }
                     .padding(.top, 32)
+                    if offer.arriving {
+                        Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     // Buying comes before the list, so it is on the first screen whatever the pack holds.
                     if levels.isEmpty { Spacer(minLength: 24) }
                     status(state).padding(.top, levels.isEmpty ? 0 : 32)
                     action(state).padding(.top, 14)
-                    if offer.pack != nil, state != .owned, store.state(.complete) != .owned {
+                    if offer.pack != nil, state != .owned, store.state(.complete) != .owned, Offer.shelf().contains(.complete) {
                         completeLine.padding(.top, 14)
                     }
                     restore.padding(.top, 18).padding(.bottom, 10)
@@ -848,8 +854,9 @@ struct PackDock: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             HStack(alignment: .top, spacing: 0) {
-                ForEach(Array(Offer.all.enumerated()), id: \.offset) { i, offer in
-                    let x = (Double(i) + 0.5) / Double(Offer.all.count), state = store.state(offer)
+                let shelf = Offer.shelf()
+                ForEach(Array(shelf.enumerated()), id: \.offset) { i, offer in
+                    let x = (Double(i) + 0.5) / Double(shelf.count), state = store.state(offer)
                     Button { open(offer, UnitPoint(x: x, y: 0.88)) } label: {
                         VStack(spacing: 8) {
                             LoopingTank(offer: offer, side: 66, held: held, offset: 1.75 * Double(i), interval: 1.0 / 30,
