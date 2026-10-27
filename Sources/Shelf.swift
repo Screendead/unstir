@@ -446,7 +446,7 @@ struct Swirled: ViewModifier {
         let r = side / 2
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(30),
-                                 .float(Float(Tank.plateau)), .float(Float(Tank.swirlPlateau)), .float(Float(scale)),
+                                 .float(Float(Tank.plateau)), .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)),
                                  .float(0), .float3(0, 0, -1), .float(0)),
             maxSampleOffset: CGSize(width: side, height: side))
     }

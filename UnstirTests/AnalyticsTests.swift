@@ -361,6 +361,29 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertNil(Sender.Endpoint(key: ""))
     }
 
+    /// A tank lost on Escapement's clock is an end of its own: it sends `lost`, and leaving it after is no quit.
+    func testALostClockSendsLostAndNoQuit() async throws {
+        let wire = Wire()
+        let a = analytics(wire)
+        a.decide(true)
+        var level = Level.escapement[0]
+        level.id = "test-escapement"
+        let game = Game(level: level, tankTurned: true, bank: (3, nil))
+        game.commit(rod: 1, steps: 1)
+        XCTAssertTrue(game.lost)
+        a.finished(game)
+        a.left(game)
+        a.suspended(game)
+        XCTAssertNil(a.tally.pending)
+        await settle(a)
+        let outcomes = wire.requests.flatMap { r -> [String] in
+            let events = (try? JSONSerialization.jsonObject(with: r.httpBody ?? Data())) as? [[String: Any]] ?? []
+            return events.filter { $0["eventName"] as? String == "level" }
+                .compactMap { ($0["props"] as? [String: Any])?["outcome"] as? String }
+        }
+        XCTAssertEqual(outcomes, ["lost"])
+    }
+
     func testAKilledLevelSendsItsQuitNextLaunch() async {
         let wire = Wire()
         let a = analytics(wire)
