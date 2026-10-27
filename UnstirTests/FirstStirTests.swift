@@ -250,6 +250,13 @@ final class FirstStirTests: XCTestCase {
                 !story.vignettes.contains { simd_distance(p, centre($0)) <= Tank.plateau * rods[$0].z + pixel }
             }
             XCTAssertTrue(stray.isEmpty, "\(level.id): the baked layers differ outside every core, at \(stray.prefix(3))")
+            // Again at the largest phone's own pixels, the tank's side at 3x, where a stray the coarser render hides would
+            // show.
+            let phone = 1263, fine = 2.0 / Double(phone)
+            let strays = try footprint(story, story.vignettes, side: phone).filter { p in
+                !story.vignettes.contains { simd_distance(p, centre($0)) <= Tank.plateau * rods[$0].z + fine }
+            }
+            XCTAssertTrue(strays.isEmpty, "\(level.id): at the phone's scale the baked layers differ outside every core, at \(strays.prefix(3))")
             var marks: [Int: [SIMD2<Double>]] = [:]
             for k in story.vignettes {
                 let m = try footprint(story, [k], side: side)

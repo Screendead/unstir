@@ -323,7 +323,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   rewind's clock), `Harbour.rewind` (1.6 s) and `Harbour.budget` (64 MB, not yet measured on the phone; about 51 MB at
   3x on the largest phone), past which the layers bake at a lower scale. The lab's harbour in the storm is scene 16 now,
   `Storm.harbour`, on the engine below; the tests play it under a test id. `testNoVignetteShowsTheNextMove` renders
-  each vignette's two states, checks the difference stays inside its own core (so the cut clips no glow), and over
+  each vignette's two states at 512 px, and the baked layers again at the largest phone's own pixels (1263), checks the
+  difference stays inside its own core (so the cut clips no glow), and over
   every heal order that `Layout.removable` allows, that no vignette's light reaches the core of a rod removable right
   after its heal and that the entries left move none of it by half a pixel; it allows no fault (F4 redrew the
   harbour's two, the lantern's shards and the boat's stern in the cottage's ring). Every scene must also keep every
