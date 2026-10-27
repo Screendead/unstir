@@ -335,13 +335,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   boat's stern, in the cottage's ring) are pinned there until the art pass redraws them (Jack, 2026-10-26, F4). A scene on the pack's night must also keep
   every change 0.02 inside its core and clear of the knob (0.085 from the rod's centre), the outline's art spec
   (`docs/first-stir-outline.md`).
-- **StoryScene.swift**, **FirstStirDawn.swift** and **FirstStirRescue.swift** hold the scenes on the pack's one night
+- **StoryScene.swift**, **FirstStirDawn.swift**, **FirstStirRescue.swift** and **FirstStirFlood.swift** hold the scenes on the pack's one night
   (Jack, F2). A `StoryScene` draws, in tank units, a sky and sea at a time in minutes after midnight (`drawSky`), the
   scene with some vignettes played (`draw`), the bodies that move with the time where no disc reaches, their line and
   glow (`Dawn.bodyGlow`) included (`drawLive`: the sunrise's sun and chimney smoke;
   `testTheBodiesStayClearOfEveryDisc`), and the weather that falls over everything, played cores included (`drawOver`:
   the Rescue's rain), between `late`, as the level opens, and `early`; `drawLive` and `drawOver` default to nothing.
-  A chapter is an enum of its scenes conforming to it, one `Story` case (`Story.dawn`, `Story.rescue`) and an arm in
+  A chapter is an enum of its scenes conforming to it, one `Story` case (`Story.dawn`, `Story.rescue`, `Story.flood`) and an arm in
   `Story.scene` and `Story.vignettes`; `Level.firstStir` joins the chapters' levels and stamps each id and label from
   its place. `SceneLayer` draws a scene as `StoryLayer` does, from four baked layers (the sky at `late` and at
   `early`, cross-faded, and the scene held back and played), the live bodies drawn over the sky and the weather over
@@ -356,15 +356,23 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   rain's B7CEFF at full strength. Its sky (low cloud lit from below, `Rescue.skyTones`) and sea open on Dawn After's
   4:45 tones (`Dawn.tones`, mixed as `Tone`s) and turn to the chapter's own by the end of its first scene
   (`testTheRescueOpensOnTheDawnsLastSky`); its rain climbs back up its slant and thickens as a function of the time.
+  `Flood` is chapter 3, The Flood: five scenes, 2:30 back to 12:30 am, in flood teal, its ink 8F9CFF, drawn with the
+  Rescue's `Brush` and `Cast`. It opens on the Rescue's 2:30 sky, sea and rain (`testTheFloodOpensOnTheRescuesLastSky`)
+  and carries the same rain field on (`Rescue.rain(_:r:minutes:drops:through:)`, from 320 drops to 400), the sky
+  leaning to the storm's indigo. Each scene's floodwater line is fixed outside the cores; a vignette that lowers it
+  (the street lamp, the cottage door, the kitchen table) draws its own lower line inside its core. The kitchen's rain
+  falls only through its window and back door (`Kitchen.windows`).
   Its vignettes draw through `Brush` (a pen in a figure's own units through `at`, each vignette laid down under one
   tight glow by `Brush.vignette`) and `Cast` (the family and townsfolk told apart by outline alone, the dog, the
   storm lantern, the lifeboat, a breaking wave). `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
   grandmother, child, neighbour, crew) and `Dog` build silhouettes from posed parts and outline their union.
-  `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a Dawn After scene on the Mac, held back, played
+  `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a scene of chapters 1 to 3 on the Mac, held back, played
   and where they differ over the layout's cores and knobs, and prints each vignette's reach against its core less
   0.02, its nearest approach to the knob and the other discs it enters: the drawing loop, seconds a render. It counts a
   pixel changed past 14 in 255 (the Mac's renderer shifts bright glow by up to 12 when the rest of the drawing
-  changes), the test past 8 at 512 px; the test is the judge.
+  changes), the test past 8 at 512 px; the test is the judge. On the simulator one long cloud bank's flat base row came
+  out a level different whichever vignettes had played, which the Mac never showed: keep a cloud bank inside the
+  tank's width.
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
   Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there

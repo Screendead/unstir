@@ -1023,8 +1023,32 @@ names and product ids, and Complete's promise to older owners.
       on the phone first.
     - Two pens: `Pen` (chapter 1) and `Brush` (chapter 2) do the same job. Recommend folding `Pen` into `Brush` (the
       more general: figure units, clips, one glow per vignette) before chapter 3, so later chapters draw with one.
+    Chapter 3, The Flood (scenes 11 to 15), drawn 2026-10-27 on `firststir-ch3` (off `firststir-content`) in
+    `FirstStirFlood.swift` with chapter 2's `Brush` and `Cast`, levels `first-stir-11` to `-15`: the breakwater path
+    (eye `1:+4,0:-3,3:+5,2:-4,0:-2,3:+3,2:+2`, the path's entry under both of the quay end's: the wave over the father
+    reaches rod 0's disc), high street under water (pent `0:+3,2:-4,3:+5,1:-3,0:-5,4:+2,2:+4,3:-2`), the upstairs
+    window (quad `1:-4,3:+3,0:+5,2:-3,1:+2,0:-4,3:-5,2:+4`), the kitchen, flooded (eye
+    `0:+4,3:-3,1:+5,2:-4,1:-2,3:+3,2:+2,1:+4`, the table's one entry at the bottom, so it plays last, as the outline's
+    "A after rod 1" asks) and over the quay (pent `4:-3,1:+4,3:+5,0:-2,4:+3,2:-4,1:-5,3:+2,0:+3`); each par the solver's
+    optimum, and every change 0.02 inside its core, clear of its knob, and unsmeared over every heal order (tested at
+    512 px). 2:30 back to 12:30 am in flood teal, ink 8F9CFF (the outline's), opening on the Rescue's 2:30 sky, sea and
+    rain (tested) and thickening the same rain field from 320 drops to 400 towards the storm; the sky leans to storm
+    indigo. Each scene's floodwater line is fixed outside its cores (the spec lets only sky, rain and lightning move
+    there); the vignettes that lower the water draw their own line inside the core: the lamp's foot, the cottage
+    door's step between its porch posts, the kitchen table standing clear with ripples at its legs. The float keeps
+    3FE0B0. `scripts/first-stir-lab.sh` now draws chapters 1 to 3. Shots `firststir-11` to `-15`, `-held`, `-played`;
+    sheet in the tools folder (`round10/firststir/ch3-sheet.png`).
+    **Open for Jack, chapter 3** (Claude's recommendations, not decided):
+    - The water inside a core. Where a vignette lowers the water (scenes 13 and 14), the played core shows a lower
+      line than the scene around it, since the scene's own line may not move. A: as built. B: put each lowering in the
+      time layer instead, the water a function of the time like the rain (a spec change: the water would cross discs).
+      Recommend A: it keeps the spec's rule that only sky, rain and lightning cross discs, and every other beat already
+      shows an earlier moment against a later scene.
+    - Scene 14's heal order. The outline asks the table after the stair; built as the table's one entry at the bottom,
+      so it heals after everything (the tabletop also reaches the float's disc). Recommend keeping it: the cup back on
+      the table is the chapter's last beat before the storm.
     Left: Jack's review of the art at phone size (the figures are small on the quad and pent scenes), the films, and
-    chapters 3 to 5.
+    chapters 4 and 5.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
