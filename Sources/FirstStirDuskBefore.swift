@@ -59,8 +59,8 @@ enum Dusk: Int, CaseIterable, Sendable, StoryScene {
     /// the sunset's coral at 7:40. The Storm's scene 20 is to end on these at 9:30.
     static func skyTones(_ minutes: Double) -> [Tone] {
         let b = back(minutes)
-        return [Tone(0x03062A).mix(Tone(0x16205E), b), Tone(0x16205E).scaled(0.6).mix(Tone(0x4A2C78), b),
-                Tone(0x4A2C78).scaled(0.55).mix(Tone(0xC8605A), b)]
+        let night = Tone(0x03062A), rose = Tone(0x4A2C78)
+        return [night.mix(night.mix(rose, 0.45), b), night.mix(rose, 0.3).mix(rose, b), rose.scaled(0.55).mix(Tone(0xC8605A), b)]
     }
 
     /// The sea's tone at the horizon, catching the sunset as the night winds back; it darkens to black towards the viewer.
