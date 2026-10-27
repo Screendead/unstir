@@ -7,16 +7,20 @@ import SwiftUI
 /// entries on that rod holds it back, so it plays once its core is still.
 enum Story: Hashable, Sendable {
     case harbour
+    /// The Rescue, chapter 2: the outline's scene `n`, 6 to 10.
+    case rescue(Int)
 
     var vignettes: Set<Int> {
         switch self {
         case .harbour: [0, 1, 2]
+        case .rescue(let n): Rescue.vignettes(n)
         }
     }
 
     var layout: Layout {
         switch self {
         case .harbour: Harbour.layout
+        case .rescue(let n): Rescue.layout(n)
         }
     }
 
@@ -27,12 +31,14 @@ enum Story: Hashable, Sendable {
     var boltBox: CGRect? {
         switch self {
         case .harbour: Harbour.boltBox
+        case .rescue: nil
         }
     }
 
     func draw(_ ctx: GraphicsContext, r: CGFloat, layer: Harbour.Layer) {
         switch self {
         case .harbour: Harbour.draw(ctx, r: r, layer: layer)
+        case .rescue(let n): Rescue.draw(n, ctx, r: r, layer: layer)
         }
     }
 
@@ -41,6 +47,7 @@ enum Story: Hashable, Sendable {
     func weather(_ ctx: GraphicsContext, r: CGFloat, stage: Int, from: Int, u: Double) {
         switch self {
         case .harbour: Harbour.weather(ctx, r: r, stage: stage, from: from, u: u)
+        case .rescue(let n): Rescue.weather(n, ctx, r: r, stage: stage, from: from, u: u)
         }
     }
 
@@ -62,7 +69,7 @@ enum Story: Hashable, Sendable {
 
 extension Level {
     /// Numbered by place, as `Pack.levels` reads them, in the story's order (the outline's scene table).
-    static let firstStir: [Level] = [harbour].enumerated().map { i, level in
+    static let firstStir: [Level] = ([harbour] + rescue).enumerated().map { i, level in
         var level = level
         level.id = Pack.firstStir.id(i + 1)
         level.label = String(format: "%02d", i + 1)

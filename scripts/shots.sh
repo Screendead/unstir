@@ -324,3 +324,15 @@ shot firststir-01-healed-1 "First Stir 01 after the first heal (0:-3): the lante
 shot firststir-01-healed-2 "First Stir 01 after the second heal (1:+4): the boat upright, the cottage's core still turned." \
   $fs STACK=2:+5,1:-4 TURNED=1:+4
 shot firststir-01-solved "First Stir 01 solved (2:-5) on the calm evening, the card held off." $fs STACK=2:+5 TURNED=2:-5 WAVE=2
+# The Rescue, chapter 2 (scenes 6 to 10): each as dealt, then drawn unstirred held back and played. rescue is scene 6's
+# place in First Stir's table, 2 until chapter 1's scenes 2 to 5 are in, then 6.
+rescue=2
+rescue_shots() {  # scene description-dealt description-held description-played
+  local n=$1 at="PACK=first-stir LEVEL=$(($1 - 6 + rescue))"
+  shot "firststir-$(printf %02d "$n")" "First Stir $n as dealt: $2" $at
+  shot "firststir-$(printf %02d "$n")-held" "First Stir $n drawn unstirred, every vignette held back: $3" $at BARE=1
+  shot "firststir-$(printf %02d "$n")-played" "First Stir $n drawn unstirred, every vignette played: $4" $at BARE=1 STACK="" WAVE=2
+}
+rescue_shots 6 "the harbour mouth at 4:45, every core turned." \
+  "the lifeboat just inside the mouth, the torch left on the sill, a neighbour holding out blankets at the steps." \
+  "the lifeboat outside on a swell, searchlight out; the child at the window with the torch and the dog; two neighbours carrying blankets out of the lifeboat house; heavier rain."

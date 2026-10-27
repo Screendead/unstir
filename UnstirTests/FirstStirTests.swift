@@ -101,10 +101,16 @@ final class FirstStirTests: XCTestCase {
     }
 
     /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, past
-    /// the renderer's own noise (up to 6 in 255 where nothing changed).
+    /// the renderer's own noise (up to 6 in 255 where nothing changed). A rescue scene's vignette is drawn alone, since
+    /// how the renderer lays down light near any drawing shifts with what else the canvas holds.
     @MainActor private func footprint(_ k: Int, of story: Story, side: Int) throws -> [SIMD2<Double>] {
         func pixels(_ played: Set<Int>) throws -> [UInt8] {
-            let image = try XCTUnwrap(story.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear)?.cgImage)
+            let render = if case .rescue(let n) = story {
+                Rescue.render(n, vignette: k, played: !played.isEmpty, side: CGFloat(side), colorMode: .nonLinear)
+            } else {
+                story.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear)
+            }
+            let image = try XCTUnwrap(render?.cgImage)
             var bytes = [UInt8](repeating: 0, count: 4 * side * side)
             let ctx = try XCTUnwrap(CGContext(data: &bytes, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 4 * side,
                                               space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
@@ -119,6 +125,10 @@ final class FirstStirTests: XCTestCase {
         }
         return marks
     }
+
+    /// How far inside its core's edge a vignette's change keeps, glow included, and the knob it keeps clear of: its
+    /// radius, 0.07, and 0.015 more.
+    private static let margin = 0.02, knob = 0.085
 
     /// Each vignette changes nothing past a pixel outside its own core, so the core the layer cuts in clips none of it.
     /// Over every heal order: no vignette's light reaches the core of a rod with an entry removable right after its heal,
@@ -140,6 +150,12 @@ final class FirstStirTests: XCTestCase {
                 XCTAssertFalse(m.isEmpty, "\(level.id): vignette \(k) changes nothing")
                 let core = Tank.plateau * rods[k].z
                 XCTAssertTrue(m.allSatisfy { simd_distance($0, centre(k)) <= core + pixel }, "\(level.id): vignette \(k) leaves its core")
+                // The art spec, which the lab's harbour predates: a margin inside the core's edge, and clear of the knob.
+                if story != .harbour {
+                    let d = m.map { simd_distance($0, centre(k)) }
+                    XCTAssertLessThanOrEqual(d.max()!, core - Self.margin + pixel, "\(level.id): vignette \(k) nears its core's edge")
+                    XCTAssertGreaterThanOrEqual(d.min()!, Self.knob - pixel, "\(level.id): vignette \(k) reaches under its knob")
+                }
                 marks[k] = m
             }
             var seen: Set<[Twist]> = []

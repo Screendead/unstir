@@ -198,3 +198,6 @@ firststir-01-bare-3.png  First Stir 01 drawn unstirred after the last heal: some
 firststir-01-healed-1.png  First Stir 01 after the first heal (0:-3): the lantern lit in a still core, the other two cores still turned.
 firststir-01-healed-2.png  First Stir 01 after the second heal (1:+4): the boat upright, the cottage's core still turned.
 firststir-01-solved.png  First Stir 01 solved (2:-5) on the calm evening, the card held off.
+firststir-06.png  First Stir 6 as dealt: the harbour mouth at 4:45, every core turned.
+firststir-06-held.png  First Stir 6 drawn unstirred, every vignette held back: the lifeboat just inside the mouth, the torch left on the sill, a neighbour holding out blankets at the steps.
+firststir-06-played.png  First Stir 6 drawn unstirred, every vignette played: the lifeboat outside on a swell, searchlight out; the child at the window with the torch and the dog; two neighbours carrying blankets out of the lifeboat house; heavier rain.
