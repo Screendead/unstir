@@ -758,11 +758,12 @@ enum Kitchen {
         // Vignette 1, the stair.
         pen.vignette(1) { pen in
             if played.contains(1) {
-                let x = 0.535
-                Cast.figure(pen.at(x, step(x - 0.01), k: 0.16), .child,
+                // Standing on one tread, the leading foot up on the next.
+                let x = 0.51, y = step(0.48)
+                Cast.figure(pen.at(x, y, k: 0.16), .child,
                             arms: [[(0.1, -0.62), (0.26, -0.5), (0.3, -0.42)], [(-0.1, -0.62), (0.12, -0.48), (0.22, -0.44)]],
-                            legs: [[(-0.06, -0.32), (-0.06, 0)], [(0.06, -0.32), (0.14, -0.2), (0.16, -0.38)]], colour: ink)
-                Cast.dog(pen.at(x + 0.045, step(x - 0.01) - 0.045, k: 0.07, turn: -0.3), colour: ink)
+                            legs: [[(-0.05, -0.32), (-0.04, 0)], [(0.06, -0.32), (0.2, -0.44), (0.22, -0.32)]], colour: ink)
+                Cast.dog(pen.at(x + 0.045, y - 0.045, k: 0.07, turn: -0.3), colour: ink)
             } else {
                 // A pair of boots on a step, toes out.
                 for dx in [0.0, 0.026] {
