@@ -874,13 +874,29 @@ names and product ids, and Complete's promise to older owners.
     its knob, and no vignette plays smeared over any heal order (tested). Level 1 was the lab's storm harbour, the
     outline's scene 16: per F5 it is now the same view at sunrise, redrawn, and the storm harbour waits, with no level,
     for chapter 4. Shots `firststir-0N`, `-held`, `-played`, `firststir-01-healed-1` and `-2`; `scripts/first-stir-lab.sh`
-    is the drawing loop. Departures from the outline, for Jack: the sunrise's chimney smoke comes from the neighbour's
-    chimney, as the time layer outside every disc (the cottage's chimney lies outside its core); the sunrise's cottage
-    plays after the boat because its doorway lies in the boat's disc (as the outline says) and its door was moved a
-    little left so the change keeps 0.02 inside the core; on the rock pool the dog sits a little up the rocks from the
-    child, not by her boots, so its change stays clear; righting the boat's boat lies clear of the haulers' disc (the
-    outline had it heal after them), with the boat above its knob and the haulers below theirs. Left: Jack's review of
-    the art at phone size (the figures are small on the quad scenes), the films, and chapters 2 to 5.
+    is the drawing loop. The review's fixes (2026-10-27): each core cuts in through a mask without antialiasing, since
+    an antialiased edge left a faint ring at every played core (`testTheCutInCoresLeaveNoSeam`; a vignette's faint glow
+    tail can still step a few levels where it crosses its core's edge); the sun and smoke keep clear of every disc by
+    their glow and line as well (`Dawn.bodyGlow`), so the sun is smaller (0.022) and further right, and the smoke starts
+    a little higher off the neighbour's chimney pot; tea's crate stands on the ground with the flask in the pouring
+    hand, its searchlight beam is a flat fill and the held coil is ink; righting's lantern and bucket stand either side
+    of rod 3's knob; the rock pool's weed is ink, leaving the float the one teal thing; the gallery's candle window
+    sits in a house's wall. The sunrise's cottage plays after the boat because its doorway lies in the boat's disc (as
+    the outline says), its door moved a little left so the change keeps 0.02 inside the core.
+    **Open, Jack's calls on three departures from the outline** (Claude's recommendations, not decided):
+    - D1, the sunrise's chimney smoke. A: smoke from the neighbour's chimney as the time layer, outside every disc,
+      thinning as the night winds back (built). B: the outline's, smoke from the cottage's own chimney in the
+      cottage's vignette, which needs the cottage redrawn so its chimney lies in the core. C: no smoke. Recommend A:
+      the smoke tells the time on every heal, not once, and B crowds the cottage's core.
+    - D2, the rock pool's dog. A: sitting a little up the rocks from the child, clear of her change (built). B: the
+      outline's, by the child's boots, where its change did not stay clear, so B needs the dog, the child or the
+      pool reworked until it does. Recommend A: the same story, and each change reads on its own.
+    - D3, righting the boat's heal order. A: the boat clear of the haulers' disc, so the two heal in either order
+      (built). B: the outline's, the bow reaching the haulers' disc so the boat heals after them, which means
+      redrawing the beach so the boat sits nearer rod 0 and rechecking it plays unsmeared. Recommend A for now:
+      it plays clean under every order; B is the better story if Jack wants the order to carry it.
+    Left: Jack's review of the art at phone size (the figures are small on the quad scenes), the films, and
+    chapters 2 to 5.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
