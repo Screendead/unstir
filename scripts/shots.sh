@@ -292,7 +292,7 @@ if [[ -z "$pattern" || "rim-" == *$pattern* ]]; then
     "concat=n=6:v=1,crop=iw:ih*0.56:0:ih*0.21,scale=440:-1,tile=3x2:padding=8:color=0x303030" -frames:v 1 "shots/vortex-rim.png"
   echo "sheet vortex-rim"
 fi
-shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the centre turned 90 degrees, sheared all the way out to the glass's edge, which stays still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
+shot swirl-quad-one "Square with a swirl, one stir of it alone (4:+3): the glass's edge turned 90 degrees, sheared all the way in to the centre, which stays still." LAYOUT=quadSwirl STACK=4:+3 SWIRLED=1 CLOCK=3
 swirl=0:+3,4:+2,2:-4,1:+3,4:-3,3:+5
 shot swirl-quad "Square with a swirl (rod 4), $swirl." LAYOUT=quadSwirl STACK="$swirl" SWIRLED=1 CLOCK=3
 shot swirl-quad-live "The same held mid-drag from the rim, the swirl 1.5 steps clockwise." LAYOUT=quadSwirl STACK="$swirl" LIVE=4:1.5 TOUCH=0.7,-0.7 SWIRLED=1 CLOCK=3
