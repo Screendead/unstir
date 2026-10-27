@@ -98,6 +98,9 @@ struct Level: Hashable, Sendable {
     var sockets: Set<Int> = []
     /// Escapement's clocks: a knob that can't be turned, and waits on a tap.
     var ratchets: Set<Int> = []
+    /// Lens's slots whose steps magnify (`Tank.lens`) rather than turn. Their knobs work as any other: only the map
+    /// differs, so every merge, commutation and solve on the level takes this set.
+    var lenses: Set<Int> = []
     /// What carries the knobs round without a stir, held by the rim. Maelstrom's turns the tank, to bring a seized
     /// knob's fluid to a working one.
     var motion = Motion.none

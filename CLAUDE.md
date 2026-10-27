@@ -80,14 +80,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
     -destination 'platform=iOS Simulator,name=Unstir iPhone 17 Pro Max' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
   ```
-  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds skip
-  unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
+  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds, and the
+  halftone's contrast test, skip unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
   `xcodebuild` to run them too (about a minute and a half more).
 - StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
-- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated]` (e.g. `quad 0:+3,2:-4 0`; a swirl
-  layout by its name, `quadSwirl`, its swirl never seized) prints the optimum (and what untwisting alone takes when a
+- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots]` (e.g. `quad 0:+3,2:-4 0`,
+  or `tri 1:-2,2:+4,0:+3 lenses=0`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
   detour beats it), the park rule's fewest and most moves over every way its ties go under each parking, fair or over
   by the most, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It
   compiles `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut
@@ -159,10 +159,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   more for the swirl, so the menu's `Stirred` keeps its disc just under 1. It stacks and merges like any rod, decided by sampling as it overlaps every rod, and every
   turn of the tank leaves it on itself. On hex it commutes exactly with the hub, which shares its centre. It has no
   rigid core (`Tank.swirlPlateau`), so it shears through every other rod's and the core-clearance rule exempts it. `Layout.allCases` leaves the swirls out, so the
-  frozen generator never deals one and the sandbox never cycles to one.
+  frozen generator never deals one and the sandbox never cycles to one. A rod may instead be a lens (Lens's pack,
+  `Level.lenses`, by slot): `Tank.lens` moves only its rigid core, on the flow of u (1 - (u / 0.6)^2) (`lensEdge`, 2),
+  which magnifies the centre by 2 a step (`lensRate`, Jack's from the phone, 2026-10-26) for positive steps and fixes the core's rim, so the picture
+  draws a crisp circle there and nothing outside it moves. Steps sum and cancel, so a lens's entries merge and pop
+  through the same `Array.commit`, and a lens never wraps: +k needs exactly -k. Every call that maps points
+  (`same`, `commutes`, `looksSolved`, `removable`, `landing`, `commit`, `parse`) takes the lens set,
+  empty by default; a call that drops it treats a lens as a twist, which `testTheLensSetChangesHowAStackMerges` catches
+  where it matters. Ported from the hard lens on local branch `lab-lens` (Jack's call, round 3, L1).
 - **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
-  the stack's inverses to sample the picture. The tests only reach the Swift copy (`Tank.profile`/`Tank.twist`), so
-  change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
+  the stack's inverses to sample the picture. A lens's entry carries a negative radius and its flow's time
+  (`steps * Tank.lensRate`) for the angle, and the rim's sharpness comes in as a uniform. The tests reach the Swift copy
+  (`Tank.profile`/`Tank.twist`/`Tank.lens`) and only the shader's `lensFlow`, compiled on its own
+  (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
   The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (30) limits are tuned against 120 Hz on an
   iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone.
@@ -297,7 +306,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
-  one so far; Lens and Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
+  one so far, Lens three; Escapement none): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
@@ -312,6 +321,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
   opens without one, and a card with none says "buy" alone.
+  `Level.lens` holds three levels for the hard lens's phone test, the draft table's free taste (`docs/lens-design.md`): tri, rod 0 a lens, on the halftone, each dealt lens entry +1 to +3 and each lens netting at most +3,
+  par the solver's optimum (`testLensLevels`). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
+  (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
+  one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
+  through the rod's own `liveAngle` and detent, so its count, dashes, clicks and the iris's turn are a rod's, a step
+  at a time, the dashes running clockwise round the disc for a zoom in.
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
   (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
@@ -396,10 +411,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   raw clock; the neural web is static per seed, built once off the main actor. Vortex's own family (isobars, ephemeris,
   cords; **VortexPictures.swift**, **Flow.metal**, **Sky.metal**, **Loom.metal**) is drawn live the same way, with no
   twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. The sandbox's cycle
-  (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins.
+  (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's
+  halftone. The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
+  screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
+  outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
+  It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
-  even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
+  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
@@ -442,7 +461,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   disc still, and save a move). It tries only the detours its class comment lists, so it is a bounded search, not a
   proof; `exhaustive` checks it on small cases. Its pruning reads which rods interact (`interacts`: discs that overlap
   and maps that fail to commute, judged by the maps), so a swirl interacts with every rod but hex's hub, which shares
-  its centre; whether a word commutes is still `Layout.commutes`'s call. The swirl is a slot like any other, held at
+  its centre; whether a word commutes is still `Layout.commutes`'s call. `Solver(layout, lenses:)` maps a lens's slots
+  as the game does, so on tri a lens interacts with both its neighbours, and two lenses, whose cores never meet, never
+  interact. The swirl is a slot like any other, held at
   every position and never seized. With no knob seized, as on every vortex level, the tank never turns, so every
   player untwists and the planning gap is 0: there the solver's job is the optimum, and whether a detour beats
   untwisting. The park rule (`park`) untwists the newest whole seam a working knob

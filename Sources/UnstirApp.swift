@@ -184,10 +184,15 @@ struct Harness {
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))
         }
         if let picture { level.picture = picture }
-        if let s = env["UNSTIR_STACK"] {
+        if env["UNSTIR_STACK"] != nil {
             level.layout = env["UNSTIR_LAYOUT"].flatMap(Layout.init(rawValue:)) ?? level.layout
-            level.scramble = .parse(s, in: level.layout)
         }
+        // UNSTIR_LENSES=0,2: those slots lenses, never the swirl; they change how UNSTIR_STACK merges as it is parsed.
+        if let s = env["UNSTIR_LENSES"] {
+            level.lenses = Set(s.split(separator: ",").compactMap { Int($0) }
+                .filter { level.layout.rods.indices.contains($0) && $0 != level.layout.swirl })
+        }
+        if let s = env["UNSTIR_STACK"] { level.scramble = .parse(s, in: level.layout, lenses: level.lenses) }
         // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
         if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }
         // UNSTIR_SEIZED=1,4: those knobs seized on a turning tank, never the swirl, which has no knob.

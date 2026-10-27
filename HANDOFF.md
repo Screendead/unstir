@@ -780,6 +780,19 @@ names and product ids, and Complete's promise to older owners.
    Jack's call (2026-10-26, round 9, L1 = A): the phone test before any of Lens's art is drawn; the story and levels
    wait for its result. The session above is its first part. `docs/lens-design.md` now opens with what the session
    decided and which parts of the draft it supersedes (PR #42); the table itself is not redone.
+   The hard lens is built for real on `lens-pack` (PR #45, merged 2026-10-27), with `lens-1` to `lens-3` (the draft's
+   taste, tri) to play, each card's "next" going on to the next. The phone session's two calls are ported there
+   (round 9, 2026-10-26): the drag up and down (0.15 tank units a step, up a positive step, which magnifies, so the
+   dealt lenses still magnify and are undone dragging down) and x2 a step. Lenses on big rods only is still open, so
+   the three levels keep tri and rod 0. At x2 the deal's cap of +3 is x8 at the centre, and just inside the rim a
+   step squashes by 2^-2, so +3 there is 1/64 of the screen's pitch, against 0.21 at x1.3: the glitter check at +2 and
+   +3 matters more. The shelf shows no Lens cover in Release until the pack has levels past its taste (S1), so it is
+   still a Debug install (`scripts/run-ios.sh Debug`), then
+   `xcrun devicectl device process launch --device "$UNSTIR_DEVICE" --terminate-existing --environment-variables
+   '{"UNSTIR_PACK":"lens","UNSTIR_LEVEL":"1","UNSTIR_OPEN":"1","UNSTIR_UNLOCK":"1"}' com.screendead.Unstir`
+   (`UNSTIR_UNLOCK` keeps the phone's developer unlock, which any other harness variable clears; the flag's name is
+   unchecked against this Xcode's `devicectl`). The first launch bakes the halftone, unoptimised, for 20 s or more;
+   later ones read it from Caches. The phone test itself has not been run.
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
    Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
@@ -884,14 +897,30 @@ names and product ids, and Complete's promise to older owners.
     ids, and each pack's own rules.
 27. Lens: a rod kind on the level (twist by default), read by the map, `same`, the shader and the solver;
     `testDailyVectors` and `testEndlessVectors` pass unchanged.
+   Built 2026-10-25 on `lens-pack` (merged 2026-10-27), off `packs-ground`: `Level.lenses` (slots), a `lenses` set on every
+   call that maps points, empty by default, so the free game is untouched. Left: a spiral kind, only if Jack wants one
+   (below).
 28. Lens: the zoom map from the lab and the spiral flow (its ring angle a closed-form integral checked against
     numerical integration), each in Twist.swift and Unstir.metal together, with tests that steps merge by summing, an
     entry and its inverse cancel, the map is the identity outside the disc and the Metal copy holds precision far past
     ±3 steps; shots that pin each kind's sign.
+   Built 2026-10-25 on `lens-pack` (merged 2026-10-27): the hard lens only (Jack's L1), x2 a step (x1.3 until the
+   phone session, 2026-10-26) at sharpness 2, as
+   constants (`Tank.lensRate`, `Tank.lensEdge`), with those tests (`LensTests`, the Metal copy to 12 steps either way)
+   and the `lens-plus`/`lens-minus` shots pinning the sign. The soft zoom and the spiral are not ported.
 29. Lens: the solver and solve.sh learn rod kinds; pars from the solver.
+   Built 2026-10-25 on `lens-pack` (merged 2026-10-27): `Solver(layout, lenses:)`, `solve.sh ... lenses=0`. The three test
+   levels' pars (1, 2, 3) are the solver's optimum. Left: pars for the rest of the table once Jack approves it.
 30. Lens: the halftone pipeline (dot screens in clean coordinates, baked panels, fill 0) and a test in the spirit of
     `testVisibleSmudgeIsNotSolved` that every step of every rod moves contrasting pixels.
+   Built 2026-10-25 on `lens-pack` (merged 2026-10-27) as far as the lab's halftone test panel (`Picture.halftone`, baked off
+   the main actor, cached in Debug, where it takes some 20 s) and the contrast test, on every layout. Left: the 25
+   panels' art (to-do 32) and a bake that fits the phone's time and memory with 25 of them.
 31. Lens: iris and nautilus knobs, the drag's count reading zoom steps, and haptic detents.
+   Built 2026-10-25 on `lens-pack` (merged 2026-10-27): the iris (`RodView.lens`). The drag runs up and down, a step
+   per 0.15 tank units, up zooming in (Jack, 2026-10-26); the count, dashes and half-step clicks are a rod's unchanged,
+   the dashes running round the disc and the iris turning with the steps (`lens-live` shot). No nautilus: no spiral. Left: the phone's feel,
+   in the phone test.
 32. Lens: 25 panels of art (an original wordless heist in pop-art objects) and the issue pages.
    Story drafted 2026-10-25 (`docs/lens-design.md` section 1, branch `lens-design`): "The Switch", a reverse heist,
    each panel's beat and the clue its lens core holds. Waits on Jack (open point 2); no art drawn.
