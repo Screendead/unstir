@@ -536,7 +536,7 @@ enum HomeLight {
                 Rescue.swellUnder(pen, x: 0.11, y: -0.665, w: 0.12)
                 Cast.lifeboat(pen.at(0.1, -0.675, k: 0.12, turn: -0.15), beam: true, reach: 0.08)
             } else {
-                Cast.lifeboat(pen.at(0.11, -0.445, k: 0.12))
+                Cast.lifeboat(pen.at(0.11, -0.445, k: 0.12), beam: true, reach: 0.08)
             }
         }
 
