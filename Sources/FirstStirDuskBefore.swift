@@ -315,11 +315,12 @@ extension Dusk {
             pen.vignette(0) { pen in
                 if played.contains(0) {
                     // Dark, the grandmother at the lamp reaching her taper to its wick.
-                    Cast.figure(pen.at(0.33, room.y1 - 0.003, k: 0.115), .grandmother,
-                                arms: [[(0.1, -0.72), (0.22, -0.78), (0.36, -0.68)], [(-0.1, -0.72), (-0.14, -0.45)]], colour: ink)
+                    // 0.125 tall with her bun, past the spec's 0.12 for a standing adult, her head under the room's top.
+                    Cast.figure(pen.at(0.328, room.y1 - 0.003, k: 0.135), .grandmother,
+                                arms: [[(0.1, -0.72), (0.2, -0.7), (0.24, -0.585)], [(-0.1, -0.72), (-0.14, -0.45)]], colour: ink)
                     pen.lit(Rescue.tight) { g in
-                        g.stroke(g.seg(0.371, -0.548, lampAt.x - 0.004, -0.532), cream)
-                        g.fill(g.circle(lampAt.x - 0.004, -0.534, 0.005), lamplight)
+                        g.stroke(g.seg(0.36, -0.55, 0.379, -0.557), cream)
+                        g.fill(g.circle(0.381, -0.558, 0.005), lamplight)
                     }
                 } else {
                     pen.fill(pen.poly([(room.x1, -0.548), (0.49, -0.566), (0.49, -0.506), (room.x1, -0.52)]), lamplight, 0.3)
