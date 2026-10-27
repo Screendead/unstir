@@ -187,7 +187,6 @@ final class FirstStirTests: XCTestCase {
             var marks: [Int: [SIMD2<Double>]] = [:]
             for k in story.vignettes {
                 let m = try footprint(story, k, side: side)
-                guard !m.isEmpty || level.id == "first-stir-1" || story.scene == nil else { continue }
                 XCTAssertFalse(m.isEmpty, "\(level.id): vignette \(k) changes nothing")
                 let core = Tank.plateau * rods[k].z
                 XCTAssertTrue(m.allSatisfy { simd_distance($0, centre(k)) <= core + pixel }, "\(level.id): vignette \(k) leaves its core")
