@@ -398,8 +398,11 @@ enum HighStreet {
         pen.vignette(0) { pen in
             let (hour, minute) = played.contains(0) ? (1.0, 40.0) : (2.0, 5.0)
             let h = (hour + minute / 60) * .pi / 6, m = minute * .pi / 30
-            pen.stroke(pen.seg(clock.x, clock.y, clock.x + 0.03 * sin(h), clock.y - 0.03 * cos(h)), ink)
-            pen.stroke(pen.seg(clock.x, clock.y, clock.x + 0.048 * sin(m), clock.y - 0.048 * cos(m)), ink)
+            // A short hour hand against a long minute hand, and the hub between: at 1:40 the two lie nearly in one line.
+            pen.stroke(pen.seg(clock.x, clock.y, clock.x + 0.022 * sin(h), clock.y - 0.022 * cos(h)), ink)
+            pen.stroke(pen.seg(clock.x, clock.y, clock.x + 0.052 * sin(m), clock.y - 0.052 * cos(m)), ink)
+            pen.fill(pen.circle(clock.x, clock.y, 0.008), .black)
+            pen.stroke(pen.circle(clock.x, clock.y, 0.008), ink)
         }
 
         // Vignette 2, the street lamp.
