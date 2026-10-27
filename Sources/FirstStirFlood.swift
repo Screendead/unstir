@@ -157,9 +157,11 @@ extension Cast {
 }
 
 /// Scene 11, 2:30 back to 2:05, on eye: the breakwater curving out from the quay end on the left, round to the dark
-/// lighthouse on its end, the rope line along it on posts, the sea over it. Rod 0, the quay end: the rope tied off on its
-/// ring and running out, then the father kneeling there tying it. Rod 1, the path: the father halfway out, crouched
-/// against a wave breaking over him, then the path bare between waves. Rod 2, the lantern: the hand-lamp in the gallery
+/// lighthouse on its end, posts along it, the sea over it. Rod 0, the quay end: the rope tied off on its ring and running
+/// out along the path, then the father kneeling there tying it. Rod 1, the path: the father halfway out with the coil on
+/// his shoulder, paying the rope out behind him, crouched against a wave breaking over him (scene 10's played beat, at
+/// the same 2:30), then the path bare between waves. The rope exists only in the two vignettes; between the cores, a
+/// wave over the path stands where it would cross in both states. Rod 2, the lantern: the hand-lamp in the gallery
 /// window, then dark.
 enum BreakwaterPath {
     static let horizon = -0.3
@@ -178,6 +180,11 @@ enum BreakwaterPath {
     /// Where the father crouches, halfway out.
     static let halfway = 0.29
     static let axis = 0.16
+    /// The rope along the path's harbour edge, at t along it.
+    static func rope(_ t: Double) -> (Double, Double) { (arm(t).x, arm(t).y - 0.025 - 0.05 * depth(t)) }
+    /// How far out the quay end's rope reaches before the path's disc (rod 1's), and where the path's takes it up, clear
+    /// of the quay end's core.
+    static let ropeOut = 0.033, ropeIn = 0.205
 
     static func draw(_ pen: Brush, played: Set<Int>) {
         let ink = Flood.ink
@@ -196,9 +203,8 @@ enum BreakwaterPath {
             let p = arm(t)
             stone.addPath(pen.seg(p.x, p.y, p.x, p.y + wall(t)))
         }
-        // The rope line on its posts, along the path's harbour edge.
-        var rope = Path(), posts = Path()
-        rope.addPath(pen.poly([(ring.x, ring.y)] + ts.map { t in (arm(t).x, arm(t).y - 0.025 - 0.05 * depth(t)) }, closed: false))
+        // Posts along the path's harbour edge.
+        var posts = Path()
         for t in Swift.stride(from: 0.08, through: 0.95, by: 0.12) {
             let p = arm(t)
             posts.addPath(pen.seg(p.x, p.y, p.x, p.y - 0.03 - 0.06 * depth(t)))
@@ -238,11 +244,10 @@ enum BreakwaterPath {
             g.stroke(quayside, ink)
             g.stroke(house, ink)
             g.stroke(posts, ink, 0.8)
-            g.stroke(rope, Flood.sodium, 0.6)
         }
         // The sea breaking over the far arm and along the quay's foot, and in the foreground, rod 3's core.
         for (x, y, k) in [(0.62, -0.2, 0.14), (0.66, 0.2, 0.16), (-0.7, 0.4, 0.18), (0.05, 0.5, 0.22), (0.3, 0.74, 0.24),
-                          (-0.38, 0.72, 0.22), (0.72, 0.52, 0.2)] {
+                          (-0.38, 0.72, 0.22), (0.72, 0.52, 0.2), (-0.05, 0.1, 0.3)] {
             Cast.breaker(pen.at(x, y, k: k), colour: Flood.sea)
         }
 
@@ -255,7 +260,8 @@ enum BreakwaterPath {
                 pen.stroke(pen.ellipse(-0.47, quay - 0.012, 0.03, 0.011), Flood.sodium, 0.8)
                 pen.stroke(pen.ellipse(-0.47, quay - 0.016, 0.02, 0.008), Flood.sodium, 0.8)
             } else {
-                // The hitch on the ring and its tail hanging down the face.
+                // The hitch on the ring and its tail hanging down the face, the rope running out up onto the path.
+                pen.stroke(pen.poly([(ring.x, ring.y)] + Swift.stride(from: 0.0, through: ropeOut, by: 0.011).map(rope), closed: false), Flood.sodium, 0.6)
                 pen.stroke(pen.ellipse(ring.x + 0.004, ring.y + 0.004, 0.012, 0.02), Flood.sodium, 0.8)
                 pen.stroke(pen.curve(ring.x - 0.006, ring.y + 0.02, ring.x - 0.03, ring.y + 0.06, ring.x - 0.015, ring.y + 0.1), Flood.sodium, 0.8)
             }
@@ -265,10 +271,15 @@ enum BreakwaterPath {
         pen.vignette(1) { pen in
             if !played.contains(1) {
                 let p = arm(halfway)
-                Cast.figure(pen.at(p.x + 0.02, p.y - depth(halfway) / 2, k: 0.13, turn: 0.28), .father,
+                // The rope paid out behind him from the coil, back towards the quay.
+                pen.stroke(pen.poly(Swift.stride(from: ropeIn, through: halfway, by: 0.01).map(rope), closed: false), Flood.sodium, 0.6)
+                let him = pen.at(p.x + 0.02, p.y - depth(halfway) / 2, k: 0.13, turn: 0.28)
+                Cast.figure(him, .father,
                             arms: [[(0.1, -0.74), (0.2, -0.56), (0.24, -0.4)], [(-0.1, -0.74), (-0.22, -0.6), (-0.3, -0.62)]],
                             legs: [[(-0.05, -0.3), (-0.14, -0.14), (-0.1, 0)], [(0.05, -0.3), (0.16, -0.16), (0.14, 0)]],
                             colour: ink)
+                him.stroke(him.ellipse(-0.12, -0.7, 0.15, 0.11), Flood.sodium)
+                him.stroke(him.ellipse(-0.12, -0.7, 0.09, 0.065), Flood.sodium)
                 Cast.breaker(pen.at(p.x - 0.035, p.y - depth(halfway), k: 0.1, flip: true), glows: Rescue.tight, colour: Flood.sea)
                 for (x, y) in [(p.x - 0.07, p.y - 0.1), (p.x - 0.03, p.y - 0.12), (p.x - 0.1, p.y - 0.07)] {
                     pen.stroke(pen.seg(x, y, x + 0.03, y - 0.02), Flood.sea, 0.8)
