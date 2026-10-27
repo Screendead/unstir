@@ -192,21 +192,36 @@ swirl-hex.png  Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3.
 icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
 icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
 icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.
-firststir-01.png  First Stir 01 as dealt: every core turned, the time under the tank.
-firststir-01-held.png  First Stir 01 drawn unstirred, held back. Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney.
-firststir-01-played.png  First Stir 01 drawn unstirred, every vignette played: a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke.
-firststir-02.png  First Stir 02 as dealt: every core turned, the time under the tank.
-firststir-02-held.png  First Stir 02 drawn unstirred, held back. The gallery: a neighbour measuring the smashed panes with a rule; three gulls on the rail; smoke from three chimneys.
-firststir-02-played.png  First Stir 02 drawn unstirred, every vignette played: the gallery empty, shards on the deck; spray over the bare rail; no smoke, one window lit by a candle.
-firststir-03.png  First Stir 03 as dealt: every core turned, the time under the tank.
-firststir-03-held.png  First Stir 03 drawn unstirred, held back. The rock pool: the lighthouse door shut, rope coiled on its hook; the child kneeling at the pool, holding up the float; the dog sitting.
-firststir-03-played.png  First Stir 03 drawn unstirred, every vignette played: the door open, the rope trailing over the rocks; the float alone in the pool; the dog sniffing.
-firststir-04.png  First Stir 04 as dealt: every core turned, the time under the tank.
-firststir-04-held.png  First Stir 04 drawn unstirred, held back. Righting the boat: three townsfolk, the rope slack, one waving; the boat upright on the sand; gulls coming back.
-firststir-04-played.png  First Stir 04 drawn unstirred, every vignette played: the three leaning back, hauling; the boat keel up, dark; the last stars, a gull asleep on the beacon.
-firststir-05.png  First Stir 05 as dealt: every core turned, the time under the tank.
-firststir-05-held.png  First Stir 05 drawn unstirred, held back. Tea on the quay: the lifeboat moored, crew gone, lamp out; the three on the bench under one blanket, the child asleep; three cups steaming on a crate.
-firststir-05-played.png  First Stir 05 drawn unstirred, every vignette played: a crewman coiling rope, the searchlight on; the child standing on the bench, pointing; a neighbour pouring from a flask.
+firststir-01.png  First Stir 1 as dealt: every core turned, the time under the tank.
+firststir-01-held.png  First Stir 1 drawn unstirred, held back. Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney.
+firststir-01-played.png  First Stir 1 drawn unstirred, every vignette played: a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke.
+firststir-02.png  First Stir 2 as dealt: every core turned, the time under the tank.
+firststir-02-held.png  First Stir 2 drawn unstirred, held back. The gallery: a neighbour measuring the smashed panes with a rule; three gulls on the rail; smoke from three chimneys.
+firststir-02-played.png  First Stir 2 drawn unstirred, every vignette played: the gallery empty, shards on the deck; spray over the bare rail; no smoke, one window lit by a candle.
+firststir-03.png  First Stir 3 as dealt: every core turned, the time under the tank.
+firststir-03-held.png  First Stir 3 drawn unstirred, held back. The rock pool: the lighthouse door shut, rope coiled on its hook; the child kneeling at the pool, holding up the float; the dog sitting.
+firststir-03-played.png  First Stir 3 drawn unstirred, every vignette played: the door open, the rope trailing over the rocks; the float alone in the pool; the dog sniffing.
+firststir-04.png  First Stir 4 as dealt: every core turned, the time under the tank.
+firststir-04-held.png  First Stir 4 drawn unstirred, held back. Righting the boat: three townsfolk, the rope slack, one waving; the boat upright on the sand; gulls coming back.
+firststir-04-played.png  First Stir 4 drawn unstirred, every vignette played: the three leaning back, hauling; the boat keel up, dark; the last stars, a gull asleep on the beacon.
+firststir-05.png  First Stir 5 as dealt: every core turned, the time under the tank.
+firststir-05-held.png  First Stir 5 drawn unstirred, held back. Tea on the quay: the lifeboat moored, crew gone, lamp out; the three on the bench under one blanket, the child asleep; three cups steaming on a crate.
+firststir-05-played.png  First Stir 5 drawn unstirred, every vignette played: a crewman coiling rope, the searchlight on; the child standing on the bench, pointing; a neighbour pouring from a flask.
+firststir-06.png  First Stir 6 as dealt: every core turned, the time under the tank.
+firststir-06-held.png  First Stir 6 drawn unstirred, held back. Home light, 4:45 under the dawn's last sky: the lifeboat just inside the harbour mouth, the torch left on the sill, a neighbour holding out blankets at the steps; light rain.
+firststir-06-played.png  First Stir 6 drawn unstirred, every vignette played: the lifeboat outside on a swell, searchlight out; the child at the window with the torch and the dog; two neighbours carrying blankets out of the lifeboat house; the low cloud lit, heavier rain.
+firststir-07.png  First Stir 7 as dealt: every core turned, the time under the tank.
+firststir-07-held.png  First Stir 7 drawn unstirred, held back. Off the breakwater: the steps empty, a rope hanging, surf over the lower steps; the lifeboat alongside their foot, two crew reaching up them; the lighthouse dark.
+firststir-07-played.png  First Stir 7 drawn unstirred, every vignette played: the father helping the grandmother down the steps; the lifeboat further off, bow high on a wave; a glow at the lighthouse's stair window; heavier rain.
+firststir-08.png  First Stir 8 as dealt: every core turned, the time under the tank.
+firststir-08-held.png  First Stir 8 drawn unstirred, held back. The lantern chain: the lifeboat house open on an empty slip; the chain of lights reaching the lighthouse door; four bearers with lanterns held high.
+firststir-08-played.png  First Stir 8 drawn unstirred, every vignette played: the crew pushing the lifeboat out of the house and down the slip; the chain ending short of the lighthouse, one light at the door; two bearers, two more running up unlit; heavier rain.
+firststir-09.png  First Stir 9 as dealt: every core turned, the time under the tank.
+firststir-09-held.png  First Stir 9 drawn unstirred, held back. The stair: the hand-lamp burning on the stair's turn; the lantern chain's lights far below the window; the storm lantern on the bottom step by the open door.
+firststir-09-played.png  First Stir 9 drawn unstirred, every vignette played: the grandmother sitting at the turn, her ankle bound, the lamp beside her; the window dark; the father at the foot, lantern raised, looking up; heavier rain at the window and door.
+firststir-10.png  First Stir 10 as dealt: every core turned, the time under the tank.
+firststir-10-held.png  First Stir 10 drawn unstirred, held back. The lighthouse door: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair.
+firststir-10-played.png  First Stir 10 drawn unstirred, every vignette played: the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain.
 firststir-01-healed-1.png  First Stir 01 after the first heal (1:-2): no vignette, the clock at 6:34 am.
 firststir-01-healed-2.png  First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am.
 shelf-menu.png  Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought.

@@ -310,27 +310,38 @@ shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl 
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
-# First Stir's chapter 1, Dawn After (scenes 1 to 5, 6:40 back to 4:45 am), three vignettes a scene. UNSTIR_BARE draws
-# the picture unstirred, so the art shows as the stack has played it: -held as dealt, at the scene's latest time, and
-# -played with its last heal just made, at its earliest, a wave past the rim keeping the card away (UNSTIR_STACK
-# replaces the scramble, so it gives only the bottom entry, which that heal clears).
-dawn=("Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney."
+# First Stir's chapters 1, Dawn After (scenes 1 to 5, 6:40 back to 4:45 am), and 2, The Rescue (6 to 10, 4:45 back to
+# 2:30 am), three vignettes a scene. UNSTIR_BARE draws the picture unstirred, so the art shows as the stack has played
+# it: -held as dealt, at the scene's latest time, and -played with its last heal just made, at its earliest, a wave
+# past the rim keeping the card away (UNSTIR_STACK replaces the scramble, so it gives only the bottom entry, which that
+# heal clears). The pack is owned, so a level past its taste opens rather than its card.
+held=("Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney."
       "The gallery: a neighbour measuring the smashed panes with a rule; three gulls on the rail; smoke from three chimneys."
       "The rock pool: the lighthouse door shut, rope coiled on its hook; the child kneeling at the pool, holding up the float; the dog sitting."
       "Righting the boat: three townsfolk, the rope slack, one waving; the boat upright on the sand; gulls coming back."
-      "Tea on the quay: the lifeboat moored, crew gone, lamp out; the three on the bench under one blanket, the child asleep; three cups steaming on a crate.")
-undone=("a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke."
+      "Tea on the quay: the lifeboat moored, crew gone, lamp out; the three on the bench under one blanket, the child asleep; three cups steaming on a crate."
+      "Home light, 4:45 under the dawn's last sky: the lifeboat just inside the harbour mouth, the torch left on the sill, a neighbour holding out blankets at the steps; light rain."
+      "Off the breakwater: the steps empty, a rope hanging, surf over the lower steps; the lifeboat alongside their foot, two crew reaching up them; the lighthouse dark."
+      "The lantern chain: the lifeboat house open on an empty slip; the chain of lights reaching the lighthouse door; four bearers with lanterns held high."
+      "The stair: the hand-lamp burning on the stair's turn; the lantern chain's lights far below the window; the storm lantern on the bottom step by the open door."
+      "The lighthouse door: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair.")
+played=("a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke."
         "the gallery empty, shards on the deck; spray over the bare rail; no smoke, one window lit by a candle."
         "the door open, the rope trailing over the rocks; the float alone in the pool; the dog sniffing."
         "the three leaning back, hauling; the boat keel up, dark; the last stars, a gull asleep on the beacon."
-        "a crewman coiling rope, the searchlight on; the child standing on the bench, pointing; a neighbour pouring from a flask.")
-bottom=(2:+5 3:+4 1:+4 0:+3 2:+4)
-for n in 1 2 3 4 5; do
-  last=${bottom[$((n - 1))]}
-  fs="PACK=first-stir LEVEL=$n"
-  shot "firststir-0$n" "First Stir 0$n as dealt: every core turned, the time under the tank." $fs
-  shot "firststir-0$n-held" "First Stir 0$n drawn unstirred, held back. ${dawn[$((n - 1))]}" $fs BARE=1
-  shot "firststir-0$n-played" "First Stir 0$n drawn unstirred, every vignette played: ${undone[$((n - 1))]}" $fs BARE=1 STACK="$last" TURNED="${last%%:*}:$((-${last#*:}))" WAVE=2
+        "a crewman coiling rope, the searchlight on; the child standing on the bench, pointing; a neighbour pouring from a flask."
+        "the lifeboat outside on a swell, searchlight out; the child at the window with the torch and the dog; two neighbours carrying blankets out of the lifeboat house; the low cloud lit, heavier rain."
+        "the father helping the grandmother down the steps; the lifeboat further off, bow high on a wave; a glow at the lighthouse's stair window; heavier rain."
+        "the crew pushing the lifeboat out of the house and down the slip; the chain ending short of the lighthouse, one light at the door; two bearers, two more running up unlit; heavier rain."
+        "the grandmother sitting at the turn, her ankle bound, the lamp beside her; the window dark; the father at the foot, lantern raised, looking up; heavier rain at the window and door."
+        "the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain.")
+bottom=(2:+5 3:+4 1:+4 0:+3 2:+4 1:+3 0:+4 3:+4 0:+4 3:-4)
+for n in $(seq 1 10); do
+  last=${bottom[$((n - 1))]} name=firststir-$(printf %02d "$n")
+  fs="PACK=first-stir LEVEL=$n OWNED=first-stir"
+  shot "$name" "First Stir $n as dealt: every core turned, the time under the tank." $fs
+  shot "$name-held" "First Stir $n drawn unstirred, held back. ${held[$((n - 1))]}" $fs BARE=1
+  shot "$name-played" "First Stir $n drawn unstirred, every vignette played: ${played[$((n - 1))]}" $fs BARE=1 STACK="$last" TURNED="${last%%:*}:$((-${last#*:}))" WAVE=2
 done
 # Sunrise (2:+5,1:-4,0:+3,1:+2) part healed: the first heal plays nothing and steps the clock back; the second plays the
 # lantern.
