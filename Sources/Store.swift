@@ -25,7 +25,8 @@ struct Ledger: Equatable, Sendable {
     func state(_ pack: Pack) -> Purchase {
         let own = products[pack.productID] ?? .unowned, complete = products[Pack.completeID] ?? .unowned
         if own == .owned || complete == .owned { return .owned }
-        return own != .unowned ? own : complete
+        // Complete's failed attempt was made on Complete's card, and says nothing about this pack.
+        return own != .unowned ? own : complete == .failed ? .unowned : complete
     }
 
     var owned: Set<Pack> { Set(Pack.allCases.filter { state($0) == .owned }) }
@@ -50,6 +51,7 @@ final class Store {
     private(set) var prices: [String: String] = [:]
     @ObservationIgnored private var products: [String: Product] = [:]
     @ObservationIgnored private var updates: Task<Void, Never>?
+    @ObservationIgnored private var attempt = 0
 
     func state(_ pack: Pack) -> Purchase { (harness ?? ledger).state(pack) }
 
@@ -62,7 +64,11 @@ final class Store {
 
     func price(_ id: String) -> String? { prices[id] }
 
-    func forgetFailures() { ledger.forgetFailures() }
+    /// Forgets every failed attempt, and any still running, so a card never opens on an error it didn't see happen.
+    func forgetFailures() {
+        attempt += 1
+        ledger.forgetFailures()
+    }
 
     /// Set before `start`, which then leaves StoreKit alone for the launch.
     func pretend(_ ledger: Ledger, prices: [String: String] = [:]) {
@@ -115,19 +121,23 @@ final class Store {
     func purchase(_ pack: Pack) async { await purchase(pack.productID) }
 
     func purchase(_ id: String) async {
+        let started = attempt
+        func failed(_ why: String) {
+            Log.write("purchase \(id) failed: \(why)\(attempt == started ? "" : ", its card closed")")
+            if attempt == started { ledger.record(id, .failed) }
+        }
         do {
-            guard let product = try await product(id) else { return ledger.record(id, .failed) }
+            guard let product = try await product(id) else { return failed("no such product") }
             switch try await product.purchase() {
             case .success(let result):
-                guard case .verified = result else { return ledger.record(id, .failed) }
+                guard case .verified = result else { return failed("unverified") }
                 await apply(result)
             case .pending: ledger.record(id, .pending)
             case .userCancelled: ledger.record(id, .unowned)
-            @unknown default: ledger.record(id, .failed)
+            @unknown default: failed("unknown result")
             }
         } catch {
-            Log.write("purchase \(id) failed: \(error)")
-            ledger.record(id, .failed)
+            failed("\(error)")
         }
     }
 

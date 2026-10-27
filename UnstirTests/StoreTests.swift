@@ -38,6 +38,15 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.escapement), .pending)
     }
 
+    /// Complete's failure shows on Complete's card, never on a pack's.
+    func testCompletesFailureStaysOnItsOwnCard() {
+        var ledger = Ledger()
+        ledger.record(Pack.completeID, .failed)
+        XCTAssertEqual(ledger.state(.lens), .unowned)
+        ledger.record(Pack.completeID, .pending)
+        XCTAssertEqual(ledger.state(.lens), .pending)
+    }
+
     /// The entitlements reread after a revocation own the product again when it was bought since.
     func testOwnedAfterARevocationOwnsAgain() {
         var ledger = Ledger()

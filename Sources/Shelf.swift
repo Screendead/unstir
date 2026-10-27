@@ -619,6 +619,10 @@ struct PackCard: View {
         .accessibilityAddTraits(.isModal)
         .accessibilityAction(.escape, onBack)
         .task { await store.fetchPrices() }
+        .onAppear {
+            Log.write("card \(offer.key) opens")
+            store.forgetFailures()
+        }
         .onDisappear { store.forgetFailures() }
         .onChange(of: state) {
             if let tag = state.tag { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
