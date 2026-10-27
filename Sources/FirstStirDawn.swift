@@ -1046,8 +1046,7 @@ extension Dawn {
         // Vignette 3: the lifeboat's deck.
         if played.contains(3) {
             let beam = pen.poly([(-0.405, -0.553), (-0.5, -0.58), (-0.5, -0.53), (-0.405, -0.545)])
-            pen.ctx.fill(beam, with: .linearGradient(Gradient(colors: [Self.light.opacity(0.55), Self.light.opacity(0)]),
-                                                     startPoint: pen.p(-0.405, -0.55), endPoint: pen.p(-0.5, -0.55)))
+            pen.fill(beam, Self.light.opacity(0.3))
             var who = Figure.standing(.crew)
             who.head = (0.1, 0.84)
             who.neck = (0.07, 0.74)
