@@ -152,7 +152,7 @@ enum Rescue {
         return r.uiImage
     }
 
-    static func horizon(_ n: Int) -> Double { [-0.66, -0.12, -0.62, 0, -0.70][n - 6] }
+    static func horizon(_ n: Int) -> Double { [-0.66, -0.3, -0.62, 0, -0.70][n - 6] }
 
     /// The sky over the sea, the night's swell under it, darkening towards the viewer.
     static func outside(_ pen: Pen, minutes: Double, horizon: Double) {
@@ -427,24 +427,28 @@ enum Cast {
         if beam {
             let tip = 0.08 + reach
             pen.fill(pen.poly([(0.08, -0.43), (tip, -0.43 - reach * 0.25), (tip, -0.38 + reach * 0.25), (0.08, -0.38)]),
-                         .linearGradient(Gradient(colors: [Rescue.flame.opacity(0.55), Rescue.flame.opacity(0)]),
-                                               startPoint: pen.point(0.08, -0.4), endPoint: pen.point(tip, -0.4)))
+                     .linearGradient(Gradient(colors: [Rescue.flame.opacity(0.55), Rescue.flame.opacity(0)]),
+                                     startPoint: pen.point(0.08, -0.4), endPoint: pen.point(tip, -0.4)))
         }
     }
 
-    /// A wave breaking towards the right: its face, its curl and the white water thrown off it, `w` wide.
+    /// A wave breaking towards the right, 1 wide on the water at y = 0: its back, the crest and the lip curling over a
+    /// dark hollow, and spray thrown off it.
     static func breaker(_ pen: Pen, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.35), (0.008, 0.9)]) {
-        var lines = Path()
-        lines.addPath(pen.path { b in
+        let face = pen.path { b in
             b.move(to: CGPoint(x: -0.5, y: 0))
-            b.addQuadCurve(to: CGPoint(x: 0.15, y: -0.4), control: CGPoint(x: -0.1, y: -0.05))
-            b.addQuadCurve(to: CGPoint(x: 0.42, y: -0.18), control: CGPoint(x: 0.4, y: -0.5))
-        })
-        lines.addPath(pen.curve(0.42, -0.18, 0.3, -0.12, 0.3, -0.24))
-        for (x, y, a) in [(0.2, -0.46, -1.2), (0.3, -0.42, -0.6), (0.08, -0.42, -1.8)] {
-            lines.addPath(pen.seg(x, y, x + 0.12 * cos(a), y + 0.12 * sin(a)))
+            b.addQuadCurve(to: CGPoint(x: 0.12, y: -0.3), control: CGPoint(x: -0.12, y: -0.04))
+            b.addQuadCurve(to: CGPoint(x: 0.4, y: -0.16), control: CGPoint(x: 0.36, y: -0.34))
+            b.addQuadCurve(to: CGPoint(x: 0.28, y: -0.1), control: CGPoint(x: 0.36, y: -0.06))
+            b.addQuadCurve(to: CGPoint(x: 0.5, y: 0), control: CGPoint(x: 0.3, y: 0))
         }
-        pen.lit(glows) { $0.stroke(lines, Rescue.ink, 0.85) }
+        var lines = Path()
+        lines.addPath(face)
+        for (x, y, a) in [(0.18, -0.36, -1.3), (0.3, -0.33, -0.7), (0.06, -0.34, -1.9)] {
+            lines.addPath(pen.seg(x, y, x + 0.07 * cos(a), y + 0.07 * sin(a)))
+        }
+        pen.fill(face, .black, 0.6)
+        pen.lit(glows) { $0.stroke(lines, Rescue.ink, 0.8) }
     }
 }
 
@@ -534,11 +538,11 @@ enum HomeLight {
         quayside.addPath(pen.ellipse(-0.4, 0.52, 0.04, 0.012))
         quayside.addPath(pen.ellipse(-0.4, 0.512, 0.03, 0.009))
         // The quay's flags running towards the viewer, so its foreground is ground.
-        for x in Swift.stride(from: -1.2, through: 1.2, by: 0.2) {
-            quayside.addPath(pen.seg(x * 0.55, 0.6, x, 1))
-        }
-        for y in [0.6, 0.72, 0.88] { quayside.addPath(pen.seg(-1, y, 1, y)) }
+        var flags = Path()
+        for x in Swift.stride(from: -1.5, through: 1.5, by: 0.3) { flags.addPath(pen.seg(x * 0.55, 0.6, x, 1)) }
+        for y in [0.6, 0.78] { flags.addPath(pen.seg(-1, y, 1, y)) }
         pen.lit { g in
+            g.stroke(flags, ink, 0.22)
             g.stroke(quayside, ink, 0.7)
             g.stroke(shed, ink)
             g.stroke(door, Rescue.torch)
@@ -614,19 +618,509 @@ extension Rescue {
     }
 }
 
-enum OffTheBreakwater { static func draw(_ pen: Pen, played: Set<Int>) {} }
-enum LanternChain { static func draw(_ pen: Pen, played: Set<Int>) {} }
-enum LighthouseDoor { static func draw(_ pen: Pen, played: Set<Int>) {} }
-enum Stair {
-    static func windows(_ pen: Pen) -> Path { Path() }
-    static func sky(_ pen: Pen, minutes: Double) {}
-    static func draw(_ pen: Pen, played: Set<Int>) {}
-}
-
 extension Level {
     /// The Rescue's scenes in story order, numbered by place in `firstStir`.
-    static let rescue: [Level] = [6].map { n in
+    static let rescue: [Level] = Array(Rescue.scenes).map { n in
         Level(id: "", pack: .firstStir, label: "", title: Rescue.title(n), note: "Each heal turns the night back.",
               layout: Rescue.layout(n), scramble: .parse(Rescue.scramble(n), in: Rescue.layout(n)), story: .rescue(n))
+    }
+}
+
+/// Scene 7, 4:15 back to 3:50, on eye: the breakwater's end in surf, its seaward face with steps cut down it to the
+/// water, the lighthouse dark on its end. Rod 0, the steps: empty, a rope hanging and the surf over their foot, then the
+/// father helping the grandmother down. Rod 1, the lifeboat: alongside the steps, two crew reaching up, then further off,
+/// bow high on a wave. Rod 2, the lighthouse: dark, then a glow at the stair window from the lamp she left.
+enum OffTheBreakwater {
+    static let top = -0.36, water = 0.12
+
+    /// The steps' nosings, top left to the water.
+    static func step(_ x: Double) -> Double { top + 0.06 + (x + 0.64) * 0.8 }
+
+    static func draw(_ pen: Pen, played: Set<Int>) {
+        let ink = Rescue.ink
+        Rescue.clouds(pen, [(-1, -0.35, -0.72, 0.05), (0.3, 1, -0.62, 0.05), (-0.4, 0.05, -0.92, 0.04), (0.35, 0.9, -0.9, 0.04)])
+
+        // The breakwater from the left, its end under the lighthouse; its face down to the water.
+        let wall = pen.poly([(-1, top), (0.27, top), (0.27, water), (-1, water)])
+        pen.fill(wall, .black)
+        var stone = Path()
+        stone.addPath(wall)
+        stone.addPath(pen.seg(-1, top + 0.03, 0.27, top + 0.03))
+        for (i, y) in Swift.stride(from: top + 0.11, to: water - 0.02, by: 0.08).enumerated() {
+            stone.addPath(pen.seg(-1, y, 0.27, y))
+            for x in Swift.stride(from: -0.98 + (i % 2 == 0 ? 0 : 0.07), to: 0.26, by: 0.14) {
+                stone.addPath(pen.seg(x, y, x, y + 0.08 > water ? water : y + 0.08))
+            }
+        }
+        // The steps, cut into the face from the top down to the water, a rail post at their head.
+        var steps = Path()
+        steps.addPath(pen.seg(-0.64, step(-0.64), -0.06, step(-0.06)))
+        for x in Swift.stride(from: -0.64, to: -0.07, by: 0.05) {
+            steps.addPath(pen.poly([(x, step(x)), (x + 0.05, step(x)), (x + 0.05, step(x + 0.05))], closed: false))
+        }
+        steps.addPath(pen.poly([(-0.66, top), (-0.66, top - 0.06), (-0.6, top - 0.06)], closed: false))
+        pen.fill(pen.poly([(-0.64, step(-0.64)), (-0.06, step(-0.06)), (-0.06, step(-0.06) + 0.06), (-0.64, step(-0.64) + 0.06)]), .black)
+        pen.lit { g in
+            g.stroke(stone, ink, 0.55)
+            g.stroke(steps, ink)
+        }
+
+        // The lighthouse on the end, its door shut and its stair window dark.
+        let tower = pen.poly([(0.1, top), (0.125, -0.8), (0.215, -0.8), (0.24, top)])
+        pen.fill(tower, .black)
+        var house = Path()
+        house.addPath(tower)
+        house.addPath(pen.seg(0.09, -0.8, 0.25, -0.8))
+        house.addPath(pen.rect(0.13, -0.87, 0.21, -0.8))
+        house.addPath(pen.curve(0.12, -0.87, 0.17, -0.93, 0.22, -0.87))
+        house.addPath(pen.seg(0.17, -0.93, 0.17, -0.96))
+        house.addPath(pen.rect(0.15, -0.44, 0.19, top))
+        house.addPath(pen.rect(0.155, -0.63, 0.185, -0.57))
+        pen.lit { $0.stroke(house, ink) }
+
+        // The surf in front: breakers along the foot of the wall and across the foreground, in rod 3's core.
+        for (x, y, k) in [(-0.82, water + 0.02, 0.14), (0.62, 0.3, 0.18), (-0.24, 0.5, 0.22), (0.2, 0.74, 0.24), (-0.66, 0.74, 0.2)] {
+            Cast.breaker(pen.at(x, y, k: k))
+        }
+        // Rocks of the breakwater's toe, heaped.
+        let rocks = pen.poly([(-1, 0.32), (-0.9, 0.27), (-0.78, 0.3), (-0.7, 0.26), (-0.58, 0.31), (-0.5, 0.36), (-1, 0.4)])
+        pen.fill(rocks, .black)
+        pen.lit { $0.stroke(rocks, ink, 0.7) }
+
+        // Vignette 0, the steps.
+        pen.vignette(0) { pen in
+            if played.contains(0) {
+                Cast.figure(pen.at(-0.26, step(-0.26), k: 0.13), .grandmother, arms: [[(0.1, -0.72), (0.3, -0.74), (0.5, -0.66)]])
+                Cast.figure(pen.at(-0.16, step(-0.16), k: 0.15, flip: true), .father,
+                            arms: [[(0.1, -0.74), (0.32, -0.66), (0.62, -0.62)], [(-0.1, -0.74), (-0.14, -0.5)]])
+            } else {
+                // A rope hanging off the post's ring down the face, and the surf over the steps' foot.
+                pen.stroke(pen.curve(-0.2, step(-0.2) - 0.01, -0.24, step(-0.2) + 0.06, -0.21, step(-0.2) + 0.11), ink)
+                Cast.breaker(pen.at(-0.16, water - 0.005, k: 0.12))
+            }
+        }
+
+        // Vignette 1, the lifeboat.
+        pen.vignette(1) { pen in
+            if played.contains(1) {
+                Rescue.swellUnder(pen, x: 0.6, y: 0.035, w: 0.2)
+                Cast.lifeboat(pen.at(0.6, 0.02, k: 0.17, flip: true, turn: 0.3))
+            } else {
+                // Clear of the steps' disc, its stern to their foot.
+                Cast.lifeboat(pen.at(0.29, 0.15, k: 0.16))
+                Cast.figure(pen.at(0.235, 0.135, k: 0.085), .crew, arms: [[(-0.1, -0.74), (-0.22, -0.95), (-0.3, -1.1)]])
+                Cast.figure(pen.at(0.27, 0.135, k: 0.085), .crew, arms: [[(-0.1, -0.74), (-0.24, -0.92), (-0.34, -1.05)]])
+            }
+        }
+
+        // Vignette 2, the stair window.
+        pen.vignette(2) { pen in
+            let window = pen.rect(0.155, -0.63, 0.185, -0.57)
+            if played.contains(2) {
+                pen.glow(0.17, -0.6, 0.045, Rescue.torch, 0.6)
+                pen.fill(window, Rescue.flame, 0.85)
+                pen.stroke(window, Rescue.torch)
+            } else {
+                pen.stroke(pen.seg(0.155, -0.6, 0.185, -0.6), ink, 0.6)
+            }
+        }
+    }
+}
+
+/// Scene 8, 3:50 back to 3:25, on quad: the breakwater path running from the quay out to the lighthouse door, the
+/// harbour on its left with the lifeboat house, the open sea on its right, a rope line along it on posts. Rod 3, the
+/// lifeboat house: its doors open on an empty slip, then the crew pushing the lifeboat off it, its lamp lit. Rod 0, the
+/// far end: the chain of lights reaching the lighthouse door, then ending halfway, one light at the door. Rod 1, the
+/// bearers: four lanterns held high in a row, then two, and two figures running up with theirs unlit.
+enum LanternChain {
+    /// The path's centre line, from the quay at the bottom to the lighthouse door: x at height y.
+    static func path(_ y: Double) -> Double { -0.05 + 0.55 * (1 - y) / 1.42 }
+    /// How wide the path is at height y, in perspective.
+    static func width(_ y: Double) -> Double { 0.02 + 0.2 * (y + 0.42) / 1.42 }
+
+    static func draw(_ pen: Pen, played: Set<Int>) {
+        let ink = Rescue.ink
+        Rescue.clouds(pen, [(-1, -0.25, -0.8, 0.05), (0.1, 0.95, -0.86, 0.05), (-0.55, 0.3, -0.98, 0.04)])
+
+        // The lighthouse on the far end, dark, its door at the path's end.
+        let tower = pen.poly([(0.46, -0.41), (0.475, -0.8), (0.545, -0.8), (0.56, -0.41)])
+        let rock = pen.poly([(0.36, -0.4), (0.44, -0.43), (0.6, -0.43), (0.7, -0.39)])
+        pen.fill(tower, .black)
+        pen.fill(rock, .black)
+        var house = Path()
+        house.addPath(tower)
+        house.addPath(rock)
+        house.addPath(pen.seg(0.455, -0.8, 0.565, -0.8))
+        house.addPath(pen.rect(0.485, -0.86, 0.535, -0.8))
+        house.addPath(pen.curve(0.48, -0.86, 0.51, -0.9, 0.54, -0.86))
+        house.addPath(pen.rect(0.495, -0.47, 0.525, -0.42))
+        house.addPath(pen.rect(0.5, -0.62, 0.52, -0.58))
+
+        // The path, widening towards the viewer, and the rope line on posts along its harbour side.
+        let ys = Array(Swift.stride(from: -0.42, through: 1.05, by: 0.03))
+        let left = ys.map { (path($0) - width($0), $0) }, right = ys.map { (path($0) + width($0), $0) }
+        let band = pen.poly(left + right.reversed())
+        pen.fill(band, .black)
+        var walk = Path()
+        walk.addPath(pen.poly(left, closed: false))
+        walk.addPath(pen.poly(right, closed: false))
+        var rope = Path()
+        rope.addPath(pen.poly(ys.map { (path($0) - width($0) * 0.8, $0 - 0.02 - 0.06 * width($0) / 0.22) }, closed: false))
+        for y in Swift.stride(from: -0.36, through: 1.0, by: 0.16) {
+            let x = path(y) - width(y) * 0.8, h = 0.02 + 0.06 * width(y) / 0.22
+            rope.addPath(pen.seg(x, y, x, y - h - 0.01))
+        }
+
+        // The lifeboat house on the harbour side, its doors open, and the slip down from them to the water.
+        let shed = pen.poly([(-0.6, -0.33), (-0.6, -0.47), (-0.5, -0.55), (-0.4, -0.47), (-0.4, -0.33)])
+        pen.fill(shed, .black)
+        house.addPath(shed)
+        house.addPath(pen.rect(-0.55, -0.45, -0.45, -0.33))
+        house.addPath(pen.poly([(-0.45, -0.33), (-0.56, -0.2), (-0.68, -0.2), (-0.55, -0.33)], closed: false))
+        house.addPath(pen.seg(-0.5, -0.265, -0.62, -0.265))
+
+        // The quay end in the foreground: a lamp post, lit, and a bollard.
+        house.addPath(pen.poly([(-0.3, 0.72), (-0.3, 0.42), (-0.27, 0.4)], closed: false))
+        house.addPath(pen.rect(-0.28, 0.36, -0.24, 0.41))
+        house.addPath(pen.poly([(-0.5, 0.72), (-0.5, 0.66), (-0.515, 0.65), (-0.445, 0.65), (-0.46, 0.66), (-0.46, 0.72)], closed: false))
+        house.addPath(pen.seg(-1, 0.72, -0.12, 0.72))
+        pen.fill(pen.rect(-1, 0.72, -0.12, 1), .black)
+        pen.lit { g in
+            g.stroke(house, ink)
+            g.stroke(walk, ink, 0.85)
+            g.stroke(rope, Rescue.torch, 0.6)
+            g.fill(g.rect(-0.275, 0.365, -0.245, 0.405), Rescue.flame)
+        }
+        pen.glow(-0.26, 0.39, 0.08, Rescue.torch, 0.35)
+        // The surf on the sea side.
+        for (x, y, k) in [(0.82, -0.1, 0.16), (0.78, 0.62, 0.2), (0.62, 0.86, 0.22)] { Cast.breaker(pen.at(x, y, k: k)) }
+
+        /// A light carried along the far path: a lantern too far off to show its bearer.
+        func far(_ pen: Pen, _ y: Double) {
+            Cast.lantern(pen.at(path(y) + 0.025, y - 0.03, k: 0.03), lit: true)
+            pen.glow(path(y) + 0.025, y - 0.04, 0.03, Rescue.torch, 0.5)
+        }
+        for y in [-0.04, 0.06] { far(pen, y) }
+
+        // Vignette 0, the far end.
+        pen.vignette(0) { pen in
+            for y in played.contains(0) ? [-0.13, -0.21, -0.415] : [-0.13, -0.21, -0.28, -0.35, -0.415] { far(pen, y) }
+        }
+
+        // Vignette 1, the bearers on the near path.
+        pen.vignette(1) { pen in
+            let feet: [(Double, Double)] = [(0.175, 0.5), (0.205, 0.42), (0.235, 0.34), (0.26, 0.27)]
+            // Farthest first, so a nearer bearer stands in front; every lantern over them all.
+            var lanterns: [(x: Double, y: Double, lit: Bool)] = []
+            for (i, (x, y)) in feet.enumerated().reversed() {
+                let k = 0.13 - 0.006 * Double(i)
+                if played.contains(1), i < 2 {
+                    // Running up the path, lantern swinging unlit.
+                    Cast.figure(pen.at(x, y, k: k), .neighbour, arms: [[(0.1, -0.74), (0.24, -0.6), (0.3, -0.45)], [(-0.1, -0.74), (-0.24, -0.58)]],
+                                legs: [[(-0.05, -0.4), (-0.22, -0.18), (-0.2, 0)], [(0.05, -0.4), (0.2, -0.2), (0.3, -0.06)]])
+                    lanterns.append((x + 0.3 * k, y - 0.45 * k + 0.03, false))
+                } else {
+                    Cast.figure(pen.at(x, y, k: k), .neighbour, arms: [[(0.1, -0.74), (0.22, -0.95), (0.24, -1.12)]])
+                    lanterns.append((x + 0.24 * k, y - 1.12 * k + 0.035, true))
+                }
+            }
+            for l in lanterns {
+                Cast.lantern(pen.at(l.x, l.y, k: 0.035), lit: l.lit)
+                if l.lit { pen.glow(l.x, l.y - 0.015, 0.03, Rescue.torch, 0.45) }
+            }
+        }
+
+        // Vignette 3, the lifeboat house.
+        pen.vignette(3) { pen in
+            if played.contains(3) {
+                Cast.lifeboat(pen.at(-0.53, -0.29, k: 0.1, flip: true, turn: -0.4))
+                for x in [-0.5, -0.47] {
+                    Cast.figure(pen.at(x, -0.3, k: 0.1, flip: true, turn: -0.35), .crew, arms: [[(0.1, -0.7), (0.3, -0.6), (0.42, -0.55)]])
+                }
+            } else {
+                pen.fill(pen.rect(-0.545, -0.445, -0.455, -0.335), .black)
+                pen.stroke(pen.seg(-0.5, -0.445, -0.5, -0.335), Rescue.ink, 0.5)
+            }
+        }
+    }
+}
+
+/// Scene 9, 3:25 back to 3:00, on tri: inside the lighthouse, its stair climbing the wall from the door at its foot,
+/// past a window, to a turn below the lamp room. The night shows only through the window and the open door. Every
+/// vignette keeps to the part of its core no other disc reaches. Rod 0, the turn of the stair: the hand-lamp left
+/// burning on a step, then the grandmother sitting there, her ankle bound with her shawl, the lamp beside her. Rod 1,
+/// the window: the lantern chain's lights far below, then dark. Rod 2, the foot: the storm lantern left on the bottom
+/// step, then the father there, lantern raised, looking up.
+enum Stair {
+    static let window = (x0: 0.47, y0: 0.1, x1: 0.62, y1: 0.34)
+    static let door = (x0: -0.74, y0: 0.13, x1: -0.62, y1: 0.42)
+    static let floor = 0.42, turn = -0.53
+
+    /// The window and the open door, where the night shows.
+    static func windows(_ pen: Pen) -> Path {
+        var p = Path()
+        p.addPath(pen.rect(window.x0, window.y0, window.x1, window.y1))
+        p.addPath(pen.rect(door.x0, door.y0, door.x1, door.y1))
+        return p
+    }
+
+    /// Dark stone inside, and through the openings the sky at `minutes` over a black sea.
+    static func sky(_ pen: Pen, minutes: Double) {
+        pen.fill(pen.rect(-1, -1, 1, 1), Rescue.sky)
+        for (o, horizon) in [(window, 0.25), (door, 0.3)] {
+            pen.fill(pen.rect(o.x0, o.y0, o.x1, horizon), .linearGradient(Gradient(stops: Rescue.skyStops(minutes)),
+                                                                          startPoint: pen.point(0, o.y0 - 0.3), endPoint: pen.point(0, horizon)))
+            pen.fill(pen.rect(o.x0, horizon, o.x1, o.y1), .linearGradient(Gradient(colors: [Rescue.sea.opacity(0.7), .black]),
+                                                                          startPoint: pen.point(0, horizon), endPoint: pen.point(0, o.y1)))
+        }
+    }
+
+    static func draw(_ pen: Pen, played: Set<Int>) {
+        let ink = Rescue.ink
+        // The tower's round wall, its stone courses bowing as they go round, and the lamp room's floor above.
+        var wall = Path()
+        for x in [-0.86, 0.86] { wall.addPath(pen.seg(x, -0.6, x, floor)) }
+        for y in Swift.stride(from: -0.62, through: 0.36, by: 0.14) {
+            wall.addPath(pen.curve(-0.86, y, 0, y + 0.06, 0.86, y))
+        }
+        wall.addPath(pen.seg(-0.6, -0.78, 0.6, -0.78))
+        wall.addPath(pen.rect(-0.1, -0.86, 0.1, -0.78))
+        // The stair: from the floor by the door up to the right, a landing under the window, then back up to the left
+        // to the turn, its steps' nosings and a rope rail along the wall.
+        var stair = Path()
+        func flight(_ a: (Double, Double), _ b: (Double, Double), _ n: Int) {
+            let dx = (b.0 - a.0) / Double(n), dy = (b.1 - a.1) / Double(n)
+            var pts: [(Double, Double)] = [a]
+            for i in 0..<n {
+                let x = a.0 + dx * Double(i), y = a.1 + dy * Double(i)
+                pts.append((x, y + dy)); pts.append((x + dx, y + dy))
+            }
+            stair.addPath(pen.poly(pts, closed: false))
+            stair.addPath(pen.seg(a.0, a.1 + 0.04, b.0, b.1 + 0.04))
+        }
+        flight((-0.3, floor), (0.42, 0.02), 9)
+        stair.addPath(pen.seg(0.42, 0.02, 0.7, 0.02))
+        flight((0.62, 0.02), (0.22, turn), 8)
+        stair.addPath(pen.seg(0.22, turn, -0.3, turn))
+        stair.addPath(pen.seg(-0.3, turn, -0.3, turn + 0.04))
+        stair.addPath(pen.seg(-0.3, turn + 0.04, 0.2, turn + 0.04))
+        var rail = Path()
+        rail.addPath(pen.curve(-0.28, floor - 0.12, 0.1, 0.12, 0.44, -0.08))
+        rail.addPath(pen.curve(0.6, -0.08, 0.42, -0.3, 0.22, turn - 0.12))
+        // The window's deep reveal and its bars, the door standing open on its hinges.
+        var frames = Path()
+        frames.addPath(pen.rect(window.x0, window.y0, window.x1, window.y1))
+        frames.addPath(pen.poly([(window.x0, window.y0), (window.x0 - 0.03, window.y0 - 0.03), (window.x1 + 0.03, window.y0 - 0.03),
+                                 (window.x1, window.y0)], closed: false))
+        frames.addPath(pen.seg((window.x0 + window.x1) / 2, window.y0, (window.x0 + window.x1) / 2, window.y1))
+        frames.addPath(pen.rect(door.x0, door.y0, door.x1, door.y1))
+        frames.addPath(pen.poly([(door.x1, door.y0), (door.x1 + 0.06, door.y0 + 0.03), (door.x1 + 0.06, door.y1 + 0.02), (door.x1, door.y1)]))
+        let leaf = pen.poly([(door.x1, door.y0), (door.x1 + 0.06, door.y0 + 0.03), (door.x1 + 0.06, door.y1 + 0.02), (door.x1, door.y1)])
+        pen.fill(leaf, .black)
+        frames.addPath(pen.seg(-1, floor, 1, floor))
+        // The floor's flags running towards the viewer, faint, and a coil of rope by the door.
+        var flags = Path()
+        for x in Swift.stride(from: -1.5, through: 1.5, by: 0.3) { flags.addPath(pen.seg(x * 0.6, floor, x, 1)) }
+        for y in [0.55, 0.78] { flags.addPath(pen.seg(-1, y, 1, y)) }
+        frames.addPath(pen.ellipse(-0.8, floor + 0.05, 0.06, 0.018))
+        frames.addPath(pen.ellipse(-0.8, floor + 0.04, 0.045, 0.013))
+        pen.lit { g in
+            g.stroke(wall, ink, 0.4)
+            g.stroke(flags, ink, 0.22)
+            g.stroke(stair, ink)
+            g.stroke(rail, Rescue.torch, 0.5)
+            g.stroke(frames, ink)
+            g.stroke(g.seg(window.x0, 0.25, window.x1, 0.25), ink, 0.5)
+            g.stroke(g.seg(door.x0, 0.3, door.x1, 0.3), ink, 0.5)
+        }
+
+        // Vignette 0, the turn of the stair: the hand-lamp on the step, and the grandmother sitting by it.
+        pen.vignette(0) { pen in
+            if played.contains(0) {
+                Stair.sitting(pen.at(-0.17, turn, k: 0.15))
+            }
+            Rescue.handLamp(pen, x: -0.065, y: turn)
+        }
+
+        // Vignette 1, the window: the chain of lights along the breakwater far below.
+        pen.vignette(1) { pen in
+            if !played.contains(1) {
+                for (i, x) in [0.49, 0.515, 0.54, 0.565, 0.59].enumerated() {
+                    let y = 0.275 + 0.01 * Double(i)
+                    pen.fill(pen.circle(x, y, 0.007), Rescue.flame)
+                    pen.glow(x, y, 0.025, Rescue.torch, 0.55)
+                }
+            }
+        }
+
+        // Vignette 2, the foot of the stair.
+        pen.vignette(2) { pen in
+            if played.contains(2) {
+                // His far arm holds the lantern up behind him, out of his own light, as he looks up the stair.
+                Cast.figure(pen.at(-0.5, floor, k: 0.16), .father,
+                            arms: [[(-0.1, -0.74), (-0.26, -0.94), (-0.34, -1.1)], [(0.1, -0.74), (0.16, -0.5)]])
+                Cast.lantern(pen.at(-0.555, floor - 0.17, k: 0.045), lit: true)
+                pen.glow(-0.555, floor - 0.185, 0.06, Rescue.torch, 0.4)
+            } else {
+                Cast.lantern(pen.at(-0.42, floor, k: 0.05), lit: true)
+                pen.glow(-0.42, floor - 0.02, 0.06, Rescue.torch, 0.4)
+            }
+        }
+    }
+
+    /// The grandmother sitting on a step at (0, 0), facing right, her hurt leg out along the step with the shawl bound
+    /// round its ankle, the other knee up.
+    static func sitting(_ pen: Pen) {
+        var body = Path(), lines = Path()
+        let head = pen.circle(0, -0.86, 0.07), bun = pen.circle(-0.08, -0.91, 0.035)
+        let torso = pen.poly([(-0.1, -0.74), (0.1, -0.74), (0.12, -0.3), (-0.14, -0.3), (-0.16, 0)])
+        let skirt = pen.poly([(-0.16, 0), (-0.12, -0.3), (0.12, -0.3), (0.26, -0.34), (0.58, -0.06), (0.58, 0)])
+        for p in [head, bun, torso, skirt] { body.addPath(p); lines.addPath(p) }
+        lines.addPath(pen.poly([(0.6, 0), (0.66, -0.02), (0.68, -0.1)], closed: false))
+        lines.addPath(pen.poly([(0.44, -0.11), (0.5, -0.02), (0.54, -0.15)], closed: false))
+        lines.addPath(pen.poly([(0.1, -0.7), (0.24, -0.5), (0.3, -0.36)], closed: false))
+        lines.addPath(pen.poly([(-0.1, -0.7), (-0.2, -0.42), (-0.2, -0.1)], closed: false))
+        pen.fill(body, .black)
+        pen.lit(Rescue.tight) { $0.stroke(lines, Rescue.ink) }
+    }
+}
+
+extension Rescue {
+    /// The grandmother's hand-lamp, standing lit on a step at (x, y): a squat glass chimney on a base, with a ring.
+    static func handLamp(_ pen: Pen, x: Double, y: Double) {
+        var lamp = Path()
+        lamp.addPath(pen.poly([(x - 0.025, y), (x - 0.02, y - 0.012), (x + 0.02, y - 0.012), (x + 0.025, y)]))
+        lamp.addPath(pen.path { c in
+            c.move(to: CGPoint(x: x - 0.012, y: y - 0.012))
+            c.addQuadCurve(to: CGPoint(x: x - 0.008, y: y - 0.055), control: CGPoint(x: x - 0.024, y: y - 0.03))
+            c.addLine(to: CGPoint(x: x + 0.008, y: y - 0.055))
+            c.addQuadCurve(to: CGPoint(x: x + 0.012, y: y - 0.012), control: CGPoint(x: x + 0.024, y: y - 0.03))
+        })
+        lamp.addPath(pen.curve(x + 0.022, y - 0.004, x + 0.04, y - 0.01, x + 0.024, y - 0.016))
+        pen.glow(x, y - 0.03, 0.05, torch, 0.5)
+        pen.fill(pen.ellipse(x, y - 0.03, 0.007, 0.012), flame)
+        pen.lit(tight) { $0.stroke(lamp, torch) }
+    }
+}
+
+/// Scene 10, 3:00 back to 2:30, on pent: the foot of the lighthouse on its rocks, waves breaking, the breakwater path
+/// running in from the right. Rod 0, the gallery window: dark, then the hand-lamp in it blinking a signal. Rod 1, the
+/// path: the rope tied off on an iron ring and stretched back along the path, then the father out on it, the coil on
+/// his shoulder, bent into the spray. Rod 3, the door: open, light on the stair inside, then shut, a wave breaking over
+/// its step.
+enum LighthouseDoor {
+    static let axis = -0.12, base = 0.56
+
+    /// The path's walking surface, from the right edge in to the lighthouse's foot: its height at x.
+    static func path(_ x: Double) -> Double { x > 0.3 ? 0.02 - 0.08 * (x - 0.3) : 0.02 + (0.3 - x) * 1.6 }
+
+    /// The rope from the quay, along the path's harbour edge: its height at x.
+    static func rope(_ x: Double) -> Double { path(x) - 0.03 - 0.012 * sin(x * 9) }
+
+    static func draw(_ pen: Pen, played: Set<Int>) {
+        let ink = Rescue.ink
+        Rescue.clouds(pen, [(-1, -0.4, -0.82, 0.05), (0.2, 1, -0.88, 0.05), (0.35, 0.95, -0.76, 0.03)])
+
+        // The tower, tapering up to its gallery and lamp room, dark; a stone course every so often.
+        let w = { (y: Double) in 0.17 - 0.07 * (base - y) / (base + 0.6) }
+        let tower = pen.poly([(axis - w(base), base), (axis - w(-0.6), -0.6), (axis + w(-0.6), -0.6), (axis + w(base), base)])
+        let room = pen.rect(axis - 0.07, -0.74, axis + 0.07, -0.62)
+        let dome = pen.path { d in
+            d.move(to: CGPoint(x: axis - 0.085, y: -0.74)); d.addQuadCurve(to: CGPoint(x: axis + 0.085, y: -0.74), control: CGPoint(x: axis, y: -0.86))
+            d.closeSubpath()
+        }
+        pen.fill(tower, .black); pen.fill(dome, .black)
+        var house = Path()
+        house.addPath(tower)
+        house.addPath(room)
+        house.addPath(dome)
+        house.addPath(pen.seg(axis, -0.86, axis, -0.9))
+        house.addPath(pen.seg(axis - 0.13, -0.6, axis + 0.13, -0.6))
+        house.addPath(pen.seg(axis - 0.13, -0.6, axis - 0.13, -0.635))
+        house.addPath(pen.seg(axis + 0.13, -0.6, axis + 0.13, -0.635))
+        house.addPath(pen.seg(axis - 0.13, -0.635, axis + 0.13, -0.635))
+        for x in [axis - 0.025, axis + 0.025] { house.addPath(pen.seg(x, -0.74, x, -0.62)) }
+        for y in Swift.stride(from: -0.45, to: 0.5, by: 0.16) { house.addPath(pen.seg(axis - w(y), y, axis + w(y), y)) }
+        // The door's frame and step, its little window above.
+        house.addPath(pen.rect(-0.21, 0.36, -0.12, base))
+        house.addPath(pen.rect(-0.24, base, -0.08, base + 0.03))
+        house.addPath(pen.rect(-0.18, 0.12, -0.15, 0.18))
+
+        // The rocks heaped round the foot, the path coming in on its wall from the right.
+        let rocks = pen.poly([(-1, 0.66), (-0.82, 0.6), (-0.66, 0.63), (-0.5, 0.57), (-0.34, 0.6), (0.14, 0.6), (0.3, 0.64), (0.48, 0.61),
+                              (0.7, 0.66), (0.86, 0.62), (1, 0.66), (1, 1), (-1, 1)])
+        let xs = Array(Swift.stride(from: 0.06, through: 1.0, by: 0.02))
+        let walk = pen.poly(xs.map { ($0, path($0)) } + [(1, path(1) + 0.08), (0.06, base + 0.04)])
+        pen.fill(rocks, .black)
+        pen.fill(walk, .black)
+        house.addPath(pen.poly(xs.map { ($0, path($0)) }, closed: false))
+        house.addPath(pen.poly(xs.map { ($0, path($0) + 0.05) }, closed: false))
+        var rocky = Path()
+        rocky.addPath(rocks)
+        // Boulders, flat-bottomed and heaped, so the foot of the picture reads as ground.
+        for (x, y, k) in [(-0.8, 0.76, 0.1), (-0.52, 0.74, 0.12), (-0.24, 0.73, 0.09), (0.18, 0.75, 0.11), (0.46, 0.76, 0.1),
+                          (0.72, 0.78, 0.09), (-0.05, 0.9, 0.13), (-0.62, 0.92, 0.11), (0.48, 0.94, 0.12)] {
+            rocky.addPath(pen.poly([(x - k, y), (x - 0.8 * k, y - 0.45 * k), (x - 0.2 * k, y - 0.7 * k), (x + 0.5 * k, y - 0.55 * k),
+                                    (x + k, y)]))
+        }
+        // The rope from the quay along the path, outside the path's core.
+        let line = pen.poly(Swift.stride(from: 0.8, through: 1.0, by: 0.02).map { ($0, rope($0)) }, closed: false)
+        pen.lit { g in
+            g.stroke(house, ink)
+            g.stroke(rocky, ink, 0.6)
+            g.stroke(line, Rescue.torch, 0.8)
+        }
+        for (x, y, k) in [(-0.62, 0.55, 0.24), (0.36, 0.58, 0.22), (-0.72, -0.08, 0.2), (0.8, 0.4, 0.2), (-0.88, 0.3, 0.18)] {
+            Cast.breaker(pen.at(x, y, k: k))
+        }
+
+        // Vignette 0, the gallery window.
+        pen.vignette(0) { pen in
+            if played.contains(0) {
+                // In the pane away from the knob, its light flashing out to sea.
+                pen.fill(pen.rect(axis - 0.065, -0.69, axis - 0.03, -0.625), Rescue.torch, 0.25)
+                Rescue.handLamp(pen, x: axis - 0.045, y: -0.625)
+                for a in [Double.pi - 0.5, .pi, .pi + 0.5] {
+                    let x = axis - 0.045, y = -0.655
+                    pen.stroke(pen.seg(x + 0.026 * cos(a), y + 0.026 * sin(a), x + 0.042 * cos(a), y + 0.042 * sin(a)), Rescue.flame)
+                }
+            }
+        }
+
+        // Vignette 1, the path.
+        pen.vignette(1) { pen in
+            if played.contains(1) {
+                pen.stroke(pen.poly(Swift.stride(from: 0.72, through: 0.8, by: 0.02).map { ($0, rope($0)) }, closed: false), Rescue.torch, 0.8)
+                Cast.figure(pen.at(0.685, path(0.685), k: 0.13, turn: -0.25), .father,
+                            arms: [[(0.1, -0.74), (0.22, -0.6), (0.3, -0.62)], [(-0.1, -0.74), (-0.2, -0.56), (-0.26, -0.44)]])
+                // The coil over his shoulder.
+                pen.stroke(pen.ellipse(0.672, path(0.685) - 0.093, 0.026, 0.019), Rescue.torch)
+                pen.stroke(pen.ellipse(0.672, path(0.685) - 0.093, 0.017, 0.012), Rescue.torch)
+                // Spray driving across him from the sea.
+                for (x, y) in [(0.72, -0.13), (0.74, -0.09), (0.7, -0.17)] {
+                    pen.stroke(pen.seg(x, y, x - 0.035, y + 0.012), Rescue.ink, 0.8)
+                }
+            } else {
+                pen.stroke(pen.poly(Swift.stride(from: 0.42, through: 0.8, by: 0.02).map { ($0, rope($0)) }, closed: false), Rescue.torch, 0.8)
+                pen.stroke(pen.circle(0.405, rope(0.42) + 0.004, 0.014), Rescue.ink)
+                pen.stroke(pen.seg(0.405, rope(0.42) + 0.018, 0.405, path(0.405)), Rescue.ink)
+            }
+        }
+
+        // Vignette 3, the door.
+        pen.vignette(3) { pen in
+            if played.contains(3) {
+                pen.fill(pen.rect(-0.21, 0.36, -0.12, base), .black)
+                pen.stroke(pen.rect(-0.2, 0.37, -0.13, base), Rescue.ink)
+                pen.stroke(pen.seg(-0.165, 0.37, -0.165, base), Rescue.ink, 0.6)
+                Cast.breaker(pen.at(-0.2, base + 0.03, k: 0.13), glows: Rescue.tight)
+            } else {
+                pen.fill(pen.rect(-0.21, 0.36, -0.12, base), Rescue.torch, 0.35)
+                for k in 0..<4 {
+                    let y = base - 0.04 - 0.04 * Double(k)
+                    pen.stroke(pen.seg(-0.2 + 0.015 * Double(k), y, -0.13, y), Rescue.flame, 0.8)
+                }
+            }
+        }
     }
 }

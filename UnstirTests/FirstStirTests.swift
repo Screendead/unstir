@@ -152,9 +152,12 @@ final class FirstStirTests: XCTestCase {
                 XCTAssertTrue(m.allSatisfy { simd_distance($0, centre(k)) <= core + pixel }, "\(level.id): vignette \(k) leaves its core")
                 // The art spec, which the lab's harbour predates: a margin inside the core's edge, and clear of the knob.
                 if story != .harbour {
-                    let d = m.map { simd_distance($0, centre(k)) }
-                    XCTAssertLessThanOrEqual(d.max()!, core - Self.margin + pixel, "\(level.id): vignette \(k) nears its core's edge")
-                    XCTAssertGreaterThanOrEqual(d.min()!, Self.knob - pixel, "\(level.id): vignette \(k) reaches under its knob")
+                    let far = m.max { simd_distance($0, centre(k)) < simd_distance($1, centre(k)) }!
+                    let near = m.min { simd_distance($0, centre(k)) < simd_distance($1, centre(k)) }!
+                    XCTAssertLessThanOrEqual(simd_distance(far, centre(k)), core - Self.margin + pixel,
+                                             "\(level.id): vignette \(k) nears its core's edge at \(far)")
+                    XCTAssertGreaterThanOrEqual(simd_distance(near, centre(k)), Self.knob - pixel,
+                                                "\(level.id): vignette \(k) reaches under its knob at \(near)")
                 }
                 marks[k] = m
             }

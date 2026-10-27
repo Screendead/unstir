@@ -336,3 +336,15 @@ rescue_shots() {  # scene description-dealt description-held description-played
 rescue_shots 6 "the harbour mouth at 4:45, every core turned." \
   "the lifeboat just inside the mouth, the torch left on the sill, a neighbour holding out blankets at the steps." \
   "the lifeboat outside on a swell, searchlight out; the child at the window with the torch and the dog; two neighbours carrying blankets out of the lifeboat house; heavier rain."
+rescue_shots 7 "the breakwater's end at 4:15, every core turned." \
+  "the steps empty, a rope hanging, surf over their foot; the lifeboat alongside, two crew reaching up; the lighthouse dark." \
+  "the father helping the grandmother down the steps; the lifeboat further off, bow high on a wave; a glow at the lighthouse's stair window; heavier rain."
+rescue_shots 8 "the breakwater path at 3:50, every core turned." \
+  "the lifeboat house open on an empty slip; the chain of lights reaching the lighthouse door; four bearers with lanterns held high." \
+  "the crew pushing the lifeboat off the slip; the chain ending halfway, one light at the door; two bearers, two more running up unlit; heavier rain."
+rescue_shots 9 "inside the lighthouse at 3:25, every core turned." \
+  "the hand-lamp burning on the stair's turn; the lantern chain's lights far below the window; the storm lantern on the bottom step by the open door." \
+  "the grandmother sitting at the turn, her ankle bound, the lamp beside her; the window dark; the father at the foot, lantern raised, looking up; heavier rain at the window and door."
+rescue_shots 10 "the foot of the lighthouse at 3:00, every core turned." \
+  "the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair." \
+  "the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain."

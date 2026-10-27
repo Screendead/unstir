@@ -201,3 +201,15 @@ firststir-01-solved.png  First Stir 01 solved (2:-5) on the calm evening, the ca
 firststir-06.png  First Stir 6 as dealt: the harbour mouth at 4:45, every core turned.
 firststir-06-held.png  First Stir 6 drawn unstirred, every vignette held back: the lifeboat just inside the mouth, the torch left on the sill, a neighbour holding out blankets at the steps.
 firststir-06-played.png  First Stir 6 drawn unstirred, every vignette played: the lifeboat outside on a swell, searchlight out; the child at the window with the torch and the dog; two neighbours carrying blankets out of the lifeboat house; heavier rain.
+firststir-07.png  First Stir 7 as dealt: the breakwater's end at 4:15, every core turned.
+firststir-07-held.png  First Stir 7 drawn unstirred, every vignette held back: the steps empty, a rope hanging, surf over their foot; the lifeboat alongside, two crew reaching up; the lighthouse dark.
+firststir-07-played.png  First Stir 7 drawn unstirred, every vignette played: the father helping the grandmother down the steps; the lifeboat further off, bow high on a wave; a glow at the lighthouse's stair window; heavier rain.
+firststir-08.png  First Stir 8 as dealt: the breakwater path at 3:50, every core turned.
+firststir-08-held.png  First Stir 8 drawn unstirred, every vignette held back: the lifeboat house open on an empty slip; the chain of lights reaching the lighthouse door; four bearers with lanterns held high.
+firststir-08-played.png  First Stir 8 drawn unstirred, every vignette played: the crew pushing the lifeboat off the slip; the chain ending halfway, one light at the door; two bearers, two more running up unlit; heavier rain.
+firststir-09.png  First Stir 9 as dealt: inside the lighthouse at 3:25, every core turned.
+firststir-09-held.png  First Stir 9 drawn unstirred, every vignette held back: the hand-lamp burning on the stair's turn; the lantern chain's lights far below the window; the storm lantern on the bottom step by the open door.
+firststir-09-played.png  First Stir 9 drawn unstirred, every vignette played: the grandmother sitting at the turn, her ankle bound, the lamp beside her; the window dark; the father at the foot, lantern raised, looking up; heavier rain at the window and door.
+firststir-10.png  First Stir 10 as dealt: the foot of the lighthouse at 3:00, every core turned.
+firststir-10-held.png  First Stir 10 drawn unstirred, every vignette held back: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair.
+firststir-10-played.png  First Stir 10 drawn unstirred, every vignette played: the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain.
