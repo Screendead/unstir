@@ -875,6 +875,13 @@ names and product ids, and Complete's promise to older owners.
     are not built on either chapter branch, so the night steps per vignette as level 1's does; at pent's core size
     (0.264) a vignette's change has a ring 0.12 wide between the knob and the margin, so figures are near the spec's
     0.12 minimum and the lifeboat about 0.12 long.
+    Reviewed 2026-10-27 and fixed on the branch: a played core's edge showed a seam (the core's sky and layer were
+    masked apart; now flattened first, which fixes level 1 too), and the test now measures the two layers the game
+    bakes; par is pinned by `testFirstStirParIsTheOptimum`; glows, beams and lit doors are flat fills under a blur, to
+    the spec's "no gradients but the sky and sea" (level 1, the lab's harbour, still uses gradients: Jack's to call);
+    scene 7's steps come down to the boat inside its core; scene 8's chain ends well short, its house stands open on
+    an empty slip, the boat goes down the slip, the bearers stand in a row; scene 9's lantern is on the bottom step and
+    the hand-lamp no longer reads as a numeral; scene 6 held keeps the searchlight on.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render
