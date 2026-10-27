@@ -404,8 +404,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `returned` with the day number (day 1 the install's) on the first opening of any later day number not yet sent, at
   launch or on coming to the front, so a clock set ahead and back costs no real return, and on the first opening on or
   after days 2, 7 and 30 the newest `snapshot` due, every one due marked sent, so a late yes or a clock jumped ahead
-  sends one (Jack, 2026-10-26, K). Days are plain `Best.day`, not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved or quit, moves, par, undos, resets)
-  as it is solved or left for the menu; endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox
+  sends one (Jack, 2026-10-26, K). Days are plain `Best.day`, not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved, lost (Escapement's clock) or quit, moves, par, undos, resets)
+  as it is solved, lost or left for the menu (a lost tank left is no quit); endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox
   nothing. A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app
   was killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
   fires once a pack's taste levels all have bests, `purchased` on a verified purchase in `Store.purchase`. The snapshot

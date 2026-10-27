@@ -221,13 +221,15 @@ final class Analytics {
 
     // MARK: Play
 
-    /// A level or run ends on its own: solved, or the brim spilled. An endless tank solved is no end: the run goes on.
+    /// A level or run ends on its own: solved, lost on Escapement's clock, or the brim spilled. An endless tank solved
+    /// is no end: the run goes on.
     func finished(_ game: Game) {
         guard on else { return }
         if game.level.run != nil {
             if game.spilled, let e = Analytics.report(game, "spilled") { send(e.name, e.props) }
             return
         }
+        if game.lost, let e = Analytics.report(game, "lost") { send(e.name, e.props); return }
         guard game.solved, let e = Analytics.report(game, "solved") else { return }
         send(e.name, e.props)
         if let pack = game.level.pack, (1...pack.taste).allSatisfy({ Best.load(pack.id($0)) != nil }) {

@@ -955,7 +955,7 @@ names and product ids, and Complete's promise to older owners.
     Built on `escapement-pack` and merged 2026-10-27 (PR #46): a tick that pushes loses on the move that made it
     (E1), and so does a tick that stops the clock with twists still on the picture (E2 = B, round 9); "lost." by
     the clock, `LostCard` with "lost on move N", undo (from the bank) and again, its exit through `leave` so
-    analytics sees it.
+    analytics sees it; a lost tank sends the level event with outcome `lost`, and leaving it after is no quit.
     `testAPushedTickNeverPops` plays 40 random small tri and quad stacks to a pushed tick, then every continuation of
     one move (two under `UNSTIR_SLOW_TESTS`, minutes). Checked on the 30 book problems too (2026-10-25,
     `ESC_PUSHED=1 scripts/escapement.sh`): playing on past a pushed tick, no line of whole heals and waits reaches
