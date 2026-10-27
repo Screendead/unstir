@@ -98,6 +98,10 @@ struct Level: Hashable, Sendable {
     var sockets: Set<Int> = []
     /// Escapement's clocks: a knob that can't be turned, and waits on a tap.
     var ratchets: Set<Int> = []
+    /// Escapement's clocks wound back: stirred clockwise, each ticks -1. The rest of `ratchets` tick +1.
+    var woundBack: Set<Int> = []
+    /// A pack's chapter, which the card's list heads where it changes.
+    var chapter: String?
     /// Escapement: a stack of the demonstration's own, played on the clock before the first stir.
     var demo: [Twist] = []
     /// Lens's slots whose steps magnify (`Tank.lens`) rather than turn. Their knobs work as any other: only the map
@@ -122,8 +126,12 @@ struct Level: Hashable, Sendable {
 
     enum Knob: Hashable, Sendable { case working, seized, socket, ratchet }
 
-    /// Escapement's clock rod, which ticks +1 after every move while it holds an entry. One clock a level for now.
-    var clock: Int? { ratchets.min() }
+    /// Escapement's clocks in the order they tick after every move, clockwise from twelve (Jack's call D1, round 9), each
+    /// with the step it ticks while it holds an entry. None is ever hex's hub, which has no angle.
+    var clocks: [(rod: Int, dir: Int)] {
+        ratchets.map { (rod: $0, dir: woundBack.contains($0) ? -1 : 1) }
+            .sorted { layout.clockwise($0.rod) < layout.clockwise($1.rod) }
+    }
 
     func kind(of knob: Int) -> Knob {
         seized.contains(knob) ? .seized : sockets.contains(knob) ? .socket : ratchets.contains(knob) ? .ratchet : .working
