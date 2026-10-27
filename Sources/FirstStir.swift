@@ -13,16 +13,67 @@ enum Story: Hashable, Sendable {
         case .harbour: [0, 1, 2]
         }
     }
+
+    var layout: Layout {
+        switch self {
+        case .harbour: Harbour.layout
+        }
+    }
+
+    /// The night winds back a stage with each vignette played.
+    var stages: Int { vignettes.count }
+
+    /// The far lightning's box, baked alone; nil where the scene has none.
+    var boltBox: CGRect? {
+        switch self {
+        case .harbour: Harbour.boltBox
+        }
+    }
+
+    func draw(_ ctx: GraphicsContext, r: CGFloat, layer: Harbour.Layer) {
+        switch self {
+        case .harbour: Harbour.draw(ctx, r: r, layer: layer)
+        }
+    }
+
+    /// What moves over the baked layers as the night winds back: `from` is the stage being wound back from, `u` how far
+    /// (0 to 1) the rewind to `stage` has gone.
+    func weather(_ ctx: GraphicsContext, r: CGFloat, stage: Int, from: Int, u: Double) {
+        switch self {
+        case .harbour: Harbour.weather(ctx, r: r, stage: stage, from: from, u: u)
+        }
+    }
+
+    @MainActor
+    func render(_ layer: Harbour.Layer, side: CGFloat, scale: CGFloat, colorMode: ColorRenderingMode = .extendedLinear) -> UIImage? {
+        let box = layer == .bolt ? boltBox ?? .zero : CGRect(x: -1, y: -1, width: 2, height: 2)
+        let r = ImageRenderer(content: Canvas { ctx, _ in
+            var c = ctx
+            c.translateBy(x: -(box.minX + 1) * side / 2, y: -(box.minY + 1) * side / 2)
+            draw(c, r: side / 2, layer: layer)
+        }
+        .frame(width: box.width * side / 2, height: box.height * side / 2))
+        r.scale = scale
+        r.isOpaque = layer == .sky(evening: false) || layer == .sky(evening: true)
+        r.colorMode = colorMode
+        return r.uiImage
+    }
 }
 
 extension Level {
-    static let firstStir: [Level] = [
-        // One entry per rod, so the overlapping tri rods heal the lighthouse (0), the boat (1), then the cottage (2): the
-        // doorway lies in the boat's shear ring, so the cottage plays once the boat is still.
-        Level(id: Pack.firstStir.id(1), pack: .firstStir, label: "01", title: "The harbour",
-              note: "Each heal turns the night back.", layout: .tri, scramble: .parse("2:+5,1:-4,0:+3", in: .tri),
-              story: .harbour),
-    ]
+    /// Numbered by place, as `Pack.levels` reads them, in the story's order (the outline's scene table).
+    static let firstStir: [Level] = [harbour].enumerated().map { i, level in
+        var level = level
+        level.id = Pack.firstStir.id(i + 1)
+        level.label = String(format: "%02d", i + 1)
+        return level
+    }
+
+    // One entry per rod, so the overlapping tri rods heal the lighthouse (0), the boat (1), then the cottage (2): the
+    // doorway lies in the boat's shear ring, so the cottage plays once the boat is still.
+    private static let harbour = Level(id: "", pack: .firstStir, label: "", title: "The harbour",
+                                       note: "Each heal turns the night back.", layout: .tri,
+                                       scramble: .parse("2:+5,1:-4,0:+3", in: .tri), story: .harbour)
 }
 
 /// First Stir's harbour in the storm, in single-weight neon line, on the tri layout. Everything that differs between a
@@ -134,21 +185,6 @@ enum Harbour {
         case sky(evening: Bool)
         case bolt
         case scene(played: Set<Int>)
-    }
-
-    @MainActor
-    static func render(_ layer: Layer, side: CGFloat, scale: CGFloat, colorMode: ColorRenderingMode = .extendedLinear) -> UIImage? {
-        let box = layer == .bolt ? boltBox : CGRect(x: -1, y: -1, width: 2, height: 2)
-        let r = ImageRenderer(content: Canvas { ctx, _ in
-            var c = ctx
-            c.translateBy(x: -(box.minX + 1) * side / 2, y: -(box.minY + 1) * side / 2)
-            draw(c, r: side / 2, layer: layer)
-        }
-        .frame(width: box.width * side / 2, height: box.height * side / 2))
-        r.scale = scale
-        r.isOpaque = layer == .sky(evening: false) || layer == .sky(evening: true)
-        r.colorMode = colorMode
-        return r.uiImage
     }
 
     // ponytail: one long drawing function, top to bottom of the picture; split it only if a second scene is drawn.
@@ -541,7 +577,8 @@ struct StoryLayer: View {
     let side: CGFloat
     var onStrike: () -> Void = {}
     @Environment(\.displayScale) private var scale
-    @State private var layers: (storm: UIImage, evening: UIImage, bolt: UIImage, held: UIImage, played: UIImage)?
+    @State private var layers: Layers?
+    private typealias Layers = (storm: UIImage, evening: UIImage, bolt: UIImage?, held: UIImage, played: UIImage)
     /// The stage being wound back from, and when the rewind began.
     @State private var rewind: (from: Int, at: Date)?
     /// The stage the rain and moon rest at between rewinds: it lags `stage` until `onChange` sees the change.
@@ -563,8 +600,8 @@ struct StoryLayer: View {
                 if let layers {
                     sky(layers, night: night)
                     Image(uiImage: layers.held)
-                    ForEach(Harbour.layout.rods.indices.filter(story.vignettes.contains), id: \.self) { k in
-                        let rod = Harbour.layout.rods[k], core = Tank.plateau * rod.z * side
+                    ForEach(story.layout.rods.indices.filter(story.vignettes.contains), id: \.self) { k in
+                        let rod = story.layout.rods[k], core = Tank.plateau * rod.z * side
                         ZStack {
                             sky(layers, night: night)
                             Image(uiImage: layers.played)
@@ -575,7 +612,7 @@ struct StoryLayer: View {
                             return x * x * (3 - 2 * x)
                         } ?? 0)
                     }
-                    Canvas { ctx, size in Harbour.weather(ctx, r: size.width / 2, stage: to, from: from, u: u) }
+                    Canvas { ctx, size in story.weather(ctx, r: size.width / 2, stage: to, from: from, u: u) }
                 } else {
                     Color.black
                 }
@@ -606,23 +643,24 @@ struct StoryLayer: View {
         }
         .task(id: "\(side) \(scale)") {
             let s = Harbour.bakeScale(side: side, scale: scale)
-            @MainActor func bake(_ layer: Harbour.Layer) -> UIImage? { Harbour.render(layer, side: side, scale: s) }
-            guard let storm = bake(.sky(evening: false)), let evening = bake(.sky(evening: true)), let bolt = bake(.bolt),
+            @MainActor func bake(_ layer: Harbour.Layer) -> UIImage? { story.render(layer, side: side, scale: s) }
+            let bolt = story.boltBox == nil ? nil : bake(.bolt)
+            guard let storm = bake(.sky(evening: false)), let evening = bake(.sky(evening: true)), story.boltBox == nil || bolt != nil,
                   let held = bake(.scene(played: [])), let played = bake(.scene(played: story.vignettes)) else { return }
             layers = (storm, evening, bolt, held, played)
         }
     }
 
     /// The storm's sky faded into the evening's as far as the night stands wound back, the bolt going in the first stage.
-    private func sky(_ layers: (storm: UIImage, evening: UIImage, bolt: UIImage, held: UIImage, played: UIImage),
-                     night: Double) -> some View {
-        let box = Harbour.boltBox
-        return ZStack {
+    private func sky(_ layers: Layers, night: Double) -> some View {
+        ZStack {
             Image(uiImage: layers.storm)
-            Image(uiImage: layers.evening).opacity(night / Double(Harbour.stages))
-            Image(uiImage: layers.bolt)
-                .position(x: side / 2 * (1 + box.midX), y: side / 2 * (1 + box.midY))
-                .opacity(max(1 - night, 0))
+            Image(uiImage: layers.evening).opacity(night / Double(story.stages))
+            if let bolt = layers.bolt, let box = story.boltBox {
+                Image(uiImage: bolt)
+                    .position(x: side / 2 * (1 + box.midX), y: side / 2 * (1 + box.midY))
+                    .opacity(max(1 - night, 0))
+            }
         }
         .frame(width: side, height: side)
     }

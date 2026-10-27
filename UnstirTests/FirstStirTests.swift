@@ -90,7 +90,7 @@ final class FirstStirTests: XCTestCase {
         for level in Level.firstStir {
             let story = try XCTUnwrap(level.story, level.id)
             XCTAssertEqual(level.pack, .firstStir)
-            XCTAssertEqual(level.layout, Harbour.layout, level.id)
+            XCTAssertEqual(level.layout, story.layout, level.id)
             XCTAssertEqual(level.motion, .none, level.id)
             XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty && level.ratchets.isEmpty, level.id)
             XCTAssertEqual(level.par, level.scramble.count, level.id)
@@ -102,9 +102,9 @@ final class FirstStirTests: XCTestCase {
 
     /// The pixels of a tank `side` pixels across, in tank units, where vignette k's two states differ, glow included, past
     /// the renderer's own noise (up to 6 in 255 where nothing changed).
-    @MainActor private func footprint(_ k: Int, side: Int) throws -> [SIMD2<Double>] {
+    @MainActor private func footprint(_ k: Int, of story: Story, side: Int) throws -> [SIMD2<Double>] {
         func pixels(_ played: Set<Int>) throws -> [UInt8] {
-            let image = try XCTUnwrap(Harbour.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear)?.cgImage)
+            let image = try XCTUnwrap(story.render(.scene(played: played), side: CGFloat(side), scale: 1, colorMode: .nonLinear)?.cgImage)
             var bytes = [UInt8](repeating: 0, count: 4 * side * side)
             let ctx = try XCTUnwrap(CGContext(data: &bytes, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 4 * side,
                                               space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
@@ -136,7 +136,7 @@ final class FirstStirTests: XCTestCase {
             func centre(_ rod: Int) -> SIMD2<Double> { SIMD2(rods[rod].x, rods[rod].y) }
             var marks: [Int: [SIMD2<Double>]] = [:]
             for k in story.vignettes {
-                let m = try footprint(k, side: side)
+                let m = try footprint(k, of: story, side: side)
                 XCTAssertFalse(m.isEmpty, "\(level.id): vignette \(k) changes nothing")
                 let core = Tank.plateau * rods[k].z
                 XCTAssertTrue(m.allSatisfy { simd_distance($0, centre(k)) <= core + pixel }, "\(level.id): vignette \(k) leaves its core")
