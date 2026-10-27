@@ -28,7 +28,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
-  runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, the workflow and
+  runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, `Config/`, the workflow and
   `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
   inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
   build system to ignore inode changes; the restored build then stays incremental. A hit saves compile work but not
@@ -66,7 +66,10 @@ Once Jack has heard the argument and still decides, carry out his decision.
 `project.yml` is the source of truth for the Xcode project; the scripts run `xcodegen generate` before building, so
 edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitignored).
 
-- Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result)
+- Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result).
+  It passes the shell's `APTABASE_KEY`, Aptabase's app key, into Info.plist's `AptabaseKey`, over
+  `Config/Local.xcconfig` (gitignored), which `Config/Unstir.xcconfig` includes for Xcode's own builds and archives;
+  with neither analytics is off.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level on the phone
   until a run with `UNSTIR_UNLOCK=0`.
@@ -288,6 +291,35 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it.
+- **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
+  (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
+  no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
+  the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
+  word it and settings say (`ConsentWords`): on a plain launch while undecided,
+  `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
+  link, "What does it send?", that opens the full list of what is sent under the line; Yes and No the same
+  control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
+  analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
+  leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
+  once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
+  install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
+  bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
+  `returned` with the day number (day 1 the install's) on the first opening of any later day number not yet sent, at
+  launch or on coming to the front, so a clock set ahead and back costs no real return, and on the first opening on or
+  after days 2, 7 and 30 the newest `snapshot` due, every one due marked sent, so a late yes or a clock jumped ahead
+  sends one (Jack, 2026-10-26, K). Days are plain `Best.day`, not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved or quit, moves, par, undos, resets)
+  as it is solved or left for the menu; endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox
+  nothing. A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app
+  was killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
+  fires once a pack's taste levels all have bests, `purchased` on a verified purchase in `Store.purchase`. The snapshot
+  reads the bests, started flags, bank, endless best, dailies solved on the first try, packs owned and the tally.
+  `Sender` posts batches of 25 to `/api/v0/events` from `Library/analytics-queue.json`; it is built at launch under a
+  yes, so what an earlier launch left queued goes out with no new event to carry it. It keeps a batch on no answer, a
+  5xx or 429 and retries a minute later, drops one refused, and drops events over 23 hours old (the server refuses a
+  day's). `Sender.body` is everything on the wire: name, props, time, a session renewed after an hour with no event, as
+  Aptabase's SDK does (the snapshot its own) and `isDebug`, `osName`, the app's versions and `sdkVersion`. The server
+  takes property keys of up to 40 characters and event names of up to 60, cuts strings at 180, and drops without an
+  error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
@@ -329,7 +361,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch, so shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
-  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_UNLOCK` alone
+  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_ANALYTICS=log` writes each analytics event to the
+  flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
+  `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
+  any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
+  opens the card's list); `UNSTIR_CONSENT=yes`
+  or `=no` answers for the launch, never stored, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. This is how screenshots and films
   are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.

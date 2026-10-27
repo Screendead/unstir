@@ -295,6 +295,7 @@ final class Game {
             undos += 1
             bank -= 1
             if storesBank { Best.undos = bank }
+            Analytics.shared.undid()
         }
         Log.write("undo \(last) moves=\(moves) bank=\(bank) pushes=\(pushes) stack=\(stack.count) \(stack)")
         settle()
@@ -421,6 +422,7 @@ final class Game {
         } else if solved && counts && level.keepsProgress {
             Best(over: over, seconds: seconds, clean: clean).save(level.id)
         }
+        Analytics.shared.finished(self)
     }
 }
 
@@ -589,7 +591,7 @@ struct LevelView: View {
             let side = min(geo.size.width, geo.size.height - 290) / 1.045
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
-                    Button("\u{2039} levels", action: onExit)
+                    Button("\u{2039} levels", action: leave)
                     Spacer()
                     if game.level.sandbox {
                         control(game.level.picture.rawValue, game.nextPicture)
@@ -640,7 +642,7 @@ struct LevelView: View {
                     .padding(.top, 14)
                     .overlay(alignment: .top) {
                         if showResult {
-                            ResultCard(game: game, onExit: onExit, onNext: onNext)
+                            ResultCard(game: game, onExit: leave, onNext: onNext)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
@@ -771,7 +773,17 @@ struct LevelView: View {
             // Where there is no opening, onChange's initial call may run before the refill.
             if shown == nil { badge = game.refilled }
         }
+        .onChange(of: phase) {
+            if phase == .background { Analytics.shared.suspended(game) }
+            if phase == .active { Analytics.shared.resumed() }
+        }
         .onDisappear { endPath(); endTwist(); Log.write("level \(game.level.id) exits \(state)") }
+    }
+
+    /// Back to the menu, the only way out short of a finish or the next tank.
+    private func leave() {
+        Analytics.shared.left(game)
+        onExit()
     }
 
     /// Everything that decides what the tank draws, as the log shows it.
