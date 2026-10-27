@@ -371,7 +371,7 @@ played=("a neighbour on a stepladder nailing the first plank; the father bailing
         "the lighthouse beam sweeping in, no lightning; the ceiling lamp lit, the candle out; the child kneeling on the window seat beside the dog, both looking out."
         "the lighthouse beam out, no spray; the buoy upright; the harbourmaster pulling the shutter to."
         "the awning whole, the café's owner winding it in; the bicycle leaning on the lamp post; the sign hanging by two chains."
-        "shirts pegged on the line, streaming hard; the neighbour leaning out to pull the shutters to; the child unclipping the dog; 9:30 pm, the sky warming to dusk, a few drops."
+        "shirts pegged on the line, streaming hard; the neighbour leaning out to pull the shutters to; the child unclipping the dog; 9:30 pm, the sky at dusk's night blue, the rain gone."
         "the lantern dark, the grandmother reaching a taper to the lamp; the evening star; one window lit; the cloud bank sunk, the afterglow rising."
         "the grandmother just out on the path, lantern swinging, shawl blowing; the child running along the quay, arm up; the afterglow alone."
         "the father in the stern tying the second line; the needle on the sun glyph; the window dark, the float still hanging."

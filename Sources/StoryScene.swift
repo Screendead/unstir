@@ -242,8 +242,9 @@ struct Tone: Equatable, Sendable {
     init(_ hex: UInt32) { self.init(red: Double(hex >> 16 & 0xFF) / 255, green: Double(hex >> 8 & 0xFF) / 255, blue: Double(hex & 0xFF) / 255) }
 
     func scaled(_ k: Double) -> Tone { Tone(red: red * k, green: green * k, blue: blue * k) }
+    /// Exactly self at 0 and exactly other at 1, so a chapter's seam tones compare equal.
     func mix(_ other: Tone, _ t: Double) -> Tone {
-        Tone(red: red + (other.red - red) * t, green: green + (other.green - green) * t, blue: blue + (other.blue - blue) * t)
+        Tone(red: red * (1 - t) + other.red * t, green: green * (1 - t) + other.green * t, blue: blue * (1 - t) + other.blue * t)
     }
     var color: Color { Color(red: red, green: green, blue: blue) }
 }

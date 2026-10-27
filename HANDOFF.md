@@ -1128,10 +1128,11 @@ names and product ids, and Complete's promise to older owners.
     `Story.harbour` and the lab's own drawing are gone, and `Harbour` keeps only the shared line, fades and budget. Its
     sky is the lab's storm at 12:30 warming late to the lab's dusk at 9:30; its rain thins as the night winds back; far
     lightning crosses the sky in scenes 16 and 18 until about 10:50; scene 17 is indoors, rain only in its windows.
-    Combine step: the Flood's last sky should end on `Storm.tones(30)`, and Dusk Before's first should open on
-    `Storm.tones(-150)`, with a test like `testTheRescueOpensOnTheDawnsLastSky` at each seam; `testTheTable` starts the
-    Storm at 12:30 on its own until the Flood carries the time to it. `testTheStormsSkyMeetsItsNeighbours` pins both
-    ends as literals. Scene 19's sign is a cut-out cobbler's boot (no board, so nothing in it reads as a letter) high
+    Joined on `firststir-content` (2026-10-27): the two branches disagreed on the seams (the Flood's 12:30 sky is its
+    own deep blue, and the Storm's 9:30 sky was Dusk Before's 7:40 coral, where Dusk opens on night blue), so the Storm
+    bridges both, as each chapter before it turns from the last: it opens on the Flood's 12:30 sky and sea, turns to the
+    lab's storm across scene 16, and ends on Dusk Before's 9:30 sky and sea, its rain gone by then
+    (`testTheStormsSkyMeetsItsNeighbours`). Scene 19's sign is a cut-out cobbler's boot (no board, so nothing in it reads as a letter) high
     on a gable, where the small rod's core is clear of the big rods' discs (the outline fixes no place for it); its
     cuff chain and the top of its toe chain are the same in both states, the toe chain snapped below. Review fixes
     (2026-10-27): the tinted room fills are black; scene 17's low window is wider so the child and the dog both kneel
@@ -1156,9 +1157,8 @@ names and product ids, and Complete's promise to older owners.
     doubling the lines (pent `4:+3,1:-4,3:+5,2:-3,0:+4,1:+2,4:-5`), the float (quad `0:+4,3:-3,2:+5,1:-2,0:-3,3:+2`) and
     first stir (tri `2:+4,0:-3,1:+5,0:+2,1:-3`, the cup's entry at the bottom so the stir always heals last), each par
     the solver's optimum and every vignette drawn clear of the other discs (the outline's "Clear" orders). The clock
-    runs 9:30 back to 7:40 pm. Its levels are `first-stir-21` to `-25`. The Storm's scene 20 must end on `Dusk.skyTones(1290)` and
-    `Dusk.seaTone(1290)`, as the Rescue opens on the Dawn's last sky; add a test like
-    `testTheRescueOpensOnTheDawnsLastSky` when the two meet. Sheet: `scripts/first-stir-sheet.py 21 25`. **Open for Jack, chapter 5** (Claude's recommendations, not decided):
+    runs 9:30 back to 7:40 pm. Its levels are `first-stir-21` to `-25`. The Storm's scene 20 ends on `Dusk.skyTones(1290)` and
+    `Dusk.seaTone(1290)` (`testTheStormsSkyMeetsItsNeighbours`). Sheet: `scripts/first-stir-sheet.py 21 25`. **Open for Jack, chapter 5** (Claude's recommendations, not decided):
     - Scene 24's gift held back: the outline has the child holding the float up to the light while the same picture
       shows it hanging in the window, two floats as the level opens. Built: the child's hands up to the window, empty,
       so the opening and the end each show one float, the child standing under the window with both arms up to it.

@@ -401,8 +401,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   storm lantern, the lifeboat, a breaking wave). `Storm` is chapter 4, The Storm: five scenes, 12:30 am back to 9:30
   pm, in storm indigo with sodium (the lab's), its times negative past midnight (`Storm.times`, which `clock` wraps).
   Its levels are 16 to 20, after the Flood's. Scene 16, the harbour, is drawn from Dawn After's sunrise plan (the outline's continuity), its
-  shards falling inside the lantern's core and its boat right of the cottage's disc. Its sky (`Storm.tones`) is the
-  lab's storm at 12:30 and warms late towards the lab's dusk at 9:30, where Dusk Before's first scene opens. Its rain thins as the night winds back and its far lightning
+  shards falling inside the lantern's core and its boat right of the cottage's disc. Its sky (`Storm.tones`) opens on the
+  Flood's 12:30 sky and sea, turns to the lab's storm across scene 16, and warms late to Dusk Before's 9:30 sky, where
+  that chapter opens (`testTheStormsSkyMeetsItsNeighbours`). Its rain thins to none by 9:30 as the night winds back and its far lightning
   (`Storm.flash`, drawn over all in scenes 16 and 18) is gone by about 10:50; scene 17 is indoors, its rain only
   through its windows. Its vignettes draw through the Rescue's `Brush` and `Cast` in the Storm's ink.
   `Dusk` (**FirstStirDuskBefore.swift**) is chapter 5, Dusk Before: five scenes, 9:30 back to 7:40 pm, in dusk rose (ink B0A6E8), the last in kitchen gold, drawn through `Brush` and

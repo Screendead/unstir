@@ -212,12 +212,20 @@ final class FirstStirTests: XCTestCase {
         XCTAssertLessThan(Flood.rain(Flood.quay.early), Double(Rescue.drops.count))
     }
 
-    /// The Storm's seams as literals for the chapters either side to meet (F2): the lab's storm at 12:30, where the Flood
-    /// ends, and the lab's dusk at 9:30 pm, where Dusk Before opens.
+    /// Chapter 4 opens on the sky chapter 3 ends on and ends on the sky chapter 5 opens on (F2): at 12:30 the Storm's sky
+    /// and sea are the Flood's, and at 9:30 pm Dusk Before's, with the lab's storm between and no rain left at 9:30.
     func testTheStormsSkyMeetsItsNeighbours() {
+        XCTAssertEqual(Storm.harbour.late, Flood.quay.early)
+        XCTAssertEqual(Storm.washing.early + 24 * 60, Dusk.lamp.late)
         let peak = Storm.tones(Storm.harbour.late), dusk = Storm.tones(Storm.washing.early)
-        XCTAssertEqual([peak.zenith, peak.middle, peak.low, peak.sea], [Tone(0x000000), Tone(0x0E0B3C), Tone(0x1E1960), Tone(0x0B2238)])
-        XCTAssertEqual([dusk.zenith, dusk.middle, dusk.low, dusk.sea], [Tone(0x03062A), Tone(0x4A2C78), Tone(0xC8605A), Tone(0x2A3E6A)])
+        XCTAssertEqual([peak.zenith, peak.middle, peak.low], Flood.skyTones(Flood.quay.early))
+        XCTAssertEqual(peak.sea, Flood.seaTones(Flood.quay.early)[0])
+        XCTAssertEqual([dusk.zenith, dusk.middle, dusk.low], Dusk.skyTones(Dusk.lamp.late))
+        XCTAssertEqual(dusk.sea, Dusk.seaTone(Dusk.lamp.late))
+        let storm = Storm.tones(Storm.lightning.late)
+        XCTAssertEqual(storm.zenith, Tone(0x000000).mix(Dusk.skyTones(Dusk.lamp.late)[0], pow(Storm.back(Storm.lightning.late), 2)),
+                       "the lab's storm by the end of the first scene")
+        XCTAssertEqual(Storm.rain(Storm.washing.early), 0)
     }
 
     /// The caption is the scene's time (Jack, F3), stepping back a share of its window with each of the scramble's entries

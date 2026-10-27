@@ -51,12 +51,22 @@ enum Storm: Int, CaseIterable, Sendable {
 
     // MARK: The time layer
 
+    /// How far the first scene has turned the Flood's sky to the Storm's own, eased.
+    static func turned(_ minutes: Double) -> Double {
+        let x = min(back(minutes) / back(times[1]), 1)
+        return x * x * (3 - 2 * x)
+    }
+
     /// The sky's tones at `minutes`, from the zenith to the horizon (the middle one at `Dawn.middle`), and the sea's at
-    /// the horizon: the lab's storm at 12:30, warming late towards the dusk rose the evening stood in at 9:30.
+    /// the horizon: the Flood's 12:30 sky turning to the lab's storm across the first scene, the storm warming late
+    /// towards Dusk Before's 9:30 sky, which its first scene opens on.
     static func tones(_ minutes: Double) -> (zenith: Tone, middle: Tone, low: Tone, sea: Tone) {
-        let t = back(minutes) * back(minutes)
-        return (Tone(0x000000).mix(Tone(0x03062A), t), Tone(0x0E0B3C).mix(Tone(0x4A2C78), t), Tone(0x1E1960).mix(Tone(0xC8605A), t),
-                Tone(0x0B2238).mix(Tone(0x2A3E6A), t))
+        let t = back(minutes) * back(minutes), u = turned(minutes)
+        let flood = Flood.skyTones(times[0]) + [Flood.seaTones(times[0])[0]]
+        let dusk = Dusk.skyTones(Dusk.times[0]) + [Dusk.seaTone(Dusk.times[0])]
+        let own = zip([Tone(0x000000), Tone(0x0E0B3C), Tone(0x1E1960), Tone(0x0B2238)], dusk).map { $0.mix($1, t) }
+        let tone = zip(flood, own).map { $0.mix($1, u) }
+        return (tone[0], tone[1], tone[2], tone[3])
     }
 
     /// The rain, one field over everything but a roof: in a random order, so the first n are an even thinning.
@@ -71,8 +81,9 @@ enum Storm: Int, CaseIterable, Sendable {
     /// How far the rain climbs back up its slant per minute wound back, in tank radii.
     static let climb = 0.07
 
-    /// Drops falling at `minutes`, the last one partly: driving at the storm's peak, a few before it came in.
-    static func rain(_ minutes: Double) -> Double { 30 + 340 * (1 - back(minutes)) }
+    /// Drops falling at `minutes`, the last one partly: driving at the storm's peak, none by 9:30, where Dusk Before's
+    /// still air opens.
+    static func rain(_ minutes: Double) -> Double { 370 * (1 - back(minutes)) }
 
     /// How bright the far lightning stands at `minutes`: the storm's peak, gone by about 10:50.
     static func flash(_ minutes: Double) -> Double { max(1 - back(minutes) / 0.6, 0) }

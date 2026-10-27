@@ -42,7 +42,7 @@ enum Dusk: Int, CaseIterable, Sendable, StoryScene {
     var vignettes: Set<Int> { [[0, 3, 2], [1, 0, 2], [1, 3, 4], [3, 0, 2], [0, 1, 2]][rawValue - 21] }
 
     /// The chapter's window, minutes after midnight, 9:30 back to 7:40 pm: each scene's played time is the next one's
-    /// held-back time. The Storm's last scene ends where this one opens.
+    /// held-back time. The Storm's last scene ends where this one opens, a day earlier in these minutes.
     static let times: [Double] = [1290, 1260, 1235, 1210, 1195, 1180]
     var late: Double { Self.times[rawValue - 21] }
     var early: Double { Self.times[rawValue - 20] }
@@ -56,7 +56,7 @@ enum Dusk: Int, CaseIterable, Sendable, StoryScene {
     static let middle = 0.6
 
     /// The sky's tones from the zenith to the horizon at `minutes`: night blue at 9:30, climbing back through dusk rose to
-    /// the sunset's coral at 7:40. The Storm's scene 20 is to end on these at 9:30.
+    /// the sunset's coral at 7:40. The Storm's scene 20 ends on these at 9:30.
     static func skyTones(_ minutes: Double) -> [Tone] {
         let b = back(minutes)
         let night = Tone(0x03062A), rose = Tone(0x4A2C78)
