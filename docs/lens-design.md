@@ -1,19 +1,52 @@
 # Lens: design drafts
 
 Drafts for Jack, 2026-10-25. Nothing here is decided except Jack's round 3 call L1: **the hard lens, phone test
-next**. Everything else is Claude's recommendation. "Checked" marks a claim computed or read from code; "inferred"
+next**, his round 9 call L1 (A: the phone test before any art is drawn) and what the first phone session decided
+(below). Everything else is Claude's recommendation. "Checked" marks a claim computed or read from code; "inferred"
 marks one that wasn't, and says what would check it.
+
+## The first phone session (2026-10-26): what it supersedes
+
+Jack played the lab's hard lens 2 (quad) on `lab-lens`, not the stills of section 3. Quad's lens rods (radius 0.48)
+were too small for him to make out their rims at x1.3, so the order was very hard to read. He then decided, built on
+`lab-lens` (4f23965, 65c049b; local, not for merging):
+
+- **A lens follows the finger up and down instead of turning.** Up zooms in, down zooms out (one step per 0.15 tank
+  units of travel, `LevelView.lensPitch`); he called it "way better". In the lab's map a magnifying step is now
+  negative, so up is a negative step.
+- **x2 a step**, which he called good, after x1.3 and x1.6 (set at launch with `UNSTIR_ZOOMRATE`; the lab's default
+  is unchanged). He judged it on eye's two big rods as lenses (radius 0.58, lab layout `eyeZoom`, `lens-hard-3`).
+
+These supersede, below:
+
+- Section 0's x1.3 and "Clockwise magnifies": the rate is x2, and the gesture is up and down. The dealt sizes are x2,
+  x4 and x8 the screen's pitch, not x1.3, x1.69 and x2.2.
+- Consequence 4's numbers (computed from its own law, radial scale rate^-2 a step at the rim): at x2 a rod netting +1
+  squashes the rim band's dots to 0.25 of their pitch (about 4.3 px at Pro Max size), +2 to 0.06 (about 1.1 px) and +3
+  to 0.016 (about 0.3 px). By the draft's own glitter estimate (+5 at x1.3, 1.3 px, inferred to glitter), +2 and +3
+  would glitter; that is unchecked on the phone, and the +3 cap of open point 4 rests on it.
+- Section 1's "read at x1.3" for the clues: the smallest dealt step is x2.
+- Section 2's table: the scrambles keep the draft's sign (+ magnifies), which is the lab's opposite now; row 1's
+  "clockwise swells the dots, anticlockwise brings them back" is now up and down; and the quad rows (8, 11, 18), and
+  every lens on a small rod, wait on the open question below. The table is not redone here.
+- Section 3: the setup's x1.3 and its step 3 on quad are played; steps 1, 2 and 4 (count, order, the rim band) were
+  not run.
+- Open point 3 (quad and pent) widens to the question below.
+
+**Open, not decided:** lenses only on big rods (eye's two, radius 0.58, `eyeZoom`), or on rods of every size now that
+a step is x2. Jack named both ways out. Not yet checked at x2: glitter in the rim band at +2 and +3, and whether the
+order reads on eye's lenses. The count and order stills were not run.
 
 ## 0. The rod Jack chose
 
 The hard lens as built on local branch `lab-lens` (f6dfc8b to 5928602), read from its code and commit messages:
 
 - A lens rod moves only its rigid core (out to `Tank.plateau`, 0.6 of its disc). Inside, the fluid flows on
-  u (1 - (u/a)^e), which scales the centre by the rate each step (x1.3) and fixes the rim; the ring outside the core
+  u (1 - (u/a)^e), which scales the centre by the rate each step (x1.3; x2 since the phone session) and fixes the rim; the ring outside the core
   never moves. Rim sharpness e = 2 (`Lab.hardEdge`), which reads at +1 where 1 barely does.
 - Steps form a group: turns merge by summing and an entry pops at 0, through the ordinary `Array.commit`. A lens
   never wraps: +k needs exactly -k. Play is uncapped; only the deal is capped (every dealt lens entry +1 to +3).
-- Clockwise magnifies. The deal only magnifies, so a dealt core always shows swollen dots, x1.3, x1.69 or x2.2 the
+- Clockwise magnifies (superseded: a lens follows the finger up and down, up zooming in). The deal only magnifies, so a dealt core always shows swollen dots, x1.3, x1.69 or x2.2 the
   screen's pitch (0.03 tank units).
 - The read: a whole rim means the lens is on top; a newer twist drags the rim into its swirl, and a newer lens cuts
   the twist's lines dead at its rim. The bead covers 36% of the disc.
@@ -145,7 +178,7 @@ knows nothing of lenses, so no par here comes from it.
 
 | # | Issue | Layout | Lens rods | Scramble (intent) | Depth | Free | What it adds | Par |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Close-up | tri | 0 | `0:+2` | 1 | 1 | The ringed knob: clockwise swells the dots, anticlockwise brings them back to the screen's pitch, and the rim goes at 0 | TBD |
+| 1 | Close-up | tri | 0 | `0:+2` | 1 | 1 | The ringed knob (superseded: up and down): clockwise swells the dots, anticlockwise brings them back to the screen's pitch, and the rim goes at 0 | TBD |
 | 2 | Close-up | tri | 0 | `0:+1,1:+3` | 2 | 1 | A broken rim: the twist is on top. Untwist, the rim comes whole, then shrink; the faintest step, +1 | TBD |
 | 3 | Close-up | tri | 0 | `1:-2,2:+4,0:+3` | 3 | 1 | A whole rim over twists, their lines cut dead at it: the lens first, and +3 to count by the dots | TBD |
 | 4 | Close-up | tri | 1 | `0:+3,1:+2,2:-4,1:+1` | 4 | 1 | One lens twice, a twist between: two separate entries | TBD |
