@@ -586,6 +586,9 @@ struct LevelView: View {
     @State private var twist: (down: Date, trail: Trail<Double>)?
     /// The finger's latest point in tank units, kept after it lifts so a count left showing stays put.
     @State private var finger: SIMD2<Double>?
+    /// Where the finger holding the stir landed: a lens's track keeps to the side away from it, so a thumb wobbling
+    /// across the knob on its way up never flips it.
+    @State private var landed: SIMD2<Double>?
     /// UNSTIR_FINGER: the fingertip drawn down where it landed, and what it turns about (the tank's centre for the rim
     /// and the swirl).
     @State private var ghost: (at: SIMD2<Double>, pivot: SIMD2<Double>, rim: Bool, lens: Bool)?
@@ -696,6 +699,7 @@ struct LevelView: View {
             _drag = State(initialValue: (.zero, grab, 0))
             // A lens's finger goes up and down instead.
             let lens = live.map { level.lenses.contains($0.rod) } ?? false
+            _landed = State(initialValue: p)
             _finger = State(initialValue: lens ? p - SIMD2(0, angle / Tank.step * LevelView.lensPitch)
                                 : pivot + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a)))
             switch grab {
@@ -1077,7 +1081,7 @@ struct LevelView: View {
         let grab = Self.grab(layout, motion: level.motion, kind: level.kind(of:), at: at)
         if grab != (rim ? .rim : .rod(m.rod)) { Log.write("finger at \(Log.point(at)) holds \(grab), not \(m)") }
         withAnimation(.easeOut(duration: 0.12)) { ghost = (at, rim || swirl ? .zero : centre(m.rod), rim, !rim && level.lenses.contains(game.slot(of: m.rod))) }
-        finger = at
+        finger = at; landed = at
         guard await pause(0.45) else { return false }
         let d = rim ? 0.45 * Double(abs(m.steps)) + 0.2 : 0.1 * Double(abs(m.steps)) + 0.25
         if rim {
@@ -1228,7 +1232,7 @@ struct LevelView: View {
         // A lens's count runs up and down a track beside its knob, on the side away from the finger.
         let lensTrack: CGFloat? = rodCount.flatMap { c in
             guard game.level.lenses.contains(game.slot(of: c.k)) else { return nil }
-            let side: CGFloat = (finger.map { $0.x > rods[c.k].x } ?? false) ? -1 : 1
+            let side: CGFloat = ((landed ?? finger).map { $0.x > rods[c.k].x } ?? false) ? -1 : 1
             return at(c.k).x + side * (core / 2 + Self.trackGap)
         }
         // Out of the way while the tank is held.
@@ -1624,6 +1628,7 @@ struct LevelView: View {
                     if spin == nil { liveTurn = nil; spun = false; endTwist() }
                     // Where it landed: the first change seen can come later, once a release or a reset's stir settles.
                     let landed = norm(v.startLocation)
+                    self.landed = landed
                     drag = (v.startLocation, Self.grab(level.layout, motion: level.motion, kind: level.kind(of:), at: landed), 0)
                     Log.write("touch \(drag!.grab) at \(Log.point(landed))")
                     path = (drag!.grab, v.time, Trail(gap: 0.03) { simd_distance($0, $1) })
