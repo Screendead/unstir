@@ -743,9 +743,9 @@ extension Dawn {
 
         // Vignette 1: the right-hand roofs.
         if played.contains(1) {
-            let pane = pen.rect(0.465, 0.46, 0.535, 0.525)
+            let pane = pen.rect(0.4, 0.46, 0.47, 0.525)
             pen.fill(pane, Self.light.opacity(0.3))
-            pen.line([(pane, Self.light, 1), (pen.ellipse(0.5, 0.49, 0.008, 0.016), Self.light, 1), (pen.rect(0.492, 0.506, 0.508, 0.525), Self.light, 1)],
+            pen.line([(pane, Self.light, 1), (pen.ellipse(0.435, 0.49, 0.008, 0.016), Self.light, 1), (pen.rect(0.427, 0.506, 0.443, 0.525), Self.light, 1)],
                      glows: [(0.02, 0.45), (0.007, 0.9)])
         } else {
             var smoke = Path()
