@@ -96,6 +96,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
   Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py
   <dir>` picks the table from them by its slots. `scripts/vortex-levels.sh check <layout> <scramble>` measures one row.
+- Plughole's levels: `scripts/plughole-levels.sh table` measures every plughole level in Levels.swift (entries, the
+  solver's optimum, hidden stirs, rings whole as dealt, right moves per step and forced steps over the untwist, each
+  right move taken as equally likely); `check <layout> <scramble>` measures one, and `search <layout> <depth>
+  <inversions> <from> <to>` deals seeded scrambles with the frozen generator, keeping those whose optimum is their
+  entry count. It builds `build/plughole-levels/measure` like `build/solve`.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
