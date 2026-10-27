@@ -12,12 +12,15 @@ enum Story: Hashable, Sendable {
     case dawn(Dawn)
     /// Chapter 2, The Rescue: scenes 6 to 10.
     case rescue(Rescue)
+    /// Chapter 5, Dusk Before: scenes 21 to 25.
+    case dusk(Dusk)
 
     var vignettes: Set<Int> {
         switch self {
         case .harbour: [0, 1, 2]
         case .dawn(let scene): scene.vignettes
         case .rescue(let scene): scene.vignettes
+        case .dusk(let scene): scene.vignettes
         }
     }
 }
@@ -25,7 +28,7 @@ enum Story: Hashable, Sendable {
 extension Level {
     /// The pack's scenes in the outline's order, the night told backwards, numbered by place as `Pack.levels` reads
     /// them. A scene's caption is its time.
-    static let firstStir: [Level] = (dawn + rescue).enumerated().map { i, level in
+    static let firstStir: [Level] = (dawn + rescue + dusk).enumerated().map { i, level in
         var level = level
         level.id = Pack.firstStir.id(i + 1)
         level.label = String(format: "%02d", i + 1)

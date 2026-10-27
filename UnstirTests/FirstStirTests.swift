@@ -125,6 +125,27 @@ final class FirstStirTests: XCTestCase {
             time = scene.early
         }
         XCTAssertEqual(time, 150, "chapter 2 ends at 2:30")
+        // Chapter 5 closes the pack: the Flood and the Storm wind the night from 2:30 am back to 9:30 pm before it.
+        let dusk = Array(Level.firstStir.suffix(Dusk.allCases.count))
+        XCTAssertEqual(dusk.map { $0.story }, Dusk.allCases.map { .dusk($0) })
+        XCTAssertEqual(dusk.map(\.scramble.count), [8, 8, 7, 6, 5])
+        XCTAssertEqual(dusk.map(\.layout), [.quad, .eye, .pent, .quad, .tri])
+        time = 21 * 60 + 30
+        for level in dusk {
+            let story = try XCTUnwrap(level.story, level.id), scene = try XCTUnwrap(story.scene, level.id)
+            XCTAssertEqual(level.layout, scene.layout, level.id)
+            XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty && level.ratchets.isEmpty, level.id)
+            XCTAssertEqual(story.vignettes.count, 3, level.id)
+            XCTAssertEqual(story.vignettes, story.vignettes.intersection(level.scramble.map(\.rod)), "\(level.id) opens with one played")
+            XCTAssertEqual(scene.late, time, level.id)
+            XCTAssertLessThan(scene.early, scene.late, level.id)
+            time = scene.early
+        }
+        XCTAssertEqual(time, 19 * 60 + 40, "chapter 5 ends at 7:40 pm")
+        // The stir is the pack's last heal: the cup's one entry lies under every other, on tri, where every disc meets.
+        let stir = try XCTUnwrap(dusk.last)
+        XCTAssertEqual(stir.scramble.first?.rod, 2)
+        XCTAssertEqual(stir.scramble.filter { $0.rod == 2 }.count, 1)
         XCTAssertEqual(Level.firstStir.map(\.id), (1...Level.firstStir.count).map { Pack.firstStir.id($0) })
         for level in Level.firstStir {
             let story = try XCTUnwrap(level.story, level.id)

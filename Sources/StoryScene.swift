@@ -58,6 +58,7 @@ extension Story {
         case .harbour: nil
         case .dawn(let scene): scene
         case .rescue(let scene): scene
+        case .dusk(let scene): scene
         }
     }
 }
