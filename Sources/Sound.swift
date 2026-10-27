@@ -16,6 +16,12 @@ enum UndoSound: String, CaseIterable {
     case late = "as is", early
 }
 
+/// Temporary, for Jack to hear both: an undo leaves the heal notes where they stand, or steps them back, so the next heal
+/// plays the undone one's note again.
+enum HealUndo: String, CaseIterable {
+    case keep, back = "step back"
+}
+
 extension Level {
     /// Each tier's own bed; the daily, endless, the sandbox and the packs, which have none yet, are plughole's.
     var bed: Sound.Bed {
@@ -60,7 +66,9 @@ final class Sound: @unchecked Sendable {
     /// Named by file.
     enum Bed: String, Sendable { case menu, plughole = "loop", whirlpool, vortex, maelstrom }
 
-    static let undoKey = "soundUndo"
+    static let undoKey = "soundUndo", healUndoKey = "soundHealUndo"
+    /// Read as a game opens.
+    static var stepsHealsBack: Bool { UserDefaults.standard.string(forKey: healUndoKey) == HealUndo.back.rawValue }
 
     /// A bed's player. There are two, so the old bed fades out while the new one fades in.
     private struct Deck {

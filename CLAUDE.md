@@ -370,17 +370,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and the heal that solves sounds as the solve. An undo's negation that brings back one of the scramble's entries marks
   it the scramble's again. The `seized` sound plays with `Knock.thud` whenever a finger lands on a knob that can't be
   turned. Beds loop under the menu and each tier (`Level.bed`; daily, endless, the sandbox and the packs take
-  plughole's), and a new one crossfades in over the old at equal power across two
-  decks. Only a bed that is playing stays decoded, and none in the background. `Sounding`, set on `RootView`, is the
-  app's button style: a button taps as it acts, and undo and reset have sounds of their own. A button that sets its own
-  `.plain` style has none, so every such button that acts takes `Sounding` instead: the gear, the consent card's answers
-  and its link, the settings sheet's switch and log, the pack cards' and the dock's buttons and the tier-up. The menu's
-  tier names, rows and `sound:` switch stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a
-  row taps only when it opens, the switch only when it picks, neither as a tier swipe lifts over it. Nothing sounds
-  during a drag but the detent's tick, and a sound never tells the player anything the picture doesn't. The session is
-  ambient, and while another app plays music the bed steps aside and the effects still sound. A harness launch or the
-  test host is silent unless `UNSTIR_SOUND=1`; the menu's `sound:` switch picks the set or turns it off, and its `undo:` switch picks the undo as rendered in September or `early`
-  (`undo-early.caf`), whose body peaks at about 0.2 s instead of 0.5: both temporary, for Jack's listen.
+  plughole's), and a new one crossfades in over the old at equal power across two decks. Only a bed that is playing
+  stays decoded, and none in the background. `Sounding`, set on `RootView`, is the app's button style: a button taps as
+  it acts, and undo and reset have sounds of their own. A button that sets its own `.plain` style has none, so every
+  such button that acts takes `Sounding` instead: the gear, the consent card's answers and its link, the settings
+  sheet's switch and log, the pack cards' and the dock's buttons and the tier-up. The menu's tier names, rows and
+  `sound:` switch stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it
+  opens, the switch only when it picks, neither as a tier swipe lifts over it. Nothing sounds during a drag but the
+  detent's tick, and a sound never tells the player anything the picture doesn't. The session is ambient, and while
+  another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
+  unless `UNSTIR_SOUND=1`; the menu's `sound:` switch picks the set or turns it off, and its `undo:` switch picks the
+  undo as rendered in September or `early` (`undo-early.caf`), whose body peaks at about 0.2 s instead of 0.5, and its
+  `heal undo:` switch whether an undo steps the heal notes back (`Game.stepsHealsBack`), so the next heal plays the
+  undone one's note again: all three temporary, for Jack's listen.
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a

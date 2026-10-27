@@ -123,6 +123,7 @@ struct MenuView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("soundSet") private var sound = SoundSet.glass
     @AppStorage(Sound.undoKey) private var undoSound = UndoSound.late
+    @AppStorage(Sound.healUndoKey) private var healUndo = HealUndo.keep
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -250,11 +251,12 @@ struct MenuView: View {
         show(nil)
     }
 
-    /// The set, and the undo, each heard both ways: temporary, for Jack's listen.
+    /// The set, the undo and what an undo does to the heal notes, each heard both ways: temporary, for Jack's listen.
     private var sounds: some View {
         VStack(alignment: .leading, spacing: 0) {
             choice("sound:", $sound)
             choice("undo:", $undoSound)
+            choice("heal undo:", $healUndo)
         }
         .font(.mono(12))
     }

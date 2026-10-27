@@ -116,6 +116,10 @@ final class Game {
     /// Heals since the level opened or was reset, for the heal's rising note: moves that popped one of the scramble's
     /// entries. The heal that solves sounds as the solve, so a heal counts only once the win check has had its say.
     private(set) var heals = 0
+    /// `heals` as each stir of `history` began.
+    private var healsBefore: [Int] = []
+    /// Whether an undo takes back the heals its stir made: temporary, for Jack to hear both (`Sound.stepsHealsBack`).
+    var stepsHealsBack = Sound.stepsHealsBack
     /// The rod and outcome of the newest commit or undo, for the commit flash.
     private(set) var lastCommit: (rod: Int, result: Commit)?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it.
@@ -209,11 +213,14 @@ final class Game {
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
         if open, history.last?.rod == slot {
             history[history.count - 1].steps += steps
-            if history.last!.steps == 0 { history.removeLast(); openBefore.removeLast(); before.removeLast(); open = false }
+            if history.last!.steps == 0 {
+                history.removeLast(); openBefore.removeLast(); before.removeLast(); healsBefore.removeLast(); open = false
+            }
         } else {
             history.append(Twist(rod: slot, steps: steps))
             openBefore.append(open)
             before.append(was)
+            healsBefore.append(heals)
             open = true
         }
         lastCommit = (rod, result)
@@ -261,12 +268,14 @@ final class Game {
         let net = tankStir(after: steps)
         let wasOpen = joins ? openBefore.removeLast() : open
         let was = joins ? before.removeLast() : entries
+        let healsWere = joins ? healsBefore.removeLast() : heals
         if joins { history.removeLast() }
         open = net != 0
         if open {
             history.append(Twist(rod: Game.tank, steps: net))
             openBefore.append(wasOpen)
             before.append(was)
+            healsBefore.append(healsWere)
         }
         Log.write("tank \(steps) position=\(position) moves=\(moves)")
         settle()
@@ -283,6 +292,8 @@ final class Game {
         // The sandbox counts nothing, so its undos are free.
         guard !finished, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast() else { return }
         let was = before.removeLast()
+        let healsWere = healsBefore.removeLast()
+        if stepsHealsBack { heals = healsWere }
         if level.pack != nil {
             entries = was
         } else if last.rod != Game.tank {
@@ -315,6 +326,7 @@ final class Game {
         history = []
         openBefore = []
         before = []
+        healsBefore = []
         heals = 0
         open = false
         resets += 1
@@ -1194,7 +1206,7 @@ struct LevelView: View {
         .onChange(of: ticks) { Sound.shared.play(.tick) }
         .onChange(of: tankTicks) { Knock.clunk.play(); Sound.shared.play(.tank) }
         .sensoryFeedback(.impact(weight: .heavy), trigger: game.cancels)
-        // Only on a new heal, not on a reset's return to 0.
+        // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
         .onChange(of: game.heals) { was, now in if now > was { Sound.shared.play(.heal(now)) } }
         .sensoryFeedback(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.
