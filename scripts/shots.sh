@@ -339,6 +339,11 @@ shot firststir-01-healed-1 "First Stir 01 after the first heal (0:-3): the lante
 shot firststir-01-healed-2 "First Stir 01 after the second heal (1:+4): the boat upright, the cottage's core still turned." \
   $fs STACK=2:+5,1:-4 TURNED=1:+4
 shot firststir-01-solved "First Stir 01 solved (2:-5) on the calm evening, the card held off." $fs STACK=2:+5 TURNED=2:-5 WAVE=2
+# A Debug build bakes Lens's halftone some 20 s the first time a size is asked for; one launch caches it for the shots.
+if [[ -z "$pattern" || card-lens == *$pattern* || clip-lens == *$pattern* || shelf == *$pattern* ]]; then
+  SIMCTL_CHILD_UNSTIR_CARD=lens xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
+  sleep 25
+fi
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in. Prices are the StoreKit configuration's, as a US storefront shows them.
 shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4

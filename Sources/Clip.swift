@@ -412,7 +412,7 @@ struct ClipPlayer: View {
             if let t = held ?? (reduceMotion ? clip.still : nil) {
                 frame(t)
             } else {
-                TimelineView(.animation) { tl in frame(tl.date.timeIntervalSince(start)) }
+                TimelineView(.animation(minimumInterval: 1.0 / 60)) { tl in frame(tl.date.timeIntervalSince(start)) }
             }
         }
         .onAppear { start = .now }

@@ -870,8 +870,7 @@ names and product ids, and Complete's promise to older owners.
     the taste show it; Music Box's says "needs sound".
    Built 2026-10-25 on `packs-shelf` (`PackCard`): the price is StoreKit's `displayPrice` (`Store.prices`), the levels
    list shows once a pack has levels (shot with Debug placeholders, `UNSTIR_CARDLEVELS`), and `Store.card(for:)` sends
-   any level past the taste of an unowned pack to its card (`RootView.show`). Left: the clips themselves (to-do 50; the
-   slot plays `<pack>-clip.mp4` from the bundle once it exists, the cover's loop until then); Music Box's "needs sound"
+   any level past the taste of an unowned pack to its card (`RootView.show`). The clips themselves are drawn live by the game (to-do 50, `Clip.swift`); Music Box's "needs sound"
    waits on Music Box; the card's words ("holds 25 panels in four issues" and so on) follow the design tables and
    change with them.
 17. Accessibility on the new screens: Dynamic Type and VoiceOver for the shelf, card and purchase flow; Reduce Motion
@@ -1059,8 +1058,11 @@ names and product ids, and Complete's promise to older owners.
     until the level carries F3's clock). Lens: level 3 as dealt, the lens dragged down and back up, ending on the order
     read. Escapement: problem 1 in three, each tick landing. Complete: the three in turn. The dock keeps its covers.
     Two takes built where there were two good ideas; Claude's recommendations, for Jack to decide: Lens A (the zoom
-    and the read, as asked) over B (level 2 solved), and Complete A (the three whole, about 21 s) over B (a cut of
-    each one's first beat, about 8 s). Films `clip-*`, `shelf-dock`. Still open: the purchase art and the social cut.
+    and the read, as asked) over B (level 2 solved), and Complete B (each one's first beat in turn, about 8 s, near
+    the 7 s asked) over A (the three whole, about 21 s). Films `clip-*`, `shelf-dock`. Follow-up: on
+    `firststir-content` level 1 becomes Sunrise on `SceneLayer` with its own clock, so the First Stir reel must then
+    draw with the level's own layer and read its `late`/`early`; `ClipTests` will flag it. Complete keeps three
+    tanks drawn, two clear: its cost on the phone is unmeasured. Still open: the purchase art and the social cut.
 51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
     agreement, tax and banking, and the in-app purchases with review screenshots and promoted purchases.
 52. The privacy manifest, new work (no `PrivacyInfo.xcprivacy` exists): UserDefaults with reason CA92.1, the uptime
