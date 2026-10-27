@@ -62,7 +62,7 @@ enum Dawn: Int, CaseIterable, Sendable {
     /// The neighbour's chimney smoke on the sunrise, outside every disc: puffs from the chimney pot up into the sky,
     /// thinning as the night winds back to before the fire was lit.
     static let smoke: [(x: Double, y: Double, radius: Double)] =
-        [(-0.795, -0.165, 0.018), (-0.79, -0.215, 0.022), (-0.775, -0.27, 0.026), (-0.75, -0.33, 0.03)]
+        [(-0.83, -0.19, 0.015), (-0.85, -0.24, 0.02), (-0.86, -0.3, 0.024), (-0.86, -0.36, 0.028)]
 
     /// The bodies `live` draws, as circles, for the test that keeps them clear of every disc.
     var bodies: [(x: Double, y: Double, radius: Double)] {
@@ -132,7 +132,7 @@ enum Dawn: Int, CaseIterable, Sendable {
             for strand in 0..<2 {
                 let o = 0.012 * Double(strand)
                 var curl = Path()
-                curl.move(to: pen.p(-0.795 + o, -0.14))
+                curl.move(to: pen.p(Self.smoke[0].x + o, Self.smoke[0].y + Self.smoke[0].radius))
                 for (i, puff) in Self.smoke.enumerated() {
                     let shown = min(max(lit * Double(Self.smoke.count) - Double(i), 0), 1)
                     guard shown > 0 else { break }
@@ -148,7 +148,8 @@ enum Dawn: Int, CaseIterable, Sendable {
         let pen = Pen(ctx: ctx, r: r)
         switch self {
         case .sunrise: Self.sunrise(pen, played)
-        case .gallery, .rockPool, .righting, .tea: break
+        case .gallery: Self.gallery(pen, played)
+        case .rockPool, .righting, .tea: break
         }
     }
 }
@@ -480,8 +481,8 @@ extension Dawn {
                 d.addPath(pen.seg(-0.255, 0.26, -0.17, 0.26))
                 d.addPath(pen.circle(-0.18, 0.225, 0.006))
             }
-            neon(pen.ctx, r: pen.r, glows: [(0.022, 0.55), (0.008, 1)]) { g in
-                g.fill(window, with: .color(light.opacity(0.4)))
+            pen.fill(window, light.opacity(0.35))
+            neon(pen.ctx, r: pen.r) { g in
                 g.stroke(window, with: .color(light), style: pen.style)
                 g.stroke(pen.seg(-0.545, 0.09, -0.545, 0.18), with: .color(light), style: pen.style)
                 g.stroke(pen.seg(-0.6, 0.135, -0.49, 0.135), with: .color(light), style: pen.style)
@@ -506,6 +507,15 @@ extension Dawn {
             c.addPath(pen.poly([(0.3, 0.405), (0.32, 0.43), (0.28, 0.43)]))
             c.addPath(pen.poly([(0.5, 0.405), (0.52, 0.43), (0.48, 0.43)]))
         }
+        if played.contains(1) {
+            // The father standing in it, drawn first so the hull hides him below the gunwale.
+            var who = Figure.standing(.father)
+            who.head = (0.24, 0.82)
+            who.neck = (0.16, 0.74)
+            who.hip = (0, 0.5)
+            who.arms = [[(0.2, 0.72), (0.3, 0.6), (0.4, 0.56)], [(0.12, 0.7), (0.26, 0.58), (0.36, 0.53)]]
+            pen.solid(who.path(pen, x: 0.48, y: 0.375, h: 0.15), ink)
+        }
         pen.fill(hull)
         var boat = Path()
         boat.addPath(hull)
@@ -515,21 +525,10 @@ extension Dawn {
         if played.contains(1) {
             // The mast still down along the thwarts, and the father bent over the side, bailing.
             let mast = pen.seg(0.25, 0.318, 0.43, 0.322)
-            var who = Figure.standing(.father)
-            who.head = (0.24, 0.82)
-            who.neck = (0.16, 0.74)
-            who.hip = (0, 0.5)
-            who.arms = [[(0.2, 0.72), (0.3, 0.6), (0.4, 0.56)], [(0.12, 0.7), (0.26, 0.58), (0.36, 0.53)]]
-            let figure = who.path(pen, x: 0.48, y: 0.375, h: 0.15)
             let bucket = pen.poly([(0.522, 0.31), (0.548, 0.31), (0.544, 0.334), (0.526, 0.334)])
             var spill = Path()
             for (x, y) in [(0.585, 0.292), (0.6, 0.31), (0.572, 0.278)] { spill.addPath(pen.circle(x, y, 0.005)) }
             spill.addPath(pen.quad(0.548, 0.31, 0.575, 0.288, 0.598, 0.322))
-            var c = pen.ctx
-            c.clip(to: Path(CGRect(x: 0, y: 0, width: 2 * pen.r, height: pen.p(0, 0.326).y)))
-            let above = Pen(ctx: c, r: pen.r)
-            above.fill(figure)
-            above.line([(figure, ink, 1)], glows: [(0.02, 0.4), (0.007, 0.9)])
             pen.fill(bucket)
             pen.line([(mast, ink, 0.8), (bucket, ink, 1), (spill, Self.sea, 0.9)], glows: [(0.02, 0.4), (0.007, 0.9)])
         } else {
@@ -540,6 +539,49 @@ extension Dawn {
             rig.addPath(pen.seg(0.52, 0.075, 0.47, 0.3))
             let pennant = pen.poly([(0.52, 0.062), (0.586, 0.07), (0.52, 0.086)])
             pen.line([(rig, ink, 0.9), (pennant, Self.glow, 1)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        }
+    }
+}
+
+extension Pen {
+    /// A gull standing at (x, y) (its feet), `s` long, facing right when `f` is 1.
+    func gull(_ x: Double, _ y: Double, _ s: Double, facing f: Double = 1) -> Path {
+        func q(_ u: Double, _ v: Double) -> (Double, Double) { (x + f * u * s, y - v * s) }
+        return Path { g in
+            g.addPath(poly([q(-0.5, 0.42), q(-0.1, 0.62), q(0.25, 0.62), q(0.42, 0.46), q(0.1, 0.3), q(-0.3, 0.34)]))
+            g.addPath(circle(q(0.36, 0.78).0, q(0.36, 0.78).1, 0.13 * s))
+            g.move(to: p(q(0.48, 0.8).0, q(0.48, 0.8).1)); g.addLine(to: p(q(0.66, 0.76).0, q(0.66, 0.76).1))
+            g.move(to: p(q(0, 0.32).0, q(0, 0.32).1)); g.addLine(to: p(q(0, 0).0, q(0, 0).1))
+            g.move(to: p(q(0.12, 0.32).0, q(0.12, 0.32).1)); g.addLine(to: p(q(0.14, 0).0, q(0.14, 0).1))
+        }
+    }
+
+    /// A gull in flight, its wings an open M, `s` across.
+    func flying(_ x: Double, _ y: Double, _ s: Double) -> Path {
+        Path { g in
+            g.move(to: p(x - s / 2, y + 0.05 * s))
+            g.addQuadCurve(to: p(x, y + 0.12 * s), control: p(x - s / 4, y - 0.22 * s))
+            g.addQuadCurve(to: p(x + s / 2, y + 0.05 * s), control: p(x + s / 4, y - 0.22 * s))
+        }
+    }
+
+    /// A gull asleep, head tucked into its back, at (x, y) (its feet).
+    func sleeping(_ x: Double, _ y: Double, _ s: Double) -> Path {
+        Path { g in
+            g.addPath(ellipse(x, y - 0.4 * s, 0.42 * s, 0.3 * s))
+            g.addPath(circle(x + 0.2 * s, y - 0.66 * s, 0.13 * s))
+            g.move(to: p(x - 0.42 * s, y - 0.42 * s)); g.addLine(to: p(x - 0.6 * s, y - 0.5 * s))
+        }
+    }
+
+    /// Glass panes smashed to the teeth left in a frame from x0 to x1, top t to bottom b.
+    func teeth(_ x0: Double, _ x1: Double, _ t: Double, _ b: Double) -> Path {
+        let w = x1 - x0, hgt = b - t
+        return Path { g in
+            g.addPath(poly([(x0, t), (x1, t), (x1 - 0.2 * w, t + 0.22 * hgt), (x1 - 0.45 * w, t + 0.1 * hgt), (x0 + 0.3 * w, t + 0.3 * hgt),
+                            (x0 + 0.1 * w, t + 0.12 * hgt)]))
+            g.addPath(poly([(x0, b), (x1, b), (x1 - 0.15 * w, b - 0.3 * hgt), (x1 - 0.4 * w, b - 0.12 * hgt), (x0 + 0.35 * w, b - 0.36 * hgt),
+                            (x0 + 0.12 * w, b - 0.18 * hgt)]))
         }
     }
 }
@@ -579,5 +621,117 @@ struct Dog {
             return path.copy(strokingWithWidth: w, lineCap: .round, lineJoin: .round, miterLimit: 4)
         }
         return Path(shapes.dropFirst().reduce(shapes[0]) { $0.union($1) })
+    }
+}
+
+extension Dawn {
+    // MARK: Scene 2, the gallery (6:15 to 5:50): the lighthouse's top from the headland, the town's roofs below.
+
+    /// Rod 3 (top left): a neighbour on the gallery measuring the broken panes with a rule; earlier, the gallery empty,
+    /// shards on the deck. Rod 0 (top right): three gulls back on the rail; earlier, the rail bare, spray blowing over.
+    /// Rod 1 (bottom right): smoke from three chimneys; earlier, none, and one window lit by a candle. Rod 2 holds the
+    /// roofs and a street lamp, still.
+    static func gallery(_ pen: Pen, _ played: Set<Int>) {
+        let ink = Self.ink, deck = -0.19, rail = -0.27
+        // The rock and the tower under the gallery, the lantern room with every pane smashed out, its dome.
+        let rock = pen.poly([(-0.32, 0.07), (-0.2, 0.0), (-0.1, -0.012), (0.1, -0.008), (0.22, 0.01), (0.34, 0.07)])
+        let tower = pen.poly([(-0.17, 0.01), (-0.13, deck + 0.03), (0.13, deck + 0.03), (0.17, 0.01)])
+        let room = pen.rect(-0.17, -0.49, 0.17, deck - 0.005)
+        var dome = pen.quad(-0.2, -0.49, 0, -0.72, 0.2, -0.49)
+        dome.closeSubpath()
+        for path in [rock, tower, dome] { pen.fill(path) }
+        pen.fill(room, Color(0x05060C))
+        pen.fill(pen.rect(-0.62, rail, 0.62, deck))
+        var house = Path()
+        house.addPath(tower)
+        house.addPath(pen.quad(-0.155, -0.12, 0, -0.1, 0.155, -0.12))
+        house.addPath(pen.rect(-0.016, -0.17, 0.016, -0.11))
+        house.addPath(room)
+        for x in [-0.06, 0.06] { house.addPath(pen.seg(x, -0.49, x, deck - 0.005)) }
+        for (x0, x1) in [(-0.17, -0.06), (-0.06, 0.06), (0.06, 0.17)] { house.addPath(pen.teeth(x0 + 0.008, x1 - 0.008, -0.485, deck - 0.01)) }
+        house.addPath(dome)
+        house.addPath(pen.circle(0, -0.635, 0.022))
+        house.addPath(pen.seg(0, -0.657, 0, -0.7))
+        house.addPath(pen.seg(-0.62, deck, 0.62, deck))
+        house.addPath(pen.seg(-0.62, rail, 0.62, rail))
+        for x in stride(from: -0.6, through: 0.61, by: 0.075) { house.addPath(pen.seg(x, rail, x, deck)) }
+        house.addPath(pen.seg(-0.62, deck, -0.15, deck + 0.05))
+        house.addPath(pen.seg(0.62, deck, 0.15, deck + 0.05))
+        pen.line([(rock, ink, 0.8), (house, ink, 1)])
+
+        // The town's roofs in front, gables up, and chimneys; a street lamp, unlit, among the left-hand ones.
+        var roofs = Path()
+        // Chimney tops first, so the roofs in front cover their feet.
+        let chimneys: [(Double, Double)] = [(0.22, 0.3), (0.5, 0.33), (0.58, 0.44)]
+        for (x, y) in chimneys {
+            let stack = pen.rect(x - 0.016, y - 0.05, x + 0.016, y + 0.06)
+            pen.fill(stack)
+            roofs.addPath(stack)
+        }
+        let gables: [(x: Double, w: Double, eave: Double, peak: Double)] = [
+            (-0.7, 0.3, 0.46, 0.36), (-0.42, 0.28, 0.54, 0.44), (-0.14, 0.26, 0.64, 0.55), (0.2, 0.3, 0.38, 0.29),
+            (0.5, 0.28, 0.42, 0.33), (0.62, 0.24, 0.52, 0.45), (0.28, 0.32, 0.66, 0.56)]
+        for g in gables {
+            let shape = pen.poly([(g.x - g.w / 2, 1), (g.x - g.w / 2, g.eave), (g.x, g.peak), (g.x + g.w / 2, g.eave), (g.x + g.w / 2, 1)])
+            pen.fill(shape)
+            roofs.addPath(shape)
+        }
+        var lamp = Path()
+        lamp.addPath(pen.seg(-0.56, 0.5, -0.56, 0.3))
+        lamp.addPath(pen.quad(-0.56, 0.3, -0.56, 0.27, -0.53, 0.27))
+        lamp.addPath(pen.poly([(-0.53, 0.27), (-0.515, 0.3), (-0.545, 0.3)]))
+        var windows = Path()
+        for (x, y) in [(-0.42, 0.62), (-0.74, 0.54), (-0.14, 0.72), (0.2, 0.48), (0.62, 0.6), (0.36, 0.74)] {
+            windows.addPath(pen.rect(x - 0.022, y - 0.025, x + 0.022, y + 0.025))
+        }
+        pen.line([(roofs, ink, 0.9), (lamp, ink, 0.8), (windows, ink, 0.7)])
+
+        // Vignette 3: the gallery's left.
+        if played.contains(3) {
+            var shards = Path()
+            for (x, a) in [(-0.28, 0.3), (-0.24, -0.5), (-0.205, 0.9), (-0.5, 0.1), (-0.46, -0.7)] {
+                shards.addPath(pen.poly([(x, deck), (x + 0.022 * cos(a), deck - 0.012 - 0.008 * sin(a)), (x + 0.016, deck)]))
+            }
+            pen.line([(shards, ink, 0.9)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        } else {
+            // The neighbour on the gallery, a rule held up against the nearest pane.
+            var who = Figure.standing(.neighbour)
+            who.arms = [[(0.1, 0.76), (0.2, 0.84), (0.27, 0.95)], [(-0.1, 0.76), (-0.12, 0.6), (-0.1, 0.45)]]
+            let figure = who.path(pen, x: -0.222, y: deck, h: 0.14)
+            let rule = Path { r in
+                r.addPath(pen.seg(-0.183, -0.32, -0.183, -0.41))
+                for y in stride(from: -0.33, through: -0.405, by: 0.017) { r.addPath(pen.seg(-0.183, y, -0.172, y)) }
+            }
+            pen.solid(figure, ink)
+            pen.line([(rule, Self.light, 1)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        }
+
+        // Vignette 0: the rail's right.
+        if played.contains(0) {
+            var spray = Path()
+            for (x, y, l) in [(0.5, -0.17, 0.07), (0.56, -0.24, 0.06), (0.26, -0.16, 0.06), (0.47, -0.44, 0.05), (0.56, -0.38, 0.06)] {
+                spray.addPath(pen.quad(x, y, x - l * 0.4, y - l * 0.8, x - l, y - l * 0.7))
+            }
+            for (x, y) in [(0.2, -0.24), (0.36, -0.46), (0.48, -0.5), (0.24, -0.42)] { spray.addPath(pen.circle(x, y, 0.006)) }
+            pen.line([(spray, Self.sea, 0.9)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        } else {
+            var gulls = Path()
+            for (x, f) in [(0.17, 1.0), (0.236, -1), (0.485, 1)] { gulls.addPath(pen.gull(x, rail, 0.06, facing: f)) }
+            pen.solid(gulls, ink)
+        }
+
+        // Vignette 1: the right-hand roofs.
+        if played.contains(1) {
+            let pane = pen.rect(0.46, 0.46, 0.54, 0.535)
+            pen.fill(pane, Self.light.opacity(0.3))
+            pen.line([(pane, Self.light, 1), (pen.ellipse(0.5, 0.49, 0.008, 0.016), Self.light, 1), (pen.rect(0.492, 0.506, 0.508, 0.535), Self.light, 1)],
+                     glows: [(0.02, 0.45), (0.007, 0.9)])
+        } else {
+            var smoke = Path()
+            for (x, y) in chimneys {
+                smoke.addPath(pen.smooth([(x, y - 0.06), (x - 0.018, y - 0.085), (x + 0.012, y - 0.11), (x - 0.006, y - 0.135)]))
+            }
+            pen.line([(smoke, ink, 0.6)], glows: [(0.02, 0.35), (0.007, 0.8)])
+        }
     }
 }

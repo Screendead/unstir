@@ -38,6 +38,7 @@ let crop = args.count > 6 ? (x: Double(args[4])!, y: Double(args[5])!, w: Double
     let r = ImageRenderer(content: Canvas { ctx, size in draw(ctx, size.width / 2) }.frame(width: CGFloat(side), height: CGFloat(side)))
     r.scale = 1
     r.isOpaque = opaque
+    if ProcessInfo.processInfo.environment["LAB_LINEAR"] != nil { r.colorMode = .extendedLinear }
     return r.cgImage!
 }
 
@@ -60,19 +61,27 @@ MainActor.assumeIsolated {
     let a = pixels(render({ ctx, r in scene.draw(ctx, r: r, played: []) }, opaque: false))
     let b = pixels(render({ ctx, r in scene.draw(ctx, r: r, played: scene.vignettes) }, opaque: false))
     let rods = scene.layout.rods
+    let again = pixels(render({ ctx, r in scene.draw(ctx, r: r, played: []) }, opaque: false))
+    let noise = (0..<side * side).filter { i in (0..<4).contains(where: { abs(Int(a[4 * i + $0]) - Int(again[4 * i + $0])) > 8 }) }
+    if !noise.isEmpty { print("the held-back scene drawn twice differs at \(noise.count) pixels, e.g. \(noise.prefix(3).map { ($0 % side, $0 / side) })") }
     // Per vignette: how far its change reaches from its own centre (against the core less 0.02), how near the knob it
     // comes (against 0.085), and which other discs it enters.
     for k in scene.vignettes.sorted() {
         let one = pixels(render({ ctx, r in scene.draw(ctx, r: r, played: [k]) }, opaque: false))
-        var far = 0.0, near = 9.0, enters: Set<Int> = []
-        for i in 0..<side * side where (0..<4).contains(where: { abs(Int(a[4 * i + $0]) - Int(one[4 * i + $0])) > 8 }) {
+        var far = 0.0, near = 9.0, enters: Set<Int> = [], farthest = (0.0, 0.0)
+        let core0 = Tank.plateau * rods[k].z
+        var stray: [(Double, Double, [Int])] = []
+        for i in 0..<side * side where (0..<4).contains(where: { abs(Int(a[4 * i + $0]) - Int(one[4 * i + $0])) > 14 }) {
             let x = (Double(i % side) + 0.5) / Double(side) * 2 - 1, y = (Double(i / side) + 0.5) / Double(side) * 2 - 1
             let d = ((x - rods[k].x) * (x - rods[k].x) + (y - rods[k].y) * (y - rods[k].y)).squareRoot()
+            if d > far { farthest = (x, y) }
+            if d > core0 { stray.append((x, y, (0..<4).map { Int(one[4 * i + $0]) - Int(a[4 * i + $0]) })) }
             far = max(far, d); near = min(near, d)
             for (j, o) in rods.enumerated() where j != k && ((x - o.x) * (x - o.x) + (y - o.y) * (y - o.y)).squareRoot() < o.z { enters.insert(j) }
         }
         let core = Tank.plateau * rods[k].z
-        print(String(format: "vignette %d: reaches %.3f of %.3f%@, nearest the knob %.3f of 0.085%@, enters %@", k, far, core - 0.02,
+        if !stray.isEmpty { print("  \(stray.count) outside the core, e.g.", stray.prefix(4).map { String(format: "(%.3f, %.3f) %@", $0.0, $0.1, $0.2.description) }) }
+        print(String(format: "vignette %d: reaches %.3f (at %.2f, %.2f) of %.3f%@, nearest the knob %.3f of 0.085%@, enters %@", k, far, farthest.0, farthest.1, core - 0.02,
                      far > core - 0.02 ? " OVER" : "", near, near < 0.085 ? " OVER" : "", enters.sorted().description))
     }
     let guide = render({ ctx, r in
