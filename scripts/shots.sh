@@ -396,7 +396,7 @@ hold=9 shot firststir-01-healed-2 "First Stir 01 after the second heal (0:-3): t
 fs="PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean"
 shot firststir-ending-02 "The night forwards 2 s in: scene 25 played, the tea stirring at 7:40 pm, the time under the glass." $fs ENDING=2
 shot firststir-ending-05 "The night forwards 5 s in: scene 25 near its end, the tea still, crossfading to scene 24 at 7:55 pm." $fs ENDING=5.3
-shot firststir-ending-60 "The night forwards a minute in: the Storm, near midnight." $fs ENDING=60
+shot firststir-ending-60 "The night forwards a minute in: the Flood's upstairs window, 1:39 am, the water rising." $fs ENDING=60
 shot firststir-ending-end "The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am." $fs ENDING=118
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in, one stir left. Prices are the StoreKit configuration's, as a US storefront shows them.

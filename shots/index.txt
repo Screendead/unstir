@@ -279,7 +279,7 @@ firststir-01-healed-1.png  First Stir 01 after the first heal (1:-2): no vignett
 firststir-01-healed-2.png  First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am.
 firststir-ending-02.png  The night forwards 2 s in: scene 25 played, the tea stirring at 7:40 pm, the time under the glass.
 firststir-ending-05.png  The night forwards 5 s in: scene 25 near its end, the tea still, crossfading to scene 24 at 7:55 pm.
-firststir-ending-60.png  The night forwards a minute in: the Storm, near midnight.
+firststir-ending-60.png  The night forwards a minute in: the Flood's upstairs window, 1:39 am, the water rising.
 firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
 shelf-menu.png  Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought.
 shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot.
