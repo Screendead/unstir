@@ -149,7 +149,8 @@ enum Dawn: Int, CaseIterable, Sendable {
         switch self {
         case .sunrise: Self.sunrise(pen, played)
         case .gallery: Self.gallery(pen, played)
-        case .rockPool, .righting, .tea: break
+        case .rockPool: Self.rockPool(pen, played)
+        case .righting, .tea: break
         }
     }
 }
@@ -602,10 +603,11 @@ struct Dog {
     ])
     /// Head down, nose to the ground, tail out.
     static let sniffing = Dog(parts: [
-        ([(-0.42, 0.55), (0.18, 0.55)], 0.32), ([(0.18, 0.55), (0.42, 0.32)], 0.2), ([(0.46, 0.26)], 0.24),
-        ([(0.5, 0.2), (0.62, 0.06)], 0.12), ([(0.36, 0.36), (0.3, 0.46), (0.4, 0.42)], 0.08),
-        ([(0.12, 0.45), (0.16, 0.02)], 0.1), ([(0.02, 0.45), (-0.02, 0.02)], 0.1), ([(-0.34, 0.45), (-0.3, 0.02)], 0.1),
-        ([(-0.44, 0.45), (-0.5, 0.02)], 0.1), ([(-0.56, 0.6), (-0.74, 0.72)], 0.07),
+        ([(-0.4, 0.55), (0.15, 0.52)], 0.36), ([(0.12, 0.52), (0.38, 0.24)], 0.24), ([(0.42, 0.2)], 0.24),
+        ([(0.46, 0.14), (0.56, 0.04)], 0.12), ([(0.32, 0.3), (0.24, 0.4)], 0.1),
+        ([(0.1, 0.42), (0.16, 0.2), (0.12, 0.02)], 0.11), ([(0.0, 0.42), (0.02, 0.2), (-0.04, 0.02)], 0.11),
+        ([(-0.3, 0.45), (-0.38, 0.22), (-0.3, 0.02)], 0.12), ([(-0.42, 0.45), (-0.5, 0.22), (-0.46, 0.02)], 0.12),
+        ([(-0.56, 0.6), (-0.7, 0.74), (-0.74, 0.86)], 0.07),
     ])
 
     func path(_ pen: Pen, x: Double, y: Double, h: Double, facing f: Double = 1) -> Path {
@@ -722,9 +724,9 @@ extension Dawn {
 
         // Vignette 1: the right-hand roofs.
         if played.contains(1) {
-            let pane = pen.rect(0.46, 0.46, 0.54, 0.535)
+            let pane = pen.rect(0.465, 0.46, 0.535, 0.525)
             pen.fill(pane, Self.light.opacity(0.3))
-            pen.line([(pane, Self.light, 1), (pen.ellipse(0.5, 0.49, 0.008, 0.016), Self.light, 1), (pen.rect(0.492, 0.506, 0.508, 0.535), Self.light, 1)],
+            pen.line([(pane, Self.light, 1), (pen.ellipse(0.5, 0.49, 0.008, 0.016), Self.light, 1), (pen.rect(0.492, 0.506, 0.508, 0.525), Self.light, 1)],
                      glows: [(0.02, 0.45), (0.007, 0.9)])
         } else {
             var smoke = Path()
@@ -733,5 +735,114 @@ extension Dawn {
             }
             pen.line([(smoke, ink, 0.6)], glows: [(0.02, 0.35), (0.007, 0.8)])
         }
+    }
+}
+
+extension Figure {
+    /// Kneeling, facing right, arms held up and out in front.
+    static func kneeling(_ who: Who) -> Figure {
+        Figure(who: who, head: (0.05, 0.74), neck: (0.03, 0.62), hip: (-0.02, 0.34),
+               legs: [[(0.0, 0.34), (0.2, 0.08), (0.0, 0.04)], [(-0.04, 0.34), (0.14, 0.06), (-0.08, 0.04)]],
+               arms: [[(0.08, 0.6), (0.22, 0.58), (0.36, 0.64)], [(0.0, 0.6), (0.16, 0.54), (0.32, 0.6)]])
+    }
+}
+
+extension Dawn {
+    // MARK: Scene 3, the rock pool (5:50 to 5:25): the breakwater's rocks at low tide, the lighthouse door above.
+
+    /// Rod 0 (top): the lighthouse door shut, a coil of rope on its hook; earlier, open, the rope trailing out across the
+    /// rocks. Rod 1 (right): the child kneeling at the pool, holding up the green float; earlier, the float bobbing alone
+    /// among the weed. Rod 2 (left): the dog sitting, tail up; earlier, nose down, sniffing along towards the pool. The
+    /// child kneels in the dog's disc, so the scramble heals the dog first.
+    static func rockPool(_ pen: Pen, _ played: Set<Int>) {
+        let ink = Self.ink
+        // The rocks climbing to the lighthouse's foot, and the tower going up out of sight.
+        let mound = pen.poly([(-0.62, -0.3), (-0.4, -0.36), (-0.24, -0.46), (-0.13, -0.52), (0.13, -0.52), (0.26, -0.45), (0.42, -0.35),
+                              (0.66, -0.3), (0.66, -0.285), (-0.62, -0.285)])
+        let tower = pen.poly([(-0.13, -0.52), (-0.1, -1.0), (0.1, -1.0), (0.13, -0.52)])
+        pen.fill(mound)
+        pen.fill(tower)
+        let doorway = pen.rect(-0.045, -0.69, 0.045, -0.535)
+        var house = Path()
+        house.addPath(tower)
+        house.addPath(pen.quad(-0.118, -0.86, 0, -0.84, 0.118, -0.86))
+        house.addPath(doorway)
+        house.addPath(pen.poly([(-0.07, -0.52), (-0.07, -0.535), (0.07, -0.535), (0.07, -0.52)], closed: false))
+        house.addPath(pen.seg(0.09, -0.66, 0.09, -0.645))
+        house.addPath(pen.quad(0.09, -0.645, 0.1, -0.64, 0.105, -0.65))
+        pen.line([(house, ink, 1), (pen.poly([(-0.62, -0.3), (-0.4, -0.36), (-0.24, -0.46), (-0.13, -0.52)], closed: false), ink, 0.8),
+                  (pen.poly([(0.13, -0.52), (0.26, -0.45), (0.42, -0.35), (0.66, -0.3)], closed: false), ink, 0.8)])
+
+        // Boulders down the breakwater, weed hanging off them; the pool on the right.
+        var rocks = Path()
+        let boulders: [[(Double, Double)]] = [
+            [(-1, -0.05), (-0.8, -0.12), (-0.62, -0.08), (-0.5, 0.02), (-0.52, 0.12), (-1, 0.14)],
+            [(-0.56, 0.14), (-0.44, 0.05), (-0.2, 0.04), (-0.08, 0.14), (-0.1, 0.24), (-0.56, 0.26)],
+            [(-0.08, 0.12), (0.06, 0.0), (0.3, -0.04), (0.5, 0.02), (0.6, 0.12), (-0.08, 0.16)],
+            [(0.6, 0.12), (0.76, -0.02), (1, 0.0), (1, 0.2), (0.6, 0.2)],
+            [(-1, 0.42), (-0.8, 0.4), (-0.6, 0.42), (-0.15, 0.42), (0.02, 0.44), (0.24, 0.42), (0.6, 0.44), (0.8, 0.42), (1, 0.44), (1, 1), (-1, 1)],
+        ]
+        for b in boulders {
+            let shape = pen.smooth(b + [b[0]])
+            pen.fill(shape)
+            rocks.addPath(shape)
+        }
+        let pool = pen.ellipse(0.43, 0.43, 0.15, 0.04)
+        pen.fill(pool, Color(0x080B12))
+        var weed = Path()
+        for (x, y, l) in [(-0.7, 0.13, 0.05), (-0.62, 0.135, 0.04), (-0.4, 0.25, 0.05), (-0.25, 0.25, 0.04), (0.0, 0.15, 0.05),
+                          (0.3, 0.465, 0.03), (0.52, 0.465, 0.03), (0.66, 0.45, 0.04), (0.75, 0.2, 0.05)] {
+            weed.addPath(pen.smooth([(x, y), (x + 0.012, y + l * 0.5), (x - 0.006, y + l)]))
+        }
+        var ripples = Path()
+        ripples.addPath(pen.ellipse(0.43, 0.43, 0.15, 0.04))
+        ripples.addPath(pen.seg(0.33, 0.43, 0.38, 0.43))
+        ripples.addPath(pen.seg(0.48, 0.44, 0.53, 0.44))
+        // A marker post at the pool's far side, upright whatever happens round it.
+        let post = pen.rect(0.585, 0.2, 0.605, 0.44)
+        pen.fill(post)
+        pen.line([(rocks, ink, 0.85), (weed, Self.float.opacity(0.6), 1), (ripples, Self.sea, 0.9), (post, ink, 1),
+                  (pen.seg(0.575, 0.2, 0.615, 0.2), ink, 1)])
+
+        // Vignette 0: the door.
+        if played.contains(0) {
+            pen.fill(doorway, Color(0x020308))
+            let leaf = pen.poly([(-0.045, -0.69), (-0.085, -0.675), (-0.085, -0.55), (-0.045, -0.535)])
+            pen.fill(leaf)
+            let rope = pen.smooth([(0.0, -0.545), (0.04, -0.53), (0.1, -0.535), (0.16, -0.5), (0.2, -0.46), (0.26, -0.43), (0.3, -0.38)])
+            pen.line([(leaf, ink, 1), (rope, Self.glow, 0.9)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        } else {
+            var door = Path()
+            for x in [-0.015, 0.015] { door.addPath(pen.seg(x, -0.685, x, -0.54)) }
+            door.addPath(pen.circle(0.03, -0.61, 0.005))
+            var coil = Path()
+            for k in 0..<3 { coil.addPath(pen.ellipse(0.1, -0.615 + 0.006 * Double(k), 0.024 - 0.003 * Double(k), 0.03)) }
+            pen.line([(door, ink, 0.9), (coil, Self.glow, 0.9)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        }
+
+        // Vignette 2: the dog, up the rocks.
+        if played.contains(2) {
+            pen.solid(Dog.sniffing.path(pen, x: -0.32, y: 0.42, h: 0.11), ink)
+        } else {
+            pen.solid(Dog.sitting.path(pen, x: -0.3, y: 0.42, h: 0.12), ink)
+        }
+
+        // Vignette 1: the pool.
+        if played.contains(1) {
+            Self.drawFloat(pen, 0.45, 0.415, 0.026)
+        } else {
+            pen.solid(Figure.kneeling(.child).path(pen, x: 0.188, y: 0.42, h: 0.17), ink)
+            Self.drawFloat(pen, 0.272, 0.318, 0.026)
+        }
+    }
+
+    /// The green glass float in its net, the one thing in the town that is always teal.
+    static func drawFloat(_ pen: Pen, _ x: Double, _ y: Double, _ radius: Double) {
+        let ball = pen.circle(x, y, radius)
+        pen.fill(ball, Self.float.opacity(0.25))
+        var net = Path()
+        net.addPath(pen.seg(x - radius, y, x + radius, y))
+        net.addPath(pen.ellipse(x, y, radius * 0.45, radius))
+        pen.line([(ball, Self.float, 1), (net, Self.float, 0.7)], glows: [(0.02, 0.5), (0.007, 1)])
     }
 }
