@@ -684,6 +684,8 @@ struct LevelView: View {
     /// The picture has landed and struck.
     @State private var struck = false
     private let brimDemo: Bool
+    /// Escapement: what a tank lost to its last clock stopping shows, while Jack decides (UNSTIR_STOPLOOK).
+    private let stopLook: StopLook
     private let shareSheet: Bool
     let onExit: () -> Void
     let onNext: (Level) -> Void
@@ -743,6 +745,7 @@ struct LevelView: View {
         moves = harness?.moves
         fingered = harness?.finger ?? false
         brimDemo = harness?.brimDemo ?? false
+        stopLook = harness?.stopLook ?? .stamp
         shareSheet = harness?.shareSheet ?? false
         bench = harness?.bench ?? false
         frozenWave = harness?.wave
@@ -1553,10 +1556,24 @@ struct LevelView: View {
             .overlay(Capsule().stroke(Color.vermilion, lineWidth: 1.5))
     }
 
-    /// Escapement: "lost." stamped by clock `k`, the one whose tick pushed or the last to stop.
+    /// Escapement: "lost." stamped by clock `k`, the one whose tick pushed or the last to stop. A tank lost to its last
+    /// clock stopping has no count to stamp beside; what it shows instead is Jack's call, built three ways
+    /// (`StopLook`).
     @ViewBuilder private func lostMarks(_ c: CGPoint, size: CGFloat, twisted: [(at: CGPoint, disc: CGFloat)]) -> some View {
         let spot = Self.badgeSpot(c, size: size)
+        let stopped = game.pushedClock == nil
         ZStack {
+            if stopped && stopLook == .left {
+                let left = game.stack.count
+                Circle().stroke(Color.vermilion, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
+                badge("\(left) left").position(x: spot.x + 14, y: spot.y)
+            }
+            if stopped && stopLook == .rings {
+                ForEach(twisted.indices, id: \.self) { i in
+                    Circle().stroke(Color.vermilion, lineWidth: 2).frame(width: 2 * twisted[i].disc, height: 2 * twisted[i].disc)
+                        .position(twisted[i].at)
+                }
+            }
             LostStamp(size: 50).position(x: spot.x - 6, y: spot.y + 30)
         }
         .allowsHitTesting(false)
@@ -2460,6 +2477,10 @@ struct RatchetView: View {
         .animation(.easeOut(duration: 0.12), value: pawl == 1)
     }
 }
+
+/// Escapement: what a tank lost to its last clock stopping with twists left shows beside "lost.": nothing more (as
+/// built), the count of twists left where a pushed tick's count would stand, or a ring round each knob still twisted.
+enum StopLook: String, Sendable { case stamp, left, rings }
 
 /// Escapement: "lost." stamped by the clock once a tick pushes or the last clock stops with twists left.
 struct LostStamp: View {

@@ -117,6 +117,9 @@ struct Harness {
     /// none with UNSTIR_PRICES=0, as before StoreKit answers.
     let prices: [String: String]
 
+    /// UNSTIR_STOPLOOK=left: what an Escapement tank lost to its last clock stopping shows (`StopLook`), stamp unset.
+    let stopLook: StopLook?
+
     /// UNSTIR_ICON=n: app-icon candidate n alone on the screen (`IconView`).
     let icon: Int?
     /// UNSTIR_CARD=lens (a pack's prefix, or complete): that pack's card open over the menu.
@@ -158,6 +161,7 @@ struct Harness {
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
+        stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
         prices = env["UNSTIR_PRICES"] == "0" ? [:]
             : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, $0 == Pack.completeID ? "$5.99" : "$2.99") })
