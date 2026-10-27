@@ -1421,9 +1421,9 @@ struct LevelView: View {
                     LinearKeyframe(1.0, duration: 0.4, timingCurve: .easeOut)
                 }
                 .position(at(fk))
-            ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core)) }
+            ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core), r: r) }
             if game.lost && shown == nil, let k = game.pushedClock ?? game.lastStopped {
-                lostMarks(at(k), size: Self.ratchetSize(core),
+                lostMarks(at(k), size: Self.ratchetSize(core), r: r,
                           twisted: Set(game.stack.map(\.rod)).sorted().map { (at($0), disc($0)) })
             }
             if let spillAt {
@@ -1497,7 +1497,7 @@ struct LevelView: View {
     /// Escapement: what clock `k` at `c` shows round its ratchet: a red flash for a tick of its own that pushed; while a
     /// pushed tick stands, a ring and its vermilion count, signed as the clock ticks; its disc lighting as it ticks, in
     /// the move's turn; and a ring going out as it stops.
-    private func clockMarks(_ k: Int, dir: Int, _ c: CGPoint, disc: CGFloat, size: CGFloat) -> some View {
+    private func clockMarks(_ k: Int, dir: Int, _ c: CGPoint, disc: CGFloat, size: CGFloat, r: CGFloat) -> some View {
         let overdue = game.overdue(k), showing = shown == nil
         let core = 2 * Tank.plateau * disc
         // Each clock's marks wait for its own tick in the move's turn.
@@ -1515,7 +1515,7 @@ struct LevelView: View {
                 .position(c)
             if overdue > 0 && showing {
                 Circle().stroke(Color.vermilion, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
-                badge(dir > 0 ? "+\(overdue)" : "\u{2212}\(overdue)").position(Self.badgeSpot(c, size: size))
+                badge(dir > 0 ? "+\(overdue)" : "\u{2212}\(overdue)").position(Self.badgeSpot(c, size: size, r: r))
                     .transition(.opacity)
             }
             // The clock's disc lights as it ticks, so the eye goes where the tick acts.
@@ -1543,9 +1543,10 @@ struct LevelView: View {
         .allowsHitTesting(false)
     }
 
-    /// Where a clock's count stands: right of its ratchet, or left of one on the tank's right, so it stays on screen.
-    private static func badgeSpot(_ c: CGPoint, size: CGFloat) -> CGPoint {
-        CGPoint(x: c.x + size / 2 + 30, y: c.y)
+    /// Where a clock's count stands: right of its ratchet, or left of one on the tank's right, so it stays on screen;
+    /// `r` is the tank's centre.
+    private static func badgeSpot(_ c: CGPoint, size: CGFloat, r: CGFloat) -> CGPoint {
+        CGPoint(x: c.x + (c.x > 1.2 * r ? -1 : 1) * (size / 2 + 30), y: c.y)
     }
 
     private func badge(_ text: String) -> some View {
@@ -1559,14 +1560,15 @@ struct LevelView: View {
     /// Escapement: "lost." stamped by clock `k`, the one whose tick pushed or the last to stop. A tank lost to its last
     /// clock stopping has no count to stamp beside; what it shows instead is Jack's call, built three ways
     /// (`StopLook`).
-    @ViewBuilder private func lostMarks(_ c: CGPoint, size: CGFloat, twisted: [(at: CGPoint, disc: CGFloat)]) -> some View {
-        let spot = Self.badgeSpot(c, size: size)
+    @ViewBuilder private func lostMarks(_ c: CGPoint, size: CGFloat, r: CGFloat, twisted: [(at: CGPoint, disc: CGFloat)])
+        -> some View {
+        let spot = Self.badgeSpot(c, size: size, r: r), out: CGFloat = spot.x < c.x ? -1 : 1
         let stopped = game.pushedClock == nil
         ZStack {
             if stopped && stopLook == .left {
                 let left = game.stack.count
                 Circle().stroke(Color.vermilion, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
-                badge("\(left) left").position(x: spot.x + 14, y: spot.y)
+                badge("\(left) left").position(x: spot.x + 14 * out, y: spot.y)
             }
             if stopped && stopLook == .rings {
                 ForEach(twisted.indices, id: \.self) { i in
@@ -1574,7 +1576,7 @@ struct LevelView: View {
                         .position(twisted[i].at)
                 }
             }
-            LostStamp(size: 50).position(x: spot.x - 6, y: spot.y + 30)
+            LostStamp(size: 50).position(x: spot.x - 6 * out, y: spot.y + 30)
         }
         .allowsHitTesting(false)
     }
