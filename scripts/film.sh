@@ -124,3 +124,10 @@ for size in "big tri 0 1" "mid quad 0 1" "small eye 2 0"; do
   film "lens-glitter-$name" 15 "$tank,fps=3,scale=220:-1,tile=9x5:padding=4" PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens \
     STACK=$twist:+4 FINGER=1 REST=1 MOVES=$lens:+1,$lens:+1,$lens:+1,$twist:+2,$twist:-2,$lens:-3,$twist:-4
 done
+# Two Lens levels solved by a drawn fingertip at par, the order read off the rims: 08 on quad, its lenses on small rods
+# (radius 0.48), and 12 on eye, both big rods (0.58) lenses. A lens's move rides up and down; dealt lenses come out
+# dragging down.
+film lens-08-solve 19 "$tank,fps=1.5,scale=220:-1,tile=7x4:padding=4" PACK=lens LEVEL=8 OWNED=lens FINGER=1 REST=2.5 \
+  MOVES=0:-1,1:+5,2:-3,3:+3,0:-2,1:-4
+film lens-12-solve 21 "$tank,fps=1.5,scale=220:-1,tile=8x4:padding=4" PACK=lens LEVEL=12 OWNED=lens FINGER=1 REST=2.5 \
+  MOVES=3:-5,0:-1,2:+2,1:-3,3:+4,0:-2,2:-3
