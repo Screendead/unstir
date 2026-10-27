@@ -646,14 +646,15 @@ enum UpstairsWindow {
 /// the child on the stair carrying the dog up. Rod 3, the float: drifting towards the open door, then caught on a
 /// chair's leg.
 enum Kitchen {
-    /// The water's line on the back wall, and the earlier one at the table's legs.
-    static let water = 0.11, low = 0.24
+    /// The water's line on the back wall, and the earlier one across the table's legs.
+    static let water = 0.11, low = 0.215
     static let window = (x0: -0.17, y0: -0.66, x1: 0.17, y1: -0.4)
     static let door = (x0: -0.92, y0: -0.3, x1: -0.76, y1: water)
     static let ceiling = -0.8
-    /// The table's ends and legs.
-    static let ends = (-0.58, -0.2)
-    static let legs = [-0.56, -0.49, -0.29, -0.22]
+    /// The table's ends, legs, top and feet: one table in both states, the water falling round it.
+    static let ends = (-0.57, -0.23)
+    static let legs = [-0.55, -0.49, -0.31, -0.25]
+    static let top = 0.14, feet = 0.25
     /// The stair's nosings, from its foot in the water up to the ceiling: y at x.
     static func step(_ x: Double) -> Double { 0.3 - (x - 0.12) * 0.84 }
     static let tread = 0.06
@@ -745,16 +746,17 @@ enum Kitchen {
             if played.contains(0) {
                 // The water down at the legs: the table standing clear of it, nearer than the back wall's line, the cup
                 // on its top with its spoon.
-                let (table, slab) = Kitchen.table(pen, top: 0.108, feet: low)
+                let (table, slab) = Kitchen.table(pen)
                 pen.fill(slab, .black)
                 pen.stroke(table, ink)
+                pen.stroke(pen.seg(ends.0 - 0.03, low, ends.1 + 0.03, low), Flood.sea, 0.9)
                 for x in Kitchen.legs { pen.stroke(pen.ellipse(x, low, 0.014, 0.004), Flood.sea, 0.8) }
-                Kitchen.cup(pen, -0.3, 0.108, spoon: true)
+                Kitchen.cup(pen, -0.32, top, spoon: true)
             } else {
                 // Sunk under the water, dim, the cup floating off it.
-                pen.stroke(Kitchen.table(pen, top: 0.17, feet: 0.25).lines, ink, 0.3)
-                Kitchen.cup(pen, -0.21, water + 0.004, spoon: false)
-                pen.stroke(pen.ellipse(-0.21, water + 0.006, 0.045, 0.008), Flood.sea, 0.6)
+                pen.stroke(Kitchen.table(pen).lines, ink, 0.3)
+                Kitchen.cup(pen, -0.22, water + 0.004, spoon: false)
+                pen.stroke(pen.ellipse(-0.22, water + 0.006, 0.045, 0.008), Flood.sea, 0.6)
             }
         }
 
@@ -791,8 +793,8 @@ enum Kitchen {
         }
     }
 
-    /// The kitchen table, front on, its top at `top` and its legs down to `feet`: its lines, and its top and apron to fill.
-    static func table(_ pen: Brush, top: Double, feet: Double) -> (lines: Path, slab: Path) {
+    /// The kitchen table, front on: its lines, and its top and apron to fill.
+    static func table(_ pen: Brush) -> (lines: Path, slab: Path) {
         var t = Path()
         let slab = pen.rect(ends.0, top, ends.1, top + 0.04)
         t.addPath(pen.rect(ends.0, top, ends.1, top + 0.015))
