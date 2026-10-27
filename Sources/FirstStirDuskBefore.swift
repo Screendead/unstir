@@ -476,23 +476,23 @@ extension Dusk {
             distance.addPath(pen.curve(0.135, -0.5, 0.15, -0.52, 0.165, -0.5))
 
             // The cottage's gable, its window over the knob.
-            let gable = pen.poly([(-1, -0.48), (-0.74, -0.68), (-0.4, -0.48), (-0.4, 0.2), (-1, 0.2)])
+            let quay = 0.27
+            let gable = pen.poly([(-1, -0.48), (-0.74, -0.68), (-0.4, -0.48), (-0.4, quay), (-1, quay)])
             pen.fill(gable, .black)
             var cottage = Path()
-            cottage.addPath(pen.poly([(-1, -0.48), (-0.74, -0.68), (-0.4, -0.48), (-0.4, 0.2)], closed: false))
+            cottage.addPath(pen.poly([(-1, -0.48), (-0.74, -0.68), (-0.4, -0.48), (-0.4, quay)], closed: false))
             cottage.addPath(pen.rect(window.x0, window.y0, window.x1, window.y1))
             cottage.addPath(pen.seg(window.x0 - 0.01, window.y1 + 0.008, window.x1 + 0.01, window.y1 + 0.008))
             cottage.addPath(pen.rect(-0.86, -0.25, -0.76, -0.1))
             // The sill's lamp, its chimney and base.
             cottage.addPath(pen.poly([(-0.563, window.y1), (-0.56, -0.315), (-0.548, -0.318), (-0.545, window.y1)]))
 
-            // The harbour wall along the front on the right, a bollard on it.
-            let quay = 0.27
-            pen.fill(pen.rect(-0.4, quay, 1, 1), .black)
+            // The quay along the front, from the cottage's foot across, its wall's coping, a bollard on it.
+            pen.fill(pen.rect(-1, quay, 1, 1), .black)
             var wall = Path()
-            wall.addPath(pen.seg(-0.4, quay, 1, quay))
-            wall.addPath(pen.seg(-0.4, 0.34, 1, 0.34))
-            for (i, x) in Swift.stride(from: -0.38, to: 1, by: 0.12).enumerated() {
+            wall.addPath(pen.seg(-1, quay, 1, quay))
+            wall.addPath(pen.seg(-1, 0.34, 1, 0.34))
+            for (i, x) in Swift.stride(from: -0.98, to: 1, by: 0.12).enumerated() {
                 wall.addPath(pen.seg(x + (i % 2 == 0 ? 0 : 0.06), quay, x + (i % 2 == 0 ? 0 : 0.06), 0.34))
             }
             wall.addPath(pen.poly([(0.42, quay), (0.42, 0.225), (0.405, 0.215), (0.475, 0.215), (0.46, 0.225), (0.46, quay)], closed: false))
