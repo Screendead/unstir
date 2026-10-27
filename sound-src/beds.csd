@@ -300,14 +300,15 @@ opcode Swells, 0, ii[]iii
   od
 endop
 
-opcode Pings, 0, ii[]i
-  icount, inotes[], iamp xin
+; p4 of Pings, optional: a scale on every ping's decay.
+opcode Pings, 0, ii[]ip
+  icount, inotes[], iamp, iring xin
   its[] Events icount, 2.2
   ii = 0
   while ii < icount do
     ifq = Hz(Pick(inotes))
     iamp1 = iamp * random:i(0.25, 0.45)
-    Thrice "ping", its[ii], 5, ifq, iamp1, random:i(1.2, 2.0), random:i(-0.8, 0.8), NewSeed(), 0, 0
+    Thrice "ping", its[ii], 5, ifq, iamp1, iring * random:i(1.2, 2.0), random:i(-0.8, 0.8), NewSeed(), 0, 0
     ii += 1
   od
 endop
@@ -409,7 +410,7 @@ instr vortex
   iswells[] fillarray 57, 62, 64, 69, 76
   Swells 8, iswells, 6.5, 10, 0.28
   ipings[] fillarray 81, 86, 88, 93, 95
-  Pings 7, ipings, 0.9
+  Pings 7, ipings, 0.9, 1.6
   Drips 6, 0.6, 1
   schedule "water", 0, 3 * giL, 3, 0.11, 400, 0.5, 0.03
   turnoff
