@@ -77,7 +77,9 @@ MainActor.assumeIsolated {
             if d > far { farthest = (x, y) }
             if d > core0 { stray.append((x, y, (0..<4).map { Int(one[4 * i + $0]) - Int(a[4 * i + $0]) })) }
             far = max(far, d); near = min(near, d)
-            for (j, o) in rods.enumerated() where j != k && ((x - o.x) * (x - o.x) + (y - o.y) * (y - o.y)).squareRoot() < o.z { enters.insert(j) }
+            for (j, o) in rods.enumerated() where j != k && ((x - o.x) * (x - o.x) + (y - o.y) * (y - o.y)).squareRoot() < o.z {
+                if enters.insert(j).inserted { print(String(format: "  enters %d at (%.3f, %.3f)", j, x, y)) }
+            }
         }
         let core = Tank.plateau * rods[k].z
         if !stray.isEmpty { print("  \(stray.count) outside the core, e.g.", stray.prefix(4).map { String(format: "(%.3f, %.3f) %@", $0.0, $0.1, $0.2.description) }) }

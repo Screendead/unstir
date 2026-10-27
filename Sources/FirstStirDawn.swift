@@ -150,7 +150,8 @@ enum Dawn: Int, CaseIterable, Sendable {
         case .sunrise: Self.sunrise(pen, played)
         case .gallery: Self.gallery(pen, played)
         case .rockPool: Self.rockPool(pen, played)
-        case .righting, .tea: break
+        case .righting: Self.righting(pen, played)
+        case .tea: break
         }
     }
 }
@@ -844,5 +845,115 @@ extension Dawn {
         net.addPath(pen.seg(x - radius, y, x + radius, y))
         net.addPath(pen.ellipse(x, y, radius * 0.45, radius))
         pen.line([(ball, Self.float, 1), (net, Self.float, 0.7)], glows: [(0.02, 0.5), (0.007, 1)])
+    }
+}
+
+extension Dawn {
+    // MARK: Scene 4, righting the boat (5:25 to 5:05): the beach beside the slip, the horizon high.
+
+    /// Rod 0 (left): three townsfolk, the rope slack at their feet, one waving; earlier, all three leaning back,
+    /// hauling. Rod 1 (right): the boat upright on the sand; earlier, keel up and dark. Rod 2 (top): gulls coming back
+    /// over a paling sky; earlier, the last stars and a gull asleep on the beacon. Between the cores the rope is one line
+    /// in both states. Rod 3 holds a lantern and a bucket on the sand, still.
+    static func righting(_ pen: Pen, _ played: Set<Int>) {
+        let ink = Self.ink, sand = 0.245, shore = -0.27
+        // The sand, from the water's edge down, rippled.
+        pen.fill(pen.rect(-1, shore, 1, 1))
+        var ripples = Path()
+        for (y, x0, x1) in [(-0.2, -0.9, -0.3), (-0.12, 0.62, 0.95), (0.08, -0.95, -0.7), (0.33, 0.3, 0.8), (0.42, -0.8, -0.3),
+                            (0.6, 0.35, 0.75), (0.75, -0.6, -0.25)] {
+            ripples.addPath(pen.smooth([(x0, y), ((x0 + x1) / 2, y - 0.012), (x1, y)]))
+        }
+        // The beacon pole standing in the shallows, and the shared run of rope from the haulers' feet to the boat's bow.
+        let pole = pen.rect(0.152, -0.66, 0.168, shore + 0.02)
+        pen.fill(pole)
+        var beacon = Path()
+        beacon.addPath(pole)
+        beacon.addPath(pen.seg(0.13, -0.66, 0.19, -0.66))
+        let rope = pen.smooth([(-0.335, 0.21), (-0.1, 0.17), (0.1, 0.02), (0.26, -0.1), (0.3, -0.14)])
+        pen.line([(pen.seg(-1, shore, 1, shore), Self.sea, 0.9), (ripples, ink, 0.35), (beacon, ink, 1), (rope, Self.glow, 0.85)])
+
+        // Rod 3: a lantern and a bucket left on the sand.
+        var kit = Path()
+        kit.addPath(pen.lantern(-0.06, 0.66, size: 0.09))
+        kit.addPath(pen.poly([(0.05, 0.6), (0.11, 0.6), (0.1, 0.66), (0.06, 0.66)]))
+        kit.addPath(pen.quad(0.05, 0.6, 0.08, 0.565, 0.11, 0.6))
+        pen.line([(kit, ink, 0.9)])
+
+        // Vignette 1: the boat, above its knob.
+        if played.contains(1) {
+            // Keel up, dark, the rope run over it to the far side.
+            let hull = Path { h in
+                h.move(to: pen.p(0.3, -0.11))
+                h.addQuadCurve(to: pen.p(0.45, -0.235), control: pen.p(0.32, -0.23))
+                h.addQuadCurve(to: pen.p(0.61, -0.11), control: pen.p(0.59, -0.23))
+                h.closeSubpath()
+            }
+            pen.fill(hull)
+            var wreck = Path()
+            wreck.addPath(hull)
+            wreck.addPath(pen.quad(0.33, -0.13, 0.45, -0.21, 0.59, -0.13))
+            wreck.addPath(pen.seg(0.46, -0.235, 0.46, -0.25))
+            pen.line([(wreck, ink, 0.55), (pen.smooth([(0.3, -0.14), (0.35, -0.2), (0.45, -0.236), (0.55, -0.2)]), Self.glow, 0.85)],
+                     glows: [(0.02, 0.3), (0.007, 0.8)])
+        } else {
+            let hull = Path { h in
+                h.move(to: pen.p(0.3, -0.19)); h.addLine(to: pen.p(0.61, -0.2))
+                h.addQuadCurve(to: pen.p(0.55, -0.105), control: pen.p(0.6, -0.13))
+                h.addLine(to: pen.p(0.35, -0.105))
+                h.addQuadCurve(to: pen.p(0.3, -0.19), control: pen.p(0.305, -0.13))
+            }
+            pen.fill(hull)
+            var boat = Path()
+            boat.addPath(hull)
+            boat.addPath(pen.seg(0.31, -0.168, 0.6, -0.175))
+            boat.addPath(pen.seg(0.44, -0.2, 0.44, -0.25))
+            pen.line([(boat, ink, 1), (pen.seg(0.3, -0.14, 0.305, -0.17), Self.glow, 0.85)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        }
+
+        // Vignette 0: the haulers, below their knob.
+        let xs = [-0.555, -0.462, -0.372]
+        if played.contains(0) {
+            var people = Path()
+            for (i, x) in xs.enumerated() {
+                var who = Figure.standing(i == 1 ? .father : .neighbour)
+                who.head = (-0.2, 0.86)
+                who.neck = (-0.14, 0.76)
+                who.hip = (0, 0.47)
+                who.legs = [[(0.02, 0.47), (0.14, 0.26), (0.24, 0.03)], [(-0.02, 0.47), (-0.06, 0.24), (-0.08, 0.03)]]
+                who.arms = [[(-0.08, 0.72), (0.06, 0.66), (0.2, 0.62)], [(-0.14, 0.72), (0.0, 0.64), (0.16, 0.6)]]
+                people.addPath(who.path(pen, x: x, y: sand, h: 0.13))
+            }
+            pen.solid(people, ink)
+            let taut = pen.seg(-0.59, 0.165, -0.335, 0.21)
+            pen.line([(taut, Self.glow, 0.85)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        } else {
+            var people = Path()
+            for (i, x) in xs.enumerated() {
+                var who = Figure.standing(i == 1 ? .father : .neighbour)
+                if i == 0 { who.arms[1] = [(-0.1, 0.76), (-0.22, 0.9), (-0.3, 1.04)] }
+                people.addPath(who.path(pen, x: x, y: sand, h: 0.13, facing: i == 0 ? 1 : -1))
+            }
+            pen.solid(people, ink)
+            let slack = pen.smooth([(-0.335, 0.21), (-0.38, 0.248), (-0.5, 0.256), (-0.58, 0.25), (-0.6, 0.24), (-0.55, 0.236)])
+            pen.line([(slack, Self.glow, 0.85)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        }
+
+        // Vignette 2: the sky over the beacon.
+        if played.contains(2) {
+            var stars = Path()
+            for (x, y) in [(-0.15, -0.72), (0.03, -0.76), (-0.1, -0.655), (0.12, -0.72), (-0.19, -0.6)] {
+                stars.addPath(pen.seg(x - 0.01, y, x + 0.01, y))
+                stars.addPath(pen.seg(x, y - 0.01, x, y + 0.01))
+            }
+            pen.line([(stars, Self.light, 0.8)], glows: [(0.02, 0.4), (0.007, 0.9)])
+            pen.solid(pen.sleeping(0.16, -0.665, 0.05), ink)
+        } else {
+            var gulls = Path()
+            for (x, y, w) in [(-0.13, -0.72, 0.06), (0.05, -0.755, 0.05), (-0.07, -0.665, 0.05), (0.13, -0.69, 0.045)] {
+                gulls.addPath(pen.flying(x, y, w))
+            }
+            pen.line([(gulls, ink, 1)], glows: [(0.02, 0.4), (0.007, 0.9)])
+        }
     }
 }
