@@ -128,6 +128,8 @@ struct Harness {
     let cardLevels: Int
     /// UNSTIR_SHELFDEMO=1: the menu opens Lens's card from the dock and closes it, through the calls a finger makes.
     let shelfDemo: Bool
+    /// UNSTIR_CARDSCROLL=1: with UNSTIR_CARD, the card opens scrolled to its list of levels.
+    let cardScroll: Bool
     /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
     let typeSize: DynamicTypeSize?
     /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
@@ -247,6 +249,7 @@ struct Harness {
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
         card = env["UNSTIR_CARD"].flatMap(Offer.init(name:))
+        cardScroll = env["UNSTIR_CARDSCROLL"] == "1"
         cardLevels = env["UNSTIR_CARDLEVELS"].flatMap(Int.init).map { min(max($0, 0), 30) } ?? 0
         shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
         typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
@@ -334,7 +337,7 @@ struct RootView: View {
             } else {
                 MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
                          settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
-                         shelfDemo: harness?.shelfDemo ?? false) {
+                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false) {
                     show($0)
                 }
                 .transition(dip)

@@ -571,6 +571,8 @@ struct PackCard: View {
     var clock: Double?
     /// The pack's own, unless the harness lists placeholders.
     var levels: [Level]
+    /// UNSTIR_CARDSCROLL: opens scrolled to the list.
+    var scrolled = false
     let onBack: () -> Void
     let onPlay: (Level) -> Void
     var store = Store.shared
@@ -582,43 +584,46 @@ struct PackCard: View {
     var body: some View {
         let state = store.state(offer)
         GeometryReader { g in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    Button(action: onBack) { Text("\u{2039} back").font(.mono(.subheadline, .medium)) }
-                        .buttonStyle(.plain).padding(.top, 18).opacity(0.8)
-                        .accessibilityLabel("Back")
-                    Text(offer.pack == nil ? "BUNDLE \u{00B7} PAID ADD-ON" : "PACK \u{00B7} PAID ADD-ON").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
-                        .padding(.top, 26)
-                    Text(offer.name).font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
-                        .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
-                        .accessibilityAddTraits(.isHeader)
-                    Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
-                    PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48), held: clock)
-                        .frame(maxWidth: .infinity).padding(.top, 28)
-                    VStack(alignment: .leading, spacing: 9) {
-                        fact("for", offer.assumes)
-                        fact("free", offer.free)
-                        fact("holds", offer.holds)
+            ScrollViewReader { reader in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Button(action: onBack) { Text("\u{2039} back").font(.mono(.subheadline, .medium)) }
+                            .buttonStyle(.plain).padding(.top, 18).opacity(0.8)
+                            .accessibilityLabel("Back")
+                        Text(offer.pack == nil ? "BUNDLE \u{00B7} PAID ADD-ON" : "PACK \u{00B7} PAID ADD-ON").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
+                            .padding(.top, 26)
+                        Text(offer.name).font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
+                            .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
+                            .accessibilityAddTraits(.isHeader)
+                        Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
+                        PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48), held: clock)
+                            .frame(maxWidth: .infinity).padding(.top, 28)
+                        VStack(alignment: .leading, spacing: 9) {
+                            fact("for", offer.assumes)
+                            fact("free", offer.free)
+                            fact("holds", offer.holds)
+                        }
+                        .padding(.top, 32)
+                        if offer.arriving {
+                            Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        // Buying comes before the list, so it is on the first screen whatever the pack holds.
+                        if levels.isEmpty { Spacer(minLength: 24) }
+                        status(state).padding(.top, levels.isEmpty ? 0 : 32)
+                        action(state).padding(.top, 14)
+                        if offer.pack != nil, state != .owned, store.state(.complete) != .owned, Offer.shelf().contains(.complete) {
+                            completeLine.padding(.top, 14)
+                        }
+                        restore.padding(.top, 18).padding(.bottom, 10)
+                        if !levels.isEmpty { list.padding(.top, 26).padding(.bottom, 10).id("list") }
                     }
-                    .padding(.top, 32)
-                    if offer.arriving {
-                        Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    // Buying comes before the list, so it is on the first screen whatever the pack holds.
-                    if levels.isEmpty { Spacer(minLength: 24) }
-                    status(state).padding(.top, levels.isEmpty ? 0 : 32)
-                    action(state).padding(.top, 14)
-                    if offer.pack != nil, state != .owned, store.state(.complete) != .owned, Offer.shelf().contains(.complete) {
-                        completeLine.padding(.top, 14)
-                    }
-                    restore.padding(.top, 18).padding(.bottom, 10)
-                    if !levels.isEmpty { list.padding(.top, 26).padding(.bottom, 10) }
+                    .padding(.horizontal, 24)
+                    .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
                 }
-                .padding(.horizontal, 24)
-                .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
+                .scrollBounceBehavior(.basedOnSize)
+                .onAppear { if scrolled { reader.scrollTo("list", anchor: .top) } }
             }
-            .scrollBounceBehavior(.basedOnSize)
         }
         .foregroundStyle(Color.text)
         .background(Color.black.ignoresSafeArea())
@@ -647,15 +652,15 @@ struct PackCard: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// Every level, those past the taste locked until the pack is owned.
+    /// Every level, those past the taste locked until the pack is owned, under a heading for each chapter where the
+    /// pack has chapters, as the menu heads each tier.
     private var list: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                Text("levels").font(.mono(.caption2, .semibold)).foregroundStyle(offer.gradient)
-                Rectangle().fill(offer.gradient).frame(height: 1).opacity(0.8)
-            }
-            .padding(.bottom, 4)
-            ForEach(levels, id: \.id) { level in
+            if levels.first?.chapter == nil { heading("levels", of: []) }
+            ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
+                if let chapter = level.chapter, i == 0 || levels[i - 1].chapter != chapter {
+                    heading(chapter, of: levels.filter { $0.chapter == chapter }).padding(.top, i == 0 ? 0 : 18)
+                }
                 let open = store.access(level) != .needsCard, best = Best.load(level.id)
                 Button { onPlay(level) } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -679,6 +684,21 @@ struct PackCard: View {
                 .accessibilityValue(open ? best.map { $0.over == 0 ? "at par" : "\($0.over) over par" } ?? "" : "locked, needs the pack")
             }
         }
+    }
+
+    /// A chapter's name and rule, with how many of its levels are at par.
+    private func heading(_ name: String, of chapter: [Level]) -> some View {
+        HStack(spacing: 10) {
+            Text(name.lowercased()).font(.mono(.caption2, .semibold)).foregroundStyle(offer.gradient)
+            Rectangle().fill(offer.gradient).frame(height: 1).opacity(0.8)
+            if !chapter.isEmpty {
+                Text("\(chapter.filter { Best.load($0.id)?.over == 0 }.count)/\(chapter.count) at par").font(.mono(.caption2))
+                    .opacity(0.4)
+            }
+        }
+        .padding(.bottom, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 
     @ViewBuilder private func status(_ state: Purchase) -> some View {
