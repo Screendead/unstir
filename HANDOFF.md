@@ -963,7 +963,9 @@ names and product ids, and Complete's promise to older owners.
     ring when they play. Tri's cores all lie in each other's discs, so no heal order avoids it; only the art can.
     Jack's call (2026-10-26, round 9, F4 = A): every change stays inside its own core, checked by the test over every
     picture, and the boat's stern and the lantern's shards are redrawn in the art pass; the two smears stay pinned in
-    the test until then. Merged 2026-10-27 (PR #44).
+    the test until then. Merged 2026-10-27 (PR #44). Redrawn 2026-10-27 on `firststir-ch4` (scene 16 on the engine):
+    the shards fall inside the lantern's core clear of the other discs, the boat lies right of the cottage's disc, and
+    the test pins no fault.
 42. First Stir: vignettes baked on demand within a memory budget measured on the phone.
     Built 2026-10-26 on `firststir-pack`: the layers bake as the level appears, five in all whatever the number of
     stages (two skies, the bolt's box, the scene held back and played), against the lab's two per stage; about 51 MB
@@ -1011,7 +1013,7 @@ names and product ids, and Complete's promise to older owners.
     each par the solver's optimum (`SolverTests.testFirstStirParIsTheOptimum`). On the engine its time steps per
     scramble entry with the clock caption, 4:45 back to 2:30 am; its rain is drawn over the composite (`drawOver`), a
     function of the time; its sky and sea open on Dawn After's 4:45 tones and turn to rescue amber's lit low cloud by
-    4:15, so the horizon brightens as scene 6 winds back. Its pen is `Brush` beside chapter 1's `Pen`. Chapter 2's `.compositingGroup()` fix to `StoryLayer`'s cut-in was not carried: the storm harbour (scene 16, no level) still cuts its cores the old way until it moves onto the engine. At the test's
+    4:15, so the horizon brightens as scene 6 winds back. Its pen is `Brush` beside chapter 1's `Pen`. Chapter 2's `.compositingGroup()` fix to `StoryLayer`'s cut-in was not carried; the storm harbour moved onto the engine with chapter 4, so `StoryLayer` is gone. At the test's
     512 px five vignettes reached a few thousandths past the art spec (scene 6's window pane by the knob, scene 8's
     lifeboat and bearers, scene 10's door wave and lamp flashes) and were pulled in. Its review's fixes stand (flat
     fills for glows and beams, scene 7's steps, scene 8's beats, scene 9's lamp and lantern, scene 6's searchlight).
@@ -1023,8 +1025,26 @@ names and product ids, and Complete's promise to older owners.
       on the phone first.
     - Two pens: `Pen` (chapter 1) and `Brush` (chapter 2) do the same job. Recommend folding `Pen` into `Brush` (the
       more general: figure units, clips, one glow per vignette) before chapter 3, so later chapters draw with one.
-    Left: Jack's review of the art at phone size (the figures are small on the quad and pent scenes), the films, and
-    chapters 3 to 5.
+    Chapter 4, The Storm (scenes 16 to 20), drawn 2026-10-27 on `firststir-ch4` (off `firststir-content`, pushed, no PR)
+    in `FirstStirTheStorm.swift` as `Story.storm` cases, in storm indigo with sodium, 12:30 am back to 9:30 pm (its
+    times negative past midnight). Until the Flood goes in before it, its levels are `first-stir-11` to `-15` by place
+    (shots `firststir-11` to `-15`); they move to 16 to 20 when chapter 3 joins the table. The harbour (tri
+    `2:+5,1:-4,0:+3,2:-2,1:+5,0:-4,1:+2,0:+3`, the cottage's entry at the bottom as the lab had it), lightning (quad
+    `3:+4,0:-3,1:+5,2:-2,3:+3,0:+4,1:-4,2:+5,3:-2`), the bell buoy (pent `0:+4,2:-3,1:+5,3:+2,4:-4,0:-2,2:+5,3:-3,1:+2`),
+    high street, rain (eye `0:+4,2:-3,1:+5,3:+2,0:-3,1:+4,2:+5,0:+2,3:-4,1:-2`) and washing (pent
+    `3:+4,0:-3,1:+5,4:-2,2:+4,0:+3,1:-4,3:-5,2:+2,0:-2`), the outline's stirs, each par the solver's optimum. The lab's
+    harbour is scene 16 on the engine, drawn from the sunrise's plan, its two faults redrawn (F4); `StoryLayer`,
+    `Story.harbour` and the lab's own drawing are gone, and `Harbour` keeps only the shared line, fades and budget. Its
+    sky is the lab's storm at 12:30 warming late to the lab's dusk at 9:30; its rain thins as the night winds back; far
+    lightning crosses the sky in scenes 16 and 18 until about 10:50; scene 17 is indoors, rain only in its windows.
+    Combine step: the Flood's last sky should end on `Storm.tones(30)`, and Dusk Before's first should open on
+    `Storm.tones(-150)`, with a test like `testTheRescueOpensOnTheDawnsLastSky` at each seam; `testTheTable` starts the
+    Storm at 12:30 on its own until the Flood carries the time to it. Departures from the outline (Claude's calls within
+    it, not Jack's): scene 17 has three windows (a bay window for the view, a small one whose sill holds the candle, a low
+    one over the window seat), since the three vignettes' rods sit in three corners; scene 19's sign is a cobbler's boot
+    on a board high on a gable, where the small rod's core is clear of the big rods' discs.
+    Left: Jack's review of the art at phone size (the figures are small on the quad and pent scenes; on the Storm's pent
+    and quad scenes the adults are near the spec's 0.12 minimum), the films, and chapters 3 and 5.
 44. First Stir: the "night forwards" end film.
 45. Sound: merge the sound branch after Jack's listen; sketch each v1 pack's layers for his ear (First Stir's
     felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth drops and looping phrase); render

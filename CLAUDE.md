@@ -319,31 +319,25 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the stack alone: a pop plays what it carried, a vignette waits for every entry on its rod, a win the fine pass calls
   plays the rest, and the pack's undo and a reset bring tags back with their entries. On a story, the heal ring
   (magenta and the heavy tap) marks only a commit that plays a vignette; cancelling the player's own push flashes
-  white. `StoryLayer` draws it from baked layers, made as it appears: the storm's sky and the evening's, the bolt cut to
-  its box, and the scene with every vignette held back and with every one played, both transparent, under live rain
-  and moon (`Harbour.weather`). Each played core is cut in from the played scene over its own sky and fades in over
-  `Harbour.fade` (0.4 s) on the rewind's clock; an unplayed one snaps back at once, since a fade would show the played
-  state on a turned core. The night winds back a stage per vignette played (Jack's call, F2): over `Harbour.rewind`
-  the evening's sky fades in by a stage, the bolt goes in the first, the rain climbs back up its slant and thins, and
-  the moon, outside every disc, sinks. Only undo or reset winds it forward, and that snaps. The layers bake at the
-  screen's scale unless they would pass `Harbour.budget` (64 MB, not yet measured on the phone; about 51 MB at 3x on
-  the largest phone), then lower. The harbour (`Story.harbour`, the lab's storm) is the outline's scene 16 and has no level until
-  that chapter is drawn; the tests play it under a test id. `testNoVignetteShowsTheNextMove` renders each vignette's
-  two states, checks the difference stays inside its own core (so the cut clips no glow), and over every heal order
-  that `Layout.removable` allows, that no vignette's light reaches the core of a rod removable right after its heal and
-  that the entries left move none of it by half a pixel; the harbour's two known smears (the lantern's shards and the
-  boat's stern, in the cottage's ring) are pinned there until the art pass redraws them (Jack, 2026-10-26, F4). A scene on the pack's night must also keep
-  every change 0.02 inside its core and clear of the knob (0.085 from the rod's centre), the outline's art spec
+  white. `Harbour` holds what every scene shares: the line, `Harbour.fade` (0.4 s, a played core fading in on the
+  rewind's clock), `Harbour.rewind` (1.6 s) and `Harbour.budget` (64 MB, not yet measured on the phone; about 51 MB at
+  3x on the largest phone), past which the layers bake at a lower scale. The lab's harbour in the storm is scene 16 now,
+  `Storm.harbour`, on the engine below; the tests play it under a test id. `testNoVignetteShowsTheNextMove` renders
+  each vignette's two states, checks the difference stays inside its own core (so the cut clips no glow), and over
+  every heal order that `Layout.removable` allows, that no vignette's light reaches the core of a rod removable right
+  after its heal and that the entries left move none of it by half a pixel; it allows no fault (F4 redrew the
+  harbour's two, the lantern's shards and the boat's stern in the cottage's ring). Every scene must also keep every
+  change 0.02 inside its core and clear of the knob (0.085 from the rod's centre), the outline's art spec
   (`docs/first-stir-outline.md`).
-- **StoryScene.swift**, **FirstStirDawn.swift** and **FirstStirRescue.swift** hold the scenes on the pack's one night
+- **StoryScene.swift**, **FirstStirDawn.swift**, **FirstStirRescue.swift** and **FirstStirTheStorm.swift** hold the scenes on the pack's one night
   (Jack, F2). A `StoryScene` draws, in tank units, a sky and sea at a time in minutes after midnight (`drawSky`), the
   scene with some vignettes played (`draw`), the bodies that move with the time where no disc reaches, their line and
   glow (`Dawn.bodyGlow`) included (`drawLive`: the sunrise's sun and chimney smoke;
   `testTheBodiesStayClearOfEveryDisc`), and the weather that falls over everything, played cores included (`drawOver`:
-  the Rescue's rain), between `late`, as the level opens, and `early`; `drawLive` and `drawOver` default to nothing.
-  A chapter is an enum of its scenes conforming to it, one `Story` case (`Story.dawn`, `Story.rescue`) and an arm in
+  the Rescue's and the Storm's rain, the Storm's far lightning), between `late`, as the level opens, and `early`; `drawLive` and `drawOver` default to nothing.
+  A chapter is an enum of its scenes conforming to it, one `Story` case (`Story.dawn`, `Story.rescue`, `Story.storm`) and an arm in
   `Story.scene` and `Story.vignettes`; `Level.firstStir` joins the chapters' levels and stamps each id and label from
-  its place. `SceneLayer` draws a scene as `StoryLayer` does, from four baked layers (the sky at `late` and at
+  its place. `SceneLayer` draws a scene from four baked layers (the sky at `late` and at
   `early`, cross-faded, and the scene held back and played), the live bodies drawn over the sky and the weather over
   all. Its cores cut in through masks drawn without antialiasing
   (`SceneComposite.cores`): an antialiased edge showed a ring however it was composited, though both scenes held the
@@ -358,7 +352,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`testTheRescueOpensOnTheDawnsLastSky`); its rain climbs back up its slant and thickens as a function of the time.
   Its vignettes draw through `Brush` (a pen in a figure's own units through `at`, each vignette laid down under one
   tight glow by `Brush.vignette`) and `Cast` (the family and townsfolk told apart by outline alone, the dog, the
-  storm lantern, the lifeboat, a breaking wave). `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
+  storm lantern, the lifeboat, a breaking wave). `Storm` is chapter 4, The Storm: five scenes, 12:30 am back to 9:30
+  pm, in storm indigo with sodium (the lab's), its times negative past midnight (`Storm.times`, which `clock` wraps).
+  Its levels follow the Rescue's in `Level.firstStir` until the Flood (scenes 11 to 15) goes in between, so today they
+  are levels 11 to 15. Scene 16, the harbour, is drawn from Dawn After's sunrise plan (the outline's continuity), its
+  shards falling inside the lantern's core and its boat right of the cottage's disc. Its sky (`Storm.tones`) is the
+  lab's storm at 12:30 and warms late towards the lab's dusk at 9:30, which Dusk Before's first scene should open on;
+  the Flood's last sky should end on `Storm.tones(30)`. Its rain thins as the night winds back and its far lightning
+  (`Storm.flash`, drawn over all in scenes 16 and 18) is gone by about 10:50; scene 17 is indoors, its rain only
+  through its windows. Its vignettes draw through the Rescue's `Brush` and `Cast` in the Storm's ink. `Pen` draws in tank units at the one line weight with the shared `neon` glow; `Figure` (father,
   grandmother, child, neighbour, crew) and `Dog` build silhouettes from posed parts and outline their union.
   `scripts/first-stir-lab.sh <scene> <out.png> [side] [x y half-width]` draws a Dawn After scene on the Mac, held back, played
   and where they differ over the layout's cores and knobs, and prints each vignette's reach against its core less
