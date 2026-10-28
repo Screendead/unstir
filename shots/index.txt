@@ -192,12 +192,139 @@ swirl-pent.png  Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3.
 swirl-hex.png  Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3.
 lens-plus.png  Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies.
 lens-minus.png  Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim.
-lens-1.png  Lens 1 as dealt, on the halftone, rod 0 a lens.
-lens-2.png  Lens 2 as dealt, on the halftone, rod 0 a lens.
-lens-3.png  Lens 3 as dealt, on the halftone, rod 0 a lens.
+lens-01.png  Lens 01 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-02.png  Lens 02 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-03.png  Lens 03 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-04.png  Lens 04 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-05.png  Lens 05 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-06.png  Lens 06 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-07.png  Lens 07 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-08.png  Lens 08 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-09.png  Lens 09 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-10.png  Lens 10 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-11.png  Lens 11 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-12.png  Lens 12 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-13.png  Lens 13 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-14.png  Lens 14 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-15.png  Lens 15 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-16.png  Lens 16 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-17.png  Lens 17 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-18.png  Lens 18 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-19.png  Lens 19 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-20.png  Lens 20 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-21.png  Lens 21 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-22.png  Lens 22 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-23.png  Lens 23 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-24.png  Lens 24 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-25.png  Lens 25 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
 lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
-lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step.
+lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger.
+lens-glitter-big-1.png  Lens on tri rod 0 at +1, still.
+lens-glitter-big-1-drag.png  Lens on tri rod 0 held at +0.5, mid-drag up.
+lens-glitter-big-1-twist.png  Lens on tri rod 0 at +1, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-big-2.png  Lens on tri rod 0 at +2, still.
+lens-glitter-big-2-drag.png  Lens on tri rod 0 held at +1.5, mid-drag up.
+lens-glitter-big-2-twist.png  Lens on tri rod 0 at +2, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-big-3.png  Lens on tri rod 0 at +3, still.
+lens-glitter-big-3-drag.png  Lens on tri rod 0 held at +2.5, mid-drag up.
+lens-glitter-big-3-twist.png  Lens on tri rod 0 at +3, rod 1 held 1.5 steps into a twist over it.
+lens-flip-big-zoom-00.png  Lens on tri rod 0 held at +2 and 0.0 steps.
+lens-flip-big-twist-00.png  Lens on tri rod 0 at +3, rod 1 held 0.0 steps into a twist.
+lens-flip-big-zoom-01.png  Lens on tri rod 0 held at +2 and 0.1 steps.
+lens-flip-big-twist-01.png  Lens on tri rod 0 at +3, rod 1 held 0.1 steps into a twist.
+lens-flip-big-zoom-02.png  Lens on tri rod 0 held at +2 and 0.2 steps.
+lens-flip-big-twist-02.png  Lens on tri rod 0 at +3, rod 1 held 0.2 steps into a twist.
+lens-flip-big-zoom-03.png  Lens on tri rod 0 held at +2 and 0.3 steps.
+lens-flip-big-twist-03.png  Lens on tri rod 0 at +3, rod 1 held 0.3 steps into a twist.
+lens-flip-big-zoom-04.png  Lens on tri rod 0 held at +2 and 0.4 steps.
+lens-flip-big-twist-04.png  Lens on tri rod 0 at +3, rod 1 held 0.4 steps into a twist.
+lens-flip-big-zoom-05.png  Lens on tri rod 0 held at +2 and 0.5 steps.
+lens-flip-big-twist-05.png  Lens on tri rod 0 at +3, rod 1 held 0.5 steps into a twist.
+lens-flip-big-zoom-06.png  Lens on tri rod 0 held at +2 and 0.6 steps.
+lens-flip-big-twist-06.png  Lens on tri rod 0 at +3, rod 1 held 0.6 steps into a twist.
+lens-flip-big-zoom-07.png  Lens on tri rod 0 held at +2 and 0.7 steps.
+lens-flip-big-twist-07.png  Lens on tri rod 0 at +3, rod 1 held 0.7 steps into a twist.
+lens-flip-big-zoom-08.png  Lens on tri rod 0 held at +2 and 0.8 steps.
+lens-flip-big-twist-08.png  Lens on tri rod 0 at +3, rod 1 held 0.8 steps into a twist.
+lens-flip-big-zoom-09.png  Lens on tri rod 0 held at +2 and 0.9 steps.
+lens-flip-big-twist-09.png  Lens on tri rod 0 at +3, rod 1 held 0.9 steps into a twist.
+lens-flip-big-zoom-10.png  Lens on tri rod 0 held at +2 and 1.0 steps.
+lens-flip-big-twist-10.png  Lens on tri rod 0 at +3, rod 1 held 1.0 steps into a twist.
+lens-order-big-over-1.png  Lens on tri rod 0, 1:+1,0:+2: the lens newest.
+lens-order-big-under-1.png  Lens on tri rod 0, 0:+2,1:+1: the twist newest.
+lens-order-big-over-3.png  Lens on tri rod 0, 1:+3,0:+2: the lens newest.
+lens-order-big-under-3.png  Lens on tri rod 0, 0:+2,1:+3: the twist newest.
+lens-glitter-mid-1.png  Lens on quad rod 0 at +1, still.
+lens-glitter-mid-1-drag.png  Lens on quad rod 0 held at +0.5, mid-drag up.
+lens-glitter-mid-1-twist.png  Lens on quad rod 0 at +1, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-mid-2.png  Lens on quad rod 0 at +2, still.
+lens-glitter-mid-2-drag.png  Lens on quad rod 0 held at +1.5, mid-drag up.
+lens-glitter-mid-2-twist.png  Lens on quad rod 0 at +2, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-mid-3.png  Lens on quad rod 0 at +3, still.
+lens-glitter-mid-3-drag.png  Lens on quad rod 0 held at +2.5, mid-drag up.
+lens-glitter-mid-3-twist.png  Lens on quad rod 0 at +3, rod 1 held 1.5 steps into a twist over it.
+lens-flip-mid-zoom-00.png  Lens on quad rod 0 held at +2 and 0.0 steps.
+lens-flip-mid-twist-00.png  Lens on quad rod 0 at +3, rod 1 held 0.0 steps into a twist.
+lens-flip-mid-zoom-01.png  Lens on quad rod 0 held at +2 and 0.1 steps.
+lens-flip-mid-twist-01.png  Lens on quad rod 0 at +3, rod 1 held 0.1 steps into a twist.
+lens-flip-mid-zoom-02.png  Lens on quad rod 0 held at +2 and 0.2 steps.
+lens-flip-mid-twist-02.png  Lens on quad rod 0 at +3, rod 1 held 0.2 steps into a twist.
+lens-flip-mid-zoom-03.png  Lens on quad rod 0 held at +2 and 0.3 steps.
+lens-flip-mid-twist-03.png  Lens on quad rod 0 at +3, rod 1 held 0.3 steps into a twist.
+lens-flip-mid-zoom-04.png  Lens on quad rod 0 held at +2 and 0.4 steps.
+lens-flip-mid-twist-04.png  Lens on quad rod 0 at +3, rod 1 held 0.4 steps into a twist.
+lens-flip-mid-zoom-05.png  Lens on quad rod 0 held at +2 and 0.5 steps.
+lens-flip-mid-twist-05.png  Lens on quad rod 0 at +3, rod 1 held 0.5 steps into a twist.
+lens-flip-mid-zoom-06.png  Lens on quad rod 0 held at +2 and 0.6 steps.
+lens-flip-mid-twist-06.png  Lens on quad rod 0 at +3, rod 1 held 0.6 steps into a twist.
+lens-flip-mid-zoom-07.png  Lens on quad rod 0 held at +2 and 0.7 steps.
+lens-flip-mid-twist-07.png  Lens on quad rod 0 at +3, rod 1 held 0.7 steps into a twist.
+lens-flip-mid-zoom-08.png  Lens on quad rod 0 held at +2 and 0.8 steps.
+lens-flip-mid-twist-08.png  Lens on quad rod 0 at +3, rod 1 held 0.8 steps into a twist.
+lens-flip-mid-zoom-09.png  Lens on quad rod 0 held at +2 and 0.9 steps.
+lens-flip-mid-twist-09.png  Lens on quad rod 0 at +3, rod 1 held 0.9 steps into a twist.
+lens-flip-mid-zoom-10.png  Lens on quad rod 0 held at +2 and 1.0 steps.
+lens-flip-mid-twist-10.png  Lens on quad rod 0 at +3, rod 1 held 1.0 steps into a twist.
+lens-order-mid-over-1.png  Lens on quad rod 0, 1:+1,0:+2: the lens newest.
+lens-order-mid-under-1.png  Lens on quad rod 0, 0:+2,1:+1: the twist newest.
+lens-order-mid-over-3.png  Lens on quad rod 0, 1:+3,0:+2: the lens newest.
+lens-order-mid-under-3.png  Lens on quad rod 0, 0:+2,1:+3: the twist newest.
+lens-glitter-small-1.png  Lens on eye rod 2 at +1, still.
+lens-glitter-small-1-drag.png  Lens on eye rod 2 held at +0.5, mid-drag up.
+lens-glitter-small-1-twist.png  Lens on eye rod 2 at +1, rod 0 held 1.5 steps into a twist over it.
+lens-glitter-small-2.png  Lens on eye rod 2 at +2, still.
+lens-glitter-small-2-drag.png  Lens on eye rod 2 held at +1.5, mid-drag up.
+lens-glitter-small-2-twist.png  Lens on eye rod 2 at +2, rod 0 held 1.5 steps into a twist over it.
+lens-glitter-small-3.png  Lens on eye rod 2 at +3, still.
+lens-glitter-small-3-drag.png  Lens on eye rod 2 held at +2.5, mid-drag up.
+lens-glitter-small-3-twist.png  Lens on eye rod 2 at +3, rod 0 held 1.5 steps into a twist over it.
+lens-flip-small-zoom-00.png  Lens on eye rod 2 held at +2 and 0.0 steps.
+lens-flip-small-twist-00.png  Lens on eye rod 2 at +3, rod 0 held 0.0 steps into a twist.
+lens-flip-small-zoom-01.png  Lens on eye rod 2 held at +2 and 0.1 steps.
+lens-flip-small-twist-01.png  Lens on eye rod 2 at +3, rod 0 held 0.1 steps into a twist.
+lens-flip-small-zoom-02.png  Lens on eye rod 2 held at +2 and 0.2 steps.
+lens-flip-small-twist-02.png  Lens on eye rod 2 at +3, rod 0 held 0.2 steps into a twist.
+lens-flip-small-zoom-03.png  Lens on eye rod 2 held at +2 and 0.3 steps.
+lens-flip-small-twist-03.png  Lens on eye rod 2 at +3, rod 0 held 0.3 steps into a twist.
+lens-flip-small-zoom-04.png  Lens on eye rod 2 held at +2 and 0.4 steps.
+lens-flip-small-twist-04.png  Lens on eye rod 2 at +3, rod 0 held 0.4 steps into a twist.
+lens-flip-small-zoom-05.png  Lens on eye rod 2 held at +2 and 0.5 steps.
+lens-flip-small-twist-05.png  Lens on eye rod 2 at +3, rod 0 held 0.5 steps into a twist.
+lens-flip-small-zoom-06.png  Lens on eye rod 2 held at +2 and 0.6 steps.
+lens-flip-small-twist-06.png  Lens on eye rod 2 at +3, rod 0 held 0.6 steps into a twist.
+lens-flip-small-zoom-07.png  Lens on eye rod 2 held at +2 and 0.7 steps.
+lens-flip-small-twist-07.png  Lens on eye rod 2 at +3, rod 0 held 0.7 steps into a twist.
+lens-flip-small-zoom-08.png  Lens on eye rod 2 held at +2 and 0.8 steps.
+lens-flip-small-twist-08.png  Lens on eye rod 2 at +3, rod 0 held 0.8 steps into a twist.
+lens-flip-small-zoom-09.png  Lens on eye rod 2 held at +2 and 0.9 steps.
+lens-flip-small-twist-09.png  Lens on eye rod 2 at +3, rod 0 held 0.9 steps into a twist.
+lens-flip-small-zoom-10.png  Lens on eye rod 2 held at +2 and 1.0 steps.
+lens-flip-small-twist-10.png  Lens on eye rod 2 at +3, rod 0 held 1.0 steps into a twist.
+lens-order-small-over-1.png  Lens on eye rod 2, 0:+1,2:+2: the lens newest.
+lens-order-small-under-1.png  Lens on eye rod 2, 2:+2,0:+1: the twist newest.
+lens-order-small-over-3.png  Lens on eye rod 2, 0:+3,2:+2: the lens newest.
+lens-order-small-under-3.png  Lens on eye rod 2, 2:+2,0:+3: the twist newest.
 icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
 icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
 icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.
