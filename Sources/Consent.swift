@@ -7,6 +7,7 @@ enum ConsentWords {
     static let title = "Help improve Unstir?"
     static let body = "Let the game tell us how you play. Never who you are."
     static let sendsLink = "What does it send? \u{203A}"
+    static let hideLink = "Hide the list \u{2039}"
     static let sends = "If you say yes, the game tells us how you play: which puzzles you finish, how many moves and "
         + "undos they take, which days you play, which packs you buy, and roughly which country you're in. It never "
         + "sends your name, your Apple ID, or anything that tells us who you are. You can change your mind any time in "
@@ -52,20 +53,21 @@ struct ConsentCard: View {
             Text(ConsentWords.body)
                 .font(.mono(12)).opacity(0.6).lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
+            Button {
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { sends.toggle() }
+            } label: {
+                Text(sends ? ConsentWords.hideLink : ConsentWords.sendsLink).font(.mono(12))
+                    .foregroundStyle(Color.neonCyan)
+                    .frame(minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(sends ? "shown" : "hidden")
             if sends {
                 Text(ConsentWords.sends)
                     .font(.mono(12)).opacity(0.6).lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
                     .transition(.opacity)
-            } else {
-                Button {
-                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { sends = true }
-                } label: {
-                    Text(ConsentWords.sendsLink).font(.mono(12)).foregroundStyle(Color.neonCyan)
-                        .frame(minHeight: 44, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
             }
             HStack(spacing: 14) {
                 answer(ConsentWords.yes, true)
