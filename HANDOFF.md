@@ -521,10 +521,10 @@ must time your heals so the clock always finds its seam.
   note, looping without resolving, and only the solve lands it on the tonic, D, never move N on an unsolved page.
   Nothing sounds during a drag.
 - **Structure.** 30 problems in five chapters of 6: The Clock (one clock, no slack), The Waiting Move (slack to burn),
-  Two Clocks, Wound Back (a clock ticking −1), Grand Complication (deep pent and hex, ending on a three-clock hex
-  finale), each opening on a wordless teaching problem. After each solve the composed line replays. Problems 1 to 3
-  free. Level ids `escapement-1` to `escapement-30`; every problem ships proved (a line at N exists and none is
-  shorter).
+  Two Clocks, Wound Back (a clock ticking −1), Grand Complication (deep pent and hex, three clocks on hex one page
+  before a two-clock hex finale, J6 = B), each opening on a wordless teaching problem. After each solve the composed
+  line replays. Problems 1 to 3 free. Level ids `escapement-1` to `escapement-30`; every problem ships proved (a line
+  at N exists and none is shorter).
 - **Weakest point.** The smallest, most demanding buyer and the hardest content to make: 30 composed problems, each
   proved by a pruned search that may not reach N on hex, a lost state harsher than any tier, and a paper page that
   breaks the shelf's neon.
@@ -1022,9 +1022,9 @@ names and product ids, and Complete's promise to older owners.
    and replayed on a real `Game`; each key pinned. Problem 1 is the book's "The tick" under D1's title "The clock" (so
    the old escapement-1, the mock-up, is now 2, "The wait"); the 22 untitled problems are "Problem N". Escapement now
    has levels past its taste, so it goes on sale on the shelf and its card no longer says more arrive.
-   Open for Jack (round 10): J6, the finale's order, A as the book (30 last) or B (29 last, the three-clock hex as 29),
-   a reorder of two rows; and what a tank lost to its last clock stopping shows (`UNSTIR_STOPLOOK`: stamp as built,
-   left, rings; recommended: left). Still open from the book: J3 (built as A, D1), J5, J7 (built as A), J8.
+   Jack's call J6 = B (round 11): the book ends on the two-clock hex, 30, with the three-clock hex as 29; rows swapped
+   and the book re-proved on `escapement-book`. Open for Jack (round 10): what a tank lost to its last clock stopping
+   shows (`UNSTIR_STOPLOOK`: stamp as built, left, rings; recommended: left). Still open from the book: J3 (built as A, D1), J5, J7 (built as A), J8.
 40. First Stir: vignettes as tag sets on the scramble's entries, played when their tags leave the stack (a pop, a
     merged pop, a fine-pass win), unplayed by undo and reset, crossfading 0.4 s under the stack.
     Built 2026-10-26 on `firststir-pack`, merged 2026-10-27 (PR #44): `Level.story` and `Story.vignettes`, each of

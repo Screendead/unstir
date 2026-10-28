@@ -294,19 +294,19 @@ Knob 2's seam covers the clock and knob 4's looks newest: knob 2 first, since kn
 seams on 4, 5, 3 and 4 each take the free move before knob 2, knob 6 and the hub fall due. The last move is a tap.
 Difficulty 4 (4.6 bits, 12 seams).
 
-**29.** hex, clocks knobs 1 and 3 (twelve and four). `1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2`.
-**Unstir in 8.**
-Line: `0:-2` · `5:+3` · `4:-5` · `5:+4` · `6:+4` · `5:-3` · `4:-2` · `5:-2`.
-The hub's seam covers both clocks: first. Knob 5 is outside both and has four seams. They are the tempo between knob 4's
-seams (crossing four o'clock) and knob 6's (crossing twelve), each taken in the one move that fits. Difficulty 5 (4.0
-bits, 12 seams).
-
-**30. Finale.** hex, clocks knobs 1, 3 and 5. `5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3`.
+**29.** hex, clocks knobs 1, 3 and 5. `5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3`.
 **Unstir in 8.**
 Line: `4:-3` · `wait` · `2:-2` · `wait` · `2:-4` · `0:+5` · `2:-3` · `4:-3`.
 Three clocks cross every knob, so on each move at most one turn is safe, and the work is reading which. Knob 4's seam
 covers the clocks at four and eight. The taps fall where the seams over knob 2 still owe a step, and the hub goes when
 all three clocks have uncovered it. Difficulty 3 (2.0 bits, 13 seams); see J6.
+
+**30. Finale.** hex, clocks knobs 1 and 3 (twelve and four). `1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2`.
+**Unstir in 8.**
+Line: `0:-2` · `5:+3` · `4:-5` · `5:+4` · `6:+4` · `5:-3` · `4:-2` · `5:-2`.
+The hub's seam covers both clocks: first. Knob 5 is outside both and has four seams. They are the tempo between knob 4's
+seams (crossing four o'clock) and knob 6's (crossing twelve), each taken in the one move that fits. Difficulty 5 (4.0
+bits, 12 seams).
 
 ### The book at a glance
 
@@ -340,8 +340,8 @@ all three clocks have uncovered it. Difficulty 3 (2.0 bits, 13 seams); see J6.
 | 26 | pent | 0, 2 | 8 | 13 | 1:-2 | 2.0 | 3 | 1 / 1 |
 | 27 | pent | 0 | 9 | 13 | 2:-2 | 4.6 | 4 | 1 / 1 |
 | 28 | hex | 1 | 9 | 12 | 2:-4 | 4.6 | 4 | 1 / 1 |
-| 29 | hex | 1, 3 | 8 | 12 | 0:-2 | 5.0 | 5 | 1 / 1 |
-| 30 | hex | 1, 3, 5 | 8 | 13 | 4:-3 | 2.0 | 3 | 1 / 1 |
+| 29 | hex | 1, 3, 5 | 8 | 13 | 4:-3 | 2.0 | 3 | 1 / 1 |
+| 30 | hex | 1, 3 | 8 | 12 | 0:-2 | 5.0 | 5 | 1 / 1 |
 
 All 30: exists, none shorter (absolute), one key. "With detours" counts every line of turns of up to ±6 steps.
 
@@ -405,14 +405,17 @@ Any rule that ticks every move alike keeps waits forced. B means giving moves di
 the steps turned, which breaks the "always the same +1, known before the first move" that answers R5. **Recommendation:
 A.** Triage under the dial reaches 4 to 5 bits on hex (5 to 6 in the first draft, before E2), and Jack called go on the lab's rule (E1).
 
-**J6. The finale.** Three clocks on hex cross every knob, so 25 and 30 have at most one safe turn a move: a reading test,
-2.0 bits.
+**J6. The finale.** Three clocks on hex cross every knob, so 25 and the three-clock hex have at most one safe turn a
+move: a reading test, 2.0 bits.
 - A: end on 30, the three-clock hex, as the pitch planned.
 - B: end on 29, two clocks on hex at 4.0 bits, with the three-clock problem as 29.
 
 **Recommendation: B.** A book should end on its hardest problem, and three dials still get their moment one page before.
 Since E2, 29 measures 4.0 bits (5.0 in the first draft) and 28 4.6, so by bits alone 28 is now the chapter's hardest;
 Jack's play of the book (E3) settles the order of the last problems.
+
+**Jack's call (2026-10-28, round 11 J6): B.** The book ends on the two-clock hex, now 30, the finale; the three-clock
+hex is 29, one page before.
 
 **J7. Wound Back mirrors The Clock.** A wound-back clock alone plays exactly as a forward one with every sign flipped
 (19 is 2 mirrored).

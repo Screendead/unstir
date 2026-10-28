@@ -113,11 +113,11 @@ film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escape
 film escapement-lost 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=2:4,1:-3
 # Lost to the clock stopping with twists left: on 3, a tap, then knob 1, which pushes under knob 2's seam as the clock stops.
 film escapement-stopped 11 "$tank,fps=3,scale=200:-1,tile=8x4:padding=4" PACK=escapement LEVEL=3 FINGER=1 REST=1 MOVES=0:1,1:-3
-# Clean solves of the book's lines: 17's two clocks, the first uncovering the second's seam on every move, and the finale's
-# three, with its two taps (a ratchet's move, 1:1).
+# Clean solves of the book's lines: 17's two clocks, the first uncovering the second's seam on every move, and 29's three,
+# with its two taps (a ratchet's move, 1:1).
 film escapement-two-clocks 19 "$tank,fps=2,scale=200:-1,tile=8x5:padding=4" PACK=escapement OWNED=escapement LEVEL=17 FINGER=1 REST=1 \
   MOVES=3:-5,4:-2,3:5,4:3,3:-4
-film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" PACK=escapement OWNED=escapement LEVEL=30 FINGER=1 REST=1 \
+film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" PACK=escapement OWNED=escapement LEVEL=29 FINGER=1 REST=1 \
   MOVES=4:-3,1:1,2:-2,1:1,2:-4,0:5,2:-3,4:-3
 # Lens: a launch first bakes the halftone into Caches, which takes 20 s or more in Debug; the films then read it.
 if [[ -z "$pattern" || lens == *$pattern* || "$pattern" == lens* ]]; then
