@@ -80,16 +80,41 @@ enum Pack: String, CaseIterable, Sendable {
 }
 
 extension Level {
-    /// The hard lens's phone test (Jack's call, 2026-10-25, L1): the draft table's free taste, all on tri with rod 0 a
-    /// lens, on the halftone test panel. Every dealt lens entry magnifies by 1 to 3 steps and each lens nets at most +3.
+    /// Lens's 25 panels on the halftone test panel, `docs/lens-tables.md`'s table A: the draft table with lenses on rods
+    /// of every size. A rod is a lens or a twist for the whole level; every dealt lens entry magnifies by 1 to 3 steps
+    /// and each lens nets at most +3. No entry merges as it is dealt, and par is the depth (`testLensLevels`), the
+    /// solver's optimum (`testLensParIsTheOptimum`).
     static let lens: [Level] = [
-        "0:+2",
-        "0:+1,1:+3",
-        "1:-2,2:+4,0:+3",
-    ].enumerated().map { i, scramble in
-        let lenses: Set<Int> = [0]
+        (Layout.tri, [0], "0:+2"),
+        (.tri, [0], "0:+1,1:+3"),
+        (.tri, [0], "1:-2,2:+4,0:+3"),
+        (.tri, [1], "0:+3,1:+2,2:-4,1:+1"),
+        (.eye, [2], "0:-4,2:+2,1:+5,3:-3"),
+        (.eye, [0], "2:+3,0:+2,1:-4,3:+5,0:+1"),
+        (.tri, [0, 1], "2:+4,0:+2,1:+1"),
+        (.quad, [0, 2], "1:+4,0:+2,3:-3,2:+3,1:-5,0:+1"),
+        (.eye, [2, 3], "0:+3,2:+2,1:-4,3:+3,0:+2,2:+1"),
+        (.tri, [2], "0:+3,2:+2,1:-5,0:-2,2:+1,1:+4"),
+        (.quad, [1, 3], "0:+3,1:+3,2:-4,3:+2,0:-3,3:+1,2:+5"),
+        (.eye, [0, 1], "2:+3,0:+2,3:-4,1:+3,2:-2,0:+1,3:+5"),
+        (.hex, [1, 4], "0:+3,1:+2,2:-4,4:+3,6:+2,0:-2,5:+4"),
+        (.hex, [2, 5], "3:-3,2:+2,0:+4,5:+1,6:-3,2:+1,4:+5,5:+2"),
+        (.eye, [2], "1:+4,2:+1,0:-5,3:+3,2:+2,1:-3,0:+4,3:-2"),
+        (.tri, [0], "1:+3,0:+1,2:-4,1:-2,0:+1,2:+5,1:+4,0:+1"),
+        (.hex, [1, 3, 5], "0:+2,1:+3,2:-4,3:+2,4:+3,5:+1,6:-5,0:+4,5:+2"),
+        (.quad, [0, 2], "1:+3,0:+1,3:-4,2:+2,1:+5,0:+2,3:+3,2:+1,1:-4"),
+        (.hex, [0], "1:+3,0:+2,4:-3,2:+4,0:+1,5:-3,3:+2,6:+4"),
+        (.hex, [0, 1, 4], "2:+3,0:+2,1:+3,5:-4,4:+2,3:+4,0:+1,6:-3,2:-2"),
+        (.eye, [0, 3], "2:+4,0:+2,1:-5,3:+2,2:-3,0:+1,1:+4,3:+1,2:+3"),
+        (.hex, [0, 2, 5], "1:+3,0:+1,2:+2,3:-4,6:+5,5:+3,4:-3,0:+2,1:-3,2:+1"),
+        (.hex, [0], "3:+4,0:+1,6:-3,1:+5,0:+1,2:-4,4:+3,0:+1,5:-5,3:+2"),
+        (.eye, [2, 3], "0:+4,2:+2,1:-3,3:+1,0:-4,3:+2,1:+5,2:+1,0:+3,1:-2"),
+        (.hex, [0, 1, 3, 5], "2:+3,0:+1,1:+2,4:-4,3:+3,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,0:+1"),
+    ].enumerated().map { i, row in
+        let (layout, slots, scramble): (Layout, [Int], String) = row
+        let lenses = Set(slots)
         return Level(id: Pack.lens.id(i + 1), pack: .lens, label: String(format: "%02d", i + 1), title: "Panel \(i + 1)",
-                     picture: .halftone, layout: .tri, scramble: .parse(scramble, in: .tri, lenses: lenses), lenses: lenses)
+                     picture: .halftone, layout: layout, scramble: .parse(scramble, in: layout, lenses: lenses), lenses: lenses)
     }
     /// Each problem's par is the prover's optimum (`Solver.escapement`), and its note the stipulation.
     static let escapement: [Level] = [

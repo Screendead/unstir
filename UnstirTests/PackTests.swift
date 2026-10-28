@@ -206,13 +206,13 @@ final class PackTests: XCTestCase {
                 .filter { $0.key != "unlock" })
         }
         // An earlier build's harness launch may have left them on this simulator.
-        for key in ["best.lens-5", "started.lens-5"] { UserDefaults.standard.removeObject(forKey: key) }
+        for key in ["best.escapement-5", "started.escapement-5"] { UserDefaults.standard.removeObject(forKey: key) }
         let before = stored()
-        let h = Harness(["UNSTIR_OWNED": "complete", "UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "5"])
+        let h = Harness(["UNSTIR_OWNED": "complete", "UNSTIR_PACK": "escapement", "UNSTIR_LEVEL": "5"])
         let store = Store()
         store.pretend(try XCTUnwrap(h.purchases))
-        XCTAssertEqual(h.level.id, "lens-5")
-        XCTAssertEqual(h.level.pack, .lens)
+        XCTAssertEqual(h.level.id, "escapement-5")
+        XCTAssertEqual(h.level.pack, .escapement)
         XCTAssertEqual(store.access(h.level), .owned)
         XCTAssertEqual(store.state(.escapement), .owned)
         XCTAssertEqual(store.ledger.owned, [], "the harness's packs are not StoreKit's")
@@ -221,8 +221,8 @@ final class PackTests: XCTestCase {
         game.commit(rod: 0, steps: -4)
         XCTAssertTrue(game.solved)
         XCTAssertEqual(stored(), before)
-        XCTAssertNil(Best.load("lens-5"))
-        XCTAssertFalse(Best.started("lens-5"))
+        XCTAssertNil(Best.load("escapement-5"))
+        XCTAssertFalse(Best.started("escapement-5"))
         XCTAssertEqual(Store().access(h.level), .needsCard)
         XCTAssertEqual(Store().access(Harness(["UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "3"]).level), .taste)
         Best.unlocked = false
