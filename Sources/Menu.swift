@@ -96,8 +96,6 @@ struct MenuView: View {
     let placeholders: Int
     /// UNSTIR_SHELFDEMO: opens Lens's card from the dock and back, through the calls a finger makes.
     let shelfDemo: Bool
-    /// UNSTIR_CLIPS=b: the cards' other clips.
-    let alternateClips: Bool
     /// The tier picked in the strip, open or not. `shown` trails it while the old list stirs away, and `listed`, the
     /// scroll view's own list, trails that to the end of the switch: rebuilding it stalls a frame (about 40 ms on the
     /// simulator), unseen once the stir has settled over it.
@@ -132,7 +130,7 @@ struct MenuView: View {
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
-         alternateClips: Bool = false, onPick: @escaping (Level) -> Void) {
+         onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = State(initialValue: settings)
         self.onPick = onPick
@@ -140,7 +138,6 @@ struct MenuView: View {
         self.clock = clock
         self.placeholders = placeholders
         self.shelfDemo = shelfDemo
-        self.alternateClips = alternateClips
         let tier = start ?? Tier.stored()
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
@@ -228,7 +225,7 @@ struct MenuView: View {
     /// The card grows out of its cover, or fades in under Reduce Motion.
     @ViewBuilder private var cardView: some View {
         if let card {
-            PackCard(offer: card, clock: clock, alternate: alternateClips, levels: card.levels(placeholders: placeholders), onBack: { show(nil) },
+            PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), onBack: { show(nil) },
                      onPlay: { onPick($0) })
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)

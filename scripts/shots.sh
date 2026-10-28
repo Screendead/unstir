@@ -402,11 +402,6 @@ shot clip-lens-still "Lens's clip on its still: level 3 as dealt, the lens newes
 for t in 2.4 3.2 4.3; do
   shot clip-lens-$t "Lens's clip $t s in, the lens dragged down and back up." CARD=lens STORE=lens:unowned CLOCK=$t
 done
-shot clip-lens-solve-still "Lens's other clip on its still: level 2's twist taken off, the lens's rim whole." \
-  CARD=lens STORE=lens:unowned CLOCK=2.75 CLIPS=b
-for t in 1.6 3.4 4.4; do
-  shot clip-lens-solve-$t "Lens's other clip $t s in." CARD=lens STORE=lens:unowned CLOCK=$t CLIPS=b
-done
 shot clip-escapement-still "Escapement's clip on its still: rod 2 +4 let go, its tick landed, the ratchet a tooth on." \
   CARD=escapement STORE=lens:unowned CLOCK=2.55
 for t in 1.6 2.2 3.6 5.1 5.9; do

@@ -125,8 +125,6 @@ struct Harness {
     let cardLevels: Int
     /// UNSTIR_SHELFDEMO=1: the menu opens Lens's card from the dock and closes it, through the calls a finger makes.
     let shelfDemo: Bool
-    /// UNSTIR_CLIPS=b: each card plays its other clip, where it has two for Jack to choose between.
-    let alternateClips: Bool
     /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
     let typeSize: DynamicTypeSize?
     /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
@@ -247,7 +245,6 @@ struct Harness {
         card = env["UNSTIR_CARD"].flatMap(Offer.init(name:))
         cardLevels = env["UNSTIR_CARDLEVELS"].flatMap(Int.init).map { min(max($0, 0), 30) } ?? 0
         shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
-        alternateClips = env["UNSTIR_CLIPS"] == "b"
         typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
     }
 }
@@ -336,7 +333,7 @@ struct RootView: View {
             } else {
                 MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
                          settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
-                         shelfDemo: harness?.shelfDemo ?? false, alternateClips: harness?.alternateClips ?? false) {
+                         shelfDemo: harness?.shelfDemo ?? false) {
                     show($0)
                 }
                 .transition(dip)

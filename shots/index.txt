@@ -356,10 +356,6 @@ clip-lens-still.png  Lens's clip on its still: level 3 as dealt, the lens newest
 clip-lens-2.4.png  Lens's clip 2.4 s in, the lens dragged down and back up.
 clip-lens-3.2.png  Lens's clip 3.2 s in, the lens dragged down and back up.
 clip-lens-4.3.png  Lens's clip 4.3 s in, the lens dragged down and back up.
-clip-lens-solve-still.png  Lens's other clip on its still: level 2's twist taken off, the lens's rim whole.
-clip-lens-solve-1.6.png  Lens's other clip 1.6 s in.
-clip-lens-solve-3.4.png  Lens's other clip 3.4 s in.
-clip-lens-solve-4.4.png  Lens's other clip 4.4 s in.
 clip-escapement-still.png  Escapement's clip on its still: rod 2 +4 let go, its tick landed, the ratchet a tooth on.
 clip-escapement-1.6.png  Escapement's clip 1.6 s in.
 clip-escapement-2.2.png  Escapement's clip 2.2 s in.

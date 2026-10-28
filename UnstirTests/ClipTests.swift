@@ -5,8 +5,8 @@ import XCTest
 
 /// The pack cards' clips: each plays its level as a real `Game` would, loops without a jump, and holds a still inside it.
 @MainActor final class ClipTests: XCTestCase {
-    private let clips: [(String, Clip)] = [("first stir", .firstStir), ("lens", .lens), ("lens solve", .lensSolve),
-                                           ("escapement", .escapement), ("complete", .complete), ("complete cut", .completeCut)]
+    private let clips: [(String, Clip)] = [("first stir", .firstStir), ("lens", .lens), ("escapement", .escapement),
+                                           ("complete", .complete)]
 
     /// Each reel's stacks are the ones a `Game` shows after the same moves, under an id of no pack level so a win keeps
     /// no best.
@@ -32,7 +32,7 @@ import XCTest
     }
 
     func testTheSolvesSolveAndTheLensComesBackToItsRead() {
-        for clip in [Clip.firstStir, .lensSolve, .escapement] {
+        for clip in [Clip.firstStir, .escapement] {
             XCTAssertEqual(clip.reels.last!.beats.last!.after.count, 0)
         }
         let lens = Clip.lens.reels[0]
@@ -66,8 +66,7 @@ import XCTest
     }
 
     func testAboutSevenSecondsAndAStillInside() {
-        for (name, clip) in [("first stir", Clip.firstStir), ("lens", .lens), ("lens solve", .lensSolve),
-                             ("escapement", .escapement), ("complete cut", .completeCut)] {
+        for (name, clip) in clips {
             XCTAssertEqual(clip.period, 7, accuracy: 1.2, name)
         }
         for (name, clip) in clips {
@@ -79,13 +78,14 @@ import XCTest
         }
     }
 
-    /// A lens follows the finger up and down, up zooming in: the fingertip rises a pitch a step.
+    /// A lens follows the finger up and down, down zooming out: the fingertip falls a pitch a step.
     func testTheLensFingerRidesUpAndDown() {
-        let reel = Clip.lensSolve.reels[0], b = reel.beats[1]
-        let f = reel.frame(at: b.start + 0.6)
-        let rod = reel.level.layout.rods[0], at = SIMD2(rod.x, rod.y) + 0.5 * rod.z * SIMD2(0.7071, -0.7071)
-        XCTAssertEqual(f.live!.angle, 0.9 * Tank.step, accuracy: 1e-9)
-        XCTAssertEqual(f.finger!.at.y, at.y - 0.9 * LevelView.lensPitch, accuracy: 1e-9)
+        let reel = Clip.lens.reels[0], b = reel.beats[0], k = reel.level.lenses.min()!
+        let f = reel.frame(at: b.start + 0.65)
+        let steps = f.live!.angle / Tank.step
+        XCTAssertLessThan(steps, -0.5)
+        let rod = reel.level.layout.rods[k], at = SIMD2(rod.x, rod.y) + 0.5 * rod.z * SIMD2(0.7071, -0.7071)
+        XCTAssertEqual(f.finger!.at.y, at.y - steps * LevelView.lensPitch, accuracy: 1e-9)
         XCTAssertEqual(f.finger!.at.x, at.x, accuracy: 1e-9)
     }
 }

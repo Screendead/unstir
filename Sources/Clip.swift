@@ -23,13 +23,13 @@ struct Clip: Sendable {
         fatalError("a clip has reels")
     }
 
-    /// Each offer's clip. Complete plays the three in turn.
-    static func of(_ offer: Offer, alternate: Bool = false) -> Clip {
+    /// Each offer's clip. Complete cuts between the three.
+    static func of(_ offer: Offer) -> Clip {
         switch offer {
         case .pack(.firstStir): firstStir
-        case .pack(.lens): alternate ? lensSolve : lens
+        case .pack(.lens): lens
         case .pack(.escapement): escapement
-        case .complete: alternate ? completeCut : complete
+        case .complete: complete
         }
     }
 
@@ -40,21 +40,14 @@ struct Clip: Sendable {
     /// drags it down to clean and back up, so it zooms out and in again, crisp at its rim, and lets go where it took it.
     static let lens = Clip(reels: [.lens()], still: 0.5)
 
-    /// Level 2 solved: a twist newest, dragging the lens's rim into its swirl, comes off and the rim closes; then the lens
-    /// is dragged up, zooming in, and down past where it began, zooming out to clean.
-    static let lensSolve = Clip(reels: [.lensSolve()], still: Reel.lensSolve().beats[0].lift + 0.5)
-
     /// Escapement 1 solved in its par of three: a stir, its tick landing; a wait, and a tick; the last stir, whose tick
     /// stops the clock on the clean picture.
     static let escapement = Clip(reels: [.escapement()], still: Reel.escapement().beats[0].lift + 0.6)
 
-    /// The three clips whole, one after another.
-    static let complete = Clip(reels: [.firstStir(), .lens(dips: true), .escapement()], still: firstStir.still)
-
-    /// Each pack's telling beat in turn, inside about seven seconds.
-    static let completeCut = Clip(reels: [cutStory, .lens(dips: true, rest: 0.3, down: 0.6, hold: 0.1, up: 0.6, tail: 0.25),
-                                          .escapement(moves: 1, rest: 0.45, tail: 0.7)],
-                                  still: cutStory.beats[0].lift + 0.5)
+    /// Each pack's telling beat in turn, inside about eight seconds: a vignette, a zoom, a tick.
+    static let complete = Clip(reels: [cutStory, .lens(dips: true, rest: 0.3, down: 0.6, hold: 0.1, up: 0.6, tail: 0.25),
+                                       .escapement(moves: 1, rest: 0.45, tail: 0.7)],
+                               still: cutStory.beats[0].lift + 0.5)
     private static let cutStory = Reel.firstStir(moves: 1, rest: 0.45, tail: 0.6)
 }
 
@@ -173,14 +166,6 @@ struct Reel: Sendable {
         let dealt = level.scramble.last { $0.rod == lens }!.steps
         return Reel(level: level, gestures: [.turn(knob: lens, keys: [(Double(-dealt), down), (Double(-dealt), hold), (0, up)])],
                     rest: rest, gap: 0, tail: tail, dips: dips)
-    }
-
-    static func lensSolve() -> Reel {
-        let level = Level.lens[1]
-        let twist = level.scramble.last!, lens = level.scramble.first!
-        return Reel(level: level, gestures: [.turn(twist.rod, -twist.steps),
-                                             .turn(knob: lens.rod, keys: [(0.9, 0.6), (0.9, 0.2), (Double(-lens.steps), 0.9)])],
-                    rest: 0.8, gap: 0.8, tail: 1.4)
     }
 
     /// Its par's three moves, the second a wait on the clock.

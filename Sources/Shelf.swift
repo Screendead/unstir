@@ -518,11 +518,9 @@ struct PackClip: View {
     let offer: Offer
     let side: CGFloat
     var held: Double?
-    /// The harness's other take on a clip, where there are two to choose from.
-    var alternate = false
 
     var body: some View {
-        ClipPlayer(clip: .of(offer, alternate: alternate), side: side, held: held)
+        ClipPlayer(clip: .of(offer), side: side, held: held)
     }
 }
 
@@ -534,8 +532,6 @@ struct PackCard: View {
     let offer: Offer
     /// The harness's clip time, else the clip runs.
     var clock: Double?
-    /// The harness's other clip, where there are two.
-    var alternate = false
     /// The pack's own, unless the harness lists placeholders.
     var levels: [Level]
     let onBack: () -> Void
@@ -560,8 +556,7 @@ struct PackCard: View {
                         .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
                         .accessibilityAddTraits(.isHeader)
                     Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
-                    PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48), held: clock,
-                             alternate: alternate)
+                    PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48), held: clock)
                         .frame(maxWidth: .infinity).padding(.top, 28)
                     VStack(alignment: .leading, spacing: 9) {
                         fact("for", offer.assumes)

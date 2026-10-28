@@ -1072,9 +1072,9 @@ names and product ids, and Complete's promise to older owners.
     each vignette playing as its time under the tank steps back (12:30 am to 11:40 pm, scene 16's window, a stand-in
     until the level carries F3's clock). Lens: level 3 as dealt, the lens dragged down and back up, ending on the order
     read. Escapement: problem 1 in three, each tick landing. Complete: the three in turn. The dock keeps its covers.
-    Two takes built where there were two good ideas; Claude's recommendations, for Jack to decide: Lens A (the zoom
-    and the read, as asked) over B (level 2 solved), and Complete B (each one's first beat in turn, about 8 s, near
-    the 7 s asked) over A (the three whole, about 21 s). Films `clip-*`, `shelf-dock`. Follow-up: on
+    Jack's calls (round 11): CL1 A, Lens plays the zoom and the read; CL2 B, Complete plays each one's first beat in
+    turn (a vignette, a zoom, a tick, about 8 s). The other takes are gone (set aside: Lens's level 2 solved, and
+    Complete's three whole, about 21 s, too long for a card). Films `clip-*`, `shelf-dock`. Follow-up: on
     `firststir-content` level 1 becomes Sunrise on `SceneLayer` with its own clock, so the First Stir reel must then
     draw with the level's own layer and read its `late`/`early`; `ClipTests` will flag it. Complete keeps three
     tanks drawn, two clear: its cost on the phone is unmeasured. Still open: the purchase art and the social cut.
