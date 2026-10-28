@@ -657,8 +657,11 @@ struct LevelView: View {
     private let shareSheet: Bool
     let onExit: () -> Void
     let onNext: (Level) -> Void
+    /// Back to the menu on a tier other than the stored one: a closed tier's gate.
+    let onLook: (Tier) -> Void
 
-    init(level: Level, harness: Harness?, onExit: @escaping () -> Void, onNext: @escaping (Level) -> Void) {
+    init(level: Level, harness: Harness?, onExit: @escaping () -> Void, onNext: @escaping (Level) -> Void,
+         onLook: @escaping (Tier) -> Void) {
         let game = Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank)
         game.turnTank(harness?.tank ?? 0)
         if let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
@@ -724,6 +727,7 @@ struct LevelView: View {
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
+        self.onLook = onLook
     }
 
     var body: some View {
@@ -787,7 +791,7 @@ struct LevelView: View {
                                 .padding(.top, 14)
                                 .transition(reveal)
                         } else if showResult {
-                            ResultCard(game: game, onExit: leave, onNext: onNext)
+                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
@@ -934,6 +938,11 @@ struct LevelView: View {
     private func leave() {
         Analytics.shared.left(game)
         onExit()
+    }
+
+    private func look(_ tier: Tier) {
+        Analytics.shared.left(game)
+        onLook(tier)
     }
 
     /// Everything that decides what the tank draws, as the log shows it.
@@ -2229,6 +2238,7 @@ struct ResultCard: View {
     let game: Game
     let onExit: () -> Void
     let onNext: (Level) -> Void
+    let onLook: (Tier) -> Void
 
     var body: some View {
         let run = game.level.run
@@ -2271,44 +2281,44 @@ struct ResultCard: View {
             }
             .font(.mono(15, .medium))
             if game.level.id == game.level.tier.levels.last?.id, let up = game.level.tier.step(1) {
-                TierUp(from: game.level.tier, to: up, onNext: onNext, onExit: onExit)
+                TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
     }
 }
 
-/// The last level of a tier goes on up the ladder, in the next tier's own colours. A tier still closed shows what
-/// opens it and goes back to the levels.
+/// The last level of a tier goes on up the ladder, in the next tier's own colours. A tier still closed keeps its
+/// glow behind a lock and opens the menu on its gate, which shows the levels still short of par.
 private struct TierUp: View {
     let from: Tier
     let to: Tier
     let onNext: (Level) -> Void
-    let onExit: () -> Void
+    let onLook: (Tier) -> Void
     @State private var glint = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let open = to.isOpen()
-        Button { open ? onNext(to.levels[0]) : onExit() } label: {
+        Button { open ? onNext(to.levels[0]) : onLook(to) } label: {
             VStack(spacing: 6) {
                 Text(open ? "up a notch" : "par every \(from.name.lowercased()) level to open")
                     .font(.mono(11, .semibold)).tracking(open ? 3 : 0.5).textCase(open ? .uppercase : nil).opacity(0.6)
                 HStack(spacing: 10) {
                     if !open { Image(systemName: "lock.fill").font(.system(size: 16, weight: .semibold)) }
                     Text(to.name.uppercased()).font(.system(size: 26, weight: .black).width(.expanded)).tracking(5)
-                    if open { Text("\u{203A}").font(.system(size: 26, weight: .black)) }
+                    Text("\u{203A}").font(.system(size: 26, weight: .black))
                 }
                 .foregroundStyle(to.sweep)
                 .shadow(color: to.glow.opacity(glint ? 0.9 : 0.5), radius: glint ? 16 : 9)
             }
             .padding(.horizontal, 26).padding(.vertical, 14)
             .background { Capsule().strokeBorder(to.sweep, lineWidth: 1.5).shadow(color: to.glow, radius: glint ? 10 : 5) }
-            .opacity(open ? 1 : 0.45)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. Par every \(from.name) level to open it")
+        .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
         .onAppear {
-            guard open, !reduceMotion else { return }
+            guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 1.1).repeatForever()) { glint = true }
         }
     }

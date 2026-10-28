@@ -127,8 +127,10 @@ shot result "Level 05 result card after a harness solve through the real commit 
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
 shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
-shot tier-up-locked "The same with maelstrom still closed: the button dimmed with a lock, saying par every vortex level opens it." \
+shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying par every vortex level opens it; it opens the menu on maelstrom's gate." \
   SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
+shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over)." \
+  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:000100000010000000000200000
 shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels." \
   SCREEN=result MODE=daily
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
