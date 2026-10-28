@@ -797,6 +797,18 @@ names and product ids, and Complete's promise to older owners.
    (`UNSTIR_UNLOCK` keeps the phone's developer unlock, which any other harness variable clears; the flag's name is
    unchecked against this Xcode's `devicectl`). The first launch bakes the halftone, unoptimised, for 20 s or more;
    later ones read it from Caches. The phone test itself has not been run.
+   Built 2026-10-27 (round 10, for Jack's call on lens sizes; not merged, nothing decided): a lens's drag now counts on
+   a short vertical track beside its knob, up for in, and a drawn fingertip rides up and down on a lens
+   (`lens-levels-all`). The glitter check at x2 (simulator stills at the screen's own pixels, not the phone): at +3 the
+   band just inside the rim is a stripe of dots finer than a pixel, a point or two wide, that shimmers as the lens or a
+   neighbour moves; at +2 the dots there still read as slivers. The order read at x2: a 1-step twist visibly breaks a
+   lens's rim on tri, eye (both sizes) and hex (ring and hub); on quad even 3 steps barely do, as the draft's
+   consequence 3 predicted from its discs grazing. Three complete 25-level tables, each solver-checked with par the
+   optimum, which is the depth on every row (`docs/lens-tables.md`): A, lenses on every rod size, the draft table
+   unchanged (`lens-levels-all`, the PR); B, lenses only on big rods, so only tri and eye (`lens-levels-big`); and A
+   capped at +2 a lens for the glitter (`lens-levels-cap2`). Recommended: A, with quad's three rows (8, 11, 18) moved to
+   hex or eye if quad's order fails on the phone, and the cap left at +3 until the phone shows whether the band's
+   shimmer bothers a player. With 25 levels the Lens cover shows in Release (S1).
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
    Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
@@ -937,6 +949,9 @@ names and product ids, and Complete's promise to older owners.
    Drafted 2026-10-25 (`docs/lens-design.md` section 2, branch `lens-design`): layouts, lens rods and scrambles as
    design intent, checked against the hard lens's rules by `scripts/lens-table.py`; no spiral (open point 1), no pent
    (open point 3). Every par TBD until rod kinds land (27 to 29); par is at most the depth.
+   Built 2026-10-27 as three complete tables, par the solver's optimum on every row (`docs/lens-tables.md`; item 6
+   above): A on `lens-levels-all`, B (big rods only) on `lens-levels-big`, A capped at +2 on `lens-levels-cap2`. Which
+   one is Jack's call.
 34. Escapement: the ratchet knob kind and its tap, and the tick rule (lands on lift, lifts out on a re-grab of the
     open stir, sealed by the next commit of another knob or a ratchet tap, solves on the spot, the clock stopping once
     E is empty), with a test for each case.
