@@ -130,10 +130,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
   scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as
   one sheet (needs Pillow).
-- Lens's draft table: `scripts/lens-table.py [docs/lens-design.md] [--pitches 4]` reads the level rows of
-  `docs/lens-design.md` and checks each against the hard lens's rules with no app code (a lens moves only its core, so
+- Lens's tables: `scripts/lens-table.py [docs/lens-design.md] [--pitches 4] [--solve]` reads the level rows of
+  a doc (`docs/lens-tables.md` holds the built ones) and checks each against the hard lens's rules with no app code (a lens moves only its core, so
   overlap decides commutation): depth after the parse, dealt lens steps and nets, and how far each twist dealt over a
-  lens drags its rim, in dot pitches. It exits non-zero on a break.
+  lens drags its rim, in dot pitches; `--solve` also runs `scripts/solve.sh` on each row and breaks one whose
+  optimum or the app's parse is not its depth. It exits non-zero on a break.
 - First Stir's outline: `docs/first-stir-outline.md` is the pack's story, scene table and art spec, approved by Jack
   (2026-10-26) with his answers marked under its open points. `scripts/first-stir-compositions.py` draws plans of three of its scenes (each rod's disc and core,
   the part of a core another disc reaches, where each vignette sits) to `shots/first-stir-composition-*.png` (needs
@@ -264,7 +265,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   magenta ring and heavy tap, which in a run mark only a commit that pops one of the scramble's entries; a win the fine pass calls also settles one, as the tank's
   last heal, while one of the scramble's entries is left and unless its move healed one. `Game.nextTank` carries it to
   the next tank. `Game.turnTank` is a move that pushes no entry: turns in a row join, and one netting a whole turn
-  drops. The result card of a tier's last level goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or dimmed with a lock while that tier is closed, going back to the levels. `Game.history` holds rod stirs by slot and
+  drops. The result card of a tier's last level goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or, while that tier is closed, as bright behind a lock, opening the menu on that tier's gate. `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where the level's motion is the tank, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
@@ -351,12 +352,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
   opens without one, and a card with none says "buy" alone.
-  `Level.lens` holds three levels for the hard lens's phone test, the draft table's free taste (`docs/lens-design.md`): tri, rod 0 a lens, on the halftone, each dealt lens entry +1 to +3 and each lens netting at most +3,
-  par the solver's optimum (`testLensLevels`). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
+  `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
+  rods only, is the alternative on branch `lens-levels-big`), on the halftone: each dealt lens entry +1 to +3, each lens
+  netting at most +3, no entry merging as it is dealt, and par the depth (`testLensLevels`, which pins the table), the
+  solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks a
+  table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
   (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
   one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
-  through the rod's own `liveAngle` and detent, so its count, dashes, clicks and the iris's turn are a rod's, a step
-  at a time, the dashes running clockwise round the disc for a zoom in.
+  through the rod's own `liveAngle` and detent, so its count, clicks and the iris's turn are a rod's, a step at a time,
+  but its dashes run up a short vertical track beside the knob for a zoom in and down it for out (`track`, on the side
+  away from the finger), not round the disc. A drawn fingertip (`UNSTIR_FINGER`) on a lens rides up and down too.
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
   (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
@@ -400,7 +405,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
   word it and settings say (`ConsentWords`): on a plain launch while undecided,
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
-  link, "What does it send?", that opens the full list of what is sent under the line; Yes and No the same
+  link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
   analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
   leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out

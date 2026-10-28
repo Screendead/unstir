@@ -300,6 +300,8 @@ struct RootView: View {
     /// UNSTIR_CARDLEVELS, kept past the harness's first launch so the card's list stays while it is played from.
     @State private var placeholders = 0
     @State private var typeSize: DynamicTypeSize?
+    /// The tier the next menu opens on, set by a closed tier's button on a result card.
+    @State private var look: Tier?
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     @Environment(\.scenePhase) private var phase
@@ -332,11 +334,12 @@ struct RootView: View {
             } else if let level {
                 LevelView(level: level, harness: harness,
                           onExit: { show(nil) },
-                          onNext: { show($0) })
+                          onNext: { show($0) },
+                          onLook: { show(nil, look: $0) })
                     .id(level)
                     .transition(dip)
             } else {
-                MenuView(start: harness?.menuTier, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
+                MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
                          settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
                          shelfDemo: harness?.shelfDemo ?? false) {
                     show($0)
@@ -379,8 +382,10 @@ struct RootView: View {
     }
 
     /// A level past its pack's taste that the player doesn't own shows the pack's card over the menu instead.
-    private func show(_ next: Level?, keep: Bool = false) {
+    /// `look`: the tier the menu opens on in place of the stored one, locked or not.
+    private func show(_ next: Level?, keep: Bool = false, look: Tier? = nil) {
         if !keep { harness = nil }
+        self.look = look
         let gate = next.flatMap { Store.shared.card(for: $0) }
         if gate != nil { card = gate.map(Offer.pack) }
         withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil ? next : nil }

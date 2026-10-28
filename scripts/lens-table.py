@@ -8,8 +8,12 @@ when everything above commutes, and pops at 0), commutation decided by overlap a
 the lens entries, how many entries come off at the start, and every rule broken: a dealt lens entry outside +1 to +3,
 a lens rod netting past +3 or out of every twist rod's reach, an entry the parse merges, or a twist dealt over a lens that drags its rim less than
 --pitches dot pitches (0.03 tank units) at the rim's deepest point inside the twist's disc.
-Usage: scripts/lens-table.py [docs/lens-design.md] [--pitches 4]"""
+With --solve it also runs scripts/solve.sh on each row and breaks a row whose optimum is not its depth, as par is the
+depth only where untwisting is the optimum.
+Usage: scripts/lens-table.py [docs/lens-design.md] [--pitches 4] [--solve]"""
 import math
+import os
+import subprocess
 import re
 import sys
 
@@ -100,6 +104,9 @@ def main():
         i = args.index("--pitches")
         pitches = float(args[i + 1])
         del args[i:i + 2]
+    solve = "--solve" in args
+    if solve:
+        args.remove("--solve")
     path = args[0] if args else "docs/lens-design.md"
     rows = 0
     failed = False
@@ -114,6 +121,17 @@ def main():
         rods = LAYOUTS[layout]
         free = sum(all(not interacts(rods, lenses, e[0], f[0]) for f in stack[i + 1:]) for i, e in enumerate(stack))
         lens_entries = sum(r in lenses for r, _ in stack)
+        if solve:
+            here = os.path.dirname(os.path.abspath(__file__))
+            out = subprocess.run([os.path.join(here, "solve.sh"), layout, cells[4], "lenses=" + ",".join(map(str, sorted(lenses)))],
+                                 capture_output=True, text=True).stdout
+            found = re.search(r"^optimum (\d+)", out, re.M)
+            optimum = int(found.group(1)) if found else None
+            parsed = re.search(r"^entries (\d+)", out, re.M)
+            if not parsed or int(parsed.group(1)) != len(stack):
+                problems.append(f"the app's parse leaves {parsed and parsed.group(1)} entries, not {len(stack)}")
+            if optimum != len(stack):
+                problems.append(f"optimum {optimum}, not the depth {len(stack)}")
         print(f"{n:2d} {layout:4s} lenses {','.join(map(str, sorted(lenses))):7s} depth {len(stack):2d}, "
               f"lens entries {lens_entries}, free at start {free}" + ("".join(f"\n     {p}" for p in problems)))
         failed |= bool(problems)
