@@ -240,7 +240,7 @@ final class AnalyticsTests: XCTestCase {
     func testAnAnswerBeforeStartIsKept() async {
         let a = Analytics(defaults: defaults)
         a.today = { "2026-10-01" }
-        a.configure(env: [:], harnessed: false)
+        a.configure(env: [:], harnessed: false, built: true)
         XCTAssertTrue(a.asks)
         a.decide(true)
         XCTAssertEqual(defaults.string(forKey: "analytics.consent"), "yes")
@@ -250,17 +250,17 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertEqual(wire.names, ["installed"])
 
         let shot = Analytics(defaults: defaults)
-        shot.configure(env: ["UNSTIR_CONSENT": "ask"], harnessed: true)
+        shot.configure(env: ["UNSTIR_CONSENT": "ask"], harnessed: true, built: true)
         XCTAssertTrue(shot.asks)
         XCTAssertFalse(shot.opensSends)
         XCTAssertEqual(shot.consent, .undecided)
         shot.decide(false)
         XCTAssertEqual(defaults.string(forKey: "analytics.consent"), "yes")
         let plain = Analytics(defaults: defaults)
-        plain.configure(env: ["UNSTIR_LEVEL": "3"], harnessed: true)
+        plain.configure(env: ["UNSTIR_LEVEL": "3"], harnessed: true, built: true)
         XCTAssertFalse(plain.asks)
         let sends = Analytics(defaults: defaults)
-        sends.configure(env: ["UNSTIR_CONSENT": "sends"], harnessed: true)
+        sends.configure(env: ["UNSTIR_CONSENT": "sends"], harnessed: true, built: true)
         XCTAssertTrue(sends.asks)
         XCTAssertTrue(sends.opensSends)
         XCTAssertEqual(sends.consent, .undecided)
@@ -341,16 +341,65 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertNil(defaults.object(forKey: "analytics.consent"))
 
         let off = Analytics(defaults: defaults)
-        off.start(env: ["UNSTIR_LEVEL": "3"], harnessed: true, key: "A-EU-0000000000")
+        off.start(env: ["UNSTIR_LEVEL": "3"], harnessed: true, key: "A-EU-0000000000", built: true)
         XCTAssertFalse(off.on)
         let keyless = Analytics(defaults: defaults)
-        keyless.start(env: [:], harnessed: false, key: "")
+        keyless.start(env: [:], harnessed: false, key: "", built: true)
         XCTAssertFalse(keyless.on)
         let logging = Analytics(defaults: defaults)
-        logging.start(env: ["UNSTIR_ANALYTICS": "log"], harnessed: false, key: nil)
+        logging.start(env: ["UNSTIR_ANALYTICS": "log"], harnessed: false, key: nil, built: true)
         XCTAssertTrue(logging.on)
         XCTAssertNil(logging.sender)
         XCTAssertNil(defaults.object(forKey: "analytics"))
+    }
+
+    /// v1 ships with the layer left out: a plain launch neither asks nor shows the switch, and nothing it does reaches
+    /// the analytics keys, whatever key or consent the phone holds.
+    func testABuildWithoutAnalyticsAsksAndKeepsNothing() {
+        XCTAssertFalse(Analytics.built, "the test host builds with ANALYTICS = NO, as v1 ships")
+        let key = "A-EU-0000000000"
+        for env in [[:], ["UNSTIR_ANALYTICS": "log"]] {
+            let a = Analytics(defaults: defaults)
+            a.today = { "2026-10-01" }
+            a.configure(env: env, harnessed: false)
+            XCTAssertFalse(a.asks)
+            XCTAssertFalse(a.shown)
+            a.start(env: env, harnessed: false, key: key)
+            XCTAssertFalse(a.on)
+            a.opened(today: "2026-10-01")
+            a.opened(today: "2026-10-08")
+            a.phase(.active)
+            a.cardSeen(.lens)
+            a.tasteFinished(.lens)
+            a.purchased(Pack.lens.productID)
+            a.undid()
+            a.resumed()
+            a.phase(.background)
+            XCTAssertNil(a.sender)
+        }
+        XCTAssertNil(defaults.object(forKey: "analytics"))
+        XCTAssertNil(defaults.object(forKey: "analytics.consent"))
+
+        // A phone that said yes on an earlier build sends nothing either.
+        defaults.set("yes", forKey: "analytics.consent")
+        let earlier = Analytics(defaults: defaults)
+        earlier.configure(env: [:], harnessed: false)
+        earlier.start(env: [:], harnessed: false, key: key)
+        earlier.opened(today: "2026-10-09")
+        XCTAssertFalse(earlier.on)
+        XCTAssertFalse(earlier.asks)
+        XCTAssertNil(earlier.sender)
+        XCTAssertNil(defaults.object(forKey: "analytics"))
+
+        // Shots can still draw the question and the switch, storing nothing.
+        let shot = Analytics(defaults: defaults)
+        shot.configure(env: ["UNSTIR_CONSENT": "ask"], harnessed: true)
+        XCTAssertTrue(shot.asks)
+        XCTAssertTrue(shot.shown)
+        let plain = Analytics(defaults: defaults)
+        plain.configure(env: ["UNSTIR_SETTINGS": "1"], harnessed: true)
+        XCTAssertFalse(plain.asks)
+        XCTAssertFalse(plain.shown)
     }
 
     func testAKeyNamesItsRegion() {

@@ -67,9 +67,9 @@ Once Jack has heard the argument and still decides, carry out his decision.
 edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitignored).
 
 - Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result).
-  It passes the shell's `APTABASE_KEY`, Aptabase's app key, into Info.plist's `AptabaseKey`, over
-  `Config/Local.xcconfig` (gitignored), which `Config/Unstir.xcconfig` includes for Xcode's own builds and archives;
-  with neither analytics is off. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
+  It passes the shell's `ANALYTICS` (YES builds analytics in; NO, the default, is v1's) and `APTABASE_KEY`, Aptabase's
+  app key, into Info.plist's `Analytics` and `AptabaseKey`, over `Config/Local.xcconfig` (gitignored), which
+  `Config/Unstir.xcconfig` includes for Xcode's own builds and archives; without both analytics is off. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
   build's events as Debug.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
@@ -525,15 +525,21 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   in Release, without First Stir, the zoom and the tick alone. Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
-  (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
+  (undecided, yes, no; stored as `analytics.consent`). v1 ships without them: the build's `ANALYTICS`
+  (`Config/Unstir.xcconfig`, NO) sets Info.plist's `Analytics`, read as `Analytics.built`, and while it is off a plain
+  launch never asks, settings has no switch (`Analytics.shown`), `start` leaves the mode off whatever the key, and
+  nothing reaches `analytics` or `analytics.consent` (`testABuildWithoutAnalyticsAsksAndKeepsNothing`); the privacy
+  manifest declares no collected data, so a build with `ANALYTICS = YES` must declare analytics's three types again.
+  The rest of this paragraph is that build. Until yes nothing is queued or sent and no `Sender` exists, and a
   no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
   the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
   word it and settings say (`ConsentWords`): on a plain launch while undecided,
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
-  analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
-  leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
+  analytics switch (`NeonToggle`, which calls `decide`) where the build has analytics, "send log", which hands `Log.url` to the share sheet, and
+  "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)), for now the github.com page of
+  `docs/privacy-policy.md`. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
   bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
@@ -628,12 +634,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch, so shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
-  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_ANALYTICS=log` writes each analytics event to the
-  flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
+  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
   opens the card's list); `UNSTIR_CONSENT=yes`
-  or `=no` answers for the launch, never stored, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
+  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
   `UNSTIR_SOUND=1`. This is how screenshots and films

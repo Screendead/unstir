@@ -44,7 +44,7 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch, the analytics question answered: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
+shot menu "Menu on first launch (in a build with analytics, the question answered): only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
 shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
@@ -484,8 +484,9 @@ shot card-lens-ax "Lens's card at the largest accessibility text size, its facts
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
 shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again." CONSENT=sends
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
-shot consent-settings-on "The gear's sheet: the analytics switch on, and send log." CONSENT=yes SETTINGS=1
-shot consent-settings-off "The gear's sheet: the analytics switch off, and send log." CONSENT=no SETTINGS=1
+shot consent-settings-on "The gear's sheet: the analytics switch on, send log and privacy policy." CONSENT=yes SETTINGS=1
+shot consent-settings-off "The gear's sheet: the analytics switch off, send log and privacy policy." CONSENT=no SETTINGS=1
+shot settings "The gear's sheet in a build without analytics, v1's: send log and privacy policy, no switch." SETTINGS=1
 
 # Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
 # sub-dial (a wound-back clock's mirrored), the stipulation under the tank. Clocks are rods, + forward, - wound back.
