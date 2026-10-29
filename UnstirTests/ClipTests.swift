@@ -66,6 +66,18 @@ import XCTest
         XCTAssertEqual(a.knobs.values.reduce(0, +), b.knobs.values.reduce(0, +), accuracy: 1e-9)
     }
 
+    /// Complete's cut as a Release build sells it, without First Stir: a zoom, then a tick, and its still on the tank.
+    func testCompletesCutWithoutFirstStir() {
+        let clip = Clip.cut(of: [.lens, .escapement])
+        XCTAssertEqual(clip.reels.map(\.level.pack), [.lens, .escapement])
+        XCTAssertTrue(clip.still > 0 && clip.still < clip.period)
+        let (reel, _, t) = clip.reel(at: clip.still)
+        let f = reel.frame(at: t)
+        XCTAssertEqual(f.dip, 0)
+        XCTAssertNil(f.finger)
+        XCTAssertEqual(Clip.cut(of: Pack.allCases).period, Clip.complete.period, accuracy: 1e-9)
+    }
+
     func testAboutSevenSecondsAndAStillInside() {
         for (name, clip) in clips {
             XCTAssertEqual(clip.period, 7, accuracy: 1.2, name)

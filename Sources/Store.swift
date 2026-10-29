@@ -24,12 +24,12 @@ struct Ledger: Equatable, Sendable {
     /// Owned through its own product or Complete; otherwise its own product's state, else Complete's.
     func state(_ pack: Pack) -> Purchase {
         let own = products[pack.productID] ?? .unowned, complete = products[Pack.completeID] ?? .unowned
-        if own == .owned || complete == .owned { return .owned }
+        if own == .owned || (complete == .owned && Pack.sold().contains(pack)) { return .owned }
         // Complete's failed attempt was made on Complete's card, and says nothing about this pack.
         return own != .unowned ? own : complete == .failed ? .unowned : complete
     }
 
-    var owned: Set<Pack> { Set(Pack.allCases.filter { state($0) == .owned }) }
+    var owned: Set<Pack> { Set(Pack.sold().filter { state($0) == .owned }) }
 
     /// A failure belongs to the attempt, so it goes when the card that showed it closes.
     mutating func forgetFailures() {
