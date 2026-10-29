@@ -216,14 +216,14 @@ extension Level {
         (.pent, "0:g,1:g,2:r,3:b,4:w", "4:+4,2:+4,1:+2,0:+2,3:+5,1:+3"),
         (.pent, "0:g,1:w,2:b,3:b,4:r", "1:-5,2:-4,3:-5,0:+3,2:-5,4:-5,3:+5"),
         (.pent, "0:b,1:w,2:r,3:r,4:g", "1:+5,2:-2,4:+3,0:+4,3:-2,2:-3,3:-3,2:+4"),
-        // Colour Order, on the movement: cyan, magenta and yellow, each pair sharing a channel, so overlapping inks block.
+        // Colour Order, on the medusae: cyan, magenta and yellow, each pair sharing a channel, so overlapping inks block.
         (.tri, "0:m,1:c,2:w", "2:-5,1:+5,0:-4,1:-5"),
         (.quad, "0:w,1:m,2:c,3:y", "0:-5,1:+4,3:-4,2:-2"),
         (.quad, "0:y,1:w,2:m,3:c", "1:-3,2:-3,0:+5,3:+3,2:+5"),
         (.eye, "0:c,1:w,2:y,3:m", "1:+5,0:+5,2:-2,0:-5,3:+5"),
         (.pent, "0:c,1:c,2:m,3:w,4:y", "3:+3,0:+5,4:+3,0:+3,2:-2,1:+2"),
         (.pent, "0:m,1:y,2:c,3:w,4:y", "3:+3,2:+5,4:+5,1:+4,0:-3,1:-5,2:-3"),
-        // Overprint, on the cathedral: primaries and inks together; red passes cyan, and blocks yellow and magenta.
+        // Overprint, on the radiolarians: primaries and inks together; red passes cyan, and blocks yellow and magenta.
         (.quad, "0:c,1:b,2:y,3:w", "3:-5,2:-2,1:-4,0:+3,1:-3,0:-3"),
         (.eye, "0:w,1:m,2:g,3:b", "0:-2,2:+3,3:+4,1:+3,3:-2,1:-4"),
         (.eye, "0:w,1:b,2:y,3:m", "0:-4,3:+5,1:-2,2:-3,3:+5,1:+3,3:-4"),
@@ -247,7 +247,7 @@ extension Level {
 
     /// Prism's trays, six specimens each, and the plate each is engraved on.
     static let prismTrays = ["Two Colours", "Three Colours", "Colour Order", "Overprint", "Spectrum"]
-    static let prismPlates: [Picture] = [.fern, .seeds, .movement, .cathedral, .nautilus]
+    static let prismPlates: [Picture] = [.fern, .seeds, .medusae, .radiolaria, .nautilus]
     /// Each tray's opener says the rule it adds, as the first tray's says the pack's.
     static let prismNotes = ["Each rod stirs only its knob's colours.", "Red, green and blue pass through each other.",
                              "Inks that share a colour block each other.", "Red passes cyan, and blocks yellow and magenta.",

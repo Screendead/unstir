@@ -57,7 +57,7 @@ Red, green and blue rods. The primaries share no channel either, so three words 
 | 11 | pent | 0 g, 1 w, 2 b, 3 b, 4 r | `1:-5,2:-4,3:-5,0:+3,2:-5,4:-5,3:+5` | 7 | 3 / 1 | 2 | 1.69 | 11 | 56% | 3% |
 | 12 | pent | 0 b, 1 w, 2 r, 3 r, 4 g | `1:+5,2:-2,4:+3,0:+4,3:-2,2:-3,3:-3,2:+4` | 8 | 3 / 2 | 2 | 1.61 | 12 | 67% | 5% |
 
-## Tray 3: Colour Order, on the movement
+## Tray 3: Colour Order, on the medusae
 
 Cyan, magenta and yellow rods. Each pair of inks shares one channel (cyan and magenta blue, and so on), so overlapping inks of different colours block each other as rods of one colour do: the order matters again, and only one entry is free at the start on every specimen. The read is which shared channel a ghost belongs to.
 
@@ -70,7 +70,7 @@ Cyan, magenta and yellow rods. Each pair of inks shares one channel (cyan and ma
 | 17 | pent | 0 c, 1 c, 2 m, 3 w, 4 y | `3:+3,0:+5,4:+3,0:+3,2:-2,1:+2` | 6 | 1 / 1 | 4 | 1.44 | 15 | 67% | 6% |
 | 18 | pent | 0 m, 1 y, 2 c, 3 w, 4 y | `3:+3,2:+5,4:+5,1:+4,0:-3,1:-5,2:-3` | 7 | 1 / 1 | 4 | 1.21 | 17 | 67% | 8% |
 
-## Tray 4: Overprint, on the cathedral
+## Tray 4: Overprint, on the radiolarians
 
 Primaries and inks together. A primary passes the ink that lacks it (red passes cyan) and blocks the two that hold it, so a knob's tint decides, entry by entry, what it can pass.
 

@@ -549,6 +549,6 @@ prism-swatch-b.png  Prism specimen 8 with the b swatch held: that channel's line
 prism-letters-8.png  Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB.
 prism-letters-14.png  Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG.
 prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
-prism-plate-movement.png  Prism's movement plate under pent's knobs, unstirred.
-prism-plate-cathedral.png  Prism's cathedral plate under pent's knobs, unstirred.
+prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
+prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
 prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.

@@ -565,6 +565,6 @@ done
 hold=5 shot prism-letters-8 "Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB." \
   PACK=prism LEVEL=8 OWNED=prism LETTERS=1
 hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG." PACK=prism LEVEL=14 OWNED=prism LETTERS=1
-for plate in seeds movement cathedral nautilus; do
+for plate in seeds medusae radiolaria nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1
 done
