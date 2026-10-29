@@ -130,7 +130,8 @@ struct NeonToggle: ToggleStyle {
     }
 }
 
-/// The gear's sheet: the analytics switch, the log and the privacy policy, black, sized to what it holds.
+/// The gear's sheet: the analytics switch where the build has analytics, the log and the privacy policy, black, sized
+/// to what it holds.
 struct SettingsSheet: View {
     /// Apple's guideline 5.1.1(i) wants it reachable in the app. The plain github.com page until docs/ is served as a
     /// site.
@@ -144,13 +145,15 @@ struct SettingsSheet: View {
             Text(ConsentWords.settings).font(.mono(11, .semibold)).opacity(0.5).padding(.top, 26)
                 .accessibilityAddTraits(.isHeader)
             VStack(alignment: .leading, spacing: 0) {
-                Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
-                    row(ConsentWords.analytics,
-                        analytics.consent == .yes ? ConsentWords.analyticsOn : ConsentWords.analyticsOff)
+                if analytics.shown {
+                    Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
+                        row(ConsentWords.analytics,
+                            analytics.consent == .yes ? ConsentWords.analyticsOn : ConsentWords.analyticsOff)
+                    }
+                    .toggleStyle(NeonToggle())
+                    .padding(.vertical, 12)
+                    rule
                 }
-                .toggleStyle(NeonToggle())
-                .padding(.vertical, 12)
-                rule
                 ShareLink(item: Log.url) { outward(ConsentWords.sendLog, ConsentWords.sendLogDetail) }
                     .shareTap()
                 rule

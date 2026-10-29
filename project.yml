@@ -35,6 +35,7 @@ targets:
         UILaunchScreen: {}
         CADisableMinimumFrameDurationOnPhone: true
         UIUserInterfaceStyle: Dark
+        Analytics: $(ANALYTICS)
         AptabaseKey: $(APTABASE_KEY)
         AnalyticsPlaytest: $(ANALYTICS_PLAYTEST)
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]

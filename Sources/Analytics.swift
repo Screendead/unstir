@@ -103,7 +103,13 @@ final class Analytics {
         case send(Sender.Endpoint, queue: URL, transport: Sender.Transport)
     }
 
+    /// Info.plist's `Analytics`, which the build's ANALYTICS sets. Off, the game shows no question or switch and
+    /// records and sends nothing; only a harness launch with UNSTIR_CONSENT draws them, for shots.
+    static let built = Bundle.main.object(forInfoDictionaryKey: "Analytics") as? String == "YES"
+
     private(set) var consent: Consent
+    /// Whether settings shows the switch: in a build with analytics, or a harness launch with UNSTIR_CONSENT.
+    private(set) var shown = false
     /// Whether the menu asks the question while it is undecided: on a plain launch, or a harnessed one with
     /// UNSTIR_CONSENT=ask.
     private(set) var asks = false
@@ -132,26 +138,32 @@ final class Analytics {
 
     /// Before the first frame, so the menu's question shows at once and an answer given before `start` is kept.
     /// UNSTIR_ANALYTICS=log counts as a yes and stores nothing. Under any other harness flag nothing is stored either:
-    /// UNSTIR_CONSENT=yes or no answers for the launch, =ask asks, =sends asks with the list open.
-    func configure(env: [String: String], harnessed: Bool) {
-        if env["UNSTIR_ANALYTICS"] == "log" {
+    /// UNSTIR_CONSENT=yes or no answers for the launch, =ask asks, =sends asks with the list open. In a build without
+    /// analytics only UNSTIR_CONSENT does anything, and a plain launch neither asks nor stores.
+    func configure(env: [String: String], harnessed: Bool, built: Bool = Analytics.built) {
+        if built, env["UNSTIR_ANALYTICS"] == "log" {
+            shown = true
             consent = .yes
         } else if harnessed {
             let c = env["UNSTIR_CONSENT"]
+            shown = built || c != nil
             opensSends = c == "sends"
             asks = c == "ask" || opensSends
             consent = asks ? .undecided : c.flatMap(Consent.init(rawValue:)) ?? consent
-        } else {
+        } else if built {
+            shown = true
             // Without a key the answer is still kept, for the build that has one.
             stores = true
             asks = true
         }
     }
 
-    /// The launch's mode: logging with UNSTIR_ANALYTICS=log; off under any other harness flag or without an app key;
-    /// otherwise sending.
+    /// The launch's mode: off in a build without analytics; logging with UNSTIR_ANALYTICS=log; off under any other
+    /// harness flag or without an app key; otherwise sending.
     func start(env: [String: String], harnessed: Bool,
-               key: String? = Bundle.main.object(forInfoDictionaryKey: "AptabaseKey") as? String) {
+               key: String? = Bundle.main.object(forInfoDictionaryKey: "AptabaseKey") as? String,
+               built: Bool = Analytics.built) {
+        guard built else { return }
         if env["UNSTIR_ANALYTICS"] == "log" {
             start(.log, stores: false)
         } else if !harnessed, let endpoint = key.flatMap(Sender.Endpoint.init(key:)) {

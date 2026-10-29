@@ -44,7 +44,7 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch, the analytics question answered: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
+shot menu "Menu on first launch (in a build with analytics, the question answered): only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
 shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
@@ -427,6 +427,7 @@ shot consent-sends "First launch: the analytics question with its link opened, t
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
 shot consent-settings-on "The gear's sheet: the analytics switch on, send log and privacy policy." CONSENT=yes SETTINGS=1
 shot consent-settings-off "The gear's sheet: the analytics switch off, send log and privacy policy." CONSENT=no SETTINGS=1
+shot settings "The gear's sheet in a build without analytics, v1's: send log and privacy policy, no switch." SETTINGS=1
 
 # Escapement 1, the packs mock-up's problem: tri 0:-1,1:+3,0:-2,2:-4, rod 0 the clock with a ratchet for a knob, unstirred
 # in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
