@@ -1,4 +1,4 @@
-menu.png  Menu on first launch, the analytics question answered: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23.
+menu.png  Menu on first launch (in a build with analytics, the question answered): only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
 menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
 menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, vortex still locked.
@@ -371,10 +371,11 @@ card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in 
 shelf-menu-ax.png  The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5).
 card-lens-ax.png  Lens's card at the largest accessibility text size, its facts stacked.
 consent-ask.png  First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no.
-consent-sends.png  First launch: the analytics question with its link opened, the full list of what it sends.
+consent-sends.png  First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again.
 consent-gear.png  Menu with the settings gear beside the title, analytics answered yes.
-consent-settings-on.png  The gear's sheet: the analytics switch on, and send log.
-consent-settings-off.png  The gear's sheet: the analytics switch off, and send log.
+consent-settings-on.png  The gear's sheet: the analytics switch on, send log and privacy policy.
+consent-settings-off.png  The gear's sheet: the analytics switch off, send log and privacy policy.
+settings.png  The gear's sheet in a build without analytics, v1's: send log and privacy policy, no switch.
 escapement-1.png  Escapement 1: rod 0 the clock, its disc dashed vermilion at all times, its ratchet read against the sub-dial; par 3.
 escapement-1-ticked.png  Escapement 1 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on.
 escapement-1-lost.png  Escapement 1, then rod 1 -3: its tick finds no seam and pushes, so the move loses at once: the vermilion +1, lost. stamped by the clock, the card's undo and again.
