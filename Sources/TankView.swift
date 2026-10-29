@@ -148,17 +148,13 @@ final class Game {
     struct Clock {
         /// Ticks standing on each clock, by rod, for its ratchet wheel.
         var ticks: [Int: Int] = [:]
-        /// The ticks left to spend, each clock's tick taking one (Jack's call EL1, round 11).
-        var budget = 0
-        /// Out of ticks: the budget is spent with twists still on the picture, so no move is left.
+        /// Out of ticks: no clock has a tick left to spend and twists are still on the picture, so no move is left.
         var lost = false
         /// The clock whose tick pushed last, and the one that stopped last.
         var pushed: Int?
         var stopped: Int?
     }
     private(set) var escapement = Clock()
-    /// What the clocks owe on the stack as it stands, so a demonstration and the problem each start with their own.
-    private var freshClock: Clock { Clock(budget: level.budget(on: stack)) }
     /// Escapement: the newest move's ticks in the order they landed, each clock's with the stack it changed, for the view
     /// to play them in turn.
     private(set) var tick: [(stack: [Twist], rod: Int, dir: Int)] = []
@@ -177,19 +173,23 @@ final class Game {
         let dir = level.woundBack.contains(clock) ? -1 : 1
         return stack.filter { $0.rod == clock && $0.steps * dir > 0 }.reduce(0) { $0 + abs($1.steps) }
     }
-    /// Escapement: the ticks clock `clock` still owes before it stops. Without a pushed tick each move takes one off while
-    /// it runs, and nothing else reaches it, so the slowest clock's is the moves left to play.
+    /// Escapement: the ticks clock `clock` has left, its hub's count (Jack's call ES2, round 12). Only its own ticks
+    /// change its rod's steps, each by one whether it merges or pushes, so this is what it owed as dealt less its ticks:
+    /// nothing needs storing, and undo and reset bring it back with the stack.
     func owed(_ clock: Int) -> Int { level.owed(clock, on: stack) }
-    /// Escapement: the ticks left to spend.
-    var budget: Int { escapement.budget }
+    /// Escapement: the ticks left to spend, the header's count: every clock's together.
+    var budget: Int { level.budget(on: stack) }
     /// Escapement: whether the clock on `rod` still runs, holding an entry.
     func running(_ rod: Int) -> Bool { entries.contains { $0.twist.rod == rod } }
+    /// Escapement: whether the clock on `rod` ticks after the next move: it holds an entry and has a tick left. A clean
+    /// line empties its rod exactly as its count reaches 0; after a pushed tick the rod never empties, and the count
+    /// stops it.
+    func canTick(_ rod: Int) -> Bool { owed(rod) > 0 && running(rod) }
 
     init(level: Level, tankTurned: Bool? = nil, swirled: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil) {
         self.level = level
         entries = Self.dealt(level)
         brim = level.run?.brim ?? 0
-        escapement = Clock(budget: level.budget)
         firstTry = level.run != nil || !Best.started(level.id)
         self.tankTurned = tankTurned ?? Best.tankTurned
         storesTankTurned = tankTurned == nil
@@ -371,8 +371,7 @@ final class Game {
     /// Escapement's waiting move, a tap on any ratchet: it only ticks the clocks. Once every clock has stopped there is
     /// nothing to wait for.
     func wait(on ratchet: Int) {
-        guard !finished, level.kind(of: ratchet) == .ratchet, budget > 0, level.clocks.contains(where: { running($0.rod) })
-        else { return }
+        guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return }
         guard !ticksRefused(entries) else { Log.write("wait refused"); return }
         before.append((entries, escapement))
         healsBefore.append(heals)
@@ -386,26 +385,25 @@ final class Game {
         settle(healed: healed > 0)
     }
 
-    /// Escapement: after a move, each clock that still holds an entry as its turn comes ticks its step, clockwise from
-    /// twelve, so one clock's tick can uncover the next's seam on the same move, and spends one of the budget. A tick
-    /// that pushes buries an entry no continuation pops, but the tank plays on (Jack's call EL1, round 11) until the
-    /// budget is spent; spent with twists still on the picture, the tank is out of ticks. It returns how many of the
-    /// scramble's entries the ticks popped.
+    /// Escapement: after a move, each clock with a tick left that still holds an entry as its turn comes ticks its step,
+    /// clockwise from twelve, so one clock's tick can uncover the next's seam on the same move, and spends one of its
+    /// own count. A tick that pushes buries an entry no continuation pops, but the tank plays on (Jack's call EL1, round
+    /// 11); a clock stops once its count is spent (ES2, round 12), and once none can tick with twists still on the
+    /// picture, the tank is out of ticks. It returns how many of the scramble's entries the ticks popped.
     @discardableResult private func landTicks() -> Int {
         tick = []
         var healed = 0
-        for c in level.clocks where escapement.budget > 0 {
+        for c in level.clocks where owed(c.rod) > 0 {
             let from = stack
             guard let result = Self.tick(&entries, on: c, in: level, popped: { if !$0.pushed { healed += 1 } }),
                   result != .refused else { continue }
             escapement.ticks[c.rod, default: 0] += 1
-            escapement.budget -= 1
             tick.append((from, c.rod, c.dir))
             if result == .pushed {
                 tickPushes += 1
                 escapement.pushed = c.rod
             }
-            if !running(c.rod) {
+            if owed(c.rod) == 0 {
                 clockStops += 1
                 stops[c.rod, default: 0] += 1
                 escapement.stopped = c.rod
@@ -413,9 +411,9 @@ final class Game {
         }
         guard !tick.isEmpty else { return healed }
         tickEvents += 1
-        // Without a pushed tick the budget is spent exactly as the last clock stops. A stack the fine pass is about to
+        // Without a pushed tick each clock's count is spent exactly as its rod empties. A stack the fine pass is about to
         // call solved is not out of ticks.
-        if !entries.isEmpty, budget == 0 || !level.clocks.contains(where: { running($0.rod) }),
+        if !entries.isEmpty, !level.clocks.contains(where: { canTick($0.rod) }),
            !level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses, masks: level.masks) {
             escapement.lost = true
         }
@@ -434,13 +432,9 @@ final class Game {
 
     /// Escapement: whether a full stack would refuse a tick after a move that leaves `entries`.
     private func ticksRefused(_ entries: [Entry]) -> Bool {
-        var copy = entries, left = budget
-        for c in level.clocks where left > 0 {
-            switch Self.tick(&copy, on: c, in: level) {
-            case .refused?: return true
-            case nil: continue
-            default: left -= 1
-            }
+        var copy = entries
+        for c in level.clocks where level.owed(c.rod, on: copy.map(\.twist)) > 0 {
+            if Self.tick(&copy, on: c, in: level) == .refused { return true }
         }
         return false
     }
@@ -465,7 +459,7 @@ final class Game {
         healsBefore = []
         heals = 0
         open = false
-        escapement = freshClock
+        escapement = Clock()
         tick = []
     }
 

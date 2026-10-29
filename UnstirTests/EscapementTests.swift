@@ -613,4 +613,124 @@ import XCTest
         }
         XCTAssertEqual(cases, 40)
     }
+
+    // MARK: - Each clock's own count (Jack's call ES2, round 12)
+
+    /// Every hub's count and the header's, at a move of the line `g` stands on: the header the hubs' sum, each hub what
+    /// its clock still owes, at 0 exactly once its clock can tick no more.
+    private func checkCounts(_ g: Game, _ at: String) {
+        let clocks = g.level.clocks.map(\.rod)
+        XCTAssertEqual(g.budget, clocks.reduce(0) { $0 + g.owed($1) }, at)
+        for k in clocks {
+            XCTAssertEqual(g.owed(k) == 0, !g.canTick(k), at)
+            // Only the clock's own ticks reach its rod's steps, so its count needs no storing.
+            XCTAssertEqual(g.owed(k), g.level.owed(k, on: g.level.scramble) - (g.escapement.ticks[k] ?? 0), at)
+        }
+    }
+
+    /// Along every problem's proved line, each move takes one off the hub of each clock that ticked and nothing off the
+    /// rest; each hub reaches 0 exactly as its rod empties, with the clock's stop; and a wrong move that pushes, tried
+    /// before each move of the line, keeps the header the hubs' sum and its undo puts every count back.
+    func testEachHubCountsItsOwnClockAndTheHeaderIsTheirSum() throws {
+        for level in Level.escapement {
+            let clocks = level.clocks.map(\.rod)
+            var seen = 0
+            let play = try XCTUnwrap(Solver(level.layout).escapement(level.scramble, clocks: level.clocks, limit: level.par,
+                                                                    steps: [], seen: &seen), level.id)
+            var test = level
+            test.id = "test-" + level.id
+            func make(_ move: Move, on g: Game) {
+                switch move {
+                case let .stir(knob, _, steps): g.commit(rod: knob, steps: steps)
+                case .wait: g.wait(on: clocks[0])
+                case .turn: XCTFail("a clock's tank never turns: \(level.id)")
+                }
+            }
+            var g = Game(level: test, tankTurned: true, bank: (1000, nil))
+            checkCounts(g, level.id)
+            XCTAssertEqual(g.budget, level.budget, level.id)
+            var pushes = 0
+            for (i, move) in play.moves.enumerated() {
+                let at = "\(level.id) move \(i + 1)"
+                let stack = g.stack, hubs = clocks.map { g.owed($0) }, ticks = g.escapement.ticks
+                wrong: for knob in level.layout.rods.indices where level.kind(of: knob) == .working {
+                    for steps in [1, -1, 2, -2] {
+                        g.commit(rod: knob, steps: steps)
+                        guard g.history.count > i else { continue }
+                        // Another line's last move: no wrong one, and a solve can't be undone, so play the line again.
+                        guard !g.solved else {
+                            g = Game(level: test, tankTurned: true, bank: (1000, nil))
+                            for m in play.moves.prefix(i) { make(m, on: g) }
+                            continue
+                        }
+                        let pushed = g.lastCommit?.result == .pushed
+                        checkCounts(g, at + " wrong \(knob):\(steps)")
+                        g.undo()
+                        XCTAssertEqual(g.stack, stack, at)
+                        XCTAssertEqual(clocks.map { g.owed($0) }, hubs, at)
+                        XCTAssertEqual(g.escapement.ticks, ticks, at)
+                        XCTAssertFalse(g.lost, at)
+                        if pushed { pushes += 1; break wrong }
+                    }
+                }
+                let stops = g.stops
+                make(move, on: g)
+                checkCounts(g, at)
+                let ticked = Set(g.tick.map(\.rod))
+                for (j, k) in clocks.enumerated() {
+                    XCTAssertEqual(hubs[j] - g.owed(k), ticked.contains(k) ? 1 : 0, "\(at) clock \(k)")
+                    XCTAssertEqual(g.owed(k) == 0, !g.running(k), "\(at) clock \(k)")
+                    let stopped = (g.stops[k] ?? 0) - (stops[k] ?? 0)
+                    XCTAssertEqual(stopped, hubs[j] > 0 && g.owed(k) == 0 ? 1 : 0, "\(at) clock \(k)")
+                }
+            }
+            XCTAssertGreaterThan(pushes, 0, level.id)
+            XCTAssertTrue(g.solved, level.id)
+            XCTAssertEqual(clocks.map { g.owed($0) }, clocks.map { _ in 0 }, level.id)
+        }
+    }
+
+    /// A hub shows one digit: no clock in the book, or in the first problem's demonstration, owes more than 9 as dealt.
+    func testEveryHubCountFitsOneDigit() {
+        for level in Level.escapement {
+            for c in level.clocks {
+                XCTAssertLessThanOrEqual(level.owed(c.rod, on: level.scramble), 9, level.id)
+                XCTAssertLessThanOrEqual(level.owed(c.rod, on: level.demo), 9, level.id)
+            }
+        }
+    }
+
+    /// A clock whose count is spent stops though its rod still holds a pushed tick's entry, and ticks no more, while the
+    /// other clock runs on; once neither can tick with twists left, the tank is out of ticks.
+    func testAClockAtZeroNoLongerTicks() {
+        var level = Level.escapement[12]
+        level.id = "test-escapement"
+        level.scramble = .parse("0:-1,1:+2,2:-3", in: level.layout)
+        XCTAssertEqual(level.clocks.map(\.rod), [0, 2])
+        let g = Game(level: level, tankTurned: true, bank: (3, nil))
+        XCTAssertEqual(g.budget, 4)
+        g.wait(on: 0)
+        // Rod 1 buries clock 0's seam, so its tick pushes and spends its only tick.
+        XCTAssertEqual(g.tickPushes, 1)
+        XCTAssertEqual(g.pushedClock, 0)
+        XCTAssertEqual(g.owed(0), 0)
+        XCTAssertTrue(g.running(0))
+        XCTAssertFalse(g.canTick(0))
+        XCTAssertEqual(g.stops[0], 1)
+        XCTAssertEqual(g.owed(2), 2)
+        XCTAssertEqual(g.budget, 2)
+        XCTAssertFalse(g.lost)
+        g.wait(on: 2)
+        XCTAssertEqual(g.tick.map(\.rod), [2])
+        XCTAssertEqual(g.escapement.ticks, [0: 1, 2: 2])
+        XCTAssertEqual(g.budget, 1)
+        g.wait(on: 0)
+        XCTAssertEqual(g.escapement.ticks, [0: 1, 2: 3])
+        XCTAssertEqual(g.budget, 0)
+        XCTAssertTrue(g.lost)
+        g.undo()
+        XCTAssertFalse(g.lost)
+        XCTAssertEqual(g.owed(0), 0)
+        XCTAssertEqual(g.owed(2), 1)
+    }
 }
