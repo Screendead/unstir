@@ -13,12 +13,15 @@ enum Offer: Hashable, Sendable {
     /// pack is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the shop can be looked at.
     static func shelf(release: Bool = Build.release, ready: (Pack) -> Bool = { $0.levels.count > $0.taste }) -> [Offer] {
         guard release else { return all }
-        let packs = Pack.allCases.filter(ready)
-        return packs.map(Offer.pack) + (packs.count == Pack.allCases.count ? [.complete] : [])
+        let sold = Pack.sold(release: release), packs = sold.filter(ready)
+        return packs.map(Offer.pack) + (packs.count == sold.count ? [.complete] : [])
     }
 
+    /// Whether this build sells it.
+    var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
+
     /// Some of what it sells is still to come.
-    var arriving: Bool { (pack.map { [$0] } ?? Pack.allCases).contains { $0.levels.count < $0.planned } }
+    var arriving: Bool { (pack.map { [$0] } ?? Pack.sold()).contains { $0.levels.count < $0.planned } }
 
     /// A pack's prefix, or "complete", as the harness names it and the clip's file is named.
     init?(name: String) {
@@ -42,7 +45,7 @@ enum Offer: Hashable, Sendable {
         switch self {
         case .pack(.firstStir): "a story told backwards"
         case .pack(.lens): "some rods zoom instead of turning"
-        case .pack(.escapement): "a clock rod ticks after every move"
+        case .pack(.escapement): "clocks tick after every move, on a budget of ticks"
         case .complete: "every pack, for less"
         }
     }
@@ -53,7 +56,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.firstStir): "anyone \u{00B7} an evening, not a challenge"
         case .pack(.lens): "after plughole"
         case .pack(.escapement): "hard \u{00B7} composed problems"
-        case .complete: "anyone, then harder"
+        case .complete: Pack.sold().contains(.firstStir) ? "anyone, then harder" : "after plughole, then harder"
         }
     }
 
@@ -62,7 +65,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.firstStir): "\(Pack.firstStir.planned) scenes in five chapters"
         case .pack(.lens): "\(Pack.lens.planned) panels in four issues"
         case .pack(.escapement): "\(Pack.escapement.planned) problems in five chapters"
-        case .complete: "First Stir, Lens and Escapement \u{00B7} \(Pack.allCases.map(\.planned).reduce(0, +)) levels"
+        case .complete: "\(Pack.named(Pack.sold())) \u{00B7} \(Pack.sold().map(\.planned).reduce(0, +)) levels"
         }
     }
 
@@ -127,13 +130,16 @@ extension Store {
         case .pack(let p): return state(p)
         case .complete:
             let l = harness ?? ledger
-            if Pack.allCases.allSatisfy({ l.state($0) == .owned }) { return .owned }
+            if Pack.sold().allSatisfy({ l.state($0) == .owned }) { return .owned }
             return l.products[Pack.completeID] ?? .unowned
         }
     }
 
     /// The pack whose card a level shows instead of playing: one past its taste that the player doesn't own.
     func card(for level: Level) -> Pack? { access(level) == .needsCard ? level.pack : nil }
+
+    /// A level this build may open: any outside a pack, and a pack's that the build sells.
+    func opens(_ level: Level) -> Bool { access(level) != .withheld }
 }
 
 extension Purchase {
@@ -182,16 +188,16 @@ enum Cover {
         case .pack(.lens): lens(ctx, r: r)
         case .pack(.escapement): escapement(ctx, r: r)
         case .complete:
-            // A third of the tank each, cut from the centre.
-            let packs: [Offer] = [.pack(.firstStir), .pack(.lens), .pack(.escapement)]
+            // An equal wedge of the tank for each pack it grants, cut from the centre, the first centred at the top.
+            let packs = Pack.sold(), span = 360 / Double(packs.count), start = -90 - span / 2
             for (k, p) in packs.enumerated() {
                 var c = ctx
-                c.clip(to: wedge(r, from: -150 + 120 * Double(k), to: -30 + 120 * Double(k)))
-                draw(p, c, r: r)
+                c.clip(to: wedge(r, from: start + span * Double(k), to: start + span * Double(k + 1)))
+                draw(.pack(p), c, r: r)
             }
             var seams = Path()
-            for k in 0..<3 {
-                let a = (-150 + 120 * Double(k)) * .pi / 180
+            for k in packs.indices {
+                let a = (start + span * Double(k)) * .pi / 180
                 seams.move(to: CGPoint(x: r, y: r))
                 seams.addLine(to: CGPoint(x: r + 1.5 * r * cos(a), y: r + 1.5 * r * sin(a)))
             }
@@ -534,6 +540,8 @@ struct PackCard: View {
     var clock: Double?
     /// The pack's own, unless the harness lists placeholders.
     var levels: [Level]
+    /// UNSTIR_CARDSCROLL: opens scrolled to the list.
+    var scrolled = false
     let onBack: () -> Void
     let onPlay: (Level) -> Void
     var store = Store.shared
@@ -545,43 +553,46 @@ struct PackCard: View {
     var body: some View {
         let state = store.state(offer)
         GeometryReader { g in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    Button(action: onBack) { Text("\u{2039} back").font(.mono(.subheadline, .medium)) }
-                        .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
-                        .accessibilityLabel("Back")
-                    Text(offer.pack == nil ? "BUNDLE \u{00B7} PAID ADD-ON" : "PACK \u{00B7} PAID ADD-ON").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
-                        .padding(.top, 26)
-                    Text(offer.name).font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
-                        .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
-                        .accessibilityAddTraits(.isHeader)
-                    Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
-                    PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48), held: clock)
-                        .frame(maxWidth: .infinity).padding(.top, 28)
-                    VStack(alignment: .leading, spacing: 9) {
-                        fact("for", offer.assumes)
-                        fact("free", offer.free)
-                        fact("holds", offer.holds)
+            ScrollViewReader { reader in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Button(action: onBack) { Text("\u{2039} back").font(.mono(.subheadline, .medium)) }
+                            .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
+                            .accessibilityLabel("Back")
+                        Text(offer.pack == nil ? "BUNDLE \u{00B7} PAID ADD-ON" : "PACK \u{00B7} PAID ADD-ON").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
+                            .padding(.top, 26)
+                        Text(offer.name).font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
+                            .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
+                            .accessibilityAddTraits(.isHeader)
+                        Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
+                        PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48), held: clock)
+                            .frame(maxWidth: .infinity).padding(.top, 28)
+                        VStack(alignment: .leading, spacing: 9) {
+                            fact("for", offer.assumes)
+                            fact("free", offer.free)
+                            fact("holds", offer.holds)
+                        }
+                        .padding(.top, 32)
+                        if offer.arriving {
+                            Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        // Buying comes before the list, so it is on the first screen whatever the pack holds.
+                        if levels.isEmpty { Spacer(minLength: 24) }
+                        status(state).padding(.top, levels.isEmpty ? 0 : 32)
+                        action(state).padding(.top, 14)
+                        if offer.pack != nil, state != .owned, store.state(.complete) != .owned, Offer.shelf().contains(.complete) {
+                            completeLine.padding(.top, 14)
+                        }
+                        restore.padding(.top, 18).padding(.bottom, 10)
+                        if !levels.isEmpty { list.padding(.top, 26).padding(.bottom, 10).id("list") }
                     }
-                    .padding(.top, 32)
-                    if offer.arriving {
-                        Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    // Buying comes before the list, so it is on the first screen whatever the pack holds.
-                    if levels.isEmpty { Spacer(minLength: 24) }
-                    status(state).padding(.top, levels.isEmpty ? 0 : 32)
-                    action(state).padding(.top, 14)
-                    if offer.pack != nil, state != .owned, store.state(.complete) != .owned, Offer.shelf().contains(.complete) {
-                        completeLine.padding(.top, 14)
-                    }
-                    restore.padding(.top, 18).padding(.bottom, 10)
-                    if !levels.isEmpty { list.padding(.top, 26).padding(.bottom, 10) }
+                    .padding(.horizontal, 24)
+                    .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
                 }
-                .padding(.horizontal, 24)
-                .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
+                .scrollBounceBehavior(.basedOnSize)
+                .onAppear { if scrolled { reader.scrollTo("list", anchor: .top) } }
             }
-            .scrollBounceBehavior(.basedOnSize)
         }
         .foregroundStyle(Color.text)
         .background(Color.black.ignoresSafeArea())
@@ -610,15 +621,15 @@ struct PackCard: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// Every level, those past the taste locked until the pack is owned.
+    /// Every level, those past the taste locked until the pack is owned, under a heading for each chapter where the
+    /// pack has chapters, as the menu heads each tier.
     private var list: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                Text("levels").font(.mono(.caption2, .semibold)).foregroundStyle(offer.gradient)
-                Rectangle().fill(offer.gradient).frame(height: 1).opacity(0.8)
-            }
-            .padding(.bottom, 4)
-            ForEach(levels, id: \.id) { level in
+            if levels.first?.chapter == nil { heading("levels", of: []) }
+            ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
+                if let chapter = level.chapter, i == 0 || levels[i - 1].chapter != chapter {
+                    heading(chapter, of: levels.filter { $0.chapter == chapter }).padding(.top, i == 0 ? 0 : 18)
+                }
                 let open = store.access(level) != .needsCard, best = Best.load(level.id)
                 Button { onPlay(level) } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -630,7 +641,7 @@ struct PackCard: View {
                         if !open {
                             Image(systemName: "lock.fill").font(.caption2).opacity(0.4)
                         } else if let best {
-                            Text(best.over == 0 ? "par" : "+\(best.over)").font(.mono(.caption2))
+                            Text(best.over == 0 ? atPar : "+\(best.over)").font(.mono(.caption2))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
                         }
                     }
@@ -639,9 +650,30 @@ struct PackCard: View {
                 }
                 .buttonStyle(Sounding())
                 .disabled(!open)
-                .accessibilityValue(open ? best.map { $0.over == 0 ? "at par" : "\($0.over) over par" } ?? "" : "locked, needs the pack")
+                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" } ?? ""
+                                    : "locked, needs the pack")
             }
         }
+    }
+
+    /// Escapement has no par (Jack's call EL1, round 11): its best is a solve, which spends the budget to the last tick.
+    private var noPar: Bool { offer.pack == .escapement }
+    private var atPar: String { noPar ? "solved" : "par" }
+
+    /// A chapter's name and rule, with how many of its levels are at par, or solved.
+    private func heading(_ name: String, of chapter: [Level]) -> some View {
+        HStack(spacing: 10) {
+            Text(name.lowercased()).font(.mono(.caption2, .semibold)).foregroundStyle(offer.gradient)
+            Rectangle().fill(offer.gradient).frame(height: 1).opacity(0.8)
+            if !chapter.isEmpty {
+                Text("\(chapter.filter { Best.load($0.id)?.over == 0 }.count)/\(chapter.count) \(noPar ? "solved" : "at par")")
+                    .font(.mono(.caption2))
+                    .opacity(0.4)
+            }
+        }
+        .padding(.bottom, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 
     @ViewBuilder private func status(_ state: Purchase) -> some View {

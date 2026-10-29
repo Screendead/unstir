@@ -410,7 +410,7 @@ final class AnalyticsTests: XCTestCase {
         XCTAssertNil(Sender.Endpoint(key: ""))
     }
 
-    /// A tank lost on Escapement's clock is an end of its own: it sends `lost`, and leaving it after is no quit.
+    /// An Escapement tank out of ticks is an end of its own: it sends `lost`, and leaving it after is no quit.
     func testALostClockSendsLostAndNoQuit() async throws {
         let wire = Wire()
         let a = analytics(wire)
@@ -418,7 +418,9 @@ final class AnalyticsTests: XCTestCase {
         var level = Level.escapement[0]
         level.id = "test-escapement"
         let game = Game(level: level, tankTurned: true, bank: (3, nil))
+        // Its tick pushes, and the wait spends the last of the budget.
         game.commit(rod: 1, steps: 1)
+        game.wait(on: 0)
         XCTAssertTrue(game.lost)
         a.finished(game)
         a.left(game)

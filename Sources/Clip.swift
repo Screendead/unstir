@@ -23,7 +23,7 @@ struct Clip: Sendable {
         fatalError("a clip has reels")
     }
 
-    /// Each offer's clip. Complete cuts between the three.
+    /// Each offer's clip. Complete cuts between the packs it grants.
     static func of(_ offer: Offer) -> Clip {
         switch offer {
         case .pack(.firstStir): firstStir
@@ -33,8 +33,8 @@ struct Clip: Sendable {
         }
     }
 
-    /// Level 1 healed top first, the night winding back a stage and its clock stepping back with each vignette.
-    static let firstStir = Clip(reels: [.firstStir()], still: Reel.firstStir().beats[1].lift + 0.5)
+    /// Level 1 healed top first, its clock stepping back with each heal and a vignette playing with every one but the first.
+    static let firstStir = Clip(reels: [.firstStir()], still: Reel.firstStir().beats[1].lift + 0.25)
 
     /// Level 3 as dealt, the lens newest, so its rim runs whole through both twists beside it: the order read. The finger
     /// drags it down to clean and back up, so it zooms out and in again, crisp at its rim, and lets go where it took it.
@@ -44,11 +44,29 @@ struct Clip: Sendable {
     /// stops the clock on the clean picture.
     static let escapement = Clip(reels: [.escapement()], still: Reel.escapement().beats[0].lift + 0.6)
 
-    /// Each pack's telling beat in turn, inside about eight seconds: a vignette, a zoom, a tick.
-    static let complete = Clip(reels: [cutStory, .lens(dips: true, rest: 0.3, down: 0.6, hold: 0.1, up: 0.6, tail: 0.25),
-                                       .escapement(moves: 1, rest: 0.45, tail: 0.7)],
-                               still: cutStory.beats[0].lift + 0.5)
-    private static let cutStory = Reel.firstStir(moves: 1, rest: 0.45, tail: 0.6)
+    /// Each sold pack's telling beat in turn: a vignette, a zoom, a tick, about eight seconds with all three.
+    static let complete = cut(of: Pack.sold())
+
+    /// Each of `packs`' beats in turn, held at the first one's still.
+    static func cut(of packs: [Pack]) -> Clip {
+        let cuts = packs.map { pack -> (reel: Reel, still: Double) in
+            switch pack {
+            case .firstStir: return (cutStory, cutStory.beats[1].lift + 0.5)
+            case .lens:
+                let r = Reel.lens(dips: true, rest: 0.3, down: 0.6, hold: 0.1, up: 0.6, tail: 0.25)
+                return (r, r.beats[0].lift + 0.15)
+            case .escapement:
+                let r = Reel.escapement(moves: 1, rest: 0.45, tail: 0.7)
+                return (r, r.beats[0].lift + 0.6)
+            }
+        }
+        return Clip(reels: cuts.map(\.reel), still: cuts[0].still - cuts[0].reel.from)
+    }
+    /// The sunrise's first heal plays nothing, so the cut opens just after it, on the second, which plays the lantern.
+    private static let cutStory: Reel = {
+        let r = Reel.firstStir(moves: 2, rest: 0.45, gap: 0.5, tail: 0.6)
+        return r.starting(at: r.beats[0].lift + 0.15)
+    }()
 }
 
 /// One level's part of a clip, timed in its own seconds from 0 to `length`.
@@ -91,10 +109,8 @@ struct Reel: Sendable {
     let beats: [Beat]
     let length: Double
     /// The part shown, and whether it dips in from black and out to it.
-    let from: Double, to: Double
+    private(set) var from: Double, to: Double
     let dips: Bool
-    /// First Stir's time under the tank, in minutes after midnight, as the level opens and once every entry has gone.
-    let night: (late: Double, early: Double)?
 
     var shown: Double { to - from }
 
@@ -103,9 +119,8 @@ struct Reel: Sendable {
     static let settle = 0.35, hold = 0.25, press = 0.18
 
     init(level: Level, opening: [Game.Entry]? = nil, gestures: [Gesture], rest: Double, gap: Double, tail: Double,
-         dips: Bool = true, night: (late: Double, early: Double)? = nil) {
+         dips: Bool = true) {
         self.level = level
-        self.night = night
         self.dips = dips
         let opening = opening ?? Game.dealt(level)
         self.opening = opening
@@ -122,9 +137,9 @@ struct Reel: Sendable {
                 }
             }
             var after = moved, ticked = false, stops = false
-            if let e = level.clock, g.knob == e || result != nil, let r = Game.tick(&after, on: e, in: level), r != .refused {
+            if let c = level.clocks.first, g.knob == c.rod || result != nil, let r = Game.tick(&after, on: c, in: level), r != .refused {
                 ticked = true
-                stops = !after.contains { $0.twist.rod == e }
+                stops = !after.contains { $0.twist.rod == c.rod }
             }
             let heals = level.story != nil ? !Self.played(level, after).isSubset(of: playedWas) : result == .cancelled
             beats.append(Beat(gesture: g, land: land, start: start, lift: lift, before: entries, moved: moved, after: after,
@@ -154,10 +169,17 @@ struct Reel: Sendable {
         return out
     }
 
-    /// Level 1, the harbour, as the outline's scene 16 (12:30 am back to 11:40 pm) until the level carries its own clock.
-    static func firstStir(moves: Int = .max, rest: Double = 0.7, tail: Double = 1.3) -> Reel {
+    /// Level 1, the sunrise, on its own window of the night (6:40 back to 6:15 am).
+    static func firstStir(moves: Int = .max, rest: Double = 0.5, gap: Double = 0.35, tail: Double = 1.0) -> Reel {
         let level = Level.firstStir[0]
-        return Reel(level: level, gestures: solve(level, moves: moves), rest: rest, gap: 0.6, tail: tail, night: (30, -20))
+        return Reel(level: level, gestures: solve(level, moves: moves), rest: rest, gap: gap, tail: tail)
+    }
+
+    /// The same reel shown from `t`, dipping in from black there.
+    func starting(at t: Double) -> Reel {
+        var r = self
+        r.from = t
+        return r
     }
 
     static func lens(dips: Bool = false, rest: Double = 1.4, down: Double = 1.3, hold: Double = 0.5, up: Double = 1.3,
@@ -168,10 +190,10 @@ struct Reel: Sendable {
                     rest: rest, gap: 0, tail: tail, dips: dips)
     }
 
-    /// Its par's three moves, the second a wait on the clock.
+    /// The mock-up's problem, the book's second, in its three moves, the second a wait on the clock.
     static func escapement(moves: Int = 3, rest: Double = 0.7, tail: Double = 1.2) -> Reel {
-        let level = Level.escapement[0]
-        let line: [Gesture] = [.turn(2, 4), .tap(knob: level.clock!), .turn(1, -3)]
+        let level = Level.escapement[1]
+        let line: [Gesture] = [.turn(2, 4), .tap(knob: level.clocks[0].rod), .turn(1, -3)]
         return Reel(level: level, gestures: Array(line.prefix(moves)), rest: rest, gap: 0.9, tail: tail)
     }
 
@@ -181,7 +203,7 @@ struct Reel: Sendable {
     func frame(at t: Double) -> ClipFrame {
         var f = ClipFrame()
         if dips {
-            f.dip = max(1 - (t - from) / Self.dip, (t - (to - Self.dip)) / Self.dip, 0)
+            f.dip = min(max(1 - (t - from) / Self.dip, (t - (to - Self.dip)) / Self.dip, 0), 1)
         }
         let done = beats.filter { $0.lift <= t }
         var entries = done.last?.after ?? opening
@@ -202,7 +224,7 @@ struct Reel: Sendable {
                 let p = Self.flight(s)
                 if p < 1 {
                     entries = b.moved
-                    f.tick = (level.clock!, p * Tank.step)
+                    f.tick = (level.clocks[0].rod, p * Tank.step)
                     f.ratchetTurn = p
                     f.pawl = sin(.pi * p)
                 }
@@ -210,12 +232,12 @@ struct Reel: Sendable {
             if b.after.isEmpty { f.solved = (b.gesture.knob, s) }
         }
         f.stack = entries.map(\.twist)
-        f.clockRuns = entries.contains { $0.twist.rod == level.clock }
+        f.clockRuns = entries.contains { $0.twist.rod == level.clocks.first?.rod }
         f.finished = entries.isEmpty
-        if let night {
+        if let scene = level.story?.scene {
             let count = level.scramble.count
-            let gone = entries.isEmpty ? count : max(count - entries.filter { !$0.pushed }.count, 0)
-            f.caption = Self.clock(night.late - (night.late - night.early) * Double(gone) / Double(max(count, 1)))
+            f.wound = entries.isEmpty ? count : max(count - entries.filter { !$0.pushed }.count, 0)
+            f.caption = type(of: scene).clock(scene.minutes(wound: f.wound, of: count))
         }
         // The fingertip, from its landing until just after it lifts.
         if let b = beats.first(where: { $0.land <= t && t < $0.lift + 0.12 }) {
@@ -259,18 +281,14 @@ struct Reel: Sendable {
     }
 
     static func ease(_ x: Double) -> Double { let c = min(max(x, 0), 1); return c * c * (3 - 2 * c) }
-
-    /// The time as First Stir's caption shows it (Jack, F3): "6:40 am".
-    static func clock(_ minutes: Double) -> String {
-        let m = (Int(minutes.rounded()) % 1440 + 1440) % 1440, h = m / 60
-        return "\((h + 11) % 12 + 1):\(String(format: "%02d", m % 60)) \(h < 12 ? "am" : "pm")"
-    }
 }
 
 /// One frame of a reel. Each `(rod, s)` is a ring's seconds since the lift that set it off.
 struct ClipFrame {
     var stack: [Twist] = []
     var played: Set<Int> = []
+    /// The scramble's entries gone, which sets a story's time.
+    var wound = 0
     var live: (rod: Int, angle: Double)?
     var tick: (rod: Int, angle: Double)?
     var knobs: [Int: Double] = [:]
@@ -301,7 +319,7 @@ struct ClipTank: View {
         let f = reel.frame(at: t)
         VStack(spacing: 20) {
             tank(f)
-            if reel.night != nil {
+            if reel.level.story != nil {
                 Text(f.caption ?? "").font(.mono(.subheadline, .medium)).monospacedDigit().opacity(0.8)
                     .contentTransition(.identity)
             }
@@ -324,15 +342,15 @@ struct ClipTank: View {
         let ratchet = LevelView.ratchetSize(core)
         return ZStack {
             Group {
-                if let story = level.story {
-                    StoryLayer(story: story, played: f.played, side: side)
+                if let scene = level.story?.scene {
+                    SceneLayer(scene: scene, played: f.played, wound: f.wound, count: level.scramble.count, side: side)
                 } else {
                     PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: t)
                 }
             }
             .modifier(unstirred)
             .clipShape(Circle())
-            if let e = level.clock, !f.finished {
+            if let e = level.clocks.first?.rod, !f.finished {
                 ClockHint(radius: disc(e)).position(at(e))
             }
             if let fl = f.flash, fl.s < 0.3 {
@@ -346,9 +364,9 @@ struct ClipTank: View {
                     .opacity(0.9 * (1 - u * u)).position(at(h.rod))
             }
             ForEach(rods.indices.filter { $0 != layout.swirl }, id: \.self) { k in
-                if k == level.clock {
+                if k == level.clocks.first?.rod {
                     RatchetView(angle: (Double(f.ticks) - (1 - f.ratchetTurn)) * Tank.step,
-                                size: ratchet, pawl: f.pawl, lit: f.pressing, stopped: !f.clockRuns)
+                                size: ratchet, plate: LevelView.ratchetReach * r, pawl: f.pawl, lit: f.pressing, stopped: !f.clockRuns)
                         .position(at(k))
                 } else {
                     RodView(angle: f.knobs[k] ?? 0, size: core, seized: level.kind(of: k) != .working, grabbed: f.live?.rod == k,
@@ -360,7 +378,7 @@ struct ClipTank: View {
                 Circle().strokeBorder(Color.alarm, lineWidth: 1).padding(-3).frame(width: core, height: core)
                     .opacity(pow(1 - p.s / 0.4, 2)).position(at(p.rod))
             }
-            if let e = level.clock {
+            if let e = level.clocks.first?.rod {
                 if let s = f.tickLit {
                     let v = s < 0.15 ? 0.25 * s / 0.15 : min(0.25 + 0.75 * (s - 0.15) / 0.6, 1)
                     Circle().stroke(Color.vermilion, lineWidth: hairline).frame(width: 2 * disc(e), height: 2 * disc(e))

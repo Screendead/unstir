@@ -29,7 +29,20 @@ enum Pack: String, CaseIterable, Sendable {
     /// Grants every pack. A later pack joins it, so an older Complete owns it too.
     static let completeID = "com.screendead.Unstir.complete"
 
-    static var productIDs: [String] { allCases.map(\.productID) + [completeID] }
+    static var productIDs: [String] { sold().map(\.productID) + [completeID] }
+
+    /// Whether a Release build sells it. First Stir is out of v1, to be reworked (Jack, FS17); a build outside Release
+    /// keeps it, so its levels, tests and films still run.
+    var ships: Bool { self != .firstStir }
+
+    /// The packs a build sells, and Complete grants.
+    static func sold(release: Bool = Build.release) -> [Pack] { allCases.filter { !release || $0.ships } }
+
+    /// "Lens and Escapement".
+    static func named(_ packs: [Pack]) -> String {
+        let names = packs.map(\.name)
+        return names.count < 2 ? names.joined() : names.dropLast().joined(separator: ", ") + " and " + names.last!
+    }
 
     /// Levels 1 to `taste` play without the pack.
     var taste: Int { 3 }
@@ -59,12 +72,14 @@ enum Pack: String, CaseIterable, Sendable {
         return Int(id.dropFirst(prefix.count + 1)).flatMap { $0 > 0 ? $0 : nil }
     }
 
-    enum Access: Equatable { case taste, owned, needsCard }
+    /// `withheld`: a pack this build doesn't sell, which opens neither its levels nor its card.
+    enum Access: Equatable { case taste, owned, needsCard, withheld }
 
     /// Whether `number` plays. `owned` is what StoreKit grants; the developer unlock and the harness's packs count only
     /// outside Release, so a shipped build opens a pack past its taste for nothing but a purchase.
     func access(_ number: Int, owned: Set<Pack>, unlocked: Bool = Best.unlocked, harness: Set<Pack> = [],
                 release: Bool = Build.release) -> Access {
+        if release && !ships { return .withheld }
         if number <= taste { return .taste }
         if owned.contains(self) || (!release && (unlocked || harness.contains(self))) { return .owned }
         return .needsCard
@@ -116,14 +131,62 @@ extension Level {
         return Level(id: Pack.lens.id(i + 1), pack: .lens, label: String(format: "%02d", i + 1), title: "Panel \(i + 1)",
                      picture: .halftone, layout: layout, scramble: .parse(scramble, in: layout, lenses: lenses), lenses: lenses)
     }
-    /// Each problem's par is the prover's optimum (`Solver.escapement`), and its note the stipulation.
+    /// The problem book (docs/escapement-problems.md, scripts/escapement/problems.tsv) in its order: five chapters of
+    /// six, each opening on a problem that teaches without words. Each problem's `par`, never shown, is the moves its
+    /// slowest clock owes, which the prover (`Solver.escapement`) shows a line reaches; its note, the stipulation, states
+    /// the tick budget instead (Jack's call EL1, round 11). The book names only its teachers and the finale; problem 1,
+    /// the book's "The tick", is "The clock" (Jack's call D1, round 9).
     static let escapement: [Level] = [
-        // The packs mock-up's problem: rod 2 +4, a wait, rod 1 -3. Any other first move's tick pushes on the clock.
-        Level(id: Pack.escapement.id(1), pack: .escapement, label: "01", title: "The clock", note: "Unstir in 3.",
-              layout: .tri, scramble: .parse("0:-1,1:+3,0:-2,2:-4", in: .tri), ratchets: [0],
-              // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
-              demo: .parse("0:-3,1:+2", in: .tri), fixedPar: 3),
+        // The Clock.
+        problem(1, "The clock", .tri, "0:-1,1:+3,0:-1,2:-4", clocks: [0], par: 2),
+        problem(2, "The wait", .tri, "0:-1,1:+3,0:-2,2:-4", clocks: [0], par: 3),
+        problem(3, "The dashed edge", .quad, "0:-1,1:+3,0:-1,2:-4", clocks: [0], par: 2),
+        problem(4, "Problem 4", .quad, "0:-1,3:+2,0:-2,2:-4,1:-3,0:-1,2:-2", clocks: [0], par: 4),
+        problem(5, "Problem 5", .eye, "2:-2,3:-2,1:-4,2:-2,3:-3,1:+3,2:-1,3:-5", clocks: [2], par: 5),
+        problem(6, "Problem 6", .hex, "1:-3,4:-2,3:-4,6:+3,1:-2,5:+3,2:-3,1:-1,3:+2", clocks: [1], par: 6),
+        // The Waiting Move.
+        problem(7, "The quiet first move", .quad, "0:-2,2:+3,1:-2,0:-1", clocks: [0], par: 3),
+        problem(8, "Problem 8", .pent, "0:-1,1:+4,0:-3,2:-4,3:-3,4:-5,0:-1", clocks: [0], par: 5),
+        problem(9, "Problem 9", .eye, "2:-3,0:+3,2:-2,3:+4,0:-3,2:-1,3:+3", clocks: [2], par: 6),
+        problem(10, "Problem 10", .pent, "0:-3,3:+3,2:-3,1:-2,0:-2,1:-4,0:-1,2:+3", clocks: [0], par: 6),
+        problem(11, "Problem 11", .pent, "0:-3,1:+2,0:-2,2:+3,4:+5,0:-2,3:+2,4:-3,0:-1,3:-2", clocks: [0], par: 8),
+        problem(12, "Problem 12", .hex, "1:-2,5:+4,2:+5,1:-2,3:+3,2:-3,1:-2,3:-4,0:-5,1:-1", clocks: [1], par: 7),
+        // Two Clocks.
+        problem(13, "Two dials", .quad, "0:-1,2:-2,1:+3,0:-1,2:-1,3:+2", clocks: [0, 2], par: 3),
+        problem(14, "Problem 14", .quad, "0:-1,1:+3,0:-1,3:+3,2:-2,0:-2,3:-3", clocks: [0, 2], par: 4),
+        problem(15, "Problem 15", .pent, "2:-1,3:-4,2:-4,4:-5,0:-2,4:+2,0:-1,4:-5", clocks: [0, 2], par: 5),
+        problem(16, "Problem 16", .hex, "4:-2,2:+5,5:-3,4:-3,6:+4,1:-3,5:+2,4:-1,3:+2", clocks: [1, 4], par: 6),
+        problem(17, "Problem 17", .pent, "1:-3,3:+4,4:-3,0:-1,3:-5,1:-1,0:-1,4:+2,1:-1,0:-1,3:+5", clocks: [0, 1], par: 5),
+        problem(18, "Problem 18", .hex, "2:-2,6:+2,3:-4,2:-2,4:-2,1:-1,5:+2,2:-1,1:-1,4:+4,2:-1,1:-1,5:-4", clocks: [1, 2], par: 6),
+        // Wound Back.
+        problem(19, "Backwards", .tri, "0:+1,1:-3,0:+2,2:+4", clocks: [0], back: [0], par: 3),
+        problem(20, "Problem 20", .quad, "2:+1,1:+3,2:+1,1:-3,2:+1,0:-1,1:-4,2:+2,0:-2,1:+5", clocks: [0, 2], back: [2], par: 5),
+        problem(21, "Problem 21", .pent, "0:+2,3:+2,4:+5,0:+2,3:+3,2:-2,4:-3,0:+2,3:-4,2:-1", clocks: [0, 2], back: [0], par: 6),
+        problem(22, "Problem 22", .hex, "4:+2,2:-2,5:+3,4:+2,6:-5,1:-2,3:-2,4:+3,6:-5,1:-2,5:+3", clocks: [1, 4], back: [4], par: 7),
+        problem(23, "Problem 23", .pent, "0:+2,3:-5,4:-5,0:+3,2:-2,3:+4,4:-3,0:+1,3:-4", clocks: [0], back: [0], par: 6),
+        problem(24, "Problem 24", .hex, "1:+3,4:-2,5:+4,2:+2,1:+2,3:+3,2:-5,1:+2,3:+2,6:-2", clocks: [1], back: [1], par: 7),
+        // Grand Complication.
+        problem(25, "Three dials", .hex, "1:-2,3:-1,5:-3,0:+3", clocks: [1, 3, 5], par: 3),
+        problem(26, "Problem 26", .pent, "2:-2,4:-3,3:+2,2:-2,4:+3,3:+5,2:-3,0:-2,4:+2,0:-2,3:+3,2:-1,1:+2", clocks: [0, 2], par: 8),
+        problem(27, "Problem 27", .pent, "0:-3,3:-4,2:-5,1:-5,0:-2,1:+2,0:-1,1:+2,0:-2,2:+5,1:-2,0:-1,2:+2", clocks: [0], par: 9),
+        problem(28, "Problem 28", .hex, "1:-2,0:+5,1:-3,4:-5,3:+3,6:+4,1:-2,5:-4,2:+3,1:-2,4:+5,2:+4", clocks: [1], par: 9),
+        problem(29, "Problem 29", .hex, "5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3", clocks: [1, 3, 5], par: 8),
+        problem(30, "Finale", .hex, "1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2", clocks: [1, 3], par: 8),
     ]
+
+    /// The book's chapters, six problems each.
+    static let escapementChapters = ["The Clock", "The Waiting Move", "Two Clocks", "Wound Back", "Grand Complication"]
+
+    private static func problem(_ n: Int, _ title: String, _ layout: Layout, _ scramble: String, clocks: [Int],
+                                back: [Int] = [], par: Int) -> Level {
+        var level = Level(id: Pack.escapement.id(n), pack: .escapement, label: String(format: "%02d", n), title: title,
+                          layout: layout, scramble: .parse(scramble, in: layout), ratchets: Set(clocks), woundBack: Set(back),
+                          chapter: escapementChapters[(n - 1) / 6],
+                          // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
+                          demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)
+        level.note = "Unstir in \(level.budget) ticks."
+        return level
+    }
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
     /// never leaves progress under an id a real level will take.
