@@ -15,7 +15,7 @@ enum Engraving {
     }
 
     enum Plate: String, CaseIterable {
-        case fern, seeds, movement, cathedral, nautilus
+        case fern, seeds, medusae, radiolaria, nautilus
     }
 
     static let heavy = 0.006, medium = 0.004, fine = 0.003
@@ -24,8 +24,8 @@ enum Engraving {
         switch plate {
         case .fern: Fern.lines
         case .seeds: Seeds.lines
-        case .movement: Movement.lines
-        case .cathedral: Radiolaria.lines
+        case .medusae: Medusae.lines
+        case .radiolaria: Radiolaria.lines
         case .nautilus: Nautilus.lines
         }
     }
@@ -310,7 +310,7 @@ enum Seeds {
 /// Plate 3: medusae after Haeckel: bells of every size seen a little from above, their radial canals and scalloped
 /// margins, trailing tentacles and twisting oral arms in long lines through black water. The bells are tilted ellipses
 /// with canal counts prime to 12, so no figure is whole about a core's centre.
-enum Movement {
+enum Medusae {
     typealias Line = Engraving.Line
     private typealias E = Engraving
 

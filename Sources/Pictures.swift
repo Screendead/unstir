@@ -16,7 +16,7 @@ enum Picture: String, CaseIterable {
     /// Lens's halftone test panel (`Halftone`), baked a pixel at a time.
     case halftone
     /// Prism's engravings (`Engraving`), a plate a tray, white lines on black, baked.
-    case fern, seeds, movement, cathedral, nautilus
+    case fern, seeds, medusae, radiolaria, nautilus
 
     var isLive: Bool { ![.grid, .sunset, .city, .halftone].contains(self) && plate == nil }
 
@@ -55,7 +55,7 @@ enum Picture: String, CaseIterable {
     /// microbench); the others are the glass's scaled by their Mac GPU cost against it, not yet confirmed on the phone.
     var fillEntries: Int {
         switch self {
-        case .grid, .sunset, .city, .halftone, .fern, .seeds, .movement, .cathedral, .nautilus: 0
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus: 0
         case .marbling: 3
         case .glass, .chainmail, .coral, .marblingTwin: 4
         case .neurons, .glassTwin, .chainmailTwin, .coralTwin: 5
@@ -332,7 +332,7 @@ enum Picture: String, CaseIterable {
                 city(g, lit: true)
             }
 
-        case .fern, .seeds, .movement, .cathedral, .nautilus:
+        case .fern, .seeds, .medusae, .radiolaria, .nautilus:
             // White only, so every channel samples the same lines and an aligned one stays white.
             var strokes: [Double: Path] = [:]
             for line in Engraving.lines(plate!) {

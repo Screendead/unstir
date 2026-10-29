@@ -617,7 +617,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
   It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp. Prism's plates
-  (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, a watch movement, a cathedral's west front and a
+  (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white
   (`testEveryPlateIsWhiteLinesOnBlack`). Each fills the glass and breaks every rotation a core could fall on, so a step

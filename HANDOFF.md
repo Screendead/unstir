@@ -625,7 +625,7 @@ colours: unstir until every coloured ghost snaps back into one white line.
   meter. Undo is the pack snapshot from the shared bank.
 - **Skill.** Reading by channel: which channels a seam broke, from the colour of its ghosts, and working out what is
   free to heal when commutation depends on colour. No free tier splits a picture into parts that stir independently.
-- **Look.** Botanical and architectural engravings (a fern, seed heads, a cathedral elevation, a clock movement) in
+- **Look.** Natural-history engravings (a fern, seed heads, medusae and radiolarians after Haeckel, a nautilus) in
   fine lines. Misregistered, each splits into red, green and blue ghosts, with cyan, magenta and yellow where two
   coincide; aligned, it is a white line drawing. For colour-blind players each channel draws its own line style (solid
   red, dashed green, dotted blue) when iOS's Differentiate Without Colour setting is on. Off, every channel is solid,
@@ -637,8 +637,8 @@ colours: unstir until every coloured ghost snaps back into one white line.
   glass rod, pitched by heals done. Nothing sounds during a drag.
 - **Structure.** 30 specimens in five trays of 6, every one at depth 8 or less (PK1), built 2026-10-29
   (`docs/prism-design.md`): Two Colours on the fern (red and cyan), Three Colours on seed heads (the primaries),
-  Colour Order on a watch movement (the inks, each pair sharing a channel), Overprint on a cathedral's west front
-  (primaries and inks), Spectrum on a nautilus (any mask). Later trays are harder by colour order, not depth, and every
+  Colour Order on medusae after Haeckel (the inks, each pair sharing a channel), Overprint on radiolarians after
+  Haeckel (primaries and inks), Spectrum on a nautilus (any mask). Later trays are harder by colour order, not depth, and every
   specimen keeps to readability limits on how much of the glass ghosts and splits three ways. Specimens 1 to 3 free.
   Level ids `prism-1` to `prism-30`.
 - **Weakest point.** Fine lines may mush past about 8 entries, the colour-blind read rests on line styles nobody has
