@@ -137,9 +137,9 @@ struct Reel: Sendable {
                 }
             }
             var after = moved, ticked = false, stops = false
-            if let e = level.clock, g.knob == e || result != nil, let r = Game.tick(&after, on: e, in: level), r != .refused {
+            if let c = level.clocks.first, g.knob == c.rod || result != nil, let r = Game.tick(&after, on: c, in: level), r != .refused {
                 ticked = true
-                stops = !after.contains { $0.twist.rod == e }
+                stops = !after.contains { $0.twist.rod == c.rod }
             }
             let heals = level.story != nil ? !Self.played(level, after).isSubset(of: playedWas) : result == .cancelled
             beats.append(Beat(gesture: g, land: land, start: start, lift: lift, before: entries, moved: moved, after: after,
@@ -190,10 +190,10 @@ struct Reel: Sendable {
                     rest: rest, gap: 0, tail: tail, dips: dips)
     }
 
-    /// Its par's three moves, the second a wait on the clock.
+    /// The mock-up's problem, the book's second, in its three moves, the second a wait on the clock.
     static func escapement(moves: Int = 3, rest: Double = 0.7, tail: Double = 1.2) -> Reel {
-        let level = Level.escapement[0]
-        let line: [Gesture] = [.turn(2, 4), .tap(knob: level.clock!), .turn(1, -3)]
+        let level = Level.escapement[1]
+        let line: [Gesture] = [.turn(2, 4), .tap(knob: level.clocks[0].rod), .turn(1, -3)]
         return Reel(level: level, gestures: Array(line.prefix(moves)), rest: rest, gap: 0.9, tail: tail)
     }
 
@@ -224,7 +224,7 @@ struct Reel: Sendable {
                 let p = Self.flight(s)
                 if p < 1 {
                     entries = b.moved
-                    f.tick = (level.clock!, p * Tank.step)
+                    f.tick = (level.clocks[0].rod, p * Tank.step)
                     f.ratchetTurn = p
                     f.pawl = sin(.pi * p)
                 }
@@ -232,7 +232,7 @@ struct Reel: Sendable {
             if b.after.isEmpty { f.solved = (b.gesture.knob, s) }
         }
         f.stack = entries.map(\.twist)
-        f.clockRuns = entries.contains { $0.twist.rod == level.clock }
+        f.clockRuns = entries.contains { $0.twist.rod == level.clocks.first?.rod }
         f.finished = entries.isEmpty
         if let scene = level.story?.scene {
             let count = level.scramble.count
@@ -350,7 +350,7 @@ struct ClipTank: View {
             }
             .modifier(unstirred)
             .clipShape(Circle())
-            if let e = level.clock, !f.finished {
+            if let e = level.clocks.first?.rod, !f.finished {
                 ClockHint(radius: disc(e)).position(at(e))
             }
             if let fl = f.flash, fl.s < 0.3 {
@@ -364,9 +364,9 @@ struct ClipTank: View {
                     .opacity(0.9 * (1 - u * u)).position(at(h.rod))
             }
             ForEach(rods.indices.filter { $0 != layout.swirl }, id: \.self) { k in
-                if k == level.clock {
+                if k == level.clocks.first?.rod {
                     RatchetView(angle: (Double(f.ticks) - (1 - f.ratchetTurn)) * Tank.step,
-                                size: ratchet, pawl: f.pawl, lit: f.pressing, stopped: !f.clockRuns)
+                                size: ratchet, plate: LevelView.ratchetReach * r, pawl: f.pawl, lit: f.pressing, stopped: !f.clockRuns)
                         .position(at(k))
                 } else {
                     RodView(angle: f.knobs[k] ?? 0, size: core, seized: level.kind(of: k) != .working, grabbed: f.live?.rod == k,
@@ -378,7 +378,7 @@ struct ClipTank: View {
                 Circle().strokeBorder(Color.alarm, lineWidth: 1).padding(-3).frame(width: core, height: core)
                     .opacity(pow(1 - p.s / 0.4, 2)).position(at(p.rod))
             }
-            if let e = level.clock {
+            if let e = level.clocks.first?.rod {
                 if let s = f.tickLit {
                     let v = s < 0.15 ? 0.25 * s / 0.15 : min(0.25 + 0.75 * (s - 0.15) / 0.6, 1)
                     Circle().stroke(Color.vermilion, lineWidth: hairline).frame(width: 2 * disc(e), height: 2 * disc(e))
