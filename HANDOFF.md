@@ -29,7 +29,7 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is built (2026-09-29): Csound sources in `sound-src/`, rendered and measured by `scripts/sounds.sh`; a detuned saw hum in D under every bed; a heal about 8 LU over its bed (the phone-speaker model says 10–12); beds for the menu and each tier, crossfading over 1.5 s between screens and stepping aside while another app plays music; tap, tier-switch, undo and reset sounds. Round 2 on today's game (2026-10-27, branch `sound-r2`, PR #56): `sound` merged with master and passing every test; the heal's note now counts moves that pop one of the scramble's entries, as endless's brim does; vortex has its own bed (open fifths and a ninth, high sparse pings, water circling three times a loop); every button added since September taps (the consent card, the settings sheet, the pack cards, the dock, the tier-up); a push that fills the brim sounds only as the spill. Jack's call (2026-10-28, SN1 = A): "In, with early undo and step-back heals. Keep the vortex bed." So the undo is the early one (its body peaks about 0.2 s after the press, against September's 0.5 s), an undo steps the heal notes back, and the vortex bed stays; the three temporary switches under the menu's list (`sound`, `undo`, `heal undo`) and the first sketch (`sound-src/sketch.py`, `scripts/sounds.sh sketch`) are gone, applied on PR #56. `scripts/sounds.sh listen <dir>` writes every sound and bed to m4a for a listen off the phone. The sounds add about 9 MB of CAF and AAC to git (rendered from `sound-src/`, so they could be rendered at build time instead, at the cost of Csound in CI). Endless has no par now, so the old question of a solve one over par is gone. Also for Jack, smaller: the detent's tick sounds during a drag (it echoes the haptic and the dashes; the rule as written says nothing sounds then), so keep it or drop it; in the free tiers cancelling the player's own push still shows the magenta ring and heavy tap but no longer plays a heal, so the ring could follow endless's rule too; a purchase landing plays nothing (the buy buttons tap). The share links tap through a simultaneous gesture, unheard and untapped on a device. Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
 | Merged 2026-10-28 and 29 | PRs #55 (the consent link opens and closes its list), #57 (a locked next tier's up-a-notch button opens its gate), #53 (Lens, lenses on rods of every size) and #58 (drag guard) on 2026-10-28; #50 (plughole eased), #56 (sound round 2), #51 (live pack clips) and #54 (First Stir's 25 scenes, FS17 C) on 2026-10-29. Jack's calls on them are in rounds 10 and 11 under "Jack's calls on the pitch" |
 | Open PRs and branches (2026-10-29) | PR #52 `escapement-book` (the 30 problems, the tick budget and the flip counter; J6 = B applied; waits on Jack's play of the book and ES2). Draft PR #59 `prism` (the Prism prototype, tray 1). PR #60 `v1-without-firststir` (v1 without First Stir, FS17 C). Local, no PR: `v1-no-analytics` and `keep-analytics` (the two sides of AN1), `store-page` (ST1 to ST7 = A, two drafts of the privacy policy) |
-| Round 12 (open, 2026-10-29) | Recommendations, not decisions: AN1 analytics in v1 (rec A, none), EU1 selling in the EU at launch (rec A), PK1 Prism as First Stir's replacement (rec A, capped at depth 8), ES2 Escapement's budget display (rec A, as built). LG3 (round 11) is unanswered. The legal summary is kept outside the repo. See round 12 under "Jack's calls on the pitch" |
+| Round 12 (decided, 2026-10-29) | AN1 = A (v1 ships with no analytics), EU1 = B (no EU storefronts at launch; revisit when sales cover a business address), PK1 = A (Prism replaces First Stir as the third pack, capped at depth 8), ES2 = B (each hub shows its own flip clock, plus a total counter elsewhere; a hub that reaches 0 shows plainly that it has run out; being built). See round 12 under "Jack's calls on the pitch" |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
@@ -357,14 +357,20 @@ Round 11 (2026-10-29, on the review page after round 10's notes):
 | LG2. Children and the consent card | **A:** an age bracket before the card, the threshold read from one setting |
 | LG3. The rest of the legal work, required either way | **No answer.** Jack objected to the UK data-protection registration fee. To come back to him |
 
-Round 12 (open, 2026-10-29): recommendations for Jack, not decisions.
+Round 12 (decided, 2026-10-29). Jack's words are kept in `HANDOFF.private.md`.
 
-| Call | Options and Claude's recommendation |
+| Call | Decision |
 |---|---|
-| AN1. Analytics in v1 | **Recommended A:** none; App Store Connect's numbers only, and analytics can return in an update. B: keep it, outside the EU, with the age question. Branches `v1-no-analytics` and `keep-analytics` hold each side |
-| EU1. Selling in the EU at launch | **Recommended A:** a business address service and number for the trader details the Digital Services Act asks of an EU seller, about 130 to 180 pounds a year. B: not at launch, and add the EU when sales pay for it |
-| PK1. Prism as First Stir's replacement | **Recommended A:** Prism, capped at depth 8, since depth 9 reads too busy; roughly 9 to 13 days to ship. B: something else, with a different mechanic prototyped the same way. Draft PR #59 |
-| ES2. Escapement's budget display | **Recommended A:** one flip counter in the header, as built. B: also each clock's count in its hub, which disagrees with the header after a wrong move |
+| AN1. Analytics in v1 | **A:** none. v1 ships through `v1-no-analytics` (App Store Connect's numbers only); `keep-analytics` holds the other side, for an update. Every analytics item in the to-dos and in the launch checklist below is moot for v1 |
+| EU1. Selling in the EU at launch | **B:** no EU or EEA storefronts at launch. Revisit if sales cover the cost of a business address for the trader details the Digital Services Act asks of an EU seller (no vendor names or prices in tracked files) |
+| PK1. Prism as First Stir's replacement | **A:** Prism, capped at depth 8, since depth 9 reads too busy. Being built (PR #59) |
+| ES2. Escapement's budget display | **B:** the flip-clock numbers also show in each hub, and a total counter elsewhere; the numbers must never contradict each other, and a hub at 0 must show clearly that it has run out. Being built |
+
+**Launch checklist** (App Store Connect and the rest; to be extended)
+
+- In App Store Connect's availability, exclude the EU and EEA storefronts (EU1 = B).
+- Analytics items (the consent question, the age bracket, the privacy label's analytics rows, Aptabase's region and key)
+  are moot for v1 (AN1 = A).
 
 **The charybdis rule (Jack's call, 2026-10-25, from V4).** Jack's words, and only these: "The tank edge being dragged
 should always swirl the tank. It'd make the locked rods harder because turning the tank has a side effect. I feel
@@ -1369,10 +1375,10 @@ names and product ids, and Complete's promise to older owners.
    Unstir; ST2 = A, the subtitle "Unwind the stirred picture"; ST3 = A, the promotional text that says what is free and
    that packs exist; ST4 = A, seven free-game screenshots then one per pack; ST5 = A, one 25 s preview of the free game
    only; ST6 = A, Family Sharing on for the packs and Complete; ST7 = A, the draft's keywords, category, policy and
-   support page, and the send-log button left undeclared on the privacy label (contact address: kept privately). Two
-   drafts of the privacy policy exist, one per side of AN1. ST8: Jack will not ask a lawyer and told Claude to find
+   support page, and the send-log button left undeclared on the privacy label (contact address: kept privately). The
+   analytics side's policy draft was dropped after AN1 = A. ST8: Jack will not ask a lawyer and told Claude to find
    the answers itself; the legal summary is kept outside the repo. Open: the pack screenshots and the 25 s film are
-   still to make, and the policy waits on AN1 and EU1 (round 12).
+   still to make, and AN1 and EU1 (round 12) are decided, so the no-analytics policy is the one that stays.
 55. Check App Review's rules on Complete before naming or pricing it.
 56. ~~Offer codes for press and reviewers.~~ Dropped (Jack: "No.").
 57. TestFlight with 20 to 50 strangers and sandbox purchases. What it measures (shelf and card taps, free-taste
@@ -1413,8 +1419,7 @@ names and product ids, and Complete's promise to older owners.
    who says Yes, No, then Yes sends `installed` (and any snapshot due) again and counts as a second install; he
    accepts that. AN1 = A: the consent card's link opens and closes its list (merged 2026-10-28, PR #55). Round 11:
    LG1 = C conditionally (no EU release if the EU hurdles can't be cleared), LG2 = A (an age bracket), LG3 unanswered.
-   Open (round 12, AN1): whether v1 ships analytics at all; recommended not, with `v1-no-analytics` and
-   `keep-analytics` holding each side.
+   Round 12, AN1 = A: v1 ships no analytics (`v1-no-analytics`); `keep-analytics` holds the other side.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
