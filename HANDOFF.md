@@ -882,8 +882,7 @@ names and product ids, and Complete's promise to older owners.
     the taste show it; Music Box's says "needs sound".
    Built 2026-10-25 on `packs-shelf` (`PackCard`): the price is StoreKit's `displayPrice` (`Store.prices`), the levels
    list shows once a pack has levels (shot with Debug placeholders, `UNSTIR_CARDLEVELS`), and `Store.card(for:)` sends
-   any level past the taste of an unowned pack to its card (`RootView.show`). Left: the clips themselves (to-do 50; the
-   slot plays `<pack>-clip.mp4` from the bundle once it exists, the cover's loop until then); Music Box's "needs sound"
+   any level past the taste of an unowned pack to its card (`RootView.show`). The clips themselves are drawn live by the game (to-do 50, `Clip.swift`); Music Box's "needs sound"
    waits on Music Box; the card's words ("holds 25 panels in four issues" and so on) follow the design tables and
    change with them.
 17. Accessibility on the new screens: Dynamic Type and VoiceOver for the shelf, card and purchase flow; Reduce Motion
@@ -1068,6 +1067,17 @@ names and product ids, and Complete's promise to older owners.
 50. Jack (2026-10-26, on the phone): the placeholder loops "don't show off what it does". Each card's clip must show the pack's own mechanic: Lens's lenses zooming, Escapement's clock ticking, First Stir's picture changing as it unstirs. They wait on each pack's content merging, so the card can stir with the real code (no committed media).
     Clips and images: each pack's 7-second clip and promoted in-app purchase art, filmed with film.sh, plus a sound-on
     cut for social video.
+    Built 2026-10-27 on `pack-clips` (`Clip.swift`): every card's clip is drawn live by the game on the real levels and
+    rules, about 7 s, seamless, Reduce Motion holding a still; the bundled-video path is gone. First Stir: level 1 healed,
+    each vignette playing as its time under the tank steps back (12:30 am to 11:40 pm, scene 16's window, a stand-in
+    until the level carries F3's clock). Lens: level 3 as dealt, the lens dragged down and back up, ending on the order
+    read. Escapement: problem 1 in three, each tick landing. Complete: an 8 s cut, a vignette, a zoom and a tick. The dock keeps its covers.
+    Jack's calls (round 11): CL1 A, Lens plays the zoom and the read; CL2 B, Complete plays each one's first beat in
+    turn (a vignette, a zoom, a tick, about 8 s). The other takes are gone (set aside: Lens's level 2 solved, and
+    Complete's three whole, about 21 s, too long for a card). Films `clip-*`, `shelf-dock`. Follow-up: on
+    `firststir-content` level 1 becomes Sunrise on `SceneLayer` with its own clock, so the First Stir reel must then
+    draw with the level's own layer and read its `late`/`early`; `ClipTests` will flag it. Complete keeps three
+    tanks drawn, two clear: its cost on the phone is unmeasured. Still open: the purchase art and the social cut.
 51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
     agreement, tax and banking, and the in-app purchases with review screenshots and promoted purchases.
 52. The privacy manifest, new work (no `PrivacyInfo.xcprivacy` exists): UserDefaults with reason CA92.1, the uptime

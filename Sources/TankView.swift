@@ -185,7 +185,7 @@ final class Game {
     }
 
     /// The scramble's entries. In a story each holds back the vignette in its own rod's core, if that core has one.
-    private static func dealt(_ level: Level) -> [Entry] {
+    nonisolated static func dealt(_ level: Level) -> [Entry] {
         level.scramble.map { Entry(twist: $0, pushed: false, tags: level.story?.vignettes.intersection([$0.rod]) ?? []) }
     }
 
@@ -367,12 +367,11 @@ final class Game {
     /// Escapement: the clock's tick after a move, while the clock rod holds an entry. It loses the tank if it pushes, or
     /// if it stops the clock with twists still on the picture. It returns how many of the scramble's entries it popped.
     @discardableResult private func landTick() -> Int {
-        guard let e = level.clock, entries.contains(where: { $0.twist.rod == e }) else { return 0 }
+        guard let e = level.clock else { return 0 }
         let from = stack
         var healed = 0
-        let result = entries.commit(Entry(twist: Twist(rod: e, steps: 1), pushed: true), in: level.layout, lenses: level.lenses,
-                                    popped: { if !$0.pushed { healed += 1 } })
-        guard result != .refused else { return 0 }
+        guard let result = Self.tick(&entries, on: e, in: level, popped: { if !$0.pushed { healed += 1 } }),
+              result != .refused else { return 0 }
         escapement.ticks += 1
         tick = from
         tickEvents += 1
@@ -385,11 +384,20 @@ final class Game {
         return healed
     }
 
+    /// Escapement: the clock rod's +1 through the ordinary commit, or nil while the rod holds no entry and the clock stands
+    /// stopped.
+    nonisolated static func tick(_ entries: inout [Entry], on clock: Int, in level: Level,
+                                 popped: (Entry) -> Void = { _ in }) -> Commit? {
+        guard entries.contains(where: { $0.twist.rod == clock }) else { return nil }
+        return entries.commit(Entry(twist: Twist(rod: clock, steps: 1), pushed: true), in: level.layout, lenses: level.lenses,
+                              popped: popped)
+    }
+
     /// Escapement: whether a full stack would refuse the tick after a move that leaves `entries`.
     private func tickRefused(_ entries: [Entry]) -> Bool {
-        guard let e = level.clock, entries.contains(where: { $0.twist.rod == e }) else { return false }
+        guard let e = level.clock else { return false }
         var copy = entries
-        return copy.commit(Entry(twist: Twist(rod: e, steps: 1), pushed: true), in: level.layout, lenses: level.lenses) == .refused
+        return Self.tick(&copy, on: e, in: level) == .refused
     }
 
     /// Escapement: the opening's demonstration plays on a stack of its own, through the real rules.
@@ -1504,12 +1512,15 @@ struct LevelView: View {
     /// Escapement: a tick's flight, 0 to 1: a beat after the lift, then one 30-degree step of the clock's core.
     @KeyframesBuilder<Double> private static var tickKeys: some Keyframes<Double> {
         MoveKeyframe(0.0)
-        LinearKeyframe(0.0, duration: 0.15)
-        CubicKeyframe(1.0, duration: 0.3)
+        LinearKeyframe(0.0, duration: tickBeat)
+        CubicKeyframe(1.0, duration: tickTurn)
     }
 
+    /// Escapement: the beat between a lift and its tick, and the tick's turn.
+    nonisolated static let tickBeat = 0.15, tickTurn = 0.3
+
     /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
-    private static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
+    nonisolated static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
 
     /// Escapement: what the clock at `c` shows round its ratchet: a red flash for a tick that pushed; while a pushed tick
     /// stands, a ring and its vermilion count; "lost." stamped by the clock once the tank is lost; the clock's disc
@@ -1739,7 +1750,7 @@ struct LevelView: View {
     }
 
     /// The finger's travel up or down, in tank units, for one step of a lens (Jack, 2026-10-26).
-    static let lensPitch = 0.15
+    nonisolated static let lensPitch = 0.15
 
     /// A lens follows the finger up and down, not round: the angle the detent counts for a finger gone from height `y0`
     /// to `y` (tank units, down positive). Up zooms in, a positive step (Jack, 2026-10-26).
