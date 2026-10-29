@@ -108,12 +108,23 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
   Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py
   <dir>` picks the table from them by its slots. `scripts/vortex-levels.sh check <layout> <scramble>` measures one row.
+- Plughole's levels: `scripts/plughole-levels.sh table` measures every plughole level in Levels.swift (entries, the
+  solver's optimum, hidden stirs, rings whole as dealt, right moves per step and forced steps over the untwist, each
+  right move taken as equally likely); `check <layout> <scramble>` measures one, and `search <layout> <depth>
+  <inversions> <from> <to>` deals seeded scrambles with the frozen generator, keeping those whose optimum is their
+  entry count. It builds `build/plughole-levels/measure` like `build/solve`.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
   Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives.
   Git ignores `shots/` apart from `index.txt`: show pictures and films in a PR by attaching them to a comment through
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
+- Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` and prints each file's
+  loudness, peaks, onset, phone-speaker loss and size, and each bed's seam (needs Homebrew's `csound` and `ffmpeg`).
+  Every source is seeded, so a rerun renders the same samples, but the AAC encoder isn't byte-deterministic, so a
+  rerun may rewrite a bed's .m4a with new bytes; restore those rather than commit them. `scripts/sounds.sh listen
+  <dir>` writes every effect and bed as m4a to `<dir>`, with a few effects played in turn over a bed, for listening
+  off the phone.
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
@@ -217,8 +228,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
   (`L1`, `N1`, `V1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
   its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
-  loses it unless the stored keys are remapped. Plughole has 27 hand-written
-  levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
+  loses it unless the stored keys are remapped. Plughole has 27 levels, 1–18
+  hand-written and 19–27 dealt by the frozen generator and picked for a gentler curve (`scripts/plughole-levels.sh`),
+  all scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would; whirlpool
   deeper variants on live pictures that follow a table, vortex 27 provisional swirl levels (quad, tri, eye, pent,
   then hex) on its own family, nine levels each: no two neighbours alike, V1–V3 one of each, isobars opening each
   layout and taking the finale, the ephemeris only to 14 stirs (`testVortexTable`), no knob seized, so the tank never turns and par is the entry count, which the
@@ -458,6 +470,24 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
   It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp.
+- **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
+  twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
+  reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,
+  and the heal that solves sounds as the solve. An undo's negation that brings back one of the scramble's entries marks
+  it the scramble's again. The `seized` sound plays with `Knock.thud` whenever a finger lands on a knob that can't be
+  turned. Beds loop under the menu and each tier (`Level.bed`; daily, endless, the sandbox and the packs take
+  plughole's), and a new one crossfades in over the old at equal power across two decks. Only a bed that is playing
+  stays decoded, and none in the background. `Sounding`, set on `RootView`, is the app's button style: a button taps as
+  it acts, and undo and reset have sounds of their own; the undo's body peaks about 0.2 s after the press (Jack,
+  SN1). A button that sets its own `.plain` style has none, so every
+  such button that acts takes `Sounding` instead: the gear, the consent card's answers and its link, the settings
+  sheet's switch and log, the pack cards' and the dock's buttons and the tier-up. The menu's tier names and rows
+  stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
+  a tier swipe lifts over it. Nothing sounds during a drag but the
+  detent's tick, and a sound never tells the player anything the picture doesn't. The session is ambient, and while
+  another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
+  unless `UNSTIR_SOUND=1`. An undo steps the heal notes back, so the next heal plays the undone one's note again
+  (Jack, SN1).
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
@@ -494,7 +524,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   opens the card's list); `UNSTIR_CONSENT=yes`
   or `=no` answers for the launch, never stored, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
-  the next unlocked. This is how screenshots and films
+  the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
+  `UNSTIR_SOUND=1`. This is how screenshots and films
   are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
 - **UnstirTests/Solver.swift** plays turning-tank levels for the tests and `scripts/solve.sh`; it never ships in the
   app. It has three players, whose moves count as `Game.history` counts them (`Play.count`). The optimum is the fewest
