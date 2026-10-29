@@ -480,6 +480,103 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.history, [Twist(rod: 0, steps: 2), Twist(rod: 0, steps: -2)])
     }
 
+    /// A heal climbs the scale: a wrong stir turned straight back cancels but is no heal, and the heal that solves sounds
+    /// as the solve instead.
+    @MainActor func testHealsCountTheScrambleTakenOff() {
+        let scramble = [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)]
+        let game = Game(level: Level(id: "test-heals", label: "", title: "", layout: .tri, scramble: scramble))
+        game.commit(rod: 0, steps: 2)
+        XCTAssertEqual(game.pushes, 1)
+        game.commit(rod: 0, steps: -2)
+        XCTAssertEqual(game.cancels, 1)
+        XCTAssertEqual(game.heals, 0)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 1)
+        game.commit(rod: 0, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertEqual(game.cancels, 3)
+        XCTAssertEqual(game.heals, 1)
+    }
+
+    /// Cancelling the player's own push, even long after, is no heal: only the scramble's entries count.
+    @MainActor func testCancellingAPushIsNoHeal() {
+        XCTAssertFalse(Layout.quad.overlaps(0, 2))
+        let game = Game(level: Level(id: "test-heals-push", label: "", title: "", layout: .quad,
+                                     scramble: [Twist(rod: 0, steps: 4)]))
+        game.commit(rod: 2, steps: 2)
+        XCTAssertEqual(game.pushes, 1)
+        game.commit(rod: 0, steps: -4)
+        XCTAssertEqual(game.heals, 1)
+        game.commit(rod: 2, steps: -2)
+        XCTAssertEqual(game.cancels, 2)
+        XCTAssertTrue(game.solved)
+        XCTAssertEqual(game.heals, 1)
+    }
+
+    /// A reset starts the heals' climb again from the bottom note.
+    @MainActor func testResetRestartsTheHeals() {
+        let scramble = [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)]
+        let game = Game(level: Level(id: "test-heals-reset", label: "", title: "", layout: .tri, scramble: scramble))
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 1)
+        XCTAssertTrue(game.reset())
+        XCTAssertEqual(game.heals, 0)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 1)
+    }
+
+    /// Undoing a heal steps the heal notes back, so the next heal plays the undone one's note again (Jack, SN1).
+    @MainActor func testUndoingAHealStepsBackTheNotes() {
+        let scramble = [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3), Twist(rod: 2, steps: 2)]
+        let level = Level(id: "test-heals-undo", label: "", title: "", layout: .tri, scramble: scramble)
+        let game = Game(level: level, bank: (undos: 5, refilled: nil))
+        game.commit(rod: 2, steps: -2)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 2)
+        game.undo()
+        XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)])
+        XCTAssertEqual(game.heals, 1)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 2)
+        // An undone stir that healed nothing moves no note.
+        game.commit(rod: 0, steps: -1)
+        game.undo()
+        XCTAssertEqual(game.heals, 2)
+    }
+
+    /// The push that fills the brim spills the run and is no heal, and a run's tank solved is its solve.
+    @MainActor func testTheBrimsLastPushSpills() {
+        let scramble = [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)]
+        let game = Game(level: Level(id: "test-heals-spill", label: "", title: "", layout: .tri, scramble: scramble,
+                                     run: Run(seed: 0, brim: Run.room - 1)))
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 1)
+        XCTAssertEqual(game.brim, Run.room - 2)
+        game.commit(rod: 2, steps: 2)
+        XCTAssertFalse(game.finished)
+        game.commit(rod: 1, steps: 1)
+        XCTAssertEqual(game.pushes, 2)
+        XCTAssertTrue(game.spilled)
+        XCTAssertFalse(game.solved)
+        XCTAssertEqual(game.heals, 1)
+        let solving = Game(level: Level(id: "test-heals-solve", label: "", title: "", layout: .tri, scramble: scramble,
+                                        run: Run(seed: 0)))
+        solving.commit(rod: 1, steps: -3)
+        solving.commit(rod: 0, steps: -4)
+        XCTAssertTrue(solving.solved)
+        XCTAssertFalse(solving.spilled)
+        XCTAssertEqual(solving.heals, 1)
+    }
+
+    /// Each tier has its own bed, and the modes outside the tiers take plughole's.
+    func testBedsFollowTheTier() {
+        XCTAssertEqual(Level.plughole.map(\.bed), Array(repeating: .plughole, count: Level.plughole.count))
+        XCTAssertEqual(Level.whirlpool.map(\.bed), Array(repeating: .whirlpool, count: Level.whirlpool.count))
+        XCTAssertEqual(Level.vortex.map(\.bed), Array(repeating: .vortex, count: Level.vortex.count))
+        XCTAssertEqual(Level.maelstrom.map(\.bed), Array(repeating: .maelstrom, count: Level.maelstrom.count))
+        XCTAssertEqual([Level.daily(), .endless(Run(seed: 7)), .sandbox].map(\.bed), [.plughole, .plughole, .plughole])
+    }
+
     /// An undo takes back a whole stir, gives its move back and costs the clean, and an empty bank refuses.
     @MainActor func testUndoSpendsTheBank() {
         Best.undos = 2
@@ -1007,7 +1104,7 @@ final class UnstirTests: XCTestCase {
     }
 
     func testLevelsNeverMerge() {
-        let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 6, 7, 8, 9, 7, 8, 10, 12, 14]
+        let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 5, 6, 6, 7, 6, 7, 8, 9, 9]
         XCTAssertEqual(Level.plughole.map(\.scramble.count), par)
         XCTAssertEqual(Level.plughole.filter(\.replay).count, 3)
     }
@@ -1015,14 +1112,16 @@ final class UnstirTests: XCTestCase {
     /// Against the design table's inversion column.
     func testInversions() {
         XCTAssertEqual(Level.plughole.map { $0.layout.inversions($0.scramble) },
-                       [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4])
+                       [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1, 2])
     }
 
-    /// Twice each level's par, strictly more inversions (against the whirlpool design table), and room to stir on top.
+    /// Twice the par of each plughole level as first written (19 to 27 have since eased), strictly more inversions than
+    /// the same-numbered level (against the whirlpool design table), and room to stir on top.
     func testWhirlpool() {
         let whirlpool = Level.whirlpool
         XCTAssertEqual(whirlpool.map(\.layout), Level.plughole.map(\.layout))
-        XCTAssertEqual(whirlpool.map(\.scramble.count), Level.plughole.map { 2 * $0.scramble.count })
+        XCTAssertEqual(whirlpool.map(\.scramble.count),
+                       [2, 2, 4, 4, 6, 6, 8, 6, 4, 8, 10, 12, 14, 8, 10, 6, 14, 16, 12, 14, 16, 18, 14, 16, 20, 24, 28])
         let inversions = whirlpool.map { $0.layout.inversions($0.scramble) }
         XCTAssertEqual(inversions, [1, 1, 2, 2, 3, 3, 4, 4, 2, 3, 4, 5, 6, 3, 4, 3, 6, 7, 4, 5, 6, 8, 5, 6, 8, 10, 12])
         for (n, level) in zip(inversions, Level.plughole) { XCTAssertGreaterThan(n, level.layout.inversions(level.scramble), level.id) }
@@ -1242,8 +1341,10 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack, level.scramble)
         XCTAssertEqual(game.moves, 0)
         XCTAssertNil(game.reachable)
+        // A tap on the ratchet is a move of its own: the clock ticks its 2:-4 on to 2:-3.
         game.wait(on: 2)
-        XCTAssertEqual(game.moves, 0)
+        XCTAssertEqual(game.moves, 1)
+        XCTAssertEqual(game.stack, .parse("0:+3,1:+2,2:-3", in: .quad))
         // Every level today turns its tank exactly where a knob is seized, and only there counts the turns in par.
         for level in Tier.allCases.flatMap(\.levels) + [.sandbox, .endless(Run(seed: 1))] {
             XCTAssertEqual(level.motion == .tank, !level.seized.isEmpty, level.id)

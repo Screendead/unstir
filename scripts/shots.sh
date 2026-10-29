@@ -31,7 +31,10 @@ shot() {  # name description KEY=VALUE...
   [[ -n "${pattern:-}" && "$name" != *$pattern* ]] && return
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   env ${vars[@]+"${vars[@]}"} xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
-  sleep "${hold:-$settle}"
+  local wait=${hold:-$settle}
+  # Lens's halftone bakes for 20 s or more the first time a Debug install draws it; the shots after read it from Caches.
+  if [[ " $* " == *" PACK=lens "* && -z "${baked:-}" ]]; then wait=30; baked=1; fi
+  sleep "$wait"
   settle=3
   xcrun simctl io "$udid" screenshot "shots/$name.png" >/dev/null 2>&1
   echo "shot $name"
@@ -41,8 +44,8 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23."
-shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1
+shot menu "Menu on first launch, the analytics question answered: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
+shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
@@ -94,7 +97,7 @@ for n in 01 04 07 08 09 13 14 18 19 22 23 27 05 11 15 06 10 16; do
 done
 # Mid-solve, where an inversion is on top: the top rod should not read from the still.
 shot inversion-L12 "Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers." LEVEL=12 STACK=2:-3,0:+4,3:+7,0:-2
-shot inversion-L27 "Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6." LEVEL=27 STACK=2:+3,0:-5,5:+6,4:+3
+shot inversion-L27 "Level 27 part-solved at its first inversion: 4:-7 sits on 3:+7." LEVEL=27 STACK=2:+2,3:-5,1:+3,0:+6,3:+7,1:-3,4:-7
 shot daily "Today's daily." MODE=daily
 shot endless "Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title." \
   MODE=endless
@@ -127,8 +130,10 @@ shot result "Level 05 result card after a harness solve through the real commit 
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
 shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
-shot tier-up-locked "The same with maelstrom still closed: the button dimmed with a lock, saying par every vortex level opens it." \
+shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying par every vortex level opens it; it opens the menu on maelstrom's gate." \
   SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
+shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over)." \
+  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:000100000010000000000200000
 shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels." \
   SCREEN=result MODE=daily
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
@@ -306,7 +311,210 @@ shot swirl-tri "Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3." LAYOUT=triS
 shot swirl-eye "Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3." LAYOUT=eyeSwirl STACK=0:+3,4:+2,2:-4,4:-3 SWIRLED=1 CLOCK=3
 shot swirl-pent "Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3." LAYOUT=pentSwirl STACK=0:+3,5:+2,2:-4,5:-3 SWIRLED=1 CLOCK=3
 shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl STACK=1:+3,7:+2,4:-4,7:-3 SWIRLED=1 CLOCK=3
+# Lens: rod 0 of tri is a lens on the halftone panel.
+hold=5 shot lens-plus "Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies." \
+  PACK=lens LEVEL=1 STACK=0:+3
+hold=5 shot lens-minus "Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim." PACK=lens LEVEL=1 STACK=0:-2
+for n in $(seq -w 1 25); do
+  hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens
+done
+hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 STACK=1:+2,0:+2
+hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 STACK=0:+2,1:+2
+hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger." \
+  PACK=lens LEVEL=1 LIVE=0:+1.4 TOUCH=0,-0.42
+# The rim band at each dealt step on each rod size, for glitter: tri's big rod 0 (0.58), quad's rod 0 (0.48) and eye's
+# small top rod 2 (0.44), each beside a neighbour that overlaps it. Still, the lens held half a step short, and the
+# neighbour held mid-twist over the lens.
+for size in "big tri 0 1 0,-0.42" "mid quad 0 1 -0.35,-0.35" "small eye 2 0 0,-0.56"; do
+  read -r name layout lens twist touch <<< "$size"
+  for n in 1 2 3; do
+    hold=5 shot "lens-glitter-$name-$n" "Lens on $layout rod $lens at +$n, still." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+$n
+    below=$( ((n > 1)) && echo "$lens:+$((n - 1))" || true )
+    hold=5 shot "lens-glitter-$name-$n-drag" "Lens on $layout rod $lens held at +$((n - 1)).5, mid-drag up." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$below LIVE=$lens:+0.5 TOUCH=$touch
+    hold=5 shot "lens-glitter-$name-$n-twist" "Lens on $layout rod $lens at +$n, rod $twist held 1.5 steps into a twist over it." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+$n LIVE=$twist:+1.5
+  done
+  # A flip book at the screen's own pixels, for glitter in motion (a film records at half size): the lens dragged from
+  # +2 to +3, then the neighbour twisted a step over it at +3, a tenth of a step a frame.
+  for i in 00 01 02 03 04 05 06 07 08 09 10; do
+    f=$((10#$i / 10)).$((10#$i % 10))
+    hold=3 shot "lens-flip-$name-zoom-$i" "Lens on $layout rod $lens held at +2 and $f steps." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+2 LIVE=$lens:+$f
+    hold=3 shot "lens-flip-$name-twist-$i" "Lens on $layout rod $lens at +3, rod $twist held $f steps into a twist." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+3 LIVE=$twist:+$f
+  done
+  # The order read at x2: the lens at +2 newest (its rim whole) or under a twist of 1 or 3 steps (its rim dragged).
+  for k in 1 3; do
+    hold=5 shot "lens-order-$name-over-$k" "Lens on $layout rod $lens, $twist:+$k,$lens:+2: the lens newest." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$twist:+$k,$lens:+2
+    hold=5 shot "lens-order-$name-under-$k" "Lens on $layout rod $lens, $lens:+2,$twist:+$k: the twist newest." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+2,$twist:+$k
+  done
+done
 # App-icon candidates, each a 1024-pixel square centred on the screen; scripts/icon.sh crops them and lays out the sheet.
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# First Stir's chapters 1, Dawn After (scenes 1 to 5, 6:40 back to 4:45 am), 2, The Rescue (6 to 10, 4:45 back to
+# 2:30 am), 3, The Flood (11 to 15, 2:30 back to 12:30 am), 4, The Storm (16 to 20, 12:30 am back to 9:30 pm), and
+# 5, Dusk Before (21 to 25, 9:30 back to 7:40 pm), three vignettes a scene. UNSTIR_BARE draws the picture unstirred, so the art shows as the stack has played
+# it: -held as dealt, at the scene's latest time, and -played with its last heal just made, at its earliest, a wave
+# past the rim keeping the card away (UNSTIR_STACK replaces the scramble, so it gives only the bottom entry, which that
+# heal clears). The pack is owned, so a level past its taste opens rather than its card.
+held=("Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney."
+      "The gallery: a neighbour measuring the smashed panes with a rule; three gulls on the rail; smoke from three chimneys."
+      "The rock pool: the lighthouse door shut, rope coiled on its hook; the child kneeling at the pool, holding up the float; the dog sitting."
+      "Righting the boat: three townsfolk, the rope slack, one waving; the boat upright on the sand; gulls coming back."
+      "Tea on the quay: the lifeboat moored, crew gone, lamp out; the three on the bench under one blanket, the child asleep; three cups steaming on a crate."
+      "Home light, 4:45 under the dawn's last sky: the lifeboat just inside the harbour mouth, the torch left on the sill, a neighbour holding out blankets at the steps; light rain."
+      "Off the breakwater: the steps empty, a rope hanging, surf over the lower steps; the lifeboat alongside their foot, two crew reaching up them; the lighthouse dark."
+      "The lantern chain: the lifeboat house open on an empty slip; the chain of lights reaching the lighthouse door; four bearers with lanterns held high."
+      "The stair: the hand-lamp burning on the stair's turn; the lantern chain's lights far below the window; the storm lantern on the bottom step by the open door."
+      "The lighthouse door: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair."
+      "The breakwater path, 2:30 under the Rescue's last sky: the rope hitched to its ring on the quay end; the father halfway out, crouched into a wave; the hand-lamp in the gallery window."
+      "High street under water: the town clock at 2:05; the street lamp drowned to its crossbar, dark; the father and a neighbour rowing the dinghy down the street, a coil of rope aboard."
+      "The upstairs window: the child and the dog at it, the torch shining out; the weathervane bent, pointing down; the door open, the water at its knocker, the float drifting out."
+      "The kitchen, flooded: the table sunk under the water, the cup floating off it on its saucer; the water up the stair, the child's boots on a step; the float drifting to the open door."
+      "Over the quay: the boat capsized and awash; only the dropped lantern's bail ring on the stones; a wave breaking white over the wall."
+      "The harbour, 12:30 am at the storm's peak: the lantern smashed and dark, shards falling past the gallery; the boat capsized, its rope snapped, the oar adrift; the cottage door flung open, the window dark, the lantern dropped on the quay; far lightning, driving rain."
+      "Lightning: a fork of lightning to the sea in the bay window; a candle lit on the small window's sill, the ceiling lamp dark; the child in her father's arms."
+      "The bell buoy: spray up the lighthouse to its gallery; the buoy heeled hard over, its bell swinging; the hut's shutter torn off and hanging."
+      "High street, rain: the café's awning torn to strips; the bicycle blown over in the gutter, a wheel spinning; the cobbler's sign hanging by one chain."
+      "Washing: the line snapped, a shirt flying off over the roofs; the neighbour's shutters shut and barred; the kennel's chain lying empty."
+      "Lighting the lamp, 9:30 pm, night blue, a cloud bank low on the sea: the lantern lit, its first beam out; gulls flocking inland; four of the town's windows lit."
+      "The path to the light: the grandmother at the lighthouse door, lantern raised; the child at the quay rail, waving; a thin moon beside the evening star."
+      "Doubling the lines: the boat's two lines out, its lamps lit, nobody aboard; the barometer's needle on the storm glyph; the float in the cottage window, the lamp lit."
+      "The float, the kitchen at sunset: the float hanging in the window, lit teal; the oilskin gone, the door ajar on the sunset; the child reaching up to the window, hands empty."
+      "First stir, the kitchen at golden dusk: the sun touching the sea, a small cloud over it; the clock at 7:55; the tea still and steaming, the spoon in the saucer.")
+played=("a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke."
+        "the gallery empty, shards on the deck; spray over the bare rail; no smoke, one window lit by a candle."
+        "the door open, the rope trailing over the rocks; the float alone in the pool; the dog sniffing."
+        "the three leaning back, hauling; the boat keel up, dark; the last stars, a gull asleep on the beacon."
+        "a crewman coiling rope, the searchlight on; the child standing on the bench, pointing; a neighbour pouring from a flask."
+        "the lifeboat outside on a swell, searchlight out; the child at the window with the torch and the dog; two neighbours carrying blankets out of the lifeboat house; the low cloud lit, heavier rain."
+        "the father helping the grandmother down the steps; the lifeboat further off, bow high on a wave; a glow at the lighthouse's stair window; heavier rain."
+        "the crew pushing the lifeboat out of the house and down the slip; the chain ending short of the lighthouse, one light at the door; two bearers, two more running up unlit; heavier rain."
+        "the grandmother sitting at the turn, her ankle bound, the lamp beside her; the window dark; the father at the foot, lantern raised, looking up; heavier rain at the window and door."
+        "the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain."
+        "the father kneeling at the ring, tying the rope; the path bare; the gallery window dark; the flood's deep blue sky, thicker rain."
+        "the clock at 1:40; the water at the lamp's foot, the lamp still lit and sparking; the dinghy tied to the drainpipe, empty."
+        "the window dark, a curtain blowing in; the weathervane upright, spinning; the water down at the step, the float on the threshold."
+        "the table standing clear, the water at its legs, the cup on it with its spoon; the child carrying the dog up the stair; the float caught on the chair's leg."
+        "the boat keel up, high in the water; the lantern on its side, its glass out; the sea a hand below the wall's top, slopping; the sky leaning to the storm's indigo, the rain at its thickest."
+        "the lantern whole and lit; the boat moored upright, its lamps lit; the father in the lit doorway holding the lantern up and out; 11:40 pm, the lightning fading, the rain thinner."
+        "the lighthouse beam sweeping in, no lightning; the ceiling lamp lit, the candle out; the child kneeling on the window seat beside the dog, both looking out."
+        "the lighthouse beam out, no spray; the buoy upright; the harbourmaster pulling the shutter to."
+        "the awning whole, the café's owner winding it in; the bicycle leaning on the lamp post; the sign hanging by two chains."
+        "shirts pegged on the line, streaming hard; the neighbour leaning out to pull the shutters to; the child unclipping the dog; 9:30 pm, the sky at dusk's night blue, the rain gone."
+        "the lantern dark, the grandmother reaching a taper to the lamp; the evening star; one window lit; the cloud bank sunk, the afterglow rising."
+        "the grandmother just out on the path, lantern swinging, shawl blowing; the child running along the quay, arm up; the afterglow alone."
+        "the father in the stern tying the second line; the needle on the sun glyph; the window dark, the float still hanging."
+        "the hook bare; the oilskin and hat on their pegs, boots below, the door shut; the grandmother holding the float out to the child."
+        "the sun a hand above the sea, clear; the clock at 7:40; the child's hand stirring, the tea's swirl.")
+bottom=(2:+5 3:+4 1:+4 0:+3 2:+4 1:+3 0:+4 3:+4 0:+4 3:-4 1:+4 0:+3 1:-4 0:+4 4:-3 2:+5 3:+4 0:+4 0:+4 3:+4 3:+4 0:+3 4:+3 0:+4 2:+4)
+for n in $(seq 1 25); do
+  last=${bottom[$((n - 1))]} name=firststir-$(printf %02d "$n")
+  fs="PACK=first-stir LEVEL=$n OWNED=first-stir"
+  shot "$name" "First Stir $n as dealt: every core turned, the time under the tank." $fs
+  shot "$name-held" "First Stir $n drawn unstirred, held back. ${held[$((n - 1))]}" $fs BARE=1
+  shot "$name-played" "First Stir $n drawn unstirred, every vignette played: ${played[$((n - 1))]}" $fs BARE=1 STACK="$last" TURNED="${last%%:*}:$((-${last#*:}))" WAVE=2
+done
+# Sunrise (2:+5,1:-4,0:+3,1:+2) part healed: the first heal plays nothing and steps the clock back; the second plays the
+# lantern.
+fs="PACK=first-stir LEVEL=1"
+shot firststir-01-healed-1 "First Stir 01 after the first heal (1:-2): no vignette, the clock at 6:34 am." $fs TURNED=1:-2
+hold=9 shot firststir-01-healed-2 "First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am." \
+  $fs MOVES=1:-2,0:-3
+# The night forwards (UNSTIR_ENDING), after First Stir 25's solve: every scene in story order, 6.4 s each with a 0.6 s
+# crossfade, held at moments through it.
+fs="PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean"
+shot firststir-ending-02 "The night forwards 1 s in: scene 25 played, the tea stirring at 7:40 pm, the time under the glass." $fs ENDING=1.1
+shot firststir-ending-05 "The night forwards 7 s in: scene 25 at its end, the tea still, crossfading to scene 24 at 7:55 pm." $fs ENDING=7.1
+shot firststir-ending-60 "The night forwards 83 s in: the Flood's upstairs window, 1:39 am, the water rising." $fs ENDING=83.4
+shot firststir-ending-end "The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am." $fs ENDING=162
+# A Debug build bakes Lens's halftone some 20 s the first time a size is asked for; one launch caches it for the shots.
+if [[ -z "$pattern" || card-lens == *$pattern* || clip-lens == *$pattern* || shelf == *$pattern* ]]; then
+  SIMCTL_CHILD_UNSTIR_CARD=lens xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
+  sleep 25
+fi
+# The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
+# held 5.4 s in. Prices are the StoreKit configuration's, as a US storefront shows them.
+shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
+shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot." \
+  OWNED=lens STORE=escapement:pending CLOCK=5.4
+for state in unowned owned pending failed revoked; do
+  shot card-lens-$state "Lens's card, $state." CARD=lens STORE=lens:$state CLOCK=5.4
+done
+shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
+shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
+shot card-complete "Complete's card, unowned." CARD=complete STORE=lens:unowned CLOCK=5.4
+# Each card's clip (`Clip`) held on the frame Reduce Motion holds, and a few frames either side of it.
+shot clip-first-stir-still "First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm." \
+  CARD=first-stir STORE=lens:unowned CLOCK=4.2
+for t in 1.4 2.1 3.3 5.4 6.2; do
+  shot clip-first-stir-$t "First Stir's clip $t s in." CARD=first-stir STORE=lens:unowned CLOCK=$t
+done
+shot clip-lens-still "Lens's clip on its still: level 3 as dealt, the lens newest, its rim whole through both twists." \
+  CARD=lens STORE=lens:unowned CLOCK=0.5
+for t in 2.4 3.2 4.3; do
+  shot clip-lens-$t "Lens's clip $t s in, the lens dragged down and back up." CARD=lens STORE=lens:unowned CLOCK=$t
+done
+shot clip-escapement-still "Escapement's clip on its still: rod 2 +4 let go, its tick landed, the ratchet a tooth on." \
+  CARD=escapement STORE=lens:unowned CLOCK=2.55
+for t in 1.6 2.2 3.6 5.1 5.9; do
+  shot clip-escapement-$t "Escapement's clip $t s in." CARD=escapement STORE=lens:unowned CLOCK=$t
+done
+shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
+  CARD=lens STORE=complete:failed CLOCK=5.4
+shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4
+shot card-lens-noprice "Lens's card before the App Store answers: buy, with no price." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
+  CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
+shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place." \
+  PACK=lens LEVEL=5 STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
+  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
+  CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+
+# The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
+shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
+shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again." CONSENT=sends
+shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
+shot consent-settings-on "The gear's sheet: the analytics switch on, and send log." CONSENT=yes SETTINGS=1
+shot consent-settings-off "The gear's sheet: the analytics switch off, and send log." CONSENT=no SETTINGS=1
+
+# Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
+# sub-dial (a wound-back clock's mirrored), the stipulation under the tank. Clocks are rods, + forward, - wound back.
+while IFS=$'\t' read -r n layout clocks scramble; do
+  shot "escapement-book-$(printf %02d "$n")" "Escapement $n as dealt: $layout, clocks $clocks, scramble $scramble." PACK=escapement OWNED=escapement LEVEL="$n"
+done < scripts/escapement/problems.tsv
+shot escapement-card "Escapement's card, owned, scrolled to its levels under the book's five chapter headings." \
+  CARD=escapement OWNED=escapement CARDSCROLL=1 CLOCK=5.4
+# Escapement 2, the packs mock-up's problem: tri 0:-1,1:+3,0:-2,2:-4, rod 0 the clock with a ratchet for a knob, unstirred
+# in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
+shot escapement-2-ticked "Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02." \
+  PACK=escapement LEVEL=2 PLAYED=2:4
+shot escapement-2-pushed "Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left." \
+  PACK=escapement LEVEL=2 PLAYED=2:4,1:-3
+shot escapement-2-out "Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again." \
+  PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1
+shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
+# The tick budget on 16 (clocks 1, owing 3, and 4, owing 6, so 9; line 3:-2, 5:-2, a wait, 6:-4, 5:+3, 2:-5): as dealt,
+# after the wait that stops clock 1, and one move from the end.
+shot escapement-budget-16-dealt "Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6." PACK=escapement OWNED=escapement LEVEL=16
+shot escapement-budget-16-mid "Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left." \
+  PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,1:1
+shot escapement-budget-16-late "Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: 01 tick left, clock 4's last." \
+  PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,1:1,6:-4,5:3
+# Out of ticks as the clocks stop with twists left, each of the three looks (UNSTIR_STOPLOOK): on 3, the book's decoy, a
+# tap then knob 1, which pushes under knob 2's seam; on 17, two clocks, a tap where the last heal was due.
+for look in stamp left rings; do
+  shot "escapement-stopped-3-$look" "Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look $look." \
+    PACK=escapement LEVEL=3 PLAYED=0:1,1:-3 STOPLOOK=$look
+  shot "escapement-stopped-17-$look" "Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look $look." \
+    PACK=escapement OWNED=escapement LEVEL=17 PLAYED=3:-5,4:-2,3:5,4:3,0:1 STOPLOOK=$look
+done

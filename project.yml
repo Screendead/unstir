@@ -14,7 +14,15 @@ targets:
   Unstir:
     type: application
     platform: iOS
-    sources: [Sources]
+    sources:
+      - Sources
+      # A folder reference keeps Sounds/glass/ in the bundle, where `Sound.use` looks for it.
+      - path: Sounds
+        type: folder
+        buildPhase: resources
+    configFiles:
+      Debug: Config/Unstir.xcconfig
+      Release: Config/Unstir.xcconfig
     settings:
       base:
         TARGETED_DEVICE_FAMILY: 1
@@ -27,6 +35,8 @@ targets:
         UILaunchScreen: {}
         CADisableMinimumFrameDurationOnPhone: true
         UIUserInterfaceStyle: Dark
+        AptabaseKey: $(APTABASE_KEY)
+        AnalyticsPlaytest: $(ANALYTICS_PLAYTEST)
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
   UnstirTests:
     type: bundle.unit-test

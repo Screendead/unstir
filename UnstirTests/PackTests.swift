@@ -78,7 +78,97 @@ final class PackTests: XCTestCase {
         XCTAssertNil(Store().access(Level(id: "L7", label: "", title: "", layout: .tri, scramble: [])))
     }
 
+    /// Opening a level past the taste of a pack the player doesn't own shows the pack's card in its place, from the menu
+    /// or from the level before it; the taste and an owned pack play, and so does a level in no pack.
+    @MainActor func testALevelPastTheTasteShowsItsCard() {
+        let unlocked = Best.unlocked
+        defer { Best.unlocked = unlocked }
+        Best.unlocked = false
+        func level(_ pack: Pack, _ n: Int) -> Level {
+            Level(id: pack.id(n), pack: pack, label: "", title: "", layout: .tri, scramble: [])
+        }
+        let store = Store()
+        XCTAssertNil(store.card(for: level(.lens, 3)))
+        XCTAssertEqual(store.card(for: level(.lens, 4)), .lens)
+        XCTAssertNil(store.card(for: Level.plughole[5]))
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .owned)
+        store.pretend(ledger)
+        XCTAssertNil(store.card(for: level(.lens, 4)))
+        XCTAssertEqual(store.card(for: level(.escapement, 4)), .escapement)
+        ledger.record(Pack.lens.productID, .revoked)
+        store.pretend(ledger)
+        XCTAssertEqual(store.card(for: level(.lens, 4)), .lens)
+    }
+
+    /// First Stir plays whole from the shelf in order: its 25 scenes, each card's next the scene after; the taste of 3
+    /// opens unowned and every scene past it shows the card, until the pack is owned. Nothing is left to arrive, and only a
+    /// build outside Release shelves it (FS17).
+    @MainActor func testFirstStirPlaysInOrderFromTheShelf() {
+        let unlocked = Best.unlocked
+        defer { Best.unlocked = unlocked }
+        Best.unlocked = false
+        let levels = Pack.firstStir.levels
+        XCTAssertEqual(levels.count, 25)
+        XCTAssertEqual(levels.map(\.id), (1...25).map { Pack.firstStir.id($0) })
+        for (a, b) in zip(levels, levels.dropFirst()) {
+            XCTAssertEqual(levels.drop { $0.id != a.id }.dropFirst().first?.id, b.id)
+        }
+        let store = Store()
+        XCTAssertEqual(levels.map { store.card(for: $0) }, Array(repeating: nil, count: 3) + Array(repeating: .firstStir, count: 22))
+        var ledger = Ledger()
+        ledger.record(Pack.firstStir.productID, .owned)
+        store.pretend(ledger)
+        XCTAssertTrue(levels.allSatisfy { store.card(for: $0) == nil })
+        XCTAssertTrue(Offer.shelf(release: false).contains(.pack(.firstStir)))
+        XCTAssertFalse(Offer.shelf(release: true).contains(.pack(.firstStir)))
+        XCTAssertFalse(Offer.pack(.firstStir).arriving)
+    }
+
+    /// Complete reads as owned once every pack is, however they were bought.
+    @MainActor func testCompleteIsOwnedOnceEveryPackIs() {
+        let store = Store()
+        var ledger = Ledger()
+        for pack in Pack.allCases.dropLast() { ledger.record(pack.productID, .owned) }
+        store.pretend(ledger)
+        XCTAssertEqual(store.state(.complete), .unowned)
+        ledger.record(Pack.allCases.last!.productID, .owned)
+        store.pretend(ledger)
+        XCTAssertEqual(store.state(.complete), .owned)
+        XCTAssertEqual(Offer.all.map(\.key), Pack.allCases.map(\.rawValue) + ["complete"])
+        XCTAssertEqual(Offer.all.map { Offer(name: $0.key) }, Offer.all)
+    }
+
     /// A pack's ids never read as another pack's or a tier's.
+    /// A Release shelf shows a pack it sells once it has levels past its taste, and Complete once it shows every pack
+    /// it sells; a build outside Release shows them all.
+    func testAPackGoesOnTheShelfOnceItsLevelsAreIn() {
+        XCTAssertEqual(Offer.shelf(release: false, ready: { _ in false }), Offer.all)
+        XCTAssertEqual(Offer.shelf(release: true, ready: { _ in false }), [])
+        XCTAssertEqual(Offer.shelf(release: true, ready: { $0 != .lens }), [.pack(.escapement)])
+        XCTAssertEqual(Offer.shelf(release: true, ready: { _ in true }), [.pack(.lens), .pack(.escapement), .complete])
+        for pack in Pack.allCases {
+            XCTAssertEqual(Offer.shelf(release: true).contains(.pack(pack)), pack.ships && pack.levels.count > pack.taste,
+                           pack.name)
+            XCTAssertEqual(Offer.pack(pack).arriving, pack.levels.count < pack.planned, pack.name)
+        }
+        XCTAssertEqual(Offer.complete.arriving, Pack.allCases.contains { $0.levels.count < $0.planned })
+    }
+
+    /// First Stir is out of v1 (Jack, FS17): a Release build neither sells it nor opens its levels, taste and all, and
+    /// Complete names only what it grants. Outside Release it stays whole.
+    func testFirstStirIsOutOfV1() {
+        XCTAssertEqual(Pack.sold(release: true), [.lens, .escapement])
+        XCTAssertEqual(Pack.sold(release: false), Pack.allCases)
+        XCTAssertEqual(Pack.firstStir.access(1, owned: [.firstStir], unlocked: true, release: true), .withheld)
+        XCTAssertEqual(Pack.firstStir.access(4, owned: [.firstStir], release: true), .withheld)
+        XCTAssertEqual(Pack.firstStir.access(1, owned: [], unlocked: false, release: false), .taste)
+        XCTAssertEqual(Pack.lens.access(1, owned: [], release: true), .taste)
+        XCTAssertEqual(Pack.named(Pack.sold(release: true)), "Lens and Escapement")
+        XCTAssertEqual(Pack.named(Pack.allCases), "First Stir, Lens and Escapement")
+        XCTAssertEqual(Pack.named([.lens]), "Lens")
+    }
+
     func testPackIdsBelongToOnePack() {
         let tierIds = Tier.allCases.flatMap { $0.levels.map(\.id) } + ["endless", "sandbox", "daily-20261025"]
         for pack in Pack.allCases {
@@ -132,13 +222,13 @@ final class PackTests: XCTestCase {
                 .filter { $0.key != "unlock" })
         }
         // An earlier build's harness launch may have left them on this simulator.
-        for key in ["best.lens-5", "started.lens-5"] { UserDefaults.standard.removeObject(forKey: key) }
+        for key in ["best.escapement-31", "started.escapement-31"] { UserDefaults.standard.removeObject(forKey: key) }
         let before = stored()
-        let h = Harness(["UNSTIR_OWNED": "complete", "UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "5"])
+        let h = Harness(["UNSTIR_OWNED": "complete", "UNSTIR_PACK": "escapement", "UNSTIR_LEVEL": "31"])
         let store = Store()
         store.pretend(try XCTUnwrap(h.purchases))
-        XCTAssertEqual(h.level.id, "lens-5")
-        XCTAssertEqual(h.level.pack, .lens)
+        XCTAssertEqual(h.level.id, "escapement-31")
+        XCTAssertEqual(h.level.pack, .escapement)
         XCTAssertEqual(store.access(h.level), .owned)
         XCTAssertEqual(store.state(.escapement), .owned)
         XCTAssertEqual(store.ledger.owned, [], "the harness's packs are not StoreKit's")
@@ -147,8 +237,8 @@ final class PackTests: XCTestCase {
         game.commit(rod: 0, steps: -4)
         XCTAssertTrue(game.solved)
         XCTAssertEqual(stored(), before)
-        XCTAssertNil(Best.load("lens-5"))
-        XCTAssertFalse(Best.started("lens-5"))
+        XCTAssertNil(Best.load("escapement-31"))
+        XCTAssertFalse(Best.started("escapement-31"))
         XCTAssertEqual(Store().access(h.level), .needsCard)
         XCTAssertEqual(Store().access(Harness(["UNSTIR_PACK": "lens", "UNSTIR_LEVEL": "3"]).level), .taste)
         Best.unlocked = false

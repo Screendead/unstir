@@ -98,11 +98,22 @@ struct Level: Hashable, Sendable {
     var sockets: Set<Int> = []
     /// Escapement's clocks: a knob that can't be turned, and waits on a tap.
     var ratchets: Set<Int> = []
+    /// Escapement's clocks wound back: stirred clockwise, each ticks -1. The rest of `ratchets` tick +1.
+    var woundBack: Set<Int> = []
+    /// A pack's chapter, which the card's list heads where it changes.
+    var chapter: String?
+    /// Escapement: a stack of the demonstration's own, played on the clock before the first stir.
+    var demo: [Twist] = []
+    /// Lens's slots whose steps magnify (`Tank.lens`) rather than turn. Their knobs work as any other: only the map
+    /// differs, so every merge, commutation and solve on the level takes this set.
+    var lenses: Set<Int> = []
     /// What carries the knobs round without a stir, held by the rim. Maelstrom's turns the tank, to bring a seized
     /// knob's fluid to a working one.
     var motion = Motion.none
     /// Nil is one move per entry. A level whose tank turns also counts its turns.
     var fixedPar: Int?
+    /// First Stir's scene, drawn in place of `picture`; each of its vignettes plays once no entry holds it back.
+    var story: Story?
     var par: Int { fixedPar ?? scramble.count }
 
     var sandbox: Bool { id == "sandbox" }
@@ -115,10 +126,31 @@ struct Level: Hashable, Sendable {
 
     enum Knob: Hashable, Sendable { case working, seized, socket, ratchet }
 
+    /// Escapement's clocks in the order they tick after every move, clockwise from twelve (Jack's call D1, round 9), each
+    /// with the step it ticks while it holds an entry. None is ever hex's hub, which has no angle.
+    var clocks: [(rod: Int, dir: Int)] {
+        ratchets.map { (rod: $0, dir: woundBack.contains($0) ? -1 : 1) }
+            .sorted { layout.clockwise($0.rod) < layout.clockwise($1.rod) }
+    }
+
+    /// Escapement: the ticks clock `clock` owes on `stack` before it stops, its own steps the way it ticks back to none.
+    func owed(_ clock: Int, on stack: [Twist]) -> Int {
+        let dir = woundBack.contains(clock) ? -1 : 1
+        return max(0, -dir * stack.filter { $0.rod == clock }.reduce(0) { $0 + $1.steps })
+    }
+
+    /// Escapement's tick budget on `stack`: every clock's owed ticks together. Every tick of every clock spends one.
+    func budget(on stack: [Twist]) -> Int { ratchets.reduce(0) { $0 + owed($1, on: stack) } }
+    /// The budget as dealt, which the stipulation states.
+    var budget: Int { budget(on: scramble) }
+
     func kind(of knob: Int) -> Knob {
         seized.contains(knob) ? .seized : sockets.contains(knob) ? .socket : ratchets.contains(knob) ? .ratchet : .working
     }
 
+    /// 19 to 27 eased (2026-10-27), dealt by the frozen generator as layout-depth-inversions #seed: pent-5-0 #1,
+    /// pent-6-0 #3, pent-6-1 #36, pent-7-1 #8, hex-6-0 #249, hex-7-0 #374, hex-8-1 #4, hex-9-1 #12, hex-9-2 #46, picked by
+    /// scripts/plughole-levels/pick.py so each layout's curve rises.
     static let plughole: [Level] = ([
         (.tri, "0:+4", "Turn it back.", "Turn a rod to look. Let go where you started and nothing happens."),
         (.tri, "1:-7", "Further than it looks.", ""),
@@ -138,15 +170,15 @@ struct Level: Hashable, Sendable {
         (.eye, "0:+4,2:+5,0:-4", "The tail follows the rod that moved last.", "Turned, stirred past, turned back: all it leaves is a tail."),
         (.eye, "3:+3,2:-3,0:-6,2:-3,0:-6,1:-3,3:+4", "Viscous, reversible, mildly smug.", ""),
         (.eye, "3:+4,2:-2,1:+6,0:-5,3:+6,1:-2,2:+5,3:-4", "Laminar, if you squint.", ""),
-        (.pent, "4:+3,0:+5,4:-6,1:-3,2:+4,3:+7", "Five rods and no middle.", ""),
-        (.pent, "1:+2,2:+4,1:+2,0:+4,3:+4,4:+5,1:+2", "Read the crossings, not the colours.", ""),
-        (.pent, "4:+3,3:+6,1:-3,4:+4,2:-4,0:+3,4:+6,3:-7", "Every ring is nearly whole. One is.", ""),
-        (.pent, "3:-4,0:-3,4:+5,3:-2,4:-3,1:-2,2:-2,3:+4,2:-3", "Chaotic advection, politely reversed.", ""),
-        (.hex, "5:+4,3:+2,4:+5,6:-3,2:-4,5:+7,1:+7", "Seven rods. Same rule.", ""),
-        (.hex, "3:-4,2:-5,0:+2,6:-3,4:-2,5:+6,4:+7,2:+4", "The hub cuts everything.", ""),
-        (.hex, "6:-2,2:+3,4:+4,5:-6,1:+5,2:-2,1:-3,6:+6,2:-4,3:-5", "Low Reynolds number, high standards.", ""),
-        (.hex, "1:+4,5:+3,2:+5,1:-3,0:-2,5:+3,2:-3,1:-4,4:+5,3:-3,2:-7,6:+2", "Mixing is easy. Ask anyone.", ""),
-        (.hex, "2:+3,0:-5,5:+6,4:+3,0:+4,6:-7,0:+5,5:-6,6:-6,2:+4,5:+3,1:+5,3:+2,0:+6", "Unstirred, by hand.", ""),
+        (.pent, "2:+4,3:-5,0:-4,1:-7,4:+7", "Five rods and no middle.", ""),
+        (.pent, "0:-2,2:+3,1:+6,4:-4,3:-5,4:+7", "Read the crossings, not the colours.", ""),
+        (.pent, "4:+3,2:-3,0:-3,1:+4,4:-2,0:-6", "Every ring is nearly whole. One is.", ""),
+        (.pent, "0:-2,2:+2,4:-4,0:+6,4:+2,1:-5,0:+7", "Chaotic advection, politely reversed.", ""),
+        (.hex, "1:-2,4:-4,2:+5,3:-6,5:+4,1:-3", "Seven rods. Same rule.", ""),
+        (.hex, "0:+3,4:-4,1:-2,3:+6,6:-4,1:+6,5:-3", "The hub cuts everything.", ""),
+        (.hex, "4:-2,1:+2,2:-4,0:-2,1:+5,2:+6,4:-4,6:-2", "Low Reynolds number, high standards.", ""),
+        (.hex, "1:-3,2:-2,3:-3,4:-4,6:+2,2:-3,0:+5,2:+7,6:+2", "Mixing is easy. Ask anyone.", ""),
+        (.hex, "2:+2,3:-5,1:+3,0:+6,3:+7,1:-3,4:-7,2:-5,5:+3", "Unstirred, by hand.", ""),
     ] as [(Layout, String, String, String)]).enumerated().map { i, l in
         // The city only where par is 4 or less: deeper, it goes murky.
         Level(id: Tier.plughole.prefix + "\(i + 1)", label: String(format: "%02d", i + 1), title: l.2, note: l.3,
@@ -154,7 +186,8 @@ struct Level: Hashable, Sendable {
               layout: l.0, replay: i < 3, scramble: .parse(l.1, in: l.0))
     }
 
-    /// Twice the stirs of the same-numbered level, more of them hidden under louder ones, live pictures, nothing replayed.
+    /// Twice the stirs of the same-numbered plughole level as first written (19 to 27 have since eased), more of them
+    /// hidden under louder ones, live pictures, nothing replayed.
     static let whirlpool: [Level] = ([
         (.tri, "0:-5,1:+3", "Turn them back.", "Same rules, twice the stirs, no replays."),
         (.tri, "2:+7,0:-7", "Both went further than they look.", ""),

@@ -4,16 +4,17 @@ Drafted 2026-10-27; Jack's calls ST1 to ST7 applied 2026-10-29, each A, so each 
 options set aside under it. Every character count below was measured with a script, not by eye. Anything legal is
 marked **(check)**: nothing here settles it.
 
-Two things still follow a call that isn't made: whether v1 ships with analytics (the description's last paragraph and
-the App Privacy label each have a variant per answer), and the contact address, which is Jack's and is written here
-only as the token `{{CONTACT_ADDRESS}}`. The address itself is kept outside the repo, in `HANDOFF.private.md`; it goes
-into App Store Connect and the hosted pages, never into a tracked file.
+v1 ships with no analytics (AN1 = A) and is not sold in the EU or EEA at launch (EU1 = B), so this page holds only
+the no-analytics texts and the privacy policy for that build. The contact address is Jack's and is written here only as
+the token `{{CONTACT_ADDRESS}}`; the address itself is kept outside the repo, in `HANDOFF.private.md`, and goes into App
+Store Connect and the hosted pages, never into a tracked file. The same goes for the developer's name in the policy:
+`{{DEVELOPER_NAME}}`.
 
-What it is true to: `master` at 2f74de9 (four tiers of 27 levels, the daily, endless, the sandbox, StoreKit for three
-packs and Complete) and the `analytics` branch at e816c97 (the consent card and Aptabase). Not built, so left out of
-the copy: the packs' levels (`Level.firstStir`, `Level.lens` and `Level.escapement` are empty), the daily archive, the
-supporter mark, iCloud sync, sound (on `sound`, unmerged) and charybdis. The packs' lines describe the designs in
-HANDOFF.md; check them against the packs once they are built.
+What it is true to: `master` with `v1-no-analytics` (four tiers of 27 levels, the daily, endless, the sandbox, StoreKit
+for the packs and Complete) and the packs' levels as built: Lens's 25 and Escapement's 30. Prism, the third pack
+(PK1 = A, replacing First Stir, which is out of v1), is being built; its lines below describe its design and are to be
+checked against it once it ships. Not built, so left out of the copy: the daily archive, the supporter mark, iCloud
+sync and charybdis.
 
 ## Name (30 characters at most)
 
@@ -50,8 +51,7 @@ later, or a line about a new tier when one ships.
 
 ## Description (4000 characters at most)
 
-2,971 characters with the analytics paragraph, 2,830 without; plain text. Capitals stand in for headings, since the store renders no formatting. The
-last paragraph is two variants: use the one that matches the build that ships.
+Plain text. Capitals stand in for headings, since the store renders no formatting.
 
 ```
 A picture sits in a tank of thick fluid. Rods under the glass have stirred it, one after another, and each stir left a ring of sheared picture behind. Turn the rods back in the right order and the picture comes clean.
@@ -81,27 +81,23 @@ PACKS
 
 Three packs add their own pictures, tanks and rules. The first three levels of each are free to play.
 
-- First Stir: a wordless story of one stormy night in a seaside town, told backwards. Each heal rewinds part of the night, until the last tank is a child stirring a cup of tea.
 - Lens: some rods zoom or spiral instead of turning. Read how far a picture has grown against a halftone dot screen that never lies about scale.
 - Escapement: a book of composed problems with a clock in them. One rod ticks a step by itself after every move you make. Time your heals so the clock always finds its seam.
+- Prism: every picture is drawn three times, in red, green and blue light, and each rod stirs only some of the colours. Unstir until the ghosts snap back into one white line.
 
-Complete unlocks First Stir, Lens and Escapement in one purchase. Packs and Complete can be shared with your family through Family Sharing.
+Complete unlocks Lens, Escapement and Prism in one purchase. Packs and Complete can be shared with your family through Family Sharing.
 
-[with analytics] No ads. No timers. No account. Your progress stays on your phone. If you are 13 or over and say yes when the game asks, it sends counts of how you play, with no name or ID for you or your phone; you can change your answer in settings.
-
-[without analytics] No ads. No timers. No account. Your progress stays on your phone, and the game sends nothing.
+No ads. No timers. No account. Your progress stays on your phone, and the game sends nothing.
 ```
 
 Choices and checks in it:
-- **The analytics paragraph** follows the `keep-analytics` branch: under 13, or on an EU or EEA storefront, nothing
-  is asked or sent; the line names only the age, since a storefront the game doesn't ask on needs no mention.
 - **Complete.** It names the three packs and promises nothing about later ones (HANDOFF: the store page never promises
   later packs to Complete owners; to-do 55, App Review's rules on Complete, is still open) **(check)**.
 - **Family Sharing.** On for all four products (Jack, ST6): `StoreKit/Unstir.storekit` already marks each
   family-shareable, and the store code handles family grants. Turn it on for each in App Store Connect too; once on it
   can't be turned off (check).
 - **Prices.** Left out: they vary by storefront and the store shows them beside each purchase.
-- **Pack sizes.** Left out until built (planned: First Stir 25 scenes, Lens 25 panels, Escapement 30 problems).
+- **Pack sizes.** Left out until Prism is built (Lens 25 levels, Escapement 30 problems, Prism planned at 30 specimens).
 - **Vortex's swirl.** Worded to fit both the map in CLAUDE.md and a7d5b9f ("turn the swirl inside out"); check it
   against the swirl as it ships.
 
@@ -126,7 +122,7 @@ A leans on what players search for when they look for this kind of game (unscram
 | B, set aside | Games › Puzzle | Games › Strategy |
 | C, set aside | Games › Puzzle | none |
 
-A puts it beside calm puzzle games, where First Stir's buyer looks. B suits maelstrom and Escapement's solver, a
+A puts it beside calm puzzle games, where Lens's buyer looks. B suits maelstrom and Escapement's solver, a
 smaller audience. Secondary category is optional, so C costs only reach.
 
 ## Age rating
@@ -138,20 +134,20 @@ version exists.
 
 | Area | Answer | Why |
 |---|---|---|
-| Violence (cartoon, realistic, prolonged, graphic) | None | Abstract pictures; First Stir's storm and flood show no harm to anyone (keep it so as the scenes are drawn) |
+| Violence (cartoon, realistic, prolonged, graphic) | None | Abstract pictures |
 | Sexual content, nudity | None | |
 | Profanity, crude humour | None | |
-| Horror, fear themes | None | First Stir's storm, flood and rescue: nobody is hurt and every scene heals back. Infrequent would make it 9+; recheck once drawn |
+| Horror, fear themes | None | Abstract pictures, no scenes |
 | Alcohol, tobacco, drugs | None | |
 | Mature or suggestive themes | None | |
 | Medical or treatment information | None | |
 | Gambling, simulated gambling | None | No loot boxes; every purchase names what it unlocks |
 | Contests ("competitions for rankings, rewards, or personal goals") | Infrequent | Par, bests and the daily fit. Still 4+, but A6 in Brazil, not AL |
-| Unrestricted web access | No | The app has no web view: the privacy policy row opens Safari, and analytics, if it ships, posts to one fixed address |
+| Unrestricted web access | No | The app has no web view: the privacy policy row opens Safari |
 | User-generated content, messaging, chat | No | The share line is a text the player sends through the system share sheet; nothing is received |
 | Advertising | No | |
 | In-app purchases | Yes | Three packs and Complete |
-| Parental controls, age assurance | No | The analytics build's age question gates only analytics, not the game |
+| Parental controls, age assurance | No | No age question in v1 |
 | In-app controls, capabilities, medical or wellness topics, violent themes (added 2025) | None or No | |
 
 Expected result: 4+.
@@ -182,7 +178,7 @@ The set, in order, with a caption each (captions are composited onto the shot, w
 | 5 | `seized-m23-half` | Maelstrom: knobs seize. Turn the whole tank. | 44 |
 | 6 | `daily-result` | A new daily every day, the same for everyone. | 45 |
 | 7 | `endless-brim` | Endless: waste a stir and the brim rises. | 41 |
-| 8 | to make: a First Stir scene, mid-heal | Paid pack · First Stir: a night told backwards | 46 |
+| 8 | to make: a Prism specimen, ghosts half-merged | Paid pack · Prism: three colours, one line | 42 |
 | 9 | to make: a Lens panel with a zoom seam | Paid pack · Lens: rods that zoom and spiral | 43 |
 | 10 | to make: an Escapement plate, clock mid-tick | Paid pack · Escapement: a clock in every problem | 48 |
 
@@ -238,15 +234,15 @@ The 4–12 s film doesn't exist and is the one new case the plan needs; it also 
   recorded in `HANDOFF.private.md` only, and filled in App Store Connect and in the published pages at publishing.
 - **Marketing URL** (optional). None until a domain exists.
 - **Copyright.** The year and holder of the source files' copyright headers.
-- **In-app purchases.** Display names: "First Stir", "Lens", "Escapement", "Complete". Descriptions (Apple's limit is
+- **In-app purchases.** Display names: "Lens", "Escapement", "Prism", "Complete". Descriptions (Apple's limit is
   assumed to be 45 characters; check):
 
   | Product | Description | Chars |
   |---|---|---|
-  | First Stir | A stormy night, told backwards | 30 |
   | Lens | Rods that zoom and spiral | 25 |
   | Escapement | Composed problems with a clock | 30 |
-  | Complete | First Stir, Lens and Escapement | 31 |
+  | Prism | Three colours, one white line | 29 |
+  | Complete | Lens, Escapement and Prism | 26 |
 
   Each also needs a review screenshot and, if promoted, its own art (to-do 50 and 51).
 - **Review notes.** App Review can't open the later tiers without playing every level at par, and the developer unlock
@@ -256,45 +252,12 @@ The 4–12 s film doesn't exist and is the one new case the plan needs; it also 
 
 ## App Privacy label
 
-The label must match the build that ships. All of what follows is derived from the code, cited by file.
-
-### Without analytics (branch `v1-no-analytics`)
+The label must match the build that ships: v1 without analytics (branch `v1-no-analytics`). Derived from the code.
 
 **Data Not Collected.** With analytics off the app opens no network connection of its own. StoreKit's
 purchases go between the phone and Apple, and Apple's handling isn't the app's to declare (Apple's guidance, as
 understood; check). The daily's share line and the send-log button go through the system share sheet, which the
 player directs.
-
-### With analytics (branch `keep-analytics`)
-
-Matches `Sources/PrivacyInfo.xcprivacy` on `master`. The legal research (round 10) also recommends declaring
-Identifiers › User ID, not linked, for Aptabase's daily hash; not yet added:
-
-| Data type | Collected | Linked to the player | Used to track | Purpose |
-|---|---|---|---|---|
-| Usage Data › Product Interaction | Yes | No | No | Analytics |
-| Purchases › Purchase History | Yes | No | No | Analytics |
-| Location › Coarse Location | Yes | No | No | Analytics |
-
-Everything else: not collected. No tracking, so no App Tracking Transparency prompt.
-
-Why each, from `Sources/Analytics.swift` on `analytics`:
-- **Product Interaction**: `installed` and `returned` (a day number); `level` (the level's id, a daily as "daily",
-  outcome solved or quit, moves, par, undos, resets); `run` (endless: outcome spilled or quit, tanks cleared, moves);
-  `card` and `taste` (a pack's name, once per install); `snapshot` on days 2, 7 and 30 (the day numbers played, undos
-  used, undos banked, endless's best, the furthest level reached in each tier, levels started, dailies solved on the
-  first try, and for each pack whether its card was seen, its taste finished and it is owned). The sandbox sends
-  nothing.
-- **Purchase History**: `purchased` (a pack's name or "complete", once per install, for a verified purchase made on
-  that phone), and each pack's owned flag in `snapshot`. No price, transaction or Apple ID.
-- **Coarse Location**: the code sends no location. Aptabase reads the country from the address each request comes
-  from, which is why the consent card says "roughly which country you're in". What Aptabase does with the address
-  after that is its policy, not this code: unchecked **(check)**.
-- **Not linked**: no player, install or device ID is sent. Each event carries a random session number, renewed after
-  an hour with no event (and a fresh one for each snapshot), so events of one sitting can be grouped together, but not
-  with the next sitting. Also sent with every batch: whether the build is Debug, "iOS", the app's version and build
-  number, `unstir@1`, and a `User-Agent` of "Unstir". No locale, device model or OS version. Whether "not linked" holds
-  in Apple's sense for a `snapshot` row, a per-player summary, is a judgement call **(check)**.
 
 ### The send-log button
 
@@ -313,11 +276,7 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
 
 ## Still open
 
-1. Whether v1 ships with analytics (the round 11 law calls): it picks the description's last paragraph, the App
-   Privacy label variant above and which privacy policy is published (`docs/privacy-policy.md` without analytics,
-   `docs/privacy-policy-analytics.md` with).
-2. Before submitting: the checks marked **(check)** above, against App Store Connect's live pages.
-3. Screenshots 8 to 10 and the 4–12 s film are still to make, and captions need a compositing step that doesn't exist.
-4. The pack lines describe the designs; check them against the packs as they ship.
-5. Carried from to-do 57: on the analytics build, a Yes, then No, then Yes sends `installed` again and counts as a
-   second install.
+1. Before submitting: the checks marked **(check)** above, against App Store Connect's live pages.
+2. Screenshots 8 to 10 and the 4–12 s film are still to make, and captions need a compositing step that doesn't exist.
+3. The Prism lines describe its design; check them against the pack as it ships.
+4. In App Store Connect's availability, exclude the EU/EEA storefronts (EU1 = B); the EU is out at launch.

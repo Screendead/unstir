@@ -1,12 +1,12 @@
 # Unstir privacy policy
 
-> **Draft, 2026-10-29, not for publishing yet.** The policy for v1 without analytics, as the `v1-no-analytics` branch
-> builds it; `docs/privacy-policy-analytics.md` is the one for a build with analytics. The app's settings row opens this
-> page. `{{CONTACT_ADDRESS}}` is filled in at publishing, never in this public repo. Remove this box before publishing.
+> **Draft, 2026-10-29, not for publishing yet.** The policy for v1, which has no analytics (the app's settings row opens
+> this page). `{{CONTACT_ADDRESS}}` and `{{DEVELOPER_NAME}}` are filled in at publishing, never in this public repo. v1 is
+> not sold in the EU or EEA. Remove this box before publishing.
 
 *Last updated: [date of publishing]*
 
-Unstir is a puzzle game made by Jack Lusher, its developer ("we", "us").
+Unstir is a puzzle game made by {{DEVELOPER_NAME}}, its developer ("we", "us").
 
 ## In short
 

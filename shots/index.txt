@@ -1,4 +1,4 @@
-menu.png  Menu on first launch: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23.
+menu.png  Menu on first launch, the analytics question answered: only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
 menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
 menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, vortex still locked.
@@ -43,7 +43,7 @@ level06.png  Level 06 with its full scramble and its note.
 level10.png  Level 10 with its full scramble and its note.
 level16.png  Level 16 with its full scramble and its note.
 inversion-L12.png  Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers.
-inversion-L27.png  Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6.
+inversion-L27.png  Level 27 part-solved at its first inversion: 4:-7 sits on 3:+7.
 daily.png  Today's daily.
 endless.png  Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title.
 endless-brim.png  Endless, first tank, opened with 5 of the brim's 8 notches: the picture's own colours in the bezel up to the fifth tick on both sides, glowing onto the black; the tank where moves and par were, no undo or reset.
@@ -60,7 +60,8 @@ undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refi
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
 tier-up.png  Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing.
-tier-up-locked.png  The same with maelstrom still closed: the button dimmed with a lock, saying par every vortex level opens it.
+tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying par every vortex level opens it; it opens the menu on maelstrom's gate.
+tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over).
 daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels.
 daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap).
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
@@ -189,6 +190,305 @@ swirl-tri.png  Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3.
 swirl-eye.png  Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3.
 swirl-pent.png  Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3.
 swirl-hex.png  Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3.
+lens-plus.png  Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies.
+lens-minus.png  Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim.
+lens-01.png  Lens 01 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-02.png  Lens 02 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-03.png  Lens 03 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-04.png  Lens 04 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-05.png  Lens 05 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-06.png  Lens 06 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-07.png  Lens 07 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-08.png  Lens 08 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-09.png  Lens 09 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-10.png  Lens 10 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-11.png  Lens 11 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-12.png  Lens 12 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-13.png  Lens 13 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-14.png  Lens 14 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-15.png  Lens 15 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-16.png  Lens 16 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-17.png  Lens 17 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-18.png  Lens 18 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-19.png  Lens 19 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-20.png  Lens 20 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-21.png  Lens 21 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-22.png  Lens 22 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-23.png  Lens 23 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-24.png  Lens 24 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-25.png  Lens 25 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
+lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
+lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger.
+lens-glitter-big-1.png  Lens on tri rod 0 at +1, still.
+lens-glitter-big-1-drag.png  Lens on tri rod 0 held at +0.5, mid-drag up.
+lens-glitter-big-1-twist.png  Lens on tri rod 0 at +1, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-big-2.png  Lens on tri rod 0 at +2, still.
+lens-glitter-big-2-drag.png  Lens on tri rod 0 held at +1.5, mid-drag up.
+lens-glitter-big-2-twist.png  Lens on tri rod 0 at +2, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-big-3.png  Lens on tri rod 0 at +3, still.
+lens-glitter-big-3-drag.png  Lens on tri rod 0 held at +2.5, mid-drag up.
+lens-glitter-big-3-twist.png  Lens on tri rod 0 at +3, rod 1 held 1.5 steps into a twist over it.
+lens-flip-big-zoom-00.png  Lens on tri rod 0 held at +2 and 0.0 steps.
+lens-flip-big-twist-00.png  Lens on tri rod 0 at +3, rod 1 held 0.0 steps into a twist.
+lens-flip-big-zoom-01.png  Lens on tri rod 0 held at +2 and 0.1 steps.
+lens-flip-big-twist-01.png  Lens on tri rod 0 at +3, rod 1 held 0.1 steps into a twist.
+lens-flip-big-zoom-02.png  Lens on tri rod 0 held at +2 and 0.2 steps.
+lens-flip-big-twist-02.png  Lens on tri rod 0 at +3, rod 1 held 0.2 steps into a twist.
+lens-flip-big-zoom-03.png  Lens on tri rod 0 held at +2 and 0.3 steps.
+lens-flip-big-twist-03.png  Lens on tri rod 0 at +3, rod 1 held 0.3 steps into a twist.
+lens-flip-big-zoom-04.png  Lens on tri rod 0 held at +2 and 0.4 steps.
+lens-flip-big-twist-04.png  Lens on tri rod 0 at +3, rod 1 held 0.4 steps into a twist.
+lens-flip-big-zoom-05.png  Lens on tri rod 0 held at +2 and 0.5 steps.
+lens-flip-big-twist-05.png  Lens on tri rod 0 at +3, rod 1 held 0.5 steps into a twist.
+lens-flip-big-zoom-06.png  Lens on tri rod 0 held at +2 and 0.6 steps.
+lens-flip-big-twist-06.png  Lens on tri rod 0 at +3, rod 1 held 0.6 steps into a twist.
+lens-flip-big-zoom-07.png  Lens on tri rod 0 held at +2 and 0.7 steps.
+lens-flip-big-twist-07.png  Lens on tri rod 0 at +3, rod 1 held 0.7 steps into a twist.
+lens-flip-big-zoom-08.png  Lens on tri rod 0 held at +2 and 0.8 steps.
+lens-flip-big-twist-08.png  Lens on tri rod 0 at +3, rod 1 held 0.8 steps into a twist.
+lens-flip-big-zoom-09.png  Lens on tri rod 0 held at +2 and 0.9 steps.
+lens-flip-big-twist-09.png  Lens on tri rod 0 at +3, rod 1 held 0.9 steps into a twist.
+lens-flip-big-zoom-10.png  Lens on tri rod 0 held at +2 and 1.0 steps.
+lens-flip-big-twist-10.png  Lens on tri rod 0 at +3, rod 1 held 1.0 steps into a twist.
+lens-order-big-over-1.png  Lens on tri rod 0, 1:+1,0:+2: the lens newest.
+lens-order-big-under-1.png  Lens on tri rod 0, 0:+2,1:+1: the twist newest.
+lens-order-big-over-3.png  Lens on tri rod 0, 1:+3,0:+2: the lens newest.
+lens-order-big-under-3.png  Lens on tri rod 0, 0:+2,1:+3: the twist newest.
+lens-glitter-mid-1.png  Lens on quad rod 0 at +1, still.
+lens-glitter-mid-1-drag.png  Lens on quad rod 0 held at +0.5, mid-drag up.
+lens-glitter-mid-1-twist.png  Lens on quad rod 0 at +1, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-mid-2.png  Lens on quad rod 0 at +2, still.
+lens-glitter-mid-2-drag.png  Lens on quad rod 0 held at +1.5, mid-drag up.
+lens-glitter-mid-2-twist.png  Lens on quad rod 0 at +2, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-mid-3.png  Lens on quad rod 0 at +3, still.
+lens-glitter-mid-3-drag.png  Lens on quad rod 0 held at +2.5, mid-drag up.
+lens-glitter-mid-3-twist.png  Lens on quad rod 0 at +3, rod 1 held 1.5 steps into a twist over it.
+lens-flip-mid-zoom-00.png  Lens on quad rod 0 held at +2 and 0.0 steps.
+lens-flip-mid-twist-00.png  Lens on quad rod 0 at +3, rod 1 held 0.0 steps into a twist.
+lens-flip-mid-zoom-01.png  Lens on quad rod 0 held at +2 and 0.1 steps.
+lens-flip-mid-twist-01.png  Lens on quad rod 0 at +3, rod 1 held 0.1 steps into a twist.
+lens-flip-mid-zoom-02.png  Lens on quad rod 0 held at +2 and 0.2 steps.
+lens-flip-mid-twist-02.png  Lens on quad rod 0 at +3, rod 1 held 0.2 steps into a twist.
+lens-flip-mid-zoom-03.png  Lens on quad rod 0 held at +2 and 0.3 steps.
+lens-flip-mid-twist-03.png  Lens on quad rod 0 at +3, rod 1 held 0.3 steps into a twist.
+lens-flip-mid-zoom-04.png  Lens on quad rod 0 held at +2 and 0.4 steps.
+lens-flip-mid-twist-04.png  Lens on quad rod 0 at +3, rod 1 held 0.4 steps into a twist.
+lens-flip-mid-zoom-05.png  Lens on quad rod 0 held at +2 and 0.5 steps.
+lens-flip-mid-twist-05.png  Lens on quad rod 0 at +3, rod 1 held 0.5 steps into a twist.
+lens-flip-mid-zoom-06.png  Lens on quad rod 0 held at +2 and 0.6 steps.
+lens-flip-mid-twist-06.png  Lens on quad rod 0 at +3, rod 1 held 0.6 steps into a twist.
+lens-flip-mid-zoom-07.png  Lens on quad rod 0 held at +2 and 0.7 steps.
+lens-flip-mid-twist-07.png  Lens on quad rod 0 at +3, rod 1 held 0.7 steps into a twist.
+lens-flip-mid-zoom-08.png  Lens on quad rod 0 held at +2 and 0.8 steps.
+lens-flip-mid-twist-08.png  Lens on quad rod 0 at +3, rod 1 held 0.8 steps into a twist.
+lens-flip-mid-zoom-09.png  Lens on quad rod 0 held at +2 and 0.9 steps.
+lens-flip-mid-twist-09.png  Lens on quad rod 0 at +3, rod 1 held 0.9 steps into a twist.
+lens-flip-mid-zoom-10.png  Lens on quad rod 0 held at +2 and 1.0 steps.
+lens-flip-mid-twist-10.png  Lens on quad rod 0 at +3, rod 1 held 1.0 steps into a twist.
+lens-order-mid-over-1.png  Lens on quad rod 0, 1:+1,0:+2: the lens newest.
+lens-order-mid-under-1.png  Lens on quad rod 0, 0:+2,1:+1: the twist newest.
+lens-order-mid-over-3.png  Lens on quad rod 0, 1:+3,0:+2: the lens newest.
+lens-order-mid-under-3.png  Lens on quad rod 0, 0:+2,1:+3: the twist newest.
+lens-glitter-small-1.png  Lens on eye rod 2 at +1, still.
+lens-glitter-small-1-drag.png  Lens on eye rod 2 held at +0.5, mid-drag up.
+lens-glitter-small-1-twist.png  Lens on eye rod 2 at +1, rod 0 held 1.5 steps into a twist over it.
+lens-glitter-small-2.png  Lens on eye rod 2 at +2, still.
+lens-glitter-small-2-drag.png  Lens on eye rod 2 held at +1.5, mid-drag up.
+lens-glitter-small-2-twist.png  Lens on eye rod 2 at +2, rod 0 held 1.5 steps into a twist over it.
+lens-glitter-small-3.png  Lens on eye rod 2 at +3, still.
+lens-glitter-small-3-drag.png  Lens on eye rod 2 held at +2.5, mid-drag up.
+lens-glitter-small-3-twist.png  Lens on eye rod 2 at +3, rod 0 held 1.5 steps into a twist over it.
+lens-flip-small-zoom-00.png  Lens on eye rod 2 held at +2 and 0.0 steps.
+lens-flip-small-twist-00.png  Lens on eye rod 2 at +3, rod 0 held 0.0 steps into a twist.
+lens-flip-small-zoom-01.png  Lens on eye rod 2 held at +2 and 0.1 steps.
+lens-flip-small-twist-01.png  Lens on eye rod 2 at +3, rod 0 held 0.1 steps into a twist.
+lens-flip-small-zoom-02.png  Lens on eye rod 2 held at +2 and 0.2 steps.
+lens-flip-small-twist-02.png  Lens on eye rod 2 at +3, rod 0 held 0.2 steps into a twist.
+lens-flip-small-zoom-03.png  Lens on eye rod 2 held at +2 and 0.3 steps.
+lens-flip-small-twist-03.png  Lens on eye rod 2 at +3, rod 0 held 0.3 steps into a twist.
+lens-flip-small-zoom-04.png  Lens on eye rod 2 held at +2 and 0.4 steps.
+lens-flip-small-twist-04.png  Lens on eye rod 2 at +3, rod 0 held 0.4 steps into a twist.
+lens-flip-small-zoom-05.png  Lens on eye rod 2 held at +2 and 0.5 steps.
+lens-flip-small-twist-05.png  Lens on eye rod 2 at +3, rod 0 held 0.5 steps into a twist.
+lens-flip-small-zoom-06.png  Lens on eye rod 2 held at +2 and 0.6 steps.
+lens-flip-small-twist-06.png  Lens on eye rod 2 at +3, rod 0 held 0.6 steps into a twist.
+lens-flip-small-zoom-07.png  Lens on eye rod 2 held at +2 and 0.7 steps.
+lens-flip-small-twist-07.png  Lens on eye rod 2 at +3, rod 0 held 0.7 steps into a twist.
+lens-flip-small-zoom-08.png  Lens on eye rod 2 held at +2 and 0.8 steps.
+lens-flip-small-twist-08.png  Lens on eye rod 2 at +3, rod 0 held 0.8 steps into a twist.
+lens-flip-small-zoom-09.png  Lens on eye rod 2 held at +2 and 0.9 steps.
+lens-flip-small-twist-09.png  Lens on eye rod 2 at +3, rod 0 held 0.9 steps into a twist.
+lens-flip-small-zoom-10.png  Lens on eye rod 2 held at +2 and 1.0 steps.
+lens-flip-small-twist-10.png  Lens on eye rod 2 at +3, rod 0 held 1.0 steps into a twist.
+lens-order-small-over-1.png  Lens on eye rod 2, 0:+1,2:+2: the lens newest.
+lens-order-small-under-1.png  Lens on eye rod 2, 2:+2,0:+1: the twist newest.
+lens-order-small-over-3.png  Lens on eye rod 2, 0:+3,2:+2: the lens newest.
+lens-order-small-under-3.png  Lens on eye rod 2, 2:+2,0:+3: the twist newest.
 icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
 icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
 icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.
+firststir-01.png  First Stir 1 as dealt: every core turned, the time under the tank.
+firststir-01-held.png  First Stir 1 drawn unstirred, held back. Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney.
+firststir-01-played.png  First Stir 1 drawn unstirred, every vignette played: a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke.
+firststir-02.png  First Stir 2 as dealt: every core turned, the time under the tank.
+firststir-02-held.png  First Stir 2 drawn unstirred, held back. The gallery: a neighbour measuring the smashed panes with a rule; three gulls on the rail; smoke from three chimneys.
+firststir-02-played.png  First Stir 2 drawn unstirred, every vignette played: the gallery empty, shards on the deck; spray over the bare rail; no smoke, one window lit by a candle.
+firststir-03.png  First Stir 3 as dealt: every core turned, the time under the tank.
+firststir-03-held.png  First Stir 3 drawn unstirred, held back. The rock pool: the lighthouse door shut, rope coiled on its hook; the child kneeling at the pool, holding up the float; the dog sitting.
+firststir-03-played.png  First Stir 3 drawn unstirred, every vignette played: the door open, the rope trailing over the rocks; the float alone in the pool; the dog sniffing.
+firststir-04.png  First Stir 4 as dealt: every core turned, the time under the tank.
+firststir-04-held.png  First Stir 4 drawn unstirred, held back. Righting the boat: three townsfolk, the rope slack, one waving; the boat upright on the sand; gulls coming back.
+firststir-04-played.png  First Stir 4 drawn unstirred, every vignette played: the three leaning back, hauling; the boat keel up, dark; the last stars, a gull asleep on the beacon.
+firststir-05.png  First Stir 5 as dealt: every core turned, the time under the tank.
+firststir-05-held.png  First Stir 5 drawn unstirred, held back. Tea on the quay: the lifeboat moored, crew gone, lamp out; the three on the bench under one blanket, the child asleep; three cups steaming on a crate.
+firststir-05-played.png  First Stir 5 drawn unstirred, every vignette played: a crewman coiling rope, the searchlight on; the child standing on the bench, pointing; a neighbour pouring from a flask.
+firststir-06.png  First Stir 6 as dealt: every core turned, the time under the tank.
+firststir-06-held.png  First Stir 6 drawn unstirred, held back. Home light, 4:45 under the dawn's last sky: the lifeboat just inside the harbour mouth, the torch left on the sill, a neighbour holding out blankets at the steps; light rain.
+firststir-06-played.png  First Stir 6 drawn unstirred, every vignette played: the lifeboat outside on a swell, searchlight out; the child at the window with the torch and the dog; two neighbours carrying blankets out of the lifeboat house; the low cloud lit, heavier rain.
+firststir-07.png  First Stir 7 as dealt: every core turned, the time under the tank.
+firststir-07-held.png  First Stir 7 drawn unstirred, held back. Off the breakwater: the steps empty, a rope hanging, surf over the lower steps; the lifeboat alongside their foot, two crew reaching up them; the lighthouse dark.
+firststir-07-played.png  First Stir 7 drawn unstirred, every vignette played: the father helping the grandmother down the steps; the lifeboat further off, bow high on a wave; a glow at the lighthouse's stair window; heavier rain.
+firststir-08.png  First Stir 8 as dealt: every core turned, the time under the tank.
+firststir-08-held.png  First Stir 8 drawn unstirred, held back. The lantern chain: the lifeboat house open on an empty slip; the chain of lights reaching the lighthouse door; four bearers with lanterns held high.
+firststir-08-played.png  First Stir 8 drawn unstirred, every vignette played: the crew pushing the lifeboat out of the house and down the slip; the chain ending short of the lighthouse, one light at the door; two bearers, two more running up unlit; heavier rain.
+firststir-09.png  First Stir 9 as dealt: every core turned, the time under the tank.
+firststir-09-held.png  First Stir 9 drawn unstirred, held back. The stair: the hand-lamp burning on the stair's turn; the lantern chain's lights far below the window; the storm lantern on the bottom step by the open door.
+firststir-09-played.png  First Stir 9 drawn unstirred, every vignette played: the grandmother sitting at the turn, her ankle bound, the lamp beside her; the window dark; the father at the foot, lantern raised, looking up; heavier rain at the window and door.
+firststir-10.png  First Stir 10 as dealt: every core turned, the time under the tank.
+firststir-10-held.png  First Stir 10 drawn unstirred, held back. The lighthouse door: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair.
+firststir-10-played.png  First Stir 10 drawn unstirred, every vignette played: the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain.
+firststir-11.png  First Stir 11 as dealt: every core turned, the time under the tank.
+firststir-11-held.png  First Stir 11 drawn unstirred, held back. The breakwater path, 2:30 under the Rescue's last sky: the rope hitched to its ring on the quay end; the father halfway out, crouched into a wave; the hand-lamp in the gallery window.
+firststir-11-played.png  First Stir 11 drawn unstirred, every vignette played: the father kneeling at the ring, tying the rope; the path bare; the gallery window dark; the flood's deep blue sky, thicker rain.
+firststir-12.png  First Stir 12 as dealt: every core turned, the time under the tank.
+firststir-12-held.png  First Stir 12 drawn unstirred, held back. High street under water: the town clock at 2:05; the street lamp drowned to its crossbar, dark; the father and a neighbour rowing the dinghy down the street, a coil of rope aboard.
+firststir-12-played.png  First Stir 12 drawn unstirred, every vignette played: the clock at 1:40; the water at the lamp's foot, the lamp still lit and sparking; the dinghy tied to the drainpipe, empty.
+firststir-13.png  First Stir 13 as dealt: every core turned, the time under the tank.
+firststir-13-held.png  First Stir 13 drawn unstirred, held back. The upstairs window: the child and the dog at it, the torch shining out; the weathervane bent, pointing down; the door open, the water at its knocker, the float drifting out.
+firststir-13-played.png  First Stir 13 drawn unstirred, every vignette played: the window dark, a curtain blowing in; the weathervane upright, spinning; the water down at the step, the float on the threshold.
+firststir-14.png  First Stir 14 as dealt: every core turned, the time under the tank.
+firststir-14-held.png  First Stir 14 drawn unstirred, held back. The kitchen, flooded: the table sunk under the water, the cup floating off it on its saucer; the water up the stair, the child's boots on a step; the float drifting to the open door.
+firststir-14-played.png  First Stir 14 drawn unstirred, every vignette played: the table standing clear, the water at its legs, the cup on it with its spoon; the child carrying the dog up the stair; the float caught on the chair's leg.
+firststir-15.png  First Stir 15 as dealt: every core turned, the time under the tank.
+firststir-15-held.png  First Stir 15 drawn unstirred, held back. Over the quay: the boat capsized and awash; only the dropped lantern's bail ring on the stones; a wave breaking white over the wall.
+firststir-15-played.png  First Stir 15 drawn unstirred, every vignette played: the boat keel up, high in the water; the lantern on its side, its glass out; the sea a hand below the wall's top, slopping; the sky leaning to the storm's indigo, the rain at its thickest.
+firststir-16.png  First Stir 16 as dealt: every core turned, the time under the tank.
+firststir-16-held.png  First Stir 16 drawn unstirred, held back. The harbour, 12:30 am at the storm's peak: the lantern smashed and dark, shards falling past the gallery; the boat capsized, its rope snapped, the oar adrift; the cottage door flung open, the window dark, the lantern dropped on the quay; far lightning, driving rain.
+firststir-16-played.png  First Stir 16 drawn unstirred, every vignette played: the lantern whole and lit; the boat moored upright, its lamps lit; the father in the lit doorway holding the lantern up and out; 11:40 pm, the lightning fading, the rain thinner.
+firststir-17.png  First Stir 17 as dealt: every core turned, the time under the tank.
+firststir-17-held.png  First Stir 17 drawn unstirred, held back. Lightning: a fork of lightning to the sea in the bay window; a candle lit on the small window's sill, the ceiling lamp dark; the child in her father's arms.
+firststir-17-played.png  First Stir 17 drawn unstirred, every vignette played: the lighthouse beam sweeping in, no lightning; the ceiling lamp lit, the candle out; the child kneeling on the window seat beside the dog, both looking out.
+firststir-18.png  First Stir 18 as dealt: every core turned, the time under the tank.
+firststir-18-held.png  First Stir 18 drawn unstirred, held back. The bell buoy: spray up the lighthouse to its gallery; the buoy heeled hard over, its bell swinging; the hut's shutter torn off and hanging.
+firststir-18-played.png  First Stir 18 drawn unstirred, every vignette played: the lighthouse beam out, no spray; the buoy upright; the harbourmaster pulling the shutter to.
+firststir-19.png  First Stir 19 as dealt: every core turned, the time under the tank.
+firststir-19-held.png  First Stir 19 drawn unstirred, held back. High street, rain: the café's awning torn to strips; the bicycle blown over in the gutter, a wheel spinning; the cobbler's sign hanging by one chain.
+firststir-19-played.png  First Stir 19 drawn unstirred, every vignette played: the awning whole, the café's owner winding it in; the bicycle leaning on the lamp post; the sign hanging by two chains.
+firststir-20.png  First Stir 20 as dealt: every core turned, the time under the tank.
+firststir-20-held.png  First Stir 20 drawn unstirred, held back. Washing: the line snapped, a shirt flying off over the roofs; the neighbour's shutters shut and barred; the kennel's chain lying empty.
+firststir-20-played.png  First Stir 20 drawn unstirred, every vignette played: shirts pegged on the line, streaming hard; the neighbour leaning out to pull the shutters to; the child unclipping the dog; 9:30 pm, the sky at dusk's night blue, the rain gone.
+firststir-21.png  First Stir 21 as dealt: every core turned, the time under the tank.
+firststir-21-held.png  First Stir 21 drawn unstirred, held back. Lighting the lamp, 9:30 pm, night blue, a cloud bank low on the sea: the lantern lit, its first beam out; gulls flocking inland; four of the town's windows lit.
+firststir-21-played.png  First Stir 21 drawn unstirred, every vignette played: the lantern dark, the grandmother reaching a taper to the lamp; the evening star; one window lit; the cloud bank sunk, the afterglow rising.
+firststir-22.png  First Stir 22 as dealt: every core turned, the time under the tank.
+firststir-22-held.png  First Stir 22 drawn unstirred, held back. The path to the light: the grandmother at the lighthouse door, lantern raised; the child at the quay rail, waving; a thin moon beside the evening star.
+firststir-22-played.png  First Stir 22 drawn unstirred, every vignette played: the grandmother just out on the path, lantern swinging, shawl blowing; the child running along the quay, arm up; the afterglow alone.
+firststir-23.png  First Stir 23 as dealt: every core turned, the time under the tank.
+firststir-23-held.png  First Stir 23 drawn unstirred, held back. Doubling the lines: the boat's two lines out, its lamps lit, nobody aboard; the barometer's needle on the storm glyph; the float in the cottage window, the lamp lit.
+firststir-23-played.png  First Stir 23 drawn unstirred, every vignette played: the father in the stern tying the second line; the needle on the sun glyph; the window dark, the float still hanging.
+firststir-24.png  First Stir 24 as dealt: every core turned, the time under the tank.
+firststir-24-held.png  First Stir 24 drawn unstirred, held back. The float, the kitchen at sunset: the float hanging in the window, lit teal; the oilskin gone, the door ajar on the sunset; the child reaching up to the window, hands empty.
+firststir-24-played.png  First Stir 24 drawn unstirred, every vignette played: the hook bare; the oilskin and hat on their pegs, boots below, the door shut; the grandmother holding the float out to the child.
+firststir-25.png  First Stir 25 as dealt: every core turned, the time under the tank.
+firststir-25-held.png  First Stir 25 drawn unstirred, held back. First stir, the kitchen at golden dusk: the sun touching the sea, a small cloud over it; the clock at 7:55; the tea still and steaming, the spoon in the saucer.
+firststir-25-played.png  First Stir 25 drawn unstirred, every vignette played: the sun a hand above the sea, clear; the clock at 7:40; the child's hand stirring, the tea's swirl.
+firststir-01-healed-1.png  First Stir 01 after the first heal (1:-2): no vignette, the clock at 6:34 am.
+firststir-01-healed-2.png  First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am.
+firststir-ending-02.png  The night forwards 2 s in: scene 25 played, the tea stirring at 7:40 pm, the time under the glass.
+firststir-ending-05.png  The night forwards 5 s in: scene 25 near its end, the tea still, crossfading to scene 24 at 7:55 pm.
+firststir-ending-60.png  The night forwards a minute in: the Flood's upstairs window, 1:39 am, the water rising.
+firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
+shelf-menu.png  Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought.
+shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot.
+card-lens-unowned.png  Lens's card, unowned.
+card-lens-owned.png  Lens's card, owned.
+card-lens-pending.png  Lens's card, pending.
+card-lens-failed.png  Lens's card, failed.
+card-lens-revoked.png  Lens's card, revoked.
+card-first-stir.png  First Stir's card, unowned.
+card-escapement.png  Escapement's card, unowned.
+card-complete.png  Complete's card, unowned.
+clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
+clip-first-stir-1.4.png  First Stir's clip 1.4 s in.
+clip-first-stir-2.1.png  First Stir's clip 2.1 s in.
+clip-first-stir-3.3.png  First Stir's clip 3.3 s in.
+clip-first-stir-5.4.png  First Stir's clip 5.4 s in.
+clip-first-stir-6.2.png  First Stir's clip 6.2 s in.
+clip-lens-still.png  Lens's clip on its still: level 3 as dealt, the lens newest, its rim whole through both twists.
+clip-lens-2.4.png  Lens's clip 2.4 s in, the lens dragged down and back up.
+clip-lens-3.2.png  Lens's clip 3.2 s in, the lens dragged down and back up.
+clip-lens-4.3.png  Lens's clip 4.3 s in, the lens dragged down and back up.
+clip-escapement-still.png  Escapement's clip on its still: rod 2 +4 let go, its tick landed, the ratchet a tooth on.
+clip-escapement-1.6.png  Escapement's clip 1.6 s in.
+clip-escapement-2.2.png  Escapement's clip 2.2 s in.
+clip-escapement-3.6.png  Escapement's clip 3.6 s in.
+clip-escapement-5.1.png  Escapement's clip 5.1 s in.
+clip-escapement-5.9.png  Escapement's clip 5.9 s in.
+card-lens-complete-failed.png  Lens's card after Complete, bought from it, failed: the line under Complete's button says so.
+card-complete-owned.png  Complete's card, owned: every pack open.
+card-lens-noprice.png  Lens's card before the App Store answers: buy, with no price.
+card-lens-levels.png  Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked.
+card-lens-levels-owned.png  The same, owned: every level open.
+card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place.
+shelf-menu-ax.png  The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5).
+card-lens-ax.png  Lens's card at the largest accessibility text size, its facts stacked.
+consent-ask.png  First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no.
+consent-sends.png  First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again.
+consent-gear.png  Menu with the settings gear beside the title, analytics answered yes.
+consent-settings-on.png  The gear's sheet: the analytics switch on, and send log.
+consent-settings-off.png  The gear's sheet: the analytics switch off, and send log.
+escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
+escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
+escapement-book-03.png  Escapement 3 as dealt: quad, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
+escapement-book-04.png  Escapement 4 as dealt: quad, clocks 0+, scramble 0:-1,3:+2,0:-2,2:-4,1:-3,0:-1,2:-2.
+escapement-book-05.png  Escapement 5 as dealt: eye, clocks 2+, scramble 2:-2,3:-2,1:-4,2:-2,3:-3,1:+3,2:-1,3:-5.
+escapement-book-06.png  Escapement 6 as dealt: hex, clocks 1+, scramble 1:-3,4:-2,3:-4,6:+3,1:-2,5:+3,2:-3,1:-1,3:+2.
+escapement-book-07.png  Escapement 7 as dealt: quad, clocks 0+, scramble 0:-2,2:+3,1:-2,0:-1.
+escapement-book-08.png  Escapement 8 as dealt: pent, clocks 0+, scramble 0:-1,1:+4,0:-3,2:-4,3:-3,4:-5,0:-1.
+escapement-book-09.png  Escapement 9 as dealt: eye, clocks 2+, scramble 2:-3,0:+3,2:-2,3:+4,0:-3,2:-1,3:+3.
+escapement-book-10.png  Escapement 10 as dealt: pent, clocks 0+, scramble 0:-3,3:+3,2:-3,1:-2,0:-2,1:-4,0:-1,2:+3.
+escapement-book-11.png  Escapement 11 as dealt: pent, clocks 0+, scramble 0:-3,1:+2,0:-2,2:+3,4:+5,0:-2,3:+2,4:-3,0:-1,3:-2.
+escapement-book-12.png  Escapement 12 as dealt: hex, clocks 1+, scramble 1:-2,5:+4,2:+5,1:-2,3:+3,2:-3,1:-2,3:-4,0:-5,1:-1.
+escapement-book-13.png  Escapement 13 as dealt: quad, clocks 0+,2+, scramble 0:-1,2:-2,1:+3,0:-1,2:-1,3:+2.
+escapement-book-14.png  Escapement 14 as dealt: quad, clocks 0+,2+, scramble 0:-1,1:+3,0:-1,3:+3,2:-2,0:-2,3:-3.
+escapement-book-15.png  Escapement 15 as dealt: pent, clocks 0+,2+, scramble 2:-1,3:-4,2:-4,4:-5,0:-2,4:+2,0:-1,4:-5.
+escapement-book-16.png  Escapement 16 as dealt: hex, clocks 1+,4+, scramble 4:-2,2:+5,5:-3,4:-3,6:+4,1:-3,5:+2,4:-1,3:+2.
+escapement-book-17.png  Escapement 17 as dealt: pent, clocks 0+,1+, scramble 1:-3,3:+4,4:-3,0:-1,3:-5,1:-1,0:-1,4:+2,1:-1,0:-1,3:+5.
+escapement-book-18.png  Escapement 18 as dealt: hex, clocks 1+,2+, scramble 2:-2,6:+2,3:-4,2:-2,4:-2,1:-1,5:+2,2:-1,1:-1,4:+4,2:-1,1:-1,5:-4.
+escapement-book-19.png  Escapement 19 as dealt: tri, clocks 0-, scramble 0:+1,1:-3,0:+2,2:+4.
+escapement-book-20.png  Escapement 20 as dealt: quad, clocks 0+,2-, scramble 2:+1,1:+3,2:+1,1:-3,2:+1,0:-1,1:-4,2:+2,0:-2,1:+5.
+escapement-book-21.png  Escapement 21 as dealt: pent, clocks 0-,2+, scramble 0:+2,3:+2,4:+5,0:+2,3:+3,2:-2,4:-3,0:+2,3:-4,2:-1.
+escapement-book-22.png  Escapement 22 as dealt: hex, clocks 1+,4-, scramble 4:+2,2:-2,5:+3,4:+2,6:-5,1:-2,3:-2,4:+3,6:-5,1:-2,5:+3.
+escapement-book-23.png  Escapement 23 as dealt: pent, clocks 0-, scramble 0:+2,3:-5,4:-5,0:+3,2:-2,3:+4,4:-3,0:+1,3:-4.
+escapement-book-24.png  Escapement 24 as dealt: hex, clocks 1-, scramble 1:+3,4:-2,5:+4,2:+2,1:+2,3:+3,2:-5,1:+2,3:+2,6:-2.
+escapement-book-25.png  Escapement 25 as dealt: hex, clocks 1+,3+,5+, scramble 1:-2,3:-1,5:-3,0:+3.
+escapement-book-26.png  Escapement 26 as dealt: pent, clocks 0+,2+, scramble 2:-2,4:-3,3:+2,2:-2,4:+3,3:+5,2:-3,0:-2,4:+2,0:-2,3:+3,2:-1,1:+2.
+escapement-book-27.png  Escapement 27 as dealt: pent, clocks 0+, scramble 0:-3,3:-4,2:-5,1:-5,0:-2,1:+2,0:-1,1:+2,0:-2,2:+5,1:-2,0:-1,2:+2.
+escapement-book-28.png  Escapement 28 as dealt: hex, clocks 1+, scramble 1:-2,0:+5,1:-3,4:-5,3:+3,6:+4,1:-2,5:-4,2:+3,1:-2,4:+5,2:+4.
+escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3.
+escapement-book-30.png  Escapement 30 as dealt: hex, clocks 1+,3+, scramble 1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2.
+escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's five chapter headings.
+escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02.
+escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left.
+escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
+escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
+escapement-budget-16-dealt.png  Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6.
+escapement-budget-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left.
+escapement-budget-16-late.png  Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: 01 tick left, clock 4's last.
+escapement-stopped-3-stamp.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look stamp.
+escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look stamp.
+escapement-stopped-3-left.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look left.
+escapement-stopped-17-left.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look left.
+escapement-stopped-3-rings.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look rings.
+escapement-stopped-17-rings.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look rings.

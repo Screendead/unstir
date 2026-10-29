@@ -26,6 +26,27 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.lens), .pending)
     }
 
+    /// Closing a card forgets a failed attempt, Complete's too, and nothing else.
+    func testForgettingFailuresLeavesEveryOtherState() {
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .failed)
+        ledger.record(Pack.completeID, .failed)
+        ledger.record(Pack.escapement.productID, .pending)
+        ledger.forgetFailures()
+        XCTAssertEqual(ledger.state(.lens), .unowned)
+        XCTAssertEqual(ledger.state(.firstStir), .unowned)
+        XCTAssertEqual(ledger.state(.escapement), .pending)
+    }
+
+    /// Complete's failure shows on Complete's card, never on a pack's.
+    func testCompletesFailureStaysOnItsOwnCard() {
+        var ledger = Ledger()
+        ledger.record(Pack.completeID, .failed)
+        XCTAssertEqual(ledger.state(.lens), .unowned)
+        ledger.record(Pack.completeID, .pending)
+        XCTAssertEqual(ledger.state(.lens), .pending)
+    }
+
     /// The entitlements reread after a revocation own the product again when it was bought since.
     func testOwnedAfterARevocationOwnsAgain() {
         var ledger = Ledger()
@@ -132,6 +153,14 @@ final class StoreTests: XCTestCase {
             await next.refresh()
             return next.ledger.owned == packs
         }
+    }
+
+    /// The card shows the App Store's price, never one of the app's own.
+    func testStartFetchesEveryPrice() async throws {
+        let store = Store()
+        await store.start()
+        for id in Pack.productIDs { XCTAssertNotNil(store.price(id), id) }
+        XCTAssertNotEqual(store.price(Pack.lens.productID), store.price(Pack.completeID))
     }
 
     func testPurchaseGrantsOnePack() async throws {

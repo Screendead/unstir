@@ -11,12 +11,15 @@ enum Move: Hashable, CustomStringConvertible {
     case stir(knob: Int, slot: Int, steps: Int)
     /// A turn of the tank the short way.
     case turn(steps: Int, to: Int)
+    /// Escapement: a tap on the ratchet, a move that only ticks the clock.
+    case wait
 
     var description: String {
         func signed(_ n: Int) -> String { n > 0 ? "+\(n)" : "\(n)" }
         return switch self {
         case let .stir(knob, slot, steps): "knob \(knob) \(signed(steps)) (slot \(slot))"
         case let .turn(steps, to): "tank \(signed(steps)) to \(to)"
+        case .wait: "wait"
         }
     }
 }
@@ -25,13 +28,20 @@ struct Play {
     var moves: [Move] = []
 
     /// Moves as `Game.history` counts them: commits to one slot in a row join, and a stir that nets nothing drops out
-    /// and shuts, so the next commit to that slot is a new move. Turns in a row join too; no play turns in a row.
+    /// and shuts, so the next commit to that slot is a new move. Turns in a row join too; no play turns in a row. A wait
+    /// joins nothing.
     var count: Int {
         var history: [(slot: Int, net: Int)] = [], open = false
         for move in moves {
             let (slot, steps) = switch move {
             case let .stir(_, slot, steps): (slot, steps)
             case let .turn(steps, _): (-1, steps)
+            case .wait: (-2, 0)
+            }
+            if case .wait = move {
+                history.append((slot, steps))
+                open = false
+                continue
             }
             if open, history.last?.slot == slot {
                 history[history.count - 1].net += steps
@@ -61,6 +71,8 @@ struct Play {
 /// back over three or more commits.
 final class Solver {
     let layout: Layout
+    /// The rods whose steps magnify rather than turn (`Level.lenses`).
+    let lenses: Set<Int>
     private var ids: [[Twist]: Int] = [:]
     private var stacks: [[Twist]] = []
     private var memo: [[Untwist]?] = []
@@ -93,7 +105,10 @@ final class Solver {
         case lowest
     }
 
-    init(_ layout: Layout) { self.layout = layout }
+    init(_ layout: Layout, lenses: Set<Int> = []) {
+        self.layout = layout
+        self.lenses = lenses
+    }
 
     var stacksSeen: Int { stacks.count }
 
@@ -113,7 +128,7 @@ final class Solver {
         let whole = stack.indices.filter { landing(stack, rod: stack[$0].rod, steps: -stack[$0].steps) == $0 }
         let found = whole.map { i in
             var after = stack
-            after.commit(rod: stack[i].rod, steps: -stack[i].steps, in: layout)
+            after.commit(rod: stack[i].rod, steps: -stack[i].steps, in: layout, lenses: lenses)
             return Untwist(index: i, slot: stack[i].rod, steps: -stack[i].steps, to: self.id(after))
         }
         memo[id] = found
@@ -157,7 +172,7 @@ final class Solver {
         if parts(stack, above: i, rod: rod, steps: steps) { return false }
         let word = Array(stack[(i + 1)...]) + [Twist(rod: rod, steps: steps)]
         if let known = commuting[word] { return known }
-        let found = layout.commutes(stack, above: i, rod: rod, steps: steps)
+        let found = layout.commutes(stack, above: i, rod: rod, steps: steps, lenses: lenses)
         commuting[word] = found
         return found
     }
@@ -171,12 +186,14 @@ final class Solver {
     /// would.
     private func parts(_ stack: [Twist], above i: Int, rod: Int, steps: Int) -> Bool {
         guard let q = stack[(i + 1)...].first(where: { interacts[$0.rod][rod] })?.rod else { return false }
-        let rods = layout.rods, turn = Double(steps) * Tank.step
-        func above(_ p: SIMD2<Double>) -> SIMD2<Double> {
-            stack[(i + 1)...].reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
+        let rods = layout.rods, lenses = self.lenses
+        func stir(_ p: SIMD2<Double>, _ rod: Int, _ steps: Int) -> SIMD2<Double> {
+            lenses.contains(rod) ? Tank.lens(p, rod: rods[rod], steps: Double(steps))
+                : Tank.twist(p, rod: rods[rod], angle: Double(steps) * Tank.step)
         }
-        return lens[rod][q].contains { p in
-            let d = Tank.twist(above(p), rod: rods[rod], angle: turn) - above(Tank.twist(p, rod: rods[rod], angle: turn))
+        func above(_ p: SIMD2<Double>) -> SIMD2<Double> { stack[(i + 1)...].reduce(p) { stir($0, $1.rod, $1.steps) } }
+        return shared[rod][q].contains { p in
+            let d = stir(above(p), rod, steps) - above(stir(p, rod, steps))
             return (d * d).sum() > 1e-6
         }
     }
@@ -193,7 +210,7 @@ final class Solver {
             for j in rods where j > i && overlap[i][j] {
                 found[i][j] = !counts.allSatisfy { a in counts.allSatisfy { b in
                     let (s, t) = (Twist(rod: i, steps: a), Twist(rod: j, steps: b))
-                    return layout.same([s, t], [t, s], at: Tank.samples, within: 1e-6)
+                    return layout.same([s, t], [t, s], at: Tank.samples, within: 1e-6, lenses: lenses)
                 } }
                 found[j][i] = found[i][j]
             }
@@ -201,8 +218,8 @@ final class Solver {
         return found
     }()
 
-    /// lens[i][j]: `Tank.samples` inside both rods' discs.
-    private lazy var lens: [[[SIMD2<Double>]]] = layout.rods.map { a in
+    /// shared[i][j]: `Tank.samples` inside both rods' discs.
+    private lazy var shared: [[[SIMD2<Double>]]] = layout.rods.map { a in
         layout.rods.map { b in
             Tank.samples.filter { p in [a, b].allSatisfy { rod in
                 let d = p - SIMD2(rod.x, rod.y)
@@ -264,9 +281,9 @@ final class Solver {
         }
         for steps in Set(Array(-11...11) + stack.filter { $0.rod == slot }.map { -$0.steps }) where steps != 0 {
             var after = stack
-            guard after.commit(rod: slot, steps: steps, in: layout) != .refused else { continue }
+            guard after.commit(rod: slot, steps: steps, in: layout, lenses: lenses) != .refused else { continue }
             var back = after
-            if back.commit(rod: slot, steps: -steps, in: layout) != .refused, back != stack {
+            if back.commit(rod: slot, steps: -steps, in: layout, lenses: lenses) != .refused, back != stack {
                 found.append(Run(to: self.id(back), commits: [steps, -steps]))
             }
             guard !plain.contains(after), after != rodsOnlyCommit(stack, slot: slot, steps: steps) || !rodsOnly(after)
@@ -497,7 +514,7 @@ final class Solver {
                         joined = joined.flatMap { stack in
                             Set(steps + stack.filter { $0.rod == slot }.map { -$0.steps }).compactMap { k -> [Twist]? in
                                 var stack = stack
-                                return stack.commit(rod: slot, steps: k, in: layout) == .refused ? nil : stack
+                                return stack.commit(rod: slot, steps: k, in: layout, lenses: lenses) == .refused ? nil : stack
                             }
                         }
                         after += joined.map { State(stack: $0, position: state.position) }
@@ -508,6 +525,112 @@ final class Solver {
             }
             frontier = next
         }
+        return nil
+    }
+}
+
+extension Solver {
+    /// Escapement's clocks, in the order they tick: each clock rod and its step, +1 or -1 for a wound-back clock.
+    typealias Clocks = [(rod: Int, dir: Int)]
+
+    /// Escapement's moves and their ticks, played on a stack: after every move each clock that still holds an entry as
+    /// its turn comes ticks its step, in `clocks`' order, as `Game` plays them. A move is a wait or one commit to a
+    /// working slot; every let-go is final, so the same slot stirred again is another move (Jack's call E1).
+    struct Clockwork {
+        let layout: Layout
+        let lenses: Set<Int>
+        let clocks: Clocks
+        let steps: [Int]
+
+        func isClock(_ rod: Int) -> Bool { clocks.contains { $0.rod == rod } }
+        func running(_ s: [Twist]) -> Bool { clocks.contains { c in s.contains { $0.rod == c.rod } } }
+
+        /// Ticks still owed: the most any one clock needs. Every move takes exactly one step off each running clock, and
+        /// nothing else turns a clock, so no line is shorter.
+        func owed(_ s: [Twist]) -> Int {
+            clocks.map { c in max(0, -c.dir * s.filter { $0.rod == c.rod }.reduce(0) { $0 + $1.steps }) }.max() ?? 0
+        }
+
+        /// A lower bound on the moves left: what the clocks owe, and one turn for each working rod whose steps don't net
+        /// to nothing.
+        func bound(_ s: [Twist]) -> Int {
+            var net: [Int: Int] = [:]
+            for t in s where !isClock(t.rod) { net[t.rod, default: 0] += t.steps }
+            return max(owed(s), net.values.filter { $0 != 0 }.count)
+        }
+
+        /// The stack after the move and its ticks, or nil where the move is refused or the problem is lost: a tick
+        /// pushes, so that entry can never pop (`testAPushedTickNeverPops`), or the last clock stops with twists still
+        /// on the picture (Jack's call E2).
+        func play(_ s: [Twist], _ m: Move) -> [Twist]? {
+            var s = s
+            if case let .stir(_, slot, n) = m {
+                guard !isClock(slot), s.commit(rod: slot, steps: n, in: layout, lenses: lenses) != .refused else { return nil }
+            } else if !running(s) {
+                return nil
+            }
+            for c in clocks where s.contains(where: { $0.rod == c.rod }) {
+                let r = s.commit(rod: c.rod, steps: c.dir, in: layout, lenses: lenses)
+                guard r == .reduced || r == .cancelled else { return nil }
+            }
+            return s.isEmpty || running(s) ? s : nil
+        }
+
+        /// Every move from `s`: each entry's exact inverse first, then the wait, then every count in `steps` on every
+        /// working slot.
+        func moves(_ s: [Twist]) -> [Move] {
+            var out: [Move] = [], seen = Set<Move>()
+            func add(_ m: Move) { if seen.insert(m).inserted { out.append(m) } }
+            for t in s.reversed() where !isClock(t.rod) { add(.stir(knob: t.rod, slot: t.rod, steps: -t.steps)) }
+            if running(s) { add(.wait) }
+            for slot in layout.rods.indices where !isClock(slot) {
+                for k in steps { add(.stir(knob: slot, slot: slot, steps: k)) }
+            }
+            return out
+        }
+    }
+
+    /// Escapement's prover: the fewest moves that empty `stack` under `clocks` (`Clockwork`), by a count from `steps` or
+    /// an entry's exact inverse. Depth first at each length from `Clockwork.bound` up to `limit`, a stack and the moves
+    /// left remembered once they fail, so the first line found is a fewest among those counts. Where it is what the
+    /// clocks owe, no line of any counts is shorter. Every move counts, as every let-go is final: `moves.count`, never
+    /// `Play.count`, which joins commits to one slot in a row. Nil past `limit`, with the stacks that failed in `seen`.
+    func escapement(_ stack: [Twist], clocks: Clocks, limit: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] },
+                    seen: inout Int) -> Play? {
+        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps)
+        var failed = Set<Key>()
+        defer { seen = failed.count }
+        guard !stack.isEmpty else { return Play() }
+        for n in work.bound(stack)...max(limit, work.bound(stack)) where n <= limit {
+            if let line = Self.line(work, stack, left: n, failed: &failed) { return Play(moves: line) }
+        }
+        return nil
+    }
+
+    /// Escapement: every first move from `stack` after which a line empties it in `par` moves in all, under `clocks`.
+    func escapementKeys(_ stack: [Twist], clocks: Clocks, par: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] })
+        -> [Move] {
+        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps)
+        var failed = Set<Key>()
+        return work.moves(stack).filter { m in
+            guard let t = work.play(stack, m) else { return false }
+            return t.isEmpty ? par == 1 : par > 1 && Self.line(work, t, left: par - 1, failed: &failed) != nil
+        }
+    }
+
+    private struct Key: Hashable {
+        var stack: [Twist]
+        var left: Int
+    }
+
+    private static func line(_ work: Clockwork, _ s: [Twist], left: Int, failed: inout Set<Key>) -> [Move]? {
+        if s.isEmpty { return [] }
+        guard left > 0, work.bound(s) <= left, !failed.contains(Key(stack: s, left: left)) else { return nil }
+        for m in work.moves(s) {
+            guard let t = work.play(s, m) else { continue }
+            if let rest = line(work, t, left: left - 1, failed: &failed) { return [m] + rest }
+        }
+        failed.insert(Key(stack: s, left: left))
         return nil
     }
 }
