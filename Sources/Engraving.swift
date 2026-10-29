@@ -307,154 +307,153 @@ enum Seeds {
     }
 }
 
-/// Plate 3: a watch movement seen from the back: wheels with tooth counts and spokes prime to 12, the escape wheel and
-/// pallet fork, the balance and its hairspring, bridges with their screws and jewels, over a plate of perlage.
+/// Plate 3: medusae after Haeckel: bells of every size seen a little from above, their radial canals and scalloped
+/// margins, trailing tentacles and twisting oral arms in long lines through black water. The bells are tilted ellipses
+/// with canal counts prime to 12, so no figure is whole about a core's centre.
 enum Movement {
     typealias Line = Engraving.Line
     private typealias E = Engraving
 
+    /// A bell: its margin's centre, half-width, dome height, axis heading, tilt towards the viewer, canals, tentacles,
+    /// their length, oral arms and the current's pull on everything trailing.
+    private struct Bell {
+        var c: SIMD2<Double>, w: Double, h: Double, heading: Double, tilt: Double
+        var canals: Int, tentacles: Int, length: Double, arms: Int, drift: SIMD2<Double>
+    }
+
     static let lines: [Line] = {
-        var rng = SplitMix64(state: 0x4D4F_5645)
+        var rng = SplitMix64(state: 0x4D45_4455)
         var out: [Line] = []
-        perlage(&out)
-        // (centre, tip radius, teeth, spokes, turn)
-        let wheels: [(SIMD2<Double>, Double, Int, Int, Double)] = [
-            (SIMD2(0.05, 0.1), 0.42, 79, 5, 0.2),
-            (SIMD2(-0.55, -0.3), 0.3, 53, 5, 0.9),
-            (SIMD2(-0.5, 0.52), 0.26, 43, 3, 0.4),
-            (SIMD2(0.55, 0.55), 0.22, 37, 5, 1.3),
-            (SIMD2(0.12, -0.62), 0.2, 31, 3, 2.1),
-            (SIMD2(0.68, -0.05), 0.13, 19, 0, 0.5),
-            (SIMD2(-0.15, -0.3), 0.1, 13, 0, 0.0),
+        let bells = [
+            Bell(c: SIMD2(-0.2, -0.34), w: 0.34, h: 0.32, heading: -0.1, tilt: 0.34, canals: 17, tentacles: 24,
+                 length: 1.0, arms: 4, drift: SIMD2(-0.05, 0)),
+            Bell(c: SIMD2(0.52, -0.06), w: 0.19, h: 0.19, heading: 0.22, tilt: 0.4, canals: 13, tentacles: 15,
+                 length: 0.75, arms: 2, drift: SIMD2(0.08, 0)),
+            Bell(c: SIMD2(0.5, -0.64), w: 0.1, h: 0.1, heading: 0.3, tilt: 0.4, canals: 11, tentacles: 9,
+                 length: 0.36, arms: 0, drift: SIMD2(0.04, 0)),
+            Bell(c: SIMD2(-0.66, 0.34), w: 0.11, h: 0.11, heading: -0.35, tilt: 0.38, canals: 11, tentacles: 10,
+                 length: 0.42, arms: 1, drift: SIMD2(-0.04, 0)),
+            Bell(c: SIMD2(0.24, 0.56), w: 0.08, h: 0.08, heading: 0.15, tilt: 0.4, canals: 7, tentacles: 8,
+                 length: 0.3, arms: 0, drift: SIMD2(0.03, 0)),
         ]
-        for (c, r, teeth, spokes, turn) in wheels { wheel(&out, c, r, teeth: teeth, spokes: spokes, turn: turn) }
-        balance(&out, SIMD2(-0.15, 0.78) + SIMD2(0.6, -1.32), 0.0)
-        escapement(&out, SIMD2(0.36, -0.3))
-        bridges(&out, &rng)
+        for bell in bells { medusa(&out, &rng, bell) }
+        // The smallest adrift, a few tentacles each.
+        for (c, heading) in [(SIMD2(-0.56, -0.76), -0.5), (SIMD2(0.12, -0.86), 0.2), (SIMD2(0.86, -0.44), 0.6),
+                             (SIMD2(-0.84, -0.2), -0.3), (SIMD2(0.8, 0.36), 0.35), (SIMD2(-0.26, 0.78), -0.2)] {
+            let w = Double.random(in: 0.03..<0.055, using: &rng)
+            medusa(&out, &rng, Bell(c: c, w: w, h: w, heading: heading, tilt: 0.4, canals: 5, tentacles: 4,
+                                    length: 3.2 * w, arms: 0, drift: .zero))
+        }
         return out
     }()
 
-    /// Overlapping circles in rows across the plate, the finish's swirls, each broken by a hatched quadrant.
-    private static func perlage(_ out: inout [Line]) {
-        let pitch = 0.13
-        var y = -1.0, row = 0
-        while y < 1.05 {
-            var x = -1.0 + (row % 2 == 0 ? 0 : pitch / 2)
-            while x < 1.05 {
-                let c = SIMD2(x, y)
-                if simd_length(c) < 1.04 {
-                    out.append(Line(points: E.arc(c, 0.075, from: 0.3, to: 0.3 + 1.25 * .pi, 30), width: E.fine))
-                }
-                x += pitch
-            }
-            y += pitch * 0.87
-            row += 1
-        }
+    /// The bell's surface at azimuth `phi` (0 to the right, front at π/2) and `t` from the apex (0) to the margin (1).
+    private static func surface(_ b: Bell, _ phi: Double, _ t: Double, flare: Double = 1) -> SIMD2<Double> {
+        let u = E.dir(b.heading), v = SIMD2(-u.y, u.x)
+        let rho = flare * b.w * sin(t * .pi / 2), z = b.h * pow(cos(t * .pi / 2), 0.9)
+        return b.c + rho * cos(phi) * v + (z * cos(b.tilt) - rho * sin(phi) * sin(b.tilt)) * u
     }
 
-    /// A wheel: its teeth, rim, crossings (spokes) and a hub with a slotted screw.
-    private static func wheel(_ out: inout [Line], _ c: SIMD2<Double>, _ r: Double, teeth: Int, spokes: Int, turn: Double) {
-        let depth = min(0.035, r * 0.12), w = 2 * .pi / Double(teeth)
-        var rim: [SIMD2<Double>] = []
-        for i in 0...teeth {
-            let a = turn + w * Double(i)
-            for (f, rr) in [(0.0, r - depth), (0.18, r - 0.3 * depth), (0.3, r), (0.5, r), (0.62, r - 0.3 * depth), (0.8, r - depth)] {
-                rim.append(c + rr * SIMD2(cos(a + f * w), sin(a + f * w)))
+    /// The bell's outline on screen: the dome's two edges and the margin's near half.
+    private static func silhouette(_ b: Bell) -> [SIMD2<Double>] {
+        let left = (0...40).map { surface(b, .pi, 1 - Double($0) / 40) }
+        let right = (0...40).map { surface(b, 0, Double($0) / 40) }
+        let front = (0...40).map { surface(b, Double($0) / 40 * .pi, 1) }
+        return left + right + front
+    }
+
+    private static func inside(_ p: SIMD2<Double>, _ poly: [SIMD2<Double>]) -> Bool {
+        var odd = false
+        var j = poly.count - 1
+        for i in poly.indices {
+            let a = poly[i], b = poly[j]
+            if (a.y > p.y) != (b.y > p.y), p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x { odd.toggle() }
+            j = i
+        }
+        return odd
+    }
+
+    /// A polyline cut where it passes behind the bell.
+    private static func outside(_ out: inout [Line], _ points: [SIMD2<Double>], _ hull: [SIMD2<Double>], _ width: Double) {
+        var run: [SIMD2<Double>] = []
+        for p in points {
+            if inside(p, hull) {
+                if run.count > 1 { out.append(Line(points: run, width: width)) }
+                run = []
+            } else {
+                run.append(p)
             }
         }
-        out.append(Line(points: rim, width: E.heavy))
-        let inner = r - depth - 0.03
-        out.append(Line(points: E.circle(c, inner, 120), width: E.heavy))
-        let hub = max(0.03, r * 0.16)
-        out.append(Line(points: E.circle(c, hub, 40), width: E.medium))
-        for k in 0..<spokes {
-            // Crossings swept a little, each a pair of curved edges.
-            let a = turn + 2 * .pi * Double(k) / Double(spokes)
+        if run.count > 1 { out.append(Line(points: run, width: width)) }
+    }
+
+    private static func medusa(_ out: inout [Line], _ rng: inout SplitMix64, _ b: Bell) {
+        let u = E.dir(b.heading), v = SIMD2(-u.y, u.x)
+        let hull = silhouette(b)
+        // The dome's edges over the apex, heavy; the margin's near half scalloped into lappets, the far half seen
+        // through the bell, fine.
+        out.append(Line(points: (0...80).map { i in
+            let s = Double(i) / 80
+            return s < 0.5 ? surface(b, .pi, 1 - 2 * s) : surface(b, 0, 2 * s - 1)
+        }, width: E.heavy))
+        let lappets = 2 * b.canals
+        out.append(Line(points: (0...(lappets * 8)).map { i in
+            let phi = Double(i) / Double(lappets * 8) * .pi
+            let bump = 1 + 0.05 * abs(sin(Double(lappets) * phi / 2))
+            return surface(b, phi, 1, flare: bump)
+        }, width: E.medium))
+        if b.w > 0.06 {
+            out.append(Line(points: (0...60).map { surface(b, .pi + Double($0) / 60 * .pi, 1) }, width: E.fine))
+        }
+        // Radial canals on the near face, from the stomach out to the margin.
+        let phase = Double.random(in: 0..<(2 * .pi), using: &rng)
+        for k in 0..<b.canals {
+            let phi = phase + 2 * .pi * Double(k) / Double(b.canals)
+            guard sin(phi) > 0.08 else { continue }
+            guard b.w > 0.15 else {
+                out.append(Line(points: (0...30).map { surface(b, phi, 0.18 + 0.8 * Double($0) / 30) }, width: E.fine))
+                continue
+            }
+            // On the larger bells each canal forks two thirds of the way out.
+            let fork = 0.62, half = .pi / Double(b.canals) * 0.45
+            out.append(Line(points: (0...20).map { surface(b, phi, 0.18 + (fork - 0.18) * Double($0) / 20) }, width: E.fine))
             for side in [-1.0, 1.0] {
-                let a0 = a + side * 0.18 * 0.3 / max(hub, 0.03) * hub, a1 = a + 0.25 + side * 0.08
-                let p0 = c + hub * SIMD2(cos(a0), sin(a0)), p1 = c + inner * SIMD2(cos(a1), sin(a1))
-                let mid = c + 0.55 * inner * SIMD2(cos(a + 0.05), sin(a + 0.05))
-                out.append(Line(points: E.curve(p0, mid + side * 0.02 * SIMD2(-sin(a), cos(a)), p1, 20), width: E.fine))
+                out.append(Line(points: (0...16).map { i in
+                    let f = Double(i) / 16
+                    return surface(b, phi + side * half * sin(f * .pi / 2), fork + (0.98 - fork) * f)
+                }, width: E.fine))
             }
         }
-        if spokes == 0 {
-            // A pinion's solid wheel: a ring of lightening holes, five of them.
-            for k in 0..<5 {
-                let a = turn + 2 * .pi * Double(k) / 5
-                out.append(Line(points: E.circle(c + 0.55 * inner * SIMD2(cos(a), sin(a)), 0.18 * inner, 16), width: E.fine))
+        // Tentacles from all round the margin, trailing and fanning.
+        for k in 0..<b.tentacles {
+            let phi = 2 * .pi * (Double(k) + Double.random(in: -0.3..<0.3, using: &rng)) / Double(b.tentacles)
+            let root = surface(b, phi, 1)
+            let len = b.length * Double.random(in: 0.55..<1.05, using: &rng)
+            let fan = 0.14 * cos(phi), amp = b.w * Double.random(in: 0.04..<0.12, using: &rng)
+            let freq = Double.random(in: 1.2..<2.4, using: &rng), ph = Double.random(in: 0..<(2 * .pi), using: &rng)
+            let points = (0...90).map { i -> SIMD2<Double> in
+                let s = Double(i) / 90
+                return root - len * s * u + fan * len * s * v + amp * s * sin(2 * .pi * freq * s + ph) * v + s * s * len * b.drift
             }
+            outside(&out, points, hull, E.fine)
         }
-        screw(&out, c, hub * 0.6, turn: turn * 2.3)
-    }
-
-    private static func screw(_ out: inout [Line], _ c: SIMD2<Double>, _ r: Double, turn: Double) {
-        out.append(Line(points: E.circle(c, r, 24), width: E.fine))
-        let u = SIMD2(cos(turn), sin(turn)), v = SIMD2(-u.y, u.x)
-        out.append(Line(points: [c - 0.85 * r * u + 0.18 * r * v, c + 0.85 * r * u + 0.18 * r * v], width: E.fine))
-        out.append(Line(points: [c - 0.85 * r * u - 0.18 * r * v, c + 0.85 * r * u - 0.18 * r * v], width: E.fine))
-    }
-
-    /// The balance: a rim with timing screws, a cross arm and the hairspring's spiral from its stud.
-    private static func balance(_ out: inout [Line], _ c: SIMD2<Double>, _ turn: Double) {
-        let r = 0.27
-        out.append(Line(points: E.circle(c, r, 160), width: E.heavy))
-        out.append(Line(points: E.circle(c, r - 0.022, 160), width: E.fine))
-        for k in 0..<11 {
-            let a = turn + 2 * .pi * Double(k) / 11
-            let p = c + (r + 0.014) * SIMD2(cos(a), sin(a))
-            out.append(Line(points: E.circle(p, 0.012, 10), width: E.fine))
-        }
-        for a in [turn + 0.3, turn + 0.3 + .pi] {
-            out.append(Line(points: [c + 0.03 * SIMD2(cos(a), sin(a)), c + (r - 0.022) * SIMD2(cos(a), sin(a))], width: E.medium))
-        }
-        // The spiral winds out 9 turns from the collet to the stud, off the arm's line.
-        let spiral = (0...900).map { i -> SIMD2<Double> in
-            let t = Double(i) / 900, a = turn + 1.1 + 2 * .pi * 9 * t
-            return c + (0.035 + 0.16 * t) * SIMD2(cos(a), sin(a))
-        }
-        out.append(Line(points: spiral, width: E.fine))
-        out.append(Line(points: E.circle(c, 0.03, 20), width: E.medium))
-    }
-
-    /// The escape wheel's hooked teeth, fifteen of them, and the pallet fork reaching across to the balance.
-    private static func escapement(_ out: inout [Line], _ c: SIMD2<Double>) {
-        let r = 0.15, n = 15
-        var teeth: [SIMD2<Double>] = []
-        for i in 0...n {
-            let a = 2 * .pi * Double(i) / Double(n)
-            teeth.append(c + 0.62 * r * SIMD2(cos(a), sin(a)))
-            teeth.append(c + r * SIMD2(cos(a + 0.12), sin(a + 0.12)))
-            teeth.append(c + 0.9 * r * SIMD2(cos(a + 0.2), sin(a + 0.2)))
-            teeth.append(c + 0.62 * r * SIMD2(cos(a + 0.28), sin(a + 0.28)))
-        }
-        out.append(Line(points: teeth, width: E.medium))
-        out.append(Line(points: E.circle(c, 0.04, 20), width: E.medium))
-        let pivot = c + SIMD2(0.2, 0.12)
-        out.append(Line(points: E.circle(pivot, 0.02, 14), width: E.medium))
-        out.append(Line(points: [c + SIMD2(0.07, -0.13), pivot, c + SIMD2(0.16, 0.12)], width: E.medium))
-        out.append(Line(points: [pivot, pivot + SIMD2(0.22, 0.12), pivot + SIMD2(0.25, 0.1)], width: E.medium))
-    }
-
-    /// Bridges over the train, each an outline with a bevel line inside, screws at its feet and jewels at its pivots.
-    private static func bridges(_ out: inout [Line], _ rng: inout SplitMix64) {
-        let shapes: [[SIMD2<Double>]] = [
-            [SIMD2(-0.95, -0.05), SIMD2(-0.55, -0.12), SIMD2(-0.18, -0.4), SIMD2(0.12, -0.7), SIMD2(0.3, -0.85)],
-            [SIMD2(-0.85, 0.55), SIMD2(-0.5, 0.45), SIMD2(0.05, 0.12), SIMD2(0.55, 0.5), SIMD2(0.85, 0.42)],
-        ]
-        for spine in shapes {
-            for (offset, width) in [(0.06, E.medium), (0.045, E.fine)] {
-                for side in [-1.0, 1.0] {
-                    var edge: [SIMD2<Double>] = []
-                    for i in 0..<(spine.count - 1) {
-                        let a = spine[i], b = spine[i + 1], d = simd_normalize(b - a), n = SIMD2(-d.y, d.x)
-                        for k in 0..<12 { edge.append(a + (b - a) * Double(k) / 12 + side * offset * n) }
-                    }
-                    out.append(Line(points: edge, width: width))
+        // Oral arms from the mouth: long ribbons twisting as they hang, so their edges cross at each half turn.
+        for k in 0..<b.arms {
+            let off = b.arms == 1 ? 0 : Double(k) / Double(b.arms - 1) - 0.5
+            let len = 0.85 * b.length * Double.random(in: 0.85..<1.1, using: &rng)
+            let ph = Double.random(in: 0..<(2 * .pi), using: &rng), half = 0.16 * b.w
+            let turns = Double.random(in: 2.2..<3.2, using: &rng)
+            func centre(_ s: Double) -> SIMD2<Double> {
+                b.c - len * s * u + 0.45 * off * b.w * (1 + 1.2 * s) * v + 0.05 * s * sin(4 * s + ph) * v + s * s * len * b.drift
+            }
+            for side in [-1.0, 1.0] {
+                let points = (0...200).map { i -> SIMD2<Double> in
+                    let s = Double(i) / 200
+                    let d = simd_normalize(centre(min(s + 0.01, 1)) - centre(max(s - 0.01, 0))), n = SIMD2(-d.y, d.x)
+                    let wd = half * (1 - 0.7 * s) * sin(2 * .pi * turns * s + ph)
+                    return centre(s) + side * wd * n
                 }
-            }
-            for p in spine {
-                screw(&out, p, 0.028, turn: Double.random(in: 0..<(2 * .pi), using: &rng))
-                out.append(Line(points: E.circle(p, 0.04, 24), width: E.fine))
+                outside(&out, points, hull, E.medium)
             }
         }
     }
