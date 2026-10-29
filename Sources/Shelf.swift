@@ -9,9 +9,10 @@ enum Offer: Hashable, Sendable {
 
     static let all: [Offer] = Pack.allCases.map(Offer.pack) + [.complete]
 
-    /// The covers the dock shows. A pack goes on sale only once it has levels past its taste, and Complete only once every
-    /// pack is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the shop can be looked at.
-    static func shelf(release: Bool = Build.release, ready: (Pack) -> Bool = { $0.levels.count > $0.taste }) -> [Offer] {
+    /// The covers the dock shows. A pack goes on sale only once it has levels past its taste and isn't `held`, and
+    /// Complete only once every pack is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the
+    /// shop can be looked at.
+    static func shelf(release: Bool = Build.release, ready: (Pack) -> Bool = { !$0.held && $0.levels.count > $0.taste }) -> [Offer] {
         guard release else { return all }
         let packs = Pack.allCases.filter(ready)
         return packs.map(Offer.pack) + (packs.count == Pack.allCases.count ? [.complete] : [])

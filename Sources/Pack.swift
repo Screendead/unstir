@@ -33,6 +33,9 @@ enum Pack: String, CaseIterable, Sendable {
 
     static var productIDs: [String] { allCases.map(\.productID) + [completeID] }
 
+    /// Kept off a Release shelf whatever levels it has: Prism is a prototype until Jack calls it in.
+    var held: Bool { self == .prism }
+
     /// Levels 1 to `taste` play without the pack.
     var taste: Int { 3 }
 
