@@ -401,7 +401,8 @@ stir), never merged. To make it a tier:
 7. Tests, shots and films; the tier strip takes a fourth name.
 
 So the catalogue is five packs: First Stir, Lens and Escapement at v1, then Prism, then Music Box if it passes its ear
-test.
+test. **Since FS17 (2026-10-29): First Stir is out of v1, to be reworked; v1's third pack, which Jack wants to bring at
+least one new mechanic, is open, with Prism being prototyped for it.**
 
 #### The catalogue
 
@@ -1132,8 +1133,14 @@ names and product ids, and Complete's promise to older owners.
     night's clock and sky, and the departures from the outline, all as built), FS15 = A (judge small figures on the
     phone first), FS16 = A (fold Pen into Brush), and a note on FS11 (the ending film, see to-do 44). They stand for the
     rework.
+    Built 2026-10-29 on `v1-without-firststir` (PR #60, merged 2026-10-29): `Pack.ships`/`Pack.sold()` keep First
+    Stir off a Release build (no shelf cover, no card, its levels `.withheld`, Complete naming, granting, drawing and
+    clipping Lens and Escapement only, the analytics snapshot without it) while Debug and the harness keep all of it.
+    The StoreKit test file keeps First Stir's product, since `StoreTests` run outside Release, where it is still sold.
+    Release-build shots `round12/fs/release-*.png` in the tools folder: the dock shows Lens alone (Escapement has one
+    level, so it waits for levels past its taste, and Complete waits for both).
     All five chapters joined on `firststir-content` (2026-10-27), levels `first-stir-1` to `-25` in the outline's
-    order, with master's Lens and Escapement; First Stir is now on the Release shelf, nothing left to arrive, the taste
+    order, with master's Lens and Escapement; First Stir was on the Release shelf until FS17, nothing left to arrive, the taste
     of 3 then the card (`testFirstStirPlaysInOrderFromTheShelf`). The Flood's and the Storm's `HighStreet` clashed; the
     Storm's is `StreetInRain`. Sheets `round10/firststir/ch1-sheet.png` to `ch5-sheet.png` in the tools folder.
     The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), approved by Jack (2026-10-26, round 9).

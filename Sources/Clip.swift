@@ -23,7 +23,7 @@ struct Clip: Sendable {
         fatalError("a clip has reels")
     }
 
-    /// Each offer's clip. Complete cuts between the three.
+    /// Each offer's clip. Complete cuts between the packs it grants.
     static func of(_ offer: Offer) -> Clip {
         switch offer {
         case .pack(.firstStir): firstStir
@@ -44,10 +44,24 @@ struct Clip: Sendable {
     /// stops the clock on the clean picture.
     static let escapement = Clip(reels: [.escapement()], still: Reel.escapement().beats[0].lift + 0.6)
 
-    /// Each pack's telling beat in turn, inside about eight seconds: a vignette, a zoom, a tick.
-    static let complete = Clip(reels: [cutStory, .lens(dips: true, rest: 0.3, down: 0.6, hold: 0.1, up: 0.6, tail: 0.25),
-                                       .escapement(moves: 1, rest: 0.45, tail: 0.7)],
-                               still: cutStory.beats[1].lift + 0.5 - cutStory.from)
+    /// Each sold pack's telling beat in turn: a vignette, a zoom, a tick, about eight seconds with all three.
+    static let complete = cut(of: Pack.sold())
+
+    /// Each of `packs`' beats in turn, held at the first one's still.
+    static func cut(of packs: [Pack]) -> Clip {
+        let cuts = packs.map { pack -> (reel: Reel, still: Double) in
+            switch pack {
+            case .firstStir: return (cutStory, cutStory.beats[1].lift + 0.5)
+            case .lens:
+                let r = Reel.lens(dips: true, rest: 0.3, down: 0.6, hold: 0.1, up: 0.6, tail: 0.25)
+                return (r, r.beats[0].lift + 0.15)
+            case .escapement:
+                let r = Reel.escapement(moves: 1, rest: 0.45, tail: 0.7)
+                return (r, r.beats[0].lift + 0.6)
+            }
+        }
+        return Clip(reels: cuts.map(\.reel), still: cuts[0].still - cuts[0].reel.from)
+    }
     /// The sunrise's first heal plays nothing, so the cut opens just after it, on the second, which plays the lantern.
     private static let cutStory: Reel = {
         let r = Reel.firstStir(moves: 2, rest: 0.45, gap: 0.5, tail: 0.6)

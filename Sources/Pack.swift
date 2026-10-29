@@ -29,7 +29,20 @@ enum Pack: String, CaseIterable, Sendable {
     /// Grants every pack. A later pack joins it, so an older Complete owns it too.
     static let completeID = "com.screendead.Unstir.complete"
 
-    static var productIDs: [String] { allCases.map(\.productID) + [completeID] }
+    static var productIDs: [String] { sold().map(\.productID) + [completeID] }
+
+    /// Whether a Release build sells it. First Stir is out of v1, to be reworked (Jack, FS17); a build outside Release
+    /// keeps it, so its levels, tests and films still run.
+    var ships: Bool { self != .firstStir }
+
+    /// The packs a build sells, and Complete grants.
+    static func sold(release: Bool = Build.release) -> [Pack] { allCases.filter { !release || $0.ships } }
+
+    /// "Lens and Escapement".
+    static func named(_ packs: [Pack]) -> String {
+        let names = packs.map(\.name)
+        return names.count < 2 ? names.joined() : names.dropLast().joined(separator: ", ") + " and " + names.last!
+    }
 
     /// Levels 1 to `taste` play without the pack.
     var taste: Int { 3 }
@@ -59,12 +72,14 @@ enum Pack: String, CaseIterable, Sendable {
         return Int(id.dropFirst(prefix.count + 1)).flatMap { $0 > 0 ? $0 : nil }
     }
 
-    enum Access: Equatable { case taste, owned, needsCard }
+    /// `withheld`: a pack this build doesn't sell, which opens neither its levels nor its card.
+    enum Access: Equatable { case taste, owned, needsCard, withheld }
 
     /// Whether `number` plays. `owned` is what StoreKit grants; the developer unlock and the harness's packs count only
     /// outside Release, so a shipped build opens a pack past its taste for nothing but a purchase.
     func access(_ number: Int, owned: Set<Pack>, unlocked: Bool = Best.unlocked, harness: Set<Pack> = [],
                 release: Bool = Build.release) -> Access {
+        if release && !ships { return .withheld }
         if number <= taste { return .taste }
         if owned.contains(self) || (!release && (unlocked || harness.contains(self))) { return .owned }
         return .needsCard
