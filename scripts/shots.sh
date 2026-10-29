@@ -439,16 +439,20 @@ shot escapement-1-stopped "Escapement's clock on 1:+3,0:-1 after a wait: the clo
   PACK=escapement STACK=1:+3,0:-1 PLAYED=0:1
 shot escapement-1-won "Escapement 1 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement PLAYED=2:4,0:1,1:-3
 
-# Prism's placeholder: tri on the fern engraving, rod 0 red, rod 1 cyan and rod 2 white, dealt 2:+3,0:+4,1:-3. Each
+# Prism's specimen 1: tri on the fern engraving, rod 0 red, rod 1 cyan and rod 2 white, dealt 2:+3,0:+4,1:-3. Each
 # channel is sampled through its own entries, so a ghost's colour names the channels its stir moved.
-hold=5 shot prism-dealt "Prism placeholder as dealt: red ghosts in the top core, cyan in the left, both over the white bottom stir's shear; the knobs tinted red, cyan and white." PACK=prism
-hold=5 shot prism-solved "Prism placeholder drawn unstirred: the engraving in pure white lines, every channel in register." PACK=prism BARE=1
-hold=5 shot prism-live "Prism placeholder held mid-drag, the cyan rod 1 turned back +1.5 of its 3: its green and blue ghosts swing towards the red." \
+hold=5 shot prism-dealt "Prism specimen 1 as dealt: red ghosts in the top core, cyan in the left, both over the white bottom stir's shear; the knobs tinted red, cyan and white." PACK=prism
+hold=5 shot prism-solved "Prism specimen 1 drawn unstirred: the engraving in pure white lines, every channel in register." PACK=prism BARE=1
+hold=5 shot prism-live "Prism specimen 1 held mid-drag, the cyan rod 1 turned back +1.5 of its 3: its green and blue ghosts swing towards the red." \
   PACK=prism LIVE=1:+1.5
 hold=5 shot prism-mixed "Prism on tri, magenta, yellow and cyan rods, 0:+3,1:-2,2:+2: one channel left behind where each moved, red, green and blue ghosts and their pairs." \
   PACK=prism MASKS=0:m,1:y,2:c STACK=0:+3,1:-2,2:+2
 hold=5 shot prism-hex "Prism on hex, every rod a different mask (white hub), 1:+3,4:-4,2:+2,5:-3: the fern's lines in every core." \
   PACK=prism LAYOUT=hex MASKS=1:r,2:g,3:b,4:c,5:m,6:y STACK=1:+3,4:-4,2:+2,5:-3
+for n in 2 3 4 5 6; do
+  hold=5 shot "prism-specimen-$n" "Prism specimen $n as dealt (docs/prism-design.md): red and cyan ghosts over the white bottom stir." \
+    PACK=prism LEVEL=$n
+done
 for layout in quad eye pent hex; do
   hold=5 shot "prism-bare-$layout" "Prism's fern under $layout's knobs, unstirred: some line in every core." PACK=prism LAYOUT=$layout STACK=0:+1 BARE=1
 done

@@ -102,6 +102,12 @@ film firststir-01-solve 25 "$tank,fps=1.5,scale=200:-1,tile=9x4:padding=4" PACK=
 # The heal ring: a push on the boat's rod (red), turned back (white, nothing plays), then the lighthouse's heal (magenta,
 # its vignette).
 film firststir-01-ring 14 "$tank,fps=2,scale=200:-1,tile=11x2:padding=4" PACK=first-stir LEVEL=1 MOVES=1:+2,1:-2,0:-3 PACE=2.2
+# Prism, played by a drawn fingertip: specimen 1 heals the red rod buried under the cyan one first, which its colour
+# frees, then the cyan, then the white bottom stir; specimen 5 on pent heals the solver's line, red and cyan words
+# interleaved, the white last.
+film prism-01-solve 13 "$tank,fps=2,scale=200:-1,tile=9x3:padding=4" PACK=prism LEVEL=1 FINGER=1 MOVES=0:-4,1:+3,2:-3
+film prism-05-solve 24 "$tank,fps=1.5,scale=200:-1,tile=9x4:padding=4" PACK=prism LEVEL=5 FINGER=1 \
+  MOVES=0:+3,1:-2,0:-4,2:-5,3:-4,4:-3,2:+3
 # The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
 # (UNSTIR_SHELFDEMO, through the calls a finger makes).
 film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned
