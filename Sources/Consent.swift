@@ -21,6 +21,8 @@ enum ConsentWords {
     static let analyticsOff = "off \u{00B7} nothing is sent"
     static let sendLog = "send log"
     static let sendLogDetail = "what the game noted as you played, for a bug"
+    static let policy = "privacy policy"
+    static let policyDetail = "what the game keeps, and why"
 }
 
 /// The first launch's question, over the menu, which waits for an answer. Yes and no are the same control: same type,
@@ -128,8 +130,12 @@ struct NeonToggle: ToggleStyle {
     }
 }
 
-/// The gear's sheet: the analytics switch and the log, black, sized to what it holds.
+/// The gear's sheet: the analytics switch, the log and the privacy policy, black, sized to what it holds.
 struct SettingsSheet: View {
+    /// Apple's guideline 5.1.1(i) wants it reachable in the app. The plain github.com page until docs/ is served as a
+    /// site.
+    static let policy = URL(string: "https://github.com/Screendead/unstir/blob/master/docs/privacy-policy.md")!
+
     @State private var height: CGFloat = 220
 
     var body: some View {
@@ -144,19 +150,12 @@ struct SettingsSheet: View {
                 }
                 .toggleStyle(NeonToggle())
                 .padding(.vertical, 12)
-                Rectangle().fill(Color.text.opacity(0.12)).frame(height: 1)
-                ShareLink(item: Log.url) {
-                    HStack(alignment: .center, spacing: 12) {
-                        row(ConsentWords.sendLog, ConsentWords.sendLogDetail)
-                        Spacer(minLength: 8)
-                        Text("\u{2197}").font(.mono(15, .medium)).foregroundStyle(Color.amber)
-                            .shadow(color: .amber, radius: 4)
-                            .accessibilityHidden(true)
-                    }
-                    .padding(.vertical, 12)
-                    .contentShape(Rectangle())
-                }
-                .shareTap()
+                rule
+                ShareLink(item: Log.url) { outward(ConsentWords.sendLog, ConsentWords.sendLogDetail) }
+                    .shareTap()
+                rule
+                Link(destination: SettingsSheet.policy) { outward(ConsentWords.policy, ConsentWords.policyDetail) }
+                    .buttonStyle(Sounding())
             }
         }
         .padding(.horizontal, 20)
@@ -169,6 +168,21 @@ struct SettingsSheet: View {
         .presentationDragIndicator(.visible)
         .presentationBackground(Color(0x0B0C10))
         .presentationCornerRadius(24)
+    }
+
+    private var rule: some View { Rectangle().fill(Color.text.opacity(0.12)).frame(height: 1) }
+
+    /// A row that hands off to another app, marked with the amber arrow.
+    private func outward(_ name: String, _ detail: String) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            row(name, detail)
+            Spacer(minLength: 8)
+            Text("\u{2197}").font(.mono(15, .medium)).foregroundStyle(Color.amber)
+                .shadow(color: .amber, radius: 4)
+                .accessibilityHidden(true)
+        }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
     }
 
     private func row(_ name: String, _ detail: String) -> some View {

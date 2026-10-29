@@ -426,8 +426,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
-  analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
-  leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
+  analytics switch (`NeonToggle`, which calls `decide`), "send log", which hands `Log.url` to the share sheet, and
+  "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)), for now the github.com page of
+  `docs/privacy-policy.md`. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
   bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
