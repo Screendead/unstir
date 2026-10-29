@@ -197,23 +197,61 @@ extension Level {
         return level
     }
 
-    /// Prism's specimens on the fern, `docs/prism-design.md`'s table: so far the Two Colours tray, red and cyan rods
-    /// over one white rod that holds only the bottom entry, so neither channel is ever clean alone. No entry merges as it
-    /// is dealt, and par is the depth (`testPrismLevels`), the solver's optimum (`testPrismParIsTheOptimum`).
+    /// Prism's 30 specimens, `docs/prism-design.md`'s table: five trays of six, each on its own plate. One white rod holds
+    /// only the bottom entry, so no channel is ever clean alone; no entry merges as it is dealt; every stack is at most 8
+    /// deep, as deeper ones read too busy (Jack's call PK1); par is the depth (`testPrismLevels`), the solver's optimum
+    /// (`testPrismParIsTheOptimum`). `scripts/prism-levels.sh table` measures them.
     static let prism: [Level] = [
+        // Two Colours, on the fern: red and cyan, which share no channel, so they always pass each other.
         (Layout.tri, "0:r,1:c,2:w", "2:+3,0:+4,1:-3"),
         (.quad, "0:r,1:c,2:r,3:w", "3:+3,2:-4,1:+3,0:+5"),
         (.eye, "0:r,1:c,2:r,3:w", "3:+4,0:-3,2:+2,1:+5,0:+3"),
         (.quad, "0:r,1:r,2:c,3:w", "3:-3,0:+3,1:+4,2:-5,0:-2,1:+3"),
         (.pent, "0:r,1:r,2:c,3:c,4:w", "4:+3,0:+4,2:-3,1:+2,3:+4,0:-3,2:+5"),
-        (.hex, "0:w,1:r,2:r,3:c,4:c,5:r,6:c", "0:+3,1:+4,3:-3,2:-2,5:+2,4:+5,1:+3,6:-4,3:+2"),
+        (.hex, "0:c,1:c,2:c,3:r,4:r,5:w,6:c", "5:-2,1:+5,6:+3,1:-5,4:-5,0:+3,2:-3,3:-4"),
+        // Three Colours, on the seed heads: red, green and blue, three words that never meet.
+        (.quad, "0:b,1:g,2:r,3:w", "3:-4,2:-5,1:-4,0:-3"),
+        (.pent, "0:b,1:g,2:r,3:w,4:r", "3:+3,1:-5,0:+4,4:-4,2:-2"),
+        (.pent, "0:r,1:g,2:b,3:w,4:r", "3:-3,2:+2,1:-2,0:+3,4:+2,0:-2"),
+        (.pent, "0:g,1:g,2:r,3:b,4:w", "4:+4,2:+4,1:+2,0:+2,3:+5,1:+3"),
+        (.pent, "0:g,1:w,2:b,3:b,4:r", "1:-5,2:-4,3:-5,0:+3,2:-5,4:-5,3:+5"),
+        (.pent, "0:b,1:w,2:r,3:r,4:g", "1:+5,2:-2,4:+3,0:+4,3:-2,2:-3,3:-3,2:+4"),
+        // Colour Order, on the movement: cyan, magenta and yellow, each pair sharing a channel, so overlapping inks block.
+        (.tri, "0:m,1:c,2:w", "2:-5,1:+5,0:-4,1:-5"),
+        (.quad, "0:w,1:m,2:c,3:y", "0:-5,1:+4,3:-4,2:-2"),
+        (.quad, "0:y,1:w,2:m,3:c", "1:-3,2:-3,0:+5,3:+3,2:+5"),
+        (.eye, "0:c,1:w,2:y,3:m", "1:+5,0:+5,2:-2,0:-5,3:+5"),
+        (.pent, "0:c,1:c,2:m,3:w,4:y", "3:+3,0:+5,4:+3,0:+3,2:-2,1:+2"),
+        (.pent, "0:m,1:y,2:c,3:w,4:y", "3:+3,2:+5,4:+5,1:+4,0:-3,1:-5,2:-3"),
+        // Overprint, on the cathedral: primaries and inks together; red passes cyan, and blocks yellow and magenta.
+        (.quad, "0:c,1:b,2:y,3:w", "3:-5,2:-2,1:-4,0:+3,1:-3,0:-3"),
+        (.eye, "0:w,1:m,2:g,3:b", "0:-2,2:+3,3:+4,1:+3,3:-2,1:-4"),
+        (.eye, "0:w,1:b,2:y,3:m", "0:-4,3:+5,1:-2,2:-3,3:+5,1:+3,3:-4"),
+        (.pent, "0:c,1:w,2:b,3:m,4:g", "1:+3,4:-2,0:+2,2:-2,3:+5,4:-5,2:+5"),
+        (.pent, "0:m,1:r,2:c,3:b,4:w", "4:+5,3:+2,0:-5,2:-3,1:+3,0:-5,1:-2,0:+2"),
+        (.pent, "0:y,1:w,2:g,3:c,4:m", "1:-2,4:-5,3:-5,0:+3,2:+3,3:+3,4:+2,3:+2"),
+        // Spectrum, on the nautilus: every mask on one tank.
+        (.tri, "0:w,1:m,2:r", "0:+2,1:+5,2:+3,1:-2,2:-2,1:-3"),
+        (.quad, "0:y,1:c,2:r,3:w", "3:+5,2:+4,1:-4,0:-4,1:-4,0:+2,1:-4"),
+        (.eye, "0:b,1:w,2:m,3:y", "1:-4,0:+3,2:-2,3:-3,0:+5,2:+3,0:+3"),
+        (.eye, "0:w,1:r,2:m,3:b", "0:-3,2:-2,3:-3,1:-5,2:+4,1:+5,2:-2,1:-2"),
+        (.pent, "0:c,1:m,2:b,3:y,4:w", "4:-4,3:+5,0:-3,2:+2,1:+4,2:-3,1:+3,0:-4"),
+        (.pent, "0:y,1:m,2:r,3:w,4:g", "3:-3,2:+2,1:-2,2:-2,0:+3,4:+2,1:+2,0:-2"),
     ].enumerated().map { i, row in
         let (layout, mask, scramble): (Layout, String, String) = row
-        let masks = Channels.masks(mask)!
+        let masks = Channels.masks(mask)!, tray = i / 6
         return Level(id: Pack.prism.id(i + 1), pack: .prism, label: String(format: "%02d", i + 1), title: "Specimen \(i + 1)",
-                     note: i == 0 ? "Each rod stirs only its knob's colours." : "", picture: .fern, layout: layout,
-                     scramble: .parse(scramble, in: layout, masks: masks), masks: masks)
+                     note: i % 6 == 0 ? prismNotes[tray] : "", picture: prismPlates[tray], layout: layout,
+                     scramble: .parse(scramble, in: layout, masks: masks), chapter: prismTrays[tray], masks: masks)
     }
+
+    /// Prism's trays, six specimens each, and the plate each is engraved on.
+    static let prismTrays = ["Two Colours", "Three Colours", "Colour Order", "Overprint", "Spectrum"]
+    static let prismPlates: [Picture] = [.fern, .seeds, .movement, .cathedral, .nautilus]
+    /// Each tray's opener says the rule it adds, as the first tray's says the pack's.
+    static let prismNotes = ["Each rod stirs only its knob's colours.", "Red, green and blue pass through each other.",
+                             "Inks that share a colour block each other.", "Red passes cyan, and blocks yellow and magenta.",
+                             "White stirs every colour."]
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
     /// never leaves progress under an id a real level will take.

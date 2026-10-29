@@ -236,30 +236,58 @@ final class PrismTests: XCTestCase {
         }
     }
 
+    /// Pinned: a specimen's id holds its best, so a row changes only with a reason.
     static let table: [(Layout, [Int: Channels], String)] = [
         (.tri, [0: .red, 1: .cyan, 2: .white], "2:+3,0:+4,1:-3"),
         (.quad, [0: .red, 1: .cyan, 2: .red, 3: .white], "3:+3,2:-4,1:+3,0:+5"),
         (.eye, [0: .red, 1: .cyan, 2: .red, 3: .white], "3:+4,0:-3,2:+2,1:+5,0:+3"),
         (.quad, [0: .red, 1: .red, 2: .cyan, 3: .white], "3:-3,0:+3,1:+4,2:-5,0:-2,1:+3"),
         (.pent, [0: .red, 1: .red, 2: .cyan, 3: .cyan, 4: .white], "4:+3,0:+4,2:-3,1:+2,3:+4,0:-3,2:+5"),
-        (.hex, [0: .white, 1: .red, 2: .red, 3: .cyan, 4: .cyan, 5: .red, 6: .cyan],
-         "0:+3,1:+4,3:-3,2:-2,5:+2,4:+5,1:+3,6:-4,3:+2"),
+        (.hex, [0: .cyan, 1: .cyan, 2: .cyan, 3: .red, 4: .red, 5: .white, 6: .cyan], "5:-2,1:+5,6:+3,1:-5,4:-5,0:+3,2:-3,3:-4"),
+        (.quad, [0: .blue, 1: .green, 2: .red, 3: .white], "3:-4,2:-5,1:-4,0:-3"),
+        (.pent, [0: .blue, 1: .green, 2: .red, 3: .white, 4: .red], "3:+3,1:-5,0:+4,4:-4,2:-2"),
+        (.pent, [0: .red, 1: .green, 2: .blue, 3: .white, 4: .red], "3:-3,2:+2,1:-2,0:+3,4:+2,0:-2"),
+        (.pent, [0: .green, 1: .green, 2: .red, 3: .blue, 4: .white], "4:+4,2:+4,1:+2,0:+2,3:+5,1:+3"),
+        (.pent, [0: .green, 1: .white, 2: .blue, 3: .blue, 4: .red], "1:-5,2:-4,3:-5,0:+3,2:-5,4:-5,3:+5"),
+        (.pent, [0: .blue, 1: .white, 2: .red, 3: .red, 4: .green], "1:+5,2:-2,4:+3,0:+4,3:-2,2:-3,3:-3,2:+4"),
+        (.tri, [0: .magenta, 1: .cyan, 2: .white], "2:-5,1:+5,0:-4,1:-5"),
+        (.quad, [0: .white, 1: .magenta, 2: .cyan, 3: .yellow], "0:-5,1:+4,3:-4,2:-2"),
+        (.quad, [0: .yellow, 1: .white, 2: .magenta, 3: .cyan], "1:-3,2:-3,0:+5,3:+3,2:+5"),
+        (.eye, [0: .cyan, 1: .white, 2: .yellow, 3: .magenta], "1:+5,0:+5,2:-2,0:-5,3:+5"),
+        (.pent, [0: .cyan, 1: .cyan, 2: .magenta, 3: .white, 4: .yellow], "3:+3,0:+5,4:+3,0:+3,2:-2,1:+2"),
+        (.pent, [0: .magenta, 1: .yellow, 2: .cyan, 3: .white, 4: .yellow], "3:+3,2:+5,4:+5,1:+4,0:-3,1:-5,2:-3"),
+        (.quad, [0: .cyan, 1: .blue, 2: .yellow, 3: .white], "3:-5,2:-2,1:-4,0:+3,1:-3,0:-3"),
+        (.eye, [0: .white, 1: .magenta, 2: .green, 3: .blue], "0:-2,2:+3,3:+4,1:+3,3:-2,1:-4"),
+        (.eye, [0: .white, 1: .blue, 2: .yellow, 3: .magenta], "0:-4,3:+5,1:-2,2:-3,3:+5,1:+3,3:-4"),
+        (.pent, [0: .cyan, 1: .white, 2: .blue, 3: .magenta, 4: .green], "1:+3,4:-2,0:+2,2:-2,3:+5,4:-5,2:+5"),
+        (.pent, [0: .magenta, 1: .red, 2: .cyan, 3: .blue, 4: .white], "4:+5,3:+2,0:-5,2:-3,1:+3,0:-5,1:-2,0:+2"),
+        (.pent, [0: .yellow, 1: .white, 2: .green, 3: .cyan, 4: .magenta], "1:-2,4:-5,3:-5,0:+3,2:+3,3:+3,4:+2,3:+2"),
+        (.tri, [0: .white, 1: .magenta, 2: .red], "0:+2,1:+5,2:+3,1:-2,2:-2,1:-3"),
+        (.quad, [0: .yellow, 1: .cyan, 2: .red, 3: .white], "3:+5,2:+4,1:-4,0:-4,1:-4,0:+2,1:-4"),
+        (.eye, [0: .blue, 1: .white, 2: .magenta, 3: .yellow], "1:-4,0:+3,2:-2,3:-3,0:+5,2:+3,0:+3"),
+        (.eye, [0: .white, 1: .red, 2: .magenta, 3: .blue], "0:-3,2:-2,3:-3,1:-5,2:+4,1:+5,2:-2,1:-2"),
+        (.pent, [0: .cyan, 1: .magenta, 2: .blue, 3: .yellow, 4: .white], "4:-4,3:+5,0:-3,2:+2,1:+4,2:-3,1:+3,0:-4"),
+        (.pent, [0: .yellow, 1: .magenta, 2: .red, 3: .white, 4: .green], "3:-3,2:+2,1:-2,2:-2,0:+3,4:+2,1:+2,0:-2"),
     ]
 
-    /// The Two Colours tray, `docs/prism-design.md`: red and cyan rods, every one dealt, over one white rod that holds only
-    /// the bottom entry. Nothing merges as it is dealt, par is the depth, untwisting reaches it, and every stack keeps four
-    /// taps under the per-channel shader's assumed cost.
+    /// Prism's five trays, `docs/prism-design.md`: every rod dealt, over one white rod that holds only the bottom entry.
+    /// Nothing merges as it is dealt, no stack is deeper than 8 (Jack's call PK1: deeper reads too busy), par is the
+    /// depth, untwisting reaches it, and every stack keeps four taps under the per-channel shader's assumed cost.
     @MainActor func testPrismLevels() {
         XCTAssertEqual(Level.prism.count, Self.table.count)
         XCTAssertEqual(Level.prism.map(\.id), (1...Self.table.count).map { "prism-\($0)" })
         for (level, (layout, masks, scramble)) in zip(Level.prism, Self.table) {
             XCTAssertEqual(level.pack, .prism)
-            XCTAssertEqual(level.picture, .fern)
+            let tray = (Int(level.label)! - 1) / 6
+            XCTAssertEqual(level.picture, Level.prismPlates[tray], level.id)
+            XCTAssertEqual(level.chapter, Level.prismTrays[tray], level.id)
+            XCTAssertLessThanOrEqual(level.scramble.count, 8, "\(level.id) is deeper than Prism's cap")
             XCTAssertEqual(level.motion, .none)
             XCTAssertEqual(level.layout, layout, level.id)
             XCTAssertEqual(level.masks, masks, level.id)
             XCTAssertEqual(Set(masks.keys), Set(layout.rods.indices), level.id)
-            XCTAssertTrue(masks.values.allSatisfy { [.red, .cyan, .white].contains($0) }, level.id)
+            if tray == 0 { XCTAssertTrue(masks.values.allSatisfy { [.red, .cyan, .white].contains($0) }, level.id) }
+            XCTAssertEqual(masks.values.filter { $0 == .white }.count, 1, level.id)
             XCTAssertEqual(level.scramble, .parse(scramble, in: layout, masks: masks), level.id)
             XCTAssertEqual(level.scramble.count, scramble.split(separator: ",").count, "\(level.id) merges as it is dealt")
             XCTAssertEqual(level.par, level.scramble.count, level.id)
@@ -275,6 +303,7 @@ final class PrismTests: XCTestCase {
             XCTAssertTrue(game.solved, level.id)
             XCTAssertEqual(game.moves, level.par, level.id)
         }
+        XCTAssertEqual(Level.prism.count, Pack.prism.planned)
         XCTAssertFalse(Offer.shelf(release: true).contains(.pack(.prism)), "Prism stays off the Release shelf")
     }
 
