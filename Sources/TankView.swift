@@ -1408,7 +1408,10 @@ struct LevelView: View {
             .opacity(1 - demoDip)
             if !game.finished {
                 ForEach(clocks, id: \.rod) { c in
-                    ClockHint(radius: disc(c.rod)).position(at(c.rod)).opacity(1 - demoDip).allowsHitTesting(false)
+                    // Grey as its last tick lands, in the move's turn.
+                    ClockHint(radius: disc(c.rod), spent: !game.canTick(c.rod) && shown == nil && !demoing,
+                              lands: Self.tickBeat + Self.tickTurn * Double((game.tick.firstIndex { $0.rod == c.rod } ?? -1) + 1))
+                        .position(at(c.rod)).opacity(1 - demoDip).allowsHitTesting(false)
                 }
             }
             if let k = liveRod, shown != nil {
@@ -1493,7 +1496,8 @@ struct LevelView: View {
                         let i = tickNow.firstIndex { $0.rod == k }, f = i.map { Self.flight(v, $0) } ?? 1
                         let ride = f < 1 && v >= Double(i ?? 0) ? sin(.pi * f) : 0
                         KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
-                            ratchet(k, back: c.dir < 0, flight: f, pawl: ride, shake: s, core: core, plate: Self.ratchetReach * r)
+                            ratchet(k, back: c.dir < 0, at: v, of: i, flight: f, pawl: ride, shake: s, core: core,
+                                    plate: Self.ratchetReach * r)
                         } keyframes: { _ in Self.jolt }
                     } keyframes: { _ in Self.tickKeys }
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
@@ -1635,12 +1639,17 @@ struct LevelView: View {
     /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
     nonisolated static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
 
-    /// Clock `k`'s ratchet, `flight` of the way through its newest tick's turn.
-    private func ratchet(_ k: Int, back: Bool, flight f: Double, pawl: Double, shake s: Double, core: CGFloat,
-                         plate: CGFloat) -> RatchetView {
-        RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                    size: Self.ratchetSize(core), plate: plate, pawl: pawl, lit: pressing == k,
-                    stopped: !game.running(k) && shown == nil && !demoing, back: back)
+    /// Clock `k`'s ratchet, `flight` of the way through its newest tick's turn, the `i`th of the move's turn at `v`. Its
+    /// hub flips as the header does, as its tick starts, so the header is always the hubs' sum; it greys once that tick
+    /// has landed, with the stop's amber ring.
+    private func ratchet(_ k: Int, back: Bool, at v: Double, of i: Int?, flight f: Double, pawl: Double, shake s: Double,
+                         core: CGFloat, plate: CGFloat) -> RatchetView {
+        let owed = game.owed(k), started = i.map { v > Double($0) }
+        return RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
+                           size: Self.ratchetSize(core), plate: plate, pawl: pawl, lit: pressing == k,
+                           stopped: !game.canTick(k) && f >= 1 && shown == nil && !demoing, back: back,
+                           owed: started == false ? owed + 1 : owed, was: started == true ? owed + 1 : nil,
+                           fall: started == true ? min(v - Double(i!), 1) : 1, still: reduceMotion)
     }
 
     /// Escapement: what clock `k` at `c` shows round its ratchet: a red flash for a tick of its own that pushed; while a
@@ -1693,7 +1702,8 @@ struct LevelView: View {
                 .position(c)
             Circle().stroke(Color.amber, lineWidth: 2)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.stops[k] ?? 0) { v, t in
-                    v.frame(width: size + (core - size) * t, height: size + (core - size) * t).opacity(t >= 1 ? 0 : 0.9 * (1 - t * t))
+                    // Unseen until the tick that stops it lands, so it goes out with the hub's last flip and its grey.
+                    v.frame(width: size + (core - size) * t, height: size + (core - size) * t).opacity(t <= 0 || t >= 1 ? 0 : 0.9 * (1 - t * t))
                 } keyframes: { _ in
                     MoveKeyframe(0.0)
                     LinearKeyframe(0.0, duration: delay + 0.15)
@@ -2681,21 +2691,27 @@ private struct TierUp: View {
 /// wash creeping in from it, so every turn that reaches in reads as reaching into the clock.
 struct ClockHint: View {
     let radius: CGFloat
+    /// A clock run out: the dashes grey and the wash gone, as its ratchet greys, `lands` seconds after the change.
+    var spent = false
+    var lands = 0.0
 
     var body: some View {
         ZStack {
-            Circle().fill(RadialGradient(colors: [.clear, Color.vermilion.opacity(0.2)], center: .center,
+            Circle().fill(RadialGradient(colors: [.clear, Color.vermilion.opacity(spent ? 0 : 0.2)], center: .center,
                                          startRadius: 0.55 * radius, endRadius: radius))
-            Circle().stroke(Color.vermilion.opacity(0.9), style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+            Circle().stroke(spent ? Color(0x6E7686).opacity(0.5) : Color.vermilion.opacity(0.9),
+                            style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
         }
         .frame(width: 2 * radius, height: 2 * radius)
+        .animation(.easeOut(duration: 0.25).delay(spent ? lands : 0), value: spent)
     }
 }
 
 /// Escapement's clock knob: a 12-tooth ratchet wheel that turns clockwise only, a tooth a tick, its index read against a
 /// vermilion sub-dial fixed to the glass, and the pawl that drops into it. `pawl` 0 rests in a gap, 1 is lifted clear
-/// as a tick rides it out. Stopped, the wheel goes grey, the pawl amber, locked in its gap, and its hub, fixed to the
-/// glass, shows the stop.
+/// as a tick rides it out. Its hub, fixed to the glass, is a split-flap card of the ticks the clock has left (Jack's call
+/// ES2, round 12), which flips as each of its ticks starts to turn. Run out, the wheel, the sub-dial and the card go
+/// grey, the card at 0, and the pawl amber, locked in its gap.
 struct RatchetView: View {
     let angle: Double
     let size: CGFloat
@@ -2706,6 +2722,11 @@ struct RatchetView: View {
     let stopped: Bool
     /// A wound-back clock's: mirrored, so it ticks anticlockwise.
     var back = false
+    /// The hub's count, flipping from `was` to `owed` as `fall` runs 0 to 1, as `FlipCounter`'s do.
+    var owed = 0
+    var was: Int?
+    var fall = 1.0
+    var still = false
 
     var body: some View {
         let rt = size / 2, rr = size / 2 * 0.74
@@ -2735,24 +2756,26 @@ struct RatchetView: View {
             let backing = max(size + 6, 2 * plate)
             Circle().fill(Color.black.opacity(0.75)).frame(width: backing, height: backing).position(c)
             Circle().stroke(Color.live.opacity(lit ? 1 : 0.35), lineWidth: 1).frame(width: backing, height: backing).position(c)
-            dial.stroke(Color.vermilion.opacity(0.9), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+            dial.stroke(stopped ? Color(0x6E7686).opacity(0.6) : Color.vermilion.opacity(0.9), style: StrokeStyle(lineWidth: 1, lineCap: .round))
             ZStack {
                 wheel.fill(RadialGradient(stops: [.init(color: Color(0xE6EAF2), location: 0), .init(color: Color(0x6E7686), location: 0.5),
                                                   .init(color: Color(0x262A33), location: 1)],
                                           center: UnitPoint(x: 0.4, y: 0.35), startRadius: 0, endRadius: size))
                 wheel.stroke(Color.black.opacity(0.85), lineWidth: 1)
-                // The index, so each tick's step reads at a glance against the sub-dial; the hub covers its root.
-                Path { $0.move(to: at(0, rr * 0.55)); $0.addLine(to: at(0, rr * 0.92)) }
+                // The index, so each tick's step reads at a glance against the sub-dial; the hub's card covers its root.
+                Path { $0.move(to: at(0, rr * 0.84)); $0.addLine(to: at(0, rr * 0.99)) }
                     .stroke(Color.vermilion, style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
             }
             .rotationEffect(.radians(angle), anchor: .center)
             .saturation(stopped ? 0 : 1)
             .opacity(stopped ? 0.55 : 1)
-            Circle().fill(Color.black.opacity(0.85)).frame(width: rr * 1.1, height: rr * 1.1).position(c)
-            Circle().stroke(stopped ? Color.amber : steel, lineWidth: 1.2).frame(width: rr * 1.1, height: rr * 1.1).position(c)
-            if stopped {
-                RoundedRectangle(cornerRadius: 1).fill(Color.amber).frame(width: rr * 0.4, height: rr * 0.4).position(c)
-            }
+            // The hub as wide as reads its card, the teeth and the index outside it.
+            Circle().fill(Color.black.opacity(0.85)).frame(width: rr * 1.6, height: rr * 1.6).position(c)
+            // Unmirrored, so a wound-back clock's count reads; its corners just inside the hub's ring.
+            FlipCounter(value: owed, was: was ?? owed, fall: fall, digits: 1, still: still, spent: stopped, height: rr * 1.25)
+                .scaleEffect(x: back ? -1 : 1)
+                .position(c)
+            Circle().stroke(stopped ? Color.amber : steel, lineWidth: 1.2).frame(width: rr * 1.6, height: rr * 1.6).position(c)
             Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(Color.black.opacity(0.9), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
             Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(stopped ? Color.amber : steel,
                                                                    style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
@@ -2762,12 +2785,14 @@ struct RatchetView: View {
         // Wheel, pawl and all, so it turns anticlockwise.
         .scaleEffect(x: back ? -1 : 1)
         .animation(.easeOut(duration: 0.12), value: pawl == 1)
+        .animation(.easeOut(duration: 0.25), value: stopped)
     }
 }
 
-/// Escapement's tick budget as a split-flap clock: a card per digit, hinged across its middle. As `value` takes over
-/// from `was`, the old digit's top half falls over the hinge onto its bottom half, `fall` 0 to 0.5, uncovering the new
-/// digit's top, and the new digit's bottom half lands, 0.5 to 1. Under Reduce Motion it swaps without the fall.
+/// Escapement's tick counts as a split-flap clock, the header's and each hub's: a card per digit, hinged across its
+/// middle. As `value` takes over from `was`, the old digit's top half falls over the hinge onto its bottom half, `fall`
+/// 0 to 0.5, uncovering the new digit's top, and the new digit's bottom half lands, 0.5 to 1. Under Reduce Motion it
+/// swaps without the fall.
 struct FlipCounter: View {
     let value: Int
     let was: Int
@@ -2776,8 +2801,11 @@ struct FlipCounter: View {
     var still = false
     /// Spent with twists left, the cards go vermilion.
     var out = false
-
-    static let width: CGFloat = 19, height: CGFloat = 26
+    /// A hub's whose clock has run out: grey ink on grey-edged cards.
+    var spent = false
+    /// The header's cards are 26 pt tall; a hub's fit inside it.
+    var height: CGFloat = 26
+    private var width: CGFloat { height * 19 / 26 }
 
     var body: some View {
         let new = Self.digits(of: value, digits), old = Self.digits(of: was, digits)
@@ -2792,17 +2820,17 @@ struct FlipCounter: View {
         Array(String(String(max(n, 0)).suffix(count)).leftPadded(to: count))
     }
 
-    private var ink: Color { out ? .vermilion : Color(0xF2F4F8) }
+    private var ink: Color { out ? .vermilion : spent ? Color(0x6E7686) : Color(0xF2F4F8) }
 
     private func face(_ d: Character, top: Bool) -> some View {
-        let w = Self.width, h = Self.height
+        let w = width, h = height, k = height / 26
         return ZStack {
-            UnevenRoundedRectangle(topLeadingRadius: top ? 3 : 0, bottomLeadingRadius: top ? 0 : 3,
-                                   bottomTrailingRadius: top ? 0 : 3, topTrailingRadius: top ? 3 : 0)
+            UnevenRoundedRectangle(topLeadingRadius: top ? 3 * k : 0, bottomLeadingRadius: top ? 0 : 3 * k,
+                                   bottomTrailingRadius: top ? 0 : 3 * k, topTrailingRadius: top ? 3 * k : 0)
                 .fill(LinearGradient(colors: top ? [Color(0x23262E), Color(0x181A20)] : [Color(0x15171C), Color(0x0D0E11)],
                                      startPoint: .top, endPoint: .bottom))
             Text(String(d)).font(.system(size: h * 0.74, weight: .bold, design: .monospaced))
-                .foregroundStyle(ink).shadow(color: ink.opacity(0.55), radius: 3)
+                .foregroundStyle(ink).shadow(color: ink.opacity(spent ? 0 : 0.55), radius: 3 * k)
                 .frame(width: w, height: h)
                 .frame(width: w, height: h / 2, alignment: top ? .top : .bottom)
         }
@@ -2811,7 +2839,7 @@ struct FlipCounter: View {
     }
 
     private func card(_ d: Character, _ o: Character, fall p: Double) -> some View {
-        let h = Self.height
+        let h = height, k = height / 26
         // The top half falls, gathering speed; the bottom half lands and settles.
         let first = pow(min(p / 0.5, 1), 2), second = 1 - pow(1 - max((p - 0.5) / 0.5, 0), 2)
         return VStack(spacing: 0) {
@@ -2833,20 +2861,24 @@ struct FlipCounter: View {
                 }
             }
         }
-        .frame(width: Self.width, height: h)
+        .frame(width: width, height: h)
         // The hinge, and its pins at either edge.
         .overlay {
             ZStack {
-                Rectangle().fill(Color.black).frame(height: 1)
-                HStack {
-                    Capsule().fill(Color(0x8C94A6)).frame(width: 2, height: 4)
-                    Spacer()
-                    Capsule().fill(Color(0x8C94A6)).frame(width: 2, height: 4)
+                Rectangle().fill(Color.black).frame(height: max(k, 0.5))
+                // Too small to read on a hub's card, where they only cut into the digit.
+                if height >= 20 {
+                    HStack {
+                        Capsule().fill(Color(0x8C94A6)).frame(width: 2 * k, height: 4 * k)
+                        Spacer()
+                        Capsule().fill(Color(0x8C94A6)).frame(width: 2 * k, height: 4 * k)
+                    }
+                    .padding(.horizontal, -k)
                 }
-                .padding(.horizontal, -1)
             }
         }
-        .overlay(RoundedRectangle(cornerRadius: 3).stroke((out ? Color.vermilion : Color(0x5A6272)).opacity(0.8), lineWidth: 0.75))
+        .overlay(RoundedRectangle(cornerRadius: 3 * k).stroke((out ? Color.vermilion : Color(0x5A6272)).opacity(spent ? 0.5 : 0.8),
+                                                             lineWidth: 0.75))
     }
 }
 
