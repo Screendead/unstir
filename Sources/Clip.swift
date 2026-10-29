@@ -168,7 +168,7 @@ struct Reel: Sendable {
                     rest: rest, gap: 0, tail: tail, dips: dips)
     }
 
-    /// Its par's three moves, the second a wait on the clock.
+    /// The mock-up's problem, the book's second, in its three moves, the second a wait on the clock.
     static func escapement(moves: Int = 3, rest: Double = 0.7, tail: Double = 1.2) -> Reel {
         let level = Level.escapement[1]
         let line: [Gesture] = [.turn(2, 4), .tap(knob: level.clocks[0].rod), .turn(1, -3)]

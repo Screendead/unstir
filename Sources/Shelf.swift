@@ -42,7 +42,7 @@ enum Offer: Hashable, Sendable {
         switch self {
         case .pack(.firstStir): "a story told backwards"
         case .pack(.lens): "some rods zoom instead of turning"
-        case .pack(.escapement): "a clock rod ticks after every move"
+        case .pack(.escapement): "clocks tick after every move, on a budget of ticks"
         case .complete: "every pack, for less"
         }
     }
@@ -635,7 +635,7 @@ struct PackCard: View {
                         if !open {
                             Image(systemName: "lock.fill").font(.caption2).opacity(0.4)
                         } else if let best {
-                            Text(best.over == 0 ? "par" : "+\(best.over)").font(.mono(.caption2))
+                            Text(best.over == 0 ? atPar : "+\(best.over)").font(.mono(.caption2))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
                         }
                     }
@@ -644,18 +644,24 @@ struct PackCard: View {
                 }
                 .buttonStyle(Sounding())
                 .disabled(!open)
-                .accessibilityValue(open ? best.map { $0.over == 0 ? "at par" : "\($0.over) over par" } ?? "" : "locked, needs the pack")
+                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" } ?? ""
+                                    : "locked, needs the pack")
             }
         }
     }
 
-    /// A chapter's name and rule, with how many of its levels are at par.
+    /// Escapement has no par (Jack's call EL1, round 11): its best is a solve, which spends the budget to the last tick.
+    private var noPar: Bool { offer.pack == .escapement }
+    private var atPar: String { noPar ? "solved" : "par" }
+
+    /// A chapter's name and rule, with how many of its levels are at par, or solved.
     private func heading(_ name: String, of chapter: [Level]) -> some View {
         HStack(spacing: 10) {
             Text(name.lowercased()).font(.mono(.caption2, .semibold)).foregroundStyle(offer.gradient)
             Rectangle().fill(offer.gradient).frame(height: 1).opacity(0.8)
             if !chapter.isEmpty {
-                Text("\(chapter.filter { Best.load($0.id)?.over == 0 }.count)/\(chapter.count) at par").font(.mono(.caption2))
+                Text("\(chapter.filter { Best.load($0.id)?.over == 0 }.count)/\(chapter.count) \(noPar ? "solved" : "at par")")
+                    .font(.mono(.caption2))
                     .opacity(0.4)
             }
         }

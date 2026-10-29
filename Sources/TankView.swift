@@ -2534,6 +2534,15 @@ struct ResultCard: View {
                     Text("moves \(game.moves) \u{00B7} \(time)")
                     Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
                          : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                } else if !game.level.ratchets.isEmpty {
+                    // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round 11).
+                    Text("moves \(game.moves) \u{00B7} \(game.level.budget) ticks \u{00B7} \(time)")
+                    if game.clean {
+                        Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
+                    } else {
+                        Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
+                            .foregroundStyle(Color.amber)
+                    }
                 } else {
                     Text("moves \(game.moves) \u{00B7} par \(game.par) \u{00B7} \(time)")
                     if game.clean {
