@@ -140,6 +140,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Levels.swift and `Picture.cells` cut out of LivePictures.swift. The Mac's GPU clock wanders: read the
   scaled-to-glass column over a few runs. `scripts/vortex-family-sheet.py` lays the `vortex-family-*` shots out as
   one sheet (needs Pillow).
+- Prism's specimens: `scripts/prism-levels.sh table` measures every specimen in Pack.swift (depth, the solver's
+  optimum, what is free under the masks and read white, blocked knobs, right moves per step, the shader's assumed cost,
+  and the shares of the glass showing ghosts and three-way splits, the readability limits); `check <layout> <masks>
+  <scramble>` measures one and `search <layout> <depth> <palette> <from> <to>` deals seeded ones over a white bottom rod,
+  keeping those at par. `scripts/prism-levels/pick.py <pool dir>` picks the trays from the pools.
+  `scripts/prism-plates.sh render <plate> <out.png> [side] [layout]` draws a plate on the Mac, and `check` prints each
+  core's lit share and how much of it a 30° step moves, as the test measures.
 - Lens's tables: `scripts/lens-table.py [docs/lens-design.md] [--pitches 4] [--solve]` reads the level rows of
   a doc (`docs/lens-tables.md` holds the built ones) and checks each against the hard lens's rules with no app code (a lens moves only its core, so
   overlap decides commutation): depth after the parse, dealt lens steps and nets, and how far each twist dealt over a
@@ -422,10 +429,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   through the rod's own `liveAngle` and detent, so its count, clicks and the iris's turn are a rod's, a step at a time,
   but its dashes run up a short vertical track beside the knob for a zoom in and down it for out (`track`, on the side
   away from the finger), not round the disc. A drawn fingertip (`UNSTIR_FINGER`) on a lens rides up and down too.
-  `Level.prism` holds Prism's first tray, Two Colours, six specimens on the fern from `docs/prism-design.md`: red and
-  cyan rods, every one dealt, over one white rod that holds only the bottom entry, no entry merging as it is dealt, par
-  the depth (`testPrismLevels`, which pins the table and checks each stack keeps four taps under `channelCost`), the
-  solver's optimum (`testPrismParIsTheOptimum`, slow). The other four trays aren't built.
+  `Level.prism` holds Prism's 30 specimens from `docs/prism-design.md`, five trays of six (`Level.prismTrays`, each a
+  `chapter` the card heads, on its own plate, `Level.prismPlates`, its opener's note saying the rule it adds): Two
+  Colours (red and cyan), Three Colours (the primaries), Colour Order (the inks), Overprint (both) and Spectrum (any).
+  Every rod is dealt, over one white rod that holds only the bottom entry, no entry merging as it is dealt, no stack
+  deeper than 8 (Jack's call PK1: deeper reads too busy), par the depth (`testPrismLevels`, which pins the table and
+  checks each stack keeps four taps under `channelCost`), the solver's optimum (`testPrismParIsTheOptimum`, slow,
+  about 4 minutes).
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
   (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
@@ -593,10 +603,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   halftone. The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
-  It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp. Prism's fern
-  (**Engraving.swift**, `Fern`) is polylines in tank units, baked through `draw` as plughole's are: three fronds, a
-  fiddlehead, drifting seeds and the ground, in white lines only, so a channel out of register shows as its colour and
-  an aligned line is white (`testTheFernIsWhiteLinesOnBlack`); the sandbox skips it too.
+  It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp. Prism's plates
+  (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, a watch movement, a cathedral's west front and a
+  nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
+  lines only, so a channel out of register shows as its colour and an aligned line is white
+  (`testEveryPlateIsWhiteLinesOnBlack`). Each fills the glass and breaks every rotation a core could fall on, so a step
+  moves most of the light in every core of every layout (`testEveryPlateShowsAStepInEveryCore`); the sandbox skips them.
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
   reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,

@@ -174,9 +174,9 @@ final class PrismTests: XCTestCase {
         XCTAssertEqual(Unstirred.channelCost([w, r, c]), 2 + 3 + 1 + 2)
     }
 
-    /// The engraving is grey everywhere, so a channel out of register shows its own colour and aligned lines are white.
-    @MainActor func testTheFernIsWhiteLinesOnBlack() async throws {
-        let rendered = await Picture.fern.render(side: 240, scale: 1)
+    /// Each plate, drawn at `side`, as grey levels, row 0 at the top.
+    @MainActor private func pixels(_ picture: Picture, side: Int) async throws -> (rgb: [UInt8], w: Int) {
+        let rendered = await picture.render(side: CGFloat(side), scale: 1)
         let image = try XCTUnwrap(rendered?.cgImage)
         let w = image.width, h = image.height
         var pixels = [UInt8](repeating: 0, count: 4 * w * h)
@@ -184,40 +184,110 @@ final class PrismTests: XCTestCase {
                                           space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                           bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
         ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
-        var lit = 0, tinted = 0
-        for i in 0..<(w * h) {
-            let r = Int(pixels[4 * i]), g = Int(pixels[4 * i + 1]), b = Int(pixels[4 * i + 2])
-            if max(abs(r - g), abs(g - b), abs(r - b)) > 2 { tinted += 1 }
-            if r > 230 { lit += 1 }
-        }
-        XCTAssertEqual(tinted, 0)
-        XCTAssertGreaterThan(lit, w * h / 400)
+        return (pixels, w)
     }
 
+    /// Every plate is grey everywhere, so a channel out of register shows its own colour and aligned lines are white.
+    @MainActor func testEveryPlateIsWhiteLinesOnBlack() async throws {
+        for plate in Engraving.Plate.allCases {
+            let picture = try XCTUnwrap(Picture(rawValue: plate.rawValue))
+            XCTAssertEqual(picture.plate, plate)
+            XCTAssertFalse(picture.isLive)
+            let (px, w) = try await pixels(picture, side: 240)
+            var lit = 0, tinted = 0
+            for i in 0..<(w * w) {
+                let r = Int(px[4 * i]), g = Int(px[4 * i + 1]), b = Int(px[4 * i + 2])
+                if max(abs(r - g), abs(g - b), abs(r - b)) > 2 { tinted += 1 }
+                if r > 230 { lit += 1 }
+            }
+            XCTAssertEqual(tinted, 0, plate.rawValue)
+            XCTAssertGreaterThan(lit, w * w / 400, plate.rawValue)
+        }
+    }
+
+    /// Every core of every layout holds some of each plate's lines, and a 30° step of the core moves most of its light,
+    /// so a step reads wherever a specimen puts a rod (`scripts/prism-plates.sh check` prints the same measures).
+    @MainActor func testEveryPlateShowsAStepInEveryCore() async throws {
+        for plate in Engraving.Plate.allCases {
+            let (px, w) = try await pixels(Picture(rawValue: plate.rawValue)!, side: 512)
+            let r = Double(w) / 2
+            func lit(_ x: Double, _ y: Double) -> Bool {
+                let i = Int(r + x * r), j = Int(r + y * r)
+                return i >= 0 && j >= 0 && i < w && j < w && px[4 * (j * w + i)] > 127
+            }
+            for layout in Layout.allCases {
+                for (k, rod) in layout.rods.enumerated() {
+                    let core = rod.z * Tank.plateau, step = 2 / Double(w)
+                    var inside = 0, on = 0, moved = 0
+                    for y in stride(from: -core, through: core, by: step) {
+                        for x in stride(from: -core, through: core, by: step) where x * x + y * y <= core * core {
+                            inside += 1
+                            guard lit(rod.x + x, rod.y + y) else { continue }
+                            on += 1
+                            let c = cos(Tank.step), s = sin(Tank.step)
+                            if !lit(rod.x + c * x - s * y, rod.y + s * x + c * y) { moved += 1 }
+                        }
+                    }
+                    let where_ = "\(plate.rawValue) \(layout.rawValue) rod \(k)"
+                    XCTAssertGreaterThan(Double(on) / Double(inside), 0.02, where_)
+                    XCTAssertGreaterThan(Double(moved) / Double(max(on, 1)), 0.5, where_)
+                }
+            }
+        }
+    }
+
+    /// Pinned: a specimen's id holds its best, so a row changes only with a reason.
     static let table: [(Layout, [Int: Channels], String)] = [
         (.tri, [0: .red, 1: .cyan, 2: .white], "2:+3,0:+4,1:-3"),
         (.quad, [0: .red, 1: .cyan, 2: .red, 3: .white], "3:+3,2:-4,1:+3,0:+5"),
         (.eye, [0: .red, 1: .cyan, 2: .red, 3: .white], "3:+4,0:-3,2:+2,1:+5,0:+3"),
         (.quad, [0: .red, 1: .red, 2: .cyan, 3: .white], "3:-3,0:+3,1:+4,2:-5,0:-2,1:+3"),
         (.pent, [0: .red, 1: .red, 2: .cyan, 3: .cyan, 4: .white], "4:+3,0:+4,2:-3,1:+2,3:+4,0:-3,2:+5"),
-        (.hex, [0: .white, 1: .red, 2: .red, 3: .cyan, 4: .cyan, 5: .red, 6: .cyan],
-         "0:+3,1:+4,3:-3,2:-2,5:+2,4:+5,1:+3,6:-4,3:+2"),
+        (.hex, [0: .cyan, 1: .cyan, 2: .cyan, 3: .red, 4: .red, 5: .white, 6: .cyan], "5:-2,1:+5,6:+3,1:-5,4:-5,0:+3,2:-3,3:-4"),
+        (.quad, [0: .blue, 1: .green, 2: .red, 3: .white], "3:-4,2:-5,1:-4,0:-3"),
+        (.pent, [0: .blue, 1: .green, 2: .red, 3: .white, 4: .red], "3:+3,1:-5,0:+4,4:-4,2:-2"),
+        (.pent, [0: .red, 1: .green, 2: .blue, 3: .white, 4: .red], "3:-3,2:+2,1:-2,0:+3,4:+2,0:-2"),
+        (.pent, [0: .green, 1: .green, 2: .red, 3: .blue, 4: .white], "4:+4,2:+4,1:+2,0:+2,3:+5,1:+3"),
+        (.pent, [0: .green, 1: .white, 2: .blue, 3: .blue, 4: .red], "1:-5,2:-4,3:-5,0:+3,2:-5,4:-5,3:+5"),
+        (.pent, [0: .blue, 1: .white, 2: .red, 3: .red, 4: .green], "1:+5,2:-2,4:+3,0:+4,3:-2,2:-3,3:-3,2:+4"),
+        (.tri, [0: .magenta, 1: .cyan, 2: .white], "2:-5,1:+5,0:-4,1:-5"),
+        (.quad, [0: .white, 1: .magenta, 2: .cyan, 3: .yellow], "0:-5,1:+4,3:-4,2:-2"),
+        (.quad, [0: .yellow, 1: .white, 2: .magenta, 3: .cyan], "1:-3,2:-3,0:+5,3:+3,2:+5"),
+        (.eye, [0: .cyan, 1: .white, 2: .yellow, 3: .magenta], "1:+5,0:+5,2:-2,0:-5,3:+5"),
+        (.pent, [0: .cyan, 1: .cyan, 2: .magenta, 3: .white, 4: .yellow], "3:+3,0:+5,4:+3,0:+3,2:-2,1:+2"),
+        (.pent, [0: .magenta, 1: .yellow, 2: .cyan, 3: .white, 4: .yellow], "3:+3,2:+5,4:+5,1:+4,0:-3,1:-5,2:-3"),
+        (.quad, [0: .cyan, 1: .blue, 2: .yellow, 3: .white], "3:-5,2:-2,1:-4,0:+3,1:-3,0:-3"),
+        (.eye, [0: .white, 1: .magenta, 2: .green, 3: .blue], "0:-2,2:+3,3:+4,1:+3,3:-2,1:-4"),
+        (.eye, [0: .white, 1: .blue, 2: .yellow, 3: .magenta], "0:-4,3:+5,1:-2,2:-3,3:+5,1:+3,3:-4"),
+        (.pent, [0: .cyan, 1: .white, 2: .blue, 3: .magenta, 4: .green], "1:+3,4:-2,0:+2,2:-2,3:+5,4:-5,2:+5"),
+        (.pent, [0: .magenta, 1: .red, 2: .cyan, 3: .blue, 4: .white], "4:+5,3:+2,0:-5,2:-3,1:+3,0:-5,1:-2,0:+2"),
+        (.pent, [0: .yellow, 1: .white, 2: .green, 3: .cyan, 4: .magenta], "1:-2,4:-5,3:-5,0:+3,2:+3,3:+3,4:+2,3:+2"),
+        (.tri, [0: .white, 1: .magenta, 2: .red], "0:+2,1:+5,2:+3,1:-2,2:-2,1:-3"),
+        (.quad, [0: .yellow, 1: .cyan, 2: .red, 3: .white], "3:+5,2:+4,1:-4,0:-4,1:-4,0:+2,1:-4"),
+        (.eye, [0: .blue, 1: .white, 2: .magenta, 3: .yellow], "1:-4,0:+3,2:-2,3:-3,0:+5,2:+3,0:+3"),
+        (.eye, [0: .white, 1: .red, 2: .magenta, 3: .blue], "0:-3,2:-2,3:-3,1:-5,2:+4,1:+5,2:-2,1:-2"),
+        (.pent, [0: .cyan, 1: .magenta, 2: .blue, 3: .yellow, 4: .white], "4:-4,3:+5,0:-3,2:+2,1:+4,2:-3,1:+3,0:-4"),
+        (.pent, [0: .yellow, 1: .magenta, 2: .red, 3: .white, 4: .green], "3:-3,2:+2,1:-2,2:-2,0:+3,4:+2,1:+2,0:-2"),
     ]
 
-    /// The Two Colours tray, `docs/prism-design.md`: red and cyan rods, every one dealt, over one white rod that holds only
-    /// the bottom entry. Nothing merges as it is dealt, par is the depth, untwisting reaches it, and every stack keeps four
-    /// taps under the per-channel shader's assumed cost.
+    /// Prism's five trays, `docs/prism-design.md`: every rod dealt, over one white rod that holds only the bottom entry.
+    /// Nothing merges as it is dealt, no stack is deeper than 8 (Jack's call PK1: deeper reads too busy), par is the
+    /// depth, untwisting reaches it, and every stack keeps four taps under the per-channel shader's assumed cost.
     @MainActor func testPrismLevels() {
         XCTAssertEqual(Level.prism.count, Self.table.count)
         XCTAssertEqual(Level.prism.map(\.id), (1...Self.table.count).map { "prism-\($0)" })
         for (level, (layout, masks, scramble)) in zip(Level.prism, Self.table) {
             XCTAssertEqual(level.pack, .prism)
-            XCTAssertEqual(level.picture, .fern)
+            let tray = (Int(level.label)! - 1) / 6
+            XCTAssertEqual(level.picture, Level.prismPlates[tray], level.id)
+            XCTAssertEqual(level.chapter, Level.prismTrays[tray], level.id)
+            XCTAssertLessThanOrEqual(level.scramble.count, 8, "\(level.id) is deeper than Prism's cap")
             XCTAssertEqual(level.motion, .none)
             XCTAssertEqual(level.layout, layout, level.id)
             XCTAssertEqual(level.masks, masks, level.id)
             XCTAssertEqual(Set(masks.keys), Set(layout.rods.indices), level.id)
-            XCTAssertTrue(masks.values.allSatisfy { [.red, .cyan, .white].contains($0) }, level.id)
+            if tray == 0 { XCTAssertTrue(masks.values.allSatisfy { [.red, .cyan, .white].contains($0) }, level.id) }
+            XCTAssertEqual(masks.values.filter { $0 == .white }.count, 1, level.id)
             XCTAssertEqual(level.scramble, .parse(scramble, in: layout, masks: masks), level.id)
             XCTAssertEqual(level.scramble.count, scramble.split(separator: ",").count, "\(level.id) merges as it is dealt")
             XCTAssertEqual(level.par, level.scramble.count, level.id)
@@ -233,6 +303,7 @@ final class PrismTests: XCTestCase {
             XCTAssertTrue(game.solved, level.id)
             XCTAssertEqual(game.moves, level.par, level.id)
         }
+        XCTAssertEqual(Level.prism.count, Pack.prism.planned)
         XCTAssertFalse(Offer.shelf(release: true).contains(.pack(.prism)), "Prism stays off the Release shelf")
     }
 

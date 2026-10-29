@@ -28,7 +28,7 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). Merged 2026-09-28 (PR #3); see below |
 | Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is built (2026-09-29): Csound sources in `sound-src/`, rendered and measured by `scripts/sounds.sh`; a detuned saw hum in D under every bed; a heal about 8 LU over its bed (the phone-speaker model says 10–12); beds for the menu and each tier, crossfading over 1.5 s between screens and stepping aside while another app plays music; tap, tier-switch, undo and reset sounds. Round 2 on today's game (2026-10-27, branch `sound-r2`, PR #56): `sound` merged with master and passing every test; the heal's note now counts moves that pop one of the scramble's entries, as endless's brim does; vortex has its own bed (open fifths and a ninth, high sparse pings, water circling three times a loop); every button added since September taps (the consent card, the settings sheet, the pack cards, the dock, the tier-up); a push that fills the brim sounds only as the spill. Jack's call (2026-10-28, SN1 = A): "In, with early undo and step-back heals. Keep the vortex bed." So the undo is the early one (its body peaks about 0.2 s after the press, against September's 0.5 s), an undo steps the heal notes back, and the vortex bed stays; the three temporary switches under the menu's list (`sound`, `undo`, `heal undo`) and the first sketch (`sound-src/sketch.py`, `scripts/sounds.sh sketch`) are gone, applied on PR #56. `scripts/sounds.sh listen <dir>` writes every sound and bed to m4a for a listen off the phone. The sounds add about 9 MB of CAF and AAC to git (rendered from `sound-src/`, so they could be rendered at build time instead, at the cost of Csound in CI). Endless has no par now, so the old question of a solve one over par is gone. Also for Jack, smaller: the detent's tick sounds during a drag (it echoes the haptic and the dashes; the rule as written says nothing sounds then), so keep it or drop it; in the free tiers cancelling the player's own push still shows the magenta ring and heavy tap but no longer plays a heal, so the ring could follow endless's rule too; a purchase landing plays nothing (the buy buttons tap). The share links tap through a simultaneous gesture, unheard and untapped on a device. Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
 | Merged 2026-10-28 and 29 | PRs #55 (the consent link opens and closes its list), #57 (a locked next tier's up-a-notch button opens its gate), #53 (Lens, lenses on rods of every size) and #58 (drag guard) on 2026-10-28; #50 (plughole eased), #56 (sound round 2), #51 (live pack clips), #54 (First Stir's 25 scenes, FS17 C), #60 (v1 without First Stir) and #52 (Escapement's book, the tick budget and the flip counter) on 2026-10-29. Jack's calls on them are in rounds 10 and 11 under "Jack's calls on the pitch" |
-| Open PRs and branches (2026-10-29) | `esc-hub-flaps` (ES2 = B: each clock's own flip count in its hub, the header their sum; Claude merges it once CI passes); the book still waits on Jack's play on the phone. Draft PR #59 `prism` (the Prism prototype, tray 1). PR #60 `v1-without-firststir` (v1 without First Stir, FS17 C). Local, no PR: `v1-no-analytics` and `keep-analytics` (the two sides of AN1), `store-page` (ST1 to ST7 = A, two drafts of the privacy policy) |
+| Open PRs and branches (2026-10-29) | `esc-hub-flaps` (ES2 = B: each clock's own flip count in its hub, the header their sum; Claude merges it once CI passes); the book still waits on Jack's play on the phone. Prism: #59 (the prototype) merged; `prism-levels` (the 30 specimens and five plates) in review. PR #60 `v1-without-firststir` (v1 without First Stir, FS17 C). Local, no PR: `v1-no-analytics` and `keep-analytics` (the two sides of AN1), `store-page` (ST1 to ST7 = A, two drafts of the privacy policy) |
 | Round 12 (decided, 2026-10-29) | AN1 = A (v1 ships with no analytics), EU1 = B (no EU storefronts at launch; revisit when sales cover a business address), PK1 = A (Prism replaces First Stir as the third pack, capped at depth 8), ES2 = B (each hub shows its own flip clock, plus a total counter elsewhere; a hub that reaches 0 shows plainly that it has run out; built on `esc-hub-flaps`). See round 12 under "Jack's calls on the pitch" |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
@@ -218,7 +218,7 @@ Jack answered on the pitch page. These are his calls. Everything else in this se
 
 | Call | Jack's answer |
 |---|---|
-| 1. v1's packs | **First Stir, Lens and Escapement** (option A). "I LOVE the look of Lens. Escapement is a great idea, if implemented properly." Superseded for First Stir by FS17 (2026-10-29): First Stir leaves v1; see to-do 43; the third pack is open, Prism recommended (PK1, round 12) |
+| 1. v1's packs | **First Stir, Lens and Escapement** (option A). "I LOVE the look of Lens. Escapement is a great idea, if implemented properly." Superseded for First Stir by FS17 (2026-10-29): First Stir leaves v1; see to-do 43. The third pack is **Prism** (Jack's call PK1 = A, round 12) |
 | 2. Orrery: free rung or pack | **Not made.** "You didn't show me Orrery, so I can't make a call." A mock-up of Orrery, and Orrery beside maelstrom, goes to him next |
 | 3. First Stir's art | **Claude draws all 25 scenes** (option B): "I am not hiring an illustrator". So First Stir's long pole is Claude's line art, judged by Jack scene by scene, and the go/no-go film decides whether code-drawn figures carry it |
 | 4. What v1 sells | **Packs and a Complete bundle** (option A); Unstir+ dropped, endless stays free. "not just one I think will sell, but one I would be proud and unashamed to put my brand behind" |
@@ -363,7 +363,7 @@ Round 12 (decided, 2026-10-29). Jack's words are kept in `HANDOFF.private.md`.
 |---|---|
 | AN1. Analytics in v1 | **A:** none. v1 ships through `v1-no-analytics` (App Store Connect's numbers only); `keep-analytics` holds the other side, for an update. Every analytics item in the to-dos and in the launch checklist below is moot for v1 |
 | EU1. Selling in the EU at launch | **B:** no EU or EEA storefronts at launch. Revisit if sales cover the cost of a business address for the trader details the Digital Services Act asks of an EU seller (no vendor names or prices in tracked files) |
-| PK1. Prism as First Stir's replacement | **A:** Prism, capped at depth 8, since depth 9 reads too busy. Being built (PR #59) |
+| PK1. Prism as First Stir's replacement | **A:** Prism, capped at depth 8, since depth 9 reads too busy. Being built: the prototype merged (PR #59), the 30 specimens and five plates on `prism-levels` |
 | ES2. Escapement's budget display | **B:** the flip-clock numbers also show in each hub, and a total counter elsewhere; the numbers must never contradict each other, and a hub at 0 must show clearly that it has run out. Jack's words: "just don't let the numbers contradict each other? they should render as flip-clock numbers in the hubs too. and when the hubs reach 0, it should show clearly that they've run out (e.g. greying out the hub/escapement, or what you already built to show it, or something else)", and "i want the flip clocks for each hub in that hub, plus a counter for the total elsewhere." Built on `esc-hub-flaps` (2026-10-29), the rule Claude settled under the note: each clock's count is what it owed as dealt, each of its ticks takes one off it, a pushed tick too; the header is the hubs' sum after every tick; a clock at 0 stops ticking and greys (wheel, sub-dial, card, dashed disc) as its last tick lands, with the amber stop ring; out of ticks once no clock can tick with twists left. On a clean line each count reaches 0 as its rod empties, so the book stands. Each hub is a one-digit split-flap card (no clock owes more than 9) |
 
 **Launch checklist** (App Store Connect and the rest; to be extended)
@@ -602,7 +602,7 @@ must time your heals so the clock always finds its seam.
   move, so it shows nothing about the scramble. Its only animation is one tooth and one 30° step of E's own core per
   move.
 
-##### 4. Prism (recommended first after v1)
+##### 4. Prism (v1's third pack, Jack's call PK1 = A, round 12)
 
 The picture is one engraving drawn three times in red, green and blue light, and each rod stirs only some of the
 colours: unstir until every coloured ghost snaps back into one white line.
@@ -631,10 +631,12 @@ colours: unstir until every coloured ghost snaps back into one white line.
 - **Sound.** The lead is the piece's motif in three detuned voices, one per channel, over cold FM glass-bell pads.
   They resolve to unison only on the solve, never during play, so the sound is no closeness meter. A heal is a struck
   glass rod, pitched by heals done. Nothing sounds during a drag.
-- **Structure.** 30 specimens in five trays of 6: Two Colours (red and cyan rods only), Three Colours (all seven
-  masks), Colour Order (a buried seam freed because the stir above it is another colour), Overprint (deep pent and
-  hex), Spectrum (the finale tray). Specimens 1 to 3 free. Level ids `prism-1` to `prism-30`; depth held near 12 to 14
-  entries until the cached chain lands.
+- **Structure.** 30 specimens in five trays of 6, every one at depth 8 or less (PK1), built 2026-10-29
+  (`docs/prism-design.md`): Two Colours on the fern (red and cyan), Three Colours on seed heads (the primaries),
+  Colour Order on a watch movement (the inks, each pair sharing a channel), Overprint on a cathedral's west front
+  (primaries and inks), Spectrum on a nautilus (any mask). Later trays are harder by colour order, not depth, and every
+  specimen keeps to readability limits on how much of the glass ghosts and splits three ways. Specimens 1 to 3 free.
+  Level ids `prism-1` to `prism-30`.
 - **Weakest point.** Fine lines may mush past about 8 entries, the colour-blind read rests on line styles nobody has
   tested, and each channel's own inverse chain costs up to 3× an entry (assumed) until the performance pass's cached
   chain lands.
@@ -1170,7 +1172,7 @@ names and product ids, and Complete's promise to older owners.
     only because I think the constraints of the artwork have resulted in the story becoming difficult to read from the
     illustrations alone. I think we should leave First Stir out of v1 of the app, and rework it significantly later.
     Something else needs to take its place as the third paid level pack with at least one new mechanic." The work below
-    stays on `firststir-content` (PR #54, merged 2026-10-29) for that rework; the third pack's place is open: PK1 (round 12) recommends Prism.
+    stays on `firststir-content` (PR #54, merged 2026-10-29) for that rework; the third pack is Prism (PK1 = A, round 12).
     Jack's calls (2026-10-28, round 10), made before FS17: FS10 = A (approve the art), FS12, FS13 and FS14 = A (the
     night's clock and sky, and the departures from the outline, all as built), FS15 = A (judge small figures on the
     phone first), FS16 = A (fold Pen into Brush), and a note on FS11 (the ending film, see to-do 44). They stand for the
@@ -1424,15 +1426,15 @@ names and product ids, and Complete's promise to older owners.
    Round 12, AN1 = A: v1 ships no analytics (`v1-no-analytics`); `keep-analytics` holds the other side.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
-59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
-    overlapping entries with disjoint masks commute.
-60. Prism: the shader's per-channel chains, their cost (up to 3× an entry, assumed) benched on the phone, and depth
-    held near 12 to 14 entries until the cached chain lands.
+59. ~~Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
+    overlapping entries with disjoint masks commute.~~ Done: PR #59, merged 2026-10-29.
+60. Prism: the shader's per-channel chains (built, #59), their cost (assumed 2 plus a map per channel held) benched on
+    the phone. Depth is capped at 8 (PK1), so every specimen costs at most 18 entries against the 30 the plain shader
+    holds four taps at; the bench says whether that assumption holds.
 61. Prism: a colour-blind simulation of every specimen (protanopia, deuteranopia, tritanopia), with and without the
     per-channel line styles that Differentiate Without Colour turns on, and the swatch that shows one channel.
-62. Prism: the engravings, tinted knobs and 30 specimens, solver-checked, to Jack before code.
-    Draft PR #59 (2026-10-29) holds the prototype, tray 1. Round 12's PK1 recommends Prism as First Stir's replacement,
-    capped at depth 8 since depth 9 reads too busy, roughly 9 to 13 days to ship; not decided.
+62. ~~Prism: the engravings, tinted knobs and 30 specimens, solver-checked.~~ Done 2026-10-29: five plates, 30
+    specimens in five trays at depth 8 or less, par the solver's optimum on every one (`docs/prism-design.md`).
 63. Music Box: the render-thread scheduler for sample-accurate plucks (a render callback reading a lock-free snapshot
     of pin positions each buffer; assumed `AVAudioSourceNode`).
 64. Music Box: the ear-test protocol (cold readers, sound on against sound off, the time to find each seam), run
