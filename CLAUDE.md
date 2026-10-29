@@ -157,6 +157,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the part of a core another disc reaches, where each vignette sits) to `shots/first-stir-composition-*.png` (needs
   Pillow).
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
+- GPU bench: `scripts/gpu-bench.sh [sim]` launches the app with `UNSTIR_GPUBENCH=1` (`GPUBench.swift`), which runs
+  Unstir.metal's own shader bodies (`benchUnstir`, over `unstirBody` and `unstirChannelsBody`, the templates the
+  stitchables call) off screen at the largest phone's 1284 px and prints a plain stack entry's cost, then each Prism
+  specimen's per-channel cost in entries against `Unstirred.channelCost`'s assumption, and the slowest against a 120 Hz
+  frame, then quits. The simulator has no GPU clock, so there it times the wall clock round each command buffer.
+  `scripts/gpu-bench.sh phone` is Jack's: it installs Release through `run-ios.sh` with the bench on, waits, and pulls
+  the lines from the log.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
   the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs
@@ -200,7 +207,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   path untouched. `same` compares each channel's cut words (an all-white word costs one pass), so two entries commute
   when their discs miss, when their masks share no channel (`commutes`' early exit), or when their maps commute on
   every channel they share, and `looksSolved` is every channel back. `Channels.masks` reads `0:r,1:c`.
-- **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
+- **Unstir.metal** is the GPU copy of the same map. Each stitchable's body is a template over its layer (`unstirBody`,
+  `unstirChannelsBody`), so the GPU bench's kernel runs the same code on a texture. It turns the sample point back by the glass's `turn`, then applies
   the stack's inverses to sample the picture. A lens's entry carries a negative radius and its flow's time
   (`steps * Tank.lensRate`) for the angle, and the rim's sharpness comes in as a uniform. The tests reach the Swift copy
   (`Tank.profile`/`Tank.twist`/`Tank.lens`) and only the shader's `lensFlow`, compiled on its own

@@ -57,16 +57,11 @@ static half4 finish(float3 acc, int stride, float haze) {
     return half4(half3(mix(c, float3(dot(c, float3(0.299, 0.587, 0.114))), haze)), 1.0h);
 }
 
-// twists: n entries of (rod centre x, y, disc radius, angle) in tank-normalized units, bottom of the stack first. A
-// lens's entry has a negative radius and its flow's time (steps * Tank.lensRate) for the angle.
-// Tank.profile / Tank.twist / Tank.lens in Twist.swift are the Swift copy the tests check; the tests reach only
-// lensFlow and chains here.
-// plateau is a knob's, swirlPlateau a disc's of radius 1 or more (the swirl's, or the breath's through it).
-// turn: the glass's clockwise turn about the centre. The stack names the glass's own rods, so the point turns back
-// first. Swift has no copy of the turn: the seized-* harness shots pin its sign.
-[[ stitchable ]] half4 unstir(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
-                              device const float *twists, int count, float n, float fourTaps, float plateau,
-                              float swirlPlateau, float lensEdge, float scale, float haze, float3 wave, float turn) {
+// The stitchables' bodies, over any layer with a sample(float2) in points: SwiftUI's, or the GPU bench's texture.
+template <typename L>
+static half4 unstirBody(float2 pos, L layer, float2 centre, float radius, device const float *twists, int count, float n,
+                        float fourTaps, float plateau, float swirlPlateau, float lensEdge, float scale, float haze,
+                        float3 wave, float turn) {
     // Four taps a quarter device pixel off centre, each through the whole inverse chain: the stretching is in the
     // map, so a filament thinner than a pixel keeps its light as coverage. Past fourTaps entries only the diagonal pair
     // runs: on an iPhone 13 Pro Max, hex's hub and a neighbour alternating hold 120 Hz at 31 entries with four taps, not 32.
@@ -82,13 +77,11 @@ static half4 finish(float3 acc, int stride, float haze) {
     return finish(acc, stride, haze);
 }
 
-// Prism's: each of red, green and blue sampled through its own word, the entries whose mask (masks[i], a Channels raw
-// value) holds it. cost is the work in entries, against fourTaps as n is above. isolate, a single channel's raw value or
-// 0, draws that channel alone in white and hides the others: the held swatch, which reads without telling colours apart.
-[[ stitchable ]] half4 unstirChannels(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
-                                      device const float *twists, int count, device const float *masks, int maskCount,
-                                      float n, float cost, float fourTaps, float plateau, float swirlPlateau,
-                                      float lensEdge, float scale, float haze, float3 wave, float turn, float isolate) {
+template <typename L>
+static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius, device const float *twists, int count,
+                                device const float *masks, int maskCount, float n, float cost, float fourTaps,
+                                float plateau, float swirlPlateau, float lensEdge, float scale, float haze, float3 wave,
+                                float turn, float isolate) {
     int stride = cost > fourTaps ? 3 : 1;
     int alone = int(isolate);
     float ct = cos(turn), st = sin(turn);
@@ -106,4 +99,57 @@ static half4 finish(float3 acc, int stride, float haze) {
     return finish(acc, stride, haze);
 }
 
+// twists: n entries of (rod centre x, y, disc radius, angle) in tank-normalized units, bottom of the stack first. A
+// lens's entry has a negative radius and its flow's time (steps * Tank.lensRate) for the angle.
+// Tank.profile / Tank.twist / Tank.lens in Twist.swift are the Swift copy the tests check; the tests reach only
+// lensFlow and chains here.
+// plateau is a knob's, swirlPlateau a disc's of radius 1 or more (the swirl's, or the breath's through it).
+// turn: the glass's clockwise turn about the centre. The stack names the glass's own rods, so the point turns back
+// first. Swift has no copy of the turn: the seized-* harness shots pin its sign.
+[[ stitchable ]] half4 unstir(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
+                              device const float *twists, int count, float n, float fourTaps, float plateau,
+                              float swirlPlateau, float lensEdge, float scale, float haze, float3 wave, float turn) {
+    return unstirBody(pos, layer, centre, radius, twists, count, n, fourTaps, plateau, swirlPlateau, lensEdge, scale,
+                      haze, wave, turn);
+}
 
+// Prism's: each of red, green and blue sampled through its own word, the entries whose mask (masks[i], a Channels raw
+// value) holds it. cost is the work in entries, against fourTaps as n is above. isolate, a single channel's raw value or
+// 0, draws that channel alone in white and hides the others: the held swatch, which reads without telling colours apart.
+[[ stitchable ]] half4 unstirChannels(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
+                                      device const float *twists, int count, device const float *masks, int maskCount,
+                                      float n, float cost, float fourTaps, float plateau, float swirlPlateau,
+                                      float lensEdge, float scale, float haze, float3 wave, float turn, float isolate) {
+    return unstirChannelsBody(pos, layer, centre, radius, twists, count, masks, maskCount, n, cost, fourTaps, plateau,
+                              swirlPlateau, lensEdge, scale, haze, wave, turn, isolate);
+}
+
+// The GPU bench (UNSTIR_GPUBENCH, GPUBench.swift): the stitchables' own bodies on a texture of the picture, one thread a
+// device pixel, so the phone's GPU clock times exactly the shader the tank draws.
+struct BenchLayer {
+    texture2d<half> picture;
+    float pixels;  // device pixels per point
+    half4 sample(float2 p) const {
+        constexpr sampler s(filter::linear, address::clamp_to_zero, coord::pixel);
+        return picture.sample(s, p * pixels);
+    }
+};
+
+struct BenchArgs {
+    float radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge;
+    int count, maskCount, channels;
+};
+
+kernel void benchUnstir(texture2d<half> picture [[texture(0)]], texture2d<half, access::write> out [[texture(1)]],
+                        device const float *twists [[buffer(0)]], device const float *masks [[buffer(1)]],
+                        constant BenchArgs &a [[buffer(2)]], uint2 gid [[thread_position_in_grid]]) {
+    if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
+    BenchLayer layer = { picture, a.scale };
+    float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius);
+    half4 c = a.channels != 0
+        ? unstirChannelsBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost, a.fourTaps,
+                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0)
+        : unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
+                     a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0);
+    out.write(c, gid);
+}
