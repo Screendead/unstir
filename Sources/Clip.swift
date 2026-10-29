@@ -327,7 +327,7 @@ struct ClipTank: View {
         func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
         func disc(_ k: Int) -> CGFloat { min(rods[k].z * r, r - 4) }
         let core = 2 * Tank.coreRadius * r, hairline: CGFloat = 0.5
-        var unstirred = Unstirred(stack: f.stack, layout: layout, lenses: level.lenses, liveRod: f.live?.rod,
+        var unstirred = Unstirred(stack: f.stack, layout: layout, lenses: level.lenses, masks: level.masks, liveRod: f.live?.rod,
                                   liveAngle: f.live?.angle ?? 0, side: side, fillEntries: level.picture.fillEntries)
         unstirred.tick = f.tick
         if let w = f.solved {

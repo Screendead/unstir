@@ -1,6 +1,9 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import Metal
+import UIKit
 import XCTest
+import simd
 @testable import Unstir
 
 /// Prism's channel masks: a stir moves only its rod's channels, so commutation and the win are judged per channel.
@@ -98,4 +101,77 @@ final class PrismTests: XCTestCase {
         XCTAssertEqual(Solver(.tri, masks: [0: .red, 1: .green])
             .exhaustive(deeper, limit: optimum, steps: [-5, -4, -2, 2, 4, 5]), optimum)
     }
+
+    /// Unstir.metal's per-channel chains carry each channel's point through the inverses of exactly the entries whose
+    /// mask holds it, as the model's restricted words map it, on hex's swirl too. Only the helpers above the stitchables
+    /// compile here, since they take a layer.
+    func testTheShadersChannelChainsMatchTheModel() throws {
+        guard let device = MTLCreateSystemDefaultDevice() else { throw XCTSkip("no Metal device") }
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Sources/Unstir.metal")
+        let helpers = try XCTUnwrap(try String(contentsOf: url, encoding: .utf8).components(separatedBy: "[[ stitchable ]]").first)
+            .replacingOccurrences(of: "#include <SwiftUI/SwiftUI_Metal.h>", with: "")
+        let source = helpers + """
+
+            kernel void chain(device const float2 *points [[buffer(0)]], device const float *twists [[buffer(1)]],
+                              device const float *masks [[buffer(2)]], constant int &n [[buffer(3)]],
+                              constant float3 &k [[buffer(4)]], device float2 *out [[buffer(5)]],
+                              uint i [[thread_position_in_grid]]) {
+                float2 qr = points[i], qg = qr, qb = qr;
+                chains(n, twists, masks, k.x, k.y, k.z, qr, qg, qb);
+                out[3 * i] = qr; out[3 * i + 1] = qg; out[3 * i + 2] = qb;
+            }
+            """
+        let library = try device.makeLibrary(source: source, options: nil)
+        let pipeline = try device.makeComputePipelineState(function: try XCTUnwrap(library.makeFunction(name: "chain")))
+        let layout = Layout.hexSwirl, rods = layout.rods
+        let all: [Channels] = [.red, .green, .blue, .cyan, .magenta, .yellow, .white]
+        var rng = SplitMix64(state: 60)
+        var masks: [Int: Channels] = [:]
+        for k in rods.indices where k != layout.swirl { masks[k] = all[rng.below(all.count)] }
+        let stack = (0..<12).map { _ in Twist(rod: rng.below(rods.count), steps: [-5, -3, -1, 2, 4][rng.below(5)]) }
+        let twists = stack.flatMap { [Float(rods[$0.rod].x), Float(rods[$0.rod].y), Float(rods[$0.rod].z), Float(Double($0.steps) * Tank.step)] }
+        let channels = stack.map { Float((masks[$0.rod] ?? .white).rawValue) }
+        let points = Array(Tank.grid(41)).filter { simd_length($0) < 1 }
+        let input = points.map { SIMD2<Float>(Float($0.x), Float($0.y)) }
+        var n = Int32(stack.count)
+        var k = SIMD3<Float>(Float(Tank.plateau), Float(Tank.swirlPlateau), Float(Tank.lensEdge))
+        let output = try XCTUnwrap(device.makeBuffer(length: 8 * 3 * points.count))
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        let cb = try XCTUnwrap(queue.makeCommandBuffer()), enc = try XCTUnwrap(cb.makeComputeCommandEncoder())
+        enc.setComputePipelineState(pipeline)
+        enc.setBuffer(device.makeBuffer(bytes: input, length: 8 * input.count), offset: 0, index: 0)
+        enc.setBuffer(device.makeBuffer(bytes: twists, length: 4 * twists.count), offset: 0, index: 1)
+        enc.setBuffer(device.makeBuffer(bytes: channels, length: 4 * channels.count), offset: 0, index: 2)
+        enc.setBytes(&n, length: 4, index: 3)
+        enc.setBytes(&k, length: 16, index: 4)
+        enc.setBuffer(output, offset: 0, index: 5)
+        enc.dispatchThreads(MTLSize(width: points.count, height: 1, depth: 1),
+                            threadsPerThreadgroup: MTLSize(width: 64, height: 1, depth: 1))
+        enc.endEncoding()
+        cb.commit()
+        cb.waitUntilCompleted()
+        XCTAssertNil(cb.error)
+        let got = output.contents().bindMemory(to: SIMD2<Float>.self, capacity: 3 * points.count)
+        var moved = 0
+        for (i, p) in points.enumerated() {
+            for (j, c) in Channels.each.enumerated() {
+                let want = stack.filter { (masks[$0.rod] ?? .white).contains(c) }.reversed()
+                    .reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: -Double($1.steps) * Tank.step) }
+                let q = SIMD2<Double>(Double(got[3 * i + j].x), Double(got[3 * i + j].y))
+                XCTAssertLessThan(simd_distance(q, want), 2e-4, "\(p) channel \(j)")
+                if simd_distance(want, p) > 0.01 { moved += 1 }
+            }
+        }
+        XCTAssertGreaterThan(moved, points.count, "the stack moves enough of the tank to test")
+    }
+
+    /// The per-channel shader draws only a stack with a mask that isn't white, and its cost counts each channel's map.
+    func testTheChannelCostCountsEachChannelsMap() {
+        let w = Float(Channels.white.rawValue), r = Float(Channels.red.rawValue), c = Float(Channels.cyan.rawValue)
+        XCTAssertNil(Unstirred.channelCost([]))
+        XCTAssertNil(Unstirred.channelCost([w, w, w]))
+        XCTAssertEqual(Unstirred.channelCost([w, r, c]), 2 + 3 + 1 + 2)
+    }
+
 }

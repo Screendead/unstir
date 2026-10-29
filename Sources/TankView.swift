@@ -1250,7 +1250,7 @@ struct LevelView: View {
         let held = liveTurn.map { $0 + (spin ?? 0) }
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
-        let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
+        let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
@@ -2056,6 +2056,8 @@ struct Unstirred: ViewModifier, Animatable {
     var layout: Layout
     /// The rods whose steps magnify rather than turn.
     var lenses: Set<Int> = []
+    /// Prism's channels by slot, a missing slot white.
+    var masks: [Int: Channels] = [:]
     var liveRod: Int?
     var liveAngle: Double
     var wind = 1.0
@@ -2081,9 +2083,10 @@ struct Unstirred: ViewModifier, Animatable {
 
     func body(content: Content) -> some View {
         let rods = layout.rods
-        var floats: [Float] = []
+        var floats: [Float] = [], channels: [Float] = []
         floats.reserveCapacity(4 * (stack.count + 1))
         func add(_ rod: Int, _ angle: Double) {
+            channels.append(Float((masks[rod] ?? .white).rawValue))
             floats.append(Float(rods[rod].x)); floats.append(Float(rods[rod].y))
             // A lens's entry is marked by a negative radius, and takes its flow's time for the angle.
             let lens = lenses.contains(rod)
@@ -2103,10 +2106,32 @@ struct Unstirred: ViewModifier, Animatable {
         // one over, within the 31 the shader's comment measured. Two at once, for the `Breath.fade` a touch takes to cut a
         // slosh or a grab within a tick's flight, drop to two taps at the budget's edge rather than run 32.
         let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
+        if let cost = Self.channelCost(channels) {
+            // The in-flight entry rides over by its own cost, as above, so a touch never changes the taps.
+            let flight = [liveRod, breathes ? breath?.rod : nil, tick?.rod].compactMap { $0 }
+                .map { (masks[$0] ?? .white).rawValue.nonzeroBitCount }.max() ?? 0
+            return content.layerEffect(
+                ShaderLibrary.unstirChannels(.float2(r, r), .float(r), .floatArray(floats), .floatArray(channels), .float(Float(n)),
+                                             .float(Float(cost)), .float(Float(Tank.fourTaps - fillEntries + flight)), .float(Float(Tank.plateau)),
+                                             .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)),
+                                             .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
+                maxSampleOffset: CGSize(width: side, height: side))
+        }
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
                                  .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
             maxSampleOffset: CGSize(width: side, height: side))
+    }
+}
+
+extension Unstirred {
+    /// The per-channel shader's work in entries for these masks (raw values, an entry each), or nil when every one is
+    /// white and the plain shader draws them. An entry costs a map per channel it holds and a tap's two extra samples
+    /// two entries: assumed, not measured on the phone.
+    static func channelCost(_ masks: [Float]) -> Int? {
+        let white = Float(Channels.white.rawValue)
+        guard masks.contains(where: { $0 != white }) else { return nil }
+        return masks.reduce(2) { $0 + Int($1).nonzeroBitCount }
     }
 }
 
