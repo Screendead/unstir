@@ -316,6 +316,26 @@ import XCTest
         }
     }
 
+    /// What each clock owes counts down a tick a move to its stop, and the slowest clock's, as dealt, is par.
+    func testEachClockOwesATickAMoveDownToItsStop() {
+        for level in Level.escapement {
+            XCTAssertEqual(level.clocks.map { Game(level: level, tankTurned: true, bank: (0, nil)).owed($0.rod) }.max(), level.par,
+                           level.id)
+        }
+        var level = Level.escapement[15]
+        level.id = "test-escapement"
+        let g = Game(level: level, tankTurned: true, bank: (0, nil))
+        XCTAssertEqual([g.owed(1), g.owed(4)], [3, 6])
+        let line: [(Int, Int)?] = [(3, -2), (5, -2), nil, (6, -4), (5, 3), (2, -5)]
+        let owed = [[2, 5], [1, 4], [0, 3], [0, 2], [0, 1], [0, 0]]
+        for (move, left) in zip(line, owed) {
+            if let (knob, steps) = move { g.commit(rod: knob, steps: steps) } else { g.wait(on: 1) }
+            XCTAssertEqual([g.owed(1), g.owed(4)], left)
+            XCTAssertEqual([g.running(1), g.running(4)], left.map { $0 > 0 })
+        }
+        XCTAssertTrue(g.solved)
+    }
+
     /// Every problem has one key: among whole heals and waits, exactly one first move reaches par, and it is the book's.
     func testEveryProblemHasOneKey() {
         for (level, row) in zip(Level.escapement, Self.book) {

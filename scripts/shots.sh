@@ -421,6 +421,13 @@ shot escapement-2-ticked "Escapement 2 after rod 2 +4 heals: its tick has taken 
 shot escapement-2-lost "Escapement 2, then rod 1 -3: its tick finds no seam and pushes, so the move loses at once: the vermilion +1, lost. stamped by the clock, the card's undo and again." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
+# What each clock owes before it stops, on 16 (clocks 1, owing 3, and 4, owing 6; line 3:-2, 5:-2, a wait, 6:-4, 5:+3,
+# 2:-5): as dealt, after the wait that stops clock 1, and one move from the end.
+shot escapement-budget-16-dealt "Escapement 16 as dealt: clock 1 owes 3 ticks, clock 4 owes 6." PACK=escapement OWNED=escapement LEVEL=16
+shot escapement-budget-16-mid "Escapement 16 after 3:-2, 5:-2 and a wait: clock 1 stopped, clock 4 owing 3." \
+  PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,1:1
+shot escapement-budget-16-late "Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: clock 4 owing its last tick." \
+  PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,1:1,6:-4,5:3
 # Lost to the clock stopping with twists left (Jack's call E2), each of the three looks (UNSTIR_STOPLOOK): on 3, the
 # book's decoy, a tap then knob 1, which pushes under knob 2's seam; on 17, two clocks, a tap where the last heal was due.
 for look in stamp left rings; do

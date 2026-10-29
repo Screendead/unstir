@@ -117,6 +117,9 @@ film escapement-stopped 11 "$tank,fps=3,scale=200:-1,tile=8x4:padding=4" PACK=es
 # with its two taps (a ratchet's move, 1:1).
 film escapement-two-clocks 19 "$tank,fps=2,scale=200:-1,tile=8x5:padding=4" PACK=escapement OWNED=escapement LEVEL=17 FINGER=1 REST=1 \
   MOVES=3:-5,4:-2,3:5,4:3,3:-4
+# 16's line, so each clock's budget runs down to its stop: clock 1's on the wait, clock 4's on the last move.
+film escapement-budget-16 22 "$tank,fps=2,scale=200:-1,tile=8x6:padding=4" PACK=escapement OWNED=escapement LEVEL=16 FINGER=1 REST=1 \
+  MOVES=3:-2,5:-2,1:1,6:-4,5:3,2:-5
 film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" PACK=escapement OWNED=escapement LEVEL=29 FINGER=1 REST=1 \
   MOVES=4:-3,1:1,2:-2,1:1,2:-4,0:5,2:-3,4:-3
 # Escapement 7, whose first move is a wait: a tap halfway out the clock's disc (0:2), then one on its ratchet (0:1),
