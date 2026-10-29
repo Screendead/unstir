@@ -86,8 +86,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
-- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots]` (e.g. `quad 0:+3,2:-4 0`,
-  or `tri 1:-2,2:+4,0:+3 lenses=0`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
+- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots] [masks=slot:channel]`
+  (e.g. `quad 0:+3,2:-4 0`, `tri 1:-2,2:+4,0:+3 lenses=0`, or `tri 2:+2,0:+3,1:+4 masks=0:r,1:c`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
   detour beats it), the park rule's fewest and most moves over every way its ties go under each parking, fair or over
   by the most, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It
   compiles `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut
@@ -544,7 +544,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and maps that fail to commute, judged by the maps), so a swirl interacts with every rod but hex's hub, which shares
   its centre; whether a word commutes is still `Layout.commutes`'s call. `Solver(layout, lenses:)` maps a lens's slots
   as the game does, so on tri a lens interacts with both its neighbours, and two lenses, whose cores never meet, never
-  interact. The swirl is a slot like any other, held at
+  interact. `Solver(layout, masks:)` takes Prism's masks the same way: two rods whose masks share no channel never
+  interact, and `parts`, which maps the whole picture, steps aside under masks, so every overlap goes to
+  `Layout.commutes`. The swirl is a slot like any other, held at
   every position and never seized. With no knob seized, as on every vortex level, the tank never turns, so every
   player untwists and the planning gap is 0: there the solver's job is the optimum, and whether a detour beats
   untwisting. The park rule (`park`) untwists the newest whole seam a working knob

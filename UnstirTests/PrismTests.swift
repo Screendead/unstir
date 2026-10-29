@@ -85,4 +85,13 @@ final class PrismTests: XCTestCase {
         game.commit(rod: 2, steps: -2)
         XCTAssertTrue(game.solved)
     }
+
+    func testTheSolverReadsMasks() throws {
+        let stack = [Twist].parse("2:+2,0:+3,1:+4", in: .tri, masks: redCyan)
+        let solver = Solver(.tri, masks: redCyan)
+        let play = try XCTUnwrap(solver.optimalPlay(stack, seized: []))
+        XCTAssertEqual(play.count, 3)
+        XCTAssertFalse(solver.interacts[0][1])
+        XCTAssertTrue(Solver(.tri).interacts[0][1])
+    }
 }

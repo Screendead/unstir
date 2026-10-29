@@ -73,6 +73,8 @@ final class Solver {
     let layout: Layout
     /// The rods whose steps magnify rather than turn (`Level.lenses`).
     let lenses: Set<Int>
+    /// Prism's channels by slot (`Level.masks`).
+    let masks: [Int: Channels]
     private var ids: [[Twist]: Int] = [:]
     private var stacks: [[Twist]] = []
     private var memo: [[Untwist]?] = []
@@ -105,9 +107,10 @@ final class Solver {
         case lowest
     }
 
-    init(_ layout: Layout, lenses: Set<Int> = []) {
+    init(_ layout: Layout, lenses: Set<Int> = [], masks: [Int: Channels] = [:]) {
         self.layout = layout
         self.lenses = lenses
+        self.masks = masks
     }
 
     var stacksSeen: Int { stacks.count }
@@ -128,7 +131,7 @@ final class Solver {
         let whole = stack.indices.filter { landing(stack, rod: stack[$0].rod, steps: -stack[$0].steps) == $0 }
         let found = whole.map { i in
             var after = stack
-            after.commit(rod: stack[i].rod, steps: -stack[i].steps, in: layout, lenses: lenses)
+            after.commit(rod: stack[i].rod, steps: -stack[i].steps, in: layout, lenses: lenses, masks: masks)
             return Untwist(index: i, slot: stack[i].rod, steps: -stack[i].steps, to: self.id(after))
         }
         memo[id] = found
@@ -172,7 +175,7 @@ final class Solver {
         if parts(stack, above: i, rod: rod, steps: steps) { return false }
         let word = Array(stack[(i + 1)...]) + [Twist(rod: rod, steps: steps)]
         if let known = commuting[word] { return known }
-        let found = layout.commutes(stack, above: i, rod: rod, steps: steps, lenses: lenses)
+        let found = layout.commutes(stack, above: i, rod: rod, steps: steps, lenses: lenses, masks: masks)
         commuting[word] = found
         return found
     }
@@ -185,7 +188,8 @@ final class Solver {
     /// as `Layout.same` does, with a looser tolerance than `Layout.commutes`, so any word it parts, `Layout.commutes`
     /// would.
     private func parts(_ stack: [Twist], above i: Int, rod: Int, steps: Int) -> Bool {
-        guard let q = stack[(i + 1)...].first(where: { interacts[$0.rod][rod] })?.rod else { return false }
+        // It maps the whole picture, not each channel's word, so under masks it could part a word that commutes.
+        guard masks.isEmpty, let q = stack[(i + 1)...].first(where: { interacts[$0.rod][rod] })?.rod else { return false }
         let rods = layout.rods, lenses = self.lenses
         func stir(_ p: SIMD2<Double>, _ rod: Int, _ steps: Int) -> SIMD2<Double> {
             lenses.contains(rod) ? Tank.lens(p, rod: rods[rod], steps: Double(steps))
@@ -198,7 +202,10 @@ final class Solver {
         }
     }
 
-    private lazy var overlap = layout.rods.indices.map { i in layout.rods.indices.map { layout.overlaps(i, $0) } }
+    /// overlap[i][j]: rods i and j overlap and stir a channel in common, as `Layout.commutes` reads them before sampling.
+    private lazy var overlap = layout.rods.indices.map { i in
+        layout.rods.indices.map { layout.overlaps(i, $0) && !(masks[i] ?? .white).isDisjoint(with: masks[$0] ?? .white) }
+    }
 
     /// interacts[i][j]: rods i and j overlap and fail to commute, as `Layout.commutes` judges a pair of turns, at some
     /// pair of the counts below. Only the search's rule reads it, so a pair that parted only at other counts would cost
@@ -210,7 +217,7 @@ final class Solver {
             for j in rods where j > i && overlap[i][j] {
                 found[i][j] = !counts.allSatisfy { a in counts.allSatisfy { b in
                     let (s, t) = (Twist(rod: i, steps: a), Twist(rod: j, steps: b))
-                    return layout.same([s, t], [t, s], at: Tank.samples, within: 1e-6, lenses: lenses)
+                    return layout.same([s, t], [t, s], at: Tank.samples, within: 1e-6, lenses: lenses, masks: masks)
                 } }
                 found[j][i] = found[i][j]
             }
@@ -281,9 +288,9 @@ final class Solver {
         }
         for steps in Set(Array(-11...11) + stack.filter { $0.rod == slot }.map { -$0.steps }) where steps != 0 {
             var after = stack
-            guard after.commit(rod: slot, steps: steps, in: layout, lenses: lenses) != .refused else { continue }
+            guard after.commit(rod: slot, steps: steps, in: layout, lenses: lenses, masks: masks) != .refused else { continue }
             var back = after
-            if back.commit(rod: slot, steps: -steps, in: layout, lenses: lenses) != .refused, back != stack {
+            if back.commit(rod: slot, steps: -steps, in: layout, lenses: lenses, masks: masks) != .refused, back != stack {
                 found.append(Run(to: self.id(back), commits: [steps, -steps]))
             }
             guard !plain.contains(after), after != rodsOnlyCommit(stack, slot: slot, steps: steps) || !rodsOnly(after)
@@ -514,7 +521,7 @@ final class Solver {
                         joined = joined.flatMap { stack in
                             Set(steps + stack.filter { $0.rod == slot }.map { -$0.steps }).compactMap { k -> [Twist]? in
                                 var stack = stack
-                                return stack.commit(rod: slot, steps: k, in: layout, lenses: lenses) == .refused ? nil : stack
+                                return stack.commit(rod: slot, steps: k, in: layout, lenses: lenses, masks: masks) == .refused ? nil : stack
                             }
                         }
                         after += joined.map { State(stack: $0, position: state.position) }
@@ -541,7 +548,7 @@ extension Solver {
                     seen: inout Int) -> Play? {
         func tick(_ s: inout [Twist]) -> Bool {
             guard s.contains(where: { $0.rod == clock }) else { return s.isEmpty }
-            let r = s.commit(rod: clock, steps: 1, in: layout, lenses: lenses)
+            let r = s.commit(rod: clock, steps: 1, in: layout, lenses: lenses, masks: masks)
             return (r == .reduced || r == .cancelled) && (s.isEmpty || s.contains { $0.rod == clock })
         }
         let start = stack
@@ -560,7 +567,7 @@ extension Solver {
                 for slot in layout.rods.indices where slot != clock {
                     for k in Set(steps + state.filter { $0.rod == slot }.map { -$0.steps }) {
                         var s = state
-                        guard s.commit(rod: slot, steps: k, in: layout, lenses: lenses) != .refused, tick(&s) else { continue }
+                        guard s.commit(rod: slot, steps: k, in: layout, lenses: lenses, masks: masks) != .refused, tick(&s) else { continue }
                         after.append((s, .stir(knob: slot, slot: slot, steps: k)))
                     }
                 }
