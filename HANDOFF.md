@@ -1071,7 +1071,7 @@ names and product ids, and Complete's promise to older owners.
     rules, about 7 s, seamless, Reduce Motion holding a still; the bundled-video path is gone. First Stir: level 1 healed,
     each vignette playing as its time under the tank steps back (12:30 am to 11:40 pm, scene 16's window, a stand-in
     until the level carries F3's clock). Lens: level 3 as dealt, the lens dragged down and back up, ending on the order
-    read. Escapement: problem 1 in three, each tick landing. Complete: the three in turn. The dock keeps its covers.
+    read. Escapement: problem 1 in three, each tick landing. Complete: an 8 s cut, a vignette, a zoom and a tick. The dock keeps its covers.
     Jack's calls (round 11): CL1 A, Lens plays the zoom and the read; CL2 B, Complete plays each one's first beat in
     turn (a vignette, a zoom, a tick, about 8 s). The other takes are gone (set aside: Lens's level 2 solved, and
     Complete's three whole, about 21 s, too long for a card). Films `clip-*`, `shelf-dock`. Follow-up: on
