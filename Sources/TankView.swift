@@ -18,6 +18,8 @@ extension Color {
     static let blood = Color(0xFF1438)
     static let violet = Color(0x9A2CFF)
     static let alarm = Color(0xFF3B6B)
+    /// Escapement's clock, from the packs mock-up's plate, lifted to read on black.
+    static let vermilion = Color(0xFF5A36)
     /// The grid never uses white, so the live ring cannot be mistaken for a line.
     static let live = Color(0xF2F4FA)
 }
@@ -79,8 +81,8 @@ final class Game {
     /// A rod stir names the rod the stack names (the slot under the knob turned). A turn of the tank is rod `Game.tank`,
     /// in steps of the layout's symmetry.
     private(set) var history: [Twist] = []
-    /// The stack as each stir of `history` began: a pack's undo puts it back whole.
-    private var before: [[Entry]] = []
+    /// The stack and the clock as each stir of `history` began: a pack's undo puts them back whole.
+    private var before: [(entries: [Entry], clock: Clock)] = []
     nonisolated static let tank = -1
     /// Whether the next turn of the newest stir's rod joins it. A stir turned back to nothing is gone, and the one before
     /// it stays shut; an undone one is as if never made, so the one before it is open again if it was then.
@@ -136,9 +138,30 @@ final class Game {
     /// Every change of `brim`, for the rim to play.
     private(set) var brimEvents: [Brim.Event] = []
 
+    /// Escapement's clock between moves. Every let-go is a move of its own and final: its tick lands with it, and a
+    /// grab of the same knob again is the next move (Jack's call E1, round 9).
+    struct Clock {
+        /// Ticks standing, for the ratchet wheel.
+        var ticks = 0
+        /// A tick pushed, so the stack can never empty, or the clock stopped with twists still on the picture (Jack's
+        /// call E2, round 9).
+        var lost = false
+    }
+    private(set) var escapement = Clock()
+    /// Escapement: the stack the latest tick changed, for the view to play the tick over it.
+    private(set) var tick: [Twist]?
+    /// Escapement: every tick, every one that pushed (the ratchet's red flash), and every one that emptied the clock
+    /// rod, which then stops.
+    private(set) var tickEvents = 0
+    private(set) var tickPushes = 0
+    private(set) var clockStops = 0
+    var lost: Bool { escapement.lost }
+    /// Escapement: the clock rod's positive steps. Only +1 ticks reach the clock, so no tick ever takes them off.
+    var overdue: Int { stack.filter { $0.rod == level.clock && $0.steps > 0 }.reduce(0) { $0 + $1.steps } }
+
     init(level: Level, tankTurned: Bool? = nil, swirled: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil) {
         self.level = level
-        entries = level.scramble.map { Entry(twist: $0, pushed: false) }
+        entries = Self.dealt(level)
         brim = level.run?.brim ?? 0
         firstTry = level.run != nil || !Best.started(level.id)
         self.tankTurned = tankTurned ?? Best.tankTurned
@@ -156,6 +179,17 @@ final class Game {
         storesBank = bank == nil
     }
 
+    /// The scramble's entries. In a story each holds back the vignette in its own rod's core, if that core has one.
+    private static func dealt(_ level: Level) -> [Entry] {
+        level.scramble.map { Entry(twist: $0, pushed: false, tags: level.story?.vignettes.intersection([$0.rod]) ?? []) }
+    }
+
+    /// The story's vignettes played: each once no entry holds it back. A function of the stack alone, so undo and reset
+    /// unplay them, and a win the fine pass calls on a stack that only looks solved plays the rest.
+    var played: Set<Int> {
+        level.story.map { $0.vignettes.subtracting(entries.flatMap(\.tags)) } ?? []
+    }
+
     /// Practice saves nothing.
     var counts: Bool { firstTry || !level.id.hasPrefix("daily-") }
 
@@ -165,14 +199,14 @@ final class Game {
     /// Endless has no par.
     var over: Int { level.run == nil ? max(moves - par, 0) : 0 }
     var spilled: Bool { level.run != nil && brim >= Run.room }
-    var finished: Bool { solved || spilled }
+    var finished: Bool { solved || spilled || lost }
     var clean: Bool { over == 0 && resets == 0 && undos == 0 && firstTry }
 
     /// What each move did to the stack, oldest first: read once the level has settled, since the fine pass may empty the
     /// stack after the last move.
     var marks: [Share.Mark] {
         history.indices.map { i in
-            let size = before[i].count, after = i + 1 < before.count ? before[i + 1].count : entries.count
+            let size = before[i].entries.count, after = i + 1 < before.count ? before[i + 1].entries.count : entries.count
             return history[i].rod == Game.tank ? .tank : after < size ? .healed : after > size ? .pushed : .merged
         }
     }
@@ -191,12 +225,13 @@ final class Game {
     /// A turn of knob `rod`, which stirs whatever fluid the tank has brought under it.
     func commit(rod: Int, steps: Int) {
         guard !finished else { return }
-        let slot = self.slot(of: rod), was = entries
+        if level.clock != nil { return clockCommit(knob: rod, steps: steps) }
+        let slot = self.slot(of: rod), was = entries, playedWas = played
         // Every entry of the scramble's that pops is a heal, even where an entry that the merge lets fall cancels it.
         var healed = 0
         let result = level.kind(of: rod) != .working ? .refused
             : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
-                             popped: { if !$0.pushed { healed += 1 } })
+                             lenses: level.lenses, popped: { if !$0.pushed { healed += 1 } })
         guard result != .refused else { Log.write("commit \(Twist(rod: rod, steps: steps)) refused"); return }
         if rod == level.layout.swirl, !swirled {
             swirled = true
@@ -210,7 +245,7 @@ final class Game {
         } else {
             history.append(Twist(rod: slot, steps: steps))
             openBefore.append(open)
-            before.append(was)
+            before.append((was, escapement))
             open = true
         }
         lastCommit = (rod, result)
@@ -219,8 +254,10 @@ final class Game {
             pushes += 1
             if level.run != nil { brim += 1 }
         }
-        // A run's heal ring marks only what settles the brim: cancelling the player's own push flashes white, as a merge.
-        if level.run == nil ? result == .cancelled : healed > 0 { cancels += 1; cancelledRod = rod }
+        // A run's heal ring marks only what settles the brim, and a story's only a commit that plays a vignette:
+        // cancelling the player's own push flashes white, as a merge.
+        let heals = level.story != nil ? !played.isSubset(of: playedWas) : level.run == nil ? result == .cancelled : healed > 0
+        if heals { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
         Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
@@ -257,7 +294,7 @@ final class Game {
         let joins = open && history.last?.rod == Game.tank
         let net = tankStir(after: steps)
         let wasOpen = joins ? openBefore.removeLast() : open
-        let was = joins ? before.removeLast() : entries
+        let was = joins ? before.removeLast() : (entries, escapement)
         if joins { history.removeLast() }
         open = net != 0
         if open {
@@ -269,21 +306,111 @@ final class Game {
         settle()
     }
 
-    /// Escapement's waiting move, a tap on a ratchet: its tick is not built.
-    func wait(on ratchet: Int) {
-        Log.write("wait \(ratchet)")
+    /// Escapement: a let-go is a move, a commit of its turn and then the clock's tick, and it is final: the same knob
+    /// turned again is another move with its own tick (Jack's call E1, round 9). A tick that pushes loses at once.
+    private func clockCommit(knob: Int, steps: Int) {
+        let slot = self.slot(of: knob)
+        var next = entries
+        let result = level.kind(of: knob) != .working ? .refused
+            : next.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout, lenses: level.lenses)
+        // A full stack refuses the tick as it would a push, so it refuses the move.
+        guard result != .refused, !tickRefused(next) else {
+            Log.write("commit \(Twist(rod: knob, steps: steps)) refused")
+            return
+        }
+        before.append((entries, escapement))
+        openBefore.append(open)
+        history.append(Twist(rod: slot, steps: steps))
+        entries = next
+        // Final, so no later turn joins it.
+        open = false
+        lastCommit = (knob, result)
+        turns += 1
+        if result == .pushed { pushes += 1 }
+        if result == .cancelled { cancels += 1; cancelledRod = knob }
+        landTick()
+        Log.write("commit \(Twist(rod: knob, steps: steps)) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        settle()
     }
 
-    /// Endless has none: it would take back a red flash. A pack's puts the stack back as the stir found it, marks and
-    /// tags and all; elsewhere it commits the stir's negation.
+    /// Escapement's waiting move, a tap on the ratchet: it only ticks. Once the clock has stopped there is nothing to
+    /// wait for.
+    func wait(on ratchet: Int) {
+        guard !finished, let e = level.clock, slot(of: ratchet) == e, entries.contains(where: { $0.twist.rod == e })
+        else { return }
+        guard !tickRefused(entries) else { Log.write("wait refused"); return }
+        before.append((entries, escapement))
+        openBefore.append(open)
+        history.append(Twist(rod: e, steps: 1))
+        open = false
+        lastCommit = (ratchet, .reduced)
+        turns += 1
+        landTick()
+        Log.write("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        settle()
+    }
+
+    /// Escapement: the clock's tick after a move, while the clock rod holds an entry. It loses the tank if it pushes, or
+    /// if it stops the clock with twists still on the picture.
+    private func landTick() {
+        guard let e = level.clock, entries.contains(where: { $0.twist.rod == e }) else { return }
+        let from = stack
+        let result = entries.commit(Entry(twist: Twist(rod: e, steps: 1), pushed: true), in: level.layout, lenses: level.lenses)
+        guard result != .refused else { return }
+        escapement.ticks += 1
+        tick = from
+        tickEvents += 1
+        if result == .pushed { tickPushes += 1; escapement.lost = true }
+        if !entries.contains(where: { $0.twist.rod == e }) {
+            clockStops += 1
+            if !entries.isEmpty { escapement.lost = true }
+        }
+        Log.write("tick \(result) stack=\(stack)")
+    }
+
+    /// Escapement: whether a full stack would refuse the tick after a move that leaves `entries`.
+    private func tickRefused(_ entries: [Entry]) -> Bool {
+        guard let e = level.clock, entries.contains(where: { $0.twist.rod == e }) else { return false }
+        var copy = entries
+        return copy.commit(Entry(twist: Twist(rod: e, steps: 1), pushed: true), in: level.layout, lenses: level.lenses) == .refused
+    }
+
+    /// Escapement: the opening's demonstration plays on a stack of its own, through the real rules.
+    func demo(_ stack: [Twist]) {
+        entries = stack.map { Entry(twist: $0, pushed: false) }
+        restart()
+    }
+
+    /// Escapement: back to the level's own scramble once the demonstration is over, as if nothing had been played.
+    func endDemo() {
+        entries = Self.dealt(level)
+        restart()
+        start = nil
+    }
+
+    private func restart() {
+        history = []
+        openBefore = []
+        before = []
+        open = false
+        escapement = Clock()
+        tick = nil
+    }
+
+    /// Endless has none: it would take back a red flash. A pack's puts the stack back as the stir found it, marks, tags
+    /// and the clock's tick and all; elsewhere it commits the stir's negation.
     func undo() {
-        // The sandbox counts nothing, so its undos are free.
-        guard !finished, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast() else { return }
+        // The sandbox counts nothing, so its undos are free. A lost tank can be undone.
+        guard !solved, !spilled, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast()
+        else { return }
         let was = before.removeLast()
-        if level.pack != nil {
-            entries = was
+        if level.pack != nil || level.clock != nil {
+            entries = was.entries
+            escapement = was.clock
+            tick = nil
         } else if last.rod != Game.tank {
-            entries.commit(Entry(twist: Twist(rod: last.rod, steps: -last.steps), pushed: true), in: level.layout)
+            entries.commit(Entry(twist: Twist(rod: last.rod, steps: -last.steps), pushed: true), in: level.layout,
+                           lenses: level.lenses)
         }
         if last.rod != Game.tank {
             // A white flash whatever the stack did: undo bumps neither pushes nor cancels, so no alarm or thunk may show.
@@ -305,11 +432,8 @@ final class Game {
     /// has already settled on.
     @discardableResult func reset() -> Bool {
         guard !checking, level.run == nil else { return false }
-        entries = level.scramble.map { Entry(twist: $0, pushed: false) }
-        history = []
-        openBefore = []
-        before = []
-        open = false
+        entries = Self.dealt(level)
+        restart()
         resets += 1
         Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
         return true
@@ -371,7 +495,7 @@ final class Game {
 
     /// The newest twist a working knob can take off now, as that knob's turn: what autoplay and the harness play.
     var reachable: Twist? {
-        level.layout.removable(stack).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
+        level.layout.removable(stack, lenses: level.lenses).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
             .first { level.kind(of: $0.rod) == .working }
     }
 
@@ -379,7 +503,7 @@ final class Game {
     var wasting: Twist? {
         level.layout.rods.indices.filter { level.kind(of: $0) == .working }.lazy.compactMap { k -> Twist? in
             var s = self.stack
-            return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout) == .pushed ? Twist(rod: k, steps: 2) : nil
+            return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout, lenses: self.level.lenses) == .pushed ? Twist(rod: k, steps: 2) : nil
         }.first
     }
 
@@ -387,11 +511,11 @@ final class Game {
     private func settle(healed: Bool = false) {
         // Refusing a win the picture already shows is the bug players hit, and a residual under half a pixel is invisible.
         // Only the coarse pass runs here: the fine one takes ~0.1 s exactly when it passes, which would hitch the win.
-        if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel) {
-            let stack = stack, layout = level.layout
+        if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses) {
+            let stack = stack, layout = level.layout, lenses = level.lenses
             checking = true
             Task {
-                let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack) }.value
+                let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack, lenses: lenses) }.value
                 self.checking = false
                 // A move made meanwhile settled itself.
                 guard self.stack == stack else { return }
@@ -403,6 +527,7 @@ final class Game {
                         self.settleBrim(1)
                         self.noteBrim(from: was)
                     }
+                    // A story's vignettes left play with the solve wave, which rings for them.
                     self.entries = []
                 }
                 self.finish()
@@ -415,7 +540,7 @@ final class Game {
     private func finish() {
         guard finished else { return }
         seconds = Int(Date.now.timeIntervalSince(start ?? .now))
-        Log.write("\(solved ? "solved" : "spilled") \(level.id) moves=\(moves) "
+        Log.write("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
                   + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
             if solved { Best.tanks = max(Best.tanks, run.tank + 1) }
@@ -454,6 +579,8 @@ struct LevelView: View {
     @State private var wind = 1.0
     /// The touch it belongs to, what it holds, and the finger's last angle about that.
     @State private var drag: (start: CGPoint, grab: Grab, last: Double)?
+    /// A finger is down on the tank. It resets when the system cancels the touch too, which `drag` alone never sees.
+    @GestureState private var holding = false
     /// Where the finger has been since it landed, timed from when the drag was taken up, and what it held there, for
     /// the log's one line when the drag ends.
     @State private var path: (grab: Grab, down: Date, trail: Trail<SIMD2<Double>>)?
@@ -461,15 +588,25 @@ struct LevelView: View {
     @State private var twist: (down: Date, trail: Trail<Double>)?
     /// The finger's latest point in tank units, kept after it lifts so a count left showing stays put.
     @State private var finger: SIMD2<Double>?
+    /// Where the finger holding the stir landed: a lens's track keeps to the side away from it, so a thumb wobbling
+    /// across the knob on its way up never flips it.
+    @State private var landed: SIMD2<Double>?
     /// UNSTIR_FINGER: the fingertip drawn down where it landed, and what it turns about (the tank's centre for the rim
     /// and the swirl).
-    @State private var ghost: (at: SIMD2<Double>, pivot: SIMD2<Double>, rim: Bool)?
+    @State private var ghost: (at: SIMD2<Double>, pivot: SIMD2<Double>, rim: Bool, lens: Bool)?
     /// The knob, or `Game.tank`, touched last: its open stir's count stays up, faint, after letting go.
     @State private var counted: Int?
     @State private var grabs = 0
     /// The seized knob touched last, and every such touch: it shakes, the rim pulses and a thud plays.
     @State private var jammed: Int?
     @State private var jams = 0
+    /// Escapement: a finger is on the ratchet.
+    @State private var pressing = false
+    /// Escapement: the demonstration of the clock is playing, before the problem winds in.
+    @State private var demoing = false
+    /// Escapement: the tank dips to black between the demonstration and the problem, so the problem's clean opening
+    /// frame never reads as the demonstration solved.
+    @State private var demoDip = 0.0
     @State private var detent = Detent(step: Tank.step)
     @State private var ticks = 0
     @State private var tankTicks = 0
@@ -486,6 +623,10 @@ struct LevelView: View {
     @Environment(\.scenePhase) private var phase
     private let still: Bool
     private let autoplay: Bool
+    /// UNSTIR_PACE: the seconds autoplay and UNSTIR_MOVES wait before each move.
+    private let pace: Double
+    /// UNSTIR_BARE: the picture drawn unstirred, as the stack has played it.
+    private let bare: Bool
     private let moves: [Twist]?
     private let fingered: Bool
     private let bench: Bool
@@ -521,8 +662,11 @@ struct LevelView: View {
     private let shareSheet: Bool
     let onExit: () -> Void
     let onNext: (Level) -> Void
+    /// Back to the menu on a tier other than the stored one: a closed tier's gate.
+    let onLook: (Tier) -> Void
 
-    init(level: Level, harness: Harness?, onExit: @escaping () -> Void, onNext: @escaping (Level) -> Void) {
+    init(level: Level, harness: Harness?, onExit: @escaping () -> Void, onNext: @escaping (Level) -> Void,
+         onLook: @escaping (Tier) -> Void) {
         let game = Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank)
         game.turnTank(harness?.tank ?? 0)
         if let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
@@ -543,6 +687,9 @@ struct LevelView: View {
             }
         }
         if let t = harness?.turned { game.commit(rod: t.rod, steps: t.steps) }
+        for m in harness?.played ?? [] {
+            if level.kind(of: m.rod) == .ratchet { game.wait(on: m.rod) } else { game.commit(rod: m.rod, steps: m.steps) }
+        }
         _game = State(initialValue: game)
         let live = harness?.live, angle = (live?.steps ?? 0) * Tank.step, turn = harness?.tankLive.map { $0 * .pi / 180 }
         _liveRod = State(initialValue: live?.rod)
@@ -555,12 +702,16 @@ struct LevelView: View {
             let pivot = live.map { SIMD2(level.layout.rods[$0.rod].x, level.layout.rods[$0.rod].y) } ?? .zero
             let a = live != nil ? angle : turn ?? 0, d = p - pivot
             _drag = State(initialValue: (.zero, grab, 0))
-            _finger = State(initialValue: pivot + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a)))
+            // A lens's finger goes up and down instead.
+            let lens = live.map { level.lenses.contains($0.rod) } ?? false
+            _landed = State(initialValue: p)
+            _finger = State(initialValue: lens ? p - SIMD2(0, angle / Tank.step * LevelView.lensPitch)
+                                : pivot + SIMD2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a)))
             switch grab {
             case .rod(let k): _liveRod = State(initialValue: k); _counted = State(initialValue: k)
             case .rim: _liveTurn = State(initialValue: turn ?? 0); _counted = State(initialValue: Game.tank)
-            case .seized(let k): _jammed = State(initialValue: k)
-            case .ratchet, .nothing: break
+            case .seized(let k), .ratchet(let k): _jammed = State(initialValue: k)
+            case .nothing: break
             }
         }
         // A spill's card waits for the pour, so a harness launch that spills shows it only if held past then.
@@ -569,6 +720,8 @@ struct LevelView: View {
         _eased = State(initialValue: game.solved)
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
+        pace = harness?.pace ?? 0.3
+        bare = harness?.bare ?? false
         moves = harness?.moves
         fingered = harness?.finger ?? false
         brimDemo = harness?.brimDemo ?? false
@@ -583,6 +736,7 @@ struct LevelView: View {
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
+        self.onLook = onLook
     }
 
     var body: some View {
@@ -635,14 +789,18 @@ struct LevelView: View {
                     }
                 // The play controls fade rather than leave, and the result is an overlay, so the solved tank stays
                 // exactly where it was played.
-                Text(shown == nil ? game.counts ? game.level.note : "Practice: only the first try counts."
+                Text(demoing ? "tap to skip" : shown == nil ? game.counts ? game.level.note : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip")
                     .font(.mono(12)).opacity(showResult ? 0 : 0.55).multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
                     .overlay(alignment: .top) {
-                        if showResult {
-                            ResultCard(game: game, onExit: leave, onNext: onNext)
+                        if showResult && game.lost {
+                            LostCard(game: game, onExit: leave, again: { if game.reset() { replays += 1 } })
+                                .padding(.top, 14)
+                                .transition(reveal)
+                        } else if showResult {
+                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
@@ -663,7 +821,7 @@ struct LevelView: View {
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
-                .disabled(settling || game.finished || shown != nil || game.level.run != nil)
+                .disabled(settling || game.finished || shown != nil || demoing || game.level.run != nil || holding)
                 .opacity(showResult || game.level.run != nil ? 0 : 1)
                 .accessibilityHidden(game.level.run != nil)
                 .padding(.bottom, 8)
@@ -674,6 +832,7 @@ struct LevelView: View {
         .padding(.horizontal, 16)
         .background(Color.black)
         .task(id: replays) {
+            if !game.level.demo.isEmpty && replays == 0 && !still { await clockDemo() }
             if !game.level.sandbox, replays > 0 || !still { await open() }
             if autoplay && replays == 0 { await play() }
             if let moves, replays == 0 { await play(moves) }
@@ -715,6 +874,8 @@ struct LevelView: View {
                   still: game.level.picture.isLive ? { liveRod = nil; liveAngle = 0 } : nil).start()
         }
         .onChange(of: shown == nil, initial: true) {
+            // The clock's demonstration is not the player's tank.
+            guard !demoing else { return }
             if shown == nil { game.startClock(); badge = game.refilled } else { lifted = false }
         }
         .onChange(of: touching) { if touching && shown == nil { lifted = true } }
@@ -738,7 +899,8 @@ struct LevelView: View {
             }
         }
         .onChange(of: game.finished) {
-            guard game.finished else { return }
+            // An undo or reset from the lost card.
+            guard game.finished else { showResult = false; return }
             // The fine pass can call the win ~0.1 s after the commit: a finger down in that gap would hold its turn frozen
             // over the win, then have the commit refused on lift.
             endPath(); endTwist()
@@ -747,8 +909,9 @@ struct LevelView: View {
             // centre among them.
             if game.solved { withAnimation(.easeInOut(duration: 0.9)) { eased = true } }
             Task {
-                // A spill's card waits for the pour and the word.
-                try? await Task.sleep(for: .seconds(game.spilled ? Brim.card : 1.4))
+                // A spill's card waits for the pour and the word; a lost clock's for its stamp.
+                try? await Task.sleep(for: .seconds(game.spilled ? Brim.card : game.lost ? 0.7 : 1.4))
+                guard game.finished else { return }
                 withAnimation(.easeIn(duration: 0.3)) { showResult = true }
                 Log.write("result shown")
             }
@@ -784,6 +947,11 @@ struct LevelView: View {
     private func leave() {
         Analytics.shared.left(game)
         onExit()
+    }
+
+    private func look(_ tier: Tier) {
+        Analytics.shared.left(game)
+        onLook(tier)
     }
 
     /// Everything that decides what the tank draws, as the log shows it.
@@ -824,7 +992,9 @@ struct LevelView: View {
         endPath(); endTwist()
         shown = 0; liveRod = nil; liveAngle = 0; drag = nil; liveTurn = nil; spun = false
         if !game.level.replay { wind = 0; shown = scramble.count }
-        guard await pause(1) else { return }
+        defer { if demoDip > 0 { withAnimation(.easeOut(duration: 0.3)) { demoDip = 0 } } }
+        guard await pause(demoDip > 0 ? 0.3 : 1) else { return }
+        if demoDip > 0 { withAnimation(.easeInOut(duration: 1.4)) { demoDip = 0 } }
         if game.level.replay {
             for (i, t) in scramble.enumerated() {
                 let d = 0.12 * Double(abs(t.steps))
@@ -852,7 +1022,7 @@ struct LevelView: View {
     private func play() async {
         while !game.finished {
             let t = game.reachable
-            guard (try? await Task.sleep(for: .seconds(0.3))) != nil else { return }
+            guard (try? await Task.sleep(for: .seconds(pace))) != nil else { return }
             if let t {
                 liveRod = t.rod
                 withAnimation(.easeInOut(duration: 0.4)) { liveAngle = Double(t.steps) * Tank.step }
@@ -869,7 +1039,11 @@ struct LevelView: View {
     private func play(_ moves: [Twist]) async {
         if fingered { await hand(moves); return }
         for m in moves {
-            guard (try? await Task.sleep(for: .seconds(0.3))) != nil, !game.finished else { return }
+            guard (try? await Task.sleep(for: .seconds(pace))) != nil, !game.finished else { return }
+            if game.level.kind(of: m.rod) == .ratchet {
+                game.wait(on: m.rod)
+                continue
+            }
             if m.rod == Game.tank {
                 liveTurn = 0
                 withAnimation(.easeInOut(duration: 0.4)) { liveTurn = Double(m.steps) * game.level.layout.tankStep }
@@ -885,34 +1059,80 @@ struct LevelView: View {
     /// UNSTIR_FINGER: the line at a hand's pace, after a rest to read the tank untouched: each fingertip lands, holds a
     /// beat, turns at about a step a tenth of a second and lifts, and the next waits for the heal or push to show.
     private func hand(_ moves: [Twist]) async {
-        func pause(_ s: Double) async -> Bool { (try? await Task.sleep(for: .seconds(s))) != nil && !game.finished }
-        guard await pause(rest) else { return }
-        let level = game.level, layout = level.layout, both = layout.swirl != nil && level.motion != .none
+        guard (try? await Task.sleep(for: .seconds(rest))) != nil else { return }
         for m in moves {
-            let rim = m.rod == Game.tank, swirl = m.rod == layout.swirl
-            // The tank's up and left, the swirl's up and right, so the two read apart where both share the rim; a knob's
-            // halfway out its disc.
-            let at: SIMD2<Double> = rim ? 1.04 * SIMD2(-0.7071, -0.7071)
-                : swirl ? (both ? 0.93 : 0.99) * SIMD2(0.7071, -0.7071)
-                : centre(m.rod) + 0.5 * rods[m.rod].z * SIMD2(0.7071, -0.7071)
-            let grab = Self.grab(layout, motion: level.motion, kind: level.kind(of:), at: at)
-            if grab != (rim ? .rim : .rod(m.rod)) { Log.write("finger at \(Log.point(at)) holds \(grab), not \(m)") }
-            withAnimation(.easeOut(duration: 0.12)) { ghost = (at, rim || swirl ? .zero : centre(m.rod), rim) }
-            finger = at
-            guard await pause(0.45) else { return }
-            let d = rim ? 0.45 * Double(abs(m.steps)) + 0.2 : 0.1 * Double(abs(m.steps)) + 0.25
-            if rim {
-                liveTurn = 0
-                withAnimation(.easeInOut(duration: d)) { liveTurn = Double(m.steps) * layout.tankStep }
-            } else {
-                liveRod = m.rod; counted = m.rod
-                withAnimation(.easeInOut(duration: d)) { liveAngle = Double(m.steps) * Tank.step }
-            }
-            guard await pause(d + 0.25) else { return }
-            withAnimation(.easeIn(duration: 0.12)) { ghost = nil }
-            if rim { releaseTank() } else { release(m.rod) }
-            guard await pause(1.0) else { return }
+            guard !game.finished, await fingertip(m, while: { !game.finished }),
+                  (try? await Task.sleep(for: .seconds(1.0))) != nil else { return }
         }
+    }
+
+    /// One move by a drawn fingertip, through the calls a finger makes: it lands where `grab` gives it the move's rod or
+    /// the rim, holds a beat, rides the turn round and lifts; on a ratchet it taps. False once `going` fails.
+    private func fingertip(_ m: Twist, while going: @escaping () -> Bool) async -> Bool {
+        func pause(_ s: Double) async -> Bool { (try? await Task.sleep(for: .seconds(s))) != nil && going() }
+        let level = game.level, layout = level.layout, both = layout.swirl != nil && level.motion != .none
+        if level.kind(of: m.rod) == .ratchet {
+            withAnimation(.easeOut(duration: 0.12)) { ghost = (centre(m.rod), centre(m.rod), false, false) }
+            finger = centre(m.rod)
+            guard await pause(0.45) else { return false }
+            pressing = true
+            guard await pause(0.18) else { return false }
+            pressing = false
+            game.wait(on: m.rod)
+            // Gone before the tick lands, or the fingertip hides the ratchet turning.
+            withAnimation(.easeOut(duration: 0.12)) { ghost = nil }
+            return true
+        }
+        let rim = m.rod == Game.tank, swirl = m.rod == layout.swirl
+        // The tank's up and left, the swirl's up and right, so the two read apart where both share the rim; a knob's
+        // halfway out its disc.
+        let at: SIMD2<Double> = rim ? 1.04 * SIMD2(-0.7071, -0.7071)
+            : swirl ? (both ? 0.93 : 0.99) * SIMD2(0.7071, -0.7071)
+            : centre(m.rod) + 0.5 * rods[m.rod].z * SIMD2(0.7071, -0.7071)
+        let grab = Self.grab(layout, motion: level.motion, kind: level.kind(of:), at: at)
+        if grab != (rim ? .rim : .rod(m.rod)) { Log.write("finger at \(Log.point(at)) holds \(grab), not \(m)") }
+        withAnimation(.easeOut(duration: 0.12)) { ghost = (at, rim || swirl ? .zero : centre(m.rod), rim, !rim && level.lenses.contains(game.slot(of: m.rod))) }
+        finger = at; landed = at
+        guard await pause(0.45) else { return false }
+        let d = rim ? 0.45 * Double(abs(m.steps)) + 0.2 : 0.1 * Double(abs(m.steps)) + 0.25
+        if rim {
+            liveTurn = 0
+            withAnimation(.easeInOut(duration: d)) { liveTurn = Double(m.steps) * layout.tankStep }
+        } else {
+            liveRod = m.rod; counted = m.rod
+            withAnimation(.easeInOut(duration: d)) { liveAngle = Double(m.steps) * Tank.step }
+        }
+        guard await pause(d + 0.25) else { return false }
+        withAnimation(.easeIn(duration: 0.12)) { ghost = nil }
+        if rim { releaseTank() } else { release(m.rod) }
+        return true
+    }
+
+    /// Escapement, before the first stir: a fingertip shows the clock working on the level's demonstration stack. Each
+    /// heal hands the clock its seam and it ticks; a tap on the ratchet waits, and it ticks again. Then the tank dips to
+    /// black and the problem winds in. A tap skips it.
+    private func clockDemo() async {
+        guard let e = game.level.clock else { return }
+        demoing = true
+        shown = nil
+        game.demo(game.level.demo)
+        Log.write("demo starts \(state)")
+        let going = { demoing }
+        func pause(_ s: Double) async -> Bool { (try? await Task.sleep(for: .seconds(s))) != nil && going() }
+        var on = await pause(1.4)
+        while on, let t = game.reachable {
+            on = await fingertip(t, while: going)
+            if on { on = await pause(0.9) }
+        }
+        if on, await fingertip(Twist(rod: e, steps: 1), while: going) { _ = await pause(1.6) }
+        while settling { try? await Task.sleep(for: .seconds(0.05)) }
+        withAnimation(.easeOut(duration: 0.2)) { ghost = nil }
+        drag = nil; liveRod = nil; liveAngle = 0; pressing = false; counted = nil
+        withAnimation(.easeIn(duration: 0.35)) { demoDip = 1 }
+        try? await Task.sleep(for: .seconds(0.4))
+        game.endDemo()
+        demoing = false
+        Log.write("demo ends \(state)")
     }
 
     /// UNSTIR_BRIMDEMO: the approved film's run of the brim, through the same path as a finger: two heals, then pushes
@@ -990,13 +1210,13 @@ struct LevelView: View {
         let commits = liveRod.map { k in
             let steps = Detent.steps(liveAngle, of: Tank.step)
             return steps != 0 && (game.stack.count < Tank.maxStack
-                || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout) != nil)
+                || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout, lenses: game.level.lenses) != nil)
         } ?? false
         let step = game.level.layout.tankStep
         let held = liveTurn.map { $0 + (spin ?? 0) }
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
-        let unstirred = Unstirred(stack: stack, layout: game.level.layout, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
+        let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
@@ -1020,20 +1240,30 @@ struct LevelView: View {
         } else {
             nil
         }
+        // A lens's count runs up and down a track beside its knob, on the side away from the finger.
+        let lensTrack: CGFloat? = rodCount.flatMap { c in
+            guard game.level.lenses.contains(game.slot(of: c.k)) else { return nil }
+            let side: CGFloat = ((landed ?? finger).map { $0.x > rods[c.k].x } ?? false) ? -1 : 1
+            return at(c.k).x + side * (core / 2 + Self.trackGap)
+        }
         // Out of the way while the tank is held.
         let lesson = shown == nil && !game.finished && held == nil
         // The swirl's too while it is held.
         let swirlLesson = lesson && !game.swirled && game.level.layout.swirl != nil && probing != game.level.layout.swirl
         let arc = (game.level.motion != .none && lesson && !game.tankTurned ? RimLesson.arc(r, .tank) : [])
             + (swirlLesson ? RimLesson.arc(r, .swirl) : [])
-        let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }.map { (at($0), core / 2 + Self.countRoom) }
+        // The clock's ratchet and its count want more room than a knob.
+        let others: [(CGPoint, CGFloat)] = knobs.filter { $0 != rodCount?.k }
+            .map { (at($0), ($0 == game.level.clock ? Self.ratchetSize(core) / 2 + 40 : core / 2) + Self.countRoom) }
             + arc.map { ($0, RimLesson.width + Self.countRoom) }
+            + (lensTrack.map { x in (-3...3).map { (CGPoint(x: x, y: at(rodCount!.k).y + CGFloat($0) * Self.trackPitch), Self.countRoom + 4) } } ?? [])
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
         let spillAt = game.spilled ? game.brimEvents.last?.time : nil
         // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow.
         // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
         // breathes.
         let moving = game.level.picture.isLive || spillAt != nil && brimMoving || breathing
+        let tickNow = game.tick, clock = game.level.clock, playable = shown == nil
         return ZStack {
             TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !moving || frozenClock != nil)) { timeline in
                 let murk = spillAt.flatMap { at -> [Float]? in
@@ -1041,30 +1271,54 @@ struct LevelView: View {
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
-                PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
-                             clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
-                    .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
-                        var u = unstirred
-                        u.wave = SIMD3(Float(source.x), Float(source.y), Float(frozenWave ?? w))
-                        u.breath = swirlBreath
-                        return picture.modifier(u).modifier(Murk(stirs: murk, side: side))
-                    } keyframes: { _ in
-                        // A light wave from the last-turned rod, over the clean picture. The animator holds its last value, so
-                        // the band runs out past the farthest rim of any layout (1.56 from a ring rod) rather than parking on it.
-                        MoveKeyframe(0.0)
-                        LinearKeyframe(1.9, duration: 0.9, timingCurve: .easeOut)
+                KeyframeAnimator(initialValue: 1.0, trigger: game.tickEvents) { p in
+                    Group {
+                        if let story = game.level.story {
+                            StoryLayer(story: story, played: game.played, side: side, onStrike: { struck = true })
+                        } else {
+                            PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
+                                         clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
+                        }
                     }
+                        .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
+                            var u = unstirred
+                            u.wave = SIMD3(Float(source.x), Float(source.y), Float(frozenWave ?? w))
+                            u.breath = swirlBreath
+                            // Escapement: a tick in flight, turned part way on the stack it changed.
+                            if let t = tickNow, let clock, p < 1, playable {
+                                u.stack = t
+                                u.tick = (clock, p * Tank.step)
+                            }
+                            return picture.modifier(u).modifier(Murk(stirs: murk, side: side))
+                        } keyframes: { _ in
+                            // A light wave from the last-turned rod, over the clean picture. The animator holds its last value, so
+                            // the band runs out past the farthest rim of any layout (1.56 from a ring rod) rather than parking on it.
+                            MoveKeyframe(0.0)
+                            LinearKeyframe(1.9, duration: 0.9, timingCurve: .easeOut)
+                        }
+                } keyframes: { _ in Self.tickKeys }
             }
             .clipShape(Circle())
+            .opacity(1 - demoDip)
+            if let clock, !game.finished {
+                ClockHint(radius: disc(clock)).position(at(clock)).opacity(1 - demoDip).allowsHitTesting(false)
+            }
             if let k = liveRod, shown != nil {
                 glowRing(.magenta, 2.5, 6, under: .black.opacity(0.7))
                     .frame(width: 2 * disc(k), height: 2 * disc(k))
                     .position(at(k))
             }
             if let c = rodCount, c.live || c.steps != 0 {
-                dial(at(c.k), disc(c.k), inner: dashes(c.k, r), from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
-                     to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps, step: Tank.step)
-                    .opacity(c.live ? (commits ? 1 : Self.idle) : Self.lifted)
+                Group {
+                    if let x = lensTrack {
+                        track(at(c.k), disc(c.k), x: x, pitch: Self.trackPitch, steps: c.steps,
+                              now: Double(c.steps) + (c.live ? liveAngle / Tank.step - Double(Detent.steps(liveAngle, of: Tank.step)) : 0))
+                    } else {
+                        dial(at(c.k), disc(c.k), inner: dashes(c.k, r), from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
+                             to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps, step: Tank.step)
+                    }
+                }
+                .opacity(c.live ? (commits ? 1 : Self.idle) : Self.lifted)
             }
             if let c = tankCount, c.live || c.steps != 0 {
                 // Inset clear of the bezel's own hairline at the glass's edge.
@@ -1125,14 +1379,29 @@ struct LevelView: View {
             ForEach(knobs, id: \.self) { k in
                 // On a device pixel, so the knob's ticks can be.
                 let p = at(k)
-                KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
-                    RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                            size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k)
-                } keyframes: { _ in Self.jolt }
+                if k == clock {
+                    KeyframeAnimator(initialValue: 1.0, trigger: game.tickEvents) { t in
+                        let flight = game.tick != nil && t < 1 ? 1 - t : 0
+                        let ride = game.tick != nil && t < 1 ? sin(.pi * t) : 0
+                        KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
+                            RatchetView(angle: (Double(game.escapement.ticks) - flight) * Tank.step
+                                            + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
+                                        size: Self.ratchetSize(core), pawl: ride, lit: pressing,
+                                        stopped: !game.stack.contains { $0.rod == k } && shown == nil && !demoing)
+                        } keyframes: { _ in Self.jolt }
+                    } keyframes: { _ in Self.tickKeys }
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
+                } else {
+                    KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
+                        RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
+                                size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
+                                lens: game.level.lenses.contains(game.slot(of: k)))
+                    } keyframes: { _ in Self.jolt }
+                        .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
+                }
             }
-            // A spilled tank keeps its caps over the murk.
-            .opacity(showResult && !game.spilled ? 0 : 1)
+            // A spilled tank keeps its caps over the murk, and a lost one its clock.
+            .opacity(showResult && !game.spilled && !game.lost ? 0 : 1)
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
             // knobs, which would hide it. The swirl's is a ring just inside the glass's edge, over the picture, so a
             // hairline. One view either way, so the first push on either animates.
@@ -1147,6 +1416,7 @@ struct LevelView: View {
                     LinearKeyframe(1.0, duration: 0.4, timingCurve: .easeOut)
                 }
                 .position(at(fk))
+            if let clock { clockMarks(at(clock), disc: disc(clock), size: Self.ratchetSize(core)) }
             if let spillAt {
                 TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || frozenClock != nil)) { timeline in
                     SpillWords(r: r, at: frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
@@ -1160,13 +1430,15 @@ struct LevelView: View {
                 countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side))
             }
             if let ghost {
-                // Turned with the stir it holds, about its pivot, so it rides the same animation round the arc.
+                // Turned with the stir it holds, about its pivot, so it rides the same animation round the arc; on a
+                // lens, carried up and down as a finger drives one.
                 let a = ghost.rim ? held ?? 0 : liveAngle
                 Circle().fill(Color.white.opacity(0.28)).overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 1))
                     .frame(width: 40, height: 40)
                     .position(x: r + ghost.at.x * r, y: r + ghost.at.y * r)
                     .frame(width: side, height: side)
-                    .rotationEffect(.radians(a), anchor: UnitPoint(x: (ghost.pivot.x + 1) / 2, y: (ghost.pivot.y + 1) / 2))
+                    .rotationEffect(.radians(ghost.lens ? 0 : a), anchor: UnitPoint(x: (ghost.pivot.x + 1) / 2, y: (ghost.pivot.y + 1) / 2))
+                    .offset(y: ghost.lens ? -a / Tank.step * Self.lensPitch * r : 0)
                     .allowsHitTesting(false)
             }
         }
@@ -1177,6 +1449,7 @@ struct LevelView: View {
         // A level that turns, or swirls, reaches a finger on the bezel or just beyond it.
         .contentShape(Circle().inset(by: game.level.motion == .none && game.level.layout.swirl == nil ? 0 : -25))
         .gesture(twistGesture(r))
+        .onChange(of: holding) { _, now in if !now, let g = drag { cut(g) } }
         // Not .none: that also switches off the gesture above.
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
@@ -1184,6 +1457,8 @@ struct LevelView: View {
         .onChange(of: tankTicks) { Knock.clunk.play() }
         .sensoryFeedback(.impact(weight: .heavy), trigger: game.cancels)
         .sensoryFeedback(.warning, trigger: game.pushes)
+        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
+        .sensoryFeedback(.error, trigger: game.tickPushes)
         .sensoryFeedback(.success, trigger: game.solved) { _, solved in solved }
         // Keeps texture pixels on device pixels, so the untwisted picture is not blurred by half a pixel.
         .offset(snap)
@@ -1191,6 +1466,68 @@ struct LevelView: View {
             snap = CGSize(width: (o.x * scale).rounded() / scale - o.x, height: (o.y * scale).rounded() / scale - o.y)
         }
         .padding(0.045 * r)
+    }
+
+    /// Escapement: a tick's flight, 0 to 1: a beat after the lift, then one 30-degree step of the clock's core.
+    @KeyframesBuilder<Double> private static var tickKeys: some Keyframes<Double> {
+        MoveKeyframe(0.0)
+        LinearKeyframe(0.0, duration: 0.15)
+        CubicKeyframe(1.0, duration: 0.3)
+    }
+
+    /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
+    private static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
+
+    /// Escapement: what the clock at `c` shows round its ratchet: a red flash for a tick that pushed; while a pushed tick
+    /// stands, a ring and its vermilion count; "lost." stamped by the clock once the tank is lost; the clock's disc
+    /// lighting as it ticks; and a ring going out as the clock stops.
+    private func clockMarks(_ c: CGPoint, disc: CGFloat, size: CGFloat) -> some View {
+        let overdue = game.overdue, showing = shown == nil
+        let badge = CGPoint(x: c.x + size / 2 + 30, y: c.y)
+        let core = 2 * Tank.plateau * disc
+        return ZStack {
+            Circle().stroke(Color.alarm, lineWidth: 2).frame(width: size + 10, height: size + 10)
+                .keyframeAnimator(initialValue: 1.0, trigger: game.tickPushes) { ring, t in
+                    ring.opacity(t >= 1 ? 0 : 1 - t).scaleEffect(1 + 0.25 * t)
+                } keyframes: { _ in
+                    MoveKeyframe(0.0)
+                    LinearKeyframe(1.0, duration: 0.5, timingCurve: .easeOut)
+                }
+                .position(c)
+            if overdue > 0 && showing {
+                Circle().stroke(Color.vermilion, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
+                Text("+\(overdue)").font(.system(size: 20, weight: .bold, design: .serif))
+                    .foregroundStyle(Color.vermilion)
+                    .padding(.horizontal, 7).padding(.vertical, 1)
+                    .background(Capsule().fill(Color.black.opacity(0.7)))
+                    .overlay(Capsule().stroke(Color.vermilion, lineWidth: 1.5))
+                    .position(badge)
+                    .transition(.opacity)
+            }
+            // A clock stopped with twists left has no +1 to stamp beside, so the stamp keeps its place by the clock.
+            if game.lost && showing { LostStamp(size: 50).position(x: badge.x - 6, y: badge.y + 30) }
+            // The clock's disc lights as it ticks, so the eye goes where the tick acts.
+            Circle().stroke(Color.vermilion, lineWidth: Self.hairline)
+                .frame(width: 2 * disc, height: 2 * disc)
+                .keyframeAnimator(initialValue: 1.0, trigger: game.tickEvents) { v, t in
+                    v.opacity(t >= 1 ? 0 : 0.9 * sin(.pi * t))
+                } keyframes: { _ in
+                    MoveKeyframe(0.0)
+                    LinearKeyframe(0.25, duration: 0.15)
+                    LinearKeyframe(1.0, duration: 0.6)
+                }
+                .position(c)
+            Circle().stroke(Color.amber, lineWidth: 2)
+                .keyframeAnimator(initialValue: 1.0, trigger: game.clockStops) { v, t in
+                    v.frame(width: size + (core - size) * t, height: size + (core - size) * t).opacity(t >= 1 ? 0 : 0.9 * (1 - t * t))
+                } keyframes: { _ in
+                    MoveKeyframe(0.0)
+                    LinearKeyframe(0.0, duration: 0.3)
+                    LinearKeyframe(1.0, duration: 0.7, timingCurve: .easeOut)
+                }
+                .position(c)
+        }
+        .allowsHitTesting(false)
     }
 
     /// Wide enough to read, too thin to hide the picture: 1.5 px on a 3x screen.
@@ -1223,6 +1560,35 @@ struct LevelView: View {
             Path { $0.move(to: point(origin, radius)); $0.addLine(to: point(origin, radius - 10)) }
                 .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
             Path { arc(&$0, origin, now) }.stroke(Color.live.opacity(Self.traceTone), lineWidth: Self.trace)
+            dashes.stroke(Color.live.opacity(Self.dashTone), lineWidth: Self.dash)
+        }
+    }
+
+    /// How far a lens's track stands off its knob's edge, and its dashes' spacing: a short track, not the finger's travel.
+    private static let trackGap: CGFloat = 16, trackPitch: CGFloat = 16
+
+    /// A lens's count, which follows the finger up and down (Jack, 2026-10-26): on a vertical hairline at `x` beside a
+    /// disc of `radius` about `c`, the disc's own hairline round it, a long mark level with the knob where the stir
+    /// began, a dash per step up for in and down for out, `pitch` apart, over a rail with a mark at `now`
+    /// steps, where the drag stands.
+    private func track(_ c: CGPoint, _ radius: CGFloat, x: CGFloat, pitch: CGFloat, steps: Int, now: Double) -> some View {
+        func y(_ s: Double) -> CGFloat { c.y - CGFloat(s) * pitch }
+        let reach = max(3.5, abs(now) + 0.5), dir = steps > 0 ? 1.0 : -1.0, gap = 3 / Double(pitch)
+        let dashes = Path { p in
+            for i in 0..<abs(steps) {
+                p.move(to: CGPoint(x: x, y: y(dir * (Double(i) + gap))))
+                p.addLine(to: CGPoint(x: x, y: y(dir * (Double(i + 1) - gap))))
+            }
+        }
+        return ZStack {
+            Path(ellipseIn: CGRect(x: c.x - radius, y: c.y - radius, width: 2 * radius, height: 2 * radius))
+                .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
+            Path { $0.move(to: CGPoint(x: x, y: y(-reach))); $0.addLine(to: CGPoint(x: x, y: y(reach))) }
+                .stroke(Color.live.opacity(Self.traceTone), lineWidth: Self.hairline)
+            Path { $0.move(to: CGPoint(x: x - 6, y: c.y)); $0.addLine(to: CGPoint(x: x + 6, y: c.y)) }
+                .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
+            Path { $0.move(to: CGPoint(x: x - 3, y: y(now))); $0.addLine(to: CGPoint(x: x + 3, y: y(now))) }
+                .stroke(Color.live.opacity(Self.dashTone), lineWidth: Self.hairline)
             dashes.stroke(Color.live.opacity(Self.dashTone), lineWidth: Self.dash)
         }
     }
@@ -1262,18 +1628,22 @@ struct LevelView: View {
     private func twistGesture(_ r: CGFloat) -> some Gesture {
         func norm(_ p: CGPoint) -> SIMD2<Double> { SIMD2(Double(p.x / r - 1), Double(p.y / r - 1)) }
         return DragGesture(minimumDistance: 0)
+            .updating($holding) { _, holding, _ in holding = true }
             .onChanged { v in
-                guard !settling, !game.finished, shown == nil else { return }
+                guard !settling, !game.finished, shown == nil, !demoing else { return }
                 let q = norm(v.location)
                 let level = game.level
                 // Keyed on the start point because a cancelled drag never reaches onEnded; a new touch starts afresh.
                 if drag?.start != v.startLocation {
+                    // A touch cut off without onEnded keeps the turn it showed; this one is taken up once that settles.
+                    if let g = drag, cut(g) { return }
                     endPath()
-                    drag = nil; liveRod = nil; liveAngle = 0
+                    drag = nil; liveRod = nil; liveAngle = 0; pressing = false
                     // A twist cancelled without onEnded leaves its turn behind.
                     if spin == nil { liveTurn = nil; spun = false; endTwist() }
                     // Where it landed: the first change seen can come later, once a release or a reset's stir settles.
                     let landed = norm(v.startLocation)
+                    self.landed = landed
                     drag = (v.startLocation, Self.grab(level.layout, motion: level.motion, kind: level.kind(of:), at: landed), 0)
                     Log.write("touch \(drag!.grab) at \(Log.point(landed))")
                     path = (drag!.grab, v.time, Trail(gap: 0.03) { simd_distance($0, $1) })
@@ -1286,11 +1656,13 @@ struct LevelView: View {
                 guard let g = drag, let pivot = pivot(g.grab) else { return }
                 let d = q - pivot
                 let a = atan2(d.y, d.x)
-                drag!.last = a
+                let lens = lensHeld(g.grab)
+                drag!.last = lens ? q.y : a
                 // Two fingers turn the tank while they are down.
                 guard !spun else { return }
                 // Near the pivot the angle is noise; track it without turning.
-                let da = simd_length(d) > 0.1 ? atan2(sin(a - g.last), cos(a - g.last)) : 0
+                let da = lens ? Self.lensTurn(from: g.last, to: q.y)
+                    : simd_length(d) > 0.1 ? atan2(sin(a - g.last), cos(a - g.last)) : 0
                 if g.grab != .rim {
                     liveAngle += da
                     ticks += detent.turn(to: liveAngle)
@@ -1300,6 +1672,11 @@ struct LevelView: View {
                 }
             }
             .onEnded { v in
+                if demoing {
+                    demoing = false
+                    Log.write("skip demo")
+                    return
+                }
                 if shown != nil {
                     // Past 1, so the value changes and cuts short a wind-in still animating towards 1.
                     shown = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; wind = 2
@@ -1314,10 +1691,29 @@ struct LevelView: View {
                 switch g.grab {
                 case .rod(let k): release(k)
                 case .rim: if !spun { releaseTank() }
-                case .ratchet(let k): game.wait(on: k)
+                case .ratchet(let k):
+                    pressing = false
+                    // A tap on the ratchet itself waits; a drag, or a touch elsewhere on the clock's disc, is refused.
+                    let start = norm(g.start), end = norm(v.location)
+                    if simd_distance(start, end) < 0.06 && simd_distance(start, centre(k)) < Self.ratchetReach {
+                        game.wait(on: k)
+                    } else {
+                        jammed = k; jams += 1; Knock.thud.play()
+                    }
                 case .seized, .nothing: break
                 }
             }
+    }
+
+    /// The finger's travel up or down, in tank units, for one step of a lens (Jack, 2026-10-26).
+    static let lensPitch = 0.15
+
+    /// A lens follows the finger up and down, not round: the angle the detent counts for a finger gone from height `y0`
+    /// to `y` (tank units, down positive). Up zooms in, a positive step (Jack, 2026-10-26).
+    static func lensTurn(from y0: Double, to y: Double) -> Double { (y0 - y) / lensPitch * Tank.step }
+
+    private func lensHeld(_ grab: Grab) -> Bool {
+        if case .rod(let k) = grab { game.level.lenses.contains(game.slot(of: k)) } else { false }
     }
 
     private func pivot(_ grab: Grab) -> SIMD2<Double>? {
@@ -1336,9 +1732,10 @@ struct LevelView: View {
             jams += 1
             Knock.thud.play()
         }
+        if case .ratchet? = drag?.grab { pressing = true; grabs += 1 }
         guard let g = drag, let pivot = pivot(g.grab) else { return }
         let d = point - pivot
-        drag!.last = atan2(d.y, d.x)
+        drag!.last = lensHeld(g.grab) ? point.y : atan2(d.y, d.x)
         if case .rod(let k) = g.grab {
             liveRod = k; counted = k; grabs += 1; detent = Detent(step: Tank.step)
         } else {
@@ -1373,6 +1770,9 @@ struct LevelView: View {
         case .ratchet: return .ratchet(k)
         }
     }
+
+    /// Escapement: how far from the clock's centre a tap waits, in tank units: the ratchet and a finger's slack.
+    nonisolated static let ratchetReach = 0.16
 
     /// Where the rim's grab starts, in tank units: about 13 pt into the glass on a Pro Max.
     nonisolated static let rim = 0.93
@@ -1451,6 +1851,20 @@ struct LevelView: View {
             liveTurn = nil
             settling = false
             game.turnTank(steps)
+        }
+    }
+
+    /// A drag the system cut off, or a second finger took over, before the lift lets go as the lift would, so a turn
+    /// shown whole never snaps back uncommitted (Jack, V26 on the phone, 2026-10-27). True when it has a turn to settle.
+    @discardableResult private func cut(_ g: (start: CGPoint, grab: Grab, last: Double)) -> Bool {
+        Log.write("cut \(state)")
+        endPath()
+        drag = nil
+        switch g.grab {
+        case .rod(let k): release(k); return true
+        case .rim where !spun && liveTurn != nil: releaseTank(); return true
+        case .ratchet: pressing = false; return false
+        default: return false
         }
     }
 
@@ -1595,6 +2009,8 @@ struct Detent {
 struct Unstirred: ViewModifier, Animatable {
     var stack: [Twist]
     var layout: Layout
+    /// The rods whose steps magnify rather than turn.
+    var lenses: Set<Int> = []
     var liveRod: Int?
     var liveAngle: Double
     var wind = 1.0
@@ -1609,6 +2025,8 @@ struct Unstirred: ViewModifier, Animatable {
     var fillEntries = 0
     /// The swirl's breath, newest of all.
     var breath: (rod: Int, angle: Double)?
+    /// Escapement: the clock's tick part way, on top of the stack and under the live twist.
+    var tick: (rod: Int, angle: Double)?
     @Environment(\.displayScale) private var scale
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>> {
@@ -1622,9 +2040,13 @@ struct Unstirred: ViewModifier, Animatable {
         floats.reserveCapacity(4 * (stack.count + 1))
         func add(_ rod: Int, _ angle: Double) {
             floats.append(Float(rods[rod].x)); floats.append(Float(rods[rod].y))
-            floats.append(Float(rods[rod].z)); floats.append(Float(angle))
+            // A lens's entry is marked by a negative radius, and takes its flow's time for the angle.
+            let lens = lenses.contains(rod)
+            floats.append(Float(lens ? -rods[rod].z : rods[rod].z))
+            floats.append(Float(lens ? angle / Tank.step * Tank.lensRate : angle))
         }
         for t in stack { add(t.rod, Double(t.steps) * Tank.step * min(wind, 1)) }
+        if let tick { add(tick.rod, tick.angle) }
         if let liveRod { add(liveRod, liveAngle) }
         let breathes = breath.map { $0.angle != 0 } ?? false
         if breathes, let breath { add(breath.rod, breath.angle) }
@@ -1632,13 +2054,13 @@ struct Unstirred: ViewModifier, Animatable {
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
         // A live picture keeps four taps only to `Tank.fourTaps` entries less its fill: the same budget as without it.
-        // Counted in committed entries, so a touch never changes the taps; the drag or the breath rides one over, within
-        // the 31 the shader's comment measured. Both at once, for the `Breath.fade` a touch takes to cut a slosh, drop to
-        // two taps at the budget's edge rather than run 32.
-        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes ? 1 : 0)
+        // Counted in committed entries, so a touch never changes the taps; the drag, the breath or a tick in flight rides
+        // one over, within the 31 the shader's comment measured. Two at once, for the `Breath.fade` a touch takes to cut a
+        // slosh or a grab within a tick's flight, drop to two taps at the budget's edge rather than run 32.
+        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
-                                 .float(Float(Tank.swirlPlateau)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
+                                 .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
             maxSampleOffset: CGSize(width: side, height: side))
     }
 }
@@ -1690,7 +2112,7 @@ struct PictureLayer: View {
         // A live picture bakes nothing: the empty image only strikes the tube, once its data is ready.
         .task(id: [picture.rawValue, "\(seed)", "\(side)", "\(scale)"]) {
             if picture.isLive { await picture.prepare(seed: seed) }
-            image = picture.isLive ? UIImage() : picture.render(side: side, scale: scale)
+            image = picture.isLive ? UIImage() : await picture.render(side: side, scale: scale)
         }
     }
 }
@@ -1811,6 +2233,8 @@ struct RodView: View {
     let size: CGFloat
     var seized = false
     var grabbed = false
+    /// A lens's knob, whose cap carries an iris.
+    var lens = false
     @Environment(\.displayScale) private var scale
     private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }
@@ -1827,6 +2251,10 @@ struct RodView: View {
             Circle().strokeBorder(Color.black.opacity(0.8), lineWidth: 1.2)
             ticks(rim - px(2), rim - px(1 / 3)).stroke(lit.opacity(0.8), lineWidth: width)
             if grabbed { ticks(rim - px(2), rim - px(1 / 3)).stroke(Color.live, lineWidth: width) }
+            if lens {
+                iris.stroke(Color.magenta.opacity(0.3), lineWidth: 3)
+                iris.stroke(Color.magenta, lineWidth: 1)
+            }
             // Off-centre so a half turn reads as pointing down, not as untouched.
             Capsule().fill(lit.opacity(0.25)).frame(width: 6, height: size * 0.3 + 4).offset(y: -size * 0.3)
             Capsule().fill(lit).frame(width: 2, height: size * 0.3).offset(y: -size * 0.3)
@@ -1853,6 +2281,20 @@ struct RodView: View {
 
     private func px(_ points: CGFloat) -> CGFloat { (points * scale).rounded() / scale }
 
+    /// Six blades, each swept from the cap's edge in to a corner of the aperture, so the iris turns with the knob.
+    private var iris: Path {
+        Path { p in
+            let c = CGPoint(x: size / 2, y: size / 2), outer = size * 0.4, inner = size * 0.14
+            func at(_ r: CGFloat, _ a: Double) -> CGPoint { CGPoint(x: c.x + r * sin(a), y: c.y - r * cos(a)) }
+            for i in 0..<6 {
+                let a = Double(i) * .pi / 3
+                p.move(to: at(outer, a))
+                p.addQuadCurve(to: at(inner, a + 1.3), control: at(outer * 0.62, a + 0.85))
+                p.addLine(to: at(inner, a + 1.3 + .pi / 3))
+            }
+        }
+    }
+
     /// One radial mark per 30-degree step, from radius `a` out to `b`.
     private func ticks(_ a: CGFloat, _ b: CGFloat) -> Path {
         var p = Path()
@@ -1869,6 +2311,7 @@ struct ResultCard: View {
     let game: Game
     let onExit: () -> Void
     let onNext: (Level) -> Void
+    let onLook: (Tier) -> Void
 
     var body: some View {
         let run = game.level.run
@@ -1877,7 +2320,7 @@ struct ResultCard: View {
         case .vortex: game.level.tier.glow
         case .whirlpool, .maelstrom: .blood
         }
-        let next = run != nil ? game.nextTank : game.level.tier.levels.drop(while: { $0.id != game.level.id }).dropFirst().first
+        let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
         let time = String(format: "%d:%02d", game.seconds / 60, game.seconds % 60)
         VStack(spacing: 26) {
             VStack(spacing: 8) {
@@ -1911,45 +2354,159 @@ struct ResultCard: View {
             }
             .font(.mono(15, .medium))
             if game.level.id == game.level.tier.levels.last?.id, let up = game.level.tier.step(1) {
-                TierUp(from: game.level.tier, to: up, onNext: onNext, onExit: onExit)
+                TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
     }
 }
 
-/// The last level of a tier goes on up the ladder, in the next tier's own colours. A tier still closed shows what
-/// opens it and goes back to the levels.
+/// The last level of a tier goes on up the ladder, in the next tier's own colours. A tier still closed keeps its
+/// glow behind a lock and opens the menu on its gate, which shows the levels still short of par.
 private struct TierUp: View {
     let from: Tier
     let to: Tier
     let onNext: (Level) -> Void
-    let onExit: () -> Void
+    let onLook: (Tier) -> Void
     @State private var glint = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let open = to.isOpen()
-        Button { open ? onNext(to.levels[0]) : onExit() } label: {
+        Button { open ? onNext(to.levels[0]) : onLook(to) } label: {
             VStack(spacing: 6) {
                 Text(open ? "up a notch" : "par every \(from.name.lowercased()) level to open")
                     .font(.mono(11, .semibold)).tracking(open ? 3 : 0.5).textCase(open ? .uppercase : nil).opacity(0.6)
                 HStack(spacing: 10) {
                     if !open { Image(systemName: "lock.fill").font(.system(size: 16, weight: .semibold)) }
                     Text(to.name.uppercased()).font(.system(size: 26, weight: .black).width(.expanded)).tracking(5)
-                    if open { Text("\u{203A}").font(.system(size: 26, weight: .black)) }
+                    Text("\u{203A}").font(.system(size: 26, weight: .black))
                 }
                 .foregroundStyle(to.sweep)
                 .shadow(color: to.glow.opacity(glint ? 0.9 : 0.5), radius: glint ? 16 : 9)
             }
             .padding(.horizontal, 26).padding(.vertical, 14)
             .background { Capsule().strokeBorder(to.sweep, lineWidth: 1.5).shadow(color: to.glow, radius: glint ? 10 : 5) }
-            .opacity(open ? 1 : 0.45)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. Par every \(from.name) level to open it")
+        .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
         .onAppear {
-            guard open, !reduceMotion else { return }
+            guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 1.1).repeatForever()) { glint = true }
+        }
+    }
+}
+
+/// Escapement's standing hint (Jack's call, 2026-10-25): the clock's disc marked at all times, a dashed edge and a faint
+/// wash creeping in from it, so every turn that reaches in reads as reaching into the clock.
+struct ClockHint: View {
+    let radius: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle().fill(RadialGradient(colors: [.clear, Color.vermilion.opacity(0.2)], center: .center,
+                                         startRadius: 0.55 * radius, endRadius: radius))
+            Circle().stroke(Color.vermilion.opacity(0.9), style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+        }
+        .frame(width: 2 * radius, height: 2 * radius)
+    }
+}
+
+/// Escapement's clock knob: a 12-tooth ratchet wheel that turns clockwise only, a tooth a tick, its index read against a
+/// vermilion sub-dial fixed to the glass, and the pawl that drops into it. `pawl` 0 rests in a gap, 1 is lifted clear
+/// as a tick rides it out. Stopped, it dims.
+struct RatchetView: View {
+    let angle: Double
+    let size: CGFloat
+    let pawl: Double
+    let lit: Bool
+    let stopped: Bool
+
+    var body: some View {
+        let rt = size / 2, rr = size / 2 * 0.74
+        let c = CGPoint(x: size, y: size)
+        func at(_ a: Double, _ rad: CGFloat) -> CGPoint { CGPoint(x: c.x + rad * sin(a), y: c.y - rad * cos(a)) }
+        // Each tooth from its root: a steep rise, then a long slope back down to the next root.
+        let wheel = Path { p in
+            for i in 0..<12 {
+                let a0 = Double(i) * Tank.step
+                if i == 0 { p.move(to: at(a0, rr)) } else { p.addLine(to: at(a0, rr)) }
+                p.addLine(to: at(a0 + 0.035, rt))
+                p.addLine(to: at(a0 + Tank.step, rr))
+            }
+            p.closeSubpath()
+        }
+        let dial = Path { p in
+            for i in 0..<12 {
+                let a = Double(i) * Tank.step
+                p.move(to: at(a, rt + 4))
+                p.addLine(to: at(a, rt + (i == 0 ? 11 : 7)))
+            }
+        }
+        let tipA = Double.pi / 6 + 0.25
+        let pivot = at(1.35, rt * 1.55), tip = at(tipA, rr + (rt - rr) * 0.35 + CGFloat(pawl) * (rt - rr) * 1.1)
+        let steel = Color(0xB8BECA)
+        return ZStack {
+            Circle().fill(Color.black.opacity(0.75)).frame(width: size + 6, height: size + 6).position(c)
+            dial.stroke(Color.vermilion.opacity(0.9), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+            ZStack {
+                wheel.fill(RadialGradient(stops: [.init(color: Color(0xE6EAF2), location: 0), .init(color: Color(0x6E7686), location: 0.5),
+                                                  .init(color: Color(0x262A33), location: 1)],
+                                          center: UnitPoint(x: 0.4, y: 0.35), startRadius: 0, endRadius: size))
+                wheel.stroke(Color.black.opacity(0.85), lineWidth: 1)
+                Circle().stroke(Color.black.opacity(0.8), lineWidth: 1.2).frame(width: rr * 1.1, height: rr * 1.1).position(c)
+                // The index, so each tick's step reads at a glance against the sub-dial.
+                Path { $0.move(to: at(0, rr * 0.25)); $0.addLine(to: at(0, rr * 0.85)) }
+                    .stroke(Color.vermilion, style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
+            }
+            .rotationEffect(.radians(angle), anchor: .center)
+            if lit {
+                Circle().stroke(Color.live, lineWidth: 1).frame(width: size + 6, height: size + 6).position(c)
+            }
+            Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(Color.black.opacity(0.9), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
+            Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(steel, style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
+            Circle().fill(Color(0xD8DCE4)).frame(width: 4, height: 4).position(pivot)
+        }
+        .frame(width: 2 * size, height: 2 * size)
+        .opacity(stopped ? 0.5 : 1)
+        .animation(.easeOut(duration: 0.12), value: pawl == 1)
+    }
+}
+
+/// Escapement: "lost." stamped by the clock once a tick pushes or the clock stops with twists left.
+struct LostStamp: View {
+    var size: CGFloat = 76
+    @State private var landed = false
+
+    var body: some View {
+        Text("lost.").font(.system(size: size, weight: .bold, design: .serif)).italic()
+            .foregroundStyle(Color.vermilion)
+            .shadow(color: .black.opacity(0.9), radius: 8)
+            .rotationEffect(.degrees(-6))
+            .scaleEffect(landed ? 1 : 1.3)
+            .opacity(landed ? 1 : 0)
+            .onAppear { withAnimation(.easeOut(duration: 0.16)) { landed = true } }
+            .allowsHitTesting(false)
+    }
+}
+
+/// Escapement's lost tank: the move it was lost on, undo if the bank has one, and again, a reset.
+struct LostCard: View {
+    let game: Game
+    let onExit: () -> Void
+    let again: () -> Void
+
+    var body: some View {
+        VStack(spacing: 26) {
+            // No par: beside a loss it reads as a score.
+            Text("lost on move \(game.moves)").font(.mono(13))
+            HStack(spacing: 32) {
+                Button("\u{2039} levels", action: onExit)
+                Button("undo \u{00B7} \(game.bank)") { game.undo() }
+                    .disabled(game.bank == 0).opacity(game.bank == 0 ? 0.35 : 1)
+                Button("again \u{203A}", action: again).foregroundStyle(Color.vermilion).shadow(color: .vermilion, radius: 4)
+            }
+            .font(.mono(15, .medium))
         }
     }
 }

@@ -72,7 +72,7 @@ struct Stirred: ViewModifier, Animatable {
                 // A low plateau: the whole disc shears, where the tank's 0.6 would spin the middle rows as a block. The
                 // disc's radius stays under 1, which the shader would take for the swirl, turned inside out.
                 ShaderLibrary.unstir(.float2(centre), .float(radius), .floatArray([0, 0, 0.9999, Float(angle)]),
-                                     .float(1), .float(30), .float(0.1), .float(0.1), .float(Float(scale)), .float(Float(0.3 * fade)),
+                                     .float(1), .float(30), .float(0.1), .float(0.1), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(0.3 * fade)),
                                      .float3(0, 0, -1), .float(0)),
                 // Samples stay in the disc, which reaches past the view's edges by no more than this. The effect draws
                 // its margin too, so a wider one is wasted work.

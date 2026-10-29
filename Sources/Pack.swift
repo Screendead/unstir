@@ -80,9 +80,50 @@ enum Pack: String, CaseIterable, Sendable {
 }
 
 extension Level {
-    static let firstStir: [Level] = []
-    static let lens: [Level] = []
-    static let escapement: [Level] = []
+    /// Lens's 25 panels on the halftone test panel, `docs/lens-tables.md`'s table A: the draft table with lenses on rods
+    /// of every size. A rod is a lens or a twist for the whole level; every dealt lens entry magnifies by 1 to 3 steps
+    /// and each lens nets at most +3. No entry merges as it is dealt, and par is the depth (`testLensLevels`), the
+    /// solver's optimum (`testLensParIsTheOptimum`).
+    static let lens: [Level] = [
+        (Layout.tri, [0], "0:+2"),
+        (.tri, [0], "0:+1,1:+3"),
+        (.tri, [0], "1:-2,2:+4,0:+3"),
+        (.tri, [1], "0:+3,1:+2,2:-4,1:+1"),
+        (.eye, [2], "0:-4,2:+2,1:+5,3:-3"),
+        (.eye, [0], "2:+3,0:+2,1:-4,3:+5,0:+1"),
+        (.tri, [0, 1], "2:+4,0:+2,1:+1"),
+        (.quad, [0, 2], "1:+4,0:+2,3:-3,2:+3,1:-5,0:+1"),
+        (.eye, [2, 3], "0:+3,2:+2,1:-4,3:+3,0:+2,2:+1"),
+        (.tri, [2], "0:+3,2:+2,1:-5,0:-2,2:+1,1:+4"),
+        (.quad, [1, 3], "0:+3,1:+3,2:-4,3:+2,0:-3,3:+1,2:+5"),
+        (.eye, [0, 1], "2:+3,0:+2,3:-4,1:+3,2:-2,0:+1,3:+5"),
+        (.hex, [1, 4], "0:+3,1:+2,2:-4,4:+3,6:+2,0:-2,5:+4"),
+        (.hex, [2, 5], "3:-3,2:+2,0:+4,5:+1,6:-3,2:+1,4:+5,5:+2"),
+        (.eye, [2], "1:+4,2:+1,0:-5,3:+3,2:+2,1:-3,0:+4,3:-2"),
+        (.tri, [0], "1:+3,0:+1,2:-4,1:-2,0:+1,2:+5,1:+4,0:+1"),
+        (.hex, [1, 3, 5], "0:+2,1:+3,2:-4,3:+2,4:+3,5:+1,6:-5,0:+4,5:+2"),
+        (.quad, [0, 2], "1:+3,0:+1,3:-4,2:+2,1:+5,0:+2,3:+3,2:+1,1:-4"),
+        (.hex, [0], "1:+3,0:+2,4:-3,2:+4,0:+1,5:-3,3:+2,6:+4"),
+        (.hex, [0, 1, 4], "2:+3,0:+2,1:+3,5:-4,4:+2,3:+4,0:+1,6:-3,2:-2"),
+        (.eye, [0, 3], "2:+4,0:+2,1:-5,3:+2,2:-3,0:+1,1:+4,3:+1,2:+3"),
+        (.hex, [0, 2, 5], "1:+3,0:+1,2:+2,3:-4,6:+5,5:+3,4:-3,0:+2,1:-3,2:+1"),
+        (.hex, [0], "3:+4,0:+1,6:-3,1:+5,0:+1,2:-4,4:+3,0:+1,5:-5,3:+2"),
+        (.eye, [2, 3], "0:+4,2:+2,1:-3,3:+1,0:-4,3:+2,1:+5,2:+1,0:+3,1:-2"),
+        (.hex, [0, 1, 3, 5], "2:+3,0:+1,1:+2,4:-4,3:+3,6:+3,0:+1,5:+2,2:-5,1:+1,4:+4,0:+1"),
+    ].enumerated().map { i, row in
+        let (layout, slots, scramble): (Layout, [Int], String) = row
+        let lenses = Set(slots)
+        return Level(id: Pack.lens.id(i + 1), pack: .lens, label: String(format: "%02d", i + 1), title: "Panel \(i + 1)",
+                     picture: .halftone, layout: layout, scramble: .parse(scramble, in: layout, lenses: lenses), lenses: lenses)
+    }
+    /// Each problem's par is the prover's optimum (`Solver.escapement`), and its note the stipulation.
+    static let escapement: [Level] = [
+        // The packs mock-up's problem: rod 2 +4, a wait, rod 1 -3. Any other first move's tick pushes on the clock.
+        Level(id: Pack.escapement.id(1), pack: .escapement, label: "01", title: "The clock", note: "Unstir in 3.",
+              layout: .tri, scramble: .parse("0:-1,1:+3,0:-2,2:-4", in: .tri), ratchets: [0],
+              // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
+              demo: .parse("0:-3,1:+2", in: .tri), fixedPar: 3),
+    ]
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
     /// never leaves progress under an id a real level will take.

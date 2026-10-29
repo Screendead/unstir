@@ -95,6 +95,39 @@ for p in isobars ephemeris cords; do
   film "vortex-family-$p" 10 "$tank,fps=3,scale=220:-1,tile=8x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 FINGER=1 PICTURE=$p \
     MOVES=4:-4,4:-4,4:+4,4:+6
 done
+# First Stir 01, the harbour: the opening stirs the wrecked harbour in, then autoplay heals the lighthouse, the boat and
+# the cottage 2.5 s apart. As each heal plays its vignette (a 0.4 s cross-fade in its core), the night winds back a
+# stage: the rain climbs back up its slant and thins, the lightning goes, the sky warms and the moon sinks.
+film firststir-01-solve 25 "$tank,fps=1.5,scale=200:-1,tile=9x4:padding=4" PACK=first-stir LEVEL=1 OPEN=1 AUTOPLAY=1 PACE=2.5
+# The heal ring: a push on the boat's rod (red), turned back (white, nothing plays), then the lighthouse's heal (magenta,
+# its vignette).
+film firststir-01-ring 14 "$tank,fps=2,scale=200:-1,tile=11x2:padding=4" PACK=first-stir LEVEL=1 MOVES=1:+2,1:-2,0:-3 PACE=2.2
 # The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
 # (UNSTIR_SHELFDEMO, through the calls a finger makes).
 film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned
+# Escapement 1: the demonstration a first-time player sees before the first stir (a heal ticks the clock, a wait ticks it
+# again, then the problem winds in), and lines played by a drawn fingertip: won, and lost the moment a slip is let go.
+# A ratchet's move (0:1) is a tap on it.
+film escapement-demo 14 "$tank,fps=3,scale=200:-1,tile=8x6:padding=4" PACK=escapement OPEN=1
+film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
+film escapement-lost 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,1:-3
+# Lens: a launch first bakes the halftone into Caches, which takes 20 s or more in Debug; the films then read it.
+if [[ -z "$pattern" || lens == *$pattern* || "$pattern" == lens* ]]; then
+  xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
+  SIMCTL_CHILD_UNSTIR_PACK=lens xcrun simctl launch "$udid" "$bundle" >/dev/null
+  sleep 35
+fi
+# The rim band on each rod size while it moves, for glitter: a drawn fingertip zooms the lens in a step at a time to +3,
+# twists its neighbour two steps over it and back, zooms it out and heals the neighbour.
+for size in "big tri 0 1" "mid quad 0 1" "small eye 2 0"; do
+  read -r name layout lens twist <<< "$size"
+  film "lens-glitter-$name" 15 "$tank,fps=3,scale=220:-1,tile=9x5:padding=4" PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens \
+    STACK=$twist:+4 FINGER=1 REST=1 MOVES=$lens:+1,$lens:+1,$lens:+1,$twist:+2,$twist:-2,$lens:-3,$twist:-4
+done
+# Two Lens levels solved by a drawn fingertip at par, the order read off the rims: 08 on quad, its lenses on small rods
+# (radius 0.48), and 12 on eye, both big rods (0.58) lenses. A lens's move rides up and down; dealt lenses come out
+# dragging down.
+film lens-08-solve 19 "$tank,fps=1.5,scale=220:-1,tile=7x4:padding=4" PACK=lens LEVEL=8 OWNED=lens FINGER=1 REST=2.5 \
+  MOVES=0:-1,1:+5,2:-3,3:+3,0:-2,1:-4
+film lens-12-solve 21 "$tank,fps=1.5,scale=220:-1,tile=8x4:padding=4" PACK=lens LEVEL=12 OWNED=lens FINGER=1 REST=2.5 \
+  MOVES=3:-5,0:-1,2:+2,1:-3,3:+4,0:-2,2:-3

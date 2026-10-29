@@ -31,7 +31,10 @@ shot() {  # name description KEY=VALUE...
   [[ -n "${pattern:-}" && "$name" != *$pattern* ]] && return
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   env ${vars[@]+"${vars[@]}"} xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
-  sleep "${hold:-$settle}"
+  local wait=${hold:-$settle}
+  # Lens's halftone bakes for 20 s or more the first time a Debug install draws it; the shots after read it from Caches.
+  if [[ " $* " == *" PACK=lens "* && -z "${baked:-}" ]]; then wait=30; baked=1; fi
+  sleep "$wait"
   settle=3
   xcrun simctl io "$udid" screenshot "shots/$name.png" >/dev/null 2>&1
   echo "shot $name"
@@ -127,8 +130,10 @@ shot result "Level 05 result card after a harness solve through the real commit 
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
 shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
-shot tier-up-locked "The same with maelstrom still closed: the button dimmed with a lock, saying par every vortex level opens it." \
+shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying par every vortex level opens it; it opens the menu on maelstrom's gate." \
   SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
+shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over)." \
+  TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:000100000010000000000200000
 shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels." \
   SCREEN=result MODE=daily
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
@@ -306,10 +311,70 @@ shot swirl-tri "Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3." LAYOUT=triS
 shot swirl-eye "Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3." LAYOUT=eyeSwirl STACK=0:+3,4:+2,2:-4,4:-3 SWIRLED=1 CLOCK=3
 shot swirl-pent "Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3." LAYOUT=pentSwirl STACK=0:+3,5:+2,2:-4,5:-3 SWIRLED=1 CLOCK=3
 shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl STACK=1:+3,7:+2,4:-4,7:-3 SWIRLED=1 CLOCK=3
+# Lens: rod 0 of tri is a lens on the halftone panel.
+hold=5 shot lens-plus "Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies." \
+  PACK=lens LEVEL=1 STACK=0:+3
+hold=5 shot lens-minus "Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim." PACK=lens LEVEL=1 STACK=0:-2
+for n in $(seq -w 1 25); do
+  hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens
+done
+hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 STACK=1:+2,0:+2
+hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 STACK=0:+2,1:+2
+hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger." \
+  PACK=lens LEVEL=1 LIVE=0:+1.4 TOUCH=0,-0.42
+# The rim band at each dealt step on each rod size, for glitter: tri's big rod 0 (0.58), quad's rod 0 (0.48) and eye's
+# small top rod 2 (0.44), each beside a neighbour that overlaps it. Still, the lens held half a step short, and the
+# neighbour held mid-twist over the lens.
+for size in "big tri 0 1 0,-0.42" "mid quad 0 1 -0.35,-0.35" "small eye 2 0 0,-0.56"; do
+  read -r name layout lens twist touch <<< "$size"
+  for n in 1 2 3; do
+    hold=5 shot "lens-glitter-$name-$n" "Lens on $layout rod $lens at +$n, still." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+$n
+    below=$( ((n > 1)) && echo "$lens:+$((n - 1))" || true )
+    hold=5 shot "lens-glitter-$name-$n-drag" "Lens on $layout rod $lens held at +$((n - 1)).5, mid-drag up." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$below LIVE=$lens:+0.5 TOUCH=$touch
+    hold=5 shot "lens-glitter-$name-$n-twist" "Lens on $layout rod $lens at +$n, rod $twist held 1.5 steps into a twist over it." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+$n LIVE=$twist:+1.5
+  done
+  # A flip book at the screen's own pixels, for glitter in motion (a film records at half size): the lens dragged from
+  # +2 to +3, then the neighbour twisted a step over it at +3, a tenth of a step a frame.
+  for i in 00 01 02 03 04 05 06 07 08 09 10; do
+    f=$((10#$i / 10)).$((10#$i % 10))
+    hold=3 shot "lens-flip-$name-zoom-$i" "Lens on $layout rod $lens held at +2 and $f steps." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+2 LIVE=$lens:+$f
+    hold=3 shot "lens-flip-$name-twist-$i" "Lens on $layout rod $lens at +3, rod $twist held $f steps into a twist." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+3 LIVE=$twist:+$f
+  done
+  # The order read at x2: the lens at +2 newest (its rim whole) or under a twist of 1 or 3 steps (its rim dragged).
+  for k in 1 3; do
+    hold=5 shot "lens-order-$name-over-$k" "Lens on $layout rod $lens, $twist:+$k,$lens:+2: the lens newest." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$twist:+$k,$lens:+2
+    hold=5 shot "lens-order-$name-under-$k" "Lens on $layout rod $lens, $lens:+2,$twist:+$k: the twist newest." \
+      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+2,$twist:+$k
+  done
+done
 # App-icon candidates, each a 1024-pixel square centred on the screen; scripts/icon.sh crops them and lays out the sheet.
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# First Stir 01, the harbour: 2:+5,1:-4,0:+3 on tri, a vignette in each rod's core (the lighthouse 0, the boat 1, the
+# cottage 2), the night winding back a stage with each. UNSTIR_BARE draws the picture unstirred, so the art shows as the
+# stack has played it. The last heal solves the tank, so a wave past the rim keeps the card away.
+fs="PACK=first-stir LEVEL=1"
+shot firststir-01 "First Stir 01 as dealt: the wrecked harbour in the storm, every core turned, the caption under the tank." $fs
+shot firststir-01-bare-0 "First Stir 01 drawn unstirred with every vignette held back: lantern smashed, boat capsized, door flung open, a lantern dropped; the storm at its height." \
+  $fs BARE=1
+shot firststir-01-bare-1 "First Stir 01 drawn unstirred after the lighthouse's heal: the lantern lit, no lightning, rain thinner, the moon lower." \
+  $fs BARE=1 STACK=2:+5,1:-4
+shot firststir-01-bare-2 "First Stir 01 drawn unstirred after the boat's heal: the boat moored upright, a third of the rain left, the sky warming." \
+  $fs BARE=1 STACK=2:+5
+shot firststir-01-bare-3 "First Stir 01 drawn unstirred after the last heal: someone in the lit doorway, no rain, an afterglow, the moon low over the roofs." \
+  $fs BARE=1 STACK="" WAVE=2
+shot firststir-01-healed-1 "First Stir 01 after the first heal (0:-3): the lantern lit in a still core, the other two cores still turned." \
+  $fs TURNED=0:-3
+shot firststir-01-healed-2 "First Stir 01 after the second heal (1:+4): the boat upright, the cottage's core still turned." \
+  $fs STACK=2:+5,1:-4 TURNED=1:+4
+shot firststir-01-solved "First Stir 01 solved (2:-5) on the calm evening, the card held off." $fs STACK=2:+5 TURNED=2:-5 WAVE=2
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in, one stir left. Prices are the StoreKit configuration's, as a US storefront shows them.
 shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
@@ -337,7 +402,18 @@ shot card-lens-ax "Lens's card at the largest accessibility text size, its facts
 
 # The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
-shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends." CONSENT=sends
+shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again." CONSENT=sends
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
 shot consent-settings-on "The gear's sheet: the analytics switch on, and send log." CONSENT=yes SETTINGS=1
 shot consent-settings-off "The gear's sheet: the analytics switch off, and send log." CONSENT=no SETTINGS=1
+
+# Escapement 1, the packs mock-up's problem: tri 0:-1,1:+3,0:-2,2:-4, rod 0 the clock with a ratchet for a knob, unstirred
+# in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
+shot escapement-1 "Escapement 1: rod 0 the clock, its disc dashed vermilion at all times, its ratchet read against the sub-dial; par 3." PACK=escapement
+shot escapement-1-ticked "Escapement 1 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on." \
+  PACK=escapement PLAYED=2:4
+shot escapement-1-lost "Escapement 1, then rod 1 -3: its tick finds no seam and pushes, so the move loses at once: the vermilion +1, lost. stamped by the clock, the card's undo and again." \
+  PACK=escapement PLAYED=2:4,1:-3
+shot escapement-1-stopped "Escapement's clock on 1:+3,0:-1 after a wait: the clock has stopped with rod 1's twist still on the picture, so lost., with no +1." \
+  PACK=escapement STACK=1:+3,0:-1 PLAYED=0:1
+shot escapement-1-won "Escapement 1 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement PLAYED=2:4,0:1,1:-3
