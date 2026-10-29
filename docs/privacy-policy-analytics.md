@@ -1,8 +1,8 @@
 # Unstir privacy policy (with analytics)
 
 > **Draft, 2026-10-29, not for publishing yet.** The policy for a build with analytics, as the `keep-analytics` branch
-> builds it. The policy for v1 without analytics is `docs/privacy-policy.md`; publish only the one that matches the
-> build that ships, at the address the app's settings row opens. Written from the code and from the round 10 legal
+> builds it, whose settings row and analytics question link this file. The policy for v1 without analytics is
+> `docs/privacy-policy.md`; App Store Connect's privacy policy URL takes the one that matches the build that ships. Written from the code and from the round 10 legal
 > research (primary sources, not legal advice). `{{CONTACT_ADDRESS}}` is filled in at publishing, never in this public
 > repo. Remove this box before publishing.
 >
