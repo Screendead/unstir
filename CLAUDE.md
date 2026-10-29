@@ -369,12 +369,18 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
   always, past it only a pack StoreKit grants, with `Best.unlocked` and the harness counted outside Release only.
+  First Stir is out of v1, to be reworked (Jack's call FS17): `Pack.ships` is false for it, and `Pack.sold()`, the
+  packs a build sells, leaves it out in Release only, so its code, levels, ids and tests stay and Debug and the harness
+  (`UNSTIR_PACK=first-stir`) still reach it. In Release its every level, taste and all, is `.withheld`, which opens
+  neither the level (`Store.opens`, checked by `RootView.show`) nor its card (nor `UNSTIR_CARD`), and `Pack.sold()`
+  sets what StoreKit is asked for (`Pack.productIDs`), what Complete grants and needs, Complete's cover, words
+  (`Pack.named`), and clip, and analytics' snapshot (`testFirstStirIsOutOfV1`).
   `Store` is StoreKit 2 with no server and nothing stored: entitlements from `Transaction.currentEntitlements` at
   launch, a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
-  card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
+  card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and Complete as family-shareable non-consumables at
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
   opens without one, and a card with none says "buy" alone.
@@ -470,7 +476,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
   Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
-  (Jack, 2026-10-26, S1), so today First Stir alone (`testFirstStirPlaysInOrderFromTheShelf`); outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
+  (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens alone; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
   (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a dot for its state. `PackCard` grows out
   of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
@@ -493,8 +499,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seam never jumps. First Stir: level 1, the sunrise, healed top first, the time under the tank stepping back with each
   heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
-  no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves. Complete: each one's first beat in turn, a
-  vignette (the sunrise from just after its first heal, which plays nothing, through its second), a zoom and a tick, about 8 s (Jack, CL2). Every reel stays drawn,
+  no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves. Complete (`Clip.cut(of:)`): each sold pack's first beat in turn, a
+  vignette (the sunrise from just after its first heal, which plays nothing, through its second), a zoom and a tick, about 8 s (Jack, CL2);
+  in Release, without First Stir, the zoom and the tick alone. Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a

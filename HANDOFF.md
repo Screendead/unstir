@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-10-27. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-10-29. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -18,7 +18,7 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | Monetisation code | StoreKit 2 for the packs and Complete merged 2026-10-25 (PR #21); the daily share line merged 2026-10-25 (PR #24). Prices are Jack's call (2026-10-25): 2.99 a pack, 5.99 Complete. No ads |
 | Undo bank | Starts at 10 (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10. Built on `help` (2026-09-29, `Best.refill`; merged 2026-09-29, PR #9): the first opening of a level other than the sandbox on a local calendar day later than the last refill's adds 2, up to 10, and a "+2" shows over the undo count once the level's opening ends or is skipped. A fresh install records its first day without a refill; a clock moved back never refills. Jack (2026-09-29): setting the phone's date mustn't game the refill. Closed on `help` (2026-09-29, `Best.trustedNow`): within one boot the day comes from the last time it vouched for plus the uptime since (`CLOCK_MONOTONIC_RAW`, which counts sleep and can't be set), so a clock set ahead refills nothing until real time reaches the next day, give or take 5 min, and the log says `undo refill held: clock ahead Xh`. The anchor follows the wall clock no further ahead than drift explains (a second plus 100 ppm of the uptime since), so creeping the clock ahead a few minutes at a time gains about a second an opening; review found the first version let each step under 5 min carry the anchor along, a day ahead in about 290 steps (fixed 2026-09-29). Still open: a restart between date changes still borrows a refill, since a new boot has nothing to check against. A trusted network clock would close that; Claude recommends against it (a server, and a refill that waits on the network, to guard 2 undos a day). Unverified whether it is the only way: `kern.monotonicclock` is a candidate, a clock XNU's `clock.c` says nothing can set, and on a Mac it runs on across restarts. Unchecked on iOS: whether the app may read it, and whether setting the date moves it. The launch logs it next to the uptime (`monotonic clock Ns` or `unread`), so launches either side of a restart and of a date change answer both; if it holds, reckoning from it would close the restart hole. Unverified: whether iOS lets the app read the boot session (`kern.bootsessionuuid`); an app in macOS's App Sandbox reads it, but `container.sb` leaves it off its sysctl allow list, and iOS's profile is unpublished. The phone's log answers it at launch (`boot session read` or `unread`). Unread, a jump of at least the phone's uptime at the last level opened passes as a possible restart, and a believed jump anchors at the uptime then; so on a phone up less than a day, as after any restart, steps of a day get through one after another until a level opens with the phone up longer than the step. A genuine forward correction of more than 5 min within a boot (a phone that ran slow, set right) is held too, so its refill day turns late by that much until the next restart; one under 5 min is believed, and the anchor takes it in a few seconds a day. A new boot whose clock reads more than 5 min before the anchor's time, as after a clock reset, is believed but leaves the anchor, so setting the clock right later in that boot still counts as a new boot (review found the first version held every refill until the next restart there; fixed 2026-09-29). Not covered: a clock behind at the first opening with no anchor stored (a fresh install, or the first on this build), then set right, makes refills late by that much until a restart. The privacy manifest is written (`Sources/PrivacyInfo.xcprivacy`, merged 2026-10-25, PR #20): UserDefaults with CA92.1 and system boot time with 35F9.1. Apple's required-reason pages (developer.apple.com, "Describing use of required reason API" and the `NSPrivacyAccessedAPIType` page, read 2026-10-25) list `systemUptime` and `mach_absolute_time()` under boot time and no `clock_gettime`-family call or sysctl, so `clock_gettime_nsec_np`, `kern.bootsessionuuid` and `kern.monotonicclock_usecs` are not on the list; 35F9.1 is declared anyway, inferred as harmless and as the nearest fit, since the uptime clock measures elapsed time and never leaves the device |
 | TestFlight | Prep merged 2026-10-25 (PR #23): version 1.0 (1), the export-compliance key, an asset catalog. The icon is candidate 1, the neon grid (Jack, 2026-10-25), already the placeholder in the catalog. No archive script until Jack's developer account is in Xcode |
-| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s, #23 5m36s and #26 5m11s. Jack's calls (2026-10-25): watch it, then cache the build, and the line moves to 7 minutes. The cache merged 2026-10-25 (PR #29): `test.yml` keeps the StoreKit test build (`build/store`) between runs, keyed on the Xcode build and the sources, and stamps each file with a time drawn from its content, so a hit compiles nothing. It saves about 30 s, but the build is not where CI's time goes: the job ran 5m13s cold and 5m18s warm, as the simulator's boot, install and tests vary by about 90 s from run to run. A warm-up build on each merge to `master` (PR #31) was closed on Jack's call (2026-10-25, round 6): the compile runs inside the simulator's boot, so it saves nothing |
+| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s, #23 5m36s and #26 5m11s. Jack's calls (2026-10-25): watch it, then cache the build, and the line moves to 7 minutes. The cache merged 2026-10-25 (PR #29): `test.yml` keeps the StoreKit test build (`build/store`) between runs, keyed on the Xcode build and the sources, and stamps each file with a time drawn from its content, so a hit compiles nothing. It saves about 30 s, but the build is not where CI's time goes: the job ran 5m13s cold and 5m18s warm, as the simulator's boot, install and tests vary by about 90 s from run to run. A warm-up build on each merge to `master` (PR #31) was closed on Jack's call (2026-10-25, round 6): the compile runs inside the simulator's boot, so it saves nothing. Jack's call CI1 = A (2026-10-28, round 10): keep and watch, noting each run's time; if two runs in a row pass 7 minutes, build the split (the core tests on PRs, the StoreKit tests and the long pack suites nightly on `master`; a break could show a night late) |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
 | Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below; vortex, the swirl tier between whirlpool and maelstrom (Jack, 2026-10-24), with 27 provisional levels, merged 2026-10-25 (PR #22); Jack's calls on it (2026-10-25) are in "Vortex (provisional, 2026-10-24)"; vortex's own pictures (isobars, ephemeris, cords) merged 2026-10-25 (PR #28), and breath as the swirl's cue merged 2026-10-25 (PR #30); the swirl shears to its centre (W3, Jack 2026-10-25), on `swirl-map` |
 | Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
@@ -27,6 +27,9 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | README | Merged 2026-09-28 (PR #3), with the four suggested images (Jack's pick); the rename updated it to plughole, whirlpool and maelstrom (PR #7); see below |
 | Copyright headers | Decided (Jack, 2026-09-28): every code file names Jack in full as the copyright holder, 2026. His name is public already (the commit email's domain). Merged 2026-09-28 (PR #3); see below |
 | Sound | Jack wants a bespoke soundscape, music and effects (2026-09-28). Tools agreed (Jack, 2026-09-28): everything synthesized from scratch in Csound (Homebrew), with no samples or stock loops; MuseScore 4 only if a written tune is wanted later, with a Muse Sounds Pro licence if its audio ships; GarageBand has no scripting and Audacity adds nothing. Claude can't hear, so Jack listens at the end of every round. Two sketches (Python): "glass and water" and "neon hum". Jack played both on the phone in a prototype (branch `sound`, uncommitted) and chose **glass** (2026-09-28), asking for quieter effects against the music, neon's low synth hum brought in, music on the menu, and a sound for every button. Round 2 is built (2026-09-29): Csound sources in `sound-src/`, rendered and measured by `scripts/sounds.sh`; a detuned saw hum in D under every bed; a heal about 8 LU over its bed (the phone-speaker model says 10–12); beds for the menu and each tier, crossfading over 1.5 s between screens and stepping aside while another app plays music; tap, tier-switch, undo and reset sounds. Round 2 on today's game (2026-10-27, branch `sound-r2`, PR #56): `sound` merged with master and passing every test; the heal's note now counts moves that pop one of the scramble's entries, as endless's brim does; vortex has its own bed (open fifths and a ninth, high sparse pings, water circling three times a loop); every button added since September taps (the consent card, the settings sheet, the pack cards, the dock, the tier-up); a push that fills the brim sounds only as the spill. Jack's call (2026-10-28, SN1 = A): "In, with early undo and step-back heals. Keep the vortex bed." So the undo is the early one (its body peaks about 0.2 s after the press, against September's 0.5 s), an undo steps the heal notes back, and the vortex bed stays; the three temporary switches under the menu's list (`sound`, `undo`, `heal undo`) and the first sketch (`sound-src/sketch.py`, `scripts/sounds.sh sketch`) are gone, applied on PR #56. `scripts/sounds.sh listen <dir>` writes every sound and bed to m4a for a listen off the phone. The sounds add about 9 MB of CAF and AAC to git (rendered from `sound-src/`, so they could be rendered at build time instead, at the cost of Csound in CI). Endless has no par now, so the old question of a solve one over par is gone. Also for Jack, smaller: the detent's tick sounds during a drag (it echoes the haptic and the dashes; the rule as written says nothing sounds then), so keep it or drop it; in the free tiers cancelling the player's own push still shows the magenta ring and heavy tap but no longer plays a heal, so the ring could follow endless's rule too; a purchase landing plays nothing (the buy buttons tap). The share links tap through a simultaneous gesture, unheard and untapped on a device. Rule: a sound never tells the player anything the picture doesn't, so nothing sounds during a drag and a heal's pitch follows heals done, never heals left. Claude recommends building it in after the new level set and before TestFlight; not decided |
+| Merged 2026-10-28 and 29 | PRs #55 (the consent link opens and closes its list), #57 (a locked next tier's up-a-notch button opens its gate), #53 (Lens, lenses on rods of every size) and #58 (drag guard) on 2026-10-28; #50 (plughole eased), #56 (sound round 2), #51 (live pack clips) and #54 (First Stir's 25 scenes, FS17 C) on 2026-10-29. Jack's calls on them are in rounds 10 and 11 under "Jack's calls on the pitch" |
+| Open PRs and branches (2026-10-29) | PR #52 `escapement-book` (the 30 problems, the tick budget and the flip counter; J6 = B applied; waits on Jack's play of the book and ES2). Draft PR #59 `prism` (the Prism prototype, tray 1). PR #60 `v1-without-firststir` (v1 without First Stir, FS17 C). Local, no PR: `v1-no-analytics` and `keep-analytics` (the two sides of AN1), `store-page` (ST1 to ST7 = A, two drafts of the privacy policy) |
+| Round 12 (open, 2026-10-29) | Recommendations, not decisions: AN1 analytics in v1 (rec A, none), EU1 selling in the EU at launch (rec A), PK1 Prism as First Stir's replacement (rec A, capped at depth 8), ES2 Escapement's budget display (rec A, as built). LG3 (round 11) is unanswered. The legal summary is kept outside the repo. See round 12 under "Jack's calls on the pitch" |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
@@ -215,7 +218,7 @@ Jack answered on the pitch page. These are his calls. Everything else in this se
 
 | Call | Jack's answer |
 |---|---|
-| 1. v1's packs | **First Stir, Lens and Escapement** (option A). "I LOVE the look of Lens. Escapement is a great idea, if implemented properly." Superseded for First Stir by FS17 (2026-10-29): First Stir leaves v1; see to-do 43 |
+| 1. v1's packs | **First Stir, Lens and Escapement** (option A). "I LOVE the look of Lens. Escapement is a great idea, if implemented properly." Superseded for First Stir by FS17 (2026-10-29): First Stir leaves v1; see to-do 43; the third pack is open, Prism recommended (PK1, round 12) |
 | 2. Orrery: free rung or pack | **Not made.** "You didn't show me Orrery, so I can't make a call." A mock-up of Orrery, and Orrery beside maelstrom, goes to him next |
 | 3. First Stir's art | **Claude draws all 25 scenes** (option B): "I am not hiring an illustrator". So First Stir's long pole is Claude's line art, judged by Jack scene by scene, and the go/no-go film decides whether code-drawn figures carry it |
 | 4. What v1 sells | **Packs and a Complete bundle** (option A); Unstir+ dropped, endless stays free. "not just one I think will sell, but one I would be proud and unashamed to put my brand behind" |
@@ -307,6 +310,62 @@ Round 6 (2026-10-25, five calls before TestFlight, one at a time on their own pa
 | EU consent for anonymous counts | **Ask once** (Claude's recommendation): one plain Yes or No at first launch, the same switch in settings, nothing sent until Yes. Consent satisfies ePrivacy article 5(3) under any reading; whether anonymous counts need it at all is unconfirmed, and no lawyer was asked | A first-launch question and a settings switch, stored; the analytics layer sends nothing while it is off |
 | How to read testers' play | **An analytics library now, plus a send-log button** (option D, Claude's revised recommendation after Jack asked what a log upload alone adds if a library comes anyway). Counts measure day-2 return across every tester who says yes and test the library before launch; a log shows a stuck tester's every touch. Which library: researched and pitched next | The library behind the consent switch, with events for return, progress, stuck points, shelf and card taps, free-taste completion and sandbox purchases; a "Send log" button in settings that shares `Library/unstir-log.txt` through the share sheet (no server); the privacy manifest and label updated for the library |
 | First Stir's opening | **The wrecked harbour, as built** (Claude's recommendation): the player starts in the storm and earns the calm; opening on the calm evening would give away the end | None now: `lab-firststir` already deals the held-back picture. The pack's build keeps it |
+Round 10 (2026-10-28, on the review page of PRs #50 to #58, Escapement's book, First Stir's scenes and the store page):
+
+| Call | Jack's answer |
+|---|---|
+| PH1. Plughole 19-27 eased (PR #50) | **No option chosen on the page.** Jack: "Why are we doing this at all? Were they too hard? What's the rationale?" The rationale was that pent and hex were the steep part of plughole. Merged 2026-10-29 as option A (pent and hex both eased); see "Plughole gets easier" |
+| SN1. Sound round 2 (PR #56) | **A:** in, with the early undo and step-back heals; keep the vortex bed. Merged 2026-10-29 |
+| TU1. A locked next tier's up-a-notch button | **C, the gate:** the tap shows what is left to do, as the menu's gate page does. Merged 2026-10-28 (PR #57) |
+| LN1. Lens's rod sizes | **A:** lenses on rods of every size. Merged 2026-10-28 (PR #53); `lens-levels-big` stays as the alternative |
+| LN2. Cap on a dealt lens | **A:** keep +3. `lens-levels-cap2` stays as the fallback if the band's shimmer bothers him on the phone |
+| J6. The book's last problems | **B:** end on 29, the two-clock hex; the three-clock hex becomes 29. Applied on PR #52 |
+| ES1. What the tank shows when the last clock stops with twists left | **B, a count of twists left,** with a note: "3 left" doesn't read at once as three twists left, which can't be undone at par with the ticking escapement in play; workshop it. Reworked in round 11 (EL1), and then replaced by the tick budget |
+| EB1. Play Escapement's 30 problems on the phone | **B, change some.** Notes: on problem 7 a wait needs a tap on the escapement's centre, and a tap on the circle instead reads as an impossible move (it shakes and refuses), so players may think it can't be moved by tapping; he asked for a better way to show the centre is the target (round 11, ET1). On problem 16 it is not clear at a glance that an escapement moves only so many times, that it then stops, and that it has stopped; that should be clear upfront so players can plan (round 11, EB2). "Problem 27 is naaasty! But I love it!" |
+| CL1. Lens's card clip | **A:** the zoom and the read |
+| CL2. Complete's clip | **B:** a cut of the three, a vignette, a zoom and a tick, about 8 s. PR #51 merged 2026-10-29 |
+| FS10. First Stir's 25 scenes | **A:** approve the art. Superseded in effect by FS17 (round 11): First Stir leaves v1 |
+| FS11. The ending film | **No option chosen.** Jack: "There are points where the scene changes very briefly then switches back to what it was before - reads as something for gameplay, rather than the final rendered scene. They should either be longer changes, clearer in what they're communicating, or they shouldn't change like that at all." Moot for v1 with First Stir out |
+| FS12. The night's clock and sky | **A:** all as built |
+| FS13. Chapters 1 and 2's departures from the outline | **A:** all as built |
+| FS14. Chapters 3 to 5's departures from the outline | **A:** all as built |
+| FS15. Figures on small rods | **A:** judge them on the phone first; change nothing yet |
+| FS16. Fold Pen into Brush | **A:** one drawing kit |
+| ST1. The store name | **A:** Unstir |
+| ST2. The subtitle | **A:** "Unwind the stirred picture" |
+| ST3. The promotional text | **A:** the one that says what is free and that packs exist |
+| ST4. Screenshots | **A:** seven free-game shots, then one per pack |
+| ST5. Preview video | **A:** one 25 s preview, free game only |
+| ST6. Family Sharing | **A:** yes, on for the packs and Complete, and the description says so |
+| ST7. Store defaults (keywords, category, policy and support page, the send-log disclosure) | **A:** all fine. The contact address for privacy and support: kept privately |
+| ST8. Questions for a lawyer | **No option chosen.** Jack will not ask a lawyer: Claude finds the answers itself and keeps looking until sure. He is UK-based, so UK law matters most, but the app should release worldwide if possible. The findings are in a legal summary kept outside the repo and became round 11's LG1 to LG3 |
+| AN1. The consent link | **A:** a toggle, "Hide the list" when open. Merged 2026-10-28 (PR #55) |
+| AN2. Yes, No, Yes counting a second install | **A:** accept the double count |
+| CI1. CI near the 7-minute line | **A:** keep and watch |
+| DO1. For Jack to do | **B, partly:** he updates Xcode (a macOS upgrade and a restart, so Claude stops and waits); the failed-purchase message issue is fixed; he has played Lens and Escapement and not First Stir |
+
+Round 11 (2026-10-29, on the review page after round 10's notes):
+
+| Call | Jack's answer |
+|---|---|
+| ET1. Learning that a wait is a tap on the clock's centre | **B:** a plate on the hub, and a miss points to it. Built on PR #52 |
+| EB2. Showing how many ticks a clock has left and that it has stopped | **B,** the countdown numeral in the hub, with a note: "to keep with the clock theme, can you make the numbers count down like a flip clock? have start flipping when the escapement starts moving". Built on PR #52 as a flip counter |
+| EL1. Why a tank is lost when the last clock stops with twists left | **No option chosen; a note that replaces round 9's E1/E2 loss rule:** "better idea: "par" is not a thing for escapement. instead, you get a tick budget, and each individual escapement decreases it. a puzzle becomes impossible to solve without an undo if you make a wrong move, rather than you losing instantly. the remaining ticks are always shown clearly. if a tank has more than one escapement, each one decrements the budget when it moves, so when they all move in sequence the budget goes down by for example 3 even though only one move was made by the player. make sense?" Built on PR #52 (tick budget, one flip counter) |
+| EL2. A reason for a tank lost to a pushing tick | **"See answer to call 3"** (EL1): the budget replaces the instant loss |
+| FS17. First Stir | **C:** the clearer ending (the fade fix, the longer night and a caption per vignette, merged in #54). With it, Jack's note: First Stir leaves v1 and is reworked later, because the art's constraints made the story hard to read from the illustrations alone; something else with at least one new mechanic takes its place as the third paid pack. #54 merged 2026-10-29; PR #60 is v1 without it |
+| LG1. The EU and analytics | **C, conditionally:** "C if those hurdles can't be overcome", meaning no EU release if the EU representative and trader-page hurdles can't be cleared. He asked how solo developers handle the EU representative; the answer fed round 12's EU1 |
+| LG2. Children and the consent card | **A:** an age bracket before the card, the threshold read from one setting |
+| LG3. The rest of the legal work, required either way | **No answer.** Jack objected to the UK data-protection registration fee. To come back to him |
+
+Round 12 (open, 2026-10-29): recommendations for Jack, not decisions.
+
+| Call | Options and Claude's recommendation |
+|---|---|
+| AN1. Analytics in v1 | **Recommended A:** none; App Store Connect's numbers only, and analytics can return in an update. B: keep it, outside the EU, with the age question. Branches `v1-no-analytics` and `keep-analytics` hold each side |
+| EU1. Selling in the EU at launch | **Recommended A:** a business address service and number for the trader details the Digital Services Act asks of an EU seller, about 130 to 180 pounds a year. B: not at launch, and add the EU when sales pay for it |
+| PK1. Prism as First Stir's replacement | **Recommended A:** Prism, capped at depth 8, since depth 9 reads too busy; roughly 9 to 13 days to ship. B: something else, with a different mechanic prototyped the same way. Draft PR #59 |
+| ES2. Escapement's budget display | **Recommended A:** one flip counter in the header, as built. B: also each clock's count in its hub, which disagrees with the header after a wrong move |
+
 **The charybdis rule (Jack's call, 2026-10-25, from V4).** Jack's words, and only these: "The tank edge being dragged
 should always swirl the tank. It'd make the locked rods harder because turning the tank has a side effect. I feel
 strongly about this." That is the call.
@@ -342,7 +401,8 @@ stir), never merged. To make it a tier:
 7. Tests, shots and films; the tier strip takes a fourth name.
 
 So the catalogue is five packs: First Stir, Lens and Escapement at v1, then Prism, then Music Box if it passes its ear
-test.
+test. **Since FS17 (2026-10-29): First Stir is out of v1, to be reworked; v1's third pack, which Jack wants to bring at
+least one new mechanic, is open, with Prism being prototyped for it.**
 
 #### The catalogue
 
@@ -486,6 +546,9 @@ must time your heals so the clock always finds its seam.
   `Grab` case (`.seized` holds nothing). E's scramble entries are negative, and after every move E ticks +1 through
   the ordinary `Array.commit`, merging into E's newest entry when everything above it commutes and popping at 0. A move
   is the net of one working knob's open stir, or a wait (a tap on the ratchet).
+  - *Superseded again (Jack's round 11 call EL1, built on PR #52):* par is not a thing for Escapement. A tank has a tick
+    budget, and each escapement's tick takes one off it, so several clocks cost several ticks for one move; the
+    budget is always shown. A wrong move leaves the puzzle impossible without an undo, instead of losing at once.
   - *Superseded (Jack's round 9 call E1, built in PR #46):* every let-go is a move of its own and final, its tick
     landing with it and a losing tick showing "lost." at once; nothing lifts out or seals. The timing below is the
     lab's, kept for the record.
@@ -810,6 +873,8 @@ names and product ids, and Complete's promise to older owners.
    capped at +2 a lens for the glitter (`lens-levels-cap2`). Recommended: A, with quad's three rows (8, 11, 18) moved to
    hex or eye if quad's order fails on the phone, and the cap left at +3 until the phone shows whether the band's
    shimmer bothers a player. With 25 levels the Lens cover shows in Release (S1).
+   Jack's calls (2026-10-28, round 10): LN1 = A, lenses on rods of every size, merged 2026-10-28 (PR #53); LN2 = A, the
+   cap stays +3 (`lens-levels-cap2` is the fallback if the band's shimmer bothers him on the phone).
 7. Escapement go/no-go: the mock-up's problem in the lab, played on the phone, for whether a tick landing on lift and
    lifting out on a re-grab reads, whether sealing on the next commit feels fair, and whether "lost." does.
    Built 2026-10-25; Jack has called it (round 3, E1, below): `lab-escapement` (local). Claude's verdict: go with changes. Then open:
@@ -979,6 +1044,7 @@ names and product ids, and Complete's promise to older owners.
     one move (two under `UNSTIR_SLOW_TESTS`, minutes). Checked on the 30 book problems too (2026-10-25,
     `ESC_PUSHED=1 scripts/escapement.sh`): playing on past a pushed tick, no line of whole heals and waits reaches
     par.
+    Superseded by Jack's round 11 call EL1 (to-do 39): the instant loss gives way to a tick budget.
 36. Escapement: the pruned prover (`exhaustive` with a forced tick after every move and a line dropped where a tick
     pushes), a meet-in-the-middle fallback for hex, and an escapement mode in solve.sh.
     Two provers now. The book's, `scripts/escapement.sh` on `Array.commit` (from `escapement-design`, PR #43), has a
@@ -1017,6 +1083,15 @@ names and product ids, and Complete's promise to older owners.
    - *E3 = A:* searched problems are fine once Jack has played them on the phone and vetoed any that feel random;
      replacements come from the same search (J9 A). He also judges the order of the last two then (J6).
    Still open: J3 and J5 to J8. Left: Jack's play of the book on the phone.
+   Jack's calls (2026-10-28, round 10): J6 = B, the book ends on the two-clock hex and the three-clock hex is 29; ES1 =
+   B, a count of twists left, which he found unclear and asked to be workshopped; EB1 = B, change some (a wait's tap
+   target on problem 7, and on problem 16 how many ticks are left and that a clock has stopped; problem 27 "naaasty!
+   But I love it!"). Round 11 (2026-10-29): ET1 = B (a plate on the hub, a miss points to it); EB2 = B as a flip
+   counter that starts flipping when the escapement starts moving; EL1's note replaces the E1/E2 loss rule: no par,
+   a tick budget that every escapement's tick decrements (several clocks moving in sequence take several off for one
+   move), always shown, and a wrong move leaves the puzzle unsolvable without an undo instead of losing at once;
+   EL2 follows it. Built on PR #52 (`escapement-book`, open): the budget, the flip counter, the plate and J6. Open
+   (round 12, ES2): one flip counter in the header (recommended, as built), or also each clock's count in its hub.
    E1 and E2 are built in the app and merged 2026-10-27 (PR #46, to-dos 34 to 36), with the D1 defaults that touch
    Escapement kept as built (D1 = A, round 9).
    All 30 built on `escapement-book` (2026-10-27, round 10), waiting on Jack's play of the book on the phone (E3): the
@@ -1087,9 +1162,19 @@ names and product ids, and Complete's promise to older owners.
     only because I think the constraints of the artwork have resulted in the story becoming difficult to read from the
     illustrations alone. I think we should leave First Stir out of v1 of the app, and rework it significantly later.
     Something else needs to take its place as the third paid level pack with at least one new mechanic." The work below
-    stays on `firststir-content` (PR #54) for that rework; the third pack's place is open.
+    stays on `firststir-content` (PR #54, merged 2026-10-29) for that rework; the third pack's place is open: PK1 (round 12) recommends Prism.
+    Jack's calls (2026-10-28, round 10), made before FS17: FS10 = A (approve the art), FS12, FS13 and FS14 = A (the
+    night's clock and sky, and the departures from the outline, all as built), FS15 = A (judge small figures on the
+    phone first), FS16 = A (fold Pen into Brush), and a note on FS11 (the ending film, see to-do 44). They stand for the
+    rework.
+    Built 2026-10-29 on `v1-without-firststir` (PR #60, merged 2026-10-29): `Pack.ships`/`Pack.sold()` keep First
+    Stir off a Release build (no shelf cover, no card, its levels `.withheld`, Complete naming, granting, drawing and
+    clipping Lens and Escapement only, the analytics snapshot without it) while Debug and the harness keep all of it.
+    The StoreKit test file keeps First Stir's product, since `StoreTests` run outside Release, where it is still sold.
+    Release-build shots `round12/fs/release-*.png` in the tools folder: the dock shows Lens alone (Escapement has one
+    level, so it waits for levels past its taste, and Complete waits for both).
     All five chapters joined on `firststir-content` (2026-10-27), levels `first-stir-1` to `-25` in the outline's
-    order, with master's Lens and Escapement; First Stir is now on the Release shelf, nothing left to arrive, the taste
+    order, with master's Lens and Escapement; First Stir was on the Release shelf until FS17, nothing left to arrive, the taste
     of 3 then the card (`testFirstStirPlaysInOrderFromTheShelf`). The Flood's and the Storm's `HighStreet` clashed; the
     Storm's is `StreetInRain`. Sheets `round10/firststir/ch1-sheet.png` to `ch5-sheet.png` in the tools folder.
     The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), approved by Jack (2026-10-26, round 9).
@@ -1235,6 +1320,9 @@ names and product ids, and Complete's promise to older owners.
     plays it (as Escapement's demo plays every time). Reduce Motion cuts instead of fading. No motif yet: the sound
     branch is unmerged. Shots `firststir-ending-*`, film `firststir-ending`. Left: the memory and frame pacing of the
     bake (main actor, two scenes at once, at most 2x) measured on the phone.
+    Jack's note (2026-10-28, round 10, FS11): at points a scene changes very briefly and switches back, which reads as
+    gameplay rather than the final scene; those changes should be longer, clearer in what they say, or not happen. Moot
+    for v1 with First Stir out (FS17 C); it belongs to the rework.
 45. Sound: round 2 is in (SN1 = A, 2026-10-28: early undo, step-back heals, the vortex bed; PR #56); sketch each v1 pack's
     layers for his ear (First Stir's felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth
     drops and looping phrase); render the finals in Csound.
@@ -1258,7 +1346,7 @@ names and product ids, and Complete's promise to older owners.
     each vignette playing as its time under the tank steps back (12:30 am to 11:40 pm, scene 16's window, a stand-in
     until the level carries F3's clock). Lens: level 3 as dealt, the lens dragged down and back up, ending on the order
     read. Escapement: problem 1 in three, each tick landing. Complete: an 8 s cut, a vignette, a zoom and a tick. The dock keeps its covers.
-    Jack's calls (round 11): CL1 A, Lens plays the zoom and the read; CL2 B, Complete plays each one's first beat in
+    Merged 2026-10-29 (PR #51). Jack's calls (2026-10-28, round 10): CL1 A, Lens plays the zoom and the read; CL2 B, Complete plays each one's first beat in
     turn (a vignette, a zoom, a tick, about 8 s). The other takes are gone (set aside: Lens's level 2 solved, and
     Complete's three whole, about 21 s, too long for a card). Films `clip-*`, `shelf-dock`. Follow-up: on
     `firststir-content` level 1 becomes Sunrise on `SceneLayer` with its own clock, so the First Stir reel must then
@@ -1273,9 +1361,18 @@ names and product ids, and Complete's promise to older owners.
    With analytics (branch `analytics`) the manifest also declares product interaction, coarse location and purchase
    history (the `purchased` event and the snapshot's packs owned), each unlinked, not tracking, for analytics; the
    App Store privacy label must say the same.
-53. The age-rating questionnaire.
+53. The age-rating questionnaire. Jack's call LG2 = A (2026-10-29, round 11): if analytics ships, an age bracket comes before
+    the consent card, the threshold read from one setting; round 12's AN1 recommends no analytics in v1, which would make it moot.
 54. The store page: screenshots and a preview leading with the free game, then the packs, each pack labelled as a paid
     add-on, captioned for muted playback.
+   Jack's calls (2026-10-28, round 10), drafted on local branch `store-page` (not pushed, no PR): ST1 = A, the name
+   Unstir; ST2 = A, the subtitle "Unwind the stirred picture"; ST3 = A, the promotional text that says what is free and
+   that packs exist; ST4 = A, seven free-game screenshots then one per pack; ST5 = A, one 25 s preview of the free game
+   only; ST6 = A, Family Sharing on for the packs and Complete; ST7 = A, the draft's keywords, category, policy and
+   support page, and the send-log button left undeclared on the privacy label (contact address: kept privately). Two
+   drafts of the privacy policy exist, one per side of AN1. ST8: Jack will not ask a lawyer and told Claude to find
+   the answers itself; the legal summary is kept outside the repo. Open: the pack screenshots and the 25 s film are
+   still to make, and the policy waits on AN1 and EU1 (round 12).
 55. Check App Review's rules on Complete before naming or pricing it.
 56. ~~Offer codes for press and reviewers.~~ Dropped (Jack: "No.").
 57. TestFlight with 20 to 50 strangers and sandbox purchases. What it measures (shelf and card taps, free-taste
@@ -1312,8 +1409,12 @@ names and product ids, and Complete's promise to older owners.
      Never who you are.", then a cyan link "What does it send? ›" that opens round 9's option A, the full list of what
      is sent, under the line (Claude recommended B, the shorter text). Yes and No stay equal. Shots `consent-ask` and
      `consent-sends` (`UNSTIR_CONSENT=sends`).
-   Still open: under N, clearing the tally clears what was sent once too, so a player who says Yes, No, then Yes sends
-   `installed` (and any snapshot due) again and counts as a second install; keeping the sent marks would avoid that.
+   Settled (Jack, 2026-10-28, round 10, AN2 = A): under N, clearing the tally clears what was sent once too, so a player
+   who says Yes, No, then Yes sends `installed` (and any snapshot due) again and counts as a second install; he
+   accepts that. AN1 = A: the consent card's link opens and closes its list (merged 2026-10-28, PR #55). Round 11:
+   LG1 = C conditionally (no EU release if the EU hurdles can't be cleared), LG2 = A (an age bracket), LG3 unanswered.
+   Open (round 12, AN1): whether v1 ships analytics at all; recommended not, with `v1-no-analytics` and
+   `keep-analytics` holding each side.
    TestFlight prep merged 2026-10-25 (PR #23); the icon is candidate 1, the neon grid (Jack, 2026-10-25, I1).
 58. Apple's featuring nomination, then launch.
 59. Prism: per-channel `same`, `commutes` and `looksSolved` on each channel's restricted word, with tests that
@@ -1323,6 +1424,8 @@ names and product ids, and Complete's promise to older owners.
 61. Prism: a colour-blind simulation of every specimen (protanopia, deuteranopia, tritanopia), with and without the
     per-channel line styles that Differentiate Without Colour turns on, and the swatch that shows one channel.
 62. Prism: the engravings, tinted knobs and 30 specimens, solver-checked, to Jack before code.
+    Draft PR #59 (2026-10-29) holds the prototype, tray 1. Round 12's PK1 recommends Prism as First Stir's replacement,
+    capped at depth 8 since depth 9 reads too busy, roughly 9 to 13 days to ship; not decided.
 63. Music Box: the render-thread scheduler for sample-accurate plucks (a render callback reading a lock-free snapshot
     of pin positions each buffer; assumed `AVAudioSourceNode`).
 64. Music Box: the ear-test protocol (cold readers, sound on against sound off, the time to find each seam), run

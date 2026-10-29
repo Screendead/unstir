@@ -13,12 +13,15 @@ enum Offer: Hashable, Sendable {
     /// pack is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the shop can be looked at.
     static func shelf(release: Bool = Build.release, ready: (Pack) -> Bool = { $0.levels.count > $0.taste }) -> [Offer] {
         guard release else { return all }
-        let packs = Pack.allCases.filter(ready)
-        return packs.map(Offer.pack) + (packs.count == Pack.allCases.count ? [.complete] : [])
+        let sold = Pack.sold(release: release), packs = sold.filter(ready)
+        return packs.map(Offer.pack) + (packs.count == sold.count ? [.complete] : [])
     }
 
+    /// Whether this build sells it.
+    var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
+
     /// Some of what it sells is still to come.
-    var arriving: Bool { (pack.map { [$0] } ?? Pack.allCases).contains { $0.levels.count < $0.planned } }
+    var arriving: Bool { (pack.map { [$0] } ?? Pack.sold()).contains { $0.levels.count < $0.planned } }
 
     /// A pack's prefix, or "complete", as the harness names it and the clip's file is named.
     init?(name: String) {
@@ -53,7 +56,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.firstStir): "anyone \u{00B7} an evening, not a challenge"
         case .pack(.lens): "after plughole"
         case .pack(.escapement): "hard \u{00B7} composed problems"
-        case .complete: "anyone, then harder"
+        case .complete: Pack.sold().contains(.firstStir) ? "anyone, then harder" : "after plughole, then harder"
         }
     }
 
@@ -62,7 +65,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.firstStir): "\(Pack.firstStir.planned) scenes in five chapters"
         case .pack(.lens): "\(Pack.lens.planned) panels in four issues"
         case .pack(.escapement): "\(Pack.escapement.planned) problems in five chapters"
-        case .complete: "First Stir, Lens and Escapement \u{00B7} \(Pack.allCases.map(\.planned).reduce(0, +)) levels"
+        case .complete: "\(Pack.named(Pack.sold())) \u{00B7} \(Pack.sold().map(\.planned).reduce(0, +)) levels"
         }
     }
 
@@ -127,13 +130,16 @@ extension Store {
         case .pack(let p): return state(p)
         case .complete:
             let l = harness ?? ledger
-            if Pack.allCases.allSatisfy({ l.state($0) == .owned }) { return .owned }
+            if Pack.sold().allSatisfy({ l.state($0) == .owned }) { return .owned }
             return l.products[Pack.completeID] ?? .unowned
         }
     }
 
     /// The pack whose card a level shows instead of playing: one past its taste that the player doesn't own.
     func card(for level: Level) -> Pack? { access(level) == .needsCard ? level.pack : nil }
+
+    /// A level this build may open: any outside a pack, and a pack's that the build sells.
+    func opens(_ level: Level) -> Bool { access(level) != .withheld }
 }
 
 extension Purchase {
@@ -182,16 +188,16 @@ enum Cover {
         case .pack(.lens): lens(ctx, r: r)
         case .pack(.escapement): escapement(ctx, r: r)
         case .complete:
-            // A third of the tank each, cut from the centre.
-            let packs: [Offer] = [.pack(.firstStir), .pack(.lens), .pack(.escapement)]
+            // An equal wedge of the tank for each pack it grants, cut from the centre, the first centred at the top.
+            let packs = Pack.sold(), span = 360 / Double(packs.count), start = -90 - span / 2
             for (k, p) in packs.enumerated() {
                 var c = ctx
-                c.clip(to: wedge(r, from: -150 + 120 * Double(k), to: -30 + 120 * Double(k)))
-                draw(p, c, r: r)
+                c.clip(to: wedge(r, from: start + span * Double(k), to: start + span * Double(k + 1)))
+                draw(.pack(p), c, r: r)
             }
             var seams = Path()
-            for k in 0..<3 {
-                let a = (-150 + 120 * Double(k)) * .pi / 180
+            for k in packs.indices {
+                let a = (start + span * Double(k)) * .pi / 180
                 seams.move(to: CGPoint(x: r, y: r))
                 seams.addLine(to: CGPoint(x: r + 1.5 * r * cos(a), y: r + 1.5 * r * sin(a)))
             }

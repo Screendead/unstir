@@ -321,7 +321,7 @@ final class Analytics {
         // Only a daily solved on its first try keeps a best.
         p["dailies"] = .int(defaults.dictionaryRepresentation().keys.filter { $0.hasPrefix("best.daily-") }.count)
         let owned = Store.shared.ledger.owned
-        for pack in Pack.allCases {
+        for pack in Pack.sold() {
             let flags = [tally.seen.contains("card.\(pack.rawValue)") ? "card" : nil,
                          tally.seen.contains("taste.\(pack.rawValue)") ? "taste" : nil,
                          owned.contains(pack) ? "owned" : nil].compactMap { $0 }
