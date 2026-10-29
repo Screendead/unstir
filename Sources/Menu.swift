@@ -166,7 +166,7 @@ struct MenuView: View {
                     Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
                         .frame(width: 44, height: 44).contentShape(Rectangle())
                 }
-                .buttonStyle(.plain).opacity(0.5)
+                .buttonStyle(Sounding()).opacity(0.5)
                 .accessibilityLabel("Settings")
             }
             .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
@@ -302,6 +302,7 @@ struct MenuView: View {
                         if t != Tier.allCases.first {
                             Text("\u{00B7}").font(.mono(15)).opacity(0.3).padding(.horizontal, 7).frame(height: 36)
                         }
+                        // Silent itself: `go` sounds a switch as it starts, however it starts.
                         Button { select(t) } label: { name(t) }
                             .buttonStyle(.plain)
                             .id(t)
@@ -366,6 +367,7 @@ struct MenuView: View {
     private func go(to t: Tier, turning dir: Double) {
         guard t != shown, !busy else { return }
         busy = true
+        Sound.shared.play(.tier)
         Tier.store(t)
         withAnimation(.snappy(duration: 0.35)) { picked = t }
         withAnimation(.easeIn(duration: 0.32)) {
@@ -452,8 +454,12 @@ struct MenuView: View {
         select(.plughole)
     }
 
-    /// A touch that ends a stir must not open the row it lifted over.
-    private func pick(_ level: Level) { if !twisting { onPick(level) } }
+    /// A touch that ends a stir must not open the row it lifted over, nor tap.
+    private func pick(_ level: Level) {
+        guard !twisting else { return }
+        Sound.shared.play(.tap)
+        onPick(level)
+    }
 }
 
 /// A tier's rule and rows, and a locked tier's gate. Compared by tier alone, so a frame of a drag or a stir doesn't
@@ -552,6 +558,7 @@ private struct LevelRow: View {
             .padding(.vertical, 11)
             .contentShape(Rectangle())
         }
+        // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .disabled(!enabled)
     }

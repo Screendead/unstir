@@ -64,7 +64,7 @@ private func glowRing(_ colour: Color, _ width: CGFloat, _ underlay: CGFloat, un
 @MainActor @Observable
 final class Game {
     /// A stack entry, and whether a turn of the player's pushed it: any other is one of the scramble's, perhaps changed
-    /// since by turns that merged into it. Only a run reads it, and a run has no undo. An entry merging into another
+    /// since by turns that merged into it. A run's brim and the heal's note read it. An entry merging into another
     /// leaves its mark behind and hands over its tags, First Stir's vignettes, so a pop plays every tag either carried.
     struct Entry: Stacked, Equatable {
         var twist: Twist
@@ -115,6 +115,11 @@ final class Game {
     private(set) var seconds = 0
     private(set) var cancels = 0
     private(set) var cancelledRod = 0
+    /// Heals since the level opened or was reset, for the heal's rising note: moves that popped one of the scramble's
+    /// entries. The heal that solves sounds as the solve, so a heal counts only once the win check has had its say.
+    private(set) var heals = 0
+    /// `heals` as each stir of `history` began.
+    private var healsBefore: [Int] = []
     /// The rod and outcome of the newest commit or undo, for the commit flash.
     private(set) var lastCommit: (rod: Int, result: Commit)?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it.
@@ -199,7 +204,7 @@ final class Game {
     }
 
     /// The scramble's entries. In a story each holds back the vignette in its own rod's core, if that core has one.
-    private static func dealt(_ level: Level) -> [Entry] {
+    nonisolated static func dealt(_ level: Level) -> [Entry] {
         level.scramble.map { Entry(twist: $0, pushed: false, tags: level.story?.vignettes.intersection([$0.rod]) ?? []) }
     }
 
@@ -260,11 +265,14 @@ final class Game {
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
         if open, history.last?.rod == slot {
             history[history.count - 1].steps += steps
-            if history.last!.steps == 0 { history.removeLast(); openBefore.removeLast(); before.removeLast(); open = false }
+            if history.last!.steps == 0 {
+                history.removeLast(); openBefore.removeLast(); before.removeLast(); healsBefore.removeLast(); open = false
+            }
         } else {
             history.append(Twist(rod: slot, steps: steps))
             openBefore.append(open)
             before.append((was, escapement))
+            healsBefore.append(heals)
             open = true
         }
         lastCommit = (rod, result)
@@ -314,12 +322,14 @@ final class Game {
         let net = tankStir(after: steps)
         let wasOpen = joins ? openBefore.removeLast() : open
         let was = joins ? before.removeLast() : (entries, escapement)
+        let healsWere = joins ? healsBefore.removeLast() : heals
         if joins { history.removeLast() }
         open = net != 0
         if open {
             history.append(Twist(rod: Game.tank, steps: net))
             openBefore.append(wasOpen)
             before.append(was)
+            healsBefore.append(healsWere)
         }
         Log.write("tank \(steps) position=\(position) moves=\(moves)")
         settle()
@@ -330,14 +340,17 @@ final class Game {
     private func clockCommit(knob: Int, steps: Int) {
         let slot = self.slot(of: knob)
         var next = entries
+        var healed = 0
         let result = level.kind(of: knob) != .working ? .refused
-            : next.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout, lenses: level.lenses)
+            : next.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout, lenses: level.lenses,
+                          popped: { if !$0.pushed { healed += 1 } })
         // A full stack refuses a tick as it would a push, so it refuses the move.
         guard result != .refused, !ticksRefused(next) else {
             Log.write("commit \(Twist(rod: knob, steps: steps)) refused")
             return
         }
         before.append((entries, escapement))
+        healsBefore.append(heals)
         openBefore.append(open)
         history.append(Twist(rod: slot, steps: steps))
         entries = next
@@ -347,9 +360,9 @@ final class Game {
         turns += 1
         if result == .pushed { pushes += 1 }
         if result == .cancelled { cancels += 1; cancelledRod = knob }
-        landTicks()
+        healed += landTicks()
         Log.write("commit \(Twist(rod: knob, steps: steps)) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
-        settle()
+        settle(healed: healed > 0)
     }
 
     /// Escapement's waiting move, a tap on any ratchet: it only ticks the clocks. Once every clock has stopped there is
@@ -358,26 +371,28 @@ final class Game {
         guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { running($0.rod) }) else { return }
         guard !ticksRefused(entries) else { Log.write("wait refused"); return }
         before.append((entries, escapement))
+        healsBefore.append(heals)
         openBefore.append(open)
         history.append(Twist(rod: slot(of: ratchet), steps: 1))
         open = false
         lastCommit = (ratchet, .reduced)
         turns += 1
-        landTicks()
+        let healed = landTicks()
         Log.write("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
-        settle()
+        settle(healed: healed > 0)
     }
 
     /// Escapement: after a move, each clock that still holds an entry as its turn comes ticks its step, clockwise from
     /// twelve, so one clock's tick can uncover the next's seam on the same move. The tank is lost on a tick that pushes,
-    /// and then no later clock ticks, or once every clock has stopped with twists still on the picture.
-    private func landTicks() {
+    /// and then no later clock ticks, or once every clock has stopped with twists still on the picture. It returns how
+    /// many of the scramble's entries the ticks popped.
+    @discardableResult private func landTicks() -> Int {
         tick = []
-        for c in level.clocks where running(c.rod) {
+        var healed = 0
+        for c in level.clocks {
             let from = stack
-            let result = entries.commit(Entry(twist: Twist(rod: c.rod, steps: c.dir), pushed: true), in: level.layout,
-                                        lenses: level.lenses)
-            guard result != .refused else { continue }
+            guard let result = Self.tick(&entries, on: c, in: level, popped: { if !$0.pushed { healed += 1 } }),
+                  result != .refused else { continue }
             escapement.ticks[c.rod, default: 0] += 1
             tick.append((from, c.rod, c.dir))
             if result == .pushed {
@@ -392,19 +407,29 @@ final class Game {
                 escapement.stopped = c.rod
             }
         }
-        guard !tick.isEmpty else { return }
+        guard !tick.isEmpty else { return healed }
         tickEvents += 1
         if !entries.isEmpty, !level.clocks.contains(where: { running($0.rod) }) { escapement.lost = true }
         Log.write("ticks \(tick.map { "\($0.rod):\($0.dir > 0 ? "+" : "-")" }.joined(separator: ",")) stack=\(stack)")
+        return healed
+    }
+
+    /// Escapement: clock `clock`'s step through the ordinary commit, or nil while its rod holds no entry and it stands
+    /// stopped.
+    nonisolated static func tick(_ entries: inout [Entry], on clock: (rod: Int, dir: Int), in level: Level,
+                                 popped: (Entry) -> Void = { _ in }) -> Commit? {
+        guard entries.contains(where: { $0.twist.rod == clock.rod }) else { return nil }
+        return entries.commit(Entry(twist: Twist(rod: clock.rod, steps: clock.dir), pushed: true), in: level.layout,
+                              lenses: level.lenses, popped: popped)
     }
 
     /// Escapement: whether a full stack would refuse a tick after a move that leaves `entries`.
     private func ticksRefused(_ entries: [Entry]) -> Bool {
         var copy = entries
-        for c in level.clocks where copy.contains(where: { $0.twist.rod == c.rod }) {
-            switch copy.commit(Entry(twist: Twist(rod: c.rod, steps: c.dir), pushed: true), in: level.layout, lenses: level.lenses) {
-            case .refused: return true
-            case .pushed: return false
+        for c in level.clocks {
+            switch Self.tick(&copy, on: c, in: level) {
+            case .refused?: return true
+            case .pushed?: return false
             default: continue
             }
         }
@@ -428,6 +453,8 @@ final class Game {
         history = []
         openBefore = []
         before = []
+        healsBefore = []
+        heals = 0
         open = false
         escapement = Clock()
         tick = []
@@ -440,12 +467,16 @@ final class Game {
         guard !solved, !spilled, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast()
         else { return }
         let was = before.removeLast()
+        heals = healsBefore.removeLast()
         if level.pack != nil || !level.ratchets.isEmpty {
             entries = was.entries
             escapement = was.clock
             tick = []
         } else if last.rod != Game.tank {
-            entries.commit(Entry(twist: Twist(rod: last.rod, steps: -last.steps), pushed: true), in: level.layout,
+            // What the negation brings back of the scramble's is the scramble's again, so taking it off once more heals.
+            let scrambles = { (e: [Entry]) in e.filter { !$0.pushed }.count }
+            let negation = Twist(rod: last.rod, steps: -last.steps)
+            entries.commit(Entry(twist: negation, pushed: scrambles(was.entries) <= scrambles(entries)), in: level.layout,
                            lenses: level.lenses)
         }
         if last.rod != Game.tank {
@@ -566,14 +597,15 @@ final class Game {
                     // A story's vignettes left play with the solve wave, which rings for them.
                     self.entries = []
                 }
-                self.finish()
+                self.finish(healed: healed)
             }
             return
         }
-        finish()
+        finish(healed: healed)
     }
 
-    private func finish() {
+    private func finish(healed: Bool) {
+        if healed && !finished { heals += 1 }
         guard finished else { return }
         seconds = Int(Date.now.timeIntervalSince(start ?? .now))
         Log.write("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
@@ -854,12 +886,15 @@ struct LevelView: View {
                     control(game.level.sandbox ? "undo" : "undo \u{00B7} \(game.bank)") {
                         withAnimation(game.history.last?.rod == Game.tank ? .snappy(duration: 0.3) : nil) { game.undo() }
                     }
+                        // With nothing to take back it does nothing, so it only taps.
+                        .buttonStyle(Sounding(effect: game.history.isEmpty ? .tap : .undo))
                         // The plain button style does not grey a disabled label.
                         .disabled(!game.level.sandbox && game.bank == 0)
                         .opacity(!game.level.sandbox && game.bank == 0 ? 0.35 : 1)
                         .overlay(alignment: .topTrailing) { refillBadge }
                     Spacer()
                     control("reset") { if game.reset() { replays += 1 } }
+                        .buttonStyle(Sounding(effect: .reset))
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
@@ -1224,7 +1259,6 @@ struct LevelView: View {
                 .background(Capsule().fill(Color.white.opacity(0.05)))
                 .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
         }
-        .buttonStyle(.plain)
     }
 
     /// The knob shows only the player's own turning, so it can neither give away nor misstate the scramble.
@@ -1503,12 +1537,19 @@ struct LevelView: View {
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .sensoryFeedback(.selection, trigger: ticks)
         .sensoryFeedback(.selection, trigger: misses)
-        .onChange(of: tankTicks) { Knock.clunk.play() }
+        .onChange(of: ticks) { Sound.shared.play(.tick) }
+        .onChange(of: tankTicks) { Knock.clunk.play(); Sound.shared.play(.tank) }
         .sensoryFeedback(.impact(weight: .heavy), trigger: game.cancels)
+        // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
+        .onChange(of: game.heals) { was, now in if now > was { Sound.shared.play(.heal(now)) } }
         .sensoryFeedback(.warning, trigger: game.pushes)
+        // A push that spills a run sounds only as the spill.
+        .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
         .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
         .sensoryFeedback(.error, trigger: game.tickPushes)
         .sensoryFeedback(.success, trigger: game.solved) { _, solved in solved }
+        // One sound for the end, as its card shows it.
+        .onChange(of: game.finished) { if game.finished { Sound.shared.play(game.solved ? .solve : .spilled) } }
         // Keeps texture pixels on device pixels, so the untwisted picture is not blurred by half a pixel.
         .offset(snap)
         .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { o in
@@ -1518,15 +1559,14 @@ struct LevelView: View {
     }
 
     /// Escapement: a move's ticks in flight, 0 up to `ticksDone`: a beat after the lift, then each clock's in turn, one
-    /// 30-degree step of its core in `tickTime`, so the clicks read in order (Jack's call D1, round 9).
+    /// 30-degree step of its core in `tickTurn`, so the clicks read in order (Jack's call D1, round 9).
     @KeyframesBuilder<Double> private static var tickKeys: some Keyframes<Double> {
         MoveKeyframe(0.0)
-        LinearKeyframe(0.0, duration: 0.15)
-        LinearKeyframe(ticksDone, duration: ticksDone * tickTime)
+        LinearKeyframe(0.0, duration: tickBeat)
+        LinearKeyframe(ticksDone, duration: ticksDone * tickTurn)
     }
     /// The most clocks a level has, so the most ticks one move lands.
     private static let ticksDone = 3.0
-    private static let tickTime = 0.3
 
     /// The `i`th tick's flight, 0 to 1, eased, at `v` of the move's ticks.
     nonisolated private static func flight(_ v: Double, _ i: Int) -> Double {
@@ -1534,8 +1574,11 @@ struct LevelView: View {
         return x * x * (3 - 2 * x)
     }
 
+    /// Escapement: the beat between a lift and its first tick, and each tick's turn.
+    nonisolated static let tickBeat = 0.15, tickTurn = 0.3
+
     /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
-    private static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
+    nonisolated static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
 
     /// Clock `k`'s ratchet, `flight` of the way through its newest tick's turn.
     private func ratchet(_ k: Int, back: Bool, flight f: Double, pawl: Double, shake s: Double, core: CGFloat,
@@ -1552,7 +1595,7 @@ struct LevelView: View {
         let overdue = game.overdue(k), showing = shown == nil
         let core = 2 * Tank.plateau * disc
         // Each clock's marks wait for its own tick in the move's turn.
-        let delay = 0.15 + Self.tickTime * Double(game.tick.firstIndex { $0.rod == k } ?? 0)
+        let delay = Self.tickBeat + Self.tickTurn * Double(game.tick.firstIndex { $0.rod == k } ?? 0)
         let ticked = game.tick.contains { $0.rod == k }, pushed = game.pushedClock == k
         return ZStack {
             Circle().stroke(Color.alarm, lineWidth: 2).frame(width: size + 10, height: size + 10)
@@ -1812,7 +1855,7 @@ struct LevelView: View {
     }
 
     /// The finger's travel up or down, in tank units, for one step of a lens (Jack, 2026-10-26).
-    static let lensPitch = 0.15
+    nonisolated static let lensPitch = 0.15
 
     /// A lens follows the finger up and down, not round: the angle the detent counts for a finger gone from height `y0`
     /// to `y` (tank units, down positive). Up zooms in, a positive step (Jack, 2026-10-26).
@@ -1837,6 +1880,7 @@ struct LevelView: View {
             jammed = k
             jams += 1
             Knock.thud.play()
+            Sound.shared.play(.seized)
         }
         if case .ratchet(let k)? = drag?.grab { pressing = k; grabs += 1 }
         guard let g = drag, let pivot = pivot(g.grab) else { return }
@@ -2469,6 +2513,7 @@ struct ResultCard: View {
                 Button("\u{2039} levels", action: onExit)
                 if let share = game.shareText {
                     ShareLink(item: share) { Text("share \u{2197}") }
+                        .shareTap()
                         .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
                 }
                 if let next {
@@ -2511,7 +2556,7 @@ private struct TierUp: View {
             .padding(.horizontal, 26).padding(.vertical, 14)
             .background { Capsule().strokeBorder(to.sweep, lineWidth: 1.5).shadow(color: to.glow, radius: glint ? 10 : 5) }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Sounding())
         .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. Par every \(from.name) level to open it")
         .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
         .onAppear {
