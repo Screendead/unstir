@@ -93,5 +93,9 @@ final class PrismTests: XCTestCase {
         XCTAssertEqual(play.count, 3)
         XCTAssertFalse(solver.interacts[0][1])
         XCTAssertTrue(Solver(.tri).interacts[0][1])
+        let deeper = [Twist].parse("2:+2,0:+3,1:+4,0:+2", in: .tri, masks: [0: .red, 1: .green])
+        let optimum = try XCTUnwrap(Solver(.tri, masks: [0: .red, 1: .green]).optimum(deeper))
+        XCTAssertEqual(Solver(.tri, masks: [0: .red, 1: .green])
+            .exhaustive(deeper, limit: optimum, steps: [-5, -4, -2, 2, 4, 5]), optimum)
     }
 }
