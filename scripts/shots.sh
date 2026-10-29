@@ -451,7 +451,7 @@ hold=5 shot prism-hex "Prism on hex, every rod a different mask (white hub), 1:+
   PACK=prism LAYOUT=hex MASKS=1:r,2:g,3:b,4:c,5:m,6:y STACK=1:+3,4:-4,2:+2,5:-3
 for n in 2 3 4 5 6; do
   hold=5 shot "prism-specimen-$n" "Prism specimen $n as dealt (docs/prism-design.md): red and cyan ghosts over the white bottom stir." \
-    PACK=prism LEVEL=$n
+    PACK=prism LEVEL=$n OWNED=prism
 done
 for layout in quad eye pent hex; do
   hold=5 shot "prism-bare-$layout" "Prism's fern under $layout's knobs, unstirred: some line in every core." PACK=prism LAYOUT=$layout STACK=0:+1 BARE=1
