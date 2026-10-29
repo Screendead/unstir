@@ -437,23 +437,25 @@ shot escapement-card "Escapement's card, owned, scrolled to its levels under the
   CARD=escapement OWNED=escapement CARDSCROLL=1 CLOCK=5.4
 # Escapement 2, the packs mock-up's problem: tri 0:-1,1:+3,0:-2,2:-4, rod 0 the clock with a ratchet for a knob, unstirred
 # in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
-shot escapement-2-ticked "Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on." \
+shot escapement-2-ticked "Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02." \
   PACK=escapement LEVEL=2 PLAYED=2:4
-shot escapement-2-lost "Escapement 2, then rod 1 -3: its tick finds no seam and pushes, so the move loses at once: the vermilion +1, lost. stamped by the clock, the card's undo and again." \
+shot escapement-2-pushed "Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3
+shot escapement-2-out "Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again." \
+  PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
-# What each clock owes before it stops, on 16 (clocks 1, owing 3, and 4, owing 6; line 3:-2, 5:-2, a wait, 6:-4, 5:+3,
-# 2:-5): as dealt, after the wait that stops clock 1, and one move from the end.
-shot escapement-budget-16-dealt "Escapement 16 as dealt: clock 1 owes 3 ticks, clock 4 owes 6." PACK=escapement OWNED=escapement LEVEL=16
-shot escapement-budget-16-mid "Escapement 16 after 3:-2, 5:-2 and a wait: clock 1 stopped, clock 4 owing 3." \
+# The tick budget on 16 (clocks 1, owing 3, and 4, owing 6, so 9; line 3:-2, 5:-2, a wait, 6:-4, 5:+3, 2:-5): as dealt,
+# after the wait that stops clock 1, and one move from the end.
+shot escapement-budget-16-dealt "Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6." PACK=escapement OWNED=escapement LEVEL=16
+shot escapement-budget-16-mid "Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left." \
   PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,1:1
-shot escapement-budget-16-late "Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: clock 4 owing its last tick." \
+shot escapement-budget-16-late "Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: 01 tick left, clock 4's last." \
   PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,1:1,6:-4,5:3
-# Lost to the clock stopping with twists left (Jack's call E2), each of the three looks (UNSTIR_STOPLOOK): on 3, the
-# book's decoy, a tap then knob 1, which pushes under knob 2's seam; on 17, two clocks, a tap where the last heal was due.
+# Out of ticks as the clocks stop with twists left, each of the three looks (UNSTIR_STOPLOOK): on 3, the book's decoy, a
+# tap then knob 1, which pushes under knob 2's seam; on 17, two clocks, a tap where the last heal was due.
 for look in stamp left rings; do
-  shot "escapement-stopped-3-$look" "Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, lost; look $look." \
+  shot "escapement-stopped-3-$look" "Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look $look." \
     PACK=escapement LEVEL=3 PLAYED=0:1,1:-3 STOPLOOK=$look
-  shot "escapement-stopped-17-$look" "Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, lost; look $look." \
+  shot "escapement-stopped-17-$look" "Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look $look." \
     PACK=escapement OWNED=escapement LEVEL=17 PLAYED=3:-5,4:-2,3:5,4:3,0:1 STOPLOOK=$look
 done

@@ -406,15 +406,16 @@ escapement-book-28.png  Escapement 28 as dealt: hex, clocks 1+, scramble 1:-2,0:
 escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3.
 escapement-book-30.png  Escapement 30 as dealt: hex, clocks 1+,3+, scramble 1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2.
 escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's five chapter headings.
-escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on.
-escapement-2-lost.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, so the move loses at once: the vermilion +1, lost. stamped by the clock, the card's undo and again.
+escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02.
+escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left.
+escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
 escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
-escapement-budget-16-dealt.png  Escapement 16 as dealt: clock 1 owes 3 ticks, clock 4 owes 6.
-escapement-budget-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait: clock 1 stopped, clock 4 owing 3.
-escapement-budget-16-late.png  Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: clock 4 owing its last tick.
-escapement-stopped-3-stamp.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, lost; look stamp.
-escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, lost; look stamp.
-escapement-stopped-3-left.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, lost; look left.
-escapement-stopped-17-left.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, lost; look left.
-escapement-stopped-3-rings.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, lost; look rings.
-escapement-stopped-17-rings.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, lost; look rings.
+escapement-budget-16-dealt.png  Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6.
+escapement-budget-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left.
+escapement-budget-16-late.png  Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: 01 tick left, clock 4's last.
+escapement-stopped-3-stamp.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look stamp.
+escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look stamp.
+escapement-stopped-3-left.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look left.
+escapement-stopped-17-left.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look left.
+escapement-stopped-3-rings.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look rings.
+escapement-stopped-17-rings.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look rings.
