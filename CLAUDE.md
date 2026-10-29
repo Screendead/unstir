@@ -108,6 +108,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
   Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py
   <dir>` picks the table from them by its slots. `scripts/vortex-levels.sh check <layout> <scramble>` measures one row.
+- Plughole's levels: `scripts/plughole-levels.sh table` measures every plughole level in Levels.swift (entries, the
+  solver's optimum, hidden stirs, rings whole as dealt, right moves per step and forced steps over the untwist, each
+  right move taken as equally likely); `check <layout> <scramble>` measures one, and `search <layout> <depth>
+  <inversions> <from> <to>` deals seeded scrambles with the frozen generator, keeping those whose optimum is their
+  entry count. It builds `build/plughole-levels/measure` like `build/solve`.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
@@ -217,8 +222,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
   (`L1`, `N1`, `V1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
   its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
-  loses it unless the stored keys are remapped. Plughole has 27 hand-written
-  levels (scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would), whirlpool
+  loses it unless the stored keys are remapped. Plughole has 27 levels, 1–18
+  hand-written and 19–27 dealt by the frozen generator and picked for a gentler curve (`scripts/plughole-levels.sh`),
+  all scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would; whirlpool
   deeper variants on live pictures that follow a table, vortex 27 provisional swirl levels (quad, tri, eye, pent,
   then hex) on its own family, nine levels each: no two neighbours alike, V1–V3 one of each, isobars opening each
   layout and taking the finale, the ephemeris only to 14 stirs (`testVortexTable`), no knob seized, so the tank never turns and par is the entry count, which the

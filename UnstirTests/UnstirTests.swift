@@ -1007,7 +1007,7 @@ final class UnstirTests: XCTestCase {
     }
 
     func testLevelsNeverMerge() {
-        let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 6, 7, 8, 9, 7, 8, 10, 12, 14]
+        let par = [1, 1, 2, 2, 3, 3, 4, 3, 2, 4, 5, 6, 7, 4, 5, 3, 7, 8, 5, 6, 6, 7, 6, 7, 8, 9, 9]
         XCTAssertEqual(Level.plughole.map(\.scramble.count), par)
         XCTAssertEqual(Level.plughole.filter(\.replay).count, 3)
     }
@@ -1015,14 +1015,16 @@ final class UnstirTests: XCTestCase {
     /// Against the design table's inversion column.
     func testInversions() {
         XCTAssertEqual(Level.plughole.map { $0.layout.inversions($0.scramble) },
-                       [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4])
+                       [0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1, 2])
     }
 
-    /// Twice each level's par, strictly more inversions (against the whirlpool design table), and room to stir on top.
+    /// Twice the par of each plughole level as first written (19 to 27 have since eased), strictly more inversions than
+    /// the same-numbered level (against the whirlpool design table), and room to stir on top.
     func testWhirlpool() {
         let whirlpool = Level.whirlpool
         XCTAssertEqual(whirlpool.map(\.layout), Level.plughole.map(\.layout))
-        XCTAssertEqual(whirlpool.map(\.scramble.count), Level.plughole.map { 2 * $0.scramble.count })
+        XCTAssertEqual(whirlpool.map(\.scramble.count),
+                       [2, 2, 4, 4, 6, 6, 8, 6, 4, 8, 10, 12, 14, 8, 10, 6, 14, 16, 12, 14, 16, 18, 14, 16, 20, 24, 28])
         let inversions = whirlpool.map { $0.layout.inversions($0.scramble) }
         XCTAssertEqual(inversions, [1, 1, 2, 2, 3, 3, 4, 4, 2, 3, 4, 5, 6, 3, 4, 3, 6, 7, 4, 5, 6, 8, 5, 6, 8, 10, 12])
         for (n, level) in zip(inversions, Level.plughole) { XCTAssertGreaterThan(n, level.layout.inversions(level.scramble), level.id) }

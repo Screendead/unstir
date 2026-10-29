@@ -1186,6 +1186,13 @@ from Nightmare to Nightmare+ is easy to miss.
   levels down to about 7 and 9 stirs, with fewer quiet stirs hidden under loud ones. Measure every level first with
   the maelstrom solver (stirs, hidden stirs, choices per step) and show Jack the table. Jack's own results, the only
   play data so far, are in `HANDOFF.private.md`.
+  **Merged (PR #50), Jack's call PH1 = A (2026-10-29): pent and hex both eased.** Measured with
+  `scripts/plughole-levels.sh`; "choices per step" is defined there as the rods that could rightly come off next,
+  averaged over the untwist. 19–22 (pent) go from 6, 7, 8, 9 stirs to 5, 6, 6, 7 and 23–27 (hex) from 7, 8, 10, 12, 14
+  to 6, 7, 8, 9, 9; hidden stirs from 16 to 6 over the nine. Each is dealt by the frozen generator from a seed (in the
+  comment over the table), par is the solver's optimum, titles kept, the first hex level leaves the hub out. Claude
+  recommends easing both layouts; easing hex only is the alternative. Side effect for a later call: whirlpool was built
+  at twice plughole's stirs, and its 19–27 are untouched, so they now run 2.4–3.1 times the eased levels.
 - **A wrong stir turned straight back stays free** (Jack, for now): a slip of 30° is too easy, and charging it would
   upset players chasing every clean. So par and the gates measure persistence as much as reading: a player can try
   each rod, turn back each red flash and never go over par (the free test; simulated on endless tanks).
