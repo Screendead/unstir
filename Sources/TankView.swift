@@ -169,6 +169,12 @@ final class Game {
         let dir = level.woundBack.contains(clock) ? -1 : 1
         return stack.filter { $0.rod == clock && $0.steps * dir > 0 }.reduce(0) { $0 + abs($1.steps) }
     }
+    /// Escapement: the ticks clock `clock` still owes before it stops. Each move takes one off while it runs, and nothing
+    /// else reaches it, so the slowest clock's is the moves left to play.
+    func owed(_ clock: Int) -> Int {
+        let dir = level.woundBack.contains(clock) ? -1 : 1
+        return max(0, -dir * stack.filter { $0.rod == clock }.reduce(0) { $0 + $1.steps })
+    }
     /// Escapement: whether the clock on `rod` still runs, holding an entry.
     func running(_ rod: Int) -> Bool { entries.contains { $0.twist.rod == rod } }
 
