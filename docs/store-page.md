@@ -1,8 +1,13 @@
-# App Store page: drafts for Jack
+# App Store page
 
-Draft, 2026-10-27. Nothing here is decided. Where a choice is Jack's, it gives the options and one recommendation.
-Every character count below was measured with a script, not by eye. Anything legal is marked **(check)**: it needs
-Jack's or a lawyer's check, and nothing here settles it.
+Drafted 2026-10-27; Jack's calls ST1 to ST7 applied 2026-10-29, each A, so each section holds the chosen text and the
+options set aside under it. Every character count below was measured with a script, not by eye. Anything legal is
+marked **(check)**: nothing here settles it.
+
+Two things still follow a call that isn't made: whether v1 ships with analytics (the description's last paragraph and
+the App Privacy label each have a variant per answer), and the contact address, which is Jack's and is written here
+only as the token `{{CONTACT_ADDRESS}}`. The address itself is kept outside the repo, in `HANDOFF.private.md`; it goes
+into App Store Connect and the hosted pages, never into a tracked file.
 
 What it is true to: `master` at 2f74de9 (four tiers of 27 levels, the daily, endless, the sandbox, StoreKit for three
 packs and Complete) and the `analytics` branch at e816c97 (the consent card and Aptabase). Not built, so left out of
@@ -14,9 +19,9 @@ HANDOFF.md; check them against the packs once they are built.
 
 | Option | Text | Chars |
 |---|---|---|
-| **A (recommended)** | Unstir | 6 |
-| B | Unstir: Unwind the Picture | 26 |
-| C | Unstir - Picture Puzzle | 23 |
+| **A (Jack, ST1)** | Unstir | 6 |
+| B, set aside | Unstir: Unwind the Picture | 26 |
+| C, set aside | Unstir - Picture Puzzle | 23 |
 
 A: the name is the brand and the subtitle does the explaining; B and C spend the name on words the subtitle can carry.
 Unchecked: whether "Unstir" is free in App Store Connect. A name is reserved only when the app record is created, and
@@ -26,9 +31,9 @@ nobody can check that before the developer account exists. A trademark search on
 
 | Option | Text | Chars |
 |---|---|---|
-| **A (recommended)** | Unwind the stirred picture | 26 |
-| B | Turn the stir back | 18 |
-| C | A picture puzzle in reverse | 27 |
+| **A (Jack, ST2)** | Unwind the stirred picture | 26 |
+| B, set aside | Turn the stir back | 18 |
+| C, set aside | A picture puzzle in reverse | 27 |
 
 A says what you do and what you do it to. B is the shortest, but it doesn't say there is a picture. C names the genre,
 which the category already shows.
@@ -37,15 +42,15 @@ which the category already shows.
 
 | Option | Text | Chars |
 |---|---|---|
-| **A (recommended)** | A picture, stirred by rods under the glass. Turn them back in the right order and it snaps clean. 108 levels free, a new daily every day, three packs to add. | 157 |
-| B | Every stir left a seam. The newest one runs unbroken. Turn the rods back in order and the picture comes clean. Four tiers and a daily, free. | 140 |
+| **A (Jack, ST3)** | A picture, stirred by rods under the glass. Turn them back in the right order and it snaps clean. 108 levels free, a new daily every day, three packs to add. | 157 |
+| B, set aside for later | Every stir left a seam. The newest one runs unbroken. Turn the rods back in order and the picture comes clean. Four tiers and a daily, free. | 140 |
 
 A says what is free and that packs exist; B teaches the rule. Since this field changes without a review, B can follow
 later, or a line about a new tier when one ships.
 
 ## Description (4000 characters at most)
 
-2,855 characters with the analytics paragraph, 2,756 without; plain text. Capitals stand in for headings, since the store renders no formatting. The
+2,971 characters with the analytics paragraph, 2,830 without; plain text. Capitals stand in for headings, since the store renders no formatting. The
 last paragraph is two variants: use the one that matches the build that ships.
 
 ```
@@ -80,19 +85,21 @@ Three packs add their own pictures, tanks and rules. The first three levels of e
 - Lens: some rods zoom or spiral instead of turning. Read how far a picture has grown against a halftone dot screen that never lies about scale.
 - Escapement: a book of composed problems with a clock in them. One rod ticks a step by itself after every move you make. Time your heals so the clock always finds its seam.
 
-Complete unlocks First Stir, Lens and Escapement in one purchase.
+Complete unlocks First Stir, Lens and Escapement in one purchase. Packs and Complete can be shared with your family through Family Sharing.
 
-[with analytics] No ads. No timers. No account. Your progress stays on your phone. If you say yes when the game asks, it sends counts of how you play, never who you are; you can change your answer in settings.
+[with analytics] No ads. No timers. No account. Your progress stays on your phone. If you are 13 or over and say yes when the game asks, it sends counts of how you play, with no name or ID for you or your phone; you can change your answer in settings.
 
 [without analytics] No ads. No timers. No account. Your progress stays on your phone, and the game sends nothing.
 ```
 
 Choices and checks in it:
+- **The analytics paragraph** follows the `keep-analytics` branch: under 13, or on an EU or EEA storefront, nothing
+  is asked or sent; the line names only the age, since a storefront the game doesn't ask on needs no mention.
 - **Complete.** It names the three packs and promises nothing about later ones (HANDOFF: the store page never promises
   later packs to Complete owners; to-do 55, App Review's rules on Complete, is still open) **(check)**.
-- **Family Sharing.** Left out. `StoreKit/Unstir.storekit` marks every product family-shareable, but HANDOFF lists
-  Family Sharing among the defaults needing Jack's explicit yes, as it can't be turned off once on (assumed; check). If
-  he says yes, add "Packs and Complete can be shared with your family through Family Sharing." after the Complete line.
+- **Family Sharing.** On for all four products (Jack, ST6): `StoreKit/Unstir.storekit` already marks each
+  family-shareable, and the store code handles family grants. Turn it on for each in App Store Connect too; once on it
+  can't be turned off (check).
 - **Prices.** Left out: they vary by storefront and the store shows them beside each purchase.
 - **Pack sizes.** Left out until built (planned: First Stir 25 scenes, Lens 25 panels, Escapement 30 problems).
 - **Vortex's swirl.** Worded to fit both the map in CLAUDE.md and a7d5b9f ("turn the swirl inside out"); check it
@@ -105,8 +112,8 @@ left out as the category's own word (assumed to be indexed through the category;
 
 | Option | Text | Chars |
 |---|---|---|
-| **A (recommended)** | `twist,unscramble,swirl,rotate,rods,untangle,undo,logic,brain,daily,neon,calm,minimal,order,mind,spin` | 100 |
-| B | `twist,swirl,unscramble,rotate,untwist,rods,knob,logic,brain,daily,neon,relaxing,minimal,order,mind` | 98 |
+| **A (Jack, ST7)** | `twist,unscramble,swirl,rotate,rods,untangle,undo,logic,brain,daily,neon,calm,minimal,order,mind,spin` | 100 |
+| B, set aside | `twist,swirl,unscramble,rotate,untwist,rods,knob,logic,brain,daily,neon,relaxing,minimal,order,mind` | 98 |
 
 A leans on what players search for when they look for this kind of game (unscramble, untangle, logic); B swaps in
 "relaxing" and "knob". No competitor names in either, which Apple's guidelines forbid.
@@ -115,37 +122,39 @@ A leans on what players search for when they look for this kind of game (unscram
 
 | Option | Primary | Secondary |
 |---|---|---|
-| **A (recommended)** | Games › Puzzle | Games › Casual |
-| B | Games › Puzzle | Games › Strategy |
-| C | Games › Puzzle | none |
+| **A (Jack, ST7)** | Games › Puzzle | Games › Casual |
+| B, set aside | Games › Puzzle | Games › Strategy |
+| C, set aside | Games › Puzzle | none |
 
 A puts it beside calm puzzle games, where First Stir's buyer looks. B suits maelstrom and Escapement's solver, a
 smaller audience. Secondary category is optional, so C costs only reach.
 
 ## Age rating
 
-Apple revised the questionnaire in 2025, so the wording below is by content area, not Apple's own: match each to the
-live questionnaire in App Store Connect **(check)**.
+As drafted, with the two corrections from a check against Apple's own reference (App Store Connect help, "Age ratings
+values and definitions"), accepted with ST7. Apple's July 2025 scheme is 4+, 9+, 13+, 16+ and 18+; each item is
+answered None, Infrequent or Frequent, or No and Yes. The questions sit under App Information and may show only once a
+version exists.
 
 | Area | Answer | Why |
 |---|---|---|
 | Violence (cartoon, realistic, prolonged, graphic) | None | Abstract pictures; First Stir's storm and flood show no harm to anyone (keep it so as the scenes are drawn) |
 | Sexual content, nudity | None | |
 | Profanity, crude humour | None | |
-| Horror, fear themes | None | First Stir's storm is a mild weather scene; recheck once drawn |
+| Horror, fear themes | None | First Stir's storm, flood and rescue: nobody is hurt and every scene heals back. Infrequent would make it 9+; recheck once drawn |
 | Alcohol, tobacco, drugs | None | |
 | Mature or suggestive themes | None | |
 | Medical or treatment information | None | |
-| Gambling, simulated gambling, contests | None | No loot boxes; every purchase names what it unlocks |
-| Unrestricted web access | No | The app has no web view; analytics posts to one fixed address |
+| Gambling, simulated gambling | None | No loot boxes; every purchase names what it unlocks |
+| Contests ("competitions for rankings, rewards, or personal goals") | Infrequent | Par, bests and the daily fit. Still 4+, but A6 in Brazil, not AL |
+| Unrestricted web access | No | The app has no web view: the privacy policy row opens Safari, and analytics, if it ships, posts to one fixed address |
 | User-generated content, messaging, chat | No | The share line is a text the player sends through the system share sheet; nothing is received |
 | Advertising | No | |
 | In-app purchases | Yes | Three packs and Complete |
-| Parental controls, age assurance | No | |
+| Parental controls, age assurance | No | The analytics build's age question gates only analytics, not the game |
+| In-app controls, capabilities, medical or wellness topics, violent themes (added 2025) | None or No | |
 
-Expected result: the lowest rating (4+ under the old scheme). **(check)**: a game rated for young children that asks a
-yes or no about analytics at first launch; whether a child's yes is valid consent under GDPR article 8 (the age varies
-by country, 13 to 16) needs a lawyer. See the privacy policy draft.
+Expected result: 4+.
 
 ## Screenshots
 
@@ -156,14 +165,13 @@ shots. HANDOFF's rule: lead with the free game, then the packs, each pack shot l
 
 | Option | Set |
 |---|---|
-| **A (recommended)** | Seven free-game shots, then one shot per pack (ten, Apple's limit) |
-| B | Nine free-game shots, then one "packs" shot of the shelf |
-| C | Free game only; the packs shown only in their promoted-purchase art |
+| **A (Jack, ST4)** | Seven free-game shots, then one shot per pack (ten, Apple's limit) |
+| B, set aside | Nine free-game shots, then one "packs" shot of the shelf |
+| C, set aside | Free game only; the packs shown only in their promoted-purchase art |
 
-A shows each pack's look, which is what sells it; B needs the shelf built; C keeps the page shortest but sells the
-packs only to players who scroll to the purchases.
+A shows each pack's look, which is what sells it, and the free game still leads.
 
-Option A, in order, with a caption each (captions are composited onto the shot, which no script does yet):
+The set, in order, with a caption each (captions are composited onto the shot, which no script does yet):
 
 | # | Case | Caption | Chars |
 |---|---|---|---|
@@ -199,15 +207,15 @@ restated here from memory: check them before cutting **(check)**.
 
 | Option | Plan |
 |---|---|
-| **A (recommended)** | One preview, about 25 s, free game only: the packs live in screenshots 8 to 10 |
-| B | Three previews: the free game, the tiers, the packs |
-| C | One preview with the packs at its end, each labelled as a paid add-on |
+| **A (Jack, ST5)** | One preview, about 25 s, free game only: the packs live in screenshots 8 to 10 |
+| B, set aside | Three previews: the free game, the tiers, the packs |
+| C, set aside | One preview with the packs at its end, each labelled as a paid add-on |
 
 A: the first seconds autoplay muted in search results, and one strong loop of a picture snapping back is the pitch
 (plan step 3's clips test the same moment). B triples the cutting work for slots most visitors never open. C is the
 fallback if the packs need video to sell.
 
-Option A's cut, in order:
+The cut, in order:
 
 | Seconds | Source | What it shows | Caption (muted playback) |
 |---|---|---|---|
@@ -221,12 +229,13 @@ The 4–12 s film doesn't exist and is the one new case the plan needs; it also 
 
 ## Other fields App Store Connect asks for
 
-- **Privacy policy URL** (required). Options: **A (recommended)** GitHub Pages serving `docs/` of this public repo,
-  free and versioned with the code; B the plain github.com link to `docs/privacy-policy.md`, which works but reads as a
-  code page; C a domain of its own, which HANDOFF puts off until sharing. A or B shows the GitHub account name in the
-  address, which the public repo shows already.
-- **Support URL** (required). The same Pages site with a support page, or the repo's issues page. Either needs a
-  contact address that is Jack's to choose; it goes into App Store Connect, never into this repo.
+- **Privacy policy URL** (required): GitHub Pages serving `docs/` of this public repo (Jack, ST7), free and versioned
+  with the code. Until Pages is set up, the app's settings row links the plain github.com page of
+  `docs/privacy-policy.md`; switch that constant to the Pages address once it serves. Set aside: a domain of its own,
+  which HANDOFF puts off until sharing.
+- **Support URL** (required): a support page on the same Pages site, giving `{{CONTACT_ADDRESS}}`.
+- **Contact address** for privacy and support: `{{CONTACT_ADDRESS}}` everywhere in the repo. Jack has picked it; it is
+  recorded in `HANDOFF.private.md` only, and filled in App Store Connect and in the published pages at publishing.
 - **Marketing URL** (optional). None until a domain exists.
 - **Copyright.** The year and holder of the source files' copyright headers.
 - **In-app purchases.** Display names: "First Stir", "Lens", "Escapement", "Complete". Descriptions (Apple's limit is
@@ -249,16 +258,17 @@ The 4–12 s film doesn't exist and is the one new case the plan needs; it also 
 
 The label must match the build that ships. All of what follows is derived from the code, cited by file.
 
-### Without analytics (`master` as it is)
+### Without analytics (branch `v1-no-analytics`)
 
-**Data Not Collected.** The app opens no network connection of its own (no `URLSession` on `master`). StoreKit's
+**Data Not Collected.** With analytics off the app opens no network connection of its own. StoreKit's
 purchases go between the phone and Apple, and Apple's handling isn't the app's to declare (Apple's guidance, as
 understood; check). The daily's share line and the send-log button go through the system share sheet, which the
 player directs.
 
-### With analytics (the `analytics` branch, if merged)
+### With analytics (branch `keep-analytics`)
 
-Matches the branch's `Sources/PrivacyInfo.xcprivacy`:
+Matches `Sources/PrivacyInfo.xcprivacy` on `master`. The legal research (round 10) also recommends declaring
+Identifiers › User ID, not linked, for Aptabase's daily hash; not yet added:
 
 | Data type | Collected | Linked to the player | Used to track | Purpose |
 |---|---|---|---|---|
@@ -295,26 +305,19 @@ whether the boot session and monotonic clock could be read (not their values).
 
 | Option | Label |
 |---|---|
-| **A (recommended)** | Don't declare it: optional, infrequent, started by the player each time, through a system sheet that shows where it goes |
-| B | Declare Diagnostics › Other Diagnostic Data, linked (an email carries the sender's address) |
+| **A (Jack, ST7)** | Don't declare it: optional, infrequent, started by the player each time, through a system sheet that shows where it goes |
+| B, set aside | Declare Diagnostics › Other Diagnostic Data, linked (an email carries the sender's address) |
 
-A rests on Apple's "optional disclosure" criteria as Claude understands them, unchecked against the current App
-Privacy page **(check)**. B is the safe reading if those criteria don't fit. Either way the privacy policy says what
-the log holds.
+A rests on Apple's "optional disclosure" criteria, unchecked against the current App Privacy page **(check)**; B is
+the fallback if App Review reads them otherwise. Either way the privacy policy says what the log holds.
 
-## Open choices for Jack
+## Still open
 
-1. Name: "Unstir" alone (recommended), or with a tagline.
-2. Subtitle: "Unwind the stirred picture" (recommended).
-3. Promotional text: A (recommended), what is free and that packs exist.
-4. Keywords: A (recommended).
-5. Category: Puzzle with Casual (recommended).
-6. Screenshots: seven free shots then one per pack (recommended); captions need a compositing step that doesn't exist.
-7. Preview: one 25-second free-game preview (recommended), with one new finger-driven film to make.
-8. Family Sharing: still needs an explicit yes before the description mentions it (hard to undo).
-9. Privacy policy hosting: GitHub Pages from `docs/` (recommended), and a contact address for privacy and support.
-10. The send-log button on the label: undeclared under optional disclosure (recommended), or Diagnostics.
-11. For a lawyer: GDPR article 8 and a 4+ game's consent question; whether `snapshot` rows are personal data; whether
-    Aptabase offers a processing agreement and how long it keeps request addresses.
-12. Carried from to-do 57, not a page choice: a Yes, then No, then Yes sends `installed` again and counts as a second
-    install.
+1. Whether v1 ships with analytics (the round 11 law calls): it picks the description's last paragraph, the App
+   Privacy label variant above and which privacy policy is published (`docs/privacy-policy.md` without analytics,
+   `docs/privacy-policy-analytics.md` with).
+2. Before submitting: the checks marked **(check)** above, against App Store Connect's live pages.
+3. Screenshots 8 to 10 and the 4–12 s film are still to make, and captions need a compositing step that doesn't exist.
+4. The pack lines describe the designs; check them against the packs as they ship.
+5. Carried from to-do 57: on the analytics build, a Yes, then No, then Yes sends `installed` again and counts as a
+   second install.
