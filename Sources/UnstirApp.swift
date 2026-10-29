@@ -56,8 +56,8 @@ struct Harness {
     /// the start at -1, for films. Needs UNSTIR_SCREEN=clean.
     let ending: Double?
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
-    /// names it), as solve.sh prints a line. A ratchet's turn is a tap on it, a wait; a turn of the open stir's knob
-    /// takes it up again.
+    /// names it), as solve.sh prints a line. A ratchet's turn is a tap on it, a wait; with UNSTIR_FINGER, any turn of it
+    /// but 1 taps halfway out the clock's disc instead. A turn of the open stir's knob takes it up again.
     let moves: [Twist]?
     /// UNSTIR_PLAYED=2:4,0:1: a line in UNSTIR_MOVES's form, committed through the real path as the level opens, so a
     /// still shows the tank part way through it.
@@ -120,6 +120,9 @@ struct Harness {
     /// none with UNSTIR_PRICES=0, as before StoreKit answers.
     let prices: [String: String]
 
+    /// UNSTIR_STOPLOOK=left: what an Escapement tank lost to its last clock stopping shows (`StopLook`), stamp unset.
+    let stopLook: StopLook?
+
     /// UNSTIR_ICON=n: app-icon candidate n alone on the screen (`IconView`).
     let icon: Int?
     /// UNSTIR_CARD=lens (a pack's prefix, or complete): that pack's card open over the menu.
@@ -128,6 +131,8 @@ struct Harness {
     let cardLevels: Int
     /// UNSTIR_SHELFDEMO=1: the menu opens Lens's card from the dock and closes it, through the calls a finger makes.
     let shelfDemo: Bool
+    /// UNSTIR_CARDSCROLL=1: with UNSTIR_CARD, the card opens scrolled to its list of levels.
+    let cardScroll: Bool
     /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
     let typeSize: DynamicTypeSize?
     /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
@@ -164,6 +169,7 @@ struct Harness {
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
+        stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
         prices = env["UNSTIR_PRICES"] == "0" ? [:]
             : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, $0 == Pack.completeID ? "$5.99" : "$2.99") })
@@ -256,6 +262,7 @@ struct Harness {
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
         card = env["UNSTIR_CARD"].flatMap(Offer.init(name:)).flatMap { $0.sold ? $0 : nil }
+        cardScroll = env["UNSTIR_CARDSCROLL"] == "1"
         cardLevels = env["UNSTIR_CARDLEVELS"].flatMap(Int.init).map { min(max($0, 0), 30) } ?? 0
         shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
         typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
@@ -349,7 +356,7 @@ struct RootView: View {
             } else {
                 MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
                          settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
-                         shelfDemo: harness?.shelfDemo ?? false) {
+                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false) {
                     show($0)
                 }
                 .transition(dip)

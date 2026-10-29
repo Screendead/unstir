@@ -74,26 +74,34 @@ extension String {
     func ifEmpty(_ other: String) -> String { isEmpty ? other : self }
 }
 
-/// solve.sh escapement <layout> <scramble> <clock rod> [limit]: the prover's fewest moves with the clock ticking after
-/// each, and the line, or none within the limit. Exits when done.
+/// solve.sh escapement <layout> <scramble> <clocks> [limit]: the prover's fewest moves with the clocks ticking after
+/// each, in the order given, and the line, or none within the limit. A clock is a rod, + to tick forward or - for wound
+/// back, as scripts/escapement/problems.tsv writes them: 1+,4-. Exits when done.
 func escapement(_ args: [String]) -> Never {
-    guard (3...4).contains(args.count), let layout = Layout(rawValue: args[0]), let clock = Int(args[2]),
-          layout.rods.indices.contains(clock), args.count < 4 || Int(args[3]) != nil else {
-        print("usage: scripts/solve.sh escapement <layout> <scramble, e.g. 0:-1,1:+3> <clock rod> [limit, default 8]")
+    let clocks: Solver.Clocks = args.count > 2 ? args[2].split(separator: ",").compactMap { part in
+        Int(part.trimmingCharacters(in: CharacterSet(charactersIn: "+-"))).map { (rod: $0, dir: part.hasSuffix("-") ? -1 : 1) }
+    } : []
+    guard (3...4).contains(args.count), let layout = Layout(rawValue: args[0]), !clocks.isEmpty,
+          clocks.allSatisfy({ layout.rods.indices.contains($0.rod) }), args.count < 4 || Int(args[3]) != nil else {
+        print("usage: scripts/solve.sh escapement <layout> <scramble, e.g. 0:-1,1:+3> <clocks, e.g. 0+ or 1+,4-> [limit, default 9]")
         exit(2)
     }
-    let stack = [Twist].parse(args[1], in: layout), limit = args.count > 3 ? Int(args[3])! : 8
+    let stack = [Twist].parse(args[1], in: layout), limit = args.count > 3 ? Int(args[3])! : 9
     let clock0 = ContinuousClock()
     var seen = 0, play: Play?
-    let took = clock0.measure { play = Solver(layout).escapement(stack, clock: clock, limit: limit, seen: &seen) }
-    print("entries \(stack.count), clock \(clock), counts \u{00B1}1 to \u{00B1}11 and each entry's inverse")
+    let solver = Solver(layout)
+    let took = clock0.measure { play = solver.escapement(stack, clocks: clocks, limit: limit, seen: &seen) }
+    print("entries \(stack.count), clocks \(args[2]), counts \u{00B1}1 to \u{00B1}11 and each entry's inverse")
     if let play {
-        print("optimum \(play.count): no shorter line exists among those counts; a line:")
+        let owed = Solver.Clockwork(layout: layout, lenses: [], clocks: clocks, steps: []).owed(stack)
+        print("optimum \(play.moves.count)" + (play.moves.count == owed ? ", what the clocks owe, so no line is shorter" : "") + "; a line:")
         for (i, move) in play.moves.enumerated() { print("  \(i + 1). \(move)") }
+        let keys = solver.escapementKeys(stack, clocks: clocks, par: play.moves.count)
+        print("first moves that reach it: \(keys.map(\.description).joined(separator: ", "))")
     } else {
         print("no line within \(limit) moves")
     }
     let ms = Double(took.components.seconds) * 1e3 + Double(took.components.attoseconds) / 1e15
-    print("\(seen) states, \(String(format: "%.2f", ms)) ms")
+    print("\(seen) states failed, \(String(format: "%.2f", ms)) ms")
     exit(play == nil ? 1 : 0)
 }

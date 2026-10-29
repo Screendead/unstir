@@ -272,8 +272,9 @@ final class Analytics {
         }
         guard !level.sandbox else { return nil }
         return ("level", ["id": .text(level.id.hasPrefix("daily-") ? "daily" : level.id), "outcome": .text(outcome),
-                          "moves": .int(game.moves), "par": .int(game.par), "undos": .int(game.undos),
-                          "resets": .int(game.resets)])
+                          // Escapement has no par: its budget stands in.
+                          "moves": .int(game.moves), "par": .int(level.ratchets.isEmpty ? game.par : level.budget),
+                          "undos": .int(game.undos), "resets": .int(game.resets)])
     }
 
     private static func quit(_ game: Game) -> (name: String, props: [String: Prop])? {

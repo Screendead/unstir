@@ -2,7 +2,7 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots, comma-separated]
 #        [masks=slot:channel pairs, each channel one of r g b c m y w]
-#        scripts/solve.sh escapement <layout> <scramble> <clock rod> [limit]
+#        scripts/solve.sh escapement <layout> <scramble> <clocks, e.g. 1+,4-> [limit]
 # Prints the optimum, the park rule's fewest and most moves over every way its ties go under each reading, the
 # no-lookahead player's count, and the optimal moves. Escapement's mode prints the prover's fewest moves with the clock
 # ticking after each, and a line.

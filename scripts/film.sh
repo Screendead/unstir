@@ -136,11 +136,28 @@ film clip-complete 18 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=comple
 # The menu's dock of covers, which keep their own loops.
 film shelf-dock 9 "crop=1320:420:0:2380,fps=2,scale=440:-1,tile=4x4:padding=4" STORE=lens:unowned
 # Escapement 1: the demonstration a first-time player sees before the first stir (a heal ticks the clock, a wait ticks it
-# again, then the problem winds in), and lines played by a drawn fingertip: won, and lost the moment a slip is let go.
-# A ratchet's move (0:1) is a tap on it.
+# again, then the problem winds in), and lines played by a drawn fingertip: won, and a slip whose tick pushes, played on
+# until the ticks run out. A ratchet's move (0:1) is a tap on it. Screen, so the header's budget shows with the tank.
 film escapement-demo 14 "$tank,fps=3,scale=200:-1,tile=8x6:padding=4" PACK=escapement OPEN=1
-film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
-film escapement-lost 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement FINGER=1 REST=1 MOVES=2:4,1:-3
+film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
+screen=crop=iw:ih*0.75:0:ih*0.05  # the header and the tank, the budget's flaps with the clocks, at either scale
+film escapement-out-of-ticks 15 "$screen,fps=3,scale=150:-1,tile=9x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=2:4,1:-3,0:1
+# Out of ticks as the clock stops with twists left: on 3, a tap, then knob 1, which pushes under knob 2's seam as the
+# clock stops.
+film escapement-stopped 11 "$tank,fps=3,scale=200:-1,tile=8x4:padding=4" PACK=escapement LEVEL=3 FINGER=1 REST=1 MOVES=0:1,1:-3
+# Clean solves of the book's lines: 17's two clocks, the first uncovering the second's seam on every move, and 29's three,
+# with its two taps (a ratchet's move, 1:1).
+film escapement-two-clocks 19 "$tank,fps=2,scale=200:-1,tile=8x5:padding=4" PACK=escapement OWNED=escapement LEVEL=17 FINGER=1 REST=1 \
+  MOVES=3:-5,4:-2,3:5,4:3,3:-4
+# 16's line, the budget's flaps falling two a move while both clocks run, then one: 09 to 00 as clock 4 stops.
+film escapement-budget-16 22 "$screen,fps=2,scale=150:-1,tile=11x4:padding=4" PACK=escapement OWNED=escapement LEVEL=16 FINGER=1 REST=1 \
+  MOVES=3:-2,5:-2,1:1,6:-4,5:3,2:-5
+film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" PACK=escapement OWNED=escapement LEVEL=29 FINGER=1 REST=1 \
+  MOVES=4:-3,1:1,2:-2,1:1,2:-4,0:5,2:-3,4:-3
+# Escapement 7, whose first move is a wait: a tap halfway out the clock's disc (0:2), then one on its ratchet (0:1),
+# then the line.
+film escapement-tap 15 "$tank,fps=3,scale=200:-1,tile=9x5:padding=4" PACK=escapement OWNED=escapement LEVEL=7 FINGER=1 REST=1 \
+  MOVES=0:2,0:1,1:2,2:-3
 # Lens: a launch first bakes the halftone into Caches, which takes 20 s or more in Debug; the films then read it.
 if [[ -z "$pattern" || lens == *$pattern* || "$pattern" == lens* ]]; then
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true

@@ -182,6 +182,12 @@ enum Layout: String, CaseIterable {
     }
     var tankStep: Double { 2 * .pi / Double(order) }
 
+    /// Rod `k`'s centre as an angle clockwise from twelve, 0 up to 2π; y runs down the screen.
+    func clockwise(_ k: Int) -> Double {
+        let a = atan2(rods[k].x, -rods[k].y)
+        return a < 0 ? a + 2 * .pi : a
+    }
+
     /// After one step of the tank clockwise, knob k sits over the fluid that rod `behind[k]` stirs.
     private var behind: [Int] {
         switch self {
