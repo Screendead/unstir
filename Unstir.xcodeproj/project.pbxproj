@@ -11,6 +11,8 @@
 		1A5F105A934D627FC90E16AE /* SolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE69789D7FB741D6D04AA1A /* SolverTests.swift */; };
 		1E804D07FF7FF37E986BFF19 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 25930862609F89911BFB5015 /* Sounds */; };
 		21DF6C200CBDE16E8AD4BA92 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A75F3E52CC7C2EE27C7DFE /* Log.swift */; };
+		2D70099B35E5AC7E8ED3C714 /* FirstStirEnding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680D4F9DC78E6890CAD80AE7 /* FirstStirEnding.swift */; };
+		2E38B1B5B55BE8B14D6D3B09 /* FirstStirDawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */; };
 		2F4A4627C3976608D2D99D66 /* ClipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED6B7A35E47B3475841C4DC /* ClipTests.swift */; };
 		3A65E8F7E58F1DA384BE5ABC /* Clip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F14A8BD3536DD66979D13A /* Clip.swift */; };
 		3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965EC2AB5B15FD9B3CA462DE /* Twist.swift */; };
@@ -23,6 +25,7 @@
 		52972B0C126203096364F0AF /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E8193F7A9FB37B678695D2 /* Menu.swift */; };
 		5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944137441C4619E684D8CC15 /* LivePictures.swift */; };
 		6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */; };
+		64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */; };
 		650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B80E0606D266BF05C66786E /* FirstStir.swift */; };
 		730654ACB29B80F0DED02225 /* EscapementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD78B993A35245B095AA159 /* EscapementTests.swift */; };
 		79D52A8EF45A795194455A50 /* Sky.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2926E44D61C37EEF53C771BA /* Sky.metal */; };
@@ -36,8 +39,10 @@
 		98526A3AA7420D378D76C241 /* Levels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD430ED66CD5CE54E0F67F72 /* Levels.swift */; };
 		9F25E1385928C5125BE5CD40 /* Unstir.metal in Sources */ = {isa = PBXBuildFile; fileRef = 63330CD5793ABE158F314B89 /* Unstir.metal */; };
 		A0D3E8882BD5D8BFC1B6B764 /* Flow.metal in Sources */ = {isa = PBXBuildFile; fileRef = BA733A070401C0AD2175FAC1 /* Flow.metal */; };
+		A381D1DEF77AFA6955900C8D /* StoryScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */; };
 		A3FE9653504683BB8858E5DA /* Halftone.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2393BC9A530BA08FB39DD5F /* Halftone.swift */; };
 		A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE72E9F1CCE362B73E2FA79 /* Solver.swift */; };
+		AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */; };
 		B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB4A9DE240F63330597A189 /* LensTests.swift */; };
 		BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */ = {isa = PBXBuildFile; fileRef = D1F91870B1E87E24EFC084E0 /* Glass.metal */; };
 		C3596BB291D30EF520836782 /* Chainmail.metal in Sources */ = {isa = PBXBuildFile; fileRef = E302013539F573E3F8C8FBC5 /* Chainmail.metal */; };
@@ -45,11 +50,13 @@
 		D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0CD5709FED7976550A2E52 /* TankView.swift */; };
 		D7B47E903167691787C1EB50 /* Marbling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0D958FCA92212546745A433D /* Marbling.metal */; };
 		D90B92AEBB41C6429CB55D32 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551B7907E2001DBDBAC8A1B9 /* Store.swift */; };
+		E40A904A8187FBF9CD6F33F4 /* FirstStirDuskBefore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */; };
 		E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D692C82FAF648856F00B09E0 /* PackTests.swift */; };
 		ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283B1A56B07119D483F58617 /* Pack.swift */; };
 		F09FECAA611D270EE52C8307 /* FirstStirTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B662DA049B8A76E76E38BF /* FirstStirTests.swift */; };
 		F1D5DFB747CEEE7F2DC62166 /* Coral.metal in Sources */ = {isa = PBXBuildFile; fileRef = 27E5962A6708954A5E564099 /* Coral.metal */; };
 		F40291CB604E0F77378217A9 /* Pictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7147B0B195AAB46DE31D870D /* Pictures.swift */; };
+		FA7C0CC5ADD8583855C61026 /* FirstStirFlood.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */; };
 		FBCBC734D11A37A402DFEA2F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 059E21DBCF779B91F994E8E5 /* Assets.xcassets */; };
 		FE081CE6E2DD92DDE163DCA7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */; };
 		FF92A9DDE01E5F17039DBCBB /* Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02DCBCEAE9EA5C16D6101548 /* Share.swift */; };
@@ -79,6 +86,7 @@
 		2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareTests.swift; sourceTree = "<group>"; };
 		2DF7981B1F96D77FDEB85C68 /* Unstir.storekit */ = {isa = PBXFileReference; path = Unstir.storekit; sourceTree = "<group>"; };
 		31807869E592C189FDCC0657 /* UnstirTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = UnstirTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirRescue.swift; sourceTree = "<group>"; };
 		39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3CB4A9DE240F63330597A189 /* LensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensTests.swift; sourceTree = "<group>"; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
@@ -88,6 +96,7 @@
 		59B662DA049B8A76E76E38BF /* FirstStirTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirTests.swift; sourceTree = "<group>"; };
 		63330CD5793ABE158F314B89 /* Unstir.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Unstir.metal; sourceTree = "<group>"; };
 		6499D4977A88A7764419D373 /* Brim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brim.swift; sourceTree = "<group>"; };
+		680D4F9DC78E6890CAD80AE7 /* FirstStirEnding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirEnding.swift; sourceTree = "<group>"; };
 		6EE69789D7FB741D6D04AA1A /* SolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolverTests.swift; sourceTree = "<group>"; };
 		7147B0B195AAB46DE31D870D /* Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pictures.swift; sourceTree = "<group>"; };
 		7898E0AEAFE90492DC3EB64C /* Neurons.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Neurons.metal; sourceTree = "<group>"; };
@@ -110,11 +119,16 @@
 		D1F91870B1E87E24EFC084E0 /* Glass.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Glass.metal; sourceTree = "<group>"; };
 		D322AA44C06018F3A665792F /* Brim.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Brim.metal; sourceTree = "<group>"; };
 		D692C82FAF648856F00B09E0 /* PackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackTests.swift; sourceTree = "<group>"; };
+		D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirDawn.swift; sourceTree = "<group>"; };
 		D80A3010678E45A15B0543C3 /* Consent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Consent.swift; sourceTree = "<group>"; };
 		D89654A86FE88E89D5339382 /* Sound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sound.swift; sourceTree = "<group>"; };
 		DB7B4A291F2734F1B961F3FE /* Shelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shelf.swift; sourceTree = "<group>"; };
+		E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirTheStorm.swift; sourceTree = "<group>"; };
 		E302013539F573E3F8C8FBC5 /* Chainmail.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Chainmail.metal; sourceTree = "<group>"; };
+		EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirDuskBefore.swift; sourceTree = "<group>"; };
+		EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirFlood.swift; sourceTree = "<group>"; };
 		FED6B7A35E47B3475841C4DC /* ClipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipTests.swift; sourceTree = "<group>"; };
+		FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryScene.swift; sourceTree = "<group>"; };
 		FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -186,6 +200,12 @@
 				D80A3010678E45A15B0543C3 /* Consent.swift */,
 				27E5962A6708954A5E564099 /* Coral.metal */,
 				0B80E0606D266BF05C66786E /* FirstStir.swift */,
+				D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */,
+				EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */,
+				680D4F9DC78E6890CAD80AE7 /* FirstStirEnding.swift */,
+				EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */,
+				36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */,
+				E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */,
 				BA733A070401C0AD2175FAC1 /* Flow.metal */,
 				D1F91870B1E87E24EFC084E0 /* Glass.metal */,
 				B2393BC9A530BA08FB39DD5F /* Halftone.swift */,
@@ -206,6 +226,7 @@
 				2926E44D61C37EEF53C771BA /* Sky.metal */,
 				D89654A86FE88E89D5339382 /* Sound.swift */,
 				551B7907E2001DBDBAC8A1B9 /* Store.swift */,
+				FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */,
 				4C0CD5709FED7976550A2E52 /* TankView.swift */,
 				965EC2AB5B15FD9B3CA462DE /* Twist.swift */,
 				63330CD5793ABE158F314B89 /* Unstir.metal */,
@@ -328,6 +349,12 @@
 				50B41DB91ADFEC633FAE5BB8 /* Consent.swift in Sources */,
 				F1D5DFB747CEEE7F2DC62166 /* Coral.metal in Sources */,
 				650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */,
+				2E38B1B5B55BE8B14D6D3B09 /* FirstStirDawn.swift in Sources */,
+				E40A904A8187FBF9CD6F33F4 /* FirstStirDuskBefore.swift in Sources */,
+				2D70099B35E5AC7E8ED3C714 /* FirstStirEnding.swift in Sources */,
+				FA7C0CC5ADD8583855C61026 /* FirstStirFlood.swift in Sources */,
+				64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */,
+				AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */,
 				A0D3E8882BD5D8BFC1B6B764 /* Flow.metal in Sources */,
 				BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */,
 				A3FE9653504683BB8858E5DA /* Halftone.swift in Sources */,
@@ -346,6 +373,7 @@
 				79D52A8EF45A795194455A50 /* Sky.metal in Sources */,
 				87529D1AE6435E7B409D5D4E /* Sound.swift in Sources */,
 				D90B92AEBB41C6429CB55D32 /* Store.swift in Sources */,
+				A381D1DEF77AFA6955900C8D /* StoryScene.swift in Sources */,
 				D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */,
 				3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */,
 				9F25E1385928C5125BE5CD40 /* Unstir.metal in Sources */,

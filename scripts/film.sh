@@ -95,13 +95,24 @@ for p in isobars ephemeris cords; do
   film "vortex-family-$p" 10 "$tank,fps=3,scale=220:-1,tile=8x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 FINGER=1 PICTURE=$p \
     MOVES=4:-4,4:-4,4:+4,4:+6
 done
-# First Stir 01, the harbour: the opening stirs the wrecked harbour in, then autoplay heals the lighthouse, the boat and
-# the cottage 2.5 s apart. As each heal plays its vignette (a 0.4 s cross-fade in its core), the night winds back a
-# stage: the rain climbs back up its slant and thins, the lightning goes, the sky warms and the moon sinks.
+# First Stir 01, sunrise: the opening stirs the wrecked dawn in, then autoplay heals its four entries 2.5 s apart. Each
+# heal steps the clock back and winds the sky back a quarter of its window, the sun sinking and the smoke going; the
+# second, third and fourth play the lantern, the boat and the cottage, each a 0.4 s cross-fade in its core.
 film firststir-01-solve 25 "$tank,fps=1.5,scale=200:-1,tile=9x4:padding=4" PACK=first-stir LEVEL=1 OPEN=1 AUTOPLAY=1 PACE=2.5
-# The heal ring: a push on the boat's rod (red), turned back (white, nothing plays), then the lighthouse's heal (magenta,
-# its vignette).
-film firststir-01-ring 14 "$tank,fps=2,scale=200:-1,tile=11x2:padding=4" PACK=first-stir LEVEL=1 MOVES=1:+2,1:-2,0:-3 PACE=2.2
+# The heal ring: a push on the lighthouse's rod (red), turned back (white, nothing plays), the boat's top entry healed
+# (no vignette plays; the clock steps back), then the lighthouse's heal (magenta, its vignette).
+film firststir-01-ring 14 "$tank,fps=2,scale=200:-1,tile=11x2:padding=4" PACK=first-stir LEVEL=1 MOVES=0:+2,0:-2,1:-2,0:-3 PACE=2.2
+# A scene from each chapter unstirred by a drawn fingertip, every heal stepping the clock back and each vignette playing
+# as its rod's last entry goes: sunrise (1), the lantern chain (8), the kitchen, flooded (14), the harbour at the
+# storm's peak (16) and first stir (25), whose solve runs on into the night forwards.
+fs="OWNED=first-stir FINGER=1 PACK=first-stir"
+film firststir-ch1-sunrise 20 "$tank,fps=1,scale=200:-1,tile=10x2:padding=4" $fs LEVEL=1 MOVES=1:-2,0:-3,1:+4,2:-5
+film firststir-ch2-chain 30 "$tank,fps=1,scale=200:-1,tile=10x3:padding=4" $fs LEVEL=8 MOVES=1:+3,0:-2,3:+5,2:+2,1:-5,0:+3,3:-4
+film firststir-ch3-kitchen 33 "$tank,fps=1,scale=200:-1,tile=11x3:padding=4" $fs LEVEL=14 MOVES=1:-4,2:-2,3:-3,1:+2,2:+4,1:-5,3:+3,0:-4
+film firststir-ch4-harbour 33 "$tank,fps=1,scale=200:-1,tile=11x3:padding=4" $fs LEVEL=16 MOVES=0:-3,1:-2,0:+4,1:-5,2:+2,0:-3,1:+4,2:-5
+film firststir-ch5-stir 34 "$tank,fps=1,scale=200:-1,tile=12x3:padding=4" $fs LEVEL=25 MOVES=1:+3,0:-2,1:-5,0:+3,2:-4
+# The night forwards whole, from First Stir 25 opened solved (UNSTIR_ENDING=-1 runs it from the start).
+film firststir-ending 168 "$tank,fps=0.2,scale=160:-1,tile=8x4:padding=4" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=-1
 # The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
 # (UNSTIR_SHELFDEMO, through the calls a finger makes).
 film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned

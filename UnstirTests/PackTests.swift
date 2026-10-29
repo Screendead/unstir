@@ -101,6 +101,29 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(store.card(for: level(.lens, 4)), .lens)
     }
 
+    /// First Stir plays whole from the shelf in order: its 25 scenes, each card's next the scene after; the taste of 3
+    /// opens unowned and every scene past it shows the card, until the pack is owned. It is on the Release shelf now, with
+    /// nothing left to arrive.
+    @MainActor func testFirstStirPlaysInOrderFromTheShelf() {
+        let unlocked = Best.unlocked
+        defer { Best.unlocked = unlocked }
+        Best.unlocked = false
+        let levels = Pack.firstStir.levels
+        XCTAssertEqual(levels.count, 25)
+        XCTAssertEqual(levels.map(\.id), (1...25).map { Pack.firstStir.id($0) })
+        for (a, b) in zip(levels, levels.dropFirst()) {
+            XCTAssertEqual(levels.drop { $0.id != a.id }.dropFirst().first?.id, b.id)
+        }
+        let store = Store()
+        XCTAssertEqual(levels.map { store.card(for: $0) }, Array(repeating: nil, count: 3) + Array(repeating: .firstStir, count: 22))
+        var ledger = Ledger()
+        ledger.record(Pack.firstStir.productID, .owned)
+        store.pretend(ledger)
+        XCTAssertTrue(levels.allSatisfy { store.card(for: $0) == nil })
+        XCTAssertTrue(Offer.shelf(release: true).contains(.pack(.firstStir)))
+        XCTAssertFalse(Offer.pack(.firstStir).arriving)
+    }
+
     /// Complete reads as owned once every pack is, however they were bought.
     @MainActor func testCompleteIsOwnedOnceEveryPackIs() {
         let store = Store()
