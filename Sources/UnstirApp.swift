@@ -11,7 +11,9 @@ struct UnstirApp: App {
     }
 
     var body: some Scene {
-        WindowGroup { RootView() }
+        WindowGroup {
+            if GPUBench.wanted { GPUBenchView() } else { RootView() }
+        }
     }
 }
 

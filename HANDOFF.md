@@ -1430,7 +1430,10 @@ names and product ids, and Complete's promise to older owners.
     overlapping entries with disjoint masks commute.~~ Done: PR #59, merged 2026-10-29.
 60. Prism: the shader's per-channel chains (built, #59), their cost (assumed 2 plus a map per channel held) benched on
     the phone. Depth is capped at 8 (PK1), so every specimen costs at most 18 entries against the 30 the plain shader
-    holds four taps at; the bench says whether that assumption holds.
+    holds four taps at. The GPU bench is built (`prism-bench`, `scripts/gpu-bench.sh`): on the simulator (the Mac's GPU,
+    wall clock) every specimen's measured cost is 0.6 to 0.9 of the assumed, the slowest (24) 0.7 ms a frame at 1284 px.
+    **For Jack:** run `scripts/gpu-bench.sh phone` once with the phone cool; it prints the same lines from the phone's
+    own GPU clock. Until then the cost stays an assumption.
 61. ~~Prism: a colour-blind simulation, the line styles under Differentiate Without Colour, and the swatch that shows
     one channel.~~ Done 2026-10-29 (`prism-colourblind`). The simulation (`scripts/colour-blind.py`) showed the default
     read fails for protanopes and deuteranopes: red, green and yellow ghosts all turn one olive, and cyan nearly white,
