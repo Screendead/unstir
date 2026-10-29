@@ -83,12 +83,14 @@ static half4 finish(float3 acc, int stride, float haze) {
 }
 
 // Prism's: each of red, green and blue sampled through its own word, the entries whose mask (masks[i], a Channels raw
-// value) holds it. cost is the work in entries, against fourTaps as n is above.
+// value) holds it. cost is the work in entries, against fourTaps as n is above. isolate, a single channel's raw value or
+// 0, draws that channel alone in white and hides the others: the held swatch, which reads without telling colours apart.
 [[ stitchable ]] half4 unstirChannels(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
                                       device const float *twists, int count, device const float *masks, int maskCount,
                                       float n, float cost, float fourTaps, float plateau, float swirlPlateau,
-                                      float lensEdge, float scale, float haze, float3 wave, float turn) {
+                                      float lensEdge, float scale, float haze, float3 wave, float turn, float isolate) {
     int stride = cost > fourTaps ? 3 : 1;
+    int alone = int(isolate);
     float ct = cos(turn), st = sin(turn);
     float3 acc = 0;
     for (int j = 0; j < 4; j += stride) {
@@ -98,6 +100,7 @@ static half4 finish(float3 acc, int stride, float haze) {
         chains(min(int(n), min(count / 4, maskCount)), twists, masks, plateau, swirlPlateau, lensEdge, qr, qg, qb);
         float3 s = float3(layer.sample(centre + qr * radius).r, layer.sample(centre + qg * radius).g,
                           layer.sample(centre + qb * radius).b);
+        if (alone != 0) s = float3(alone == 1 ? s.r : alone == 2 ? s.g : s.b);
         acc += lit(s, p, wave);
     }
     return finish(acc, stride, haze);

@@ -536,6 +536,11 @@ prism-bare-quad.png  Prism's fern under quad's knobs, unstirred: some line in ev
 prism-bare-eye.png  Prism's fern under eye's knobs, unstirred: some line in every core.
 prism-bare-pent.png  Prism's fern under pent's knobs, unstirred: some line in every core.
 prism-bare-hex.png  Prism's fern under hex's knobs, unstirred: some line in every core.
+prism-swatch-r.png  Prism specimen 8 with the r swatch held: that channel's lines alone, in white, the others hidden.
+prism-swatch-g.png  Prism specimen 8 with the g swatch held: that channel's lines alone, in white, the others hidden.
+prism-swatch-b.png  Prism specimen 8 with the b swatch held: that channel's lines alone, in white, the others hidden.
+prism-letters-8.png  Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB.
+prism-letters-14.png  Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG.
 prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-movement.png  Prism's movement plate under pent's knobs, unstirred.
 prism-plate-cathedral.png  Prism's cathedral plate under pent's knobs, unstirred.

@@ -636,6 +636,10 @@ enum Grab: Equatable {
 struct LevelView: View {
     @State private var game: Game
     @State private var liveRod: Int?
+    /// Prism: the channel whose swatch is held, drawn alone.
+    @State private var isolated: Channels?
+    private let letters: Bool
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
     @State private var liveAngle = 0.0
     /// The tank's turn in hand, in radians clockwise, while a finger holds the rim; nil when it is not held.
     @State private var liveTurn: Double?
@@ -811,6 +815,8 @@ struct LevelView: View {
         stopLook = harness?.stopLook ?? .stamp
         shareSheet = harness?.shareSheet ?? false
         bench = harness?.bench ?? false
+        _isolated = State(initialValue: harness?.swatch)
+        letters = harness?.letters ?? false
         frozenWave = harness?.wave
         frozenClock = harness?.clock
         frozenShake = harness?.shake
@@ -902,6 +908,12 @@ struct LevelView: View {
                                 .transition(reveal)
                         }
                     }
+                // Only where colour can't carry the read, so for everyone else the read stays by colour.
+                if !game.level.masks.isEmpty, letters || differentiate || isolated != nil {
+                    ChannelSwatches(isolated: $isolated)
+                        .opacity(showResult || ending || shown != nil ? 0 : 1)
+                        .allowsHitTesting(!showResult && shown == nil)
+                }
                 Spacer(minLength: 12)
                 HStack {
                     // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats too.
@@ -1322,7 +1334,7 @@ struct LevelView: View {
             : Double(game.position) * step + (held ?? 0)
         let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
-                                  fillEntries: game.level.picture.fillEntries)
+                                  fillEntries: game.level.picture.fillEntries, isolate: isolated)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
         let source = game.history.last.map { $0.rod == Game.tank ? .zero : centre(game.knob(over: $0.rod)) } ?? centre(0)
         let frozenWave = frozenWave
@@ -1505,13 +1517,15 @@ struct LevelView: View {
                     KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                         RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
                                 size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
-                                lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)))
+                                lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)),
+                                channels: game.level.channels(of: game.slot(of: k)))
                     } keyframes: { _ in Self.jolt }
                         .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
                 }
             }
             // A spilled tank keeps its caps over the murk, and a lost one its clock.
             .opacity(showResult && !game.spilled && !game.lost ? 0 : 1)
+            .environment(\.channelLetters, letters || differentiate)
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
             // knobs, which would hide it. The swirl's is a ring just inside the glass's edge, over the picture, so a
             // hairline. One view either way, so the first push on either animates.
@@ -2262,6 +2276,8 @@ struct Unstirred: ViewModifier, Animatable {
     var breath: (rod: Int, angle: Double)?
     /// Escapement: the clock's tick part way, on top of the stack and under the live twist.
     var tick: (rod: Int, angle: Double)?
+    /// Prism: one channel drawn alone in white, the others hidden, while its swatch is held.
+    var isolate: Channels?
     @Environment(\.displayScale) private var scale
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>> {
@@ -2302,7 +2318,8 @@ struct Unstirred: ViewModifier, Animatable {
                 ShaderLibrary.unstirChannels(.float2(r, r), .float(r), .floatArray(floats), .floatArray(channels), .float(Float(n)),
                                              .float(Float(cost)), .float(Float(Tank.fourTaps - fillEntries + flight)), .float(Float(Tank.plateau)),
                                              .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)),
-                                             .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
+                                             .float3(wave.x, wave.y, wave.z), .float(Float(turn)),
+                                             .float(Float(isolate?.rawValue ?? 0))),
                 maxSampleOffset: CGSize(width: side, height: side))
         }
         return content.layerEffect(
@@ -2325,6 +2342,49 @@ extension Channels {
 extension Level {
     /// A rod's tint on a level with channels, nil on any other.
     func tint(of slot: Int) -> Color? { masks.isEmpty ? nil : (masks[slot] ?? .white).colour }
+    /// A rod's channels on a level with channels, nil on any other.
+    func channels(of slot: Int) -> Channels? { masks.isEmpty ? nil : masks[slot] ?? .white }
+}
+
+extension Channels {
+    /// The primaries held, in the swatches' letters: "R", "GB", "RGB".
+    var letters: String { zip(Channels.each, ["R", "G", "B"]).filter { contains($0.0) }.map(\.1).joined() }
+    /// The primary's name, for VoiceOver.
+    var name: String { self == .red ? "red" : self == .green ? "green" : "blue" }
+}
+
+extension EnvironmentValues {
+    /// Prism's knobs spell out their channels: Differentiate Without Colour, or the harness's UNSTIR_LETTERS.
+    @Entry var channelLetters = false
+}
+
+/// Prism's swatches, red, green and blue, shown under Differentiate Without Colour: holding one draws that channel alone
+/// in white, the others hidden, so which lines a channel has stirred reads by shape alone. VoiceOver toggles one instead
+/// of holding it.
+struct ChannelSwatches: View {
+    @Binding var isolated: Channels?
+
+    var body: some View {
+        HStack(spacing: 18) {
+            ForEach(Channels.each, id: \.rawValue) { c in
+                let held = isolated == c
+                Text(c.letters).font(.mono(13, .semibold)).foregroundStyle(held ? .black : .white)
+                    .frame(width: 38, height: 30)
+                    .background(Capsule().fill(held ? c.colour : Color.white.opacity(0.06)))
+                    .overlay(Capsule().strokeBorder(c.colour, lineWidth: 1.5))
+                    .contentShape(Capsule())
+                    .onLongPressGesture(minimumDuration: 0, maximumDistance: 60, perform: {}) { pressing in
+                        if pressing { isolated = c } else if isolated == c { isolated = nil }
+                    }
+                    .accessibilityElement()
+                    .accessibilityLabel("show \(c.name) alone")
+                    .accessibilityValue(held ? "on" : "off")
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction { isolated = held ? nil : c }
+            }
+        }
+        .padding(.top, 4)
+    }
 }
 
 extension Unstirred {
@@ -2510,6 +2570,9 @@ struct RodView: View {
     var lens = false
     /// Prism's: the colour of the channels the rod stirs, on its ticks, pointer and a jewel at the cap's centre.
     var tint: Color?
+    /// Prism's channels, spelt out under the knob in the swatches' letters where colour alone mustn't carry them.
+    var channels: Channels?
+    @Environment(\.channelLetters) private var letters
     @Environment(\.displayScale) private var scale
     private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }
@@ -2545,6 +2608,14 @@ struct RodView: View {
         }
         .frame(width: size, height: size)
         .rotationEffect(.radians(angle))
+        .overlay(alignment: .bottom) {
+            // Upright, off the turning cap.
+            if letters, let channels {
+                Text(channels.letters).font(.mono(9, .semibold)).foregroundStyle(.white)
+                    .padding(.horizontal, 3).background(Capsule().fill(Color.black.opacity(0.75)))
+                    .fixedSize().offset(y: 12).accessibilityHidden(true)
+            }
+        }
         .background {
             Circle().strokeBorder(Color.black.opacity(0.7), lineWidth: 3).padding(-3)
             ticks(rim + px(2 / 3), rim + px(8 / 3)).stroke(lit.opacity(0.5), lineWidth: width)
