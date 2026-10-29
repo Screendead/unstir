@@ -215,7 +215,7 @@ Jack answered on the pitch page. These are his calls. Everything else in this se
 
 | Call | Jack's answer |
 |---|---|
-| 1. v1's packs | **First Stir, Lens and Escapement** (option A). "I LOVE the look of Lens. Escapement is a great idea, if implemented properly." |
+| 1. v1's packs | **First Stir, Lens and Escapement** (option A). "I LOVE the look of Lens. Escapement is a great idea, if implemented properly." Superseded for First Stir by FS17 (2026-10-29): First Stir leaves v1; see to-do 43 |
 | 2. Orrery: free rung or pack | **Not made.** "You didn't show me Orrery, so I can't make a call." A mock-up of Orrery, and Orrery beside maelstrom, goes to him next |
 | 3. First Stir's art | **Claude draws all 25 scenes** (option B): "I am not hiring an illustrator". So First Stir's long pole is Claude's line art, judged by Jack scene by scene, and the go/no-go film decides whether code-drawn figures carry it |
 | 4. What v1 sells | **Packs and a Complete bundle** (option A); Unstir+ dropped, endless stays free. "not just one I think will sell, but one I would be proud and unashamed to put my brand behind" |
@@ -1049,6 +1049,11 @@ names and product ids, and Complete's promise to older owners.
     (`testTheLayersBakeWithinTheBudget`). Merged 2026-10-27 (PR #44). Left: measure the budget on the phone; it is a
     guess until then.
 43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
+    **Jack's call FS17 = C (2026-10-29): First Stir leaves v1, to be reworked significantly later.** His note: "I say C
+    only because I think the constraints of the artwork have resulted in the story becoming difficult to read from the
+    illustrations alone. I think we should leave First Stir out of v1 of the app, and rework it significantly later.
+    Something else needs to take its place as the third paid level pack with at least one new mechanic." The work below
+    stays on `firststir-content` (PR #54) for that rework; the third pack's place is open.
     All five chapters joined on `firststir-content` (2026-10-27), levels `first-stir-1` to `-25` in the outline's
     order, with master's Lens and Escapement; First Stir is now on the Release shelf, nothing left to arrive, the taste
     of 3 then the card (`testFirstStirPlaysInOrderFromTheShelf`). The Flood's and the Storm's `HighStreet` clashed; the
