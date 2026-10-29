@@ -76,8 +76,14 @@ enum Pack: String, CaseIterable, Sendable {
     #if DEBUG
     /// A stand-in for level `number`, for the harness to open before the pack has levels.
     func placeholder(_ number: Int) -> Level {
-        Level(id: id(number), pack: self, label: String(format: "%02d", number), title: "\(name) placeholder",
-              layout: .tri, scramble: .parse("0:+4", in: .tri))
+        if self == .prism {
+            // Red and cyan rods over a white bottom entry, on the engraving.
+            let masks: [Int: Channels] = [0: .red, 1: .cyan]
+            return Level(id: id(number), pack: self, label: String(format: "%02d", number), title: "\(name) placeholder",
+                         picture: .fern, layout: .tri, scramble: .parse("2:+3,0:+4,1:-3", in: .tri, masks: masks), masks: masks)
+        }
+        return Level(id: id(number), pack: self, label: String(format: "%02d", number), title: "\(name) placeholder",
+                     layout: .tri, scramble: .parse("0:+4", in: .tri))
     }
     #endif
 }

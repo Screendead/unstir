@@ -431,7 +431,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seam never jumps. First Stir: level 1 healed top first, each heal playing its vignette, with the time under the tank
   stepping back (F3), on the outline's scene 16 window (12:30 am to 11:40 pm) until the level carries its own clock.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
-  no dip on the order read (Jack, CL1). Escapement: problem 1 in its par of three. Prism: a stand-in reel on tri, a red and a cyan rod over a white bottom entry, until it has specimens.
+  no dip on the order read (Jack, CL1). Escapement: problem 1 in its par of three. Prism: a stand-in reel on tri on the fern, a red and a cyan rod over a white bottom entry, until it has specimens.
   Complete: each one's first beat in turn, a
   vignette, a zoom and a tick, about 8 s (Jack, CL2). Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
@@ -486,7 +486,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   halftone. The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
-  It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp.
+  It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp. Prism's fern
+  (**Engraving.swift**, `Fern`) is polylines in tank units, baked through `draw` as plughole's are: three fronds, a
+  fiddlehead, drifting seeds and the ground, in white lines only, so a channel out of register shows as its colour and
+  an aligned line is white (`testTheFernIsWhiteLinesOnBlack`); the sandbox skips it too.
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
   reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,
@@ -514,7 +517,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
   (`UNSTIR_BENCH`). `UNSTIR_PACE=s` sets autoplay's and `UNSTIR_MOVES`' wait before each move (0.3 s unset), and
   `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
-  best or started flag (`Level.keepsProgress`), and
+  best or started flag (`Level.keepsProgress`); Prism's is tri on the fern, rod 0 red and rod 1 cyan, dealt
+  `2:+3,0:+4,1:-3`. And
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
   in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`).
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder

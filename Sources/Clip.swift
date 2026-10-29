@@ -175,7 +175,7 @@ struct Reel: Sendable {
     /// Tri with a red rod and a cyan one over a white bottom entry: the red stir buried under the cyan one heals first.
     static func prism() -> Reel {
         let masks: [Int: Channels] = [0: .red, 1: .cyan]
-        let level = Level(id: "prism-clip", pack: .prism, label: "", title: "", layout: .tri,
+        let level = Level(id: "prism-clip", pack: .prism, label: "", title: "", picture: .fern, layout: .tri,
                           scramble: .parse("2:+3,0:+4,1:-3", in: .tri, masks: masks), masks: masks)
         return Reel(level: level, gestures: solve(level), rest: 0.7, gap: 0.6, tail: 1.2)
     }

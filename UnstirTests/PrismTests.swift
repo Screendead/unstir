@@ -174,4 +174,23 @@ final class PrismTests: XCTestCase {
         XCTAssertEqual(Unstirred.channelCost([w, r, c]), 2 + 3 + 1 + 2)
     }
 
+    /// The engraving is grey everywhere, so a channel out of register shows its own colour and aligned lines are white.
+    @MainActor func testTheFernIsWhiteLinesOnBlack() async throws {
+        let rendered = await Picture.fern.render(side: 240, scale: 1)
+        let image = try XCTUnwrap(rendered?.cgImage)
+        let w = image.width, h = image.height
+        var pixels = [UInt8](repeating: 0, count: 4 * w * h)
+        let ctx = try XCTUnwrap(CGContext(data: &pixels, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 4 * w,
+                                          space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                          bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+        var lit = 0, tinted = 0
+        for i in 0..<(w * h) {
+            let r = Int(pixels[4 * i]), g = Int(pixels[4 * i + 1]), b = Int(pixels[4 * i + 2])
+            if max(abs(r - g), abs(g - b), abs(r - b)) > 2 { tinted += 1 }
+            if r > 230 { lit += 1 }
+        }
+        XCTAssertEqual(tinted, 0)
+        XCTAssertGreaterThan(lit, w * h / 400)
+    }
 }
