@@ -191,6 +191,9 @@ struct SceneComposite: View {
                     Image(uiImage: layers.played)
                 }
                 .mask(core(k))
+                // Faded as one layer: faded apart, its two skies land over the sky beneath at the wrong weights, and
+                // the core shows as a disc of another time until the fade ends.
+                .compositingGroup()
                 .opacity(shown[k] ?? 0)
             }
             Canvas { ctx, size in scene.drawOver(ctx, r: size.width / 2, minutes: minutes) }
