@@ -112,7 +112,7 @@ film firststir-ch3-kitchen 33 "$tank,fps=1,scale=200:-1,tile=11x3:padding=4" $fs
 film firststir-ch4-harbour 33 "$tank,fps=1,scale=200:-1,tile=11x3:padding=4" $fs LEVEL=16 MOVES=0:-3,1:-2,0:+4,1:-5,2:+2,0:-3,1:+4,2:-5
 film firststir-ch5-stir 34 "$tank,fps=1,scale=200:-1,tile=12x3:padding=4" $fs LEVEL=25 MOVES=1:+3,0:-2,1:-5,0:+3,2:-4
 # The night forwards whole, from First Stir 25 opened solved (UNSTIR_ENDING=-1 runs it from the start).
-film firststir-ending 124 "$tank,fps=0.25,scale=160:-1,tile=8x4:padding=4" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=-1
+film firststir-ending 168 "$tank,fps=0.2,scale=160:-1,tile=8x4:padding=4" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=-1
 # The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
 # (UNSTIR_SHELFDEMO, through the calls a finger makes).
 film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned

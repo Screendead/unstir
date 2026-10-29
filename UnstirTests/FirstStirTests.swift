@@ -415,7 +415,7 @@ final class FirstStirTests: XCTestCase {
         XCTAssertEqual(levels.count, 25)
         XCTAssertTrue(levels.first!.endsFirstStir)
         XCTAssertFalse(Level.firstStir.dropLast().contains { $0.endsFirstStir })
-        XCTAssertEqual(NightForwards.duration, 120, accuracy: 10)
+        XCTAssertEqual(NightForwards.duration, 165, accuracy: 5)
         // One axis of minutes from the evening on: the chapters past midnight are a day on from Dusk Before's.
         func axis(_ level: Level, _ minutes: Double) -> Double {
             if case .dusk = level.story { return minutes }
@@ -442,15 +442,24 @@ final class FirstStirTests: XCTestCase {
             XCTAssertEqual(NightForwards.shown(level, seconds: NightForwards.length, cut: false).values.max(), 0,
                            "\(level.id) ends held back")
             XCTAssertEqual(NightForwards.shown(level, seconds: NightForwards.length, cut: true).values.max(), 0, level.id)
-            XCTAssertLessThanOrEqual(returns.values.max()!, NightForwards.length - NightForwards.blend, level.id)
-            // With c of the scramble's entries back, the film shows what the game plays with the top n - c undone.
+            XCTAssertLessThanOrEqual(returns.values.max()! + NightForwards.fade, NightForwards.length - NightForwards.blend,
+                                     level.id)
+            // With c of the scramble's entries back, the film may show only what the game plays with the top n - c undone.
+            var states: [Set<Int>] = []
             for c in 0...n {
                 let game = Game(level: level, bank: (undos: 10, refilled: nil))
                 for e in level.scramble.suffix(n - c).reversed() { game.commit(rod: e.rod, steps: -e.steps) }
                 XCTAssertEqual(NightForwards.played(level, entries: c), game.played, "\(level.id) at \(c)")
-                let seconds = (Double(c) / Double(n)) * (NightForwards.length - NightForwards.blend)
-                let back = Set(returns.filter { $0.value < seconds }.keys)
-                XCTAssertEqual(level.story!.vignettes.subtracting(back), game.played, "\(level.id) at \(c)")
+                states.append(game.played)
+            }
+            for seconds in stride(from: 0, through: NightForwards.length, by: 0.02) {
+                for cut in [false, true] {
+                    let shown = NightForwards.shown(level, seconds: seconds, cut: cut)
+                    XCTAssertTrue(states.contains(Set(shown.filter { $0.value > 0 }.keys)), "\(level.id) at \(seconds) s")
+                    XCTAssertTrue(states.contains(Set(shown.filter { $0.value == 1 }.keys)), "\(level.id) at \(seconds) s")
+                }
+                let going = NightForwards.shown(level, seconds: seconds, cut: false).values.filter { 0 < $0 && $0 < 1 }
+                XCTAssertLessThanOrEqual(going.count, 1, "\(level.id): one vignette goes back at a time")
             }
         }
     }

@@ -12,9 +12,11 @@ enum NightForwards {
     /// The fade in over the solved tank, before the first scene runs.
     static let open = 1.0
     /// Each scene's share of the film, its crossfade into the next included.
-    static let length = 4.6
-    /// The crossfade between scenes, which stand still through it, and the fade of a vignette going back.
+    static let length = 6.4
+    /// The crossfade between scenes, which stand still through it.
     static let blend = 0.6
+    /// How long a vignette takes to go back.
+    static let fade = 1.2
     /// The last frame, the town at sunrise as the pack opened, held before the card.
     static let hold = 2.5
     static var duration: Double { open + length * Double(levels.count) + hold }
@@ -35,23 +37,24 @@ enum NightForwards {
         (level.story?.vignettes ?? []).subtracting(level.scramble.prefix(entries).map(\.rod))
     }
 
-    /// The seconds into a scene's run at which each vignette goes back: when the first entry on its rod returns, entry j
-    /// of n halfway through its share of the run.
+    /// The seconds into a scene's run at which each vignette starts to go back, in the order its rod's first entry
+    /// returns: each fade centred in its own even share of the run, so no two overlap.
     static func returns(_ level: Level) -> [Int: Double] {
-        let n = level.scramble.count, running = length - blend
-        var at: [Int: Double] = [:]
-        for k in level.story?.vignettes ?? [] {
-            if let j = level.scramble.firstIndex(where: { $0.rod == k }) { at[k] = (Double(j) + 0.5) / Double(n) * running }
+        let running = length - blend
+        let order = (level.story?.vignettes ?? []).sorted { k, l in
+            level.scramble.firstIndex { $0.rod == k }! < level.scramble.firstIndex { $0.rod == l }!
         }
+        var at: [Int: Double] = [:]
+        for (i, k) in order.enumerated() { at[k] = (Double(i) + 0.5) / Double(order.count) * running - fade / 2 }
         return at
     }
 
-    /// Each vignette's played layer's opacity `seconds` into the scene: 1 until it goes back, then fading out over `blend`,
+    /// Each vignette's played layer's opacity `seconds` into the scene: 1 until it goes back, then fading out over `fade`,
     /// or cut at once under Reduce Motion.
     static func shown(_ level: Level, seconds: Double, cut: Bool) -> [Int: Double] {
         returns(level).mapValues { at in
             if cut { return seconds < at ? 1 : 0 }
-            let x = min(max((seconds - at) / blend, 0), 1)
+            let x = min(max((seconds - at) / fade, 0), 1)
             return 1 - x * x * (3 - 2 * x)
         }
     }

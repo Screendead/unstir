@@ -427,13 +427,13 @@ fs="PACK=first-stir LEVEL=1"
 shot firststir-01-healed-1 "First Stir 01 after the first heal (1:-2): no vignette, the clock at 6:34 am." $fs TURNED=1:-2
 hold=9 shot firststir-01-healed-2 "First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am." \
   $fs MOVES=1:-2,0:-3
-# The night forwards (UNSTIR_ENDING), after First Stir 25's solve: every scene in story order, 4.6 s each with a 0.6 s
+# The night forwards (UNSTIR_ENDING), after First Stir 25's solve: every scene in story order, 6.4 s each with a 0.6 s
 # crossfade, held at moments through it.
 fs="PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean"
-shot firststir-ending-02 "The night forwards 2 s in: scene 25 played, the tea stirring at 7:40 pm, the time under the glass." $fs ENDING=2
-shot firststir-ending-05 "The night forwards 5 s in: scene 25 near its end, the tea still, crossfading to scene 24 at 7:55 pm." $fs ENDING=5.3
-shot firststir-ending-60 "The night forwards a minute in: the Flood's upstairs window, 1:39 am, the water rising." $fs ENDING=60
-shot firststir-ending-end "The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am." $fs ENDING=118
+shot firststir-ending-02 "The night forwards 1 s in: scene 25 played, the tea stirring at 7:40 pm, the time under the glass." $fs ENDING=1.1
+shot firststir-ending-05 "The night forwards 7 s in: scene 25 at its end, the tea still, crossfading to scene 24 at 7:55 pm." $fs ENDING=7.1
+shot firststir-ending-60 "The night forwards 83 s in: the Flood's upstairs window, 1:39 am, the water rising." $fs ENDING=83.4
+shot firststir-ending-end "The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am." $fs ENDING=162
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in, one stir left. Prices are the StoreKit configuration's, as a US storefront shows them.
 shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
