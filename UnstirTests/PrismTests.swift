@@ -312,7 +312,7 @@ final class PrismTests: XCTestCase {
             XCTAssertEqual(game.moves, level.par, level.id)
         }
         XCTAssertEqual(Level.prism.count, Pack.prism.planned)
-        XCTAssertFalse(Offer.shelf(release: true).contains(.pack(.prism)), "Prism stays off the Release shelf")
+        XCTAssertTrue(Offer.shelf(release: true).contains(.pack(.prism)), "Prism ships in v1 (PK1)")
     }
 
     /// Every specimen's par, its depth, is the solver's optimum: no detour beats untwisting. Slow, as Lens's is.

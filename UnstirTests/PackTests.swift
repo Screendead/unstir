@@ -146,8 +146,8 @@ final class PackTests: XCTestCase {
     func testAPackGoesOnTheShelfOnceItsLevelsAreIn() {
         XCTAssertEqual(Offer.shelf(release: false, ready: { _ in false }), Offer.all)
         XCTAssertEqual(Offer.shelf(release: true, ready: { _ in false }), [])
-        XCTAssertEqual(Offer.shelf(release: true, ready: { $0 != .lens }), [.pack(.escapement)])
-        XCTAssertEqual(Offer.shelf(release: true, ready: { _ in true }), [.pack(.lens), .pack(.escapement), .complete])
+        XCTAssertEqual(Offer.shelf(release: true, ready: { $0 != .lens }), [.pack(.escapement), .pack(.prism)])
+        XCTAssertEqual(Offer.shelf(release: true, ready: { _ in true }), [.pack(.lens), .pack(.escapement), .pack(.prism), .complete])
         for pack in Pack.allCases {
             XCTAssertEqual(Offer.shelf(release: true).contains(.pack(pack)), pack.ships && pack.levels.count > pack.taste,
                            pack.name)
@@ -156,18 +156,20 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Offer.complete.arriving, Pack.allCases.contains { $0.levels.count < $0.planned })
     }
 
-    /// First Stir is out of v1 (Jack, FS17), and Prism a prototype: a Release build neither sells them nor opens their
-    /// levels, taste and all, and Complete names only what it grants. Outside Release they stay whole.
+    /// First Stir is out of v1 (Jack, FS17), and Prism takes its place (PK1): a Release build neither sells First Stir nor
+    /// opens its levels, taste and all, and Complete names only what it grants. Outside Release it stays whole.
     func testFirstStirIsOutOfV1() {
-        XCTAssertEqual(Pack.sold(release: true), [.lens, .escapement])
+        XCTAssertEqual(Pack.sold(release: true), [.lens, .escapement, .prism])
         XCTAssertEqual(Pack.sold(release: false), Pack.allCases)
         XCTAssertEqual(Pack.firstStir.access(1, owned: [.firstStir], unlocked: true, release: true), .withheld)
         XCTAssertEqual(Pack.firstStir.access(4, owned: [.firstStir], release: true), .withheld)
         XCTAssertEqual(Pack.firstStir.access(1, owned: [], unlocked: false, release: false), .taste)
-        XCTAssertEqual(Pack.prism.access(1, owned: [.prism], unlocked: true, release: true), .withheld)
+        XCTAssertEqual(Pack.prism.access(1, owned: [], release: true), .taste)
+        XCTAssertEqual(Pack.prism.access(4, owned: [], release: true), .needsCard)
+        XCTAssertEqual(Pack.prism.access(4, owned: [.prism], release: true), .owned)
         XCTAssertEqual(Pack.prism.access(4, owned: [], harness: [.prism], release: false), .owned)
         XCTAssertEqual(Pack.lens.access(1, owned: [], release: true), .taste)
-        XCTAssertEqual(Pack.named(Pack.sold(release: true)), "Lens and Escapement")
+        XCTAssertEqual(Pack.named(Pack.sold(release: true)), "Lens, Escapement and Prism")
         XCTAssertEqual(Pack.named(Pack.allCases), "First Stir, Lens, Escapement and Prism")
         XCTAssertEqual(Pack.named([.lens]), "Lens")
     }

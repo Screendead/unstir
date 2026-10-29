@@ -6,7 +6,7 @@ import XCTest
 /// The pack cards' clips: each plays its level as a real `Game` would, loops without a jump, and holds a still inside it.
 @MainActor final class ClipTests: XCTestCase {
     private let clips: [(String, Clip)] = [("first stir", .firstStir), ("lens", .lens), ("escapement", .escapement), ("prism", .prism),
-                                           ("complete", .complete)]
+                                           ("complete", .complete), ("complete as sold", Clip.cut(of: Pack.sold(release: true)))]
 
     /// Each reel's stacks are the ones a `Game` shows after the same moves, under an id of no pack level so a win keeps
     /// no best.
@@ -66,10 +66,13 @@ import XCTest
         XCTAssertEqual(a.knobs.values.reduce(0, +), b.knobs.values.reduce(0, +), accuracy: 1e-9)
     }
 
-    /// Complete's cut as a Release build sells it, without First Stir: a zoom, then a tick, and its still on the tank.
+    /// Complete's cut as a Release build sells it, without First Stir: a zoom, a tick, then Prism's buried red stir
+    /// coming off under the cyan one, and its still on the tank.
     func testCompletesCutWithoutFirstStir() {
-        let clip = Clip.cut(of: [.lens, .escapement])
-        XCTAssertEqual(clip.reels.map(\.level.pack), [.lens, .escapement])
+        let clip = Clip.cut(of: Pack.sold(release: true))
+        XCTAssertEqual(clip.reels.map(\.level.pack), [.lens, .escapement, .prism])
+        let prism = clip.reels[2], healed = prism.frame(at: prism.to).stack
+        XCTAssertEqual(healed.map(\.rod), [2, 1], "the red stir, under the cyan one, comes off first")
         XCTAssertTrue(clip.still > 0 && clip.still < clip.period)
         let (reel, _, t) = clip.reel(at: clip.still)
         let f = reel.frame(at: t)
@@ -79,7 +82,8 @@ import XCTest
     }
 
     func testAboutSevenSecondsAndAStillInside() {
-        for (name, clip) in clips {
+        // Complete outside Release cuts First Stir in too, a fourth beat.
+        for (name, clip) in clips where name != "complete" {
             XCTAssertEqual(clip.period, 7, accuracy: 1.2, name)
         }
         for (name, clip) in clips {

@@ -441,7 +441,7 @@ if [[ -z "$pattern" || card-lens == *$pattern* || clip-lens == *$pattern* || she
 fi
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in. Prices are the StoreKit configuration's, as a US storefront shows them.
-shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
+shot shelf-menu "Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot." \
   OWNED=lens STORE=escapement:pending CLOCK=5.4
 for state in unowned owned pending failed revoked; do
@@ -449,6 +449,9 @@ for state in unowned owned pending failed revoked; do
 done
 shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
 shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
+shot card-prism "Prism's card, unowned: the fern printed off register in red, green and blue, its clip, and its 30 specimens under five tray headings." \
+  CARD=prism STORE=lens:unowned CLOCK=5.4
+shot card-prism-levels "Prism's card, owned, scrolled to its specimens under the five trays." CARD=prism OWNED=prism CARDSCROLL=1 CLOCK=5.4
 shot card-complete "Complete's card, unowned." CARD=complete STORE=lens:unowned CLOCK=5.4
 # Each card's clip (`Clip`) held on the frame Reduce Motion holds, and a few frames either side of it.
 shot clip-first-stir-still "First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm." \
@@ -465,6 +468,11 @@ shot clip-escapement-still "Escapement's clip on its still: rod 2 +4 let go, its
   CARD=escapement STORE=lens:unowned CLOCK=2.55
 for t in 1.6 2.2 3.6 5.1 5.9; do
   shot clip-escapement-$t "Escapement's clip $t s in." CARD=escapement STORE=lens:unowned CLOCK=$t
+done
+shot clip-prism-still "Prism's clip on its still: specimen 1 as dealt, red ghosts round the red rod and cyan round the cyan." \
+  CARD=prism STORE=lens:unowned CLOCK=0.5
+for t in 1.4 2.4 3.6 5.0; do
+  shot clip-prism-$t "Prism's clip $t s in: the buried red stir off first, then the cyan, then the white." CARD=prism STORE=lens:unowned CLOCK=$t
 done
 shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
   CARD=lens STORE=complete:failed CLOCK=5.4

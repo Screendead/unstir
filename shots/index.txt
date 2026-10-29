@@ -409,7 +409,7 @@ firststir-ending-02.png  The night forwards 1 s in: scene 25 played, the tea sti
 firststir-ending-05.png  The night forwards 7 s in: scene 25 at its end, the tea still, crossfading to scene 24 at 7:55 pm.
 firststir-ending-60.png  The night forwards 83 s in: the Flood's upstairs window, 1:39 am, the water rising.
 firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
-shelf-menu.png  Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought.
+shelf-menu.png  Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought.
 shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot.
 card-lens-unowned.png  Lens's card, unowned.
 card-lens-owned.png  Lens's card, owned.
@@ -418,6 +418,8 @@ card-lens-failed.png  Lens's card, failed.
 card-lens-revoked.png  Lens's card, revoked.
 card-first-stir.png  First Stir's card, unowned.
 card-escapement.png  Escapement's card, unowned.
+card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, and its 30 specimens under five tray headings.
+card-prism-levels.png  Prism's card, owned, scrolled to its specimens under the five trays.
 card-complete.png  Complete's card, unowned.
 clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
 clip-first-stir-1.4.png  First Stir's clip 1.4 s in.
@@ -435,6 +437,11 @@ clip-escapement-2.2.png  Escapement's clip 2.2 s in.
 clip-escapement-3.6.png  Escapement's clip 3.6 s in.
 clip-escapement-5.1.png  Escapement's clip 5.1 s in.
 clip-escapement-5.9.png  Escapement's clip 5.9 s in.
+clip-prism-still.png  Prism's clip on its still: specimen 1 as dealt, red ghosts round the red rod and cyan round the cyan.
+clip-prism-1.4.png  Prism's clip 1.4 s in: the buried red stir off first, then the cyan, then the white.
+clip-prism-2.4.png  Prism's clip 2.4 s in: the buried red stir off first, then the cyan, then the white.
+clip-prism-3.6.png  Prism's clip 3.6 s in: the buried red stir off first, then the cyan, then the white.
+clip-prism-5.0.png  Prism's clip 5.0 s in: the buried red stir off first, then the cyan, then the white.
 card-lens-complete-failed.png  Lens's card after Complete, bought from it, failed: the line under Complete's button says so.
 card-complete-owned.png  Complete's card, owned: every pack open.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, with no price.

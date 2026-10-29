@@ -4,6 +4,9 @@ import SwiftUI
 
 /// What the shelf sells: a pack, or Complete, which grants every pack.
 enum Offer: Hashable, Sendable {
+    /// How many packs Complete grants, in words: Release sells three, a build outside it four.
+    static func countWord(_ n: Int) -> String { n < 2 || n > 6 ? "\(n)" : ["two", "three", "four", "five", "six"][n - 2] }
+
     case pack(Pack)
     case complete
 
@@ -122,7 +125,8 @@ enum Offer: Hashable, Sendable {
         switch self {
         case .pack(.firstStir): [Twist(rod: 0, steps: 3), Twist(rod: 2, steps: -4), Twist(rod: 1, steps: 5)]
         case .pack(.lens): [Twist(rod: 1, steps: -3), Twist(rod: 3, steps: 4), Twist(rod: 0, steps: 5), Twist(rod: 2, steps: -4)]
-        case .pack(.escapement), .pack(.prism): [Twist(rod: 2, steps: 4), Twist(rod: 0, steps: -5), Twist(rod: 1, steps: 3)]
+        case .pack(.escapement): [Twist(rod: 2, steps: 4), Twist(rod: 0, steps: -5), Twist(rod: 1, steps: 3)]
+        case .pack(.prism): [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: -3), Twist(rod: 2, steps: 3)]
         case .complete: [Twist(rod: 0, steps: 4), Twist(rod: 2, steps: -5), Twist(rod: 3, steps: 3), Twist(rod: 1, steps: -4)]
         }
     }
@@ -439,30 +443,24 @@ enum Cover {
                  at: u.p(0, 0.8))
     }
 
-    /// A fern frond engraved three times, in red, green and blue light, each a little off register: white only where
-    /// all three meet. A stand-in until the specimens have their engravings.
+    /// The first tray's plate, the fern, printed three times in red, green and blue light, each a little off register:
+    /// white only where all three meet, as a specimen looks with every channel stirred apart by a hair.
     private static func prism(_ ctx: GraphicsContext, r: CGFloat) {
-        let u = Units(r: r)
         ctx.fill(Path(CGRect(x: 0, y: 0, width: 2 * r, height: 2 * r)), with: .color(.black))
-        var frond = Path()
-        frond.move(to: u.p(0.05, 0.85))
-        frond.addQuadCurve(to: u.p(-0.05, -0.8), control: u.p(0.18, 0))
-        for k in 1...14 {
-            let t = Double(k) / 15, y = 0.85 - 1.65 * t, x = 0.05 + 0.2 * t * (1 - t) * 2 - 0.1 * t
-            let len = 0.5 * sin(.pi * min(t * 1.1, 1)) + 0.05
-            for side in [-1.0, 1.0] {
-                frond.move(to: u.p(x, y))
-                frond.addQuadCurve(to: u.p(x + side * len, y - 0.16 * len), control: u.p(x + side * len * 0.5, y + 0.06))
-            }
+        var strokes: [Double: Path] = [:]
+        for line in Engraving.lines(.fern) {
+            strokes[line.width, default: Path()].addLines(line.points.map { CGPoint(x: r + $0.x * r, y: r + $0.y * r) })
         }
         var g = ctx
         g.blendMode = .plusLighter
-        let w = max(0.012 * r, 1)
-        for (colour, dx, dy) in [(Color(red: 1, green: 0, blue: 0), -0.025, 0.01), (Color(red: 0, green: 1, blue: 0), 0.02, 0.015),
-                                 (Color(red: 0, green: 0, blue: 1), 0.005, -0.025)] {
+        for (colour, dx, dy) in [(Color(red: 1, green: 0, blue: 0), -0.012, 0.006), (Color(red: 0, green: 1, blue: 0), 0.01, 0.008),
+                                 (Color(red: 0, green: 0, blue: 1), 0.002, -0.012)] {
             var c = g
             c.translateBy(x: dx * r, y: dy * r)
-            c.stroke(frond, with: .color(colour), lineWidth: w)
+            // Twice the plate's own weight, since a cover is drawn small.
+            for (width, path) in strokes {
+                c.stroke(path, with: .color(colour), style: StrokeStyle(lineWidth: max(2 * width * r, 0.8), lineCap: .round, lineJoin: .round))
+            }
         }
     }
 }
@@ -801,7 +799,7 @@ struct PackCard: View {
         return VStack(alignment: .leading, spacing: 6) {
             Button { buy(.complete) } label: {
                 HStack(spacing: 6) {
-                    Text("or all three in Complete").opacity(0.55)
+                    Text("or all \(Offer.countWord(Pack.sold().count)) in Complete").opacity(0.55)
                     if let complete { Text(complete).opacity(0.75) }
                     Text("\u{203A}").opacity(0.55)
                 }
