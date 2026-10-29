@@ -376,7 +376,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   rods only, is the alternative on branch `lens-levels-big`), on the halftone: each dealt lens entry +1 to +3, each lens
   netting at most +3, no entry merging as it is dealt, and par the depth (`testLensLevels`, which pins the table), the
   solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks a
-  table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
+  table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
+  colour (`Level.tint`, `Channels.colour`, the cover's red, green and blue and their mixes), a white rod white: its
+  ticks, pointer and a jewel at the cap's centre. A lens follows the finger up and down, not round
   (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
   one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
   through the rod's own `liveAngle` and detent, so its count, clicks and the iris's turn are a rod's, a step at a time,

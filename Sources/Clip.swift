@@ -364,7 +364,7 @@ struct ClipTank: View {
                         .position(at(k))
                 } else {
                     RodView(angle: f.knobs[k] ?? 0, size: core, seized: level.kind(of: k) != .working, grabbed: f.live?.rod == k,
-                            lens: level.lenses.contains(k))
+                            lens: level.lenses.contains(k), tint: level.tint(of: k))
                         .position(at(k))
                 }
             }

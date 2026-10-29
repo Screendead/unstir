@@ -1429,7 +1429,7 @@ struct LevelView: View {
                     KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                         RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
                                 size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
-                                lens: game.level.lenses.contains(game.slot(of: k)))
+                                lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)))
                     } keyframes: { _ in Self.jolt }
                         .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
                 }
@@ -2124,6 +2124,21 @@ struct Unstirred: ViewModifier, Animatable {
     }
 }
 
+extension Channels {
+    /// A knob's tint: the cover's red, green and blue, and each mix their brightest.
+    var colour: Color {
+        let parts: [(Channels, SIMD3<Double>)] = [(.red, SIMD3(0xFF, 0x2A, 0x2A)), (.green, SIMD3(0x2A, 0xFF, 0x5A)),
+                                                  (.blue, SIMD3(0x3A, 0x6B, 0xFF))]
+        let c = parts.filter { contains($0.0) }.map(\.1).reduce(SIMD3<Double>(0, 0, 0)) { simd_max($0, $1) } / 255
+        return Color(.sRGB, red: c.x, green: c.y, blue: c.z)
+    }
+}
+
+extension Level {
+    /// A rod's tint on a level with channels, nil on any other.
+    func tint(of slot: Int) -> Color? { masks.isEmpty ? nil : (masks[slot] ?? .white).colour }
+}
+
 extension Unstirred {
     /// The per-channel shader's work in entries for these masks (raw values, an entry each), or nil when every one is
     /// white and the plain shader draws them. An entry costs a map per channel it holds and a tap's two extra samples
@@ -2305,6 +2320,8 @@ struct RodView: View {
     var grabbed = false
     /// A lens's knob, whose cap carries an iris.
     var lens = false
+    /// Prism's: the colour of the channels the rod stirs, on its ticks, pointer and a jewel at the cap's centre.
+    var tint: Color?
     @Environment(\.displayScale) private var scale
     private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }
@@ -2314,7 +2331,7 @@ struct RodView: View {
     var body: some View {
         // Whole device pixels out from a pixel-snapped centre, so at rest the upright and level ticks land crisp.
         let rim = px(size / 2), width = px(2 / 3)
-        let lit = seized ? Color(0x5A606C) : .neonCyan
+        let lit = seized ? Color(0x5A606C) : tint ?? .neonCyan
         ZStack {
             Circle().fill(RadialGradient(stops: seized ? Self.dull : Self.knob, center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0,
                                          endRadius: size * 0.95))
@@ -2324,6 +2341,11 @@ struct RodView: View {
             if lens {
                 iris.stroke(Color.magenta.opacity(0.3), lineWidth: 3)
                 iris.stroke(Color.magenta, lineWidth: 1)
+            }
+            if let tint {
+                Circle().fill(tint.opacity(0.3)).frame(width: size * 0.34, height: size * 0.34)
+                Circle().fill(tint).overlay(Circle().strokeBorder(Color.black.opacity(0.6), lineWidth: 0.5))
+                    .frame(width: size * 0.2, height: size * 0.2)
             }
             // Off-centre so a half turn reads as pointing down, not as untouched.
             Capsule().fill(lit.opacity(0.25)).frame(width: 6, height: size * 0.3 + 4).offset(y: -size * 0.3)
