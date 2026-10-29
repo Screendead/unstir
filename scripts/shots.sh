@@ -529,10 +529,12 @@ hold=5 shot prism-mixed "Prism on tri, magenta, yellow and cyan rods, 0:+3,1:-2,
   PACK=prism MASKS=0:m,1:y,2:c STACK=0:+3,1:-2,2:+2
 hold=5 shot prism-hex "Prism on hex, every rod a different mask (white hub), 1:+3,4:-4,2:+2,5:-3: the fern's lines in every core." \
   PACK=prism LAYOUT=hex MASKS=1:r,2:g,3:b,4:c,5:m,6:y STACK=1:+3,4:-4,2:+2,5:-3
-for n in 2 3 4 5 6; do
-  hold=5 shot "prism-specimen-$n" "Prism specimen $n as dealt (docs/prism-design.md): red and cyan ghosts over the white bottom stir." \
-    PACK=prism LEVEL=$n OWNED=prism
+for n in $(seq 2 30); do
+  hold=5 shot "prism-specimen-$n" "Prism specimen $n as dealt (docs/prism-design.md), on its tray's plate." PACK=prism LEVEL=$n OWNED=prism
 done
 for layout in quad eye pent hex; do
   hold=5 shot "prism-bare-$layout" "Prism's fern under $layout's knobs, unstirred: some line in every core." PACK=prism LAYOUT=$layout STACK=0:+1 BARE=1
+done
+for plate in seeds movement cathedral nautilus; do
+  hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1
 done
