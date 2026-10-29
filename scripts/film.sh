@@ -132,6 +132,7 @@ fi
 film clip-first-stir 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=first-stir STORE=lens:unowned
 film clip-lens 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=lens STORE=lens:unowned
 film clip-escapement 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=escapement STORE=lens:unowned
+film clip-prism 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=prism STORE=lens:unowned
 film clip-complete 18 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=complete STORE=lens:unowned
 # The menu's dock of covers, which keep their own loops.
 film shelf-dock 9 "crop=1320:420:0:2380,fps=2,scale=440:-1,tile=4x4:padding=4" STORE=lens:unowned

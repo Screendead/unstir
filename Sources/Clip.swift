@@ -45,15 +45,16 @@ struct Clip: Sendable {
     /// stops the clock on the clean picture.
     static let escapement = Clip(reels: [.escapement()], still: Reel.escapement().beats[0].lift + 0.6)
 
-    /// Specimen 1 healed top first.
+    /// Specimen 1 solved in its par of three, the buried red stir first: it comes off under the cyan one above it, and
+    /// only the red ghosts snap back.
     static let prism = Clip(reels: [.prism()], still: 0.5)
 
-    /// Each sold pack's telling beat in turn: a vignette, a zoom, a tick, about eight seconds with all three.
+    /// Each sold pack's telling beat in turn: a vignette, a zoom, a tick, a buried colour coming off.
     static let complete = cut(of: Pack.sold())
 
-    /// Each of `packs`' beats in turn, held at the first one's still. Prism, a prototype, has no beat yet.
+    /// Each of `packs`' beats in turn, held at the first one's still.
     static func cut(of packs: [Pack]) -> Clip {
-        let cuts = packs.compactMap { pack -> (reel: Reel, still: Double)? in
+        let cuts = packs.map { pack -> (reel: Reel, still: Double) in
             switch pack {
             case .firstStir: return (cutStory, cutStory.beats[1].lift + 0.5)
             case .lens:
@@ -62,7 +63,9 @@ struct Clip: Sendable {
             case .escapement:
                 let r = Reel.escapement(moves: 1, rest: 0.45, tail: 0.7)
                 return (r, r.beats[0].lift + 0.6)
-            case .prism: return nil
+            case .prism:
+                let r = Reel.prism(moves: 1, rest: 0.3, tail: 0.5)
+                return (r, r.beats[0].lift + 0.6)
             }
         }
         return Clip(reels: cuts.map(\.reel), still: cuts[0].still - cuts[0].reel.from)
@@ -195,10 +198,12 @@ struct Reel: Sendable {
                     rest: rest, gap: 0, tail: tail, dips: dips)
     }
 
-    /// Specimen 1: tri's red rod and cyan one over a white bottom entry, the red stir buried under the cyan one healed first.
-    static func prism() -> Reel {
+    /// Specimen 1: tri's red rod and cyan one over a white bottom entry, the red stir, buried under the cyan one, healed
+    /// first, since they share no channel; then the cyan, then the white.
+    static func prism(moves: Int = 3, rest: Double = 0.7, tail: Double = 1.2) -> Reel {
         let level = Level.prism[0]
-        return Reel(level: level, gestures: solve(level), rest: 0.7, gap: 0.6, tail: 1.2)
+        let line: [Gesture] = [.turn(0, -4), .turn(1, 3), .turn(2, -3)]
+        return Reel(level: level, gestures: Array(line.prefix(moves)), rest: rest, gap: 0.6, tail: tail)
     }
 
     /// The mock-up's problem, the book's second, in its three moves, the second a wait on the clock.

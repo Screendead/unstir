@@ -33,9 +33,9 @@ enum Pack: String, CaseIterable, Sendable {
 
     static var productIDs: [String] { sold().map(\.productID) + [completeID] }
 
-    /// Whether a Release build sells it. First Stir is out of v1, to be reworked (Jack, FS17), and Prism is a prototype
-    /// until Jack calls it in; a build outside Release keeps both, so their levels, tests and films still run.
-    var ships: Bool { self != .firstStir && self != .prism }
+    /// Whether a Release build sells it. First Stir is out of v1, to be reworked (Jack, FS17), and Prism takes its place
+    /// (PK1); a build outside Release keeps First Stir, so its levels, tests and films still run.
+    var ships: Bool { self != .firstStir }
 
     /// The packs a build sells, and Complete grants.
     static func sold(release: Bool = Build.release) -> [Pack] { allCases.filter { !release || $0.ships } }

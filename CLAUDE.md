@@ -403,26 +403,26 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   25, five chapters; Lens 25; Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
   card's list heads, counting solved levels: each par, never shown, what its slowest clock owes and reached by the
   prover, its one key pinned,
-  `EscapementTests`; the full ±11 key search is slow; Prism six, a prototype that may take First Stir's place in v1):
+  `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
   always, past it only a pack StoreKit grants, with `Best.unlocked` and the harness counted outside Release only.
-  First Stir is out of v1, to be reworked (Jack's call FS17), and Prism doesn't ship while a prototype: `Pack.ships` is
-  false for both, and `Pack.sold()`, the packs a build sells, leaves them out in Release only, so their code, levels,
-  ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`, `=prism`) still reach them. In Release their every level, taste and all, is `.withheld`, which opens
+  First Stir is out of v1, to be reworked (Jack's call FS17), and Prism takes its place (PK1): `Pack.ships` is
+  false for First Stir alone, and `Pack.sold()`, the packs a build sells (Lens, Escapement and Prism in Release), leaves it out in Release only, so its code, levels,
+  ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`) still reach them. In Release its every level, taste and all, is `.withheld`, which opens
   neither the level (`Store.opens`, checked by `RootView.show`) nor its card (nor `UNSTIR_CARD`), and `Pack.sold()`
   sets what StoreKit is asked for (`Pack.productIDs`), what Complete grants and needs, Complete's cover, words
-  (`Pack.named`), and clip (in which Prism has no beat yet), and analytics' snapshot (`testFirstStirIsOutOfV1`).
+  (`Pack.named`; the card's "or all three in Complete" counts them, `Offer.countWord`), and clip, and analytics' snapshot (`testFirstStirIsOutOfV1`).
   `Store` is StoreKit 2 with no server and nothing stored: entitlements from `Transaction.currentEntitlements` at
   launch, a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
-  card again. `StoreKit/Unstir.storekit` sells each pack (First Stir and Prism too, since `StoreTests` run outside Release, where they are sold) and Complete as family-shareable non-consumables at
-  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25, before Prism was a fourth); the scheme's run action and `StoreTests` use it. Prices are
+  card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and Complete as family-shareable non-consumables at
+  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25, when Complete held three packs, as it does again in Release); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
   opens without one, and a card with none says "buy" alone.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
@@ -555,9 +555,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
   no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves, its hub counting 3 down to 0. Prism: specimen 1
-  healed top first. Complete (`Clip.cut(of:)`): each sold pack's first beat in turn, Prism, a prototype, having none, a
-  vignette (the sunrise from just after its first heal, which plays nothing, through its second), a zoom and a tick, about 8 s (Jack, CL2);
-  in Release, without First Stir, the zoom and the tick alone. Every reel stays drawn,
+  in its par of three, the red stir buried under the cyan one first. Complete (`Clip.cut(of:)`): each sold pack's first beat in turn, a
+  vignette (the sunrise from just after its first heal, which plays nothing, through its second), a zoom, a tick and Prism's buried red stir coming off (Jack, CL2, before Prism);
+  in Release, without First Stir, the zoom, the tick and Prism's red stir coming off, about 8 s. Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`). v1 ships without them: the build's `ANALYTICS`
