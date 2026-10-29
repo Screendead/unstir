@@ -44,4 +44,11 @@ jobs:
       - name: Test
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
-          UNSTIR_SIM=$udid scripts/test-store.sh -quiet COMPILER_INDEX_STORE_ENABLE=NO
+          UNSTIR_SIM=$udid scripts/test-store.sh COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+      - name: Slowest tests
+        if: always()
+        run: |
+          echo "== suites =="
+          grep -E "^Test Suite '[A-Za-z]+' (passed|failed)" "$RUNNER_TEMP/test.log" | sed -E "s/.*'([A-Za-z]+)'.*Executed ([0-9]+) tests?.* in ([0-9.]+) \(.*/\3 \1 (\2 tests)/" | sort -rn
+          echo "== slowest 30 cases =="
+          grep -E "^Test Case .* (passed|failed) \(" "$RUNNER_TEMP/test.log" | sed -E "s/.*\[(.*)\]'.*\(([0-9.]+) seconds\).*/\2 \1/" | sort -rn | head -30
