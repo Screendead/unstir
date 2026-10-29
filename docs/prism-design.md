@@ -8,8 +8,8 @@ and the win is every channel looking solved. The picture is the fern engraving (
 into red, green and blue ghosts where the channels disagree.
 
 The design plans 30 specimens in five trays of six: Two Colours, Three Colours, Colour Order, Overprint and Spectrum.
-Only the first tray is built. Specimens 1 to 3 are the free taste. The pack is held off the Release shelf
-(`Pack.held`) while it is a prototype.
+Only the first tray is built. Specimens 1 to 3 are the free taste. A Release build doesn't sell it
+(`Pack.ships`, as First Stir) while it is a prototype; Debug and the harness reach it.
 
 ## Rules every row keeps
 

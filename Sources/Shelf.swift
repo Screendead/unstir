@@ -9,17 +9,19 @@ enum Offer: Hashable, Sendable {
 
     static let all: [Offer] = Pack.allCases.map(Offer.pack) + [.complete]
 
-    /// The covers the dock shows. A pack goes on sale only once it has levels past its taste and isn't `held`, and
-    /// Complete only once every pack is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the
-    /// shop can be looked at.
-    static func shelf(release: Bool = Build.release, ready: (Pack) -> Bool = { !$0.held && $0.levels.count > $0.taste }) -> [Offer] {
+    /// The covers the dock shows. A pack goes on sale only once it has levels past its taste, and Complete only once every
+    /// pack is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the shop can be looked at.
+    static func shelf(release: Bool = Build.release, ready: (Pack) -> Bool = { $0.levels.count > $0.taste }) -> [Offer] {
         guard release else { return all }
-        let packs = Pack.allCases.filter(ready)
-        return packs.map(Offer.pack) + (packs.count == Pack.allCases.count ? [.complete] : [])
+        let sold = Pack.sold(release: release), packs = sold.filter(ready)
+        return packs.map(Offer.pack) + (packs.count == sold.count ? [.complete] : [])
     }
 
+    /// Whether this build sells it.
+    var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
+
     /// Some of what it sells is still to come.
-    var arriving: Bool { (pack.map { [$0] } ?? Pack.allCases).contains { $0.levels.count < $0.planned } }
+    var arriving: Bool { (pack.map { [$0] } ?? Pack.sold()).contains { $0.levels.count < $0.planned } }
 
     /// A pack's prefix, or "complete", as the harness names it and the clip's file is named.
     init?(name: String) {
@@ -56,7 +58,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.lens): "after plughole"
         case .pack(.escapement): "hard \u{00B7} composed problems"
         case .pack(.prism): "after plughole \u{00B7} reading by colour"
-        case .complete: "anyone, then harder"
+        case .complete: Pack.sold().contains(.firstStir) ? "anyone, then harder" : "after plughole, then harder"
         }
     }
 
@@ -66,13 +68,8 @@ enum Offer: Hashable, Sendable {
         case .pack(.lens): "\(Pack.lens.planned) panels in four issues"
         case .pack(.escapement): "\(Pack.escapement.planned) problems in five chapters"
         case .pack(.prism): "\(Pack.prism.planned) specimens in five trays"
-        case .complete: "\(Self.everyPack) \u{00B7} \(Pack.allCases.map(\.planned).reduce(0, +)) levels"
+        case .complete: "\(Pack.named(Pack.sold())) \u{00B7} \(Pack.sold().map(\.planned).reduce(0, +)) levels"
         }
-    }
-
-    private static var everyPack: String {
-        let names = Pack.allCases.map(\.name)
-        return "\(names.dropLast().joined(separator: ", ")) and \(names.last!)"
     }
 
     var free: String {
@@ -138,13 +135,16 @@ extension Store {
         case .pack(let p): return state(p)
         case .complete:
             let l = harness ?? ledger
-            if Pack.allCases.allSatisfy({ l.state($0) == .owned }) { return .owned }
+            if Pack.sold().allSatisfy({ l.state($0) == .owned }) { return .owned }
             return l.products[Pack.completeID] ?? .unowned
         }
     }
 
     /// The pack whose card a level shows instead of playing: one past its taste that the player doesn't own.
     func card(for level: Level) -> Pack? { access(level) == .needsCard ? level.pack : nil }
+
+    /// A level this build may open: any outside a pack, and a pack's that the build sells.
+    func opens(_ level: Level) -> Bool { access(level) != .withheld }
 }
 
 extension Purchase {
@@ -194,16 +194,16 @@ enum Cover {
         case .pack(.escapement): escapement(ctx, r: r)
         case .pack(.prism): prism(ctx, r: r)
         case .complete:
-            // A wedge of the tank each, cut from the centre.
-            let packs = Pack.allCases.map(Offer.pack), arc = 360 / Double(packs.count), a0 = -90 - arc / 2
+            // An equal wedge of the tank for each pack it grants, cut from the centre, the first centred at the top.
+            let packs = Pack.sold(), span = 360 / Double(packs.count), start = -90 - span / 2
             for (k, p) in packs.enumerated() {
                 var c = ctx
-                c.clip(to: wedge(r, from: a0 + arc * Double(k), to: a0 + arc * Double(k + 1)))
-                draw(p, c, r: r)
+                c.clip(to: wedge(r, from: start + span * Double(k), to: start + span * Double(k + 1)))
+                draw(.pack(p), c, r: r)
             }
             var seams = Path()
             for k in packs.indices {
-                let a = (a0 + arc * Double(k)) * .pi / 180
+                let a = (start + span * Double(k)) * .pi / 180
                 seams.move(to: CGPoint(x: r, y: r))
                 seams.addLine(to: CGPoint(x: r + 1.5 * r * cos(a), y: r + 1.5 * r * sin(a)))
             }

@@ -226,6 +226,16 @@ final class SolverTests: XCTestCase {
         }
     }
 
+    /// First Stir's par is each scene's entry count: the solver's optimum, which plain untwisting reaches.
+    @MainActor func testFirstStirParIsTheOptimum() {
+        for level in Level.firstStir {
+            let solver = Solver(level.layout), stack = level.scramble
+            XCTAssertEqual(level.par, stack.count, level.id)
+            XCTAssertEqual(solver.untwistingPlay(stack)?.count, level.par, level.id)
+            assertEveryPlayEmpties(solver, stack, seized: [], optimum: level.par, level.id)
+        }
+    }
+
     func testTheOptimumMatchesAnExhaustiveSearchOnSmallCases() throws {
         try skipUnlessSlow()
         assertNothingBeatsTheOptimum([

@@ -644,6 +644,10 @@ struct LevelView: View {
     @State private var tankTicks = 0
     @State private var settling = false
     @State private var showResult: Bool
+    /// First Stir's last scene solved: the night forwards plays before the card.
+    @State private var ending: Bool
+    /// UNSTIR_ENDING=s: the night forwards held this many seconds in.
+    private let frozenEnding: Double?
     /// Scramble entries on screen during the opening; nil once the tank is the player's.
     @State private var shown: Int?
     @State private var replays = 0
@@ -747,7 +751,10 @@ struct LevelView: View {
             }
         }
         // A spill's card waits for the pour, so a harness launch that spills shows it only if held past then.
-        _showResult = State(initialValue: game.finished && harness?.wave == nil
+        let ending = harness?.ending != nil && game.solved && level.endsFirstStir
+        _ending = State(initialValue: ending)
+        frozenEnding = harness?.ending.flatMap { $0 < 0 ? nil : $0 }
+        _showResult = State(initialValue: game.finished && harness?.wave == nil && !ending
                             && (!game.spilled || (harness?.clock ?? 0) >= Brim.card))
         _eased = State(initialValue: game.solved)
         still = harness?.still ?? false
@@ -794,7 +801,7 @@ struct LevelView: View {
                                 MoveKeyframe(1.0)
                                 LinearKeyframe(0.0, duration: 0.8)
                             }
-                            .opacity(showResult ? 0 : 1)
+                            .opacity(showResult || ending ? 0 : 1)
                     }
                 }
                 .font(.mono(13))
@@ -810,6 +817,16 @@ struct LevelView: View {
                 Spacer(minLength: 12)
                 let reveal = AnyTransition.opacity.animation(.easeOut(duration: 0.4).delay(0.3))
                 tank(side)
+                    .overlay {
+                        if ending {
+                            NightForwardsFilm(side: side, frozen: frozenEnding) {
+                                withAnimation(.easeOut(duration: 0.5)) { ending = false }
+                                withAnimation(.easeIn(duration: 0.3).delay(0.4)) { showResult = true }
+                                Log.write("night forwards ended")
+                            }
+                            .transition(.opacity)
+                        }
+                    }
                     .overlay(alignment: .top) {
                         // A spill says so over the tank itself.
                         if showResult && game.solved {
@@ -821,9 +838,9 @@ struct LevelView: View {
                     }
                 // The play controls fade rather than leave, and the result is an overlay, so the solved tank stays
                 // exactly where it was played.
-                Text(demoing ? "tap to skip" : shown == nil ? game.counts ? game.level.note : "Practice: only the first try counts."
+                Text(demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip")
-                    .font(.mono(12)).opacity(showResult ? 0 : 0.55).multilineTextAlignment(.center)
+                    .font(.mono(12)).opacity(showResult || ending ? 0 : 0.55).multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
                     .overlay(alignment: .top) {
@@ -857,7 +874,7 @@ struct LevelView: View {
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
                 .disabled(settling || game.finished || shown != nil || demoing || game.level.run != nil || holding)
-                .opacity(showResult || game.level.run != nil ? 0 : 1)
+                .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
                 .accessibilityHidden(game.level.run != nil)
                 .padding(.bottom, 8)
             }
@@ -947,6 +964,11 @@ struct LevelView: View {
                 // A spill's card waits for the pour and the word; a lost clock's for its stamp.
                 try? await Task.sleep(for: .seconds(game.spilled ? Brim.card : game.lost ? 0.7 : 1.4))
                 guard game.finished else { return }
+                if game.solved && game.level.endsFirstStir {
+                    ending = true
+                    Log.write("night forwards")
+                    return
+                }
                 withAnimation(.easeIn(duration: 0.3)) { showResult = true }
                 Log.write("result shown")
             }
@@ -1307,8 +1329,9 @@ struct LevelView: View {
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
                 KeyframeAnimator(initialValue: 1.0, trigger: game.tickEvents) { p in
                     Group {
-                        if let story = game.level.story {
-                            StoryLayer(story: story, played: game.played, side: side, onStrike: { struck = true })
+                        if let scene = game.level.story?.scene {
+                            SceneLayer(scene: scene, played: game.played, wound: game.wound, count: game.level.scramble.count, side: side,
+                                       onStrike: { struck = true })
                         } else {
                             PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                                          clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
