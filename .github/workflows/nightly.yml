@@ -1,0 +1,47 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 25
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: |
+          curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+      # The build system takes a file whose time or inode has changed as edited, and checkout gives every file a new
+      # inode and the current time. Each file gets a time drawn from its content instead, the same from run to run
+      # until the file changes.
+      - name: Prepare the build cache
+        id: xcode
+        run: |
+          defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+          git ls-files -s | perl -ne '/^\S+ (\S+) \S+\t(.*)$/ and utime 1e9 + hex(substr($1, 0, 7)), 1e9 + hex(substr($1, 0, 7)), $2'
+          echo "build=$(xcodebuild -version | awk '/Build version/ { print $3 }')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: |
+            build/store
+            !build/store/Index.noindex
+            !build/store/Logs
+          key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', 'Config/**', '.github/workflows/test.yml', '.github/workflows/nightly.yml', 'scripts/test-store.sh') }}
+          restore-keys: store-${{ steps.xcode.outputs.build }}-
+      # Every test, the slow ones too (UNSTIR_SLOW_TESTS), signed ad hoc by the script so the StoreKit tests run.
+      - name: Test
+        run: |
+          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
+          UNSTIR_SIM=$udid TEST_RUNNER_UNSTIR_SLOW_TESTS=1 scripts/test-store.sh COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+      - name: Slowest tests
+        if: always()
+        run: scripts/ci-times.sh "$RUNNER_TEMP/test.log"
