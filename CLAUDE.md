@@ -467,14 +467,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   each a real level played by a drawn fingertip at `UNSTIR_FINGER`'s pace, every move through `Array.commit` and, on a
   clock, its tick through `Game.tick`, the rule `Game` itself ticks by, so `ClipTests` checks every stack against a real
   `Game`. A frame (`Reel.frame(at:)`) is a pure function of the clip's time, drawn by the level's own views (`Unstirred`,
-  `StoryLayer` or `PictureLayer`, `RodView`, `RatchetView`, `ClockHint`, `Bezel`) with the game's heal, push, tick and
+  `SceneLayer` or `PictureLayer`, `RodView`, `RatchetView`, `ClockHint`, `Bezel`) with the game's heal, push, tick and
   stop rings and its solve wave timed as `LevelView`'s keyframes are; `ClipPlayer` loops it from when it appears, holds
   it at `UNSTIR_CLOCK`, and under Reduce Motion holds `Clip.still`. A reel that dips is black at both ends, so the
-  seam never jumps. First Stir: level 1 healed top first, each heal playing its vignette, with the time under the tank
-  stepping back (F3), on the outline's scene 16 window (12:30 am to 11:40 pm) until the level carries its own clock.
+  seam never jumps. First Stir: level 1, the sunrise, healed top first, the time under the tank stepping back with each
+  heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
   no dip on the order read (Jack, CL1). Escapement: problem 1 in its par of three. Complete: each one's first beat in turn, a
-  vignette, a zoom and a tick, about 8 s (Jack, CL2). Every reel stays drawn,
+  vignette (the sunrise from just after its first heal, which plays nothing, through its second), a zoom and a tick, about 8 s (Jack, CL2). Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
