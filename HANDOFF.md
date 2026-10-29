@@ -668,9 +668,10 @@ names and product ids, and Complete's promise to older owners.
   heal's note.
 - **Turn-backs in Escapement.** Not free (Jack, round 2): the tick is final once a move is committed; a look that lets
   go where it started is no move and no tick. The pack's first level shows the clock working before the first stir.
-- **Escapement's lost rule.** A pack-only exception: a tick that pushes loses the problem on the move that made it
-  (Jack's round 9 call E1), as does a tick that stops the clock with twists still on the picture (E2 = B);
-  "lost." with undo (if the bank has one) and again (a free reset).
+- **Escapement's tick budget** (Jack's round 11 call EL1, which replaced round 9's E1/E2 loss rule, where a pushed
+  tick or the last clock stopping with twists left lost at once): no par; a budget of ticks that every clock's tick
+  spends, a wrong move playing on until the budget is spent, then "out of ticks." with undo (if the bank has one) and
+  again (a free reset).
 - **First Stir's heal ring.** Endless's rule (Jack, 2026-09-29): magenta and the heavy tap only for a commit that plays
   a vignette; cancelling your own push flashes white.
 - **Music Box's two exceptions to the sound rule.** Allow, inside Music Box only, sound carrying the read and the arm
@@ -968,6 +969,8 @@ names and product ids, and Complete's promise to older owners.
     loses; one clock stopping while another runs loses nothing; a tap on any ratchet waits.
 35. Escapement: the lost rule and its test (a pushed tick leaves a positive E entry that no continuation pops,
     property-tested on small cases) and the "lost." card with undo and again.
+    Superseded 2026-10-29 by Jack's round 11 call EL1 (the tick budget, under to-do 39): a pushed tick now plays on
+    until the budget is spent, then "out of ticks."; the history below is round 9's rule.
     Built on `escapement-pack` and merged 2026-10-27 (PR #46): a tick that pushes loses on the move that made it
     (E1), and so does a tick that stops the clock with twists still on the picture (E2 = B, round 9); "lost." by
     the clock, `LostCard` with "lost on move N", undo (from the bank) and again, its exit through `leave` so
@@ -1022,8 +1025,28 @@ names and product ids, and Complete's promise to older owners.
    the old escapement-1, the mock-up, is now 2, "The wait"); the 22 untitled problems are "Problem N". Escapement now
    has levels past its taste, so it goes on sale on the shelf and its card no longer says more arrive.
    Jack's call J6 = B (round 11): the book ends on the two-clock hex, 30, with the three-clock hex as 29; rows swapped
-   and the book re-proved on `escapement-book`. Open for Jack (round 10): what a tank lost to its last clock stopping
-   shows (`UNSTIR_STOPLOOK`: stamp as built, left, rings; recommended: left). Still open from the book: J3 (built as A, D1), J5, J7 (built as A), J8.
+   and the book re-proved on `escapement-book`. Round 10's question of what a tank lost to its last clock stopping shows
+   (`UNSTIR_STOPLOOK`) is superseded by EL1: the budget at 00 is always on screen, so the stamp alone says it; the
+   looks stay in the harness, unpicked. Still open from the book: J3 (built as A, D1), J5, J7 (built as A), J8.
+   Jack's round 11 calls, built on `escapement-book` (2026-10-29):
+   - ET1 = B: `esc-tap-target` merged: the ratchet sits on a lit plate a tap waits on, and a tap off the plate draws a
+     ring closing on it instead of a refusal.
+   - EB2 = B: `esc-budget-count` (on `esc-owed`, `Game.owed`) merged, with Jack's note: "to keep with the clock theme,
+     can you make the numbers count down like a flip clock? have start flipping when the escapement starts moving".
+     Built as one split-flap numeral in the header, flipping once per clock's tick as that tick starts to turn; the
+     per-clock hub counts went, since after a pushed tick they would disagree with the one budget EL1 asks for.
+   - EL1 (and EL2, "See answer to call 3"), replacing round 9's E1/E2 loss rule: "better idea: "par" is not a thing
+     for escapement. instead, you get a tick budget, and each individual escapement decreases it. a puzzle becomes
+     impossible to solve without an undo if you make a wrong move, rather than you losing instantly. the remaining
+     ticks are always shown clearly. if a tank has more than one escapement, each one decrements the budget when it
+     moves, so when they all move in sequence the budget goes down by for example 3 even though only one move was made
+     by the player. make sense?" Built: the budget is what the clocks owe in all as dealt; each tick spends one; a
+     pushed tick plays on (every later clock in the turn still ticks); spent with twists left is "out of ticks." with
+     `LostCard`'s undo and again. Without a push the budget equals what the clocks still owe after every move and hits
+     0 exactly as the last clock stops: checked on all 30 problems' proved lines, so the book stands unchanged. Par is
+     gone from every Escapement screen, the card and the book's stipulations ("Unstir in N ticks.").
+   - Not merged, per Jack: `esc-lost-line`, `esc-lost-flash`, `esc-tap-anywhere`, `esc-tap-lesson`,
+     `esc-budget-stopwork` (local branches, kept).
 40. First Stir: vignettes as tag sets on the scramble's entries, played when their tags leave the stack (a pop, a
     merged pop, a fine-pass win), unplayed by undo and reset, crossfading 0.4 s under the stack.
     Built 2026-10-26 on `firststir-pack`, merged 2026-10-27 (PR #44): `Level.story` and `Story.vignettes`, each of
