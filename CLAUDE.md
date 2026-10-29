@@ -356,7 +356,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
   one so far, Lens three, Escapement one, the packs mock-up's problem at par 3, proved by the prover,
-  `testEveryProblemsParIsTheProversOptimum`, Prism none yet, a prototype that may take First Stir's place in v1):
+  `testEveryProblemsParIsTheProversOptimum`, Prism six, a prototype that may take First Stir's place in v1):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
@@ -384,6 +384,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   through the rod's own `liveAngle` and detent, so its count, clicks and the iris's turn are a rod's, a step at a time,
   but its dashes run up a short vertical track beside the knob for a zoom in and down it for out (`track`, on the side
   away from the finger), not round the disc. A drawn fingertip (`UNSTIR_FINGER`) on a lens rides up and down too.
+  `Level.prism` holds Prism's first tray, Two Colours, six specimens on the fern from `docs/prism-design.md`: red and
+  cyan rods, every one dealt, over one white rod that holds only the bottom entry, no entry merging as it is dealt, par
+  the depth (`testPrismLevels`, which pins the table and checks each stack keeps four taps under `channelCost`), the
+  solver's optimum (`testPrismParIsTheOptimum`, slow). The other four trays aren't built.
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
   (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
@@ -518,7 +522,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`UNSTIR_BENCH`). `UNSTIR_PACE=s` sets autoplay's and `UNSTIR_MOVES`' wait before each move (0.3 s unset), and
   `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
   best or started flag (`Level.keepsProgress`); Prism's is tri on the fern, rod 0 red and rod 1 cyan, dealt
-  `2:+3,0:+4,1:-3`. And
+  `2:+3,0:+4,1:-3`, as specimen 1 is. And
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
   in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`).
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder

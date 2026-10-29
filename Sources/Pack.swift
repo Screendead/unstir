@@ -137,9 +137,23 @@ extension Level {
               demo: .parse("0:-3,1:+2", in: .tri), fixedPar: 3),
     ]
 
-    /// Prism's specimens, each rod's channels in `masks` and the scramble's bottom entry white. None yet: the
-    /// specimens go to Jack before code (to-do 62).
-    static let prism: [Level] = []
+    /// Prism's specimens on the fern, `docs/prism-design.md`'s table: so far the Two Colours tray, red and cyan rods
+    /// over one white rod that holds only the bottom entry, so neither channel is ever clean alone. No entry merges as it
+    /// is dealt, and par is the depth (`testPrismLevels`), the solver's optimum (`testPrismParIsTheOptimum`).
+    static let prism: [Level] = [
+        (Layout.tri, "0:r,1:c,2:w", "2:+3,0:+4,1:-3"),
+        (.quad, "0:r,1:c,2:r,3:w", "3:+3,2:-4,1:+3,0:+5"),
+        (.eye, "0:r,1:c,2:r,3:w", "3:+4,0:-3,2:+2,1:+5,0:+3"),
+        (.quad, "0:r,1:r,2:c,3:w", "3:-3,0:+3,1:+4,2:-5,0:-2,1:+3"),
+        (.pent, "0:r,1:r,2:c,3:c,4:w", "4:+3,0:+4,2:-3,1:+2,3:+4,0:-3,2:+5"),
+        (.hex, "0:w,1:r,2:r,3:c,4:c,5:r,6:c", "0:+3,1:+4,3:-3,2:-2,5:+2,4:+5,1:+3,6:-4,3:+2"),
+    ].enumerated().map { i, row in
+        let (layout, mask, scramble): (Layout, String, String) = row
+        let masks = Channels.masks(mask)!
+        return Level(id: Pack.prism.id(i + 1), pack: .prism, label: String(format: "%02d", i + 1), title: "Specimen \(i + 1)",
+                     note: i == 0 ? "Each rod stirs only its knob's colours." : "", picture: .fern, layout: layout,
+                     scramble: .parse(scramble, in: layout, masks: masks), masks: masks)
+    }
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
     /// never leaves progress under an id a real level will take.

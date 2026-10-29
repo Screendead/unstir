@@ -193,4 +193,55 @@ final class PrismTests: XCTestCase {
         XCTAssertEqual(tinted, 0)
         XCTAssertGreaterThan(lit, w * h / 400)
     }
+
+    static let table: [(Layout, [Int: Channels], String)] = [
+        (.tri, [0: .red, 1: .cyan, 2: .white], "2:+3,0:+4,1:-3"),
+        (.quad, [0: .red, 1: .cyan, 2: .red, 3: .white], "3:+3,2:-4,1:+3,0:+5"),
+        (.eye, [0: .red, 1: .cyan, 2: .red, 3: .white], "3:+4,0:-3,2:+2,1:+5,0:+3"),
+        (.quad, [0: .red, 1: .red, 2: .cyan, 3: .white], "3:-3,0:+3,1:+4,2:-5,0:-2,1:+3"),
+        (.pent, [0: .red, 1: .red, 2: .cyan, 3: .cyan, 4: .white], "4:+3,0:+4,2:-3,1:+2,3:+4,0:-3,2:+5"),
+        (.hex, [0: .white, 1: .red, 2: .red, 3: .cyan, 4: .cyan, 5: .red, 6: .cyan],
+         "0:+3,1:+4,3:-3,2:-2,5:+2,4:+5,1:+3,6:-4,3:+2"),
+    ]
+
+    /// The Two Colours tray, `docs/prism-design.md`: red and cyan rods, every one dealt, over one white rod that holds only
+    /// the bottom entry. Nothing merges as it is dealt, par is the depth, untwisting reaches it, and every stack keeps four
+    /// taps under the per-channel shader's assumed cost.
+    @MainActor func testPrismLevels() {
+        XCTAssertEqual(Level.prism.count, Self.table.count)
+        XCTAssertEqual(Level.prism.map(\.id), (1...Self.table.count).map { "prism-\($0)" })
+        for (level, (layout, masks, scramble)) in zip(Level.prism, Self.table) {
+            XCTAssertEqual(level.pack, .prism)
+            XCTAssertEqual(level.picture, .fern)
+            XCTAssertEqual(level.motion, .none)
+            XCTAssertEqual(level.layout, layout, level.id)
+            XCTAssertEqual(level.masks, masks, level.id)
+            XCTAssertEqual(Set(masks.keys), Set(layout.rods.indices), level.id)
+            XCTAssertTrue(masks.values.allSatisfy { [.red, .cyan, .white].contains($0) }, level.id)
+            XCTAssertEqual(level.scramble, .parse(scramble, in: layout, masks: masks), level.id)
+            XCTAssertEqual(level.scramble.count, scramble.split(separator: ",").count, "\(level.id) merges as it is dealt")
+            XCTAssertEqual(level.par, level.scramble.count, level.id)
+            let bottom = level.scramble[0].rod
+            XCTAssertEqual(masks[bottom], .white, "\(level.id): the bottom entry is white")
+            XCTAssertEqual(level.scramble.filter { $0.rod == bottom }.count, 1, level.id)
+            XCTAssertEqual(Set(level.scramble.map(\.rod)), Set(layout.rods.indices), "\(level.id): a knob with nothing to do")
+            XCTAssertFalse(level.layout.looksSolved(level.scramble, masks: masks), level.id)
+            let cost = Unstirred.channelCost(level.scramble.map { Float(masks[$0.rod]!.rawValue) })
+            XCTAssertLessThanOrEqual(cost ?? .max, Tank.fourTaps - level.picture.fillEntries, level.id)
+            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+            while let t = game.reachable, !game.finished { game.commit(rod: t.rod, steps: t.steps) }
+            XCTAssertTrue(game.solved, level.id)
+            XCTAssertEqual(game.moves, level.par, level.id)
+        }
+        XCTAssertFalse(Offer.shelf(release: true).contains(.pack(.prism)), "Prism stays off the Release shelf")
+    }
+
+    /// Every specimen's par, its depth, is the solver's optimum: no detour beats untwisting. Slow, as Lens's is.
+    func testPrismParIsTheOptimum() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
+                          "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
+        for level in Level.prism {
+            XCTAssertEqual(Solver(level.layout, masks: level.masks).optimum(level.scramble), level.par, level.id)
+        }
+    }
 }
