@@ -1,6 +1,5 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
-import AVFoundation
 import SwiftUI
 
 /// What the shelf sells: a pack, or Complete, which grants every pack.
@@ -514,50 +513,14 @@ struct LoopingTank: View {
     }
 }
 
-/// The card's clip: `<key>-clip.mp4` from the bundle once it is filmed, else the cover's own loop in its tank.
+/// The card's clip: the pack's own levels played live by the game (`Clip`), never a committed video.
 struct PackClip: View {
     let offer: Offer
     let side: CGFloat
     var held: Double?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        if let url = Bundle.main.url(forResource: "\(offer.key)-clip", withExtension: "mp4") {
-            LoopingVideo(url: url, playing: held == nil && !reduceMotion)
-                .frame(width: side, height: side)
-                .clipShape(Circle())
-                .overlay { Bezel(r: side / 2) }
-                .accessibilityHidden(true)
-        } else {
-            LoopingTank(offer: offer, side: side, held: held)
-        }
-    }
-}
-
-/// A muted clip on a loop, held on its first frame when not `playing`.
-private struct LoopingVideo: UIViewRepresentable {
-    let url: URL
-    let playing: Bool
-
-    final class Screen: UIView {
-        override class var layerClass: AnyClass { AVPlayerLayer.self }
-        let player = AVQueuePlayer()
-        var looper: AVPlayerLooper?
-    }
-
-    func makeUIView(context: Context) -> Screen {
-        let view = Screen()
-        let layer = view.layer as! AVPlayerLayer
-        layer.player = view.player
-        layer.videoGravity = .resizeAspectFill
-        view.player.isMuted = true
-        view.player.preventsDisplaySleepDuringVideoPlayback = false
-        view.looper = AVPlayerLooper(player: view.player, templateItem: AVPlayerItem(url: url))
-        return view
-    }
-
-    func updateUIView(_ view: Screen, context: Context) {
-        if playing { view.player.play() } else { view.player.pause() }
+        ClipPlayer(clip: .of(offer), side: side, held: held)
     }
 }
 
@@ -585,7 +548,7 @@ struct PackCard: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     Button(action: onBack) { Text("\u{2039} back").font(.mono(.subheadline, .medium)) }
-                        .buttonStyle(.plain).padding(.top, 18).opacity(0.8)
+                        .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
                         .accessibilityLabel("Back")
                     Text(offer.pack == nil ? "BUNDLE \u{00B7} PAID ADD-ON" : "PACK \u{00B7} PAID ADD-ON").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
                         .padding(.top, 26)
@@ -674,7 +637,7 @@ struct PackCard: View {
                     .padding(.vertical, 9)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(Sounding())
                 .disabled(!open)
                 .accessibilityValue(open ? best.map { $0.over == 0 ? "at par" : "\($0.over) over par" } ?? "" : "locked, needs the pack")
             }
@@ -733,7 +696,7 @@ struct PackCard: View {
                     Button { onPlay(level) } label: {
                         Text("try \(offer.pack?.taste ?? 3) free \u{203A}").font(.mono(.footnote)).opacity(0.7)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(Sounding())
                     .accessibilityLabel("Try the first \(offer.pack?.taste ?? 3) levels free")
                 }
             }
@@ -764,7 +727,7 @@ struct PackCard: View {
             .overlay { Capsule().strokeBorder(colour, lineWidth: 1).shadow(color: colour, radius: 5) }
             .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Sounding())
     }
 
     /// Complete's failure stays off the pack's own status, so it is said here, beside the button that tried.
@@ -779,7 +742,7 @@ struct PackCard: View {
                 }
                 .font(.mono(.caption))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(Sounding())
             .disabled(buying || store.state(.complete) == .pending)
             .accessibilityLabel("Buy Complete, every pack")
             .accessibilityValue(complete ?? "")
@@ -802,7 +765,7 @@ struct PackCard: View {
                 : restored == true ? "restored \u{00B7} restore purchases" : "restore purchases"
             Text(s).font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Sounding())
         .disabled(restoring)
     }
 
@@ -872,7 +835,7 @@ struct PackDock: View {
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(Sounding())
                     .accessibilityLabel("\(offer.name), \(offer.pack == nil ? "every pack" : "pack")")
                     .accessibilityValue(state.tag?.word ?? store.price(offer.productID) ?? "")
                     .accessibilityHint(offer.pitch)

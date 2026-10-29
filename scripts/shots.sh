@@ -97,7 +97,7 @@ for n in 01 04 07 08 09 13 14 18 19 22 23 27 05 11 15 06 10 16; do
 done
 # Mid-solve, where an inversion is on top: the top rod should not read from the still.
 shot inversion-L12 "Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers." LEVEL=12 STACK=2:-3,0:+4,3:+7,0:-2
-shot inversion-L27 "Level 27 part-solved at its first inversion: 4:+3 sits on 5:+6." LEVEL=27 STACK=2:+3,0:-5,5:+6,4:+3
+shot inversion-L27 "Level 27 part-solved at its first inversion: 4:-7 sits on 3:+7." LEVEL=27 STACK=2:+2,3:-5,1:+3,0:+6,3:+7,1:-3,4:-7
 shot daily "Today's daily." MODE=daily
 shot endless "Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title." \
   MODE=endless
@@ -434,8 +434,13 @@ shot firststir-ending-02 "The night forwards 1 s in: scene 25 played, the tea st
 shot firststir-ending-05 "The night forwards 7 s in: scene 25 at its end, the tea still, crossfading to scene 24 at 7:55 pm." $fs ENDING=7.1
 shot firststir-ending-60 "The night forwards 83 s in: the Flood's upstairs window, 1:39 am, the water rising." $fs ENDING=83.4
 shot firststir-ending-end "The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am." $fs ENDING=162
+# A Debug build bakes Lens's halftone some 20 s the first time a size is asked for; one launch caches it for the shots.
+if [[ -z "$pattern" || card-lens == *$pattern* || clip-lens == *$pattern* || shelf == *$pattern* ]]; then
+  SIMCTL_CHILD_UNSTIR_CARD=lens xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
+  sleep 25
+fi
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
-# held 5.4 s in, one stir left. Prices are the StoreKit configuration's, as a US storefront shows them.
+# held 5.4 s in. Prices are the StoreKit configuration's, as a US storefront shows them.
 shot shelf-menu "Menu with the pack dock: First Stir, Lens, Escapement and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot." \
   OWNED=lens STORE=escapement:pending CLOCK=5.4
@@ -445,6 +450,22 @@ done
 shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
 shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
 shot card-complete "Complete's card, unowned." CARD=complete STORE=lens:unowned CLOCK=5.4
+# Each card's clip (`Clip`) held on the frame Reduce Motion holds, and a few frames either side of it.
+shot clip-first-stir-still "First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm." \
+  CARD=first-stir STORE=lens:unowned CLOCK=4.2
+for t in 1.4 2.1 3.3 5.4 6.2; do
+  shot clip-first-stir-$t "First Stir's clip $t s in." CARD=first-stir STORE=lens:unowned CLOCK=$t
+done
+shot clip-lens-still "Lens's clip on its still: level 3 as dealt, the lens newest, its rim whole through both twists." \
+  CARD=lens STORE=lens:unowned CLOCK=0.5
+for t in 2.4 3.2 4.3; do
+  shot clip-lens-$t "Lens's clip $t s in, the lens dragged down and back up." CARD=lens STORE=lens:unowned CLOCK=$t
+done
+shot clip-escapement-still "Escapement's clip on its still: rod 2 +4 let go, its tick landed, the ratchet a tooth on." \
+  CARD=escapement STORE=lens:unowned CLOCK=2.55
+for t in 1.6 2.2 3.6 5.1 5.9; do
+  shot clip-escapement-$t "Escapement's clip $t s in." CARD=escapement STORE=lens:unowned CLOCK=$t
+done
 shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
   CARD=lens STORE=complete:failed CLOCK=5.4
 shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4

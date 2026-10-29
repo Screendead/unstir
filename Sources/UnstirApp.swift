@@ -133,6 +133,9 @@ struct Harness {
     /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
     /// logs it, and stores nothing either way.
     let harnessed: Bool
+    /// Shots, films, the bench and the test host play no sound unless UNSTIR_SOUND=1. Not stored, so the next launch on
+    /// the phone sounds; UNSTIR_UNLOCK alone is a phone launch.
+    let mute: Bool
 
     init(_ env: [String: String]) {
         // UNSTIR_LEVEL counts in UNSTIR_TIER too.
@@ -250,6 +253,7 @@ struct Harness {
         cardLevels = env["UNSTIR_CARDLEVELS"].flatMap(Int.init).map { min(max($0, 0), 30) } ?? 0
         shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
         typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
+        mute = (harnessed || env.keys.contains { $0.hasPrefix("XCTest") }) && env["UNSTIR_SOUND"] != "1"
     }
 }
 
@@ -305,6 +309,7 @@ struct RootView: View {
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     @Environment(\.scenePhase) private var phase
+    private let mute: Bool
 
     init() {
         let env = ProcessInfo.processInfo.environment
@@ -315,6 +320,7 @@ struct RootView: View {
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
         _level = State(initialValue: h.screen == "menu" || gate != nil ? nil : h.level)
         _harness = State(initialValue: h)
+        mute = h.mute
         _card = State(initialValue: gate.map(Offer.pack) ?? h.card)
         _placeholders = State(initialValue: h.cardLevels)
         _typeSize = State(initialValue: h.typeSize)
@@ -344,6 +350,7 @@ struct RootView: View {
             }
         }
         .background(Color.black)
+        .buttonStyle(Sounding())
         .modifier(TypeSize(size: typeSize))
         // A failure belongs to the card that showed it, so every change of card forgets it: back, another pack, or a
         // level's gate. Here, since the menu isn't up while a level is, and a card shown again doesn't always appear anew.
@@ -351,7 +358,12 @@ struct RootView: View {
         .onChange(of: phase) {
             Log.write("phase \(phase)")
             Analytics.shared.phase(phase)
+            // Not on inactive: Control Center and the app switcher pass through it.
+            Sound.shared.foreground(phase != .background)
         }
+        .onAppear { Sound.shared.use(on: !mute) }
+        // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
+        .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
         .task {
             // A test host's listener would finish the transactions the StoreKit tests watch, and its analytics would
             // count the tests.
