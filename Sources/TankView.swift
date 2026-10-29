@@ -632,6 +632,9 @@ struct LevelView: View {
     @State private var jams = 0
     /// Escapement: the ratchet a finger is on.
     @State private var pressing: Int?
+    /// Escapement: the clock tapped last off its plate, and how far off, in tank units; every such tap.
+    @State private var missed: (k: Int, by: Double)?
+    @State private var misses = 0
     /// Escapement: the demonstration of the clock is playing, before the problem winds in.
     @State private var demoing = false
     /// Escapement: the tank dips to black between the demonstration and the problem, so the problem's clean opening
@@ -1105,13 +1108,14 @@ struct LevelView: View {
         func pause(_ s: Double) async -> Bool { (try? await Task.sleep(for: .seconds(s))) != nil && going() }
         let level = game.level, layout = level.layout, both = layout.swirl != nil && level.motion != .none
         if level.kind(of: m.rod) == .ratchet {
-            withAnimation(.easeOut(duration: 0.12)) { ghost = (centre(m.rod), centre(m.rod), false, false) }
-            finger = centre(m.rod)
+            // Any step but 1 taps halfway out the clock's disc instead of on its ratchet.
+            let at = centre(m.rod) + (m.steps == 1 ? 0 : 0.5 * rods[m.rod].z) * SIMD2(0.7071, -0.7071)
+            withAnimation(.easeOut(duration: 0.12)) { ghost = (at, centre(m.rod), false, false) }
+            finger = at
             guard await pause(0.45) else { return false }
             pressing = m.rod
             guard await pause(0.18) else { return false }
-            pressing = nil
-            game.wait(on: m.rod)
+            tapped(m.rod, from: at, to: at)
             // Gone before the tick lands, or the fingertip hides the ratchet turning.
             withAnimation(.easeOut(duration: 0.12)) { ghost = nil }
             return true
@@ -1423,7 +1427,7 @@ struct LevelView: View {
                         KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                             RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step
                                             + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                                        size: Self.ratchetSize(core), pawl: ride, lit: pressing == k,
+                                        size: Self.ratchetSize(core), plate: Self.ratchetReach * r, pawl: ride, lit: pressing == k,
                                         stopped: !game.running(k) && shown == nil && !demoing, back: c.dir < 0)
                         } keyframes: { _ in Self.jolt }
                     } keyframes: { _ in Self.tickKeys }
@@ -1495,6 +1499,7 @@ struct LevelView: View {
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
         .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .sensoryFeedback(.selection, trigger: ticks)
+        .sensoryFeedback(.selection, trigger: misses)
         .onChange(of: tankTicks) { Knock.clunk.play() }
         .sensoryFeedback(.impact(weight: .heavy), trigger: game.cancels)
         .sensoryFeedback(.warning, trigger: game.pushes)
@@ -1563,6 +1568,18 @@ struct LevelView: View {
                     LinearKeyframe(0.0, duration: delay - 0.15)
                     LinearKeyframe(0.25, duration: 0.15)
                     LinearKeyframe(1.0, duration: 0.6)
+                }
+                .position(c)
+            // A tap off the plate: a ring through the finger closes on the plate's edge, which flares.
+            let plate = Self.ratchetReach * r, from = missed?.k == k ? (missed?.by ?? 0) * r : plate
+            Circle().stroke(Color.live, lineWidth: 1.5)
+                .keyframeAnimator(initialValue: 2.0, trigger: misses) { v, t in
+                    v.frame(width: 2 * (from + (plate - from) * min(t, 1)), height: 2 * (from + (plate - from) * min(t, 1)))
+                        .opacity(missed?.k != k || t >= 2 ? 0 : t < 1 ? 0.5 + 0.4 * t : 0.9 * (2 - t))
+                } keyframes: { _ in
+                    MoveKeyframe(0.0)
+                    LinearKeyframe(1.0, duration: 0.35, timingCurve: .easeIn)
+                    LinearKeyframe(2.0, duration: 0.5, timingCurve: .easeOut)
                 }
                 .position(c)
             Circle().stroke(Color.amber, lineWidth: 2)
@@ -1777,15 +1794,7 @@ struct LevelView: View {
                 switch g.grab {
                 case .rod(let k): release(k)
                 case .rim: if !spun { releaseTank() }
-                case .ratchet(let k):
-                    pressing = nil
-                    // A tap on the ratchet itself waits; a drag, or a touch elsewhere on the clock's disc, is refused.
-                    let start = norm(g.start), end = norm(v.location)
-                    if simd_distance(start, end) < 0.06 && simd_distance(start, centre(k)) < Self.ratchetReach {
-                        game.wait(on: k)
-                    } else {
-                        jammed = k; jams += 1; Knock.thud.play()
-                    }
+                case .ratchet(let k): tapped(k, from: norm(g.start), to: norm(v.location))
                 case .seized, .nothing: break
                 }
             }
@@ -1859,6 +1868,24 @@ struct LevelView: View {
 
     /// Escapement: how far from the clock's centre a tap waits, in tank units: the ratchet and a finger's slack.
     nonisolated static let ratchetReach = 0.16
+
+    /// Escapement: a touch on the disc of the clock centred at `centre`, landing at `start` and lifting at `end`, waits.
+    nonisolated static func waits(from start: SIMD2<Double>, to end: SIMD2<Double>, centre: SIMD2<Double>) -> Bool {
+        simd_distance(start, end) < 0.06 && simd_distance(start, centre) < ratchetReach
+    }
+
+    /// A touch on clock `k`'s disc let go: a tap on the ratchet's plate waits, a tap elsewhere on the disc points the
+    /// finger to the plate, and a drag is refused.
+    private func tapped(_ k: Int, from start: SIMD2<Double>, to end: SIMD2<Double>) {
+        pressing = nil
+        if Self.waits(from: start, to: end, centre: centre(k)) {
+            game.wait(on: k)
+        } else if simd_distance(start, end) < 0.06 {
+            missed = (k, simd_distance(start, centre(k))); misses += 1
+        } else {
+            jammed = k; jams += 1; Knock.thud.play()
+        }
+    }
 
     /// Where the rim's grab starts, in tank units: about 13 pt into the glass on a Pro Max.
     nonisolated static let rim = 0.93
@@ -2504,6 +2531,8 @@ struct ClockHint: View {
 struct RatchetView: View {
     let angle: Double
     let size: CGFloat
+    /// The radius of the dark plate it sits on, which a tap must land on to wait.
+    var plate: CGFloat = 0
     let pawl: Double
     let lit: Bool
     let stopped: Bool
@@ -2535,7 +2564,9 @@ struct RatchetView: View {
         let pivot = at(1.35, rt * 1.55), tip = at(tipA, rr + (rt - rr) * 0.35 + CGFloat(pawl) * (rt - rr) * 1.1)
         let steel = Color(0xB8BECA)
         return ZStack {
-            Circle().fill(Color.black.opacity(0.75)).frame(width: size + 6, height: size + 6).position(c)
+            let backing = max(size + 6, 2 * plate)
+            Circle().fill(Color.black.opacity(0.75)).frame(width: backing, height: backing).position(c)
+            Circle().stroke(Color.live.opacity(lit ? 1 : 0.35), lineWidth: 1).frame(width: backing, height: backing).position(c)
             dial.stroke(Color.vermilion.opacity(0.9), style: StrokeStyle(lineWidth: 1, lineCap: .round))
             ZStack {
                 wheel.fill(RadialGradient(stops: [.init(color: Color(0xE6EAF2), location: 0), .init(color: Color(0x6E7686), location: 0.5),
@@ -2548,9 +2579,6 @@ struct RatchetView: View {
                     .stroke(Color.vermilion, style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
             }
             .rotationEffect(.radians(angle), anchor: .center)
-            if lit {
-                Circle().stroke(Color.live, lineWidth: 1).frame(width: size + 6, height: size + 6).position(c)
-            }
             Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(Color.black.opacity(0.9), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
             Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(steel, style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
             Circle().fill(Color(0xD8DCE4)).frame(width: 4, height: 4).position(pivot)
