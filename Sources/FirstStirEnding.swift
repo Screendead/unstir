@@ -32,6 +32,88 @@ enum NightForwards {
         return (index, run, seconds, x * x * (3 - 2 * x))
     }
 
+    /// What each vignette going back shows, told forwards: the outline's vignettes from played to held back, by scene (the
+    /// pack's levels in order) and rod.
+    static let beats: [[Int: String]] = [
+        [0: "The lantern is boarded up.",
+         1: "The boat is bailed, her mast stepped.",
+         2: "The door shuts; the fire is lit."],
+        [3: "A neighbour measures the broken panes.",
+         0: "The gulls come back to the rail.",
+         1: "Chimneys smoke across the town."],
+        [0: "The rope is coiled, the door shut.",
+         1: "She finds the float in the pool.",
+         2: "The dog sits by her boots."],
+        [0: "The haulers ease the rope and wave.",
+         1: "The boat comes upright.",
+         2: "Gulls wake into a paling sky."],
+        [3: "The lifeboat's lamp goes out.",
+         2: "She falls asleep against her father.",
+         1: "Three cups of tea, poured."],
+        [0: "The lifeboat comes into the harbour.",
+         4: "She leaves the torch on the sill.",
+         2: "Blankets are held out on the steps."],
+        [0: "They help Grandmother aboard.",
+         1: "The lifeboat comes alongside.",
+         2: "The stair window goes dark."],
+        [3: "The lifeboat is launched.",
+         0: "The lanterns reach the lighthouse.",
+         1: "Four lanterns held high in a row."],
+        [0: "She is helped down; the lamp burns on.",
+         1: "Lanterns gather far below.",
+         2: "Father climbs, his lantern left below."],
+        [0: "The signal lamp leaves the window.",
+         1: "Father ties the rope off.",
+         3: "The door opens; he is in."],
+        [0: "The rope is tied at the quay.",
+         1: "Father starts out along the path.",
+         2: "A lamp shows in the gallery."],
+        [0: "The town clock reads five past two.",
+         2: "The street lamp drowns and goes out.",
+         3: "Two men row down the street."],
+        [3: "She shines the torch from the window.",
+         0: "The weathervane bends over.",
+         1: "The water rises; the float drifts out."],
+        [0: "The teacup floats off the table.",
+         1: "She carries the dog upstairs.",
+         3: "The float drifts for the door."],
+        [1: "The boat sinks low.",
+         3: "The lantern is washed away.",
+         4: "A wave breaks over the wall."],
+        [0: "The lantern smashes.",
+         1: "The boat breaks loose and capsizes.",
+         2: "Father runs out; the lantern falls."],
+        [0: "Lightning forks into the sea.",
+         3: "The power fails; a candle is lit.",
+         2: "She hides in her father's arms."],
+        [0: "Spray climbs to the gallery.",
+         2: "The bell buoy heels over, ringing.",
+         3: "The hut's shutter tears off."],
+        [0: "The awning tears to strips.",
+         1: "The bicycle blows over.",
+         2: "The shop sign swings from one chain."],
+        [0: "The line snaps; a shirt flies off.",
+         1: "The neighbour bars her shutters.",
+         3: "She brings the dog in."],
+        [0: "Grandmother lights the lamp.",
+         3: "The gulls flock inland.",
+         2: "Windows light across the town."],
+        [1: "Grandmother reaches the lighthouse.",
+         0: "She waves from the quay rail.",
+         2: "A thin moon rises by the star."],
+        [1: "Father doubles the boat's lines.",
+         3: "The barometer falls to storm.",
+         4: "A lamp is lit behind the float."],
+        [3: "The float is hung in the window.",
+         0: "Father takes his oilskin and goes.",
+         2: "Grandmother gives her the float."],
+        [0: "The sun sinks toward a curl of cloud.",
+         1: "The kitchen clock ticks on.",
+         2: "She lays the spoon down."],
+    ]
+    /// How long a beat's line takes to fade in and out at the ends of its share.
+    static let read = 0.3
+
     /// The vignettes played with the scramble's bottom `entries` entries on the stack: the rest have gone.
     static func played(_ level: Level, entries: Int) -> Set<Int> {
         (level.story?.vignettes ?? []).subtracting(level.scramble.prefix(entries).map(\.rod))
@@ -57,6 +139,17 @@ enum NightForwards {
             let x = min(max((seconds - at) / fade, 0), 1)
             return 1 - x * x * (3 - 2 * x)
         }
+    }
+
+    /// The line under the glass `seconds` into a scene, and how far it stands faded in: each vignette's beat over its own
+    /// share of the run.
+    static func beat(_ level: Level, seconds: Double) -> (text: String, opacity: Double)? {
+        guard let scene = Level.firstStir.firstIndex(where: { $0.id == level.id }) else { return nil }
+        let returns = returns(level), share = (length - blend) / Double(max(returns.count, 1))
+        guard let (k, at) = returns.first(where: { abs(seconds - $0.value - fade / 2) < share / 2 }), let text = beats[scene][k]
+        else { return nil }
+        let start = at + fade / 2 - share / 2
+        return (text, min(max(min(seconds - start, start + share - seconds) / read, 0), 1))
     }
 }
 
@@ -92,6 +185,8 @@ struct NightForwardsFilm: View {
             .opacity(reduceMotion ? 1 : min(t / NightForwards.open, 1))
             .overlay(alignment: .bottom) {
                 VStack(spacing: 6) {
+                    let beat = NightForwards.beat(NightForwards.levels[now.index], seconds: now.seconds)
+                    Text(beat?.text ?? " ").font(.mono(12)).lineLimit(1).opacity(0.8 * (beat?.opacity ?? 0))
                     Text(clock(now)).font(.mono(12)).opacity(0.55)
                     Text("tap to skip").font(.mono(12)).opacity(0.35)
                 }

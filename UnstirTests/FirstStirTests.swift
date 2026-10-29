@@ -438,6 +438,12 @@ final class FirstStirTests: XCTestCase {
         for level in levels {
             let n = level.scramble.count, returns = NightForwards.returns(level)
             XCTAssertEqual(Set(returns.keys), level.story!.vignettes, level.id)
+            let i = Level.firstStir.firstIndex { $0.id == level.id }!
+            XCTAssertEqual(Set(NightForwards.beats[i].keys), level.story!.vignettes, "\(level.id): a beat for each vignette")
+            XCTAssertLessThanOrEqual(NightForwards.beats[i].values.map(\.count).max()!, 40, "\(level.id): one line under the glass")
+            for (k, at) in returns {
+                XCTAssertEqual(NightForwards.beat(level, seconds: at + NightForwards.fade / 2)?.text, NightForwards.beats[i][k], level.id)
+            }
             XCTAssertEqual(NightForwards.shown(level, seconds: 0, cut: false).values.min(), 1, "\(level.id) opens played")
             XCTAssertEqual(NightForwards.shown(level, seconds: NightForwards.length, cut: false).values.max(), 0,
                            "\(level.id) ends held back")
