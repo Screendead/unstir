@@ -116,10 +116,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
 - Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` and prints each file's
   loudness, peaks, onset, phone-speaker loss and size, and each bed's seam (needs Homebrew's `csound` and `ffmpeg`).
-  Every source is seeded, so a rerun writes the same bytes. `scripts/sounds.sh sketch` builds the first glass sketch
-  (`sound-src/sketch.py`, numpy) into `Sounds/sketch`, which git ignores, for the temporary `sketch` set; a build
-  without it plays nothing on that set. `scripts/sounds.sh listen <dir>` writes every effect and bed as m4a to `<dir>`,
-  with each open choice played both ways one after the other over plughole's bed, for listening off the phone.
+  Every source is seeded, so a rerun renders the same samples, but the AAC encoder isn't byte-deterministic, so a
+  rerun may rewrite a bed's .m4a with new bytes; restore those rather than commit them. `scripts/sounds.sh listen
+  <dir>` writes every effect and bed as m4a to `<dir>`, with a few effects played in turn over a bed, for listening
+  off the phone.
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
@@ -459,17 +459,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   turned. Beds loop under the menu and each tier (`Level.bed`; daily, endless, the sandbox and the packs take
   plughole's), and a new one crossfades in over the old at equal power across two decks. Only a bed that is playing
   stays decoded, and none in the background. `Sounding`, set on `RootView`, is the app's button style: a button taps as
-  it acts, and undo and reset have sounds of their own. A button that sets its own `.plain` style has none, so every
+  it acts, and undo and reset have sounds of their own; the undo's body peaks about 0.2 s after the press (Jack,
+  SN1). A button that sets its own `.plain` style has none, so every
   such button that acts takes `Sounding` instead: the gear, the consent card's answers and its link, the settings
-  sheet's switch and log, the pack cards' and the dock's buttons and the tier-up. The menu's tier names, rows and
-  `sound:` switch stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it
-  opens, the switch only when it picks, neither as a tier swipe lifts over it. Nothing sounds during a drag but the
+  sheet's switch and log, the pack cards' and the dock's buttons and the tier-up. The menu's tier names and rows
+  stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
+  a tier swipe lifts over it. Nothing sounds during a drag but the
   detent's tick, and a sound never tells the player anything the picture doesn't. The session is ambient, and while
   another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
-  unless `UNSTIR_SOUND=1`; the menu's `sound:` switch picks the set or turns it off, and its `undo:` switch picks the
-  undo as rendered in September or `early` (`undo-early.caf`), whose body peaks at about 0.2 s instead of 0.5, and its
-  `heal undo:` switch whether an undo steps the heal notes back (`Game.stepsHealsBack`), so the next heal plays the
-  undone one's note again: all three temporary, for Jack's listen.
+  unless `UNSTIR_SOUND=1`. An undo steps the heal notes back, so the next heal plays the undone one's note again
+  (Jack, SN1).
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
@@ -506,7 +505,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   or `=no` answers for the launch, never stored, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
-  `UNSTIR_SOUND=1`; the stored sound settings are left alone. This is how screenshots and films
+  `UNSTIR_SOUND=1`. This is how screenshots and films
   are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
 - **UnstirTests/Solver.swift** plays turning-tank levels for the tests and `scripts/solve.sh`; it never ships in the
   app. It has three players, whose moves count as `Game.history` counts them (`Play.count`). The optimum is the fewest

@@ -349,41 +349,48 @@ endin
 
 ; ------------------------------------------------------------------ undo (new)
 ; A stir running backwards: a short forward stir (an E5 and B5 glass struck, a swish of water falling from 1.2 kHz to
-; 500 Hz, three bubbles, a small room) is recorded, then played in reverse, so the room swells in, the swish rises,
-; the bubbles sink and the glass grows into its strike. A faint bead at 0 answers the finger straight away.
-gitFwd Tab 0.5
+; 500 Hz, three bubbles, a small room) is recorded in 0.22 s, then played in reverse, so the room swells in, the swish
+; rises, the bubbles sink and the glass grows into its strike, its body peaking about a fifth of a second after the
+; press. Then the E5 glass rings on forward, softly, as if the stir had landed back in place. A faint bead at 0 answers
+; the finger straight away.
+gitFwd Tab 0.22
+gaRing init 0
 
 instr undo
-  schedule "undo_fwd", 0, 0.5
-  schedule "v_glass", 0, 0.5, Hz(76), 0.5, 0.35, 0.6, 0.6, 0.4, 0.5
-  schedule "v_glass", 0.03, 0.47, Hz(83), 0.47, 0.3, 0.5, 0.4, 0.3, 0.22
-  schedule "v_bubble", 0.02, 0.1, 1000, 0.6, 0.012, 0.12
-  schedule "v_bubble", 0.06, 0.1, 1300, 0.6, 0.012, 0.1
-  schedule "v_bubble", 0.1, 0.1, 1150, 0.6, 0.012, 0.08
-  schedule "undo_out", 0.5, p3
+  schedule "undo_fwd", 0, 0.22
+  schedule "v_glass", 0, 0.22, Hz(76), 0.22, 0.35, 0.6, 0.6, 0.4, 0.5
+  schedule "v_glass", 0.015, 0.205, Hz(83), 0.205, 0.3, 0.5, 0.4, 0.3, 0.22
+  schedule "v_bubble", 0.01, 0.1, 1000, 0.6, 0.012, 0.12
+  schedule "v_bubble", 0.035, 0.1, 1300, 0.6, 0.012, 0.1
+  schedule "v_bubble", 0.06, 0.1, 1150, 0.6, 0.012, 0.08
+  schedule "undo_out", 0.22, p3
+  schedule "undo_ring", 0.44, 0.6
   turnoff
 endin
-
 instr undo_fwd
-  kc expseg 1200, 0.4, 500
-  aenv expon 1, 20 * 0.12, exp(-20)
+  kc expseg 1200, 0.18, 500
+  aenv expon 1, 20 * 0.06, exp(-20)
   anz Noise
   ay Band anz, kc, 0.9
   ay = gaBus + 0.5 * ay * aenv
   clear gaBus
   ay Hall ay, $SHORT_HALL, 0.35, $SHORT_NORM
-  ; the recording's last 5 ms fades in, so the reversed start is soft
-  afade cosseg 1, 0.495, 1, 0.005, 0
+  afade cosseg 1, 0.215, 1, 0.005, 0
   Record ay * afade, gitFwd
 endin
-
+instr undo_ring
+  ; no strike: it carries on from the reversed strike, which has just sounded
+  ag Glass Hz(76), 0.6, 0.3, 0.5, 0, 0, 0.9
+  aon cosseg 0, 0.004, 1
+  gaRing += 0.18 * ag * aon
+endin
 instr undo_out
-  ; read backwards, and let it stop on a 5 ms fade rather than a cut
   kn init ftlen(gitFwd) - 1
   kv table kn, gitFwd
   kn = max(kn - 1, 0)
-  aend cosseg 1, 0.495, 1, 0.005, 0
-  ay = a(kv) * aend
+  aend cosseg 1, 0.215, 1, 0.005, 0
+  ay = a(kv) * aend + gaRing
+  clear gaRing
   ay += 0.12 * Mode(Hz(98), 0.004, 1)
   ay Room ay, 0.35, 0.3, 0.2, 0.1
   Out ay, p3
@@ -433,52 +440,6 @@ instr reset_out
   ay = gaBus
   clear gaBus
   ay Hall ay, $SPILL_HALL, 0.25, $SPILL_NORM
-  Out ay, p3
-endin
-
-; ------------------------------------------------------------------ undo, early (a variant for Jack's ear)
-; The same stir running backwards, squeezed into 0.22 s so its body peaks a quarter of a second after the press
-; instead of half a second, then the E5 glass rings on forward, softly, as if the stir had landed back in place.
-gitFwdEarly Tab 0.22
-gaRing init 0
-
-instr undo_early
-  schedule "undo_early_fwd", 0, 0.22
-  schedule "v_glass", 0, 0.22, Hz(76), 0.22, 0.35, 0.6, 0.6, 0.4, 0.5
-  schedule "v_glass", 0.015, 0.205, Hz(83), 0.205, 0.3, 0.5, 0.4, 0.3, 0.22
-  schedule "v_bubble", 0.01, 0.1, 1000, 0.6, 0.012, 0.12
-  schedule "v_bubble", 0.035, 0.1, 1300, 0.6, 0.012, 0.1
-  schedule "v_bubble", 0.06, 0.1, 1150, 0.6, 0.012, 0.08
-  schedule "undo_early_out", 0.22, p3
-  schedule "undo_early_ring", 0.44, 0.6
-  turnoff
-endin
-instr undo_early_fwd
-  kc expseg 1200, 0.18, 500
-  aenv expon 1, 20 * 0.06, exp(-20)
-  anz Noise
-  ay Band anz, kc, 0.9
-  ay = gaBus + 0.5 * ay * aenv
-  clear gaBus
-  ay Hall ay, $SHORT_HALL, 0.35, $SHORT_NORM
-  afade cosseg 1, 0.215, 1, 0.005, 0
-  Record ay * afade, gitFwdEarly
-endin
-instr undo_early_ring
-  ; no strike: it carries on from the reversed strike, which has just sounded
-  ag Glass Hz(76), 0.6, 0.3, 0.5, 0, 0, 0.9
-  aon cosseg 0, 0.004, 1
-  gaRing += 0.18 * ag * aon
-endin
-instr undo_early_out
-  kn init ftlen(gitFwdEarly) - 1
-  kv table kn, gitFwdEarly
-  kn = max(kn - 1, 0)
-  aend cosseg 1, 0.215, 1, 0.005, 0
-  ay = a(kv) * aend + gaRing
-  clear gaRing
-  ay += 0.12 * Mode(Hz(98), 0.004, 1)
-  ay Room ay, 0.35, 0.3, 0.2, 0.1
   Out ay, p3
 endin
 

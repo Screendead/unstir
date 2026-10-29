@@ -16,7 +16,7 @@ targets:
     platform: iOS
     sources:
       - Sources
-      # A folder reference keeps each set's directory, Sounds/<set>/, in the bundle, where `Sound.use` looks for it.
+      # A folder reference keeps Sounds/glass/ in the bundle, where `Sound.use` looks for it.
       - path: Sounds
         type: folder
         buildPhase: resources

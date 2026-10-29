@@ -1,33 +1,16 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/sounds.sh [sketch | listen <dir>]   Renders the glass set from sound-src into Sounds/glass with
+# Usage: scripts/sounds.sh [listen <dir>]   Renders the glass set from sound-src into Sounds/glass with
 # Csound, then prints each file's loudness, peaks, onset, phone-speaker loss and size, and each bed's seam;
-# spectrograms go to build/sounds/spec. Needs Homebrew's csound and ffmpeg. Everything is seeded, so a rerun writes
-# the same bytes.
+# spectrograms go to build/sounds/spec. Needs Homebrew's csound and ffmpeg. Everything is seeded, so a rerun renders
+# the same samples; the AAC encoder isn't byte-deterministic, so a bed's .m4a may still come out with new bytes.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
 
-# sketch: the first glass sketch's files into Sounds/sketch (gitignored), from sound-src/sketch.py, for the temporary
-# switch. Needs numpy; about a minute and a half.
-if [ "${1:-}" = sketch ]; then
-    S=build/sounds/sketch
-    mkdir -p "$S"
-    cp sound-src/sketch.py "$S/make.py"
-    (cd "$S" && python3 -I make.py --no-film >make.log)
-    rm -rf Sounds/sketch
-    mkdir -p Sounds/sketch
-    for f in tick-1 tick-2 tick-3 tick-4 push heal-1 heal-2 heal-3 heal-4 heal-5 heal-6 tank seized solve spilled loop \
-        maelstrom; do
-        cp "$S/$f.wav" Sounds/sketch/
-    done
-    echo "Sounds/sketch: $(ls Sounds/sketch | wc -l | tr -d ' ') files"
-    exit 0
-fi
-
-# listen <dir>: every effect and bed in Sounds/glass as m4a in <dir>, and each open choice played both ways, one after
-# the other: the undo alone and after a push, and a heal undone with the notes kept or stepped back. An effect plays on
-# both channels at its full level, as the app plays it, and the plays sit on plughole's bed at its own level.
+# listen <dir>: every effect and bed in Sounds/glass as m4a in <dir>, and a few effects played in turn over a bed: the
+# undo after a push, and a heal undone and healed again. An effect plays on both channels at its full level, as the app
+# plays it, and the plays sit on plughole's bed at its own level.
 if [ "${1:-}" = listen ]; then
     D=${2:?usage: scripts/sounds.sh listen <dir>}
     L=build/sounds/listen
@@ -68,23 +51,12 @@ if [ "${1:-}" = listen ]; then
         ffmpeg -hide_banner -nostdin -v error -y "${inputs[@]}" \
             -filter_complex "$chain${mix}amix=inputs=$k:normalize=0:duration=first" -c:a pcm_f32le "$L/$out.wav"
     }
-    # pair a b out: a, a second and a half of silence, then b.
-    pair() {
-        ffmpeg -hide_banner -nostdin -v error -y -i "$L/$1.wav" -i "$L/$2.wav" -filter_complex \
-            "[0]aformat=channel_layouts=stereo,apad=pad_dur=1.5[a];[1]aformat=channel_layouts=stereo[b];[a][b]concat=n=2:v=0:a=1" \
-            -c:a pcm_f32le "$L/$3.wav"
-        aac "$L/$3.wav" "$D/$3.m4a"
-    }
-    pair undo undo-early pair-undo-as-is-then-early
-    play undo-after-push-as-is 6 "push@1 undo@2.6"
-    play undo-after-push-early 6 "push@1 undo-early@2.6"
-    pair undo-after-push-as-is undo-after-push-early pair-undo-after-a-push-as-is-then-early
-    # Two heals, the second undone and healed again, one more heal, then the move that solves, which sounds as the solve.
-    play heal-undo-keep 14 "heal-1@1 heal-2@3 undo@5 heal-3@6.6 heal-4@8.6 solve@10.6"
-    play heal-undo-step-back 14 "heal-1@1 heal-2@3 undo@5 heal-2@6.6 heal-3@8.6 solve@10.6"
-    for f in heal-undo-keep heal-undo-step-back; do aac "$L/$f.wav" "$D/$f.m4a"; done
-    pair heal-undo-keep heal-undo-step-back pair-heal-undo-keep-then-step-back
-    # The new bed under play: heals, a push and the solve.
+    play undo-after-push 6 "push@1 undo@2.6"
+    # Two heals, the second undone, which steps its note back, healed again, one more heal, then the move that solves,
+    # which sounds as the solve.
+    play heal-undo 14 "heal-1@1 heal-2@3 undo@5 heal-2@6.6 heal-3@8.6 solve@10.6"
+    for f in undo-after-push heal-undo; do aac "$L/$f.wav" "$D/$f.m4a"; done
+    # The vortex bed under play: heals, a push and the solve.
     play vortex-with-play 14 "heal-1@2 push@4 heal-2@6 heal-3@8 solve@10.5" vortex
     aac "$L/vortex-with-play.wav" "$D/vortex-with-play.m4a"
     ls "$D"
@@ -105,7 +77,7 @@ PHONE="highpass=f=250:width_type=q:width=0.50980,highpass=f=250:width_type=q:wid
 PHONE="$PHONE,highpass=f=250:width_type=q:width=0.89998,highpass=f=250:width_type=q:width=2.56292"
 
 # Effects: file, instrument, argument, seconds rendered, seed, loudest momentary loudness (LUFS), tail trimmed. The
-# order of loudness is the sketch's (solve, heal, tank, spilled, push, seized, tick), 4 LU down; the new ones sit
+# order of loudness is the first sketch's (solve, heal, tank, spilled, push, seized, tick), 4 LU down; the new ones sit
 # among them, the tap under the heal.
 EFFECTS="
 tick-1 tick 0 0.05 101 -34 no
@@ -128,8 +100,7 @@ tap-2 tap 1 0.7 1002 -28 yes
 tap-3 tap 2 0.7 1003 -28 yes
 tap-4 tap 3 0.7 1004 -28 yes
 switch switch 0 1.8 1100 -25 yes
-undo undo 0 1.0 1200 -24 yes
-undo-early undo_early 0 1.0 1201 -24 yes
+undo undo 0 1.0 1201 -24 yes
 reset reset 0 2.4 1300 -22 yes
 "
 # Frames of each bed's own ends encoded round it, tried in turn (each shifts the AAC frame grid by a quarter frame).

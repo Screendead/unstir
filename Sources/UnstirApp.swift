@@ -305,8 +305,6 @@ struct RootView: View {
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     @Environment(\.scenePhase) private var phase
-    @AppStorage("soundSet") private var sound = SoundSet.glass
-    @AppStorage(Sound.undoKey) private var undoSound = UndoSound.late
     private let mute: Bool
 
     init() {
@@ -359,8 +357,7 @@ struct RootView: View {
             // Not on inactive: Control Center and the app switcher pass through it.
             Sound.shared.foreground(phase != .background)
         }
-        .onChange(of: sound, initial: true) { Sound.shared.use(mute ? .off : sound) }
-        .onChange(of: undoSound, initial: true) { Sound.shared.use(undoSound) }
+        .onAppear { Sound.shared.use(on: !mute) }
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
         .task {

@@ -120,8 +120,6 @@ final class Game {
     private(set) var heals = 0
     /// `heals` as each stir of `history` began.
     private var healsBefore: [Int] = []
-    /// Whether an undo takes back the heals its stir made: temporary, for Jack to hear both (`Sound.stepsHealsBack`).
-    var stepsHealsBack = Sound.stepsHealsBack
     /// The rod and outcome of the newest commit or undo, for the commit flash.
     private(set) var lastCommit: (rod: Int, result: Commit)?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it.
@@ -425,8 +423,7 @@ final class Game {
         guard !solved, !spilled, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast()
         else { return }
         let was = before.removeLast()
-        let healsWere = healsBefore.removeLast()
-        if stepsHealsBack { heals = healsWere }
+        heals = healsBefore.removeLast()
         if level.pack != nil || level.clock != nil {
             entries = was.entries
             escapement = was.clock

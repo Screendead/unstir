@@ -525,27 +525,23 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.heals, 1)
     }
 
-    /// Undoing a heal leaves the heal notes where they stand, or, as Jack may pick, steps them back so the next heal plays
-    /// the undone one's note again.
-    @MainActor func testUndoingAHealKeepsOrStepsBackTheNotes() {
+    /// Undoing a heal steps the heal notes back, so the next heal plays the undone one's note again (Jack, SN1).
+    @MainActor func testUndoingAHealStepsBackTheNotes() {
         let scramble = [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3), Twist(rod: 2, steps: 2)]
-        for back in [false, true] {
-            let level = Level(id: "test-heals-undo", label: "", title: "", layout: .tri, scramble: scramble)
-            let game = Game(level: level, bank: (undos: 5, refilled: nil))
-            game.stepsHealsBack = back
-            game.commit(rod: 2, steps: -2)
-            game.commit(rod: 1, steps: -3)
-            XCTAssertEqual(game.heals, 2)
-            game.undo()
-            XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)])
-            XCTAssertEqual(game.heals, back ? 1 : 2)
-            game.commit(rod: 1, steps: -3)
-            XCTAssertEqual(game.heals, back ? 2 : 3)
-            // An undone stir that healed nothing moves no note.
-            game.commit(rod: 0, steps: -1)
-            game.undo()
-            XCTAssertEqual(game.heals, back ? 2 : 3)
-        }
+        let level = Level(id: "test-heals-undo", label: "", title: "", layout: .tri, scramble: scramble)
+        let game = Game(level: level, bank: (undos: 5, refilled: nil))
+        game.commit(rod: 2, steps: -2)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 2)
+        game.undo()
+        XCTAssertEqual(game.stack, [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)])
+        XCTAssertEqual(game.heals, 1)
+        game.commit(rod: 1, steps: -3)
+        XCTAssertEqual(game.heals, 2)
+        // An undone stir that healed nothing moves no note.
+        game.commit(rod: 0, steps: -1)
+        game.undo()
+        XCTAssertEqual(game.heals, 2)
     }
 
     /// The push that fills the brim spills the run and is no heal, and a run's tank solved is its solve.

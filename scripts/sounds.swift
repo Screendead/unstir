@@ -12,8 +12,8 @@
 //                                                    for the encoder, so neither end of the AAC starts cold
 //   gapless <file.m4a> <frames> <loop frames>        marks those frames as priming and remainder in the file's
 //                                                    iTunSMPB, so AVAudioFile decodes exactly the loop, and zeroes
-//                                                    the MP4 creation and modification times, so a rerun is
-//                                                    byte-identical
+//                                                    the MP4 creation and modification times, so they never
+//                                                    change the bytes
 import AVFoundation
 import Foundation
 

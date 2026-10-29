@@ -1,7 +1,8 @@
 ; Copyright © 2026 Jack Lusher. All rights reserved.
 ; The glass set's voices and rooms, shared by effects.csd and beds.csd. Each voice follows the numpy sketch it
-; replaces sample for sample (ksmps = 1), then adds what the sketch could not do: the strike rings the glass's own
-; modes, and the longer rooms are reverbsc behind an allpass diffuser.
+; replaces (the first glass sketch, sound-src/sketch.py, now only in git history) sample for sample (ksmps = 1), then
+; adds what the sketch could not do: the strike rings the glass's own modes, and the longer rooms are reverbsc behind
+; an allpass diffuser.
 
 gisine ftgen 0, 0, 65536, 10, 1
 ; How loud the strike rings the modes; 0 gives the sketch's glass.

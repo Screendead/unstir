@@ -3,25 +3,6 @@
 import AVFoundation
 import SwiftUI
 
-/// The sound sets on trial, each a folder under Sounds/ with the same file names. Sketch is glass as first played,
-/// built by `scripts/sounds.sh sketch`; it has no taps, undo, reset, switch or menu bed, and its loop stands in for the
-/// beds it lacks. Temporary, for comparing on the phone.
-enum SoundSet: String, CaseIterable {
-    case glass, sketch, off
-}
-
-/// Temporary, for Jack to hear both: the undo as rendered in September, whose body peaks about half a second after the
-/// press, or one that peaks at about a fifth of a second.
-enum UndoSound: String, CaseIterable {
-    case late = "as is", early
-}
-
-/// Temporary, for Jack to hear both: an undo leaves the heal notes where they stand, or steps them back, so the next heal
-/// plays the undone one's note again.
-enum HealUndo: String, CaseIterable {
-    case keep, back = "step back"
-}
-
 extension Level {
     /// Each tier's own bed; the daily, endless, the sandbox and the packs, which have none yet, are plughole's.
     var bed: Sound.Bed {
@@ -35,7 +16,7 @@ extension Level {
 }
 
 /// Every button sounds as it acts. RootView sets this for the whole app, and undo and reset set their own sound. The
-/// menu's tier names, rows and `sound:` switch stay plain and sound from their actions.
+/// menu's tier names and rows stay plain and sound from their actions.
 struct Sounding: PrimitiveButtonStyle {
     var effect = Sound.Effect.tap
 
@@ -74,10 +55,6 @@ final class Sound: @unchecked Sendable {
     /// Named by file.
     enum Bed: String, Sendable { case menu, plughole = "loop", whirlpool, vortex, maelstrom }
 
-    static let undoKey = "soundUndo", healUndoKey = "soundHealUndo"
-    /// Read as a game opens.
-    static var stepsHealsBack: Bool { UserDefaults.standard.string(forKey: healUndoKey) == HealUndo.back.rawValue }
-
     /// A bed's player. There are two, so the old bed fades out while the new one fades in.
     private struct Deck {
         let player = AVAudioPlayerNode()
@@ -91,20 +68,19 @@ final class Sound: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.screendead.Unstir.sound", qos: .userInteractive)
     /// Every buffer is converted to this on load, so any player can take any sound.
     private let format = AVAudioFormat(standardFormatWithSampleRate: 48000, channels: 2)!
-    /// Built on the first sound or bed, so with the set off the audio session never opens.
+    /// Built on the first sound or bed, so with sound off the audio session never opens.
     private var engine: AVAudioEngine?
     private var voices: [AVAudioPlayerNode] = []
     /// When each voice's sound ends, in uptime nanoseconds. A new sound takes the voice that ends first, which is a
     /// finished one whenever there is one.
     private var ends: [UInt64] = []
     private var decks: [Deck] = []
-    private var set = SoundSet.off
-    /// The set's effects.
+    private var on = false
+    /// The glass set's effects.
     private var buffers: [String: AVAudioPCMBuffer] = [:]
-    /// The set's beds. Each is 18 MB decoded, so only the wanted one and any still fading out are kept.
+    /// The glass set's beds. Each is 18 MB decoded, so only the wanted one and any still fading out are kept.
     private var bedFiles: [String: URL] = [:]
     private var beds: [String: AVAudioPCMBuffer] = [:]
-    private var undo = UndoSound.late
     private var ticks = 0
     private var taps = 0
     private var bed: Bed?
@@ -157,23 +133,23 @@ final class Sound: @unchecked Sendable {
         }
     }
 
-    /// Decodes the set's effects off the main actor, all of them, so no effect waits on its file. A bed decodes when it
-    /// is wanted.
-    func use(_ set: SoundSet) {
+    /// Decodes the effects off the main actor, all of them, so no effect waits on its file. A bed decodes when it is
+    /// wanted.
+    func use(on: Bool) {
         queue.async {
-            guard set != self.set else { return }
-            self.set = set
+            guard on != self.on else { return }
+            self.on = on
             self.buffers = [:]
             self.bedFiles = [:]
             self.beds = [:]
-            // Effects are CAF, beds AAC in .m4a or ALAC in CAF; the sketch is WAV.
-            for ext in set == .off ? [] : ["wav", "caf", "m4a"] {
-                for url in Bundle.main.urls(forResourcesWithExtension: ext, subdirectory: "Sounds/\(set.rawValue)") ?? [] {
+            // Effects are CAF, beds AAC in .m4a or ALAC in CAF.
+            for ext in on ? ["caf", "m4a"] : [] {
+                for url in Bundle.main.urls(forResourcesWithExtension: ext, subdirectory: "Sounds/glass") ?? [] {
                     let name = url.deletingPathExtension().lastPathComponent
                     if Bed(rawValue: name) == nil { self.buffers[name] = self.load(url) } else { self.bedFiles[name] = url }
                 }
             }
-            self.note("sound set \(set.rawValue): \(self.buffers.count) effects, \(self.bedFiles.count) beds")
+            self.note("sound \(on ? "on" : "off"): \(self.buffers.count) effects, \(self.bedFiles.count) beds")
             self.fade()
         }
     }
@@ -182,10 +158,6 @@ final class Sound: @unchecked Sendable {
         // A drag ticks up to ten times a second, which would crowd the recorder's 3000 lines.
         if effect != .tick { Log.write("sound \(effect)") }
         queue.async { self.start(effect) }
-    }
-
-    func use(_ undo: UndoSound) {
-        queue.async { self.undo = undo }
     }
 
     /// The bed under the menu or a level: a new one crossfades in over the old.
@@ -233,7 +205,7 @@ final class Sound: @unchecked Sendable {
         case .seized: "seized"
         case .solve: "solve"
         case .spilled: "spilled"
-        case .undo: undo == .early ? "undo-early" : "undo"
+        case .undo: "undo"
         case .reset: "reset"
         case .tier: "switch"
         case .heal(let n): "heal-\(((n - 1) % 6 + 6) % 6 + 1)"
@@ -310,7 +282,7 @@ final class Sound: @unchecked Sendable {
         hushed = AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint
     }
 
-    /// The bed's file, or the set's loop where the set has no such bed; none while another app's music plays.
+    /// The bed's file, or plughole's loop where there is no such bed; none while another app's music plays.
     private var wantedName: String? {
         guard let bed, !hushed else { return nil }
         return bedFiles[bed.rawValue] == nil ? Bed.plughole.rawValue : bed.rawValue
@@ -324,7 +296,7 @@ final class Sound: @unchecked Sendable {
     /// Decodes the wanted bed if need be, and drops every other that no deck is playing.
     private func stock() {
         while let name = wantedName, beds[name] == nil, let url = bedFiles[name] {
-            // A bed that will not load leaves the set, so the set's loop plays in its place.
+            // A bed that will not load is dropped, so plughole's loop plays in its place.
             guard let buffer = load(url) else { bedFiles[name] = nil; continue }
             beds[name] = buffer
             note("sound bed \(name): \(buffer.frameLength) frames")
@@ -376,7 +348,7 @@ final class Sound: @unchecked Sendable {
             decks[i].player.volume = sin(decks[i].level * .pi / 2)
             if decks[i].level == 0 {
                 decks[i].player.stop()
-                // By identity: another set's bed of the same name may be the one fading in.
+                // By identity: the same bed decoded again, sound turned off and on, may be the one fading in.
                 if beds[decks[i].name] === decks[i].buffer { beds[decks[i].name] = nil }
                 decks[i].buffer = nil
                 note("sound bed \(decks[i].name) out")
@@ -392,7 +364,7 @@ final class Sound: @unchecked Sendable {
         fader = nil
     }
 
-    /// With no bed to play, as when the set is off, pauses the engine once the last effect has rung out.
+    /// With no bed to play, as when sound is off, pauses the engine once the last effect has rung out.
     private func rest() {
         let now = DispatchTime.now().uptimeNanoseconds, busy = ends.max() ?? 0
         guard busy <= now else {

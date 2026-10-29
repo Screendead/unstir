@@ -121,9 +121,6 @@ struct MenuView: View {
     /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
     @State private var settings: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @AppStorage("soundSet") private var sound = SoundSet.glass
-    @AppStorage(Sound.undoKey) private var undoSound = UndoSound.late
-    @AppStorage(Sound.healUndoKey) private var healUndo = HealUndo.keep
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -184,7 +181,6 @@ struct MenuView: View {
                     TierList(tier: listed, pick: pick).equatable()
                         .opacity(twisting ? 0 : 1)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { list = $0 }
-                    sounds.padding(.top, 18)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 28)
@@ -249,37 +245,6 @@ struct MenuView: View {
         show(.pack(.lens), from: UnitPoint(x: 0.375, y: 0.88))
         await pause(7.2)
         show(nil)
-    }
-
-    /// The set, the undo and what an undo does to the heal notes, each heard both ways: temporary, for Jack's listen.
-    private var sounds: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            choice("sound:", $sound)
-            choice("undo:", $undoSound)
-            choice("heal undo:", $healUndo)
-        }
-        .font(.mono(12))
-    }
-
-    private func choice<T: RawRepresentable<String> & CaseIterable & Hashable>(_ name: String, _ value: Binding<T>)
-        -> some View where T.AllCases: RandomAccessCollection {
-        HStack(spacing: 0) {
-            Text(name).opacity(0.55)
-            ForEach(Array(T.allCases), id: \.self) { option in
-                if option != T.allCases.first { Text("\u{00B7}").opacity(0.35) }
-                Button {
-                    guard !twisting else { return }
-                    Sound.shared.play(.tap)
-                    value.wrappedValue = option
-                } label: {
-                    Text(option.rawValue).foregroundStyle(value.wrappedValue == option ? Color.text : .white.opacity(0.35))
-                        .padding(.horizontal, 8).frame(minHeight: 44).contentShape(Rectangle())
-                }
-                // Plain and guarded, as a row is: a tier swipe can lift over it.
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(value.wrappedValue == option ? .isSelected : [])
-            }
-        }
     }
 
     /// While it turns, the list is drawn again, cut to the part on screen, over the scroll view, and that is what
