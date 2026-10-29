@@ -435,7 +435,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seam never jumps. First Stir: level 1 healed top first, each heal playing its vignette, with the time under the tank
   stepping back (F3), on the outline's scene 16 window (12:30 am to 11:40 pm) until the level carries its own clock.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
-  no dip on the order read (Jack, CL1). Escapement: problem 1 in its par of three. Prism: a stand-in reel on tri on the fern, a red and a cyan rod over a white bottom entry, until it has specimens.
+  no dip on the order read (Jack, CL1). Escapement: problem 1 in its par of three. Prism: specimen 1 healed top first.
   Complete: each one's first beat in turn, a
   vignette, a zoom and a tick, about 8 s (Jack, CL2). Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).

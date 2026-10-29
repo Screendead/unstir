@@ -45,7 +45,7 @@ struct Clip: Sendable {
     /// stops the clock on the clean picture.
     static let escapement = Clip(reels: [.escapement()], still: Reel.escapement().beats[0].lift + 0.6)
 
-    /// A stand-in until Prism has specimens, drawn white until the shader splits the channels.
+    /// Specimen 1 healed top first.
     static let prism = Clip(reels: [.prism()], still: 0.5)
 
     /// Each pack's telling beat in turn, inside about eight seconds: a vignette, a zoom, a tick.
@@ -172,11 +172,9 @@ struct Reel: Sendable {
                     rest: rest, gap: 0, tail: tail, dips: dips)
     }
 
-    /// Tri with a red rod and a cyan one over a white bottom entry: the red stir buried under the cyan one heals first.
+    /// Specimen 1: tri's red rod and cyan one over a white bottom entry, the red stir buried under the cyan one healed first.
     static func prism() -> Reel {
-        let masks: [Int: Channels] = [0: .red, 1: .cyan]
-        let level = Level(id: "prism-clip", pack: .prism, label: "", title: "", picture: .fern, layout: .tri,
-                          scramble: .parse("2:+3,0:+4,1:-3", in: .tri, masks: masks), masks: masks)
+        let level = Level.prism[0]
         return Reel(level: level, gestures: solve(level), rest: 0.7, gap: 0.6, tail: 1.2)
     }
 
