@@ -511,6 +511,18 @@ shot escapement-budget-16-mid "Escapement 16 after 3:-2, 5:-2 and a wait, two ti
   PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,1:1
 shot escapement-budget-16-late "Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: 01 tick left, clock 4's last." \
   PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,1:1,6:-4,5:3
+# Each clock's own flip count in its hub, the header their sum (Jack's call ES2, round 12): 16 as dealt (3 and 6), after
+# the wait that runs clock 1 out with its rod, after a wrong 6:-4 instead, whose tick pushes clock 1's last and runs it
+# out over its +1, and that wrong line waited out of ticks; 22's wound-back clock 4 reads unmirrored.
+shot escapement-hubs-16-dealt "Escapement 16 as dealt: hubs 3 and 6, header 09." PACK=escapement OWNED=escapement LEVEL=16
+shot escapement-hubs-16-mid "Escapement 16 after 3:-2, 5:-2 and a wait: clock 1 run out, grey at 0; clock 4 at 3; header 03." \
+  PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,1:1
+shot escapement-hubs-16-wrong "Escapement 16 after 3:-2, 5:-2 and a wrong 6:-4: clock 1's last tick pushed, grey at 0 over its +1; clock 4 at 3; header 03." \
+  PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,6:-4
+shot escapement-hubs-16-out "Escapement 16, the wrong 6:-4 then three waits: both hubs grey at 0, header 00, out of ticks." \
+  PACK=escapement OWNED=escapement LEVEL=16 PLAYED=3:-2,5:-2,6:-4,4:1,4:1,4:1
+shot escapement-hubs-22-dealt "Escapement 22 as dealt: clock 1 at 4, wound-back clock 4 at 7, its digit unmirrored; header 11." \
+  PACK=escapement OWNED=escapement LEVEL=22
 # Out of ticks as the clocks stop with twists left, each of the three looks (UNSTIR_STOPLOOK): on 3, the book's decoy, a
 # tap then knob 1, which pushes under knob 2's seam; on 17, two clocks, a tap where the last heal was due.
 for look in stamp left rings; do
