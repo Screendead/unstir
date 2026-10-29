@@ -53,8 +53,8 @@ struct Harness {
     /// played it.
     let bare: Bool
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
-    /// names it), as solve.sh prints a line. A ratchet's turn is a tap on it, a wait; a turn of the open stir's knob
-    /// takes it up again.
+    /// names it), as solve.sh prints a line. A ratchet's turn is a tap on it, a wait; with UNSTIR_FINGER, any turn of it
+    /// but 1 taps halfway out the clock's disc instead. A turn of the open stir's knob takes it up again.
     let moves: [Twist]?
     /// UNSTIR_PLAYED=2:4,0:1: a line in UNSTIR_MOVES's form, committed through the real path as the level opens, so a
     /// still shows the tank part way through it.

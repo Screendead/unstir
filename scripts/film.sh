@@ -119,6 +119,10 @@ film escapement-two-clocks 19 "$tank,fps=2,scale=200:-1,tile=8x5:padding=4" PACK
   MOVES=3:-5,4:-2,3:5,4:3,3:-4
 film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" PACK=escapement OWNED=escapement LEVEL=29 FINGER=1 REST=1 \
   MOVES=4:-3,1:1,2:-2,1:1,2:-4,0:5,2:-3,4:-3
+# Escapement 7, whose first move is a wait: a tap halfway out the clock's disc (0:2), then one on its ratchet (0:1),
+# then the line.
+film escapement-tap 15 "$tank,fps=3,scale=200:-1,tile=9x5:padding=4" PACK=escapement OWNED=escapement LEVEL=7 FINGER=1 REST=1 \
+  MOVES=0:2,0:1,1:2,2:-3
 # Lens: a launch first bakes the halftone into Caches, which takes 20 s or more in Debug; the films then read it.
 if [[ -z "$pattern" || lens == *$pattern* || "$pattern" == lens* ]]; then
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true

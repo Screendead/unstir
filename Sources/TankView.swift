@@ -1105,13 +1105,14 @@ struct LevelView: View {
         func pause(_ s: Double) async -> Bool { (try? await Task.sleep(for: .seconds(s))) != nil && going() }
         let level = game.level, layout = level.layout, both = layout.swirl != nil && level.motion != .none
         if level.kind(of: m.rod) == .ratchet {
-            withAnimation(.easeOut(duration: 0.12)) { ghost = (centre(m.rod), centre(m.rod), false, false) }
-            finger = centre(m.rod)
+            // Any step but 1 taps halfway out the clock's disc instead of on its ratchet.
+            let at = centre(m.rod) + (m.steps == 1 ? 0 : 0.5 * rods[m.rod].z) * SIMD2(0.7071, -0.7071)
+            withAnimation(.easeOut(duration: 0.12)) { ghost = (at, centre(m.rod), false, false) }
+            finger = at
             guard await pause(0.45) else { return false }
             pressing = m.rod
             guard await pause(0.18) else { return false }
-            pressing = nil
-            game.wait(on: m.rod)
+            tapped(m.rod, from: at, to: at)
             // Gone before the tick lands, or the fingertip hides the ratchet turning.
             withAnimation(.easeOut(duration: 0.12)) { ghost = nil }
             return true
@@ -1777,15 +1778,7 @@ struct LevelView: View {
                 switch g.grab {
                 case .rod(let k): release(k)
                 case .rim: if !spun { releaseTank() }
-                case .ratchet(let k):
-                    pressing = nil
-                    // A tap on the ratchet itself waits; a drag, or a touch elsewhere on the clock's disc, is refused.
-                    let start = norm(g.start), end = norm(v.location)
-                    if simd_distance(start, end) < 0.06 && simd_distance(start, centre(k)) < Self.ratchetReach {
-                        game.wait(on: k)
-                    } else {
-                        jammed = k; jams += 1; Knock.thud.play()
-                    }
+                case .ratchet(let k): tapped(k, from: norm(g.start), to: norm(v.location))
                 case .seized, .nothing: break
                 }
             }
@@ -1859,6 +1852,22 @@ struct LevelView: View {
 
     /// Escapement: how far from the clock's centre a tap waits, in tank units: the ratchet and a finger's slack.
     nonisolated static let ratchetReach = 0.16
+
+    /// Escapement: a touch on the disc of the clock centred at `centre`, landing at `start` and lifting at `end`, waits.
+    nonisolated static func waits(from start: SIMD2<Double>, to end: SIMD2<Double>, centre: SIMD2<Double>) -> Bool {
+        simd_distance(start, end) < 0.06 && simd_distance(start, centre) < ratchetReach
+    }
+
+    /// A touch on clock `k`'s disc let go: a tap on the ratchet itself waits; a drag, or a tap elsewhere on the disc, is
+    /// refused.
+    private func tapped(_ k: Int, from start: SIMD2<Double>, to end: SIMD2<Double>) {
+        pressing = nil
+        if Self.waits(from: start, to: end, centre: centre(k)) {
+            game.wait(on: k)
+        } else {
+            jammed = k; jams += 1; Knock.thud.play()
+        }
+    }
 
     /// Where the rim's grab starts, in tank units: about 13 pt into the glass on a Pro Max.
     nonisolated static let rim = 0.93
