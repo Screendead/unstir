@@ -834,6 +834,8 @@ struct LevelView: View {
                         control(game.level.picture.rawValue, game.nextPicture)
                         // A turn in hand, or snapping to commit, names a rod of the current layout.
                         control(game.level.layout.rawValue) { if liveRod == nil { game.nextLayout() } }
+                    } else if !game.level.ratchets.isEmpty {
+                        tickBudget.opacity(showResult && !game.lost ? 0 : 1)
                     } else {
                         // Endless has no par; its brim is on the rim.
                         Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
@@ -1504,7 +1506,7 @@ struct LevelView: View {
                 }
                 .position(at(fk))
             ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core), r: r) }
-            if game.lost && shown == nil, let k = game.pushedClock ?? game.lastStopped {
+            if game.lost && shown == nil, let k = game.tick.last?.rod ?? game.pushedClock ?? game.lastStopped {
                 lostMarks(at(k), size: Self.ratchetSize(core), r: r,
                           twisted: Set(game.stack.map(\.rod)).sorted().map { (at($0), disc($0)) })
             }
@@ -1586,6 +1588,33 @@ struct LevelView: View {
     /// Escapement: the beat between a lift and its first tick, and each tick's turn.
     nonisolated static let tickBeat = 0.15, tickTurn = 0.3
 
+    /// Escapement: the ticks left, a split-flap numeral whose every tick flips it down one as that clock's tick starts
+    /// to turn, so a move of three running clocks flips it three times in their order. Escapement has no par (Jack's
+    /// call EL1, round 11).
+    private var tickBudget: some View {
+        HStack(alignment: .center, spacing: 8) {
+            Text("ticks")
+                .keyframeAnimator(initialValue: 0.0, trigger: game.tickPushes) { text, t in
+                    text.foregroundStyle(t > 0.5 ? Color.alarm : Color.text)
+                } keyframes: { _ in
+                    MoveKeyframe(0.0)
+                    LinearKeyframe(0.0, duration: Self.tickBeat)
+                    MoveKeyframe(1.0)
+                    LinearKeyframe(0.0, duration: 0.8)
+                }
+            KeyframeAnimator(initialValue: Self.ticksDone, trigger: game.tickEvents) { v in
+                let n = game.tick.count, started = (0..<n).filter { v > Double($0) }.count
+                let shown = game.budget + n - started
+                FlipCounter(value: shown, was: started > 0 ? shown + 1 : shown,
+                            fall: started > 0 ? min(v - Double(started - 1), 1) : 1,
+                            digits: max(String(game.level.budget).count, 2),
+                            still: reduceMotion, out: game.lost)
+            } keyframes: { _ in Self.tickKeys }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(game.budget) ticks left")
+    }
+
     /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
     nonisolated static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
 
@@ -1594,7 +1623,7 @@ struct LevelView: View {
                          plate: CGFloat) -> RatchetView {
         RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
                     size: Self.ratchetSize(core), plate: plate, pawl: pawl, lit: pressing == k,
-                    stopped: !game.running(k) && shown == nil && !demoing, owed: game.owed(k), back: back)
+                    stopped: !game.running(k) && shown == nil && !demoing, back: back)
     }
 
     /// Escapement: what clock `k` at `c` shows round its ratchet: a red flash for a tick of its own that pushed; while a
@@ -1672,8 +1701,8 @@ struct LevelView: View {
             .overlay(Capsule().stroke(Color.vermilion, lineWidth: 1.5))
     }
 
-    /// Escapement: "lost." stamped by clock `k`, the one whose tick pushed or the last to stop. A tank lost to its last
-    /// clock stopping has no count to stamp beside; what it shows instead is Jack's call, built three ways
+    /// Escapement: "out of ticks." stamped by clock `k`, the one whose tick spent the last of the budget. A tank whose
+    /// clocks all stopped with twists left has no count to stamp beside; what it shows instead is built three ways
     /// (`StopLook`).
     @ViewBuilder private func lostMarks(_ c: CGPoint, size: CGFloat, r: CGFloat, twisted: [(at: CGPoint, disc: CGFloat)])
         -> some View {
@@ -1691,7 +1720,7 @@ struct LevelView: View {
                         .position(twisted[i].at)
                 }
             }
-            LostStamp(size: 50).position(x: spot.x - 6 * out, y: spot.y + 30)
+            LostStamp(size: 30).position(x: spot.x + 20 * out, y: spot.y + 34)
         }
         .allowsHitTesting(false)
     }
@@ -2592,8 +2621,8 @@ struct ClockHint: View {
 
 /// Escapement's clock knob: a 12-tooth ratchet wheel that turns clockwise only, a tooth a tick, its index read against a
 /// vermilion sub-dial fixed to the glass, and the pawl that drops into it. `pawl` 0 rests in a gap, 1 is lifted clear
-/// as a tick rides it out. Its hub, fixed to the glass, counts the ticks still owed down to its stop. Stopped, the wheel
-/// goes grey, the pawl amber, locked in its gap, and the hub says so.
+/// as a tick rides it out. Stopped, the wheel goes grey, the pawl amber, locked in its gap, and its hub, fixed to the
+/// glass, shows the stop.
 struct RatchetView: View {
     let angle: Double
     let size: CGFloat
@@ -2602,7 +2631,6 @@ struct RatchetView: View {
     let pawl: Double
     let lit: Bool
     let stopped: Bool
-    var owed = 0
     /// A wound-back clock's: mirrored, so it ticks anticlockwise.
     var back = false
 
@@ -2640,7 +2668,7 @@ struct RatchetView: View {
                                                   .init(color: Color(0x262A33), location: 1)],
                                           center: UnitPoint(x: 0.4, y: 0.35), startRadius: 0, endRadius: size))
                 wheel.stroke(Color.black.opacity(0.85), lineWidth: 1)
-                // The index, so each tick's step reads at a glance against the sub-dial; the hub's count covers its root.
+                // The index, so each tick's step reads at a glance against the sub-dial; the hub covers its root.
                 Path { $0.move(to: at(0, rr * 0.55)); $0.addLine(to: at(0, rr * 0.92)) }
                     .stroke(Color.vermilion, style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
             }
@@ -2649,18 +2677,9 @@ struct RatchetView: View {
             .opacity(stopped ? 0.55 : 1)
             Circle().fill(Color.black.opacity(0.85)).frame(width: rr * 1.1, height: rr * 1.1).position(c)
             Circle().stroke(stopped ? Color.amber : steel, lineWidth: 1.2).frame(width: rr * 1.1, height: rr * 1.1).position(c)
-            // Unmirrored, so a wound-back clock's count reads.
-            Group {
-                if stopped {
-                    // The stop symbol, not a dash, which would read as a wound-back count.
-                    RoundedRectangle(cornerRadius: 1).fill(Color.amber).frame(width: rr * 0.4, height: rr * 0.4)
-                } else {
-                    Text("\(owed)").font(.system(size: rr * 0.78, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color(0xF2F4F8)).contentTransition(.numericText(countsDown: true))
-                }
+            if stopped {
+                RoundedRectangle(cornerRadius: 1).fill(Color.amber).frame(width: rr * 0.4, height: rr * 0.4).position(c)
             }
-            .scaleEffect(x: back ? -1 : 1)
-            .position(c)
             Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(Color.black.opacity(0.9), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
             Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(stopped ? Color.amber : steel,
                                                                    style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
@@ -2670,21 +2689,109 @@ struct RatchetView: View {
         // Wheel, pawl and all, so it turns anticlockwise.
         .scaleEffect(x: back ? -1 : 1)
         .animation(.easeOut(duration: 0.12), value: pawl == 1)
-        .animation(.easeOut(duration: 0.2), value: owed)
     }
 }
 
-/// Escapement: what a tank lost to its last clock stopping with twists left shows beside "lost.": nothing more (as
-/// built), the count of twists left where a pushed tick's count would stand, or a ring round each knob still twisted.
+/// Escapement's tick budget as a split-flap clock: a card per digit, hinged across its middle. As `value` takes over
+/// from `was`, the old digit's top half falls over the hinge onto its bottom half, `fall` 0 to 0.5, uncovering the new
+/// digit's top, and the new digit's bottom half lands, 0.5 to 1. Under Reduce Motion it swaps without the fall.
+struct FlipCounter: View {
+    let value: Int
+    let was: Int
+    let fall: Double
+    let digits: Int
+    var still = false
+    /// Spent with twists left, the cards go vermilion.
+    var out = false
+
+    static let width: CGFloat = 19, height: CGFloat = 26
+
+    var body: some View {
+        let new = Self.digits(of: value, digits), old = Self.digits(of: was, digits)
+        HStack(spacing: 2) {
+            ForEach(0..<digits, id: \.self) { i in
+                card(new[i], old[i], fall: still || new[i] == old[i] ? 1 : fall)
+            }
+        }
+    }
+
+    static func digits(of n: Int, _ count: Int) -> [Character] {
+        Array(String(String(max(n, 0)).suffix(count)).leftPadded(to: count))
+    }
+
+    private var ink: Color { out ? .vermilion : Color(0xF2F4F8) }
+
+    private func face(_ d: Character, top: Bool) -> some View {
+        let w = Self.width, h = Self.height
+        return ZStack {
+            UnevenRoundedRectangle(topLeadingRadius: top ? 3 : 0, bottomLeadingRadius: top ? 0 : 3,
+                                   bottomTrailingRadius: top ? 0 : 3, topTrailingRadius: top ? 3 : 0)
+                .fill(LinearGradient(colors: top ? [Color(0x23262E), Color(0x181A20)] : [Color(0x15171C), Color(0x0D0E11)],
+                                     startPoint: .top, endPoint: .bottom))
+            Text(String(d)).font(.system(size: h * 0.74, weight: .bold, design: .monospaced))
+                .foregroundStyle(ink).shadow(color: ink.opacity(0.55), radius: 3)
+                .frame(width: w, height: h)
+                .frame(width: w, height: h / 2, alignment: top ? .top : .bottom)
+        }
+        .frame(width: w, height: h / 2)
+        .clipped()
+    }
+
+    private func card(_ d: Character, _ o: Character, fall p: Double) -> some View {
+        let h = Self.height
+        // The top half falls, gathering speed; the bottom half lands and settles.
+        let first = pow(min(p / 0.5, 1), 2), second = 1 - pow(1 - max((p - 0.5) / 0.5, 0), 2)
+        return VStack(spacing: 0) {
+            ZStack {
+                face(d, top: true)
+                if p < 0.5 {
+                    face(o, top: true)
+                        .overlay(Color.black.opacity(0.5 * first))
+                        .rotation3DEffect(.degrees(-90 * first), axis: (x: 1, y: 0, z: 0), anchor: .bottom, perspective: 0.6)
+                }
+            }
+            ZStack {
+                face(p < 1 ? o : d, top: false)
+                    .overlay(Color.black.opacity(p > 0.5 && p < 1 ? 0.35 * (1 - second) : 0))
+                if p > 0.5 && p < 1 {
+                    face(d, top: false)
+                        .overlay(Color.black.opacity(0.5 * (1 - second)))
+                        .rotation3DEffect(.degrees(90 * (1 - second)), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.6)
+                }
+            }
+        }
+        .frame(width: Self.width, height: h)
+        // The hinge, and its pins at either edge.
+        .overlay {
+            ZStack {
+                Rectangle().fill(Color.black).frame(height: 1)
+                HStack {
+                    Capsule().fill(Color(0x8C94A6)).frame(width: 2, height: 4)
+                    Spacer()
+                    Capsule().fill(Color(0x8C94A6)).frame(width: 2, height: 4)
+                }
+                .padding(.horizontal, -1)
+            }
+        }
+        .overlay(RoundedRectangle(cornerRadius: 3).stroke((out ? Color.vermilion : Color(0x5A6272)).opacity(0.8), lineWidth: 0.75))
+    }
+}
+
+private extension String {
+    func leftPadded(to n: Int) -> String { String(repeating: "0", count: max(n - count, 0)) + self }
+}
+
+/// Escapement: what a tank whose clocks all stopped with twists left shows beside its stamp: nothing more (as built), the
+/// count of twists left where a pushed tick's count would stand, or a ring round each knob still twisted.
 enum StopLook: String, Sendable { case stamp, left, rings }
 
-/// Escapement: "lost." stamped by the clock once a tick pushes or the last clock stops with twists left.
+/// Escapement: "out of ticks." stamped by the clock once the budget is spent with twists left.
 struct LostStamp: View {
     var size: CGFloat = 76
     @State private var landed = false
 
     var body: some View {
-        Text("lost.").font(.system(size: size, weight: .bold, design: .serif)).italic()
+        Text("out of ticks.").font(.system(size: size, weight: .bold, design: .serif)).italic().fixedSize()
             .foregroundStyle(Color.vermilion)
             .shadow(color: .black.opacity(0.9), radius: 8)
             .rotationEffect(.degrees(-6))
@@ -2695,7 +2802,7 @@ struct LostStamp: View {
     }
 }
 
-/// Escapement's lost tank: the move it was lost on, undo if the bank has one, and again, a reset.
+/// Escapement's tank out of ticks: the move that spent them, undo if the bank has one, and again, a reset.
 struct LostCard: View {
     let game: Game
     let onExit: () -> Void
@@ -2703,8 +2810,7 @@ struct LostCard: View {
 
     var body: some View {
         VStack(spacing: 26) {
-            // No par: beside a loss it reads as a score.
-            Text("lost on move \(game.moves)").font(.mono(13))
+            Text("out of ticks on move \(game.moves)").font(.mono(13))
             HStack(spacing: 32) {
                 Button("\u{2039} levels", action: onExit)
                 Button("undo \u{00B7} \(game.bank)") { game.undo() }
