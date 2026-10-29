@@ -117,9 +117,10 @@ extension Level {
                      picture: .halftone, layout: layout, scramble: .parse(scramble, in: layout, lenses: lenses), lenses: lenses)
     }
     /// The problem book (docs/escapement-problems.md, scripts/escapement/problems.tsv) in its order: five chapters of
-    /// six, each opening on a problem that teaches without words. Each problem's par is what its clocks owe, which the
-    /// prover (`Solver.escapement`) shows a line reaches, and its note the stipulation. The book names only its teachers
-    /// and the finale; problem 1, the book's "The tick", is "The clock" (Jack's call D1, round 9).
+    /// six, each opening on a problem that teaches without words. Each problem's `par`, never shown, is the moves its
+    /// slowest clock owes, which the prover (`Solver.escapement`) shows a line reaches; its note, the stipulation, states
+    /// the tick budget instead (Jack's call EL1, round 11). The book names only its teachers and the finale; problem 1,
+    /// the book's "The tick", is "The clock" (Jack's call D1, round 9).
     static let escapement: [Level] = [
         // The Clock.
         problem(1, "The clock", .tri, "0:-1,1:+3,0:-1,2:-4", clocks: [0], par: 2),
@@ -163,11 +164,13 @@ extension Level {
 
     private static func problem(_ n: Int, _ title: String, _ layout: Layout, _ scramble: String, clocks: [Int],
                                 back: [Int] = [], par: Int) -> Level {
-        Level(id: Pack.escapement.id(n), pack: .escapement, label: String(format: "%02d", n), title: title,
-              note: "Unstir in \(par).", layout: layout, scramble: .parse(scramble, in: layout), ratchets: Set(clocks),
-              woundBack: Set(back), chapter: escapementChapters[(n - 1) / 6],
-              // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
-              demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)
+        var level = Level(id: Pack.escapement.id(n), pack: .escapement, label: String(format: "%02d", n), title: title,
+                          layout: layout, scramble: .parse(scramble, in: layout), ratchets: Set(clocks), woundBack: Set(back),
+                          chapter: escapementChapters[(n - 1) / 6],
+                          // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
+                          demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)
+        level.note = "Unstir in \(level.budget) ticks."
+        return level
     }
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder

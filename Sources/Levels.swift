@@ -133,6 +133,17 @@ struct Level: Hashable, Sendable {
             .sorted { layout.clockwise($0.rod) < layout.clockwise($1.rod) }
     }
 
+    /// Escapement: the ticks clock `clock` owes on `stack` before it stops, its own steps the way it ticks back to none.
+    func owed(_ clock: Int, on stack: [Twist]) -> Int {
+        let dir = woundBack.contains(clock) ? -1 : 1
+        return max(0, -dir * stack.filter { $0.rod == clock }.reduce(0) { $0 + $1.steps })
+    }
+
+    /// Escapement's tick budget on `stack`: every clock's owed ticks together. Every tick of every clock spends one.
+    func budget(on stack: [Twist]) -> Int { ratchets.reduce(0) { $0 + owed($1, on: stack) } }
+    /// The budget as dealt, which the stipulation states.
+    var budget: Int { budget(on: scramble) }
+
     func kind(of knob: Int) -> Knob {
         seized.contains(knob) ? .seized : sockets.contains(knob) ? .socket : ratchets.contains(knob) ? .ratchet : .working
     }

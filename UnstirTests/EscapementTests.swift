@@ -27,7 +27,8 @@ import XCTest
         XCTAssertEqual(level.scramble, tri("0:-1,1:+3,0:-1,2:-4"))
         XCTAssertEqual(level.clocks.map(\.rod), [0])
         XCTAssertEqual(level.par, 2)
-        XCTAssertEqual(level.note, "Unstir in 2.")
+        XCTAssertEqual(level.budget, 2)
+        XCTAssertEqual(level.note, "Unstir in 2 ticks.")
         XCTAssertEqual(level.demo, tri("0:-3,1:+2"))
         XCTAssertTrue(Level.escapement.dropFirst().allSatisfy(\.demo.isEmpty))
     }
@@ -41,15 +42,18 @@ import XCTest
         XCTAssertEqual(level.kind(of: 0), .ratchet)
         XCTAssertEqual(level.motion, .none)
         XCTAssertEqual(level.par, 3)
-        XCTAssertEqual(level.note, "Unstir in 3.")
+        XCTAssertEqual(level.budget, 3)
+        XCTAssertEqual(level.note, "Unstir in 3 ticks.")
     }
 
     func testTheComposedLineWinsInThree() {
         let g = game()
+        XCTAssertEqual(g.budget, 3)
         g.commit(rod: 2, steps: 4)
         XCTAssertEqual(g.lastCommit?.result, .cancelled)
         // Its tick takes the clock's upper seam from -2 to -1.
         XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1"))
+        XCTAssertEqual(g.budget, 2)
         g.wait(on: 0)
         XCTAssertEqual(g.stack, tri("0:-1,1:+3"))
         XCTAssertEqual(g.moves, 2)
@@ -62,37 +66,47 @@ import XCTest
         XCTAssertEqual(g.over, 0)
         XCTAssertEqual(g.clockStops, 1)
         XCTAssertEqual(g.escapement.ticks, [0: 3])
+        XCTAssertEqual(g.budget, 0)
         XCTAssertFalse(g.lost)
     }
 
-    /// Jack's call E1 (round 9): every let-go is final, so a tick that pushes loses on the move that made it.
-    func testAPushedTickLosesAtOnce() {
+    /// Jack's call EL1 (round 11): a tick that pushes still buries a +1 that nothing can ever pop, but the tank plays on,
+    /// the budget falling a tick a move, until it is spent with twists left: out of ticks, and nothing more is taken.
+    func testAPushedTickPlaysOnUntilTheTicksRunOut() {
         let g = game()
         g.commit(rod: 2, steps: 4)
         g.commit(rod: 1, steps: -3)
-        // Rod 1 buries the clock's newest seam, so its tick pushes a +1 that nothing can ever pop.
-        let slipped = g.stack
-        XCTAssertEqual(slipped, tri("0:-1,1:+3,0:-1,1:-3") + [Twist(rod: 0, steps: 1)])
+        // Rod 1 buries the clock's newest seam, so its tick pushes.
+        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1,1:-3") + [Twist(rod: 0, steps: 1)])
         XCTAssertEqual(g.overdue(0), 1)
         XCTAssertEqual(g.tickPushes, 1)
         XCTAssertEqual(g.pushedClock, 0)
+        XCTAssertEqual(g.budget, 1)
+        XCTAssertFalse(g.lost)
+        XCTAssertFalse(g.finished)
+        XCTAssertTrue(g.running(0))
+        g.commit(rod: 1, steps: 3)
+        XCTAssertEqual(g.moves, 3)
+        XCTAssertEqual(g.budget, 0)
         XCTAssertTrue(g.lost)
         XCTAssertTrue(g.finished)
-        XCTAssertEqual(g.moves, 2)
-        // Lost, nothing more is taken.
+        let spent = g.stack
+        XCTAssertFalse(spent.isEmpty)
         g.commit(rod: 1, steps: 3)
         g.wait(on: 0)
-        XCTAssertEqual(g.stack, slipped)
-        XCTAssertEqual(g.moves, 2)
+        XCTAssertEqual(g.stack, spent)
+        XCTAssertEqual(g.moves, 3)
     }
 
-    func testAWaitWhoseTickPushesIsLostAtOnce() {
-        let g = game("0:-1,1:+3,0:-1")
+    func testAWaitWhoseTickPushesPlaysOn() {
+        let g = game("0:-1,1:+3,0:-1,2:-4")
         g.wait(on: 0)
-        XCTAssertEqual(g.stack, tri("0:-1,1:+3"))
+        XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1,2:-4,0:+1"))
+        XCTAssertEqual(g.overdue(0), 1)
+        XCTAssertEqual(g.budget, 1)
         XCTAssertFalse(g.lost)
         g.wait(on: 0)
-        XCTAssertEqual(g.overdue(0), 1)
+        XCTAssertEqual(g.budget, 0)
         XCTAssertTrue(g.lost)
         XCTAssertEqual(g.moves, 2)
     }
@@ -108,7 +122,8 @@ import XCTest
         XCTAssertEqual(g.history, [Twist(rod: 2, steps: 4), Twist(rod: 2, steps: -4)])
         XCTAssertEqual(g.escapement.ticks, [0: 2])
         XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1,2:-4") + [Twist(rod: 0, steps: 1)])
-        XCTAssertTrue(g.lost)
+        XCTAssertEqual(g.budget, 1)
+        XCTAssertFalse(g.finished)
     }
 
     func testTheClockRodIsNeverTurned() {
@@ -119,11 +134,14 @@ import XCTest
         XCTAssertEqual(g.escapement.ticks, [:])
     }
 
-    /// Jack's call E2 (round 9): once the clock's own twists are gone it stops, and a picture still twisted then is lost.
-    func testAClockThatStopsWithTwistsLeftIsLost() {
+    /// Once the clock's own twists are gone it stops, and its last tick spends the budget: a picture still twisted then is
+    /// out of ticks.
+    func testAClockThatStopsWithTwistsLeftIsOutOfTicks() {
         let g = game("1:+3,0:-1")
+        XCTAssertEqual(g.budget, 1)
         g.wait(on: 0)
         XCTAssertEqual(g.stack, tri("1:+3"))
+        XCTAssertEqual(g.budget, 0)
         XCTAssertEqual(g.clockStops, 1)
         XCTAssertEqual(g.lastStopped, 0)
         XCTAssertNil(g.pushedClock)
@@ -136,24 +154,31 @@ import XCTest
         XCTAssertEqual(g.moves, 1)
         g.undo()
         XCTAssertFalse(g.lost)
+        XCTAssertEqual(g.budget, 1)
         XCTAssertEqual(g.stack, tri("1:+3,0:-1"))
     }
 
-    /// The pack's undo: the move and its tick together, from the shared bank, on a lost tank too.
+    /// The pack's undo: the move and its ticks together, and the budget they spent, from the shared bank, on a tank out
+    /// of ticks too.
     func testUndoTakesTheMoveAndItsTick() {
         let g = game()
         g.commit(rod: 2, steps: 4)
         let s1 = g.stack
         g.commit(rod: 1, steps: -3)
+        g.wait(on: 0)
         XCTAssertTrue(g.lost)
         g.undo()
         XCTAssertFalse(g.lost)
+        XCTAssertEqual(g.budget, 1)
+        XCTAssertEqual(g.pushedClock, 0)
+        g.undo()
+        XCTAssertEqual(g.budget, 2)
         XCTAssertEqual(g.stack, s1)
         XCTAssertEqual(g.overdue(0), 0)
         XCTAssertNil(g.pushedClock)
         XCTAssertEqual(g.escapement.ticks, [0: 1])
         XCTAssertEqual(g.moves, 1)
-        XCTAssertEqual(g.bank, 2)
+        XCTAssertEqual(g.bank, 1)
         // And the line still wins in three.
         g.wait(on: 0)
         g.commit(rod: 1, steps: -3)
@@ -162,21 +187,31 @@ import XCTest
         XCTAssertEqual(g.over, 0)
     }
 
-    func testAnEmptyBankLeavesTheLossStanding() {
-        let g = game(bank: 0)
+    /// Burying the clock's seam, then waiting out the budget.
+    private func spend(_ g: Game) {
         g.commit(rod: 1, steps: 1)
+        XCTAssertFalse(g.lost)
+        g.wait(on: 0)
+        g.wait(on: 0)
         XCTAssertTrue(g.lost)
+    }
+
+    func testAnEmptyBankLeavesTheTankOutOfTicks() {
+        let g = game(bank: 0)
+        spend(g)
         g.undo()
         XCTAssertTrue(g.lost)
-        XCTAssertEqual(g.moves, 1)
+        XCTAssertEqual(g.budget, 0)
+        XCTAssertEqual(g.moves, 3)
     }
 
     func testResetStartsTheClockAfresh() {
         let g = game()
-        g.commit(rod: 1, steps: 1)
-        XCTAssertTrue(g.lost)
+        spend(g)
         XCTAssertTrue(g.reset())
         XCTAssertFalse(g.lost)
+        XCTAssertEqual(g.budget, 3)
+        XCTAssertNil(g.pushedClock)
         XCTAssertEqual(g.escapement.ticks, [:])
         XCTAssertEqual(g.moves, 0)
         XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-2,2:-4"))
@@ -188,6 +223,7 @@ import XCTest
         let g = Game(level: first, tankTurned: true, bank: (3, nil))
         XCTAssertEqual(g.level.demo, tri("0:-3,1:+2"))
         g.demo(g.level.demo)
+        XCTAssertEqual(g.budget, 3)
         XCTAssertEqual(g.reachable, Twist(rod: 1, steps: -2))
         g.commit(rod: 1, steps: -2)
         XCTAssertEqual(g.stack, tri("0:-2"))
@@ -196,6 +232,7 @@ import XCTest
         XCTAssertFalse(g.finished)
         g.endDemo()
         XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1,2:-4"))
+        XCTAssertEqual(g.budget, 2)
         XCTAssertEqual(g.moves, 0)
         XCTAssertEqual(g.escapement.ticks, [:])
         XCTAssertEqual(g.resets, 0)
@@ -263,7 +300,7 @@ import XCTest
             XCTAssertEqual(level.layout, row.layout, level.id)
             XCTAssertEqual(clocks(level), row.clocks, level.id)
             XCTAssertEqual(level.par, row.par, level.id)
-            XCTAssertEqual(level.note, "Unstir in \(row.par).", level.id)
+            XCTAssertEqual(level.note, "Unstir in \(level.budget) ticks.", level.id)
             XCTAssertEqual(level.motion, .none, level.id)
             XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty, level.id)
             XCTAssertTrue(level.ratchets.allSatisfy { level.kind(of: $0) == .ratchet }, level.id)
@@ -314,6 +351,64 @@ import XCTest
             XCTAssertTrue(g.solved, level.id)
             XCTAssertEqual(g.moves, level.par, level.id)
         }
+    }
+
+    /// Jack's call EL1 (round 11) keeps the book: on every problem's proved line, each move's ticks are one per clock
+    /// running as it began, each spends one of the budget, and the budget is what the clocks still owe after every move,
+    /// spent exactly as the last clock stops on the clean picture. So the budget never ends a line the prover proved.
+    func testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine() throws {
+        for level in Level.escapement {
+            let clocks = level.clocks
+            var seen = 0
+            let play = try XCTUnwrap(Solver(level.layout).escapement(level.scramble, clocks: clocks, limit: level.par,
+                                                                    steps: [], seen: &seen), level.id)
+            var test = level
+            test.id = "test-" + level.id
+            let g = Game(level: test, tankTurned: true, bank: (0, nil))
+            XCTAssertEqual(g.budget, clocks.reduce(0) { $0 + g.owed($1.rod) }, level.id)
+            XCTAssertGreaterThanOrEqual(g.budget, level.par, level.id)
+            for (i, move) in play.moves.enumerated() {
+                let running = clocks.filter { g.running($0.rod) }.map(\.rod), was = g.budget
+                switch move {
+                case let .stir(knob, _, steps): g.commit(rod: knob, steps: steps)
+                case .wait: g.wait(on: clocks[0].rod)
+                case .turn: XCTFail("a clock's tank never turns: \(level.id)")
+                }
+                let at = "\(level.id) move \(i + 1)"
+                XCTAssertEqual(g.tick.map(\.rod), running, at)
+                XCTAssertEqual(was - g.budget, running.count, at)
+                XCTAssertEqual(g.budget, clocks.reduce(0) { $0 + g.owed($1.rod) }, at)
+                XCTAssertEqual(g.budget == 0, clocks.allSatisfy { !g.running($0.rod) }, at)
+                XCTAssertEqual(g.tickPushes, 0, at)
+                XCTAssertFalse(g.lost, at)
+            }
+            XCTAssertEqual(g.budget, 0, level.id)
+            XCTAssertTrue(g.solved, level.id)
+        }
+    }
+
+    /// A move with k clocks running takes k: three dials (25) spend three a move, and 16's two clocks two, then one
+    /// once clock 1 has stopped.
+    func testAMoveWithKRunningClocksTakesK() {
+        var three = Level.escapement[24]
+        three.id = "test-escapement"
+        let g = Game(level: three, tankTurned: true, bank: (0, nil))
+        let start = g.budget
+        g.commit(rod: 0, steps: -3)
+        XCTAssertEqual(g.tick.map(\.rod), [1, 3, 5])
+        XCTAssertEqual(start - g.budget, 3)
+        var two = Level.escapement[15]
+        two.id = "test-escapement"
+        let h = Game(level: two, tankTurned: true, bank: (0, nil))
+        XCTAssertEqual(h.budget, 9)
+        var spent: [Int] = []
+        for move in [(3, -2), (5, -2), nil, (6, -4), (5, 3), (2, -5)] as [(Int, Int)?] {
+            let was = h.budget
+            if let (knob, steps) = move { h.commit(rod: knob, steps: steps) } else { h.wait(on: 1) }
+            spent.append(was - h.budget)
+        }
+        XCTAssertEqual(spent, [2, 2, 2, 1, 1, 1])
+        XCTAssertTrue(h.solved)
     }
 
     /// What each clock owes counts down a tick a move to its stop, and the slowest clock's, as dealt, is par.
@@ -400,19 +495,19 @@ import XCTest
         XCTAssertNil(solver.escapement(level.scramble, clocks: level.clocks.reversed(), limit: level.par, seen: &seen))
     }
 
-    /// A tick that pushes loses at once, and no clock after it in the turn ticks.
-    func testAPushedTickStopsTheTurn() {
+    /// A tick that pushes no longer ends the turn (Jack's call EL1, round 11): every clock after it ticks and spends one.
+    func testAPushedTickLeavesTheTurnTicking() {
         var level = Level.escapement[12]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (1, nil))
+        XCTAssertEqual(g.budget, 5)
         // Knob 3's seam lies over both clocks.
         g.wait(on: 2)
-        XCTAssertTrue(g.lost)
-        XCTAssertEqual(g.pushedClock, 0)
-        XCTAssertEqual(g.tick.map(\.rod), [0])
-        XCTAssertEqual(g.escapement.ticks, [0: 1])
+        XCTAssertFalse(g.lost)
+        XCTAssertEqual(g.tick.map(\.rod), [0, 2])
+        XCTAssertEqual(g.escapement.ticks, [0: 1, 2: 1])
+        XCTAssertEqual(g.budget, 3)
         XCTAssertEqual(g.overdue(0), 1)
-        XCTAssertEqual(g.overdue(2), 0)
     }
 
     /// Backwards (19): a wound-back clock ticks -1 over seams stirred clockwise, and a pushed tick of its own is a -1.
@@ -430,7 +525,8 @@ import XCTest
         XCTAssertEqual(g.moves, 3)
         let h = Game(level: level, tankTurned: true, bank: (1, nil))
         h.commit(rod: 1, steps: 3)
-        XCTAssertTrue(h.lost)
+        XCTAssertFalse(h.finished)
+        XCTAssertEqual(h.budget, 2)
         XCTAssertEqual(h.stack.last, Twist(rod: 0, steps: -1))
         XCTAssertEqual(h.overdue(0), 1)
     }
@@ -450,8 +546,9 @@ import XCTest
         XCTAssertFalse(g.lost)
     }
 
-    /// The prover finds nothing shorter than the composed line, and drops the lost lines: on 1:+3,0:-1, taking rod 1
-    /// off first buries the clock's seam, so its tick pushes, and waiting first stops the clock with rod 1 still on.
+    /// The prover finds nothing shorter than the composed line, and drops the lines that can only run out of ticks: on
+    /// 1:+3,0:-1, taking rod 1 off first buries the clock's seam, so its tick pushes and the stack can never empty
+    /// (`testAPushedTickNeverPops`), and waiting first stops the clock, its budget spent, with rod 1 still on.
     func testTheProverDropsLostLines() {
         var seen = 0
         let solver = Solver(.tri), clock: Solver.Clocks = [(0, 1)]
@@ -461,8 +558,8 @@ import XCTest
         XCTAssertNil(solver.escapement(tri("1:+3,0:-1"), clocks: clock, limit: 4, seen: &seen))
     }
 
-    /// The lost rule: once a tick pushes, the clock holds a positive entry that no continuation pops, so the stack can
-    /// never empty. Random small stacks on tri and quad, played at random until a tick pushes, then every continuation
+    /// Why a pushed tick dooms a tank to run out of ticks: once a tick pushes, the clock holds a positive entry that no
+    /// continuation pops, so the stack can never empty. Random small stacks on tri and quad, played at random until a tick pushes, then every continuation
     /// of one move (pushes and partial merges too), ticking after it; of two with UNSTIR_SLOW_TESTS=1, which takes
     /// minutes.
     func testAPushedTickNeverPops() {
