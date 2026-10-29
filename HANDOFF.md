@@ -1186,7 +1186,7 @@ from Nightmare to Nightmare+ is easy to miss.
   levels down to about 7 and 9 stirs, with fewer quiet stirs hidden under loud ones. Measure every level first with
   the maelstrom solver (stirs, hidden stirs, choices per step) and show Jack the table. Jack's own results, the only
   play data so far, are in `HANDOFF.private.md`.
-  **Built on `plughole-ease` (2026-10-27), waiting on Jack's OK of the table.** Measured with
+  **Merged (PR #50), Jack's call PH1 = A (2026-10-29): pent and hex both eased.** Measured with
   `scripts/plughole-levels.sh`; "choices per step" is defined there as the rods that could rightly come off next,
   averaged over the untwist. 19–22 (pent) go from 6, 7, 8, 9 stirs to 5, 6, 6, 7 and 23–27 (hex) from 7, 8, 10, 12, 14
   to 6, 7, 8, 9, 9; hidden stirs from 16 to 6 over the nine. Each is dealt by the frozen generator from a seed (in the
