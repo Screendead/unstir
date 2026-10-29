@@ -9,6 +9,39 @@ struct Twist: Hashable {
     var steps: Int
 }
 
+/// Prism's colour channels a rod stirs. A stir moves only its own, so each channel is sampled through the word of the
+/// entries whose rod holds it. Every rod of a level without masks is white.
+struct Channels: OptionSet, Hashable, Sendable {
+    let rawValue: UInt8
+    init(rawValue: UInt8) { self.rawValue = rawValue }
+    static let red = Channels(rawValue: 1), green = Channels(rawValue: 2), blue = Channels(rawValue: 4)
+    static let cyan: Channels = [.green, .blue], magenta: Channels = [.red, .blue], yellow: Channels = [.red, .green]
+    static let white: Channels = [.red, .green, .blue]
+    static let each: [Channels] = [.red, .green, .blue]
+
+    private static let letters: [(Character, Channels)] =
+        [("r", .red), ("g", .green), ("b", .blue), ("c", .cyan), ("m", .magenta), ("y", .yellow), ("w", .white)]
+
+    /// One of r, g, b, c, m, y or w, either case.
+    init?(letter: Character) {
+        guard let found = Self.letters.first(where: { $0.0 == Character(letter.lowercased()) }) else { return nil }
+        self = found.1
+    }
+
+    var letter: Character? { Self.letters.first { $0.1 == self }?.0 }
+
+    /// "0:r,2:c" -> [0: .red, 2: .cyan]; nil on anything else.
+    static func masks(_ s: String) -> [Int: Channels]? {
+        var out: [Int: Channels] = [:]
+        for part in s.split(separator: ",") {
+            let f = part.split(separator: ":")
+            guard f.count == 2, let slot = Int(f[0]), f[1].count == 1, let c = Channels(letter: f[1].first!) else { return nil }
+            out[slot] = c
+        }
+        return out
+    }
+}
+
 /// Tank geometry in normalized coordinates: tank radius 1, centre at the origin, y down.
 enum Tank {
     static let step = Double.pi / 6
@@ -175,30 +208,44 @@ enum Layout: String, CaseIterable {
     }
 
     /// Indices of the entries whose inverse would cancel right now: the inverse lands on them.
-    func removable(_ stack: [Twist], lenses: Set<Int> = []) -> [Int] {
-        stack.indices.filter { stack.landing(rod: stack[$0].rod, steps: -stack[$0].steps, in: self, lenses: lenses) == $0 }
+    func removable(_ stack: [Twist], lenses: Set<Int> = [], masks: [Int: Channels] = [:]) -> [Int] {
+        stack.indices.filter {
+            stack.landing(rod: stack[$0].rod, steps: -stack[$0].steps, in: self, lenses: lenses, masks: masks) == $0
+        }
     }
 
     /// Whether the entries above index i commute with a turn of `rod` by `steps`, so the turn can merge into entry i.
-    func commutes(_ stack: [some Stacked], above i: Int, rod: Int, steps: Int, lenses: Set<Int> = []) -> Bool {
+    func commutes(_ stack: [some Stacked], above i: Int, rod: Int, steps: Int, lenses: Set<Int> = [],
+                  masks: [Int: Channels] = [:]) -> Bool {
         let above = stack[(i + 1)...].map(\.twist)
-        if above.allSatisfy({ !overlaps($0.rod, rod) }) { return true }
+        let mask = masks[rod] ?? .white
+        if above.allSatisfy({ !overlaps($0.rod, rod) || (masks[$0.rod] ?? .white).isDisjoint(with: mask) }) { return true }
         // Overlapping rods can still commute exactly (a word can hold a whole disc still), and only the maps show it.
         let turn = Twist(rod: rod, steps: steps)
-        return same(above + [turn], [turn] + above, at: Tank.samples, within: 1e-6, lenses: lenses)
+        return same(above + [turn], [turn] + above, at: Tank.samples, within: 1e-6, lenses: lenses, masks: masks)
     }
 
-    /// Whether the stack leaves the picture looking unstirred.
-    func looksSolved(_ stack: [Twist], lenses: Set<Int> = []) -> Bool {
+    /// Whether the stack leaves the picture looking unstirred, in every channel.
+    func looksSolved(_ stack: [Twist], lenses: Set<Int> = [], masks: [Int: Channels] = [:]) -> Bool {
         // The coarse pass first, so a stirred tank exits within a few points.
-        same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: lenses)
-            && same(stack, [], at: Tank.grid(Tank.pixelGrid), within: Tank.halfPixel, lenses: lenses)
+        same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: lenses, masks: masks)
+            && same(stack, [], at: Tank.grid(Tank.pixelGrid), within: Tank.halfPixel, lenses: lenses, masks: masks)
     }
 
     /// Whether words a and b, each applied bottom first, send every point within `tolerance` of each other. `lenses`
-    /// are the rods whose steps magnify rather than turn.
+    /// are the rods whose steps magnify rather than turn. Under `masks`, each channel compares the words cut to the
+    /// entries whose rod holds it, and every channel must agree.
     func same(_ a: [Twist], _ b: [Twist], at points: some Sequence<SIMD2<Double>>, within tolerance: Double,
-              lenses: Set<Int> = []) -> Bool {
+              lenses: Set<Int> = [], masks: [Int: Channels] = [:]) -> Bool {
+        guard masks.isEmpty else {
+            var compared: Set<[[Twist]]> = []
+            return Channels.each.allSatisfy { c in
+                func cut(_ word: [Twist]) -> [Twist] { word.filter { (masks[$0.rod] ?? .white).contains(c) } }
+                let pair = [cut(a), cut(b)]
+                guard pair[0] != pair[1], compared.insert(pair).inserted else { return true }
+                return same(pair[0], pair[1], at: points, within: tolerance, lenses: lenses)
+            }
+        }
         let rods = self.rods
         func map(_ word: [Twist], _ p: SIMD2<Double>) -> SIMD2<Double> {
             word.reduce(p) { Tank.twist($0, rod: rods[$1.rod], angle: Double($1.steps) * Tank.step) }
@@ -238,19 +285,20 @@ extension Twist: Stacked {
 
 extension Array where Element: Stacked {
     /// The rod's newest entry that everything above it commutes with the turn: where the turn merges.
-    func landing(rod: Int, steps: Int, in layout: Layout, lenses: Set<Int> = []) -> Int? {
+    func landing(rod: Int, steps: Int, in layout: Layout, lenses: Set<Int> = [], masks: [Int: Channels] = [:]) -> Int? {
         indices.reversed().first {
-            self[$0].twist.rod == rod && layout.commutes(self, above: $0, rod: rod, steps: steps, lenses: lenses)
+            self[$0].twist.rod == rod && layout.commutes(self, above: $0, rod: rod, steps: steps, lenses: lenses, masks: masks)
         }
     }
 
     /// Merges into the landing entry, popping at zero; otherwise pushes. `popped` is handed every entry that merges to
-    /// nothing, whether the turn lands on it or an entry the merge lets fall does. `lenses` are the rods that magnify.
+    /// nothing, whether the turn lands on it or an entry the merge lets fall does. `lenses` are the rods that magnify, and
+    /// `masks` the channels each rod stirs.
     @discardableResult
-    mutating func commit(_ entry: Element, in layout: Layout, lenses: Set<Int> = [],
+    mutating func commit(_ entry: Element, in layout: Layout, lenses: Set<Int> = [], masks: [Int: Channels] = [:],
                          popped: (Element) -> Void = { _ in }) -> Commit {
         guard entry.twist.steps != 0 else { return .refused }
-        if let i = landing(rod: entry.twist.rod, steps: entry.twist.steps, in: layout, lenses: lenses) {
+        if let i = landing(rod: entry.twist.rod, steps: entry.twist.steps, in: layout, lenses: lenses, masks: masks) {
             // A merge under an overlapping rod changes what the entries above it were checked against, so the merged
             // entry and everything above go back on in order and merge wherever they now can.
             var rest = Array(self[i...])
@@ -262,9 +310,9 @@ extension Array where Element: Stacked {
                 popped(rest[0])
                 merged = .cancelled
             } else {
-                merged = commit(rest[0], in: layout, lenses: lenses, popped: popped)
+                merged = commit(rest[0], in: layout, lenses: lenses, masks: masks, popped: popped)
             }
-            for t in rest.dropFirst() { commit(t, in: layout, lenses: lenses, popped: popped) }
+            for t in rest.dropFirst() { commit(t, in: layout, lenses: lenses, masks: masks, popped: popped) }
             return merged == .cancelled ? .cancelled : .reduced
         }
         guard count < Tank.maxStack else { return .refused }
@@ -275,18 +323,18 @@ extension Array where Element: Stacked {
 
 extension Array where Element == Twist {
     @discardableResult
-    mutating func commit(rod: Int, steps: Int, in layout: Layout, lenses: Set<Int> = []) -> Commit {
-        commit(Twist(rod: rod, steps: steps), in: layout, lenses: lenses)
+    mutating func commit(rod: Int, steps: Int, in layout: Layout, lenses: Set<Int> = [], masks: [Int: Channels] = [:]) -> Commit {
+        commit(Twist(rod: rod, steps: steps), in: layout, lenses: lenses, masks: masks)
     }
 
     /// "0:+3,1:-6" -> [(0,3),(1,-6)], committed in order so entries that can merge do.
-    static func parse(_ s: String, in layout: Layout, lenses: Set<Int> = []) -> [Twist] {
+    static func parse(_ s: String, in layout: Layout, lenses: Set<Int> = [], masks: [Int: Channels] = [:]) -> [Twist] {
         var stack: [Twist] = []
         for part in s.split(separator: ",") {
             let f = part.split(separator: ":")
             if f.count == 2, let r = Int(f[0]), layout.rods.indices.contains(r),
                let n = Int(f[1]) {
-                stack.commit(rod: r, steps: n, in: layout, lenses: lenses)
+                stack.commit(rod: r, steps: n, in: layout, lenses: lenses, masks: masks)
             }
         }
         return stack

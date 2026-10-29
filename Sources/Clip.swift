@@ -118,7 +118,7 @@ struct Reel: Sendable {
                 lift = start + keys.reduce(0) { $0 + $1.seconds } + Self.hold
                 let net = Int(keys.last!.steps.rounded())
                 if net != 0 {
-                    result = moved.commit(Game.Entry(twist: Twist(rod: k, steps: net), pushed: true), in: level.layout, lenses: level.lenses)
+                    result = moved.commit(Game.Entry(twist: Twist(rod: k, steps: net), pushed: true), in: level.layout, lenses: level.lenses, masks: level.masks)
                 }
             }
             var after = moved, ticked = false, stops = false
@@ -147,9 +147,9 @@ struct Reel: Sendable {
     /// Top first, each newest entry a working knob can take off: what the harness's autoplay plays.
     static func solve(_ level: Level, moves: Int = .max) -> [Gesture] {
         var stack = level.scramble, out: [Gesture] = []
-        while out.count < moves, let i = level.layout.removable(stack, lenses: level.lenses).last {
+        while out.count < moves, let i = level.layout.removable(stack, lenses: level.lenses, masks: level.masks).last {
             out.append(.turn(stack[i].rod, -stack[i].steps))
-            stack.commit(rod: stack[i].rod, steps: -stack[i].steps, in: level.layout, lenses: level.lenses)
+            stack.commit(rod: stack[i].rod, steps: -stack[i].steps, in: level.layout, lenses: level.lenses, masks: level.masks)
         }
         return out
     }

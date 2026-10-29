@@ -236,7 +236,7 @@ final class Game {
         var healed = 0
         let result = level.kind(of: rod) != .working ? .refused
             : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
-                             lenses: level.lenses, popped: { if !$0.pushed { healed += 1 } })
+                             lenses: level.lenses, masks: level.masks, popped: { if !$0.pushed { healed += 1 } })
         guard result != .refused else { Log.write("commit \(Twist(rod: rod, steps: steps)) refused"); return }
         if rod == level.layout.swirl, !swirled {
             swirled = true
@@ -324,7 +324,7 @@ final class Game {
         var healed = 0
         let result = level.kind(of: knob) != .working ? .refused
             : next.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout, lenses: level.lenses,
-                          popped: { if !$0.pushed { healed += 1 } })
+                          masks: level.masks, popped: { if !$0.pushed { healed += 1 } })
         // A full stack refuses the tick as it would a push, so it refuses the move.
         guard result != .refused, !tickRefused(next) else {
             Log.write("commit \(Twist(rod: knob, steps: steps)) refused")
@@ -390,7 +390,7 @@ final class Game {
                                  popped: (Entry) -> Void = { _ in }) -> Commit? {
         guard entries.contains(where: { $0.twist.rod == clock }) else { return nil }
         return entries.commit(Entry(twist: Twist(rod: clock, steps: 1), pushed: true), in: level.layout, lenses: level.lenses,
-                              popped: popped)
+                              masks: level.masks, popped: popped)
     }
 
     /// Escapement: whether a full stack would refuse the tick after a move that leaves `entries`.
@@ -441,7 +441,7 @@ final class Game {
             let scrambles = { (e: [Entry]) in e.filter { !$0.pushed }.count }
             let negation = Twist(rod: last.rod, steps: -last.steps)
             entries.commit(Entry(twist: negation, pushed: scrambles(was.entries) <= scrambles(entries)), in: level.layout,
-                           lenses: level.lenses)
+                           lenses: level.lenses, masks: level.masks)
         }
         if last.rod != Game.tank {
             // A white flash whatever the stack did: undo bumps neither pushes nor cancels, so no alarm or thunk may show.
@@ -526,7 +526,7 @@ final class Game {
 
     /// The newest twist a working knob can take off now, as that knob's turn: what autoplay and the harness play.
     var reachable: Twist? {
-        level.layout.removable(stack, lenses: level.lenses).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
+        level.layout.removable(stack, lenses: level.lenses, masks: level.masks).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
             .first { level.kind(of: $0.rod) == .working }
     }
 
@@ -534,7 +534,7 @@ final class Game {
     var wasting: Twist? {
         level.layout.rods.indices.filter { level.kind(of: $0) == .working }.lazy.compactMap { k -> Twist? in
             var s = self.stack
-            return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout, lenses: self.level.lenses) == .pushed ? Twist(rod: k, steps: 2) : nil
+            return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout, lenses: self.level.lenses, masks: self.level.masks) == .pushed ? Twist(rod: k, steps: 2) : nil
         }.first
     }
 
@@ -542,11 +542,11 @@ final class Game {
     private func settle(healed: Bool = false) {
         // Refusing a win the picture already shows is the bug players hit, and a residual under half a pixel is invisible.
         // Only the coarse pass runs here: the fine one takes ~0.1 s exactly when it passes, which would hitch the win.
-        if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses) {
-            let stack = stack, layout = level.layout, lenses = level.lenses
+        if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses, masks: level.masks) {
+            let stack = stack, layout = level.layout, lenses = level.lenses, masks = level.masks
             checking = true
             Task {
-                let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack, lenses: lenses) }.value
+                let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack, lenses: lenses, masks: masks) }.value
                 self.checking = false
                 // A move made meanwhile settled itself.
                 guard self.stack == stack else { return }
@@ -1244,7 +1244,7 @@ struct LevelView: View {
         let commits = liveRod.map { k in
             let steps = Detent.steps(liveAngle, of: Tank.step)
             return steps != 0 && (game.stack.count < Tank.maxStack
-                || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout, lenses: game.level.lenses) != nil)
+                || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout, lenses: game.level.lenses, masks: game.level.masks) != nil)
         } ?? false
         let step = game.level.layout.tankStep
         let held = liveTurn.map { $0 + (spin ?? 0) }
