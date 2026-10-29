@@ -6,13 +6,14 @@ import Foundation
 /// prefix and `productID` is what StoreKit sells it as; bests and purchases are kept under both, so neither ever
 /// changes (UnstirTests pins them).
 enum Pack: String, CaseIterable, Sendable {
-    case firstStir = "first-stir", lens, escapement
+    case firstStir = "first-stir", lens, escapement, prism
 
     var name: String {
         switch self {
         case .firstStir: "First Stir"
         case .lens: "Lens"
         case .escapement: "Escapement"
+        case .prism: "Prism"
         }
     }
 
@@ -23,6 +24,7 @@ enum Pack: String, CaseIterable, Sendable {
         case .firstStir: "com.screendead.Unstir.pack.firststir"
         case .lens: "com.screendead.Unstir.pack.lens"
         case .escapement: "com.screendead.Unstir.pack.escapement"
+        case .prism: "com.screendead.Unstir.pack.prism"
         }
     }
 
@@ -38,7 +40,7 @@ enum Pack: String, CaseIterable, Sendable {
     var planned: Int {
         switch self {
         case .firstStir, .lens: 25
-        case .escapement: 30
+        case .escapement, .prism: 30
         }
     }
 
@@ -48,6 +50,7 @@ enum Pack: String, CaseIterable, Sendable {
         case .firstStir: Level.firstStir
         case .lens: Level.lens
         case .escapement: Level.escapement
+        case .prism: Level.prism
         }
     }
 
@@ -124,6 +127,10 @@ extension Level {
               // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
               demo: .parse("0:-3,1:+2", in: .tri), fixedPar: 3),
     ]
+
+    /// Prism's specimens, each rod's channels in `masks` and the scramble's bottom entry white. None yet: the
+    /// specimens go to Jack before code (to-do 62).
+    static let prism: [Level] = []
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder
     /// never leaves progress under an id a real level will take.

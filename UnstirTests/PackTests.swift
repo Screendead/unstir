@@ -20,11 +20,12 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Level.endless(Run(seed: 1)).id, "endless")
         XCTAssertEqual(Level.sandbox.id, "sandbox")
 
-        XCTAssertEqual(Pack.allCases.map(\.prefix), ["first-stir", "lens", "escapement"])
-        XCTAssertEqual(Pack.allCases.map { $0.id(1) }, ["first-stir-1", "lens-1", "escapement-1"])
+        XCTAssertEqual(Pack.allCases.map(\.prefix), ["first-stir", "lens", "escapement", "prism"])
+        XCTAssertEqual(Pack.allCases.map { $0.id(1) }, ["first-stir-1", "lens-1", "escapement-1", "prism-1"])
         XCTAssertEqual(Pack.allCases.map(\.productID), ["com.screendead.Unstir.pack.firststir",
                                                         "com.screendead.Unstir.pack.lens",
-                                                        "com.screendead.Unstir.pack.escapement"])
+                                                        "com.screendead.Unstir.pack.escapement",
+                                                        "com.screendead.Unstir.pack.prism"])
         XCTAssertEqual(Pack.completeID, "com.screendead.Unstir.complete")
         XCTAssertEqual(Pack.productIDs.count, Set(Pack.productIDs).count)
         for pack in Pack.allCases {
@@ -121,7 +122,7 @@ final class PackTests: XCTestCase {
     func testAPackGoesOnTheShelfOnceItsLevelsAreIn() {
         XCTAssertEqual(Offer.shelf(release: false, ready: { _ in false }), Offer.all)
         XCTAssertEqual(Offer.shelf(release: true, ready: { _ in false }), [])
-        XCTAssertEqual(Offer.shelf(release: true, ready: { $0 != .lens }), [.pack(.firstStir), .pack(.escapement)])
+        XCTAssertEqual(Offer.shelf(release: true, ready: { $0 != .lens }), [.pack(.firstStir), .pack(.escapement), .pack(.prism)])
         XCTAssertEqual(Offer.shelf(release: true, ready: { _ in true }), Offer.all)
         for pack in Pack.allCases {
             XCTAssertEqual(Offer.shelf(release: true).contains(.pack(pack)), pack.levels.count > pack.taste, pack.name)
@@ -167,10 +168,10 @@ final class PackTests: XCTestCase {
     func testHarnessSetsEachPurchaseState() throws {
         let ledger = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "first-stir:pending,lens:failed,escapement:revoked"],
                                                      release: false))
-        XCTAssertEqual(Pack.allCases.map(ledger.state), [.pending, .failed, .revoked])
+        XCTAssertEqual(Pack.allCases.map(ledger.state), [.pending, .failed, .revoked, .unowned])
         let complete = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "complete:revoked", "UNSTIR_OWNED": "lens"],
                                                        release: false))
-        XCTAssertEqual(Pack.allCases.map(complete.state), [.revoked, .owned, .revoked])
+        XCTAssertEqual(Pack.allCases.map(complete.state), [.revoked, .owned, .revoked, .revoked])
         XCTAssertEqual(Harness.purchases(["UNSTIR_STORE": "lens:unowned"], release: false)?.state(.lens), .unowned)
     }
 

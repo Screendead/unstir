@@ -29,6 +29,7 @@ struct Clip: Sendable {
         case .pack(.firstStir): firstStir
         case .pack(.lens): lens
         case .pack(.escapement): escapement
+        case .pack(.prism): prism
         case .complete: complete
         }
     }
@@ -43,6 +44,9 @@ struct Clip: Sendable {
     /// Escapement 1 solved in its par of three: a stir, its tick landing; a wait, and a tick; the last stir, whose tick
     /// stops the clock on the clean picture.
     static let escapement = Clip(reels: [.escapement()], still: Reel.escapement().beats[0].lift + 0.6)
+
+    /// A stand-in until Prism has specimens, drawn white until the shader splits the channels.
+    static let prism = Clip(reels: [.prism()], still: 0.5)
 
     /// Each pack's telling beat in turn, inside about eight seconds: a vignette, a zoom, a tick.
     static let complete = Clip(reels: [cutStory, .lens(dips: true, rest: 0.3, down: 0.6, hold: 0.1, up: 0.6, tail: 0.25),
@@ -166,6 +170,14 @@ struct Reel: Sendable {
         let dealt = level.scramble.last { $0.rod == lens }!.steps
         return Reel(level: level, gestures: [.turn(knob: lens, keys: [(Double(-dealt), down), (Double(-dealt), hold), (0, up)])],
                     rest: rest, gap: 0, tail: tail, dips: dips)
+    }
+
+    /// Tri with a red rod and a cyan one over a white bottom entry: the red stir buried under the cyan one heals first.
+    static func prism() -> Reel {
+        let masks: [Int: Channels] = [0: .red, 1: .cyan]
+        let level = Level(id: "prism-clip", pack: .prism, label: "", title: "", layout: .tri,
+                          scramble: .parse("2:+3,0:+4,1:-3", in: .tri, masks: masks), masks: masks)
+        return Reel(level: level, gestures: solve(level), rest: 0.7, gap: 0.6, tail: 1.2)
     }
 
     /// Its par's three moves, the second a wait on the clock.

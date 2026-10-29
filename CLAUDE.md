@@ -347,9 +347,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
-  Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
+  Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
   one so far, Lens three, Escapement one, the packs mock-up's problem at par 3, proved by the prover,
-  `testEveryProblemsParIsTheProversOptimum`): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
+  `testEveryProblemsParIsTheProversOptimum`, Prism none yet, a prototype that may take First Stir's place in v1):
+  `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
@@ -361,7 +362,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack and Complete as family-shareable non-consumables at
-  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it. Prices are
+  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25, before Prism was a fourth); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
   opens without one, and a card with none says "buy" alone.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
@@ -421,7 +422,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seam never jumps. First Stir: level 1 healed top first, each heal playing its vignette, with the time under the tank
   stepping back (F3), on the outline's scene 16 window (12:30 am to 11:40 pm) until the level carries its own clock.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
-  no dip on the order read (Jack, CL1). Escapement: problem 1 in its par of three. Complete: each one's first beat in turn, a
+  no dip on the order read (Jack, CL1). Escapement: problem 1 in its par of three. Prism: a stand-in reel on tri, a red and a cyan rod over a white bottom entry, until it has specimens.
+  Complete: each one's first beat in turn, a
   vignette, a zoom and a tick, about 8 s (Jack, CL2). Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`

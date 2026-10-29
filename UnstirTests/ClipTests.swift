@@ -5,7 +5,7 @@ import XCTest
 
 /// The pack cards' clips: each plays its level as a real `Game` would, loops without a jump, and holds a still inside it.
 @MainActor final class ClipTests: XCTestCase {
-    private let clips: [(String, Clip)] = [("first stir", .firstStir), ("lens", .lens), ("escapement", .escapement),
+    private let clips: [(String, Clip)] = [("first stir", .firstStir), ("lens", .lens), ("escapement", .escapement), ("prism", .prism),
                                            ("complete", .complete)]
 
     /// Each reel's stacks are the ones a `Game` shows after the same moves, under an id of no pack level so a win keeps

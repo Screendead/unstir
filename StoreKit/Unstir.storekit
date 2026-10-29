@@ -48,6 +48,21 @@
       "type": "NonConsumable"
     },
     {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "6740000005",
+      "localizations": [
+        {
+          "description": "Rods that stir only some colours.",
+          "displayName": "Prism",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "com.screendead.Unstir.pack.prism",
+      "referenceName": "Prism",
+      "type": "NonConsumable"
+    },
+    {
       "displayPrice": "5.99",
       "familyShareable": true,
       "internalID": "6740000004",

@@ -43,6 +43,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.firstStir): "a story told backwards"
         case .pack(.lens): "some rods zoom instead of turning"
         case .pack(.escapement): "a clock rod ticks after every move"
+        case .pack(.prism): "each rod stirs only some colours"
         case .complete: "every pack, for less"
         }
     }
@@ -53,6 +54,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.firstStir): "anyone \u{00B7} an evening, not a challenge"
         case .pack(.lens): "after plughole"
         case .pack(.escapement): "hard \u{00B7} composed problems"
+        case .pack(.prism): "after plughole \u{00B7} reading by colour"
         case .complete: "anyone, then harder"
         }
     }
@@ -62,8 +64,14 @@ enum Offer: Hashable, Sendable {
         case .pack(.firstStir): "\(Pack.firstStir.planned) scenes in five chapters"
         case .pack(.lens): "\(Pack.lens.planned) panels in four issues"
         case .pack(.escapement): "\(Pack.escapement.planned) problems in five chapters"
-        case .complete: "First Stir, Lens and Escapement \u{00B7} \(Pack.allCases.map(\.planned).reduce(0, +)) levels"
+        case .pack(.prism): "\(Pack.prism.planned) specimens in five trays"
+        case .complete: "\(Self.everyPack) \u{00B7} \(Pack.allCases.map(\.planned).reduce(0, +)) levels"
         }
+    }
+
+    private static var everyPack: String {
+        let names = Pack.allCases.map(\.name)
+        return "\(names.dropLast().joined(separator: ", ")) and \(names.last!)"
     }
 
     var free: String {
@@ -78,6 +86,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.firstStir): [Color(0xFFC857), Color(0xFF6FA5), Color(0x7A7CFF)]
         case .pack(.lens): [.neonCyan, .magenta, Color(0xFFE600)]
         case .pack(.escapement): [Color(0xF3EAD8), Color(0xD8402A)]
+        case .pack(.prism): [Color(0xFF2A2A), Color(0x2AFF5A), Color(0x3A6BFF)]
         case .complete: [Color(0xFFC857), .neonCyan, Color(0xD8402A)]
         }
     }
@@ -87,6 +96,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.firstStir): Color(0xFFC857)
         case .pack(.lens): .magenta
         case .pack(.escapement): Color(0xD8402A)
+        case .pack(.prism): .white
         case .complete: .neonCyan
         }
     }
@@ -114,7 +124,7 @@ enum Offer: Hashable, Sendable {
         switch self {
         case .pack(.firstStir): [Twist(rod: 0, steps: 3), Twist(rod: 2, steps: -4), Twist(rod: 1, steps: 5)]
         case .pack(.lens): [Twist(rod: 1, steps: -3), Twist(rod: 3, steps: 4), Twist(rod: 0, steps: 5), Twist(rod: 2, steps: -4)]
-        case .pack(.escapement): [Twist(rod: 2, steps: 4), Twist(rod: 0, steps: -5), Twist(rod: 1, steps: 3)]
+        case .pack(.escapement), .pack(.prism): [Twist(rod: 2, steps: 4), Twist(rod: 0, steps: -5), Twist(rod: 1, steps: 3)]
         case .complete: [Twist(rod: 0, steps: 4), Twist(rod: 2, steps: -5), Twist(rod: 3, steps: 3), Twist(rod: 1, steps: -4)]
         }
     }
@@ -181,17 +191,18 @@ enum Cover {
         case .pack(.firstStir): firstStir(ctx, r: r)
         case .pack(.lens): lens(ctx, r: r)
         case .pack(.escapement): escapement(ctx, r: r)
+        case .pack(.prism): prism(ctx, r: r)
         case .complete:
-            // A third of the tank each, cut from the centre.
-            let packs: [Offer] = [.pack(.firstStir), .pack(.lens), .pack(.escapement)]
+            // A wedge of the tank each, cut from the centre.
+            let packs = Pack.allCases.map(Offer.pack), arc = 360 / Double(packs.count), a0 = -90 - arc / 2
             for (k, p) in packs.enumerated() {
                 var c = ctx
-                c.clip(to: wedge(r, from: -150 + 120 * Double(k), to: -30 + 120 * Double(k)))
+                c.clip(to: wedge(r, from: a0 + arc * Double(k), to: a0 + arc * Double(k + 1)))
                 draw(p, c, r: r)
             }
             var seams = Path()
-            for k in 0..<3 {
-                let a = (-150 + 120 * Double(k)) * .pi / 180
+            for k in packs.indices {
+                let a = (a0 + arc * Double(k)) * .pi / 180
                 seams.move(to: CGPoint(x: r, y: r))
                 seams.addLine(to: CGPoint(x: r + 1.5 * r * cos(a), y: r + 1.5 * r * sin(a)))
             }
@@ -425,6 +436,33 @@ enum Cover {
         ctx.fill(u.circle(dc.0, dc.1, 0.025), with: .color(ink))
         ctx.draw(Text("Unstir in 4.").font(.system(size: 0.09 * r, design: .serif).italic()).foregroundStyle(ink),
                  at: u.p(0, 0.8))
+    }
+
+    /// A fern frond engraved three times, in red, green and blue light, each a little off register: white only where
+    /// all three meet. A stand-in until the specimens have their engravings.
+    private static func prism(_ ctx: GraphicsContext, r: CGFloat) {
+        let u = Units(r: r)
+        ctx.fill(Path(CGRect(x: 0, y: 0, width: 2 * r, height: 2 * r)), with: .color(.black))
+        var frond = Path()
+        frond.move(to: u.p(0.05, 0.85))
+        frond.addQuadCurve(to: u.p(-0.05, -0.8), control: u.p(0.18, 0))
+        for k in 1...14 {
+            let t = Double(k) / 15, y = 0.85 - 1.65 * t, x = 0.05 + 0.2 * t * (1 - t) * 2 - 0.1 * t
+            let len = 0.5 * sin(.pi * min(t * 1.1, 1)) + 0.05
+            for side in [-1.0, 1.0] {
+                frond.move(to: u.p(x, y))
+                frond.addQuadCurve(to: u.p(x + side * len, y - 0.16 * len), control: u.p(x + side * len * 0.5, y + 0.06))
+            }
+        }
+        var g = ctx
+        g.blendMode = .plusLighter
+        let w = max(0.012 * r, 1)
+        for (colour, dx, dy) in [(Color(red: 1, green: 0, blue: 0), -0.025, 0.01), (Color(red: 0, green: 1, blue: 0), 0.02, 0.015),
+                                 (Color(red: 0, green: 0, blue: 1), 0.005, -0.025)] {
+            var c = g
+            c.translateBy(x: dx * r, y: dy * r)
+            c.stroke(frond, with: .color(colour), lineWidth: w)
+        }
     }
 }
 
