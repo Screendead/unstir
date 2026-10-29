@@ -41,20 +41,21 @@ import XCTest
         // Escapement ticks after each of its three moves, the last stopping the clock.
         XCTAssertEqual(Clip.escapement.reels[0].beats.map(\.ticked), [true, true, true])
         XCTAssertEqual(Clip.escapement.reels[0].beats.map(\.stops), [false, false, true])
-        // First Stir plays a vignette with every heal, and its time steps back to the scene's earliest.
+        // First Stir's first heal leaves rod 1 an entry, so plays nothing; each after plays a vignette, and its time
+        // steps back to the scene's earliest.
         let story = Clip.firstStir.reels[0]
-        XCTAssertEqual(story.beats.map(\.heals), [true, true, true])
-        XCTAssertEqual(story.frame(at: 0).caption, "12:30 am")
-        XCTAssertEqual(story.frame(at: story.length).caption, "11:40 pm")
+        XCTAssertEqual(story.beats.map(\.heals), [false, true, true, true])
+        XCTAssertEqual(story.frame(at: 0).caption, "6:40 am")
+        XCTAssertEqual(story.frame(at: story.length).caption, "6:15 am")
     }
 
     /// The loop's seam: a reel that dips is black at both ends, and the lens's, which doesn't, ends as it began.
     func testEveryClipLoopsWithoutAJump() {
         for (name, clip) in clips {
-            XCTAssertEqual(clip.period, clip.reels.reduce(0) { $0 + $1.length }, accuracy: 1e-9, name)
+            XCTAssertEqual(clip.period, clip.reels.reduce(0) { $0 + $1.shown }, accuracy: 1e-9, name)
             for reel in clip.reels where reel.dips {
-                XCTAssertEqual(reel.frame(at: 0).dip, 1, accuracy: 1e-9, name)
-                XCTAssertEqual(reel.frame(at: reel.length).dip, 1, accuracy: 1e-9, name)
+                XCTAssertEqual(reel.frame(at: reel.from).dip, 1, accuracy: 1e-9, name)
+                XCTAssertEqual(reel.frame(at: reel.to).dip, 1, accuracy: 1e-9, name)
             }
         }
         let lens = Clip.lens.reels[0], a = lens.frame(at: 0), b = lens.frame(at: lens.length - 1e-6)

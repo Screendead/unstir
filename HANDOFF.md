@@ -215,7 +215,7 @@ Jack answered on the pitch page. These are his calls. Everything else in this se
 
 | Call | Jack's answer |
 |---|---|
-| 1. v1's packs | **First Stir, Lens and Escapement** (option A). "I LOVE the look of Lens. Escapement is a great idea, if implemented properly." |
+| 1. v1's packs | **First Stir, Lens and Escapement** (option A). "I LOVE the look of Lens. Escapement is a great idea, if implemented properly." Superseded for First Stir by FS17 (2026-10-29): First Stir leaves v1; see to-do 43 |
 | 2. Orrery: free rung or pack | **Not made.** "You didn't show me Orrery, so I can't make a call." A mock-up of Orrery, and Orrery beside maelstrom, goes to him next |
 | 3. First Stir's art | **Claude draws all 25 scenes** (option B): "I am not hiring an illustrator". So First Stir's long pole is Claude's line art, judged by Jack scene by scene, and the go/no-go film decides whether code-drawn figures carry it |
 | 4. What v1 sells | **Packs and a Complete bundle** (option A); Unstir+ dropped, endless stays free. "not just one I think will sell, but one I would be proud and unashamed to put my brand behind" |
@@ -1061,7 +1061,7 @@ names and product ids, and Complete's promise to older owners.
     Jack's calls (2026-10-26, round 9) that touch it: *F2 = A* (one night across the pack, about half an hour a
     picture) and *F5 = A* (the harbour as pictures 16 and 1) mean level 1's whole night, storm back to evening, is a
     stand-in: the art pass cuts each harbour picture to its own half hour. *F3 = A* (a clock under the tank stepping
-    back on every heal) replaces the caption "Each heal turns the night back."; not built yet. *D1 = A:* the cottage's
+    back on every heal) replaces the caption "Each heal turns the night back."; built with chapter 1 (to-do 43). *D1 = A:* the cottage's
     glow stays narrowed to its core (to-do 41).
 41. First Stir: a per-scene test that no vignette's light reaches the core of a rod with an entry removable right
     after its heal (`Layout.removable`), over every heal order.
@@ -1073,7 +1073,9 @@ names and product ids, and Complete's promise to older owners.
     ring when they play. Tri's cores all lie in each other's discs, so no heal order avoids it; only the art can.
     Jack's call (2026-10-26, round 9, F4 = A): every change stays inside its own core, checked by the test over every
     picture, and the boat's stern and the lantern's shards are redrawn in the art pass; the two smears stay pinned in
-    the test until then. Merged 2026-10-27 (PR #44).
+    the test until then. Merged 2026-10-27 (PR #44). Redrawn 2026-10-27 on `firststir-ch4` (scene 16 on the engine):
+    the shards fall inside the lantern's core clear of the other discs, the boat lies right of the cottage's disc, and
+    the test pins no fault.
 42. First Stir: vignettes baked on demand within a memory budget measured on the phone.
     Built 2026-10-26 on `firststir-pack`: the layers bake as the level appears, five in all whatever the number of
     stages (two skies, the bolt's box, the scene held back and played), against the lab's two per stage; about 51 MB
@@ -1081,9 +1083,158 @@ names and product ids, and Complete's promise to older owners.
     (`testTheLayersBakeWithinTheBudget`). Merged 2026-10-27 (PR #44). Left: measure the budget on the phone; it is a
     guess until then.
 43. First Stir: 25 scenes of art and their scrambles; Jack reviews the table.
-   The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), approved by Jack (2026-10-26, round 9);
-   no art or scrambles yet.
+    **Jack's call FS17 = C (2026-10-29): First Stir leaves v1, to be reworked significantly later.** His note: "I say C
+    only because I think the constraints of the artwork have resulted in the story becoming difficult to read from the
+    illustrations alone. I think we should leave First Stir out of v1 of the app, and rework it significantly later.
+    Something else needs to take its place as the third paid level pack with at least one new mechanic." The work below
+    stays on `firststir-content` (PR #54) for that rework; the third pack's place is open.
+    All five chapters joined on `firststir-content` (2026-10-27), levels `first-stir-1` to `-25` in the outline's
+    order, with master's Lens and Escapement; First Stir is now on the Release shelf, nothing left to arrive, the taste
+    of 3 then the card (`testFirstStirPlaysInOrderFromTheShelf`). The Flood's and the Storm's `HighStreet` clashed; the
+    Storm's is `StreetInRain`. Sheets `round10/firststir/ch1-sheet.png` to `ch5-sheet.png` in the tools folder.
+    The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), approved by Jack (2026-10-26, round 9).
+    Chapter 1, Dawn After (scenes 1 to 5), built 2026-10-27 on `firststir-ch1`, merged into `firststir-content` (off `master`, not yet a PR), to
+    the outline (FS=A) and round 9's answers (F1 to F5, all A): `FirstStirDawn.swift` draws the five scenes, three
+    vignettes each, in dawn pewter, 6:40 back to 4:45 am; `StoryScene.swift` plays them on the pack's one night, the
+    time stepping back with each of the scramble's entries gone and shown as a clock under the tank ("6:40 am"). Levels
+    `first-stir-1` to `-5`: sunrise (tri `2:+5,1:-4,0:+3,1:+2`), the gallery (quad `3:+4,0:-3,1:+5,2:-2`), the rock pool
+    (tri `1:+4,2:-3,0:+5,1:-2,2:+3`), righting the boat (eye `0:+3,1:-4,2:+5,3:-2,1:+2`), tea on the quay (quad
+    `2:+4,3:-3,1:+5,0:-2,3:+2,2:-5`); each par the solver's optimum. Every change keeps 0.02 inside its core and clear of
+    its knob, and no vignette plays smeared over any heal order (tested). Level 1 was the lab's storm harbour, the
+    outline's scene 16: per F5 it is now the same view at sunrise, redrawn, and the storm harbour waits, with no level,
+    for chapter 4. Shots `firststir-0N`, `-held`, `-played`, `firststir-01-healed-1` and `-2`; `scripts/first-stir-lab.sh`
+    is the drawing loop. The review's fixes (2026-10-27): each core cuts in through a mask without antialiasing, since
+    an antialiased edge left a faint ring at every played core (`testTheCutInCoresLeaveNoSeam`; a vignette's faint glow
+    tail can still step a few levels where it crosses its core's edge); the sun and smoke keep clear of every disc by
+    their glow and line as well (`Dawn.bodyGlow`), so the sun is smaller (0.022) and further right, and the smoke starts
+    a little higher off the neighbour's chimney pot; tea's crate stands on the ground with the flask in the pouring
+    hand, its searchlight beam is a flat fill and the held coil is ink; righting's lantern and bucket stand either side
+    of rod 3's knob; the rock pool's weed is ink, leaving the float the one teal thing; the gallery's candle window
+    sits in a house's wall. The sunrise's cottage plays after the boat because its doorway lies in the boat's disc (as
+    the outline says), its door moved a little left so the change keeps 0.02 inside the core.
+    **Open, Jack's calls on three departures from the outline** (Claude's recommendations, not decided):
+    - D1, the sunrise's chimney smoke. A: smoke from the neighbour's chimney as the time layer, outside every disc,
+      thinning as the night winds back (built). B: the outline's, smoke from the cottage's own chimney in the
+      cottage's vignette, which needs the cottage redrawn so its chimney lies in the core. C: no smoke. Recommend A:
+      the smoke tells the time on every heal, not once, and B crowds the cottage's core.
+    - D2, the rock pool's dog. A: sitting a little up the rocks from the child, clear of her change (built). B: the
+      outline's, by the child's boots, where its change did not stay clear, so B needs the dog, the child or the
+      pool reworked until it does. Recommend A: the same story, and each change reads on its own.
+    - D3, righting the boat's heal order. A: the boat clear of the haulers' disc, so the two heal in either order
+      (built). B: the outline's, the bow reaching the haulers' disc so the boat heals after them, which means
+      redrawing the beach so the boat sits nearer rod 0 and rechecking it plays unsmeared. Recommend A for now:
+      it plays clean under every order; B is the better story if Jack wants the order to carry it.
+    Chapter 2, The Rescue (scenes 6 to 10), drawn 2026-10-27 on `firststir-ch2` in `FirstStirRescue.swift` and brought
+    onto chapter 1's engine on `firststir-content` (2026-10-27, pushed, no PR yet) as `Story.rescue` cases, levels
+    `first-stir-6` to `-10` (ids now stamped by place): home light (pent `1:+3,0:-4,2:+5,4:-3,3:+4,0:+2`), off the
+    breakwater (eye `0:+4,3:-3,1:+5,2:-4,1:-2,3:+3`), the lantern chain (quad `3:+4,0:-3,1:+5,2:-2,3:-5,0:+2,1:-3`), the
+    stair (tri `0:+4,1:-3,2:+5,1:+4,2:-3,1:-5,2:+2`) and the lighthouse door (pent `3:-4,1:+3,0:+5,4:-2,2:+4,1:-5,3:+2`),
+    each par the solver's optimum (`SolverTests.testFirstStirParIsTheOptimum`). On the engine its time steps per
+    scramble entry with the clock caption, 4:45 back to 2:30 am; its rain is drawn over the composite (`drawOver`), a
+    function of the time; its sky and sea open on Dawn After's 4:45 tones and turn to rescue amber's lit low cloud by
+    4:15, so the horizon brightens as scene 6 winds back. Its pen is `Brush` beside chapter 1's `Pen`. Chapter 2's `.compositingGroup()` fix to `StoryLayer`'s cut-in was not carried; the storm harbour moved onto the engine with chapter 4, so `StoryLayer` is gone. At the test's
+    512 px five vignettes reached a few thousandths past the art spec (scene 6's window pane by the knob, scene 8's
+    lifeboat and bearers, scene 10's door wave and lamp flashes) and were pulled in. Its review's fixes stand (flat
+    fills for glows and beams, scene 7's steps, scene 8's beats, scene 9's lamp and lantern, scene 6's searchlight).
+    **Open for Jack, chapter 2** (Claude's recommendations, not decided):
+    - Ink: the outline names no line ink for rescue amber; built with the rain's B7CEFF at full strength. The other
+      choice is chapter 3's 8F9CFF, carrying over into the flood. Recommend B7CEFF: it ties the lines to the rain.
+    - Scale on pent: figures are at the spec's 0.12 minimum and the lifeboat about 0.12 long between knob and margin.
+      If they read small on the phone: a smaller knob clearance on small rods, or closer-up drawing. Recommend judging
+      on the phone first.
+    - Two pens: `Pen` (chapter 1) and `Brush` (chapter 2) do the same job. Recommend folding `Pen` into `Brush` (the
+      more general: figure units, clips, one glow per vignette) before chapter 3, so later chapters draw with one.
+    Chapter 3, The Flood (scenes 11 to 15), drawn 2026-10-27 on `firststir-ch3` (off `firststir-content`) in
+    `FirstStirFlood.swift` with chapter 2's `Brush` and `Cast`, levels `first-stir-11` to `-15`: the breakwater path
+    (eye `1:+4,0:-3,3:+5,2:-4,0:-2,3:+3,2:+2`, the path's entry under both of the quay end's: the wave over the father
+    reaches rod 0's disc), high street under water (pent `0:+3,2:-4,3:+5,1:-3,0:-5,4:+2,2:+4,3:-2`), the upstairs
+    window (quad `1:-4,3:+3,0:+5,2:-3,1:+2,0:-4,3:-5,2:+4`), the kitchen, flooded (eye
+    `0:+4,3:-3,1:+5,2:-4,1:-2,3:+3,2:+2,1:+4`, the table's one entry at the bottom, so it plays last, as the outline's
+    "A after rod 1" asks) and over the quay (pent `4:-3,1:+4,3:+5,0:-2,4:+3,2:-4,1:-5,3:+2,0:+3`); each par the solver's
+    optimum, and every change 0.02 inside its core, clear of its knob, and unsmeared over every heal order (tested at
+    512 px). 2:30 back to 12:30 am in flood teal, ink 8F9CFF (the outline's), opening on the Rescue's 2:30 sky, sea and
+    rain (tested) and thickening the same rain field from 320 drops to 400 towards the storm; the sky stays in the
+    flood's palette, taking a little of its ink (chapter 4 turns from it to storm indigo, as this one turns from the
+    Rescue's). The father's rope is drawn only in scene 11's vignettes, out to him and the coil on his shoulder at 2:30
+    as scene 10 leaves him, and absent at 2:05 while he ties it; a wave over the path stands where it would cross
+    between the cores. Each scene's floodwater line is fixed outside its cores (the spec lets only sky, rain and lightning move
+    there); the vignettes that lower the water draw their own line inside the core: the lamp's foot, the cottage
+    door's step between its porch posts, the kitchen table standing clear with ripples at its legs. The float keeps
+    3FE0B0. `scripts/first-stir-lab.sh` now draws chapters 1 to 3. Shots `firststir-11` to `-15`, `-held`, `-played`;
+    sheet in the tools folder (`round10/firststir/ch3-sheet.png`).
+    **Open for Jack, chapter 3** (Claude's recommendations, not decided):
+    - The water inside a core. Where a vignette lowers the water (scenes 12, the street lamp; 13, the door; 14, the
+      table), the played core shows a lower
+      line than the scene around it, since the scene's own line may not move. A: as built. B: put each lowering in the
+      time layer instead, the water a function of the time like the rain (a spec change: the water would cross discs).
+      Recommend A: it keeps the spec's rule that only sky, rain and lightning cross discs, and every other beat already
+      shows an earlier moment against a later scene.
+    - Scene 14's heal order. The outline asks the table after the stair; built as the table's one entry at the bottom,
+      so it heals after everything (the tabletop also reaches the float's disc). Recommend keeping it: the cup back on
+      the table is the chapter's last beat before the storm.
+    Left: Jack's review of the art at phone size (the figures are small on the quad and pent scenes), the films, and
+    chapters 4 and 5.
+    Chapter 4, The Storm (scenes 16 to 20), drawn 2026-10-27 on `firststir-ch4` (off `firststir-content`, pushed, no PR)
+    in `FirstStirTheStorm.swift` as `Story.storm` cases, in storm indigo with sodium, 12:30 am back to 9:30 pm (its
+    times negative past midnight), levels `first-stir-16` to `-20` once chapter 3 joined the table on
+    `firststir-content`. The harbour (tri
+    `2:+5,1:-4,0:+3,2:-2,1:+5,0:-4,1:+2,0:+3`, the cottage's entry at the bottom as the lab had it), lightning (quad
+    `3:+4,0:-3,1:+5,2:-2,3:+3,0:+4,1:-4,2:+5,3:-2`), the bell buoy (pent `0:+4,2:-3,1:+5,3:+2,4:-4,0:-2,2:+5,3:-3,1:+2`),
+    high street, rain (eye `0:+4,2:-3,1:+5,3:+2,0:-3,1:+4,2:+5,0:+2,3:-4,1:-2`) and washing (pent
+    `3:+4,0:-3,1:+5,4:-2,2:+4,0:+3,1:-4,3:-5,2:+2,0:-2`), the outline's stirs, each par the solver's optimum. The lab's
+    harbour is scene 16 on the engine, drawn from the sunrise's plan, its two faults redrawn (F4); `StoryLayer`,
+    `Story.harbour` and the lab's own drawing are gone, and `Harbour` keeps only the shared line, fades and budget. Its
+    sky is the lab's storm at 12:30 warming late to the lab's dusk at 9:30; its rain thins as the night winds back; far
+    lightning crosses the sky in scenes 16 and 18 until about 10:50; scene 17 is indoors, rain only in its windows.
+    Joined on `firststir-content` (2026-10-27): the two branches disagreed on the seams (the Flood's 12:30 sky is its
+    own deep blue, and the Storm's 9:30 sky was Dusk Before's 7:40 coral, where Dusk opens on night blue), so the Storm
+    bridges both, as each chapter before it turns from the last: it opens on the Flood's 12:30 sky and sea, turns to the
+    lab's storm across scene 16, and ends on Dusk Before's 9:30 sky and sea, its rain gone by then
+    (`testTheStormsSkyMeetsItsNeighbours`). Scene 19's sign is a cut-out cobbler's boot (no board, so nothing in it reads as a letter) high
+    on a gable, where the small rod's core is clear of the big rods' discs (the outline fixes no place for it); its
+    cuff chain and the top of its toe chain are the same in both states, the toe chain snapped below. Review fixes
+    (2026-10-27): the tinted room fills are black; scene 17's low window is wider so the child and the dog both kneel
+    under it, heads against its sky, and the held child is larger, her hat beside her father's brim; scene 19's bicycle
+    stands on the pavement, its front wheel against the lamp post (moved to x 0.64); scene 20's corner line stops at the
+    back wall's top, the shirts hang by their shoulders, sheared downwind, pegged at the corners, the neighbour's window
+    is larger and she leans out to her waist, and a lit window with a sill under it gives rod 1's core its up.
+    `testNoVignetteShowsTheNextMove` now also checks the baked layers for strays at the phone's own pixels, where
+    scene 20 once showed two single-pixel strays at 512 px that went away on a 0.01 nudge.
+    **Open for Jack, chapter 4** (Claude's recommendation, not decided):
+    - S1, scene 17's windows. The outline gives the upstairs room one window over the bay, with the candle on its sill
+      and the child on its window seat, but quad puts the three vignette rods in three corners (view top right, light
+      top left, child bottom left). A: three windows, the bay window for the view, a small high one whose sill holds the
+      candle, a low one over the window seat (built). B: one wide window, which means re-planning which rods hold which
+      beat (the light and the child would move off the outline's rods 3 and 2). Recommend A: the outline's rods and
+      beats stand, and an attic room with three windows reads as one room.
+    Left: Jack's review of the art at phone size (the figures are small on the quad and pent scenes; on the Storm's pent
+    and quad scenes the adults are near the spec's 0.12 minimum), the films, and chapters 3 and 5.
+    Chapter 5, Dusk Before (scenes 21 to 25), drawn 2026-10-27 on `firststir-ch5` (from `firststir-content`, pushed, no
+    PR) in `FirstStirDuskBefore.swift` on the scene engine as `Story.dusk` cases: lighting the lamp (quad
+    `3:+4,0:-3,1:+5,2:-2,3:-5,0:+2,1:-3,2:+4`), the path to the light (eye `0:+3,2:-4,1:+5,3:-2,0:-4,1:+3,2:+2,3:+4`),
+    doubling the lines (pent `4:+3,1:-4,3:+5,2:-3,0:+4,1:+2,4:-5`), the float (quad `0:+4,3:-3,2:+5,1:-2,0:-3,3:+2`) and
+    first stir (tri `2:+4,0:-3,1:+5,0:+2,1:-3`, the cup's entry at the bottom so the stir always heals last), each par
+    the solver's optimum and every vignette drawn clear of the other discs (the outline's "Clear" orders). The clock
+    runs 9:30 back to 7:40 pm. Its levels are `first-stir-21` to `-25`. The Storm's scene 20 ends on `Dusk.skyTones(1290)` and
+    `Dusk.seaTone(1290)` (`testTheStormsSkyMeetsItsNeighbours`). Sheet: `scripts/first-stir-sheet.py 21 25`. **Open for Jack, chapter 5** (Claude's recommendations, not decided):
+    - Scene 24's gift held back: the outline has the child holding the float up to the light while the same picture
+      shows it hanging in the window, two floats as the level opens. Built: the child's hands up to the window, empty,
+      so the opening and the end each show one float, the child standing under the window with both arms up to it.
+      The other choice is the outline's, as written.
+    Review fixes (2026-10-27, same branch): the quay runs under scene 23's hut and the boat is moored to two buoys; its
+    barometer is larger, the needle short of the glyphs; scene 24's figures are scaled to the kitchen (bodies drawn
+    outside the vignette, only arms and float inside the core) and its door is glazed, a horizon in rod 0's core;
+    scene 21's grandmother is 0.125 tall; scene 25 has a cloud, not a gull, a leaf hour hand, and the child's hand
+    joined to a sleeve from the table's near edge (static, so it may leave the core). The cloud bank now sinks as a
+    live body at the glass's left edge (x -0.985 to -0.83), the one stretch of horizon clear of every disc, so it is
+    no longer a departure; the sky uses the palette's three tones alone.
 44. First Stir: the "night forwards" end film.
+    Built 2026-10-27 on `firststir-content` (Jack's D1 default, round 9): after level 25's solve, all 25 scenes play
+    forwards in the glass, 4.6 s each with a 0.6 s crossfade, the time under it running on from 7:40 pm to 6:40 am,
+    about two minutes, ending held on scene 1 as the pack opened, then the card; a tap skips it. Every solve of 25
+    plays it (as Escapement's demo plays every time). Reduce Motion cuts instead of fading. No motif yet: the sound
+    branch is unmerged. Shots `firststir-ending-*`, film `firststir-ending`. Left: the memory and frame pacing of the
+    bake (main actor, two scenes at once, at most 2x) measured on the phone.
 45. Sound: round 2 is in (SN1 = A, 2026-10-28: early undo, step-back heals, the vortex bed; PR #56); sketch each v1 pack's
     layers for his ear (First Stir's felt-piano motif and weather pads, Lens's canon, Escapement's muted kit, tooth
     drops and looping phrase); render the finals in Csound.
