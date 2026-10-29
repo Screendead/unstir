@@ -238,6 +238,8 @@ struct Reel: Sendable {
                     f.tick = (level.clocks[0].rod, p * Tank.step)
                     f.ratchetTurn = p
                     f.pawl = sin(.pi * p)
+                    // The hub's card flips as the tick starts to turn, as `LevelView`'s does.
+                    if s > LevelView.tickBeat { f.flip = min((s - LevelView.tickBeat) / LevelView.tickTurn, 1) }
                 }
             }
             if b.after.isEmpty { f.solved = (b.gesture.knob, s) }
@@ -305,6 +307,8 @@ struct ClipFrame {
     var knobs: [Int: Double] = [:]
     var ticks = 0
     var ratchetTurn = 1.0
+    /// The clock's hub card's fall through its newest tick's flip, while it flips.
+    var flip: Double?
     var pawl = 0.0
     var pressing = false
     var clockRuns = false
@@ -376,8 +380,11 @@ struct ClipTank: View {
             }
             ForEach(rods.indices.filter { $0 != layout.swirl }, id: \.self) { k in
                 if k == level.clocks.first?.rod {
+                    // The stack stands as the move left it until its tick lands, so the card flips off what it owed then.
+                    let owed = level.owed(k, on: f.stack)
                     RatchetView(angle: (Double(f.ticks) - (1 - f.ratchetTurn)) * Tank.step,
-                                size: ratchet, plate: LevelView.ratchetReach * r, pawl: f.pawl, lit: f.pressing, stopped: !f.clockRuns)
+                                size: ratchet, plate: LevelView.ratchetReach * r, pawl: f.pawl, lit: f.pressing, stopped: !f.clockRuns,
+                                owed: f.flip == nil ? owed : owed - 1, was: f.flip.map { _ in owed }, fall: f.flip ?? 1)
                         .position(at(k))
                 } else {
                     RodView(angle: f.knobs[k] ?? 0, size: core, seized: level.kind(of: k) != .working, grabbed: f.live?.rod == k,

@@ -152,6 +152,12 @@ film escapement-two-clocks 19 "$tank,fps=2,scale=200:-1,tile=8x5:padding=4" PACK
 # 16's line, the budget's flaps falling two a move while both clocks run, then one: 09 to 00 as clock 4 stops.
 film escapement-budget-16 22 "$screen,fps=2,scale=150:-1,tile=11x4:padding=4" PACK=escapement OWNED=escapement LEVEL=16 FINGER=1 REST=1 \
   MOVES=3:-2,5:-2,1:1,6:-4,5:3,2:-5
+# Each clock's flip count in its hub (ES2): 16's line clean, each hub flipping with its own clock's ticks and greying at
+# 0 as its rod empties; and a wrong 6:-4 whose tick pushes clock 1's last, then waits on clock 4 out of ticks.
+film escapement-hubs-16 22 "$screen,fps=2,scale=150:-1,tile=11x4:padding=4" PACK=escapement OWNED=escapement LEVEL=16 FINGER=1 REST=1 \
+  MOVES=3:-2,5:-2,1:1,6:-4,5:3,2:-5
+film escapement-hubs-16-wrong 20 "$screen,fps=2,scale=150:-1,tile=10x4:padding=4" PACK=escapement OWNED=escapement LEVEL=16 FINGER=1 REST=1 \
+  MOVES=3:-2,5:-2,6:-4,4:1,4:1,4:1
 film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" PACK=escapement OWNED=escapement LEVEL=29 FINGER=1 REST=1 \
   MOVES=4:-3,1:1,2:-2,1:1,2:-4,0:5,2:-3,4:-3
 # Escapement 7, whose first move is a wait: a tap halfway out the clock's disc (0:2), then one on its ratchet (0:1),

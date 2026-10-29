@@ -1,6 +1,7 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/build-ios.sh [Debug|Release] [device|sim]   APTABASE_KEY, if set, turns analytics on in the build.
+# Usage: scripts/build-ios.sh [Debug|Release] [device|sim]   ANALYTICS=YES builds analytics in, and APTABASE_KEY, if
+# set, turns its sending on.
 # ANALYTICS_PLAYTEST=YES files a Release build's analytics as Debug.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -14,4 +15,4 @@ xcodegen generate --quiet
 xcodebuild -project Unstir.xcodeproj -scheme Unstir -configuration "$config" \
   -destination "$destination" -derivedDataPath build \
   -allowProvisioningUpdates -allowProvisioningDeviceRegistration ${signing[@]+"${signing[@]}"} \
-  ${APTABASE_KEY:+APTABASE_KEY="$APTABASE_KEY"} ${ANALYTICS_PLAYTEST:+ANALYTICS_PLAYTEST="$ANALYTICS_PLAYTEST"} build | grep -E 'error:|warning:|BUILD '
+  ${ANALYTICS:+ANALYTICS="$ANALYTICS"} ${APTABASE_KEY:+APTABASE_KEY="$APTABASE_KEY"} ${ANALYTICS_PLAYTEST:+ANALYTICS_PLAYTEST="$ANALYTICS_PLAYTEST"} build | grep -E 'error:|warning:|BUILD '

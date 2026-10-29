@@ -25,6 +25,11 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   to merge the PR. Claude may also merge without asking (Jack, 2026-10-25) once CI passes, a check of the diff, commit
   messages and PR text finds nothing personal, and Claude is satisfied with the diff's quality; a PR that rests on a
   call Jack hasn't made still waits for him.
+- **PR and nightly tests.** A PR skips `StoreTests` and `FirstStirTests` (`-skip-testing`; First Stir is out of v1 and
+  its vignette render takes two minutes), which `.github/workflows/nightly.yml` runs with every other test, the slow
+  ones too, on `master` at 03:17 UTC and on `workflow_dispatch`: a break in them shows a night late. Both jobs print each
+  suite's and the slowest tests' times (`scripts/ci-times.sh`) in the log. Add a suite to the skip list only here and in
+  `test.yml`, so the nightly keeps running it.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
@@ -67,9 +72,9 @@ Once Jack has heard the argument and still decides, carry out his decision.
 edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitignored).
 
 - Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result).
-  It passes the shell's `APTABASE_KEY`, Aptabase's app key, into Info.plist's `AptabaseKey`, over
-  `Config/Local.xcconfig` (gitignored), which `Config/Unstir.xcconfig` includes for Xcode's own builds and archives;
-  with neither analytics is off. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
+  It passes the shell's `ANALYTICS` (YES builds analytics in; NO, the default, is v1's) and `APTABASE_KEY`, Aptabase's
+  app key, into Info.plist's `Analytics` and `AptabaseKey`, over `Config/Local.xcconfig` (gitignored), which
+  `Config/Unstir.xcconfig` includes for Xcode's own builds and archives; without both analytics is off. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
   build's events as Debug.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
@@ -347,26 +352,33 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
   one clock's tick can uncover the next's seam on the same move (the book's 17 and 18 need it), and the stack's last
-  tick solves on the spot; a clock whose rod is empty has stopped, and once all have there is nothing to wait for. A
+  tick solves on the spot; a clock that can't tick (`canTick`) has stopped, and once all have there is nothing to wait for. A
   move is one working knob's stir or a wait, a tap on any ratchet. Every
   let-go is a move of its own and final (Jack's call E1, round 9): its tick lands with it, nothing joins it, and the
   same knob grabbed again is the next move with its own tick, so a stir's dial always counts from zero. Escapement has
-  no par (Jack's call EL1, round 11, which replaced round 9's E1/E2 loss rule): `Clock.budget` starts at what the clocks
-  owe in all on the stack (`Level.budget(on:)`, `Level.budget` as dealt, which the note states: "Unstir in 9 ticks."),
-  and every clock's tick spends one, so a move with three running clocks spends three; at 0 no clock ticks. A tick that
-  pushes buries a clock entry of the wrong sign, `overdue(_:)`, that no continuation pops (`testAPushedTickNeverPops`),
-  but the tank plays on, every later clock in the turn still ticking (`pushedClock`); once the budget is spent with
-  twists still on the picture the tank is out of ticks (`lost`, which `finished` counts). Without a pushed tick the
-  budget is what the clocks still owe after every move and is spent exactly as the last clock stops, so it ends no
-  proved line (`testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine`). A solve spends the budget to the last tick, so
-  `over` is always 0 and its best stores as solved. One clock stopping while another runs loses nothing. A full stack
-  refuses a move whose tick it would refuse. Undo is the pack's, the stack, the clocks and the budget as the move found
-  them, and works on a tank out of ticks; reset deals the budget afresh. The header shows the budget, not moves against
+  no par (Jack's calls EL1, round 11, which replaced round 9's E1/E2 loss rule, and ES2, round 12): each clock has its
+  own count, what it owes on the stack (`Game.owed(_:)`, `Level.owed`), and each of its ticks spends one of it; the
+  header's budget is every clock's together (`Game.budget`, `Level.budget(on:)`; `Level.budget` as dealt, which the note
+  states: "Unstir in 9 ticks."), so a move with three running clocks spends three. Only a clock's own ticks change its
+  rod's steps, each by one whether it merges or pushes, so the counts are read off the stack and nothing stores them.
+  A clock ticks while its rod holds an entry and its count is above 0 (`canTick`); at 0 it stops. A tick that pushes
+  buries a clock entry of the wrong sign, `overdue(_:)`, that no continuation pops (`testAPushedTickNeverPops`), and
+  still spends one of that clock's count, but the tank plays on, every later clock in the turn still ticking
+  (`pushedClock`); once no clock can tick with twists still on the picture the tank is out of ticks (`lost`, which
+  `finished` counts). Without a pushed tick a clock's count reaches 0 exactly as its rod empties, so it ends no proved
+  line (`testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine`, `testEachHubCountsItsOwnClockAndTheHeaderIsTheirSum`,
+  which also checks the counts through a wrong move and its undo before every move of every line). No clock in the
+  book owes more than 9, so a hub shows one digit (`testEveryHubCountFitsOneDigit`). A solve spends the budget to the
+  last tick, so `over` is always 0 and its best stores as solved. One clock stopping while another runs loses nothing.
+  A full stack refuses a move whose tick it would refuse. Undo is the pack's, the stack and the clocks as the move found
+  them, and works on a tank out of ticks; reset deals the counts afresh. The header shows the budget, not moves against
   par: "ticks" and a split-flap numeral (`FlipCounter`), driven by the ticks' own keyframes, whose old digit's top half
   falls over the hinge as each clock's tick starts to turn, one flap per tick in turn; Reduce Motion swaps without the
   fall; it goes vermilion at 00 and stays up over the card. The view draws
   each clock's knob as a 12-tooth `RatchetView` read against a vermilion sub-dial fixed to the glass (a wound-back
-  one mirrored), its pawl riding out with each tick, the move's ticks a beat after the lift each turning its clock's
+  one mirrored), its hub a one-digit `FlipCounter` card of the clock's own count (unmirrored), flipping with the header
+  as each of its ticks starts, so the header always reads as the hubs' sum; a clock at 0 greys its wheel, sub-dial,
+  card and `ClockHint` as its last tick lands, the pawl and hub ring amber, with the amber stop ring; its pawl riding out with each tick, the move's ticks a beat after the lift each turning its clock's
   core a step on screen in turn, `tickTurn` apart after `tickBeat` (`Game.tick` holds each with the stack it changed; `Unstirred.tick`,
   one entry over in the four-tap budget, like the drag) and the wheel a tooth; `ClockHint` dashes the clock's disc at all
   times (Jack's call, 2026-10-25); a pushed tick flashes the ratchet red and stands as a vermilion +N; a
@@ -374,7 +386,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (a −N for a wound-back clock), and with no push the look `UNSTIR_STOPLOOK` picks (`StopLook`: stamp, as built; left,
   the twists left as a count; rings, a ring on each knob still twisted), and `LostCard`'s "out of ticks on move N",
   undo and again, whose
-  exit goes through `leave` as the result card's does. A clock stopping sends an amber ring out. A level with a
+  exit goes through `leave` as the result card's does. A clock stopping sends an amber ring out as its last tick lands. A level with a
   `demo` plays it before the problem opens, every time, unless the harness holds the tank still: a drawn fingertip
   heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
@@ -529,21 +541,27 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seam never jumps. First Stir: level 1, the sunrise, healed top first, the time under the tank stepping back with each
   heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
-  no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves. Prism: specimen 1
+  no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves, its hub counting 3 down to 0. Prism: specimen 1
   healed top first. Complete (`Clip.cut(of:)`): each sold pack's first beat in turn, Prism, a prototype, having none, a
   vignette (the sunrise from just after its first heal, which plays nothing, through its second), a zoom and a tick, about 8 s (Jack, CL2);
   in Release, without First Stir, the zoom and the tick alone. Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
-  (undecided, yes, no; stored as `analytics.consent`): until yes nothing is queued or sent and no `Sender` exists, and a
+  (undecided, yes, no; stored as `analytics.consent`). v1 ships without them: the build's `ANALYTICS`
+  (`Config/Unstir.xcconfig`, NO) sets Info.plist's `Analytics`, read as `Analytics.built`, and while it is off a plain
+  launch never asks, settings has no switch (`Analytics.shown`), `start` leaves the mode off whatever the key, and
+  nothing reaches `analytics` or `analytics.consent` (`testABuildWithoutAnalyticsAsksAndKeepsNothing`); the privacy
+  manifest declares no collected data, so a build with `ANALYTICS = YES` must declare analytics's three types again.
+  The rest of this paragraph is that build. Until yes nothing is queued or sent and no `Sender` exists, and a
   no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
   the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
   word it and settings say (`ConsentWords`): on a plain launch while undecided,
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
-  analytics switch (`NeonToggle`, which calls `decide`) and "send log", which hands `Log.url` to the share sheet. No ID
-  leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
+  analytics switch (`NeonToggle`, which calls `decide`) where the build has analytics, "send log", which hands `Log.url` to the share sheet, and
+  "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)), for now the github.com page of
+  `docs/privacy-policy.md`. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
   bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
@@ -640,12 +658,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch, so shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
-  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_ANALYTICS=log` writes each analytics event to the
-  flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
+  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
   opens the card's list); `UNSTIR_CONSENT=yes`
-  or `=no` answers for the launch, never stored, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
+  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
   `UNSTIR_SOUND=1`. This is how screenshots and films

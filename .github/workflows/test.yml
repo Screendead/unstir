@@ -38,10 +38,14 @@ jobs:
             build/store
             !build/store/Index.noindex
             !build/store/Logs
-          key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', 'Config/**', '.github/workflows/test.yml', 'scripts/test-store.sh') }}
+          key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', 'Config/**', '.github/workflows/test.yml', '.github/workflows/nightly.yml', 'scripts/test-store.sh') }}
           restore-keys: store-${{ steps.xcode.outputs.build }}-
-      # Signed ad hoc by the script, so the StoreKit tests run too.
+      # The StoreKit tests and First Stir's suite (out of v1; its vignette render alone takes two minutes) run nightly
+      # on master (nightly.yml). Signed ad hoc by the script, as the nightly needs.
       - name: Test
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
-          UNSTIR_SIM=$udid scripts/test-store.sh -quiet COMPILER_INDEX_STORE_ENABLE=NO
+          UNSTIR_SIM=$udid scripts/test-store.sh -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+      - name: Slowest tests
+        if: always()
+        run: scripts/ci-times.sh "$RUNNER_TEMP/test.log"

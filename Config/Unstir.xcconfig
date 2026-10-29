@@ -1,3 +1,8 @@
+// YES builds analytics in: the consent question, the settings switch and, with APTABASE_KEY, Aptabase. NO, v1's,
+// leaves all of it out, so the game asks, records and sends nothing, whatever key is set. A build with it YES must
+// declare in Sources/PrivacyInfo.xcprivacy what analytics collects (product interaction, coarse location and purchase
+// history, not linked, for analytics), which v1's declares empty.
+ANALYTICS = NO
 // Aptabase's app key stays out of the repo: put `APTABASE_KEY = A-EU-...` in Config/Local.xcconfig (gitignored), which
 // Xcode's own builds and archives read, or set APTABASE_KEY in the shell for scripts/build-ios.sh. Empty leaves
 // analytics off.
