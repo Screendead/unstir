@@ -208,7 +208,13 @@ struct Harness {
             level.lenses = Set(s.split(separator: ",").compactMap { Int($0) }
                 .filter { level.layout.rods.indices.contains($0) && $0 != level.layout.swirl })
         }
-        if let s = env["UNSTIR_STACK"] { level.scramble = .parse(s, in: level.layout, lenses: level.lenses) }
+        // UNSTIR_MASKS=0:r,1:c: Prism's channels by slot, which change how UNSTIR_STACK merges as the lenses do.
+        if let m = env["UNSTIR_MASKS"].flatMap(Channels.masks) {
+            level.masks = m.filter { level.layout.rods.indices.contains($0.key) && $0.key != level.layout.swirl }
+        }
+        if let s = env["UNSTIR_STACK"] {
+            level.scramble = .parse(s, in: level.layout, lenses: level.lenses, masks: level.masks)
+        }
         // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
         if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }
         // UNSTIR_SEIZED=1,4: those knobs seized on a turning tank, never the swirl, which has no knob.

@@ -20,11 +20,12 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Level.endless(Run(seed: 1)).id, "endless")
         XCTAssertEqual(Level.sandbox.id, "sandbox")
 
-        XCTAssertEqual(Pack.allCases.map(\.prefix), ["first-stir", "lens", "escapement"])
-        XCTAssertEqual(Pack.allCases.map { $0.id(1) }, ["first-stir-1", "lens-1", "escapement-1"])
+        XCTAssertEqual(Pack.allCases.map(\.prefix), ["first-stir", "lens", "escapement", "prism"])
+        XCTAssertEqual(Pack.allCases.map { $0.id(1) }, ["first-stir-1", "lens-1", "escapement-1", "prism-1"])
         XCTAssertEqual(Pack.allCases.map(\.productID), ["com.screendead.Unstir.pack.firststir",
                                                         "com.screendead.Unstir.pack.lens",
-                                                        "com.screendead.Unstir.pack.escapement"])
+                                                        "com.screendead.Unstir.pack.escapement",
+                                                        "com.screendead.Unstir.pack.prism"])
         XCTAssertEqual(Pack.completeID, "com.screendead.Unstir.complete")
         XCTAssertEqual(Pack.productIDs.count, Set(Pack.productIDs).count)
         for pack in Pack.allCases {
@@ -155,17 +156,19 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Offer.complete.arriving, Pack.allCases.contains { $0.levels.count < $0.planned })
     }
 
-    /// First Stir is out of v1 (Jack, FS17): a Release build neither sells it nor opens its levels, taste and all, and
-    /// Complete names only what it grants. Outside Release it stays whole.
+    /// First Stir is out of v1 (Jack, FS17), and Prism a prototype: a Release build neither sells them nor opens their
+    /// levels, taste and all, and Complete names only what it grants. Outside Release they stay whole.
     func testFirstStirIsOutOfV1() {
         XCTAssertEqual(Pack.sold(release: true), [.lens, .escapement])
         XCTAssertEqual(Pack.sold(release: false), Pack.allCases)
         XCTAssertEqual(Pack.firstStir.access(1, owned: [.firstStir], unlocked: true, release: true), .withheld)
         XCTAssertEqual(Pack.firstStir.access(4, owned: [.firstStir], release: true), .withheld)
         XCTAssertEqual(Pack.firstStir.access(1, owned: [], unlocked: false, release: false), .taste)
+        XCTAssertEqual(Pack.prism.access(1, owned: [.prism], unlocked: true, release: true), .withheld)
+        XCTAssertEqual(Pack.prism.access(4, owned: [], harness: [.prism], release: false), .owned)
         XCTAssertEqual(Pack.lens.access(1, owned: [], release: true), .taste)
         XCTAssertEqual(Pack.named(Pack.sold(release: true)), "Lens and Escapement")
-        XCTAssertEqual(Pack.named(Pack.allCases), "First Stir, Lens and Escapement")
+        XCTAssertEqual(Pack.named(Pack.allCases), "First Stir, Lens, Escapement and Prism")
         XCTAssertEqual(Pack.named([.lens]), "Lens")
     }
 
@@ -206,10 +209,10 @@ final class PackTests: XCTestCase {
     func testHarnessSetsEachPurchaseState() throws {
         let ledger = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "first-stir:pending,lens:failed,escapement:revoked"],
                                                      release: false))
-        XCTAssertEqual(Pack.allCases.map(ledger.state), [.pending, .failed, .revoked])
+        XCTAssertEqual(Pack.allCases.map(ledger.state), [.pending, .failed, .revoked, .unowned])
         let complete = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "complete:revoked", "UNSTIR_OWNED": "lens"],
                                                        release: false))
-        XCTAssertEqual(Pack.allCases.map(complete.state), [.revoked, .owned, .revoked])
+        XCTAssertEqual(Pack.allCases.map(complete.state), [.revoked, .owned, .revoked, .revoked])
         XCTAssertEqual(Harness.purchases(["UNSTIR_STORE": "lens:unowned"], release: false)?.state(.lens), .unowned)
     }
 

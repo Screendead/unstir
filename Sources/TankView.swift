@@ -258,7 +258,7 @@ final class Game {
         var healed = 0
         let result = level.kind(of: rod) != .working ? .refused
             : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
-                             lenses: level.lenses, popped: { if !$0.pushed { healed += 1 } })
+                             lenses: level.lenses, masks: level.masks, popped: { if !$0.pushed { healed += 1 } })
         guard result != .refused else { Log.write("commit \(Twist(rod: rod, steps: steps)) refused"); return }
         if rod == level.layout.swirl, !swirled {
             swirled = true
@@ -346,7 +346,7 @@ final class Game {
         var healed = 0
         let result = level.kind(of: knob) != .working ? .refused
             : next.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout, lenses: level.lenses,
-                          popped: { if !$0.pushed { healed += 1 } })
+                          masks: level.masks, popped: { if !$0.pushed { healed += 1 } })
         // A full stack refuses a tick as it would a push, so it refuses the move.
         guard result != .refused, !ticksRefused(next) else {
             Log.write("commit \(Twist(rod: knob, steps: steps)) refused")
@@ -416,7 +416,7 @@ final class Game {
         // Without a pushed tick the budget is spent exactly as the last clock stops. A stack the fine pass is about to
         // call solved is not out of ticks.
         if !entries.isEmpty, budget == 0 || !level.clocks.contains(where: { running($0.rod) }),
-           !level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses) {
+           !level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses, masks: level.masks) {
             escapement.lost = true
         }
         Log.write("ticks \(tick.map { "\($0.rod):\($0.dir > 0 ? "+" : "-")" }.joined(separator: ",")) budget=\(budget) stack=\(stack)")
@@ -429,7 +429,7 @@ final class Game {
                                  popped: (Entry) -> Void = { _ in }) -> Commit? {
         guard entries.contains(where: { $0.twist.rod == clock.rod }) else { return nil }
         return entries.commit(Entry(twist: Twist(rod: clock.rod, steps: clock.dir), pushed: true), in: level.layout,
-                              lenses: level.lenses, popped: popped)
+                              lenses: level.lenses, masks: level.masks, popped: popped)
     }
 
     /// Escapement: whether a full stack would refuse a tick after a move that leaves `entries`.
@@ -486,7 +486,7 @@ final class Game {
             let scrambles = { (e: [Entry]) in e.filter { !$0.pushed }.count }
             let negation = Twist(rod: last.rod, steps: -last.steps)
             entries.commit(Entry(twist: negation, pushed: scrambles(was.entries) <= scrambles(entries)), in: level.layout,
-                           lenses: level.lenses)
+                           lenses: level.lenses, masks: level.masks)
         }
         if last.rod != Game.tank {
             // A white flash whatever the stack did: undo bumps neither pushes nor cancels, so no alarm or thunk may show.
@@ -571,7 +571,7 @@ final class Game {
 
     /// The newest twist a working knob can take off now, as that knob's turn: what autoplay and the harness play.
     var reachable: Twist? {
-        level.layout.removable(stack, lenses: level.lenses).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
+        level.layout.removable(stack, lenses: level.lenses, masks: level.masks).reversed().map { Twist(rod: knob(over: stack[$0].rod), steps: -stack[$0].steps) }
             .first { level.kind(of: $0.rod) == .working }
     }
 
@@ -579,7 +579,7 @@ final class Game {
     var wasting: Twist? {
         level.layout.rods.indices.filter { level.kind(of: $0) == .working }.lazy.compactMap { k -> Twist? in
             var s = self.stack
-            return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout, lenses: self.level.lenses) == .pushed ? Twist(rod: k, steps: 2) : nil
+            return s.commit(rod: self.slot(of: k), steps: 2, in: self.level.layout, lenses: self.level.lenses, masks: self.level.masks) == .pushed ? Twist(rod: k, steps: 2) : nil
         }.first
     }
 
@@ -587,11 +587,11 @@ final class Game {
     private func settle(healed: Bool = false) {
         // Refusing a win the picture already shows is the bug players hit, and a residual under half a pixel is invisible.
         // Only the coarse pass runs here: the fine one takes ~0.1 s exactly when it passes, which would hitch the win.
-        if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses) {
-            let stack = stack, layout = level.layout, lenses = level.lenses
+        if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses, masks: level.masks) {
+            let stack = stack, layout = level.layout, lenses = level.lenses, masks = level.masks
             checking = true
             Task {
-                let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack, lenses: lenses) }.value
+                let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack, lenses: lenses, masks: masks) }.value
                 self.checking = false
                 // A move made meanwhile settled itself.
                 guard self.stack == stack else { return }
@@ -1320,13 +1320,13 @@ struct LevelView: View {
         let commits = liveRod.map { k in
             let steps = Detent.steps(liveAngle, of: Tank.step)
             return steps != 0 && (game.stack.count < Tank.maxStack
-                || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout, lenses: game.level.lenses) != nil)
+                || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout, lenses: game.level.lenses, masks: game.level.masks) != nil)
         } ?? false
         let step = game.level.layout.tankStep
         let held = liveTurn.map { $0 + (spin ?? 0) }
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
-        let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
+        let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
@@ -1507,7 +1507,7 @@ struct LevelView: View {
                     KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                         RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
                                 size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
-                                lens: game.level.lenses.contains(game.slot(of: k)))
+                                lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)))
                     } keyframes: { _ in Self.jolt }
                         .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
                 }
@@ -2240,6 +2240,8 @@ struct Unstirred: ViewModifier, Animatable {
     var layout: Layout
     /// The rods whose steps magnify rather than turn.
     var lenses: Set<Int> = []
+    /// Prism's channels by slot, a missing slot white.
+    var masks: [Int: Channels] = [:]
     var liveRod: Int?
     var liveAngle: Double
     var wind = 1.0
@@ -2265,9 +2267,10 @@ struct Unstirred: ViewModifier, Animatable {
 
     func body(content: Content) -> some View {
         let rods = layout.rods
-        var floats: [Float] = []
+        var floats: [Float] = [], channels: [Float] = []
         floats.reserveCapacity(4 * (stack.count + 1))
         func add(_ rod: Int, _ angle: Double) {
+            channels.append(Float((masks[rod] ?? .white).rawValue))
             floats.append(Float(rods[rod].x)); floats.append(Float(rods[rod].y))
             // A lens's entry is marked by a negative radius, and takes its flow's time for the angle.
             let lens = lenses.contains(rod)
@@ -2287,10 +2290,47 @@ struct Unstirred: ViewModifier, Animatable {
         // one over, within the 31 the shader's comment measured. Two at once, for the `Breath.fade` a touch takes to cut a
         // slosh or a grab within a tick's flight, drop to two taps at the budget's edge rather than run 32.
         let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
+        if let cost = Self.channelCost(channels) {
+            // The in-flight entry rides over by its own cost, as above, so a touch never changes the taps.
+            let flight = [liveRod, breathes ? breath?.rod : nil, tick?.rod].compactMap { $0 }
+                .map { (masks[$0] ?? .white).rawValue.nonzeroBitCount }.max() ?? 0
+            return content.layerEffect(
+                ShaderLibrary.unstirChannels(.float2(r, r), .float(r), .floatArray(floats), .floatArray(channels), .float(Float(n)),
+                                             .float(Float(cost)), .float(Float(Tank.fourTaps - fillEntries + flight)), .float(Float(Tank.plateau)),
+                                             .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)),
+                                             .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
+                maxSampleOffset: CGSize(width: side, height: side))
+        }
         return content.layerEffect(
             ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
                                  .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
             maxSampleOffset: CGSize(width: side, height: side))
+    }
+}
+
+extension Channels {
+    /// A knob's tint: the cover's red, green and blue, and each mix their brightest.
+    var colour: Color {
+        let parts: [(Channels, SIMD3<Double>)] = [(.red, SIMD3(0xFF, 0x2A, 0x2A)), (.green, SIMD3(0x2A, 0xFF, 0x5A)),
+                                                  (.blue, SIMD3(0x3A, 0x6B, 0xFF))]
+        let c = parts.filter { contains($0.0) }.map(\.1).reduce(SIMD3<Double>(0, 0, 0)) { simd_max($0, $1) } / 255
+        return Color(.sRGB, red: c.x, green: c.y, blue: c.z)
+    }
+}
+
+extension Level {
+    /// A rod's tint on a level with channels, nil on any other.
+    func tint(of slot: Int) -> Color? { masks.isEmpty ? nil : (masks[slot] ?? .white).colour }
+}
+
+extension Unstirred {
+    /// The per-channel shader's work in entries for these masks (raw values, an entry each), or nil when every one is
+    /// white and the plain shader draws them. An entry costs a map per channel it holds and a tap's two extra samples
+    /// two entries: assumed, not measured on the phone.
+    static func channelCost(_ masks: [Float]) -> Int? {
+        let white = Float(Channels.white.rawValue)
+        guard masks.contains(where: { $0 != white }) else { return nil }
+        return masks.reduce(2) { $0 + Int($1).nonzeroBitCount }
     }
 }
 
@@ -2464,6 +2504,8 @@ struct RodView: View {
     var grabbed = false
     /// A lens's knob, whose cap carries an iris.
     var lens = false
+    /// Prism's: the colour of the channels the rod stirs, on its ticks, pointer and a jewel at the cap's centre.
+    var tint: Color?
     @Environment(\.displayScale) private var scale
     private static let knob = [(0, 0xF4F6FA), (0.25, 0x7A8292), (0.6, 0x2E333D), (1, 0x15181E)]
         .map { Gradient.Stop(color: Color($0.1), location: $0.0) }
@@ -2473,7 +2515,7 @@ struct RodView: View {
     var body: some View {
         // Whole device pixels out from a pixel-snapped centre, so at rest the upright and level ticks land crisp.
         let rim = px(size / 2), width = px(2 / 3)
-        let lit = seized ? Color(0x5A606C) : .neonCyan
+        let lit = seized ? Color(0x5A606C) : tint ?? .neonCyan
         ZStack {
             Circle().fill(RadialGradient(stops: seized ? Self.dull : Self.knob, center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0,
                                          endRadius: size * 0.95))
@@ -2483,6 +2525,11 @@ struct RodView: View {
             if lens {
                 iris.stroke(Color.magenta.opacity(0.3), lineWidth: 3)
                 iris.stroke(Color.magenta, lineWidth: 1)
+            }
+            if let tint {
+                Circle().fill(tint.opacity(0.3)).frame(width: size * 0.34, height: size * 0.34)
+                Circle().fill(tint).overlay(Circle().strokeBorder(Color.black.opacity(0.6), lineWidth: 0.5))
+                    .frame(width: size * 0.2, height: size * 0.2)
             }
             // Off-centre so a half turn reads as pointing down, not as untouched.
             Capsule().fill(lit.opacity(0.25)).frame(width: 6, height: size * 0.3 + 4).offset(y: -size * 0.3)

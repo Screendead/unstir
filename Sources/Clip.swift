@@ -29,6 +29,7 @@ struct Clip: Sendable {
         case .pack(.firstStir): firstStir
         case .pack(.lens): lens
         case .pack(.escapement): escapement
+        case .pack(.prism): prism
         case .complete: complete
         }
     }
@@ -44,12 +45,15 @@ struct Clip: Sendable {
     /// stops the clock on the clean picture.
     static let escapement = Clip(reels: [.escapement()], still: Reel.escapement().beats[0].lift + 0.6)
 
+    /// Specimen 1 healed top first.
+    static let prism = Clip(reels: [.prism()], still: 0.5)
+
     /// Each sold pack's telling beat in turn: a vignette, a zoom, a tick, about eight seconds with all three.
     static let complete = cut(of: Pack.sold())
 
-    /// Each of `packs`' beats in turn, held at the first one's still.
+    /// Each of `packs`' beats in turn, held at the first one's still. Prism, a prototype, has no beat yet.
     static func cut(of packs: [Pack]) -> Clip {
-        let cuts = packs.map { pack -> (reel: Reel, still: Double) in
+        let cuts = packs.compactMap { pack -> (reel: Reel, still: Double)? in
             switch pack {
             case .firstStir: return (cutStory, cutStory.beats[1].lift + 0.5)
             case .lens:
@@ -58,6 +62,7 @@ struct Clip: Sendable {
             case .escapement:
                 let r = Reel.escapement(moves: 1, rest: 0.45, tail: 0.7)
                 return (r, r.beats[0].lift + 0.6)
+            case .prism: return nil
             }
         }
         return Clip(reels: cuts.map(\.reel), still: cuts[0].still - cuts[0].reel.from)
@@ -133,7 +138,7 @@ struct Reel: Sendable {
                 lift = start + keys.reduce(0) { $0 + $1.seconds } + Self.hold
                 let net = Int(keys.last!.steps.rounded())
                 if net != 0 {
-                    result = moved.commit(Game.Entry(twist: Twist(rod: k, steps: net), pushed: true), in: level.layout, lenses: level.lenses)
+                    result = moved.commit(Game.Entry(twist: Twist(rod: k, steps: net), pushed: true), in: level.layout, lenses: level.lenses, masks: level.masks)
                 }
             }
             var after = moved, ticked = false, stops = false
@@ -162,9 +167,9 @@ struct Reel: Sendable {
     /// Top first, each newest entry a working knob can take off: what the harness's autoplay plays.
     static func solve(_ level: Level, moves: Int = .max) -> [Gesture] {
         var stack = level.scramble, out: [Gesture] = []
-        while out.count < moves, let i = level.layout.removable(stack, lenses: level.lenses).last {
+        while out.count < moves, let i = level.layout.removable(stack, lenses: level.lenses, masks: level.masks).last {
             out.append(.turn(stack[i].rod, -stack[i].steps))
-            stack.commit(rod: stack[i].rod, steps: -stack[i].steps, in: level.layout, lenses: level.lenses)
+            stack.commit(rod: stack[i].rod, steps: -stack[i].steps, in: level.layout, lenses: level.lenses, masks: level.masks)
         }
         return out
     }
@@ -188,6 +193,12 @@ struct Reel: Sendable {
         let dealt = level.scramble.last { $0.rod == lens }!.steps
         return Reel(level: level, gestures: [.turn(knob: lens, keys: [(Double(-dealt), down), (Double(-dealt), hold), (0, up)])],
                     rest: rest, gap: 0, tail: tail, dips: dips)
+    }
+
+    /// Specimen 1: tri's red rod and cyan one over a white bottom entry, the red stir buried under the cyan one healed first.
+    static func prism() -> Reel {
+        let level = Level.prism[0]
+        return Reel(level: level, gestures: solve(level), rest: 0.7, gap: 0.6, tail: 1.2)
     }
 
     /// The mock-up's problem, the book's second, in its three moves, the second a wait on the clock.
@@ -333,7 +344,7 @@ struct ClipTank: View {
         func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
         func disc(_ k: Int) -> CGFloat { min(rods[k].z * r, r - 4) }
         let core = 2 * Tank.coreRadius * r, hairline: CGFloat = 0.5
-        var unstirred = Unstirred(stack: f.stack, layout: layout, lenses: level.lenses, liveRod: f.live?.rod,
+        var unstirred = Unstirred(stack: f.stack, layout: layout, lenses: level.lenses, masks: level.masks, liveRod: f.live?.rod,
                                   liveAngle: f.live?.angle ?? 0, side: side, fillEntries: level.picture.fillEntries)
         unstirred.tick = f.tick
         if let w = f.solved {
@@ -370,7 +381,7 @@ struct ClipTank: View {
                         .position(at(k))
                 } else {
                     RodView(angle: f.knobs[k] ?? 0, size: core, seized: level.kind(of: k) != .working, grabbed: f.live?.rod == k,
-                            lens: level.lenses.contains(k))
+                            lens: level.lenses.contains(k), tint: level.tint(of: k))
                         .position(at(k))
                 }
             }

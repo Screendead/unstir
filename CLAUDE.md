@@ -86,8 +86,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
-- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots]` (e.g. `quad 0:+3,2:-4 0`,
-  or `tri 1:-2,2:+4,0:+3 lenses=0`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
+- Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots] [masks=slot:channel]`
+  (e.g. `quad 0:+3,2:-4 0`, `tri 1:-2,2:+4,0:+3 lenses=0`, or `tri 2:+2,0:+3,1:+4 masks=0:r,1:c`; a swirl layout by its name, `quadSwirl`, its swirl never seized or a lens) prints the optimum (and what untwisting alone takes when a
   detour beats it), the park rule's fewest and most moves over every way its ties go under each parking, fair or over
   by the most, the no-lookahead count and its planning gap, then the optimal moves, one commit or turn each. It
   compiles `build/solve` with `swiftc` when a source has changed, from Twist.swift, Solver.swift and `SplitMix64` cut
@@ -181,7 +181,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   through the same `Array.commit`, and a lens never wraps: +k needs exactly -k. Every call that maps points
   (`same`, `commutes`, `looksSolved`, `removable`, `landing`, `commit`, `parse`) takes the lens set,
   empty by default; a call that drops it treats a lens as a twist, which `testTheLensSetChangesHowAStackMerges` catches
-  where it matters. Ported from the hard lens on local branch `lab-lens` (Jack's call, round 3, L1).
+  where it matters. Ported from the hard lens on local branch `lab-lens` (Jack's call, round 3, L1). A rod may also
+  carry a channel mask (Prism's pack, `Level.masks`, by slot, `Channels`: red, green, blue, cyan, magenta, yellow or
+  white): a stir moves only its channels, so each of red, green and blue is the word of the entries whose rod holds it.
+  The same calls take the mask set after the lens set, empty by default, meaning every rod white, which is today's
+  path untouched. `same` compares each channel's cut words (an all-white word costs one pass), so two entries commute
+  when their discs miss, when their masks share no channel (`commutes`' early exit), or when their maps commute on
+  every channel they share, and `looksSolved` is every channel back. `Channels.masks` reads `0:r,1:c`.
 - **Unstir.metal** is the GPU copy of the same map. It turns the sample point back by the glass's `turn`, then applies
   the stack's inverses to sample the picture. A lens's entry carries a negative radius and its flow's time
   (`steps * Tank.lensRate`) for the angle, and the rim's sharpness comes in as a uniform. The tests reach the Swift copy
@@ -189,7 +195,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
   The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (30) limits are tuned against 120 Hz on an
   iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
-  four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone.
+  four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone. Prism's stacks
+  go to a second stitchable, `unstirChannels`, only when some entry's mask isn't white (`Unstirred.masks`), so every
+  other level draws through `unstir` as measured: it carries red, green and blue each through the inverses of the
+  entries whose mask (a float per entry, the `Channels` raw value) holds it, and samples each channel at its own point.
+  Both share the per-entry map (`unmap`); `testTheShadersChannelChainsMatchTheModel` compiles the per-channel loop
+  (`chains`) and checks it against the model's cut words on hex's swirl. Its cost against the four-tap limit
+  (`Unstirred.channelCost`) is a map per channel each entry holds, plus two for a tap's extra samples: assumed, not
+  benched on the phone, so a 12-entry stack of mixed masks may already run two taps.
 - **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw whirlpool's live
   pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassTwin`, ...), maelstrom's
   twin being the same body with `twin` set. Each file stands alone. The twins' heartbeat lives in their own lines: each
@@ -359,41 +372,48 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
-  Escapement) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
+  Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
   25, five chapters; Lens 25; Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
   card's list heads, counting solved levels: each par, never shown, what its slowest clock owes and reached by the
   prover, its one key pinned,
-  `EscapementTests`; the full ±11 key search is slow): `Pack.levels` reads `Level.firstStir`, `Level.lens` and `Level.escapement`, numbered from
+  `EscapementTests`; the full ±11 key search is slow; Prism six, a prototype that may take First Stir's place in v1):
+  `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
   always, past it only a pack StoreKit grants, with `Best.unlocked` and the harness counted outside Release only.
-  First Stir is out of v1, to be reworked (Jack's call FS17): `Pack.ships` is false for it, and `Pack.sold()`, the
-  packs a build sells, leaves it out in Release only, so its code, levels, ids and tests stay and Debug and the harness
-  (`UNSTIR_PACK=first-stir`) still reach it. In Release its every level, taste and all, is `.withheld`, which opens
+  First Stir is out of v1, to be reworked (Jack's call FS17), and Prism doesn't ship while a prototype: `Pack.ships` is
+  false for both, and `Pack.sold()`, the packs a build sells, leaves them out in Release only, so their code, levels,
+  ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`, `=prism`) still reach them. In Release their every level, taste and all, is `.withheld`, which opens
   neither the level (`Store.opens`, checked by `RootView.show`) nor its card (nor `UNSTIR_CARD`), and `Pack.sold()`
   sets what StoreKit is asked for (`Pack.productIDs`), what Complete grants and needs, Complete's cover, words
-  (`Pack.named`), and clip, and analytics' snapshot (`testFirstStirIsOutOfV1`).
+  (`Pack.named`), and clip (in which Prism has no beat yet), and analytics' snapshot (`testFirstStirIsOutOfV1`).
   `Store` is StoreKit 2 with no server and nothing stored: entitlements from `Transaction.currentEntitlements` at
   launch, a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
-  card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and Complete as family-shareable non-consumables at
-  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25); the scheme's run action and `StoreTests` use it. Prices are
+  card again. `StoreKit/Unstir.storekit` sells each pack (First Stir and Prism too, since `StoreTests` run outside Release, where they are sold) and Complete as family-shareable non-consumables at
+  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25, before Prism was a fourth); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
   opens without one, and a card with none says "buy" alone.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
   rods only, is the alternative on branch `lens-levels-big`), on the halftone: each dealt lens entry +1 to +3, each lens
   netting at most +3, no entry merging as it is dealt, and par the depth (`testLensLevels`, which pins the table), the
   solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks a
-  table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). A lens follows the finger up and down, not round
+  table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
+  colour (`Level.tint`, `Channels.colour`, the cover's red, green and blue and their mixes), a white rod white: its
+  ticks, pointer and a jewel at the cap's centre. A lens follows the finger up and down, not round
   (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
   one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
   through the rod's own `liveAngle` and detent, so its count, clicks and the iris's turn are a rod's, a step at a time,
   but its dashes run up a short vertical track beside the knob for a zoom in and down it for out (`track`, on the side
   away from the finger), not round the disc. A drawn fingertip (`UNSTIR_FINGER`) on a lens rides up and down too.
+  `Level.prism` holds Prism's first tray, Two Colours, six specimens on the fern from `docs/prism-design.md`: red and
+  cyan rods, every one dealt, over one white rod that holds only the bottom entry, no entry merging as it is dealt, par
+  the depth (`testPrismLevels`, which pins the table and checks each stack keeps four taps under `channelCost`), the
+  solver's optimum (`testPrismParIsTheOptimum`, slow). The other four trays aren't built.
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
   (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
@@ -499,7 +519,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seam never jumps. First Stir: level 1, the sunrise, healed top first, the time under the tank stepping back with each
   heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
-  no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves. Complete (`Clip.cut(of:)`): each sold pack's first beat in turn, a
+  no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves. Prism: specimen 1
+  healed top first. Complete (`Clip.cut(of:)`): each sold pack's first beat in turn, Prism, a prototype, having none, a
   vignette (the sunrise from just after its first heal, which plays nothing, through its second), a zoom and a tick, about 8 s (Jack, CL2);
   in Release, without First Stir, the zoom and the tick alone. Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
@@ -554,7 +575,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   halftone. The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
-  It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp.
+  It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp. Prism's fern
+  (**Engraving.swift**, `Fern`) is polylines in tank units, baked through `draw` as plughole's are: three fronds, a
+  fiddlehead, drifting seeds and the ground, in white lines only, so a channel out of register shows as its colour and
+  an aligned line is white (`testTheFernIsWhiteLinesOnBlack`); the sandbox skips it too.
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
   reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,
@@ -575,14 +599,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (Jack, SN1).
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
-  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
+  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
   many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
   (`UNSTIR_BENCH`). `UNSTIR_PACE=s` sets autoplay's and `UNSTIR_MOVES`' wait before each move (0.3 s unset), and
   `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. `UNSTIR_ENDING=s` with `UNSTIR_SCREEN=clean` opens First Stir's last scene solved with the night forwards held s seconds in (-1 runs it). In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
-  best or started flag (`Level.keepsProgress`), and
+  best or started flag (`Level.keepsProgress`); Prism's is tri on the fern, rod 0 red and rod 1 cyan, dealt
+  `2:+3,0:+4,1:-3`, as specimen 1 is. And
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
   in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`).
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
@@ -624,7 +649,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and maps that fail to commute, judged by the maps), so a swirl interacts with every rod but hex's hub, which shares
   its centre; whether a word commutes is still `Layout.commutes`'s call. `Solver(layout, lenses:)` maps a lens's slots
   as the game does, so on tri a lens interacts with both its neighbours, and two lenses, whose cores never meet, never
-  interact. The swirl is a slot like any other, held at
+  interact. `Solver(layout, masks:)` takes Prism's masks the same way: two rods whose masks share no channel never
+  interact, and `parts`, which maps the whole picture, steps aside under masks, so every overlap goes to
+  `Layout.commutes`. The swirl is a slot like any other, held at
   every position and never seized. With no knob seized, as on every vortex level, the tank never turns, so every
   player untwists and the planning gap is 0: there the solver's job is the optimum, and whether a detour beats
   untwisting. The park rule (`park`) untwists the newest whole seam a working knob

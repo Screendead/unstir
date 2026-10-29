@@ -107,6 +107,9 @@ struct Level: Hashable, Sendable {
     /// Lens's slots whose steps magnify (`Tank.lens`) rather than turn. Their knobs work as any other: only the map
     /// differs, so every merge, commutation and solve on the level takes this set.
     var lenses: Set<Int> = []
+    /// Prism's channels by slot, white where a slot has none (`Channels`): every merge, commutation and solve on the
+    /// level takes them, as it takes `lenses`.
+    var masks: [Int: Channels] = [:]
     /// What carries the knobs round without a stir, held by the rim. Maelstrom's turns the tank, to bring a seized
     /// knob's fluid to a working one.
     var motion = Motion.none

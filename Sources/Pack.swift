@@ -6,13 +6,14 @@ import Foundation
 /// prefix and `productID` is what StoreKit sells it as; bests and purchases are kept under both, so neither ever
 /// changes (UnstirTests pins them).
 enum Pack: String, CaseIterable, Sendable {
-    case firstStir = "first-stir", lens, escapement
+    case firstStir = "first-stir", lens, escapement, prism
 
     var name: String {
         switch self {
         case .firstStir: "First Stir"
         case .lens: "Lens"
         case .escapement: "Escapement"
+        case .prism: "Prism"
         }
     }
 
@@ -23,6 +24,7 @@ enum Pack: String, CaseIterable, Sendable {
         case .firstStir: "com.screendead.Unstir.pack.firststir"
         case .lens: "com.screendead.Unstir.pack.lens"
         case .escapement: "com.screendead.Unstir.pack.escapement"
+        case .prism: "com.screendead.Unstir.pack.prism"
         }
     }
 
@@ -31,9 +33,9 @@ enum Pack: String, CaseIterable, Sendable {
 
     static var productIDs: [String] { sold().map(\.productID) + [completeID] }
 
-    /// Whether a Release build sells it. First Stir is out of v1, to be reworked (Jack, FS17); a build outside Release
-    /// keeps it, so its levels, tests and films still run.
-    var ships: Bool { self != .firstStir }
+    /// Whether a Release build sells it. First Stir is out of v1, to be reworked (Jack, FS17), and Prism is a prototype
+    /// until Jack calls it in; a build outside Release keeps both, so their levels, tests and films still run.
+    var ships: Bool { self != .firstStir && self != .prism }
 
     /// The packs a build sells, and Complete grants.
     static func sold(release: Bool = Build.release) -> [Pack] { allCases.filter { !release || $0.ships } }
@@ -51,7 +53,7 @@ enum Pack: String, CaseIterable, Sendable {
     var planned: Int {
         switch self {
         case .firstStir, .lens: 25
-        case .escapement: 30
+        case .escapement, .prism: 30
         }
     }
 
@@ -61,6 +63,7 @@ enum Pack: String, CaseIterable, Sendable {
         case .firstStir: Level.firstStir
         case .lens: Level.lens
         case .escapement: Level.escapement
+        case .prism: Level.prism
         }
     }
 
@@ -88,8 +91,14 @@ enum Pack: String, CaseIterable, Sendable {
     #if DEBUG
     /// A stand-in for level `number`, for the harness to open before the pack has levels.
     func placeholder(_ number: Int) -> Level {
-        Level(id: id(number), pack: self, label: String(format: "%02d", number), title: "\(name) placeholder",
-              layout: .tri, scramble: .parse("0:+4", in: .tri))
+        if self == .prism {
+            // Red and cyan rods over a white bottom entry, on the engraving.
+            let masks: [Int: Channels] = [0: .red, 1: .cyan]
+            return Level(id: id(number), pack: self, label: String(format: "%02d", number), title: "\(name) placeholder",
+                         picture: .fern, layout: .tri, scramble: .parse("2:+3,0:+4,1:-3", in: .tri, masks: masks), masks: masks)
+        }
+        return Level(id: id(number), pack: self, label: String(format: "%02d", number), title: "\(name) placeholder",
+                     layout: .tri, scramble: .parse("0:+4", in: .tri))
     }
     #endif
 }
@@ -186,6 +195,24 @@ extension Level {
                           demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)
         level.note = "Unstir in \(level.budget) ticks."
         return level
+    }
+
+    /// Prism's specimens on the fern, `docs/prism-design.md`'s table: so far the Two Colours tray, red and cyan rods
+    /// over one white rod that holds only the bottom entry, so neither channel is ever clean alone. No entry merges as it
+    /// is dealt, and par is the depth (`testPrismLevels`), the solver's optimum (`testPrismParIsTheOptimum`).
+    static let prism: [Level] = [
+        (Layout.tri, "0:r,1:c,2:w", "2:+3,0:+4,1:-3"),
+        (.quad, "0:r,1:c,2:r,3:w", "3:+3,2:-4,1:+3,0:+5"),
+        (.eye, "0:r,1:c,2:r,3:w", "3:+4,0:-3,2:+2,1:+5,0:+3"),
+        (.quad, "0:r,1:r,2:c,3:w", "3:-3,0:+3,1:+4,2:-5,0:-2,1:+3"),
+        (.pent, "0:r,1:r,2:c,3:c,4:w", "4:+3,0:+4,2:-3,1:+2,3:+4,0:-3,2:+5"),
+        (.hex, "0:w,1:r,2:r,3:c,4:c,5:r,6:c", "0:+3,1:+4,3:-3,2:-2,5:+2,4:+5,1:+3,6:-4,3:+2"),
+    ].enumerated().map { i, row in
+        let (layout, mask, scramble): (Layout, String, String) = row
+        let masks = Channels.masks(mask)!
+        return Level(id: Pack.prism.id(i + 1), pack: .prism, label: String(format: "%02d", i + 1), title: "Specimen \(i + 1)",
+                     note: i == 0 ? "Each rod stirs only its knob's colours." : "", picture: .fern, layout: layout,
+                     scramble: .parse(scramble, in: layout, masks: masks), masks: masks)
     }
 
     /// A pack's level keeps a best and its started flag only once it is one of the pack's own, so a harness placeholder

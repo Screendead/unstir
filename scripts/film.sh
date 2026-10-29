@@ -113,6 +113,12 @@ film firststir-ch4-harbour 33 "$tank,fps=1,scale=200:-1,tile=11x3:padding=4" $fs
 film firststir-ch5-stir 34 "$tank,fps=1,scale=200:-1,tile=12x3:padding=4" $fs LEVEL=25 MOVES=1:+3,0:-2,1:-5,0:+3,2:-4
 # The night forwards whole, from First Stir 25 opened solved (UNSTIR_ENDING=-1 runs it from the start).
 film firststir-ending 168 "$tank,fps=0.2,scale=160:-1,tile=8x4:padding=4" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=-1
+# Prism, played by a drawn fingertip: specimen 1 heals the red rod buried under the cyan one first, which its colour
+# frees, then the cyan, then the white bottom stir; specimen 5 on pent heals the solver's line, red and cyan words
+# interleaved, the white last, owned since it is past the taste.
+film prism-01-solve 13 "$tank,fps=2,scale=200:-1,tile=9x3:padding=4" PACK=prism LEVEL=1 FINGER=1 MOVES=0:-4,1:+3,2:-3
+film prism-05-solve 24 "$tank,fps=1.5,scale=200:-1,tile=9x4:padding=4" PACK=prism LEVEL=5 OWNED=prism FINGER=1 \
+  MOVES=0:+3,1:-2,0:-4,2:-5,3:-4,4:-3,2:+3
 # The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
 # (UNSTIR_SHELFDEMO, through the calls a finger makes).
 film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned
