@@ -174,9 +174,9 @@ final class PrismTests: XCTestCase {
         XCTAssertEqual(Unstirred.channelCost([w, r, c]), 2 + 3 + 1 + 2)
     }
 
-    /// The engraving is grey everywhere, so a channel out of register shows its own colour and aligned lines are white.
-    @MainActor func testTheFernIsWhiteLinesOnBlack() async throws {
-        let rendered = await Picture.fern.render(side: 240, scale: 1)
+    /// Each plate, drawn at `side`, as grey levels, row 0 at the top.
+    @MainActor private func pixels(_ picture: Picture, side: Int) async throws -> (rgb: [UInt8], w: Int) {
+        let rendered = await picture.render(side: CGFloat(side), scale: 1)
         let image = try XCTUnwrap(rendered?.cgImage)
         let w = image.width, h = image.height
         var pixels = [UInt8](repeating: 0, count: 4 * w * h)
@@ -184,14 +184,56 @@ final class PrismTests: XCTestCase {
                                           space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                           bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
         ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
-        var lit = 0, tinted = 0
-        for i in 0..<(w * h) {
-            let r = Int(pixels[4 * i]), g = Int(pixels[4 * i + 1]), b = Int(pixels[4 * i + 2])
-            if max(abs(r - g), abs(g - b), abs(r - b)) > 2 { tinted += 1 }
-            if r > 230 { lit += 1 }
+        return (pixels, w)
+    }
+
+    /// Every plate is grey everywhere, so a channel out of register shows its own colour and aligned lines are white.
+    @MainActor func testEveryPlateIsWhiteLinesOnBlack() async throws {
+        for plate in Engraving.Plate.allCases {
+            let picture = try XCTUnwrap(Picture(rawValue: plate.rawValue))
+            XCTAssertEqual(picture.plate, plate)
+            XCTAssertFalse(picture.isLive)
+            let (px, w) = try await pixels(picture, side: 240)
+            var lit = 0, tinted = 0
+            for i in 0..<(w * w) {
+                let r = Int(px[4 * i]), g = Int(px[4 * i + 1]), b = Int(px[4 * i + 2])
+                if max(abs(r - g), abs(g - b), abs(r - b)) > 2 { tinted += 1 }
+                if r > 230 { lit += 1 }
+            }
+            XCTAssertEqual(tinted, 0, plate.rawValue)
+            XCTAssertGreaterThan(lit, w * w / 400, plate.rawValue)
         }
-        XCTAssertEqual(tinted, 0)
-        XCTAssertGreaterThan(lit, w * h / 400)
+    }
+
+    /// Every core of every layout holds some of each plate's lines, and a 30° step of the core moves most of its light,
+    /// so a step reads wherever a specimen puts a rod (`scripts/prism-plates.sh check` prints the same measures).
+    @MainActor func testEveryPlateShowsAStepInEveryCore() async throws {
+        for plate in Engraving.Plate.allCases {
+            let (px, w) = try await pixels(Picture(rawValue: plate.rawValue)!, side: 512)
+            let r = Double(w) / 2
+            func lit(_ x: Double, _ y: Double) -> Bool {
+                let i = Int(r + x * r), j = Int(r + y * r)
+                return i >= 0 && j >= 0 && i < w && j < w && px[4 * (j * w + i)] > 127
+            }
+            for layout in Layout.allCases {
+                for (k, rod) in layout.rods.enumerated() {
+                    let core = rod.z * Tank.plateau, step = 2 / Double(w)
+                    var inside = 0, on = 0, moved = 0
+                    for y in stride(from: -core, through: core, by: step) {
+                        for x in stride(from: -core, through: core, by: step) where x * x + y * y <= core * core {
+                            inside += 1
+                            guard lit(rod.x + x, rod.y + y) else { continue }
+                            on += 1
+                            let c = cos(Tank.step), s = sin(Tank.step)
+                            if !lit(rod.x + c * x - s * y, rod.y + s * x + c * y) { moved += 1 }
+                        }
+                    }
+                    let where_ = "\(plate.rawValue) \(layout.rawValue) rod \(k)"
+                    XCTAssertGreaterThan(Double(on) / Double(inside), 0.02, where_)
+                    XCTAssertGreaterThan(Double(moved) / Double(max(on, 1)), 0.5, where_)
+                }
+            }
+        }
     }
 
     static let table: [(Layout, [Int: Channels], String)] = [

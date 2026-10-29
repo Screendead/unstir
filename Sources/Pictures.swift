@@ -15,10 +15,13 @@ enum Picture: String, CaseIterable {
     case isobars, ephemeris, cords
     /// Lens's halftone test panel (`Halftone`), baked a pixel at a time.
     case halftone
-    /// Prism's engraving (`Fern`), white lines on black, baked.
-    case fern
+    /// Prism's engravings (`Engraving`), a plate a tray, white lines on black, baked.
+    case fern, seeds, movement, cathedral, nautilus
 
-    var isLive: Bool { ![.grid, .sunset, .city, .halftone, .fern].contains(self) }
+    var isLive: Bool { ![.grid, .sunset, .city, .halftone].contains(self) && plate == nil }
+
+    /// Prism's plate, where this is one.
+    var plate: Engraving.Plate? { Engraving.Plate(rawValue: rawValue) }
 
     /// Maelstrom's picture where whirlpool shows this one.
     var twin: Picture {
@@ -52,7 +55,7 @@ enum Picture: String, CaseIterable {
     /// microbench); the others are the glass's scaled by their Mac GPU cost against it, not yet confirmed on the phone.
     var fillEntries: Int {
         switch self {
-        case .grid, .sunset, .city, .halftone, .fern: 0
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .movement, .cathedral, .nautilus: 0
         case .marbling: 3
         case .glass, .chainmail, .coral, .marblingTwin: 4
         case .neurons, .glassTwin, .chainmailTwin, .coralTwin: 5
@@ -65,7 +68,7 @@ enum Picture: String, CaseIterable {
 
     /// The sandbox's: plughole's pictures, whirlpool's and vortex's, not the twins or the packs'.
     var next: Picture {
-        let all = Self.allCases.filter { $0.sibling == $0 && ![.halftone, .fern].contains($0) }
+        let all = Self.allCases.filter { $0.sibling == $0 && $0 != .halftone && $0.plate == nil }
         return all[((all.firstIndex(of: sibling) ?? -1) + 1) % all.count]
     }
 
@@ -329,10 +332,10 @@ enum Picture: String, CaseIterable {
                 city(g, lit: true)
             }
 
-        case .fern:
+        case .fern, .seeds, .movement, .cathedral, .nautilus:
             // White only, so every channel samples the same lines and an aligned one stays white.
             var strokes: [Double: Path] = [:]
-            for line in Fern.lines {
+            for line in Engraving.lines(plate!) {
                 strokes[line.width, default: Path()].addLines(line.points.map { p($0.x, $0.y) })
             }
             neon(ctx, r: r, glows: [(0.006, 0.35)]) { g in
