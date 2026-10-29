@@ -23,8 +23,9 @@ struct Ledger: Equatable, Sendable {
 
     /// Owned through its own product or Complete; otherwise its own product's state, else Complete's.
     func state(_ pack: Pack) -> Purchase {
-        let own = products[pack.productID] ?? .unowned, complete = products[Pack.completeID] ?? .unowned
-        if own == .owned || (complete == .owned && Pack.sold().contains(pack)) { return .owned }
+        let own = products[pack.productID] ?? .unowned
+        let complete = Pack.sold().contains(pack) ? products[Pack.completeID] ?? .unowned : .unowned
+        if own == .owned || complete == .owned { return .owned }
         // Complete's failed attempt was made on Complete's card, and says nothing about this pack.
         return own != .unowned ? own : complete == .failed ? .unowned : complete
     }
