@@ -76,6 +76,10 @@ struct Harness {
     /// so this presents the UIKit sheet it wraps, with the same text.
     let shareSheet: Bool
     let bench: Bool
+    /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism as Differentiate Without
+    /// Colour has it, its knobs spelling out their channels over the swatches.
+    let swatch: Channels?
+    let letters: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
     let wave: Double?
     /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change. It also stills
@@ -166,6 +170,9 @@ struct Harness {
         tierSpin = spin.first.map { ($0, spin.count > 1 ? spin[1] : 0) }
         settings = env["UNSTIR_SETTINGS"] == "1"
         bench = env["UNSTIR_BENCH"] == "1"
+        swatch = env["UNSTIR_SWATCH"].flatMap { $0.count == 1 ? Channels(letter: $0.first!) : nil }
+            .flatMap { Channels.each.contains($0) ? $0 : nil }
+        letters = env["UNSTIR_LETTERS"] == "1"
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"

@@ -423,7 +423,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks a
   table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
   colour (`Level.tint`, `Channels.colour`, the cover's red, green and blue and their mixes), a white rod white: its
-  ticks, pointer and a jewel at the cap's centre. A lens follows the finger up and down, not round
+  ticks, pointer and a jewel at the cap's centre. Under Differentiate Without Colour (or `UNSTIR_LETTERS=1`) Prism
+  reads without colour: each knob spells out the primaries it holds under its cap (`Channels.letters`: R, GB, RGB),
+  and `ChannelSwatches` (R, G and B) sit under the caption; holding one draws that channel alone in white and hides the
+  others (`Unstirred.isolate`, the `unstirChannels` shader's `isolate`), and VoiceOver toggles it. Neither shows
+  otherwise, so the read stays by colour for everyone else. `scripts/colour-blind.py <out> <shots>...` lays shots out
+  beside their protanopia, deuteranopia and tritanopia simulations. A lens follows the finger up and down, not round
   (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
   one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
   through the rod's own `liveAngle` and detent, so its count, clicks and the iris's turn are a rod's, a step at a time,
@@ -629,7 +634,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (Jack, SN1).
 - **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
-  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
+  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch and `UNSTIR_LETTERS=1` shows Differentiate Without Colour's letters and swatches), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that

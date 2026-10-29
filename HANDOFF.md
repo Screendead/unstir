@@ -1431,8 +1431,15 @@ names and product ids, and Complete's promise to older owners.
 60. Prism: the shader's per-channel chains (built, #59), their cost (assumed 2 plus a map per channel held) benched on
     the phone. Depth is capped at 8 (PK1), so every specimen costs at most 18 entries against the 30 the plain shader
     holds four taps at; the bench says whether that assumption holds.
-61. Prism: a colour-blind simulation of every specimen (protanopia, deuteranopia, tritanopia), with and without the
-    per-channel line styles that Differentiate Without Colour turns on, and the swatch that shows one channel.
+61. ~~Prism: a colour-blind simulation, the line styles under Differentiate Without Colour, and the swatch that shows
+    one channel.~~ Done 2026-10-29 (`prism-colourblind`). The simulation (`scripts/colour-blind.py`) showed the default
+    read fails for protanopes and deuteranopes: red, green and yellow ghosts all turn one olive, and cyan nearly white,
+    so tray 1's cyan ghosts vanish into the aligned lines. Under Differentiate Without Colour each knob spells out its
+    primaries (R, GB, RGB) and R, G and B swatches sit under the caption: holding one draws that channel alone in white,
+    an exact read for every kind of colour blindness. Line styles per channel were set aside: Prism samples one layer
+    per channel, so a styled picture must differ in its R, G and B planes, and the inks then read as the union of two
+    styles (red's solid line hides whatever it is paired with), so magenta, yellow and red stay alike; the swatch has
+    no such gap. Off Differentiate Without Colour neither shows, so the pack reads by colour as designed.
 62. ~~Prism: the engravings, tinted knobs and 30 specimens, solver-checked.~~ Done 2026-10-29: five plates, 30
     specimens in five trays at depth 8 or less, par the solver's optimum on every one (`docs/prism-design.md`).
 63. Music Box: the render-thread scheduler for sample-accurate plucks (a render callback reading a lock-free snapshot

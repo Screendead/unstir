@@ -548,6 +548,15 @@ done
 for layout in quad eye pent hex; do
   hold=5 shot "prism-bare-$layout" "Prism's fern under $layout's knobs, unstirred: some line in every core." PACK=prism LAYOUT=$layout STACK=0:+1 BARE=1
 done
+# Colour-blind reading: each swatch held on specimen 8 (red, green and blue rods), its channel alone in white; and the
+# knobs' letters, as Differentiate Without Colour shows them, on 8 and on 14 (the inks).
+for c in r g b; do
+  hold=5 shot "prism-swatch-$c" "Prism specimen 8 with the $c swatch held: that channel's lines alone, in white, the others hidden." \
+    PACK=prism LEVEL=8 OWNED=prism SWATCH=$c
+done
+hold=5 shot prism-letters-8 "Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB." \
+  PACK=prism LEVEL=8 OWNED=prism LETTERS=1
+hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG." PACK=prism LEVEL=14 OWNED=prism LETTERS=1
 for plate in seeds movement cathedral nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1
 done
