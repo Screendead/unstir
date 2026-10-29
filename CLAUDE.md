@@ -25,6 +25,11 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   to merge the PR. Claude may also merge without asking (Jack, 2026-10-25) once CI passes, a check of the diff, commit
   messages and PR text finds nothing personal, and Claude is satisfied with the diff's quality; a PR that rests on a
   call Jack hasn't made still waits for him.
+- **PR and nightly tests.** A PR skips `StoreTests` and `FirstStirTests` (`-skip-testing`; First Stir is out of v1 and
+  its vignette render takes two minutes), which `.github/workflows/nightly.yml` runs with every other test, the slow
+  ones too, on `master` at 03:17 UTC and on `workflow_dispatch`: a break in them shows a night late. Both jobs print each
+  suite's and the slowest tests' times (`scripts/ci-times.sh`) in the log. Add a suite to the skip list only here and in
+  `test.yml`, so the nightly keeps running it.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
