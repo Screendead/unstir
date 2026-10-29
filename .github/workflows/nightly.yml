@@ -37,11 +37,11 @@ jobs:
             !build/store/Logs
           key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', 'Config/**', '.github/workflows/test.yml', '.github/workflows/nightly.yml', 'scripts/test-store.sh') }}
           restore-keys: store-${{ steps.xcode.outputs.build }}-
-      # Every test, the slow ones too (UNSTIR_SLOW_TESTS), signed ad hoc by the script so the StoreKit tests run.
+      # Every test but the UNSTIR_SLOW_TESTS ones, which ran past 25 minutes here; signed ad hoc by the script so the StoreKit tests run.
       - name: Test
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
-          UNSTIR_SIM=$udid TEST_RUNNER_UNSTIR_SLOW_TESTS=1 scripts/test-store.sh COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+          UNSTIR_SIM=$udid scripts/test-store.sh COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
       - name: Slowest tests
         if: always()
         run: scripts/ci-times.sh "$RUNNER_TEMP/test.log"
