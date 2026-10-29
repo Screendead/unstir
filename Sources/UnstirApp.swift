@@ -249,7 +249,7 @@ struct Harness {
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
-        card = env["UNSTIR_CARD"].flatMap(Offer.init(name:))
+        card = env["UNSTIR_CARD"].flatMap(Offer.init(name:)).flatMap { $0.sold ? $0 : nil }
         cardLevels = env["UNSTIR_CARDLEVELS"].flatMap(Int.init).map { min(max($0, 0), 30) } ?? 0
         shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
         typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
@@ -389,7 +389,8 @@ struct RootView: View {
         self.look = look
         let gate = next.flatMap { Store.shared.card(for: $0) }
         if gate != nil { card = gate.map(Offer.pack) }
-        withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil ? next : nil }
+        let opens = next.map(Store.shared.opens) ?? true
+        withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil && opens ? next : nil }
     }
 }
 

@@ -342,7 +342,8 @@ stir), never merged. To make it a tier:
 7. Tests, shots and films; the tier strip takes a fourth name.
 
 So the catalogue is five packs: First Stir, Lens and Escapement at v1, then Prism, then Music Box if it passes its ear
-test.
+test. **Since FS17 (2026-10-29): First Stir is out of v1, to be reworked; v1's third pack, which Jack wants to bring at
+least one new mechanic, is open, with Prism being prototyped for it.**
 
 #### The catalogue
 
@@ -1052,9 +1053,15 @@ names and product ids, and Complete's promise to older owners.
     only because I think the constraints of the artwork have resulted in the story becoming difficult to read from the
     illustrations alone. I think we should leave First Stir out of v1 of the app, and rework it significantly later.
     Something else needs to take its place as the third paid level pack with at least one new mechanic." The work below
-    stays on `firststir-content` (PR #54) for that rework; the third pack's place is open.
+    stays on `firststir-content` (PR #54) for that rework; the third pack's place is open, Prism being prototyped.
+    Built 2026-10-29 on `v1-without-firststir` (local, its PR after #54 merges): `Pack.ships`/`Pack.sold()` keep First
+    Stir off a Release build (no shelf cover, no card, its levels `.withheld`, Complete naming, granting, drawing and
+    clipping Lens and Escapement only, the analytics snapshot without it) while Debug and the harness keep all of it.
+    The StoreKit test file keeps First Stir's product, since `StoreTests` run outside Release, where it is still sold.
+    Release-build shots `round12/fs/release-*.png` in the tools folder: the dock shows Lens alone (Escapement has one
+    level, so it waits for levels past its taste, and Complete waits for both).
     All five chapters joined on `firststir-content` (2026-10-27), levels `first-stir-1` to `-25` in the outline's
-    order, with master's Lens and Escapement; First Stir is now on the Release shelf, nothing left to arrive, the taste
+    order, with master's Lens and Escapement; First Stir was on the Release shelf until FS17, nothing left to arrive, the taste
     of 3 then the card (`testFirstStirPlaysInOrderFromTheShelf`). The Flood's and the Storm's `HighStreet` clashed; the
     Storm's is `StreetInRain`. Sheets `round10/firststir/ch1-sheet.png` to `ch5-sheet.png` in the tools folder.
     The scene table is outlined in `docs/first-stir-outline.md` (to-do 5), approved by Jack (2026-10-26, round 9).
