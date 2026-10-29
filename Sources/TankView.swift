@@ -1427,10 +1427,7 @@ struct LevelView: View {
                         let i = tickNow.firstIndex { $0.rod == k }, f = i.map { Self.flight(v, $0) } ?? 1
                         let ride = f < 1 && v >= Double(i ?? 0) ? sin(.pi * f) : 0
                         KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
-                            RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step
-                                            + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                                        size: Self.ratchetSize(core), pawl: ride, lit: pressing == k,
-                                        stopped: !game.running(k) && shown == nil && !demoing, back: c.dir < 0)
+                            ratchet(k, back: c.dir < 0, flight: f, pawl: ride, shake: s, core: core)
                         } keyframes: { _ in Self.jolt }
                     } keyframes: { _ in Self.tickKeys }
                     .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
@@ -1534,6 +1531,13 @@ struct LevelView: View {
 
     /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
     private static func ratchetSize(_ core: CGFloat) -> CGFloat { 1.5 * core }
+
+    /// Clock `k`'s ratchet, `flight` of the way through its newest tick's turn.
+    private func ratchet(_ k: Int, back: Bool, flight f: Double, pawl: Double, shake s: Double, core: CGFloat) -> RatchetView {
+        RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
+                    size: Self.ratchetSize(core), pawl: pawl, lit: pressing == k,
+                    stopped: !game.running(k) && shown == nil && !demoing, owed: game.owed(k), back: back)
+    }
 
     /// Escapement: what clock `k` at `c` shows round its ratchet: a red flash for a tick of its own that pushed; while a
     /// pushed tick stands, a ring and its vermilion count, signed as the clock ticks; its disc lighting as it ticks, in
@@ -2506,13 +2510,15 @@ struct ClockHint: View {
 
 /// Escapement's clock knob: a 12-tooth ratchet wheel that turns clockwise only, a tooth a tick, its index read against a
 /// vermilion sub-dial fixed to the glass, and the pawl that drops into it. `pawl` 0 rests in a gap, 1 is lifted clear
-/// as a tick rides it out. Stopped, it dims.
+/// as a tick rides it out. Its hub, fixed to the glass, counts the ticks still owed down to its stop. Stopped, the wheel
+/// goes grey, the pawl amber, locked in its gap, and the hub says so.
 struct RatchetView: View {
     let angle: Double
     let size: CGFloat
     let pawl: Double
     let lit: Bool
     let stopped: Bool
+    var owed = 0
     /// A wound-back clock's: mirrored, so it ticks anticlockwise.
     var back = false
 
@@ -2548,24 +2554,40 @@ struct RatchetView: View {
                                                   .init(color: Color(0x262A33), location: 1)],
                                           center: UnitPoint(x: 0.4, y: 0.35), startRadius: 0, endRadius: size))
                 wheel.stroke(Color.black.opacity(0.85), lineWidth: 1)
-                Circle().stroke(Color.black.opacity(0.8), lineWidth: 1.2).frame(width: rr * 1.1, height: rr * 1.1).position(c)
-                // The index, so each tick's step reads at a glance against the sub-dial.
-                Path { $0.move(to: at(0, rr * 0.25)); $0.addLine(to: at(0, rr * 0.85)) }
+                // The index, so each tick's step reads at a glance against the sub-dial; the hub's count covers its root.
+                Path { $0.move(to: at(0, rr * 0.55)); $0.addLine(to: at(0, rr * 0.92)) }
                     .stroke(Color.vermilion, style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
             }
             .rotationEffect(.radians(angle), anchor: .center)
+            .saturation(stopped ? 0 : 1)
+            .opacity(stopped ? 0.55 : 1)
+            Circle().fill(Color.black.opacity(0.85)).frame(width: rr * 1.1, height: rr * 1.1).position(c)
+            Circle().stroke(stopped ? Color.amber : steel, lineWidth: 1.2).frame(width: rr * 1.1, height: rr * 1.1).position(c)
+            // Unmirrored, so a wound-back clock's count reads.
+            Group {
+                if stopped {
+                    // The stop symbol, not a dash, which would read as a wound-back count.
+                    RoundedRectangle(cornerRadius: 1).fill(Color.amber).frame(width: rr * 0.4, height: rr * 0.4)
+                } else {
+                    Text("\(owed)").font(.system(size: rr * 0.78, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color(0xF2F4F8)).contentTransition(.numericText(countsDown: true))
+                }
+            }
+            .scaleEffect(x: back ? -1 : 1)
+            .position(c)
             if lit {
                 Circle().stroke(Color.live, lineWidth: 1).frame(width: size + 6, height: size + 6).position(c)
             }
             Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(Color.black.opacity(0.9), style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
-            Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(steel, style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
+            Path { $0.move(to: pivot); $0.addLine(to: tip) }.stroke(stopped ? Color.amber : steel,
+                                                                   style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
             Circle().fill(Color(0xD8DCE4)).frame(width: 4, height: 4).position(pivot)
         }
         .frame(width: 2 * size, height: 2 * size)
         // Wheel, pawl and all, so it turns anticlockwise.
         .scaleEffect(x: back ? -1 : 1)
-        .opacity(stopped ? 0.5 : 1)
         .animation(.easeOut(duration: 0.12), value: pawl == 1)
+        .animation(.easeOut(duration: 0.2), value: owed)
     }
 }
 
