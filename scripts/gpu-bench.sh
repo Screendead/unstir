@@ -22,11 +22,17 @@ case "${1:-sim}" in
     ;;
   phone)
     UNSTIR_GPUBENCH=1 scripts/run-ios.sh Release
-    # The bench takes about a minute; it quits when done.
-    sleep 90
+    # The bench takes about a minute and quits when done: pull the log until its last line is there, for up to 5 minutes.
     log=$(mktemp)
-    scripts/pull-log.sh "$log" >/dev/null
-    grep 'GPUBENCH' "$log" | tail -70
+    for _ in $(seq 30); do
+      sleep 10
+      scripts/pull-log.sh "$log" >/dev/null 2>&1 || continue
+      started=$(grep -n 'GPUBENCH start' "$log" | tail -1 | cut -d: -f1)
+      [[ -n "$started" ]] && tail -n +"$started" "$log" | grep -q 'measured / assumed' && break
+    done
+    started=$(grep -n 'GPUBENCH start' "$log" | tail -1 | cut -d: -f1)
+    [[ -n "$started" ]] || { echo "no bench in the phone's log"; exit 1; }
+    tail -n +"$started" "$log" | grep 'GPUBENCH'
     ;;
   *) echo "usage: scripts/gpu-bench.sh [sim|phone]"; exit 2 ;;
 esac
