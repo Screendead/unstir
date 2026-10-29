@@ -316,32 +316,32 @@ bits, 12 seams).
 | 2 | tri | 0 | 3 | 4 | 2:+4 | 0.0 | 1 | 1 / 1 |
 | 3 | quad | 0 | 2 | 4 | 2:+4 | 1.0 | 1 | 1 / 1 |
 | 4 | quad | 0 | 4 | 7 | 2:+2 | 2.0 | 2 | 1 / 1 |
-| 5 | eye | 2 | 5 | 8 | 3:+5 | 3.0 | 3 | 1 / 1 |
-| 6 | hex | 1 | 6 | 9 | 3:-2 | 5.2 | 5 | 1 / 1 |
-| 7 | quad | 0 | 3 | 4 | wait | 1.0 | 1 | 1 / 1 |
+| 5 | eye | 2 | 5 | 8 | 3:+5 | 2.0 | 3 | 1 / 1 |
+| 6 | hex | 1 | 6 | 9 | 3:-2 | 4.2 | 5 | 1 / 1 |
+| 7 | quad | 0 | 3 | 4 | wait | 0.0 | 1 | 1 / 1 |
 | 8 | pent | 0 | 5 | 7 | wait | 2.0 | 2 | 1 / 1 |
 | 9 | eye | 2 | 6 | 7 | 3:-3 | 2.0 | 2 | 1 / 13 |
-| 10 | pent | 0 | 6 | 8 | 2:-3 | 3.6 | 3 | 1 / 1 |
+| 10 | pent | 0 | 6 | 8 | 2:-3 | 2.6 | 3 | 1 / 1 |
 | 11 | pent | 0 | 8 | 10 | 3:+2 | 3.6 | 4 | 1 / 25 |
-| 12 | hex | 1 | 7 | 10 | wait | 4.2 | 4 | 1 / 1 |
+| 12 | hex | 1 | 7 | 10 | wait | 3.2 | 4 | 1 / 1 |
 | 13 | quad | 0, 2 | 3 | 6 | 3:-2 | 0.0 | 1 | 1 / 1 |
 | 14 | quad | 0, 2 | 4 | 7 | 3:+3 | 0.0 | 2 | 1 / 1 |
 | 15 | pent | 0, 2 | 5 | 8 | 4:+5 | 1.0 | 2 | 1 / 1 |
-| 16 | hex | 1, 4 | 6 | 9 | 3:-2 | 2.6 | 3 | 1 / 1 |
-| 17 | pent | 0, 1 | 5 | 11 | 3:-5 | 4.0 | 4 | 1 / 1 |
-| 18 | hex | 1, 2 | 6 | 13 | 5:+4 | 5.6 | 5 | 1 / 1 |
+| 16 | hex | 1, 4 | 6 | 9 | 3:-2 | 1.6 | 3 | 1 / 1 |
+| 17 | pent | 0, 1 | 5 | 11 | 3:-5 | 3.0 | 4 | 1 / 1 |
+| 18 | hex | 1, 2 | 6 | 13 | 5:+4 | 4.6 | 5 | 1 / 1 |
 | 19 | tri | 0 back | 3 | 4 | 2:-4 | 0.0 | 1 | 1 / 1 |
 | 20 | quad | 0, 2 back | 5 | 10 | 1:-5 | 0.0 | 2 | 1 / 1 |
-| 21 | pent | 0 back, 2 | 6 | 10 | wait | 2.0 | 3 | 1 / 1 |
-| 22 | hex | 1, 4 back | 7 | 11 | 5:-3 | 2.6 | 3 | 1 / 1 |
-| 23 | pent | 0 back | 6 | 9 | 3:+4 | 4.6 | 4 | 1 / 1 |
-| 24 | hex | 1 back | 7 | 10 | 6:+2 | 5.2 | 5 | 1 / 1 |
+| 21 | pent | 0 back, 2 | 6 | 10 | wait | 1.0 | 3 | 1 / 1 |
+| 22 | hex | 1, 4 back | 7 | 11 | 5:-3 | 1.6 | 3 | 1 / 1 |
+| 23 | pent | 0 back | 6 | 9 | 3:+4 | 3.6 | 4 | 1 / 1 |
+| 24 | hex | 1 back | 7 | 10 | 6:+2 | 4.2 | 5 | 1 / 1 |
 | 25 | hex | 1, 3, 5 | 3 | 4 | 0:-3 | 0.0 | 1 | 1 / 1 |
-| 26 | pent | 0, 2 | 8 | 13 | 1:-2 | 2.0 | 3 | 1 / 1 |
-| 27 | pent | 0 | 9 | 13 | 2:-2 | 4.6 | 4 | 1 / 1 |
+| 26 | pent | 0, 2 | 8 | 13 | 1:-2 | 1.0 | 3 | 1 / 1 |
+| 27 | pent | 0 | 9 | 13 | 2:-2 | 3.6 | 4 | 1 / 1 |
 | 28 | hex | 1 | 9 | 12 | 2:-4 | 4.6 | 4 | 1 / 1 |
 | 29 | hex | 1, 3, 5 | 8 | 13 | 4:-3 | 2.0 | 3 | 1 / 1 |
-| 30 | hex | 1, 3 | 8 | 12 | 0:-2 | 5.0 | 5 | 1 / 1 |
+| 30 | hex | 1, 3 | 8 | 12 | 0:-2 | 4.0 | 5 | 1 / 1 |
 
 All 30: exists, none shorter (absolute), one key. "With detours" counts every line of turns of up to ±6 steps.
 
@@ -411,7 +411,7 @@ move: a reading test, 2.0 bits.
 - B: end on 29, two clocks on hex at 4.0 bits, with the three-clock problem as 29.
 
 **Recommendation: B.** A book should end on its hardest problem, and three dials still get their moment one page before.
-Since E2, 29 measures 4.0 bits (5.0 in the first draft) and 28 4.6, so by bits alone 28 is now the chapter's hardest;
+Since E2, the two-clock hex (then 29) measures 4.0 bits (5.0 in the first draft) and 28 4.6, so by bits alone 28 is now the chapter's hardest;
 Jack's play of the book (E3) settles the order of the last problems.
 
 **Jack's call (2026-10-28, round 11 J6): B.** The book ends on the two-clock hex, now 30, the finale; the three-clock
