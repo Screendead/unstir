@@ -2222,6 +2222,7 @@ struct KnobLesson: View {
     let reach: CGFloat
     /// Holds the finger this many seconds in.
     let clock: Double?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Seconds of the tank untouched before it shows.
     static let wait = 4.0
     private static let sweep = 40 * Double.pi / 180, period = 2.4, rest = Double.pi / 4
@@ -2233,12 +2234,14 @@ struct KnobLesson: View {
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil)) { timeline in
+        // Reduce Motion holds it at 0 s, mid-sweep.
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
             Circle().fill(Color.live.opacity(0.22))
                 .overlay(Circle().stroke(Color.live.opacity(0.6), lineWidth: 1.5))
                 .shadow(color: .live.opacity(0.4), radius: 6)
                 .frame(width: 30, height: 30)
-                .position(Self.finger(centre: centre, reach: reach, at: clock ?? timeline.date.timeIntervalSinceReferenceDate))
+                .position(Self.finger(centre: centre, reach: reach,
+                                      at: clock ?? (reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)))
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)

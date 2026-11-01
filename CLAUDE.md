@@ -330,7 +330,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   turn sets `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does.
   The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. L1, until it has a
   best, shows its own verb the same way (`KnobLesson`): left untouched for 4 s after its opening, a ghost finger
-  rocks round knob 0 halfway out its disc until the first stir commits, gone while any finger is down. A level with a swirl
+  rocks round knob 0 halfway out its disc until the first stir commits, gone while any finger is down and held
+  mid-rock under Reduce Motion. A level with a swirl
   shows its own lesson the same way until the player's first stir of the swirl commits (`Game.swirled`,
   `Best.swirled`): a thin cyan arc at the bottom 10 pt inside the glass's edge, seated on a dark stroke
   and without the tank arc's glow since it lies on the picture, and its ghost finger there, in the middle of the
