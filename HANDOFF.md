@@ -381,7 +381,7 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | N1c. Case | **Sentence case** ("Last drop") |
 | C1. The end of the free taste | **B:** level 03's result card says "more in Lens ›" in the pack's colour; the card opens on its buy block under "You've played the free three. 22 more in Lens."; no price on the result card. Built on `taste-end` (PR #86). Open, side effects for Jack: the note shows only while it is true (every free level has a best, the pack never owned), so a player gated after fewer, or a refunded owner, sees no line; whether they want one is a words call. And the landing scrolls the card's only exit, "‹ back", off the top; Claude recommends pinning it over the card's top at every scroll position, rather than waiting for C19's edge swipe |
 | C2. Leaving an unfinished level, or the app dying | **A, resume:** the moves are saved on every commit and replayed on reopening; endless resumes mid-tank; no dialog |
-| C3. When a level counts as tried | **A:** the first committed move; a look is free; "tried" shows on the row |
+| C3. When a level counts as tried | **A:** the first committed move; a look is free; "tried" shows on the row. The rule built on `r13-play`, PR #93; the row's mark is `r13-menu`'s |
 | C4. A new player's first screen | **B:** a fresh install opens straight into plughole 01; the menu leads with 01, daily and endless hidden until they open |
 | C5. The pack dock | **C:** it appears once plughole 09 is solved |
 | C6. Pulls toward the dock | **C:** a one-time "new" mark on a cover when its pack fits the player's progress or an update adds levels, and "2/3 free" under a started pack |
@@ -389,10 +389,10 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | C8. Finishing a pack or the last free tier | **C:** one completion line, plus one quiet "try <pack> ›" while a pack is unowned |
 | C9. Results | **B:** three marks (solved, at par, clean), drawn in the design pass (to-do 72) |
 | C10. The timer | **A:** off the result card and out of the best's ranking |
-| C11. Par warning and the over-par veil | **A:** the count amber at par and magenta past it; the veil at 0.05 a move, capped at 0.2 |
-| C12. Reset | **A:** "reset? tap again" for 2 s |
+| C11. Par warning and the over-par veil | **A:** the count amber at par and magenta past it; the veil at 0.05 a move, capped at 0.2. Built on `r13-play`, PR #93 |
+| C12. Reset | **A:** "reset? tap again" for 2 s. Built on `r13-play`, PR #93 |
 | C13. A drag the system cuts off | **A:** commit everywhere, as V26; after a phone check of which handler runs first |
-| C14. Escapement's pushed tick | **A:** the caption says at once "That tick can't come back. Undo, or again."; the tank plays on (EL1 kept) |
+| C14. Escapement's pushed tick | **A:** the caption says at once "That tick can't come back. Undo, or again."; the tank plays on (EL1 kept). Built on `r13-play`, PR #93. Open, for Jack: the words name "again", the lost card's button, where the play screen's control reads "reset"; Claude recommends keeping both |
 | C15. Teaching Lens's taste | **A:** a ghost finger rides the lens's track on Lens 01 until the first lens commit |
 | C16. Prism's letters | **B:** a "colour letters" switch in settings, defaulting to Differentiate Without Colour, and one line on Prism's card |
 | C17. Settings | **A:** music, sounds and haptics switches; "report a problem" mails the log to the support address (kept out of the repo); the policy on Jack's own domain |
