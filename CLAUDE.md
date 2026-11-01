@@ -556,7 +556,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   card (`Store.forgetFailures`), and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from a row or
   from the level before it. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
-  and buttons at accessibility sizes; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
+  and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
+  of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
   reads each cover's state or price and each button's price, hides the menu under a card, and announces a change of
   state. Reduce Motion holds the covers and clip still, stills the pending dot and fades the card in.
   **Clip.swift** draws each card's clip live, never a committed video (to-do 50): a `Clip` is one or more `Reel`s,

@@ -642,7 +642,9 @@ struct PackCard: View {
                             .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
                             .accessibilityAddTraits(.isHeader)
                         Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
-                        PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48), held: clock)
+                        // Bounded by the height too, so buy is still on the first screen of the smallest phone.
+                        PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48,
+                                                         g.size.height * 0.36), held: clock)
                             .frame(maxWidth: .infinity).padding(.top, 28)
                         // An owner's card is home, not a shop: no taste to offer, and the pack's progress for what it holds.
                         VStack(alignment: .leading, spacing: 9) {
@@ -715,8 +717,8 @@ struct PackCard: View {
         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 0))
         layout {
-            Text(key).font(.mono(.caption2)).opacity(0.38)
-                .frame(width: typeSize.isAccessibilitySize ? nil : 52, alignment: .leading)
+            Text(key).font(.mono(.caption2)).opacity(0.38).fixedSize()
+                .frame(minWidth: typeSize.isAccessibilitySize ? nil : 52, alignment: .leading)
             value.font(.mono(.footnote)).opacity(0.85).fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)

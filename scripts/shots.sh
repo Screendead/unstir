@@ -503,6 +503,8 @@ shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPE
   STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
 shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
   CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+shot card-lens-xxxl "Lens's card at xxxLarge, the largest size short of the accessibility ones: each key whole beside its fact." \
+  CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=xxxLarge
 
 # The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
