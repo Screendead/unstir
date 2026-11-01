@@ -449,6 +449,8 @@ struct MenuView: View {
     }
 
     private func select(_ t: Tier) {
+        // A sideways drag that lifts over a name is the swipe's, which has already sprung back or switched.
+        guard !twisting else { return }
         if t == shown, !busy {
             withAnimation(.snappy(duration: 0.5)) { land(on: t) }
             return
