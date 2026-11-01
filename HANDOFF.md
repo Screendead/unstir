@@ -385,7 +385,7 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | C4. A new player's first screen | **B:** a fresh install opens straight into plughole 01; the menu leads with 01, daily and endless hidden until they open |
 | C5. The pack dock | **C:** it appears once plughole 09 is solved |
 | C6. Pulls toward the dock | **C:** a one-time "new" mark on a cover when its pack fits the player's progress or an update adds levels, and "2/3 free" under a started pack. Built on `r13-shop`, PR #95 (implementer calls in the PR: Escapement fits once maelstrom is open; "3/3 free" stays; First Stir never marks) |
-| C7. Complete once a pack is owned | **C:** shown only while it costs less than the unowned packs, with the saving said. Built on `r13-shop`, PR #95 (hidden until the prices are in) |
+| C7. Complete once a pack is owned | **C:** shown only while it costs less than the unowned packs, with the saving said. Built on `r13-shop`, PR #95 (the cards' line and fact wait for the prices; the dock's cover waits too unless no pack is owned, so a launch keeps it; back from a pack's card opened from Complete's goes to the menu once Complete saves nothing) |
 | C8. Finishing a pack or the last free tier | **C:** one completion line, plus one quiet "try <pack> ›" while a pack is unowned |
 | C9. Results | **B:** three marks (solved, at par, clean), drawn in the design pass (to-do 72) |
 | C10. The timer | **A:** off the result card and out of the best's ranking |
