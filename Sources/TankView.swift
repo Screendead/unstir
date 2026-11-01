@@ -1813,6 +1813,11 @@ struct LevelView: View {
             if knobLesson && shown == nil && !touching {
                 KnobLesson(centre: at(0), reach: 0.5 * disc(0), clock: frozenClock).transition(.opacity)
             }
+            if lesson && !touching, LensLesson.shows(level: game.level, history: game.history, best: Best.load(game.level.id)),
+               let k = game.level.lenses.min().map(game.knob(over:)) {
+                LensLesson(x: at(k).x + core / 2 + Self.trackGap, y0: at(k).y, pitch: Self.trackPitch, clock: frozenClock)
+                    .transition(.opacity)
+            }
             ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core), r: r) }
             if game.lost && shown == nil, let k = game.tick.last?.rod ?? game.pushedClock ?? game.lastStopped {
                 lostMarks(at(k), size: Self.ratchetSize(core), r: r,
@@ -2040,11 +2045,11 @@ struct LevelView: View {
     }
 
     /// Wide enough to read, too thin to hide the picture: 1.5 px on a 3x screen.
-    private static let hairline: CGFloat = 0.5
+    static let hairline: CGFloat = 0.5
     /// How far inside the glass's edge the swirl's push flashes.
     private static let swirlFlash: CGFloat = 5
     /// A drag's count: its dashes, and the trace under them. No glow and no dark band: with them the count hid the picture.
-    private static let dash: CGFloat = 2, dashTone = 0.85, trace = hairline, traceTone = 0.4
+    static let dash: CGFloat = 2, dashTone = 0.85, trace = hairline, traceTone = 0.4
     /// A dial's opacity while letting go would change nothing, and while its stir stays open after the finger lifts.
     private static let idle = 0.7, lifted = 0.45
 
@@ -2074,7 +2079,7 @@ struct LevelView: View {
     }
 
     /// How far a lens's track stands off its knob's edge, and its dashes' spacing: a short track, not the finger's travel.
-    private static let trackGap: CGFloat = 16, trackPitch: CGFloat = 16
+    static let trackGap: CGFloat = 16, trackPitch: CGFloat = 16
 
     /// A lens's count, which follows the finger up and down (Jack, 2026-10-26): on a vertical hairline at `x` beside a
     /// disc of `radius` about `c`, the disc's own hairline round it, a long mark level with the knob where the stir
@@ -2504,6 +2509,49 @@ struct KnobLesson: View {
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
             GhostFinger().position(Self.finger(centre: centre, reach: reach,
                                                at: clock ?? (reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)))
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Lens 01's lesson: a ghost finger riding down the lens's track from the knob's height, the way a drag undoes the
+/// level's zoom, over the track's rail drawn faintly, where a drag that lands left of the knob draws its count.
+struct LensLesson: View {
+    /// The track's x, the knob's height and a step's spacing, in points.
+    let x: CGFloat
+    let y0: CGFloat
+    let pitch: CGFloat
+    /// Holds the finger this many seconds in.
+    let clock: Double?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private nonisolated static let period = 2.2, ride = 1.6, fade = 0.4, depth = 2.5
+    /// Halfway down: where Reduce Motion holds it.
+    nonisolated static let middle = ride / 2
+
+    /// Until the level is solved, and in each game until a lens's stir commits: `history` holds slots, as `lenses` does.
+    nonisolated static func shows(level: Level, history: [Twist], best: Best?) -> Bool {
+        level.id == Pack.lens.levels.first?.id && best == nil && !history.contains { level.lenses.contains($0.rod) }
+    }
+
+    /// Where the finger is `t` seconds in, and how strongly it shows: eased down the track, faded out at its foot and
+    /// faded in again at the top.
+    nonisolated static func finger(x: CGFloat, y0: CGFloat, pitch: CGFloat, at t: Double) -> (at: CGPoint, opacity: Double) {
+        let t = t.truncatingRemainder(dividingBy: period) + (t < 0 ? period : 0)
+        let u = min(t / ride, 1), down = u * u * (3 - 2 * u)
+        let opacity = t < ride ? 1 : t < ride + fade ? 1 - (t - ride) / fade : max(0, t - ride - fade) / (period - ride - fade)
+        return (CGPoint(x: x, y: y0 + CGFloat(t < ride + fade ? down : 0) * depth * pitch), opacity)
+    }
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
+            let f = Self.finger(x: x, y0: y0, pitch: pitch,
+                                at: clock ?? (reduceMotion ? Self.middle : timeline.date.timeIntervalSinceReferenceDate))
+            ZStack {
+                Path { $0.move(to: CGPoint(x: x, y: y0 - 3.5 * pitch)); $0.addLine(to: CGPoint(x: x, y: y0 + 3.5 * pitch)) }
+                    .stroke(Color.live.opacity(LevelView.traceTone / 2), lineWidth: LevelView.hairline)
+                GhostFinger().position(f.at).opacity(f.opacity)
+            }
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
