@@ -56,11 +56,15 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.lens), .owned)
     }
 
-    /// A child asks, taps buy again and cancels the sheet: the parent's answer is still outstanding.
+    /// A child asks, asks again and cancels the sheet, or asks again offline: the parent's answer is still outstanding.
     func testCancellingASecondPurchaseKeepsAskToBuyPending() {
         var ledger = Ledger()
         ledger.record(Pack.lens.productID, .pending)
         ledger.record(Pack.lens.productID, .unowned)
+        XCTAssertEqual(ledger.state(.lens), .pending)
+        ledger.record(Pack.lens.productID, .failed)
+        XCTAssertEqual(ledger.state(.lens), .pending)
+        ledger.forgetFailures()
         XCTAssertEqual(ledger.state(.lens), .pending)
         ledger.record(Pack.lens.productID, .owned)
         XCTAssertEqual(ledger.state(.lens), .owned)

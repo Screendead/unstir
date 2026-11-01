@@ -815,6 +815,8 @@ struct PackCard: View {
                 }
                 Text("Ask to Buy: the pack opens here once it's approved.").font(.mono(.caption2)).opacity(0.5)
                     .fixedSize(horizontal: false, vertical: true)
+                // Asking again failed, and the first request is still with the parent.
+                if let why = store.failures[offer.productID]?.words { detail(why) }
             }
             .accessibilityElement(children: .combine)
         case .failed:

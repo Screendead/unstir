@@ -37,10 +37,10 @@ struct Ledger: Equatable, Sendable {
     private(set) var unshared: Set<String> = []
 
     /// Once owned, only a revocation takes a product away: a later attempt that fails, waits or is cancelled is not one.
-    /// A cancelled sheet leaves an Ask to Buy still waiting on its parent.
+    /// A cancelled or failed second ask leaves an Ask to Buy still waiting on its parent.
     mutating func record(_ id: String, _ state: Purchase, shared: Bool = false) {
         if products[id] == .owned && state != .revoked { return }
-        if products[id] == .pending && state == .unowned { return }
+        if products[id] == .pending && (state == .unowned || state == .failed) { return }
         products[id] = state
         if state == .revoked && shared { unshared.insert(id) } else { unshared.remove(id) }
     }
@@ -81,7 +81,7 @@ final class Store {
     /// Each product's price as the App Store gives it, for the player's storefront; missing until it is fetched.
     private(set) var prices: [String: String] = [:]
     private(set) var pricing = Pricing.fetching
-    /// Why each product's last attempt failed, while the ledger holds it as failed.
+    /// Why each product's last attempt failed, while the ledger holds it as failed, or as pending after a failed ask again.
     private(set) var failures: [String: Failure] = [:]
     /// The last restore's outcome, said alike by the cards and settings; nil before one, or after a cancelled sign-in.
     private(set) var restored: Restored?
@@ -195,7 +195,7 @@ final class Store {
             Log.write("purchase \(id) failed: \(why)\(attempt == started ? "" : ", its card closed")")
             guard attempt == started else { return }
             ledger.record(id, .failed)
-            if ledger.products[id] == .failed { failures[id] = failure }
+            if ledger.products[id] == .failed || ledger.products[id] == .pending { failures[id] = failure }
         }
         do {
             guard let product = try await product(id) else { return failed("no such product") }
