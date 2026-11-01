@@ -479,16 +479,6 @@ struct Best: Codable {
         return id.isEmpty ? nil : id
     }()
 
-    /// kern.monotonicclock in seconds, or nil where it can't be read. XNU's clock.c says nothing can set it, and on a
-    /// Mac it runs on across restarts; whether an iOS app can read it, and whether setting the date moves it there, is
-    /// unchecked, so the launch logs it.
-    static func monotonicClock() -> TimeInterval? {
-        var latched: (usecs: UInt64, machTime: UInt64) = (0, 0)
-        var size = MemoryLayout.size(ofValue: latched)
-        guard sysctlbyname("kern.monotonicclock_usecs", &latched, &size, nil, 0) == 0 else { return nil }
-        return Double(latched.usecs) / 1e6
-    }
-
     /// How far the wall clock may run ahead of the anchor's reckoning before it counts as set ahead: the uptime clock
     /// drifts from true time by parts per million, and the wall clock takes small corrections.
     static let slack: TimeInterval = 5 * 60

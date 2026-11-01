@@ -288,9 +288,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   about a second an opening. A new boot believes the wall clock, and anchors there unless it reads more than `slack`
   before the anchor's time, so a clock reset at boot and set right later still counts as a new boot. With the session
   unread, a new boot shows as the uptime going back, or as a jump at least the anchor's uptime, which is believed. The
-  launch logs whether the session was read, the uptime and `kern.monotonicclock`. A `Level` has a `motion`, what the rim
-  holds to carry the knobs round without a stir (`.none`; `.tank`, maelstrom's; `.crank`, charybdis's planets, not
-  built), and a kind per knob (`kind(of:)`, from its `seized`, `sockets` and `ratchets`): a working knob stirs, a seized
+  launch logs whether the session was read, never the uptime: the log can leave the phone, and a line's time less the
+  uptime is the boot's instant. A `Level` has a `motion`, what the rim holds to carry the knobs round without a stir
+  (`.none`; `.tank`, maelstrom's; `.crank`, charybdis's planets, not built), and a kind per knob (`kind(of:)`, from its `seized`, `sockets` and `ratchets`): a working knob stirs, a seized
   one or a socket refuses touch, and a ratchet is one of Escapement's clocks (`Level.clocks`, in tick order: clockwise from twelve by
   `Layout.clockwise`, each +1, or -1 if in `woundBack`), with a
   `demo` stack for the demonstration before the first stir. Every level today turns its tank exactly where a
