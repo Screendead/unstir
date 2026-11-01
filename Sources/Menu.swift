@@ -851,7 +851,8 @@ private struct LevelRow: View {
                     } else if let result {
                         Text("+\(result.over)").foregroundStyle(Color.magenta)
                     } else if new {
-                        Text("new").fontWeight(.semibold).foregroundStyle(level.colour).shadow(color: level.colour, radius: 3)
+                        // Plain white, unlike every result's colour.
+                        Text("new").opacity(0.8)
                     } else if tried {
                         Text("tried").opacity(0.4)
                     }
