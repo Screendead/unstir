@@ -492,15 +492,30 @@ shot shelf-menu "Menu with the pack dock, plughole 01 to 09 solved (a Debug buil
   STORE=lens:unowned CLOCK=5.4 BESTS=plughole:$nine
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
   OWNED=lens STORE=escapement:pending CLOCK=5.4 BESTS=plughole:$nine
+shot shelf-new "Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir." \
+  BESTS=plughole:$par27 STORE=lens:unowned CLOCK=5.4
+shot shelf-taste-count "Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens." BESTS=plughole:000000000,lens:00 STORE=lens:unowned CLOCK=5.4
+shot shelf-new-levels "Lens owned, its card last opened with 20 levels: new under Lens beside the check." \
+  BESTS=plughole:000000000 OWNED=lens SEENLEVELS=lens:20 CLOCK=5.4
+shot shelf-approved "The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header." \
+  BESTS=plughole:000000000 OWNED=lens APPROVED=lens CLOCK=1
 for state in unowned owned pending failed revoked; do
-  shot card-lens-$state "Lens's card, $state." CARD=lens STORE=lens:$state CLOCK=5.4
+  saves=": Complete's line saves \$5.97 on the four packs a Debug build sells"
+  [[ $state == owned ]] && saves=""
+  shot card-lens-$state "Lens's card, $state$saves." CARD=lens STORE=lens:$state CLOCK=5.4
 done
+shot card-prism-no-complete "Prism's card with Lens and First Stir owned (a Debug build sells four): no Complete line, since \$5.99 is more than the two packs left." \
+  CARD=prism OWNED=lens,first-stir CLOCK=5.4
+shot shelf-menu-lens-owned "The dock with Lens and First Stir owned: no Complete cover, since it costs more than the two packs left." \
+  BESTS=plughole:000000000 OWNED=lens,first-stir CLOCK=5.4
 shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
 shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
-shot card-prism "Prism's card, unowned: the fern printed off register in red, green and blue, its clip, and its 30 specimens under five tray headings." \
+shot card-prism "Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings." \
   CARD=prism STORE=lens:unowned CLOCK=5.4
 shot card-prism-levels "Prism's card, owned, scrolled to its specimens under the five trays." CARD=prism OWNED=prism CARDSCROLL=1 CLOCK=5.4
-shot card-complete "Complete's card, unowned." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-complete "Complete's card, unowned: save \$5.97 on the packs you don't have." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-complete-saves-nothing "UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover." \
+  CARD=complete OWNED=lens,first-stir CLOCK=5.4
 # Each card's clip (`Clip`) held on the frame Reduce Motion holds, and a few frames either side of it.
 shot clip-first-stir-still "First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm." \
   CARD=first-stir STORE=lens:unowned CLOCK=4.2
@@ -536,8 +551,8 @@ shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, 
   CARD=lens OWNED=lens BESTS=lens:0 TRIED=lens-2 CARDSCROLL=1 CLOCK=5.4
 shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \
   OWNED=complete CLOCK=5.4
-shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
-shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live." \
+shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading, and no Complete line until the prices say what it saves." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Complete line." \
   CARD=lens STORE=lens:unowned PRICES=unreachable CLOCK=5.4
 shot card-lens-unshared "Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey." \
   CARD=lens STORE=lens:unshared CLOCK=5.4
@@ -553,6 +568,8 @@ shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLE
 shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
 shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
+shot card-gate-ax "The same at accessibility3: the Complete line under buy wraps only before · save." \
+  PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4 TYPESIZE=accessibility3
 shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
   PACK=lens LEVEL=3 SCREEN=clean STORE=lens:unowned CLOCK=5.4
 shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's magenta." \
@@ -570,9 +587,10 @@ shot card-lens-xxxl "Lens's card at xxxLarge, the largest size short of the acce
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
 shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again." CONSENT=sends
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
-shot consent-settings-on "The gear's sheet: the analytics switch on, send log and privacy policy." CONSENT=yes SETTINGS=1
-shot consent-settings-off "The gear's sheet: the analytics switch off, send log and privacy policy." CONSENT=no SETTINGS=1
-shot settings "The gear's sheet in a build without analytics, v1's: restore purchases, send log and privacy policy, no switch, the version under them." SETTINGS=1
+shot consent-settings-on "The gear's sheet: music, sounds, haptics and colour letters, the analytics switch on, report a problem and privacy policy." CONSENT=yes SETTINGS=1
+shot consent-settings-off "The gear's sheet: music, sounds, haptics and colour letters, the analytics switch off, report a problem and privacy policy." CONSENT=no SETTINGS=1
+shot settings "Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version." SETTINGS=1
+shot settings-quiet "Settings with music and haptics off." SETTINGS=1 MUSIC=0 HAPTICS=0
 shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
   SETTINGS=1 STORE=lens:unowned RESTORED=none
 
@@ -644,6 +662,7 @@ for c in r g b; do
 done
 hold=5 shot prism-letters-8 "Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB." \
   PACK=prism LEVEL=8 OWNED=prism LETTERS=1
+hold=5 shot prism-letters-chosen "Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches." PACK=prism LEVEL=1 LETTERSCHOICE=1
 hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG." PACK=prism LEVEL=14 OWNED=prism LETTERS=1
 for plate in seeds medusae radiolaria nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1

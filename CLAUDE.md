@@ -74,7 +74,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result).
   It passes the shell's `ANALYTICS` (YES builds analytics in; NO, the default, is v1's) and `APTABASE_KEY`, Aptabase's
   app key, into Info.plist's `Analytics` and `AptabaseKey`, over `Config/Local.xcconfig` (gitignored), which
-  `Config/Unstir.xcconfig` includes for Xcode's own builds and archives; without both analytics is off. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
+  `Config/Unstir.xcconfig` includes for Xcode's own builds and archives; without both analytics is off. The same way,
+  `SUPPORT_ADDRESS` and `POLICY_URL` (Jack's, never in a tracked file; `testNoTrackedConfigHoldsAPrivateValue`) set
+  Info.plist's `SupportAddress` and `PolicyURL`; in an xcconfig a URL is written `https:/$()/...`, as `//` starts a
+  comment. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
   build's events as Debug.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
@@ -170,9 +173,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   its rotation), so a pick or turn can be checked against the finger. Past 1 MB (`Log.cap`) it is cut to its newest
   512 KB from a whole line once the first screen is up (`Log.trim`): read and cut off the main actor, then replaced
   atomically on it with the lines written meanwhile, so a launch before the first frame only opens it. Once the first screen is up
-  it logs a `device:` line (app version and build, iOS, model, locale, type size, Reduce Motion, VoiceOver, Low Power),
-  never the phone's name. `UILaunchScreen`'s colour (`LaunchBackground`, black) keeps a cold launch black in light
-  appearance too.
+  it logs a `device:` line (app version and build, iOS, model, locale, type size, Reduce Motion, VoiceOver, Low Power,
+  and the settings' switches, `Settings.summary`), never the phone's name; each switch tapped logs a `settings:` line.
+  `UILaunchScreen`'s colour (`LaunchBackground`, black) keeps a cold launch black in light appearance too.
 
 ## Architecture
 
@@ -444,7 +447,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   neither the level (`Store.opens`, checked by `RootView.show`) nor its card (nor `UNSTIR_CARD`), and `Pack.sold()`
   sets what StoreKit is asked for (`Pack.productIDs`), what Complete grants and needs, Complete's cover, words
   (`Pack.named`; the card's "or all three in Complete" counts them, `Offer.countWord`), and clip, and analytics' snapshot (`testFirstStirIsOutOfV1`).
-  `Store` is StoreKit 2 with no server and nothing stored: entitlements from `Transaction.currentEntitlements` at
+  `Store` is StoreKit 2 with no server and nothing that grants stored (`asked.<product>` only remembers an Ask to Buy
+  made here, from `purchase`'s pending result until its approval is said or it is revoked, so the approval is said
+  once: `Asked`, `Ledger.answers`, read after the launch's entitlements and each update): entitlements from `Transaction.currentEntitlements` at
   launch (`Store.ready` once that first read has finished: until then `RootView.show` waits on it, `Store.settled`,
   before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
@@ -461,7 +466,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`Ledger.unshared`), that it is no longer shared, and that the progress is kept. A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and Complete as family-shareable non-consumables at
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25, when Complete held three packs, as it does again in Release); the scheme's run action and `StoreTests` use it. Prices are
-  never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
+  never the app's own: `Store.prices` holds each product's `displayPrice` (and `amounts` its `price`, written in its
+  `priceFormatStyle` for Complete's saving, `Store.saving`), fetched at launch and again when a card
   opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" once the fetch
   has failed (`Store.pricing`), the pill still live, since the App Store's sheet shows the price.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
@@ -470,11 +476,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks a
   table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
   colour (`Level.tint`, `Channels.colour`, the cover's red, green and blue and their mixes), a white rod white: its
-  ticks, pointer and a jewel at the cap's centre. Under Differentiate Without Colour (or `UNSTIR_LETTERS=1`) Prism
-  reads without colour: each knob spells out the primaries it holds under its cap (`Channels.letters`: R, GB, RGB),
+  ticks, pointer and a jewel at the cap's centre. Under the settings' colour letters, which follow Differentiate
+  Without Colour until chosen (`Letters`, stored as `letters`, absent until then; Jack's call C16, round 13), or
+  `UNSTIR_LETTERS=1`, Prism reads without colour: each knob spells out the primaries it holds under its cap (`Channels.letters`: R, GB, RGB),
   and `ChannelSwatches` (R, G and B) sit under the caption; holding one draws that channel alone in white and hides the
   others (`Unstirred.isolate`, the `unstirChannels` shader's `isolate`), and VoiceOver toggles it. Neither shows
-  otherwise, so the read stays by colour for everyone else. `scripts/colour-blind.py <out> <shots>...` lays shots out
+  otherwise, so the read stays by colour for everyone else, and Prism's card says "letters for colour-blind play, in
+  settings" under its facts (`Offer.note`), owned or not. `scripts/colour-blind.py <out> <shots>...` lays shots out
   beside their protanopia, deuteranopia and tritanopia simulations. A lens follows the finger up and down, not round
   (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
   one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
@@ -576,19 +584,32 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
   gesture recognizer on the window that fails at once, and from a drag on the list), each carrying on from the frame
   it held (`PausingTimeline`), a glyph by its name for its state (`Purchase.mark`: a check owned, an hourglass waiting on Ask
-  to Buy, nothing else, a revocation being the card's to say). `PackCard` grows out
+  to Buy, nothing else, a revocation being the card's to say). Under the name a line says "new", in the pack's glow,
+  once its pack fits the player's progress (`Pack.fits`: Lens and Prism once every plughole level has a best,
+  Escapement once maelstrom is open, First Stir never) until its card opens, and again when an update adds levels
+  since it last opened (`Marks`, stored as `shelf.fit.<pack>` and `shelf.levels.<pack>`, never by a harnessed launch),
+  owned or not; else, under an unowned pack once any free level is started or solved, "2/3 free", counting those with
+  a best (`Pack.tastePlayed`), kept at "3/3 free"; Complete's never marks (Jack's call C6, round 13). An Ask to Buy
+  approval landing on its open card is said by the landing; otherwise the dock's header reads "Lens is yours"
+  ("every pack is yours" for Complete) in its glow for 5 s in sight, waiting while anything covers the dock, and
+  VoiceOver hears it once (`Store.approved`, `Store.said`; Jack's call C21, round 13). `PackCard` grows out
   of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
-  purchase state, buy at the App Store's price, try free, Complete beside an unowned pack while Complete is on the
-  shelf (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
+  purchase state, buy at the App Store's price, try free, Complete beside an unowned pack, and on the dock, only
+  while it costs less than the sold packs left unowned, saying the saving ("or all three in Complete · $5.99 · save
+  $2.98 ›", broken only before "· save", and a "save" fact on Complete's own card; `Offer.saving`, from
+  `Product.price`; the line and the fact wait for the prices, and the dock's cover too unless no sold pack is owned,
+  `Store.offersComplete`, so a launch's dock keeps its cover) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
   locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
   once all are (`PackCard.pickUp`, `continues`); Complete's owned card plays on in the first sold pack with a level
   left ("play Lens 04 ›"). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
-  once every one is, and Complete's cover once Complete is owned; Complete's card names each pack as a link to its
+  once every one is, and Complete's cover once it saves nothing (Complete owned, or the packs left cost no more than
+  it), animating the shelf's change, its height kept whatever the covers' lines say; Complete's card names each pack as a link to its
   card (`onOffer`, and a VoiceOver action per pack), so each taste is a tap away, and back from that card returns to
-  Complete's. A purchase landing on an open card (bought, approved or restored)
+  Complete's while Complete is still on offer, else to the menu (`UNSTIR_CARD=complete` opens it on the same terms, or
+  owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
   entitlements is no landing (`PackCard.lands`): an owner's card opened before `Store.ready` reads unowned, then owned,
@@ -634,11 +655,17 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   word it and settings say (`ConsentWords`): on a plain launch while undecided,
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
-  control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
-  analytics switch (`NeonToggle`, which calls `decide`) where the build has analytics, "restore purchases" (`Store.restore`,
-  saying what it found as the cards do), "send log", which hands `Log.url` to the share sheet, and
-  "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)), for now the github.com page of
-  `docs/privacy-policy.md`, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
+  control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds:
+  "music", "sounds" and "haptics" (`Settings`, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while
+  on; Jack's call C17, round 13; a harnessed launch holds them and the letters in memory, `Settings.held`, never
+  stored), "colour letters" (`Letters`), the analytics switch (`NeonToggle`, which calls
+  `decide`) where the build has analytics, "restore purchases" (`Store.restore`, saying what it found as the cards do),
+  "report a problem", a mail (`MailSheet`) to Info.plist's `SupportAddress` with `Log.url` attached as
+  `unstir-log.txt` and `UnstirApp.device` in the body, or, with no account in Apple's Mail, `Log.url` handed to the
+  share sheet with that subject and body and the address on its first line (with no address, the log alone), and
+  "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)) in Safari's view
+  (`SafariSheet`): Info.plist's `PolicyURL`, Jack's own domain, or the github.com page of `docs/privacy-policy.md` where
+  the build has none, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
   its content outgrows the screen. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
@@ -743,16 +770,27 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
   a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
   target to 44 pt round it without moving anything. Nothing sounds during a drag but the
-  detent's tick, and a sound never tells the player anything the picture doesn't. The session is ambient, and while
+  detent's tick, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
+  out over the crossfade and back (`Sound.music`), its sounds switch every effect and button (`Sound.sounds`), and its
+  haptics switch `Knock` and every system haptic, which all go through `haptic(_:trigger:when:)`; none of the three is
+  read anywhere else. The session is ambient, and while
   another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
   unless `UNSTIR_SOUND=1`. An undo steps the heal notes back, so the next heal plays the undone one's note again
   (Jack, SN1).
-- **UnstirApp.swift** holds `RootView` and the `Harness`. A fresh install's first launch opens straight into plughole
-  01 (`RootView.opening`, Jack's call C4, round 13), once: `Best.welcomed` is stored as it appears, so a player who
-  backs out without a move gets the menu next time. Never under the harness or the test host, but `UNSTIR_FRESH=1`
-  takes that first screen without storing it. The harness reads `UNSTIR_*` environment variables at launch
+- **UnstirApp.swift** holds `RootView` and the `Harness`. `RootView` carries Apple's age-range check (**AgeRange.swift**,
+  `AgeCheck`), which the US states' app store laws ask for: on iOS 26.2 and later, where `isEligibleForAgeFeatures` says
+  the law reaches the player, it requests the range once a launch while the menu is up with nothing over it (a card,
+  the consent question, the settings sheet, whose state `RootView` holds for this), never under the harness or the
+  test host, and drops the answer, as every level is for all ages: nothing is kept, logged or sent. It waits
+  `AgeCheck.settle` (0.3 s, past the dip) first, and a request cut off by the menu being covered or left leaves the
+  launch's ask standing (`testACancelledRequestLeavesTheLaunchsAskStanding`); a failure is dropped and not retried.
+  The entitlement Apple's docs require is a HANDOFF item. DeclaredAgeRange links weak, as the app runs from iOS 17.
+  A fresh install's first launch opens straight into plughole 01 (`RootView.opening`, Jack's call C4, round 13), once:
+  `Best.welcomed` is stored as it appears, so a player who backs out without a move gets the menu next time. Never
+  under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen without storing it. The harness
+  reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
-  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch and `UNSTIR_LETTERS=1` shows Differentiate Without Colour's letters and swatches), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
+  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch, `UNSTIR_LETTERS=1` shows the colour letters and swatches, and `UNSTIR_LETTERSCHOICE=0` or `1` sets the settings' choice for the launch), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
@@ -762,9 +800,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   best or started flag (`Level.keepsProgress`); Prism's is tri on the fern, rod 0 red and rod 1 cyan, dealt
   `2:+3,0:+4,1:-3`, as specimen 1 is. And
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` (or `lens:unshared`, revoked as a family's share) set the store's states for the launch
-  in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`, as while they load, or `UNSTIR_PRICES=unreachable`, as after a failed fetch);
+  in place of StoreKit's, never stored, with the StoreKit file's prices, in dollars (none with `UNSTIR_PRICES=0`, as while they load, or `UNSTIR_PRICES=unreachable`, as after a failed fetch);
   `UNSTIR_FAILED=offline` (`storefront`, `refused`) says why a failed product failed, or a pending one's ask again, `UNSTIR_PAYMENTS=0` turns
-  purchases off, and `UNSTIR_RESTORED=lens,prism` (`none`, `failed`) sets what the last restore found.
+  purchases off, and `UNSTIR_RESTORED=lens,prism` (`none`, `failed`) sets what the last restore found;
+  `UNSTIR_APPROVED=lens` (or `complete`) has that Ask to Buy approval wait to be said (held under `UNSTIR_CLOCK`), and
+  `UNSTIR_SEENLEVELS=lens:20` has that pack's card last opened when it had 20 levels, for the launch only.
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
   levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list; `UNSTIR_BESTS`
   takes a pack's prefix as it takes a tier's. A pack level past
@@ -796,7 +836,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
   opens the card's list); `UNSTIR_CONSENT=yes`
-  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
+  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up (`UNSTIR_MUSIC=0`, `UNSTIR_SOUNDS=0` and `UNSTIR_HAPTICS=0` set its switches off for the launch). `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
   `UNSTIR_SOUND=1`. This is how screenshots and films

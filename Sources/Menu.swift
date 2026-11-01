@@ -177,8 +177,8 @@ struct MenuView: View {
     /// The mark has moved and the list scrolls to it once it is laid out there.
     @State private var arriving = false
     @Namespace private var strip
-    /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
-    @State private var settings: Bool
+    /// The gear's sheet.
+    @Binding var settings: Bool
     /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
     @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -197,12 +197,12 @@ struct MenuView: View {
     private let dim = 0.55
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
-    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
+    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil,
          onPick: @escaping (Level) -> Void) {
         self.demo = demo
-        _settings = State(initialValue: settings)
+        _settings = settings
         self.onPick = onPick
         _card = card
         self.clock = clock
@@ -275,7 +275,9 @@ struct MenuView: View {
                 if !Offer.shelf().isEmpty && PackDock.shown() {
                     // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
                     PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle)
+                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle,
+                             covered: card != nil || settings)
+                        .equatable()
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
@@ -383,7 +385,7 @@ struct MenuView: View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
                      focus: cardFocus, arrived: card.pack != nil && card.pack == arrived,
-                     backTo: cameFrom.flatMap { $0.card == card ? $0.back.name : nil } ?? "menu",
+                     backTo: returns?.name ?? "menu",
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)
@@ -402,9 +404,15 @@ struct MenuView: View {
         withAnimation(.snappy(duration: 0.42)) { card = offer }
     }
 
-    /// The card a pack's card was opened from, or the menu.
+    /// The card a pack's card was opened from, while it is still on offer: Complete stops saving once a pack is bought.
+    private var returns: Offer? {
+        guard let cameFrom, cameFrom.card == card, cameFrom.back != .complete || Store.shared.offersComplete else { return nil }
+        return cameFrom.back
+    }
+
+    /// That card, or the menu.
     private func back() {
-        show(cameFrom.flatMap { $0.card == card ? $0.back : nil })
+        show(returns)
     }
 
     /// The menu, Lens's cover tapped, its card's clip played through, then back.

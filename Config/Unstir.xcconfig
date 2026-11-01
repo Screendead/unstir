@@ -10,4 +10,10 @@ APTABASE_KEY =
 // YES files a Release build's events as Debug in Aptabase, so playtests on the developer's phone stay out of real
 // players' numbers. scripts/run-ios.sh sets it for every build it installs.
 ANALYTICS_PLAYTEST =
+// The support address "report a problem" mails and the privacy policy's page stay out of the repo too: put them in
+// Config/Local.xcconfig, or set them in the shell for scripts/build-ios.sh. In an xcconfig `//` starts a comment, so a
+// URL is written `POLICY_URL = https:/$()/example.org/privacy`. Empty, the report goes through the share sheet and the
+// policy opens on github.com.
+SUPPORT_ADDRESS =
+POLICY_URL =
 #include? "Local.xcconfig"
