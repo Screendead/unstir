@@ -421,11 +421,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   launch, a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
-  `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
+  `Purchase` (unowned, owned, pending, failed, revoked), and `Store.failures` why each failure failed (`Failure`:
+  offline, a storefront without it, purchases turned off), which the card says under it. A pending pill stays live as
+  "ask again", since StoreKit sends nothing for a declined Ask to Buy and a new purchase sends a new request; where
+  `AppStore.canMakePayments` is false (`Store.canPay`) the card offers only the taste and says why; and a restore says
+  what it found that wasn't owned (`Restored`, `Store.restoreWords`), and nothing on a cancelled sign-in. A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and Complete as family-shareable non-consumables at
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25, when Complete held three packs, as it does again in Release); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
-  opens without one, and a card with none says "buy" alone.
+  opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" once the fetch
+  has failed (`Store.pricing`), the pill still live, since the App Store's sheet shows the price.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
   rods only, is the alternative on branch `lens-levels-big`), on the halftone: each dealt lens entry +1 to +3, each lens
   netting at most +3, no entry merging as it is dealt, and par the depth (`testLensLevels`, which pins the table), the
@@ -653,7 +658,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   best or started flag (`Level.keepsProgress`); Prism's is tri on the fern, rod 0 red and rod 1 cyan, dealt
   `2:+3,0:+4,1:-3`, as specimen 1 is. And
   `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
-  in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`).
+  in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`, as while they load, or `UNSTIR_PRICES=unreachable`, as after a failed fetch);
+  `UNSTIR_FAILED=offline` (`storefront`, `refused`) says why a failed product failed, `UNSTIR_PAYMENTS=0` turns
+  purchases off, and `UNSTIR_RESTORED=lens,prism` (`none`, `failed`) sets what the last restore found.
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
   levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list. A pack level past
   the taste needs `UNSTIR_OWNED` too, or it opens the card. `UNSTIR_STOPLOOK=left` picks how an Escapement tank out of

@@ -228,6 +228,18 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Harness.purchases(["UNSTIR_STORE": "lens:unowned"], release: false)?.state(.lens), .unowned)
     }
 
+    @MainActor func testHarnessSetsTheCardsMessages() {
+        let h = Harness(["UNSTIR_CARD": "lens", "UNSTIR_STORE": "lens:failed", "UNSTIR_FAILED": "offline",
+                         "UNSTIR_PRICES": "unreachable", "UNSTIR_PAYMENTS": "0", "UNSTIR_RESTORED": "lens,prism"])
+        XCTAssertEqual(h.failure, .offline)
+        XCTAssertEqual(h.prices, [:])
+        XCTAssertEqual(h.pricing, .unreachable)
+        XCTAssertFalse(h.canPay)
+        XCTAssertEqual(h.restored, .found([.lens, .prism]))
+        XCTAssertEqual(Harness(["UNSTIR_RESTORED": "none"]).restored, .nothing)
+        XCTAssertEqual(Harness(["UNSTIR_PRICES": "0"]).pricing, .fetching)
+    }
+
     /// UNSTIR_OWNED lasts the launch: nothing it grants is written anywhere, and solving the placeholder it opens
     /// stores no best or started flag under the id a real level will take.
     @MainActor func testHarnessOwnedIsNeverStored() throws {

@@ -151,6 +151,42 @@ extension Store {
     func opens(_ level: Level) -> Bool { access(level) != .withheld }
 }
 
+extension Store {
+    /// The restore control's words, on a card and in settings.
+    var restoreWords: String {
+        if restoring { return "restoring\u{2026}" }
+        return switch restored {
+        case .found(let packs): "restored \(Pack.named(Pack.sold().filter(packs.contains)))"
+        case .nothing: "nothing to restore on this Apple ID"
+        case .failed: "couldn't reach the App Store \u{00B7} restore purchases"
+        case nil: "restore purchases"
+        }
+    }
+}
+
+extension Failure {
+    /// Said under the failed purchase; nil where "the purchase didn't go through" is all there is to say.
+    var words: String? {
+        switch self {
+        case .offline: "No connection. Try again when you're online."
+        case .storefront: "Not sold in your country's App Store."
+        case .refused: "In-app purchases are turned off on this iPhone."
+        case .cancelled, .other: nil
+        }
+    }
+}
+
+extension Pricing {
+    /// In a price's place on the buy pill while there is none.
+    var words: String? {
+        switch self {
+        case .fetching: "price loading"
+        case .unreachable: "App Store unreachable"
+        case .fetched: nil
+        }
+    }
+}
+
 extension Purchase {
     /// The shelf's one word for a state, nil when there is nothing to say.
     var tag: (word: String, colour: Color)? {
@@ -577,8 +613,6 @@ struct PackCard: View {
     let onPlay: (Level) -> Void
     var store = Store.shared
     @State private var buying = false
-    @State private var restoring = false
-    @State private var restored: Bool?
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -612,7 +646,8 @@ struct PackCard: View {
                         if levels.isEmpty { Spacer(minLength: 24) }
                         status(state).padding(.top, levels.isEmpty ? 0 : 32)
                         action(state).padding(.top, 14)
-                        if offer.pack != nil, state != .owned, store.state(.complete) != .owned, Offer.shelf().contains(.complete) {
+                        if offer.pack != nil, state != .owned, store.canPay, store.state(.complete) != .owned,
+                           Offer.shelf().contains(.complete) {
                             completeLine.padding(.top, 14)
                         }
                         restore.padding(.top, 18).padding(.bottom, 10)
@@ -723,10 +758,18 @@ struct PackCard: View {
             }
             .accessibilityElement(children: .combine)
         case .failed:
-            line("the purchase didn't go through", .magenta)
+            VStack(alignment: .leading, spacing: 4) {
+                line("the purchase didn't go through", .magenta)
+                if let why = store.failures[offer.productID]?.words { detail(why) }
+            }
+            .accessibilityElement(children: .combine)
         case .revoked:
             line("refunded, or no longer shared with you", .alarm)
         }
+    }
+
+    private func detail(_ s: String) -> some View {
+        Text(s).font(.mono(.caption2)).opacity(0.5).fixedSize(horizontal: false, vertical: true)
     }
 
     private func line(_ s: String, _ colour: Color) -> some View {
@@ -742,19 +785,24 @@ struct PackCard: View {
                     .accessibilityLabel("Play \(offer.name)")
             }
         } else {
+            // A declined Ask to Buy sends no transaction, so a pending pill stays live: asking again sends a new request.
             let label = switch state {
+            case _ where buying: "buying\u{2026}"
             case .failed: "try again"
             case .revoked: "buy again"
-            default: buying ? "buying\u{2026}" : "buy"
+            case .pending: "ask again"
+            default: "buy"
             }
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
                 : AnyLayout(HStackLayout(spacing: 14))
+            if !store.canPay { detail(Failure.refused.words ?? "").padding(.bottom, 12) }
             layout {
-                pill(label, trailing: price, colour: offer.glow) { buy(offer) }
-                    .disabled(state == .pending || buying)
-                    .opacity(state == .pending ? 0.5 : 1)
-                    .accessibilityLabel(state == .pending ? "Waiting for approval" : "\(label.capitalized) \(offer.name)")
-                    .accessibilityValue(price ?? "")
+                if store.canPay {
+                    pill(label, trailing: price ?? store.pricing.words, colour: offer.glow, dim: price == nil) { buy(offer) }
+                        .disabled(buying)
+                        .accessibilityLabel(state == .pending ? "Ask again for \(offer.name)" : "\(label.capitalized) \(offer.name)")
+                        .accessibilityValue(price ?? store.pricing.words ?? "")
+                }
                 if let level = levels.first ?? Self.placeholder(offer) {
                     Button { onPlay(level) } label: {
                         Text("try \(offer.pack?.taste ?? 3) free \u{203A}").font(.mono(.footnote)).opacity(0.7)
@@ -780,11 +828,12 @@ struct PackCard: View {
         #endif
     }
 
-    private func pill(_ title: String, trailing: String?, colour: Color, _ tap: @escaping () -> Void) -> some View {
+    private func pill(_ title: String, trailing: String?, colour: Color, dim: Bool = false,
+                      _ tap: @escaping () -> Void) -> some View {
         Button(action: tap) {
             HStack(spacing: 14) {
                 Text(title).font(.mono(.subheadline, .semibold))
-                if let trailing { Text(trailing).font(.mono(.subheadline)).opacity(0.75) }
+                if let trailing { Text(trailing).font(.mono(dim ? .caption : .subheadline)).opacity(dim ? 0.45 : 0.75) }
             }
             .padding(.horizontal, 22).padding(.vertical, 12).frame(minHeight: 46)
             .overlay { Capsule().strokeBorder(colour, lineWidth: 1).shadow(color: colour, radius: 5) }
@@ -806,30 +855,24 @@ struct PackCard: View {
                 .font(.mono(.caption))
             }
             .buttonStyle(Sounding())
-            .disabled(buying || store.state(.complete) == .pending)
+            .disabled(buying)
             .accessibilityLabel("Buy Complete, every pack")
             .accessibilityValue(complete ?? "")
             if store.state(.complete) == .failed {
                 Text("Complete's purchase didn't go through").font(.mono(.caption, .semibold)).foregroundStyle(Color.magenta)
                     .fixedSize(horizontal: false, vertical: true)
+                if let why = store.failures[Pack.completeID]?.words { detail(why) }
             }
         }
     }
 
     private var restore: some View {
-        Button {
-            restoring = true
-            Task {
-                restored = await store.restore()
-                restoring = false
-            }
-        } label: {
-            let s = restoring ? "restoring\u{2026}" : restored == false ? "couldn't reach the App Store \u{00B7} restore purchases"
-                : restored == true ? "restored \u{00B7} restore purchases" : "restore purchases"
-            Text(s).font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
+        Button { Task { await store.restore() } } label: {
+            Text(store.restoreWords).font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .buttonStyle(Sounding())
-        .disabled(restoring)
+        .disabled(store.restoring)
     }
 
     private func buy(_ o: Offer) {

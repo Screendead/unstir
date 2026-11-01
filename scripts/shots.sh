@@ -477,7 +477,16 @@ done
 shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
   CARD=lens STORE=complete:failed CLOCK=5.4
 shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4
-shot card-lens-noprice "Lens's card before the App Store answers: buy, with no price." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live." \
+  CARD=lens STORE=lens:unowned PRICES=unreachable CLOCK=5.4
+shot card-lens-offline "Lens's card after a purchase failed offline: no connection, try again when you're online." \
+  CARD=lens STORE=lens:failed FAILED=offline CLOCK=5.4
+shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone: no buy and no Complete, try free kept." \
+  CARD=lens STORE=lens:unowned PAYMENTS=0 CLOCK=5.4
+shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
+shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
+  CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
 shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
   CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
 shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4

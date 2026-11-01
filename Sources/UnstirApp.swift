@@ -123,8 +123,15 @@ struct Harness {
     }
 
     /// With `purchases`, the prices StoreKit/Unstir.storekit sets, as the App Store would show them on a US storefront;
-    /// none with UNSTIR_PRICES=0, as before StoreKit answers.
+    /// none with UNSTIR_PRICES=0, as before StoreKit answers, or UNSTIR_PRICES=unreachable, after its fetch failed.
     let prices: [String: String]
+    let pricing: Pricing
+    /// UNSTIR_FAILED=offline (storefront, refused): why each failed product failed.
+    let failure: Failure
+    /// UNSTIR_PAYMENTS=0: purchases turned off on the device.
+    let canPay: Bool
+    /// UNSTIR_RESTORED=lens,prism (none, failed): what the last restore found.
+    let restored: Restored?
 
     /// UNSTIR_STOPLOOK=left: what an Escapement tank lost to its last clock stopping shows (`StopLook`), stamp unset.
     let stopLook: StopLook?
@@ -180,8 +187,17 @@ struct Harness {
         tour = env["UNSTIR_TOUR"] == "1"
         stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
-        prices = env["UNSTIR_PRICES"] == "0" ? [:]
+        prices = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
             : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, $0 == Pack.completeID ? "$5.99" : "$2.99") })
+        pricing = env["UNSTIR_PRICES"] == "unreachable" ? .unreachable : .fetching
+        failure = env["UNSTIR_FAILED"].flatMap(Failure.init(rawValue:)) ?? .other
+        canPay = env["UNSTIR_PAYMENTS"] != "0"
+        restored = switch env["UNSTIR_RESTORED"] {
+        case nil: nil
+        case "none": .nothing
+        case "failed": .failed
+        case let names?: .found(Set(names.split(separator: ",").compactMap { Pack(rawValue: String($0)) }))
+        }
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE", "PACK"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
@@ -338,7 +354,10 @@ struct RootView: View {
         let h = Harness(env)
         harnessed = h.harnessed
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
-        if let purchases = h.purchases { Store.shared.pretend(purchases, prices: h.prices) }
+        if let purchases = h.purchases {
+            Store.shared.pretend(purchases, prices: h.prices, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
+                                 restored: h.restored)
+        }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
         _level = State(initialValue: h.screen == "menu" || gate != nil ? nil : h.level)
         _harness = State(initialValue: h)

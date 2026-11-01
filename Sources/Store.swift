@@ -9,6 +9,27 @@ enum Purchase: String, CaseIterable, Sendable {
     case unowned, owned, pending, failed, revoked
 }
 
+/// What the card says of a failed purchase.
+enum Failure: String, Sendable {
+    /// `refused`: purchases are turned off on the device. `cancelled` fails nothing, and is only a restore's.
+    case offline, storefront, refused, cancelled, other
+
+    init(_ error: Error) {
+        switch error {
+        case StoreKitError.networkError, is URLError: self = .offline
+        case StoreKitError.notAvailableInStorefront: self = .storefront
+        case Product.PurchaseError.purchaseNotAllowed: self = .refused
+        case StoreKitError.userCancelled: self = .cancelled
+        default: self = .other
+        }
+    }
+}
+
+/// Where the prices stand: `fetched` can still lack a product the App Store didn't return.
+enum Pricing: Sendable { case fetching, fetched, unreachable }
+
+enum Restored: Equatable, Sendable { case found(Set<Pack>), nothing, failed }
+
 /// Each product's latest `Purchase`, and what that makes of each pack.
 struct Ledger: Equatable, Sendable {
     private(set) var products: [String: Purchase] = [:]
@@ -50,6 +71,13 @@ final class Store {
     private(set) var harness: Ledger?
     /// Each product's price as the App Store gives it, for the player's storefront; missing until it is fetched.
     private(set) var prices: [String: String] = [:]
+    private(set) var pricing = Pricing.fetching
+    /// Why each product's last attempt failed, while the ledger holds it as failed.
+    private(set) var failures: [String: Failure] = [:]
+    /// The last restore's outcome, said alike by the cards and settings; nil before one, or after a cancelled sign-in.
+    private(set) var restored: Restored?
+    private(set) var restoring = false
+    @ObservationIgnored private var payments: Bool?
     @ObservationIgnored private var products: [String: Product] = [:]
     @ObservationIgnored private var updates: Task<Void, Never>?
     @ObservationIgnored private var attempt = 0
@@ -65,17 +93,27 @@ final class Store {
 
     func price(_ id: String) -> String? { prices[id] }
 
+    /// Screen Time, or a child's account without Ask to Buy, can turn purchases off; read afresh as a card draws.
+    var canPay: Bool { payments ?? AppStore.canMakePayments }
+
     /// Forgets every failed attempt, and any still running, so a card never opens on an error it didn't see happen.
     func forgetFailures() {
         attempt += 1
         ledger.forgetFailures()
+        failures = [:]
+        restored = nil
     }
 
     /// Set before `start`, which then leaves StoreKit alone for the launch.
-    func pretend(_ ledger: Ledger, prices: [String: String] = [:]) {
+    func pretend(_ ledger: Ledger, prices: [String: String] = [:], pricing: Pricing = .fetching,
+                 failure: Failure = .other, canPay: Bool = true, restored: Restored? = nil) {
         guard !Build.release else { return }
         harness = ledger
         self.prices = prices
+        self.pricing = pricing
+        failures = ledger.products.filter { $0.value == .failed }.mapValues { _ in failure }
+        payments = canPay
+        self.restored = restored
     }
 
     /// Listens for purchases made or revoked elsewhere (Ask to Buy approvals, refunds, other devices, Family Sharing) and
@@ -92,10 +130,13 @@ final class Store {
     /// A failed fetch leaves the prices missing, and the card asks again when it opens.
     func fetchPrices() async {
         guard harness == nil, Pack.productIDs.contains(where: { prices[$0] == nil }) else { return }
+        pricing = .fetching
         do {
             try await fetch()
+            pricing = .fetched
         } catch {
             Log.write("products failed: \(error)")
+            pricing = .unreachable
         }
     }
 
@@ -123,9 +164,12 @@ final class Store {
 
     func purchase(_ id: String) async {
         let started = attempt
-        func failed(_ why: String) {
+        failures[id] = nil
+        func failed(_ why: String, _ failure: Failure = .other) {
             Log.write("purchase \(id) failed: \(why)\(attempt == started ? "" : ", its card closed")")
-            if attempt == started { ledger.record(id, .failed) }
+            guard attempt == started else { return }
+            ledger.record(id, .failed)
+            if ledger.products[id] == .failed { failures[id] = failure }
         }
         do {
             guard let product = try await product(id) else { return failed("no such product") }
@@ -140,21 +184,28 @@ final class Store {
             @unknown default: failed("unknown result")
             }
         } catch {
-            failed("\(error)")
+            failed("\(error)", Failure(error))
         }
     }
 
-    /// False when the player cancels the App Store sign-in or it fails; what was already known stays.
+    /// What a sync found that wasn't owned before it; nil when the player cancels the App Store sign-in. A failed sync
+    /// keeps what was already known.
     @discardableResult
-    func restore() async -> Bool {
+    func restore() async -> Restored? {
+        let before = ledger.owned
+        restoring = true
+        defer { restoring = false }
         do {
             try await AppStore.sync()
         } catch {
             Log.write("restore failed: \(error)")
-            return false
+            restored = Failure(error) == .cancelled ? nil : .failed
+            return restored
         }
         await refresh()
-        return true
+        let found = ledger.owned.subtracting(before)
+        restored = found.isEmpty ? .nothing : .found(found)
+        return restored
     }
 
     /// Fetched again for an id the last fetch lacked, so a product missing once is not missing all launch.

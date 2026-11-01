@@ -78,6 +78,17 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.lens), .pending)
     }
 
+    /// The card tells being offline, a storefront without the pack and purchases turned off apart from the rest.
+    func testEachFailureSaysWhy() {
+        XCTAssertEqual(Failure(StoreKitError.networkError(URLError(.notConnectedToInternet))), .offline)
+        XCTAssertEqual(Failure(URLError(.timedOut)), .offline)
+        XCTAssertEqual(Failure(StoreKitError.notAvailableInStorefront), .storefront)
+        XCTAssertEqual(Failure(Product.PurchaseError.purchaseNotAllowed), .refused)
+        XCTAssertEqual(Failure(StoreKitError.userCancelled), .cancelled)
+        XCTAssertEqual(Failure(StoreKitError.unknown), .other)
+        XCTAssertNil(Failure.other.words)
+    }
+
     func testTheTasteIsFreeAndThePackIsNot() {
         for pack in Pack.allCases {
             XCTAssertEqual((1...pack.taste).map { pack.access($0, owned: [], unlocked: false) },
@@ -240,6 +251,13 @@ final class StoreTests: XCTestCase {
         try session.declineAskToBuyTransaction(identifier: asked.identifier)
         try await Task.sleep(for: .seconds(2))
         XCTAssertEqual(store.ledger.owned, [])
+        // StoreKit sends nothing for a decline, so the card still waits, and asking again sends the parent a new request.
+        XCTAssertEqual(store.state(.lens), .pending)
+        await store.purchase(.lens)
+        XCTAssertEqual(store.state(.lens), .pending)
+        let again = session.allTransactions().filter { $0.pendingAskToBuyConfirmation }
+        XCTAssertEqual(again.count, 1)
+        XCTAssertNotEqual(again.first?.identifier, asked.identifier)
         try await relaunch(owns: [])
     }
 
@@ -249,6 +267,7 @@ final class StoreTests: XCTestCase {
         await store.start()
         await store.purchase(.lens)
         XCTAssertEqual(store.state(.lens), .failed)
+        XCTAssertEqual(store.failures[Pack.lens.productID], .offline)
         XCTAssertEqual(store.ledger.owned, [])
         // Clearing the error alone leaves the session failing every purchase; a reset clears it.
         session.resetToDefaultState()
@@ -270,23 +289,26 @@ final class StoreTests: XCTestCase {
         try await session.setSimulatedError(nil, forAPI: .verification)
     }
 
-    /// A restore that syncs reads what was bought; one whose sync fails says so and reads nothing, keeping what was known.
+    /// A restore that syncs says what it found that wasn't owned before; one whose sync fails says so and reads nothing,
+    /// keeping what was known.
     func testRestoreReadsWhatWasBoughtOnlyAfterASync() async throws {
         let store = Store()
         await store.purchase(.escapement)
         let next = Store()
         try await eventually("restore to find the purchase") {
-            let synced = await next.restore()
-            return synced && next.ledger.owned == [.escapement]
+            let found = await next.restore()
+            return found == .found([.escapement]) && next.ledger.owned == [.escapement]
         }
+        let again = await next.restore()
+        XCTAssertEqual(again, .nothing)
         try await session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))),
                                             forAPI: .appStoreSync)
         let offline = Store()
         let synced = await offline.restore()
-        XCTAssertFalse(synced)
+        XCTAssertEqual(synced, .failed)
         XCTAssertEqual(offline.ledger.owned, [])
         let resynced = await next.restore()
-        XCTAssertFalse(resynced)
+        XCTAssertEqual(resynced, .failed)
         XCTAssertEqual(next.ledger.owned, [.escapement])
         try await session.setSimulatedError(nil, forAPI: .appStoreSync)
     }
