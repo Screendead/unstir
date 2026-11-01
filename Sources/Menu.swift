@@ -373,7 +373,8 @@ struct MenuView: View {
         } else if !lead.sandboxFirst {
             Text("Every stir in this tank has an exact inverse.").font(.mono(13)).opacity(0.55)
         } else {
-            Color.clear.frame(height: 1)
+            // A line's height still, so a tier swap to or from one with a frontier moves nothing below it.
+            Text(" ").font(.mono(13)).hidden()
         }
     }
 
