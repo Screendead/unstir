@@ -74,7 +74,7 @@ shot menu-back-solved "Back from plughole 14's result card after a solve: the li
 shot menu-mid-switch-scrolled "The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin." \
   BESTS=plughole:$upto13 TIERSPIN=0.25:0.1
 # A switch lands on the new tier's first level without a best, a locked tier's header over its gate, or the top.
-hold=4.4 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
+hold=3.9 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
 hold=8.5 shot menu-switch-locked "Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 17 of whirlpool's 27 at par: vortex is locked, so the list landed on its header, over the gate and its short list." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
