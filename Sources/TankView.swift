@@ -1151,11 +1151,10 @@ struct LevelView: View {
 
     var body: some View {
         screen
-            // The level's edge, over the menu it slides off across.
+            // The level's edge, over the menu it slides off across: a hairline, as every line over the glass is.
             .overlay(alignment: .leading) {
                 if swiped > 0 {
-                    LinearGradient(colors: [.clear, .black.opacity(0.7)], startPoint: .leading, endPoint: .trailing)
-                        .frame(width: 16).offset(x: -16).ignoresSafeArea().allowsHitTesting(false)
+                    Rectangle().fill(Color.text.opacity(0.2)).frame(width: 0.5).ignoresSafeArea().allowsHitTesting(false)
                 }
             }
             .offset(x: swiped * width)
