@@ -206,14 +206,15 @@ extension Purchase {
         }
     }
 
-    /// The shelf's one word for a state, nil when there is nothing to say.
-    var tag: (word: String, colour: Color)? {
+    /// The shelf's one word for a state, nil when there is nothing to say. `unshared`: revoked as a family's share
+    /// ended, not a refund, as the card's status says it.
+    func tag(unshared: Bool = false) -> (word: String, colour: Color)? {
         switch self {
         case .unowned: nil
         case .owned: ("owned", .lime)
         case .pending: ("waiting for approval", .amber)
         case .failed: ("purchase failed", .magenta)
-        case .revoked: ("no longer on this Apple ID", Color.text.opacity(0.6))
+        case .revoked: (unshared ? "no longer shared with you" : "no longer on this Apple ID", Color.text.opacity(0.6))
         }
     }
 }
@@ -708,7 +709,7 @@ struct PackCard: View {
         .onChange(of: Reading(state: state, ready: store.ready)) { old, new in
             // Until the launch's first read has finished, an owned pack reads as unowned: that read is no change.
             guard old.ready, new.state != old.state else { return }
-            if let tag = new.state.tag { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
+            if let tag = new.state.tag(unshared: unshared) { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
             // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
             if Self.lands(old.state, new.state, ready: old.ready) {
                 landings += 1
@@ -1047,8 +1048,8 @@ struct PackDock: View {
                                     .multilineTextAlignment(.center).minimumScaleFactor(0.8)
                                 // A glyph, so the state reads without its colour; a revocation is the card's to say.
                                 if store.ready, let mark = state.mark {
-                                    Image(systemName: mark).font(.system(size: 8, weight: .bold)).foregroundStyle(state.tag?.colour ?? .text)
-                                        .shadow(color: state.tag?.colour ?? .clear, radius: 2)
+                                    Image(systemName: mark).font(.system(size: 8, weight: .bold)).foregroundStyle(state.tag()?.colour ?? .text)
+                                        .shadow(color: state.tag()?.colour ?? .clear, radius: 2)
                                         .accessibilityHidden(true)
                                 }
                             }
@@ -1058,7 +1059,8 @@ struct PackDock: View {
                     }
                     .buttonStyle(Sounding())
                     .accessibilityLabel("\(offer.name), \(offer.pack == nil ? "every pack" : "pack")")
-                    .accessibilityValue((store.ready ? state.tag?.word : nil) ?? store.price(offer.productID) ?? "")
+                    .accessibilityValue((store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
+                                        ?? store.price(offer.productID) ?? "")
                     .accessibilityHint(offer.pitch)
                     .accessibilityShowsLargeContentViewer {
                         Text(offer.name)
