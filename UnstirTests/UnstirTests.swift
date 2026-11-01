@@ -442,10 +442,18 @@ final class UnstirTests: XCTestCase {
             XCTAssertTrue(game.solved)
             return game
         }
+        // The rating request waits on the launch, not on the card, from the solve that opens whirlpool alone.
+        let pending = Review.shared.pending
+        defer { Review.shared.pending = pending }
+        Review.shared.pending = false
         XCTAssertNil(solve(over: true).opened)
+        XCTAssertFalse(Review.shared.pending)
         XCTAssertFalse(Tier.whirlpool.isOpen())
         XCTAssertEqual(solve(over: false).opened, .whirlpool)
+        XCTAssertTrue(Review.shared.pending)
+        Review.shared.pending = false
         XCTAssertNil(solve(over: false).opened)
+        XCTAssertFalse(Review.shared.pending)
     }
 
     /// The rating request comes once, on the solve that opens whirlpool, and never in the harness or after a purchase

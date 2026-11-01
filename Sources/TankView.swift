@@ -1,7 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
 import CoreHaptics
-import StoreKit
 import SwiftUI
 import simd
 
@@ -700,7 +699,10 @@ final class Game {
             bests = (Best.load(level.id), best)
             let done = completion
             best.save(level.id, store: storesProgress)
-            if shut, let up, up.isOpen() { opened = up }
+            if shut, let up, up.isOpen() {
+                opened = up
+                if up == .whirlpool { Review.shared.pending = true }
+            }
             completed = done == nil ? completion : nil
         }
         Analytics.shared.finished(self)
@@ -3015,7 +3017,6 @@ struct ResultCard: View {
     /// The harness's clock for the daily's next one; nil reads the time.
     let now: Date?
     let onOffer: (Pack) -> Void
-    @Environment(\.requestReview) private var requestReview
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
@@ -3120,23 +3121,21 @@ struct ResultCard: View {
             }
         }
         .onAppear { focused = true }
-        .task {
-            guard (try? await Task.sleep(for: .seconds(2))) != nil,
-                  Review.due(opened: game.opened, asked: Best.reviewAsked, harnessed: Review.harnessed, purchased: Store.shared.landed)
-            else { return }
-            Log.write("review requested\(Review.logs ? " (UNSTIR_REVIEW=log)" : "")")
-            guard !Review.logs else { return }
-            Best.reviewAsked = true
-            requestReview()
-        }
     }
 }
 
 /// The one rating request (Jack's call C20, round 13): on the card of the solve that opens whirlpool, a tier's worth of
 /// play in and on a high. A launch that saw a purchase land skips it, and since that solve comes once, never asks.
-@MainActor enum Review {
-    /// The launch's: a harnessed one never asks, and UNSTIR_REVIEW=log logs the request in place of making it.
+/// `RootView` makes it, not the card: a tap on within the wait would take it with the card, for good.
+@MainActor @Observable final class Review {
+    static let shared = Review()
+    /// The solve that opens whirlpool came this launch, and the request hasn't been made.
+    var pending = false
+    /// The launch's: a harnessed one, or the test host, never asks, and UNSTIR_REVIEW=log logs the request in place of
+    /// making it.
     static var harnessed = false, logs = false
+    /// 2 s after the card, which shows 1.4 s after the solve.
+    static let wait = 3.4
 
     static func due(opened: Tier?, asked: Bool, harnessed: Bool, purchased: Bool) -> Bool {
         opened == .whirlpool && !asked && !harnessed && !purchased

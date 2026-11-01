@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import StoreKit
 import SwiftUI
 
 @main
@@ -384,6 +385,7 @@ struct RootView: View {
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     @Environment(\.scenePhase) private var phase
+    @Environment(\.requestReview) private var requestReview
     private let mute: Bool
 
     init() {
@@ -392,7 +394,7 @@ struct RootView: View {
         harnessed = h.harnessed
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
         // The launch's, not the level's harness, which a level opened from the card's next no longer has.
-        Review.harnessed = h.harnessed && !h.reviewLog
+        Review.harnessed = h.harnessed && !h.reviewLog || env["XCTestConfigurationFilePath"] != nil
         Review.logs = h.reviewLog
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
@@ -468,6 +470,18 @@ struct RootView: View {
             await Store.shared.start()
             // After the store, so a snapshot sees the packs owned.
             Analytics.shared.start(env: env, harnessed: harnessed)
+        }
+        // Only in front: leaving cancels the wait, and coming back waits again.
+        .task(id: [Review.shared.pending, phase == .active]) {
+            guard Review.shared.pending, phase == .active,
+                  (try? await Task.sleep(for: .seconds(Review.wait))) != nil else { return }
+            Review.shared.pending = false
+            guard Review.due(opened: .whirlpool, asked: Best.reviewAsked, harnessed: Review.harnessed,
+                             purchased: Store.shared.landed) else { return }
+            Log.write("review requested\(Review.logs ? " (UNSTIR_REVIEW=log)" : "")")
+            guard !Review.logs else { return }
+            Best.reviewAsked = true
+            requestReview()
         }
         .task {
             guard let s = harness?.lands, let id = card?.productID else { return }
