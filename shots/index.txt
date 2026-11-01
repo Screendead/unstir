@@ -440,7 +440,7 @@ card-prism-no-complete.png  Prism's card with Lens and First Stir owned (a Debug
 shelf-menu-lens-owned.png  The dock with Lens and First Stir owned: no Complete cover, since it costs more than the two packs left.
 card-first-stir.png  First Stir's card, unowned.
 card-escapement.png  Escapement's card, unowned.
-card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, and its 30 specimens under five tray headings.
+card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings.
 card-prism-levels.png  Prism's card, owned, scrolled to its specimens under the five trays.
 card-complete.png  Complete's card, unowned: save $5.97 on the packs you don't have.
 card-complete-saves-nothing.png  UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover.
@@ -491,9 +491,10 @@ card-lens-xxxl.png  Lens's card at xxxLarge, the largest size short of the acces
 consent-ask.png  First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no.
 consent-sends.png  First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again.
 consent-gear.png  Menu with the settings gear beside the title, analytics answered yes.
-consent-settings-on.png  The gear's sheet: the analytics switch on, send log and privacy policy.
-consent-settings-off.png  The gear's sheet: the analytics switch off, send log and privacy policy.
-settings.png  The gear's sheet in a build without analytics, v1's: restore purchases, send log and privacy policy, no switch, the version under them.
+consent-settings-on.png  The gear's sheet: music, sounds, haptics and colour letters, the analytics switch on, report a problem and privacy policy.
+consent-settings-off.png  The gear's sheet: music, sounds, haptics and colour letters, the analytics switch off, report a problem and privacy policy.
+settings.png  Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version.
+settings-quiet.png  Settings with music and haptics off.
 settings-restored.png  The gear's sheet after a restore found nothing: nothing to restore on this Apple ID.
 escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
 escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
@@ -586,6 +587,7 @@ prism-swatch-r.png  Prism specimen 8 with the r swatch held: that channel's line
 prism-swatch-g.png  Prism specimen 8 with the g swatch held: that channel's lines alone, in white, the others hidden.
 prism-swatch-b.png  Prism specimen 8 with the b swatch held: that channel's lines alone, in white, the others hidden.
 prism-letters-8.png  Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB.
+prism-letters-chosen.png  Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches.
 prism-letters-14.png  Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG.
 prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.

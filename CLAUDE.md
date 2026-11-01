@@ -74,7 +74,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result).
   It passes the shell's `ANALYTICS` (YES builds analytics in; NO, the default, is v1's) and `APTABASE_KEY`, Aptabase's
   app key, into Info.plist's `Analytics` and `AptabaseKey`, over `Config/Local.xcconfig` (gitignored), which
-  `Config/Unstir.xcconfig` includes for Xcode's own builds and archives; without both analytics is off. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
+  `Config/Unstir.xcconfig` includes for Xcode's own builds and archives; without both analytics is off. The same way,
+  `SUPPORT_ADDRESS` and `POLICY_URL` (Jack's, never in a tracked file; `testNoTrackedConfigHoldsAPrivateValue`) set
+  Info.plist's `SupportAddress` and `PolicyURL`; in an xcconfig a URL is written `https:/$()/...`, as `//` starts a
+  comment. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
   build's events as Debug.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
@@ -170,9 +173,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   its rotation), so a pick or turn can be checked against the finger. Past 1 MB (`Log.cap`) it is cut to its newest
   512 KB from a whole line once the first screen is up (`Log.trim`): read and cut off the main actor, then replaced
   atomically on it with the lines written meanwhile, so a launch before the first frame only opens it. Once the first screen is up
-  it logs a `device:` line (app version and build, iOS, model, locale, type size, Reduce Motion, VoiceOver, Low Power),
-  never the phone's name. `UILaunchScreen`'s colour (`LaunchBackground`, black) keeps a cold launch black in light
-  appearance too.
+  it logs a `device:` line (app version and build, iOS, model, locale, type size, Reduce Motion, VoiceOver, Low Power,
+  and the settings' switches, `Settings.summary`), never the phone's name; each switch tapped logs a `settings:` line.
+  `UILaunchScreen`'s colour (`LaunchBackground`, black) keeps a cold launch black in light appearance too.
 
 ## Architecture
 
@@ -471,11 +474,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   solver's optimum (`testLensParIsTheOptimum`, slow; `scripts/lens-table.py docs/lens-tables.md --solve` checks a
   table's rules and optima in seconds before it goes in). A lens's knob carries a magenta iris (`RodView.lens`). On a level with masks every knob is tinted its mask's
   colour (`Level.tint`, `Channels.colour`, the cover's red, green and blue and their mixes), a white rod white: its
-  ticks, pointer and a jewel at the cap's centre. Under Differentiate Without Colour (or `UNSTIR_LETTERS=1`) Prism
-  reads without colour: each knob spells out the primaries it holds under its cap (`Channels.letters`: R, GB, RGB),
+  ticks, pointer and a jewel at the cap's centre. Under the settings' colour letters, which follow Differentiate
+  Without Colour until chosen (`Letters`, stored as `letters`, absent until then; Jack's call C16, round 13), or
+  `UNSTIR_LETTERS=1`, Prism reads without colour: each knob spells out the primaries it holds under its cap (`Channels.letters`: R, GB, RGB),
   and `ChannelSwatches` (R, G and B) sit under the caption; holding one draws that channel alone in white and hides the
   others (`Unstirred.isolate`, the `unstirChannels` shader's `isolate`), and VoiceOver toggles it. Neither shows
-  otherwise, so the read stays by colour for everyone else. `scripts/colour-blind.py <out> <shots>...` lays shots out
+  otherwise, so the read stays by colour for everyone else, and Prism's card says "letters for colour-blind play, in
+  settings" under its facts (`Offer.note`), owned or not. `scripts/colour-blind.py <out> <shots>...` lays shots out
   beside their protanopia, deuteranopia and tritanopia simulations. A lens follows the finger up and down, not round
   (Jack, 2026-10-26): `LevelView.lensTurn` counts `lensPitch` (0.15 tank units) of travel as a step, up a positive
   one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
@@ -647,11 +652,17 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   word it and settings say (`ConsentWords`): on a plain launch while undecided,
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
-  control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
-  analytics switch (`NeonToggle`, which calls `decide`) where the build has analytics, "restore purchases" (`Store.restore`,
-  saying what it found as the cards do), "send log", which hands `Log.url` to the share sheet, and
-  "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)), for now the github.com page of
-  `docs/privacy-policy.md`, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
+  control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds:
+  "music", "sounds" and "haptics" (`Settings`, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while
+  on; Jack's call C17, round 13; a harnessed launch holds them and the letters in memory, `Settings.held`, never
+  stored), "colour letters" (`Letters`), the analytics switch (`NeonToggle`, which calls
+  `decide`) where the build has analytics, "restore purchases" (`Store.restore`, saying what it found as the cards do),
+  "report a problem", a mail (`MailSheet`) to Info.plist's `SupportAddress` with `Log.url` attached as
+  `unstir-log.txt` and `UnstirApp.device` in the body, or, with no account in Apple's Mail, `Log.url` handed to the
+  share sheet with that subject and body and the address on its first line (with no address, the log alone), and
+  "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)) in Safari's view
+  (`SafariSheet`): Info.plist's `PolicyURL`, Jack's own domain, or the github.com page of `docs/privacy-policy.md` where
+  the build has none, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
   its content outgrows the screen. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
@@ -750,13 +761,24 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
   a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
   target to 44 pt round it without moving anything. Nothing sounds during a drag but the
-  detent's tick, and a sound never tells the player anything the picture doesn't. The session is ambient, and while
+  detent's tick, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
+  out over the crossfade and back (`Sound.music`), its sounds switch every effect and button (`Sound.sounds`), and its
+  haptics switch `Knock` and every system haptic, which all go through `haptic(_:trigger:when:)`; none of the three is
+  read anywhere else. The session is ambient, and while
   another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
   unless `UNSTIR_SOUND=1`. An undo steps the heal notes back, so the next heal plays the undone one's note again
   (Jack, SN1).
-- **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
+- **UnstirApp.swift** holds `RootView` and the `Harness`. `RootView` carries Apple's age-range check (**AgeRange.swift**,
+  `AgeCheck`), which the US states' app store laws ask for: on iOS 26.2 and later, where `isEligibleForAgeFeatures` says
+  the law reaches the player, it requests the range once a launch while the menu is up with nothing over it (a card,
+  the consent question, the settings sheet, whose state `RootView` holds for this), never under the harness or the
+  test host, and drops the answer, as every level is for all ages: nothing is kept, logged or sent. It waits
+  `AgeCheck.settle` (0.3 s, past the dip) first, and a request cut off by the menu being covered or left leaves the
+  launch's ask standing (`testACancelledRequestLeavesTheLaunchsAskStanding`); a failure is dropped and not retried.
+  The entitlement Apple's docs require is a HANDOFF item. DeclaredAgeRange links weak, as the app runs from iOS 17.
+  The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
-  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch and `UNSTIR_LETTERS=1` shows Differentiate Without Colour's letters and swatches), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
+  even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch, `UNSTIR_LETTERS=1` shows the colour letters and swatches, and `UNSTIR_LETTERSCHOICE=0` or `1` sets the settings' choice for the launch), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
@@ -801,7 +823,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
   opens the card's list); `UNSTIR_CONSENT=yes`
-  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
+  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up (`UNSTIR_MUSIC=0`, `UNSTIR_SOUNDS=0` and `UNSTIR_HAPTICS=0` set its switches off for the launch). `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
   `UNSTIR_SOUND=1`. This is how screenshots and films

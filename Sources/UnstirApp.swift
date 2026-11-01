@@ -20,7 +20,8 @@ struct UnstirApp: App {
         let type = UIApplication.shared.preferredContentSizeCategory.rawValue.replacingOccurrences(of: "UICTContentSizeCategory", with: "")
         return "device: app \(info["CFBundleShortVersionString"] ?? "?") (\(info["CFBundleVersion"] ?? "?")), iOS \(os.majorVersion).\(os.minorVersion).\(os.patchVersion), "
             + "\(model), \(Locale.current.identifier), type \(type), reduce motion \(UIAccessibility.isReduceMotionEnabled), "
-            + "voiceover \(UIAccessibility.isVoiceOverRunning), low power \(ProcessInfo.processInfo.isLowPowerModeEnabled)"
+            + "voiceover \(UIAccessibility.isVoiceOverRunning), low power \(ProcessInfo.processInfo.isLowPowerModeEnabled), "
+            + Settings.summary
     }
 
     var body: some Scene {
@@ -91,8 +92,9 @@ struct Harness {
     /// so this presents the UIKit sheet it wraps, with the same text.
     let shareSheet: Bool
     let bench: Bool
-    /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism as Differentiate Without
-    /// Colour has it, its knobs spelling out their channels over the swatches.
+    /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism with the colour letters,
+    /// its knobs spelling out their channels over the swatches, whatever the settings say. UNSTIR_LETTERSCHOICE=0 or 1:
+    /// the settings' colour letters chosen off or on, for this launch only (`switches`).
     let swatch: Channels?
     let letters: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
@@ -117,6 +119,10 @@ struct Harness {
     let tierSpin: (spin: Double, fade: Double)?
     /// UNSTIR_SETTINGS=1: the menu opens with the gear's sheet up. UNSTIR_CONSENT is read by `Analytics.configure`.
     let settings: Bool
+    /// UNSTIR_MUSIC=0, UNSTIR_SOUNDS=0 and UNSTIR_HAPTICS=0: the sheet's switches off, with UNSTIR_LETTERSCHOICE, for
+    /// `Settings.held`. A harnessed launch's switches start on and unchosen whatever is stored, and a tap on one lasts
+    /// only that launch; nil on a plain launch.
+    let switches: [String: Bool]?
     /// UNSTIR_OWNED and UNSTIR_STORE, in place of StoreKit's for this launch; never stored, and nil in Release.
     let purchases: Ledger?
 
@@ -209,6 +215,15 @@ struct Harness {
         swatch = env["UNSTIR_SWATCH"].flatMap { $0.count == 1 ? Channels(letter: $0.first!) : nil }
             .flatMap { Channels.each.contains($0) ? $0 : nil }
         letters = env["UNSTIR_LETTERS"] == "1"
+        if harnessed {
+            var held = ["music", "sounds", "haptics"].reduce(into: [String: Bool]()) {
+                $0[$1] = env["UNSTIR_\($1.uppercased())"] != "0"
+            }
+            if let c = env["UNSTIR_LETTERSCHOICE"], ["0", "1"].contains(c) { held["letters"] = c == "1" }
+            switches = held
+        } else {
+            switches = nil
+        }
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
@@ -385,6 +400,8 @@ struct RootView: View {
     @State private var typeSize: DynamicTypeSize?
     /// The tier the next menu opens on, set by a closed tier's button on a result card.
     @State private var look: Tier?
+    /// The menu's settings sheet; UNSTIR_SETTINGS=1 opens with it up.
+    @State private var settings: Bool
     /// The row the next menu, or the pack's card over it, centres on (`MenuView.focus`).
     @State private var focus: Level?
     /// Kept apart from `harness`, which a first move to another screen drops.
@@ -397,14 +414,18 @@ struct RootView: View {
         let h = Harness(env)
         harnessed = h.harnessed
         Marks.stored = !h.harnessed
+        // Here, not in Harness, which the tests build too.
+        Settings.held.withLock { $0 = h.switches }
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
                                  restored: h.restored, approved: h.approved)
         }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
-        _level = State(initialValue: h.screen == "menu" || gate != nil ? nil : h.level)
+        let menu = h.screen == "menu" || gate != nil
+        _level = State(initialValue: menu ? nil : h.level)
         _harness = State(initialValue: h)
+        _settings = State(initialValue: menu && h.settings)
         mute = h.mute
         // Complete's card opens, as from the dock, only while it is on offer, or as an owner's home.
         let card = h.card.flatMap { $0 != .complete || Store.shared.offersComplete || Store.shared.state(.complete) == .owned ? $0 : nil }
@@ -431,7 +452,7 @@ struct RootView: View {
                     .transition(dip)
             } else {
                 MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
-                         settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
+                         settings: $settings, card: $card, clock: harness?.clock, placeholders: placeholders,
                          shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false, focus: focus,
                          held: harness?.lockTap, arrived: arrived) {
                     show($0)
@@ -455,6 +476,9 @@ struct RootView: View {
             Sound.shared.foreground(phase != .background)
         }
         .onAppear { Sound.shared.use(on: !mute) }
+        .modifier(AgeChecked(menu: level == nil && card == nil && !settings
+                                 && !(Analytics.shared.asks && Analytics.shared.consent == .undecided),
+                             played: !harnessed && ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil))
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
         .task {

@@ -498,7 +498,7 @@ shot shelf-menu-lens-owned "The dock with Lens and First Stir owned: no Complete
   BESTS=plughole:000000000 OWNED=lens,first-stir CLOCK=5.4
 shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
 shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
-shot card-prism "Prism's card, unowned: the fern printed off register in red, green and blue, its clip, and its 30 specimens under five tray headings." \
+shot card-prism "Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings." \
   CARD=prism STORE=lens:unowned CLOCK=5.4
 shot card-prism-levels "Prism's card, owned, scrolled to its specimens under the five trays." CARD=prism OWNED=prism CARDSCROLL=1 CLOCK=5.4
 shot card-complete "Complete's card, unowned: save \$5.97 on the packs you don't have." CARD=complete STORE=lens:unowned CLOCK=5.4
@@ -573,9 +573,10 @@ shot card-lens-xxxl "Lens's card at xxxLarge, the largest size short of the acce
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
 shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again." CONSENT=sends
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
-shot consent-settings-on "The gear's sheet: the analytics switch on, send log and privacy policy." CONSENT=yes SETTINGS=1
-shot consent-settings-off "The gear's sheet: the analytics switch off, send log and privacy policy." CONSENT=no SETTINGS=1
-shot settings "The gear's sheet in a build without analytics, v1's: restore purchases, send log and privacy policy, no switch, the version under them." SETTINGS=1
+shot consent-settings-on "The gear's sheet: music, sounds, haptics and colour letters, the analytics switch on, report a problem and privacy policy." CONSENT=yes SETTINGS=1
+shot consent-settings-off "The gear's sheet: music, sounds, haptics and colour letters, the analytics switch off, report a problem and privacy policy." CONSENT=no SETTINGS=1
+shot settings "Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version." SETTINGS=1
+shot settings-quiet "Settings with music and haptics off." SETTINGS=1 MUSIC=0 HAPTICS=0
 shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
   SETTINGS=1 STORE=lens:unowned RESTORED=none
 
@@ -647,6 +648,7 @@ for c in r g b; do
 done
 hold=5 shot prism-letters-8 "Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB." \
   PACK=prism LEVEL=8 OWNED=prism LETTERS=1
+hold=5 shot prism-letters-chosen "Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches." PACK=prism LEVEL=1 LETTERSCHOICE=1
 hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG." PACK=prism LEVEL=14 OWNED=prism LETTERS=1
 for plate in seeds medusae radiolaria nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1

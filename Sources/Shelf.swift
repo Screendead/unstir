@@ -86,6 +86,8 @@ enum Offer: Hashable, Sendable {
 
     /// The dock's header once its Ask to Buy is approved.
     var yours: String { pack.map { "\($0.name) is yours" } ?? "every pack is yours" }
+    /// A line under the facts, owned or not.
+    var note: String? { self == .pack(.prism) ? "letters for colour-blind play, in settings" : nil }
 
     var free: String {
         switch self {
@@ -747,6 +749,7 @@ struct PackCard: View {
                             }
                         }
                         .padding(.top, 32)
+                        if let note = offer.note { detail(note).padding(.top, 12) }
                         if offer.arriving {
                             Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -829,7 +832,7 @@ struct PackCard: View {
                 store.said(offer)
             }
         }
-        .sensoryFeedback(.success, trigger: landings)
+        .haptic(.success, trigger: landings)
     }
 
     private struct Reading: Equatable {

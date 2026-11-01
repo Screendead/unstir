@@ -44,7 +44,8 @@ final class PackTests: XCTestCase {
         let d = UserDefaults.standard, id = "pin-test"
         let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
                     "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)",
-                    "shelf.fit.\(Pack.lens.rawValue)", "shelf.levels.\(Pack.lens.rawValue)"]
+                    "shelf.fit.\(Pack.lens.rawValue)", "shelf.levels.\(Pack.lens.rawValue)",
+                    "letters", "music.off", "sounds.off", "haptics.off"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -78,6 +79,77 @@ final class PackTests: XCTestCase {
         Marks.seen(.lens, fits: true, store: true)
         XCTAssertTrue(d.bool(forKey: "shelf.fit.lens"))
         XCTAssertEqual(d.integer(forKey: "shelf.levels.lens"), Pack.lens.levels.count)
+        Letters.choice = true
+        XCTAssertEqual(d.object(forKey: "letters") as? Bool, true)
+        Settings.music = false
+        XCTAssertTrue(d.bool(forKey: "music.off"))
+        Settings.sounds = false
+        XCTAssertTrue(d.bool(forKey: "sounds.off"))
+        Settings.haptics = false
+        XCTAssertTrue(d.bool(forKey: "haptics.off"))
+    }
+
+    /// Music, sounds and haptics start on, with nothing stored. Jack's call C17, round 13.
+    func testSettingsStartOn() {
+        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off"]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
+        for key in keys { d.removeObject(forKey: key) }
+        XCTAssertTrue(Settings.music)
+        XCTAssertTrue(Settings.sounds)
+        XCTAssertTrue(Settings.haptics)
+        Settings.haptics = false
+        XCTAssertFalse(Settings.haptics)
+        XCTAssertTrue(Settings.music)
+        Settings.haptics = true
+        XCTAssertNil(d.object(forKey: "haptics.off"))
+    }
+
+    /// A harnessed launch holds the switches in memory: a tap lasts only that launch, and a stored choice never shows.
+    func testHeldSettingsAreNeverStored() {
+        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off", "letters"]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer {
+            Settings.held.withLock { $0 = nil }
+            for (key, value) in zip(keys, saved) { d.set(value, forKey: key) }
+        }
+        d.set(true, forKey: "music.off")
+        d.set(true, forKey: "letters")
+        d.removeObject(forKey: "sounds.off")
+        Settings.held.withLock { $0 = ["music": true, "sounds": true, "haptics": false] }
+        XCTAssertTrue(Settings.music)
+        XCTAssertFalse(Settings.haptics)
+        XCTAssertNil(Letters.choice)
+        Settings.sounds = false
+        Letters.choice = false
+        XCTAssertFalse(Settings.sounds)
+        XCTAssertEqual(Letters.choice, false)
+        XCTAssertNil(d.object(forKey: "sounds.off"))
+        XCTAssertEqual(d.object(forKey: "letters") as? Bool, true)
+        XCTAssertEqual(Settings.summary, "music on, sounds off, haptics off, letters off")
+        Settings.held.withLock { $0 = nil }
+        XCTAssertFalse(Settings.music)
+        XCTAssertEqual(Letters.choice, true)
+    }
+
+    /// The support address and the policy's page are Jack's, so they live in Config/Local.xcconfig (gitignored) or the
+    /// shell, never in a tracked file: the tracked config leaves both empty.
+    func testNoTrackedConfigHoldsAPrivateValue() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let config = try String(contentsOf: root.appending(path: "Config/Unstir.xcconfig"), encoding: .utf8)
+        let project = try String(contentsOf: root.appending(path: "project.yml"), encoding: .utf8)
+        for key in ["SUPPORT_ADDRESS", "POLICY_URL"] {
+            let set = config.split(separator: "\n").filter { $0.hasPrefix("\(key) =") || $0.hasPrefix("\(key)=") }
+            XCTAssertEqual(set, ["\(key) ="], key)
+            XCTAssertTrue(project.contains("$(\(key))"), key)
+        }
+        let keys = ["SUPPORT_ADDRESS", "POLICY_URL", "SupportAddress", "PolicyURL"]
+        for line in (config + "\n" + project).split(separator: "\n").map({ $0.trimmingCharacters(in: .whitespaces) })
+        where !line.hasPrefix("//") && !line.hasPrefix("#") && keys.contains(where: line.contains) {
+            let value = line.drop { $0 != "=" && $0 != ":" }
+            XCTAssertFalse(value.contains("@"), String(line))
+            XCTAssertFalse(value.contains("$()/") || value.contains("://"), String(line))
+        }
     }
 
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.

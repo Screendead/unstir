@@ -177,8 +177,8 @@ struct MenuView: View {
     /// The mark has moved and the list scrolls to it once it is laid out there.
     @State private var arriving = false
     @Namespace private var strip
-    /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
-    @State private var settings: Bool
+    /// The gear's sheet.
+    @Binding var settings: Bool
     /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
     @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -192,12 +192,12 @@ struct MenuView: View {
     private let dim = 0.55
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
-    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
+    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil,
          onPick: @escaping (Level) -> Void) {
         self.demo = demo
-        _settings = State(initialValue: settings)
+        _settings = settings
         self.onPick = onPick
         _card = card
         self.clock = clock
