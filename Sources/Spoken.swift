@@ -45,7 +45,7 @@ extension Game {
         level.run == nil ? "\(Spoken.count(moves, "move")), par \(par)" : Spoken.count(moves, "move")
     }
 
-    /// Said as the level ends, before its card shows.
+    /// The card's account of how the level ended, where VoiceOver lands as it shows.
     var finishSpoken: String {
         let moved = Spoken.count(moves, "move")
         if lost { return "Out of ticks on move \(moves)." }
@@ -54,13 +54,6 @@ extension Game {
         }
         if !level.ratchets.isEmpty { return "Unstirred. \(moved), \(level.budget) ticks." + (clean ? " Clean." : "") }
         return "Unstirred. \(moved), par \(par). " + (clean ? "Clean." : over > 0 ? "\(over) over par." : "At par.")
-    }
-
-    /// Spoken over whatever VoiceOver is reading, which a focus move would otherwise cut short.
-    func announceFinish() {
-        var line = AttributedString(finishSpoken)
-        line.accessibilitySpeechAnnouncementPriority = .high
-        AccessibilityNotification.Announcement(line).post()
     }
 }
 

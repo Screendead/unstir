@@ -1034,7 +1034,6 @@ struct LevelView: View {
             // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
             // centre among them.
             if game.solved { withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true } }
-            game.announceFinish()
             Task {
                 // A spill's card waits for the pour and the word; a lost clock's for its stamp.
                 try? await Task.sleep(for: .seconds(game.spilled ? Brim.card : game.lost ? 0.7 : 1.4))
@@ -2746,9 +2745,13 @@ struct ResultCard: View {
                 }
             }
             .font(.mono(13))
+            // Focus lands on the finish itself: an announcement before a focus move is cut short.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(game.finishSpoken)
+            .accessibilityFocused($focused)
             HStack(spacing: 40) {
                 Button("\u{2039} levels", action: onExit)
-                    .accessibilityLabel(Spoken.back(game.level)).accessibilityFocused($focused)
+                    .accessibilityLabel(Spoken.back(game.level))
                 if let share = game.shareText {
                     ShareLink(item: share) { Text("share \u{2197}") }
                         .shareTap()
@@ -2766,7 +2769,6 @@ struct ResultCard: View {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
-        // The finish was announced as it landed; the card's first button takes VoiceOver on from there.
         .onAppear { focused = true }
     }
 }
@@ -3041,9 +3043,10 @@ struct LostCard: View {
     var body: some View {
         VStack(spacing: 26) {
             Text("out of ticks on move \(game.moves)").font(.mono(13))
+                .accessibilityLabel(game.finishSpoken).accessibilityFocused($focused)
             HStack(spacing: 32) {
                 Button("\u{2039} levels", action: onExit)
-                    .accessibilityLabel(Spoken.back(game.level)).accessibilityFocused($focused)
+                    .accessibilityLabel(Spoken.back(game.level))
                 Button("undo \u{00B7} \(game.bank)") { game.undo() }
                     .disabled(game.bank == 0).opacity(game.bank == 0 ? 0.35 : 1)
                     .accessibilityLabel("Undo, \(game.bank) left")

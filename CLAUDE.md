@@ -611,9 +611,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
   the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
   ..."; the daily, endless and the sandbox by name), value (its result, "not played", or "locked, solve level 6 first")
-  and hint (its rods and par), the header's "3 moves, par 7", and the finish, announced at high priority as the level
-  ends ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared."), after which the
-  result or lost card's first button takes focus. The tank is one element that allows direct interaction, so a
+  and hint (its rods and par), the header's "3 moves, par 7", and the finish ("Unstirred. 7 moves, par 7. Clean.",
+  "Out of ticks on move 9.", "Spilled. 6 tanks cleared."), which labels the result or lost card's summary, where
+  VoiceOver's focus lands as the card shows, so no announcement is cut short by a focus move. The tank is one element that allows direct interaction, so a
   VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs.
