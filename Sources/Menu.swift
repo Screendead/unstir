@@ -170,7 +170,7 @@ struct MenuView: View {
     @State private var list = CGRect.zero
     @State private var scroller: ScrollViewProxy?
     /// The list has opened on its focus.
-    @State private var arrived = false
+    @State private var centred = false
     /// Mid-switch, the incoming tier's landing row in its list's own space, measured on the stirred copy: the scroll
     /// view still holds the outgoing list, so it scrolls to a mark placed there instead.
     @State private var mark: CGRect?
@@ -525,8 +525,8 @@ struct MenuView: View {
     /// Unanimated, under the dip that brings the menu in, once the rows are laid out and the scroll view's reader is in
     /// hand, whichever comes last.
     private func arrive() {
-        guard !arrived, let scroller, list.height > 0 else { return }
-        arrived = true
+        guard !centred, let scroller, list.height > 0 else { return }
+        centred = true
         DispatchQueue.main.async {
             if let focus, listed.levels.contains(where: { $0.id == focus.id }) { scroller.scrollTo(focus.id, anchor: .center) }
             flashing = nil
