@@ -1,6 +1,6 @@
-menu.png  Menu on first launch (in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock.
+menu.png  Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
-menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
+menu-whirlpool-locked.png  Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
 menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked.
 menu-vortex-locked.png  Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played).
 menu-vortex-open.png  Menu on vortex, opened by every whirlpool level at par: its level 01 playable, maelstrom still locked.
@@ -469,7 +469,7 @@ card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, ea
 card-lens-complete-pending.png  Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled.
 card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
 card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
-card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row.
+card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74).
 shelf-menu-owned.png  The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading.
 card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live.
