@@ -40,6 +40,8 @@ targets:
         Analytics: $(ANALYTICS)
         AptabaseKey: $(APTABASE_KEY)
         AnalyticsPlaytest: $(ANALYTICS_PLAYTEST)
+        SupportAddress: $(SUPPORT_ADDRESS)
+        PolicyURL: $(POLICY_URL)
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
   UnstirTests:
     type: bundle.unit-test
@@ -51,6 +53,7 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_NSPrincipalClass: FreshDefaults
     dependencies:
       - target: Unstir
 schemes:
