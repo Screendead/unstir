@@ -83,6 +83,9 @@ final class Store {
     private(set) var harness: Ledger?
     /// Each product's price as the App Store gives it, for the player's storefront; missing until it is fetched.
     private(set) var prices: [String: String] = [:]
+    /// Each price as a number, and the storefront's style to write one in, for Complete's saving.
+    private(set) var amounts: [String: Decimal] = [:]
+    @ObservationIgnored private var styles: [String: Decimal.FormatStyle.Currency] = [:]
     private(set) var pricing = Pricing.fetching
     /// Why each product's last attempt failed, while the ledger holds it as failed, or as pending after a failed ask again.
     private(set) var failures: [String: Failure] = [:]
@@ -110,6 +113,13 @@ final class Store {
 
     func price(_ id: String) -> String? { prices[id] }
 
+    /// What Complete saves on the sold packs left unowned, in Complete's own currency; nil while it saves nothing, or
+    /// before every price it needs is in. Complete owned owns every pack, so it saves nothing.
+    var saving: String? {
+        guard let s = Offer.saving(amounts: amounts, owned: (harness ?? ledger).owned, sold: Pack.sold()) else { return nil }
+        return styles[Pack.completeID].map { s.formatted($0) }
+    }
+
     /// Screen Time, or a child's account without Ask to Buy, can turn purchases off; read afresh as a card draws.
     var canPay: Bool { payments ?? AppStore.canMakePayments }
 
@@ -122,11 +132,13 @@ final class Store {
     }
 
     /// Set before `start`, which then leaves StoreKit alone for the launch.
-    func pretend(_ ledger: Ledger, prices: [String: String] = [:], pricing: Pricing = .fetching,
-                 failure: Failure = .other, canPay: Bool = true, restored: Restored? = nil) {
+    func pretend(_ ledger: Ledger, prices: [String: String] = [:], amounts: [String: Decimal] = [:],
+                 pricing: Pricing = .fetching, failure: Failure = .other, canPay: Bool = true, restored: Restored? = nil) {
         guard !Build.release else { return }
         harness = ledger
         self.prices = prices
+        self.amounts = amounts
+        styles = amounts.mapValues { _ in .currency(code: "USD").locale(Locale(identifier: "en_US")) }
         self.pricing = pricing
         failures = ledger.products.filter { $0.value == .failed || $0.value == .pending }.mapValues { _ in failure }
         payments = canPay
@@ -249,6 +261,8 @@ final class Store {
         for p in try await Product.products(for: Pack.productIDs) {
             products[p.id] = p
             prices[p.id] = p.displayPrice
+            amounts[p.id] = p.price
+            styles[p.id] = p.priceFormatStyle
         }
     }
 }

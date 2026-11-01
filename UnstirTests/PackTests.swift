@@ -147,6 +147,31 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Offer.all.map { Offer(name: $0.key) }, Offer.all)
     }
 
+    /// Complete is offered only while it costs less than the sold packs left unowned, and only once every price that
+    /// takes is in (Jack's call C7, round 13).
+    @MainActor func testCompleteSavesOnlyWhileItCostsLessThanThePacksLeft() {
+        let sold: [Pack] = [.lens, .escapement, .prism]
+        let amounts = Dictionary(uniqueKeysWithValues: Pack.allCases.map { ($0.productID, Decimal(string: "2.99")!) })
+            .merging([Pack.completeID: Decimal(string: "5.99")!]) { $1 }
+        XCTAssertEqual(Offer.saving(amounts: amounts, owned: [], sold: sold), Decimal(string: "2.98"))
+        XCTAssertNil(Offer.saving(amounts: amounts, owned: [.lens], sold: sold), "5.98 against 5.99")
+        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.prism.productID }, owned: [], sold: sold))
+        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.completeID }, owned: [], sold: sold))
+        XCTAssertNil(Offer.saving(amounts: amounts, owned: Set(sold), sold: sold))
+
+        // The store reads it off its own ledger: a pending pack is unowned, and Complete owned owns every pack.
+        let store = Store()
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .pending)
+        store.pretend(ledger, amounts: amounts)
+        XCTAssertEqual(store.saving, Pack.sold().count == 4 ? "$5.97" : "$2.98")
+        ledger.record(Pack.completeID, .owned)
+        store.pretend(ledger, amounts: amounts)
+        XCTAssertNil(store.saving)
+        store.pretend(Ledger())
+        XCTAssertNil(store.saving, "no prices yet")
+    }
+
     /// A pack's ids never read as another pack's or a tier's.
     /// A Release shelf shows a pack it sells once it has levels past its taste, and Complete once it shows every pack
     /// it sells; a build outside Release shows them all.
@@ -296,6 +321,9 @@ final class PackTests: XCTestCase {
                          "UNSTIR_PRICES": "unreachable", "UNSTIR_PAYMENTS": "0", "UNSTIR_RESTORED": "lens,prism"])
         XCTAssertEqual(h.failure, .offline)
         XCTAssertEqual(h.prices, [:])
+        XCTAssertEqual(h.amounts, [:])
+        XCTAssertEqual(Harness([:]).prices[Pack.completeID], "$5.99")
+        XCTAssertEqual(Harness([:]).amounts[Pack.lens.productID], Decimal(string: "2.99"))
         XCTAssertEqual(h.pricing, .unreachable)
         XCTAssertFalse(h.canPay)
         XCTAssertEqual(h.restored, .found([.lens, .prism]))

@@ -20,6 +20,15 @@ enum Offer: Hashable, Sendable {
         return packs.map(Offer.pack) + (packs.count == sold.count ? [.complete] : [])
     }
 
+    /// What Complete saves over buying the `sold` packs not `owned` one by one (a pending pack is unowned): nil unless
+    /// it saves something and every price that takes is known (Jack's call C7, round 13).
+    static func saving(amounts: [String: Decimal], owned: Set<Pack>, sold: [Pack]) -> Decimal? {
+        let left = sold.filter { !owned.contains($0) }.map { amounts[$0.productID] }
+        guard !left.isEmpty, let complete = amounts[Pack.completeID], !left.contains(nil) else { return nil }
+        let saving = left.compactMap { $0 }.reduce(0, +) - complete
+        return saving > 0 ? saving : nil
+    }
+
     /// Whether this build sells it.
     var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
 
@@ -700,6 +709,9 @@ struct PackCard: View {
                                         }
                                     }
                             }
+                            if offer.pack == nil, state != .owned, let saving = store.saving {
+                                fact("save", Text("\(saving) on the packs you don't have"))
+                            }
                         }
                         .padding(.top, 32)
                         if offer.arriving {
@@ -722,9 +734,9 @@ struct PackCard: View {
                         .padding(.top, levels.isEmpty ? 0 : 16)
                         .id("buy")
                         .padding(.top, levels.isEmpty ? 0 : 16)
-                        if offer.pack != nil, state != .owned, store.canPay, store.state(.complete) != .owned,
+                        if offer.pack != nil, state != .owned, store.canPay, let saving = store.saving,
                            Offer.shelf().contains(.complete) {
-                            completeLine.padding(.top, 14)
+                            completeLine(saving).padding(.top, 14)
                         }
                         if Pack.sold().contains(where: { store.state($0) != .owned }) {
                             restore.padding(.top, 18).padding(.bottom, 10)
@@ -1048,16 +1060,17 @@ struct PackCard: View {
     }
 
     /// Complete's failure stays off the pack's own status, so it is said here, beside the button that tried.
-    private var completeLine: some View {
-        let complete = store.price(Pack.completeID)
+    private func completeLine(_ saving: String) -> some View {
+        let complete = store.price(Pack.completeID) ?? ""
+        let quiet = Color.text.opacity(0.55)
         return VStack(alignment: .leading, spacing: 6) {
             Button { buy(.complete) } label: {
-                HStack(spacing: 6) {
-                    Text("or all \(Offer.countWord(Pack.sold().count)) in Complete").opacity(0.55)
-                    if let complete { Text(complete).opacity(0.75) }
-                    Text("\u{203A}").opacity(0.55)
-                }
+                let all = Text("or all \(Offer.countWord(Pack.sold().count)) in Complete \u{00B7}").foregroundStyle(quiet)
+                let save = Text("\u{00B7} save \(saving) \u{203A}").foregroundStyle(quiet)
+                Text("\(all) \(Text(complete).foregroundStyle(Color.text.opacity(0.75))) \(save)")
                 .font(.mono(.caption))
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
                 // Its failure line is 6 pt below.
                 .hit(10, 8)
             }
@@ -1065,7 +1078,7 @@ struct PackCard: View {
             // Complete's own request is asked again only from Complete's card.
             .disabled(buying || store.state(.complete) == .pending)
             .accessibilityLabel("Buy Complete, every pack")
-            .accessibilityValue(complete ?? "")
+            .accessibilityValue("\(complete), saves \(saving)")
             if store.state(.complete) == .failed {
                 Text("Complete's purchase didn't go through").font(.mono(.caption, .semibold)).foregroundStyle(Color.magenta)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1137,8 +1150,8 @@ struct PackDock: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             HStack(alignment: .top, spacing: 0) {
-                // Complete owned leaves nothing on its card to do.
-                let shelf = Offer.shelf().filter { $0 != .complete || store.state(.complete) != .owned }
+                // Complete only while it costs less than the packs left: owned, it saves nothing.
+                let shelf = Offer.shelf().filter { $0 != .complete || store.saving != nil }
                 ForEach(Array(shelf.enumerated()), id: \.offset) { i, offer in
                     let x = (Double(i) + 0.5) / Double(shelf.count), state = store.state(offer)
                     Button { open(offer, UnitPoint(x: x, y: 0.88)) } label: {

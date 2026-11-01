@@ -145,6 +145,8 @@ struct Harness {
     /// With `purchases`, the prices StoreKit/Unstir.storekit sets, as the App Store would show them on a US storefront;
     /// none with UNSTIR_PRICES=0, as before StoreKit answers, or UNSTIR_PRICES=unreachable, after its fetch failed.
     let prices: [String: String]
+    /// The same prices as numbers, for Complete's saving.
+    let amounts: [String: Decimal]
     let pricing: Pricing
     /// UNSTIR_FAILED=offline (storefront, refused): why each failed product failed, or each pending one's ask again.
     let failure: Failure
@@ -212,8 +214,9 @@ struct Harness {
         exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up"].contains($0) ? $0 : nil }
         stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
-        prices = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
-            : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, $0 == Pack.completeID ? "$5.99" : "$2.99") })
+        amounts = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
+            : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, Decimal(string: $0 == Pack.completeID ? "5.99" : "2.99")!) })
+        prices = amounts.mapValues { "$\($0)" }
         pricing = env["UNSTIR_PRICES"] == "unreachable" ? .unreachable : .fetching
         failure = env["UNSTIR_FAILED"].flatMap(Failure.init(rawValue:)) ?? .other
         canPay = env["UNSTIR_PAYMENTS"] != "0"
@@ -385,7 +388,7 @@ struct RootView: View {
         harnessed = h.harnessed
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
         if let purchases = h.purchases {
-            Store.shared.pretend(purchases, prices: h.prices, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
+            Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
                                  restored: h.restored)
         }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
