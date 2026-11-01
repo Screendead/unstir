@@ -285,6 +285,9 @@ final class StoreTests: XCTestCase {
         let again = session.allTransactions().filter { $0.pendingAskToBuyConfirmation }
         XCTAssertEqual(again.count, 1)
         XCTAssertNotEqual(again.first?.identifier, asked.identifier)
+        // Left waiting, the request holds up the next test's approval.
+        try session.declineAskToBuyTransaction(identifier: try XCTUnwrap(again.first).identifier)
+        try await Task.sleep(for: .seconds(2))
         try await relaunch(owns: [])
     }
 
