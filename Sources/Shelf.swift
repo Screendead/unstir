@@ -751,7 +751,8 @@ struct PackCard: View {
             if !store.canPay { detail(Failure.refused.words ?? "").padding(.bottom, 12) }
             layout {
                 if store.canPay {
-                    pill(label, trailing: price ?? store.pricing.words, colour: offer.glow, dim: price == nil) { buy(offer) }
+                    pill(label, trailing: price ?? (unreachable ? nil : store.pricing.words), colour: offer.glow,
+                         dim: price == nil) { buy(offer) }
                         .disabled(buying)
                         .keyframeAnimator(initialValue: 1.0, trigger: pulses) { pill, scale in
                             pill.scaleEffect(reduceMotion ? 1 : scale)
@@ -777,8 +778,12 @@ struct PackCard: View {
                     .accessibilityLabel(replay ? "Replay the \(n) free levels" : "Try the first \(n) levels free")
                 }
             }
+            // Under the pill, as a failure is said, since it wraps inside the pill on the smallest phone.
+            if unreachable { detail(store.pricing.words ?? "").padding(.top, 10).accessibilityHidden(true) }
         }
     }
+
+    private var unreachable: Bool { store.canPay && price == nil && store.pricing == .unreachable }
 
     private var next: Level? { levels.isEmpty ? Self.placeholder(offer) : Self.pickUp(levels) }
 
