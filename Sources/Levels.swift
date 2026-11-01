@@ -2,7 +2,7 @@
 
 import Foundation
 
-struct Run: Hashable, Sendable {
+struct Run: Hashable, Sendable, Codable {
     var seed: UInt64
     var tank = 0
     /// Notches on the brim as this tank opens, as the tank before left them.

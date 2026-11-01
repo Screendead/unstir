@@ -33,7 +33,9 @@ enum Spoken {
             }
             value = what.map { "locked, solve \($0) first" } ?? gate.map { "locked, par every \($0.name) level first" } ?? "locked"
         } else if level.run != nil {
-            value = tanks > 0 ? "best \(count(tanks, "tank"))" : new ? "new" : "not played"
+            // Started, for a run: one is saved, which the row continues.
+            let best = tanks > 0 ? "best \(count(tanks, "tank"))" : nil
+            value = started ? ["run in progress", best].compactMap { $0 }.joined(separator: ", ") : best ?? (new ? "new" : "not played")
         } else if let result {
             value = result.clean == true ? "clean" : result.over == 0 ? "at par" : "\(result.over) over par"
         } else {

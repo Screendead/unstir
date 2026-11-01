@@ -46,7 +46,7 @@ final class PackTests: XCTestCase {
                     "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)",
                     "shelf.fit.\(Pack.lens.rawValue)", "shelf.levels.\(Pack.lens.rawValue)",
                     "letters", "music.off", "sounds.off", "haptics.off",
-                    "welcomed", "modes.seen", "review.asked"]
+                    "welcomed", "modes.seen", "review.asked", "resume.\(id)"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -94,6 +94,9 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(d.bool(forKey: "sounds.off"))
         Settings.haptics = false
         XCTAssertTrue(d.bool(forKey: "haptics.off"))
+        Resume.save(Resume(id: id, print: "", firstTry: true, actions: [.undo]))
+        XCTAssertEqual(Resume.load(id)?.actions, [.undo])
+        XCTAssertNotNil(d.data(forKey: "resume.pin-test"))
     }
 
     /// Music, sounds and haptics start on, with nothing stored. Jack's call C17, round 13.

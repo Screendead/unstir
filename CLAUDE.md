@@ -287,7 +287,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13). Endless changes only what
   it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to 28, at least n/2 of them hidden, to half), which
   `testEndlessVectors` pins. A `Run` is endless's seed, tank and the brim's notches as that tank opens. Progress
-  (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most) refills by 2
+  (`Best`, started flags, undo bank, and each unfinished level's resume) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most) refills by 2
   the first time a level other than the sandbox or endless opens on a local calendar day later than the stored day of
   its last refill (`Best.refill`, `Best.refilled`), so each day played refills once and a long absence once; a fresh
   install records the day without a refill, and a clock moved back never refills. The day is `Best.trustedNow`'s, in the
@@ -384,7 +384,17 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   bank empty it stays live only to put "undos refill +2 each day you play" in the caption for three seconds (the
   lost card's under its buttons), which plays the undo and reset sounds as the bottom controls do. An undo tapped
   while a let-go settles is taken once it has. A reset with nothing played only replays the opening and counts no
-  reset, so it costs no clean. With moves played, the play screen's reset takes a second tap: the first only taps and
+  reset, so it costs no clean. An unfinished level resumes (Jack's call C2, round 13): `Game` records each call that
+  succeeds (`Resume.Action`: a knob's turn, a tank's, a wait, an undo, a reset with moves played; never the
+  demonstration's) and saves it with the try's first-try flag and seconds (`resume.<id>`, Resume.swift) before the
+  settle, and on leaving or going to the background; `RootView.show` replays the record through the same calls
+  (`Game.resumed`) before the level appears, with no opening, the bank, flags and analytics untouched, the fine pass
+  inline and the brim's replayed changes long settled. A save whose level no longer deals the same (`Level.print`)
+  or that the level refuses is dropped, and a launch drops yesterday's dailies and ids no level has (`Resume.prune`).
+  A finish clears it, out of ticks too (so the lost card's undo doesn't outlive the app); a cleared tank of a run
+  saves the next tank's, empty, so endless keeps its run from tank to tank, and a spill clears it. Only a plain
+  launch's level saves (`storesResume`), and a harnessed launch reads none but `UNSTIR_RESUME`'s. `Level.print` is
+  spelt out, never through a description, and pinned (`testThePrintNeverChanges`): a change drops every save. With moves played, the play screen's reset takes a second tap: the first only taps and
   arms it, "reset? tap again", for 2 s (`ResetArm`; under VoiceOver until focus leaves it), and any move, undo or
   finish disarms it; the cards' "again" resets
   at once (Jack's call C12, round 13). The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
@@ -690,7 +700,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   after days 2, 7 and 30 the newest `snapshot` due, every one due marked sent, so a late yes or a clock jumped ahead
   sends one (Jack, 2026-10-26, K). Days are plain `Best.day`, not `trustedNow`. A level sends `level` (id, `daily` for any daily, outcome solved, lost (Escapement out of ticks) or quit, moves, par (Escapement's budget), undos, resets)
   as it is solved, lost or left for the menu (a lost tank left is no quit); endless sends `run` (spilled or quit, tanks cleared, moves); the sandbox
-  nothing. A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app
+  nothing. Since resume (C2), a level left unfinished is paused, not quit, as it reopens where it was: the build that
+  turns analytics on must say so in `level`'s outcome. A level open as the app leaves the front writes its quit to the tally, which the next launch sends if the app
   was killed. `card`, `taste` and `purchased` go once per pack: `cardSeen` waits for the pack card, `tasteFinished`
   fires once a pack's taste levels all have bests, `purchased` on a verified purchase in `Store.purchase`. The snapshot
   reads the bests, started flags, bank, endless best, dailies solved on the first try, packs owned and the tally.
@@ -703,7 +714,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
   the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
-  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "tried" (started, no best),
+  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
   "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, par
   every Plughole level first") and hint (its rods and par), the menu's next button (`Spoken.next`: "Next:
   level 2, Drip"), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
@@ -719,7 +730,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   none), and the sandbox over the list. The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
   (`Best.started`) and has no best reads tried, faint, as a pack card's list does (Jack's call C3, round 13; endless
-  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. Under the title, a strip names every tier, dimmed with a lock while locked, and
+  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. With a run saved, endless's row
+  continues it, "continue · tank 6 · brim 3 · best 9" in place of its detail, and "new run" on its title's line in
+  place of the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s; under VoiceOver until focus
+  leaves, as reset), the second drops the run and starts another, and a touch that ends a stir does neither. Under the title, a strip names every tier, dimmed with a lock while locked, and
   keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
   list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
   (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
@@ -822,7 +836,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_SEENLEVELS=lens:20` has that pack's card last opened when it had 20 levels, for the launch only.
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
   levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list; `UNSTIR_BESTS`
-  takes a pack's prefix as it takes a tier's. A pack level past
+  takes a pack's prefix as it takes a tier's, and `endless:9` the run's best. A pack level past
   the taste needs `UNSTIR_OWNED` too, or it opens the card. `UNSTIR_STOPLOOK=left` picks how an Escapement tank out of
   ticks as its last clock stops looks. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, `UNSTIR_LANDS=s`
   buys the open card's product s seconds in (with the store's states set), and
@@ -834,7 +848,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
   and it holds the swirl's breath at 0. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
   first slosh starts at 1.5 s, for stills, even under `UNSTIR_CLOCK`, and never with `UNSTIR_SWIRLED=1`, which has none. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
-  pushes until it spills. `UNSTIR_RESETARMED=1` holds the reset control armed, "reset? tap again". `UNSTIR_REVIEW=log` logs the rating request in place of making it, as a plain launch would make it. `UNSTIR_NOW=HH:mm` sets the clock the daily's card reads the next daily from. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
+  pushes until it spills. `UNSTIR_RESETARMED=1` holds the reset control armed, "reset? tap again". `UNSTIR_REVIEW=log` logs the rating request in place of making it, as a plain launch would make it. `UNSTIR_NOW=HH:mm` sets the clock the daily's card reads the next daily from. `UNSTIR_RESUME=2:+5,0:+2,u,1:+3` is the harness's one save, for the launch, so whatever a plain launch left stored never reaches a shot: the level's try with that line (`UNSTIR_MOVES`'s form, plus `u` an undo and `r` a reset), so it opens resumed, and with `UNSTIR_MODE=endless` `UNSTIR_RESUMETANK=n` puts the saved run on tank n (from 0; empty `UNSTIR_RESUME` is the run with no move yet), which the menu's endless row continues. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
   takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag or the swirl's: they
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch. Nor
