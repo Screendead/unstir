@@ -426,7 +426,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   offline, a storefront without it, purchases turned off), which the card says under it. A pending pill stays live as
   "ask again", since StoreKit sends nothing for a declined Ask to Buy and a new purchase sends a new request; where
   `AppStore.canMakePayments` is false (`Store.canPay`) the card offers only the taste and says why; and a restore says
-  what it found that wasn't owned (`Restored`, `Store.restoreWords`), and nothing on a cancelled sign-in. A revocation
+  what it found that wasn't owned (`Restored`, `Store.restoreNote`), and nothing on a cancelled sign-in. A revocation
   says, in grey, that the pack isn't on this Apple ID any more, or, where its transaction was family-shared
   (`Ledger.unshared`), that it is no longer shared, and that the progress is kept. A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and Complete as family-shareable non-consumables at
