@@ -393,7 +393,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   or that the level refuses is dropped, and a launch drops yesterday's dailies and ids no level has (`Resume.prune`).
   A finish clears it, out of ticks too (so the lost card's undo doesn't outlive the app); a cleared tank of a run
   saves the next tank's, empty, so endless keeps its run from tank to tank, and a spill clears it. Only a plain
-  launch's level saves (`storesResume`), and a harnessed launch reads none but `UNSTIR_RESUME`'s. With moves played, the play screen's reset takes a second tap: the first only taps and
+  launch's level saves (`storesResume`), and a harnessed launch reads none but `UNSTIR_RESUME`'s. `Level.print` is
+  spelt out, never through a description, and pinned (`testThePrintNeverChanges`): a change drops every save. With moves played, the play screen's reset takes a second tap: the first only taps and
   arms it, "reset? tap again", for 2 s (`ResetArm`; under VoiceOver until focus leaves it), and any move, undo or
   finish disarms it; the cards' "again" resets
   at once (Jack's call C12, round 13). The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the

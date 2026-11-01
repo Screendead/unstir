@@ -88,12 +88,15 @@ struct Resume: Codable, Equatable {
 }
 
 extension Level {
-    /// What deals the level, as a stable string: a save made on a level an update has since re-dealt is dropped.
+    /// What deals the level, as a stable string: a save made on a level an update has since re-dealt is dropped. Spelt
+    /// out here rather than through any description, whose change would drop every save.
     var print: String {
         func set(_ s: Set<Int>) -> String { s.sorted().map(String.init).joined(separator: ",") }
+        let scramble = self.scramble.map { String(format: "%d:%+d", $0.rod, $0.steps) }.joined(separator: ",")
+        let motion = switch self.motion { case .none: "none"; case .tank: "tank"; case .crank: "crank" }
         let masks = self.masks.sorted { $0.key < $1.key }.map { "\($0.key):\($0.value.rawValue)" }.joined(separator: ",")
         let run = self.run.map { " run=\($0.seed):\($0.tank):\($0.brim)" } ?? ""
-        return "\(layout.rawValue) [\(scramble.map(\.description).joined(separator: ","))] seized=\(set(seized)) "
+        return "\(layout.rawValue) [\(scramble)] seized=\(set(seized)) "
             + "sockets=\(set(sockets)) ratchets=\(set(ratchets)) back=\(set(woundBack)) lenses=\(set(lenses)) "
             + "masks=\(masks) motion=\(motion) par=\(par)\(run)"
     }

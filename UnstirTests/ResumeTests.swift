@@ -168,4 +168,11 @@ import XCTest
         XCTAssertNil(d.data(forKey: "resume.daily-20000101"), "yesterday's daily goes")
         XCTAssertNotNil(d.data(forKey: "resume.L12"))
     }
+
+    /// A save is dropped when its level's print changes, so the print is pinned as a literal: changing how it is spelt
+    /// drops every player's save.
+    func testThePrintNeverChanges() {
+        XCTAssertEqual(Level.plughole[11].print, "quad [2:-3,0:+4,3:+7,0:-2,1:-3,2:-5] seized= sockets= ratchets= back= lenses= "
+                       + "masks= motion=none par=6")
+    }
 }
