@@ -51,11 +51,6 @@ struct Resume: Codable, Equatable {
 
     static func remove(_ id: String) { UserDefaults.standard.removeObject(forKey: key(id)) }
 
-    /// The harness's: this launch sees it as the id's save, and it is never written to disk.
-    func fake() {
-        if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.register(defaults: [Self.key(id): data]) }
-    }
-
     /// A save with nothing played is none. Endless's is kept, as it carries the run from tank to tank.
     @MainActor static func save(_ game: Game) {
         guard game.storesResume, !game.replaying, !game.finished else { return }

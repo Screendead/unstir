@@ -191,7 +191,7 @@ struct MenuView: View {
     /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
     @State private var leading: Lead
     /// Endless's saved run, which its row continues (Jack's call C2, round 13).
-    @State private var saved = Resume.load("endless")
+    @State private var saved: Resume?
     /// When a first tap armed the endless row's "new run", which then says "new run? tap again" for `ResetArm.window`.
     @State private var newRunArmed: Date?
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
@@ -204,7 +204,7 @@ struct MenuView: View {
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
-         cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil,
+         cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil, run: Resume? = nil,
          onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = settings
@@ -218,6 +218,7 @@ struct MenuView: View {
         self.held = held
         self.arrived = arrived
         _flashing = State(initialValue: focus?.id)
+        _saved = State(initialValue: run)
         _cardFocus = State(initialValue: focus)
         // A tier's own level left lands on its tier, which "up a notch" may have opened since the menu was last up.
         let tier = start ?? focus.flatMap { f in f.tier.levels.contains { $0.id == f.id } ? f.tier : nil } ?? Tier.stored()
