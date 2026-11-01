@@ -356,7 +356,7 @@ Round 11 (2026-10-29, on the review page after round 10's notes):
 | FS17. First Stir | **C:** the clearer ending (the fade fix, the longer night and a caption per vignette, merged in #54). With it, Jack's note: First Stir leaves v1 and is reworked later, because the art's constraints made the story hard to read from the illustrations alone; something else with at least one new mechanic takes its place as the third paid pack. #54 merged 2026-10-29; PR #60 is v1 without it |
 | LG1. The EU and analytics | **C, conditionally:** "C if those hurdles can't be overcome", meaning no EU release if the EU representative and trader-page hurdles can't be cleared. He asked how solo developers handle the EU representative; the answer fed round 12's EU1 |
 | LG2. Children and the consent card | **A:** an age bracket before the card, the threshold read from one setting |
-| LG3. The rest of the legal work, required either way | **A (Jack, 2026-11-01): keep send log; register with the ICO and pay its fee with the address withheld, but not yet.** Jack will check with the ICO closer to release (reminder under "The Apple Developer account"). Nothing is due until the first emailed tester, received log or support email. With A, Claude also: takes boot time out of the flight log; makes send log say what it holds; fixes the privacy policy (drop portability, say StoreKit reaches Apple, the objection and legal-duty wording); adds Apple's age-range check before launch (California AB 1856 joins TX, UT, LA, AL); notes Texas's significant-change notice before a new paid pack, and Self Assessment once App Store income passes the trading allowance. Still open: whether UK e-commerce rules need a geographic address on the store page |
+| LG3. The rest of the legal work, required either way | **A (Jack, 2026-11-01): keep send log; register with the ICO and pay its fee with the address withheld, before TestFlight but not yet.** Jack will check with the ICO and pay before the first TestFlight invite (reminder under "The Apple Developer account"). Nothing is due until the first emailed tester, received log or support email. With A, Claude also: takes boot time out of the flight log; makes send log say what it holds; fixes the privacy policy (drop portability, say StoreKit reaches Apple, the objection and legal-duty wording) (those three on branch `legal-lg3`, awaiting review; the policy's 12-month and two-year retention figures are proposals for Jack, and the mailbox's provider and country are placeholders, since no paid business mailbox means no processor contract to claim); adds Apple's age-range check before launch (branch `age-range`, awaiting review) (California AB 1856 joins TX, UT, LA, AL); notes Texas's significant-change notice before a new paid pack, and Self Assessment once App Store income passes the trading allowance. Still open: whether UK e-commerce rules need a geographic address on the store page |
 
 Round 12 (decided, 2026-10-29). Jack's words are kept in `HANDOFF.private.md`.
 
@@ -368,9 +368,42 @@ Round 12 (decided, 2026-10-29). Jack's words are kept in `HANDOFF.private.md`.
 | ES2. Escapement's budget display | **B:** the flip-clock numbers also show in each hub, and a total counter elsewhere; the numbers must never contradict each other, and a hub at 0 must show clearly that it has run out. Jack's words: "just don't let the numbers contradict each other? they should render as flip-clock numbers in the hubs too. and when the hubs reach 0, it should show clearly that they've run out (e.g. greying out the hub/escapement, or what you already built to show it, or something else)", and "i want the flip clocks for each hub in that hub, plus a counter for the total elsewhere." Built on `esc-hub-flaps` (2026-10-29), the rule Claude settled under the note: each clock's count is what it owed as dealt, each of its ticks takes one off it, a pushed tick too; the header is the hubs' sum after every tick; a clock at 0 stops ticking and greys (wheel, sub-dial, card, dashed disc) as its last tick lands, with the amber stop ring; out of ticks once no clock can tick with twists left. On a clean line each count reaches 0 as its rod empties, so the book stands. Each hub is a one-digit split-flap card (no clock owes more than 9) |
 | PL1. Prism's plates 3 and 4 | **Redrawn.** Jack found the watch movement (tray 3, Colour Order) and the cathedral's west front (tray 4, Overprint) messy, and chose from six redraws, three a plate: Haeckel's medusae for tray 3 and Haeckel's radiolarians for tray 4 (2026-10-29). Shipped as he saw them, without the later polish passes, on `prism-plates-v2`; the plates, their `Picture` cases and the trays' headings take the new names |
 
+Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish page, except C19. The page and its sources
+(the audit, the proposals, the UX inventory) are outside the repo, in round 13's notes.
+
+| Call | Decision |
+|---|---|
+| N1. Level names | **One world per tier and pack, plain nouns, gentle to wild:** plughole the bath (Drop to Drain), whirlpool a river (Spring to Estuary), vortex the winds (Calm to Tornado), maelstrom the open sea (Swell to Abyss), Lens things you look through (Keyhole to Kaleidoscope), Escapement a clock taken apart (Mainspring to Midnight), Prism the specimens on each plate (Frond to Nautilus). Ids never change. The hints the old titles carried move into the levels' notes. First Stir's titles stay. Built on `level-names` (PR #82). Open: L2 (Drip, was "Further than it looks.") has no note, though the recommendation said L1 to L4 lose nothing; whether it wants one is a creative call |
+| N1a. Escapement 01 | **Mainspring**, replacing D1's "The clock" |
+| N1b. Lens's chapters | **Four:** Close-up (1-6), Cut-in (7-12), Double-take (13-18), Big Picture (19-25), so the card's "four issues" is true |
+| N1c. Case | **Sentence case** ("Last drop") |
+| C1. The end of the free taste | **B:** level 03's result card says "more in Lens ›" in the pack's colour; the card opens on its buy block under "You've played the free three. 22 more in Lens."; no price on the result card |
+| C2. Leaving an unfinished level, or the app dying | **A, resume:** the moves are saved on every commit and replayed on reopening; endless resumes mid-tank; no dialog |
+| C3. When a level counts as tried | **A:** the first committed move; a look is free; "tried" shows on the row |
+| C4. A new player's first screen | **B:** a fresh install opens straight into plughole 01; the menu leads with 01, daily and endless hidden until they open |
+| C5. The pack dock | **C:** it appears once plughole 09 is solved |
+| C6. Pulls toward the dock | **C:** a one-time "new" mark on a cover when its pack fits the player's progress or an update adds levels, and "2/3 free" under a started pack |
+| C7. Complete once a pack is owned | **C:** shown only while it costs less than the unowned packs, with the saving said |
+| C8. Finishing a pack or the last free tier | **C:** one completion line, plus one quiet "try <pack> ›" while a pack is unowned |
+| C9. Results | **B:** three marks (solved, at par, clean), drawn in the design pass (to-do 72) |
+| C10. The timer | **A:** off the result card and out of the best's ranking |
+| C11. Par warning and the over-par veil | **A:** the count amber at par and magenta past it; the veil at 0.05 a move, capped at 0.2 |
+| C12. Reset | **A:** "reset? tap again" for 2 s |
+| C13. A drag the system cuts off | **A:** commit everywhere, as V26; after a phone check of which handler runs first |
+| C14. Escapement's pushed tick | **A:** the caption says at once "That tick can't come back. Undo, or again."; the tank plays on (EL1 kept) |
+| C15. Teaching Lens's taste | **A:** a ghost finger rides the lens's track on Lens 01 until the first lens commit |
+| C16. Prism's letters | **B:** a "colour letters" switch in settings, defaulting to Differentiate Without Colour, and one line on Prism's card |
+| C17. Settings | **A:** music, sounds and haptics switches; "report a problem" mails the log to the support address (kept out of the repo); the policy on Jack's own domain |
+| C18. The daily | **A:** the gate stays at plughole 23 for v1; a quiet run count on the row and "next daily in 7 h" on the card |
+| C19. Swiping back | **Jack: an edge swipe back, as everywhere else in iOS** ("it's little things like this that Apple looks for"). Claude's recommendation (none in play) is set aside. The swipe starts only from the screen's left edge and wins over a rim turn that lands there; with C2's resume an accidental swipe loses nothing |
+| C20. A rating request | **B:** once, after the solve that opens whirlpool; never after a loss, a spill or a purchase |
+| C21. After a purchase | **A:** the card stays with "play 04 ›" lit; an Ask to Buy approval says "Lens is yours" once on the menu |
+| C22. Mac and Vision Pro | **A:** opt out for v1 in App Store Connect. Jack will bench the GPU on his old iPhone XS if it still runs |
+
 **Launch checklist** (App Store Connect and the rest; to be extended)
 
 - In App Store Connect's availability, exclude the EU and EEA storefronts (EU1 = B).
+- Opt out of the Mac and Vision Pro App Stores for v1 (C22 = A).
 - Analytics items (the consent question, the age bracket, the privacy label's analytics rows, Aptabase's region and key)
   are moot for v1 (AN1 = A).
 
@@ -1041,8 +1074,8 @@ names and product ids, and Complete's promise to older owners.
     its tick landing with it, and a re-grab of the same knob is the next move, so the lab's lift-out, its seal and
     Claude's two readings about sealing are gone. Jack's round 9 D1 = A keeps the rest as built: a move a full stack
     would refuse the tick of is refused (no problem comes near 36 entries); the demonstration plays on every opening
-    of escapement 1 and a tap skips it; escapement 1 is called "The clock"; several clocks will tick in turn
-    clockwise from twelve. Left: the ratchet's sound (to-do 45).
+    of escapement 1 and a tap skips it; escapement 1 was called "The clock" (Mainspring since N1a, round 13);
+    several clocks will tick in turn clockwise from twelve. Left: the ratchet's sound (to-do 45).
     Several clocks and wound-back clocks built on `escapement-book` (2026-10-27, round 10): each running clock ticks
     in turn, clockwise from twelve, a wound-back one -1 with a mirrored ratchet; a pushed tick stops the turn and
     loses; one clock stopping while another runs loses nothing; a tap on any ratchet waits.
@@ -1111,8 +1144,9 @@ names and product ids, and Complete's promise to older owners.
    Escapement kept as built (D1 = A, round 9).
    All 30 built on `escapement-book` (2026-10-27, round 10), waiting on Jack's play of the book on the phone (E3): the
    book's order and five chapters, headed in the card's list; each par what its clocks owe, reached by the app's prover
-   and replayed on a real `Game`; each key pinned. Problem 1 is the book's "The tick" under D1's title "The clock" (so
-   the old escapement-1, the mock-up, is now 2, "The wait"); the 22 untitled problems are "Problem N". Escapement now
+   and replayed on a real `Game`; each key pinned. Problem 1 is the book's "The tick" (so the old
+   escapement-1, the mock-up, is now 2); every problem's title is N1's (round 13), Mainspring (N1a, replacing D1's "The
+   clock") to Midnight. Escapement now
    has levels past its taste, so it goes on sale on the shelf and its card no longer says more arrive.
    Jack's call J6 = B (round 11): the book ends on the two-clock hex, 30, with the three-clock hex as 29; rows swapped
    and the book re-proved on `escapement-book`. Round 10's question of what a tank lost to its last clock stopping shows

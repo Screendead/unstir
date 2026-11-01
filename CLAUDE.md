@@ -288,9 +288,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   about a second an opening. A new boot believes the wall clock, and anchors there unless it reads more than `slack`
   before the anchor's time, so a clock reset at boot and set right later still counts as a new boot. With the session
   unread, a new boot shows as the uptime going back, or as a jump at least the anchor's uptime, which is believed. The
-  launch logs whether the session was read, the uptime and `kern.monotonicclock`. A `Level` has a `motion`, what the rim
-  holds to carry the knobs round without a stir (`.none`; `.tank`, maelstrom's; `.crank`, charybdis's planets, not
-  built), and a kind per knob (`kind(of:)`, from its `seized`, `sockets` and `ratchets`): a working knob stirs, a seized
+  launch logs whether the session was read, never the uptime: the log can leave the phone, and a line's time less the
+  uptime is the boot's instant. A `Level` has a `motion`, what the rim holds to carry the knobs round without a stir
+  (`.none`; `.tank`, maelstrom's; `.crank`, charybdis's planets, not built), and a kind per knob (`kind(of:)`, from its `seized`, `sockets` and `ratchets`): a working knob stirs, a seized
   one or a socket refuses touch, and a ratchet is one of Escapement's clocks (`Level.clocks`, in tick order: clockwise from twelve by
   `Layout.clockwise`, each +1, or -1 if in `woundBack`), with a
   `demo` stack for the demonstration before the first stir. Every level today turns its tank exactly where a
@@ -400,7 +400,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
-  25, five chapters; Lens 25; Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
+  25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
   card's list heads, counting solved levels: each par, never shown, what its slowest clock owes and reached by the
   prover, its one key pinned,
   `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
@@ -426,7 +426,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   offline, a storefront without it, purchases turned off), which the card says under it. A pending pill stays live as
   "ask again", since StoreKit sends nothing for a declined Ask to Buy and a new purchase sends a new request; where
   `AppStore.canMakePayments` is false (`Store.canPay`) the card offers only the taste and says why; and a restore says
-  what it found that wasn't owned (`Restored`, `Store.restoreWords`), and nothing on a cancelled sign-in. A revocation
+  what it found that wasn't owned (`Restored`, `Store.restoreNote`), and nothing on a cancelled sign-in. A revocation
   says, in grey, that the pack isn't on this Apple ID any more, or, where its transaction was family-shared
   (`Ledger.unshared`), that it is no longer shared, and that the progress is kept. A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and Complete as family-shareable non-consumables at

@@ -18,17 +18,18 @@ import XCTest
     }
     private func tri(_ s: String) -> [Twist] { .parse(s, in: .tri) }
 
-    /// Jack's call D1 (round 9): problem 1 is called "The clock", and the demonstration plays as it opens.
-    func testTheFirstProblemIsTheClock() {
+    /// Jack's call N1a (round 13): problem 1 is called "Mainspring", replacing D1's "The clock", and the demonstration
+    /// plays as it opens.
+    func testTheFirstProblemIsTheMainspring() {
         let level = Level.escapement[0]
         XCTAssertEqual(level.id, "escapement-1")
-        XCTAssertEqual(level.title, "The clock")
+        XCTAssertEqual(level.title, "Mainspring")
         XCTAssertEqual(level.pack, .escapement)
         XCTAssertEqual(level.scramble, tri("0:-1,1:+3,0:-1,2:-4"))
         XCTAssertEqual(level.clocks.map(\.rod), [0])
         XCTAssertEqual(level.par, 2)
         XCTAssertEqual(level.budget, 2)
-        XCTAssertEqual(level.note, "Unstir in 2 ticks.")
+        XCTAssertEqual(level.note, "Unstir in 2 ticks. A clock ticks after every move.")
         XCTAssertEqual(level.demo, tri("0:-3,1:+2"))
         XCTAssertTrue(Level.escapement.dropFirst().allSatisfy(\.demo.isEmpty))
     }
@@ -36,7 +37,7 @@ import XCTest
     func testTheSecondProblemIsTheMockUps() {
         let level = Level.escapement[1]
         XCTAssertEqual(level.id, "escapement-2")
-        XCTAssertEqual(level.title, "The wait")
+        XCTAssertEqual(level.title, "Pendulum")
         XCTAssertEqual(level.scramble, tri("0:-1,1:+3,0:-2,2:-4"))
         XCTAssertEqual(level.clocks.map(\.rod), [0])
         XCTAssertEqual(level.kind(of: 0), .ratchet)
@@ -284,8 +285,7 @@ import XCTest
         }
     }
 
-    /// The 30 problems in the book's order and its five chapters of six, the teachers and the finale under the book's
-    /// titles but problem 1 (Jack's call D1), the rest by number.
+    /// The 30 problems in the book's order and its five chapters of six, under round 13's titles (Jack's call N1).
     func testTheLevelsAreTheBook() {
         let levels = Level.escapement
         XCTAssertEqual(levels.count, 30)
@@ -293,14 +293,20 @@ import XCTest
         XCTAssertEqual(levels.map(\.label), (1...30).map { String(format: "%02d", $0) })
         XCTAssertEqual(levels.compactMap(\.chapter), (0..<30).map { Level.escapementChapters[$0 / 6] })
         XCTAssertEqual(Level.escapementChapters, ["The Clock", "The Waiting Move", "Two Clocks", "Wound Back", "Grand Complication"])
-        let titled = [1: "The clock", 2: "The wait", 3: "The dashed edge", 7: "The quiet first move", 13: "Two dials",
-                      19: "Backwards", 25: "Three dials", 30: "Finale"]
-        XCTAssertEqual(levels.map(\.title), (1...30).map { titled[$0] ?? "Problem \($0)" })
+        let rules = [1: " A clock ticks after every move.", 7: " Sometimes the first move is to wait.",
+                     13: " Two clocks tick in turn.", 19: " A wound-back clock ticks the other way.", 25: " Three clocks."]
+        XCTAssertEqual(levels.map(\.title), [
+            "Mainspring", "Pendulum", "Clock face", "Cogwheel", "Winding key", "Clockwork",
+            "Pause", "Snooze", "Hourglass", "Egg timer", "Stopwatch", "Standstill",
+            "Twin dials", "Hour hand", "Minute hand", "Metronome", "Chime", "Cuckoo clock",
+            "Rewind", "Fall back", "Mirror dial", "Anticlockwise", "Overwound", "Reverse",
+            "Moon phase", "Calendar", "Time zones", "Leap year", "Eleventh hour", "Midnight",
+        ])
         for (level, row) in zip(levels, Self.book) {
             XCTAssertEqual(level.layout, row.layout, level.id)
             XCTAssertEqual(clocks(level), row.clocks, level.id)
             XCTAssertEqual(level.par, row.par, level.id)
-            XCTAssertEqual(level.note, "Unstir in \(level.budget) ticks.", level.id)
+            XCTAssertEqual(level.note, "Unstir in \(level.budget) ticks." + (rules[Int(level.label)!] ?? ""), level.id)
             XCTAssertEqual(level.motion, .none, level.id)
             XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty, level.id)
             XCTAssertTrue(level.ratchets.allSatisfy { level.kind(of: $0) == .ratchet }, level.id)
@@ -463,7 +469,7 @@ import XCTest
         XCTAssertEqual(order(.eye, [0, 1, 2, 3]), [2, 1, 3, 0])
     }
 
-    /// Two dials (13): clock 0 stops after the second move with twists still on the picture, and that loses nothing while
+    /// Twin dials (13): clock 0 stops after the second move with twists still on the picture, and that loses nothing while
     /// clock 2 runs; a tap on the stopped clock's ratchet still waits, and its tick finishes.
     func testOneClockStoppingWhileAnotherRunsLosesNothing() {
         var level = Level.escapement[12]
@@ -510,7 +516,7 @@ import XCTest
         XCTAssertEqual(g.overdue(0), 1)
     }
 
-    /// Backwards (19): a wound-back clock ticks -1 over seams stirred clockwise, and a pushed tick of its own is a -1.
+    /// Rewind (19): a wound-back clock ticks -1 over seams stirred clockwise, and a pushed tick of its own is a -1.
     func testAWoundBackClockTicksBack() {
         var level = Level.escapement[18]
         level.id = "test-escapement"

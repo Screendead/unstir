@@ -20,7 +20,7 @@ enum ConsentWords {
     static let analyticsOn = "on \u{00B7} how you play, never who you are"
     static let analyticsOff = "off \u{00B7} nothing is sent"
     static let sendLog = "send log"
-    static let sendLogDetail = "what the game noted as you played, for a bug"
+    static let sendLogDetail = "touches, moves, purchases and errors, with times\u{00A0}\u{00B7} never who you are"
     static let policy = "privacy policy"
     static let restore = "restore purchases"
     static let restoreDetail = "packs bought on this Apple ID"
