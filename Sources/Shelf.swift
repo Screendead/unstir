@@ -144,6 +144,9 @@ extension Store {
         }
     }
 
+    /// Its own product waits on Ask to Buy, so asking again re-sends that request.
+    func asked(_ offer: Offer) -> Bool { (harness ?? ledger).asked(offer.productID) }
+
     /// The pack whose card a level shows instead of playing: one past its taste that the player doesn't own.
     func card(for level: Level) -> Pack? { access(level) == .needsCard ? level.pack : nil }
 
@@ -152,6 +155,12 @@ extension Store {
 }
 
 extension Store {
+    /// A restore that finds nothing changes no state, so VoiceOver hears what it came to here.
+    func restoreAndAnnounce() async {
+        await restore()
+        if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
+    }
+
     /// What the last restore came to, on a card and in settings; nil before one.
     var restoreNote: String? {
         if restoring { return "restoring\u{2026}" }
@@ -197,14 +206,15 @@ extension Purchase {
         }
     }
 
-    /// The shelf's one word for a state, nil when there is nothing to say.
-    var tag: (word: String, colour: Color)? {
+    /// The shelf's one word for a state, nil when there is nothing to say. `unshared`: revoked as a family's share
+    /// ended, not a refund, as the card's status says it.
+    func tag(unshared: Bool = false) -> (word: String, colour: Color)? {
         switch self {
         case .unowned: nil
         case .owned: ("owned", .lime)
         case .pending: ("waiting for approval", .amber)
         case .failed: ("purchase failed", .magenta)
-        case .revoked: ("no longer on this Apple ID", Color.text.opacity(0.6))
+        case .revoked: (unshared ? "no longer shared with you" : "no longer on this Apple ID", Color.text.opacity(0.6))
         }
     }
 }
@@ -664,6 +674,14 @@ struct PackCard: View {
                                 fact("done", Text("\(levels.filter { Best.load($0.id)?.over == 0 }.count)/\(levels.count) \(noPar ? "solved" : "at par")"))
                             } else {
                                 fact("holds", holds)
+                                    .accessibilityActions {
+                                        // The names' links, which a combined element may not offer VoiceOver.
+                                        if offer.pack == nil {
+                                            ForEach(Pack.sold(), id: \.self) { pack in
+                                                Button("Open \(pack.name)") { onOffer(.pack(pack)) }
+                                            }
+                                        }
+                                    }
                             }
                         }
                         .padding(.top, 32)
@@ -726,16 +744,27 @@ struct PackCard: View {
             Log.write("card \(offer.key) opens")
             if let pack = offer.pack { Analytics.shared.cardSeen(pack) }
         }
-        .onChange(of: state) { old, state in
-            if let tag = state.tag { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
+        .onChange(of: Reading(state: state, ready: store.ready)) { old, new in
+            // Until the launch's first read has finished, an owned pack reads as unowned: that read is no change.
+            guard old.ready, new.state != old.state else { return }
+            if let tag = new.state.tag(unshared: unshared) { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
             // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
-            if state == .owned, old != .owned {
+            if Self.lands(old.state, new.state, ready: old.ready) {
                 landings += 1
                 Sound.shared.play(.solve)
             }
         }
         .sensoryFeedback(.success, trigger: landings)
     }
+
+    private struct Reading: Equatable {
+        let state: Purchase
+        let ready: Bool
+    }
+
+    /// A purchase landing on the card: owned now, read after the launch's first read of the entitlements had finished,
+    /// so an owner's card opened in that read's window never chimes.
+    static func lands(_ old: Purchase, _ new: Purchase, ready: Bool) -> Bool { ready && old != .owned && new == .owned }
 
     private var price: String? { store.price(offer.productID) }
 
@@ -844,13 +873,20 @@ struct PackCard: View {
         case .owned:
             line(offer.pack == nil ? "\u{2713} owned \u{00B7} every pack open" : "\u{2713} owned \u{00B7} every level open", .lime)
         case .pending:
+            // A pack can wait on Complete's request alone, which only Complete's card asks again.
+            let asked = store.asked(offer)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     PulsingDot(colour: .amber)
-                    Text("waiting for approval").font(.mono(.footnote, .semibold)).foregroundStyle(Color.amber)
+                    Text(asked ? "waiting for approval" : "Complete is waiting for approval")
+                        .font(.mono(.footnote, .semibold)).foregroundStyle(Color.amber)
                 }
-                Text("Ask to Buy: the pack opens here once it's approved.").font(.mono(.caption2)).opacity(0.5)
+                Text(asked ? "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again."
+                     : "Ask to Buy: \(offer.name) opens here once Complete is approved.")
+                    .font(.mono(.caption2)).opacity(0.5)
                     .fixedSize(horizontal: false, vertical: true)
+                // Asking again failed, and the first request is still with the parent.
+                if let why = store.failures[offer.productID]?.words { detail(why) }
             }
             .accessibilityElement(children: .combine)
         case .failed:
@@ -880,18 +916,23 @@ struct PackCard: View {
     /// Owned, play; otherwise buy at the App Store's price, and the taste beside it.
     @ViewBuilder private func action(_ state: Purchase) -> some View {
         if state == .owned {
-            if let level = next {
-                let verb = Self.continues(levels) ? "continue" : "play"
-                pill("\(verb) \(level.label) \u{203A}", trailing: nil, colour: .lime) { onPlay(level) }
-                    .accessibilityLabel("\(verb.capitalized) \(offer.name), level \(level.label)")
+            // Complete has no levels of its own: its owner goes on in the first pack with a level left to play.
+            let pack = offer.pack == nil ? Pack.sold().first(where: { Self.pickUp($0.levels) != nil }) : nil
+            if let level = pack.flatMap({ Self.pickUp($0.levels) }) ?? next {
+                let verb = Self.continues(pack?.levels ?? levels) ? "continue" : "play"
+                let name = pack.map { $0.name + " " } ?? ""
+                pill("\(verb) \(name)\(level.label) \u{203A}", trailing: nil, colour: .lime) { onPlay(level) }
+                    .accessibilityLabel("\(verb.capitalized) \(pack?.name ?? offer.name), level \(level.label)")
             }
         } else {
-            // A declined Ask to Buy sends no transaction, so a pending pill stays live: asking again sends a new request.
+            // A declined Ask to Buy sends no transaction, so an asked pill stays live: tapping it sends a new request.
+            // A pack waiting only on Complete's request is bought alone.
+            let asked = store.asked(offer)
             let label = switch state {
             case _ where buying: "buying\u{2026}"
             case .failed: "try again"
             case .revoked: unshared ? "buy" : "buy again"
-            case .pending: "ask again"
+            case .pending where asked: "asked"
             default: "buy"
             }
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
@@ -909,7 +950,8 @@ struct PackCard: View {
                             CubicKeyframe(1.08, duration: 0.14)
                             CubicKeyframe(1.0, duration: 0.3)
                         }
-                        .accessibilityLabel(state == .pending ? "Ask again for \(offer.name)" : "\(label.capitalized) \(offer.name)")
+                        .accessibilityLabel(state == .pending && asked && !buying ? "Ask again for \(offer.name)"
+                                            : "\(label.capitalized) \(offer.name)")
                         .accessibilityValue(price ?? store.pricing.words ?? "")
                         .accessibilityFocused($focus, equals: .buy)
                 }
@@ -993,7 +1035,8 @@ struct PackCard: View {
                 .font(.mono(.caption))
             }
             .buttonStyle(Sounding())
-            .disabled(buying)
+            // Complete's own request is asked again only from Complete's card.
+            .disabled(buying || store.state(.complete) == .pending)
             .accessibilityLabel("Buy Complete, every pack")
             .accessibilityValue(complete ?? "")
             if store.state(.complete) == .failed {
@@ -1005,7 +1048,7 @@ struct PackCard: View {
     }
 
     private var restore: some View {
-        Button { Task { await store.restore() } } label: {
+        Button { Task { await store.restoreAndAnnounce() } } label: {
             let words = restoreWords
             Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
                 .font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
@@ -1080,8 +1123,8 @@ struct PackDock: View {
                                     .multilineTextAlignment(.center).minimumScaleFactor(0.8)
                                 // A glyph, so the state reads without its colour; a revocation is the card's to say.
                                 if store.ready, let mark = state.mark {
-                                    Image(systemName: mark).font(.system(size: 8, weight: .bold)).foregroundStyle(state.tag?.colour ?? .text)
-                                        .shadow(color: state.tag?.colour ?? .clear, radius: 2)
+                                    Image(systemName: mark).font(.system(size: 8, weight: .bold)).foregroundStyle(state.tag()?.colour ?? .text)
+                                        .shadow(color: state.tag()?.colour ?? .clear, radius: 2)
                                         .accessibilityHidden(true)
                                 }
                             }
@@ -1091,7 +1134,8 @@ struct PackDock: View {
                     }
                     .buttonStyle(Sounding())
                     .accessibilityLabel("\(offer.name), \(offer.pack == nil ? "every pack" : "pack")")
-                    .accessibilityValue((store.ready ? state.tag?.word : nil) ?? store.price(offer.productID) ?? "")
+                    .accessibilityValue((store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
+                                        ?? store.price(offer.productID) ?? "")
                     .accessibilityHint(offer.pitch)
                     .accessibilityShowsLargeContentViewer {
                         Text(offer.name)

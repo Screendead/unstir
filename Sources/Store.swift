@@ -37,13 +37,16 @@ struct Ledger: Equatable, Sendable {
     private(set) var unshared: Set<String> = []
 
     /// Once owned, only a revocation takes a product away: a later attempt that fails, waits or is cancelled is not one.
-    /// A cancelled sheet leaves an Ask to Buy still waiting on its parent.
+    /// A cancelled or failed second ask leaves an Ask to Buy still waiting on its parent.
     mutating func record(_ id: String, _ state: Purchase, shared: Bool = false) {
         if products[id] == .owned && state != .revoked { return }
-        if products[id] == .pending && state == .unowned { return }
+        if products[id] == .pending && (state == .unowned || state == .failed) { return }
         products[id] = state
         if state == .revoked && shared { unshared.insert(id) } else { unshared.remove(id) }
     }
+
+    /// The product itself waits on Ask to Buy, not only Complete that would grant it.
+    func asked(_ id: String) -> Bool { products[id] == .pending }
 
     /// Revoked because the family stopped sharing it, through its own product or Complete.
     func unshared(_ pack: Pack) -> Bool {
@@ -81,7 +84,7 @@ final class Store {
     /// Each product's price as the App Store gives it, for the player's storefront; missing until it is fetched.
     private(set) var prices: [String: String] = [:]
     private(set) var pricing = Pricing.fetching
-    /// Why each product's last attempt failed, while the ledger holds it as failed.
+    /// Why each product's last attempt failed, while the ledger holds it as failed, or as pending after a failed ask again.
     private(set) var failures: [String: Failure] = [:]
     /// The last restore's outcome, said alike by the cards and settings; nil before one, or after a cancelled sign-in.
     private(set) var restored: Restored?
@@ -125,7 +128,7 @@ final class Store {
         harness = ledger
         self.prices = prices
         self.pricing = pricing
-        failures = ledger.products.filter { $0.value == .failed }.mapValues { _ in failure }
+        failures = ledger.products.filter { $0.value == .failed || $0.value == .pending }.mapValues { _ in failure }
         payments = canPay
         self.restored = restored
         ready = true
@@ -195,7 +198,7 @@ final class Store {
             Log.write("purchase \(id) failed: \(why)\(attempt == started ? "" : ", its card closed")")
             guard attempt == started else { return }
             ledger.record(id, .failed)
-            if ledger.products[id] == .failed { failures[id] = failure }
+            if ledger.products[id] == .failed || ledger.products[id] == .pending { failures[id] = failure }
         }
         do {
             guard let product = try await product(id) else { return failed("no such product") }
@@ -215,23 +218,25 @@ final class Store {
     }
 
     /// What a sync found that wasn't owned before it; nil when the player cancels the App Store sign-in. A failed sync
-    /// keeps what was already known.
+    /// keeps what was already known. Said only on the card it was asked from, as a purchase's failure is.
     @discardableResult
     func restore() async -> Restored? {
-        let before = ledger.owned
+        let before = ledger.owned, started = attempt
         restoring = true
         defer { restoring = false }
+        func said(_ outcome: Restored?) -> Restored? {
+            if attempt == started { restored = outcome }
+            return outcome
+        }
         do {
             try await AppStore.sync()
         } catch {
             Log.write("restore failed: \(error)")
-            restored = Failure(error) == .cancelled ? nil : .failed
-            return restored
+            return said(Failure(error) == .cancelled ? nil : .failed)
         }
         await refresh()
         let found = ledger.owned.subtracting(before)
-        restored = found.isEmpty ? .nothing : .found(found)
-        return restored
+        return said(found.isEmpty ? .nothing : .found(found))
     }
 
     /// Fetched again for an id the last fetch lacked, so a product missing once is not missing all launch.
