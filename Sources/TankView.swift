@@ -756,6 +756,8 @@ struct LevelView: View {
     /// The two-finger twist has the tank, and only its own onEnded lets go: `spin` may reset before that folds the twist
     /// into `liveTurn`, and the finger's drag may end on either side of it.
     @State private var spun = false
+    /// The twist's rotation as last reported, which a let-go the system forces has in place of onEnded's.
+    @State private var lastSpin = 0.0
     /// Solved, the glass eases to the nearest home: the level ends wherever the tank stands.
     @State private var eased: Bool
     /// Scales every committed angle; the open winds it 0 to 1, all rods at once, so it shows nothing about order.
@@ -1243,14 +1245,16 @@ struct LevelView: View {
                 Log.write("result shown")
             }
         }
-        // SwiftUI never calls onEnded for a cancelled drag (lock, Siri, a call), so drop the uncommitted turn here. Only on
+        // SwiftUI never calls onEnded for a cancelled drag (lock, Siri, a call), so let go here as the lift would, and
+        // whichever of this and `holding`'s reset comes second finds nothing held (Jack's call C13, round 13). Only on
         // the way out: the launch's own turn to active would drop a finger the harness holds.
         .onChange(of: phase) {
             guard phase != .active else { return }
+            if drag != nil || spun { Log.write("\(phase) lets go \(state)") }
+            // Not `else`: a twist holds the rim as its drag, which `cut` leaves to the twist's own let-go.
+            if let g = drag { cut(g) }
+            if spun { letGoSpin(lastSpin) }
             endPath(); endTwist()
-            if drag != nil || spun {
-                Log.write("\(phase) drops drag \(state)"); drag = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; spun = false
-            }
         }
         .onAppear {
             let rules = game.level.run.map { "tank \($0.tank) brim \($0.brim)" } ?? "par \(game.par)"
@@ -2408,6 +2412,7 @@ struct LevelView: View {
                 guard !settling, !game.finished, shown == nil else { return }
                 if !spun { endPath(); twist = (v.time, Trail(gap: 0.05) { abs($0 - $1) }) }
                 spun = true
+                lastSpin = v.rotation.radians
                 if let down = twist?.down { twist!.trail.add(v.rotation.radians, ms: Self.ms(v.time, since: down)) }
                 if liveTurn == nil {
                     drag?.grab = .rim; liveRod = nil; liveAngle = 0; liveTurn = 0; counted = Game.tank
@@ -2418,15 +2423,19 @@ struct LevelView: View {
             }
             .onEnded { v in
                 guard spun else { return }
-                spun = false
                 if let down = twist?.down { twist!.trail.add(v.rotation.radians, ms: Self.ms(v.time, since: down)) }
-                endTwist()
-                guard shown == nil, let turn = liveTurn else { return }
-                liveTurn = turn + v.rotation.radians
                 // The end can carry rotation no change reported, and it commits.
-                tankTicks += detent.turn(to: liveTurn!)
-                releaseTank()
+                letGoSpin(v.rotation.radians)
             }
+    }
+
+    private func letGoSpin(_ rotation: Double) {
+        spun = false
+        endTwist()
+        guard shown == nil, let turn = liveTurn else { return }
+        liveTurn = turn + rotation
+        tankTicks += detent.turn(to: liveTurn!)
+        releaseTank()
     }
 
     private static func ms(_ time: Date, since down: Date) -> Int { Int((time.timeIntervalSince(down) * 1000).rounded()) }
