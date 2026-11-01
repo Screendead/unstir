@@ -2820,8 +2820,10 @@ struct RatchetView: View {
                 p.addLine(to: at(a, rt + (i == 0 ? 11 : 7)))
             }
         }
-        let tipA = Double.pi / 6 + 0.25
-        let pivot = at(1.35, rt * 1.55), tip = at(tipA, rr + (rt - rr) * 0.35 + CGFloat(pawl) * (rt - rr) * 1.1)
+        // The pawl trails the free turn: its tip points clockwise from its pivot and rests in a gap against a tooth's
+        // steep face, so a turn back drives that face end-on at the pivot and jams, and a turn on lifts it up the slope.
+        let tipA = Double.pi / 2 - 0.03
+        let pivot = at(tipA - 0.58, rt * 1.55), tip = at(tipA, rr + (rt - rr) * 0.25 + CGFloat(pawl) * (rt - rr) * 1.1)
         let steel = Color(0xB8BECA)
         return ZStack {
             let backing = max(size + 6, 2 * plate)
