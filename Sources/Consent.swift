@@ -1,5 +1,7 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import MessageUI
+import SafariServices
 import SwiftUI
 
 /// Every word the question and the settings sheet say.
@@ -19,12 +21,20 @@ enum ConsentWords {
     static let analytics = "analytics"
     static let analyticsOn = "on \u{00B7} how you play, never who you are"
     static let analyticsOff = "off \u{00B7} nothing is sent"
-    static let sendLog = "send log"
-    static let sendLogDetail = "touches, moves, purchases and errors, with times\u{00A0}\u{00B7} never who you are"
+    static let music = "music"
+    static let musicDetail = "the beds under the menu and the levels"
+    static let sounds = "sounds"
+    static let soundsDetail = "every effect and button"
+    static let haptics = "haptics"
+    static let hapticsDetail = "the tank's knocks and taps"
+    static let report = "report a problem"
+    static let reportDetail = "with the log: touches, moves, purchases and errors"
     static let policy = "privacy policy"
     static let restore = "restore purchases"
     static let restoreDetail = "packs bought on this Apple ID"
     static let policyDetail = "what the game keeps, and why"
+    static let letters = "colour letters"
+    static let lettersDetail = "R, G and B on Prism's knobs"
 }
 
 /// The first launch's question, over the menu, which waits for an answer. Yes and no are the same control: same type,
@@ -132,14 +142,32 @@ struct NeonToggle: ToggleStyle {
     }
 }
 
-/// The gear's sheet: the analytics switch where the build has analytics, restore, the log and the privacy policy, and the
-/// version under them, black, sized to what it holds.
+/// The gear's sheet: music, sounds, haptics, the colour letters, the analytics switch where the build has analytics,
+/// restore, a report of a problem and the privacy policy, and the version under them, black, sized to what it holds.
 struct SettingsSheet: View {
-    /// Apple's guideline 5.1.1(i) wants it reachable in the app. The plain github.com page until docs/ is served as a
-    /// site.
-    static let policy = URL(string: "https://github.com/Screendead/unstir/blob/master/docs/privacy-policy.md")!
+    /// Apple's guideline 5.1.1(i) wants it reachable in the app. Info.plist's `PolicyURL`, set outside the repo, or
+    /// the plain github.com page where the build has none.
+    static var policy: URL {
+        let set = (Bundle.main.object(forInfoDictionaryKey: "PolicyURL") as? String).flatMap(URL.init(string:))
+        return set.flatMap { ["https", "http"].contains($0.scheme) ? $0 : nil }
+            ?? URL(string: "https://github.com/Screendead/unstir/blob/master/docs/privacy-policy.md")!
+    }
+
+    /// Info.plist's `SupportAddress`, set outside the repo; nil where the build has none.
+    static var support: String? {
+        (Bundle.main.object(forInfoDictionaryKey: "SupportAddress") as? String).flatMap { $0.contains("@") ? $0 : nil }
+    }
 
     @State private var height: CGFloat = 220
+    // Mirrors of the stored switches, so each moves as it is tapped.
+    @State private var music = Settings.music
+    @State private var sounds = Settings.sounds
+    @State private var haptics = Settings.haptics
+    /// Nil until chosen, so the switch shows Differentiate Without Colour's state until then.
+    @State private var letters = Letters.choice
+    @State private var mailing = false
+    @State private var reading = false
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
     var store = Store.shared
 
     var body: some View {
@@ -150,6 +178,19 @@ struct SettingsSheet: View {
                 Text(ConsentWords.settings).font(.mono(11, .semibold)).opacity(0.5).padding(.top, 26)
                     .accessibilityAddTraits(.isHeader)
                 VStack(alignment: .leading, spacing: 0) {
+                    switchRow(ConsentWords.music, ConsentWords.musicDetail, $music) {
+                        Settings.music = $0
+                        Sound.shared.music($0)
+                    }
+                    switchRow(ConsentWords.sounds, ConsentWords.soundsDetail, $sounds) {
+                        Settings.sounds = $0
+                        Sound.shared.sounds($0)
+                        // The switch's own tap went out while sounds were off.
+                        if $0 { Sound.shared.play(.tap) }
+                    }
+                    switchRow(ConsentWords.haptics, ConsentWords.hapticsDetail, $haptics) { Settings.haptics = $0 }
+                    switchRow(ConsentWords.letters, ConsentWords.lettersDetail,
+                              Binding(get: { letters ?? differentiate }, set: { letters = $0 })) { Letters.choice = $0 }
                     if analytics.shown {
                         Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
                             row(ConsentWords.analytics,
@@ -170,11 +211,26 @@ struct SettingsSheet: View {
                     .buttonStyle(Sounding())
                     .disabled(store.restoring)
                     rule
-                    ShareLink(item: Log.url) { outward(ConsentWords.sendLog, ConsentWords.sendLogDetail) }
+                    if let to = SettingsSheet.support, MFMailComposeViewController.canSendMail() {
+                        Button { mailing = true } label: { outward(ConsentWords.report, ConsentWords.reportDetail) }
+                            .buttonStyle(Sounding())
+                            .sheet(isPresented: $mailing) { MailSheet(to: to).ignoresSafeArea() }
+                    } else if let to = SettingsSheet.support {
+                        // No account in Apple's Mail, as for most who use another mail app: the address, subject and
+                        // device line ride in the share sheet into whichever app takes it.
+                        ShareLink(item: Log.url, subject: Text(MailSheet.subject),
+                                  message: Text("To: \(to)\n\n\(MailSheet.body)")) {
+                            outward(ConsentWords.report, ConsentWords.reportDetail)
+                        }
                         .shareTap()
+                    } else {
+                        ShareLink(item: Log.url) { outward(ConsentWords.report, ConsentWords.reportDetail) }
+                            .shareTap()
+                    }
                     rule
-                    Link(destination: SettingsSheet.policy) { outward(ConsentWords.policy, ConsentWords.policyDetail) }
+                    Button { reading = true } label: { outward(ConsentWords.policy, ConsentWords.policyDetail) }
                         .buttonStyle(Sounding())
+                        .sheet(isPresented: $reading) { SafariSheet(url: SettingsSheet.policy).ignoresSafeArea() }
                 }
                 Text(SettingsSheet.version).font(.mono(11)).opacity(0.3).padding(.top, 6)
             }
@@ -205,7 +261,24 @@ struct SettingsSheet: View {
 
     private var rule: some View { Rectangle().fill(Color.text.opacity(0.12)).frame(height: 1) }
 
-    /// A row that hands off to another app, marked with the amber arrow.
+    /// A stored switch: `store` keeps the choice and acts on it, the mirror moves the knob.
+    private func switchRow(_ name: String, _ detail: String, _ mirror: Binding<Bool>,
+                           store: @escaping (Bool) -> Void) -> some View {
+        VStack(spacing: 0) {
+            Toggle(isOn: Binding(get: { mirror.wrappedValue }, set: {
+                store($0)
+                mirror.wrappedValue = $0
+                Log.write("settings: \(name) \($0 ? "on" : "off")")
+            })) {
+                row(name, detail)
+            }
+            .toggleStyle(NeonToggle())
+            .padding(.vertical, 12)
+            rule
+        }
+    }
+
+    /// A row that opens something outside the game's own screens, a mail or a web page, marked with the amber arrow.
     private func outward(_ name: String, _ detail: String) -> some View {
         HStack(alignment: .center, spacing: 12) {
             row(name, detail)
@@ -224,4 +297,49 @@ struct SettingsSheet: View {
             Text(detail).font(.mono(11)).opacity(0.4)
         }
     }
+}
+
+/// "report a problem": a mail to the support address, its log attached and the device line in the body.
+private struct MailSheet: UIViewControllerRepresentable {
+    let to: String
+
+    static var subject: String { "\(SettingsSheet.version): a problem" }
+    /// The device line, the settings' switches with it, read as the report is written.
+    static var body: String { "What happened:\n\n\n\u{2014}\n\(UnstirApp.device)\n" }
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> MFMailComposeViewController {
+        let mail = MFMailComposeViewController()
+        mail.mailComposeDelegate = context.coordinator
+        mail.setToRecipients([to])
+        mail.setSubject(MailSheet.subject)
+        mail.setMessageBody(MailSheet.body, isHTML: false)
+        if let log = try? Data(contentsOf: Log.url) {
+            mail.addAttachmentData(log, mimeType: "text/plain", fileName: "unstir-log.txt")
+        }
+        return mail
+    }
+
+    func updateUIViewController(_ mail: MFMailComposeViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator { dismiss() } }
+
+    @MainActor final class Coordinator: NSObject, @preconcurrency MFMailComposeViewControllerDelegate {
+        let done: () -> Void
+        init(done: @escaping () -> Void) { self.done = done }
+
+        func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult,
+                                              error: Error?) {
+            done()
+        }
+    }
+}
+
+/// The privacy policy, read in the app.
+private struct SafariSheet: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController { SFSafariViewController(url: url) }
+
+    func updateUIViewController(_ safari: SFSafariViewController, context: Context) {}
 }

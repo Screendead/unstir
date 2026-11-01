@@ -1,12 +1,18 @@
-menu.png  Menu on first launch (in a build with analytics, the question answered): only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23.
+menu.png  Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
-menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
+menu-whirlpool-locked.png  Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
 menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked.
 menu-vortex-locked.png  Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played).
 menu-vortex-open.png  Menu on vortex, opened by every whirlpool level at par: its level 01 playable, maelstrom still locked.
 menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
+first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it.
+menu-after-01.png  Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list.
+menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox.
+menu-daily-run.png  The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more.
+menu-tried.png  Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row.
+menu-no-dock.png  Plughole 01 to 08 solved: no pack dock yet.
 menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best.
 menu-locktap.png  Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit.
 menu-back-left.png  Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12.
@@ -429,18 +435,25 @@ firststir-ending-02.png  The night forwards 1 s in: scene 25 played, the tea sti
 firststir-ending-05.png  The night forwards 7 s in: scene 25 at its end, the tea still, crossfading to scene 24 at 7:55 pm.
 firststir-ending-60.png  The night forwards 83 s in: the Flood's upstairs window, 1:39 am, the water rising.
 firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
-shelf-menu.png  Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought.
+shelf-menu.png  Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought.
 shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass.
-card-lens-unowned.png  Lens's card, unowned.
+shelf-new.png  Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir.
+shelf-taste-count.png  Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens.
+shelf-new-levels.png  Lens owned, its card last opened with 20 levels: new under Lens beside the check.
+shelf-approved.png  The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header.
+card-lens-unowned.png  Lens's card, unowned: Complete's line saves $5.97 on the four packs a Debug build sells.
 card-lens-owned.png  Lens's card, owned.
-card-lens-pending.png  Lens's card, pending.
-card-lens-failed.png  Lens's card, failed.
-card-lens-revoked.png  Lens's card, revoked.
+card-lens-pending.png  Lens's card, pending: Complete's line saves $5.97 on the four packs a Debug build sells.
+card-lens-failed.png  Lens's card, failed: Complete's line saves $5.97 on the four packs a Debug build sells.
+card-lens-revoked.png  Lens's card, revoked: Complete's line saves $5.97 on the four packs a Debug build sells.
+card-prism-no-complete.png  Prism's card with Lens and First Stir owned (a Debug build sells four): no Complete line, since $5.99 is more than the two packs left.
+shelf-menu-lens-owned.png  The dock with Lens and First Stir owned: no Complete cover, since it costs more than the two packs left.
 card-first-stir.png  First Stir's card, unowned.
 card-escapement.png  Escapement's card, unowned.
-card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, and its 30 specimens under five tray headings.
+card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings.
 card-prism-levels.png  Prism's card, owned, scrolled to its specimens under the five trays.
-card-complete.png  Complete's card, unowned.
+card-complete.png  Complete's card, unowned: save $5.97 on the packs you don't have.
+card-complete-saves-nothing.png  UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover.
 clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
 clip-first-stir-1.4.png  First Stir's clip 1.4 s in.
 clip-first-stir-2.1.png  First Stir's clip 2.1 s in.
@@ -467,9 +480,10 @@ card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, ea
 card-lens-complete-pending.png  Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled.
 card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
 card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
+card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74).
 shelf-menu-owned.png  The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone.
-card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading.
-card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live.
+card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Complete line until the prices say what it saves.
+card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Complete line.
 card-lens-unshared.png  Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey.
 card-lens-offline.png  Lens's card after a purchase failed offline: no connection, try again when you're online.
 card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Complete, try free kept.
@@ -478,6 +492,7 @@ card-lens-restored-none.png  Lens's card after a restore found nothing: nothing 
 card-lens-levels.png  Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked.
 card-lens-levels-owned.png  The same, owned: every level open.
 card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note.
+card-gate-ax.png  The same at accessibility3: the Complete line under buy wraps only before · save.
 card-lens-taste-end.png  Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta.
 card-lens-taste-end-owned.png  The same, owned: next again, still in Lens's magenta.
 card-lens-replay.png  Lens's card, unowned, the taste played: replay 01-03 in try free's place.
@@ -487,9 +502,10 @@ card-lens-xxxl.png  Lens's card at xxxLarge, the largest size short of the acces
 consent-ask.png  First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no.
 consent-sends.png  First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again.
 consent-gear.png  Menu with the settings gear beside the title, analytics answered yes.
-consent-settings-on.png  The gear's sheet: the analytics switch on, send log and privacy policy.
-consent-settings-off.png  The gear's sheet: the analytics switch off, send log and privacy policy.
-settings.png  The gear's sheet in a build without analytics, v1's: restore purchases, send log and privacy policy, no switch, the version under them.
+consent-settings-on.png  The gear's sheet: music, sounds, haptics and colour letters, the analytics switch on, report a problem and privacy policy.
+consent-settings-off.png  The gear's sheet: music, sounds, haptics and colour letters, the analytics switch off, report a problem and privacy policy.
+settings.png  Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version.
+settings-quiet.png  Settings with music and haptics off.
 settings-restored.png  The gear's sheet after a restore found nothing: nothing to restore on this Apple ID.
 escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
 escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
@@ -583,6 +599,7 @@ prism-swatch-r.png  Prism specimen 8 with the r swatch held: that channel's line
 prism-swatch-g.png  Prism specimen 8 with the g swatch held: that channel's lines alone, in white, the others hidden.
 prism-swatch-b.png  Prism specimen 8 with the b swatch held: that channel's lines alone, in white, the others hidden.
 prism-letters-8.png  Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB.
+prism-letters-chosen.png  Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches.
 prism-letters-14.png  Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG.
 prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.

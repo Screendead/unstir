@@ -57,8 +57,8 @@ extension Tier {
 
     /// The first level with no best, on an open tier: where the player is. Every level before it has a best, so it is
     /// open.
-    func frontier(_ best: (String) -> Best? = Best.load) -> Level? {
-        isOpen(best) ? levels.first { best($0.id) == nil } : nil
+    func frontier(unlocked: Bool = Best.unlocked, _ best: (String) -> Best? = Best.load) -> Level? {
+        isOpen(unlocked: unlocked, best) ? levels.first { best($0.id) == nil } : nil
     }
 
     /// The levels short of par, as runs of neighbours by index. The first of each run is open: the level before it is at
@@ -177,14 +177,19 @@ struct MenuView: View {
     /// The mark has moved and the list scrolls to it once it is laid out there.
     @State private var arriving = false
     @Namespace private var strip
-    /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
-    @State private var settings: Bool
+    /// The gear's sheet.
+    @Binding var settings: Bool
     /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
     @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
     /// When the daily row was dealt: a menu left up past midnight, or coming back to the front, deals the new day's.
-    @State private var today = Date.now
+    @State private var today: Date
+    /// Today's daily and its run, worked out once a day rather than on every frame of a swipe. The menu is built anew
+    /// each time it comes up, so a solve's run shows on return.
+    @State private var daily: (level: Level, run: Int)
+    /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
+    @State private var leading: Lead
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -192,12 +197,12 @@ struct MenuView: View {
     private let dim = 0.55
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
-    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
+    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil,
          onPick: @escaping (Level) -> Void) {
         self.demo = demo
-        _settings = State(initialValue: settings)
+        _settings = settings
         self.onPick = onPick
         _card = card
         self.clock = clock
@@ -214,6 +219,10 @@ struct MenuView: View {
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
         _listed = State(initialValue: tier)
+        let now = Date.now
+        _today = State(initialValue: now)
+        _daily = State(initialValue: Self.daily(now))
+        _leading = State(initialValue: Self.lead(tier: tier))
         if let frozen {
             _spin = State(initialValue: frozen.spin)
             _fade = State(initialValue: frozen.fade)
@@ -221,9 +230,18 @@ struct MenuView: View {
         }
     }
 
+    /// What the menu leads with (Jack's call C4, round 13). `modes`: the daily and endless, which draw on every layout, so
+    /// they open, and show, after the first hex level. `sandboxFirst`: plughole 01 has a best, so the sandbox is over the
+    /// list, not under it, and in the tagline's place `next` opens the tier's frontier, if it has one.
+    typealias Lead = (modes: Bool, sandboxFirst: Bool, next: Level?)
+    static func lead(tier: Tier, unlocked: Bool = Best.unlocked, best: (String) -> Best? = Best.load) -> Lead {
+        let played = best(Level.plughole[0].id) != nil
+        return (unlocked || best(Level.plughole[22].id) != nil, played, played ? tier.frontier(unlocked: unlocked, best) : nil)
+    }
+
+    private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
+
     var body: some View {
-        // Daily and endless draw on every layout, so they open after the first hex level.
-        let modes = Best.unlocked || Best.load(Level.plughole[22].id) != nil
         let analytics = Analytics.shared
         // The menu waits for the question's answer, for VoiceOver too.
         let asking = analytics.asks && analytics.consent == .undecided
@@ -242,7 +260,7 @@ struct MenuView: View {
             // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
             tiers.padding(.top, 6).scrollDisabled(true).simultaneousGesture(swipe)
             ScrollViewReader { proxy in
-                ScrollView { rows(modes: modes) }
+                ScrollView { rows(leading) }
                 .onAppear {
                     scroller = proxy
                     arrive()
@@ -254,10 +272,12 @@ struct MenuView: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !Offer.shelf().isEmpty {
+                if !Offer.shelf().isEmpty && PackDock.shown() {
                     // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
                     PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle)
+                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle,
+                             covered: card != nil || settings)
+                        .equatable()
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
@@ -287,6 +307,7 @@ struct MenuView: View {
             }
         }
         .onChange(of: phase) { if phase == .active { today = .now } }
+        .onChange(of: today) { daily = Self.daily(today) }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
             today = .now
         }
@@ -294,23 +315,28 @@ struct MenuView: View {
         .task { if shelfDemo { await shelfTour() } }
     }
 
-    /// The modes, then the tier's rule and rows.
-    private func rows(modes: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Every stir in this tank has an exact inverse.")
-                .font(.mono(13)).opacity(0.55).padding(.top, 10).id(Self.top)
-            // Daily and endless say what opens them while they're shut.
-            let shut = "opens after plughole \(Level.plughole[22].label)"
-            let needs = modes ? nil : Level.plughole[22]
-            LevelRow(level: Level.daily(today), detail: modes ? nil : shut, enabled: modes, needs: needs, pick: pick,
-                     refuse: refuse)
-                .padding(.top, 22)
-            LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                     detail: modes ? "deeper every tank \u{00B7} eight wrong stirs and it spills" : shut,
-                     best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, needs: needs, pick: pick,
-                     refuse: refuse)
-            LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
-                     pick: pick, refuse: refuse)
+    /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox over them once
+    /// plughole 01 has a best.
+    private func rows(_ lead: Lead) -> some View {
+        let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
+                               pick: pick, refuse: refuse)
+        return VStack(alignment: .leading, spacing: 0) {
+            tagline(lead).padding(.top, 10).id(Self.top)
+            VStack(alignment: .leading, spacing: 0) {
+                if lead.modes {
+                    // Marked until either is first opened.
+                    let new = !Best.modesSeen, (day, run) = daily
+                    LevelRow(level: day, detail: run < 2 ? nil
+                                 : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
+                             enabled: true, new: new, pick: pick, refuse: refuse)
+                    LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
+                             detail: "deeper every tank \u{00B7} eight wrong stirs and it spills",
+                             best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true, new: new, pick: pick,
+                             refuse: refuse)
+                }
+                if lead.sandboxFirst { sandbox }
+            }
+            .padding(.top, lead.modes || lead.sandboxFirst ? 22 : 8)
             TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held).equatable()
                 .overlay(alignment: .topLeading) {
                     Color.clear.frame(width: 1, height: mark?.height ?? 1).id(Self.mark)
@@ -326,9 +352,32 @@ struct MenuView: View {
                     list = $0
                     arrive()
                 }
+            if !lead.sandboxFirst { sandbox.padding(.top, 14) }
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 28)
+    }
+
+    /// The tank's rule until plughole 01 has a best, then the shown tier's frontier, a tap away.
+    @ViewBuilder private func tagline(_ lead: Lead) -> some View {
+        if let next = lead.next {
+            Button { pick(next) } label: {
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    Text("next: ").opacity(0.55)
+                    Text(next.label).fontWeight(.semibold).foregroundStyle(next.colour).shadow(color: next.colour, radius: 4)
+                    Text(" \u{00B7} \(next.title) \u{203A}").opacity(0.8)
+                }
+                .font(.mono(13)).lineLimit(1).hit()
+            }
+            // Plain: `pick` taps, as a row does.
+            .buttonStyle(.plain)
+            .accessibilityLabel(Spoken.next(next))
+        } else if !lead.sandboxFirst {
+            Text("Every stir in this tank has an exact inverse.").font(.mono(13)).opacity(0.55)
+        } else {
+            // A line's height still, so a tier swap to or from one with a frontier moves nothing below it.
+            Text(" ").font(.mono(13)).hidden()
+        }
     }
 
     /// The card grows out of its cover, or fades in under Reduce Motion.
@@ -336,7 +385,7 @@ struct MenuView: View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
                      focus: cardFocus, arrived: card.pack != nil && card.pack == arrived,
-                     backTo: cameFrom.flatMap { $0.card == card ? $0.back.name : nil } ?? "menu",
+                     backTo: returns?.name ?? "menu",
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)
@@ -355,9 +404,15 @@ struct MenuView: View {
         withAnimation(.snappy(duration: 0.42)) { card = offer }
     }
 
-    /// The card a pack's card was opened from, or the menu.
+    /// The card a pack's card was opened from, while it is still on offer: Complete stops saving once a pack is bought.
+    private var returns: Offer? {
+        guard let cameFrom, cameFrom.card == card, cameFrom.back != .complete || Store.shared.offersComplete else { return nil }
+        return cameFrom.back
+    }
+
+    /// That card, or the menu.
     private func back() {
-        show(cameFrom.flatMap { $0.card == card ? $0.back : nil })
+        show(returns)
     }
 
     /// The menu, Lens's cover tapped, its card's clip played through, then back.
@@ -502,6 +557,7 @@ struct MenuView: View {
             fade = dim
         } completion: {
             shown = t
+            leading = Self.lead(tier: t)
             // Under the stir's peak, so the jump never shows: a landing row scrolls in once the copy has measured it.
             mark = nil
             if !t.isOpen() {
@@ -759,6 +815,8 @@ private struct LevelRow: View {
     /// What a shut row waits on, for VoiceOver: a level, or the tier below a closed tier.
     var needs: Level?
     var gate: Tier?
+    /// The daily and endless, until either is first opened.
+    var new = false
     let pick: (Level) -> Void
     /// A tap on a locked row: false while a stir is under the finger.
     let refuse: () -> Bool
@@ -769,6 +827,9 @@ private struct LevelRow: View {
 
     var body: some View {
         let result = Best.load(level.id)
+        // Started and no best yet: endless and the sandbox have none; a daily left on its first visit stays tried all day,
+        // as practice saves no best.
+        let tried = result == nil && level.run == nil && !level.sandbox && Best.started(level.id)
         let rods = level.layout.base.map { "\($0.rods.count) rods + swirl" } ?? "\(level.layout.rods.count) rods"
         let saying = (said || held) && opens != nil
         return Button { enabled ? pick(level) : tapped() } label: {
@@ -798,6 +859,11 @@ private struct LevelRow: View {
                         Text("par").foregroundStyle(Color.amber)
                     } else if let result {
                         Text("+\(result.over)").foregroundStyle(Color.magenta)
+                    } else if new {
+                        // Plain white, unlike every result's colour.
+                        Text("new").opacity(0.8)
+                    } else if tried {
+                        Text("tried").opacity(0.4)
                     }
                 }
                 .font(.mono(11))
@@ -816,7 +882,7 @@ private struct LevelRow: View {
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs,
-                                    gate: gate)))
+                                    gate: gate, started: tried, new: new)))
         .rowHairline(level.colour, max(lit, frontier ? 0.75 : 0))
         .onAppear {
             guard flash, !reduceMotion else { return }

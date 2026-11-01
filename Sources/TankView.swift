@@ -1051,7 +1051,7 @@ struct LevelView: View {
                         }
                     }
                 // Only where colour can't carry the read, so for everyone else the read stays by colour.
-                if !game.level.masks.isEmpty, letters || differentiate || isolated != nil {
+                if !game.level.masks.isEmpty, letters || Letters.shown(system: differentiate) || isolated != nil {
                     ChannelSwatches(isolated: $isolated)
                         .opacity(showResult || ending || shown != nil ? 0 : 1)
                         .allowsHitTesting(!showResult && shown == nil)
@@ -1855,7 +1855,7 @@ struct LevelView: View {
             }
             // A spilled tank keeps its caps over the murk, and a lost one its clock.
             .opacity(showResult && !game.spilled && !game.lost ? 0 : 1)
-            .environment(\.channelLetters, letters || differentiate)
+            .environment(\.channelLetters, letters || Letters.shown(system: differentiate))
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
             // knobs, which would hide it. The swirl's is a ring just inside the glass's edge, over the picture, so a
             // hairline. One view either way, so the first push on either animates.
@@ -1910,20 +1910,20 @@ struct LevelView: View {
         .onChange(of: holding) { _, now in if !now, let g = drag { cut(g) } }
         // Not .none: that also switches off the gesture above.
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
-        .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
-        .sensoryFeedback(.selection, trigger: ticks)
-        .sensoryFeedback(.selection, trigger: misses)
+        .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
+        .haptic(.selection, trigger: ticks)
+        .haptic(.selection, trigger: misses)
         .onChange(of: ticks) { Sound.shared.play(.tick) }
         .onChange(of: tankTicks) { Knock.clunk.play(); Sound.shared.play(.tank) }
-        .sensoryFeedback(.impact(weight: .heavy), trigger: game.cancels)
+        .haptic(.impact(weight: .heavy), trigger: game.cancels)
         // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
         .onChange(of: game.heals) { was, now in if now > was { Sound.shared.play(.heal(now)) } }
-        .sensoryFeedback(.warning, trigger: game.pushes)
+        .haptic(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
-        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
-        .sensoryFeedback(.error, trigger: game.tickPushes)
-        .sensoryFeedback(.success, trigger: game.solved) { _, solved in solved }
+        .haptic(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
+        .haptic(.error, trigger: game.tickPushes)
+        .haptic(.success, trigger: game.solved) { _, solved in solved }
         // One sound for the end, as its card shows it.
         .onChange(of: game.finished) { if game.finished { Sound.shared.play(game.solved ? .solve : .spilled) } }
         // Keeps texture pixels on device pixels, so the untwisted picture is not blurred by half a pixel.
@@ -2598,7 +2598,7 @@ struct Detent {
     /// Starts the engine ahead of the first knock, whose start would otherwise hitch the frame it lands on.
     static func warm(hold: Bool = true) {
         if hold { holders += 1 }
-        guard !running, let engine else { return }
+        guard Settings.haptics, !running, let engine else { return }
         running = (try? engine.start()) != nil
     }
 
@@ -2610,7 +2610,7 @@ struct Detent {
     }
 
     func play() {
-        guard let engine = Self.engine, let pattern = self == .clunk ? Self.clunkPattern : Self.thudPattern else { return }
+        guard Settings.haptics, let engine = Self.engine, let pattern = self == .clunk ? Self.clunkPattern : Self.thudPattern else { return }
         if !Self.running {
             guard (try? engine.start()) != nil else { return }
             Self.running = true
@@ -2721,12 +2721,28 @@ extension Channels {
     var name: String { self == .red ? "red" : self == .green ? "green" : "blue" }
 }
 
+/// The settings' colour letters, stored as `letters`. Absent until the player chooses, so the letters follow
+/// Differentiate Without Colour, today's and any later change of it, until then.
+enum Letters {
+    static var choice: Bool? {
+        get {
+            if let held = Settings.held.withLock({ $0 }) { return held["letters"] }
+            return UserDefaults.standard.object(forKey: "letters") as? Bool
+        }
+        set {
+            if !Settings.keep("letters", newValue) { UserDefaults.standard.set(newValue, forKey: "letters") }
+        }
+    }
+
+    static func shown(system: Bool) -> Bool { choice ?? system }
+}
+
 extension EnvironmentValues {
-    /// Prism's knobs spell out their channels: Differentiate Without Colour, or the harness's UNSTIR_LETTERS.
+    /// Prism's knobs spell out their channels: the settings' colour letters, or the harness's UNSTIR_LETTERS.
     @Entry var channelLetters = false
 }
 
-/// Prism's swatches, red, green and blue, shown under Differentiate Without Colour: holding one draws that channel alone
+/// Prism's swatches, red, green and blue, shown with the colour letters: holding one draws that channel alone
 /// in white, the others hidden, so which lines a channel has stirred reads by shape alone. VoiceOver toggles one instead
 /// of holding it.
 struct ChannelSwatches: View {

@@ -306,16 +306,23 @@ struct Level: Hashable, Sendable {
               motion: .tank, fixedPar: l.3)
     }
 
+    /// The day's yyyymmdd on the Gregorian calendar in the current zone: the daily's seed and, in its id, its best's key.
+    static func dailyDay(_ date: Date) -> Int {
+        let c = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: date)
+        return c.year! * 10000 + c.month! * 100 + c.day!
+    }
+
+    static func dailyID(_ date: Date) -> String { "daily-\(dailyDay(date))" }
+
     /// Everyone gets the same tank that day: seeded from yyyymmdd.
     static func daily(_ date: Date = .now) -> Level {
-        let c = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: date)
-        let ymd = c.year! * 10000 + c.month! * 100 + c.day!
+        let ymd = dailyDay(date)
         var rng = SplitMix64(state: UInt64(ymd))
         let layout = generated[rng.below(4)]
         let depth = 10 + rng.below(5)
         // The id keys the day's stored best, so it stays yyyymmdd; only the title follows the locale.
         let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        return Level(id: "daily-\(ymd)", label: "day", title: "Daily \u{00B7} \(day)",
+        return Level(id: dailyID(date), label: "day", title: "Daily \u{00B7} \(day)",
                      layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng))
     }
 
@@ -587,5 +594,34 @@ struct Best: Codable {
     static var tanks: Int {
         get { UserDefaults.standard.integer(forKey: "endless.tanks") }
         set { UserDefaults.standard.set(newValue, forKey: "endless.tanks") }
+    }
+
+    /// Set as a fresh install's first launch opens straight into plughole 01, so it does so once (Jack's call C4, round 13).
+    static var welcomed: Bool {
+        get { UserDefaults.standard.bool(forKey: "welcomed") }
+        set { UserDefaults.standard.set(newValue, forKey: "welcomed") }
+    }
+
+    /// Set the first time the daily or endless opens: until then, once open, their rows are marked new. Unstored, the
+    /// harness's, it lasts only this launch.
+    static var modesSeen: Bool { UserDefaults.standard.bool(forKey: "modes.seen") }
+    static func seeModes(store: Bool = true) {
+        if store { UserDefaults.standard.set(true, forKey: "modes.seen") } else {
+            UserDefaults.standard.register(defaults: ["modes.seen": true])
+        }
+    }
+}
+
+enum Daily {
+    /// Once today's daily has a best, the days in a row ending today that have one: only a first try saves a daily's
+    /// best, so practice never counts. 0 before today's solve, so a broken run is never announced.
+    static func run(today: Date, best: (String) -> Best? = Best.load) -> Int {
+        let calendar = Calendar(identifier: .gregorian)
+        var day = today, n = 0
+        while best(Level.dailyID(day)) != nil, let before = calendar.date(byAdding: .day, value: -1, to: day) {
+            n += 1
+            day = before
+        }
+        return n
     }
 }

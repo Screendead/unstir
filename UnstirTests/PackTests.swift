@@ -43,7 +43,10 @@ final class PackTests: XCTestCase {
     @MainActor func testStorageKeysNeverChange() throws {
         let d = UserDefaults.standard, id = "pin-test"
         let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
-                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown"]
+                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)",
+                    "shelf.fit.\(Pack.lens.rawValue)", "shelf.levels.\(Pack.lens.rawValue)",
+                    "letters", "music.off", "sounds.off", "haptics.off",
+                    "welcomed", "modes.seen"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -72,6 +75,86 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(d.integer(forKey: "undos.unseen"), 2)
         Best.refillShown = true
         XCTAssertTrue(d.bool(forKey: "undos.shown"))
+        Best.welcomed = true
+        XCTAssertTrue(d.bool(forKey: "welcomed"))
+        Best.seeModes()
+        XCTAssertTrue(d.bool(forKey: "modes.seen"))
+        Asked.add(Pack.lens.productID)
+        XCTAssertTrue(d.bool(forKey: "asked.com.screendead.Unstir.pack.lens"))
+        Marks.seen(.lens, fits: true, store: true)
+        XCTAssertTrue(d.bool(forKey: "shelf.fit.lens"))
+        XCTAssertEqual(d.integer(forKey: "shelf.levels.lens"), Pack.lens.levels.count)
+        Letters.choice = true
+        XCTAssertEqual(d.object(forKey: "letters") as? Bool, true)
+        Settings.music = false
+        XCTAssertTrue(d.bool(forKey: "music.off"))
+        Settings.sounds = false
+        XCTAssertTrue(d.bool(forKey: "sounds.off"))
+        Settings.haptics = false
+        XCTAssertTrue(d.bool(forKey: "haptics.off"))
+    }
+
+    /// Music, sounds and haptics start on, with nothing stored. Jack's call C17, round 13.
+    func testSettingsStartOn() {
+        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off"]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
+        for key in keys { d.removeObject(forKey: key) }
+        XCTAssertTrue(Settings.music)
+        XCTAssertTrue(Settings.sounds)
+        XCTAssertTrue(Settings.haptics)
+        Settings.haptics = false
+        XCTAssertFalse(Settings.haptics)
+        XCTAssertTrue(Settings.music)
+        Settings.haptics = true
+        XCTAssertNil(d.object(forKey: "haptics.off"))
+    }
+
+    /// A harnessed launch holds the switches in memory: a tap lasts only that launch, and a stored choice never shows.
+    func testHeldSettingsAreNeverStored() {
+        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off", "letters"]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer {
+            Settings.held.withLock { $0 = nil }
+            for (key, value) in zip(keys, saved) { d.set(value, forKey: key) }
+        }
+        d.set(true, forKey: "music.off")
+        d.set(true, forKey: "letters")
+        d.removeObject(forKey: "sounds.off")
+        Settings.held.withLock { $0 = ["music": true, "sounds": true, "haptics": false] }
+        XCTAssertTrue(Settings.music)
+        XCTAssertFalse(Settings.haptics)
+        XCTAssertNil(Letters.choice)
+        Settings.sounds = false
+        Letters.choice = false
+        XCTAssertFalse(Settings.sounds)
+        XCTAssertEqual(Letters.choice, false)
+        XCTAssertNil(d.object(forKey: "sounds.off"))
+        XCTAssertEqual(d.object(forKey: "letters") as? Bool, true)
+        XCTAssertEqual(Settings.summary, "music on, sounds off, haptics off, letters off")
+        Settings.held.withLock { $0 = nil }
+        XCTAssertFalse(Settings.music)
+        XCTAssertEqual(Letters.choice, true)
+    }
+
+    /// The support address and the policy's page are Jack's, so they live in Config/Local.xcconfig (gitignored) or the
+    /// shell, never in a tracked file: the tracked config leaves both empty.
+    func testNoTrackedConfigHoldsAPrivateValue() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let config = try String(contentsOf: root.appending(path: "Config/Unstir.xcconfig"), encoding: .utf8)
+        let project = try String(contentsOf: root.appending(path: "project.yml"), encoding: .utf8)
+        for key in ["SUPPORT_ADDRESS", "POLICY_URL"] {
+            let set = config.split(separator: "\n").filter { $0.hasPrefix("\(key) =") || $0.hasPrefix("\(key)=") }
+            XCTAssertEqual(set, ["\(key) ="], key)
+            XCTAssertTrue(project.contains("$(\(key))"), key)
+        }
+        let keys = ["SUPPORT_ADDRESS", "POLICY_URL", "SupportAddress", "PolicyURL"]
+        for line in (config + "\n" + project).split(separator: "\n").map({ $0.trimmingCharacters(in: .whitespaces) })
+        where !line.hasPrefix("//") && !line.hasPrefix("#") && keys.contains(where: line.contains) {
+            let value = line.drop { $0 != "=" && $0 != ":" }
+            XCTAssertFalse(value.contains("@"), String(line))
+            XCTAssertFalse(value.contains("$()/") || value.contains("://"), String(line))
+        }
     }
 
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
@@ -145,6 +228,146 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(store.state(.complete), .owned)
         XCTAssertEqual(Offer.all.map(\.key), Pack.allCases.map(\.rawValue) + ["complete"])
         XCTAssertEqual(Offer.all.map { Offer(name: $0.key) }, Offer.all)
+    }
+
+    /// Complete is offered only while it costs less than the sold packs left unowned, and only once every price that
+    /// takes is in (Jack's call C7, round 13).
+    @MainActor func testCompleteSavesOnlyWhileItCostsLessThanThePacksLeft() {
+        let sold: [Pack] = [.lens, .escapement, .prism]
+        let amounts = Dictionary(uniqueKeysWithValues: Pack.allCases.map { ($0.productID, Decimal(string: "2.99")!) })
+            .merging([Pack.completeID: Decimal(string: "5.99")!]) { $1 }
+        XCTAssertEqual(Offer.saving(amounts: amounts, owned: [], sold: sold), Decimal(string: "2.98"))
+        XCTAssertNil(Offer.saving(amounts: amounts, owned: [.lens], sold: sold), "5.98 against 5.99")
+        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.prism.productID }, owned: [], sold: sold))
+        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.completeID }, owned: [], sold: sold))
+        XCTAssertNil(Offer.saving(amounts: amounts, owned: Set(sold), sold: sold))
+
+        // The store reads it off its own ledger: a pending pack is unowned, and Complete owned owns every pack.
+        let store = Store()
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .pending)
+        store.pretend(ledger, amounts: amounts)
+        XCTAssertEqual(store.saving, Pack.sold().count == 4 ? "$5.97" : "$2.98")
+        ledger.record(Pack.completeID, .owned)
+        store.pretend(ledger, amounts: amounts)
+        XCTAssertNil(store.saving)
+        store.pretend(Ledger())
+        XCTAssertNil(store.saving, "no prices yet")
+
+        // On offer while it saves, or while the prices load and no pack is owned; never once they say it saves nothing.
+        XCTAssertTrue(store.offersComplete, "loading, nothing owned: it holds every pack for less")
+        store.pretend(Ledger(), pricing: .unreachable)
+        XCTAssertFalse(store.offersComplete, "unreachable: nothing to say it saves")
+        var one = Ledger()
+        one.record(Pack.lens.productID, .owned)
+        store.pretend(one)
+        XCTAssertFalse(store.offersComplete, "loading with a pack owned: it may save nothing")
+        store.pretend(Ledger(), amounts: amounts, pricing: .fetched)
+        XCTAssertTrue(store.offersComplete)
+        store.pretend(one, amounts: amounts, pricing: .fetched)
+        XCTAssertEqual(store.offersComplete, Pack.sold().count == 4, "a Debug build sells four, so three are left")
+        var all = Ledger()
+        all.record(Pack.completeID, .owned)
+        store.pretend(all)
+        XCTAssertFalse(store.offersComplete)
+    }
+
+    /// An Ask to Buy approval is said once: a request then its approval says it, and once said it is forgotten; a pack
+    /// owned without asking says nothing; a revocation forgets the request unsaid (Jack's call C21, round 13).
+    func testAnApprovalIsSaidOnce() {
+        let lens = Pack.lens.productID, prism = Pack.prism.productID
+        let d = UserDefaults.standard, keys = [Asked.key(lens), Asked.key(prism)]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
+        for key in keys { d.removeObject(forKey: key) }
+
+        var ledger = Ledger()
+        ledger.record(lens, .pending)
+        Asked.add(lens)
+        XCTAssertEqual(ledger.answers(to: Asked.all).approved, [])
+        ledger.record(lens, .owned)
+        ledger.record(prism, .owned)
+        XCTAssertEqual(ledger.answers(to: Asked.all).approved, [lens], "Prism was owned without asking")
+        // As `Store.said` does once the dock or the card has said it.
+        Asked.remove(lens)
+        XCTAssertEqual(ledger.answers(to: Asked.all).approved, [], "said, so never again")
+        Asked.add(prism)
+        ledger.record(prism, .revoked)
+        XCTAssertEqual(ledger.answers(to: Asked.all).approved, [])
+        XCTAssertEqual(ledger.answers(to: Asked.all).revoked, [prism])
+        XCTAssertEqual(Offer.pack(.lens).yours, "Lens is yours")
+        XCTAssertEqual(Offer.complete.yours, "every pack is yours")
+    }
+
+    /// The store says each approval until it is said, and the harness's last only the launch.
+    @MainActor func testTheStoreSaysAnApprovalUntilItIsSaid() {
+        let store = Store()
+        store.pretend(Ledger(), approved: [.pack(.lens), .complete])
+        XCTAssertEqual(store.approved, [.pack(.lens), .complete])
+        store.said(.pack(.prism))
+        store.said(.pack(.lens))
+        XCTAssertEqual(store.approved, [.complete])
+        XCTAssertEqual(Harness(["UNSTIR_APPROVED": "lens,nothing"]).approved, [.pack(.lens)])
+    }
+
+    /// Lens and Prism fit once every plughole level has a best, Escapement once maelstrom is open; a cover marks new
+    /// once it fits until its card opens, and again when an update adds levels (Jack's call C6, round 13).
+    @MainActor func testACoverMarksNewOnceItFits() throws {
+        let plughole = Set(Tier.plughole.levels.map(\.id)), sea = Set(Tier.vortex.levels.map(\.id))
+        let atPar = Best(over: 0, seconds: 60)
+        XCTAssertFalse(Pack.lens.fits(best: { _ in nil }))
+        XCTAssertFalse(Pack.lens.fits(best: { $0 == "L1" ? atPar : nil }))
+        XCTAssertTrue(Pack.lens.fits(best: { plughole.contains($0) ? Best(over: 2, seconds: 60) : nil }))
+        XCTAssertTrue(Pack.prism.fits(best: { plughole.contains($0) ? atPar : nil }))
+        XCTAssertFalse(Pack.escapement.fits(best: { plughole.contains($0) ? atPar : nil }))
+        XCTAssertTrue(Pack.escapement.fits(best: { sea.contains($0) ? atPar : nil }), "maelstrom opens on vortex at par")
+        XCTAssertFalse(Pack.firstStir.fits(best: { _ in atPar }))
+
+        let d = try XCTUnwrap(UserDefaults(suiteName: "marks-test"))
+        d.removePersistentDomain(forName: "marks-test")
+        defer {
+            d.removePersistentDomain(forName: "marks-test")
+            // The registration domain outlives the test, so its marks are put back as nothing seen.
+            UserDefaults.standard.register(defaults: [Marks.fitKey(.escapement): false, Marks.levelsKey(.escapement): 0])
+        }
+        XCTAssertFalse(Marks.new(.lens, fits: false, in: d))
+        XCTAssertTrue(Marks.new(.lens, fits: true, in: d))
+        Marks.seen(.lens, fits: false, store: true, in: d)
+        XCTAssertTrue(Marks.new(.lens, fits: true, in: d), "opened before it fit")
+        Marks.seen(.lens, fits: true, store: true, in: d)
+        XCTAssertFalse(Marks.new(.lens, fits: true, in: d))
+        d.set(Pack.lens.levels.count - 5, forKey: Marks.levelsKey(.lens))
+        XCTAssertTrue(Marks.new(.lens, fits: true, in: d), "an update added five")
+        XCTAssertTrue(Marks.new(.lens, fits: false, in: d))
+        // The registration domain is the process's, whichever defaults register, so on a pack no other test marks.
+        XCTAssertTrue(Marks.new(.escapement, fits: true, in: d))
+        Marks.seen(.escapement, fits: true, store: false, in: d)
+        XCTAssertFalse(Marks.new(.escapement, fits: true, in: d))
+        XCTAssertNil(d.persistentDomain(forName: "marks-test")?[Marks.fitKey(.escapement)], "a harnessed launch registers, never stores")
+    }
+
+    /// "2/3 free" under an unowned pack once any free level is started or solved, counting those with a best, and
+    /// "3/3 free" kept once all are; "new" takes the line, and an owner sees only "new".
+    @MainActor func testTheTasteCountShowsOnceStarted() throws {
+        let ids = Pack.lens.levels.prefix(3).map(\.id)
+        XCTAssertNil(Pack.lens.tastePlayed(best: { _ in nil }, started: { _ in false }))
+        XCTAssertEqual(Pack.lens.tastePlayed(best: { _ in nil }, started: { $0 == ids[0] }), 0)
+        let two: (String) -> Best? = { ids.prefix(2).contains($0) ? Best(over: 1, seconds: 60) : nil }
+        XCTAssertEqual(Pack.lens.tastePlayed(best: two, started: { _ in false }), 2)
+        XCTAssertEqual(Pack.lens.tastePlayed(best: { _ in Best(over: 0, seconds: 60) }, started: { _ in false }), 3)
+        XCTAssertNil(Pack.lens.tastePlayed(best: { $0 == Pack.lens.id(4) ? Best(over: 0, seconds: 60) : nil }, started: { _ in false }))
+
+        let d = UserDefaults.standard, keys = [Marks.fitKey(.lens), Marks.levelsKey(.lens)]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
+        Marks.seen(.lens, fits: true, store: true)
+        XCTAssertEqual(Marks.line(.lens, owned: false, fits: true, played: 2)?.words, "2/3 free")
+        XCTAssertEqual(Marks.line(.lens, owned: false, fits: true, played: 2)?.spoken, "2 of 3 free levels solved")
+        XCTAssertNil(Marks.line(.lens, owned: true, fits: true, played: 2))
+        XCTAssertNil(Marks.line(.lens, owned: false, fits: true, played: nil))
+        d.removeObject(forKey: Marks.fitKey(.lens))
+        XCTAssertEqual(Marks.line(.lens, owned: false, fits: true, played: 2)?.words, "new")
+        XCTAssertEqual(Marks.line(.lens, owned: true, fits: true, played: nil)?.words, "new")
     }
 
     /// A pack's ids never read as another pack's or a tier's.
@@ -296,11 +519,15 @@ final class PackTests: XCTestCase {
                          "UNSTIR_PRICES": "unreachable", "UNSTIR_PAYMENTS": "0", "UNSTIR_RESTORED": "lens,prism"])
         XCTAssertEqual(h.failure, .offline)
         XCTAssertEqual(h.prices, [:])
+        XCTAssertEqual(h.amounts, [:])
+        XCTAssertEqual(Harness([:]).prices[Pack.completeID], "$5.99")
+        XCTAssertEqual(Harness([:]).amounts[Pack.lens.productID], Decimal(string: "2.99"))
         XCTAssertEqual(h.pricing, .unreachable)
         XCTAssertFalse(h.canPay)
         XCTAssertEqual(h.restored, .found([.lens, .prism]))
         XCTAssertEqual(Harness(["UNSTIR_RESTORED": "none"]).restored, .nothing)
         XCTAssertEqual(Harness(["UNSTIR_PRICES": "0"]).pricing, .fetching)
+        XCTAssertEqual(Harness([:]).pricing, .fetched)
     }
 
     /// UNSTIR_OWNED lasts the launch: nothing it grants is written anywhere, and solving the placeholder it opens
