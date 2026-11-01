@@ -1683,6 +1683,29 @@ final class UnstirTests: XCTestCase {
     }
     private func under(_ layout: Layout, _ p: SIMD2<Double>) -> [Int] { layout.rods.indices.filter { depth(layout, $0, p) < 1 } }
 
+    /// The back swipe takes only a touch landing in the screen's left edge band, and only once it has gone 10 pt right
+    /// and mostly sideways; a vertical or leftward one there passes to the tank, a rim turn (Jack's call S2, round 13).
+    func testTheBackSwipeTakesOnlyTheEdge() {
+        let edge = CGPoint(x: 6, y: 400), inside = CGPoint(x: 21, y: 400)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: .zero), .undecided, "a tap there never decides")
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 7, height: 2)), .undecided)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 12, height: 3)), .swipe)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 12, height: 6)), .swipe, "twice as far across")
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 12, height: -7)), .pass)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 1, height: 14)), .pass, "vertical")
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: -12, height: 0)), .pass, "leftward")
+        XCTAssertEqual(BackSwipe.decide(start: inside, translation: .zero), .pass, "outside the band")
+        XCTAssertEqual(BackSwipe.decide(start: inside, translation: CGSize(width: 60, height: 0)), .pass)
+    }
+
+    /// Let go, the swipe leaves past a third of the width, or heading past half; otherwise the level springs back.
+    func testTheBackSwipeCommitsPastAThird() {
+        XCTAssertFalse(BackSwipe.commits(dx: 140, predicted: 180, width: 440))
+        XCTAssertTrue(BackSwipe.commits(dx: 150, predicted: 150, width: 440))
+        XCTAssertTrue(BackSwipe.commits(dx: 60, predicted: 230, width: 440), "a flick")
+        XCTAssertFalse(BackSwipe.commits(dx: 0, predicted: 0, width: 440))
+    }
+
     /// Deep in one disc a finger holds that rod the moment it lands.
     func testGrabInOneDiscIsImmediate() {
         for layout in Layout.allCases {

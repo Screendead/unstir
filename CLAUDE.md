@@ -328,7 +328,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   radius, overlapped or not, never the swirl; a seized winner or a socket is `.seized`, which holds nothing, and a
   ratchet `.ratchet`, which holds nothing: a tap on the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit)
   waits (`Game.wait`), a tap elsewhere on its disc sends a ring from the finger closing on the plate, and a drag shakes
-  it with a thud. The rim, from
+  it with a thud. A touch landing within 20 pt of the screen's left edge waits for its first 10 pt: rightward and
+  mostly sideways, it is the back swipe (`BackSwipe`; Jack's call C19, round 13), which slides the level off over the
+  menu, dimmed 0.4 at the start and less as it uncovers, and past a third of the width, or heading past half, leaves as
+  ‹ levels does, else springs back; otherwise the tank takes it up from where it landed (a vertical one a rim turn,
+  Jack's call S2). It works wherever a level is up, cards and opening too; under Reduce Motion nothing slides, and a
+  swipe past the threshold leaves through the dip. The rim, from
   `LevelView.rim` (0.93) out over the bezel, holds the level's motion where it has one and the swirl where the layout
   has one. Where it has both, the swirl holds the glass's own edge from `swirlBand` (0.86) and the motion the bezel and
   beyond. The rim lesson, the knurl, the bezel's hit area and the two-finger spin key on the motion, and touch on the
@@ -813,7 +818,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   The entitlement Apple's docs require is a HANDOFF item. DeclaredAgeRange links weak, as the app runs from iOS 17.
   A fresh install's first launch opens straight into plughole 01 (`RootView.opening`, Jack's call C4, round 13), once:
   `Best.welcomed` is stored as it appears, so a player who backs out without a move gets the menu next time. Never
-  under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen without storing it. The harness
+  under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen without storing it. While a back
+  swipe slides a level off, `RootView` draws the menu under it (`LevelView.onPeek`, `RootView.peeking`), focused as
+  leaving would focus it, first in its `ZStack`, so the menu uncovered is the one that stays up. The harness
   reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch, `UNSTIR_LETTERS=1` shows the colour letters and swatches, and `UNSTIR_LETTERSCHOICE=0` or `1` sets the settings' choice for the launch), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
@@ -855,7 +862,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
   tiers through the same calls a finger makes. `UNSTIR_EXIT=left` leaves the harness's level for the menu a second
   after it opens, through `RootView`'s own exit (`=solved` as its result card does after a solve; `=up` opens the next
-  tier's first level, as "up a notch" does, then leaves that). `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
+  tier's first level, as "up a notch" does, then leaves that; `=swipe` leaves through the back swipe's commit).
+  `UNSTIR_BACKSWIPE=0.4` holds the level that share of the way into a back swipe, the menu under it, and `=run` plays
+  the swipe a second in by a drawn fingertip. `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
   leaves it, saying what opens it. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
   today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like

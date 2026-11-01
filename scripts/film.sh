@@ -62,6 +62,8 @@ if [[ -z "$pattern" || calm-open-L12 == *$pattern* || calm-autoplay-L09 == *$pat
   calm false
   trap - EXIT
 fi
+# The edge swipe back (UNSTIR_BACKSWIPE=run): a second in, a drawn fingertip slides plughole 05 off over the menu.
+film back-swipe 3 "fps=8,scale=180:-1,tile=8x3:padding=4" LEVEL=5 BACKSWIPE=run
 film tour 8 "fps=4,scale=200:-1,tile=9x4:padding=4" TOUR=1 OPEN=1
 # The tier strip: plughole swiped to whirlpool (open), swiped to vortex (locked, 17 ticks lit), then plughole tapped.
 par27=$(printf '0%.0s' {1..27})

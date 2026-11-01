@@ -113,8 +113,13 @@ struct Harness {
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
     /// UNSTIR_EXIT=left: the level, once open, left for the menu by "‹ levels"; =solved, as from its result card after
-    /// a solve; =up, its tier's next tier's first level opened, as "up a notch" opens it, and that one left.
+    /// a solve; =up, its tier's next tier's first level opened, as "up a notch" opens it, and that one left; =swipe,
+    /// left through the back swipe's commit, sliding off over the menu.
     let exit: String?
+    /// UNSTIR_BACKSWIPE=0.4: the level held that share of the way into a back swipe, the menu under it; =run, the
+    /// swipe played a second in by a drawn fingertip and let go.
+    let backSwipe: Double?
+    let backSwipeRun: Bool
     /// UNSTIR_LOCKTAP=L8: on the menu, that locked row held as a tap leaves it, saying what opens it.
     let lockTap: String?
     /// UNSTIR_FRESH=1: the launch takes a plain launch's first screen as a fresh install would, into plughole 01, and
@@ -251,7 +256,9 @@ struct Harness {
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
         lockTap = env["UNSTIR_LOCKTAP"]
-        exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up"].contains($0) ? $0 : nil }
+        exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up", "swipe"].contains($0) ? $0 : nil }
+        backSwipe = env["UNSTIR_BACKSWIPE"].flatMap(Double.init).map { min(max($0, 0), 1) }
+        backSwipeRun = env["UNSTIR_BACKSWIPE"] == "run"
         stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
         amounts = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
@@ -442,6 +449,8 @@ struct RootView: View {
     @State private var focus: Level?
     /// The level's saved try, replayed as it opens (Jack's call C2, round 13).
     @State private var resumed: Game?
+    /// The menu is drawn under the level while a back swipe slides it off (Jack's call C19, round 13).
+    @State private var peeking = false
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     /// The harness's one save, so a plain launch's left on the simulator never reaches a shot.
@@ -501,26 +510,37 @@ struct RootView: View {
         ZStack {
             if let n = harness?.icon {
                 IconView(n: n)
-            } else if let level {
-                LevelView(level: level, harness: harness, resumed: resumed, storesResume: !harnessed,
-                          onExit: { show(nil, solved: $0) },
-                          onNext: { show($0) },
-                          onLook: { show(nil, look: $0) },
-                          onOffer: { pack in
-                              card = .pack(pack)
-                              show(nil, solved: true)
-                          })
-                    .id(level)
-                    .transition(dip)
             } else {
-                MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
-                         settings: $settings, card: $card, clock: harness?.clock, placeholders: placeholders,
-                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false, focus: focus,
-                         held: harness?.lockTap, arrived: arrived,
-                         run: Self.save("endless", harnessed: harnessed, harnessSave)) {
-                    show($0)
+                // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
+                // level it opens as leaving would open it, not on the harness's tier.
+                if level == nil || peeking {
+                    MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
+                             frozen: harness?.tierSpin, settings: $settings, card: $card, clock: harness?.clock,
+                             placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
+                             cardScroll: harness?.cardScroll ?? false, focus: focus, held: harness?.lockTap, arrived: arrived,
+                             run: Self.save("endless", harnessed: harnessed, harnessSave)) {
+                        show($0)
+                    }
+                    .allowsHitTesting(level == nil)
+                    .accessibilityHidden(level != nil)
+                    .transition(level == nil ? dip : .identity)
                 }
-                .transition(dip)
+                if let level {
+                    LevelView(level: level, harness: harness, resumed: resumed, storesResume: !harnessed,
+                              onExit: { show(nil, solved: $0) },
+                              onNext: { show($0) },
+                              onLook: { show(nil, look: $0) },
+                              onOffer: { pack in
+                                  card = .pack(pack)
+                                  show(nil, solved: true)
+                              },
+                              onPeek: { solved in
+                                  if let solved { focus = level.focus(solved: solved) }
+                                  peeking = solved != nil
+                              })
+                        .id(level)
+                        .transition(dip)
+                }
             }
         }
         .background(Color.black)
@@ -586,7 +606,8 @@ struct RootView: View {
             show(nil)
         }
         .task {
-            guard let exit = harness?.exit, let left = level else { return }
+            // The swipe's leaves through the level's own commit.
+            guard let exit = harness?.exit, exit != "swipe", let left = level else { return }
             try? await Task.sleep(for: .seconds(1))
             if exit == "up", let up = left.tier.step(1)?.levels.first {
                 show(up)
@@ -663,7 +684,11 @@ struct RootView: View {
             gate == nil && opens ? Self.resume($0, from: Self.save($0.id, harnessed: harnessed, harnessSave), harness: harness,
                                                stores: !harnessed) : nil
         }
-        withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil && opens ? next : nil }
+        // Together, so a menu a back swipe uncovered stays up as the level goes.
+        withAnimation(.easeInOut(duration: 0.25)) {
+            level = gate == nil && opens ? next : nil
+            peeking = false
+        }
     }
 }
 

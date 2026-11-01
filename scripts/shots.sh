@@ -78,6 +78,8 @@ shot menu-locktap "Plughole 01 to 13 solved, 15 tapped though locked: it shakes 
   BESTS=plughole:$upto13 LOCKTAP=L15
 shot menu-back-left "Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12." \
   LEVEL=12 EXIT=left BESTS=plughole:00000000000000000000
+shot back-swipe "Plughole 05 held 40% into an edge swipe back: the level sliding right over the menu, centred on 05, 01 to 04 solved." LEVEL=5 BACKSWIPE=0.4 BESTS=plughole:0000
+shot menu-back-swiped "Back from plughole 12 by the edge swipe: the list centred on 12." LEVEL=12 EXIT=swipe BESTS=plughole:00000000000000000000
 shot menu-back-solved "Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens." \
   SCREEN=clean LEVEL=14 EXIT=solved BESTS=plughole:$upto13
 shot menu-mid-switch-scrolled "The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin." \
