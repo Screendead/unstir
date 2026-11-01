@@ -41,9 +41,9 @@ enum Spoken {
 }
 
 extension Game {
-    /// The header's count, and what its colour says at and past par.
+    /// The header's count, and what its colour says at and past par. Endless and the sandbox have no par.
     var movesSpoken: String {
-        guard level.run == nil else { return Spoken.count(moves, "move") }
+        guard level.run == nil, !level.sandbox else { return Spoken.count(moves, "move") }
         return "\(Spoken.count(moves, "move")), par \(par)" + (moves == par ? ", at par" : moves > par ? ", over par" : "")
     }
 

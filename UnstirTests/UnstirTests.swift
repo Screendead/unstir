@@ -1797,6 +1797,11 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run.movesSpoken, "0 moves")
         XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")
         XCTAssertEqual(game.tankSpoken, game.movesSpoken)
+        // The sandbox has no par, so it never reads as at or over one.
+        let sandbox = Game(level: .sandbox)
+        XCTAssertEqual(sandbox.tankSpoken, "0 moves")
+        sandbox.commit(rod: 0, steps: 1)
+        XCTAssertEqual(sandbox.tankSpoken, "1 move")
     }
 
     /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.
