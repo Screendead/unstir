@@ -100,8 +100,12 @@ final class Game {
     private(set) var resets = 0
     private(set) var undos = 0
     private(set) var bank: Int
-    /// What the day's refill added as this level opened, for the undo control to show.
+    /// What the day's refill added as this level opened.
     private(set) var refilled = 0
+    /// What the undo control's badge shows: this opening's refill, or one earlier that day whose badge never showed.
+    private(set) var badge = 0
+    /// No refill's badge has shown before: this one says what it adds.
+    let firstRefill: Bool
     /// The day of the bank's last refill, `Best.refill`'s `last`.
     private var refillDay: String?
     /// `Best.trustedNow`'s anchor, which starts afresh where the caller set the bank.
@@ -208,6 +212,7 @@ final class Game {
             anchor = Best.anchor
         }
         storesBank = bank == nil
+        firstRefill = !Best.refillShown
     }
 
     /// The scramble's entries. In a story each holds back the vignette in its own rod's core, if that core has one.
@@ -505,12 +510,12 @@ final class Game {
     }
 
     /// False when refused, so the caller skips the opening replay. Endless has none: it would bring back entries the brim
-    /// has already settled on.
+    /// has already settled on. With nothing played it only replays the opening, so it costs no clean.
     @discardableResult func reset() -> Bool {
         guard !checking, level.run == nil else { return false }
+        if !history.isEmpty { resets += 1 }
         entries = Self.dealt(level)
         restart()
-        resets += 1
         Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
         return true
     }
@@ -543,9 +548,21 @@ final class Game {
             Best.undos = bank
             Best.refilled = refillDay
         }
-        guard let added else { return }
+        guard let added else {
+            if storesBank, refillDay == today { badge = Best.unseenRefill }
+            return
+        }
         refilled = added
+        badge = added
+        if storesBank { Best.unseenRefill = added }
         Log.write("undo refill +\(added) bank=\(bank)")
+    }
+
+    /// The refill's badge has shown.
+    func refillSeen() {
+        guard storesBank, badge > 0 else { return }
+        Best.unseenRefill = 0
+        Best.refillShown = true
     }
 
     /// The day's refill as the level opens with the clocks read as given: the day is `Best.trustedNow`'s, in `zone`.
@@ -723,6 +740,11 @@ struct LevelView: View {
     /// The day's refill as the badge shows it: set once the opening is over, and only once, so a reset's opening doesn't
     /// show it again.
     @State private var badge = 0
+    /// A line the caption shows for a few seconds in place of its own, saying why a control or a turn did nothing.
+    @State private var notice: String?
+    @State private var notices = 0
+    /// An undo tapped while a let-go settles, taken once it has.
+    @State private var undoQueued = false
     @State private var snap = CGSize.zero
     @Environment(\.displayScale) private var scale
     @Environment(\.scenePhase) private var phase
@@ -914,14 +936,15 @@ struct LevelView: View {
                     }
                 // The play controls fade rather than leave, and the result is an overlay, so the solved tank stays
                 // exactly where it was played.
-                Text(demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
-                     : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip")
-                    .font(.mono(12)).opacity(showResult || ending ? 0 : 0.55).multilineTextAlignment(.center)
+                Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
+                     : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
+                    .font(.mono(12)).opacity(showResult || ending ? 0 : notice != nil ? 0.9 : 0.55).multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
                     .overlay(alignment: .top) {
                         if showResult && game.lost {
-                            LostCard(game: game, onExit: leave, again: { if game.reset() { replays += 1 } })
+                            LostCard(game: game, notice: notice, onExit: leave, undo: undo,
+                                     again: { if game.reset() { replays += 1 } })
                                 .padding(.top, 14)
                                 .transition(reveal)
                         } else if showResult {
@@ -941,21 +964,22 @@ struct LevelView: View {
                 HStack {
                     // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats too.
                     control(game.level.sandbox ? "undo" : "undo \u{00B7} \(game.bank)") {
-                        withAnimation(game.history.last?.rod == Game.tank ? .snappy(duration: 0.3) : nil) { game.undo() }
+                        if settling { undoQueued = true } else { undo() }
                     }
-                        // With nothing to take back it does nothing, so it only taps.
-                        .buttonStyle(Sounding(effect: game.history.isEmpty ? .tap : .undo))
+                        // An empty bank only says when it refills, so it only taps.
+                        .buttonStyle(Sounding(effect: spent ? .tap : .undo))
+                        .disabled(game.history.isEmpty)
                         // The plain button style does not grey a disabled label.
-                        .disabled(!game.level.sandbox && game.bank == 0)
-                        .opacity(!game.level.sandbox && game.bank == 0 ? 0.35 : 1)
+                        .opacity(game.history.isEmpty || spent ? 0.35 : 1)
                         .overlay(alignment: .topTrailing) { refillBadge }
                     Spacer()
                     control("reset") { if game.reset() { replays += 1 } }
                         .buttonStyle(Sounding(effect: .reset))
+                        .disabled(settling)
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
-                .disabled(settling || game.finished || shown != nil || demoing || game.level.run != nil || holding)
+                .disabled(game.finished || shown != nil || demoing || game.level.run != nil || holding)
                 .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
                 .accessibilityHidden(game.level.run != nil)
                 .padding(.bottom, 8)
@@ -1010,9 +1034,23 @@ struct LevelView: View {
         .onChange(of: shown == nil, initial: true) {
             // The clock's demonstration is not the player's tank.
             guard !demoing else { return }
-            if shown == nil { game.startClock(); badge = game.refilled } else { lifted = false }
+            if shown == nil { game.startClock(); badge = game.badge } else { lifted = false }
         }
         .onChange(of: touching) { if touching && shown == nil { lifted = true } }
+        .onChange(of: settling) {
+            guard !settling, undoQueued else { return }
+            undoQueued = false
+            if !game.finished { undo() }
+        }
+        .task(id: notices) {
+            guard notice != nil, (try? await Task.sleep(for: .seconds(3))) != nil else { return }
+            withAnimation(.easeOut(duration: 0.3)) { notice = nil }
+        }
+        .onChange(of: badge) {
+            guard badge > 0 else { return }
+            game.refillSeen()
+            AccessibilityNotification.Announcement("\(badge) undos added, \(game.bank) in the bank").post()
+        }
         .onChange(of: resting, initial: true) {
             let t = Date.now.timeIntervalSinceReferenceDate
             if resting {
@@ -1073,13 +1111,28 @@ struct LevelView: View {
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
             if let today { game.refill(today: today) } else { game.refill() }
             // Where there is no opening, onChange's initial call may run before the refill.
-            if shown == nil { badge = game.refilled }
+            if shown == nil { badge = game.badge }
         }
         .onChange(of: phase) {
             if phase == .background { Analytics.shared.suspended(game); game.pauseClock() }
             if phase == .active { Analytics.shared.resumed(); game.resumeClock() }
         }
         .onDisappear { endPath(); endTwist(); Log.write("level \(game.level.id) exits \(state)") }
+    }
+
+    /// An empty bank says when it refills instead.
+    private var spent: Bool { !game.level.sandbox && game.bank == 0 }
+
+    private func undo() {
+        guard !spent else { return say(Self.refills) }
+        withAnimation(game.history.last?.rod == Game.tank ? .snappy(duration: 0.3) : nil) { game.undo() }
+    }
+
+    nonisolated static let refills = "undos refill +2 each day you play"
+
+    private func say(_ text: String) {
+        notice = text
+        notices += 1
     }
 
     /// Back to the menu, the only way out short of a finish or the next tank.
@@ -1294,7 +1347,7 @@ struct LevelView: View {
     /// see `badge` change.
     private var refillBadge: some View {
         KeyframeAnimator(initialValue: Self.refillTime, trigger: badge) { s in
-            Text("+\(badge)").font(.mono(13)).foregroundStyle(Color.lime)
+            Text(game.firstRefill ? "+\(badge) undos" : "+\(badge)").font(.mono(13)).foregroundStyle(Color.lime)
                 .opacity(badge > 0 ? Self.refillShown(frozenClock ?? s) : 0)
         } keyframes: { _ in
             MoveKeyframe(0.0)
@@ -3003,10 +3056,13 @@ struct LostStamp: View {
     }
 }
 
-/// Escapement's tank out of ticks: the move that spent them, undo if the bank has one, and again, a reset.
+/// Escapement's tank out of ticks: the move that spent them, undo (an empty bank says when it refills), and again, a
+/// reset.
 struct LostCard: View {
     let game: Game
+    let notice: String?
     let onExit: () -> Void
+    let undo: () -> Void
     let again: () -> Void
 
     var body: some View {
@@ -3014,11 +3070,14 @@ struct LostCard: View {
             Text("out of ticks on move \(game.moves)").font(.mono(13))
             HStack(spacing: 32) {
                 Button("\u{2039} levels", action: onExit)
-                Button("undo \u{00B7} \(game.bank)") { game.undo() }
-                    .disabled(game.bank == 0).opacity(game.bank == 0 ? 0.35 : 1)
-                Button("again \u{203A}", action: again).foregroundStyle(Color.vermilion).shadow(color: .vermilion, radius: 4)
+                Button("undo \u{00B7} \(game.bank)", action: undo)
+                    .buttonStyle(Sounding(effect: game.bank == 0 ? .tap : .undo))
+                    .opacity(game.bank == 0 ? 0.35 : 1)
+                Button("again \u{203A}", action: again).buttonStyle(Sounding(effect: .reset))
+                    .foregroundStyle(Color.vermilion).shadow(color: .vermilion, radius: 4)
             }
             .font(.mono(15, .medium))
+            if let notice { Text(notice).font(.mono(12)).opacity(0.7).transition(.opacity) }
         }
     }
 }

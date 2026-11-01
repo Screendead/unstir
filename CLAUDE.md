@@ -356,7 +356,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
   main actor and the fine pass off it. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
-  seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
+  seconds once the opening ends or is skipped, as the control comes live, and not again on a reset. The first refill
+  ever reads "+2 undos" (`Best.refillShown`), and VoiceOver announces each; one left unseen during its opening
+  (`Best.unseenRefill`) shows on the next level opened that day. Undo greys and refuses with nothing to undo; with the
+  bank empty it stays live only to put "undos refill +2 each day you play" in the caption for three seconds (the
+  lost card's under its buttons), which plays the undo and reset sounds as the bottom controls do. An undo tapped
+  while a let-go settles is taken once it has. A reset with nothing played only replays the opening and counts no
+  reset, so it costs no clean.
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
   one clock's tick can uncover the next's seam on the same move (the book's 17 and 18 need it), and the stack's last

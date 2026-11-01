@@ -438,6 +438,18 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "undos.day") }
     }
 
+    /// The day's refill until its badge has shown: a level left during its opening hands it to the next one that day.
+    static var unseenRefill: Int {
+        get { UserDefaults.standard.integer(forKey: "undos.unseen") }
+        set { UserDefaults.standard.set(newValue, forKey: "undos.unseen") }
+    }
+
+    /// Set once a refill's badge has shown: the first one says what it adds.
+    static var refillShown: Bool {
+        get { UserDefaults.standard.bool(forKey: "undos.shown") }
+        set { UserDefaults.standard.set(newValue, forKey: "undos.shown") }
+    }
+
     /// A calendar day in `zone` as yyyy-MM-dd, so days compare as strings. Gregorian whatever the phone's calendar, so a
     /// change of that setting can't put today before a stored day.
     static func day(_ date: Date = .now, in zone: TimeZone = .current) -> String {

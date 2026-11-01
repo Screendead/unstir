@@ -21,6 +21,8 @@ final class UnstirTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: "undos.spent")
         UserDefaults.standard.removeObject(forKey: "undos.day")
         UserDefaults.standard.removeObject(forKey: "undos.anchor")
+        UserDefaults.standard.removeObject(forKey: "undos.unseen")
+        UserDefaults.standard.removeObject(forKey: "undos.shown")
         UserDefaults.standard.removeObject(forKey: "tank.turned")
     }
 
@@ -407,6 +409,19 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Best.undos, 5)
     }
 
+    /// A reset with nothing played only replays the opening, so watching L1's stir again costs no clean.
+    @MainActor func testAResetWithNothingPlayedCostsNoClean() {
+        let game = Game(level: Level.plughole[0], tankTurned: true, swirled: true, bank: (5, nil))
+        XCTAssertTrue(game.reset())
+        XCTAssertEqual(game.resets, 0)
+        game.commit(rod: 1, steps: 2)
+        XCTAssertTrue(game.reset())
+        XCTAssertEqual(game.resets, 1)
+        game.commit(rod: 0, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertFalse(game.clean)
+    }
+
     /// The level's clock stops while the app is away, and a reset's replay never restarts it.
     @MainActor func testTheClockStopsWhileTheAppIsAway() {
         let game = Game(level: Level.plughole[0], tankTurned: true, swirled: true, bank: (5, nil))
@@ -707,7 +722,15 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(next.bank, 5)
         XCTAssertEqual(Best.undos, 5)
         XCTAssertEqual(Best.refilled, "2026-09-30")
-        XCTAssertEqual(opened(on: "2026-09-30").refilled, 0)
+        // Until its badge has shown, the day's refill passes to the next level opened that day, and adds nothing more.
+        XCTAssertTrue(next.firstRefill)
+        let again = opened(on: "2026-09-30")
+        XCTAssertEqual(again.refilled, 0)
+        XCTAssertEqual(again.badge, 2)
+        XCTAssertEqual(Best.undos, 5)
+        again.refillSeen()
+        XCTAssertEqual(opened(on: "2026-09-30").badge, 0)
+        XCTAssertFalse(opened(on: "2026-09-30").firstRefill)
         XCTAssertEqual(Best.undos, 5)
         XCTAssertEqual(opened(on: "2026-10-01").refilled, 2)
         Best.refilled = "2026-12-31"
