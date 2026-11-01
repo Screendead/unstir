@@ -555,7 +555,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
   once all are (`PackCard.pickUp`, `continues`). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
   once every one is, and Complete's cover once Complete is owned; Complete's card names each pack as a link to its
-  card (`onOffer`), so each taste is a tap away. A purchase landing on an open card (bought, approved or restored)
+  card (`onOffer`, and a VoiceOver action per pack), so each taste is a tap away, and back from that card returns to
+  Complete's. A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
   entitlements is no landing (`PackCard.lands`): an owner's card opened before `Store.ready` reads unowned, then owned,

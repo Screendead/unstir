@@ -668,6 +668,14 @@ struct PackCard: View {
                                 fact("done", Text("\(levels.filter { Best.load($0.id)?.over == 0 }.count)/\(levels.count) \(noPar ? "solved" : "at par")"))
                             } else {
                                 fact("holds", holds)
+                                    .accessibilityActions {
+                                        // The names' links, which a combined element may not offer VoiceOver.
+                                        if offer.pack == nil {
+                                            ForEach(Pack.sold(), id: \.self) { pack in
+                                                Button("Open \(pack.name)") { onOffer(.pack(pack)) }
+                                            }
+                                        }
+                                    }
                             }
                         }
                         .padding(.top, 32)
