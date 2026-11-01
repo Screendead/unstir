@@ -126,6 +126,9 @@ final class Game {
     private var healsBefore: [Int] = []
     /// The rod and outcome of the newest commit or undo, for the commit flash.
     private(set) var lastCommit: (rod: Int, result: Commit)?
+    /// Turns a full stack refused (`Tank.maxStack`), and the knob of the last, which shakes.
+    private(set) var refusals = 0
+    private(set) var refusedKnob = 0
     /// The tier this solve opened, on whichever level was the last to reach par: the card goes up a notch.
     private(set) var opened: Tier?
     /// The level's best before this solve and this solve's own, for the card's line; nil where nothing is saved.
@@ -272,7 +275,11 @@ final class Game {
         let result = level.kind(of: rod) != .working ? .refused
             : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
                              lenses: level.lenses, masks: level.masks, popped: { if !$0.pushed { healed += 1 } })
-        guard result != .refused else { Log.write("commit \(Twist(rod: rod, steps: steps)) refused"); return }
+        guard result != .refused else {
+            Log.write("commit \(Twist(rod: rod, steps: steps)) refused")
+            if level.kind(of: rod) == .working { refuse(rod) }
+            return
+        }
         if rod == level.layout.swirl, !swirled {
             swirled = true
             if storesSwirled { Best.swirled = true }
@@ -306,6 +313,11 @@ final class Game {
         Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
                   + "\(level.run == nil ? "" : "brim=\(brim) ")stack=\(stack.count) \(stack)")
         settle(healed: healed > 0)
+    }
+
+    private func refuse(_ knob: Int) {
+        refusals += 1
+        refusedKnob = knob
     }
 
     private func settleBrim(_ heals: Int) {
@@ -363,6 +375,7 @@ final class Game {
         // A full stack refuses a tick as it would a push, so it refuses the move.
         guard result != .refused, !ticksRefused(next) else {
             Log.write("commit \(Twist(rod: knob, steps: steps)) refused")
+            if level.kind(of: knob) == .working { refuse(knob) }
             return
         }
         before.append((entries, escapement))
@@ -385,7 +398,7 @@ final class Game {
     /// nothing to wait for. False when refused.
     @discardableResult func wait(on ratchet: Int) -> Bool {
         guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return false }
-        guard !ticksRefused(entries) else { Log.write("wait refused"); return false }
+        guard !ticksRefused(entries) else { Log.write("wait refused"); refuse(ratchet); return false }
         before.append((entries, escapement))
         healsBefore.append(heals)
         openBefore.append(open)
@@ -1096,6 +1109,14 @@ struct LevelView: View {
             undoQueued = false
             if !game.finished { undo() }
         }
+        .onChange(of: game.refusals) {
+            // A full stack refuses as a seized knob does, and says what frees it.
+            jammed = game.refusedKnob
+            jams += 1
+            Knock.thud.play()
+            Sound.shared.play(.seized)
+            say("the tank is full: undo or reset")
+        }
         .task(id: notices) {
             guard notice != nil, (try? await Task.sleep(for: .seconds(3))) != nil else { return }
             withAnimation(.easeOut(duration: 0.3)) { notice = nil }
@@ -1645,7 +1666,8 @@ struct LevelView: View {
             if game.level.motion != .none {
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                     RimLesson(kind: .tank, r: r, showing: lesson && !game.tankTurned,
-                              pulse: lesson && jammed != nil ? Self.pulse(frozenShake ?? s) : 0, clock: frozenClock)
+                              pulse: lesson && jammed.map { game.level.kind(of: $0) != .working } == true
+                                  ? Self.pulse(frozenShake ?? s) : 0, clock: frozenClock)
                 } keyframes: { _ in Self.jolt }
             }
             if game.level.layout.swirl != nil {
@@ -2192,8 +2214,9 @@ struct LevelView: View {
     private func tapped(_ k: Int, from start: SIMD2<Double>, to end: SIMD2<Double>) {
         pressing = nil
         if Self.waits(from: start, to: end, centre: centre(k)) {
-            // A wait no clock can take thuds, as a seized knob does.
-            if !game.wait(on: k) && !game.finished { jammed = k; jams += 1; Knock.thud.play() }
+            // A wait no clock can take thuds, as a seized knob does; a full stack's refusal says so itself.
+            let refusals = game.refusals
+            if !game.wait(on: k) && !game.finished && game.refusals == refusals { jammed = k; jams += 1; Knock.thud.play() }
         } else if simd_distance(start, end) < 0.06 {
             missed = (k, simd_distance(start, centre(k))); misses += 1
         } else {

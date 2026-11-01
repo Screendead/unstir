@@ -327,7 +327,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seized knob touched shakes a few degrees, plays `Knock.thud` (duller than the tank step's `Knock.clunk`, both on one
   haptic engine that a level able to knock starts as it appears and on coming back to the front, `Knock.warm`, so the
   first knock never hitches its frame, and stops once no such level is on screen) and pulses
-  the rim's lesson: `RimLesson`, a two-headed amber arc just outside the bezel at the top and a ghost finger rocking
+  the rim's lesson (a turn a full stack refuses shakes its knob and thuds the same way, without the pulse, and the
+  caption says "the tank is full: undo or reset" for three seconds): `RimLesson`, a two-headed amber arc just outside the bezel at the top and a ghost finger rocking
   along the rim under it, shown on any level whose rim turns the tank until the player's first turn of the tank commits. That
   turn sets `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does.
   The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. A level with a swirl

@@ -475,6 +475,22 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(tanks.map(\.best), [3, 3, 3, 3])
     }
 
+    /// A turn a full stack refuses counts as a refusal, for the knob to shake and the caption to say so, and changes
+    /// nothing else.
+    @MainActor func testAFullStackSaysItRefused() {
+        let full = (0..<Tank.maxStack).map { Twist(rod: $0 % 2, steps: 1) }
+        let game = Game(level: Level(id: "test-full", label: "", title: "", layout: .tri, scramble: full),
+                        tankTurned: true, swirled: true, bank: (5, nil))
+        game.commit(rod: 2, steps: 1)
+        XCTAssertEqual(game.refusals, 1)
+        XCTAssertEqual(game.refusedKnob, 2)
+        XCTAssertEqual(game.stack, full)
+        XCTAssertEqual(game.moves, 0)
+        game.commit(rod: 1, steps: -1)
+        XCTAssertEqual(game.refusals, 1)
+        XCTAssertEqual(game.stack.count, Tank.maxStack - 1)
+    }
+
     /// The level's clock stops while the app is away, and a reset's replay never restarts it.
     @MainActor func testTheClockStopsWhileTheAppIsAway() {
         let game = Game(level: Level.plughole[0], tankTurned: true, swirled: true, bank: (5, nil))

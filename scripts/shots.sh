@@ -127,6 +127,9 @@ shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank ref
   LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
 shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
   MODE=sandbox CLOCK=3
+full=$(for i in $(seq 0 35); do printf '%d:+1,' $((i % 2)); done)
+hold=2 shot sandbox-full "The sandbox with a full stack of 36, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset." \
+  MODE=sandbox STACK=${full%,} MOVES=2:1
 shot sandbox-chainmail "The sandbox on chainmail and pent: the header's controls in full where they fit." \
   MODE=sandbox PICTURE=chainmail LAYOUT=pent STACK= CLOCK=3
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
