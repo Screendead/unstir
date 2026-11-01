@@ -598,8 +598,8 @@ struct LoopingTank: View {
         } else if reduceMotion {
             PackTank(offer: offer, side: side)
         } else {
-            TimelineView(.animation(minimumInterval: interval > 0 ? interval : nil, paused: paused)) { tl in
-                PackTank(offer: offer, side: side, clock: tl.date.timeIntervalSinceReferenceDate + offset)
+            PausingTimeline(interval: interval > 0 ? interval : nil, paused: paused) { now in
+                PackTank(offer: offer, side: side, clock: now + offset)
             }
         }
     }
@@ -610,9 +610,20 @@ struct PackClip: View {
     let offer: Offer
     let side: CGFloat
     var held: Double?
+    @State private var seen = true
 
     var body: some View {
-        ClipPlayer(clip: .of(offer), side: side, held: held)
+        ClipPlayer(clip: .of(offer), side: side, held: held, paused: !seen)
+            .onGeometryChange(for: Bool.self) { Self.seen($0.size, in: $0.bounds(of: .scrollView)) } action: { seen = $0 }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(offer.name): \(offer.pitch). " + (offer.pack == nil ? "A level from each pack, played." : "A level played."))
+            .accessibilityAddTraits(.isImage)
+    }
+
+    /// Whether any of a view `size` across lies inside its scroll view's `viewport`, in its own space; with no scroll
+    /// view, it shows.
+    nonisolated static func seen(_ size: CGSize, in viewport: CGRect?) -> Bool {
+        viewport.map { $0.intersects(CGRect(origin: .zero, size: size)) } ?? true
     }
 }
 

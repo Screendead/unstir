@@ -817,6 +817,9 @@ struct LevelView: View {
     /// Something has been let go since the opening, so the next rest waits longer.
     @State private var lifted = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityDimFlashingLights) private var dimFlashing
+    /// Under Reduce Motion the opening fades through black, by this much, in place of the wind-in.
+    @State private var curtain = 0.0
     /// A live picture: its clock starts at zero on every visit.
     @State private var opened = Date.now
     /// Endless: the picture's colours round the rim as the stack stirs it (Brim.colours), once worked out.
@@ -922,6 +925,7 @@ struct LevelView: View {
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
                     Button(action: leave) { Text(game.level.back).hit() }
+                        .accessibilityLabel(Spoken.back(game.level))
                     Spacer()
                     if game.level.sandbox {
                         // Each says what it steps through where there is room for it.
@@ -943,6 +947,7 @@ struct LevelView: View {
                                 LinearKeyframe(0.0, duration: 0.8)
                             }
                             .opacity(showResult || ending ? 0 : 1)
+                            .accessibilityLabel(game.movesSpoken)
                     }
                 }
                 .font(.mono(13))
@@ -967,6 +972,12 @@ struct LevelView: View {
                 Spacer(minLength: 12)
                 let reveal = AnyTransition.opacity.animation(.easeOut(duration: 0.4).delay(0.3))
                 tank(side)
+                    // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
+                    .accessibilityValue(game.tankSpoken)
+                    .accessibilityHint("Played by sight: drag a knob to turn its rod.")
+                    .accessibilityAddTraits(.allowsDirectInteraction)
                     .overlay {
                         if ending {
                             NightForwardsFilm(side: side, frozen: frozenEnding) {
@@ -994,6 +1005,8 @@ struct LevelView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
+                    .accessibilityHidden(showResult || ending)
+                    .modifier(SkipButton(on: demoing || shown != nil) { skip() })
                     .overlay(alignment: .top) {
                         if showResult && game.lost {
                             LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
@@ -1018,6 +1031,7 @@ struct LevelView: View {
                     control(game.level.sandbox ? "undo" : "undo \u{00B7} \(game.bank)") {
                         if settling { undoQueued = true } else { undo() }
                     }
+                        .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
                         // An empty bank only says when it refills, so it only taps.
                         .buttonStyle(Sounding(effect: spent ? .tap : .undo))
                         .disabled(game.history.isEmpty)
@@ -1027,13 +1041,14 @@ struct LevelView: View {
                     Spacer()
                     control("reset", reset)
                         .buttonStyle(Sounding(effect: .reset))
+                        .accessibilityLabel("Reset")
                         .disabled(settling)
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
                 .disabled(game.finished || shown != nil || demoing || game.level.run != nil || holding)
                 .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
-                .accessibilityHidden(game.level.run != nil)
+                .accessibilityHidden(game.level.run != nil || showResult || ending)
                 .padding(.bottom, 8)
             }
         }
@@ -1041,6 +1056,7 @@ struct LevelView: View {
         .tint(Color.text)
         .padding(.horizontal, 16)
         .background(Color.black)
+        .accessibilityAction(.escape) { leave() }
         .task(id: replays) {
             if !game.level.demo.isEmpty && !still && (replays == 0 ? !demoRetired : fresh) { await clockDemo() }
             if !game.level.sandbox, replays > 0 || !still { await open() }
@@ -1160,7 +1176,7 @@ struct LevelView: View {
             drag = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; spun = false
             // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
             // centre among them.
-            if game.solved { withAnimation(.easeInOut(duration: 0.9)) { eased = true } }
+            if game.solved { withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true } }
             Task {
                 // A spill's card waits for the pour and the word; a lost clock's for its stamp.
                 try? await Task.sleep(for: .seconds(game.spilled ? Brim.card : game.lost ? 0.7 : 1.4))
@@ -1287,7 +1303,15 @@ struct LevelView: View {
         shown = 0; liveRod = nil; liveAngle = 0; drag = nil; liveTurn = nil; spun = false
         if !game.level.replay { wind = 0; shown = scramble.count }
         defer { if demoDip > 0 { withAnimation(.easeOut(duration: 0.3)) { demoDip = 0 } } }
+        defer { if curtain > 0 { withAnimation(.easeOut(duration: 0.2)) { curtain = 0 } } }
         guard await pause(demoDip > 0 ? 0.3 : 1) else { return }
+        // A bake that outlasts the still (Lens's halftone on an old phone) would wind in over black or through the
+        // strike's flicker, so the opening waits for the strike to land and settle. Only a picture that never lands
+        // lets it go on, after 30 s.
+        if !struck {
+            for _ in 0..<600 where !struck { guard await pause(0.05) else { return } }
+            guard await pause(PictureLayer.strikeLength(calm: reduceMotion || dimFlashing)) else { return }
+        }
         if demoDip > 0 { withAnimation(.easeInOut(duration: 1.4)) { demoDip = 0 } }
         if game.level.replay {
             for (i, t) in scramble.enumerated() {
@@ -1301,11 +1325,31 @@ struct LevelView: View {
             }
             // A beat on the stirred picture before it is the player's.
             guard await pause(0.3) else { return }
+        } else if reduceMotion {
+            withAnimation(.easeIn(duration: 0.2)) { curtain = 1 }
+            guard await pause(0.2) else { return }
+            wind = 1
+            withAnimation(.easeOut(duration: 0.2)) { curtain = 0 }
+            guard await pause(0.2) else { return }
         } else {
             withAnimation(.easeInOut(duration: 1.4)) { wind = 1 }
             guard await pause(1.4) else { return }
         }
         shown = nil
+    }
+
+    /// Cuts the clock's demonstration or the opening short; false when neither is playing.
+    @discardableResult private func skip() -> Bool {
+        if demoing {
+            demoing = false
+            Log.write("skip demo")
+            return true
+        }
+        guard shown != nil else { return false }
+        // Past 1, so the value changes and cuts short a wind-in still animating towards 1.
+        shown = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; wind = 2
+        Log.write("skip \(state)")
+        return true
     }
 
     /// False once the opening is skipped or replaced.
@@ -1580,13 +1624,14 @@ struct LevelView: View {
             + (lensTrack.map { x in (-3...3).map { (CGPoint(x: x, y: at(rodCount!.k).y + CGFloat($0) * Self.trackPitch), Self.countRoom + 4) } } ?? [])
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
         let spillAt = game.spilled ? game.brimEvents.last?.time : nil
-        // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow.
+        // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow,
+        // and 30 Hz while the phone saves power.
         // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
         // breathes.
         let moving = game.level.picture.isLive || spillAt != nil && brimMoving || breathing
         let tickNow = game.tick, clocks = game.level.clocks, playable = shown == nil
         return ZStack {
-            TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !moving || frozenClock != nil)) { timeline in
+            TimelineView(.animation(minimumInterval: 1.0 / (Power.shared.saving ? 30 : 60), paused: !moving || frozenClock != nil)) { timeline in
                 let murk = spillAt.flatMap { at -> [Float]? in
                     let since = (frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
@@ -1604,7 +1649,9 @@ struct LevelView: View {
                     }
                         .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
                             var u = unstirred
-                            u.wave = SIMD3(Float(source.x), Float(source.y), Float(frozenWave ?? w))
+                            // Under Reduce Motion the light swells where it stands instead of running out as a wave.
+                            let calm = reduceMotion && frozenWave == nil
+                            u.wave = SIMD3(Float(source.x), Float(source.y), calm ? -1 : Float(frozenWave ?? w))
                             u.breath = swirlBreath
                             // Escapement: the move's ticks in turn, the one in flight turned part way on the stack it changed.
                             if p < Double(tickNow.count), playable {
@@ -1612,7 +1659,9 @@ struct LevelView: View {
                                 u.stack = t.stack
                                 u.tick = (t.rod, Self.flight(p, i) * Double(t.dir) * Tank.step)
                             }
-                            return picture.modifier(u).modifier(Murk(stirs: murk, side: side))
+                            let drawn = picture.modifier(u).modifier(Murk(stirs: murk, side: side))
+                            // Only Reduce Motion pays for the contrast filter, over the hottest draw in the app.
+                            return Group { if calm { drawn.contrast(1 + 0.5 * max(sin(.pi * w / 1.9), 0)) } else { drawn } }
                         } keyframes: { _ in
                             // A light wave from the last-turned rod, over the clean picture. The animator holds its last value, so
                             // the band runs out past the farthest rim of any layout (1.56 from a ring rod) rather than parking on it.
@@ -1622,7 +1671,7 @@ struct LevelView: View {
                 } keyframes: { _ in Self.tickKeys }
             }
             .clipShape(Circle())
-            .opacity(1 - demoDip)
+            .opacity((1 - demoDip) * (1 - curtain))
             if !game.finished {
                 ForEach(clocks, id: \.rod) { c in
                     // Grey as its last tick lands, in the move's turn.
@@ -1682,7 +1731,7 @@ struct LevelView: View {
             }
             .keyframeAnimator(initialValue: 0.0, trigger: struck) { ring, o in
                 ring.opacity(o)
-            } keyframes: { _ in PictureLayer.strike }
+            } keyframes: { _ in PictureLayer.strike(calm: reduceMotion || dimFlashing) }
             if game.level.motion != .none {
                 KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
                     RimLesson(kind: .tank, r: r, showing: lesson && !game.tankTurned,
@@ -1778,7 +1827,7 @@ struct LevelView: View {
         }
         .frame(width: side, height: side)
         .keyframeAnimator(initialValue: 0.0, trigger: game.solved) { tank, t in
-            tank.scaleEffect(1 + 0.02 * sin(t * .pi))
+            tank.scaleEffect(1 + (reduceMotion ? 0 : 0.02) * sin(t * .pi))
         } keyframes: { _ in CubicKeyframe(1.0, duration: 0.9) }
         // A level that turns, or swirls, reaches a finger on the bezel or just beyond it.
         .contentShape(Circle().inset(by: game.level.motion == .none && game.level.layout.swirl == nil ? 0 : -25))
@@ -2178,20 +2227,6 @@ struct LevelView: View {
 
     private func markStarted() {
         if !game.level.sandbox && game.level.keepsProgress { Best.start(game.level.id) }
-    }
-
-    /// Skips the opening, or the clock's demonstration; false when neither is playing.
-    @discardableResult private func skip() -> Bool {
-        if demoing {
-            demoing = false
-            Log.write("skip demo")
-            return true
-        }
-        guard shown != nil else { return false }
-        // Past 1, so the value changes and cuts short a wind-in still animating towards 1.
-        shown = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; wind = 2
-        Log.write("skip \(state)")
-        return true
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
@@ -2660,22 +2695,31 @@ struct PictureLayer: View {
     /// When the picture lands and starts to strike, for whatever strikes with it.
     var onStrike: () -> Void = {}
     @Environment(\.displayScale) private var scale
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityDimFlashingLights) private var dimFlashing
     @State private var image: UIImage?
 
-    /// The picture's opacity as it lands.
-    @KeyframesBuilder<Double> static var strike: some Keyframes<Double> {
+    /// How long `strike` runs.
+    static func strikeLength(calm: Bool) -> Double { KeyframeTimeline(initialValue: 0.0) { strike(calm: calm) }.duration }
+
+    /// The picture's opacity as it lands: a flicker, or under Reduce Motion or Dim Flashing Lights (`calm`) a fade.
+    @KeyframesBuilder<Double> static func strike(calm: Bool) -> some Keyframes<Double> {
         // Black until the screen's 0.27 s dip in has landed, or the fade swallows the strike.
         MoveKeyframe(0.0)
         LinearKeyframe(0.0, duration: 0.25)
-        MoveKeyframe(0.8)
-        LinearKeyframe(0.8, duration: 0.04)
-        MoveKeyframe(0.1)
-        LinearKeyframe(0.1, duration: 0.06)
-        MoveKeyframe(0.95)
-        LinearKeyframe(0.95, duration: 0.03)
-        MoveKeyframe(0.35)
-        LinearKeyframe(0.35, duration: 0.05)
-        LinearKeyframe(1.0, duration: 0.16, timingCurve: .easeOut)
+        if calm {
+            LinearKeyframe(1.0, duration: 0.25, timingCurve: .easeOut)
+        } else {
+            MoveKeyframe(0.8)
+            LinearKeyframe(0.8, duration: 0.04)
+            MoveKeyframe(0.1)
+            LinearKeyframe(0.1, duration: 0.06)
+            MoveKeyframe(0.95)
+            LinearKeyframe(0.95, duration: 0.03)
+            MoveKeyframe(0.35)
+            LinearKeyframe(0.35, duration: 0.05)
+            LinearKeyframe(1.0, duration: 0.16, timingCurve: .easeOut)
+        }
     }
 
     var body: some View {
@@ -2693,7 +2737,9 @@ struct PictureLayer: View {
         .frame(width: side, height: side)
         // Flickers on like a neon tube when the texture lands. Over black, opacity is a colour multiply the shader samples for free.
         // Transparent until then, which over black matches the placeholder and keeps a live picture from showing before the strike.
-        .keyframeAnimator(initialValue: 0.0, trigger: image != nil) { picture, o in picture.opacity(o) } keyframes: { _ in Self.strike }
+        .keyframeAnimator(initialValue: 0.0, trigger: image != nil) { picture, o in picture.opacity(o) } keyframes: { _ in
+            Self.strike(calm: reduceMotion || dimFlashing)
+        }
         .onChange(of: image != nil) { if image != nil { onStrike() } }
         // A live picture bakes nothing: the empty image only strikes the tube, once its data is ready.
         .task(id: [picture.rawValue, "\(seed)", "\(side)", "\(scale)"]) {
@@ -2717,6 +2763,7 @@ struct RimLesson: View {
     let pulse: Double
     /// Holds the ghost finger this many seconds in.
     let clock: Double?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The ghost finger's path, as a fraction of the glass's radius.
     var reach = 1.0225
     private static let span = 34 * Double.pi / 180, sweep = 26 * Double.pi / 180, period = 3.6
@@ -2759,8 +2806,9 @@ struct RimLesson: View {
         let colour = kind == .tank ? Color.amber : .neonCyan
         return ZStack {
             if showing {
-                TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil)) { timeline in
-                    let a = Self.notch(kind) + Self.sweep * sin(2 * .pi * (clock ?? timeline.date.timeIntervalSinceReferenceDate) / Self.period)
+                // Under Reduce Motion it rests mid-sweep, where the arc's arrows show the way.
+                TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
+                    let a = Self.notch(kind) + Self.sweep * sin(2 * .pi * (clock ?? (reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)) / Self.period)
                     Circle().fill(Color.live.opacity(0.22))
                         .overlay(Circle().stroke(Color.live.opacity(0.6), lineWidth: 1.5))
                         .shadow(color: .live.opacity(0.4), radius: 6)
@@ -2916,6 +2964,7 @@ struct ResultCard: View {
     let onExit: () -> Void
     let onNext: (Level) -> Void
     let onLook: (Tier) -> Void
+    @AccessibilityFocusState private var focused: Bool
     /// A reset from the card, for another go at a solve that wasn't clean.
     let again: () -> Void
 
@@ -2974,8 +3023,13 @@ struct ResultCard: View {
                 }
             }
             .font(.mono(13))
+            // Focus lands on the finish itself: an announcement before a focus move is cut short.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(game.finishSpoken)
+            .accessibilityFocused($focused)
             HStack(spacing: 32) {
                 Button(action: onExit) { Text(game.level.back).hit() }
+                    .accessibilityLabel(Spoken.back(game.level))
                 if game.offersAgain {
                     Button(action: again) { Text("again \u{21BA}").hit() }.buttonStyle(Sounding(effect: .reset))
                         .accessibilityLabel("Again")
@@ -2984,6 +3038,7 @@ struct ResultCard: View {
                     ShareLink(item: share) { Text("share \u{2197}").hit() }
                         .shareTap()
                         .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
+                        .accessibilityLabel("Share result")
                 }
                 if let next {
                     // Past a pack's free taste, unowned, next opens its card: the button says so.
@@ -2991,6 +3046,7 @@ struct ResultCard: View {
                     let label = game.spilled ? "new run \u{203A}" : gate.map { "more in \($0.name) \u{203A}" } ?? "next \u{203A}"
                     Button { onNext(next) } label: { Text(label).hit() }
                         .foregroundStyle(accent).shadow(color: accent, radius: 4)
+                        .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
                 }
             }
             .font(.mono(15, .medium))
@@ -2998,6 +3054,7 @@ struct ResultCard: View {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
+        .onAppear { focused = true }
     }
 }
 
@@ -3249,13 +3306,14 @@ enum StopLook: String, Sendable { case stamp, left, rings }
 struct LostStamp: View {
     var size: CGFloat = 76
     @State private var landed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Text("out of ticks.").font(.system(size: size, weight: .bold, design: .serif)).italic().fixedSize()
             .foregroundStyle(Color.vermilion)
             .shadow(color: .black.opacity(0.9), radius: 8)
             .rotationEffect(.degrees(-6))
-            .scaleEffect(landed ? 1 : 1.3)
+            .scaleEffect(landed || reduceMotion ? 1 : 1.3)
             .opacity(landed ? 1 : 0)
             .onAppear { withAnimation(.easeOut(duration: 0.16)) { landed = true } }
             .allowsHitTesting(false)
@@ -3270,20 +3328,26 @@ struct LostCard: View {
     let onExit: () -> Void
     let undo: () -> Void
     let again: () -> Void
+    @AccessibilityFocusState private var focused: Bool
 
     var body: some View {
         VStack(spacing: 26) {
             Text("out of ticks on move \(game.moves)").font(.mono(13))
+                .accessibilityLabel(game.finishSpoken).accessibilityFocused($focused)
             HStack(spacing: 32) {
                 Button(action: onExit) { Text(game.level.back).hit() }
+                    .accessibilityLabel(Spoken.back(game.level))
                 Button(action: undo) { Text("undo \u{00B7} \(game.bank)").hit() }
                     .buttonStyle(Sounding(effect: game.bank == 0 ? .tap : .undo))
                     .opacity(game.bank == 0 ? 0.35 : 1)
+                    .accessibilityLabel("Undo, \(game.bank) left")
                 Button(action: again) { Text("again \u{203A}").hit() }.buttonStyle(Sounding(effect: .reset))
                     .foregroundStyle(Color.vermilion).shadow(color: .vermilion, radius: 4)
+                    .accessibilityLabel("Try again")
             }
             .font(.mono(15, .medium))
             if let notice { Text(notice).font(.mono(12)).opacity(0.7).transition(.opacity) }
         }
+        .onAppear { focused = true }
     }
 }

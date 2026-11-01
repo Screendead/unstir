@@ -167,7 +167,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
   the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs
-  its rotation), so a pick or turn can be checked against the finger.
+  its rotation), so a pick or turn can be checked against the finger. Past 1 MB (`Log.cap`) it is cut to its newest
+  512 KB from a whole line once the first screen is up (`Log.trim`): read and cut off the main actor, then replaced
+  atomically on it with the lines written meanwhile, so a launch before the first frame only opens it. Once the first screen is up
+  it logs a `device:` line (app version and build, iOS, model, locale, type size, Reduce Motion, VoiceOver, Low Power),
+  never the phone's name. `UILaunchScreen`'s colour (`LaunchBackground`, black) keeps a cold launch black in light
+  appearance too.
 
 ## Architecture
 
@@ -357,7 +362,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: the rod's tick, the tank's
   clunk. While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
-  main actor and the fine pass off it. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
+  main actor and the fine pass off it. Under Reduce Motion the opening fades through black (`curtain`, 0.2 s each way)
+  in place of the wind-in, a replay level keeping its rod turns, which are the information; the solve swells the
+  picture's contrast where it stands, with no wave, pulse or glass easing home; the lessons' ghost fingers rest
+  mid-sweep; the lost stamp lands without its scale. Under it or Dim Flashing Lights the picture fades on rather than
+  flickering (`PictureLayer.strike(calm:)`). Endless's pour and the live pictures keep their motion. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset. The first refill
   ever reads "+2 undos" (`Best.refillShown`), and VoiceOver announces each; one left unseen during its opening
@@ -560,7 +569,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and Complete; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
-  (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a glyph by its name for its state (`Purchase.mark`: a check owned, an hourglass waiting on Ask
+  (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused where it stands under a card or the settings sheet, while `Power` saves
+  (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
+  gesture recognizer on the window that fails at once, and from a drag on the list), each carrying on from the frame
+  it held (`PausingTimeline`), a glyph by its name for its state (`Purchase.mark`: a check owned, an hourglass waiting on Ask
   to Buy, nothing else, a revocation being the card's to say). `PackCard` grows out
   of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
@@ -597,7 +609,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Game`. A frame (`Reel.frame(at:)`) is a pure function of the clip's time, drawn by the level's own views (`Unstirred`,
   `SceneLayer` or `PictureLayer`, `RodView`, `RatchetView`, `ClockHint`, `Bezel`) with the game's heal, push, tick and
   stop rings and its solve wave timed as `LevelView`'s keyframes are; `ClipPlayer` loops it from when it appears, holds
-  it at `UNSTIR_CLOCK`, and under Reduce Motion holds `Clip.still`. A reel that dips is black at both ends, so the
+  it at `UNSTIR_CLOCK`, under Reduce Motion holds `Clip.still`, and pauses while the card has it scrolled out of sight
+  (`PackClip.seen`), carrying on from the frame it held. A reel that dips is black at both ends, so the
   seam never jumps. First Stir: level 1, the sunrise, healed top first, the time under the tank stepping back with each
   heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
@@ -643,6 +656,17 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Aptabase's SDK does (the snapshot its own) and `isDebug` (a Debug or playtest build), `osName`, the app's versions and `sdkVersion`. The server
   takes property keys of up to 40 characters and event names of up to 60, cuts strings at 180, and drops without an
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
+- **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
+  the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
+  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "locked, solve level 6 first",
+  or in a closed tier "locked, par every Plughole level first") and hint (its rods and par), the header's "3 moves, par
+  7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
+  the finish ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared."), which
+  labels the result or lost card's summary, where VoiceOver's focus lands as the card shows, so no announcement is cut
+  short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
+  VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
+  button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
+  buttons read as words, not glyphs.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
@@ -658,7 +682,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
   twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's cells take the
-  raw clock; the neural web is static per seed, built once off the main actor. Vortex's own family (isobars, ephemeris,
+  raw clock; the neural web is static per seed, built once off the main actor. The tank redraws a live picture at 60 Hz, 30 while `Power` saves. Vortex's own family (isobars, ephemeris,
   cords; **VortexPictures.swift**, **Flow.metal**, **Sky.metal**, **Loom.metal**) is drawn live the same way, with no
   twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. The sandbox's cycle
   (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's
@@ -667,7 +691,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `LevelView.layoutLabel`). The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
-  It takes some 20 s unoptimised, so a Debug build keeps it in Caches under the build's own timestamp. Prism's plates
+  It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max (unmeasured on a phone), so every build keeps it in
+  Caches, per size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
+  time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
+  the flicker; only one that never lands lets it go on, after 30 s. Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white

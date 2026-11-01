@@ -9,6 +9,20 @@ struct UnstirApp: App {
         Log.write("launch, boot session \(Best.bootSession == nil ? "unread" : "read")")
     }
 
+    /// What a sent log needs to say about where it came from, and nothing about whose phone it is. Read once the
+    /// first screen is up: the type size is unset before then.
+    static var device: String {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let os = ProcessInfo.processInfo.operatingSystemVersion
+        var machine = utsname()
+        uname(&machine)
+        let model = withUnsafeBytes(of: &machine.machine) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+        let type = UIApplication.shared.preferredContentSizeCategory.rawValue.replacingOccurrences(of: "UICTContentSizeCategory", with: "")
+        return "device: app \(info["CFBundleShortVersionString"] ?? "?") (\(info["CFBundleVersion"] ?? "?")), iOS \(os.majorVersion).\(os.minorVersion).\(os.patchVersion), "
+            + "\(model), \(Locale.current.identifier), type \(type), reduce motion \(UIAccessibility.isReduceMotionEnabled), "
+            + "voiceover \(UIAccessibility.isVoiceOverRunning), low power \(ProcessInfo.processInfo.isLowPowerModeEnabled)"
+    }
+
     var body: some Scene {
         WindowGroup {
             if GPUBench.wanted { GPUBenchView() } else { RootView() }
@@ -417,6 +431,11 @@ struct RootView: View {
         .onAppear { Sound.shared.use(on: !mute) }
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
+        .task {
+            Log.write(UnstirApp.device)
+            Power.shared.watch()
+            await Log.trim()
+        }
         .task {
             // A test host's listener would finish the transactions the StoreKit tests watch, and its analytics would
             // count the tests.

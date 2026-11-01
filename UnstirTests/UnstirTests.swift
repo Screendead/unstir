@@ -1611,6 +1611,102 @@ final class UnstirTests: XCTestCase {
         XCTAssertLessThan(logged.count, 600, logged)
     }
 
+    /// VoiceOver hears a row's name, its result or what it waits on, and its shape, never the glyphs on screen.
+    func testRowsSpeakTheirNameResultAndShape() {
+        let first = Level.plughole[0], seventh = Level.plughole[6]
+        let open = Spoken.row(first, result: nil, tanks: 0, detail: nil, enabled: true, needs: nil)
+        XCTAssertEqual(open.label, "Level 1, \(first.title).")
+        XCTAssertEqual(open.value, "not played")
+        XCTAssertEqual(open.hint, "\(Spoken.rods(first.layout)), par \(first.par)")
+        XCTAssertEqual(Spoken.row(seventh, result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[5]).value,
+                       "locked, solve level 6 first")
+        XCTAssertEqual(Spoken.row(Level.vortex[0], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil).value, "locked")
+        XCTAssertEqual(Spoken.row(Level.vortex[3], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil, gate: .whirlpool).value,
+                       "locked, par every \(Tier.whirlpool.name) level first")
+        func result(_ best: Best) -> String { Spoken.row(first, result: best, tanks: 0, detail: nil, enabled: true, needs: nil).value }
+        XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: true)), "clean")
+        XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: false)), "at par")
+        XCTAssertEqual(result(Best(over: 2, seconds: 9)), "2 over par")
+        let daily = Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[22])
+        XCTAssertEqual(daily.label, "Today's daily")
+        XCTAssertEqual(daily.value, "locked, solve Plughole level 23 first")
+        let endless = Spoken.row(.endless(Run(seed: 7)), result: nil, tanks: 1, detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
+                                 enabled: true, needs: nil)
+        XCTAssertEqual([endless.label, endless.value, endless.hint], ["Endless", "best 1 tank", "deeper every tank, wrong stirs fill the brim"])
+        XCTAssertEqual(Spoken.row(.sandbox, result: nil, tanks: 0, detail: "nothing counts", enabled: true, needs: nil).value, "")
+        XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
+        XCTAssertEqual(Spoken.back(first), "Back to levels")
+        XCTAssertEqual(Spoken.back(Pack.lens.levels[0]), "Back to Lens")
+    }
+
+    /// The header's count and the finish are said in words: moves against par, and how the level ended.
+    @MainActor func testTheFinishIsSpoken() {
+        let level = Level.plughole[3], game = Game(level: level)
+        XCTAssertEqual(game.movesSpoken, "0 moves, par \(level.par)")
+        // Two rods in turn, so no stir joins the one before it.
+        for rod in [0, 1, 0, 1] { game.commit(rod: rod, steps: 1) }
+        while let t = game.reachable { game.commit(rod: t.rod, steps: t.steps) }
+        XCTAssertTrue(game.solved)
+        XCTAssertGreaterThan(game.over, 0)
+        XCTAssertEqual(game.finishSpoken, "Unstirred. \(game.moves) moves, par \(level.par). \(game.over) over par.")
+        let clean = Game(level: level)
+        while let t = clean.reachable { clean.commit(rod: t.rod, steps: t.steps) }
+        XCTAssertEqual(clean.finishSpoken, "Unstirred. \(level.par) moves, par \(level.par). " + (clean.clean ? "Clean." : "At par."))
+        let run = Game(level: .endless(Run(seed: 7)))
+        XCTAssertEqual(run.movesSpoken, "0 moves")
+        XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")
+        XCTAssertEqual(game.tankSpoken, game.movesSpoken)
+    }
+
+    /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.
+    func testDecorationGivesWayToPowerAndSight() {
+        XCTAssertFalse(Power.saving(lowPower: false, thermal: .nominal))
+        XCTAssertFalse(Power.saving(lowPower: false, thermal: .fair))
+        XCTAssertTrue(Power.saving(lowPower: false, thermal: .serious))
+        XCTAssertTrue(Power.saving(lowPower: false, thermal: .critical))
+        XCTAssertTrue(Power.saving(lowPower: true, thermal: .nominal))
+        let clip = CGSize(width: 320, height: 320)
+        XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: -100, width: 390, height: 800)))
+        XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: 300, width: 390, height: 800)))
+        XCTAssertFalse(PackClip.seen(clip, in: CGRect(x: 0, y: 330, width: 390, height: 800)))
+        XCTAssertFalse(PackClip.seen(clip, in: CGRect(x: 0, y: -900, width: 390, height: 800)))
+        XCTAssertTrue(PackClip.seen(clip, in: nil))
+    }
+
+    /// The log keeps its newest bytes from a whole line on, and a log under the cut is left as it is.
+    func testTheLogTrimsToWholeLines() {
+        let line = Data("09-29 10:11:07.772 touch rod(1) at 0.412,-0.118\n".utf8)
+        let log = Data((0..<20_000).flatMap { _ in line })
+        let kept = Log.trimmed(log)
+        XCTAssertLessThanOrEqual(kept.count, Log.keep)
+        XCTAssertGreaterThan(kept.count, Log.keep - line.count)
+        XCTAssertEqual(kept.count % line.count, 0)
+        XCTAssertEqual(kept.prefix(line.count), line)
+        XCTAssertEqual(Log.trimmed(line), line)
+    }
+
+    /// A log past the cap, cut through a real file: its newest bytes from a whole line, then whatever was written after
+    /// the read.
+    func testTheLogCutsAFileAndKeepsWhatCameAfterTheRead() throws {
+        let line = Data("09-29 10:11:07.772 touch rod(1) at 0.412,-0.118\n".utf8)
+        let log = Data((0..<30_000).flatMap { _ in line })
+        XCTAssertGreaterThan(log.count, Log.cap)
+        let url = FileManager.default.temporaryDirectory.appending(path: "log-\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try log.write(to: url)
+        let cut = try XCTUnwrap(Log.cut(url))
+        XCTAssertEqual(cut.read, log.count)
+        let late = Data("09-29 10:11:08.001 late\n".utf8)
+        let h = try FileHandle(forWritingTo: url)
+        try h.seekToEnd()
+        try h.write(contentsOf: late)
+        try h.close()
+        Log.replace(url, with: cut.kept, after: cut.read)
+        let back = try Data(contentsOf: url)
+        XCTAssertEqual(back, Log.trimmed(log) + late)
+        XCTAssertEqual(back.prefix(line.count), line)
+    }
+
     /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one.
     /// Whirlpool's prefix predates its name and stays, so the rename kept what was played; maelstrom's set replaced
     /// nightmare+'s, so its prefix moved off N+ and no old best lands on a new level.
