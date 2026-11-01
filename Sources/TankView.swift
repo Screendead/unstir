@@ -236,6 +236,10 @@ final class Game {
     /// Practice saves nothing.
     var counts: Bool { firstTry || !level.id.hasPrefix("daily-") }
 
+    /// The result card's "again": any finish that isn't clean, but endless's and the daily's, which counts only its first
+    /// visit's solve, so a retry from its card would save a second.
+    var offersAgain: Bool { level.run == nil && !clean && Share.day(of: level.id) == nil }
+
     /// The sandbox starts on the clean picture, so it is never solved, which keeps it from finishing or saving.
     var solved: Bool { stack.isEmpty && !level.sandbox }
     var par: Int { level.par }
@@ -2956,7 +2960,7 @@ struct ResultCard: View {
             .font(.mono(13))
             HStack(spacing: 32) {
                 Button(action: onExit) { Text(game.level.back).hit() }
-                if game.level.run == nil && !game.clean {
+                if game.offersAgain {
                     Button(action: again) { Text("again \u{21BA}").hit() }.buttonStyle(Sounding(effect: .reset))
                 }
                 if let share = game.shareText {
