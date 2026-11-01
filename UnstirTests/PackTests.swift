@@ -274,7 +274,7 @@ final class PackTests: XCTestCase {
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         Marks.seen(.lens, fits: true, store: true)
         XCTAssertEqual(Marks.line(.lens, owned: false, fits: true, played: 2)?.words, "2/3 free")
-        XCTAssertEqual(Marks.line(.lens, owned: false, fits: true, played: 2)?.spoken, "2 of 3 free levels played")
+        XCTAssertEqual(Marks.line(.lens, owned: false, fits: true, played: 2)?.spoken, "2 of 3 free levels solved")
         XCTAssertNil(Marks.line(.lens, owned: true, fits: true, played: 2))
         XCTAssertNil(Marks.line(.lens, owned: false, fits: true, played: nil))
         d.removeObject(forKey: Marks.fitKey(.lens))

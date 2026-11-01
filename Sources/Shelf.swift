@@ -260,11 +260,11 @@ enum Marks {
         if store { for (key, value) in marks { defaults.set(value, forKey: key) } } else { defaults.register(defaults: marks) }
     }
 
-    /// The line under a cover's name: "new", else an unowned pack's free levels played, else nothing.
+    /// The line under a cover's name: "new", else how many of an unowned pack's free levels are solved, else nothing.
     static func line(_ pack: Pack, owned: Bool, fits: Bool, played: Int?) -> (words: String, spoken: String)? {
         if new(pack, fits: fits) { return ("new", "new") }
         guard !owned, let played else { return nil }
-        return ("\(played)/\(pack.taste) free", "\(played) of \(pack.taste) free levels played")
+        return ("\(played)/\(pack.taste) free", "\(played) of \(pack.taste) free levels solved")
     }
 }
 
