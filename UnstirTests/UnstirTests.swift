@@ -478,6 +478,16 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(solve(lens.last!, pack: .lens))
         XCTAssertEqual(solve(lens[5], pack: .lens), .pack(.lens))
         XCTAssertNil(solve(lens[5], pack: .lens))
+        // Again from the card, on the same tank: the re-solve completes nothing.
+        let level = Level(id: lens[5], pack: .lens, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)])
+        UserDefaults.standard.removeObject(forKey: "best.\(lens[5])")
+        let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+        game.commit(rod: 0, steps: -4)
+        XCTAssertEqual(game.completed, .pack(.lens))
+        XCTAssertTrue(game.reset())
+        game.commit(rod: 0, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertNil(game.completed)
         XCTAssertEqual(Completion.pack(.lens).line, "Lens complete \u{00B7} 25 panels")
 
         let sea = Tier.maelstrom.levels.map(\.id)

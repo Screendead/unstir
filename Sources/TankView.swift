@@ -701,7 +701,7 @@ final class Game {
             let done = completion
             best.save(level.id, store: storesProgress)
             if shut, let up, up.isOpen() { opened = up }
-            if done == nil { completed = completion }
+            completed = done == nil ? completion : nil
         }
         Analytics.shared.finished(self)
     }
@@ -1039,7 +1039,7 @@ struct LevelView: View {
                                 .padding(.top, 14)
                                 .transition(reveal)
                         } else if showResult {
-                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: onOffer)
+                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
@@ -1288,6 +1288,11 @@ struct LevelView: View {
     private func look(_ tier: Tier) {
         Analytics.shared.left(game)
         onLook(tier)
+    }
+
+    private func offer(_ pack: Pack) {
+        Analytics.shared.left(game)
+        onOffer(pack)
     }
 
     /// Everything that decides what the tank draws, as the log shows it.
