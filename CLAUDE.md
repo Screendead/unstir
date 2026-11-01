@@ -643,10 +643,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (Jack, SN1).
 - **UnstirApp.swift** holds `RootView` and the `Harness`. `RootView` carries Apple's age-range check (**AgeRange.swift**,
   `AgeCheck`), which the US states' app store laws ask for: on iOS 26.2 and later, where `isEligibleForAgeFeatures` says
-  the law reaches the player, it requests the range once a launch while the menu is up with no card over it, never
-  under the harness or the test host, and drops the answer, as every level is for all ages: nothing is kept, logged or
-  sent. Apple's docs require the Declared Age Range entitlement, which waits for the paid team's signing; until then
-  expect the calls to fail, and any failure is dropped. DeclaredAgeRange links weak, as the app runs from iOS 17. The harness reads `UNSTIR_*` environment variables at launch
+  the law reaches the player, it requests the range once a launch while the menu is up with nothing over it (a card,
+  the consent question, the settings sheet, whose state `RootView` holds for this), never under the harness or the
+  test host, and drops the answer, as every level is for all ages: nothing is kept, logged or sent. It waits
+  `AgeCheck.settle` (0.3 s, past the dip) first, and a request cut off by the menu being covered or left leaves the
+  launch's ask standing (`testACancelledRequestLeavesTheLaunchsAskStanding`); a failure is dropped and not retried.
+  The entitlement Apple's docs require is a HANDOFF item. DeclaredAgeRange links weak, as the app runs from iOS 17.
+  The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch and `UNSTIR_LETTERS=1` shows Differentiate Without Colour's letters and swatches), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank

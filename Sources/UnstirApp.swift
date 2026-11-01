@@ -328,6 +328,8 @@ struct RootView: View {
     @State private var typeSize: DynamicTypeSize?
     /// The tier the next menu opens on, set by a closed tier's button on a result card.
     @State private var look: Tier?
+    /// The menu's settings sheet; UNSTIR_SETTINGS=1 opens with it up.
+    @State private var settings: Bool
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     @Environment(\.scenePhase) private var phase
@@ -340,8 +342,10 @@ struct RootView: View {
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
         if let purchases = h.purchases { Store.shared.pretend(purchases, prices: h.prices) }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
-        _level = State(initialValue: h.screen == "menu" || gate != nil ? nil : h.level)
+        let menu = h.screen == "menu" || gate != nil
+        _level = State(initialValue: menu ? nil : h.level)
         _harness = State(initialValue: h)
+        _settings = State(initialValue: menu && h.settings)
         mute = h.mute
         _card = State(initialValue: gate.map(Offer.pack) ?? h.card)
         _placeholders = State(initialValue: h.cardLevels)
@@ -364,7 +368,7 @@ struct RootView: View {
                     .transition(dip)
             } else {
                 MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
-                         settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
+                         settings: $settings, card: $card, clock: harness?.clock, placeholders: placeholders,
                          shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false) {
                     show($0)
                 }
@@ -384,7 +388,8 @@ struct RootView: View {
             Sound.shared.foreground(phase != .background)
         }
         .onAppear { Sound.shared.use(on: !mute) }
-        .modifier(AgeChecked(menu: level == nil && card == nil,
+        .modifier(AgeChecked(menu: level == nil && card == nil && !settings
+                                 && !(Analytics.shared.asks && Analytics.shared.consent == .undecided),
                              played: !harnessed && ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil))
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }

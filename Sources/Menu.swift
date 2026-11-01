@@ -120,8 +120,8 @@ struct MenuView: View {
     /// The tier's list in the scroll view's space.
     @State private var list = CGRect.zero
     @Namespace private var strip
-    /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
-    @State private var settings: Bool
+    /// The gear's sheet.
+    @Binding var settings: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
@@ -130,11 +130,11 @@ struct MenuView: View {
     private let dim = 0.55
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
-    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
+    init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          cardScroll: Bool = false, onPick: @escaping (Level) -> Void) {
         self.demo = demo
-        _settings = State(initialValue: settings)
+        _settings = settings
         self.onPick = onPick
         _card = card
         self.clock = clock
