@@ -413,7 +413,7 @@ Round 13's later calls (Jack, 2026-11-01, on the open-calls page; every one as r
 | D4. The second "‹ levels" on the solved and out-of-ticks cards | **A:** removed; the top "‹ levels" and the edge swipe go back |
 | AR1. The age-range sheet (PR #79) | **A:** on the menu, never over a level or its opening; merged 2026-11-01 |
 | EC1. A geographic address | **A:** publish nothing more: the seller's name, a working support email and the GitHub page, Apple's standard EULA; the address given to anyone who asks, and put on the support page the day an enforcer writes. A knowing gap on one limb, not compliance |
-| P1. "again" on the daily's card (from F18) | **B:** a retry from the card that plays the daily as practice and saves nothing (best, started flag, analytics' first-try count and the card's best line untouched). To build |
+| P1. "again" on the daily's card (from F18) | **B:** a retry from the card that plays the daily as practice and saves nothing (best, started flag, analytics' first-try count and the card's best line untouched). Built on `daily-again`, PR #105: "again" after the daily's solve turns the try into practice, the later visit's path (`Game.firstTry` false). Implementer call: a clean daily offers no again, as on every level |
 | P2. Prism's level colour (from F17) | **A:** white for now; the design pass settles it |
 | S1. "Undo, or again." against "reset" (C14) | **A:** both words kept |
 | S2. A vertical touch in C19's edge band | **A:** a rim turn, as iOS's own edge pan |
@@ -1560,7 +1560,7 @@ names and product ids, and Complete's promise to older owners.
    rule "A clock ticks after every move. Each let-go is a move." Two calls for Jack came out of the review:
    - The daily's "again" (from F18). A retry from the daily's card would save a second solve over its one counted
      try, so the PR leaves "again" off the daily's card, which keeps the daily as it was. The other ways: a retry
-     from the card that plays as practice, saving nothing, or one that counts. Recommendation: off, as built. Jack's call P1 = B (2026-11-01): practice, saving nothing; to build.
+     from the card that plays as practice, saving nothing, or one that counts. Recommendation: off, as built. Jack's call P1 = B (2026-11-01): practice, saving nothing; built on `daily-again`, PR #105.
    - Prism's level colour (from F17). Prism's glow is white, so on its levels the number, PRISM and "next ›" are
      about the body text's colour, marked only by a white glow. The options: keep white; the cover's red (FF2A2A);
      or neon cyan. Recommendation: keep white for now, since colour on Prism means a channel and a red or cyan
