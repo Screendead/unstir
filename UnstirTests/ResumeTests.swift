@@ -141,6 +141,15 @@ import XCTest
         XCTAssertNotNil(Game.resumed(clock, from: saved, bank: (c.bank, nil), storesResume: false), "a replay passes through the loss")
     }
 
+    /// The app dying inside the solving move's fine pass: the replay finishes the try, its best taking the time played.
+    func testALineThatSolvesSavesItsBestWithItsTime() throws {
+        let id = "resume-test", level = Level(id: id, label: "", title: "", layout: .tri, scramble: .parse("0:+4", in: .tri))
+        defer { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
+        let r = Resume(id: id, print: level.print, firstTry: true, seconds: 42, actions: [.turn(knob: 0, steps: -4)])
+        XCTAssertNil(Game.resumed(level, from: r, bank: (10, nil), storesResume: false))
+        XCTAssertEqual(Best.load(id)?.seconds, 42)
+    }
+
     func testResumeKeepsTheDailysFirstTry() throws {
         let daily = Level.daily()
         defer { Resume.remove(daily.id) }

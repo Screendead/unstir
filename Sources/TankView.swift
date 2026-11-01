@@ -800,6 +800,8 @@ final class Game {
         let game = Game(level: level, tankTurned: tankTurned, swirled: swirled, bank: bank, storesProgress: storesProgress,
                         firstTry: r.firstTry, storesResume: storesResume)
         game.replaying = true
+        // Before the line, whose last call may finish the try and save its best with the time played.
+        game.elapsed = r.seconds
         for (i, action) in r.actions.enumerated() {
             game.replayGoesOn = i + 1 < r.actions.count
             switch action {
@@ -815,7 +817,6 @@ final class Game {
             }
         }
         game.replaying = false
-        game.elapsed = r.seconds
         // The newest move's ticks are long played.
         game.tick = []
         Log.write("resume \(r.id) actions=\(r.actions.count) moves=\(game.moves) stack=\(game.stack.count) \(game.stack)")
