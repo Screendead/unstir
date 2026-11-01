@@ -78,7 +78,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   build's events as Debug.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
-  numbers (Jack, 2026-10-27). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level on the phone
+  numbers (Jack, 2026-10-27). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level, packs' too, on the phone
   until a run with `UNSTIR_UNLOCK=0`.
 - Tests (XCTest, on a simulator):
   ```
@@ -409,7 +409,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
-  always, past it only a pack StoreKit grants, with `Best.unlocked` and the harness counted outside Release only.
+  always, past it only a pack StoreKit grants, with `Best.unlocked` counted outside Release or in a playtest build
+  (`Build.playtest`, what `scripts/run-ios.sh` installs), and the harness outside Release only.
   First Stir is out of v1, to be reworked (Jack's call FS17), and Prism takes its place (PK1): `Pack.ships` is
   false for First Stir alone, and `Pack.sold()`, the packs a build sells (Lens, Escapement and Prism in Release), leaves it out in Release only, so its code, levels,
   ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`) still reach them. In Release its every level, taste and all, is `.withheld`, which opens
