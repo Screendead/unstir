@@ -7,6 +7,8 @@ struct Run: Hashable, Sendable {
     var tank = 0
     /// Notches on the brim as this tank opens, as the tank before left them.
     var brim = 0
+    /// The most tanks a run had cleared as this one began, carried from tank to tank, so a spill can say it beat them.
+    var best = Best.tanks
 
     /// Notches the brim holds: the one that fills it spills the run. A guess until TestFlight.
     static let room = 8
@@ -271,7 +273,7 @@ struct Level: Hashable, Sendable {
     /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum, and the park rule
     /// reaches it however its ties go (UnstirTests). Each shows the twin of the picture its row names.
     static let maelstrom: [Level] = ([
-        (.quad, "3:-4,2:+7,1:-8", [1], 4, .coral, "Swell", "One knob has seized. Turn the tank."),
+        (.quad, "3:-4,2:+7,1:-8", [1], 4, .coral, "Swell", "One knob has seized. Turn the tank. Turns count as moves."),
         (.quad, "0:-3,2:+4,1:+5,2:+8", [2], 5, .neurons, "Crest", "The tank turns the other way too."),
         (.quad, "1:+2,2:-5,1:-5,0:-6,1:+8", [1], 6, .coral, "Whitecap", "Turn the tank so the seized knob is out of the way."),
         (.quad, "3:+2,0:+4,3:-5,0:+6,1:-8", [0,3], 6, .chainmail, "Surf", ""),
@@ -330,10 +332,13 @@ struct Level: Hashable, Sendable {
         // Wrapping, as a random seed overflows.
         var rng = SplitMix64(state: run.seed &* 1000 &+ UInt64(run.tank))
         level.scramble = level.layout.scramble(depth: depth, inversions: min(run.tank / 2, depth / 2), rng: &rng)
+        // The brim's rule, said once, as the run starts.
+        if run.tank == 0 { level.note = "A wrong stir fills the brim, even turned back. Eight and it spills." }
         return level
     }
 
-    static let sandbox = Level(id: "sandbox", label: "box", title: "Sandbox", layout: .tri, scramble: [])
+    static let sandbox = Level(id: "sandbox", label: "box", title: "Sandbox", note: "Stir anything. Undo is free here.",
+                               layout: .tri, scramble: [])
 
     /// The triangle is hand-written: every rod overlaps, so the generator's ordered sizes overshoot there.
     private static let generated: [Layout] = [.quad, .eye, .pent, .hex]
@@ -416,10 +421,13 @@ struct Best: Codable {
         if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.register(defaults: ["best.\(id)": data]) }
     }
 
+    /// Clean, then fewer over par: what a result card names, so it calls a best new only when that changes.
+    var standing: (Int, Int) { (clean == true ? 0 : 1, over) }
+
     /// Keeps the better of this and the stored result: clean, then fewer over par, then faster. Unstored, the
     /// harness's, it lasts only this launch, as `fake`'s does.
     func save(_ id: String, store: Bool = true) {
-        func rank(_ b: Best) -> (Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.seconds) }
+        func rank(_ b: Best) -> (Int, Int, Int) { (b.standing.0, b.standing.1, b.seconds) }
         if let old = Best.load(id), rank(old) <= rank(self) { return }
         if store { UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)") } else { fake(id) }
     }
@@ -445,6 +453,18 @@ struct Best: Codable {
     static var refilled: String? {
         get { UserDefaults.standard.string(forKey: "undos.day") }
         set { UserDefaults.standard.set(newValue, forKey: "undos.day") }
+    }
+
+    /// The day's refill until its badge has shown: a level left during its opening hands it to the next one that day.
+    static var unseenRefill: Int {
+        get { UserDefaults.standard.integer(forKey: "undos.unseen") }
+        set { UserDefaults.standard.set(newValue, forKey: "undos.unseen") }
+    }
+
+    /// Set once a refill's badge has shown: the first one says what it adds.
+    static var refillShown: Bool {
+        get { UserDefaults.standard.bool(forKey: "undos.shown") }
+        set { UserDefaults.standard.set(newValue, forKey: "undos.shown") }
     }
 
     /// A calendar day in `zone` as yyyy-MM-dd, so days compare as strings. Gregorian whatever the phone's calendar, so a

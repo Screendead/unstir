@@ -144,6 +144,9 @@ extension Store {
         }
     }
 
+    /// Its own product waits on Ask to Buy, so asking again re-sends that request.
+    func asked(_ offer: Offer) -> Bool { (harness ?? ledger).asked(offer.productID) }
+
     /// The pack whose card a level shows instead of playing: one past its taste that the player doesn't own.
     func card(for level: Level) -> Pack? { access(level) == .needsCard ? level.pack : nil }
 
@@ -151,15 +154,67 @@ extension Store {
     func opens(_ level: Level) -> Bool { access(level) != .withheld }
 }
 
+extension Store {
+    /// A restore that finds nothing changes no state, so VoiceOver hears what it came to here.
+    func restoreAndAnnounce() async {
+        await restore()
+        if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
+    }
+
+    /// What the last restore came to, on a card and in settings; nil before one.
+    var restoreNote: String? {
+        if restoring { return "restoring\u{2026}" }
+        return switch restored {
+        case .found(let packs): "restored \(Pack.named(Pack.sold().filter(packs.contains)))"
+        case .nothing: "nothing to restore on this Apple ID"
+        case .failed: "couldn't reach the App Store"
+        case nil: nil
+        }
+    }
+}
+
+extension Failure {
+    /// Said under the failed purchase; nil where "the purchase didn't go through" is all there is to say.
+    var words: String? {
+        switch self {
+        case .offline: "No connection. Try again when you're online."
+        case .storefront: "Not sold in your country's App Store."
+        case .refused: "In-app purchases are turned off on this iPhone."
+        case .cancelled, .other: nil
+        }
+    }
+}
+
+extension Pricing {
+    /// In a price's place on the buy pill while there is none.
+    var words: String? {
+        switch self {
+        case .fetching: "price loading"
+        case .unreachable: "App Store unreachable"
+        case .fetched: nil
+        }
+    }
+}
+
 extension Purchase {
-    /// The shelf's one word for a state, nil when there is nothing to say.
-    var tag: (word: String, colour: Color)? {
+    /// The dock's glyph beside a cover's name.
+    var mark: String? {
+        switch self {
+        case .owned: "checkmark"
+        case .pending: "hourglass"
+        case .unowned, .failed, .revoked: nil
+        }
+    }
+
+    /// The shelf's one word for a state, nil when there is nothing to say. `unshared`: revoked as a family's share
+    /// ended, not a refund, as the card's status says it.
+    func tag(unshared: Bool = false) -> (word: String, colour: Color)? {
         switch self {
         case .unowned: nil
         case .owned: ("owned", .lime)
         case .pending: ("waiting for approval", .amber)
         case .failed: ("purchase failed", .magenta)
-        case .revoked: ("refunded", .alarm)
+        case .revoked: (unshared ? "no longer shared with you" : "no longer on this Apple ID", Color.text.opacity(0.6))
         }
     }
 }
@@ -543,8 +598,8 @@ struct LoopingTank: View {
         } else if reduceMotion {
             PackTank(offer: offer, side: side)
         } else {
-            TimelineView(.animation(minimumInterval: interval > 0 ? interval : nil, paused: paused)) { tl in
-                PackTank(offer: offer, side: side, clock: tl.date.timeIntervalSinceReferenceDate + offset)
+            PausingTimeline(interval: interval > 0 ? interval : nil, paused: paused) { now in
+                PackTank(offer: offer, side: side, clock: now + offset)
             }
         }
     }
@@ -555,9 +610,20 @@ struct PackClip: View {
     let offer: Offer
     let side: CGFloat
     var held: Double?
+    @State private var seen = true
 
     var body: some View {
-        ClipPlayer(clip: .of(offer), side: side, held: held)
+        ClipPlayer(clip: .of(offer), side: side, held: held, paused: !seen)
+            .onGeometryChange(for: Bool.self) { Self.seen($0.size, in: $0.bounds(of: .scrollView)) } action: { seen = $0 }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(offer.name): \(offer.pitch). " + (offer.pack == nil ? "A level from each pack, played." : "A level played."))
+            .accessibilityAddTraits(.isImage)
+    }
+
+    /// Whether any of a view `size` across lies inside its scroll view's `viewport`, in its own space; with no scroll
+    /// view, it shows.
+    nonisolated static func seen(_ size: CGSize, in viewport: CGRect?) -> Bool {
+        viewport.map { $0.intersects(CGRect(origin: .zero, size: size)) } ?? true
     }
 }
 
@@ -575,16 +641,27 @@ struct PackCard: View {
     var scrolled = false
     /// The row it opens centred on, the pack's level just left, or after a solve the one after it.
     var focus: Level?
+    /// Opened by a level past the taste: it opens on buying, under a line that says the free levels are played.
+    var arrived = false
+    /// Where back goes: the menu, or Complete's card when this card was opened from it.
+    var backTo = "menu"
     let onBack: () -> Void
     let onPlay: (Level) -> Void
+    /// Complete's card opens a pack's card from its name.
+    var onOffer: (Offer) -> Void = { _ in }
     var store = Store.shared
     @State private var buying = false
-    @State private var restoring = false
-    @State private var restored: Bool?
     /// The focused row's hairline, lit once as the card opens on it.
     @State private var lit = 0.0
+    @State private var landings = 0
+    @State private var pulses = 0
+    /// Where VoiceOver goes when the card sends the player to buying.
+    @AccessibilityFocusState private var spoken: Focus?
+    private enum Focus: Hashable { case note, buy }
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The facts' key column, grown with the keys' own type size.
+    @ScaledMetric(relativeTo: .caption2) private var keyWidth = 52.0
 
     var body: some View {
         let state = store.state(offer)
@@ -592,21 +669,37 @@ struct PackCard: View {
             ScrollViewReader { reader in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        Button(action: onBack) { Text("\u{2039} back").font(.mono(.subheadline, .medium)) }
+                        Button(action: onBack) { Text("\u{2039} \(backTo)").font(.mono(.subheadline, .medium)).hit() }
                             .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
                             .accessibilityLabel("Back")
-                        Text(offer.pack == nil ? "BUNDLE \u{00B7} PAID ADD-ON" : "PACK \u{00B7} PAID ADD-ON").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
+                        Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
+                            .font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
                             .padding(.top, 26)
                         Text(offer.name).font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
                             .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
                             .accessibilityAddTraits(.isHeader)
                         Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
-                        PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48), held: clock)
+                        // Bounded by the height too, so buy is still on the first screen of the smallest phone.
+                        PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48,
+                                                         g.size.height * 0.36), held: clock)
                             .frame(maxWidth: .infinity).padding(.top, 28)
+                        // An owner's card is home, not a shop: no taste to offer, and the pack's progress for what it holds.
                         VStack(alignment: .leading, spacing: 9) {
-                            fact("for", offer.assumes)
-                            fact("free", offer.free)
-                            fact("holds", offer.holds)
+                            fact("for", Text(offer.assumes))
+                            if state != .owned { fact("free", Text(offer.free)) }
+                            if state == .owned, offer.pack != nil, !levels.isEmpty {
+                                fact("done", Text("\(levels.filter { Best.load($0.id)?.over == 0 }.count)/\(levels.count) \(noPar ? "solved" : "at par")"))
+                            } else {
+                                fact("holds", holds)
+                                    .accessibilityActions {
+                                        // The names' links, which a combined element may not offer VoiceOver.
+                                        if offer.pack == nil {
+                                            ForEach(Pack.sold(), id: \.self) { pack in
+                                                Button("Open \(pack.name)") { onOffer(.pack(pack)) }
+                                            }
+                                        }
+                                    }
+                            }
                         }
                         .padding(.top, 32)
                         if offer.arriving {
@@ -615,20 +708,39 @@ struct PackCard: View {
                         }
                         // Buying comes before the list, so it is on the first screen whatever the pack holds.
                         if levels.isEmpty { Spacer(minLength: 24) }
-                        status(state).padding(.top, levels.isEmpty ? 0 : 32)
-                        action(state).padding(.top, 14)
-                        if offer.pack != nil, state != .owned, store.state(.complete) != .owned, Offer.shelf().contains(.complete) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            if arrived, let note = Self.arrival(offer, levels, state: state) {
+                                Text(note).font(.mono(.footnote)).opacity(0.85).padding(.bottom, 14)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .accessibilityFocused($spoken, equals: .note)
+                            }
+                            status(state).id(state)
+                                .transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
+                            action(state).padding(.top, 14)
+                        }
+                        // Half inside the anchor, so a scroll to it leaves a margin above the note.
+                        .padding(.top, levels.isEmpty ? 0 : 16)
+                        .id("buy")
+                        .padding(.top, levels.isEmpty ? 0 : 16)
+                        if offer.pack != nil, state != .owned, store.canPay, store.state(.complete) != .owned,
+                           Offer.shelf().contains(.complete) {
                             completeLine.padding(.top, 14)
                         }
-                        restore.padding(.top, 18).padding(.bottom, 10)
-                        if !levels.isEmpty { list.padding(.top, 26).padding(.bottom, 10).id("list") }
+                        if Pack.sold().contains(where: { store.state($0) != .owned }) {
+                            restore.padding(.top, 18).padding(.bottom, 10)
+                        }
+                        if !levels.isEmpty { list(reader).padding(.top, 26).padding(.bottom, 10).id("list") }
                     }
                     .padding(.horizontal, 24)
                     .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
+                    .animation(reduceMotion ? nil : .snappy(duration: 0.45), value: state)
                 }
                 .scrollBounceBehavior(.basedOnSize)
                 .onAppear {
-                    if scrolled {
+                    // The gate's arrival opens on buying, else UNSTIR_CARDSCROLL on the list, else on the row left.
+                    if arrived {
+                        reader.scrollTo("buy", anchor: .top)
+                    } else if scrolled {
                         reader.scrollTo("list", anchor: .top)
                     } else if let focus, levels.contains(where: { $0.id == focus.id }) {
                         DispatchQueue.main.async { reader.scrollTo(focus.id, anchor: .center) }
@@ -637,6 +749,13 @@ struct PackCard: View {
                             withAnimation(.easeOut(duration: 1.4).delay(0.35)) { lit = 0 }
                         }
                     }
+                }
+                .task {
+                    // VoiceOver lands on a new screen's first element, back, after it appears, which would scroll the
+                    // card to its top again; the wait lets that land first.
+                    guard arrived else { return }
+                    try? await Task.sleep(for: .milliseconds(600))
+                    spoken = Self.arrival(offer, levels, state: store.state(offer)) == nil ? .buy : .note
                 }
             }
         }
@@ -649,27 +768,68 @@ struct PackCard: View {
             Log.write("card \(offer.key) opens")
             if let pack = offer.pack { Analytics.shared.cardSeen(pack) }
         }
-        .onChange(of: state) {
-            if let tag = state.tag { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
+        .onChange(of: Reading(state: state, ready: store.ready)) { old, new in
+            // Until the launch's first read has finished, an owned pack reads as unowned: that read is no change.
+            guard old.ready, new.state != old.state else { return }
+            if let tag = new.state.tag(unshared: unshared) { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
+            // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
+            if Self.lands(old.state, new.state, ready: old.ready) {
+                landings += 1
+                Sound.shared.play(.solve)
+            }
         }
+        .sensoryFeedback(.success, trigger: landings)
     }
+
+    private struct Reading: Equatable {
+        let state: Purchase
+        let ready: Bool
+    }
+
+    /// A purchase landing on the card: owned now, read after the launch's first read of the entitlements had finished,
+    /// so an owner's card opened in that read's window never chimes.
+    static func lands(_ old: Purchase, _ new: Purchase, ready: Bool) -> Bool { ready && old != .owned && new == .owned }
 
     private var price: String? { store.price(offer.productID) }
 
-    @ViewBuilder private func fact(_ key: String, _ value: String) -> some View {
+    /// Complete's names each pack, each opening that pack's card, so its taste is a tap away.
+    private var holds: Text {
+        guard offer.pack == nil else { return Text(offer.holds) }
+        let sold = Pack.sold()
+        var s = AttributedString()
+        for (i, pack) in sold.enumerated() {
+            if i > 0 { s += AttributedString(i == sold.count - 1 ? " and " : ", ") }
+            var name = AttributedString(pack.name)
+            name.link = URL(string: "unstir-pack:\(pack.rawValue)")
+            name.underlineStyle = Text.LineStyle(pattern: .dot)
+            s += name
+        }
+        s += AttributedString(" \u{00B7} \(sold.map(\.planned).reduce(0, +)) levels")
+        return Text(s)
+    }
+
+    @ViewBuilder private func fact(_ key: String, _ value: Text) -> some View {
         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 0))
         layout {
             Text(key).font(.mono(.caption2)).opacity(0.38)
-                .frame(width: typeSize.isAccessibilitySize ? nil : 52, alignment: .leading)
-            Text(value).font(.mono(.footnote)).opacity(0.85).fixedSize(horizontal: false, vertical: true)
+                .frame(width: typeSize.isAccessibilitySize ? nil : keyWidth, alignment: .leading)
+            value.font(.mono(.footnote)).opacity(0.85).fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
+        .tint(Color.text)
+        .environment(\.openURL, OpenURLAction { url in
+            guard url.scheme == "unstir-pack", let pack = Pack(rawValue: url.absoluteString.replacingOccurrences(of: "unstir-pack:", with: "")) else {
+                return .discarded
+            }
+            onOffer(.pack(pack))
+            return .handled
+        })
     }
 
     /// Every level, those past the taste locked until the pack is owned, under a heading for each chapter where the
     /// pack has chapters, as the menu heads each tier.
-    private var list: some View {
+    private func list(_ reader: ScrollViewProxy) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if levels.first?.chapter == nil { heading("levels", of: []) }
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
@@ -677,7 +837,13 @@ struct PackCard: View {
                     heading(chapter, of: levels.filter { $0.chapter == chapter }).padding(.top, i == 0 ? 0 : 18)
                 }
                 let open = store.access(level) != .needsCard, best = Best.load(level.id)
-                Button { onPlay(level) } label: {
+                // A locked row points at buying rather than doing nothing.
+                Button {
+                    if open { return onPlay(level) }
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.35)) { reader.scrollTo("buy", anchor: .top) }
+                    pulses += 1
+                    spoken = .buy
+                } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text(level.label).font(.mono(.footnote, .semibold)).foregroundStyle(offer.glow)
                             .opacity(open ? 1 : 0.5).frame(minWidth: 30, alignment: .leading)
@@ -686,6 +852,7 @@ struct PackCard: View {
                         Spacer(minLength: 8)
                         if !open {
                             Image(systemName: "lock.fill").font(.caption2).opacity(0.4)
+                                .transition(.opacity.combined(with: .scale(scale: 1.8)))
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.mono(.caption2))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
@@ -693,12 +860,14 @@ struct PackCard: View {
                     }
                     .padding(.vertical, 9)
                     .contentShape(Rectangle())
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.4).delay(0.3 + 0.05 * Double(max(0, i - (offer.pack?.taste ?? 0)))),
+                               value: open)
                 }
                 .buttonStyle(Sounding())
-                .disabled(!open)
                 .rowHairline(offer.glow, level.id == focus?.id ? lit : 0, inset: 10)
                 .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" } ?? ""
                                     : "locked, needs the pack")
+                .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
             }
         }
     }
@@ -729,62 +898,130 @@ struct PackCard: View {
         case .owned:
             line(offer.pack == nil ? "\u{2713} owned \u{00B7} every pack open" : "\u{2713} owned \u{00B7} every level open", .lime)
         case .pending:
+            // A pack can wait on Complete's request alone, which only Complete's card asks again.
+            let asked = store.asked(offer)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     PulsingDot(colour: .amber)
-                    Text("waiting for approval").font(.mono(.footnote, .semibold)).foregroundStyle(Color.amber)
+                    Text(asked ? "waiting for approval" : "Complete is waiting for approval")
+                        .font(.mono(.footnote, .semibold)).foregroundStyle(Color.amber)
                 }
-                Text("Ask to Buy: the pack opens here once it's approved.").font(.mono(.caption2)).opacity(0.5)
+                Text(asked ? "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again."
+                     : "Ask to Buy: \(offer.name) opens here once Complete is approved.")
+                    .font(.mono(.caption2)).opacity(0.5)
                     .fixedSize(horizontal: false, vertical: true)
+                // Asking again failed, and the first request is still with the parent.
+                if let why = store.failures[offer.productID]?.words { detail(why) }
             }
             .accessibilityElement(children: .combine)
         case .failed:
-            line("the purchase didn't go through", .magenta)
+            VStack(alignment: .leading, spacing: 4) {
+                line("the purchase didn't go through", .magenta)
+                if let why = store.failures[offer.productID]?.words { detail(why) }
+            }
+            .accessibilityElement(children: .combine)
         case .revoked:
-            line("refunded, or no longer shared with you", .alarm)
+            // A refund or a family's share ended: said plainly, never as an alarm.
+            line((unshared ? "\(offer.name) is no longer shared with you" : "\(offer.name) isn't on this Apple ID any more")
+                 + " \u{00B7} your progress is kept", Color.text.opacity(0.6), glow: false)
         }
     }
 
-    private func line(_ s: String, _ colour: Color) -> some View {
-        Text(s).font(.mono(.footnote, .semibold)).foregroundStyle(colour).shadow(color: colour.opacity(0.6), radius: 4)
+    private func detail(_ s: String) -> some View {
+        Text(s).font(.mono(.caption2)).opacity(0.5).fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var unshared: Bool { offer.pack.map(store.unshared) ?? false }
+
+    private func line(_ s: String, _ colour: Color, glow: Bool = true) -> some View {
+        Text(s).font(.mono(.footnote, .semibold)).foregroundStyle(colour).shadow(color: colour.opacity(glow ? 0.6 : 0), radius: 4)
             .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Owned, play; otherwise buy at the App Store's price, and the taste beside it.
     @ViewBuilder private func action(_ state: Purchase) -> some View {
         if state == .owned {
-            if let level = next {
-                pill("play \u{203A}", trailing: nil, colour: .lime) { onPlay(level) }
-                    .accessibilityLabel("Play \(offer.name)")
+            // Complete has no levels of its own: its owner goes on in the first pack with a level left to play.
+            let pack = offer.pack == nil ? Pack.sold().first(where: { Self.pickUp($0.levels) != nil }) : nil
+            if let level = pack.flatMap({ Self.pickUp($0.levels) }) ?? next {
+                let verb = Self.continues(pack?.levels ?? levels) ? "continue" : "play"
+                let name = pack.map { $0.name + " " } ?? ""
+                pill("\(verb) \(name)\(level.label) \u{203A}", trailing: nil, colour: .lime) { onPlay(level) }
+                    .accessibilityLabel("\(verb.capitalized) \(pack?.name ?? offer.name), level \(level.label)")
             }
         } else {
+            // A declined Ask to Buy sends no transaction, so an asked pill stays live: tapping it sends a new request.
+            // A pack waiting only on Complete's request is bought alone.
+            let asked = store.asked(offer)
             let label = switch state {
+            case _ where buying: "buying\u{2026}"
             case .failed: "try again"
-            case .revoked: "buy again"
-            default: buying ? "buying\u{2026}" : "buy"
+            case .revoked: unshared ? "buy" : "buy again"
+            case .pending where asked: "asked"
+            default: "buy"
             }
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
                 : AnyLayout(HStackLayout(spacing: 14))
+            if !store.canPay { detail(Failure.refused.words ?? "").padding(.bottom, 12) }
             layout {
-                pill(label, trailing: price, colour: offer.glow) { buy(offer) }
-                    .disabled(state == .pending || buying)
-                    .opacity(state == .pending ? 0.5 : 1)
-                    .accessibilityLabel(state == .pending ? "Waiting for approval" : "\(label.capitalized) \(offer.name)")
-                    .accessibilityValue(price ?? "")
-                if let level = levels.first ?? Self.placeholder(offer) {
+                if store.canPay {
+                    pill(label, trailing: price ?? store.pricing.words, colour: offer.glow, dim: price == nil) { buy(offer) }
+                        .disabled(buying)
+                        .keyframeAnimator(initialValue: 1.0, trigger: pulses) { pill, scale in
+                            pill.scaleEffect(reduceMotion ? 1 : scale)
+                        } keyframes: { _ in
+                            // Held while the list scrolls up to it.
+                            LinearKeyframe(1.0, duration: 0.35)
+                            CubicKeyframe(1.08, duration: 0.14)
+                            CubicKeyframe(1.0, duration: 0.3)
+                        }
+                        .accessibilityLabel(state == .pending && asked && !buying ? "Ask again for \(offer.name)"
+                                            : "\(label.capitalized) \(offer.name)")
+                        .accessibilityValue(price ?? store.pricing.words ?? "")
+                        .accessibilityFocused($spoken, equals: .buy)
+                }
+                if let taste = Self.taste(levels) ?? Self.placeholder(offer).map({ (level: $0, replay: false) }) {
+                    let (level, replay) = taste
+                    let n = offer.pack?.taste ?? 3
                     Button { onPlay(level) } label: {
-                        Text("try \(offer.pack?.taste ?? 3) free \u{203A}").font(.mono(.footnote)).opacity(0.7)
+                        Text(replay ? "replay 01\u{2013}\(String(format: "%02d", n)) \u{203A}" : "try \(n) free \u{203A}")
+                            .font(.mono(replay ? .caption : .footnote)).opacity(replay ? 0.5 : 0.7)
                     }
                     .buttonStyle(Sounding())
-                    .accessibilityLabel("Try the first \(offer.pack?.taste ?? 3) levels free")
+                    .accessibilityLabel(replay ? "Replay the \(n) free levels" : "Try the first \(n) levels free")
                 }
             }
         }
     }
 
-    /// The first level without a best, else the first: where an owner picks up.
-    private var next: Level? {
-        levels.first { Best.load($0.id) == nil } ?? levels.first ?? Self.placeholder(offer)
+    private var next: Level? { levels.isEmpty ? Self.placeholder(offer) : Self.pickUp(levels) }
+
+    /// Where an owner picks up: the first level without a best, then the first not at par; none once all are at par.
+    static func pickUp(_ levels: [Level], best: (String) -> Best? = Best.load) -> Level? {
+        levels.first { best($0.id) == nil } ?? levels.first { best($0.id)?.over != 0 }
+    }
+
+    /// The taste's first level without a best, or, once all have one, its first to replay.
+    static func taste(_ levels: [Level], best: (String) -> Best? = Best.load) -> (level: Level, replay: Bool)? {
+        let free = levels.prefix(levels.first?.pack?.taste ?? 0)
+        if let level = free.first(where: { best($0.id) == nil }) { return (level, false) }
+        return free.first.map { ($0, true) }
+    }
+
+    /// Over buying, when a level past the taste opened the card: only while it is true, every free level with a best
+    /// and the pack never owned. A row opens any free level, so the gate can come before all of them are played.
+    static func arrival(_ offer: Offer, _ levels: [Level], state: Purchase,
+                        best: (String) -> Best? = Best.load) -> String? {
+        guard let pack = offer.pack, levels.count > pack.taste, state != .owned, state != .revoked,
+              taste(levels, best: best)?.replay == true else { return nil }
+        return "You've played the free \(Offer.countWord(pack.taste)). \(levels.count - pack.taste) more in \(pack.name)."
+    }
+
+    /// Play, until a level past the taste has been solved: then the owner continues.
+    static func continues(_ levels: [Level], best: (String) -> Best? = Best.load) -> Bool {
+        levels.contains { level in
+            best(level.id) != nil && (level.pack.flatMap { $0.number(of: level.id) } ?? 0) > (level.pack?.taste ?? 0)
+        }
     }
 
     /// Before a pack has levels, a Debug build plays its harness placeholder.
@@ -796,11 +1033,12 @@ struct PackCard: View {
         #endif
     }
 
-    private func pill(_ title: String, trailing: String?, colour: Color, _ tap: @escaping () -> Void) -> some View {
+    private func pill(_ title: String, trailing: String?, colour: Color, dim: Bool = false,
+                      _ tap: @escaping () -> Void) -> some View {
         Button(action: tap) {
             HStack(spacing: 14) {
                 Text(title).font(.mono(.subheadline, .semibold))
-                if let trailing { Text(trailing).font(.mono(.subheadline)).opacity(0.75) }
+                if let trailing { Text(trailing).font(.mono(dim ? .caption : .subheadline)).opacity(dim ? 0.45 : 0.75) }
             }
             .padding(.horizontal, 22).padding(.vertical, 12).frame(minHeight: 46)
             .overlay { Capsule().strokeBorder(colour, lineWidth: 1).shadow(color: colour, radius: 5) }
@@ -820,33 +1058,34 @@ struct PackCard: View {
                     Text("\u{203A}").opacity(0.55)
                 }
                 .font(.mono(.caption))
+                // Its failure line is 6 pt below.
+                .hit(10, 8)
             }
             .buttonStyle(Sounding())
+            // Complete's own request is asked again only from Complete's card.
             .disabled(buying || store.state(.complete) == .pending)
             .accessibilityLabel("Buy Complete, every pack")
             .accessibilityValue(complete ?? "")
             if store.state(.complete) == .failed {
                 Text("Complete's purchase didn't go through").font(.mono(.caption, .semibold)).foregroundStyle(Color.magenta)
                     .fixedSize(horizontal: false, vertical: true)
+                if let why = store.failures[Pack.completeID]?.words { detail(why) }
             }
         }
     }
 
     private var restore: some View {
-        Button {
-            restoring = true
-            Task {
-                restored = await store.restore()
-                restoring = false
-            }
-        } label: {
-            let s = restoring ? "restoring\u{2026}" : restored == false ? "couldn't reach the App Store \u{00B7} restore purchases"
-                : restored == true ? "restored \u{00B7} restore purchases" : "restore purchases"
-            Text(s).font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
+        Button { Task { await store.restoreAndAnnounce() } } label: {
+            let words = restoreWords
+            Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
+                .font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
+                .fixedSize(horizontal: false, vertical: true).hit(16)
         }
         .buttonStyle(Sounding())
-        .disabled(restoring)
+        .disabled(store.restoring)
     }
+
+    private var restoreWords: String { ConsentWords.restore }
 
     private func buy(_ o: Offer) {
         buying = true
@@ -885,10 +1124,12 @@ struct PackDock: View {
 
     var body: some View {
         VStack(spacing: 10) {
+            let owned = Pack.sold().filter { store.state($0) == .owned }
             HStack {
-                Text("PACKS \u{00B7} PAID ADD-ONS").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.38)
+                Text(owned.isEmpty ? "PACKS \u{00B7} PAID ADD-ONS" : "PACKS").font(.mono(.caption2, .semibold)).tracking(2)
+                    .opacity(0.38)
                 Spacer()
-                if typeSize < .xxLarge {
+                if typeSize < .xxLarge, owned.count < Pack.sold().count {
                     Text("first 3 levels of each free").font(.mono(.caption2)).opacity(0.3)
                 }
             }
@@ -896,7 +1137,8 @@ struct PackDock: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             HStack(alignment: .top, spacing: 0) {
-                let shelf = Offer.shelf()
+                // Complete owned leaves nothing on its card to do.
+                let shelf = Offer.shelf().filter { $0 != .complete || store.state(.complete) != .owned }
                 ForEach(Array(shelf.enumerated()), id: \.offset) { i, offer in
                     let x = (Double(i) + 0.5) / Double(shelf.count), state = store.state(offer)
                     Button { open(offer, UnitPoint(x: x, y: 0.88)) } label: {
@@ -906,8 +1148,11 @@ struct PackDock: View {
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
                                 Text(offer.name).font(.mono(.caption2)).opacity(0.7).lineLimit(2)
                                     .multilineTextAlignment(.center).minimumScaleFactor(0.8)
-                                if let tag = state.tag {
-                                    Circle().fill(tag.colour).frame(width: 4, height: 4).shadow(color: tag.colour, radius: 2)
+                                // A glyph, so the state reads without its colour; a revocation is the card's to say.
+                                if store.ready, let mark = state.mark {
+                                    Image(systemName: mark).font(.system(size: 8, weight: .bold)).foregroundStyle(state.tag()?.colour ?? .text)
+                                        .shadow(color: state.tag()?.colour ?? .clear, radius: 2)
+                                        .accessibilityHidden(true)
                                 }
                             }
                         }
@@ -916,7 +1161,8 @@ struct PackDock: View {
                     }
                     .buttonStyle(Sounding())
                     .accessibilityLabel("\(offer.name), \(offer.pack == nil ? "every pack" : "pack")")
-                    .accessibilityValue(state.tag?.word ?? store.price(offer.productID) ?? "")
+                    .accessibilityValue((store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
+                                        ?? store.price(offer.productID) ?? "")
                     .accessibilityHint(offer.pitch)
                     .accessibilityShowsLargeContentViewer {
                         Text(offer.name)

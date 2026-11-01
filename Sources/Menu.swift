@@ -3,10 +3,14 @@
 import SwiftUI
 
 extension Level {
-    /// Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
+    /// Where leaving goes: a pack's level back to its card.
+    var back: String { "\u{2039} " + (pack?.name ?? "levels") }
+
+    /// A pack's level takes the pack's glow. Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
     /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
     /// magenta.
     var colour: Color {
+        if let pack { return Offer.pack(pack).glow }
         guard let n = Int(label) else { return sandbox ? .magenta : run == nil ? .amber : .neonCyan }
         let t = Double((n - 1) % 12) / 11
         return switch tier {
@@ -141,6 +145,8 @@ struct MenuView: View {
     @State private var flashing: String?
     /// `focus` for the card up as the menu opens, gone once a card is opened or closed, so a dock tap opens at the top.
     @State private var cardFocus: Level?
+    /// The pack whose card a level past its taste opened, for this showing of it.
+    let arrived: Pack?
     /// The tier picked in the strip, open or not. `shown` trails it while the old list stirs away, and `listed`, the
     /// scroll view's own list, trails that to the end of the switch: rebuilding it stalls a frame (about 40 ms on the
     /// simulator), unseen once the stir has settled over it.
@@ -173,6 +179,8 @@ struct MenuView: View {
     @Namespace private var strip
     /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
     @State private var settings: Bool
+    /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
+    @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
     /// When the daily row was dealt: a menu left up past midnight, or coming back to the front, deals the new day's.
@@ -186,7 +194,8 @@ struct MenuView: View {
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
-         cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, onPick: @escaping (Level) -> Void) {
+         cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil,
+         onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = State(initialValue: settings)
         self.onPick = onPick
@@ -197,6 +206,7 @@ struct MenuView: View {
         self.cardScroll = cardScroll
         self.focus = focus
         self.held = held
+        self.arrived = arrived
         _flashing = State(initialValue: focus?.id)
         _cardFocus = State(initialValue: focus)
         // A tier's own level left lands on its tier, which "up a notch" may have opened since the menu was last up.
@@ -245,7 +255,9 @@ struct MenuView: View {
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !Offer.shelf().isEmpty {
-                    PackDock(open: { show($0, from: $1) }, held: clock, paused: card != nil)
+                    // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
+                    PackDock(open: { show($0, from: $1) }, held: clock,
+                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
@@ -258,6 +270,8 @@ struct MenuView: View {
         }
         .animation(.easeOut(duration: 0.25), value: asking)
         .sheet(isPresented: $settings) { SettingsSheet() }
+        // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
+        .onChange(of: card == nil && !settings) { Power.shared.touched() }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()
@@ -265,6 +279,7 @@ struct MenuView: View {
         }
         .background(Color.black)
         .onChange(of: dragging) {
+            if dragging { Power.shared.touched() }
             // Cancelled, so `onEnded` never ran.
             if !dragging, sideways != nil {
                 if sideways == true { released(0, predicted: 0) }
@@ -286,11 +301,14 @@ struct MenuView: View {
                 .font(.mono(13)).opacity(0.55).padding(.top, 10).id(Self.top)
             // Daily and endless say what opens them while they're shut.
             let shut = "opens after plughole \(Level.plughole[22].label)"
-            LevelRow(level: Level.daily(today), detail: modes ? nil : shut, enabled: modes, pick: pick, refuse: refuse)
+            let needs = modes ? nil : Level.plughole[22]
+            LevelRow(level: Level.daily(today), detail: modes ? nil : shut, enabled: modes, needs: needs, pick: pick,
+                     refuse: refuse)
                 .padding(.top, 22)
             LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                     detail: modes ? "deeper every tank \u{00B7} wrong stirs fill the brim" : shut,
-                     best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, pick: pick, refuse: refuse)
+                     detail: modes ? "deeper every tank \u{00B7} eight wrong stirs and it spills" : shut,
+                     best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, needs: needs, pick: pick,
+                     refuse: refuse)
             LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                      pick: pick, refuse: refuse)
             TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held).equatable()
@@ -317,17 +335,29 @@ struct MenuView: View {
     @ViewBuilder private var cardView: some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
-                     focus: cardFocus, onBack: { show(nil) }, onPlay: { onPick($0) })
+                     focus: cardFocus, arrived: card.pack != nil && card.pack == arrived,
+                     backTo: cameFrom.flatMap { $0.card == card ? $0.back.name : nil } ?? "menu",
+                     onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
+                         show(next)
+                         cameFrom = (card, next)
+                     })
+                .id(card)
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
     }
 
     private func show(_ offer: Offer?, from: UnitPoint = .center) {
+        cameFrom = nil
         Log.write(offer.map { "card \($0.key) shown" } ?? "card closed")
         cardFocus = nil
         if offer != nil { cardFrom = from }
         withAnimation(.snappy(duration: 0.42)) { card = offer }
+    }
+
+    /// The card a pack's card was opened from, or the menu.
+    private func back() {
+        show(cameFrom.flatMap { $0.card == card ? $0.back : nil })
     }
 
     /// The menu, Lens's cover tapped, its card's clip played through, then back.
@@ -381,6 +411,7 @@ struct MenuView: View {
     private var title: some View {
         Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
             .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)
+            .accessibilityLabel("Unstir").accessibilityAddTraits(.isHeader)
     }
 
     /// Every tier by name. A strip wider than the screen moves only to keep the picked name in view, so a sideways drag
@@ -633,7 +664,8 @@ private struct TierList: View, Equatable {
                 let opens = !open ? tier.below.map { "par every \($0.rawValue) level to open" }
                     : reached ? nil : "solve \(levels[i - 1].label) to open"
                 LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,
-                         flash: level.id == flash, held: level.id == held, pick: pick, refuse: refuse)
+                         flash: level.id == flash, held: level.id == held, needs: open && !reached ? levels[i - 1] : nil,
+                         gate: open ? nil : tier.below, pick: pick, refuse: refuse)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
                         if level.id == landing?.id { report?(frame) }
                     }
@@ -724,6 +756,9 @@ private struct LevelRow: View {
     var flash = false
     /// UNSTIR_LOCKTAP: a tap on this locked row held, its line up.
     var held = false
+    /// What a shut row waits on, for VoiceOver: a level, or the tier below a closed tier.
+    var needs: Level?
+    var gate: Tier?
     let pick: (Level) -> Void
     /// A tap on a locked row: false while a stir is under the finger.
     let refuse: () -> Bool
@@ -780,7 +815,8 @@ private struct LevelRow: View {
         }
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
-        .accessibilityValue(enabled ? "" : "locked, \(opens ?? detail ?? "")")
+        .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs,
+                                    gate: gate)))
         .rowHairline(level.colour, max(lit, frontier ? 0.75 : 0))
         .onAppear {
             guard flash, !reduceMotion else { return }

@@ -47,6 +47,21 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.lens), .pending)
     }
 
+    /// A pack waiting only on Complete's Ask to Buy reads as pending, but its card has no request of its own to send again.
+    @MainActor func testAPackWaitingOnCompleteHasNothingOfItsOwnToAskAgain() {
+        var ledger = Ledger()
+        ledger.record(Pack.completeID, .pending)
+        XCTAssertEqual(ledger.state(.lens), .pending)
+        XCTAssertFalse(ledger.asked(Pack.lens.productID))
+        XCTAssertTrue(ledger.asked(Pack.completeID))
+        let store = Store()
+        store.pretend(ledger)
+        XCTAssertFalse(store.asked(.pack(.lens)))
+        XCTAssertTrue(store.asked(.complete))
+        ledger.record(Pack.lens.productID, .pending)
+        XCTAssertTrue(ledger.asked(Pack.lens.productID))
+    }
+
     /// The entitlements reread after a revocation own the product again when it was bought since.
     func testOwnedAfterARevocationOwnsAgain() {
         var ledger = Ledger()
@@ -56,14 +71,35 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.lens), .owned)
     }
 
-    /// A child asks, taps buy again and cancels the sheet: the parent's answer is still outstanding.
+    /// A child asks, asks again and cancels the sheet, or asks again offline: the parent's answer is still outstanding.
     func testCancellingASecondPurchaseKeepsAskToBuyPending() {
         var ledger = Ledger()
         ledger.record(Pack.lens.productID, .pending)
         ledger.record(Pack.lens.productID, .unowned)
         XCTAssertEqual(ledger.state(.lens), .pending)
+        ledger.record(Pack.lens.productID, .failed)
+        XCTAssertEqual(ledger.state(.lens), .pending)
+        ledger.forgetFailures()
+        XCTAssertEqual(ledger.state(.lens), .pending)
         ledger.record(Pack.lens.productID, .owned)
         XCTAssertEqual(ledger.state(.lens), .owned)
+    }
+
+    /// A family's share ended is told from a refund, through the pack's own product or Complete, until it is owned again.
+    func testAShareEndedIsNoRefund() {
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .owned)
+        ledger.record(Pack.lens.productID, .revoked, shared: true)
+        XCTAssertEqual(ledger.state(.lens), .revoked)
+        XCTAssertTrue(ledger.unshared(.lens))
+        ledger.record(Pack.completeID, .revoked)
+        XCTAssertFalse(ledger.unshared(.escapement))
+        ledger.record(Pack.completeID, .revoked, shared: true)
+        XCTAssertTrue(ledger.unshared(.escapement))
+        ledger.record(Pack.lens.productID, .revoked)
+        XCTAssertFalse(ledger.unshared(.lens))
+        ledger.record(Pack.lens.productID, .owned)
+        XCTAssertFalse(ledger.unshared(.lens))
     }
 
     /// Complete revoked takes back only what it alone granted.
@@ -76,6 +112,17 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.lens), .revoked)
         ledger.record(Pack.lens.productID, .pending)
         XCTAssertEqual(ledger.state(.lens), .pending)
+    }
+
+    /// The card tells being offline, a storefront without the pack and purchases turned off apart from the rest.
+    func testEachFailureSaysWhy() {
+        XCTAssertEqual(Failure(StoreKitError.networkError(URLError(.notConnectedToInternet))), .offline)
+        XCTAssertEqual(Failure(URLError(.timedOut)), .offline)
+        XCTAssertEqual(Failure(StoreKitError.notAvailableInStorefront), .storefront)
+        XCTAssertEqual(Failure(Product.PurchaseError.purchaseNotAllowed), .refused)
+        XCTAssertEqual(Failure(StoreKitError.userCancelled), .cancelled)
+        XCTAssertEqual(Failure(StoreKitError.unknown), .other)
+        XCTAssertNil(Failure.other.words)
     }
 
     func testTheTasteIsFreeAndThePackIsNot() {
@@ -163,6 +210,16 @@ final class StoreTests: XCTestCase {
         XCTAssertNotEqual(store.price(Pack.lens.productID), store.price(Pack.completeID))
     }
 
+    /// The gate waits for the launch's first read, which `start` finishes before it returns.
+    func testTheStoreIsReadyOnceItHasReadTheEntitlements() async throws {
+        let store = Store()
+        XCTAssertFalse(store.ready)
+        await store.settled()
+        await store.start()
+        XCTAssertTrue(store.ready)
+        await store.settled()
+    }
+
     func testPurchaseGrantsOnePack() async throws {
         let store = Store()
         await store.start()
@@ -240,6 +297,16 @@ final class StoreTests: XCTestCase {
         try session.declineAskToBuyTransaction(identifier: asked.identifier)
         try await Task.sleep(for: .seconds(2))
         XCTAssertEqual(store.ledger.owned, [])
+        // StoreKit sends nothing for a decline, so the card still waits, and asking again sends the parent a new request.
+        XCTAssertEqual(store.state(.lens), .pending)
+        await store.purchase(.lens)
+        XCTAssertEqual(store.state(.lens), .pending)
+        let again = session.allTransactions().filter { $0.pendingAskToBuyConfirmation }
+        XCTAssertEqual(again.count, 1)
+        XCTAssertNotEqual(again.first?.identifier, asked.identifier)
+        // Left waiting, the request holds up the next test's approval.
+        try session.declineAskToBuyTransaction(identifier: try XCTUnwrap(again.first).identifier)
+        try await Task.sleep(for: .seconds(2))
         try await relaunch(owns: [])
     }
 
@@ -249,6 +316,7 @@ final class StoreTests: XCTestCase {
         await store.start()
         await store.purchase(.lens)
         XCTAssertEqual(store.state(.lens), .failed)
+        XCTAssertEqual(store.failures[Pack.lens.productID], .offline)
         XCTAssertEqual(store.ledger.owned, [])
         // Clearing the error alone leaves the session failing every purchase; a reset clears it.
         session.resetToDefaultState()
@@ -270,23 +338,26 @@ final class StoreTests: XCTestCase {
         try await session.setSimulatedError(nil, forAPI: .verification)
     }
 
-    /// A restore that syncs reads what was bought; one whose sync fails says so and reads nothing, keeping what was known.
+    /// A restore that syncs says what it found that wasn't owned before; one whose sync fails says so and reads nothing,
+    /// keeping what was known.
     func testRestoreReadsWhatWasBoughtOnlyAfterASync() async throws {
         let store = Store()
         await store.purchase(.escapement)
         let next = Store()
         try await eventually("restore to find the purchase") {
-            let synced = await next.restore()
-            return synced && next.ledger.owned == [.escapement]
+            let found = await next.restore()
+            return found == .found([.escapement]) && next.ledger.owned == [.escapement]
         }
+        let again = await next.restore()
+        XCTAssertEqual(again, .nothing)
         try await session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))),
                                             forAPI: .appStoreSync)
         let offline = Store()
         let synced = await offline.restore()
-        XCTAssertFalse(synced)
+        XCTAssertEqual(synced, .failed)
         XCTAssertEqual(offline.ledger.owned, [])
         let resynced = await next.restore()
-        XCTAssertFalse(resynced)
+        XCTAssertEqual(resynced, .failed)
         XCTAssertEqual(next.ledger.owned, [.escapement])
         try await session.setSimulatedError(nil, forAPI: .appStoreSync)
     }

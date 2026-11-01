@@ -29,9 +29,17 @@ import XCTest
         XCTAssertEqual(level.clocks.map(\.rod), [0])
         XCTAssertEqual(level.par, 2)
         XCTAssertEqual(level.budget, 2)
-        XCTAssertEqual(level.note, "Unstir in 2 ticks. A clock ticks after every move.")
+        XCTAssertEqual(level.note, "Unstir in 2 ticks. A clock ticks after every move. Each let-go is a move.")
         XCTAssertEqual(level.demo, tri("0:-3,1:+2"))
         XCTAssertTrue(Level.escapement.dropFirst().allSatisfy(\.demo.isEmpty))
+    }
+
+    /// A wait no clock can take is refused, so the view can thud; one a clock takes is a move.
+    func testAWaitNoClockCanTakeIsRefused() {
+        let idle = game("1:+3,2:-4")
+        XCTAssertFalse(idle.wait(on: 0))
+        XCTAssertEqual(idle.moves, 0)
+        XCTAssertTrue(game().wait(on: 0))
     }
 
     func testTheSecondProblemIsTheMockUps() {
@@ -293,7 +301,7 @@ import XCTest
         XCTAssertEqual(levels.map(\.label), (1...30).map { String(format: "%02d", $0) })
         XCTAssertEqual(levels.compactMap(\.chapter), (0..<30).map { Level.escapementChapters[$0 / 6] })
         XCTAssertEqual(Level.escapementChapters, ["The Clock", "The Waiting Move", "Two Clocks", "Wound Back", "Grand Complication"])
-        let rules = [1: " A clock ticks after every move.", 7: " Sometimes the first move is to wait.",
+        let rules = [1: " A clock ticks after every move. Each let-go is a move.", 7: " Sometimes the first move is to wait.",
                      13: " Two clocks tick in turn.", 19: " A wound-back clock ticks the other way.", 25: " Three clocks."]
         XCTAssertEqual(levels.map(\.title), [
             "Mainspring", "Pendulum", "Clock face", "Cogwheel", "Winding key", "Clockwork",
