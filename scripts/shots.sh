@@ -501,6 +501,10 @@ fi
 nine=000000000
 shot shelf-menu "Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." \
   STORE=lens:unowned CLOCK=5.4 BESTS=plughole:$nine
+shot shelf-menu-stirred "The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Complete (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's grid clean, Prism's fern just stirring in." \
+  STORE=lens:unowned CLOCK=2.8 BESTS=plughole:$nine
+shot shelf-menu-clean "The dock at the top of its loop: First Stir and Complete clean, Lens stirring in, Escapement and Prism unstirring." \
+  STORE=lens:unowned CLOCK=0 BESTS=plughole:$nine
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
   OWNED=lens STORE=escapement:pending CLOCK=5.4 BESTS=plughole:$nine
 shot shelf-new "Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir." \
