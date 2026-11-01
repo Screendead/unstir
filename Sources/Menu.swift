@@ -383,7 +383,8 @@ struct MenuView: View {
             .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)
     }
 
-    /// Every tier by name. Scrolls sideways once there are more than fit, keeping the picked one in view.
+    /// Every tier by name. A strip wider than the screen moves only to keep the picked name in view, so a sideways drag
+    /// on it is the switcher's.
     private var tiers: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal) {
@@ -401,8 +402,7 @@ struct MenuView: View {
                 .padding(.horizontal, 20)
             }
             .scrollIndicators(.hidden)
-            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-            // Names run out into the black at the edges, so a strip wider than the screen reads as one that scrolls.
+            // Names run out into the black at the edges, so a strip wider than the screen reads as running on past them.
             .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.04),
                                          .init(color: .black, location: 0.9), .init(color: .clear, location: 1)],
                                  startPoint: .leading, endPoint: .trailing))
