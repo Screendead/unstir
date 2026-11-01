@@ -460,6 +460,19 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: false), "new best \u{00B7} was solved")
     }
 
+    /// A faster solve at the same mark keeps the older best, seconds and all; a cleaner one replaces it however slow.
+    @MainActor func testABestIsNeverRankedByTime() throws {
+        let id = "test-time", saved = UserDefaults.standard.data(forKey: "best.\(id)")
+        defer { UserDefaults.standard.set(saved, forKey: "best.\(id)") }
+        UserDefaults.standard.removeObject(forKey: "best.\(id)")
+        Best(over: 0, seconds: 60, clean: false).save(id)
+        Best(over: 0, seconds: 5, clean: false).save(id)
+        XCTAssertEqual(try XCTUnwrap(Best.load(id)).seconds, 60)
+        Best(over: 0, seconds: 90, clean: true).save(id)
+        XCTAssertEqual(try XCTUnwrap(Best.load(id)).seconds, 90)
+        XCTAssertEqual(Best.load(id)?.clean, true)
+    }
+
     /// A run carries the best as it began from tank to tank, so its spill can tell a new best though each tank cleared
     /// has already raised the stored one.
     @MainActor func testARunKeepsTheBestItBeganWith() {

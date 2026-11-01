@@ -424,11 +424,10 @@ struct Best: Codable {
     /// Clean, then fewer over par: what a result card names, so it calls a best new only when that changes.
     var standing: (Int, Int) { (clean == true ? 0 : 1, over) }
 
-    /// Keeps the better of this and the stored result: clean, then fewer over par, then faster. Unstored, the
-    /// harness's, it lasts only this launch, as `fake`'s does.
+    /// Keeps the better of this and the stored result: clean, then fewer over par, never faster (Jack's call C10, round
+    /// 13), so a tie keeps the older. Unstored, the harness's, it lasts only this launch, as `fake`'s does.
     func save(_ id: String, store: Bool = true) {
-        func rank(_ b: Best) -> (Int, Int, Int) { (b.standing.0, b.standing.1, b.seconds) }
-        if let old = Best.load(id), rank(old) <= rank(self) { return }
+        if let old = Best.load(id), old.standing <= standing { return }
         if store { UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)") } else { fake(id) }
     }
 

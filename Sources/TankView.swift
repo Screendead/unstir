@@ -2992,11 +2992,10 @@ struct ResultCard: View {
         }
         let accent = game.level.pack.map { Offer.pack($0).glow } ?? tierAccent
         let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
-        let time = String(format: "%d:%02d", game.seconds / 60, game.seconds % 60)
         VStack(spacing: 26) {
             VStack(spacing: 8) {
                 if let run {
-                    Text("moves \(game.moves) \u{00B7} \(time)")
+                    Text("moves \(game.moves)")
                     if game.spilled && run.tank > run.best {
                         Text("tanks cleared \(run.tank) \u{00B7} ") + Text("new best").foregroundStyle(Color.lime)
                     } else {
@@ -3006,7 +3005,7 @@ struct ResultCard: View {
                 } else if !game.level.ratchets.isEmpty {
                     // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round 11), so
                     // the ticks say nothing.
-                    Text("solved in \(game.moves) moves \u{00B7} \(time)")
+                    Text("solved in \(game.moves) moves")
                     if game.clean {
                         Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
                     } else {
@@ -3014,7 +3013,7 @@ struct ResultCard: View {
                             .foregroundStyle(Color.amber)
                     }
                 } else {
-                    Text("moves \(game.moves) \u{00B7} par \(game.par) \u{00B7} \(time)")
+                    Text("moves \(game.moves) \u{00B7} par \(game.par)")
                     if game.clean {
                         Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
                     } else if game.over > 0 {
