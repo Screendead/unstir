@@ -155,6 +155,12 @@ extension Store {
 }
 
 extension Store {
+    /// A restore that finds nothing changes no state, so VoiceOver hears what it came to here.
+    func restoreAndAnnounce() async {
+        await restore()
+        if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
+    }
+
     /// What the last restore came to, on a card and in settings; nil before one.
     var restoreNote: String? {
         if restoring { return "restoring\u{2026}" }
@@ -966,7 +972,7 @@ struct PackCard: View {
     }
 
     private var restore: some View {
-        Button { Task { await store.restore() } } label: {
+        Button { Task { await store.restoreAndAnnounce() } } label: {
             let words = restoreWords
             Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
                 .font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)

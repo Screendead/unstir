@@ -159,7 +159,7 @@ struct SettingsSheet: View {
                         .padding(.vertical, 12)
                         rule
                     }
-                    Button { Task { await store.restore() } } label: {
+                    Button { Task { await store.restoreAndAnnounce() } } label: {
                         HStack(spacing: 12) {
                             row(ConsentWords.restore, store.restoreNote ?? ConsentWords.restoreDetail)
                             Spacer(minLength: 8)
