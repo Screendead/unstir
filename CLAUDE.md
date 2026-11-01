@@ -44,7 +44,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
   other branch: it builds every push, PR or not. Keep
   commits local until the next build is worth paying for. If a build takes more than
-  7 minutes, raise it with Jack: the approach to builds needs rethinking.
+  10 minutes (Jack, 2026-11-01; the job's own timeout), raise it with Jack: the approach to builds needs rethinking.
 - **Watch CI spend.** Before each push that builds, run `scripts/ci-usage.sh`, which prints this month's GitHub Actions
   allowance left. Tell Jack when 50% is left, and warn him urgently at 25%. Public repos, this one included, don't
   use the allowance. macOS minutes in private repos count 10×.
