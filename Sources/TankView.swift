@@ -2425,6 +2425,8 @@ struct LevelView: View {
                 lastSpin = rotation
                 if let down = twist?.down { twist!.trail.add(rotation, ms: Self.ms(v.time, since: down)) }
                 if liveTurn == nil {
+                    // The rod a first finger held lets go as the lift would, so its turn never snaps back (V26).
+                    if case .rod(let k)? = drag?.grab { release(k, now: true) }
                     drag?.grab = .rim; liveRod = nil; liveAngle = 0; liveTurn = 0; counted = Game.tank
                     Log.write("spin \(state)")
                     detent = Detent(step: game.level.layout.tankStep)

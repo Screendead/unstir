@@ -336,9 +336,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lights at once with a light tap, so the rod that lights is the rod that turns: its knob's ticks and a ring on the dark
   band round it, never past it, and one 0.5 pt hairline round its disc, dimmer until letting go would commit. On lift
   the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red (the swirl's, a hairline `swirlFlash`, 5 pt, inside the glass's edge), and one that cancels
-  sends a magenta hairline out from the knob. A drag the system cuts off (a call, Control Center, Siri) or a second
-  finger takes over lets go as the lift would, whichever of the phase change and the cancelled gesture comes first
-  (V26, extended by Jack's call C13, round 13). Every line a turn draws over the picture is a hairline but the count's
+  sends a magenta hairline out from the knob. A drag the system cuts off (a call, Control Center, Siri, the lock) or a
+  second finger takes over lets go as the lift would, whichever of the phase change and the cancelled gesture comes
+  first, and the phase change's at once, without the settle, whose completion waits on a frame (Jack's V26 call,
+  2026-10-27, extended by his call C13, round 13). Every line a turn draws over the picture is a hairline but the count's
   dashes, 2 pt, and none has a glow or a dark band under it: the pictures are fine lines themselves, and whatever a
   heavy line covers the player cannot read. The opening replay's ring is not a hairline. A
   seized knob touched shakes a few degrees, plays `Knock.thud` (duller than the tank step's `Knock.clunk`, both on one
