@@ -2229,20 +2229,6 @@ struct LevelView: View {
         if !game.level.sandbox && game.level.keepsProgress { Best.start(game.level.id) }
     }
 
-    /// Skips the opening, or the clock's demonstration; false when neither is playing.
-    @discardableResult private func skip() -> Bool {
-        if demoing {
-            demoing = false
-            Log.write("skip demo")
-            return true
-        }
-        guard shown != nil else { return false }
-        // Past 1, so the value changes and cuts short a wind-in still animating towards 1.
-        shown = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; wind = 2
-        Log.write("skip \(state)")
-        return true
-    }
-
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
     /// The rim wins over the discs that reach it: past `rim` it holds the level's motion where it has one, and the
     /// swirl where there is one. Where there are both, the glass's own edge from `swirlBand` holds the swirl and the
