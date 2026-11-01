@@ -208,7 +208,7 @@ swirl-pent.png  Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3.
 swirl-hex.png  Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3.
 lens-plus.png  Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies.
 lens-minus.png  Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim.
-lens-01.png  Lens 01 as dealt, on the halftone (docs/lens-tables.md), the pack owned; its lesson held halfway down.
+lens-01.png  Lens 01 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
 lens-02.png  Lens 02 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
 lens-03.png  Lens 03 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
 lens-04.png  Lens 04 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
