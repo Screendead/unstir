@@ -485,7 +485,8 @@ private struct TierList: View, Equatable {
             let levels = tier.levels
             ForEach(Array(levels.enumerated()), id: \.offset) { i, level in
                 let reached = Best.unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
-                LevelRow(level: level, enabled: open && reached, needs: open && !reached ? levels[i - 1] : nil, pick: pick)
+                LevelRow(level: level, enabled: open && reached, needs: open && !reached ? levels[i - 1] : nil,
+                         gate: open ? nil : tier.below, pick: pick)
             }
         }
     }
@@ -532,8 +533,9 @@ private struct LevelRow: View {
     var detail: String?
     var best: Text?
     let enabled: Bool
-    /// What a shut row waits on, for VoiceOver.
+    /// What a shut row waits on, for VoiceOver: a level, or the tier below a closed tier.
     var needs: Level?
+    var gate: Tier?
     let pick: (Level) -> Void
 
     var body: some View {
@@ -570,6 +572,7 @@ private struct LevelRow: View {
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .disabled(!enabled)
-        .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs)))
+        .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs,
+                                    gate: gate)))
     }
 }

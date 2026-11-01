@@ -1502,6 +1502,8 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Spoken.row(seventh, result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[5]).value,
                        "locked, solve level 6 first")
         XCTAssertEqual(Spoken.row(Level.vortex[0], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil).value, "locked")
+        XCTAssertEqual(Spoken.row(Level.vortex[3], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil, gate: .whirlpool).value,
+                       "locked, par every \(Tier.whirlpool.name) level first")
         func result(_ best: Best) -> String { Spoken.row(first, result: best, tanks: 0, detail: nil, enabled: true, needs: nil).value }
         XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: true)), "clean")
         XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: false)), "at par")

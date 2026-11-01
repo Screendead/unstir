@@ -610,7 +610,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
   the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
-  ..."; the daily, endless and the sandbox by name), value (its result, "not played", or "locked, solve level 6 first")
+  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "locked, solve level 6 first",
+  or in a closed tier "locked, par every Plughole level first")
   and hint (its rods and par), the header's "3 moves, par 7", and the finish ("Unstirred. 7 moves, par 7. Clean.",
   "Out of ticks on move 9.", "Spilled. 6 tanks cleared."), which labels the result or lost card's summary, where
   VoiceOver's focus lands as the card shows, so no announcement is cut short by a focus move. The tank is one element that allows direct interaction, so a

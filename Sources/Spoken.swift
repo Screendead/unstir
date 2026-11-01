@@ -14,8 +14,9 @@ enum Spoken {
     /// Where a level's back button goes: a pack's level returns to its card.
     static func back(_ level: Level) -> String { "Back to " + (level.pack?.name ?? "levels") }
 
-    /// A menu row: its name, its result or why it is shut, and its shape. `needs` is the level whose solve opens it.
-    static func row(_ level: Level, result: Best?, tanks: Int, detail: String?, enabled: Bool, needs: Level?)
+    /// A menu row: its name, its result or why it is shut, and its shape. `needs` is the level whose solve opens it, and
+    /// `gate` the tier below a closed tier, every level of which at par opens it.
+    static func row(_ level: Level, result: Best?, tanks: Int, detail: String?, enabled: Bool, needs: Level?, gate: Tier? = nil)
         -> (label: String, value: String, hint: String) {
         let numbered = Int(level.label)
         let label = numbered.map { "Level \($0), \(level.title)." } ?? (level.id.hasPrefix("daily-") ? "Today's daily" : level.title)
@@ -26,7 +27,7 @@ enum Spoken {
                 let number = Int(n.label).map(String.init) ?? n.label
                 return numbered != nil && n.tier == level.tier ? "level \(number)" : "\(n.tier.name) level \(number)"
             }
-            value = what.map { "locked, solve \($0) first" } ?? "locked"
+            value = what.map { "locked, solve \($0) first" } ?? gate.map { "locked, par every \($0.name) level first" } ?? "locked"
         } else if level.run != nil {
             value = tanks > 0 ? "best \(count(tanks, "tank"))" : "not played"
         } else if let result {
