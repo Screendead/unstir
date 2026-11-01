@@ -1343,6 +1343,24 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(daily.title.contains(date.formatted(.dateTime.weekday(.abbreviated))), daily.title)
     }
 
+    /// Today's daily and the days before it with a best, back to the first without one; nothing until today's solve.
+    func testTheDailyRunCountsDaysInARow() throws {
+        let calendar = Calendar(identifier: .gregorian)
+        let today = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 11, day: 1, hour: 12)))
+        XCTAssertEqual(Level.dailyID(today), "daily-20261101")
+        XCTAssertEqual(Level.dailyID(today), Level.daily(today).id)
+        func run(_ solved: some Sequence<Int>) -> Int {
+            let ids = Set(solved.map { Level.dailyID(calendar.date(byAdding: .day, value: -$0, to: today)!) })
+            return Daily.run(today: today) { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+        }
+        XCTAssertEqual(run([]), 0)
+        XCTAssertEqual(run([1, 2, 3]), 0, "today unsolved says nothing of the run before it")
+        XCTAssertEqual(run([0]), 1)
+        XCTAssertEqual(run([0, 1, 2, 3]), 4)
+        XCTAssertEqual(run([0, 1, 3, 4]), 2, "a gap ends the run")
+        XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
+    }
+
     /// The menu's top follows plughole 01 and 23: the tagline, then the way on; the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
         func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {

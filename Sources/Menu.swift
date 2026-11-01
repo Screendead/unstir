@@ -311,8 +311,10 @@ struct MenuView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if lead.modes {
                     // Marked until either is first opened.
-                    let new = !Best.modesSeen
-                    LevelRow(level: Level.daily(today), enabled: true, new: new, pick: pick, refuse: refuse)
+                    let new = !Best.modesSeen, daily = Level.daily(today), run = Daily.run(today: today)
+                    LevelRow(level: daily, detail: run < 2 ? nil
+                                 : "\(daily.layout.rods.count) rods \u{00B7} par \(daily.par) \u{00B7} \(run) days running",
+                             enabled: true, new: new, pick: pick, refuse: refuse)
                     LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
                              detail: "deeper every tank \u{00B7} eight wrong stirs and it spills",
                              best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true, new: new, pick: pick,

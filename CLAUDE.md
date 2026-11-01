@@ -277,7 +277,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
   rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
   seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
-  prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. Endless changes only what
+  prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. A daily's id and seed are
+  its day's yyyymmdd (`Level.dailyID`), and `Daily.run` counts, once today's has a best, the days in a row ending today
+  that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13). Endless changes only what
   it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to 28, at least n/2 of them hidden, to half), which
   `testEndlessVectors` pins. A `Run` is endless's seed, tank and the brim's notches as that tank opens. Progress
   (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most) refills by 2
@@ -673,7 +675,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   then "next: 07 · Sprinkle ›" in the tagline's place, a button opening the shown tier's frontier (none once it has
   none), and the sandbox over the list. The daily and endless rows show only once open, each marked new until either is
   first opened (`Best.modesSeen`). A row with a committed move and no best reads tried, faint, as a pack card's list
-  does (Jack's call C3, round 13). Under the title, a strip names every tier, dimmed with a lock while locked, and
+  does (Jack's call C3, round 13); the daily's adds "4 days running" (`Daily.run`) to its detail from two. Under the title, a strip names every tier, dimmed with a lock while locked, and
   keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
   list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
   (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
@@ -786,7 +788,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tiers through the same calls a finger makes. `UNSTIR_EXIT=left` leaves the harness's level for the menu a second
   after it opens, through `RootView`'s own exit (`=solved` as its result card does after a solve; `=up` opens the next
   tier's first level, as "up a notch" does, then leaves that). `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
-  leaves it, saying what opens it. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, for that launch only. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  leaves it, saying what opens it. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
+  today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which

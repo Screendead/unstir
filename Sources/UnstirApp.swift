@@ -202,6 +202,13 @@ struct Harness {
         }
         // UNSTIR_TRIED=L14,lens-2: those levels started, for this launch only.
         for id in env["UNSTIR_TRIED"]?.split(separator: ",") ?? [] { Best.start(String(id), store: false) }
+        // UNSTIR_DAILIES=n: today's daily and the n-1 days before it solved at par, for this launch only.
+        let calendar = Calendar(identifier: .gregorian)
+        for k in 0 ..< max(env["UNSTIR_DAILIES"].flatMap(Int.init) ?? 0, 0) {
+            if let day = calendar.date(byAdding: .day, value: -k, to: .now) { Best(over: 0, seconds: 60).fake(Level.dailyID(day)) }
+            // A daily solved was opened, so the modes' rows are no longer new.
+            Best.seeModes(store: false)
+        }
         fresh = env["UNSTIR_FRESH"] == "1"
         tierDemo = env["UNSTIR_TIERDEMO"] == "1"
         let spin = env["UNSTIR_TIERSPIN"]?.split(separator: ":").compactMap { Double($0) } ?? []
