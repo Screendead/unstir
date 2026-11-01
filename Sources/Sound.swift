@@ -1,6 +1,7 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
 import AVFoundation
+import os
 import SwiftUI
 
 extension Level {
@@ -37,6 +38,65 @@ extension View {
     func hit(_ vertical: CGFloat = 14, _ horizontal: CGFloat = 8) -> some View {
         padding(.vertical, vertical).padding(.horizontal, horizontal).contentShape(Rectangle())
             .padding(.vertical, -vertical).padding(.horizontal, -horizontal)
+    }
+}
+
+/// The settings' switches, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while on, and the colour
+/// letters' choice (`Letters`).
+enum Settings {
+    /// A harnessed launch's switches, read in place of the stored ones and never stored, so a tap in one shot lasts only
+    /// that launch. Keyed `music`, `sounds`, `haptics` and `letters` (absent while unchosen).
+    static let held = OSAllocatedUnfairLock<[String: Bool]?>(initialState: nil)
+
+    static var music: Bool {
+        get { on("music") }
+        set { set("music", newValue) }
+    }
+
+    static var sounds: Bool {
+        get { on("sounds") }
+        set { set("sounds", newValue) }
+    }
+
+    static var haptics: Bool {
+        get { on("haptics") }
+        set { set("haptics", newValue) }
+    }
+
+    /// For the log and a report: "music on, sounds off, haptics on, letters system".
+    static var summary: String {
+        let letters = Letters.choice.map { $0 ? "on" : "off" } ?? "system"
+        return ["music", "sounds", "haptics"].map { "\($0) \(on($0) ? "on" : "off")" }.joined(separator: ", ")
+            + ", letters \(letters)"
+    }
+
+    private static func on(_ name: String) -> Bool {
+        held.withLock { $0.map { $0[name] ?? true } } ?? !UserDefaults.standard.bool(forKey: "\(name).off")
+    }
+
+    /// Writes into `held` where the harness holds the switches; false where they are stored.
+    static func keep(_ name: String, _ value: Bool?) -> Bool {
+        held.withLock { held in
+            guard held != nil else { return false }
+            held![name] = value
+            return true
+        }
+    }
+
+    private static func set(_ name: String, _ on: Bool) {
+        guard !keep(name, on) else { return }
+        if on {
+            UserDefaults.standard.removeObject(forKey: "\(name).off")
+        } else {
+            UserDefaults.standard.set(true, forKey: "\(name).off")
+        }
+    }
+}
+
+extension View {
+    /// Every system haptic goes through here, so the settings' switch silences them all.
+    func haptic<T: Equatable>(_ feedback: SensoryFeedback, trigger: T, when: ((T, T) -> Bool)? = nil) -> some View {
+        sensoryFeedback(feedback, trigger: trigger) { old, new in Settings.haptics && (when?(old, new) ?? true) }
     }
 }
 
@@ -99,6 +159,9 @@ final class Sound: @unchecked Sendable {
     private var failed = false
     /// Another app's music is playing: the bed gives way to it, and effects still sound.
     private var hushed = false
+    /// The settings' switches, read as the first sound is wanted and set as they change.
+    private var musicOn = Settings.music
+    private var soundsOn = Settings.sounds
 
     private init() {
         let centre = NotificationCenter.default
@@ -163,9 +226,23 @@ final class Sound: @unchecked Sendable {
     }
 
     @MainActor func play(_ effect: Effect) {
-        // A drag ticks up to ten times a second, which would crowd the recorder's 3000 lines.
-        if effect != .tick { Log.write("sound \(effect)") }
+        // A drag ticks up to ten times a second, which would crowd the recorder's 3000 lines, and a sound switched
+        // off never plays.
+        if effect != .tick, Settings.sounds { Log.write("sound \(effect)") }
         queue.async { self.start(effect) }
+    }
+
+    /// The settings' music switch: the bed fades out over the crossfade, and back in.
+    func music(_ on: Bool) {
+        queue.async {
+            self.musicOn = on
+            self.fade()
+        }
+    }
+
+    /// The settings' sounds switch: every effect and button.
+    func sounds(_ on: Bool) {
+        queue.async { self.soundsOn = on }
     }
 
     /// The bed under the menu or a level: a new one crossfades in over the old.
@@ -205,6 +282,7 @@ final class Sound: @unchecked Sendable {
     }
 
     private func start(_ effect: Effect) {
+        guard soundsOn else { return }
         let name = switch effect {
         case .tick: "tick-\(ticks % 4 + 1)"
         case .tap: "tap-\(taps % 4 + 1)"
@@ -290,9 +368,10 @@ final class Sound: @unchecked Sendable {
         hushed = AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint
     }
 
-    /// The bed's file, or plughole's loop where there is no such bed; none while another app's music plays.
+    /// The bed's file, or plughole's loop where there is no such bed; none while another app's music plays or music
+    /// is off.
     private var wantedName: String? {
-        guard let bed, !hushed else { return nil }
+        guard let bed, !hushed, musicOn else { return nil }
         return bedFiles[bed.rawValue] == nil ? Bed.plughole.rawValue : bed.rawValue
     }
 

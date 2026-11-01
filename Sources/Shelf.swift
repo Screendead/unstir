@@ -20,6 +20,23 @@ enum Offer: Hashable, Sendable {
         return packs.map(Offer.pack) + (packs.count == sold.count ? [.complete] : [])
     }
 
+    /// The pack a completion's card points to: the first on the shelf the player doesn't own, other than the one just
+    /// completed; none once every pack is owned.
+    @MainActor static func pointer(after completed: Completion?, shelf: [Offer] = Offer.shelf(),
+                                   owned: (Pack) -> Bool = { Store.shared.state($0) == .owned }) -> Pack? {
+        guard let completed else { return nil }
+        return shelf.compactMap(\.pack).first { $0 != completed.pack && !owned($0) }
+    }
+
+    /// What Complete saves over buying the `sold` packs not `owned` one by one (a pending pack is unowned): nil unless
+    /// it saves something and every price that takes is known (Jack's call C7, round 13).
+    static func saving(amounts: [String: Decimal], owned: Set<Pack>, sold: [Pack]) -> Decimal? {
+        let left = sold.filter { !owned.contains($0) }.map { amounts[$0.productID] }
+        guard !left.isEmpty, let complete = amounts[Pack.completeID], !left.contains(nil) else { return nil }
+        let saving = left.compactMap { $0 }.reduce(0, +) - complete
+        return saving > 0 ? saving : nil
+    }
+
     /// Whether this build sells it.
     var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
 
@@ -67,13 +84,18 @@ enum Offer: Hashable, Sendable {
 
     var holds: String {
         switch self {
-        case .pack(.firstStir): "\(Pack.firstStir.planned) scenes in five chapters"
-        case .pack(.lens): "\(Pack.lens.planned) panels in four issues"
-        case .pack(.escapement): "\(Pack.escapement.planned) problems in five chapters"
-        case .pack(.prism): "\(Pack.prism.planned) specimens in five trays"
+        case .pack(.firstStir): "\(Pack.firstStir.planned) \(Pack.firstStir.noun) in five chapters"
+        case .pack(.lens): "\(Pack.lens.planned) \(Pack.lens.noun) in four issues"
+        case .pack(.escapement): "\(Pack.escapement.planned) \(Pack.escapement.noun) in five chapters"
+        case .pack(.prism): "\(Pack.prism.planned) \(Pack.prism.noun) in five trays"
         case .complete: "\(Pack.named(Pack.sold())) \u{00B7} \(Pack.sold().map(\.planned).reduce(0, +)) levels"
         }
     }
+
+    /// The dock's header once its Ask to Buy is approved.
+    var yours: String { pack.map { "\($0.name) is yours" } ?? "every pack is yours" }
+    /// A line under the facts, owned or not.
+    var note: String? { self == .pack(.prism) ? "letters for colour-blind play, in settings" : nil }
 
     var free: String {
         switch self {
@@ -112,24 +134,6 @@ enum Offer: Hashable, Sendable {
     }
 
     var gradient: LinearGradient { LinearGradient(colors: sweep, startPoint: .leading, endPoint: .trailing) }
-
-    var layout: Layout {
-        switch self {
-        case .pack(.lens), .complete: .quad
-        default: .tri
-        }
-    }
-
-    /// The placeholder clip's scramble, bottom first.
-    var scramble: [Twist] {
-        switch self {
-        case .pack(.firstStir): [Twist(rod: 0, steps: 3), Twist(rod: 2, steps: -4), Twist(rod: 1, steps: 5)]
-        case .pack(.lens): [Twist(rod: 1, steps: -3), Twist(rod: 3, steps: 4), Twist(rod: 0, steps: 5), Twist(rod: 2, steps: -4)]
-        case .pack(.escapement): [Twist(rod: 2, steps: 4), Twist(rod: 0, steps: -5), Twist(rod: 1, steps: 3)]
-        case .pack(.prism): [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: -3), Twist(rod: 2, steps: 3)]
-        case .complete: [Twist(rod: 0, steps: 4), Twist(rod: 2, steps: -5), Twist(rod: 3, steps: 3), Twist(rod: 1, steps: -4)]
-        }
-    }
 }
 
 extension Store {
@@ -226,347 +230,87 @@ extension Font {
     }
 }
 
+/// What each pack's cover has shown: whether its card has opened since the pack fit the player, and how many levels it
+/// had then, so the cover says "new" once for each (Jack's call C6, round 13).
+enum Marks {
+    /// False for a harnessed launch, whose cards' openings last only that launch.
+    @MainActor static var stored = true
+
+    static func fitKey(_ pack: Pack) -> String { "shelf.fit.\(pack.rawValue)" }
+    static func levelsKey(_ pack: Pack) -> String { "shelf.levels.\(pack.rawValue)" }
+
+    /// It fits and its card hasn't opened since, or an update added levels since it last opened.
+    static func new(_ pack: Pack, fits: Bool, in defaults: UserDefaults = .standard) -> Bool {
+        let seen = defaults.integer(forKey: levelsKey(pack))
+        return (fits && !defaults.bool(forKey: fitKey(pack))) || (seen > 0 && pack.levels.count > seen)
+    }
+
+    /// Its card has opened.
+    @MainActor static func seen(_ pack: Pack, fits: Bool, store: Bool = stored, in defaults: UserDefaults = .standard) {
+        var marks: [String: Any] = [levelsKey(pack): pack.levels.count]
+        if fits { marks[fitKey(pack)] = true }
+        if store { for (key, value) in marks { defaults.set(value, forKey: key) } } else { defaults.register(defaults: marks) }
+    }
+
+    /// The line under a cover's name: "new", else how many of an unowned pack's free levels are solved, else nothing.
+    static func line(_ pack: Pack, owned: Bool, fits: Bool, played: Int?) -> (words: String, spoken: String)? {
+        if new(pack, fits: fits) { return ("new", "new") }
+        guard !owned, let played else { return nil }
+        return ("\(played)/\(pack.taste) free", "\(played) of \(pack.taste) free levels solved")
+    }
+}
+
 // MARK: - Covers
 
-/// Each offer's cover, baked once per size: the picture its clip stirs.
-@MainActor
-enum Cover {
-    private static var cache: [String: UIImage] = [:]
-
-    static func image(_ offer: Offer, side: CGFloat, scale: CGFloat) -> UIImage? {
-        let key = "\(offer.productID) \(side) \(scale)"
-        if let image = cache[key] { return image }
-        let renderer = ImageRenderer(content: Canvas { ctx, size in draw(offer, ctx, r: size.width / 2) }
-            .frame(width: side, height: side))
-        renderer.scale = scale
-        renderer.isOpaque = true
-        renderer.colorMode = .extendedLinear
-        let image = renderer.uiImage
-        cache[key] = image
-        return image
-    }
-
-    static func draw(_ offer: Offer, _ ctx: GraphicsContext, r: CGFloat) {
-        switch offer {
-        case .pack(.firstStir): firstStir(ctx, r: r)
-        case .pack(.lens): lens(ctx, r: r)
-        case .pack(.escapement): escapement(ctx, r: r)
-        case .pack(.prism): prism(ctx, r: r)
-        case .complete:
-            // An equal wedge of the tank for each pack it grants, cut from the centre, the first centred at the top.
-            let packs = Pack.sold(), span = 360 / Double(packs.count), start = -90 - span / 2
-            for (k, p) in packs.enumerated() {
-                var c = ctx
-                c.clip(to: wedge(r, from: start + span * Double(k), to: start + span * Double(k + 1)))
-                draw(.pack(p), c, r: r)
-            }
-            var seams = Path()
-            for k in packs.indices {
-                let a = (start + span * Double(k)) * .pi / 180
-                seams.move(to: CGPoint(x: r, y: r))
-                seams.addLine(to: CGPoint(x: r + 1.5 * r * cos(a), y: r + 1.5 * r * sin(a)))
-            }
-            ctx.stroke(seams, with: .color(.white.opacity(0.85)), lineWidth: 0.008 * r)
-        }
-    }
-
-    private static func wedge(_ r: CGFloat, from a0: Double, to a1: Double) -> Path {
-        var p = Path()
-        p.move(to: CGPoint(x: r, y: r))
-        p.addArc(center: CGPoint(x: r, y: r), radius: 1.5 * r, startAngle: .degrees(a0), endAngle: .degrees(a1), clockwise: false)
-        p.closeSubpath()
-        return p
-    }
-
-    /// Tank units (radius 1, y down) to points.
-    private struct Units {
-        let r: CGFloat
-        func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r + x * r, y: r + y * r) }
-        func circle(_ x: Double, _ y: Double, _ rad: Double) -> Path {
-            Path(ellipseIn: CGRect(x: r + (x - rad) * r, y: r + (y - rad) * r, width: 2 * rad * r, height: 2 * rad * r))
-        }
-        func ellipse(_ x: Double, _ y: Double, _ rx: Double, _ ry: Double) -> Path {
-            Path(ellipseIn: CGRect(x: r + (x - rx) * r, y: r + (y - ry) * r, width: 2 * rx * r, height: 2 * ry * r))
-        }
-        func line(_ x0: Double, _ y0: Double, _ x1: Double, _ y1: Double) -> Path {
-            var path = Path()
-            path.move(to: p(x0, y0))
-            path.addLine(to: p(x1, y1))
-            return path
-        }
-    }
-
-    /// The night's last scene, its first stir: a cup of tea under a rainy window, the lighthouse out at sea.
-    private static func firstStir(_ ctx: GraphicsContext, r: CGFloat) {
-        let u = Units(r: r)
-        ctx.fill(Path(CGRect(x: 0, y: 0, width: 2 * r, height: 2 * r)), with: .color(.black))
-        let gold = Color(0xFFC857), rose = Color(0xFF6FA5), indigo = Color(0x7A7CFF), teal = Color(0x2EE6C5)
-        let amber = Color(0xFFB000), w = 0.016 * r
-        neon(ctx, r: r, glows: [(0.04, 0.35), (0.01, 0.8)]) { g in
-            // The window and its cross.
-            g.stroke(Path(roundedRect: CGRect(x: u.p(-0.62, -0.84).x, y: u.p(-0.62, -0.84).y, width: 1.24 * r, height: 0.78 * r),
-                          cornerRadius: 0.05 * r), with: .color(indigo), lineWidth: w)
-            g.stroke(u.line(0, -0.84, 0, -0.06), with: .color(indigo), lineWidth: w)
-            g.stroke(u.line(-0.62, -0.47, 0.62, -0.47), with: .color(indigo), lineWidth: w)
-            // Rain, slanting one way.
-            var rng = SplitMix64(state: 5)
-            var rain = Path()
-            for _ in 0..<30 {
-                let x = Double.random(in: -0.56..<0.5, using: &rng), y = Double.random(in: -0.8 ..< -0.2, using: &rng)
-                rain.addPath(u.line(x, y, x + 0.03, y + 0.08))
-            }
-            g.stroke(rain, with: .color(indigo.opacity(0.7)), lineWidth: 0.6 * w)
-            // A crescent moon in the top right pane.
-            var moon = Path()
-            moon.addArc(center: u.p(0.34, -0.68), radius: 0.09 * r, startAngle: .degrees(-40), endAngle: .degrees(200), clockwise: false)
-            moon.addArc(center: u.p(0.38, -0.71), radius: 0.07 * r, startAngle: .degrees(195), endAngle: .degrees(-35), clockwise: true)
-            g.stroke(moon, with: .color(amber), lineWidth: w)
-            // The sea and the lighthouse, its beam to the right.
-            var sea = Path()
-            sea.move(to: u.p(-0.6, -0.2))
-            for k in 1...12 {
-                let x = -0.6 + 0.1 * Double(k)
-                sea.addQuadCurve(to: u.p(x, -0.2), control: u.p(x - 0.05, k % 2 == 0 ? -0.24 : -0.16))
-            }
-            g.stroke(sea, with: .color(teal), lineWidth: w)
-            var tower = Path()
-            tower.move(to: u.p(-0.38, -0.2))
-            tower.addLine(to: u.p(-0.34, -0.38))
-            tower.addLine(to: u.p(-0.28, -0.38))
-            tower.addLine(to: u.p(-0.24, -0.2))
-            g.stroke(tower, with: .color(amber), lineWidth: w)
-            g.stroke(u.line(-0.27, -0.38, -0.06, -0.44), with: .color(amber.opacity(0.6)), lineWidth: 0.6 * w)
-            g.stroke(u.line(-0.27, -0.38, -0.06, -0.32), with: .color(amber.opacity(0.6)), lineWidth: 0.6 * w)
-            // The table's edge, the saucer and the cup.
-            g.stroke(u.line(-0.98, 0.56, 0.98, 0.56), with: .color(rose.opacity(0.8)), lineWidth: w)
-            g.stroke(u.ellipse(0, 0.47, 0.38, 0.07), with: .color(gold), lineWidth: w)
-            g.stroke(u.ellipse(0, 0.12, 0.27, 0.06), with: .color(gold), lineWidth: w)
-            var cup = Path()
-            cup.move(to: u.p(-0.27, 0.12))
-            cup.addCurve(to: u.p(0, 0.44), control1: u.p(-0.27, 0.34), control2: u.p(-0.16, 0.44))
-            cup.addCurve(to: u.p(0.27, 0.12), control1: u.p(0.16, 0.44), control2: u.p(0.27, 0.34))
-            cup.move(to: u.p(0.25, 0.18))
-            cup.addCurve(to: u.p(0.2, 0.36), control1: u.p(0.46, 0.14), control2: u.p(0.44, 0.38))
-            g.stroke(cup, with: .color(gold), lineWidth: w)
-            // The stir in the tea.
-            var swirl = Path()
-            for k in 0...60 {
-                let t = Double(k) / 60, a = 3 * .pi * t, rad = 0.2 * (1 - t) + 0.02
-                let q = u.p(rad * cos(a), 0.12 + 0.22 * rad * sin(a))
-                if k == 0 { swirl.move(to: q) } else { swirl.addLine(to: q) }
-            }
-            g.stroke(swirl, with: .color(rose), lineWidth: 0.7 * w)
-            // Steam rising into the window.
-            var steam = Path()
-            for x0 in [-0.11, 0.0, 0.11] {
-                steam.move(to: u.p(x0, 0.0))
-                steam.addCurve(to: u.p(x0, -0.3), control1: u.p(x0 + 0.08, -0.1), control2: u.p(x0 - 0.08, -0.2))
-            }
-            g.stroke(steam, with: .color(rose.opacity(0.85)), lineWidth: 0.8 * w)
-        }
-    }
-
-    /// An eye in three dot screens, white ink over them: the screen's pitch is the ruler a zoom is read against.
-    private static func lens(_ ctx: GraphicsContext, r: CGFloat) {
-        let u = Units(r: r)
-        ctx.fill(Path(CGRect(x: 0, y: 0, width: 2 * r, height: 2 * r)), with: .color(.black))
-        let pitch = 0.036, cy = -0.04
-        // The eye's almond: |y - cy| under a parabola between the corners at x = ±0.74.
-        func inAlmond(_ x: Double, _ y: Double) -> Bool { abs(y - cy) < 0.3 * (1 - (x / 0.74) * (x / 0.74)) }
-        func screen(_ degrees: Double, _ coverage: (Double, Double) -> Double) -> Path {
-            let a = degrees * .pi / 180, c = cos(a), s = sin(a)
-            var dots = Path()
-            for i in -32...32 {
-                for j in -32...32 {
-                    let gx = Double(i) * pitch, gy = Double(j) * pitch
-                    let x = gx * c - gy * s, y = gx * s + gy * c
-                    guard x * x + y * y < 1.1 else { continue }
-                    let k = coverage(x, y)
-                    guard k > 0.02 else { continue }
-                    dots.addPath(u.circle(x, y, 0.56 * pitch * sqrt(min(k, 1))))
-                }
-            }
-            return dots
-        }
-        var g = ctx
-        g.blendMode = .plusLighter
-        let iris = 0.26, pupil = 0.1
-        g.fill(screen(15) { x, y in
-            let d = hypot(x, y - cy)
-            return d < iris && d > pupil ? 0.25 + 0.75 * (d - pupil) / (iris - pupil) : 0
-        }, with: .color(.neonCyan))
-        g.fill(screen(75) { x, y in inAlmond(x, y) ? 0 : 0.85 - 0.8 * (y + 1) / 2 }, with: .color(.magenta))
-        g.fill(screen(0) { x, y in inAlmond(x, y) ? 0 : 0.05 + 0.8 * (y + 1) / 2 }, with: .color(Color(0xFFE600)))
-        let ink = Color.white, w = 0.014 * r
-        var almond = Path()
-        almond.move(to: u.p(-0.74, cy))
-        almond.addQuadCurve(to: u.p(0.74, cy), control: u.p(0, cy - 0.6))
-        almond.addQuadCurve(to: u.p(-0.74, cy), control: u.p(0, cy + 0.6))
-        ctx.stroke(almond, with: .color(ink), lineWidth: 1.4 * w)
-        ctx.stroke(u.circle(0, cy, iris), with: .color(ink), lineWidth: w)
-        ctx.fill(u.circle(0, cy, pupil), with: .color(.black))
-        ctx.stroke(u.circle(0, cy, pupil), with: .color(ink), lineWidth: w)
-        ctx.fill(u.circle(0.07, cy - 0.1, 0.035), with: .color(ink))
-        // Lashes over the upper lid only, so up reads in the eye.
-        var lashes = Path()
-        for k in 0..<7 {
-            let x = -0.5 + Double(k) / 6
-            let y = cy - 0.3 * (1 - (x / 0.74) * (x / 0.74))
-            lashes.addPath(u.line(x, y, x * 1.15, y - 0.13))
-        }
-        ctx.stroke(lashes, with: .color(ink), lineWidth: w)
-        // A glint, top right.
-        var star = Path()
-        let sx = 0.56, sy = -0.58
-        star.move(to: u.p(sx, sy - 0.13))
-        star.addQuadCurve(to: u.p(sx + 0.13, sy), control: u.p(sx + 0.02, sy - 0.02))
-        star.addQuadCurve(to: u.p(sx, sy + 0.13), control: u.p(sx + 0.02, sy + 0.02))
-        star.addQuadCurve(to: u.p(sx - 0.13, sy), control: u.p(sx - 0.02, sy + 0.02))
-        star.addQuadCurve(to: u.p(sx, sy - 0.13), control: u.p(sx - 0.02, sy - 0.02))
-        ctx.fill(star, with: .color(ink))
-        // The registration mark, bottom left.
-        let m = (-0.5, 0.62)
-        ctx.stroke(u.circle(m.0, m.1, 0.06), with: .color(ink), lineWidth: 0.6 * w)
-        ctx.stroke(u.line(m.0 - 0.1, m.1, m.0 + 0.1, m.1), with: .color(ink), lineWidth: 0.6 * w)
-        ctx.stroke(u.line(m.0, m.1 - 0.1, m.0, m.1 + 0.1), with: .color(ink), lineWidth: 0.6 * w)
-    }
-
-    /// A plate from the problem book: engine-turned rays, a barleycorn band, the clock's vermilion sub-dial and the
-    /// ratchet, in ink on bone paper. Ink lines keep to 2 px or more, or the four-tap average fades them on paper.
-    private static func escapement(_ ctx: GraphicsContext, r: CGFloat) {
-        let u = Units(r: r)
-        let paper = Color(0xF3EAD8), ink = Color(0x1A1A1A), red = Color(0xD8402A)
-        let hair = max(0.006 * r, 2 / 3), w = max(0.012 * r, 1)
-        ctx.fill(Path(CGRect(x: 0, y: 0, width: 2 * r, height: 2 * r)), with: .color(paper))
-        var rays = Path()
-        for k in 0..<44 {
-            let a = (2 + 2 * Double(k)) * .pi / 180
-            rays.addPath(u.line(-0.95, -0.95, -0.95 + 2.8 * cos(a), -0.95 + 2.8 * sin(a)))
-        }
-        ctx.stroke(rays, with: .color(ink.opacity(0.85)), lineWidth: hair)
-        // The barleycorn band, across the bottom.
-        ctx.fill(Path(CGRect(x: 0, y: u.p(0, 0.42).y, width: 2 * r, height: 0.26 * r)), with: .color(paper))
-        var corn = Path()
-        corn.addPath(u.line(-1, 0.42, 1, 0.42))
-        corn.addPath(u.line(-1, 0.68, 1, 0.68))
-        for row in 0..<5 {
-            let y = 0.46 + 0.045 * Double(row)
-            corn.move(to: u.p(-1, y))
-            var x = -1.0, up = true
-            while x < 1 {
-                x += 0.04
-                corn.addLine(to: u.p(x, y + (up ? -0.018 : 0.018)))
-                up.toggle()
-            }
-        }
-        ctx.stroke(corn, with: .color(ink), lineWidth: hair)
-        // The ratchet: saw teeth, a hub and the pawl resting in a tooth.
-        let rc = (-0.42, 0.08)
-        ctx.fill(u.circle(rc.0, rc.1, 0.25), with: .color(paper))
-        var wheel = Path()
-        for k in 0...12 {
-            let a0 = Double(k) / 12 * 2 * .pi - .pi / 2, a1 = a0 + 2 * .pi / 12 * 0.85
-            let outer = u.p(rc.0 + 0.22 * cos(a0), rc.1 + 0.22 * sin(a0))
-            if k == 0 { wheel.move(to: outer) } else { wheel.addLine(to: outer) }
-            wheel.addLine(to: u.p(rc.0 + 0.16 * cos(a1), rc.1 + 0.16 * sin(a1)))
-            wheel.addLine(to: u.p(rc.0 + 0.16 * cos(a0 + 2 * .pi / 12), rc.1 + 0.16 * sin(a0 + 2 * .pi / 12)))
-        }
-        ctx.stroke(wheel, with: .color(ink), lineWidth: w)
-        ctx.stroke(u.circle(rc.0, rc.1, 0.04), with: .color(ink), lineWidth: w)
-        var pawl = Path()
-        pawl.move(to: u.p(rc.0 + 0.3, rc.1 - 0.3))
-        pawl.addQuadCurve(to: u.p(rc.0 + 0.05, rc.1 - 0.2), control: u.p(rc.0 + 0.14, rc.1 - 0.32))
-        ctx.stroke(pawl, with: .color(ink), lineWidth: w)
-        ctx.fill(u.circle(rc.0 + 0.3, rc.1 - 0.3, 0.025), with: .color(ink))
-        // The clock's sub-dial, twelve at the top.
-        let dc = (0.3, -0.2), dr = 0.3
-        ctx.fill(u.circle(dc.0, dc.1, dr), with: .color(paper))
-        ctx.stroke(u.circle(dc.0, dc.1, dr), with: .color(red), lineWidth: w)
-        ctx.stroke(u.circle(dc.0, dc.1, dr - 0.06), with: .color(red), lineWidth: hair)
-        var ticks = Path()
-        for k in 0..<12 {
-            let a = Double(k) / 12 * 2 * .pi - .pi / 2, inner = k % 3 == 0 ? dr - 0.11 : dr - 0.06
-            ticks.addPath(u.line(dc.0 + inner * cos(a), dc.1 + inner * sin(a), dc.0 + dr * cos(a), dc.1 + dr * sin(a)))
-        }
-        ctx.stroke(ticks, with: .color(red), lineWidth: w)
-        ctx.draw(Text("12").font(.system(size: 0.075 * r, weight: .semibold, design: .serif)).foregroundStyle(red),
-                 at: u.p(dc.0, dc.1 - dr + 0.16))
-        let ha: Double = .pi / 3 - .pi / 2
-        ctx.stroke(u.line(dc.0, dc.1, dc.0 + 0.19 * cos(ha), dc.1 + 0.19 * sin(ha)), with: .color(ink), lineWidth: 1.6 * w)
-        ctx.fill(u.circle(dc.0, dc.1, 0.025), with: .color(ink))
-        ctx.draw(Text("Unstir in 4.").font(.system(size: 0.09 * r, design: .serif).italic()).foregroundStyle(ink),
-                 at: u.p(0, 0.8))
-    }
-
-    /// The first tray's plate, the fern, printed three times in red, green and blue light, each a little off register:
-    /// white only where all three meet, as a specimen looks with every channel stirred apart by a hair.
-    private static func prism(_ ctx: GraphicsContext, r: CGFloat) {
-        ctx.fill(Path(CGRect(x: 0, y: 0, width: 2 * r, height: 2 * r)), with: .color(.black))
-        var strokes: [Double: Path] = [:]
-        for line in Engraving.lines(.fern) {
-            strokes[line.width, default: Path()].addLines(line.points.map { CGPoint(x: r + $0.x * r, y: r + $0.y * r) })
-        }
-        var g = ctx
-        g.blendMode = .plusLighter
-        for (colour, dx, dy) in [(Color(red: 1, green: 0, blue: 0), -0.012, 0.006), (Color(red: 0, green: 1, blue: 0), 0.01, 0.008),
-                                 (Color(red: 0, green: 0, blue: 1), 0.002, -0.012)] {
-            var c = g
-            c.translateBy(x: dx * r, y: dy * r)
-            // Twice the plate's own weight, since a cover is drawn small.
-            for (width, path) in strokes {
-                c.stroke(path, with: .color(colour), style: StrokeStyle(lineWidth: max(2 * width * r, 0.8), lineCap: .round, lineJoin: .round))
-            }
-        }
-    }
+extension Offer {
+    /// The levels its cover stirs: its clip's, so the dock shows what the card plays; Complete's, each sold pack's.
+    var covers: [Level] { Clip.of(self).reels.map(\.level) }
 }
 
-// MARK: - The tank
-
-/// The tank's own map, each entry of `twists` at its own angle (rod, radians), over a flat picture `side` wide.
-struct Swirled: ViewModifier {
-    let layout: Layout
-    let twists: [(rod: Int, angle: Double)]
-    let side: CGFloat
-    @Environment(\.displayScale) private var scale
-
-    func body(content: Content) -> some View {
-        let rods = layout.rods
-        var floats = twists.flatMap { [Float(rods[$0.rod].x), Float(rods[$0.rod].y), Float(rods[$0.rod].z), Float($0.angle)] }
-        let n = twists.count
-        if floats.isEmpty { floats = [0, 0, 0, 0] }
-        let r = side / 2
-        return content.layerEffect(
-            ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(30),
-                                 .float(Float(Tank.plateau)), .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)),
-                                 .float(0), .float3(0, 0, -1), .float(0)),
-            maxSampleOffset: CGSize(width: side, height: side))
-    }
-}
-
-/// An offer's cover in a tank. `clock` nil draws it still, `stirred` of the way; otherwise the placeholder clip at that
-/// time: clean, stirred in bottom first, then unstirred top first a move at a time.
+/// An offer's cover in a tank: its clip's level on its own picture, as the game draws it, stirred by the level's own
+/// dealt stack. `clock` nil holds it as dealt; otherwise the loop at that time: clean, stirred in bottom first, then
+/// unstirred top first a move at a time. Complete's shows a wedge of each pack's, cut from the centre, the first
+/// centred at the top, each on its own loop.
 struct PackTank: View {
     let offer: Offer
     let side: CGFloat
     var clock: Double?
-    var stirred = 0.4
-    @Environment(\.displayScale) private var scale
 
     static let period = 7.0
 
     var body: some View {
-        let image = Cover.image(offer, side: side, scale: scale)
-        let wind = clock.map { Self.wind(offer.scramble.count, at: $0) }
-            ?? Array(repeating: stirred, count: offer.scramble.count)
-        let twists = zip(offer.scramble, wind).map { ($0.rod, Double($0.steps) * Tank.step * $1) }
-        Group {
-            if let image { Image(uiImage: image).resizable() } else { Color.black }
+        let levels = offer.covers, span = 360 / Double(levels.count), start = -90 - span / 2, r = side / 2
+        ZStack {
+            ForEach(levels.indices, id: \.self) { k in
+                tank(levels[k]).clipShape(Wedge(from: start + span * Double(k), to: start + span * Double(k + 1)))
+            }
+            if levels.count > 1 {
+                Path { p in
+                    for k in levels.indices {
+                        let a = (start + span * Double(k)) * .pi / 180
+                        p.move(to: CGPoint(x: r, y: r))
+                        p.addLine(to: CGPoint(x: r + r * cos(a), y: r + r * sin(a)))
+                    }
+                }
+                .stroke(Color.white.opacity(0.85), lineWidth: 0.5)
+            }
         }
         .frame(width: side, height: side)
-        .modifier(Swirled(layout: offer.layout, twists: twists, side: side))
         .clipShape(Circle())
-        .overlay { Bezel(r: side / 2) }
+        .overlay { Bezel(r: r) }
         .accessibilityHidden(true)
+    }
+
+    private func tank(_ level: Level) -> some View {
+        let dealt = Game.dealt(level)
+        let wind = clock.map { Self.wind(dealt.count, at: $0) } ?? Array(repeating: 1, count: dealt.count)
+        // The entries wound away are the identity, so they leave the shader's stack.
+        let on = zip(dealt, wind).filter { $0.1 > 0 }
+        var stir = Unstirred(stack: on.map(\.0.twist), layout: level.layout, lenses: level.lenses, masks: level.masks,
+                             liveRod: nil, liveAngle: 0, side: side, fillEntries: level.picture.fillEntries)
+        stir.shares = on.map(\.1)
+        return LevelPicture(level: level, played: Reel.played(level, on.map(\.0)), wound: dealt.count - on.count, side: side)
+            .modifier(stir)
     }
 
     /// Each entry's share of its turn, 0 clean to 1 stirred, `t` seconds into the clip.
@@ -578,6 +322,21 @@ struct PackTank: View {
             if t < 2.6 { return ease((t - 1.0 - Double(k) * dIn) / dIn) }
             return 1 - ease((t - 3.2 - Double(m - 1 - k) * dOut) / (0.8 * dOut))
         }
+    }
+}
+
+/// A wedge from the centre between two angles in degrees, clockwise from three o'clock; the whole frame at 360.
+private struct Wedge: Shape {
+    let from: Double, to: Double
+
+    func path(in rect: CGRect) -> Path {
+        guard to - from < 360 else { return Path(rect) }
+        let c = CGPoint(x: rect.midX, y: rect.midY)
+        var p = Path()
+        p.move(to: c)
+        p.addArc(center: c, radius: rect.width, startAngle: .degrees(from), endAngle: .degrees(to), clockwise: false)
+        p.closeSubpath()
+        return p
     }
 }
 
@@ -700,8 +459,12 @@ struct PackCard: View {
                                         }
                                     }
                             }
+                            if offer.pack == nil, state != .owned, let saving = store.saving {
+                                fact("save", Text("\(saving) on the packs you don't have"))
+                            }
                         }
                         .padding(.top, 32)
+                        if let note = offer.note { detail(note).padding(.top, 12) }
                         if offer.arriving {
                             Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -722,9 +485,9 @@ struct PackCard: View {
                         .padding(.top, levels.isEmpty ? 0 : 16)
                         .id("buy")
                         .padding(.top, levels.isEmpty ? 0 : 16)
-                        if offer.pack != nil, state != .owned, store.canPay, store.state(.complete) != .owned,
+                        if offer.pack != nil, state != .owned, store.canPay, let saving = store.saving,
                            Offer.shelf().contains(.complete) {
-                            completeLine.padding(.top, 14)
+                            completeLine(saving).padding(.top, 14)
                         }
                         if Pack.sold().contains(where: { store.state($0) != .owned }) {
                             restore.padding(.top, 18).padding(.bottom, 10)
@@ -775,7 +538,11 @@ struct PackCard: View {
         .task { await store.fetchPrices() }
         .onAppear {
             Log.write("card \(offer.key) opens")
-            if let pack = offer.pack { Analytics.shared.cardSeen(pack) }
+            if state == .owned { store.said(offer) }
+            if let pack = offer.pack {
+                Analytics.shared.cardSeen(pack)
+                Marks.seen(pack, fits: pack.fits())
+            }
         }
         .onChange(of: Reading(state: state, ready: store.ready)) { old, new in
             // Until the launch's first read has finished, an owned pack reads as unowned: that read is no change.
@@ -784,10 +551,13 @@ struct PackCard: View {
             // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
             if Self.lands(old.state, new.state, ready: old.ready) {
                 landings += 1
+                store.landed = true
                 Sound.shared.play(.solve)
+                // An approved Ask to Buy landing here is said by the landing, not the dock.
+                store.said(offer)
             }
         }
-        .sensoryFeedback(.success, trigger: landings)
+        .haptic(.success, trigger: landings)
     }
 
     private struct Reading: Equatable {
@@ -846,6 +616,7 @@ struct PackCard: View {
                     heading(chapter, of: levels.filter { $0.chapter == chapter }).padding(.top, i == 0 ? 0 : 18)
                 }
                 let open = store.access(level) != .needsCard, best = Best.load(level.id)
+                let tried = best == nil && Best.started(level.id)
                 // A locked row points at buying rather than doing nothing.
                 Button {
                     if open { return onPlay(level) }
@@ -865,6 +636,8 @@ struct PackCard: View {
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.mono(.caption2))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
+                        } else if tried {
+                            Text("tried").font(.mono(.caption2)).opacity(0.4)
                         }
                     }
                     .padding(.vertical, 9)
@@ -874,8 +647,8 @@ struct PackCard: View {
                 }
                 .buttonStyle(Sounding())
                 .rowHairline(offer.glow, level.id == focus?.id ? lit : 0, inset: 10)
-                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" } ?? ""
-                                    : "locked, needs the pack")
+                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" }
+                                        ?? (tried ? "tried" : "") : "locked, needs the pack")
                 .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
             }
         }
@@ -1057,16 +830,19 @@ struct PackCard: View {
     }
 
     /// Complete's failure stays off the pack's own status, so it is said here, beside the button that tried.
-    private var completeLine: some View {
-        let complete = store.price(Pack.completeID)
+    private func completeLine(_ saving: String) -> some View {
+        let complete = store.price(Pack.completeID) ?? ""
+        let quiet = Color.text.opacity(0.55)
+        // Non-breaking within each part, so a narrow phone or a large size wraps the line only before "· save".
+        func joined(_ s: String) -> String { s.replacingOccurrences(of: " ", with: "\u{00A0}") }
         return VStack(alignment: .leading, spacing: 6) {
             Button { buy(.complete) } label: {
-                HStack(spacing: 6) {
-                    Text("or all \(Offer.countWord(Pack.sold().count)) in Complete").opacity(0.55)
-                    if let complete { Text(complete).opacity(0.75) }
-                    Text("\u{203A}").opacity(0.55)
-                }
+                let all = Text("or all \(Offer.countWord(Pack.sold().count)) in Complete\u{00A0}\u{00B7}\u{00A0}").foregroundStyle(quiet)
+                let save = Text(joined("\u{00B7} save \(saving) \u{203A}")).foregroundStyle(quiet)
+                Text("\(all)\(Text(joined(complete)).foregroundStyle(Color.text.opacity(0.75))) \(save)")
                 .font(.mono(.caption))
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
                 // Its failure line is 6 pt below.
                 .hit(10, 8)
             }
@@ -1074,7 +850,7 @@ struct PackCard: View {
             // Complete's own request is asked again only from Complete's card.
             .disabled(buying || store.state(.complete) == .pending)
             .accessibilityLabel("Buy Complete, every pack")
-            .accessibilityValue(complete ?? "")
+            .accessibilityValue("\(complete), saves \(saving)")
             if store.state(.complete) == .failed {
                 Text("Complete's purchase didn't go through").font(.mono(.caption, .semibold)).foregroundStyle(Color.magenta)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1122,21 +898,46 @@ private struct PulsingDot: View {
 // MARK: - The dock
 
 /// The menu's shelf: a live cover per pack and Complete along the bottom, each opening its card. Out of step, so the
-/// dock never stirs all at once.
-struct PackDock: View {
+/// dock never stirs all at once. Equatable on what it is handed, since the menu redraws on every frame of a scroll and
+/// each cover's marks read the saved bests.
+struct PackDock: View, Equatable {
+    /// The dock waits for plughole 09 (Jack's call C5, round 13). A pack owned or asked for keeps it after a reinstall
+    /// that lost the bests.
+    static func shown(best: (String) -> Best? = Best.load, unlocked: Bool = Best.unlocked,
+                      state: (Pack) -> Purchase = { Store.shared.state($0) }) -> Bool {
+        best(Level.plughole[8].id) != nil || unlocked || Pack.sold().contains { ![.unowned, .failed].contains(state($0)) }
+    }
+
     let open: (Offer, UnitPoint) -> Void
-    var held: Double?
+    let held: Double?
     /// The card covers it.
-    var paused = false
+    let paused: Bool
+    /// A card or the settings sheet is over it, so an approval waits to be said until it shows.
+    let covered: Bool
     var store = Store.shared
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Approvals already announced: a card or the settings covering the dock restarts the header's time, not its
+    /// announcement.
+    @State private var announced: Set<Offer> = []
+
+    nonisolated static func == (a: PackDock, b: PackDock) -> Bool {
+        a.held == b.held && a.paused == b.paused && a.covered == b.covered
+    }
 
     var body: some View {
         VStack(spacing: 10) {
             let owned = Pack.sold().filter { store.state($0) == .owned }
+            // Complete only while it costs less than the packs left: owned, it saves nothing.
+            let shelf = Offer.shelf().filter { $0 != .complete || store.offersComplete }
             HStack {
-                Text(owned.isEmpty ? "PACKS \u{00B7} PAID ADD-ONS" : "PACKS").font(.mono(.caption2, .semibold)).tracking(2)
-                    .opacity(0.38)
+                if let yours = store.approved.first {
+                    Text(yours.yours).font(.mono(.caption2, .semibold)).tracking(1).foregroundStyle(yours.glow)
+                        .shadow(color: yours.glow.opacity(0.6), radius: 4).transition(.opacity)
+                } else {
+                    Text(owned.isEmpty ? "PACKS \u{00B7} PAID ADD-ONS" : "PACKS").font(.mono(.caption2, .semibold)).tracking(2)
+                        .opacity(0.38).transition(.opacity)
+                }
                 Spacer()
                 if typeSize < .xxLarge, owned.count < Pack.sold().count {
                     Text("first 3 levels of each free").font(.mono(.caption2)).opacity(0.3)
@@ -1145,11 +946,23 @@ struct PackDock: View {
             .padding(.horizontal, 20)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
+            .animation(.easeInOut(duration: 0.4), value: store.approved.first)
+            .task(id: Saying(offer: store.approved.first, covered: covered)) {
+                // Held under UNSTIR_CLOCK, for its shot.
+                guard let offer = store.approved.first, !covered else { return }
+                if announced.insert(offer).inserted { AccessibilityNotification.Announcement(offer.yours).post() }
+                // Five seconds in sight: covered, it waits.
+                guard held == nil else { return }
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { return }
+                store.said(offer)
+            }
             HStack(alignment: .top, spacing: 0) {
-                // Complete owned leaves nothing on its card to do.
-                let shelf = Offer.shelf().filter { $0 != .complete || store.state(.complete) != .owned }
-                ForEach(Array(shelf.enumerated()), id: \.offset) { i, offer in
+                ForEach(Array(shelf.enumerated()), id: \.element) { i, offer in
                     let x = (Double(i) + 0.5) / Double(shelf.count), state = store.state(offer)
+                    // Unowned until the launch's first read has finished, so a pack's free levels wait for it.
+                    let line = offer.pack.flatMap { Marks.line($0, owned: state == .owned || !store.ready, fits: $0.fits(),
+                                                                played: $0.tastePlayed()) }
                     Button { open(offer, UnitPoint(x: x, y: 0.88)) } label: {
                         VStack(spacing: 8) {
                             LoopingTank(offer: offer, side: 66, held: held, offset: 1.75 * Double(i), interval: 1.0 / 30,
@@ -1164,20 +977,28 @@ struct PackDock: View {
                                         .accessibilityHidden(true)
                                 }
                             }
+                            // Its room kept without one, so a mark clearing never moves the dock.
+                            let new = line?.words == "new"
+                            Text(line?.words ?? " ").font(.mono(.caption2, new ? .semibold : .regular))
+                                .foregroundStyle(new ? offer.glow : Color.text.opacity(0.45))
+                                .shadow(color: new ? offer.glow.opacity(0.6) : .clear, radius: 3)
+                                .padding(.top, -4)
                         }
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(Sounding())
                     .accessibilityLabel("\(offer.name), \(offer.pack == nil ? "every pack" : "pack")")
-                    .accessibilityValue((store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
-                                        ?? store.price(offer.productID) ?? "")
+                    .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
+                                         ?? store.price(offer.productID), line?.spoken].compactMap { $0 }.joined(separator: ", "))
                     .accessibilityHint(offer.pitch)
                     .accessibilityShowsLargeContentViewer {
                         Text(offer.name)
                     }
+                    .transition(.opacity)
                 }
             }
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: shelf)
             .padding(.horizontal, 8)
         }
         // A bar, like a tab bar: its names stop growing where four no longer fit, and a long press shows one large.
@@ -1197,5 +1018,10 @@ struct PackDock: View {
         .overlay(alignment: .top) {
             Rectangle().fill(Offer.complete.gradient).frame(height: 0.5).opacity(0.45).padding(.horizontal, 20)
         }
+    }
+
+    private struct Saying: Equatable {
+        let offer: Offer?
+        let covered: Bool
     }
 }

@@ -28,6 +28,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>PolicyURL</key>
+	<string>$(POLICY_URL)</string>
+	<key>SupportAddress</key>
+	<string>$(SUPPORT_ADDRESS)</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
