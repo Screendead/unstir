@@ -1403,6 +1403,16 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(opening(harnessed: true))
     }
 
+    /// Opening the daily or endless retires the modes' new mark; nothing else does, nor one that doesn't open.
+    @MainActor func testOpeningADailyOrEndlessSeesTheModes() {
+        XCTAssertTrue(RootView.seesModes(.daily(), opens: true))
+        XCTAssertTrue(RootView.seesModes(.endless(Run(seed: 1)), opens: true))
+        XCTAssertFalse(RootView.seesModes(.daily(), opens: false))
+        XCTAssertFalse(RootView.seesModes(Level.plughole[0], opens: true))
+        XCTAssertFalse(RootView.seesModes(.sandbox, opens: true))
+        XCTAssertFalse(RootView.seesModes(nil, opens: true))
+    }
+
     /// The pack dock waits for plughole 09, unless a pack is owned or asked for, or the developer unlock is on.
     @MainActor func testTheDockWaitsForLevelNine() {
         func solved(_ n: Int) -> (String) -> Best? {

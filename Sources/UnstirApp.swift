@@ -511,6 +511,12 @@ struct RootView: View {
         return harnessed || welcomed || best(first.id) != nil || started(first.id) ? nil : first
     }
 
+    /// The daily's and endless's rows are marked new until either first opens.
+    static func seesModes(_ next: Level?, opens: Bool) -> Bool {
+        guard let next, opens else { return false }
+        return next.run != nil || next.id.hasPrefix("daily-")
+    }
+
     /// A level past its pack's taste that the player doesn't own shows the pack's card over the menu instead.
     /// `look`: the tier the menu opens on in place of the stored one, locked or not. `solved`: the level left is.
     private func show(_ next: Level?, keep: Bool = false, look: Tier? = nil, solved: Bool = false) {
@@ -537,8 +543,7 @@ struct RootView: View {
         // A gate's card opens on buying (`arrived`), not on a row.
         if let level { focus = gate == nil ? level.focus(solved: solved) : nil }
         let opens = next.map(Store.shared.opens) ?? true
-        // The daily's and endless's rows are marked new until either first opens.
-        if let next, opens, next.run != nil || next.id.hasPrefix("daily-"), !Best.modesSeen { Best.seeModes(store: !harnessed) }
+        if Self.seesModes(next, opens: opens), !Best.modesSeen { Best.seeModes(store: !harnessed) }
         // So a launch after the app dies in a level comes back on its tier too.
         if let next, gate == nil, opens, next.tier.levels.contains(where: { $0.id == next.id }) { Tier.store(next.tier) }
         withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil && opens ? next : nil }
