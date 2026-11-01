@@ -828,6 +828,48 @@ final class Game {
     }
 }
 
+/// The edge swipe back (Jack's call C19, round 13). A touch landing within `band` of the screen's left edge is
+/// undecided for its first `travel`; then rightward and mostly sideways it is the swipe, and anything else passes to
+/// what it landed on, as iOS's own edge pan fails on motion that isn't away from the edge (Jack's call S2, round 13).
+enum BackSwipe: Equatable {
+    case undecided, swipe, pass
+
+    static let band: CGFloat = 20
+    static let travel: CGFloat = 10
+
+    /// `start` in global points, `t` the travel since.
+    static func decide(start: CGPoint, translation t: CGSize) -> BackSwipe {
+        guard start.x < band else { return .pass }
+        guard hypot(t.width, t.height) >= travel else { return .undecided }
+        return t.width > 0 && t.width >= 2 * abs(t.height) ? .swipe : .pass
+    }
+
+    /// Let go `dx` across a screen `width` wide, heading for `predicted`, the swipe leaves; as iOS's own, a flick back
+    /// left cancels it however far it had gone.
+    static func commits(dx: CGFloat, predicted: CGFloat, width: CGFloat) -> Bool {
+        predicted > width / 2 || dx > width / 3 && predicted >= dx - 8
+    }
+
+    /// An edge touch as the tank saw it land: `start` in the tank's points, `global` the same point on the screen.
+    struct Edge: Equatable {
+        let start: CGPoint
+        let global: CGPoint
+        let call: BackSwipe
+    }
+
+    /// The tank's view of a touch from `start`, in its own points, with its origin on the screen at `origin` now:
+    /// recorded as it lands, before anything slides, and from then on read by its start alone, since the slide moves
+    /// the tank's origin and with it where `start` would seem to lie. Nil: not an edge touch.
+    static func edge(_ held: Edge?, start: CGPoint, origin: CGPoint, translation t: CGSize) -> Edge? {
+        if let held, held.start == start {
+            guard held.call == .undecided else { return held }
+            return Edge(start: start, global: held.global, call: decide(start: held.global, translation: t))
+        }
+        let global = CGPoint(x: origin.x + start.x, y: origin.y + start.y)
+        return global.x < band ? Edge(start: start, global: global, call: decide(start: global, translation: t)) : nil
+    }
+}
+
 /// What a finger on the tank holds.
 enum Grab: Equatable {
     case rod(Int)
@@ -987,12 +1029,35 @@ struct LevelView: View {
     let onLook: (Tier) -> Void
     /// A pack's card, from a completion's pointer.
     let onOffer: (Pack) -> Void
+    /// The menu drawn under a back swipe, focused as leaving with whether the level is solved would; nil once the swipe
+    /// has sprung back.
+    let onPeek: (Bool?) -> Void
+    /// The back swipe's touch, by its global start, and what it decided.
+    @State private var swipeTouch: (start: CGPoint, call: BackSwipe)?
+    /// The same decision as the tank's gesture saw it: once made it holds, though a swipe's later course may no longer
+    /// read as one.
+    @State private var edgeTouch: BackSwipe.Edge?
+    /// The system can cancel the swipe's touch, which its onEnded never sees.
+    @GestureState private var swipeHeld = false
+    /// How far across the screen the back swipe has slid the level, 0 to 1.
+    @State private var swiped = 0.0
+    /// The swipe let go past its threshold: the level is leaving.
+    @State private var swipedAway = false
+    @State private var width: CGFloat = 0
+    /// The tank's origin in global points, where the edge band is.
+    @State private var tankOrigin = CGPoint.zero
+    /// UNSTIR_BACKSWIPE=0.4: the level held that far into a back swipe.
+    private let heldSwipe: Double?
+    /// UNSTIR_BACKSWIPE=run, or UNSTIR_EXIT=swipe: a second in, the swipe drawn by a fingertip, or only its commit.
+    private let playsSwipe: Bool
+    private let exitsBySwipe: Bool
+    @State private var swipeFinger = false
 
     /// `resumed`: the try a save brought back (`Game.resumed`), built before the view, as SwiftUI reruns this init for a
     /// level it already shows. `storesResume`: the game built here saves its try, as on any launch but the harness's.
     init(level: Level, harness: Harness?, resumed: Game? = nil, storesResume: Bool = false,
          onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void, onLook: @escaping (Tier) -> Void,
-         onOffer: @escaping (Pack) -> Void) {
+         onOffer: @escaping (Pack) -> Void, onPeek: @escaping (Bool?) -> Void = { _ in }) {
         let game = resumed ?? Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
                                    storesProgress: harness?.harnessed != true, storesResume: storesResume)
         // A save with no line yet, a run's next tank, opens as any tank does.
@@ -1078,9 +1143,100 @@ struct LevelView: View {
         self.onNext = onNext
         self.onLook = onLook
         self.onOffer = onOffer
+        self.onPeek = onPeek
+        heldSwipe = harness?.backSwipe
+        playsSwipe = harness?.backSwipeRun ?? false
+        exitsBySwipe = harness?.exit == "swipe"
     }
 
     var body: some View {
+        screen
+            // The level's edge, over the menu it slides off across: a hairline, as every line over the glass is.
+            .overlay(alignment: .leading) {
+                if swiped > 0 {
+                    Rectangle().fill(Color.text.opacity(0.2)).frame(width: 0.5).ignoresSafeArea().allowsHitTesting(false)
+                }
+            }
+            .offset(x: swiped * width)
+            .background { if swiped > 0 { Color.black.opacity(0.4 * (1 - swiped)).ignoresSafeArea() } }
+            .overlay(alignment: .leading) {
+                if swipeFinger {
+                    Circle().fill(Color.white.opacity(0.28)).overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 1))
+                        .frame(width: 40, height: 40).offset(x: swiped * width - 12).allowsHitTesting(false)
+                }
+            }
+            .simultaneousGesture(backSwipe)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+            .onChange(of: swipeHeld) {
+                // After onEnded, which may follow this, has had its say.
+                guard !swipeHeld else { return }
+                Task { if swipeTouch?.call == .swipe, !swipedAway { swipeTouch = nil; springBack() } }
+            }
+            .task {
+                if let heldSwipe { peek(); swiped = heldSwipe }
+                guard playsSwipe || exitsBySwipe, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
+                peek()
+                if playsSwipe, !reduceMotion {
+                    swipeFinger = true
+                    withAnimation(.easeInOut(duration: 0.5)) { swiped = 0.45 }
+                    guard (try? await Task.sleep(for: .seconds(0.5))) != nil else { return }
+                    swipeFinger = false
+                }
+                swipeAway()
+            }
+    }
+
+    /// The edge swipe back: the level follows the finger off over the menu, which `onPeek` draws under it, and past
+    /// `BackSwipe.commits` leaves as ‹ levels does. Under Reduce Motion nothing slides; past the threshold it dips.
+    private var backSwipe: some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .global)
+            .updating($swipeHeld) { _, held, _ in held = true }
+            .onChanged { v in
+                guard !swipedAway else { return }
+                if swipeTouch?.start != v.startLocation {
+                    let call = BackSwipe.decide(start: v.startLocation, translation: v.translation)
+                    guard call != .undecided else { return }
+                    // A finger already holding the tank keeps it.
+                    swipeTouch = (v.startLocation, call == .swipe && drag == nil && !spun ? .swipe : .pass)
+                    guard swipeTouch?.call == .swipe else { return }
+                    Log.write("back swipe")
+                    if !reduceMotion { peek() }
+                }
+                guard swipeTouch?.call == .swipe, !reduceMotion, width > 0 else { return }
+                swiped = max(0, v.translation.width) / width
+            }
+            .onEnded { v in
+                guard swipeTouch?.start == v.startLocation, swipeTouch?.call == .swipe, !swipedAway else { return }
+                swipeTouch = nil
+                if BackSwipe.commits(dx: v.translation.width, predicted: v.predictedEndTranslation.width, width: width) {
+                    swipeAway()
+                } else {
+                    springBack()
+                }
+            }
+    }
+
+    /// The menu under the level reads the endless run's save as it is built, so the save is written first, as leaving
+    /// writes it.
+    private func peek() {
+        Resume.save(game)
+        onPeek(game.solved)
+    }
+
+    private func swipeAway() {
+        swipedAway = true
+        Log.write("back swipe leaves")
+        guard !reduceMotion else { leave(); return }
+        withAnimation(.easeOut(duration: 0.2)) { swiped = 1 } completion: { leave() }
+    }
+
+    private func springBack() {
+        withAnimation(.spring(duration: 0.3)) { swiped = 0 } completion: {
+            if swiped == 0, swipeTouch?.call != .swipe { onPeek(nil) }
+        }
+    }
+
+    private var screen: some View {
         GeometryReader { geo in
             // The rim sits outside the glass, 0.045 of the radius on each side.
             let side = min(geo.size.width, geo.size.height - 290) / 1.045
@@ -2071,6 +2227,7 @@ struct LevelView: View {
         .offset(snap)
         .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { o in
             snap = CGSize(width: (o.x * scale).rounded() / scale - o.x, height: (o.y * scale).rounded() / scale - o.y)
+            tankOrigin = o
         }
         .padding(0.045 * r)
     }
@@ -2338,7 +2495,13 @@ struct LevelView: View {
         return DragGesture(minimumDistance: 0)
             .updating($holding) { _, holding, _ in holding = true }
             .onChanged { v in
-                guard !settling, !game.finished, v.startLocation != skippedDemo else { return }
+                // A touch from the screen's left edge is the back swipe's until it decides; one it passes is taken up
+                // from where it landed, before it skips the opening.
+                if drag?.start != v.startLocation {
+                    edgeTouch = BackSwipe.edge(edgeTouch, start: v.startLocation, origin: tankOrigin, translation: v.translation)
+                    if let edge = edgeTouch, edge.call != .pass { return }
+                }
+                guard !settling, !game.finished, !swipedAway, v.startLocation != skippedDemo else { return }
                 // A touch skips the opening as it lands, then takes up what it landed on; one that skips the clock's
                 // demonstration holds nothing, as the problem has still to wind in.
                 if demoing { skip(); skippedDemo = v.startLocation; return }
@@ -2385,6 +2548,11 @@ struct LevelView: View {
             }
             .onEnded { v in
                 if v.startLocation == skippedDemo { skippedDemo = nil; return }
+                // An edge touch never taken up was the back swipe's, or a tap.
+                if edgeTouch?.start == v.startLocation {
+                    edgeTouch = nil
+                    if drag?.start != v.startLocation { return }
+                }
                 if skip() { return }
                 // The lift can carry movement no change reported.
                 if let down = path?.down { path!.trail.add(norm(v.location), ms: Self.ms(v.time, since: down)) }

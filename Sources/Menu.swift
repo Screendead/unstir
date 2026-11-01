@@ -141,6 +141,8 @@ struct MenuView: View {
     let focus: Level?
     /// UNSTIR_LOCKTAP: a locked row held tapped.
     let held: String?
+    /// Drawn under a level a back swipe is sliding off.
+    let peeking: Bool
     /// The focused row's id until its flash has started, so a later rebuild of its tier's list doesn't flash it again.
     @State private var flashing: String?
     /// `focus` for the card up as the menu opens, gone once a card is opened or closed, so a dock tap opens at the top.
@@ -206,7 +208,7 @@ struct MenuView: View {
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil, run: Resume? = nil,
-         onPick: @escaping (Level) -> Void) {
+         peeking: Bool = false, onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = settings
         self.onPick = onPick
@@ -217,6 +219,7 @@ struct MenuView: View {
         self.cardScroll = cardScroll
         self.focus = focus
         self.held = held
+        self.peeking = peeking
         self.arrived = arrived
         _flashing = State(initialValue: focus?.id)
         _saved = State(initialValue: run)
@@ -280,9 +283,10 @@ struct MenuView: View {
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !Offer.shelf().isEmpty && PackDock.shown() {
-                    // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
+                    // Held still under a card, the settings or a level sliding off, when the phone saves power, or
+                    // once nobody touches it.
                     PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle,
+                             paused: card != nil || settings || peeking || Power.shared.saving || Power.shared.idle,
                              covered: card != nil || settings)
                         .equatable()
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
