@@ -443,6 +443,7 @@ card-escapement.png  Escapement's card, unowned.
 card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, and its 30 specimens under five tray headings.
 card-prism-levels.png  Prism's card, owned, scrolled to its specimens under the five trays.
 card-complete.png  Complete's card, unowned: save $5.97 on the packs you don't have.
+card-complete-saves-nothing.png  UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover.
 clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
 clip-first-stir-1.4.png  First Stir's clip 1.4 s in.
 clip-first-stir-2.1.png  First Stir's clip 2.1 s in.
@@ -480,6 +481,7 @@ card-lens-restored-none.png  Lens's card after a restore found nothing: nothing 
 card-lens-levels.png  Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked.
 card-lens-levels-owned.png  The same, owned: every level open.
 card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note.
+card-gate-ax.png  The same at accessibility3: the Complete line under buy wraps only before · save.
 card-lens-taste-end.png  Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta.
 card-lens-taste-end-owned.png  The same, owned: next again, still in Lens's magenta.
 card-lens-replay.png  Lens's card, unowned, the taste played: replay 01-03 in try free's place.
