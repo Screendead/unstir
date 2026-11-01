@@ -345,9 +345,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   what the rim does. L1, until it has a best, shows the knob's verb with a lesson of its own (`KnobLesson`): left
   untouched for 4 s after its opening, a ghost finger rocks round knob 0 halfway out its disc until the first stir
   commits, gone while any finger is down and held mid-rock under Reduce Motion. Lens 01, until it has a best, shows
-  the lens's verb with `LensLesson`, from the moment the tank is the player's, with no wait, as the rim's lessons: a ghost finger (`GhostFinger`, `KnobLesson`'s too) rides down the lens's track from the knob's height, 2.5 of
-  its steps, eased, then fades and starts again at the top, every 2.2 s, over the track's rail drawn faintly, until a
-  lens's first stir in the game commits; gone while any finger is down, and held halfway down under Reduce Motion.
+  the lens's verb with `LensLesson`, from the moment the tank is the player's, with no wait, as the rim's lessons: a
+  ghost finger (`GhostFinger`, `KnobLesson`'s too) on the knob's left edge rides down the finger's real travel for the
+  level's two steps (`2 * lensPitch` of the radius), eased, then fades and starts again at the top, every 2.2 s, beside
+  the track's rail drawn faintly on the right, where a drag landing there draws its count (`trackSide`, `trackX`), so
+  copying it solves (`testCopyingTheLensLessonSolvesLens01`). It fades in and out, each showing from the top, while no
+  lens's stir is in the game's history (an undo of one brings it back), gone while any finger is down, and held
+  halfway down under Reduce Motion.
   `Knurl` mills the bezel wherever the rim turns the tank: dark grooves between ridges every 4 pt or so,
   faintly amber at rest (the tank's colour, as its lesson), turning with the glass and brighter while the rim holds
   it, gone under the result card unless the run spilled. `Breath` shows the swirl: while the tank rests, on a layout

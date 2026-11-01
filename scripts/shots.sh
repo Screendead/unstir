@@ -361,8 +361,10 @@ hold=5 shot lens-result "Lens 02's result card over par: in the pack's magenta, 
 hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:+2,1:+2
 hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger." \
   PACK=lens LEVEL=1 LIVE=0:+1.4 TOUCH=0,-0.42
-hold=6 shot lens-lesson "Lens 01 as the tank becomes the player's: a ghost finger halfway down the lens's track, the rail faint." \
+hold=6 shot lens-lesson "Lens 01 as the tank becomes the player's: a ghost finger on the lens's knob halfway through its ride down, a lens step's travel, beside the track's rail, faint, on the right." \
   PACK=lens LEVEL=1 CLOCK=0.8
+hold=5 shot lens-lesson-copied "Lens 01 held mid-drag where its lesson rides: landed on the knob's left edge and dragged two steps down, the count's -2 dashes on the lesson's rail." \
+  PACK=lens LEVEL=1 LIVE=0:-2 TOUCH=-0.07,-0.42
 # The rim band at each dealt step on each rod size, for glitter: tri's big rod 0 (0.58), quad's rod 0 (0.48) and eye's
 # small top rod 2 (0.44), each beside a neighbour that overlaps it. Still, the lens held half a step short, and the
 # neighbour held mid-twist over the lens.
