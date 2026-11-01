@@ -3008,8 +3008,8 @@ struct ResultCard: View {
     /// A reset from the card, for another go at a solve that wasn't clean.
     let again: () -> Void
     /// The harness's clock for the daily's next one; nil reads the time.
-    var now: Date?
-    var onOffer: (Pack) -> Void = { _ in }
+    let now: Date?
+    let onOffer: (Pack) -> Void
     @Environment(\.requestReview) private var requestReview
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
