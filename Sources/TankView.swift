@@ -769,17 +769,21 @@ final class Game {
             }
             completed = done == nil ? completion : nil
         }
-        // A replay passes through a lost tank its line then undid; `resumed` closes one that ends finished.
+        // A replay passes through a lost tank its line then undid; `resumed` closes one that ends solved or spilled.
         guard !replaying else { return }
         close()
         Analytics.shared.finished(self)
     }
 
-    /// A finish clears the try's save, out of ticks too, so the lost card's undo doesn't outlive the app (C2's
-    /// implementer call, round 13). A cleared tank of a run saves the next one, empty, so the run outlasts the card.
+    /// A solve or a spill clears the try's save. A tank out of ticks keeps it, its losing move too, which `record` passed
+    /// over as the move finished the try, so a back swipe off the lost card loses nothing: the level reopens on it, its
+    /// undo still live, until again or a solve clears it (Jack's call, 2026-11-01, on C19). A cleared tank of a run saves
+    /// the next one, empty, so the run outlasts the card.
     private func close() {
         guard storesResume else { return }
-        if solved, let next = nextTank, let run = next.run {
+        if lost {
+            Resume.save(Resume(of: self))
+        } else if solved, let next = nextTank, let run = next.run {
             Resume.save(Resume(id: next.id, print: next.print, firstTry: true, run: run))
         } else {
             Resume.remove(level.id)
@@ -788,8 +792,9 @@ final class Game {
 
     /// The try `r` saved, replayed through the calls that made it, before any view shows it: nil, and the level opens
     /// afresh, where `r` was saved on a level that deals differently now, where the level refuses one of its calls, or
-    /// where the line finished, as when the app died inside the solving move's fine pass, whose best its finish saves.
-    /// The bank, the stored flags and the analytics stay as the try left them.
+    /// where the line solved or spilled, as when the app died inside the solving move's fine pass, whose best its finish
+    /// saves. A line that ends out of ticks opens on its lost card. The bank, the stored flags and the analytics stay as
+    /// the try left them: the loss was counted as it happened.
     static func resumed(_ level: Level, from r: Resume, tankTurned: Bool? = nil, swirled: Bool? = nil,
                         bank: (undos: Int, refilled: String?)? = nil, storesProgress: Bool = true,
                         storesResume: Bool = true) -> Game? {
@@ -820,7 +825,7 @@ final class Game {
         // The newest move's ticks are long played.
         game.tick = []
         Log.write("resume \(r.id) actions=\(r.actions.count) moves=\(game.moves) stack=\(game.stack.count) \(game.stack)")
-        guard !game.finished else {
+        guard !game.finished || game.lost else {
             game.close()
             return nil
         }

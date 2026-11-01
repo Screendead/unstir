@@ -397,7 +397,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`Game.resumed`) before the level appears, with no opening, the bank, flags and analytics untouched, the fine pass
   inline and the brim's replayed changes long settled. A save whose level no longer deals the same (`Level.print`)
   or that the level refuses is dropped, and a launch drops yesterday's dailies and ids no level has (`Resume.prune`).
-  A finish clears it, out of ticks too (so the lost card's undo doesn't outlive the app); a cleared tank of a run
+  A solve clears it; a tank out of ticks keeps it, the losing move too, and reopens on its lost card, its undo live
+  and the loss's rings, sounds and analytics not played again, until "again" or a solve clears it, so a back swipe off
+  the lost card loses nothing (Jack's call, 2026-11-01, on C19); a cleared tank of a run
   saves the next tank's, empty, so endless keeps its run from tank to tank, and a spill clears it. Only a plain
   launch's level saves (`storesResume`), and a harnessed launch reads none but `UNSTIR_RESUME`'s. `Level.print` is
   spelt out, never through a description, and pinned (`testThePrintNeverChanges`): a change drops every save. With moves played, the play screen's reset takes a second tap: the first only taps and

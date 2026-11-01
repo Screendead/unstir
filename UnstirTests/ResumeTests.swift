@@ -125,7 +125,7 @@ import XCTest
         XCTAssertTrue(full.spilled)
         XCTAssertNil(Resume.load("endless"), "a spill clears it")
 
-        // Out of ticks clears it too; the lost card's undo saves it again.
+        // Out of ticks keeps it, the losing move too (Jack's call, 2026-11-01, on C19); the lost card's undo saves on.
         let clock = Level.escapement[1]
         defer { Resume.remove(clock.id) }
         let c = Game(level: clock, bank: (10, nil), storesResume: true)
@@ -133,12 +133,68 @@ import XCTest
         if let w = c.wasting { c.commit(rod: w.rod, steps: w.steps) }
         while !c.finished, c.wait(on: ratchet) {}
         XCTAssertTrue(c.lost)
-        XCTAssertNil(Resume.load(clock.id), "out of ticks clears it")
+        XCTAssertEqual(Resume.load(clock.id)?.actions, c.actions, "out of ticks keeps it")
         c.undo()
         XCTAssertFalse(c.lost)
         let saved = try XCTUnwrap(Resume.load(clock.id))
         XCTAssertEqual(saved.actions.last, .undo)
         XCTAssertNotNil(Game.resumed(clock, from: saved, bank: (c.bank, nil), storesResume: false), "a replay passes through the loss")
+    }
+
+    /// A tank out of ticks reopens on its lost card (Jack's call, 2026-11-01, on C19): its undo takes back the losing move
+    /// as it does live, and again deals afresh with the save following it.
+    func testALostTankReopensLost() throws {
+        let level = Level.escapement[1]
+        defer { Resume.remove(level.id) }
+        let live = Game(level: level, bank: (10, nil), storesResume: true)
+        let ratchet = try XCTUnwrap(level.clocks.first?.rod)
+        if let w = live.wasting { live.commit(rod: w.rod, steps: w.steps) }
+        var before = (stack: live.stack, ticks: live.escapement.ticks, moves: live.moves)
+        while !live.finished {
+            before = (live.stack, live.escapement.ticks, live.moves)
+            XCTAssertTrue(live.wait(on: ratchet))
+        }
+        XCTAssertTrue(live.lost)
+        let saved = try XCTUnwrap(Resume.load(level.id))
+        let r = try JSONDecoder().decode(Resume.self, from: try JSONEncoder().encode(saved))
+        let back = try XCTUnwrap(Game.resumed(level, from: r, bank: (live.bank, nil), storesResume: true))
+        XCTAssertTrue(back.lost)
+        XCTAssertTrue(back.finished)
+        XCTAssertEqual(back.tick.count, 0, "the losing move's ticks are long played")
+        assertSame(live, back, "reopened")
+        XCTAssertEqual(back.pushedClock, live.pushedClock)
+        XCTAssertEqual(back.lastStopped, live.lastStopped)
+
+        back.undo()
+        XCTAssertFalse(back.lost)
+        XCTAssertEqual(back.stack, before.stack)
+        XCTAssertEqual(back.escapement.ticks, before.ticks)
+        XCTAssertEqual(back.moves, before.moves)
+        XCTAssertEqual(back.bank, live.bank - 1)
+        XCTAssertEqual(Resume.load(level.id)?.actions, saved.actions + [.undo])
+
+        back.reset()
+        XCTAssertEqual(back.stack, level.scramble)
+        XCTAssertEqual(Resume.load(level.id)?.actions.last, .reset)
+    }
+
+    /// A solve on Escapement still clears the save, and a saved line that solves reopens nothing.
+    func testAnEscapementSolveClearsItsSave() throws {
+        let level = Level.escapement[1]
+        defer { Resume.remove(level.id); UserDefaults.standard.removeObject(forKey: "best.\(level.id)") }
+        let g = Game(level: level, bank: (10, nil), storesResume: true)
+        // The book's line for problem 2: 2:+4, a wait, 1:-3.
+        g.commit(rod: 2, steps: 4)
+        XCTAssertNotNil(Resume.load(level.id))
+        let ratchet = try XCTUnwrap(level.clocks.first?.rod)
+        XCTAssertTrue(g.wait(on: ratchet))
+        let line = Resume(of: g).actions + [.turn(knob: 1, steps: -3)]
+        g.commit(rod: 1, steps: -3)
+        XCTAssertTrue(g.solved)
+        XCTAssertNil(Resume.load(level.id), "a solve clears it")
+        let r = Resume(id: level.id, print: level.print, firstTry: true, actions: line)
+        XCTAssertNil(Game.resumed(level, from: r, bank: (10, nil), storesResume: false),
+                     "a line that solves reopens nothing")
     }
 
     /// A reset with nothing played changes nothing a replay needs, so it isn't recorded (C2's implementer call, round 13).
