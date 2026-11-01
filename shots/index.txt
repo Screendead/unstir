@@ -497,7 +497,7 @@ card-lens-offline.png  Lens's card after a purchase failed offline: no connectio
 card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Complete, try free kept.
 card-lens-restored.png  Lens's card, owned, after a restore found it: restored Lens.
 card-lens-restored-none.png  Lens's card after a restore found nothing: nothing to restore on this Apple ID.
-card-lens-levels.png  Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked.
+card-lens-levels.png  Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked.
 card-lens-levels-owned.png  The same, owned: every level open.
 card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note.
 card-gate-ax.png  The same at accessibility3: the Complete line under buy wraps only before · save.
