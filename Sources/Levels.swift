@@ -7,6 +7,8 @@ struct Run: Hashable, Sendable {
     var tank = 0
     /// Notches on the brim as this tank opens, as the tank before left them.
     var brim = 0
+    /// The most tanks a run had cleared as this one began, carried from tank to tank, so a spill can say it beat them.
+    var best = Best.tanks
 
     /// Notches the brim holds: the one that fills it spills the run. A guess until TestFlight.
     static let room = 8
@@ -414,9 +416,12 @@ struct Best: Codable {
         if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.register(defaults: ["best.\(id)": data]) }
     }
 
+    /// Clean, then fewer over par: what a result card names, so it calls a best new only when that changes.
+    var standing: (Int, Int) { (clean == true ? 0 : 1, over) }
+
     /// Keeps the better of this and the stored result: clean, then fewer over par, then faster.
     func save(_ id: String) {
-        func rank(_ b: Best) -> (Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.seconds) }
+        func rank(_ b: Best) -> (Int, Int, Int) { (b.standing.0, b.standing.1, b.seconds) }
         if let old = Best.load(id), rank(old) <= rank(self) { return }
         UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)")
     }

@@ -448,6 +448,33 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(solve(over: false).opened)
     }
 
+    /// The card calls a best new only when what it names improves: clean, then over par; a faster time at the same
+    /// mark is still the old best's line, and a first solve has none.
+    @MainActor func testTheCardsBestLine() {
+        func best(_ over: Int, clean: Bool = false, _ seconds: Int = 30) -> Best { Best(over: over, seconds: seconds, clean: clean) }
+        XCTAssertNil(ResultCard.bestLine(was: nil, now: best(0), par: true))
+        XCTAssertEqual(ResultCard.bestLine(was: best(2), now: best(0), par: true), "new best \u{00B7} was +2")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: true), "new best \u{00B7} was par")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, 10), par: true), "best \u{00B7} par")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0, clean: true), now: best(3), par: true), "best \u{00B7} clean")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: false), "new best \u{00B7} was solved")
+    }
+
+    /// A run carries the best as it began from tank to tank, so its spill can tell a new best though each tank cleared
+    /// has already raised the stored one.
+    @MainActor func testARunKeepsTheBestItBeganWith() {
+        let saved = Best.tanks
+        defer { Best.tanks = saved }
+        Best.tanks = 3
+        let game = Game(level: .endless(Run(seed: 7)))
+        Best.tanks = 9
+        XCTAssertEqual(game.level.run?.best, 3)
+        var tanks = [game.level.run!]
+        while tanks.count < 4, let next = Game(level: .endless(tanks.last!)).nextTank?.run { tanks.append(next) }
+        XCTAssertEqual(tanks.map(\.tank), [0, 1, 2, 3])
+        XCTAssertEqual(tanks.map(\.best), [3, 3, 3, 3])
+    }
+
     /// The level's clock stops while the app is away, and a reset's replay never restarts it.
     @MainActor func testTheClockStopsWhileTheAppIsAway() {
         let game = Game(level: Level.plughole[0], tankTurned: true, swirled: true, bank: (5, nil))

@@ -128,6 +128,10 @@ shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank ref
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
+shot result-again-best "Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside levels and next." \
+  SCREEN=result LEVEL=5 BESTS=plughole:00006
+shot result-fullest "Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows." \
+  SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
 shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
 shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate." \

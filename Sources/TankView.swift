@@ -128,6 +128,8 @@ final class Game {
     private(set) var lastCommit: (rod: Int, result: Commit)?
     /// The tier this solve opened, on whichever level was the last to reach par: the card goes up a notch.
     private(set) var opened: Tier?
+    /// The level's best before this solve and this solve's own, for the card's line; nil where nothing is saved.
+    private(set) var bests: (was: Best?, now: Best)?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it. Nil while the app is away, with
     /// the time played before then in `elapsed`.
     private var start: Date?
@@ -583,7 +585,8 @@ final class Game {
     /// Endless: the next tank, with the brim as this one left it, or a new run's first once the brim has spilled.
     var nextTank: Level? {
         level.run.map {
-            .endless(spilled ? Run(seed: .random(in: .min ... .max)) : Run(seed: $0.seed, tank: $0.tank + 1, brim: brim))
+            .endless(spilled ? Run(seed: .random(in: .min ... .max))
+                     : Run(seed: $0.seed, tank: $0.tank + 1, brim: brim, best: $0.best))
         }
     }
 
@@ -659,7 +662,9 @@ final class Game {
             if solved { Best.tanks = max(Best.tanks, run.tank + 1) }
         } else if solved && counts && level.keepsProgress {
             let up = level.pack == nil ? level.tier.step(1) : nil, shut = up.map { !$0.isOpen() } ?? false
-            Best(over: over, seconds: seconds, clean: clean).save(level.id)
+            let best = Best(over: over, seconds: seconds, clean: clean)
+            bests = (Best.load(level.id), best)
+            best.save(level.id)
             if shut, let up, up.isOpen() { opened = up }
         }
         Analytics.shared.finished(self)
@@ -952,7 +957,10 @@ struct LevelView: View {
                                 .padding(.top, 14)
                                 .transition(reveal)
                         } else if showResult {
-                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look)
+                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: {
+                                // The glass eases home on a solve; the next try turns it from where it stands.
+                                if game.reset() { eased = false; replays += 1 }
+                            })
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
@@ -2743,6 +2751,16 @@ struct ResultCard: View {
     let onExit: () -> Void
     let onNext: (Level) -> Void
     let onLook: (Tier) -> Void
+    /// A reset from the card, for another go at a solve that wasn't clean.
+    let again: () -> Void
+
+    /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
+    /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
+    static func bestLine(was: Best?, now: Best, par: Bool) -> String? {
+        guard let was else { return nil }
+        func mark(_ b: Best) -> String { b.clean == true ? "clean" : !par ? "solved" : b.over == 0 ? "par" : "+\(b.over)" }
+        return now.standing < was.standing ? "new best \u{00B7} was \(mark(was))" : "best \u{00B7} \(mark(was))"
+    }
 
     var body: some View {
         let run = game.level.run
@@ -2757,8 +2775,12 @@ struct ResultCard: View {
             VStack(spacing: 8) {
                 if let run {
                     Text("moves \(game.moves) \u{00B7} \(time)")
-                    Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
-                         : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                    if game.spilled && run.tank > run.best {
+                        Text("tanks cleared \(run.tank) \u{00B7} ") + Text("new best").foregroundStyle(Color.lime)
+                    } else {
+                        Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
+                             : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                    }
                 } else if !game.level.ratchets.isEmpty {
                     // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round 11).
                     Text("moves \(game.moves) \u{00B7} \(game.level.budget) ticks \u{00B7} \(time)")
@@ -2779,10 +2801,16 @@ struct ResultCard: View {
                             .foregroundStyle(Color.amber)
                     }
                 }
+                if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
+                    Text(line).opacity(0.6)
+                }
             }
             .font(.mono(13))
-            HStack(spacing: 40) {
+            HStack(spacing: 32) {
                 Button("\u{2039} levels", action: onExit)
+                if game.level.run == nil && !game.clean {
+                    Button("again \u{21BA}", action: again).buttonStyle(Sounding(effect: .reset))
+                }
                 if let share = game.shareText {
                     ShareLink(item: share) { Text("share \u{2197}") }
                         .shareTap()
