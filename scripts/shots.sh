@@ -442,7 +442,7 @@ fi
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in. Prices are the StoreKit configuration's, as a US storefront shows them.
 shot shelf-menu "Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
-shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot." \
+shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
   OWNED=lens STORE=escapement:pending CLOCK=5.4
 for state in unowned owned pending failed revoked; do
   shot card-lens-$state "Lens's card, $state." CARD=lens STORE=lens:$state CLOCK=5.4
@@ -476,8 +476,28 @@ for t in 1.4 2.4 3.6 5.0; do
 done
 shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
   CARD=lens STORE=complete:failed CLOCK=5.4
-shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4
-shot card-lens-noprice "Lens's card before the App Store answers: buy, with no price." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-complete-owned "Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, play First Stir 01 (a Debug build sells it)." \
+  CARD=complete OWNED=complete CLOCK=5.4
+shot card-lens-complete-pending "Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled." \
+  CARD=lens STORE=complete:pending CLOCK=5.4
+shot card-lens-asked-offline "Lens's card after asking again offline: still waiting for approval, asked, no connection under it." \
+  CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
+shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
+  CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
+shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \
+  OWNED=complete CLOCK=5.4
+shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live." \
+  CARD=lens STORE=lens:unowned PRICES=unreachable CLOCK=5.4
+shot card-lens-unshared "Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey." \
+  CARD=lens STORE=lens:unshared CLOCK=5.4
+shot card-lens-offline "Lens's card after a purchase failed offline: no connection, try again when you're online." \
+  CARD=lens STORE=lens:failed FAILED=offline CLOCK=5.4
+shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone: no buy and no Complete, try free kept." \
+  CARD=lens STORE=lens:unowned PAYMENTS=0 CLOCK=5.4
+shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
+shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
+  CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
 shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
   CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
 shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
@@ -487,6 +507,8 @@ shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPE
   STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
 shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
   CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+shot card-lens-xxxl "Lens's card at xxxLarge, the largest size short of the accessibility ones: each key whole beside its fact." \
+  CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=xxxLarge
 
 # The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
@@ -494,7 +516,9 @@ shot consent-sends "First launch: the analytics question with its link opened, t
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
 shot consent-settings-on "The gear's sheet: the analytics switch on, send log and privacy policy." CONSENT=yes SETTINGS=1
 shot consent-settings-off "The gear's sheet: the analytics switch off, send log and privacy policy." CONSENT=no SETTINGS=1
-shot settings "The gear's sheet in a build without analytics, v1's: send log and privacy policy, no switch." SETTINGS=1
+shot settings "The gear's sheet in a build without analytics, v1's: restore purchases, send log and privacy policy, no switch, the version under them." SETTINGS=1
+shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
+  SETTINGS=1 STORE=lens:unowned RESTORED=none
 
 # Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
 # sub-dial (a wound-back clock's mirrored), the stipulation under the tank. Clocks are rods, + forward, - wound back.

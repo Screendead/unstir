@@ -418,14 +418,25 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   sets what StoreKit is asked for (`Pack.productIDs`), what Complete grants and needs, Complete's cover, words
   (`Pack.named`; the card's "or all three in Complete" counts them, `Offer.countWord`), and clip, and analytics' snapshot (`testFirstStirIsOutOfV1`).
   `Store` is StoreKit 2 with no server and nothing stored: entitlements from `Transaction.currentEntitlements` at
-  launch, a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
+  launch (`Store.ready` once that first read has finished: until then `RootView.show` waits on it, `Store.settled`,
+  before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
-  `Purchase` (unowned, owned, pending, failed, revoked). A revoked pack keeps its bests; past the taste it needs the
+  `Purchase` (unowned, owned, pending, failed, revoked), and `Store.failures` why each failure failed (`Failure`:
+  offline, a storefront without it, purchases turned off), which the card says under it. A pending pill reads
+  "asked" and stays live, since StoreKit sends nothing for a declined Ask to Buy and a new purchase sends a new request;
+  an ask again that fails leaves the product pending and says why under it. A pack waiting only on Complete's request
+  (`Store.asked`, its own product's state) says Complete is the one waiting, and its pill buys the pack alone; Complete's
+  line under it waits too. Where
+  `AppStore.canMakePayments` is false (`Store.canPay`) the card offers only the taste and says why; and a restore says
+  what it found that wasn't owned (`Restored`, `Store.restoreNote`), and nothing on a cancelled sign-in. A revocation
+  says, in grey, that the pack isn't on this Apple ID any more, or, where its transaction was family-shared
+  (`Ledger.unshared`), that it is no longer shared, and that the progress is kept. A revoked pack keeps its bests; past the taste it needs the
   card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and Complete as family-shareable non-consumables at
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25, when Complete held three packs, as it does again in Release); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice`, fetched at launch and again when a card
-  opens without one, and a card with none says "buy" alone.
+  opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" once the fetch
+  has failed (`Store.pricing`), the pill still live, since the App Store's sheet shows the price.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
   rods only, is the alternative on branch `lens-levels-big`), on the halftone: each dealt lens entry +1 to +3, each lens
   netting at most +3, no entry merging as it is dealt, and par the depth (`testLensLevels`, which pins the table), the
@@ -532,17 +543,30 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
   Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
-  (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens alone; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
-  (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a dot for its state. `PackCard` grows out
+  (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and Complete; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
+  (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a glyph by its name for its state (`Purchase.mark`: a check owned, an hourglass waiting on Ask
+  to Buy, nothing else, a revocation being the card's to say). `PackCard` grows out
   of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
   purchase state, buy at the App Store's price, try free, Complete beside an unowned pack while Complete is on the
   shelf (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
-  locked. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
+  par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
+  the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
+  once all are (`PackCard.pickUp`, `continues`); Complete's owned card plays on in the first sold pack with a level
+  left ("play Lens 04 ›"). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
+  once every one is, and Complete's cover once Complete is owned; Complete's card names each pack as a link to its
+  card (`onOffer`, and a VoiceOver action per pack), so each taste is a tap away, and back from that card returns to
+  Complete's. A purchase landing on an open card (bought, approved or restored)
+  plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
+  another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
+  entitlements is no landing (`PackCard.lands`): an owner's card opened before `Store.ready` reads unowned, then owned,
+  without a chime or an announcement. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
   card (`Store.forgetFailures`), and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from a row or
   from the level before it. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
-  and buttons at accessibility sizes; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
+  and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
+  of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
   reads each cover's state or price and each button's price, hides the menu under a card, and announces a change of
   state. Reduce Motion holds the covers and clip still, stills the pending dot and fades the card in.
   **Clip.swift** draws each card's clip live, never a committed video (to-do 50): a `Clip` is one or more `Reel`s,
@@ -573,9 +597,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds: the
-  analytics switch (`NeonToggle`, which calls `decide`) where the build has analytics, "send log", which hands `Log.url` to the share sheet, and
+  analytics switch (`NeonToggle`, which calls `decide`) where the build has analytics, "restore purchases" (`Store.restore`,
+  saying what it found as the cards do), "send log", which hands `Log.url` to the share sheet, and
   "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)), for now the github.com page of
-  `docs/privacy-policy.md`. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
+  `docs/privacy-policy.md`, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
+  its content outgrows the screen. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
   bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
@@ -652,12 +678,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. `UNSTIR_ENDING=s` with `UNSTIR_SCREEN=clean` opens First Stir's last scene solved with the night forwards held s seconds in (-1 runs it). In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
   best or started flag (`Level.keepsProgress`); Prism's is tri on the fern, rod 0 red and rod 1 cyan, dealt
   `2:+3,0:+4,1:-3`, as specimen 1 is. And
-  `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` set the store's states for the launch
-  in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`).
+  `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` (or `lens:unshared`, revoked as a family's share) set the store's states for the launch
+  in place of StoreKit's, never stored, with the StoreKit file's prices (none with `UNSTIR_PRICES=0`, as while they load, or `UNSTIR_PRICES=unreachable`, as after a failed fetch);
+  `UNSTIR_FAILED=offline` (`storefront`, `refused`) says why a failed product failed, or a pending one's ask again, `UNSTIR_PAYMENTS=0` turns
+  purchases off, and `UNSTIR_RESTORED=lens,prism` (`none`, `failed`) sets what the last restore found.
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
-  levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list. A pack level past
+  levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list; `UNSTIR_BESTS`
+  takes a pack's prefix as it takes a tier's. A pack level past
   the taste needs `UNSTIR_OWNED` too, or it opens the card. `UNSTIR_STOPLOOK=left` picks how an Escapement tank out of
-  ticks as its last clock stops looks. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, and
+  ticks as its last clock stops looks. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, `UNSTIR_LANDS=s`
+  buys the open card's product s seconds in (with the store's states set), and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
   tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's

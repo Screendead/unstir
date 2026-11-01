@@ -122,6 +122,8 @@ struct MenuView: View {
     @Namespace private var strip
     /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
     @State private var settings: Bool
+    /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
+    @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
@@ -229,16 +231,26 @@ struct MenuView: View {
     @ViewBuilder private var cardView: some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
-                     onBack: { show(nil) }, onPlay: { onPick($0) })
+                     onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
+                         show(next)
+                         cameFrom = (card, next)
+                     })
+                .id(card)
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
     }
 
     private func show(_ offer: Offer?, from: UnitPoint = .center) {
+        cameFrom = nil
         Log.write(offer.map { "card \($0.key) shown" } ?? "card closed")
         if offer != nil { cardFrom = from }
         withAnimation(.snappy(duration: 0.42)) { card = offer }
+    }
+
+    /// The card a pack's card was opened from, or the menu.
+    private func back() {
+        show(cameFrom.flatMap { $0.card == card ? $0.back : nil })
     }
 
     /// The menu, Lens's cover tapped, its card's clip played through, then back.

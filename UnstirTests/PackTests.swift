@@ -94,7 +94,10 @@ final class PackTests: XCTestCase {
         XCTAssertNil(store.card(for: Level.plughole[5]))
         var ledger = Ledger()
         ledger.record(Pack.lens.productID, .owned)
+        XCTAssertFalse(store.ready)
         store.pretend(ledger)
+        // The harness's states are known at launch, so nothing waits on StoreKit.
+        XCTAssertTrue(store.ready)
         XCTAssertNil(store.card(for: level(.lens, 4)))
         XCTAssertEqual(store.card(for: level(.escapement, 4)), .escapement)
         ledger.record(Pack.lens.productID, .revoked)
@@ -226,6 +229,50 @@ final class PackTests: XCTestCase {
                                                        release: false))
         XCTAssertEqual(Pack.allCases.map(complete.state), [.revoked, .owned, .revoked, .revoked])
         XCTAssertEqual(Harness.purchases(["UNSTIR_STORE": "lens:unowned"], release: false)?.state(.lens), .unowned)
+        let unshared = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "lens:unshared"], release: false))
+        XCTAssertEqual(unshared.state(.lens), .revoked)
+        XCTAssertTrue(unshared.unshared(.lens))
+    }
+
+    /// An owner's pill plays from the first level without a best, then the first not at par, and goes once all are at
+    /// par; it says continue once a level past the taste is solved.
+    @MainActor func testAnOwnerPicksUpWhereTheyLeftOff() {
+        let levels = Pack.lens.levels
+        var bests: [String: Best] = [:]
+        func best(_ id: String) -> Best? { bests[id] }
+        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "01")
+        XCTAssertFalse(PackCard.continues(levels, best: best))
+        for level in levels.prefix(3) { bests[level.id] = Best(over: 0, seconds: 60) }
+        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "04")
+        XCTAssertFalse(PackCard.continues(levels, best: best))
+        bests[levels[3].id] = Best(over: 2, seconds: 60)
+        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "05")
+        XCTAssertTrue(PackCard.continues(levels, best: best))
+        for level in levels where bests[level.id] == nil { bests[level.id] = Best(over: 0, seconds: 60) }
+        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "04")
+        bests[levels[3].id] = Best(over: 0, seconds: 60)
+        XCTAssertNil(PackCard.pickUp(levels, best: best))
+    }
+
+    /// Only a change after the launch's first read lands: before it, an owner's card reads unowned until the read does.
+    @MainActor func testTheLaunchsFirstReadIsNoLanding() {
+        XCTAssertFalse(PackCard.lands(.unowned, .owned, ready: false))
+        XCTAssertTrue(PackCard.lands(.unowned, .owned, ready: true))
+        XCTAssertTrue(PackCard.lands(.pending, .owned, ready: true))
+        XCTAssertFalse(PackCard.lands(.owned, .owned, ready: true))
+        XCTAssertFalse(PackCard.lands(.unowned, .pending, ready: true))
+    }
+
+    @MainActor func testHarnessSetsTheCardsMessages() {
+        let h = Harness(["UNSTIR_CARD": "lens", "UNSTIR_STORE": "lens:failed", "UNSTIR_FAILED": "offline",
+                         "UNSTIR_PRICES": "unreachable", "UNSTIR_PAYMENTS": "0", "UNSTIR_RESTORED": "lens,prism"])
+        XCTAssertEqual(h.failure, .offline)
+        XCTAssertEqual(h.prices, [:])
+        XCTAssertEqual(h.pricing, .unreachable)
+        XCTAssertFalse(h.canPay)
+        XCTAssertEqual(h.restored, .found([.lens, .prism]))
+        XCTAssertEqual(Harness(["UNSTIR_RESTORED": "none"]).restored, .nothing)
+        XCTAssertEqual(Harness(["UNSTIR_PRICES": "0"]).pricing, .fetching)
     }
 
     /// UNSTIR_OWNED lasts the launch: nothing it grants is written anywhere, and solving the placeholder it opens
