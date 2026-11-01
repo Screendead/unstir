@@ -929,6 +929,32 @@ struct PackDock: View, Equatable {
     /// Approvals already announced: a card or the settings covering the dock restarts the header's time, not its
     /// announcement.
     @State private var announced: Set<Offer> = []
+    /// The covers' row, inside its padding.
+    @State private var row: CGFloat = 0
+
+    /// Caption2 at the dock's size, capped at xxxLarge as the dock is, down to the largest at which every word of every
+    /// name, with its cover's glyph, fits its cover.
+    private func nameSize(_ shelf: [Offer]) -> CGFloat {
+        let category = UIContentSizeCategory(min(typeSize, .xxxLarge))
+        let size = UIFontMetrics(forTextStyle: .caption2).scaledValue(for: 11, compatibleWith:
+            UITraitCollection(preferredContentSizeCategory: category))
+        guard row > 0, !shelf.isEmpty else { return size }
+        let cover = row / CGFloat(shelf.count)
+        let names = shelf.map { ($0.name, store.ready && store.state($0).mark != nil) }
+        return size * Self.nameScale(names, cover: cover, width: { word in
+            (word as NSString).size(withAttributes: [.font: UIFont.monospacedSystemFont(ofSize: size, weight: .regular)]).width
+        })
+    }
+
+    /// The one scale the row's names share: the smallest any word needs to fit its cover beside its glyph (12 pt),
+    /// never below half.
+    nonisolated static func nameScale(_ names: [(name: String, marked: Bool)], cover: CGFloat,
+                                      width: (String) -> CGFloat) -> CGFloat {
+        let fits = names.flatMap { name, marked in
+            name.split(separator: " ").map { (cover - (marked ? 12 : 0)) / max(1, width(String($0))) }
+        }
+        return min(1, max(0.5, (fits.min() ?? 1) * 0.97))
+    }
 
     nonisolated static func == (a: PackDock, b: PackDock) -> Bool {
         a.held == b.held && a.paused == b.paused && a.covered == b.covered
@@ -977,14 +1003,15 @@ struct PackDock: View, Equatable {
                             LoopingTank(offer: offer, side: 66, held: held, offset: 1.75 * Double(i), interval: 1.0 / 30,
                                         paused: paused)
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                // A name breaks only between its words, each on a line of its own: where a word
-                                // is too wide for its cover it scales down rather than hyphenate.
+                                // A name breaks only between its words, each on a line of its own, at the row's
+                                // one size, which shrinks until every word fits its cover rather than hyphenate.
                                 ViewThatFits(in: .horizontal) {
                                     Text(offer.name).lineLimit(1)
                                     Text(offer.name.replacingOccurrences(of: " ", with: "\n"))
-                                        .lineLimit(offer.name.split(separator: " ").count).minimumScaleFactor(0.5)
+                                        .lineLimit(offer.name.split(separator: " ").count)
                                 }
-                                .font(.mono(.caption2)).opacity(0.7).multilineTextAlignment(.center)
+                                .font(.system(size: nameSize(shelf), design: .monospaced))
+                                .opacity(0.7).multilineTextAlignment(.center)
                                 // A glyph, so the state reads without its colour; a revocation is the card's to say.
                                 if store.ready, let mark = state.mark {
                                     Image(systemName: mark).font(.system(size: 8, weight: .bold)).foregroundStyle(state.tag()?.colour ?? .text)
@@ -1015,6 +1042,7 @@ struct PackDock: View, Equatable {
             }
             .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: shelf)
             .padding(.horizontal, 8)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width - 16 } action: { row = $0 }
         }
         // A bar, like a tab bar: its names stop growing where four no longer fit, and a long press shows one large.
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
