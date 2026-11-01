@@ -407,6 +407,23 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Best.undos, 5)
     }
 
+    /// The level's clock stops while the app is away, and a reset's replay never restarts it.
+    @MainActor func testTheClockStopsWhileTheAppIsAway() {
+        let game = Game(level: Level.plughole[0], tankTurned: true, swirled: true, bank: (5, nil))
+        let t = Date(timeIntervalSinceReferenceDate: 1000)
+        game.pauseClock(at: t)
+        game.resumeClock(at: t + 5)
+        XCTAssertEqual(game.played(at: t + 9), 0)
+        game.startClock(at: t + 10)
+        game.pauseClock(at: t + 40)
+        // Back from the front before the opening's end can't start it again while away.
+        game.startClock(at: t + 50)
+        XCTAssertEqual(game.played(at: t + 3600), 30)
+        game.resumeClock(at: t + 3600)
+        game.startClock(at: t + 3601)
+        XCTAssertEqual(game.played(at: t + 3612), 42)
+    }
+
     /// A pack's undo puts the stack back as the move found it, marks and all, from the shared bank, where the free
     /// tiers' commits the move's negation: after the heal that lets a push fall onto the scramble's 2:+4 and cancel it,
     /// the negation pushes a new 3:+2, and the pack's brings back all six entries.

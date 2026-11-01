@@ -122,8 +122,12 @@ final class Game {
     private var healsBefore: [Int] = []
     /// The rod and outcome of the newest commit or undo, for the commit flash.
     private(set) var lastCommit: (rod: Int, result: Commit)?
-    /// Starts when the opening ends or is skipped; a reset's replay does not restart it.
+    /// Starts when the opening ends or is skipped; a reset's replay does not restart it. Nil while the app is away, with
+    /// the time played before then in `elapsed`.
     private var start: Date?
+    private var elapsed: TimeInterval = 0
+    /// Away from the front after the clock started: it runs again on coming back.
+    private var paused = false
     /// False once an earlier visit touched a rod: a daily is then practice, and nothing else can be clean.
     let firstTry: Bool
     /// Whether the player has ever turned the tank, on any level: the rim shows how until they have.
@@ -450,6 +454,8 @@ final class Game {
         entries = Self.dealt(level)
         restart()
         start = nil
+        elapsed = 0
+        paused = false
     }
 
     private func restart() {
@@ -509,7 +515,24 @@ final class Game {
         return true
     }
 
-    func startClock() { start = start ?? .now }
+    func startClock(at now: Date = .now) { if !paused { start = start ?? now } }
+
+    /// The level's clock stops while the app is away from the front, so a call or a night away never lands in a best.
+    func pauseClock(at now: Date = .now) {
+        guard let start else { return }
+        elapsed += now.timeIntervalSince(start)
+        self.start = nil
+        paused = true
+    }
+
+    func resumeClock(at now: Date = .now) {
+        guard paused else { return }
+        paused = false
+        start = now
+    }
+
+    /// Seconds played: from the opening's end, less any time away.
+    func played(at now: Date = .now) -> TimeInterval { elapsed + (start.map { now.timeIntervalSince($0) } ?? 0) }
 
     /// The day's refill of the bank (`Best.refill`), as the level opens on `today`. The sandbox and endless spend no
     /// undos, so they take no refill.
@@ -610,7 +633,7 @@ final class Game {
     private func finish(healed: Bool) {
         if healed && !finished { heals += 1 }
         guard finished else { return }
-        seconds = Int(Date.now.timeIntervalSince(start ?? .now))
+        seconds = Int(played())
         Log.write("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
                   + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
@@ -1053,8 +1076,8 @@ struct LevelView: View {
             if shown == nil { badge = game.refilled }
         }
         .onChange(of: phase) {
-            if phase == .background { Analytics.shared.suspended(game) }
-            if phase == .active { Analytics.shared.resumed() }
+            if phase == .background { Analytics.shared.suspended(game); game.pauseClock() }
+            if phase == .active { Analytics.shared.resumed(); game.resumeClock() }
         }
         .onDisappear { endPath(); endTwist(); Log.write("level \(game.level.id) exits \(state)") }
     }
