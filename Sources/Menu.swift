@@ -677,7 +677,6 @@ private struct TierList: View, Equatable {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Locked. Opens with every \(below.rawValue) level at par: \(lit) of \(par.count).")
         .padding(.top, 12)
-        .padding(.bottom, lit == par.count ? 12 : 0)
         shortList(below)
     }
 
