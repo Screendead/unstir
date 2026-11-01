@@ -611,7 +611,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   which is always open. A closed row
   still takes a tap: it shakes, sounds `seized` and says for two seconds what opens it ("solve 06 to open", or on a
   locked tier "par every plughole level to open"), which VoiceOver reads as its value; shut, the daily and endless say
-  "opens after plughole 23" in place of their detail. The first level without a best (`Tier.frontier`) keeps its
+  "opens after plughole 23" in place of their detail. The daily's title names its day in the locale's words ("Daily ·
+  Sun 1 Nov"; its id stays `daily-yyyymmdd`), and the menu deals it afresh on coming to the front and at midnight
+  (`NSCalendarDayChanged`), so a menu left up overnight opens the new day's. The first level without a best (`Tier.frontier`) keeps its
   hairline lit. A hidden stir in
   the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
   the list, and the card (`RootView`'s, bound in) lies over the whole menu. The list opens centred, unanimated under

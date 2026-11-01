@@ -1211,6 +1211,17 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(landing(.whirlpool), "N1")
     }
 
+    /// The daily row names its day in words, not as an ISO date, and its id, which its best is stored under, stays
+    /// the date.
+    func testTheDailyNamesItsDay() throws {
+        let date = try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 11, day: 1, hour: 12)))
+        let daily = Level.daily(date)
+        XCTAssertEqual(daily.id, "daily-20261101")
+        XCTAssertTrue(daily.title.hasPrefix("Daily \u{00B7} "), daily.title)
+        XCTAssertFalse(daily.title.contains("2026"), daily.title)
+        XCTAssertTrue(daily.title.contains("1"), daily.title)
+    }
+
     /// The gate lists what is short of par as runs, each opening at a level the player can open.
     func testTheGateListsTheLevelsShortOfParAsRuns() {
         var bests: [String: Best] = [:]

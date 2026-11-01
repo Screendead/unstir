@@ -311,7 +311,9 @@ struct Level: Hashable, Sendable {
         var rng = SplitMix64(state: UInt64(ymd))
         let layout = generated[rng.below(4)]
         let depth = 10 + rng.below(5)
-        return Level(id: "daily-\(ymd)", label: "day", title: String(format: "Daily, %04d-%02d-%02d", c.year!, c.month!, c.day!),
+        // The id keys the day's stored best, so it stays yyyymmdd; only the title follows the locale.
+        let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        return Level(id: "daily-\(ymd)", label: "day", title: "Daily \u{00B7} \(day)",
                      layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng))
     }
 

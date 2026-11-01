@@ -172,6 +172,9 @@ struct MenuView: View {
     /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
     @State private var settings: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var phase
+    /// When the daily row was dealt: a menu left up past midnight, or coming back to the front, deals the new day's.
+    @State private var today = Date.now
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -265,6 +268,10 @@ struct MenuView: View {
                 sideways = nil
             }
         }
+        .onChange(of: phase) { if phase == .active { today = .now } }
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
+            today = .now
+        }
         .task { if demo { await tour() } }
         .task { if shelfDemo { await shelfTour() } }
     }
@@ -276,7 +283,7 @@ struct MenuView: View {
                 .font(.mono(13)).opacity(0.55).padding(.top, 10).id(Self.top)
             // Daily and endless say what opens them while they're shut.
             let shut = "opens after plughole \(Level.plughole[22].label)"
-            LevelRow(level: Level.daily(), detail: modes ? nil : shut, enabled: modes, pick: pick, refuse: refuse)
+            LevelRow(level: Level.daily(today), detail: modes ? nil : shut, enabled: modes, pick: pick, refuse: refuse)
                 .padding(.top, 22)
             LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
                      detail: modes ? "deeper every tank \u{00B7} wrong stirs fill the brim" : shut,
