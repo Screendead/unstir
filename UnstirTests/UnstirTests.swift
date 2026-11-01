@@ -1667,7 +1667,7 @@ final class UnstirTests: XCTestCase {
             if level.picture == .coralTwin { XCTAssertLessThanOrEqual(level.scramble.count, 6, level.id) }
             if level.picture == .neuronsTwin { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
         }
-        XCTAssertEqual(levels[0].note, "One knob has seized. Turn the tank.")
+        XCTAssertEqual(levels[0].note, "One knob has seized. Turn the tank. Turns count as moves.")
         XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
     }
 
@@ -2092,6 +2092,13 @@ final class UnstirTests: XCTestCase {
             XCTAssertEqual(level.layout, layout)
             XCTAssertEqual(level.scramble, [Twist].parse(word, in: layout))
         }
+    }
+
+    /// The run's first tank says the brim's rule, its count in words, and only the first.
+    func testEndlessSaysTheBrimsRuleOnce() {
+        XCTAssertEqual(Run.room, 8, "the first tank's note and the menu's row say eight")
+        XCTAssertEqual(Level.endless(Run(seed: 7)).note, "A wrong stir fills the brim, even turned back. Eight and it spills.")
+        XCTAssertEqual(Level.endless(Run(seed: 7, tank: 1)).note, "")
     }
 
     /// Endless's ramp: tank n has 5 + 5n/4 stirs, to 28, with n/2 hidden under louder ones, to half of them.

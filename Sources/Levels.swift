@@ -273,7 +273,7 @@ struct Level: Hashable, Sendable {
     /// Seized knobs and a turning tank. Par counts the tank's turns: it is the solver's optimum, and the park rule
     /// reaches it however its ties go (UnstirTests). Each shows the twin of the picture its row names.
     static let maelstrom: [Level] = ([
-        (.quad, "3:-4,2:+7,1:-8", [1], 4, .coral, "Something has set.", "One knob has seized. Turn the tank."),
+        (.quad, "3:-4,2:+7,1:-8", [1], 4, .coral, "Something has set.", "One knob has seized. Turn the tank. Turns count as moves."),
         (.quad, "0:-3,2:+4,1:+5,2:+8", [2], 5, .neurons, "The tank turns the other way too.", ""),
         (.quad, "1:+2,2:-5,1:-5,0:-6,1:+8", [1], 6, .coral, "Park the dead knob where the work is done.", ""),
         (.quad, "3:+2,0:+4,3:-5,0:+6,1:-8", [0,3], 6, .chainmail, "Two knobs, one reason to turn.", ""),
@@ -330,6 +330,8 @@ struct Level: Hashable, Sendable {
         // Wrapping, as a random seed overflows.
         var rng = SplitMix64(state: run.seed &* 1000 &+ UInt64(run.tank))
         level.scramble = level.layout.scramble(depth: depth, inversions: min(run.tank / 2, depth / 2), rng: &rng)
+        // The brim's rule, said once, as the run starts.
+        if run.tank == 0 { level.note = "A wrong stir fills the brim, even turned back. Eight and it spills." }
         return level
     }
 

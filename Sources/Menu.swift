@@ -177,7 +177,7 @@ struct MenuView: View {
                         .font(.mono(13)).opacity(0.55).padding(.top, 10)
                     LevelRow(level: Level.daily(), enabled: modes, pick: pick).padding(.top, 22)
                     LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                             detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
+                             detail: "deeper every tank \u{00B7} eight wrong stirs and it spills",
                              best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, pick: pick)
                     LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                              pick: pick)
