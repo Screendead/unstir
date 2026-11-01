@@ -83,7 +83,7 @@ shot menu-back-solved "Back from plughole 14's result card after a solve: the li
 shot menu-mid-switch-scrolled "The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin." \
   BESTS=plughole:$upto13 TIERSPIN=0.25:0.1
 # A switch lands on the new tier's first level without a best, a locked tier's header over its gate, or the top.
-hold=4.4 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
+hold=3.9 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
 hold=8.5 shot menu-switch-locked "Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 17 of whirlpool's 27 at par: vortex is locked, so the list landed on its header, over the gate and its short list." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
@@ -578,9 +578,9 @@ shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone
 shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
 shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
   CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
-shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
-  CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
-shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
+shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked." \
+  CARD=lens STORE=lens:unowned CARDSCROLL=1 CLOCK=5.4
+shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDSCROLL=1 CLOCK=5.4
 shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-gate-ax "The same at accessibility3: the Complete line under buy wraps only before · save." \
