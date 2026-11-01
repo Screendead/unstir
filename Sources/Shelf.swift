@@ -880,10 +880,13 @@ struct PackCard: View {
     /// Owned, play; otherwise buy at the App Store's price, and the taste beside it.
     @ViewBuilder private func action(_ state: Purchase) -> some View {
         if state == .owned {
-            if let level = next {
-                let verb = Self.continues(levels) ? "continue" : "play"
-                pill("\(verb) \(level.label) \u{203A}", trailing: nil, colour: .lime) { onPlay(level) }
-                    .accessibilityLabel("\(verb.capitalized) \(offer.name), level \(level.label)")
+            // Complete has no levels of its own: its owner goes on in the first pack with a level left to play.
+            let pack = offer.pack == nil ? Pack.sold().first(where: { Self.pickUp($0.levels) != nil }) : nil
+            if let level = pack.flatMap({ Self.pickUp($0.levels) }) ?? next {
+                let verb = Self.continues(pack?.levels ?? levels) ? "continue" : "play"
+                let name = pack.map { $0.name + " " } ?? ""
+                pill("\(verb) \(name)\(level.label) \u{203A}", trailing: nil, colour: .lime) { onPlay(level) }
+                    .accessibilityLabel("\(verb.capitalized) \(pack?.name ?? offer.name), level \(level.label)")
             }
         } else {
             // A declined Ask to Buy sends no transaction, so an asked pill stays live: tapping it sends a new request.

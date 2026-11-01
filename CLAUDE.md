@@ -553,7 +553,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
-  once all are (`PackCard.pickUp`, `continues`). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
+  once all are (`PackCard.pickUp`, `continues`); Complete's owned card plays on in the first sold pack with a level
+  left ("play Lens 04 ›"). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
   once every one is, and Complete's cover once Complete is owned; Complete's card names each pack as a link to its
   card (`onOffer`, and a VoiceOver action per pack), so each taste is a tap away, and back from that card returns to
   Complete's. A purchase landing on an open card (bought, approved or restored)
