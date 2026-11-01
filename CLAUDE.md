@@ -368,7 +368,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, the level counting as started only once that touch commits, and one that skips
   Escapement's demonstration holds nothing. A level's note shows at full strength for its first 4 s of play, then at
-  0.55, as every caption rests.
+  0.55, as every caption rests. While a level is open and unfinished the screen stays awake (`Awake`) until two
+  minutes after the last touch.
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
   one clock's tick can uncover the next's seam on the same move (the book's 17 and 18 need it), and the stack's last

@@ -756,6 +756,9 @@ struct LevelView: View {
     /// The day's refill as the badge shows it: set once the opening is over, and only once, so a reset's opening doesn't
     /// show it again.
     @State private var badge = 0
+    /// Bumped by every touch: the screen stays awake for two minutes after the last.
+    @State private var awake = 0
+    @State private var awakeID = UUID()
     /// A touch that skipped the clock's demonstration: it holds nothing, as the problem has still to wind in.
     @State private var skippedDemo: CGPoint?
     /// The level's note at full strength for its first seconds of play.
@@ -1078,7 +1081,16 @@ struct LevelView: View {
         }
         // A tap anywhere skips the opening, as the caption says.
         .simultaneousGesture(TapGesture().onEnded { _ = skip() })
-        .onChange(of: touching) { if touching && shown == nil { lifted = true } }
+        .onChange(of: touching) {
+            awake += 1
+            if touching && shown == nil { lifted = true }
+        }
+        .task(id: [awake, game.finished ? 1 : 0]) {
+            // Studying a tank takes longer than the screen's lock waits, but a level left alone still lets it sleep.
+            Awake.hold(awakeID, !game.finished)
+            guard !game.finished, (try? await Task.sleep(for: .seconds(120))) != nil else { return }
+            Awake.hold(awakeID, false)
+        }
         .onChange(of: settling) {
             guard !settling, undoQueued else { return }
             undoQueued = false
@@ -1163,6 +1175,7 @@ struct LevelView: View {
         .onDisappear {
             endPath(); endTwist()
             if knocks { Knock.rest() }
+            Awake.hold(awakeID, false)
             Log.write("level \(game.level.id) exits \(state)")
         }
     }
@@ -2369,6 +2382,17 @@ struct Detent {
         let now = Self.steps(angle, of: step)
         defer { steps = now }
         return abs(now - steps)
+    }
+}
+
+/// Keeps the screen from locking while any level on screen asks it to: the next level can appear before the last
+/// has gone.
+@MainActor enum Awake {
+    private static var holders: Set<UUID> = []
+
+    static func hold(_ id: UUID, _ on: Bool) {
+        if on { holders.insert(id) } else { holders.remove(id) }
+        UIApplication.shared.isIdleTimerDisabled = !holders.isEmpty
     }
 }
 
