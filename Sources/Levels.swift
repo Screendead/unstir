@@ -335,7 +335,8 @@ struct Level: Hashable, Sendable {
         return level
     }
 
-    static let sandbox = Level(id: "sandbox", label: "box", title: "Sandbox", layout: .tri, scramble: [])
+    static let sandbox = Level(id: "sandbox", label: "box", title: "Sandbox", note: "Stir anything. Undo is free here.",
+                               layout: .tri, scramble: [])
 
     /// The triangle is hand-written: every rod overlaps, so the generator's ordered sizes overshoot there.
     private static let generated: [Layout] = [.quad, .eye, .pent, .hex]

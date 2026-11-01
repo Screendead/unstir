@@ -125,6 +125,10 @@ shot endless-spilled "The same, 6 s in: the picture stirred together, its finest
   MODE=endless BRIM=7 TURNED=1:1 CLOCK=6
 shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch)." \
   LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
+shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
+  MODE=sandbox CLOCK=3
+shot sandbox-chainmail "The sandbox on chainmail and pent: the header's controls in full where they fit." \
+  MODE=sandbox PICTURE=chainmail LAYOUT=pent STACK= CLOCK=3
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6

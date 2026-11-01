@@ -898,9 +898,11 @@ struct LevelView: View {
                     Button("\u{2039} levels", action: leave)
                     Spacer()
                     if game.level.sandbox {
-                        control(game.level.picture.rawValue, game.nextPicture)
-                        // A turn in hand, or snapping to commit, names a rod of the current layout.
-                        control(game.level.layout.rawValue) { if liveRod == nil { game.nextLayout() } }
+                        // Each says what it steps through where there is room for it.
+                        ViewThatFits(in: .horizontal) {
+                            sandboxControls(named: true)
+                            sandboxControls(named: false)
+                        }
                     } else if !game.level.ratchets.isEmpty {
                         tickBudget.opacity(showResult && !game.lost ? 0 : 1)
                     } else {
@@ -1391,9 +1393,20 @@ struct LevelView: View {
         s < 0.3 ? 0 : s < 0.6 ? (s - 0.3) / 0.3 : s < 2.3 ? 1 : max(0, (refillTime - s) / (refillTime - 2.3))
     }
 
-    private func control(_ label: String, _ action: @escaping () -> Void) -> some View {
+    private func sandboxControls(named: Bool) -> some View {
+        let picture = game.level.picture.rawValue, rods = game.level.layout.rods.count
+        return HStack(spacing: 8) {
+            control(named ? "picture: \(picture) \u{203A}" : "\(picture) \u{203A}", inset: 14, game.nextPicture)
+            // A turn in hand, or snapping to commit, names a rod of the current layout.
+            control(named ? "rods: \(rods) \u{203A}" : "\(rods) rods \u{203A}", inset: 14) {
+                if liveRod == nil { game.nextLayout() }
+            }
+        }
+    }
+
+    private func control(_ label: String, inset: CGFloat = 22, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(label).font(.mono(15)).padding(.horizontal, 22).padding(.vertical, 10)
+            Text(label).font(.mono(15)).padding(.horizontal, inset).padding(.vertical, 10)
                 .background(Capsule().fill(Color.white.opacity(0.05)))
                 .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
         }
