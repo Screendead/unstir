@@ -609,7 +609,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
   `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
   the first short of par, else the top). The daily, endless and the sandbox leave it at the top. That row's hairline,
-  in the list's left margin, lights once and fades (not under Reduce Motion). Back from a pack's level, the card over
+  in the list's left margin, lights once and fades (not under Reduce Motion). The menu opens on the tier of a level
+  of a tier left, and a tier's level opening stores its tier (`Tier.store`, so only an open one), so "up a notch" then
+  back lands on the new tier, and so does a launch after the app dies in it. Back from a pack's level, the card over
   the menu opens centred on its row the same way, but a gate's card still opens at its top.
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold

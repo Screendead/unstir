@@ -169,7 +169,8 @@ struct MenuView: View {
         self.cardScroll = cardScroll
         self.focus = focus
         _flashing = State(initialValue: focus?.id)
-        let tier = start ?? Tier.stored()
+        // A tier's own level left lands on its tier, which "up a notch" may have opened since the menu was last up.
+        let tier = start ?? focus.flatMap { f in f.tier.levels.contains { $0.id == f.id } ? f.tier : nil } ?? Tier.stored()
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
         _listed = State(initialValue: tier)

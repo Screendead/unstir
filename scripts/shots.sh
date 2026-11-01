@@ -69,6 +69,8 @@ shot menu-back-left "Back from plughole 12 left mid-level, a replay with 01 to 2
   LEVEL=12 EXIT=left BESTS=plughole:00000000000000000000
 shot menu-back-solved "Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens." \
   SCREEN=clean LEVEL=14 EXIT=solved BESTS=plughole:$upto13
+shot menu-back-up "Up a notch from plughole 27 into whirlpool 01, then back: the menu on whirlpool, not plughole." \
+  LEVEL=27 EXIT=up BESTS=plughole:$par27
 for picture in grid; do
   for d in 1 2 3 4 5; do
     stack=${depths[$((d - 1))]}

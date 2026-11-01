@@ -430,6 +430,8 @@ struct RootView: View {
         // A gate's card opens as it always has, at its top.
         if let level { focus = gate == nil ? level.focus(solved: solved) : nil }
         let opens = next.map(Store.shared.opens) ?? true
+        // So a launch after the app dies in a level comes back on its tier too.
+        if let next, gate == nil, opens, next.tier.levels.contains(where: { $0.id == next.id }) { Tier.store(next.tier) }
         withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil && opens ? next : nil }
     }
 }
