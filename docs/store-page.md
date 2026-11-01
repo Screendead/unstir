@@ -147,7 +147,7 @@ version exists.
 | User-generated content, messaging, chat | No | The share line is a text the player sends through the system share sheet; nothing is received |
 | Advertising | No | |
 | In-app purchases | Yes | Three packs and Complete |
-| Parental controls, age assurance | No | No age question in v1 |
+| Parental controls, age assurance | Yes (open) | The game calls Apple's Declared Age Range API and gates nothing; either answer keeps 4+ |
 | In-app controls, capabilities, medical or wellness topics, violent themes (added 2025) | None or No | |
 
 Expected result: 4+.
