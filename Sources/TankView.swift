@@ -1154,9 +1154,9 @@ struct LevelView: View {
                 Task { if swipeTouch?.call == .swipe, !swipedAway { swipeTouch = nil; springBack() } }
             }
             .task {
-                if let heldSwipe { onPeek(game.solved); swiped = heldSwipe }
+                if let heldSwipe { peek(); swiped = heldSwipe }
                 guard playsSwipe || exitsBySwipe, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
-                onPeek(game.solved)
+                peek()
                 if playsSwipe, !reduceMotion {
                     swipeFinger = true
                     withAnimation(.easeInOut(duration: 0.5)) { swiped = 0.45 }
@@ -1181,7 +1181,7 @@ struct LevelView: View {
                     swipeTouch = (v.startLocation, call == .swipe && drag == nil && !spun ? .swipe : .pass)
                     guard swipeTouch?.call == .swipe else { return }
                     Log.write("back swipe")
-                    if !reduceMotion { onPeek(game.solved) }
+                    if !reduceMotion { peek() }
                 }
                 guard swipeTouch?.call == .swipe, !reduceMotion, width > 0 else { return }
                 swiped = max(0, v.translation.width) / width
@@ -1195,6 +1195,13 @@ struct LevelView: View {
                     springBack()
                 }
             }
+    }
+
+    /// The menu under the level reads the endless run's save as it is built, so the save is written first, as leaving
+    /// writes it.
+    private func peek() {
+        Resume.save(game)
+        onPeek(game.solved)
     }
 
     private func swipeAway() {
