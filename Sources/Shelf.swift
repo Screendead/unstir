@@ -977,8 +977,14 @@ struct PackDock: View, Equatable {
                             LoopingTank(offer: offer, side: 66, held: held, offset: 1.75 * Double(i), interval: 1.0 / 30,
                                         paused: paused)
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(offer.name).font(.mono(.caption2)).opacity(0.7).lineLimit(2)
-                                    .multilineTextAlignment(.center).minimumScaleFactor(0.8)
+                                // A name breaks only between its words, each on a line of its own: where a word
+                                // is too wide for its cover it scales down rather than hyphenate.
+                                ViewThatFits(in: .horizontal) {
+                                    Text(offer.name).lineLimit(1)
+                                    Text(offer.name.replacingOccurrences(of: " ", with: "\n"))
+                                        .lineLimit(offer.name.split(separator: " ").count).minimumScaleFactor(0.5)
+                                }
+                                .font(.mono(.caption2)).opacity(0.7).multilineTextAlignment(.center)
                                 // A glyph, so the state reads without its colour; a revocation is the card's to say.
                                 if store.ready, let mark = state.mark {
                                     Image(systemName: mark).font(.system(size: 8, weight: .bold)).foregroundStyle(state.tag()?.colour ?? .text)
