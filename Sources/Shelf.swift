@@ -628,6 +628,9 @@ struct PackCard: View {
     @State private var buying = false
     @State private var landings = 0
     @State private var pulses = 0
+    /// Where VoiceOver goes when the card sends the player to buying.
+    @AccessibilityFocusState private var focus: Focus?
+    private enum Focus: Hashable { case note, buy }
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The facts' key column, grown with the keys' own type size.
@@ -674,6 +677,7 @@ struct PackCard: View {
                             if arrived, let note = Self.arrival(offer, levels, state: state) {
                                 Text(note).font(.mono(.footnote)).opacity(0.85).padding(.bottom, 14)
                                     .fixedSize(horizontal: false, vertical: true)
+                                    .accessibilityFocused($focus, equals: .note)
                             }
                             status(state).id(state)
                                 .transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
@@ -703,6 +707,13 @@ struct PackCard: View {
                     } else if scrolled {
                         reader.scrollTo("list", anchor: .top)
                     }
+                }
+                .task {
+                    // VoiceOver lands on a new screen's first element, back, after it appears, which would scroll the
+                    // card to its top again; the wait lets that land first.
+                    guard arrived else { return }
+                    try? await Task.sleep(for: .milliseconds(600))
+                    focus = Self.arrival(offer, levels, state: store.state(offer)) == nil ? .buy : .note
                 }
             }
         }
@@ -778,6 +789,7 @@ struct PackCard: View {
                     if open { return onPlay(level) }
                     withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.35)) { reader.scrollTo("buy", anchor: .top) }
                     pulses += 1
+                    focus = .buy
                 } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text(level.label).font(.mono(.footnote, .semibold)).foregroundStyle(offer.glow)
@@ -899,6 +911,7 @@ struct PackCard: View {
                         }
                         .accessibilityLabel(state == .pending ? "Ask again for \(offer.name)" : "\(label.capitalized) \(offer.name)")
                         .accessibilityValue(price ?? store.pricing.words ?? "")
+                        .accessibilityFocused($focus, equals: .buy)
                 }
                 if let taste = Self.taste(levels) ?? Self.placeholder(offer).map({ (level: $0, replay: false) }) {
                     let (level, replay) = taste
