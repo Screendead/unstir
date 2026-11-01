@@ -1706,6 +1706,25 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(BackSwipe.commits(dx: 0, predicted: 0, width: 440))
     }
 
+    /// The tank reads an edge touch by where it landed, though the slide carries the tank's origin right under it.
+    func testTheTankKeepsAnEdgeTouchsCallThroughTheSlide() {
+        let start = CGPoint(x: 28, y: 300)
+        func edge(_ held: BackSwipe.Edge?, at x: CGFloat, moved dx: CGFloat, _ dy: CGFloat) -> BackSwipe.Edge? {
+            BackSwipe.edge(held, start: start, origin: CGPoint(x: x, y: 100), translation: CGSize(width: dx, height: dy))
+        }
+        let landed = edge(nil, at: -20, moved: 0, 0)
+        XCTAssertEqual(landed?.call, .undecided, "recorded as it lands")
+        let decided = edge(landed, at: -20, moved: 12, 2)
+        XCTAssertEqual(decided?.call, .swipe)
+        XCTAssertEqual(edge(decided, at: 40, moved: 60, 40), decided, "slid past the band and off sideways")
+        XCTAssertEqual(edge(landed, at: 40, moved: 12, 2)?.call, .swipe, "decided where it landed")
+        let down = edge(landed, at: -20, moved: 2, 12)
+        XCTAssertEqual(down?.call, .pass)
+        XCTAssertEqual(edge(down, at: 0, moved: 40, 12), down)
+        XCTAssertNil(edge(nil, at: 10, moved: 0, 0), "landed past the band")
+        XCTAssertNil(BackSwipe.edge(decided, start: CGPoint(x: 60, y: 300), origin: .zero, translation: .zero), "a new touch")
+    }
+
     /// Deep in one disc a finger holds that rod the moment it lands.
     func testGrabInOneDiscIsImmediate() {
         for layout in Layout.allCases {

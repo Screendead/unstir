@@ -332,7 +332,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   mostly sideways, it is the back swipe (`BackSwipe`; Jack's call C19, round 13), which slides the level off over the
   menu, dimmed 0.4 at the start and less as it uncovers, and past a third of the width, or heading past half, leaves as
   ‹ levels does, else springs back; otherwise the tank takes it up from where it landed (a vertical one a rim turn,
-  Jack's call S2). It works wherever a level is up, cards and opening too; under Reduce Motion nothing slides, and a
+  Jack's call S2). The tank keeps that call for the whole touch, read by where it landed (`BackSwipe.edge`), as the
+  slide moves the tank under it. It works wherever a level is up, cards and opening too; under Reduce Motion nothing slides, and a
   swipe past the threshold leaves through the dip. The rim, from
   `LevelView.rim` (0.93) out over the bezel, holds the level's motion where it has one and the swirl where the layout
   has one. Where it has both, the swirl holds the glass's own edge from `swirlBand` (0.86) and the motion the bezel and

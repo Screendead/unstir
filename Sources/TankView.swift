@@ -848,6 +848,25 @@ enum BackSwipe: Equatable {
     static func commits(dx: CGFloat, predicted: CGFloat, width: CGFloat) -> Bool {
         dx > width / 3 || predicted > width / 2
     }
+
+    /// An edge touch as the tank saw it land: `start` in the tank's points, `global` the same point on the screen.
+    struct Edge: Equatable {
+        let start: CGPoint
+        let global: CGPoint
+        let call: BackSwipe
+    }
+
+    /// The tank's view of a touch from `start`, in its own points, with its origin on the screen at `origin` now:
+    /// recorded as it lands, before anything slides, and from then on read by its start alone, since the slide moves
+    /// the tank's origin and with it where `start` would seem to lie. Nil: not an edge touch.
+    static func edge(_ held: Edge?, start: CGPoint, origin: CGPoint, translation t: CGSize) -> Edge? {
+        if let held, held.start == start {
+            guard held.call == .undecided else { return held }
+            return Edge(start: start, global: held.global, call: decide(start: held.global, translation: t))
+        }
+        let global = CGPoint(x: origin.x + start.x, y: origin.y + start.y)
+        return global.x < band ? Edge(start: start, global: global, call: decide(start: global, translation: t)) : nil
+    }
 }
 
 /// What a finger on the tank holds.
@@ -1014,9 +1033,9 @@ struct LevelView: View {
     let onPeek: (Bool?) -> Void
     /// The back swipe's touch, by its global start, and what it decided.
     @State private var swipeTouch: (start: CGPoint, call: BackSwipe)?
-    /// The same decision as the tank's gesture saw it, by the touch's start in the tank's points: once made it holds,
-    /// though a swipe's later course may no longer read as one.
-    @State private var edgeTouch: (start: CGPoint, call: BackSwipe)?
+    /// The same decision as the tank's gesture saw it: once made it holds, though a swipe's later course may no longer
+    /// read as one.
+    @State private var edgeTouch: BackSwipe.Edge?
     /// The system can cancel the swipe's touch, which its onEnded never sees.
     @GestureState private var swipeHeld = false
     /// How far across the screen the back swipe has slid the level, 0 to 1.
@@ -1216,9 +1235,6 @@ struct LevelView: View {
             if swiped == 0, swipeTouch?.call != .swipe { onPeek(nil) }
         }
     }
-
-    /// `p` in the tank's own points, in global ones.
-    private func global(_ p: CGPoint) -> CGPoint { CGPoint(x: tankOrigin.x + p.x, y: tankOrigin.y + p.y) }
 
     private var screen: some View {
         GeometryReader { geo in
@@ -2481,13 +2497,9 @@ struct LevelView: View {
             .onChanged { v in
                 // A touch from the screen's left edge is the back swipe's until it decides; one it passes is taken up
                 // from where it landed, before it skips the opening.
-                if drag?.start != v.startLocation, global(v.startLocation).x < BackSwipe.band {
-                    if edgeTouch?.start != v.startLocation {
-                        let call = BackSwipe.decide(start: global(v.startLocation), translation: v.translation)
-                        guard call != .undecided else { return }
-                        edgeTouch = (v.startLocation, call)
-                    }
-                    guard edgeTouch?.call == .pass else { return }
+                if drag?.start != v.startLocation {
+                    edgeTouch = BackSwipe.edge(edgeTouch, start: v.startLocation, origin: tankOrigin, translation: v.translation)
+                    if let edge = edgeTouch, edge.call != .pass { return }
                 }
                 guard !settling, !game.finished, !swipedAway, v.startLocation != skippedDemo else { return }
                 // A touch skips the opening as it lands, then takes up what it landed on; one that skips the clock's
@@ -2537,7 +2549,10 @@ struct LevelView: View {
             .onEnded { v in
                 if v.startLocation == skippedDemo { skippedDemo = nil; return }
                 // An edge touch never taken up was the back swipe's, or a tap.
-                if drag?.start != v.startLocation, global(v.startLocation).x < BackSwipe.band { return }
+                if edgeTouch?.start == v.startLocation {
+                    edgeTouch = nil
+                    if drag?.start != v.startLocation { return }
+                }
                 if skip() { return }
                 // The lift can carry movement no change reported.
                 if let down = path?.down { path!.trail.add(norm(v.location), ms: Self.ms(v.time, since: down)) }
