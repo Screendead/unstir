@@ -476,7 +476,12 @@ for t in 1.4 2.4 3.6 5.0; do
 done
 shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
   CARD=lens STORE=complete:failed CLOCK=5.4
-shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4
+shot card-complete-owned "Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card." \
+  CARD=complete OWNED=complete CLOCK=5.4
+shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
+  CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
+shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \
+  OWNED=complete CLOCK=5.4
 shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
 shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live." \
   CARD=lens STORE=lens:unowned PRICES=unreachable CLOCK=5.4

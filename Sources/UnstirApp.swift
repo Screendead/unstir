@@ -167,12 +167,13 @@ struct Harness {
         self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
         menuTier = harnessed ? tier : nil
-        // UNSTIR_BESTS=plughole:00-1,whirlpool:0: a best for each of a tier's levels from 01, one character each: a
-        // digit is that many over par, - is none. For this launch only.
+        // UNSTIR_BESTS=plughole:00-1,whirlpool:0,lens:000: a best for each of a tier's or a pack's levels from 01, one
+        // character each: a digit is that many over par, - is none. For this launch only.
         for part in env["UNSTIR_BESTS"]?.split(separator: ",") ?? [] {
             let f = part.split(separator: ":")
-            guard f.count == 2, let owner = Tier(rawValue: String(f[0])) else { continue }
-            for (level, c) in zip(owner.levels, f[1]) {
+            guard f.count == 2, let levels = Tier(rawValue: String(f[0]))?.levels ?? Pack(rawValue: String(f[0]))?.levels
+            else { continue }
+            for (level, c) in zip(levels, f[1]) {
                 if let over = c.wholeNumberValue { Best(over: over, seconds: 60).fake(level.id) }
             }
         }

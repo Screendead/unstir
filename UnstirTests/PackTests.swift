@@ -234,6 +234,26 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(unshared.unshared(.lens))
     }
 
+    /// An owner's pill plays from the first level without a best, then the first not at par, and goes once all are at
+    /// par; it says continue once a level past the taste is solved.
+    @MainActor func testAnOwnerPicksUpWhereTheyLeftOff() {
+        let levels = Pack.lens.levels
+        var bests: [String: Best] = [:]
+        func best(_ id: String) -> Best? { bests[id] }
+        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "01")
+        XCTAssertFalse(PackCard.continues(levels, best: best))
+        for level in levels.prefix(3) { bests[level.id] = Best(over: 0, seconds: 60) }
+        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "04")
+        XCTAssertFalse(PackCard.continues(levels, best: best))
+        bests[levels[3].id] = Best(over: 2, seconds: 60)
+        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "05")
+        XCTAssertTrue(PackCard.continues(levels, best: best))
+        for level in levels where bests[level.id] == nil { bests[level.id] = Best(over: 0, seconds: 60) }
+        XCTAssertEqual(PackCard.pickUp(levels, best: best)?.label, "04")
+        bests[levels[3].id] = Best(over: 0, seconds: 60)
+        XCTAssertNil(PackCard.pickUp(levels, best: best))
+    }
+
     @MainActor func testHarnessSetsTheCardsMessages() {
         let h = Harness(["UNSTIR_CARD": "lens", "UNSTIR_STORE": "lens:failed", "UNSTIR_FAILED": "offline",
                          "UNSTIR_PRICES": "unreachable", "UNSTIR_PAYMENTS": "0", "UNSTIR_RESTORED": "lens,prism"])

@@ -540,14 +540,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
   Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
-  (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens alone; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
+  (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and Complete; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
   (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a glyph by its name for its state (`Purchase.mark`: a check owned, an hourglass waiting on Ask
   to Buy, nothing else, a revocation being the card's to say). `PackCard` grows out
   of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
   purchase state, buy at the App Store's price, try free, Complete beside an unowned pack while Complete is on the
   shelf (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
-  locked. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
+  par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
+  the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
+  once all are (`PackCard.pickUp`, `continues`). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
+  once every one is, and Complete's cover once Complete is owned; Complete's card names each pack as a link to its
+  card (`onOffer`), so each taste is a tap away. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
   card (`Store.forgetFailures`), and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from a row or
   from the level before it. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
@@ -666,7 +671,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_FAILED=offline` (`storefront`, `refused`) says why a failed product failed, `UNSTIR_PAYMENTS=0` turns
   purchases off, and `UNSTIR_RESTORED=lens,prism` (`none`, `failed`) sets what the last restore found.
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
-  levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list. A pack level past
+  levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list; `UNSTIR_BESTS`
+  takes a pack's prefix as it takes a tier's. A pack level past
   the taste needs `UNSTIR_OWNED` too, or it opens the card. `UNSTIR_STOPLOOK=left` picks how an Escapement tank out of
   ticks as its last clock stops looks. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the

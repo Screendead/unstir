@@ -620,6 +620,8 @@ struct PackCard: View {
     var scrolled = false
     let onBack: () -> Void
     let onPlay: (Level) -> Void
+    /// Complete's card opens a pack's card from its name.
+    var onOffer: (Offer) -> Void = { _ in }
     var store = Store.shared
     @State private var buying = false
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -633,7 +635,8 @@ struct PackCard: View {
                         Button(action: onBack) { Text("\u{2039} back").font(.mono(.subheadline, .medium)) }
                             .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
                             .accessibilityLabel("Back")
-                        Text(offer.pack == nil ? "BUNDLE \u{00B7} PAID ADD-ON" : "PACK \u{00B7} PAID ADD-ON").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
+                        Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
+                            .font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
                             .padding(.top, 26)
                         Text(offer.name).font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
                             .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
@@ -641,10 +644,15 @@ struct PackCard: View {
                         Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
                         PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48), held: clock)
                             .frame(maxWidth: .infinity).padding(.top, 28)
+                        // An owner's card is home, not a shop: no taste to offer, and the pack's progress for what it holds.
                         VStack(alignment: .leading, spacing: 9) {
-                            fact("for", offer.assumes)
-                            fact("free", offer.free)
-                            fact("holds", offer.holds)
+                            fact("for", Text(offer.assumes))
+                            if state != .owned { fact("free", Text(offer.free)) }
+                            if state == .owned, offer.pack != nil, !levels.isEmpty {
+                                fact("done", Text("\(levels.filter { Best.load($0.id)?.over == 0 }.count)/\(levels.count) \(noPar ? "solved" : "at par")"))
+                            } else {
+                                fact("holds", holds)
+                            }
                         }
                         .padding(.top, 32)
                         if offer.arriving {
@@ -659,7 +667,9 @@ struct PackCard: View {
                            Offer.shelf().contains(.complete) {
                             completeLine.padding(.top, 14)
                         }
-                        restore.padding(.top, 18).padding(.bottom, 10)
+                        if Pack.sold().contains(where: { store.state($0) != .owned }) {
+                            restore.padding(.top, 18).padding(.bottom, 10)
+                        }
                         if !levels.isEmpty { list.padding(.top, 26).padding(.bottom, 10).id("list") }
                     }
                     .padding(.horizontal, 24)
@@ -685,15 +695,39 @@ struct PackCard: View {
 
     private var price: String? { store.price(offer.productID) }
 
-    @ViewBuilder private func fact(_ key: String, _ value: String) -> some View {
+    /// Complete's names each pack, each opening that pack's card, so its taste is a tap away.
+    private var holds: Text {
+        guard offer.pack == nil else { return Text(offer.holds) }
+        let sold = Pack.sold()
+        var s = AttributedString()
+        for (i, pack) in sold.enumerated() {
+            if i > 0 { s += AttributedString(i == sold.count - 1 ? " and " : ", ") }
+            var name = AttributedString(pack.name)
+            name.link = URL(string: "unstir-pack:\(pack.rawValue)")
+            name.underlineStyle = Text.LineStyle(pattern: .dot)
+            s += name
+        }
+        s += AttributedString(" \u{00B7} \(sold.map(\.planned).reduce(0, +)) levels")
+        return Text(s)
+    }
+
+    @ViewBuilder private func fact(_ key: String, _ value: Text) -> some View {
         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 0))
         layout {
             Text(key).font(.mono(.caption2)).opacity(0.38)
                 .frame(width: typeSize.isAccessibilitySize ? nil : 52, alignment: .leading)
-            Text(value).font(.mono(.footnote)).opacity(0.85).fixedSize(horizontal: false, vertical: true)
+            value.font(.mono(.footnote)).opacity(0.85).fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
+        .tint(Color.text)
+        .environment(\.openURL, OpenURLAction { url in
+            guard url.scheme == "unstir-pack", let pack = Pack(rawValue: url.absoluteString.replacingOccurrences(of: "unstir-pack:", with: "")) else {
+                return .discarded
+            }
+            onOffer(.pack(pack))
+            return .handled
+        })
     }
 
     /// Every level, those past the taste locked until the pack is owned, under a heading for each chapter where the
@@ -794,8 +828,9 @@ struct PackCard: View {
     @ViewBuilder private func action(_ state: Purchase) -> some View {
         if state == .owned {
             if let level = next {
-                pill("play \u{203A}", trailing: nil, colour: .lime) { onPlay(level) }
-                    .accessibilityLabel("Play \(offer.name)")
+                let verb = Self.continues(levels) ? "continue" : "play"
+                pill("\(verb) \(level.label) \u{203A}", trailing: nil, colour: .lime) { onPlay(level) }
+                    .accessibilityLabel("\(verb.capitalized) \(offer.name), level \(level.label)")
             }
         } else {
             // A declined Ask to Buy sends no transaction, so a pending pill stays live: asking again sends a new request.
@@ -827,9 +862,18 @@ struct PackCard: View {
         }
     }
 
-    /// The first level without a best, else the first: where an owner picks up.
-    private var next: Level? {
-        levels.first { Best.load($0.id) == nil } ?? levels.first ?? Self.placeholder(offer)
+    private var next: Level? { levels.isEmpty ? Self.placeholder(offer) : Self.pickUp(levels) }
+
+    /// Where an owner picks up: the first level without a best, then the first not at par; none once all are at par.
+    static func pickUp(_ levels: [Level], best: (String) -> Best? = Best.load) -> Level? {
+        levels.first { best($0.id) == nil } ?? levels.first { best($0.id)?.over != 0 }
+    }
+
+    /// Play, until a level past the taste has been solved: then the owner continues.
+    static func continues(_ levels: [Level], best: (String) -> Best? = Best.load) -> Bool {
+        levels.contains { level in
+            best(level.id) != nil && (level.pack.flatMap { $0.number(of: level.id) } ?? 0) > (level.pack?.taste ?? 0)
+        }
     }
 
     /// Before a pack has levels, a Debug build plays its harness placeholder.
@@ -925,10 +969,12 @@ struct PackDock: View {
 
     var body: some View {
         VStack(spacing: 10) {
+            let owned = Pack.sold().filter { store.state($0) == .owned }
             HStack {
-                Text("PACKS \u{00B7} PAID ADD-ONS").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.38)
+                Text(owned.isEmpty ? "PACKS \u{00B7} PAID ADD-ONS" : "PACKS").font(.mono(.caption2, .semibold)).tracking(2)
+                    .opacity(0.38)
                 Spacer()
-                if typeSize < .xxLarge {
+                if typeSize < .xxLarge, owned.count < Pack.sold().count {
                     Text("first 3 levels of each free").font(.mono(.caption2)).opacity(0.3)
                 }
             }
@@ -936,7 +982,8 @@ struct PackDock: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             HStack(alignment: .top, spacing: 0) {
-                let shelf = Offer.shelf()
+                // Complete owned leaves nothing on its card to do.
+                let shelf = Offer.shelf().filter { $0 != .complete || store.state(.complete) != .owned }
                 ForEach(Array(shelf.enumerated()), id: \.offset) { i, offer in
                     let x = (Double(i) + 0.5) / Double(shelf.count), state = store.state(offer)
                     Button { open(offer, UnitPoint(x: x, y: 0.88)) } label: {

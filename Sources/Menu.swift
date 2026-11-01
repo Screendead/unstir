@@ -229,7 +229,8 @@ struct MenuView: View {
     @ViewBuilder private var cardView: some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
-                     onBack: { show(nil) }, onPlay: { onPick($0) })
+                     onBack: { show(nil) }, onPlay: { onPick($0) }, onOffer: { show($0) })
+                .id(card)
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
