@@ -85,7 +85,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
     -destination 'platform=iOS Simulator,name=Unstir iPhone 17 Pro Max' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
   ```
-  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds, and the
+  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The test host shares its defaults with the
+  harness's launches on that simulator, so the bundle's principal class (`FreshDefaults`) forgets every started flag
+  before each test and after the run. The solver's tests that take seconds, and the
   halftone's contrast test, skip unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
   `xcodebuild` to run them too (about a minute and a half more).
 - StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
@@ -378,7 +380,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lost card's under its buttons), which plays the undo and reset sounds as the bottom controls do. An undo tapped
   while a let-go settles is taken once it has. A reset with nothing played only replays the opening and counts no
   reset, so it costs no clean. With moves played, the play screen's reset takes a second tap: the first only taps and
-  arms it, "reset? tap again", for 2 s (`ResetArm`), and any move, undo or finish disarms it; the cards' "again" resets
+  arms it, "reset? tap again", for 2 s (`ResetArm`; under VoiceOver until focus leaves it), and any move, undo or
+  finish disarms it; the cards' "again" resets
   at once (Jack's call C12, round 13). The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
