@@ -716,7 +716,7 @@ struct LevelView: View {
     private let bench: Bool
     /// UNSTIR_WAVE: the solve wave held at this radius.
     private let frozenWave: Double?
-    /// UNSTIR_CLOCK: a live background, and the rim's ghost finger, held at this many seconds.
+    /// UNSTIR_CLOCK: a live background, and the rim and knob lessons' ghost fingers, held at this many seconds.
     private let frozenClock: Double?
     /// UNSTIR_SHAKE: a seized knob's shake and the rim's pulse held this many seconds in.
     private let frozenShake: Double?

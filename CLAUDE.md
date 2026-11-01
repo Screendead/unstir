@@ -328,16 +328,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the rim's lesson: `RimLesson`, a two-headed amber arc just outside the bezel at the top and a ghost finger rocking
   along the rim under it, shown on any level whose rim turns the tank until the player's first turn of the tank commits. That
   turn sets `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does.
-  The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. L1, until it has a
-  best, shows its own verb the same way (`KnobLesson`): left untouched for 4 s after its opening, a ghost finger
-  rocks round knob 0 halfway out its disc until the first stir commits, gone while any finger is down and held
-  mid-rock under Reduce Motion. A level with a swirl
+  The lesson never shows a way to turn, and after the flag only the pulse brings the arc back. A level with a swirl
   shows its own lesson the same way until the player's first stir of the swirl commits (`Game.swirled`,
   `Best.swirled`): a thin cyan arc at the bottom 10 pt inside the glass's edge, seated on a dark stroke
   and without the tank arc's glow since it lies on the picture, and its ghost finger there, in the middle of the
   swirl's grab. So on a level with both, each lesson points at its own ring: the tank's at the bezel, the swirl's
   inside the glass. It goes while the swirl is held. The lessons go once learnt, so two standing cues keep saying
-  what the rim does. `Knurl` mills the bezel wherever the rim turns the tank: dark grooves between ridges every 4 pt or so,
+  what the rim does. L1, until it has a best, shows the knob's verb with a lesson of its own (`KnobLesson`): left
+  untouched for 4 s after its opening, a ghost finger rocks round knob 0 halfway out its disc until the first stir
+  commits, gone while any finger is down and held mid-rock under Reduce Motion.
+  `Knurl` mills the bezel wherever the rim turns the tank: dark grooves between ridges every 4 pt or so,
   faintly amber at rest (the tank's colour, as its lesson), turning with the glass and brighter while the rim holds
   it, gone under the result card unless the run spilled. `Breath` shows the swirl: while the tank rests, on a layout
   with a swirl, until the player's first stir of the swirl commits (`Game.breathes`: the moment and the flag,
@@ -666,7 +666,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
   round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
-  lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
+  and knob lessons' ghost fingers, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
   and it holds the swirl's breath at 0. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
   first slosh starts at 1.5 s, for stills, even under `UNSTIR_CLOCK`, and never with `UNSTIR_SWIRLED=1`, which has none. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
   pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
