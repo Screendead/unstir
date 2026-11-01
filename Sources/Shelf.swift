@@ -1165,17 +1165,22 @@ private struct PulsingDot: View {
 // MARK: - The dock
 
 /// The menu's shelf: a live cover per pack and Complete along the bottom, each opening its card. Out of step, so the
-/// dock never stirs all at once.
-struct PackDock: View {
+/// dock never stirs all at once. Equatable on what it is handed, since the menu redraws on every frame of a scroll and
+/// each cover's marks read the saved bests.
+struct PackDock: View, Equatable {
     let open: (Offer, UnitPoint) -> Void
-    var held: Double?
+    let held: Double?
     /// The card covers it.
-    var paused = false
+    let paused: Bool
     /// A card or the settings sheet is over it, so an approval waits to be said until it shows.
-    var covered = false
+    let covered: Bool
     var store = Store.shared
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    nonisolated static func == (a: PackDock, b: PackDock) -> Bool {
+        a.held == b.held && a.paused == b.paused && a.covered == b.covered
+    }
 
     var body: some View {
         VStack(spacing: 10) {

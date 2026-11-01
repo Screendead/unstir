@@ -259,6 +259,7 @@ struct MenuView: View {
                     PackDock(open: { show($0, from: $1) }, held: clock,
                              paused: card != nil || settings || Power.shared.saving || Power.shared.idle,
                              covered: card != nil || settings)
+                        .equatable()
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
