@@ -63,6 +63,13 @@ enum Settings {
         set { set("haptics", newValue) }
     }
 
+    /// For the log and a report: "music on, sounds off, haptics on, letters system".
+    static var summary: String {
+        let letters = Letters.choice.map { $0 ? "on" : "off" } ?? "system"
+        return ["music", "sounds", "haptics"].map { "\($0) \(on($0) ? "on" : "off")" }.joined(separator: ", ")
+            + ", letters \(letters)"
+    }
+
     private static func on(_ name: String) -> Bool {
         held.withLock { $0.map { $0[name] ?? true } } ?? !UserDefaults.standard.bool(forKey: "\(name).off")
     }
@@ -219,8 +226,9 @@ final class Sound: @unchecked Sendable {
     }
 
     @MainActor func play(_ effect: Effect) {
-        // A drag ticks up to ten times a second, which would crowd the recorder's 3000 lines.
-        if effect != .tick { Log.write("sound \(effect)") }
+        // A drag ticks up to ten times a second, which would crowd the recorder's 3000 lines, and a sound switched
+        // off never plays.
+        if effect != .tick, Settings.sounds { Log.write("sound \(effect)") }
         queue.async { self.start(effect) }
     }
 

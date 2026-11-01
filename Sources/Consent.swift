@@ -185,6 +185,8 @@ struct SettingsSheet: View {
                     switchRow(ConsentWords.sounds, ConsentWords.soundsDetail, $sounds) {
                         Settings.sounds = $0
                         Sound.shared.sounds($0)
+                        // The switch's own tap went out while sounds were off.
+                        if $0 { Sound.shared.play(.tap) }
                     }
                     switchRow(ConsentWords.haptics, ConsentWords.hapticsDetail, $haptics) { Settings.haptics = $0 }
                     switchRow(ConsentWords.letters, ConsentWords.lettersDetail,
@@ -263,7 +265,11 @@ struct SettingsSheet: View {
     private func switchRow(_ name: String, _ detail: String, _ mirror: Binding<Bool>,
                            store: @escaping (Bool) -> Void) -> some View {
         VStack(spacing: 0) {
-            Toggle(isOn: Binding(get: { mirror.wrappedValue }, set: { store($0); mirror.wrappedValue = $0 })) {
+            Toggle(isOn: Binding(get: { mirror.wrappedValue }, set: {
+                store($0)
+                mirror.wrappedValue = $0
+                Log.write("settings: \(name) \($0 ? "on" : "off")")
+            })) {
                 row(name, detail)
             }
             .toggleStyle(NeonToggle())
@@ -298,7 +304,7 @@ private struct MailSheet: UIViewControllerRepresentable {
     let to: String
 
     static var subject: String { "\(SettingsSheet.version): a problem" }
-    /// The device line, read as the report is written.
+    /// The device line, the settings' switches with it, read as the report is written.
     static var body: String { "What happened:\n\n\n\u{2014}\n\(UnstirApp.device)\n" }
     @Environment(\.dismiss) private var dismiss
 

@@ -20,7 +20,8 @@ struct UnstirApp: App {
         let type = UIApplication.shared.preferredContentSizeCategory.rawValue.replacingOccurrences(of: "UICTContentSizeCategory", with: "")
         return "device: app \(info["CFBundleShortVersionString"] ?? "?") (\(info["CFBundleVersion"] ?? "?")), iOS \(os.majorVersion).\(os.minorVersion).\(os.patchVersion), "
             + "\(model), \(Locale.current.identifier), type \(type), reduce motion \(UIAccessibility.isReduceMotionEnabled), "
-            + "voiceover \(UIAccessibility.isVoiceOverRunning), low power \(ProcessInfo.processInfo.isLowPowerModeEnabled)"
+            + "voiceover \(UIAccessibility.isVoiceOverRunning), low power \(ProcessInfo.processInfo.isLowPowerModeEnabled), "
+            + Settings.summary
     }
 
     var body: some Scene {

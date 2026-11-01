@@ -120,6 +120,7 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Letters.choice, false)
         XCTAssertNil(d.object(forKey: "sounds.off"))
         XCTAssertEqual(d.object(forKey: "letters") as? Bool, true)
+        XCTAssertEqual(Settings.summary, "music on, sounds off, haptics off, letters off")
         Settings.held.withLock { $0 = nil }
         XCTAssertFalse(Settings.music)
         XCTAssertEqual(Letters.choice, true)

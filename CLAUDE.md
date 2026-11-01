@@ -173,9 +173,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   its rotation), so a pick or turn can be checked against the finger. Past 1 MB (`Log.cap`) it is cut to its newest
   512 KB from a whole line once the first screen is up (`Log.trim`): read and cut off the main actor, then replaced
   atomically on it with the lines written meanwhile, so a launch before the first frame only opens it. Once the first screen is up
-  it logs a `device:` line (app version and build, iOS, model, locale, type size, Reduce Motion, VoiceOver, Low Power),
-  never the phone's name. `UILaunchScreen`'s colour (`LaunchBackground`, black) keeps a cold launch black in light
-  appearance too.
+  it logs a `device:` line (app version and build, iOS, model, locale, type size, Reduce Motion, VoiceOver, Low Power,
+  and the settings' switches, `Settings.summary`), never the phone's name; each switch tapped logs a `settings:` line.
+  `UILaunchScreen`'s colour (`LaunchBackground`, black) keeps a cold launch black in light appearance too.
 
 ## Architecture
 
