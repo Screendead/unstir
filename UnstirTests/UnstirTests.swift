@@ -1698,12 +1698,15 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(BackSwipe.decide(start: inside, translation: CGSize(width: 60, height: 0)), .pass)
     }
 
-    /// Let go, the swipe leaves past a third of the width, or heading past half; otherwise the level springs back.
+    /// Let go, the swipe leaves past a third of the width, or heading past half, unless flicked back; otherwise the
+    /// level springs back.
     func testTheBackSwipeCommitsPastAThird() {
         XCTAssertFalse(BackSwipe.commits(dx: 140, predicted: 180, width: 440))
         XCTAssertTrue(BackSwipe.commits(dx: 150, predicted: 150, width: 440))
         XCTAssertTrue(BackSwipe.commits(dx: 60, predicted: 230, width: 440), "a flick")
         XCTAssertFalse(BackSwipe.commits(dx: 0, predicted: 0, width: 440))
+        XCTAssertFalse(BackSwipe.commits(dx: 220, predicted: 120, width: 440), "flicked back")
+        XCTAssertTrue(BackSwipe.commits(dx: 220, predicted: 215, width: 440), "held still")
     }
 
     /// The tank reads an edge touch by where it landed, though the slide carries the tank's origin right under it.

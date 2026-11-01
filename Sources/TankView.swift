@@ -844,9 +844,10 @@ enum BackSwipe: Equatable {
         return t.width > 0 && t.width >= 2 * abs(t.height) ? .swipe : .pass
     }
 
-    /// Let go `dx` across a screen `width` wide, heading for `predicted`, the swipe leaves.
+    /// Let go `dx` across a screen `width` wide, heading for `predicted`, the swipe leaves; as iOS's own, a flick back
+    /// left cancels it however far it had gone.
     static func commits(dx: CGFloat, predicted: CGFloat, width: CGFloat) -> Bool {
-        dx > width / 3 || predicted > width / 2
+        predicted > width / 2 || dx > width / 3 && predicted >= dx - 8
     }
 
     /// An edge touch as the tank saw it land: `start` in the tank's points, `global` the same point on the screen.
