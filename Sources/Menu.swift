@@ -467,7 +467,11 @@ struct MenuView: View {
             shown = t
             // Under the stir's peak, so the jump never shows: a landing row scrolls in once the copy has measured it.
             mark = nil
-            if t.landing() == nil { scroller?.scrollTo(Self.top, anchor: .top) }
+            if !t.isOpen() {
+                scroller?.scrollTo(TierList.heading, anchor: .top)
+            } else if t.landing() == nil {
+                scroller?.scrollTo(Self.top, anchor: .top)
+            }
             spin = -dir * turn
             withAnimation(.easeOut(duration: 0.62)) {
                 spin = 0
@@ -492,9 +496,13 @@ struct MenuView: View {
         }
     }
 
-    /// The tier's landing row centred, or the top where it has none.
+    /// The tier's landing row centred; a locked tier's header, over its gate, at the top; else the top.
     private func land(on t: Tier) {
-        if let row = t.landing() { scroller?.scrollTo(row.id, anchor: .center) } else { scroller?.scrollTo(Self.top, anchor: .top) }
+        if let row = t.landing() {
+            scroller?.scrollTo(row.id, anchor: .center)
+        } else {
+            scroller?.scrollTo(t.isOpen() ? Self.top : TierList.heading, anchor: .top)
+        }
     }
 
     /// The stirred copy's landing row, measured. Mid-switch, the mark moves there and the outgoing list scrolls to it,
@@ -604,6 +612,9 @@ private struct TierList: View, Equatable {
     nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier }
 
     private static let space = "tierList"
+    /// The header's id: the same on every tier, so mid-switch the outgoing list's header stands where the incoming one's
+    /// will.
+    static let heading = "heading"
 
     var body: some View {
         let open = tier.isOpen()
@@ -634,6 +645,7 @@ private struct TierList: View, Equatable {
             Text(open ? "\(par.filter { $0 }.count)/\(par.count) at par" : "locked").font(.mono(11)).opacity(0.4)
         }
         .padding(.top, 14).padding(.bottom, 8)
+        .id(Self.heading)
     }
 
     /// What opens a locked tier: a tick per level of the tier below, lit once that level is at par.

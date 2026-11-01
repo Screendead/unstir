@@ -603,8 +603,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`isSideways`); then the list stops scrolling, and a row lifted over doesn't open. While it turns, the list is drawn
   again over the scroll view, cut to its visible part, and that copy is what stirs; the scroll view's own list
   (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. At the swap the scroll
-  view lands on the new tier's landing, or its top where it has none: the copy reports where that row lies in its
-  list, a mark in the outgoing list moves there, and the scroll view scrolls to it once it is laid out, so the jump
+  view lands on the new tier's landing, its header while it is locked, or else its top: the copy reports where that
+  row lies in its list, a mark in the outgoing list moves there, and the scroll view scrolls to it once it is laid out, so the jump
   happens under the stir's peak. Tapping the picked tier scrolls to its landing. A locked tier can be
   looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par, and under the
   ticks the levels short of par as runs (`Tier.short`: "short: 05 · 12 · 21–27"), each a button opening its first,
