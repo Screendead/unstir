@@ -117,6 +117,7 @@ struct Harness {
     /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
     let tierSpin: (spin: Double, fade: Double)?
     /// UNSTIR_SETTINGS=1: the menu opens with the gear's sheet up. UNSTIR_CONSENT is read by `Analytics.configure`.
+    /// UNSTIR_MUSIC=0, UNSTIR_SOUNDS=0 and UNSTIR_HAPTICS=0: the sheet's switches off, for this launch only.
     let settings: Bool
     /// UNSTIR_OWNED and UNSTIR_STORE, in place of StoreKit's for this launch; never stored, and nil in Release.
     let purchases: Ledger?
@@ -208,6 +209,9 @@ struct Harness {
         letters = env["UNSTIR_LETTERS"] == "1"
         if let c = env["UNSTIR_LETTERSCHOICE"], ["0", "1"].contains(c) {
             UserDefaults.standard.register(defaults: ["letters": c == "1"])
+        }
+        for name in ["music", "sounds", "haptics"] where env["UNSTIR_\(name.uppercased())"] == "0" {
+            UserDefaults.standard.register(defaults: ["\(name).off": true])
         }
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)

@@ -634,10 +634,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds:
-  "colour letters" (`Letters`), the analytics switch (`NeonToggle`, which calls `decide`) where the build has analytics, "restore purchases" (`Store.restore`,
-  saying what it found as the cards do), "send log", which hands `Log.url` to the share sheet, and
-  "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)), for now the github.com page of
-  `docs/privacy-policy.md`, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
+  "music", "sounds" and "haptics" (`Settings`, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while
+  on; Jack's call C17, round 13), "colour letters" (`Letters`), the analytics switch (`NeonToggle`, which calls
+  `decide`) where the build has analytics, "restore purchases" (`Store.restore`, saying what it found as the cards do),
+  "send log", which hands `Log.url` to the share sheet, and "privacy policy", which opens `SettingsSheet.policy`
+  (Apple's guideline 5.1.1(i)), for now the github.com page of `docs/privacy-policy.md`, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
   its content outgrows the screen. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
@@ -736,7 +737,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
   a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
   target to 44 pt round it without moving anything. Nothing sounds during a drag but the
-  detent's tick, and a sound never tells the player anything the picture doesn't. The session is ambient, and while
+  detent's tick, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
+  out over the crossfade and back (`Sound.music`), its sounds switch every effect and button (`Sound.sounds`), and its
+  haptics switch `Knock` and every system haptic, which all go through `haptic(_:trigger:when:)`; none of the three is
+  read anywhere else. The session is ambient, and while
   another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
   unless `UNSTIR_SOUND=1`. An undo steps the heal notes back, so the next heal plays the undone one's note again
   (Jack, SN1).
@@ -785,7 +789,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
   opens the card's list); `UNSTIR_CONSENT=yes`
-  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up. `UNSTIR_UNLOCK` alone
+  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up (`UNSTIR_MUSIC=0`, `UNSTIR_SOUNDS=0` and `UNSTIR_HAPTICS=0` set its switches off for the launch). `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
   `UNSTIR_SOUND=1`. This is how screenshots and films

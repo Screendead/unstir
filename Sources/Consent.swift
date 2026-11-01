@@ -19,6 +19,12 @@ enum ConsentWords {
     static let analytics = "analytics"
     static let analyticsOn = "on \u{00B7} how you play, never who you are"
     static let analyticsOff = "off \u{00B7} nothing is sent"
+    static let music = "music"
+    static let musicDetail = "the beds under the menu and the levels"
+    static let sounds = "sounds"
+    static let soundsDetail = "every effect and button"
+    static let haptics = "haptics"
+    static let hapticsDetail = "the tank's knocks and taps"
     static let sendLog = "send log"
     static let sendLogDetail = "touches, moves, purchases and errors, with times\u{00A0}\u{00B7} never who you are"
     static let policy = "privacy policy"
@@ -134,15 +140,19 @@ struct NeonToggle: ToggleStyle {
     }
 }
 
-/// The gear's sheet: the colour letters, the analytics switch where the build has analytics, restore, the log and the
-/// privacy policy, and the version under them, black, sized to what it holds.
+/// The gear's sheet: music, sounds, haptics, the colour letters, the analytics switch where the build has analytics,
+/// restore, the log and the privacy policy, and the version under them, black, sized to what it holds.
 struct SettingsSheet: View {
     /// Apple's guideline 5.1.1(i) wants it reachable in the app. The plain github.com page until docs/ is served as a
     /// site.
     static let policy = URL(string: "https://github.com/Screendead/unstir/blob/master/docs/privacy-policy.md")!
 
     @State private var height: CGFloat = 220
-    /// The stored choice, mirrored so the switch moves as it is tapped.
+    // Mirrors of the stored switches, so each moves as it is tapped.
+    @State private var music = Settings.music
+    @State private var sounds = Settings.sounds
+    @State private var haptics = Settings.haptics
+    /// Nil until chosen, so the switch shows Differentiate Without Colour's state until then.
     @State private var letters = Letters.choice
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
     var store = Store.shared
@@ -155,12 +165,17 @@ struct SettingsSheet: View {
                 Text(ConsentWords.settings).font(.mono(11, .semibold)).opacity(0.5).padding(.top, 26)
                     .accessibilityAddTraits(.isHeader)
                 VStack(alignment: .leading, spacing: 0) {
-                    Toggle(isOn: Binding(get: { letters ?? differentiate }, set: { Letters.choice = $0; letters = $0 })) {
-                        row(ConsentWords.letters, ConsentWords.lettersDetail)
+                    switchRow(ConsentWords.music, ConsentWords.musicDetail, $music) {
+                        Settings.music = $0
+                        Sound.shared.music($0)
                     }
-                    .toggleStyle(NeonToggle())
-                    .padding(.vertical, 12)
-                    rule
+                    switchRow(ConsentWords.sounds, ConsentWords.soundsDetail, $sounds) {
+                        Settings.sounds = $0
+                        Sound.shared.sounds($0)
+                    }
+                    switchRow(ConsentWords.haptics, ConsentWords.hapticsDetail, $haptics) { Settings.haptics = $0 }
+                    switchRow(ConsentWords.letters, ConsentWords.lettersDetail,
+                              Binding(get: { letters ?? differentiate }, set: { letters = $0 })) { Letters.choice = $0 }
                     if analytics.shown {
                         Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
                             row(ConsentWords.analytics,
@@ -215,6 +230,19 @@ struct SettingsSheet: View {
     }
 
     private var rule: some View { Rectangle().fill(Color.text.opacity(0.12)).frame(height: 1) }
+
+    /// A stored switch: `store` keeps the choice and acts on it, the mirror moves the knob.
+    private func switchRow(_ name: String, _ detail: String, _ mirror: Binding<Bool>,
+                           store: @escaping (Bool) -> Void) -> some View {
+        VStack(spacing: 0) {
+            Toggle(isOn: Binding(get: { mirror.wrappedValue }, set: { store($0); mirror.wrappedValue = $0 })) {
+                row(name, detail)
+            }
+            .toggleStyle(NeonToggle())
+            .padding(.vertical, 12)
+            rule
+        }
+    }
 
     /// A row that hands off to another app, marked with the amber arrow.
     private func outward(_ name: String, _ detail: String) -> some View {

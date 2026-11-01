@@ -25,6 +25,7 @@ The game keeps these on your phone only, and never sends them anywhere:
   keeps the last time it trusted, the phone's time since it started up, and an identifier of that start-up that the
   system provides.
 - Which lessons you have learnt (turning the tank, using the swirl).
+- Your settings: music, sounds, haptics and colour letters.
 - A log of recent play, kept for finding bugs: the last 3,000 lines of where each touch landed and moved, each move,
   undo and reset, the levels opened, whether you own a pack as its levels open, failed purchases and the App Store's
   errors, when the app started, and similar notes of the game's state, each with the time on your phone. It holds nothing about who you

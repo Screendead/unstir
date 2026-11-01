@@ -43,7 +43,8 @@ final class PackTests: XCTestCase {
     @MainActor func testStorageKeysNeverChange() throws {
         let d = UserDefaults.standard, id = "pin-test"
         let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
-                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "letters"]
+                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "letters",
+                    "music.off", "sounds.off", "haptics.off"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -74,6 +75,26 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(d.bool(forKey: "undos.shown"))
         Letters.choice = true
         XCTAssertEqual(d.object(forKey: "letters") as? Bool, true)
+        Settings.music = false
+        XCTAssertTrue(d.bool(forKey: "music.off"))
+        Settings.sounds = false
+        XCTAssertTrue(d.bool(forKey: "sounds.off"))
+        Settings.haptics = false
+        XCTAssertTrue(d.bool(forKey: "haptics.off"))
+    }
+
+    /// Music, sounds and haptics start on, with nothing stored. Jack's call C17, round 13.
+    func testSettingsStartOn() {
+        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off"]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
+        for key in keys { d.removeObject(forKey: key) }
+        XCTAssertTrue(Settings.music)
+        XCTAssertTrue(Settings.sounds)
+        XCTAssertTrue(Settings.haptics)
+        Settings.haptics = false
+        XCTAssertFalse(Settings.haptics)
+        XCTAssertTrue(Settings.music)
     }
 
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.

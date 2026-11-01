@@ -782,7 +782,7 @@ struct PackCard: View {
                 Sound.shared.play(.solve)
             }
         }
-        .sensoryFeedback(.success, trigger: landings)
+        .haptic(.success, trigger: landings)
     }
 
     private struct Reading: Equatable {

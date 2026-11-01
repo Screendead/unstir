@@ -40,6 +40,31 @@ extension View {
     }
 }
 
+/// The settings' switches, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while on.
+enum Settings {
+    static var music: Bool {
+        get { !UserDefaults.standard.bool(forKey: "music.off") }
+        set { UserDefaults.standard.set(!newValue, forKey: "music.off") }
+    }
+
+    static var sounds: Bool {
+        get { !UserDefaults.standard.bool(forKey: "sounds.off") }
+        set { UserDefaults.standard.set(!newValue, forKey: "sounds.off") }
+    }
+
+    static var haptics: Bool {
+        get { !UserDefaults.standard.bool(forKey: "haptics.off") }
+        set { UserDefaults.standard.set(!newValue, forKey: "haptics.off") }
+    }
+}
+
+extension View {
+    /// Every system haptic goes through here, so the settings' switch silences them all.
+    func haptic<T: Equatable>(_ feedback: SensoryFeedback, trigger: T, when: ((T, T) -> Bool)? = nil) -> some View {
+        sensoryFeedback(feedback, trigger: trigger) { old, new in Settings.haptics && (when?(old, new) ?? true) }
+    }
+}
+
 extension ShareLink {
     /// A share link taps as it opens, beside its own action rather than through `Sounding`, which has not been seen to
     /// open the sheet.
@@ -99,6 +124,9 @@ final class Sound: @unchecked Sendable {
     private var failed = false
     /// Another app's music is playing: the bed gives way to it, and effects still sound.
     private var hushed = false
+    /// The settings' switches, read as the first sound is wanted and set as they change.
+    private var musicOn = Settings.music
+    private var soundsOn = Settings.sounds
 
     private init() {
         let centre = NotificationCenter.default
@@ -168,6 +196,19 @@ final class Sound: @unchecked Sendable {
         queue.async { self.start(effect) }
     }
 
+    /// The settings' music switch: the bed fades out over the crossfade, and back in.
+    func music(_ on: Bool) {
+        queue.async {
+            self.musicOn = on
+            self.fade()
+        }
+    }
+
+    /// The settings' sounds switch: every effect and button.
+    func sounds(_ on: Bool) {
+        queue.async { self.soundsOn = on }
+    }
+
     /// The bed under the menu or a level: a new one crossfades in over the old.
     func bed(_ bed: Bed) {
         queue.async {
@@ -205,6 +246,7 @@ final class Sound: @unchecked Sendable {
     }
 
     private func start(_ effect: Effect) {
+        guard soundsOn else { return }
         let name = switch effect {
         case .tick: "tick-\(ticks % 4 + 1)"
         case .tap: "tap-\(taps % 4 + 1)"
@@ -290,9 +332,10 @@ final class Sound: @unchecked Sendable {
         hushed = AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint
     }
 
-    /// The bed's file, or plughole's loop where there is no such bed; none while another app's music plays.
+    /// The bed's file, or plughole's loop where there is no such bed; none while another app's music plays or music
+    /// is off.
     private var wantedName: String? {
-        guard let bed, !hushed else { return nil }
+        guard let bed, !hushed, musicOn else { return nil }
         return bedFiles[bed.rawValue] == nil ? Bed.plughole.rawValue : bed.rawValue
     }
 

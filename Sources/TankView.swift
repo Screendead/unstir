@@ -1841,20 +1841,20 @@ struct LevelView: View {
         .onChange(of: holding) { _, now in if !now, let g = drag { cut(g) } }
         // Not .none: that also switches off the gesture above.
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
-        .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
-        .sensoryFeedback(.selection, trigger: ticks)
-        .sensoryFeedback(.selection, trigger: misses)
+        .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
+        .haptic(.selection, trigger: ticks)
+        .haptic(.selection, trigger: misses)
         .onChange(of: ticks) { Sound.shared.play(.tick) }
         .onChange(of: tankTicks) { Knock.clunk.play(); Sound.shared.play(.tank) }
-        .sensoryFeedback(.impact(weight: .heavy), trigger: game.cancels)
+        .haptic(.impact(weight: .heavy), trigger: game.cancels)
         // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
         .onChange(of: game.heals) { was, now in if now > was { Sound.shared.play(.heal(now)) } }
-        .sensoryFeedback(.warning, trigger: game.pushes)
+        .haptic(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
-        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
-        .sensoryFeedback(.error, trigger: game.tickPushes)
-        .sensoryFeedback(.success, trigger: game.solved) { _, solved in solved }
+        .haptic(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
+        .haptic(.error, trigger: game.tickPushes)
+        .haptic(.success, trigger: game.solved) { _, solved in solved }
         // One sound for the end, as its card shows it.
         .onChange(of: game.finished) { if game.finished { Sound.shared.play(game.solved ? .solve : .spilled) } }
         // Keeps texture pixels on device pixels, so the untwisted picture is not blurred by half a pixel.
@@ -2524,7 +2524,7 @@ struct Detent {
     /// Starts the engine ahead of the first knock, whose start would otherwise hitch the frame it lands on.
     static func warm(hold: Bool = true) {
         if hold { holders += 1 }
-        guard !running, let engine else { return }
+        guard Settings.haptics, !running, let engine else { return }
         running = (try? engine.start()) != nil
     }
 
@@ -2536,7 +2536,7 @@ struct Detent {
     }
 
     func play() {
-        guard let engine = Self.engine, let pattern = self == .clunk ? Self.clunkPattern : Self.thudPattern else { return }
+        guard Settings.haptics, let engine = Self.engine, let pattern = self == .clunk ? Self.clunkPattern : Self.thudPattern else { return }
         if !Self.running {
             guard (try? engine.start()) != nil else { return }
             Self.running = true
