@@ -219,7 +219,7 @@ struct Harness {
         amounts = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
             : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, Decimal(string: $0 == Pack.completeID ? "5.99" : "2.99")!) })
         prices = amounts.mapValues { "$\($0)" }
-        pricing = env["UNSTIR_PRICES"] == "unreachable" ? .unreachable : .fetching
+        pricing = env["UNSTIR_PRICES"] == "unreachable" ? .unreachable : amounts.isEmpty ? .fetching : .fetched
         failure = env["UNSTIR_FAILED"].flatMap(Failure.init(rawValue:)) ?? .other
         canPay = env["UNSTIR_PAYMENTS"] != "0"
         restored = switch env["UNSTIR_RESTORED"] {
@@ -406,7 +406,9 @@ struct RootView: View {
         _level = State(initialValue: h.screen == "menu" || gate != nil ? nil : h.level)
         _harness = State(initialValue: h)
         mute = h.mute
-        _card = State(initialValue: gate.map(Offer.pack) ?? h.card)
+        // Complete's card opens, as from the dock, only while it is on offer, or as an owner's home.
+        let card = h.card.flatMap { $0 != .complete || Store.shared.offersComplete || Store.shared.state(.complete) == .owned ? $0 : nil }
+        _card = State(initialValue: gate.map(Offer.pack) ?? card)
         _arrived = State(initialValue: gate)
         _placeholders = State(initialValue: h.cardLevels)
         _focus = State(initialValue: (h.menuTier ?? Tier.stored()).landing())

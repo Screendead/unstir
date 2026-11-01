@@ -141,6 +141,13 @@ final class Store {
         return styles[Pack.completeID].map { s.formatted($0) }
     }
 
+    /// Complete is on offer, on the dock and as a card to go back to: while it saves, or, while the prices are still
+    /// loading, while no sold pack is owned, when it holds every pack for less, so a launch's dock keeps its cover.
+    var offersComplete: Bool {
+        if saving != nil { return true }
+        return pricing == .fetching && amounts[Pack.completeID] == nil && Pack.sold().allSatisfy { state($0) != .owned }
+    }
+
     /// Screen Time, or a child's account without Ask to Buy, can turn purchases off; read afresh as a card draws.
     var canPay: Bool { payments ?? AppStore.canMakePayments }
 

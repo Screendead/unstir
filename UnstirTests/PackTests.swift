@@ -176,6 +176,23 @@ final class PackTests: XCTestCase {
         XCTAssertNil(store.saving)
         store.pretend(Ledger())
         XCTAssertNil(store.saving, "no prices yet")
+
+        // On offer while it saves, or while the prices load and no pack is owned; never once they say it saves nothing.
+        XCTAssertTrue(store.offersComplete, "loading, nothing owned: it holds every pack for less")
+        store.pretend(Ledger(), pricing: .unreachable)
+        XCTAssertFalse(store.offersComplete, "unreachable: nothing to say it saves")
+        var one = Ledger()
+        one.record(Pack.lens.productID, .owned)
+        store.pretend(one)
+        XCTAssertFalse(store.offersComplete, "loading with a pack owned: it may save nothing")
+        store.pretend(Ledger(), amounts: amounts, pricing: .fetched)
+        XCTAssertTrue(store.offersComplete)
+        store.pretend(one, amounts: amounts, pricing: .fetched)
+        XCTAssertEqual(store.offersComplete, Pack.sold().count == 4, "a Debug build sells four, so three are left")
+        var all = Ledger()
+        all.record(Pack.completeID, .owned)
+        store.pretend(all)
+        XCTAssertFalse(store.offersComplete)
     }
 
     /// An Ask to Buy approval is said once: a request then its approval says it, and once said it is forgotten; a pack
@@ -422,6 +439,7 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(h.restored, .found([.lens, .prism]))
         XCTAssertEqual(Harness(["UNSTIR_RESTORED": "none"]).restored, .nothing)
         XCTAssertEqual(Harness(["UNSTIR_PRICES": "0"]).pricing, .fetching)
+        XCTAssertEqual(Harness([:]).pricing, .fetched)
     }
 
     /// UNSTIR_OWNED lasts the launch: nothing it grants is written anywhere, and solving the placeholder it opens

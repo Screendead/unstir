@@ -502,6 +502,8 @@ shot card-prism "Prism's card, unowned: the fern printed off register in red, gr
   CARD=prism STORE=lens:unowned CLOCK=5.4
 shot card-prism-levels "Prism's card, owned, scrolled to its specimens under the five trays." CARD=prism OWNED=prism CARDSCROLL=1 CLOCK=5.4
 shot card-complete "Complete's card, unowned: save \$5.97 on the packs you don't have." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-complete-saves-nothing "UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover." \
+  CARD=complete OWNED=lens,first-stir CLOCK=5.4
 # Each card's clip (`Clip`) held on the frame Reduce Motion holds, and a few frames either side of it.
 shot clip-first-stir-still "First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm." \
   CARD=first-stir STORE=lens:unowned CLOCK=4.2

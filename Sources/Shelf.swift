@@ -1175,10 +1175,13 @@ struct PackDock: View {
     var covered = false
     var store = Store.shared
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: 10) {
             let owned = Pack.sold().filter { store.state($0) == .owned }
+            // Complete only while it costs less than the packs left: owned, it saves nothing.
+            let shelf = Offer.shelf().filter { $0 != .complete || store.offersComplete }
             HStack {
                 if let yours = store.approved.first {
                     Text(yours.yours).font(.mono(.caption2, .semibold)).tracking(1).foregroundStyle(yours.glow)
@@ -1206,9 +1209,7 @@ struct PackDock: View {
                 store.said(offer)
             }
             HStack(alignment: .top, spacing: 0) {
-                // Complete only while it costs less than the packs left: owned, it saves nothing.
-                let shelf = Offer.shelf().filter { $0 != .complete || store.saving != nil }
-                ForEach(Array(shelf.enumerated()), id: \.offset) { i, offer in
+                ForEach(Array(shelf.enumerated()), id: \.element) { i, offer in
                     let x = (Double(i) + 0.5) / Double(shelf.count), state = store.state(offer)
                     // Unowned until the launch's first read has finished, so a pack's free levels wait for it.
                     let line = offer.pack.flatMap { Marks.line($0, owned: state == .owned || !store.ready, fits: $0.fits(),
@@ -1245,8 +1246,10 @@ struct PackDock: View {
                     .accessibilityShowsLargeContentViewer {
                         Text(offer.name)
                     }
+                    .transition(.opacity)
                 }
             }
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: shelf)
             .padding(.horizontal, 8)
         }
         // A bar, like a tab bar: its names stop growing where four no longer fit, and a long press shows one large.

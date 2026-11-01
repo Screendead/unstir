@@ -589,16 +589,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
   purchase state, buy at the App Store's price, try free, Complete beside an unowned pack, and on the dock, only
   while it costs less than the sold packs left unowned, saying the saving ("or all three in Complete · $5.99 · save
-  $2.98 ›", and a "save" fact on Complete's own card; `Offer.saving`, from `Product.price`; hidden until the prices are
-  in) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
+  $2.98 ›", and a "save" fact on Complete's own card; `Offer.saving`, from
+  `Product.price`; the line and the fact wait for the prices, and the dock's cover too unless no sold pack is owned,
+  `Store.offersComplete`, so a launch's dock keeps its cover) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
   locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
   once all are (`PackCard.pickUp`, `continues`); Complete's owned card plays on in the first sold pack with a level
   left ("play Lens 04 ›"). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
-  once every one is, and Complete's cover once it saves nothing (Complete owned, or the packs left cost less); Complete's card names each pack as a link to its
+  once every one is, and Complete's cover once it saves nothing (Complete owned, or the packs left cost no more than
+  it), animating the shelf's change; Complete's card names each pack as a link to its
   card (`onOffer`, and a VoiceOver action per pack), so each taste is a tap away, and back from that card returns to
-  Complete's. A purchase landing on an open card (bought, approved or restored)
+  Complete's while Complete is still on offer, else to the menu (`UNSTIR_CARD=complete` opens it on the same terms, or
+  owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
   entitlements is no landing (`PackCard.lands`): an owner's card opened before `Store.ready` reads unowned, then owned,
