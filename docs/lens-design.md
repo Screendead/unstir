@@ -296,6 +296,9 @@ red flash teach, or annoy?
    B: a one-line caption per panel, as plughole's titles.
    **Recommend A**: the heist is wordless by design, and the taste teaches without words; a caption would compete
    with the clue.
+   **Decided (Jack's call N1, round 13):** neither. Each level is named for a thing you look through (Keyhole to
+   Kaleidoscope), with no caption, and the card heads the issues as chapters: Close-up, Cut-in, Double-take and Big
+   Picture (Splash is now plughole 10's name).
 7. **This table's shape.** Approve the issues, layouts and depth curve so rod kinds (to-do 27 to 29) can be built
    against them; the scrambles are then regenerated or confirmed by the kind-aware parse and the solver, and pars
    filled. **Recommend approving the shape after the phone test**, since its threshold may move quad's rows.

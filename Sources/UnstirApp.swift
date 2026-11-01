@@ -5,9 +5,8 @@ import SwiftUI
 @main
 struct UnstirApp: App {
     init() {
-        let monotonic = Best.monotonicClock().map { String(format: "%.1fs", $0) } ?? "unread"
-        Log.write(String(format: "launch, boot session %@, uptime %.1fs, monotonic clock %@",
-                         Best.bootSession == nil ? "unread" : "read", Best.uptime(), monotonic))
+        // No uptime: the log can leave the phone, and its time stamp less the uptime is the boot's instant.
+        Log.write("launch, boot session \(Best.bootSession == nil ? "unread" : "read")")
     }
 
     var body: some Scene {
