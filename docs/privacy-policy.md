@@ -40,6 +40,13 @@ Apple ID. The game checks Apple's signed record of what you own on the phone, wi
 and know what you own, the game asks Apple's App Store when it starts and when you buy or restore. That is Apple's
 service, and Apple's privacy policy covers it.
 
+## Your age range
+
+Where the law asks apps to check their players' ages (some US states), the game asks Apple for your age range once
+each time it starts, and Apple may ask you whether to share it. Every level is for everyone, so the answer changes
+nothing: the game keeps none of it and sends it nowhere. To tell us about anything in the game at odds with its age
+rating, write to `{{CONTACT_ADDRESS}}`.
+
 ## If you send a log
 
 Settings has a "send log" button. It opens your phone's share sheet with the play log described above, and you choose

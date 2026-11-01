@@ -1415,6 +1415,14 @@ names and product ids, and Complete's promise to older owners.
    App Store privacy label must say the same.
 53. The age-rating questionnaire. Jack's call LG2 = A (2026-10-29, round 11): if analytics ships, an age bracket comes before
     the consent card, the threshold read from one setting; round 12's AN1 recommends no analytics in v1, which would make it moot.
+    Open, with the age-range check (branch `age-range`, PR #79; Claude's recommendations, not yet Jack's calls):
+    **where Apple's sheet shows**: at launch, over the menu with nothing over it, as built, since it interrupts no
+    play; the alternatives are after the first level is solved, the first time the menu shows after a level, and
+    before the first paid pack opens. **The age gate**: 18 alone, since the answer is dropped and Apple may override
+    the gates by region (Texas names under 13, 13-15, 16-17 and 18+). **The questionnaire's "Parental controls, age
+    assurance" row**: the game calls the Declared Age Range API and gates nothing, and Apple's definition of age
+    assurance, as round 13's legal check quotes it, includes that API, so `docs/store-page.md` answers Yes, marked
+    open; either answer keeps 4+.
 54. The store page: screenshots and a preview leading with the free game, then the packs, each pack labelled as a paid
     add-on, captioned for muted playback.
    Jack's calls (2026-10-28, round 10), drafted on local branch `store-page` (not pushed, no PR): ST1 = A, the name
