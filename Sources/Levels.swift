@@ -477,6 +477,12 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "undos.shown") }
     }
 
+    /// The one rating request has been made (`Review`); Apple's own cap is three a year.
+    static var reviewAsked: Bool {
+        get { UserDefaults.standard.bool(forKey: "review.asked") }
+        set { UserDefaults.standard.set(newValue, forKey: "review.asked") }
+    }
+
     /// A calendar day in `zone` as yyyy-MM-dd, so days compare as strings. Gregorian whatever the phone's calendar, so a
     /// change of that setting can't put today before a stored day.
     static func day(_ date: Date = .now, in zone: TimeZone = .current) -> String {

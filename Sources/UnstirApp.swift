@@ -92,6 +92,8 @@ struct Harness {
     /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card. ShareLink can't be opened without a tap,
     /// so this presents the UIKit sheet it wraps, with the same text.
     let shareSheet: Bool
+    /// UNSTIR_REVIEW=log: the rating request is logged instead of made, as an unharnessed launch would make it.
+    let reviewLog: Bool
     let bench: Bool
     /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism as Differentiate Without
     /// Colour has it, its knobs spelling out their channels over the swatches.
@@ -315,6 +317,7 @@ struct Harness {
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
+        reviewLog = env["UNSTIR_REVIEW"] == "log"
         card = env["UNSTIR_CARD"].flatMap(Offer.init(name:)).flatMap { $0.sold ? $0 : nil }
         cardScroll = env["UNSTIR_CARDSCROLL"] == "1"
         lands = env["UNSTIR_LANDS"].flatMap(Double.init)
@@ -388,6 +391,9 @@ struct RootView: View {
         let h = Harness(env)
         harnessed = h.harnessed
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
+        // The launch's, not the level's harness, which a level opened from the card's next no longer has.
+        Review.harnessed = h.harnessed && !h.reviewLog
+        Review.logs = h.reviewLog
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
                                  restored: h.restored)

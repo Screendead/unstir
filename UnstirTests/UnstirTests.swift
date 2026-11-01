@@ -448,6 +448,17 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(solve(over: false).opened)
     }
 
+    /// The rating request comes once, on the solve that opens whirlpool, and never in the harness or after a purchase
+    /// landed that launch.
+    @MainActor func testTheRatingRequestComesOnce() {
+        XCTAssertTrue(Review.due(opened: .whirlpool, asked: false, harnessed: false, purchased: false))
+        XCTAssertFalse(Review.due(opened: .whirlpool, asked: true, harnessed: false, purchased: false))
+        XCTAssertFalse(Review.due(opened: .whirlpool, asked: false, harnessed: true, purchased: false))
+        XCTAssertFalse(Review.due(opened: .whirlpool, asked: false, harnessed: false, purchased: true))
+        XCTAssertFalse(Review.due(opened: nil, asked: false, harnessed: false, purchased: false))
+        XCTAssertFalse(Review.due(opened: .vortex, asked: false, harnessed: false, purchased: false))
+    }
+
     /// The card calls a best new only when what it names improves: clean, then over par; a faster time at the same
     /// mark is still the old best's line, and a first solve has none.
     @MainActor func testTheCardsBestLine() {

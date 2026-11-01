@@ -775,6 +775,7 @@ struct PackCard: View {
             // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
             if Self.lands(old.state, new.state, ready: old.ready) {
                 landings += 1
+                store.landed = true
                 Sound.shared.play(.solve)
             }
         }

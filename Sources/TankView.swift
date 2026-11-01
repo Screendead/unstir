@@ -1,6 +1,7 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
 import CoreHaptics
+import StoreKit
 import SwiftUI
 import simd
 
@@ -2978,6 +2979,7 @@ struct ResultCard: View {
     let again: () -> Void
     /// The harness's clock for the daily's next one; nil reads the time.
     var now: Date?
+    @Environment(\.requestReview) private var requestReview
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
@@ -3070,6 +3072,26 @@ struct ResultCard: View {
             }
         }
         .onAppear { focused = true }
+        .task {
+            guard (try? await Task.sleep(for: .seconds(2))) != nil,
+                  Review.due(opened: game.opened, asked: Best.reviewAsked, harnessed: Review.harnessed, purchased: Store.shared.landed)
+            else { return }
+            Log.write("review requested\(Review.logs ? " (UNSTIR_REVIEW=log)" : "")")
+            guard !Review.logs else { return }
+            Best.reviewAsked = true
+            requestReview()
+        }
+    }
+}
+
+/// The one rating request (Jack's call C20, round 13): on the card of the solve that opens whirlpool, a tier's worth of
+/// play in and on a high. A launch that saw a purchase land skips it, and since that solve comes once, never asks.
+@MainActor enum Review {
+    /// The launch's: a harnessed one never asks, and UNSTIR_REVIEW=log logs the request in place of making it.
+    static var harnessed = false, logs = false
+
+    static func due(opened: Tier?, asked: Bool, harnessed: Bool, purchased: Bool) -> Bool {
+        opened == .whirlpool && !asked && !harnessed && !purchased
     }
 }
 
