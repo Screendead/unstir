@@ -107,6 +107,30 @@ import XCTest
         XCTAssertEqual(g.moves, 3)
     }
 
+    /// Jack's call C14 (round 13): a move whose tick pushes has the caption say so at once, and an undo takes it back.
+    func testAPushedTickSaysSoAtOnce() throws {
+        var level = Level.escapement[3]
+        level.id = "test-escapement"
+        let working = level.layout.rods.indices.filter { level.kind(of: $0) == .working }
+        let move = try XCTUnwrap(working.lazy.flatMap { k in (1...11).flatMap { [$0, -$0] }.map { Twist(rod: k, steps: $0) } }
+            .first { t in
+                let g = Game(level: level, tankTurned: true, bank: (3, nil))
+                g.commit(rod: t.rod, steps: t.steps)
+                return g.tickPushes > 0 && !g.finished
+            })
+        // The shot escapement-dead-tick plays it.
+        XCTAssertEqual(move, Twist(rod: 1, steps: 1))
+        let g = Game(level: level, tankTurned: true, bank: (3, nil))
+        XCTAssertEqual(g.caption, level.note)
+        XCTAssertFalse(g.deadTick)
+        g.commit(rod: move.rod, steps: move.steps)
+        XCTAssertTrue(g.deadTick)
+        XCTAssertEqual(g.caption, "That tick can't come back. Undo, or again.")
+        g.undo()
+        XCTAssertFalse(g.deadTick)
+        XCTAssertEqual(g.caption, level.note)
+    }
+
     func testAWaitWhoseTickPushesPlaysOn() {
         let g = game("0:-1,1:+3,0:-1,2:-4")
         g.wait(on: 0)

@@ -192,6 +192,10 @@ final class Game {
         let dir = level.woundBack.contains(clock) ? -1 : 1
         return stack.filter { $0.rod == clock && $0.steps * dir > 0 }.reduce(0) { $0 + abs($1.steps) }
     }
+    /// Escapement: a pushed tick stands on the stack, so no line from here unstirs the tank: the caption says so until
+    /// an undo takes it back or the ticks run out (Jack's call C14, round 13).
+    var deadTick: Bool { !finished && level.clocks.contains { overdue($0.rod) > 0 } }
+    nonisolated static let deadTick = "That tick can't come back. Undo, or again."
     /// Escapement: the ticks clock `clock` has left, its hub's count (Jack's call ES2, round 12). Only its own ticks
     /// change its rod's steps, each by one whether it merges or pushes, so this is what it owed as dealt less its ticks:
     /// nothing needs storing, and undo and reset bring it back with the stack.
@@ -1025,7 +1029,7 @@ struct LevelView: View {
                 // exactly where it was played.
                 Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
-                    .font(.mono(12)).opacity(showResult || ending ? 0 : notice != nil ? 0.9 : noteLit ? 1 : 0.55)
+                    .font(.mono(12)).opacity(showResult || ending ? 0 : notice != nil || game.deadTick ? 0.9 : noteLit ? 1 : 0.55)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
@@ -1900,6 +1904,7 @@ struct LevelView: View {
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
         .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
         .sensoryFeedback(.error, trigger: game.tickPushes)
+        .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(Game.deadTick).post() } }
         .sensoryFeedback(.success, trigger: game.solved) { _, solved in solved }
         // One sound for the end, as its card shows it.
         .onChange(of: game.finished) { if game.finished { Sound.shared.play(game.solved ? .solve : .spilled) } }
