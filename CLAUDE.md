@@ -423,8 +423,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked), and `Store.failures` why each failure failed (`Failure`:
-  offline, a storefront without it, purchases turned off), which the card says under it. A pending pill stays live as
-  "ask again", since StoreKit sends nothing for a declined Ask to Buy and a new purchase sends a new request; where
+  offline, a storefront without it, purchases turned off), which the card says under it. A pending pill reads
+  "asked" and stays live, since StoreKit sends nothing for a declined Ask to Buy and a new purchase sends a new request;
+  an ask again that fails leaves the product pending and says why under it. A pack waiting only on Complete's request
+  (`Store.asked`, its own product's state) says Complete is the one waiting, and its pill buys the pack alone; Complete's
+  line under it waits too. Where
   `AppStore.canMakePayments` is false (`Store.canPay`) the card offers only the taste and says why; and a restore says
   what it found that wasn't owned (`Restored`, `Store.restoreNote`), and nothing on a cancelled sign-in. A revocation
   says, in grey, that the pack isn't on this Apple ID any more, or, where its transaction was family-shared

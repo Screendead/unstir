@@ -144,6 +144,9 @@ extension Store {
         }
     }
 
+    /// Its own product waits on Ask to Buy, so asking again re-sends that request.
+    func asked(_ offer: Offer) -> Bool { (harness ?? ledger).asked(offer.productID) }
+
     /// The pack whose card a level shows instead of playing: one past its taste that the player doesn't own.
     func card(for level: Level) -> Pack? { access(level) == .needsCard ? level.pack : nil }
 
@@ -808,12 +811,17 @@ struct PackCard: View {
         case .owned:
             line(offer.pack == nil ? "\u{2713} owned \u{00B7} every pack open" : "\u{2713} owned \u{00B7} every level open", .lime)
         case .pending:
+            // A pack can wait on Complete's request alone, which only Complete's card asks again.
+            let asked = store.asked(offer)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     PulsingDot(colour: .amber)
-                    Text("waiting for approval").font(.mono(.footnote, .semibold)).foregroundStyle(Color.amber)
+                    Text(asked ? "waiting for approval" : "Complete is waiting for approval")
+                        .font(.mono(.footnote, .semibold)).foregroundStyle(Color.amber)
                 }
-                Text("Ask to Buy: the pack opens here once it's approved.").font(.mono(.caption2)).opacity(0.5)
+                Text(asked ? "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again."
+                     : "Ask to Buy: \(offer.name) opens here once Complete is approved.")
+                    .font(.mono(.caption2)).opacity(0.5)
                     .fixedSize(horizontal: false, vertical: true)
                 // Asking again failed, and the first request is still with the parent.
                 if let why = store.failures[offer.productID]?.words { detail(why) }
@@ -852,12 +860,14 @@ struct PackCard: View {
                     .accessibilityLabel("\(verb.capitalized) \(offer.name), level \(level.label)")
             }
         } else {
-            // A declined Ask to Buy sends no transaction, so a pending pill stays live: asking again sends a new request.
+            // A declined Ask to Buy sends no transaction, so an asked pill stays live: tapping it sends a new request.
+            // A pack waiting only on Complete's request is bought alone.
+            let asked = store.asked(offer)
             let label = switch state {
             case _ where buying: "buying\u{2026}"
             case .failed: "try again"
             case .revoked: unshared ? "buy" : "buy again"
-            case .pending: "ask again"
+            case .pending where asked: "asked"
             default: "buy"
             }
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
@@ -867,7 +877,8 @@ struct PackCard: View {
                 if store.canPay {
                     pill(label, trailing: price ?? store.pricing.words, colour: offer.glow, dim: price == nil) { buy(offer) }
                         .disabled(buying)
-                        .accessibilityLabel(state == .pending ? "Ask again for \(offer.name)" : "\(label.capitalized) \(offer.name)")
+                        .accessibilityLabel(state == .pending && asked && !buying ? "Ask again for \(offer.name)"
+                                            : "\(label.capitalized) \(offer.name)")
                         .accessibilityValue(price ?? store.pricing.words ?? "")
                 }
                 if let level = levels.first ?? Self.placeholder(offer) {
@@ -931,7 +942,8 @@ struct PackCard: View {
                 .font(.mono(.caption))
             }
             .buttonStyle(Sounding())
-            .disabled(buying)
+            // Complete's own request is asked again only from Complete's card.
+            .disabled(buying || store.state(.complete) == .pending)
             .accessibilityLabel("Buy Complete, every pack")
             .accessibilityValue(complete ?? "")
             if store.state(.complete) == .failed {

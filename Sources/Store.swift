@@ -45,6 +45,9 @@ struct Ledger: Equatable, Sendable {
         if state == .revoked && shared { unshared.insert(id) } else { unshared.remove(id) }
     }
 
+    /// The product itself waits on Ask to Buy, not only Complete that would grant it.
+    func asked(_ id: String) -> Bool { products[id] == .pending }
+
     /// Revoked because the family stopped sharing it, through its own product or Complete.
     func unshared(_ pack: Pack) -> Bool {
         guard state(pack) == .revoked else { return false }

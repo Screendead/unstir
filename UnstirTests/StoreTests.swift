@@ -47,6 +47,21 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.lens), .pending)
     }
 
+    /// A pack waiting only on Complete's Ask to Buy reads as pending, but its card has no request of its own to send again.
+    @MainActor func testAPackWaitingOnCompleteHasNothingOfItsOwnToAskAgain() {
+        var ledger = Ledger()
+        ledger.record(Pack.completeID, .pending)
+        XCTAssertEqual(ledger.state(.lens), .pending)
+        XCTAssertFalse(ledger.asked(Pack.lens.productID))
+        XCTAssertTrue(ledger.asked(Pack.completeID))
+        let store = Store()
+        store.pretend(ledger)
+        XCTAssertFalse(store.asked(.pack(.lens)))
+        XCTAssertTrue(store.asked(.complete))
+        ledger.record(Pack.lens.productID, .pending)
+        XCTAssertTrue(ledger.asked(Pack.lens.productID))
+    }
+
     /// The entitlements reread after a revocation own the product again when it was bought since.
     func testOwnedAfterARevocationOwnsAgain() {
         var ledger = Ledger()
