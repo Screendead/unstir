@@ -2666,11 +2666,13 @@ struct ResultCard: View {
 
     var body: some View {
         let run = game.level.run
-        let accent: Color = switch game.level.tier {
+        // A pack level's tier is plughole's by default, so a pack takes its own colour first.
+        let tierAccent: Color = switch game.level.tier {
         case .plughole: .neonCyan
         case .vortex: game.level.tier.glow
         case .whirlpool, .maelstrom: .blood
         }
+        let accent = game.level.pack.map { Offer.pack($0).glow } ?? tierAccent
         let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
         let time = String(format: "%d:%02d", game.seconds / 60, game.seconds % 60)
         VStack(spacing: 26) {
@@ -2709,12 +2711,11 @@ struct ResultCard: View {
                         .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
                 }
                 if let next {
-                    // Past a pack's free taste, unowned, next opens its card: the button says so, in the pack's colour.
+                    // Past a pack's free taste, unowned, next opens its card: the button says so.
                     let gate = Store.shared.card(for: next)
-                    let colour = gate.map { Offer.pack($0).glow } ?? accent
                     let label = game.spilled ? "new run \u{203A}" : gate.map { "more in \($0.name) \u{203A}" } ?? "next \u{203A}"
                     Button(label) { onNext(next) }
-                    .foregroundStyle(colour).shadow(color: colour, radius: 4)
+                        .foregroundStyle(accent).shadow(color: accent, radius: 4)
                 }
             }
             .font(.mono(15, .medium))

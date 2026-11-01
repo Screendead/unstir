@@ -501,6 +501,8 @@ shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
   PACK=lens LEVEL=3 SCREEN=clean STORE=lens:unowned CLOCK=5.4
+shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's magenta." \
+  PACK=lens LEVEL=3 SCREEN=clean OWNED=lens CLOCK=5.4
 shot card-lens-replay "Lens's card, unowned, the taste played: replay 01-03 in try free's place." \
   CARD=lens STORE=lens:unowned BESTS=lens:000 CLOCK=5.4
 shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
