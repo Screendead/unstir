@@ -263,8 +263,9 @@ player directs.
 
 `ShareLink(item: Log.url)` hands `Library/unstir-log.txt` to the share sheet; the app sends nothing itself. The log
 holds the last 3,000 lines of play: each touch's landing and path in tank units, commits, undos and resets with the
-stack, levels opened and left, tank turns, purchase and restore failures, and a launch line with the uptime and
-whether the boot session and monotonic clock could be read (not their values).
+stack, levels opened and left, tank turns, whether a pack is owned as its levels open, purchase and restore failures,
+and a launch line saying whether the boot session could be read (not its value), each line with the phone's time. It
+holds no uptime, since a line's time less the uptime would give the boot's instant.
 
 | Option | Label |
 |---|---|

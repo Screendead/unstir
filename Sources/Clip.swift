@@ -430,7 +430,9 @@ struct ClipPlayer: View {
     let clip: Clip
     let side: CGFloat
     var held: Double?
-    @State private var start = Date.now
+    /// Scrolled out of sight: held where it stands, and carried on from there.
+    var paused = false
+    @State private var start = Date.now.timeIntervalSinceReferenceDate
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -438,10 +440,10 @@ struct ClipPlayer: View {
             if let t = held ?? (reduceMotion ? clip.still : nil) {
                 frame(t)
             } else {
-                TimelineView(.animation(minimumInterval: 1.0 / 60)) { tl in frame(tl.date.timeIntervalSince(start)) }
+                PausingTimeline(interval: 1.0 / 60, paused: paused) { now in frame(now - start) }
             }
         }
-        .onAppear { start = .now }
+        .onAppear { start = Date.now.timeIntervalSinceReferenceDate }
     }
 
     /// Every reel stays drawn, the others clear and held at their start, so a cut never waits on a picture's bake or

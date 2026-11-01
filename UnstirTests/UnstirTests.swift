@@ -21,6 +21,8 @@ final class UnstirTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: "undos.spent")
         UserDefaults.standard.removeObject(forKey: "undos.day")
         UserDefaults.standard.removeObject(forKey: "undos.anchor")
+        UserDefaults.standard.removeObject(forKey: "undos.unseen")
+        UserDefaults.standard.removeObject(forKey: "undos.shown")
         UserDefaults.standard.removeObject(forKey: "tank.turned")
     }
 
@@ -407,6 +409,115 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Best.undos, 5)
     }
 
+    /// A reset with nothing played only replays the opening, so watching L1's stir again costs no clean.
+    @MainActor func testAResetWithNothingPlayedCostsNoClean() {
+        let game = Game(level: Level.plughole[0], tankTurned: true, swirled: true, bank: (5, nil))
+        XCTAssertTrue(game.reset())
+        XCTAssertEqual(game.resets, 0)
+        game.commit(rod: 1, steps: 2)
+        XCTAssertTrue(game.reset())
+        XCTAssertEqual(game.resets, 1)
+        game.commit(rod: 0, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertFalse(game.clean)
+    }
+
+    /// The solve that brings the last of a tier's levels to par goes up a notch, wherever that level stands in the
+    /// tier; a solve with the next tier already open, or one short of par, does not.
+    @MainActor func testTheSolveThatOpensATierSaysSo() {
+        let ids = Tier.plughole.levels.map(\.id), flag = Best.unlocked
+        let saved = ids.map { UserDefaults.standard.data(forKey: "best.\($0)") }
+        defer {
+            Best.unlocked = flag
+            for (id, data) in zip(ids, saved) { UserDefaults.standard.set(data, forKey: "best.\(id)") }
+        }
+        Best.unlocked = false
+        for id in ids { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
+        for id in ids where id != ids[4] { Best(over: 0, seconds: 9, clean: false).save(id) }
+        Best(over: 2, seconds: 9, clean: false).save(ids[4])
+        func solve(over: Bool) -> Game {
+            let game = Game(level: Tier.plughole.levels[4], tankTurned: true, swirled: true, bank: (5, nil))
+            if over { game.commit(rod: 0, steps: 1); game.commit(rod: 1, steps: 1) }
+            while let t = game.reachable { game.commit(rod: t.rod, steps: t.steps) }
+            XCTAssertTrue(game.solved)
+            return game
+        }
+        XCTAssertNil(solve(over: true).opened)
+        XCTAssertFalse(Tier.whirlpool.isOpen())
+        XCTAssertEqual(solve(over: false).opened, .whirlpool)
+        XCTAssertNil(solve(over: false).opened)
+    }
+
+    /// The card calls a best new only when what it names improves: clean, then over par; a faster time at the same
+    /// mark is still the old best's line, and a first solve has none.
+    @MainActor func testTheCardsBestLine() {
+        func best(_ over: Int, clean: Bool = false, _ seconds: Int = 30) -> Best { Best(over: over, seconds: seconds, clean: clean) }
+        XCTAssertNil(ResultCard.bestLine(was: nil, now: best(0), par: true))
+        XCTAssertEqual(ResultCard.bestLine(was: best(2), now: best(0), par: true), "new best \u{00B7} was +2")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: true), "new best \u{00B7} was par")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, 10), par: true), "best \u{00B7} par")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0, clean: true), now: best(3), par: true), "best \u{00B7} clean")
+        XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: false), "new best \u{00B7} was solved")
+    }
+
+    /// A run carries the best as it began from tank to tank, so its spill can tell a new best though each tank cleared
+    /// has already raised the stored one.
+    @MainActor func testARunKeepsTheBestItBeganWith() {
+        let saved = Best.tanks
+        defer { Best.tanks = saved }
+        Best.tanks = 3
+        let game = Game(level: .endless(Run(seed: 7)))
+        Best.tanks = 9
+        XCTAssertEqual(game.level.run?.best, 3)
+        var tanks = [game.level.run!]
+        while tanks.count < 4, let next = Game(level: .endless(tanks.last!)).nextTank?.run { tanks.append(next) }
+        XCTAssertEqual(tanks.map(\.tank), [0, 1, 2, 3])
+        XCTAssertEqual(tanks.map(\.best), [3, 3, 3, 3])
+    }
+
+    /// The sandbox's layout control names quad and eye, which share a count of rods, so a tap between them reads.
+    func testTheSandboxNamesALayoutThatSharesItsCount() {
+        XCTAssertEqual(LevelView.layoutLabel(.tri, named: true), "rods: 3 \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.tri, named: false), "3 rods \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.quad, named: true), "rods: 4 \u{00B7} quad \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.eye, named: false), "eye \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.hex, named: true), "rods: 7 \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.quadSwirl, named: true), "rods: 5 \u{00B7} quad \u{203A}")
+    }
+
+    /// A turn a full stack refuses counts as a refusal, for the knob to shake and the caption to say so, and changes
+    /// nothing else.
+    @MainActor func testAFullStackSaysItRefused() {
+        let full = (0..<Tank.maxStack).map { Twist(rod: $0 % 2, steps: 1) }
+        let game = Game(level: Level(id: "test-full", label: "", title: "", layout: .tri, scramble: full),
+                        tankTurned: true, swirled: true, bank: (5, nil))
+        game.commit(rod: 2, steps: 1)
+        XCTAssertEqual(game.refusals, 1)
+        XCTAssertEqual(game.refusedKnob, 2)
+        XCTAssertEqual(game.stack, full)
+        XCTAssertEqual(game.moves, 0)
+        game.commit(rod: 1, steps: -1)
+        XCTAssertEqual(game.refusals, 1)
+        XCTAssertEqual(game.stack.count, Tank.maxStack - 1)
+    }
+
+    /// The level's clock stops while the app is away, and a reset's replay never restarts it.
+    @MainActor func testTheClockStopsWhileTheAppIsAway() {
+        let game = Game(level: Level.plughole[0], tankTurned: true, swirled: true, bank: (5, nil))
+        let t = Date(timeIntervalSinceReferenceDate: 1000)
+        game.pauseClock(at: t)
+        game.resumeClock(at: t + 5)
+        XCTAssertEqual(game.played(at: t + 9), 0)
+        game.startClock(at: t + 10)
+        game.pauseClock(at: t + 40)
+        // Back from the front before the opening's end can't start it again while away.
+        game.startClock(at: t + 50)
+        XCTAssertEqual(game.played(at: t + 3600), 30)
+        game.resumeClock(at: t + 3600)
+        game.startClock(at: t + 3601)
+        XCTAssertEqual(game.played(at: t + 3612), 42)
+    }
+
     /// A pack's undo puts the stack back as the move found it, marks and all, from the shared bank, where the free
     /// tiers' commits the move's negation: after the heal that lets a push fall onto the scramble's 2:+4 and cancel it,
     /// the negation pushes a new 3:+2, and the pack's brings back all six entries.
@@ -690,7 +801,15 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(next.bank, 5)
         XCTAssertEqual(Best.undos, 5)
         XCTAssertEqual(Best.refilled, "2026-09-30")
-        XCTAssertEqual(opened(on: "2026-09-30").refilled, 0)
+        // Until its badge has shown, the day's refill passes to the next level opened that day, and adds nothing more.
+        XCTAssertTrue(next.firstRefill)
+        let again = opened(on: "2026-09-30")
+        XCTAssertEqual(again.refilled, 0)
+        XCTAssertEqual(again.badge, 2)
+        XCTAssertEqual(Best.undos, 5)
+        again.refillSeen()
+        XCTAssertEqual(opened(on: "2026-09-30").badge, 0)
+        XCTAssertFalse(opened(on: "2026-09-30").firstRefill)
         XCTAssertEqual(Best.undos, 5)
         XCTAssertEqual(opened(on: "2026-10-01").refilled, 2)
         Best.refilled = "2026-12-31"
@@ -1188,6 +1307,70 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(String(decoding: saved, as: UTF8.self).contains("hints"))
     }
 
+    /// A launch lands on the first level without a best, then on the first short of par, then the top; a locked tier
+    /// lands on its top too.
+    func testTheMenuLandsOnTheFrontier() {
+        let flag = Best.unlocked
+        defer { Best.unlocked = flag }
+        Best.unlocked = false
+        var bests: [String: Best] = [:]
+        func landing(_ tier: Tier) -> String? { tier.landing { bests[$0] }?.id }
+        XCTAssertEqual(landing(.plughole), "L1")
+        for level in Level.plughole.prefix(13) { bests[level.id] = Best(over: 0, seconds: 30) }
+        bests["L5"] = Best(over: 2, seconds: 30)
+        XCTAssertEqual(Tier.plughole.frontier { bests[$0] }?.id, "L14")
+        XCTAssertEqual(landing(.plughole), "L14")
+        XCTAssertNil(landing(.whirlpool))
+        for level in Level.plughole { bests[level.id] = bests[level.id] ?? Best(over: 0, seconds: 30) }
+        XCTAssertNil(Tier.plughole.frontier { bests[$0] })
+        XCTAssertEqual(landing(.plughole), "L5")
+        XCTAssertNil(landing(.whirlpool), "whirlpool is still locked while 05 is over par")
+        bests["L5"] = Best(over: 0, seconds: 30)
+        XCTAssertNil(landing(.plughole))
+        XCTAssertEqual(landing(.whirlpool), "N1")
+    }
+
+    /// The daily row names its day in words, not as an ISO date, and its id, which its best is stored under, stays
+    /// the date.
+    func testTheDailyNamesItsDay() throws {
+        let date = try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 11, day: 1, hour: 12)))
+        let daily = Level.daily(date)
+        XCTAssertEqual(daily.id, "daily-20261101")
+        XCTAssertTrue(daily.title.hasPrefix("Daily \u{00B7} "), daily.title)
+        XCTAssertFalse(daily.title.contains("2026"), daily.title)
+        XCTAssertEqual(daily.title, "Daily \u{00B7} " + date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
+        // In words: the weekday, which no numeric date carries.
+        XCTAssertTrue(daily.title.contains(date.formatted(.dateTime.weekday(.abbreviated))), daily.title)
+    }
+
+    /// The gate lists what is short of par as runs, each opening at a level the player can open.
+    func testTheGateListsTheLevelsShortOfParAsRuns() {
+        var bests: [String: Best] = [:]
+        XCTAssertEqual(Tier.plughole.short { bests[$0] }, [0 ... 26])
+        for level in Level.plughole.prefix(20) { bests[level.id] = Best(over: 0, seconds: 30) }
+        for id in ["L5", "L12", "L13"] { bests[id] = Best(over: 1, seconds: 30) }
+        let runs = Tier.plughole.short { bests[$0] }
+        XCTAssertEqual(runs, [4 ... 4, 11 ... 12, 20 ... 26])
+        for run in runs { XCTAssert(run.lowerBound == 0 || bests[Level.plughole[run.lowerBound - 1].id] != nil) }
+        for level in Level.plughole { bests[level.id] = Best(over: 0, seconds: 30) }
+        XCTAssertEqual(Tier.plughole.short { bests[$0] }, [])
+    }
+
+    /// Back from a level the menu centres on it, or after a solve on the one after it, the last level on itself; the
+    /// daily, endless and the sandbox leave the list at its top, and a pack's level centres its own list.
+    func testLeavingALevelFocusesItsRow() {
+        XCTAssertEqual(Level.plughole[11].focus(solved: false)?.id, "L12")
+        XCTAssertEqual(Level.plughole[11].focus(solved: true)?.id, "L13")
+        XCTAssertEqual(Level.plughole.last!.focus(solved: true)?.id, Level.plughole.last!.id)
+        XCTAssertEqual(Level.whirlpool[0].focus(solved: false)?.id, "N1")
+        XCTAssertNil(Level.daily().focus(solved: true))
+        XCTAssertNil(Level.endless(Run(seed: 1)).focus(solved: true))
+        XCTAssertNil(Level.sandbox.focus(solved: false))
+        let lens = Pack.lens.levels
+        XCTAssertEqual(lens[1].focus(solved: true)?.id, lens[2].id)
+        XCTAssertEqual(lens[1].focus(solved: false)?.id, lens[1].id)
+    }
+
     /// A locked tier opened to look at is never stored, and a stored tier that has closed since comes back as the
     /// highest open one below it.
     func testStoredTierIsNeverLocked() {
@@ -1492,6 +1675,102 @@ final class UnstirTests: XCTestCase {
         XCTAssertLessThan(logged.count, 600, logged)
     }
 
+    /// VoiceOver hears a row's name, its result or what it waits on, and its shape, never the glyphs on screen.
+    func testRowsSpeakTheirNameResultAndShape() {
+        let first = Level.plughole[0], seventh = Level.plughole[6]
+        let open = Spoken.row(first, result: nil, tanks: 0, detail: nil, enabled: true, needs: nil)
+        XCTAssertEqual(open.label, "Level 1, \(first.title).")
+        XCTAssertEqual(open.value, "not played")
+        XCTAssertEqual(open.hint, "\(Spoken.rods(first.layout)), par \(first.par)")
+        XCTAssertEqual(Spoken.row(seventh, result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[5]).value,
+                       "locked, solve level 6 first")
+        XCTAssertEqual(Spoken.row(Level.vortex[0], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil).value, "locked")
+        XCTAssertEqual(Spoken.row(Level.vortex[3], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil, gate: .whirlpool).value,
+                       "locked, par every \(Tier.whirlpool.name) level first")
+        func result(_ best: Best) -> String { Spoken.row(first, result: best, tanks: 0, detail: nil, enabled: true, needs: nil).value }
+        XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: true)), "clean")
+        XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: false)), "at par")
+        XCTAssertEqual(result(Best(over: 2, seconds: 9)), "2 over par")
+        let daily = Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[22])
+        XCTAssertEqual(daily.label, "Today's daily")
+        XCTAssertEqual(daily.value, "locked, solve Plughole level 23 first")
+        let endless = Spoken.row(.endless(Run(seed: 7)), result: nil, tanks: 1, detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
+                                 enabled: true, needs: nil)
+        XCTAssertEqual([endless.label, endless.value, endless.hint], ["Endless", "best 1 tank", "deeper every tank, wrong stirs fill the brim"])
+        XCTAssertEqual(Spoken.row(.sandbox, result: nil, tanks: 0, detail: "nothing counts", enabled: true, needs: nil).value, "")
+        XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
+        XCTAssertEqual(Spoken.back(first), "Back to levels")
+        XCTAssertEqual(Spoken.back(Pack.lens.levels[0]), "Back to Lens")
+    }
+
+    /// The header's count and the finish are said in words: moves against par, and how the level ended.
+    @MainActor func testTheFinishIsSpoken() {
+        let level = Level.plughole[3], game = Game(level: level)
+        XCTAssertEqual(game.movesSpoken, "0 moves, par \(level.par)")
+        // Two rods in turn, so no stir joins the one before it.
+        for rod in [0, 1, 0, 1] { game.commit(rod: rod, steps: 1) }
+        while let t = game.reachable { game.commit(rod: t.rod, steps: t.steps) }
+        XCTAssertTrue(game.solved)
+        XCTAssertGreaterThan(game.over, 0)
+        XCTAssertEqual(game.finishSpoken, "Unstirred. \(game.moves) moves, par \(level.par). \(game.over) over par.")
+        let clean = Game(level: level)
+        while let t = clean.reachable { clean.commit(rod: t.rod, steps: t.steps) }
+        XCTAssertEqual(clean.finishSpoken, "Unstirred. \(level.par) moves, par \(level.par). " + (clean.clean ? "Clean." : "At par."))
+        let run = Game(level: .endless(Run(seed: 7)))
+        XCTAssertEqual(run.movesSpoken, "0 moves")
+        XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")
+        XCTAssertEqual(game.tankSpoken, game.movesSpoken)
+    }
+
+    /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.
+    func testDecorationGivesWayToPowerAndSight() {
+        XCTAssertFalse(Power.saving(lowPower: false, thermal: .nominal))
+        XCTAssertFalse(Power.saving(lowPower: false, thermal: .fair))
+        XCTAssertTrue(Power.saving(lowPower: false, thermal: .serious))
+        XCTAssertTrue(Power.saving(lowPower: false, thermal: .critical))
+        XCTAssertTrue(Power.saving(lowPower: true, thermal: .nominal))
+        let clip = CGSize(width: 320, height: 320)
+        XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: -100, width: 390, height: 800)))
+        XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: 300, width: 390, height: 800)))
+        XCTAssertFalse(PackClip.seen(clip, in: CGRect(x: 0, y: 330, width: 390, height: 800)))
+        XCTAssertFalse(PackClip.seen(clip, in: CGRect(x: 0, y: -900, width: 390, height: 800)))
+        XCTAssertTrue(PackClip.seen(clip, in: nil))
+    }
+
+    /// The log keeps its newest bytes from a whole line on, and a log under the cut is left as it is.
+    func testTheLogTrimsToWholeLines() {
+        let line = Data("09-29 10:11:07.772 touch rod(1) at 0.412,-0.118\n".utf8)
+        let log = Data((0..<20_000).flatMap { _ in line })
+        let kept = Log.trimmed(log)
+        XCTAssertLessThanOrEqual(kept.count, Log.keep)
+        XCTAssertGreaterThan(kept.count, Log.keep - line.count)
+        XCTAssertEqual(kept.count % line.count, 0)
+        XCTAssertEqual(kept.prefix(line.count), line)
+        XCTAssertEqual(Log.trimmed(line), line)
+    }
+
+    /// A log past the cap, cut through a real file: its newest bytes from a whole line, then whatever was written after
+    /// the read.
+    func testTheLogCutsAFileAndKeepsWhatCameAfterTheRead() throws {
+        let line = Data("09-29 10:11:07.772 touch rod(1) at 0.412,-0.118\n".utf8)
+        let log = Data((0..<30_000).flatMap { _ in line })
+        XCTAssertGreaterThan(log.count, Log.cap)
+        let url = FileManager.default.temporaryDirectory.appending(path: "log-\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try log.write(to: url)
+        let cut = try XCTUnwrap(Log.cut(url))
+        XCTAssertEqual(cut.read, log.count)
+        let late = Data("09-29 10:11:08.001 late\n".utf8)
+        let h = try FileHandle(forWritingTo: url)
+        try h.seekToEnd()
+        try h.write(contentsOf: late)
+        try h.close()
+        Log.replace(url, with: cut.kept, after: cut.read)
+        let back = try Data(contentsOf: url)
+        XCTAssertEqual(back, Log.trimmed(log) + late)
+        XCTAssertEqual(back.prefix(line.count), line)
+    }
+
     /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one.
     /// Whirlpool's prefix predates its name and stays, so the rename kept what was played; maelstrom's set replaced
     /// nightmare+'s, so its prefix moved off N+ and no old best lands on a new level.
@@ -1546,8 +1825,8 @@ final class UnstirTests: XCTestCase {
             XCTAssertLessThanOrEqual(level.scramble.count, Tank.fourTaps - level.picture.fillEntries, level.id)
         }
         XCTAssertEqual(Set(levels.map(\.scramble)).count, levels.count)
-        XCTAssertFalse(levels[0].note.isEmpty)
-        XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
+        // V1 teaches the rim; the rest of the notes are what the old titles taught (Jack's call N1, round 13).
+        XCTAssertEqual(levels.filter { !$0.note.isEmpty }.map(\.id), ["V1", "V2", "V3", "V12"])
     }
 
     /// Against the design table: quad, then pent, then hex, one or two seized knobs, never the hub; the twin of each
@@ -1574,8 +1853,23 @@ final class UnstirTests: XCTestCase {
             if level.picture == .coralTwin { XCTAssertLessThanOrEqual(level.scramble.count, 6, level.id) }
             if level.picture == .neuronsTwin { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
         }
-        XCTAssertEqual(levels[0].note, "One knob has seized. Turn the tank.")
-        XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
+        XCTAssertEqual(levels[0].note, "One knob has seized. Turn the tank. Turns count as moves.")
+        XCTAssertEqual(levels.filter { !$0.note.isEmpty }.map(\.id), ["M1", "M2", "M3", "M8", "M10", "M18"])
+    }
+
+    /// Jack's call N1 (round 13): every v1 title is one or two words in sentence case with no full stop, at most 16
+    /// characters, and no title repeats anywhere in the game, First Stir's kept titles included.
+    func testEveryTitleIsItsOwn() {
+        let v1 = Tier.allCases.flatMap(\.levels) + [Pack.lens, .escapement, .prism].flatMap(\.levels)
+        XCTAssertEqual(v1.count, 193)
+        for level in v1 {
+            XCTAssertLessThanOrEqual(level.title.count, 16, level.id)
+            XCTAssertLessThanOrEqual(level.title.split(separator: " ").count, 2, level.id)
+            XCTAssertFalse(level.title.hasSuffix("."), level.id)
+            XCTAssertFalse(level.title.first?.isLowercase ?? true, level.id)
+        }
+        let titles = (v1 + Pack.firstStir.levels).map { $0.title.lowercased() }
+        XCTAssertEqual(Set(titles).count, titles.count)
     }
 
     /// Against the design table. Coral reads only to 6 stirs and neurons to 14. The sandbox cycles every picture but
@@ -1999,6 +2293,13 @@ final class UnstirTests: XCTestCase {
             XCTAssertEqual(level.layout, layout)
             XCTAssertEqual(level.scramble, [Twist].parse(word, in: layout))
         }
+    }
+
+    /// The run's first tank says the brim's rule, its count in words, and only the first.
+    func testEndlessSaysTheBrimsRuleOnce() {
+        XCTAssertEqual(Run.room, 8, "the first tank's note and the menu's row say eight")
+        XCTAssertEqual(Level.endless(Run(seed: 7)).note, "A wrong stir fills the brim, even turned back. Eight and it spills.")
+        XCTAssertEqual(Level.endless(Run(seed: 7, tank: 1)).note, "")
     }
 
     /// Endless's ramp: tank n has 5 + 5n/4 stirs, to 28, with n/2 hidden under louder ones, to half of them.

@@ -50,6 +50,18 @@ film open-L12 5 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=12 OPEN=1
 # The launch fade, then the 0.4 s ignition, at 30 frames a second.
 film ignition-L12 2.5 "$tank,fps=30,scale=200:-1,tile=8x3:padding=4" LEVEL=12 OPEN=1
 film autoplay-L09 9 "fps=3,scale=220:-1,tile=9x3:padding=4" LEVEL=9 OPEN=1 AUTOPLAY=1
+# Under Reduce Motion: the opening fades through black instead of winding in, the picture fades on, and the solve
+# swells in place with no wave, pulse or easing home.
+if [[ -z "$pattern" || calm-open-L12 == *$pattern* || calm-autoplay-L09 == *$pattern* ]]; then
+  calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
+  # Off again however the films end, or every later shot and film records the calm opening.
+  trap 'calm false' EXIT
+  calm true
+  film calm-open-L12 5 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=12 OPEN=1
+  film calm-autoplay-L09 9 "fps=3,scale=220:-1,tile=9x3:padding=4" LEVEL=9 OPEN=1 AUTOPLAY=1
+  calm false
+  trap - EXIT
+fi
 film tour 8 "fps=4,scale=200:-1,tile=9x4:padding=4" TOUR=1 OPEN=1
 # The tier strip: plughole swiped to whirlpool (open), swiped to vortex (locked, 17 ticks lit), then plughole tapped.
 par27=$(printf '0%.0s' {1..27})
@@ -185,3 +197,8 @@ film lens-08-solve 19 "$tank,fps=1.5,scale=220:-1,tile=7x4:padding=4" PACK=lens 
   MOVES=0:-1,1:+5,2:-3,3:+3,0:-2,1:-4
 film lens-12-solve 21 "$tank,fps=1.5,scale=220:-1,tile=8x4:padding=4" PACK=lens LEVEL=12 OWNED=lens FINGER=1 REST=2.5 \
   MOVES=3:-5,0:-1,2:+2,1:-3,3:+4,0:-2,2:-3
+# A purchase landing on Lens's card 4 s in (UNSTIR_LANDS), the taste played: the owned line slides in and the pill
+# becomes play 04; then the same scrolled to the list, where the locks dissolve in turn.
+film card-lens-lands 7 "fps=4,scale=200:-1,tile=7x4:padding=4" CARD=lens STORE=lens:unowned BESTS=lens:000 LANDS=4 CLOCK=5.4
+film card-lens-lands-list 7 "fps=4,scale=200:-1,tile=7x4:padding=4" CARD=lens STORE=lens:unowned BESTS=lens:000 LANDS=4 \
+  CLOCK=5.4 CARDSCROLL=1
