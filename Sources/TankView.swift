@@ -835,7 +835,7 @@ struct LevelView: View {
             let side = min(geo.size.width, geo.size.height - 290) / 1.045
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
-                    Button("\u{2039} levels", action: leave)
+                    Button("\u{2039} levels", action: leave).accessibilityLabel(Spoken.back(game.level))
                     Spacer()
                     if game.level.sandbox {
                         control(game.level.picture.rawValue, game.nextPicture)
@@ -855,6 +855,7 @@ struct LevelView: View {
                                 LinearKeyframe(0.0, duration: 0.8)
                             }
                             .opacity(showResult || ending ? 0 : 1)
+                            .accessibilityLabel(game.movesSpoken)
                     }
                 }
                 .font(.mono(13))
@@ -870,6 +871,12 @@ struct LevelView: View {
                 Spacer(minLength: 12)
                 let reveal = AnyTransition.opacity.animation(.easeOut(duration: 0.4).delay(0.3))
                 tank(side)
+                    // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
+                    .accessibilityValue(game.level.ratchets.isEmpty ? game.movesSpoken : "\(game.budget) ticks left")
+                    .accessibilityHint("Played by sight: drag a knob to turn its rod.")
+                    .accessibilityAddTraits(.allowsDirectInteraction)
                     .overlay {
                         if ending {
                             NightForwardsFilm(side: side, frozen: frozenEnding) {
@@ -896,6 +903,8 @@ struct LevelView: View {
                     .font(.mono(12)).opacity(showResult || ending ? 0 : 0.55).multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
+                    .accessibilityHidden(showResult || ending)
+                    .modifier(SkipButton(on: demoing || shown != nil) { skip() })
                     .overlay(alignment: .top) {
                         if showResult && game.lost {
                             LostCard(game: game, onExit: leave, again: { if game.reset() { replays += 1 } })
@@ -920,6 +929,7 @@ struct LevelView: View {
                     control(game.level.sandbox ? "undo" : "undo \u{00B7} \(game.bank)") {
                         withAnimation(game.history.last?.rod == Game.tank ? .snappy(duration: 0.3) : nil) { game.undo() }
                     }
+                        .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
                         // With nothing to take back it does nothing, so it only taps.
                         .buttonStyle(Sounding(effect: game.history.isEmpty ? .tap : .undo))
                         // The plain button style does not grey a disabled label.
@@ -929,12 +939,13 @@ struct LevelView: View {
                     Spacer()
                     control("reset") { if game.reset() { replays += 1 } }
                         .buttonStyle(Sounding(effect: .reset))
+                        .accessibilityLabel("Reset")
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
                 .disabled(settling || game.finished || shown != nil || demoing || game.level.run != nil || holding)
                 .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
-                .accessibilityHidden(game.level.run != nil)
+                .accessibilityHidden(game.level.run != nil || showResult || ending)
                 .padding(.bottom, 8)
             }
         }
@@ -942,6 +953,7 @@ struct LevelView: View {
         .tint(Color.text)
         .padding(.horizontal, 16)
         .background(Color.black)
+        .accessibilityAction(.escape) { leave() }
         .task(id: replays) {
             if !game.level.demo.isEmpty && replays == 0 && !still { await clockDemo() }
             if !game.level.sandbox, replays > 0 || !still { await open() }
@@ -1019,6 +1031,7 @@ struct LevelView: View {
             // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
             // centre among them.
             if game.solved { withAnimation(.easeInOut(duration: 0.9)) { eased = true } }
+            game.announceFinish()
             Task {
                 // A spill's card waits for the pour and the word; a lost clock's for its stamp.
                 try? await Task.sleep(for: .seconds(game.spilled ? Brim.card : game.lost ? 0.7 : 1.4))
@@ -1126,6 +1139,20 @@ struct LevelView: View {
             guard await pause(1.4) else { return }
         }
         shown = nil
+    }
+
+    /// Cuts the clock's demonstration or the opening short; false when neither is playing.
+    @discardableResult private func skip() -> Bool {
+        if demoing {
+            demoing = false
+            Log.write("skip demo")
+            return true
+        }
+        guard shown != nil else { return false }
+        // Past 1, so the value changes and cuts short a wind-in still animating towards 1.
+        shown = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; wind = 2
+        Log.write("skip \(state)")
+        return true
     }
 
     /// False once the opening is skipped or replaced.
@@ -1908,17 +1935,7 @@ struct LevelView: View {
                 }
             }
             .onEnded { v in
-                if demoing {
-                    demoing = false
-                    Log.write("skip demo")
-                    return
-                }
-                if shown != nil {
-                    // Past 1, so the value changes and cuts short a wind-in still animating towards 1.
-                    shown = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; wind = 2
-                    Log.write("skip \(state)")
-                    return
-                }
+                if skip() { return }
                 // The lift can carry movement no change reported.
                 if let down = path?.down { path!.trail.add(norm(v.location), ms: Self.ms(v.time, since: down)) }
                 endPath()
@@ -2663,6 +2680,7 @@ struct ResultCard: View {
     let onExit: () -> Void
     let onNext: (Level) -> Void
     let onLook: (Tier) -> Void
+    @AccessibilityFocusState private var focused: Bool
 
     var body: some View {
         let run = game.level.run
@@ -2703,14 +2721,17 @@ struct ResultCard: View {
             .font(.mono(13))
             HStack(spacing: 40) {
                 Button("\u{2039} levels", action: onExit)
+                    .accessibilityLabel(Spoken.back(game.level)).accessibilityFocused($focused)
                 if let share = game.shareText {
                     ShareLink(item: share) { Text("share \u{2197}") }
                         .shareTap()
                         .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
+                        .accessibilityLabel("Share result")
                 }
                 if let next {
                     Button(game.spilled ? "new run \u{203A}" : "next \u{203A}") { onNext(next) }
                         .foregroundStyle(accent).shadow(color: accent, radius: 4)
+                        .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
                 }
             }
             .font(.mono(15, .medium))
@@ -2718,6 +2739,8 @@ struct ResultCard: View {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
+        // The finish was announced as it landed; the card's first button takes VoiceOver on from there.
+        .onAppear { focused = true }
     }
 }
 
@@ -2985,17 +3008,22 @@ struct LostCard: View {
     let game: Game
     let onExit: () -> Void
     let again: () -> Void
+    @AccessibilityFocusState private var focused: Bool
 
     var body: some View {
         VStack(spacing: 26) {
             Text("out of ticks on move \(game.moves)").font(.mono(13))
             HStack(spacing: 32) {
                 Button("\u{2039} levels", action: onExit)
+                    .accessibilityLabel(Spoken.back(game.level)).accessibilityFocused($focused)
                 Button("undo \u{00B7} \(game.bank)") { game.undo() }
                     .disabled(game.bank == 0).opacity(game.bank == 0 ? 0.35 : 1)
+                    .accessibilityLabel("Undo, \(game.bank) left")
                 Button("again \u{203A}", action: again).foregroundStyle(Color.vermilion).shadow(color: .vermilion, radius: 4)
+                    .accessibilityLabel("Try again")
             }
             .font(.mono(15, .medium))
         }
+        .onAppear { focused = true }
     }
 }

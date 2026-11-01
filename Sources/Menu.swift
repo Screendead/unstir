@@ -175,10 +175,11 @@ struct MenuView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Every stir in this tank has an exact inverse.")
                         .font(.mono(13)).opacity(0.55).padding(.top, 10)
-                    LevelRow(level: Level.daily(), enabled: modes, pick: pick).padding(.top, 22)
+                    LevelRow(level: Level.daily(), enabled: modes, needs: modes ? nil : Level.plughole[22], pick: pick).padding(.top, 22)
                     LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
                              detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
-                             best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, pick: pick)
+                             best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes,
+                             needs: modes ? nil : Level.plughole[22], pick: pick)
                     LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                              pick: pick)
                     TierList(tier: listed, pick: pick).equatable()
@@ -291,6 +292,7 @@ struct MenuView: View {
     private var title: some View {
         Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
             .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)
+            .accessibilityLabel("Unstir").accessibilityAddTraits(.isHeader)
     }
 
     /// Every tier by name. Scrolls sideways once there are more than fit, keeping the picked one in view.
@@ -478,7 +480,7 @@ private struct TierList: View, Equatable {
             let levels = tier.levels
             ForEach(Array(levels.enumerated()), id: \.offset) { i, level in
                 let reached = Best.unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
-                LevelRow(level: level, enabled: open && reached, pick: pick)
+                LevelRow(level: level, enabled: open && reached, needs: open && !reached ? levels[i - 1] : nil, pick: pick)
             }
         }
     }
@@ -525,6 +527,8 @@ private struct LevelRow: View {
     var detail: String?
     var best: Text?
     let enabled: Bool
+    /// What a shut row waits on, for VoiceOver.
+    var needs: Level?
     let pick: (Level) -> Void
 
     var body: some View {
@@ -561,5 +565,6 @@ private struct LevelRow: View {
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .disabled(!enabled)
+        .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs)))
     }
 }

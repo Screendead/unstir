@@ -558,6 +558,9 @@ struct PackClip: View {
 
     var body: some View {
         ClipPlayer(clip: .of(offer), side: side, held: held)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(offer.pack == nil ? "A level from each pack, played" : "A \(offer.name) level, played")
+            .accessibilityAddTraits(.isImage)
     }
 }
 

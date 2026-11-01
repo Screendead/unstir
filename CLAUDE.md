@@ -599,6 +599,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Aptabase's SDK does (the snapshot its own) and `isDebug` (a Debug or playtest build), `osName`, the app's versions and `sdkVersion`. The server
   takes property keys of up to 40 characters and event names of up to 60, cuts strings at 180, and drops without an
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
+- **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
+  the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
+  ..."; the daily, endless and the sandbox by name), value (its result, "not played", or "locked, solve level 6 first")
+  and hint (its rods and par), the header's "3 moves, par 7", and the finish, announced at high priority as the level
+  ends ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared."), after which the
+  result or lost card's first button takes focus. The tank is one element that allows direct interaction, so a
+  VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
+  button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
+  buttons read as words, not glyphs.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
   scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
   dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
