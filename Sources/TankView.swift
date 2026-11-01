@@ -749,11 +749,17 @@ struct LevelView: View {
     @State private var replays = 0
     /// Escapement: the demonstration has had its turn on opening, once the problem has been solved; outside the harness.
     private let demoRetired: Bool
+    /// The touch that skipped the opening, which goes on to hold what it landed on.
+    @State private var skipped: CGPoint?
     /// The last reset was of a tank with nothing played: the opening, a demonstration and all, plays again.
     @State private var fresh = false
     /// The day's refill as the badge shows it: set once the opening is over, and only once, so a reset's opening doesn't
     /// show it again.
     @State private var badge = 0
+    /// A touch that skipped the clock's demonstration: it holds nothing, as the problem has still to wind in.
+    @State private var skippedDemo: CGPoint?
+    /// The level's note at full strength for its first seconds of play.
+    @State private var noteLit = false
     /// A line the caption shows for a few seconds in place of its own, saying why a control or a turn did nothing.
     @State private var notice: String?
     @State private var notices = 0
@@ -962,7 +968,8 @@ struct LevelView: View {
                 // exactly where it was played.
                 Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
-                    .font(.mono(12)).opacity(showResult || ending ? 0 : notice != nil ? 0.9 : 0.55).multilineTextAlignment(.center)
+                    .font(.mono(12)).opacity(showResult || ending ? 0 : notice != nil ? 0.9 : noteLit ? 1 : 0.55)
+                    .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
                     .overlay(alignment: .top) {
@@ -1057,8 +1064,20 @@ struct LevelView: View {
         .onChange(of: shown == nil, initial: true) {
             // The clock's demonstration is not the player's tank.
             guard !demoing else { return }
-            if shown == nil { game.startClock(); badge = game.badge } else { lifted = false }
+            if shown == nil {
+                game.startClock()
+                badge = game.badge
+                noteLit = frozenClock == nil && game.counts && !game.level.note.isEmpty && game.level.story == nil
+            } else {
+                lifted = false
+            }
         }
+        .task(id: noteLit) {
+            guard noteLit, (try? await Task.sleep(for: .seconds(4))) != nil else { return }
+            withAnimation(.easeOut(duration: 0.6)) { noteLit = false }
+        }
+        // A tap anywhere skips the opening, as the caption says.
+        .simultaneousGesture(TapGesture().onEnded { _ = skip() })
         .onChange(of: touching) { if touching && shown == nil { lifted = true } }
         .onChange(of: settling) {
             guard !settling, undoQueued else { return }
@@ -1221,7 +1240,7 @@ struct LevelView: View {
         if demoDip > 0 { withAnimation(.easeInOut(duration: 1.4)) { demoDip = 0 } }
         if game.level.replay {
             for (i, t) in scramble.enumerated() {
-                let d = 0.12 * Double(abs(t.steps))
+                let d = 0.2 * Double(abs(t.steps))
                 liveRod = game.knob(over: t.rod)
                 withAnimation(.easeInOut(duration: d)) { liveAngle = Double(t.steps) * Tank.step }
                 guard await pause(d) else { return }
@@ -1229,6 +1248,8 @@ struct LevelView: View {
                 // Lets liveAngle render at 0 before the next rod animates from it.
                 guard await pause(0.15) else { return }
             }
+            // A beat on the stirred picture before it is the player's.
+            guard await pause(0.3) else { return }
         } else {
             withAnimation(.easeInOut(duration: 1.4)) { wind = 1 }
             guard await pause(1.4) else { return }
@@ -1985,7 +2006,11 @@ struct LevelView: View {
         return DragGesture(minimumDistance: 0)
             .updating($holding) { _, holding, _ in holding = true }
             .onChanged { v in
-                guard !settling, !game.finished, shown == nil, !demoing else { return }
+                guard !settling, !game.finished, v.startLocation != skippedDemo else { return }
+                // A touch skips the opening as it lands, then takes up what it landed on; one that skips the clock's
+                // demonstration holds nothing, as the problem has still to wind in.
+                if demoing { skip(); skippedDemo = v.startLocation; return }
+                if shown != nil { skip(); skipped = v.startLocation }
                 let q = norm(v.location)
                 let level = game.level
                 // Keyed on the start point because a cancelled drag never reaches onEnded; a new touch starts afresh.
@@ -2027,17 +2052,9 @@ struct LevelView: View {
                 }
             }
             .onEnded { v in
-                if demoing {
-                    demoing = false
-                    Log.write("skip demo")
-                    return
-                }
-                if shown != nil {
-                    // Past 1, so the value changes and cuts short a wind-in still animating towards 1.
-                    shown = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; wind = 2
-                    Log.write("skip \(state)")
-                    return
-                }
+                defer { skipped = nil }
+                if v.startLocation == skippedDemo { skippedDemo = nil; return }
+                if skip() { return }
                 // The lift can carry movement no change reported.
                 if let down = path?.down { path!.trail.add(norm(v.location), ms: Self.ms(v.time, since: down)) }
                 endPath()
@@ -2089,7 +2106,26 @@ struct LevelView: View {
         } else {
             liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
         }
+        // A touch that skipped the opening was not yet a try, so it counts once it commits.
+        if drag?.start != skipped { markStarted() }
+    }
+
+    private func markStarted() {
         if !game.level.sandbox && game.level.keepsProgress { Best.start(game.level.id) }
+    }
+
+    /// Skips the opening, or the clock's demonstration; false when neither is playing.
+    @discardableResult private func skip() -> Bool {
+        if demoing {
+            demoing = false
+            Log.write("skip demo")
+            return true
+        }
+        guard shown != nil else { return false }
+        // Past 1, so the value changes and cuts short a wind-in still animating towards 1.
+        shown = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; wind = 2
+        Log.write("skip \(state)")
+        return true
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
@@ -2217,6 +2253,7 @@ struct LevelView: View {
         } completion: {
             liveTurn = nil
             settling = false
+            if steps % game.level.layout.order != 0 { markStarted() }
             game.turnTank(steps)
         }
     }
@@ -2247,6 +2284,7 @@ struct LevelView: View {
             liveAngle = 0
             settling = false
             guard steps != 0 else { return }
+            markStarted()
             game.commit(rod: k, steps: steps)
         }
     }
@@ -2796,10 +2834,12 @@ struct ResultCard: View {
 
     var body: some View {
         let run = game.level.run
-        let accent: Color = game.level.pack.map { Offer.pack($0).glow } ?? switch game.level.tier {
-        case .plughole: .neonCyan
-        case .vortex: game.level.tier.glow
-        case .whirlpool, .maelstrom: .blood
+        let accent: Color = if let pack = game.level.pack { Offer.pack(pack).glow } else {
+            switch game.level.tier {
+            case .plughole: .neonCyan
+            case .vortex: game.level.tier.glow
+            case .whirlpool, .maelstrom: .blood
+            }
         }
         let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
         let time = String(format: "%d:%02d", game.seconds / 60, game.seconds % 60)
