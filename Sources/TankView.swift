@@ -744,12 +744,13 @@ struct LevelView: View {
     /// Escapement: what a tank lost to its last clock stopping shows, while Jack decides (UNSTIR_STOPLOOK).
     private let stopLook: StopLook
     private let shareSheet: Bool
-    let onExit: () -> Void
+    /// Back to the menu, with whether the level is solved.
+    let onExit: (Bool) -> Void
     let onNext: (Level) -> Void
     /// Back to the menu on a tier other than the stored one: a closed tier's gate.
     let onLook: (Tier) -> Void
 
-    init(level: Level, harness: Harness?, onExit: @escaping () -> Void, onNext: @escaping (Level) -> Void,
+    init(level: Level, harness: Harness?, onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void,
          onLook: @escaping (Tier) -> Void) {
         let game = Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank)
         game.turnTank(harness?.tank ?? 0)
@@ -1062,7 +1063,7 @@ struct LevelView: View {
     /// Back to the menu, the only way out short of a finish or the next tank.
     private func leave() {
         Analytics.shared.left(game)
-        onExit()
+        onExit(game.solved)
     }
 
     private func look(_ tier: Tier) {

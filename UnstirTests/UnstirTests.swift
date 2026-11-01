@@ -1188,6 +1188,44 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(String(decoding: saved, as: UTF8.self).contains("hints"))
     }
 
+    /// A launch lands on the first level without a best, then on the first short of par, then the top; a locked tier
+    /// lands on its top too.
+    func testTheMenuLandsOnTheFrontier() {
+        let flag = Best.unlocked
+        defer { Best.unlocked = flag }
+        Best.unlocked = false
+        var bests: [String: Best] = [:]
+        func landing(_ tier: Tier) -> String? { tier.landing { bests[$0] }?.id }
+        XCTAssertEqual(landing(.plughole), "L1")
+        for level in Level.plughole.prefix(13) { bests[level.id] = Best(over: 0, seconds: 30) }
+        bests["L5"] = Best(over: 2, seconds: 30)
+        XCTAssertEqual(Tier.plughole.frontier { bests[$0] }?.id, "L14")
+        XCTAssertEqual(landing(.plughole), "L14")
+        XCTAssertNil(landing(.whirlpool))
+        for level in Level.plughole { bests[level.id] = bests[level.id] ?? Best(over: 0, seconds: 30) }
+        XCTAssertNil(Tier.plughole.frontier { bests[$0] })
+        XCTAssertEqual(landing(.plughole), "L5")
+        XCTAssertNil(landing(.whirlpool), "whirlpool is still locked while 05 is over par")
+        bests["L5"] = Best(over: 0, seconds: 30)
+        XCTAssertNil(landing(.plughole))
+        XCTAssertEqual(landing(.whirlpool), "N1")
+    }
+
+    /// Back from a level the menu centres on it, or after a solve on the one after it, the last level on itself; the
+    /// daily, endless and the sandbox leave the list at its top, and a pack's level centres its own list.
+    func testLeavingALevelFocusesItsRow() {
+        XCTAssertEqual(Level.plughole[11].focus(solved: false)?.id, "L12")
+        XCTAssertEqual(Level.plughole[11].focus(solved: true)?.id, "L13")
+        XCTAssertEqual(Level.plughole.last!.focus(solved: true)?.id, Level.plughole.last!.id)
+        XCTAssertEqual(Level.whirlpool[0].focus(solved: false)?.id, "N1")
+        XCTAssertNil(Level.daily().focus(solved: true))
+        XCTAssertNil(Level.endless(Run(seed: 1)).focus(solved: true))
+        XCTAssertNil(Level.sandbox.focus(solved: false))
+        let lens = Pack.lens.levels
+        XCTAssertEqual(lens[1].focus(solved: true)?.id, lens[2].id)
+        XCTAssertEqual(lens[1].focus(solved: false)?.id, lens[1].id)
+    }
+
     /// A locked tier opened to look at is never stored, and a stored tier that has closed since comes back as the
     /// highest open one below it.
     func testStoredTierIsNeverLocked() {

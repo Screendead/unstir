@@ -7,6 +7,9 @@ menu-vortex-open.png  Menu on vortex, opened by every whirlpool tank at par: its
 menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
+menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best.
+menu-back-left.png  Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12.
+menu-back-solved.png  Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens.
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
 grid-d2.png  grid, depth-2 scramble 1:+5,2:-4 (rod:steps, 30 degrees per step, bottom first).
 grid-d3.png  grid, depth-3 scramble 0:-6,1:+4,2:-5 (rod:steps, 30 degrees per step, bottom first).

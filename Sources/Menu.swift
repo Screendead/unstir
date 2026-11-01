@@ -50,6 +50,28 @@ extension Tier {
         let par = below.atPar(), lit = par.filter { $0 }.count
         return "\(rawValue), locked, opens with every \(below.rawValue) tank at par, \(lit) of \(par.count)"
     }
+
+    /// The first level with no best, on an open tier: where the player is. Every level before it has a best, so it is
+    /// open.
+    func frontier(_ best: (String) -> Best? = Best.load) -> Level? {
+        isOpen(best) ? levels.first { best($0.id) == nil } : nil
+    }
+
+    /// The row a launch centres on: the frontier, else the first level short of par. Nil, the top, once every level is
+    /// at par or while the tier is locked.
+    func landing(_ best: (String) -> Best? = Best.load) -> Level? {
+        frontier(best) ?? (isOpen(best) ? levels.first { (best($0.id)?.over ?? 0) > 0 } : nil)
+    }
+}
+
+extension Level {
+    /// The row the menu, or a pack's card, centres on once this level is left: after a solve the one after it, which
+    /// "next ›" opens, or itself as its list's last. Nil for the daily, endless and the sandbox, which sit at the top.
+    func focus(solved: Bool) -> Level? {
+        let list = pack?.levels ?? tier.levels
+        guard let i = list.firstIndex(where: { $0.id == id }) else { return nil }
+        return list[solved ? min(i + 1, list.count - 1) : i]
+    }
 }
 
 /// The tank's own twist as one rod about `centre`: the menu stirs a tier's list away and unstirs the next into place.
@@ -98,6 +120,10 @@ struct MenuView: View {
     let shelfDemo: Bool
     /// UNSTIR_CARDSCROLL: the card opens scrolled to its levels.
     let cardScroll: Bool
+    /// The row the list, or the card, centres on as it opens: the level just left, or on launch the tier's landing.
+    let focus: Level?
+    /// The focused row's id until its flash has started, so a later rebuild of its tier's list doesn't flash it again.
+    @State private var flashing: String?
     /// The tier picked in the strip, open or not. `shown` trails it while the old list stirs away, and `listed`, the
     /// scroll view's own list, trails that to the end of the switch: rebuilding it stalls a frame (about 40 ms on the
     /// simulator), unseen once the stir has settled over it.
@@ -132,7 +158,7 @@ struct MenuView: View {
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
-         cardScroll: Bool = false, onPick: @escaping (Level) -> Void) {
+         cardScroll: Bool = false, focus: Level? = nil, onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = State(initialValue: settings)
         self.onPick = onPick
@@ -141,6 +167,8 @@ struct MenuView: View {
         self.placeholders = placeholders
         self.shelfDemo = shelfDemo
         self.cardScroll = cardScroll
+        self.focus = focus
+        _flashing = State(initialValue: focus?.id)
         let tier = start ?? Tier.stored()
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
@@ -171,22 +199,17 @@ struct MenuView: View {
             }
             .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
             tiers.padding(.top, 6)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Every stir in this tank has an exact inverse.")
-                        .font(.mono(13)).opacity(0.55).padding(.top, 10)
-                    LevelRow(level: Level.daily(), enabled: modes, pick: pick).padding(.top, 22)
-                    LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                             detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
-                             best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, pick: pick)
-                    LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
-                             pick: pick)
-                    TierList(tier: listed, pick: pick).equatable()
-                        .opacity(twisting ? 0 : 1)
-                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { list = $0 }
+            ScrollViewReader { proxy in
+                ScrollView { rows(modes: modes) }
+                .onAppear {
+                    // Unanimated, under the dip that brings the menu in; a tick on, once the rows are laid out.
+                    DispatchQueue.main.async {
+                        if let focus, listed.levels.contains(where: { $0.id == focus.id }) {
+                            proxy.scrollTo(focus.id, anchor: .center)
+                        }
+                        flashing = nil
+                    }
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 28)
             }
             // Once a drag is taken as sideways, the list stops scrolling under the stir.
             .scrollDisabled(sideways == true)
@@ -225,11 +248,30 @@ struct MenuView: View {
         .task { if shelfDemo { await shelfTour() } }
     }
 
+    /// The modes, then the tier's rule and rows.
+    private func rows(modes: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Every stir in this tank has an exact inverse.")
+                .font(.mono(13)).opacity(0.55).padding(.top, 10)
+            LevelRow(level: Level.daily(), enabled: modes, pick: pick).padding(.top, 22)
+            LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
+                     detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
+                     best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, pick: pick)
+            LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
+                     pick: pick)
+            TierList(tier: listed, pick: pick, flash: flashing).equatable()
+                .opacity(twisting ? 0 : 1)
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { list = $0 }
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 28)
+    }
+
     /// The card grows out of its cover, or fades in under Reduce Motion.
     @ViewBuilder private var cardView: some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
-                     onBack: { show(nil) }, onPlay: { onPick($0) })
+                     focus: focus, onBack: { show(nil) }, onPlay: { onPick($0) })
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
@@ -467,6 +509,8 @@ struct MenuView: View {
 private struct TierList: View, Equatable {
     let tier: Tier
     let pick: (Level) -> Void
+    /// The row that flashes as it appears.
+    var flash: String?
 
     nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier }
 
@@ -476,9 +520,9 @@ private struct TierList: View, Equatable {
             header(open: open)
             if !open, let below = tier.below { gate(below) }
             let levels = tier.levels
-            ForEach(Array(levels.enumerated()), id: \.offset) { i, level in
+            ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
                 let reached = Best.unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
-                LevelRow(level: level, enabled: open && reached, pick: pick)
+                LevelRow(level: level, enabled: open && reached, flash: level.id == flash, pick: pick)
             }
         }
     }
@@ -525,7 +569,11 @@ private struct LevelRow: View {
     var detail: String?
     var best: Text?
     let enabled: Bool
+    /// Its hairline lights once as the row appears, the row just left or the landing.
+    var flash = false
     let pick: (Level) -> Void
+    @State private var lit = 0.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let result = Best.load(level.id)
@@ -561,5 +609,15 @@ private struct LevelRow: View {
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .disabled(!enabled)
+        // In the list's left margin, clear of the number.
+        .overlay(alignment: .leading) {
+            Capsule().fill(level.colour).frame(width: 2).padding(.vertical, 13).shadow(color: level.colour, radius: 4)
+                .offset(x: -11).opacity(lit).allowsHitTesting(false)
+        }
+        .onAppear {
+            guard flash, !reduceMotion else { return }
+            lit = 1
+            withAnimation(.easeOut(duration: 1.4).delay(0.35)) { lit = 0 }
+        }
     }
 }

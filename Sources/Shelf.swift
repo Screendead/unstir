@@ -573,6 +573,8 @@ struct PackCard: View {
     var levels: [Level]
     /// UNSTIR_CARDSCROLL: opens scrolled to the list.
     var scrolled = false
+    /// The row it opens centred on, the pack's level just left, or after a solve the one after it.
+    var focus: Level?
     let onBack: () -> Void
     let onPlay: (Level) -> Void
     var store = Store.shared
@@ -622,7 +624,13 @@ struct PackCard: View {
                     .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
                 }
                 .scrollBounceBehavior(.basedOnSize)
-                .onAppear { if scrolled { reader.scrollTo("list", anchor: .top) } }
+                .onAppear {
+                    if scrolled {
+                        reader.scrollTo("list", anchor: .top)
+                    } else if let focus, levels.contains(where: { $0.id == focus.id }) {
+                        DispatchQueue.main.async { reader.scrollTo(focus.id, anchor: .center) }
+                    }
+                }
             }
         }
         .foregroundStyle(Color.text)

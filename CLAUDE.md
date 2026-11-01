@@ -605,7 +605,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. A locked tier can be
   looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par. A hidden stir in
   the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
-  the list, and the card (`RootView`'s, bound in) lies over the whole menu.
+  the list, and the card (`RootView`'s, bound in) lies over the whole menu. The list opens centred, unanimated under
+  the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
+  `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
+  the first short of par, else the top). The daily, endless and the sandbox leave it at the top. That row's hairline,
+  in the list's left margin, lights once and fades (not under Reduce Motion). Back from a pack's level, the card over
+  the menu opens centred on its row the same way, but a gate's card still opens at its top.
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
@@ -672,7 +677,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch, so shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
-  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  tiers through the same calls a finger makes. `UNSTIR_EXIT=left` leaves the harness's level for the menu a second
+  after it opens, through `RootView`'s own exit (`=solved` as its result card does after a solve; `=up` opens the next
+  tier's first level, as "up a notch" does, then leaves that). `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which

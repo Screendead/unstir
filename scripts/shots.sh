@@ -61,6 +61,14 @@ shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 o
 shot menu-maelstrom "Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK)." TIER=maelstrom UNLOCK=1
 shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN)." \
   TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33
+# Where the list opens: a cold launch, and back from a level through RootView's own exit (UNSTIR_EXIT).
+upto13=0000000000000
+shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
+  BESTS=plughole:$upto13
+shot menu-back-left "Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12." \
+  LEVEL=12 EXIT=left BESTS=plughole:00000000000000000000
+shot menu-back-solved "Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens." \
+  SCREEN=clean LEVEL=14 EXIT=solved BESTS=plughole:$upto13
 for picture in grid; do
   for d in 1 2 3 4 5; do
     stack=${depths[$((d - 1))]}
