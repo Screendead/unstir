@@ -71,8 +71,26 @@ struct Ledger: Equatable, Sendable {
     }
 }
 
-/// The App Store's side of the packs. Nothing here is stored: StoreKit keeps every purchase, and `start` reads them
-/// back on each launch, on any device, family members' included.
+extension Ledger {
+    /// Of the products asked for on Ask to Buy, those now owned, whose approval is still to be said, and those revoked,
+    /// forgotten unsaid. A declined request sends nothing, so it stays asked, and says nothing unless it is owned.
+    func answers(to asked: Set<String>) -> (approved: Set<String>, revoked: Set<String>) {
+        (asked.filter { products[$0] == .owned }, asked.filter { products[$0] == .revoked })
+    }
+}
+
+/// The Ask to Buy requests made on this device, remembered only to say each approval once (Jack's call C21, round 13):
+/// an approval arrives as any purchase made elsewhere does, so only this says it was asked for here.
+enum Asked {
+    static func key(_ id: String) -> String { "asked.\(id)" }
+    static var all: Set<String> { Set(Pack.productIDs.filter { UserDefaults.standard.bool(forKey: key($0)) }) }
+    static func add(_ id: String) { UserDefaults.standard.set(true, forKey: key(id)) }
+    static func remove(_ id: String) { UserDefaults.standard.removeObject(forKey: key(id)) }
+}
+
+/// The App Store's side of the packs. Nothing that grants is stored: StoreKit keeps every purchase, and `start` reads
+/// them back on each launch, on any device, family members' included; `Asked` only remembers a request to say its
+/// approval.
 @MainActor @Observable
 final class Store {
     static let shared = Store()
@@ -83,12 +101,18 @@ final class Store {
     private(set) var harness: Ledger?
     /// Each product's price as the App Store gives it, for the player's storefront; missing until it is fetched.
     private(set) var prices: [String: String] = [:]
+    /// Each price as a number, and the storefront's style to write one in, for Complete's saving.
+    private(set) var amounts: [String: Decimal] = [:]
+    @ObservationIgnored private var styles: [String: Decimal.FormatStyle.Currency] = [:]
     private(set) var pricing = Pricing.fetching
     /// Why each product's last attempt failed, while the ledger holds it as failed, or as pending after a failed ask again.
     private(set) var failures: [String: Failure] = [:]
     /// The last restore's outcome, said alike by the cards and settings; nil before one, or after a cancelled sign-in.
     private(set) var restored: Restored?
     private(set) var restoring = false
+    /// Offers whose Ask to Buy approval is still to be said: by the landing on the offer's own card if it is up, else by
+    /// the dock.
+    private(set) var approved: [Offer] = []
     @ObservationIgnored private var payments: Bool?
     /// The launch's first read of the entitlements has finished, so a pack the player owns reads as owned.
     private(set) var ready = false
@@ -112,6 +136,20 @@ final class Store {
 
     func price(_ id: String) -> String? { prices[id] }
 
+    /// What Complete saves on the sold packs left unowned, in Complete's own currency; nil while it saves nothing, or
+    /// before every price it needs is in. Complete owned owns every pack, so it saves nothing.
+    var saving: String? {
+        guard let s = Offer.saving(amounts: amounts, owned: (harness ?? ledger).owned, sold: Pack.sold()) else { return nil }
+        return styles[Pack.completeID].map { s.formatted($0) }
+    }
+
+    /// Complete is on offer, on the dock and as a card to go back to: while it saves, or, while the prices are still
+    /// loading, while no sold pack is owned, when it holds every pack for less, so a launch's dock keeps its cover.
+    var offersComplete: Bool {
+        if saving != nil { return true }
+        return pricing == .fetching && amounts[Pack.completeID] == nil && Pack.sold().allSatisfy { state($0) != .owned }
+    }
+
     /// Screen Time, or a child's account without Ask to Buy, can turn purchases off; read afresh as a card draws.
     var canPay: Bool { payments ?? AppStore.canMakePayments }
 
@@ -124,11 +162,15 @@ final class Store {
     }
 
     /// Set before `start`, which then leaves StoreKit alone for the launch.
-    func pretend(_ ledger: Ledger, prices: [String: String] = [:], pricing: Pricing = .fetching,
-                 failure: Failure = .other, canPay: Bool = true, restored: Restored? = nil) {
+    func pretend(_ ledger: Ledger, prices: [String: String] = [:], amounts: [String: Decimal] = [:],
+                 pricing: Pricing = .fetching, failure: Failure = .other, canPay: Bool = true, restored: Restored? = nil,
+                 approved: [Offer] = []) {
         guard !Build.release else { return }
         harness = ledger
+        self.approved = approved
         self.prices = prices
+        self.amounts = amounts
+        styles = amounts.mapValues { _ in .currency(code: "USD").locale(Locale(identifier: "en_US")) }
         self.pricing = pricing
         failures = ledger.products.filter { $0.value == .failed || $0.value == .pending }.mapValues { _ in failure }
         payments = canPay
@@ -138,6 +180,13 @@ final class Store {
 
     /// UNSTIR_LANDS: a purchase landing in the harness's states, as an approval or a restore would.
     func land(_ id: String) { harness?.record(id, .owned) }
+
+    /// An approval has been said, so it is never said again.
+    func said(_ offer: Offer) {
+        guard let i = approved.firstIndex(of: offer) else { return }
+        approved.remove(at: i)
+        if harness == nil { Asked.remove(offer.productID) }
+    }
 
     /// Returns once the first read has finished, or at once before `start`.
     func settled() async { await first?.value }
@@ -175,6 +224,14 @@ final class Store {
         for await result in Transaction.currentEntitlements {
             if case .verified(let t) = result, t.revocationDate == nil { ledger.record(t.productID, .owned) }
         }
+        answer()
+    }
+
+    /// An approval granted while the app was shut shows only as owned on the launch's read, so both reads come here.
+    private func answer() {
+        let (yes, no) = ledger.answers(to: Asked.all)
+        for id in no { Asked.remove(id) }
+        for offer in Offer.all where yes.contains(offer.productID) && !approved.contains(offer) { approved.append(offer) }
     }
 
     /// Only a transaction the App Store signed grants anything. Unverified ones are left unfinished. An old purchase's
@@ -184,6 +241,7 @@ final class Store {
         guard case .verified(let t) = result else { return }
         if t.revocationDate == nil {
             ledger.record(t.productID, .owned)
+            answer()
         } else {
             ledger.record(t.productID, .revoked, shared: t.ownershipType == .familyShared)
             await refresh()
@@ -210,7 +268,9 @@ final class Store {
                 // Not in `apply`, which also sees a reinstall's restore: only a purchase made here counts.
                 if t.revocationDate == nil { Analytics.shared.purchased(t.productID) }
                 await apply(result)
-            case .pending: ledger.record(id, .pending)
+            case .pending:
+                ledger.record(id, .pending)
+                Asked.add(id)
             case .userCancelled: ledger.record(id, .unowned)
             @unknown default: failed("unknown result")
             }
@@ -251,6 +311,8 @@ final class Store {
         for p in try await Product.products(for: Pack.productIDs) {
             products[p.id] = p
             prices[p.id] = p.displayPrice
+            amounts[p.id] = p.price
+            styles[p.id] = p.priceFormatStyle
         }
     }
 }
