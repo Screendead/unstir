@@ -88,7 +88,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
     -destination 'platform=iOS Simulator,name=Unstir iPhone 17 Pro Max' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
   ```
-  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The solver's tests that take seconds, and the
+  To run one test, add `-only-testing:UnstirTests/UnstirTests/testPush`. The test host shares its defaults with the
+  harness's launches on that simulator, so the bundle's principal class (`FreshDefaults`) forgets every started flag
+  before each test and after the run. The solver's tests that take seconds, and the
   halftone's contrast test, skip unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
   `xcodebuild` to run them too (about a minute and a half more).
 - StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
@@ -307,7 +309,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   knob is seized (`testTheRimKeysOnMotionAndADiscOnItsKind`), and `UNSTIR_SEIZED` sets both. `par` is `fixedPar`, else
   `scramble.count`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and
-  endless's brim, which the rim shows (the header shows moves, and the title the tank). `Game.commit` takes a physical
+  endless's brim, which the rim shows (the header shows moves, and the title the tank). The header's count flashes red
+  on a push, and otherwise reads amber at par and magenta past it (`LevelView.parTone`; VoiceOver adds "at par" or
+  "over par"), and an over-par solve veils its picture under the card by 0.05 a move over, to 0.2 at most
+  (`LevelView.haze`; Jack's call C11, round 13). `Game.commit` takes a physical
   knob and commits to the slot under it. Endless has no par, undo or reset: each red flash (a `.pushed` commit) adds a
   notch to `Game.brim`, each of the scramble's entries that pops settles one (the heal's `.cancelled` commit, or a push
   that the heal lets fall cancelling it), and at `Run.room` (8) the run spills. The stack's entries mark the player's
@@ -379,10 +384,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   bank empty it stays live only to put "undos refill +2 each day you play" in the caption for three seconds (the
   lost card's under its buttons), which plays the undo and reset sounds as the bottom controls do. An undo tapped
   while a let-go settles is taken once it has. A reset with nothing played only replays the opening and counts no
-  reset, so it costs no clean. The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
+  reset, so it costs no clean. With moves played, the play screen's reset takes a second tap: the first only taps and
+  arms it, "reset? tap again", for 2 s (`ResetArm`; under VoiceOver until focus leaves it), and any move, undo or
+  finish disarms it; the cards' "again" resets
+  at once (Jack's call C12, round 13). The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
-  takes up what it landed on, the level counting as started only once that touch commits, and one that skips
-  Escapement's demonstration holds nothing. A level's note shows at full strength for its first 4 s of play, then at
+  takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
+  (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
+  demonstration's commits (Jack's call C3, round 13). A level's note shows at full strength for its first 4 s of play, then at
   0.55, as every caption rests. While a level is open and unfinished the screen stays awake (`Awake`) until two
   minutes after the last touch.
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
@@ -418,7 +427,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   card and `ClockHint` as its last tick lands, the pawl and hub ring amber, with the amber stop ring; its pawl riding out with each tick, the move's ticks a beat after the lift each turning its clock's
   core a step on screen in turn, `tickTurn` apart after `tickBeat` (`Game.tick` holds each with the stack it changed; `Unstirred.tick`,
   one entry over in the four-tap budget, like the drag) and the wheel a tooth; `ClockHint` dashes the clock's disc at all
-  times (Jack's call, 2026-10-25); a pushed tick flashes the ratchet red and stands as a vermilion +N; a
+  times (Jack's call, 2026-10-25); a pushed tick flashes the ratchet red and stands as a vermilion +N, and the
+  caption says at once that the line can't come back ("That tick can't come back. Undo, or again.", `Game.deadTick`,
+  at a notice's strength and read off the stack, so it stays until an undo takes the tick back; Jack's call C14, round
+  13); a
   tank out of ticks shows "out of ticks." (`LostStamp`) by the clock whose tick spent the last, with or without a +N
   (a −N for a wound-back clock), and with no push the look `UNSTIR_STOPLOOK` picks (`StopLook`: stamp, as built; left,
   the twists left as a count; rings, a ring on each knob still twisted), and `LostCard`'s "out of ticks on move N",
@@ -819,7 +831,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
   and it holds the swirl's breath at 0. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
   first slosh starts at 1.5 s, for stills, even under `UNSTIR_CLOCK`, and never with `UNSTIR_SWIRLED=1`, which has none. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
-  pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
+  pushes until it spills. `UNSTIR_RESETARMED=1` holds the reset control armed, "reset? tap again". `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
   takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag or the swirl's: they
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch. Nor

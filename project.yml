@@ -53,6 +53,7 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_NSPrincipalClass: FreshDefaults
     dependencies:
       - target: Unstir
 schemes:

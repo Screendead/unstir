@@ -439,8 +439,8 @@ struct Best: Codable {
         if store { UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)") } else { fake(id) }
     }
 
-    /// Set when a rod is first touched: probing counts as trying, only studying the still is free. Unstored, the
-    /// harness's, it lasts only this launch.
+    /// Set by the first committed move: a look, a touch or a turn let go where it began, is free (Jack's call C3, round
+    /// 13). Unstored, the harness's, it lasts only this launch.
     static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
     static func start(_ id: String, store: Bool = true) {
         guard !started(id) else { return }

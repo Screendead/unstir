@@ -155,6 +155,8 @@ shot endless-spilled "The same, 6 s in: the picture stirred together, its finest
   MODE=endless BRIM=7 TURNED=1:1 CLOCK=6
 shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch)." \
   LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
+shot reset-armed "Level 12 with two moves played, reset tapped once: it reads reset? tap again." \
+  LEVEL=12 PLAYED=0:+1,1:+1 RESETARMED=1
 shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
   MODE=sandbox CLOCK=3
 full=$(for i in $(seq 0 35); do printf '%d:+1,' $((i % 2)); done)
@@ -164,6 +166,11 @@ shot sandbox-chainmail "The sandbox on chainmail and pent: the header's controls
   MODE=sandbox PICTURE=chainmail LAYOUT=pent STACK= CLOCK=3
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
+shot level-at-par "Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber." \
+  LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
+shot level-over-par "The same a push later: moves 6 / par 5 in magenta." LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2,3:+2
+shot result-veil "Level 11 solved in 9, four over par: the picture under the card veiled at 0.2, its most." \
+  LEVEL=11 PLAYED=0:+1,2:-6,0:-1,3:+1,1:+4,3:+4,0:+1,2:+4,0:-5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
 shot result-again-best "Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside levels and next." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006
@@ -605,8 +612,10 @@ shot escapement-card "Escapement's card, owned, scrolled to its levels under the
 # in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
 shot escapement-2-ticked "Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02." \
   PACK=escapement LEVEL=2 PLAYED=2:4
-shot escapement-2-pushed "Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left." \
+shot escapement-2-pushed "Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3
+shot escapement-dead-tick "Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again." \
+  PACK=escapement OWNED=escapement LEVEL=4 PLAYED=1:1
 shot escapement-2-out "Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3

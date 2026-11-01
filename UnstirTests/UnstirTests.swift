@@ -2,6 +2,7 @@
 
 import Metal
 import os
+import struct SwiftUI.Color
 import struct SwiftUI.EnvironmentValues
 import XCTest
 import simd
@@ -16,7 +17,7 @@ extension LevelView {
 
 final class UnstirTests: XCTestCase {
     /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full, never
-    /// refilled or anchored, and the tank never turned.
+    /// refilled or anchored and the tank never turned (`FreshDefaults` sees to the levels tried).
     override func setUp() {
         UserDefaults.standard.removeObject(forKey: "undos.spent")
         UserDefaults.standard.removeObject(forKey: "undos.day")
@@ -106,6 +107,73 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(game.solved)
         XCTAssertEqual(game.over, 0)
         XCTAssertFalse(game.clean)
+    }
+
+    /// Jack's call C3 (round 13): a level counts as tried on its first committed move, a turn, a tank turn or a wait;
+    /// a look, a refused turn and the clock's demonstration try nothing.
+    @MainActor func testALookIsFree() throws {
+        let plughole = Level.plughole[0]
+        let look = Game(level: plughole, bank: (10, nil))
+        XCTAssertFalse(Best.started(plughole.id))
+        look.commit(rod: 1, steps: 2)
+        XCTAssertTrue(Best.started(plughole.id))
+        XCTAssertTrue(look.firstTry, "the visit that tries a level is still its first try")
+
+        let maelstrom = Level.maelstrom[0], seized = try XCTUnwrap(maelstrom.seized.first)
+        let tank = Game(level: maelstrom, tankTurned: true, bank: (10, nil))
+        tank.commit(rod: seized, steps: 1)
+        XCTAssertFalse(Best.started(maelstrom.id), "a seized knob refuses the turn")
+        tank.turnTank(maelstrom.layout.order)
+        XCTAssertFalse(Best.started(maelstrom.id), "a whole turn of the tank is no move")
+        tank.turnTank(1)
+        XCTAssertTrue(Best.started(maelstrom.id))
+
+        let escapement = Level.escapement[0]
+        let clock = Game(level: escapement, tankTurned: true, bank: (10, nil))
+        clock.demo(escapement.demo)
+        clock.commit(rod: 1, steps: -2)
+        XCTAssertTrue(clock.wait(on: 0))
+        XCTAssertFalse(Best.started(escapement.id), "the demonstration's moves are not the player's")
+        clock.endDemo()
+        XCTAssertTrue(clock.wait(on: 0))
+        XCTAssertTrue(Best.started(escapement.id))
+    }
+
+    /// Jack's call C11 (round 13): the header's count turns amber at par and magenta past it.
+    func testTheCountWarnsAtPar() {
+        XCTAssertEqual(LevelView.parTone(moves: 0, par: 5), .text)
+        XCTAssertEqual(LevelView.parTone(moves: 4, par: 5), .text)
+        XCTAssertEqual(LevelView.parTone(moves: 5, par: 5), .amber)
+        XCTAssertEqual(LevelView.parTone(moves: 6, par: 5), .magenta)
+        XCTAssertEqual(LevelView.parTone(moves: 20, par: 5), .magenta)
+    }
+
+    /// Jack's call C11 (round 13): the card's veil over an over-par solve is 0.05 a move, never past 0.2.
+    func testTheVeilIsLight() {
+        XCTAssertEqual(LevelView.haze(over: 0), 0)
+        XCTAssertEqual(LevelView.haze(over: 1), 0.05, accuracy: 1e-12)
+        XCTAssertEqual(LevelView.haze(over: 4), 0.2, accuracy: 1e-12)
+        XCTAssertEqual(LevelView.haze(over: 10), 0.2)
+    }
+
+    /// Jack's call C12 (round 13): with moves played, reset takes a second tap within 2 s; with none it resets at once.
+    func testResetTakesASecondTap() throws {
+        let t0 = Date(timeIntervalSinceReferenceDate: 0)
+        let first = ResetArm.tap(now: t0, armedAt: nil, played: true)
+        XCTAssertFalse(first.reset)
+        XCTAssertEqual(first.armedAt, t0)
+        let armed = try XCTUnwrap(first.armedAt)
+        XCTAssertEqual(ResetArm.tap(now: t0 + 1.9, armedAt: armed, played: true).reset, true)
+        XCTAssertNil(ResetArm.tap(now: t0 + 1.9, armedAt: armed, played: true).armedAt)
+        // Too late: it arms afresh rather than reset.
+        let late = ResetArm.tap(now: t0 + 2.1, armedAt: armed, played: true)
+        XCTAssertFalse(late.reset)
+        XCTAssertEqual(late.armedAt, t0 + 2.1)
+        // Under VoiceOver the arm holds past the window.
+        XCTAssertTrue(ResetArm.tap(now: t0 + 30, armedAt: armed, played: true, held: true).reset)
+        XCTAssertFalse(ResetArm.tap(now: t0, armedAt: nil, played: true, held: true).reset)
+        XCTAssertTrue(ResetArm.tap(now: t0, armedAt: nil, played: false).reset)
+        XCTAssertNil(ResetArm.tap(now: t0, armedAt: nil, played: false).armedAt)
     }
 
     /// A tank of a run, on scramble `word`, opening with `brim` notches.
@@ -1807,13 +1875,20 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(game.solved)
         XCTAssertGreaterThan(game.over, 0)
         XCTAssertEqual(game.finishSpoken, "Unstirred. \(game.moves) moves, par \(level.par). \(game.over) over par.")
+        XCTAssertEqual(game.movesSpoken, "\(game.moves) moves, par \(level.par), over par")
         let clean = Game(level: level)
         while let t = clean.reachable { clean.commit(rod: t.rod, steps: t.steps) }
         XCTAssertEqual(clean.finishSpoken, "Unstirred. \(level.par) moves, par \(level.par). " + (clean.clean ? "Clean." : "At par."))
+        XCTAssertEqual(clean.movesSpoken, "\(level.par) moves, par \(level.par), at par")
         let run = Game(level: .endless(Run(seed: 7)))
         XCTAssertEqual(run.movesSpoken, "0 moves")
         XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")
         XCTAssertEqual(game.tankSpoken, game.movesSpoken)
+        // The sandbox has no par, so it never reads as at or over one.
+        let sandbox = Game(level: .sandbox)
+        XCTAssertEqual(sandbox.tankSpoken, "0 moves")
+        sandbox.commit(rod: 0, steps: 1)
+        XCTAssertEqual(sandbox.tankSpoken, "1 move")
     }
 
     /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.
