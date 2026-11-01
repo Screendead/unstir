@@ -373,7 +373,7 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 
 | Call | Decision |
 |---|---|
-| N1. Level names | **One world per tier and pack, plain nouns, gentle to wild:** plughole the bath (Drop to Drain), whirlpool a river (Spring to Estuary), vortex the winds (Calm to Tornado), maelstrom the open sea (Swell to Abyss), Lens things you look through (Keyhole to Kaleidoscope), Escapement a clock taken apart (Mainspring to Midnight), Prism the specimens on each plate (Frond to Nautilus). Ids never change. The hints the old titles carried move into the levels' notes. First Stir's titles stay |
+| N1. Level names | **One world per tier and pack, plain nouns, gentle to wild:** plughole the bath (Drop to Drain), whirlpool a river (Spring to Estuary), vortex the winds (Calm to Tornado), maelstrom the open sea (Swell to Abyss), Lens things you look through (Keyhole to Kaleidoscope), Escapement a clock taken apart (Mainspring to Midnight), Prism the specimens on each plate (Frond to Nautilus). Ids never change. The hints the old titles carried move into the levels' notes. First Stir's titles stay. Built on `level-names` (PR #82). Open: L2 (Drip, was "Further than it looks.") has no note, though the recommendation said L1 to L4 lose nothing; whether it wants one is a creative call |
 | N1a. Escapement 01 | **Mainspring**, replacing D1's "The clock" |
 | N1b. Lens's chapters | **Four:** Close-up (1-6), Cut-in (7-12), Double-take (13-18), Big Picture (19-25), so the card's "four issues" is true |
 | N1c. Case | **Sentence case** ("Last drop") |
@@ -1074,8 +1074,8 @@ names and product ids, and Complete's promise to older owners.
     its tick landing with it, and a re-grab of the same knob is the next move, so the lab's lift-out, its seal and
     Claude's two readings about sealing are gone. Jack's round 9 D1 = A keeps the rest as built: a move a full stack
     would refuse the tick of is refused (no problem comes near 36 entries); the demonstration plays on every opening
-    of escapement 1 and a tap skips it; escapement 1 is called "The clock"; several clocks will tick in turn
-    clockwise from twelve. Left: the ratchet's sound (to-do 45).
+    of escapement 1 and a tap skips it; escapement 1 was called "The clock" (Mainspring since N1a, round 13);
+    several clocks will tick in turn clockwise from twelve. Left: the ratchet's sound (to-do 45).
     Several clocks and wound-back clocks built on `escapement-book` (2026-10-27, round 10): each running clock ticks
     in turn, clockwise from twelve, a wound-back one -1 with a mirrored ratchet; a pushed tick stops the turn and
     loses; one clock stopping while another runs loses nothing; a tap on any ratchet waits.
@@ -1144,8 +1144,9 @@ names and product ids, and Complete's promise to older owners.
    Escapement kept as built (D1 = A, round 9).
    All 30 built on `escapement-book` (2026-10-27, round 10), waiting on Jack's play of the book on the phone (E3): the
    book's order and five chapters, headed in the card's list; each par what its clocks owe, reached by the app's prover
-   and replayed on a real `Game`; each key pinned. Problem 1 is the book's "The tick" under D1's title "The clock" (so
-   the old escapement-1, the mock-up, is now 2, "The wait"); the 22 untitled problems are "Problem N". Escapement now
+   and replayed on a real `Game`; each key pinned. Problem 1 is the book's "The tick" (so the old
+   escapement-1, the mock-up, is now 2); every problem's title is N1's (round 13), Mainspring (N1a, replacing D1's "The
+   clock") to Midnight. Escapement now
    has levels past its taste, so it goes on sale on the shelf and its card no longer says more arrive.
    Jack's call J6 = B (round 11): the book ends on the two-clock hex, 30, with the three-clock hex as 29; rows swapped
    and the book re-proved on `escapement-book`. Round 10's question of what a tank lost to its last clock stopping shows
