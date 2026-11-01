@@ -381,9 +381,9 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | N1c. Case | **Sentence case** ("Last drop") |
 | C1. The end of the free taste | **B:** level 03's result card says "more in Lens ›" in the pack's colour; the card opens on its buy block under "You've played the free three. 22 more in Lens."; no price on the result card. Built on `taste-end` (PR #86). Open, side effects for Jack: the note shows only while it is true (every free level has a best, the pack never owned), so a player gated after fewer, or a refunded owner, sees no line; whether they want one is a words call. And the landing scrolls the card's only exit, "‹ back", off the top; Claude recommends pinning it over the card's top at every scroll position, rather than waiting for C19's edge swipe |
 | C2. Leaving an unfinished level, or the app dying | **A, resume:** the moves are saved on every commit and replayed on reopening; endless resumes mid-tank; no dialog |
-| C3. When a level counts as tried | **A:** the first committed move; a look is free; "tried" shows on the row |
-| C4. A new player's first screen | **B:** a fresh install opens straight into plughole 01; the menu leads with 01, daily and endless hidden until they open |
-| C5. The pack dock | **C:** it appears once plughole 09 is solved |
+| C3. When a level counts as tried | **A:** the first committed move; a look is free; "tried" shows on the row. The row's mark (menu and pack card) built on `r13-menu`, PR #90: it reads `started.<id>`, which master still sets on a touch, so until `r13-play` (PR #93) lands a look marks tried |
+| C4. A new player's first screen | **B:** a fresh install opens straight into plughole 01; the menu leads with 01, daily and endless hidden until they open. Built on `r13-menu`, PR #90 |
+| C5. The pack dock | **C:** it appears once plughole 09 is solved. Built on `r13-menu`, PR #90 |
 | C6. Pulls toward the dock | **C:** a one-time "new" mark on a cover when its pack fits the player's progress or an update adds levels, and "2/3 free" under a started pack. Built on `r13-shop`, PR #95 (implementer calls in the PR: Escapement fits once maelstrom is open; "3/3 free" stays; First Stir never marks) |
 | C7. Complete once a pack is owned | **C:** shown only while it costs less than the unowned packs, with the saving said. Built on `r13-shop`, PR #95 (the cards' line and fact wait for the prices; the dock's cover waits too unless no pack is owned, so a launch keeps it; back from a pack's card opened from Complete's goes to the menu once Complete saves nothing) |
 | C8. Finishing a pack or the last free tier | **C:** one completion line, plus one quiet "try <pack> ›" while a pack is unowned |
@@ -396,7 +396,7 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | C15. Teaching Lens's taste | **A:** a ghost finger rides the lens's track on Lens 01 until the first lens commit |
 | C16. Prism's letters | **B:** a "colour letters" switch in settings, defaulting to Differentiate Without Colour, and one line on Prism's card. Built on `r13-settings`, PR #94 |
 | C17. Settings | **A:** music, sounds and haptics switches; "report a problem" mails the log to the support address (kept out of the repo); the policy on Jack's own domain. Built on `r13-settings`, PR #94 |
-| C18. The daily | **A:** the gate stays at plughole 23 for v1; a quiet run count on the row and "next daily in 7 h" on the card |
+| C18. The daily | **A:** the gate stays at plughole 23 for v1; a quiet run count on the row and "next daily in 7 h" on the card. The row's run count built on `r13-menu`, PR #90; the card waits on `r13-result` |
 | C19. Swiping back | **Jack: an edge swipe back, as everywhere else in iOS** ("it's little things like this that Apple looks for"). Claude's recommendation (none in play) is set aside. The swipe starts only from the screen's left edge and wins over a rim turn that lands there; with C2's resume an accidental swipe loses nothing |
 | C20. A rating request | **B:** once, after the solve that opens whirlpool; never after a loss, a spill or a purchase |
 | C21. After a purchase | **A:** the card stays with "play 04 ›" lit; an Ask to Buy approval says "Lens is yours" once on the menu. Built on `r13-shop`, PR #95: the dock's header says it unless its own card is up, and waits while a card or the settings cover the dock |
@@ -1571,6 +1571,9 @@ names and product ids, and Complete's promise to older owners.
     "tried", which waits on C3's build, F21 (a switch lands on the frontier, or a locked tier's header; the strip and
     title take the swipe; re-tapping the tier scrolls to its frontier) and F22 (the daily named in words and dealt
     afresh at midnight). The new menu shots in `scripts/shots.sh` still want a simulator run.
+    Open, a plain fix for this pass: a pack card scrolled down draws its pill and "restore purchases" under the status
+    bar, over the clock (`card-prism-levels`, `card-lens-tried`), since its scroll content runs under the top safe area
+    unclipped; it wants a black backing or a mask there. Found in `r13-menu`'s review, outside its lane.
 
 ## Side task: the difficulty tiers (started 2026-09-28)
 

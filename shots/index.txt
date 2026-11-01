@@ -1,12 +1,18 @@
-menu.png  Menu on first launch (in a build with analytics, the question answered): only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23.
+menu.png  Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
-menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
+menu-whirlpool-locked.png  Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
 menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked.
 menu-vortex-locked.png  Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played).
 menu-vortex-open.png  Menu on vortex, opened by every whirlpool level at par: its level 01 playable, maelstrom still locked.
 menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
+first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it.
+menu-after-01.png  Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list.
+menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox.
+menu-daily-run.png  The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more.
+menu-tried.png  Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row.
+menu-no-dock.png  Plughole 01 to 08 solved: no pack dock yet.
 menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best.
 menu-locktap.png  Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit.
 menu-back-left.png  Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12.
@@ -425,7 +431,7 @@ firststir-ending-02.png  The night forwards 1 s in: scene 25 played, the tea sti
 firststir-ending-05.png  The night forwards 7 s in: scene 25 at its end, the tea still, crossfading to scene 24 at 7:55 pm.
 firststir-ending-60.png  The night forwards 83 s in: the Flood's upstairs window, 1:39 am, the water rising.
 firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
-shelf-menu.png  Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought.
+shelf-menu.png  Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought.
 shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass.
 shelf-new.png  Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir.
 shelf-taste-count.png  Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens.
@@ -470,6 +476,7 @@ card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, ea
 card-lens-complete-pending.png  Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled.
 card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
 card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
+card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74).
 shelf-menu-owned.png  The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Complete line until the prices say what it saves.
 card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Complete line.

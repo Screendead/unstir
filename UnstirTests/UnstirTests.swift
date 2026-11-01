@@ -1343,6 +1343,93 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(daily.title.contains(date.formatted(.dateTime.weekday(.abbreviated))), daily.title)
     }
 
+    /// Today's daily and the days before it with a best, back to the first without one; nothing until today's solve.
+    func testTheDailyRunCountsDaysInARow() throws {
+        let calendar = Calendar(identifier: .gregorian)
+        let today = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 11, day: 1, hour: 12)))
+        XCTAssertEqual(Level.dailyID(today), "daily-20261101")
+        XCTAssertEqual(Level.dailyID(today), Level.daily(today).id)
+        func run(_ solved: some Sequence<Int>) -> Int {
+            let ids = Set(solved.map { Level.dailyID(calendar.date(byAdding: .day, value: -$0, to: today)!) })
+            return Daily.run(today: today) { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+        }
+        XCTAssertEqual(run([]), 0)
+        XCTAssertEqual(run([1, 2, 3]), 0, "today unsolved says nothing of the run before it")
+        XCTAssertEqual(run([0]), 1)
+        XCTAssertEqual(run([0, 1, 2, 3]), 4)
+        XCTAssertEqual(run([0, 1, 3, 4]), 2, "a gap ends the run")
+        XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
+    }
+
+    /// The menu's top follows plughole 01 and 23: the tagline, then the way on; the daily and endless only once open.
+    @MainActor func testTheMenuLeadsWithLevelOne() {
+        func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {
+            let ids = Set(Tier.plughole.levels.prefix(tier == .plughole ? n : 27).map(\.id) + tier.levels.prefix(n).map(\.id))
+            return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+        }
+        let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
+        XCTAssertFalse(fresh.modes)
+        XCTAssertFalse(fresh.sandboxFirst)
+        XCTAssertNil(fresh.next)
+        let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
+        XCTAssertFalse(one.modes)
+        XCTAssertTrue(one.sandboxFirst)
+        XCTAssertEqual(one.next?.id, Level.plughole[1].id)
+        XCTAssertNil(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(1)).next, "a locked tier has no way on")
+        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
+        let modes = MenuView.lead(tier: .plughole, unlocked: false, best: solved(23))
+        XCTAssertTrue(modes.modes)
+        XCTAssertEqual(modes.next?.id, Level.plughole[23].id)
+        XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: false, best: solved(27)).next, "every level has a best")
+        XCTAssertEqual(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(4, of: .whirlpool)).next?.id,
+                       Level.whirlpool[4].id)
+        let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
+        XCTAssertTrue(unlocked.modes)
+        XCTAssertFalse(unlocked.sandboxFirst)
+    }
+
+    /// Only a fresh install's first launch opens on plughole 01, and never the harness's.
+    @MainActor func testAFreshInstallOpensOnTheFirstLevel() {
+        let first = Level.plughole[0]
+        func opening(harnessed: Bool = false, welcomed: Bool = false, best: Bool = false, started: Bool = false) -> String? {
+            RootView.opening(harnessed: harnessed, welcomed: welcomed,
+                             best: { $0 == first.id && best ? Best(over: 0, seconds: 9) : nil },
+                             started: { $0 == first.id && started })?.id
+        }
+        XCTAssertEqual(opening(), first.id)
+        XCTAssertNil(opening(welcomed: true), "backed out of 01 without a move: the menu, not 01 again")
+        XCTAssertNil(opening(best: true))
+        XCTAssertNil(opening(started: true))
+        XCTAssertNil(opening(harnessed: true))
+    }
+
+    /// Opening the daily or endless retires the modes' new mark; nothing else does, nor one that doesn't open.
+    @MainActor func testOpeningADailyOrEndlessSeesTheModes() {
+        XCTAssertTrue(RootView.seesModes(.daily(), opens: true))
+        XCTAssertTrue(RootView.seesModes(.endless(Run(seed: 1)), opens: true))
+        XCTAssertFalse(RootView.seesModes(.daily(), opens: false))
+        XCTAssertFalse(RootView.seesModes(Level.plughole[0], opens: true))
+        XCTAssertFalse(RootView.seesModes(.sandbox, opens: true))
+        XCTAssertFalse(RootView.seesModes(nil, opens: true))
+    }
+
+    /// The pack dock waits for plughole 09, unless a pack is owned or asked for, or the developer unlock is on.
+    @MainActor func testTheDockWaitsForLevelNine() {
+        func solved(_ n: Int) -> (String) -> Best? {
+            let ids = Set(Level.plughole.prefix(n).map(\.id))
+            return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+        }
+        let none: (Pack) -> Purchase = { _ in .unowned }
+        XCTAssertFalse(PackDock.shown(best: solved(8), unlocked: false, state: none))
+        XCTAssertTrue(PackDock.shown(best: solved(9), unlocked: false, state: none))
+        XCTAssertTrue(PackDock.shown(best: solved(0), unlocked: true, state: none))
+        let pack = Pack.sold()[0]
+        for (state, shown) in [(Purchase.owned, true), (.pending, true), (.revoked, true), (.failed, false), (.unowned, false)] {
+            XCTAssertEqual(PackDock.shown(best: solved(0), unlocked: false, state: { $0 == pack ? state : .unowned }), shown,
+                           "\(state)")
+        }
+    }
+
     /// The gate lists what is short of par as runs, each opening at a level the player can open.
     func testTheGateListsTheLevelsShortOfParAsRuns() {
         var bests: [String: Best] = [:]
@@ -1698,6 +1785,13 @@ final class UnstirTests: XCTestCase {
                                  enabled: true, needs: nil)
         XCTAssertEqual([endless.label, endless.value, endless.hint], ["Endless", "best 1 tank", "deeper every tank, wrong stirs fill the brim"])
         XCTAssertEqual(Spoken.row(.sandbox, result: nil, tanks: 0, detail: "nothing counts", enabled: true, needs: nil).value, "")
+        XCTAssertEqual(Spoken.row(first, result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, started: true).value, "tried")
+        XCTAssertEqual(Spoken.row(first, result: Best(over: 1, seconds: 9), tanks: 0, detail: nil, enabled: true, needs: nil,
+                                  started: true).value, "1 over par")
+        XCTAssertEqual(Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value, "new")
+        XCTAssertEqual(Spoken.row(.endless(Run(seed: 7)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value,
+                       "new")
+        XCTAssertEqual(Spoken.next(seventh), "Next: level 7, \(seventh.title)")
         XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
         XCTAssertEqual(Spoken.back(first), "Back to levels")
         XCTAssertEqual(Spoken.back(Pack.lens.levels[0]), "Back to Lens")

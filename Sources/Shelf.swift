@@ -891,6 +891,7 @@ struct PackCard: View {
                     heading(chapter, of: levels.filter { $0.chapter == chapter }).padding(.top, i == 0 ? 0 : 18)
                 }
                 let open = store.access(level) != .needsCard, best = Best.load(level.id)
+                let tried = best == nil && Best.started(level.id)
                 // A locked row points at buying rather than doing nothing.
                 Button {
                     if open { return onPlay(level) }
@@ -910,6 +911,8 @@ struct PackCard: View {
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.mono(.caption2))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
+                        } else if tried {
+                            Text("tried").font(.mono(.caption2)).opacity(0.4)
                         }
                     }
                     .padding(.vertical, 9)
@@ -919,8 +922,8 @@ struct PackCard: View {
                 }
                 .buttonStyle(Sounding())
                 .rowHairline(offer.glow, level.id == focus?.id ? lit : 0, inset: 10)
-                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" } ?? ""
-                                    : "locked, needs the pack")
+                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" }
+                                        ?? (tried ? "tried" : "") : "locked, needs the pack")
                 .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
             }
         }
@@ -1173,6 +1176,13 @@ private struct PulsingDot: View {
 /// dock never stirs all at once. Equatable on what it is handed, since the menu redraws on every frame of a scroll and
 /// each cover's marks read the saved bests.
 struct PackDock: View, Equatable {
+    /// The dock waits for plughole 09 (Jack's call C5, round 13). A pack owned or asked for keeps it after a reinstall
+    /// that lost the bests.
+    static func shown(best: (String) -> Best? = Best.load, unlocked: Bool = Best.unlocked,
+                      state: (Pack) -> Purchase = { Store.shared.state($0) }) -> Bool {
+        best(Level.plughole[8].id) != nil || unlocked || Pack.sold().contains { ![.unowned, .failed].contains(state($0)) }
+    }
+
     let open: (Offer, UnitPoint) -> Void
     let held: Double?
     /// The card covers it.

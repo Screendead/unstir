@@ -44,12 +44,12 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch (in a build with analytics, the question answered): only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
+shot menu "Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock." CONSENT=yes
 shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
-shot menu-whirlpool-locked "Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
+shot menu-whirlpool-locked "Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
 shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked." \
   TIER=whirlpool BESTS=plughole:$par27
 shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played)." \
@@ -63,6 +63,15 @@ shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, h
   TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33
 # Where the list opens: a cold launch, and back from a level through RootView's own exit (UNSTIR_EXIT).
 upto13=0000000000000
+# What the menu leads with (C4, C5, C18, C3's tried mark).
+shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it." FRESH=1 OPEN=1
+shot menu-after-01 "Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list." BESTS=plughole:0
+shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox." \
+  TIER=whirlpool BESTS=plughole:$par27
+shot menu-daily-run "The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more." \
+  TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
+shot menu-tried "Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row." BESTS=plughole:$upto13 TRIED=L14
+shot menu-no-dock "Plughole 01 to 08 solved: no pack dock yet." BESTS=plughole:00000000
 shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
   BESTS=plughole:$upto13
 shot menu-locktap "Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit." \
@@ -477,9 +486,12 @@ if [[ -z "$pattern" || card-lens == *$pattern* || clip-lens == *$pattern* || she
 fi
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in. Prices are the StoreKit configuration's, as a US storefront shows them.
-shot shelf-menu "Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
+# The dock shows once plughole 09 is solved.
+nine=000000000
+shot shelf-menu "Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." \
+  STORE=lens:unowned CLOCK=5.4 BESTS=plughole:$nine
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
-  OWNED=lens STORE=escapement:pending CLOCK=5.4
+  OWNED=lens STORE=escapement:pending CLOCK=5.4 BESTS=plughole:$nine
 shot shelf-new "Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir." \
   BESTS=plughole:$par27 STORE=lens:unowned CLOCK=5.4
 shot shelf-taste-count "Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens." BESTS=plughole:000000000,lens:00 STORE=lens:unowned CLOCK=5.4
@@ -535,6 +547,8 @@ shot card-lens-asked-offline "Lens's card after asking again offline: still wait
   CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
 shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
   CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
+shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74)." \
+  CARD=lens OWNED=lens BESTS=lens:0 TRIED=lens-2 CARDSCROLL=1 CLOCK=5.4
 shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \
   OWNED=complete CLOCK=5.4
 shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading, and no Complete line until the prices say what it saves." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
@@ -563,7 +577,7 @@ shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's mag
 shot card-lens-replay "Lens's card, unowned, the taste played: replay 01-03 in try free's place." \
   CARD=lens STORE=lens:unowned BESTS=lens:000 CLOCK=5.4
 shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
-  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5 BESTS=plughole:$nine
 shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
   CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
 shot card-lens-xxxl "Lens's card at xxxLarge, the largest size short of the accessibility ones: each key whole beside its fact." \

@@ -110,6 +110,9 @@ struct Harness {
     let exit: String?
     /// UNSTIR_LOCKTAP=L8: on the menu, that locked row held as a tap leaves it, saying what opens it.
     let lockTap: String?
+    /// UNSTIR_FRESH=1: the launch takes a plain launch's first screen as a fresh install would, into plughole 01, and
+    /// stores nothing of it.
+    let fresh: Bool
     /// UNSTIR_TIER=whirlpool: the tier the menu opens on, locked or not, plughole when unset. Nil on a launch without
     /// the harness, which opens on the stored tier.
     let menuTier: Tier?
@@ -207,6 +210,16 @@ struct Harness {
                 if let over = c.wholeNumberValue { Best(over: over, seconds: 60).fake(level.id) }
             }
         }
+        // UNSTIR_TRIED=L14,lens-2: those levels started, for this launch only.
+        for id in env["UNSTIR_TRIED"]?.split(separator: ",") ?? [] { Best.start(String(id), store: false) }
+        // UNSTIR_DAILIES=n: today's daily and the n-1 days before it solved at par, for this launch only.
+        let calendar = Calendar(identifier: .gregorian)
+        for k in 0 ..< max(env["UNSTIR_DAILIES"].flatMap(Int.init) ?? 0, 0) {
+            if let day = calendar.date(byAdding: .day, value: -k, to: .now) { Best(over: 0, seconds: 60).fake(Level.dailyID(day)) }
+            // A daily solved was opened, so the modes' rows are no longer new.
+            Best.seeModes(store: false)
+        }
+        fresh = env["UNSTIR_FRESH"] == "1"
         tierDemo = env["UNSTIR_TIERDEMO"] == "1"
         let spin = env["UNSTIR_TIERSPIN"]?.split(separator: ":").compactMap { Double($0) } ?? []
         tierSpin = spin.first.map { ($0, spin.count > 1 ? spin[1] : 0) }
@@ -406,6 +419,8 @@ struct RootView: View {
     @State private var focus: Level?
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
+    /// A fresh install's first launch, opening straight into plughole 01.
+    private let welcoming: Bool
     @Environment(\.scenePhase) private var phase
     private let mute: Bool
 
@@ -422,10 +437,16 @@ struct RootView: View {
                                  restored: h.restored, approved: h.approved)
         }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
+        // The test host is a plain launch, but must open on nothing that stores.
+        let welcome = h.screen != "menu" ? nil
+            : Self.opening(harnessed: h.harnessed && !h.fresh || env["XCTestConfigurationFilePath"] != nil,
+                           welcomed: !h.fresh && Best.welcomed)
+        welcoming = welcome != nil && !h.harnessed
         let menu = h.screen == "menu" || gate != nil
-        _level = State(initialValue: menu ? nil : h.level)
-        _harness = State(initialValue: h)
-        _settings = State(initialValue: menu && h.settings)
+        _level = State(initialValue: welcome ?? (menu ? nil : h.level))
+        // A plain launch's level has no harness, so it stores what it plays.
+        _harness = State(initialValue: welcoming ? nil : h)
+        _settings = State(initialValue: welcome == nil && menu && h.settings)
         mute = h.mute
         // Complete's card opens, as from the dock, only while it is on offer, or as an owner's home.
         let card = h.card.flatMap { $0 != .complete || Store.shared.offersComplete || Store.shared.state(.complete) == .owned ? $0 : nil }
@@ -475,7 +496,10 @@ struct RootView: View {
             // Not on inactive: Control Center and the app switcher pass through it.
             Sound.shared.foreground(phase != .background)
         }
-        .onAppear { Sound.shared.use(on: !mute) }
+        .onAppear {
+            Sound.shared.use(on: !mute)
+            if welcoming { Best.welcomed = true }
+        }
         .modifier(AgeChecked(menu: level == nil && card == nil && !settings
                                  && !(Analytics.shared.asks && Analytics.shared.consent == .undecided),
                              played: !harnessed && ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil))
@@ -518,6 +542,21 @@ struct RootView: View {
         }
     }
 
+    /// A fresh install's first launch opens straight into plughole 01 (Jack's call C4, round 13), and only the first: a
+    /// player who backs out of it without a move, which C3 leaves free, isn't sent back on every launch. Never under the
+    /// harness, which UNSTIR_FRESH answers for.
+    static func opening(harnessed: Bool, welcomed: Bool, best: (String) -> Best? = Best.load,
+                        started: (String) -> Bool = Best.started) -> Level? {
+        let first = Level.plughole[0]
+        return harnessed || welcomed || best(first.id) != nil || started(first.id) ? nil : first
+    }
+
+    /// The daily's and endless's rows are marked new until either first opens.
+    static func seesModes(_ next: Level?, opens: Bool) -> Bool {
+        guard let next, opens else { return false }
+        return next.run != nil || next.id.hasPrefix("daily-")
+    }
+
     /// A level past its pack's taste that the player doesn't own shows the pack's card over the menu instead.
     /// `look`: the tier the menu opens on in place of the stored one, locked or not. `solved`: the level left is.
     private func show(_ next: Level?, keep: Bool = false, look: Tier? = nil, solved: Bool = false) {
@@ -544,6 +583,7 @@ struct RootView: View {
         // A gate's card opens on buying (`arrived`), not on a row.
         if let level { focus = gate == nil ? level.focus(solved: solved) : nil }
         let opens = next.map(Store.shared.opens) ?? true
+        if Self.seesModes(next, opens: opens), !Best.modesSeen { Best.seeModes(store: !harnessed) }
         // So a launch after the app dies in a level comes back on its tier too.
         if let next, gate == nil, opens, next.tier.levels.contains(where: { $0.id == next.id }) { Tier.store(next.tier) }
         withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil && opens ? next : nil }

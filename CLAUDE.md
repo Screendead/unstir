@@ -280,7 +280,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
   rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
   seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
-  prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. Endless changes only what
+  prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. A daily's id and seed are
+  its day's yyyymmdd (`Level.dailyID`), and `Daily.run` counts, once today's has a best, the days in a row ending today
+  that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13). Endless changes only what
   it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to 28, at least n/2 of them hidden, to half), which
   `testEndlessVectors` pins. A `Run` is endless's seed, tank and the brim's notches as that tank opens. Progress
   (`Best`, started flags, undo bank) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most) refills by 2
@@ -574,7 +576,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   out a level different whichever vignettes had played, which the Mac never showed: keep a cloud bank inside the
   tank's width.
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
-  Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
+  Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu, once plughole 09 is solved, a pack is owned or asked
+  for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and Complete; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
   (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused where it stands under a card or the settings sheet, while `Power` saves
@@ -648,7 +651,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   manifest declares no collected data, so a build with `ANALYTICS = YES` must declare analytics's three types again.
   The rest of this paragraph is that build. Until yes nothing is queued or sent and no `Sender` exists, and a
   no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
-  the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
+  the question shows as soon as the menu does (after plughole 01 on a fresh install, C4) and an answer given before `start` is stored. **Consent.swift** asks it and holds every
   word it and settings say (`ConsentWords`): on a plain launch while undecided,
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
@@ -685,16 +688,23 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
   the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
-  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "locked, solve level 6 first",
-  or in a closed tier "locked, par every Plughole level first") and hint (its rods and par), the header's "3 moves, par
-  7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
+  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "tried" (started, no best),
+  "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, par
+  every Plughole level first") and hint (its rods and par), the menu's next button (`Spoken.next`: "Next:
+  level 2, Drip"), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
   the finish ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared."), which
   labels the result or lost card's summary, where VoiceOver's focus lands as the card shows, so no announcement is cut
   short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
   VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs.
-- **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
+- **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
+  round 13): until 01 has a best, the tank's rule as a tagline over the tier's list, with the sandbox under the list;
+  then "next: 07 · Sprinkle ›" in the tagline's place, a button opening the shown tier's frontier (none once it has
+  none), and the sandbox over the list. The daily and endless rows show only once open, each marked new, in plain
+  white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
+  (`Best.started`) and has no best reads tried, faint, as a pack card's list does (Jack's call C3, round 13; endless
+  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. Under the title, a strip names every tier, dimmed with a lock while locked, and
   keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
   list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
   (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
@@ -709,8 +719,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ticks the levels short of par as runs (`Tier.short`: "short: 05 · 12 · 21–27"), each a button opening its first,
   which is always open. A closed row
   still takes a tap: it shakes, sounds `seized` and says for two seconds what opens it ("solve 06 to open", or on a
-  locked tier "par every plughole level to open"), which VoiceOver reads as its value; shut, the daily and endless say
-  "opens after plughole 23" in place of their detail. The daily's title names its day in the locale's words ("Daily ·
+  locked tier "par every plughole level to open"), which VoiceOver reads as its value. The daily's title names its day in the locale's words ("Daily ·
   Sun 1 Nov"; its id stays `daily-yyyymmdd`), and the menu deals it afresh on coming to the front and at midnight
   (`NSCalendarDayChanged`), so a menu left up overnight opens the new day's. The first level without a best (`Tier.frontier`) keeps its
   hairline lit. A hidden stir in
@@ -776,7 +785,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `AgeCheck.settle` (0.3 s, past the dip) first, and a request cut off by the menu being covered or left leaves the
   launch's ask standing (`testACancelledRequestLeavesTheLaunchsAskStanding`); a failure is dropped and not retried.
   The entitlement Apple's docs require is a HANDOFF item. DeclaredAgeRange links weak, as the app runs from iOS 17.
-  The harness reads `UNSTIR_*` environment variables at launch
+  A fresh install's first launch opens straight into plughole 01 (`RootView.opening`, Jack's call C4, round 13), once:
+  `Best.welcomed` is stored as it appears, so a player who backs out without a move gets the menu next time. Never
+  under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen without storing it. The harness
+  reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch, `UNSTIR_LETTERS=1` shows the colour letters and swatches, and `UNSTIR_LETTERSCHOICE=0` or `1` sets the settings' choice for the launch), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
@@ -818,7 +830,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tiers through the same calls a finger makes. `UNSTIR_EXIT=left` leaves the harness's level for the menu a second
   after it opens, through `RootView`'s own exit (`=solved` as its result card does after a solve; `=up` opens the next
   tier's first level, as "up a notch" does, then leaves that). `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
-  leaves it, saying what opens it. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  leaves it, saying what opens it. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
+  today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
