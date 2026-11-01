@@ -116,6 +116,8 @@ final class Store {
     @ObservationIgnored private var payments: Bool?
     /// The launch's first read of the entitlements has finished, so a pack the player owns reads as owned.
     private(set) var ready = false
+    /// A purchase, an approval or a restore landed on a card this launch, so the rating request keeps away.
+    @ObservationIgnored var landed = false
     @ObservationIgnored private var first: Task<Void, Never>?
     @ObservationIgnored private var products: [String: Product] = [:]
     @ObservationIgnored private var updates: Task<Void, Never>?

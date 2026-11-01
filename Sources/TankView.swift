@@ -131,6 +131,8 @@ final class Game {
     private(set) var refusedKnob = 0
     /// The tier this solve opened, on whichever level was the last to reach par: the card goes up a notch.
     private(set) var opened: Tier?
+    /// What this solve completed, the one that gave the last of a pack's levels, or of the last tier's, a best.
+    private(set) var completed: Completion?
     /// The level's best before this solve and this solve's own, for the card's line; nil where nothing is saved.
     private(set) var bests: (was: Best?, now: Best)?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it. Nil while the app is away, with
@@ -693,6 +695,17 @@ final class Game {
         finish(healed: healed)
     }
 
+    /// Every level of this level's pack, or of the last tier, has a best. A pack short of its plan isn't complete: its
+    /// card still promises the rest.
+    private var completion: Completion? {
+        if let p = level.pack, p.levels.count < p.planned { return nil }
+        let (list, done): ([Level], Completion) = if let p = level.pack { (p.levels, .pack(p)) } else {
+            (Tier.allCases.last!.levels, .free)
+        }
+        guard list.contains(where: { $0.id == level.id }), list.allSatisfy({ Best.load($0.id) != nil }) else { return nil }
+        return done
+    }
+
     private func finish(healed: Bool) {
         if healed && !finished { heals += 1 }
         guard finished else { return }
@@ -705,8 +718,13 @@ final class Game {
             let up = level.pack == nil ? level.tier.step(1) : nil, shut = up.map { !$0.isOpen() } ?? false
             let best = Best(over: over, seconds: seconds, clean: clean)
             bests = (Best.load(level.id), best)
+            let done = completion
             best.save(level.id, store: storesProgress)
-            if shut, let up, up.isOpen() { opened = up }
+            if shut, let up, up.isOpen() {
+                opened = up
+                if up == .whirlpool { Review.shared.pending = true }
+            }
+            completed = done == nil ? completion : nil
         }
         Analytics.shared.finished(self)
     }
@@ -860,14 +878,18 @@ struct LevelView: View {
     /// Escapement: what a tank lost to its last clock stopping shows, while Jack decides (UNSTIR_STOPLOOK).
     private let stopLook: StopLook
     private let shareSheet: Bool
+    /// UNSTIR_NOW: the clock the daily's card reads the next daily from.
+    private let now: Date?
     /// Back to the menu, with whether the level is solved.
     let onExit: (Bool) -> Void
     let onNext: (Level) -> Void
     /// Back to the menu on a tier other than the stored one: a closed tier's gate.
     let onLook: (Tier) -> Void
+    /// A pack's card, from a completion's pointer.
+    let onOffer: (Pack) -> Void
 
     init(level: Level, harness: Harness?, onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void,
-         onLook: @escaping (Tier) -> Void) {
+         onLook: @escaping (Tier) -> Void, onOffer: @escaping (Pack) -> Void) {
         let game = Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
                         storesProgress: harness?.harnessed != true)
         game.turnTank(harness?.tank ?? 0)
@@ -932,6 +954,7 @@ struct LevelView: View {
         brimDemo = harness?.brimDemo ?? false
         stopLook = harness?.stopLook ?? .stamp
         shareSheet = harness?.shareSheet ?? false
+        now = harness?.now
         bench = harness?.bench ?? false
         _isolated = State(initialValue: harness?.swatch)
         letters = harness?.letters ?? false
@@ -948,6 +971,7 @@ struct LevelView: View {
         self.onExit = onExit
         self.onNext = onNext
         self.onLook = onLook
+        self.onOffer = onOffer
     }
 
     var body: some View {
@@ -1045,7 +1069,7 @@ struct LevelView: View {
                                 .padding(.top, 14)
                                 .transition(reveal)
                         } else if showResult {
-                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset)
+                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
@@ -1338,6 +1362,11 @@ struct LevelView: View {
     private func look(_ tier: Tier) {
         Analytics.shared.left(game)
         onLook(tier)
+    }
+
+    private func offer(_ pack: Pack) {
+        Analytics.shared.left(game)
+        onOffer(pack)
     }
 
     /// Everything that decides what the tank draws, as the log shows it.
@@ -3056,6 +3085,28 @@ struct RodView: View {
     }
 }
 
+/// The last of a pack's levels, or of the last tier's, given a best (Jack's call C8, round 13).
+enum Completion: Equatable {
+    case pack(Pack), free
+
+    var pack: Pack? { if case .pack(let p) = self { p } else { nil } }
+
+    var line: String {
+        switch self {
+        case .pack(let p): "\(p.name) complete \u{00B7} \(p.levels.count) \(p.noun)"
+        case .free: "every tier unstirred"
+        }
+    }
+
+    /// The line as VoiceOver says it, without the middle dot.
+    var spoken: String {
+        switch self {
+        case .pack(let p): "\(p.name) complete, \(p.levels.count) \(p.noun)."
+        case .free: "Every tier unstirred."
+        }
+    }
+}
+
 struct ResultCard: View {
     let game: Game
     let onExit: () -> Void
@@ -3064,6 +3115,9 @@ struct ResultCard: View {
     @AccessibilityFocusState private var focused: Bool
     /// A reset from the card, for another go at a solve that wasn't clean.
     let again: () -> Void
+    /// The harness's clock for the daily's next one; nil reads the time.
+    let now: Date?
+    let onOffer: (Pack) -> Void
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
@@ -3083,47 +3137,58 @@ struct ResultCard: View {
         }
         let accent = game.level.pack.map { Offer.pack($0).glow } ?? tierAccent
         let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
-        let time = String(format: "%d:%02d", game.seconds / 60, game.seconds % 60)
         VStack(spacing: 26) {
-            VStack(spacing: 8) {
-                if let run {
-                    Text("moves \(game.moves) \u{00B7} \(time)")
-                    if game.spilled && run.tank > run.best {
-                        Text("tanks cleared \(run.tank) \u{00B7} ") + Text("new best").foregroundStyle(Color.lime)
+            VStack(spacing: 10) {
+                VStack(spacing: 8) {
+                    if let run {
+                        Text("moves \(game.moves)")
+                        if game.spilled && run.tank > run.best {
+                            Text("tanks cleared \(run.tank) \u{00B7} ") + Text("new best").foregroundStyle(Color.lime)
+                        } else {
+                            Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
+                                 : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                        }
+                    } else if !game.level.ratchets.isEmpty {
+                        // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round
+                        // 11), so the ticks say nothing.
+                        Text("solved in \(game.moves) moves")
+                        if game.clean {
+                            Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
+                        } else {
+                            Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
+                                .foregroundStyle(Color.amber)
+                        }
                     } else {
-                        Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
-                             : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                        Text("moves \(game.moves) \u{00B7} par \(game.par)")
+                        if game.clean {
+                            Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
+                        } else if game.over > 0 {
+                            Text("+\(game.over) over par").foregroundStyle(Color.magenta)
+                        } else {
+                            Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
+                                .foregroundStyle(Color.amber)
+                        }
                     }
-                } else if !game.level.ratchets.isEmpty {
-                    // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round 11), so
-                    // the ticks say nothing.
-                    Text("solved in \(game.moves) moves \u{00B7} \(time)")
-                    if game.clean {
-                        Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-                    } else {
-                        Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-                            .foregroundStyle(Color.amber)
+                    if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
+                        Text(line).opacity(0.6)
                     }
-                } else {
-                    Text("moves \(game.moves) \u{00B7} par \(game.par) \u{00B7} \(time)")
-                    if game.clean {
-                        Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-                    } else if game.over > 0 {
-                        Text("+\(game.over) over par").foregroundStyle(Color.magenta)
-                    } else {
-                        Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-                            .foregroundStyle(Color.amber)
+                    if let done = game.completed {
+                        Text(done.line).fontWeight(.semibold).foregroundStyle(accent).shadow(color: accent, radius: 3)
+                            .padding(.top, 4)
                     }
                 }
-                if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
-                    Text(line).opacity(0.6)
+                .font(.mono(13))
+                // Focus lands on the finish itself: an announcement before a focus move is cut short.
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(game.finishSpoken)
+                .accessibilityFocused($focused)
+                if let pack = Offer.pointer(after: game.completed) {
+                    // Quiet: the card's way on is still next, or up a notch.
+                    Button { onOffer(pack) } label: { Text("try \(pack.name) \u{203A}").hit() }
+                        .font(.mono(.caption)).opacity(0.6)
+                        .accessibilityLabel("Try \(pack.name)")
                 }
             }
-            .font(.mono(13))
-            // Focus lands on the finish itself: an announcement before a focus move is cut short.
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(game.finishSpoken)
-            .accessibilityFocused($focused)
             HStack(spacing: 32) {
                 Button(action: onExit) { Text(game.level.back).hit() }
                     .accessibilityLabel(Spoken.back(game.level))
@@ -3147,11 +3212,35 @@ struct ResultCard: View {
                 }
             }
             .font(.mono(15, .medium))
+            if let day = Share.day(of: game.level.id) {
+                TimelineView(.everyMinute) { t in
+                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.mono(12)).opacity(0.55)
+                        .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
+                }
+            }
             if let up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil) {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
         .onAppear { focused = true }
+    }
+}
+
+/// The one rating request (Jack's call C20, round 13): on the card of the solve that opens whirlpool, a tier's worth of
+/// play in and on a high. A launch that saw a purchase land skips it, and since that solve comes once, never asks.
+/// `RootView` makes it, not the card: a tap on within the wait would take it with the card, for good.
+@MainActor @Observable final class Review {
+    static let shared = Review()
+    /// The solve that opens whirlpool came this launch, and the request hasn't been made.
+    var pending = false
+    /// The launch's: a harnessed one, or the test host, never asks, and UNSTIR_REVIEW=log logs the request in place of
+    /// making it.
+    static var harnessed = false, logs = false
+    /// 2 s after the card, which shows 1.4 s after the solve.
+    static let wait = 3.4
+
+    static func due(opened: Tier?, asked: Bool, harnessed: Bool, purchased: Bool) -> Bool {
+        opened == .whirlpool && !asked && !harnessed && !purchased
     }
 }
 

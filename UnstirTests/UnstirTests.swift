@@ -510,10 +510,84 @@ final class UnstirTests: XCTestCase {
             XCTAssertTrue(game.solved)
             return game
         }
+        // The rating request waits on the launch, not on the card, from the solve that opens whirlpool alone.
+        let pending = Review.shared.pending
+        defer { Review.shared.pending = pending }
+        Review.shared.pending = false
         XCTAssertNil(solve(over: true).opened)
+        XCTAssertFalse(Review.shared.pending)
         XCTAssertFalse(Tier.whirlpool.isOpen())
         XCTAssertEqual(solve(over: false).opened, .whirlpool)
+        XCTAssertTrue(Review.shared.pending)
+        Review.shared.pending = false
         XCTAssertNil(solve(over: false).opened)
+        XCTAssertFalse(Review.shared.pending)
+    }
+
+    /// The rating request comes once, on the solve that opens whirlpool, and never in the harness or after a purchase
+    /// landed that launch.
+    @MainActor func testTheRatingRequestComesOnce() {
+        XCTAssertTrue(Review.due(opened: .whirlpool, asked: false, harnessed: false, purchased: false))
+        XCTAssertFalse(Review.due(opened: .whirlpool, asked: true, harnessed: false, purchased: false))
+        XCTAssertFalse(Review.due(opened: .whirlpool, asked: false, harnessed: true, purchased: false))
+        XCTAssertFalse(Review.due(opened: .whirlpool, asked: false, harnessed: false, purchased: true))
+        XCTAssertFalse(Review.due(opened: nil, asked: false, harnessed: false, purchased: false))
+        XCTAssertFalse(Review.due(opened: .vortex, asked: false, harnessed: false, purchased: false))
+    }
+
+    /// A completion shows on the solve that gives the last of the pack's levels a best, whichever it is, and never on a
+    /// re-solve; the free tiers complete on the last tier's last best.
+    @MainActor func testCompletionShowsOnTheSolveThatCompletes() {
+        let ids = (Pack.lens.levels + Tier.maelstrom.levels).map(\.id) + ["L1"]
+        let saved = ids.map { UserDefaults.standard.data(forKey: "best.\($0)") }
+        defer { for (id, data) in zip(ids, saved) { UserDefaults.standard.set(data, forKey: "best.\(id)") } }
+        for id in ids { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
+        func solve(_ id: String, pack: Pack? = nil, tier: Tier = .plughole) -> Completion? {
+            let level = Level(id: id, tier: tier, pack: pack, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)])
+            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+            game.commit(rod: 0, steps: -4)
+            XCTAssertTrue(game.solved, id)
+            return game.completed
+        }
+        let lens = Pack.lens.levels.map(\.id)
+        for id in lens where id != lens[5] && id != lens.last { Best(over: 0, seconds: 9).save(id) }
+        XCTAssertNil(solve(lens.last!, pack: .lens))
+        XCTAssertEqual(solve(lens[5], pack: .lens), .pack(.lens))
+        XCTAssertNil(solve(lens[5], pack: .lens))
+        // Again from the card, on the same tank: the re-solve completes nothing.
+        let level = Level(id: lens[5], pack: .lens, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)])
+        UserDefaults.standard.removeObject(forKey: "best.\(lens[5])")
+        // The solves above committed moves, which mark a level started, and only a first try is clean.
+        UserDefaults.standard.removeObject(forKey: "started.\(lens[5])")
+        let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+        game.commit(rod: 0, steps: -4)
+        XCTAssertEqual(game.completed, .pack(.lens))
+        XCTAssertEqual(game.finishSpoken, "Unstirred. 1 move, par 1. Clean. Lens complete, 25 panels.")
+        XCTAssertTrue(game.reset())
+        game.commit(rod: 0, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertNil(game.completed)
+        XCTAssertEqual(Completion.pack(.lens).line, "Lens complete \u{00B7} 25 panels")
+        XCTAssertEqual(Completion.free.spoken, "Every tier unstirred.")
+
+        let sea = Tier.maelstrom.levels.map(\.id)
+        for id in sea.dropLast() { Best(over: 3, seconds: 9).save(id) }
+        XCTAssertNil(solve("L1"))
+        XCTAssertEqual(solve(sea.last!, tier: .maelstrom), .free)
+        XCTAssertNil(solve(sea.last!, tier: .maelstrom))
+    }
+
+    /// The pointer names the first pack on the shelf the player doesn't own, never the one just completed, and none
+    /// once all are owned or nothing completed.
+    @MainActor func testThePointerSkipsOwnedPacks() {
+        let shelf: [Offer] = [.pack(.lens), .pack(.escapement), .pack(.prism), .complete]
+        func owning(_ packs: Set<Pack>) -> (Pack) -> Bool { { packs.contains($0) } }
+        XCTAssertNil(Offer.pointer(after: nil, shelf: shelf, owned: owning([])))
+        XCTAssertEqual(Offer.pointer(after: .free, shelf: shelf, owned: owning([])), .lens)
+        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: shelf, owned: owning([.lens])), .escapement)
+        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: shelf, owned: owning([.escapement])), .prism)
+        XCTAssertNil(Offer.pointer(after: .pack(.prism), shelf: shelf, owned: owning([.lens, .escapement, .prism])))
+        XCTAssertNil(Offer.pointer(after: .free, shelf: shelf, owned: owning([.lens, .escapement, .prism])))
     }
 
     /// The card calls a best new only when what it names improves: clean, then over par; a faster time at the same
@@ -526,6 +600,19 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, 10), par: true), "best \u{00B7} par")
         XCTAssertEqual(ResultCard.bestLine(was: best(0, clean: true), now: best(3), par: true), "best \u{00B7} clean")
         XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: false), "new best \u{00B7} was solved")
+    }
+
+    /// A faster solve at the same mark keeps the older best, seconds and all; a cleaner one replaces it however slow.
+    @MainActor func testABestIsNeverRankedByTime() throws {
+        let id = "test-time", saved = UserDefaults.standard.data(forKey: "best.\(id)")
+        defer { UserDefaults.standard.set(saved, forKey: "best.\(id)") }
+        UserDefaults.standard.removeObject(forKey: "best.\(id)")
+        Best(over: 0, seconds: 60, clean: false).save(id)
+        Best(over: 0, seconds: 5, clean: false).save(id)
+        XCTAssertEqual(try XCTUnwrap(Best.load(id)).seconds, 60)
+        Best(over: 0, seconds: 90, clean: true).save(id)
+        XCTAssertEqual(try XCTUnwrap(Best.load(id)).seconds, 90)
+        XCTAssertEqual(Best.load(id)?.clean, true)
     }
 
     /// A run carries the best as it began from tank to tank, so its spill can tell a new best though each tank cleared
@@ -1370,7 +1457,9 @@ final class UnstirTests: XCTestCase {
         Best(over: 0, seconds: 40).save(id)
         XCTAssertEqual(Best.load(id)?.seconds, 30)
         Best(over: 0, seconds: 20).save(id)
-        XCTAssertEqual(Best.load(id)?.seconds, 20)
+        XCTAssertEqual(Best.load(id)?.seconds, 30)
+        Best(over: 0, seconds: 50, clean: true).save(id)
+        XCTAssertEqual(Best.load(id)?.clean, true)
         let saved = try XCTUnwrap(UserDefaults.standard.data(forKey: "best.\(id)"))
         XCTAssertFalse(String(decoding: saved, as: UTF8.self).contains("hints"))
     }
@@ -1409,6 +1498,31 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(daily.title, "Daily \u{00B7} " + date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
         // In words: the weekday, which no numeric date carries.
         XCTAssertTrue(daily.title.contains(date.formatted(.dateTime.weekday(.abbreviated))), daily.title)
+    }
+
+    /// The next daily is the next local midnight: hours to the nearest, minutes under an hour, and a day the clocks
+    /// change on is as long as it really is.
+    func testTheNextDailyIsAtMidnight() throws {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = try XCTUnwrap(TimeZone(identifier: "Europe/London"))
+        func at(_ m: Int, _ d: Int, _ h: Int, _ min: Int) throws -> Date {
+            try XCTUnwrap(c.date(from: DateComponents(year: 2026, month: m, day: d, hour: h, minute: min)))
+        }
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 17, 0), calendar: c), "next daily in 7 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 23, 30), calendar: c), "next daily in 30 min")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 23, 59), calendar: c), "next daily in 1 min")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 22, 40), calendar: c), "next daily in 1 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 0, 0), calendar: c), "next daily in 24 h")
+        // The clocks go forward an hour on 29 March and back on 25 October.
+        XCTAssertEqual(Daily.untilNext(day: 20260329, now: try at(3, 29, 0, 0), calendar: c), "next daily in 23 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261025, now: try at(10, 25, 0, 0), calendar: c), "next daily in 25 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 17, 0), calendar: c, spoken: true), "next daily in 7 hours")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 22, 40), calendar: c, spoken: true), "next daily in 1 hour")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 23, 20), calendar: c, spoken: true), "next daily in 40 minutes")
+        // Sunday's daily solved, or its card still up, past midnight: Monday's is out, and the card counts from Sunday's.
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 2, 0, 5), calendar: c), "next daily is out")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 2, 0, 0), calendar: c), "next daily is out")
+        XCTAssertEqual(Daily.untilNext(day: 20261102, now: try at(11, 2, 0, 5), calendar: c), "next daily in 24 h")
     }
 
     /// Today's daily and the days before it with a best, back to the first without one; nothing until today's solve.

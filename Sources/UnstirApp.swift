@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import StoreKit
 import SwiftUI
 
 @main
@@ -60,6 +61,8 @@ struct Harness {
     let bank: (undos: Int, refilled: String?)?
     /// UNSTIR_TODAY=yyyy-MM-dd: the day the level opens on, for the bank's refill.
     let today: String?
+    /// UNSTIR_NOW=HH:mm: the daily's result card reads the next daily from that time today.
+    let now: Date?
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
     let autoplay: Bool
@@ -93,6 +96,8 @@ struct Harness {
     /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card. ShareLink can't be opened without a tap,
     /// so this presents the UIKit sheet it wraps, with the same text.
     let shareSheet: Bool
+    /// UNSTIR_REVIEW=log: the rating request is logged instead of made, as an unharnessed launch would make it.
+    let reviewLog: Bool
     let bench: Bool
     /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism with the colour letters,
     /// its knobs spelling out their channels over the swatches, whatever the settings say. UNSTIR_LETTERSCHOICE=0 or 1:
@@ -327,6 +332,8 @@ struct Harness {
         swirled = harnessed ? env["UNSTIR_SWIRLED"] == "1" : nil
         shake = env["UNSTIR_SHAKE"].flatMap(Double.init)
         today = env["UNSTIR_TODAY"].flatMap { $0.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) == nil ? nil : $0 }
+        let hm = env["UNSTIR_NOW"]?.split(separator: ":").compactMap { Int($0) } ?? []
+        now = hm.count == 2 ? Calendar(identifier: .gregorian).date(bySettingHour: hm[0], minute: hm[1], second: 0, of: .now) : nil
         let undos = env["UNSTIR_UNDOS"].flatMap(Int.init).map { min(max($0, 0), 10) } ?? Best.undos
         bank = harnessed ? (undos, Best.refilled ?? (today == nil ? nil : "0000-00-00")) : nil
         let f = env["UNSTIR_LIVE"]?.split(separator: ":") ?? []
@@ -355,6 +362,7 @@ struct Harness {
         resetArmed = env["UNSTIR_RESETARMED"] == "1"
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
+        reviewLog = env["UNSTIR_REVIEW"] == "log"
         card = env["UNSTIR_CARD"].flatMap(Offer.init(name:)).flatMap { $0.sold ? $0 : nil }
         cardScroll = env["UNSTIR_CARDSCROLL"] == "1"
         lands = env["UNSTIR_LANDS"].flatMap(Double.init)
@@ -425,6 +433,7 @@ struct RootView: View {
     /// A fresh install's first launch, opening straight into plughole 01.
     private let welcoming: Bool
     @Environment(\.scenePhase) private var phase
+    @Environment(\.requestReview) private var requestReview
     private let mute: Bool
 
     init() {
@@ -435,6 +444,9 @@ struct RootView: View {
         // Here, not in Harness, which the tests build too.
         Settings.held.withLock { $0 = h.switches }
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
+        // The launch's, not the level's harness, which a level opened from the card's next no longer has.
+        Review.harnessed = h.harnessed && !h.reviewLog || env["XCTestConfigurationFilePath"] != nil
+        Review.logs = h.reviewLog
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
                                  restored: h.restored, approved: h.approved)
@@ -471,7 +483,11 @@ struct RootView: View {
                 LevelView(level: level, harness: harness,
                           onExit: { show(nil, solved: $0) },
                           onNext: { show($0) },
-                          onLook: { show(nil, look: $0) })
+                          onLook: { show(nil, look: $0) },
+                          onOffer: { pack in
+                              card = .pack(pack)
+                              show(nil, solved: true)
+                          })
                     .id(level)
                     .transition(dip)
             } else {
@@ -521,6 +537,18 @@ struct RootView: View {
             await Store.shared.start()
             // After the store, so a snapshot sees the packs owned.
             Analytics.shared.start(env: env, harnessed: harnessed)
+        }
+        // Only in front: leaving cancels the wait, and coming back waits again.
+        .task(id: [Review.shared.pending, phase == .active]) {
+            guard Review.shared.pending, phase == .active,
+                  (try? await Task.sleep(for: .seconds(Review.wait))) != nil else { return }
+            Review.shared.pending = false
+            guard Review.due(opened: .whirlpool, asked: Best.reviewAsked, harnessed: Review.harnessed,
+                             purchased: Store.shared.landed) else { return }
+            Log.write("review requested\(Review.logs ? " (UNSTIR_REVIEW=log)" : "")")
+            guard !Review.logs else { return }
+            Best.reviewAsked = true
+            requestReview()
         }
         .task {
             guard let s = harness?.lands, let id = card?.productID else { return }

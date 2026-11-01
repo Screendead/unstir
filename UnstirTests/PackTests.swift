@@ -46,7 +46,7 @@ final class PackTests: XCTestCase {
                     "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)",
                     "shelf.fit.\(Pack.lens.rawValue)", "shelf.levels.\(Pack.lens.rawValue)",
                     "letters", "music.off", "sounds.off", "haptics.off",
-                    "welcomed", "modes.seen"]
+                    "welcomed", "modes.seen", "review.asked"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -75,6 +75,8 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(d.integer(forKey: "undos.unseen"), 2)
         Best.refillShown = true
         XCTAssertTrue(d.bool(forKey: "undos.shown"))
+        Best.reviewAsked = true
+        XCTAssertTrue(d.bool(forKey: "review.asked"))
         Best.welcomed = true
         XCTAssertTrue(d.bool(forKey: "welcomed"))
         Best.seeModes()
