@@ -498,7 +498,7 @@ shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLE
   CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
 shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
 shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
-  PACK=lens LEVEL=5 STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+  PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
   PACK=lens LEVEL=3 SCREEN=clean STORE=lens:unowned CLOCK=5.4
 shot card-lens-replay "Lens's card, unowned, the taste played: replay 01-03 in try free's place." \

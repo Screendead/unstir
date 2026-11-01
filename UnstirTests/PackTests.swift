@@ -267,10 +267,15 @@ final class PackTests: XCTestCase {
         bests[levels[1].id] = Best(over: 0, seconds: 60)
         XCTAssertEqual(PackCard.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["01", "true"])
         XCTAssertNil(PackCard.taste([], best: best))
-        XCTAssertEqual(PackCard.arrival(.pack(.lens), levels), "You've played the free three. 22 more in Lens.")
-        XCTAssertEqual(PackCard.arrival(.pack(.escapement), Pack.escapement.levels),
-                       "You've played the free three. 27 more in Escapement.")
-        XCTAssertNil(PackCard.arrival(.complete, []))
+        XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: best),
+                       "You've played the free three. 22 more in Lens.")
+        XCTAssertEqual(PackCard.arrival(.pack(.escapement), Pack.escapement.levels, state: .pending, best: { _ in
+            Best(over: 0, seconds: 60) }), "You've played the free three. 27 more in Escapement.")
+        XCTAssertNil(PackCard.arrival(.complete, [], state: .unowned, best: best))
+        // Only while it is true: not before every free level has a best, nor to an owner or a refunded one.
+        XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { _ in nil }))
+        XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .revoked, best: best))
+        XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .owned, best: best))
     }
 
     @MainActor func testHarnessSetsTheCardsMessages() {

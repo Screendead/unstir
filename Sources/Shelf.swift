@@ -671,7 +671,7 @@ struct PackCard: View {
                         // Buying comes before the list, so it is on the first screen whatever the pack holds.
                         if levels.isEmpty { Spacer(minLength: 24) }
                         VStack(alignment: .leading, spacing: 0) {
-                            if arrived, state != .owned, let note = Self.arrival(offer, levels) {
+                            if arrived, let note = Self.arrival(offer, levels, state: state) {
                                 Text(note).font(.mono(.footnote)).opacity(0.85).padding(.bottom, 14)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
@@ -928,9 +928,12 @@ struct PackCard: View {
         return free.first.map { ($0, true) }
     }
 
-    /// Over buying, when a level past the taste opened the card.
-    static func arrival(_ offer: Offer, _ levels: [Level]) -> String? {
-        guard let pack = offer.pack, levels.count > pack.taste else { return nil }
+    /// Over buying, when a level past the taste opened the card: only while it is true, every free level with a best
+    /// and the pack never owned. A row opens any free level, so the gate can come before all of them are played.
+    static func arrival(_ offer: Offer, _ levels: [Level], state: Purchase,
+                        best: (String) -> Best? = Best.load) -> String? {
+        guard let pack = offer.pack, levels.count > pack.taste, state != .owned, state != .revoked,
+              taste(levels, best: best)?.replay == true else { return nil }
         return "You've played the free \(Offer.countWord(pack.taste)). \(levels.count - pack.taste) more in \(pack.name)."
     }
 
