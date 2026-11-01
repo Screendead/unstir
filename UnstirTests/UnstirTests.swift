@@ -1219,7 +1219,9 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(daily.id, "daily-20261101")
         XCTAssertTrue(daily.title.hasPrefix("Daily \u{00B7} "), daily.title)
         XCTAssertFalse(daily.title.contains("2026"), daily.title)
-        XCTAssertTrue(daily.title.contains("1"), daily.title)
+        XCTAssertEqual(daily.title, "Daily \u{00B7} " + date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
+        // In words: the weekday, which no numeric date carries.
+        XCTAssertTrue(daily.title.contains(date.formatted(.dateTime.weekday(.abbreviated))), daily.title)
     }
 
     /// The gate lists what is short of par as runs, each opening at a level the player can open.
