@@ -195,7 +195,7 @@ extension Purchase {
         case .owned: ("owned", .lime)
         case .pending: ("waiting for approval", .amber)
         case .failed: ("purchase failed", .magenta)
-        case .revoked: ("refunded", .alarm)
+        case .revoked: ("no longer on this Apple ID", Color.text.opacity(0.6))
         }
     }
 }
@@ -764,7 +764,9 @@ struct PackCard: View {
             }
             .accessibilityElement(children: .combine)
         case .revoked:
-            line("refunded, or no longer shared with you", .alarm)
+            // A refund or a family's share ended: said plainly, never as an alarm.
+            line((unshared ? "\(offer.name) is no longer shared with you" : "\(offer.name) isn't on this Apple ID any more")
+                 + " \u{00B7} your progress is kept", Color.text.opacity(0.6), glow: false)
         }
     }
 
@@ -772,8 +774,10 @@ struct PackCard: View {
         Text(s).font(.mono(.caption2)).opacity(0.5).fixedSize(horizontal: false, vertical: true)
     }
 
-    private func line(_ s: String, _ colour: Color) -> some View {
-        Text(s).font(.mono(.footnote, .semibold)).foregroundStyle(colour).shadow(color: colour.opacity(0.6), radius: 4)
+    private var unshared: Bool { offer.pack.map(store.unshared) ?? false }
+
+    private func line(_ s: String, _ colour: Color, glow: Bool = true) -> some View {
+        Text(s).font(.mono(.footnote, .semibold)).foregroundStyle(colour).shadow(color: colour.opacity(glow ? 0.6 : 0), radius: 4)
             .fixedSize(horizontal: false, vertical: true)
     }
 
@@ -789,7 +793,7 @@ struct PackCard: View {
             let label = switch state {
             case _ where buying: "buying\u{2026}"
             case .failed: "try again"
-            case .revoked: "buy again"
+            case .revoked: unshared ? "buy" : "buy again"
             case .pending: "ask again"
             default: "buy"
             }

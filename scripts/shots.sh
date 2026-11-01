@@ -480,6 +480,8 @@ shot card-complete-owned "Complete's card, owned: every pack open." CARD=complet
 shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
 shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live." \
   CARD=lens STORE=lens:unowned PRICES=unreachable CLOCK=5.4
+shot card-lens-unshared "Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey." \
+  CARD=lens STORE=lens:unshared CLOCK=5.4
 shot card-lens-offline "Lens's card after a purchase failed offline: no connection, try again when you're online." \
   CARD=lens STORE=lens:failed FAILED=offline CLOCK=5.4
 shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone: no buy and no Complete, try free kept." \

@@ -103,7 +103,7 @@ struct Harness {
     let purchases: Ledger?
 
     /// UNSTIR_OWNED=lens,escapement (or complete): those owned. UNSTIR_STORE=lens:pending,complete:revoked: each
-    /// product (a pack's prefix, or complete) in that `Purchase` state. Nil in Release or with neither set.
+    /// product (a pack's prefix, or complete) in that `Purchase` state, or `unshared`, revoked as a family's share. Nil in Release or with neither set.
     static func purchases(_ env: [String: String], release: Bool = Build.release) -> Ledger? {
         guard !release, env["UNSTIR_OWNED"] != nil || env["UNSTIR_STORE"] != nil else { return nil }
         func product(_ name: Substring) -> String? {
@@ -115,7 +115,9 @@ struct Harness {
         }
         for part in env["UNSTIR_STORE"]?.split(separator: ",") ?? [] {
             let f = part.split(separator: ":")
-            if f.count == 2, let id = product(f[0]), let state = Purchase(rawValue: String(f[1])) {
+            if f.count == 2, let id = product(f[0]), f[1] == "unshared" {
+                ledger.record(id, .revoked, shared: true)
+            } else if f.count == 2, let id = product(f[0]), let state = Purchase(rawValue: String(f[1])) {
                 ledger.record(id, state)
             }
         }

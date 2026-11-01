@@ -33,13 +33,22 @@ enum Restored: Equatable, Sendable { case found(Set<Pack>), nothing, failed }
 /// Each product's latest `Purchase`, and what that makes of each pack.
 struct Ledger: Equatable, Sendable {
     private(set) var products: [String: Purchase] = [:]
+    /// The products whose revocation was a family member's purchase no longer shared, not a refund.
+    private(set) var unshared: Set<String> = []
 
     /// Once owned, only a revocation takes a product away: a later attempt that fails, waits or is cancelled is not one.
     /// A cancelled sheet leaves an Ask to Buy still waiting on its parent.
-    mutating func record(_ id: String, _ state: Purchase) {
+    mutating func record(_ id: String, _ state: Purchase, shared: Bool = false) {
         if products[id] == .owned && state != .revoked { return }
         if products[id] == .pending && state == .unowned { return }
         products[id] = state
+        if state == .revoked && shared { unshared.insert(id) } else { unshared.remove(id) }
+    }
+
+    /// Revoked because the family stopped sharing it, through its own product or Complete.
+    func unshared(_ pack: Pack) -> Bool {
+        guard state(pack) == .revoked else { return false }
+        return unshared.contains(products[pack.productID] == .revoked ? pack.productID : Pack.completeID)
     }
 
     /// Owned through its own product or Complete; otherwise its own product's state, else Complete's.
@@ -86,6 +95,8 @@ final class Store {
     @ObservationIgnored private var attempt = 0
 
     func state(_ pack: Pack) -> Purchase { (harness ?? ledger).state(pack) }
+
+    func unshared(_ pack: Pack) -> Bool { (harness ?? ledger).unshared(pack) }
 
     /// Nil for a level in no pack. A pack's level whose id names no number of that pack needs the card.
     func access(_ level: Level) -> Pack.Access? {
@@ -166,7 +177,7 @@ final class Store {
         if t.revocationDate == nil {
             ledger.record(t.productID, .owned)
         } else {
-            ledger.record(t.productID, .revoked)
+            ledger.record(t.productID, .revoked, shared: t.ownershipType == .familyShared)
             await refresh()
         }
         await t.finish()

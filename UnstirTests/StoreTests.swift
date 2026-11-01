@@ -66,6 +66,23 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.state(.lens), .owned)
     }
 
+    /// A family's share ended is told from a refund, through the pack's own product or Complete, until it is owned again.
+    func testAShareEndedIsNoRefund() {
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .owned)
+        ledger.record(Pack.lens.productID, .revoked, shared: true)
+        XCTAssertEqual(ledger.state(.lens), .revoked)
+        XCTAssertTrue(ledger.unshared(.lens))
+        ledger.record(Pack.completeID, .revoked)
+        XCTAssertFalse(ledger.unshared(.escapement))
+        ledger.record(Pack.completeID, .revoked, shared: true)
+        XCTAssertTrue(ledger.unshared(.escapement))
+        ledger.record(Pack.lens.productID, .revoked)
+        XCTAssertFalse(ledger.unshared(.lens))
+        ledger.record(Pack.lens.productID, .owned)
+        XCTAssertFalse(ledger.unshared(.lens))
+    }
+
     /// Complete revoked takes back only what it alone granted.
     func testRevokedCompleteKeepsAPackBoughtOnItsOwn() {
         var ledger = Ledger()

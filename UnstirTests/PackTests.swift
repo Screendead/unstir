@@ -229,6 +229,9 @@ final class PackTests: XCTestCase {
                                                        release: false))
         XCTAssertEqual(Pack.allCases.map(complete.state), [.revoked, .owned, .revoked, .revoked])
         XCTAssertEqual(Harness.purchases(["UNSTIR_STORE": "lens:unowned"], release: false)?.state(.lens), .unowned)
+        let unshared = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "lens:unshared"], release: false))
+        XCTAssertEqual(unshared.state(.lens), .revoked)
+        XCTAssertTrue(unshared.unshared(.lens))
     }
 
     @MainActor func testHarnessSetsTheCardsMessages() {
