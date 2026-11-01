@@ -1326,7 +1326,9 @@ final class UnstirTests: XCTestCase {
         Best(over: 0, seconds: 40).save(id)
         XCTAssertEqual(Best.load(id)?.seconds, 30)
         Best(over: 0, seconds: 20).save(id)
-        XCTAssertEqual(Best.load(id)?.seconds, 20)
+        XCTAssertEqual(Best.load(id)?.seconds, 30)
+        Best(over: 0, seconds: 50, clean: true).save(id)
+        XCTAssertEqual(Best.load(id)?.clean, true)
         let saved = try XCTUnwrap(UserDefaults.standard.data(forKey: "best.\(id)"))
         XCTAssertFalse(String(decoding: saved, as: UTF8.self).contains("hints"))
     }
