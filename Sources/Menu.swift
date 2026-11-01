@@ -139,6 +139,8 @@ struct MenuView: View {
     let held: String?
     /// The focused row's id until its flash has started, so a later rebuild of its tier's list doesn't flash it again.
     @State private var flashing: String?
+    /// `focus` for the card up as the menu opens, gone once a card is opened or closed, so a dock tap opens at the top.
+    @State private var cardFocus: Level?
     /// The tier picked in the strip, open or not. `shown` trails it while the old list stirs away, and `listed`, the
     /// scroll view's own list, trails that to the end of the switch: rebuilding it stalls a frame (about 40 ms on the
     /// simulator), unseen once the stir has settled over it.
@@ -196,6 +198,7 @@ struct MenuView: View {
         self.focus = focus
         self.held = held
         _flashing = State(initialValue: focus?.id)
+        _cardFocus = State(initialValue: focus)
         // A tier's own level left lands on its tier, which "up a notch" may have opened since the menu was last up.
         let tier = start ?? focus.flatMap { f in f.tier.levels.contains { $0.id == f.id } ? f.tier : nil } ?? Tier.stored()
         _picked = State(initialValue: tier)
@@ -314,7 +317,7 @@ struct MenuView: View {
     @ViewBuilder private var cardView: some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
-                     focus: focus, onBack: { show(nil) }, onPlay: { onPick($0) })
+                     focus: cardFocus, onBack: { show(nil) }, onPlay: { onPick($0) })
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
@@ -322,6 +325,7 @@ struct MenuView: View {
 
     private func show(_ offer: Offer?, from: UnitPoint = .center) {
         Log.write(offer.map { "card \($0.key) shown" } ?? "card closed")
+        cardFocus = nil
         if offer != nil { cardFrom = from }
         withAnimation(.snappy(duration: 0.42)) { card = offer }
     }
