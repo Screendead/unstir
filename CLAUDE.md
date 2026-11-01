@@ -648,7 +648,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   such button that acts takes `Sounding` instead: the gear, the consent card's answers and its link, the settings
   sheet's switch and log, the pack cards' and the dock's buttons and the tier-up. The menu's tier names and rows
   stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
-  a tier swipe lifts over it. Nothing sounds during a drag but the
+  a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
+  target to 44 pt round it without moving anything. Nothing sounds during a drag but the
   detent's tick, and a sound never tells the player anything the picture doesn't. The session is ambient, and while
   another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
   unless `UNSTIR_SOUND=1`. An undo steps the heal notes back, so the next heal plays the undone one's note again

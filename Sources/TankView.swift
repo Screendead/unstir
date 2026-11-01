@@ -901,7 +901,7 @@ struct LevelView: View {
             let side = min(geo.size.width, geo.size.height - 290) / 1.045
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
-                    Button(game.level.back, action: leave)
+                    Button(action: leave) { Text(game.level.back).hit() }
                     Spacer()
                     if game.level.sandbox {
                         // Each says what it steps through where there is room for it.
@@ -1437,6 +1437,7 @@ struct LevelView: View {
             Text(label).font(.mono(15)).padding(.horizontal, inset).padding(.vertical, 10)
                 .background(Capsule().fill(Color.white.opacity(0.05)))
                 .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                .hit(3, 0)
         }
     }
 
@@ -2880,17 +2881,17 @@ struct ResultCard: View {
             }
             .font(.mono(13))
             HStack(spacing: 32) {
-                Button(game.level.back, action: onExit)
+                Button(action: onExit) { Text(game.level.back).hit() }
                 if game.level.run == nil && !game.clean {
-                    Button("again \u{21BA}", action: again).buttonStyle(Sounding(effect: .reset))
+                    Button(action: again) { Text("again \u{21BA}").hit() }.buttonStyle(Sounding(effect: .reset))
                 }
                 if let share = game.shareText {
-                    ShareLink(item: share) { Text("share \u{2197}") }
+                    ShareLink(item: share) { Text("share \u{2197}").hit() }
                         .shareTap()
                         .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
                 }
                 if let next {
-                    Button(game.spilled ? "new run \u{203A}" : "next \u{203A}") { onNext(next) }
+                    Button { onNext(next) } label: { Text(game.spilled ? "new run \u{203A}" : "next \u{203A}").hit() }
                         .foregroundStyle(accent).shadow(color: accent, radius: 4)
                 }
             }
@@ -3176,11 +3177,11 @@ struct LostCard: View {
         VStack(spacing: 26) {
             Text("out of ticks on move \(game.moves)").font(.mono(13))
             HStack(spacing: 32) {
-                Button(game.level.back, action: onExit)
-                Button("undo \u{00B7} \(game.bank)", action: undo)
+                Button(action: onExit) { Text(game.level.back).hit() }
+                Button(action: undo) { Text("undo \u{00B7} \(game.bank)").hit() }
                     .buttonStyle(Sounding(effect: game.bank == 0 ? .tap : .undo))
                     .opacity(game.bank == 0 ? 0.35 : 1)
-                Button("again \u{203A}", action: again).buttonStyle(Sounding(effect: .reset))
+                Button(action: again) { Text("again \u{203A}").hit() }.buttonStyle(Sounding(effect: .reset))
                     .foregroundStyle(Color.vermilion).shadow(color: .vermilion, radius: 4)
             }
             .font(.mono(15, .medium))
