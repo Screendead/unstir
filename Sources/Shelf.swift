@@ -581,7 +581,10 @@ struct PackCard: View {
     @State private var buying = false
     @State private var restoring = false
     @State private var restored: Bool?
+    /// The focused row's hairline, lit once as the card opens on it.
+    @State private var lit = 0.0
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let state = store.state(offer)
@@ -629,6 +632,10 @@ struct PackCard: View {
                         reader.scrollTo("list", anchor: .top)
                     } else if let focus, levels.contains(where: { $0.id == focus.id }) {
                         DispatchQueue.main.async { reader.scrollTo(focus.id, anchor: .center) }
+                        if !reduceMotion {
+                            lit = 1
+                            withAnimation(.easeOut(duration: 1.4).delay(0.35)) { lit = 0 }
+                        }
                     }
                 }
             }
@@ -689,6 +696,7 @@ struct PackCard: View {
                 }
                 .buttonStyle(Sounding())
                 .disabled(!open)
+                .rowHairline(offer.glow, level.id == focus?.id ? lit : 0, inset: 10)
                 .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" } ?? ""
                                     : "locked, needs the pack")
             }

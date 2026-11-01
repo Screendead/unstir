@@ -775,11 +775,7 @@ private struct LevelRow: View {
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .accessibilityValue(enabled ? "" : "locked, \(opens ?? detail ?? "")")
-        // In the list's left margin, clear of the number.
-        .overlay(alignment: .leading) {
-            Capsule().fill(level.colour).frame(width: 2).padding(.vertical, 13).shadow(color: level.colour, radius: 4)
-                .offset(x: -11).opacity(max(lit, frontier ? 0.75 : 0)).allowsHitTesting(false)
-        }
+        .rowHairline(level.colour, max(lit, frontier ? 0.75 : 0))
         .onAppear {
             guard flash, !reduceMotion else { return }
             lit = 1
@@ -796,6 +792,16 @@ private struct LevelRow: View {
         Task {
             try? await Task.sleep(for: .seconds(2))
             if taps == tap { said = false }
+        }
+    }
+}
+
+extension View {
+    /// A row's hairline, in its list's left margin, clear of the number.
+    func rowHairline(_ colour: Color, _ opacity: Double, inset: CGFloat = 13) -> some View {
+        overlay(alignment: .leading) {
+            Capsule().fill(colour).frame(width: 2).padding(.vertical, inset).shadow(color: colour, radius: 4)
+                .offset(x: -11).opacity(opacity).allowsHitTesting(false)
         }
     }
 }
