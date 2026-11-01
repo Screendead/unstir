@@ -20,8 +20,10 @@ enum ConsentWords {
     static let analyticsOn = "on \u{00B7} how you play, never who you are"
     static let analyticsOff = "off \u{00B7} nothing is sent"
     static let sendLog = "send log"
-    static let sendLogDetail = "what the game noted as you played, for a bug"
+    static let sendLogDetail = "touches, moves, purchases and errors, with times\u{00A0}\u{00B7} never who you are"
     static let policy = "privacy policy"
+    static let restore = "restore purchases"
+    static let restoreDetail = "packs bought on this Apple ID"
     static let policyDetail = "what the game keeps, and why"
 }
 
@@ -130,47 +132,75 @@ struct NeonToggle: ToggleStyle {
     }
 }
 
-/// The gear's sheet: the analytics switch where the build has analytics, the log and the privacy policy, black, sized
-/// to what it holds.
+/// The gear's sheet: the analytics switch where the build has analytics, restore, the log and the privacy policy, and the
+/// version under them, black, sized to what it holds.
 struct SettingsSheet: View {
     /// Apple's guideline 5.1.1(i) wants it reachable in the app. The plain github.com page until docs/ is served as a
     /// site.
     static let policy = URL(string: "https://github.com/Screendead/unstir/blob/master/docs/privacy-policy.md")!
 
     @State private var height: CGFloat = 220
+    var store = Store.shared
 
     var body: some View {
         let analytics = Analytics.shared
-        VStack(alignment: .leading, spacing: 10) {
-            Text(ConsentWords.settings).font(.mono(11, .semibold)).opacity(0.5).padding(.top, 26)
-                .accessibilityAddTraits(.isHeader)
-            VStack(alignment: .leading, spacing: 0) {
-                if analytics.shown {
-                    Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
-                        row(ConsentWords.analytics,
-                            analytics.consent == .yes ? ConsentWords.analyticsOn : ConsentWords.analyticsOff)
+        // Scrolls, with a large detent, only where large type outgrows the screen.
+        ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(ConsentWords.settings).font(.mono(11, .semibold)).opacity(0.5).padding(.top, 26)
+                    .accessibilityAddTraits(.isHeader)
+                VStack(alignment: .leading, spacing: 0) {
+                    if analytics.shown {
+                        Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
+                            row(ConsentWords.analytics,
+                                analytics.consent == .yes ? ConsentWords.analyticsOn : ConsentWords.analyticsOff)
+                        }
+                        .toggleStyle(NeonToggle())
+                        .padding(.vertical, 12)
+                        rule
                     }
-                    .toggleStyle(NeonToggle())
-                    .padding(.vertical, 12)
-                    rule
-                }
-                ShareLink(item: Log.url) { outward(ConsentWords.sendLog, ConsentWords.sendLogDetail) }
-                    .shareTap()
-                rule
-                Link(destination: SettingsSheet.policy) { outward(ConsentWords.policy, ConsentWords.policyDetail) }
+                    Button { Task { await store.restoreAndAnnounce() } } label: {
+                        HStack(spacing: 12) {
+                            row(ConsentWords.restore, store.restoreNote ?? ConsentWords.restoreDetail)
+                            Spacer(minLength: 8)
+                        }
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                    }
                     .buttonStyle(Sounding())
+                    .disabled(store.restoring)
+                    rule
+                    ShareLink(item: Log.url) { outward(ConsentWords.sendLog, ConsentWords.sendLogDetail) }
+                        .shareTap()
+                    rule
+                    Link(destination: SettingsSheet.policy) { outward(ConsentWords.policy, ConsentWords.policyDetail) }
+                        .buttonStyle(Sounding())
+                }
+                Text(SettingsSheet.version).font(.mono(11)).opacity(0.3).padding(.top, 6)
             }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+            .foregroundStyle(Color.text)
+            .fixedSize(horizontal: false, vertical: true)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 12)
-        .foregroundStyle(Color.text)
-        .fixedSize(horizontal: false, vertical: true)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+        .scrollBounceBehavior(.basedOnSize)
         .frame(maxHeight: .infinity, alignment: .top)
-        .presentationDetents([.height(height)])
+        .presentationDetents(height > SettingsSheet.screen * 0.9 ? [.height(SettingsSheet.screen * 0.6), .large]
+                             : [.height(height)])
         .presentationDragIndicator(.visible)
         .presentationBackground(Color(0x0B0C10))
         .presentationCornerRadius(24)
+    }
+
+    /// "Unstir 1.0 (1)": the version and build.
+    static var version: String {
+        let info = Bundle.main.infoDictionary ?? [:]
+        return "Unstir \(info["CFBundleShortVersionString"] as? String ?? "?") (\(info["CFBundleVersion"] as? String ?? "?"))"
+    }
+
+    private static var screen: CGFloat {
+        UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.screen.bounds.height }.max() ?? 800
     }
 
     private var rule: some View { Rectangle().fill(Color.text.opacity(0.12)).frame(height: 1) }

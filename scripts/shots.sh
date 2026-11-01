@@ -125,13 +125,26 @@ shot endless-spilled "The same, 6 s in: the picture stirred together, its finest
   MODE=endless BRIM=7 TURNED=1:1 CLOCK=6
 shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch)." \
   LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
+shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
+  MODE=sandbox CLOCK=3
+full=$(for i in $(seq 0 35); do printf '%d:+1,' $((i % 2)); done)
+hold=2 shot sandbox-full "The sandbox with a full stack of 36, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset." \
+  MODE=sandbox STACK=${full%,} MOVES=2:1
+shot sandbox-chainmail "The sandbox on chainmail and pent: the header's controls in full where they fit." \
+  MODE=sandbox PICTURE=chainmail LAYOUT=pent STACK= CLOCK=3
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
+shot result-again-best "Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside levels and next." \
+  SCREEN=result LEVEL=5 BESTS=plughole:00006
+shot result-fullest "Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows." \
+  SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
 shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
-shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying par every vortex level opens it; it opens the menu on maelstrom's gate." \
+shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate." \
   SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
+shot tier-up-midway "Plughole 05 solved at par, the last plughole level to reach it: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last." \
+  SCREEN=clean LEVEL=5 BESTS=plughole:0000-0000000000000000000000 CLOCK=0
 shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over)." \
   TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:000100000010000000000200000
 shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels." \
@@ -319,6 +332,8 @@ for n in $(seq -w 1 25); do
   hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens
 done
 hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 STACK=1:+2,0:+2
+hold=5 shot lens-result "Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens." \
+  PACK=lens LEVEL=2 SCREEN=result CLOCK=0
 hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 STACK=0:+2,1:+2
 hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger." \
   PACK=lens LEVEL=1 LIVE=0:+1.4 TOUCH=0,-0.42
@@ -442,7 +457,7 @@ fi
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in. Prices are the StoreKit configuration's, as a US storefront shows them.
 shot shelf-menu "Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
-shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime and an amber dot." \
+shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
   OWNED=lens STORE=escapement:pending CLOCK=5.4
 for state in unowned owned pending failed revoked; do
   shot card-lens-$state "Lens's card, $state." CARD=lens STORE=lens:$state CLOCK=5.4
@@ -476,17 +491,45 @@ for t in 1.4 2.4 3.6 5.0; do
 done
 shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
   CARD=lens STORE=complete:failed CLOCK=5.4
-shot card-complete-owned "Complete's card, owned: every pack open." CARD=complete OWNED=complete CLOCK=5.4
-shot card-lens-noprice "Lens's card before the App Store answers: buy, with no price." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-complete-owned "Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, play First Stir 01 (a Debug build sells it)." \
+  CARD=complete OWNED=complete CLOCK=5.4
+shot card-lens-complete-pending "Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled." \
+  CARD=lens STORE=complete:pending CLOCK=5.4
+shot card-lens-asked-offline "Lens's card after asking again offline: still waiting for approval, asked, no connection under it." \
+  CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
+shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
+  CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
+shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \
+  OWNED=complete CLOCK=5.4
+shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live." \
+  CARD=lens STORE=lens:unowned PRICES=unreachable CLOCK=5.4
+shot card-lens-unshared "Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey." \
+  CARD=lens STORE=lens:unshared CLOCK=5.4
+shot card-lens-offline "Lens's card after a purchase failed offline: no connection, try again when you're online." \
+  CARD=lens STORE=lens:failed FAILED=offline CLOCK=5.4
+shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone: no buy and no Complete, try free kept." \
+  CARD=lens STORE=lens:unowned PAYMENTS=0 CLOCK=5.4
+shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
+shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
+  CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
 shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
   CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
 shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
-shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place." \
-  PACK=lens LEVEL=5 STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
+  PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
+shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
+  PACK=lens LEVEL=3 SCREEN=clean STORE=lens:unowned CLOCK=5.4
+shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's magenta." \
+  PACK=lens LEVEL=3 SCREEN=clean OWNED=lens CLOCK=5.4
+shot card-lens-replay "Lens's card, unowned, the taste played: replay 01-03 in try free's place." \
+  CARD=lens STORE=lens:unowned BESTS=lens:000 CLOCK=5.4
 shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
   STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
 shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
   CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+shot card-lens-xxxl "Lens's card at xxxLarge, the largest size short of the accessibility ones: each key whole beside its fact." \
+  CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=xxxLarge
 
 # The analytics question and settings. UNSTIR_CONSENT=ask asks, =yes or =no answers, for the launch only.
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
@@ -494,7 +537,9 @@ shot consent-sends "First launch: the analytics question with its link opened, t
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
 shot consent-settings-on "The gear's sheet: the analytics switch on, send log and privacy policy." CONSENT=yes SETTINGS=1
 shot consent-settings-off "The gear's sheet: the analytics switch off, send log and privacy policy." CONSENT=no SETTINGS=1
-shot settings "The gear's sheet in a build without analytics, v1's: send log and privacy policy, no switch." SETTINGS=1
+shot settings "The gear's sheet in a build without analytics, v1's: restore purchases, send log and privacy policy, no switch, the version under them." SETTINGS=1
+shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
+  SETTINGS=1 STORE=lens:unowned RESTORED=none
 
 # Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
 # sub-dial (a wound-back clock's mirrored), the stipulation under the tank. Clocks are rods, + forward, - wound back.

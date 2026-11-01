@@ -3,10 +3,14 @@
 import SwiftUI
 
 extension Level {
-    /// Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
+    /// Where leaving goes: a pack's level back to its card.
+    var back: String { "\u{2039} " + (pack?.name ?? "levels") }
+
+    /// A pack's level takes the pack's glow. Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
     /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
     /// magenta.
     var colour: Color {
+        if let pack { return Offer.pack(pack).glow }
         guard let n = Int(label) else { return sandbox ? .magenta : run == nil ? .amber : .neonCyan }
         let t = Double((n - 1) % 12) / 11
         return switch tier {
@@ -98,6 +102,8 @@ struct MenuView: View {
     let shelfDemo: Bool
     /// UNSTIR_CARDSCROLL: the card opens scrolled to its levels.
     let cardScroll: Bool
+    /// The pack whose card a level past its taste opened, for this showing of it.
+    let arrived: Pack?
     /// The tier picked in the strip, open or not. `shown` trails it while the old list stirs away, and `listed`, the
     /// scroll view's own list, trails that to the end of the switch: rebuilding it stalls a frame (about 40 ms on the
     /// simulator), unseen once the stir has settled over it.
@@ -122,6 +128,8 @@ struct MenuView: View {
     @Namespace private var strip
     /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
     @State private var settings: Bool
+    /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
+    @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
@@ -132,7 +140,7 @@ struct MenuView: View {
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
-         cardScroll: Bool = false, onPick: @escaping (Level) -> Void) {
+         cardScroll: Bool = false, arrived: Pack? = nil, onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = State(initialValue: settings)
         self.onPick = onPick
@@ -141,6 +149,7 @@ struct MenuView: View {
         self.placeholders = placeholders
         self.shelfDemo = shelfDemo
         self.cardScroll = cardScroll
+        self.arrived = arrived
         let tier = start ?? Tier.stored()
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
@@ -177,7 +186,7 @@ struct MenuView: View {
                         .font(.mono(13)).opacity(0.55).padding(.top, 10)
                     LevelRow(level: Level.daily(), enabled: modes, needs: modes ? nil : Level.plughole[22], pick: pick).padding(.top, 22)
                     LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                             detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
+                             detail: "deeper every tank \u{00B7} eight wrong stirs and it spills",
                              best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes,
                              needs: modes ? nil : Level.plughole[22], pick: pick)
                     LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
@@ -235,16 +244,28 @@ struct MenuView: View {
     @ViewBuilder private var cardView: some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
-                     onBack: { show(nil) }, onPlay: { onPick($0) })
+                     arrived: card.pack != nil && card.pack == arrived,
+                     backTo: cameFrom.flatMap { $0.card == card ? $0.back.name : nil } ?? "menu",
+                     onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
+                         show(next)
+                         cameFrom = (card, next)
+                     })
+                .id(card)
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
     }
 
     private func show(_ offer: Offer?, from: UnitPoint = .center) {
+        cameFrom = nil
         Log.write(offer.map { "card \($0.key) shown" } ?? "card closed")
         if offer != nil { cardFrom = from }
         withAnimation(.snappy(duration: 0.42)) { card = offer }
+    }
+
+    /// The card a pack's card was opened from, or the menu.
+    private func back() {
+        show(cameFrom.flatMap { $0.card == card ? $0.back : nil })
     }
 
     /// The menu, Lens's cover tapped, its card's clip played through, then back.
