@@ -1,5 +1,7 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import MessageUI
+import SafariServices
 import SwiftUI
 
 /// Every word the question and the settings sheet say.
@@ -25,8 +27,8 @@ enum ConsentWords {
     static let soundsDetail = "every effect and button"
     static let haptics = "haptics"
     static let hapticsDetail = "the tank's knocks and taps"
-    static let sendLog = "send log"
-    static let sendLogDetail = "touches, moves, purchases and errors, with times\u{00A0}\u{00B7} never who you are"
+    static let report = "report a problem"
+    static let reportDetail = "with the log: touches, moves, purchases and errors\u{00A0}\u{00B7} never who you are"
     static let policy = "privacy policy"
     static let restore = "restore purchases"
     static let restoreDetail = "packs bought on this Apple ID"
@@ -141,11 +143,20 @@ struct NeonToggle: ToggleStyle {
 }
 
 /// The gear's sheet: music, sounds, haptics, the colour letters, the analytics switch where the build has analytics,
-/// restore, the log and the privacy policy, and the version under them, black, sized to what it holds.
+/// restore, a report of a problem and the privacy policy, and the version under them, black, sized to what it holds.
 struct SettingsSheet: View {
-    /// Apple's guideline 5.1.1(i) wants it reachable in the app. The plain github.com page until docs/ is served as a
-    /// site.
-    static let policy = URL(string: "https://github.com/Screendead/unstir/blob/master/docs/privacy-policy.md")!
+    /// Apple's guideline 5.1.1(i) wants it reachable in the app. Info.plist's `PolicyURL`, set outside the repo, or
+    /// the plain github.com page where the build has none.
+    static var policy: URL {
+        let set = (Bundle.main.object(forInfoDictionaryKey: "PolicyURL") as? String).flatMap(URL.init(string:))
+        return set.flatMap { ["https", "http"].contains($0.scheme) ? $0 : nil }
+            ?? URL(string: "https://github.com/Screendead/unstir/blob/master/docs/privacy-policy.md")!
+    }
+
+    /// Info.plist's `SupportAddress`, set outside the repo; nil where the build has none.
+    static var support: String? {
+        (Bundle.main.object(forInfoDictionaryKey: "SupportAddress") as? String).flatMap { $0.contains("@") ? $0 : nil }
+    }
 
     @State private var height: CGFloat = 220
     // Mirrors of the stored switches, so each moves as it is tapped.
@@ -154,6 +165,8 @@ struct SettingsSheet: View {
     @State private var haptics = Settings.haptics
     /// Nil until chosen, so the switch shows Differentiate Without Colour's state until then.
     @State private var letters = Letters.choice
+    @State private var mailing = false
+    @State private var reading = false
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
     var store = Store.shared
 
@@ -196,11 +209,18 @@ struct SettingsSheet: View {
                     .buttonStyle(Sounding())
                     .disabled(store.restoring)
                     rule
-                    ShareLink(item: Log.url) { outward(ConsentWords.sendLog, ConsentWords.sendLogDetail) }
-                        .shareTap()
+                    if let to = SettingsSheet.support, MFMailComposeViewController.canSendMail() {
+                        Button { mailing = true } label: { outward(ConsentWords.report, ConsentWords.reportDetail) }
+                            .buttonStyle(Sounding())
+                            .sheet(isPresented: $mailing) { MailSheet(to: to).ignoresSafeArea() }
+                    } else {
+                        ShareLink(item: Log.url) { outward(ConsentWords.report, ConsentWords.reportDetail) }
+                            .shareTap()
+                    }
                     rule
-                    Link(destination: SettingsSheet.policy) { outward(ConsentWords.policy, ConsentWords.policyDetail) }
+                    Button { reading = true } label: { outward(ConsentWords.policy, ConsentWords.policyDetail) }
                         .buttonStyle(Sounding())
+                        .sheet(isPresented: $reading) { SafariSheet(url: SettingsSheet.policy).ignoresSafeArea() }
                 }
                 Text(SettingsSheet.version).font(.mono(11)).opacity(0.3).padding(.top, 6)
             }
@@ -263,4 +283,45 @@ struct SettingsSheet: View {
             Text(detail).font(.mono(11)).opacity(0.4)
         }
     }
+}
+
+/// "report a problem": a mail to the support address, its log attached and the device line in the body.
+private struct MailSheet: UIViewControllerRepresentable {
+    let to: String
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> MFMailComposeViewController {
+        let mail = MFMailComposeViewController()
+        mail.mailComposeDelegate = context.coordinator
+        mail.setToRecipients([to])
+        mail.setSubject("\(SettingsSheet.version): a problem")
+        mail.setMessageBody("What happened:\n\n\n\u{2014}\n\(UnstirApp.device)\n", isHTML: false)
+        if let log = try? Data(contentsOf: Log.url) {
+            mail.addAttachmentData(log, mimeType: "text/plain", fileName: "unstir-log.txt")
+        }
+        return mail
+    }
+
+    func updateUIViewController(_ mail: MFMailComposeViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator { dismiss() } }
+
+    @MainActor final class Coordinator: NSObject, @preconcurrency MFMailComposeViewControllerDelegate {
+        let done: () -> Void
+        init(done: @escaping () -> Void) { self.done = done }
+
+        func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult,
+                                              error: Error?) {
+            done()
+        }
+    }
+}
+
+/// The privacy policy, read in the app.
+private struct SafariSheet: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController { SFSafariViewController(url: url) }
+
+    func updateUIViewController(_ safari: SFSafariViewController, context: Context) {}
 }

@@ -41,10 +41,13 @@ Apple ID. The game checks Apple's signed record of what you own on the phone, wi
 and know what you own, the game asks Apple's App Store when it starts and when you buy or restore. That is Apple's
 service, and Apple's privacy policy covers it.
 
-## If you send a log
+## If you report a problem
 
-Settings has a "send log" button. It opens your phone's share sheet with the play log described above, and you choose
-where it goes, for example an email to us. The game sends nothing by itself.
+Settings has a "report a problem" button. It opens an email to us with the play log described above attached, and a
+line in the message about the phone: the app's version, the iOS version, the phone's model, its language and region,
+the text size, and whether Reduce Motion, VoiceOver and Low Power Mode are on. You can read and change the email, and it
+goes only if you send it. Where the phone has no mail set up, the button opens your phone's share sheet with the log
+instead, and you choose where it goes. The game sends nothing by itself.
 
 If you email it, or email us at all, we receive your email address, your message and anything you attach. We use them
 only to answer you and to fix the game. Our legal basis is our legitimate interest in answering you and keeping the

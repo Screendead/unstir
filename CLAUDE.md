@@ -74,7 +74,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Build: `scripts/build-ios.sh [Debug|Release] [device|sim]` (defaults to Debug, device; prints only errors, warnings and the result).
   It passes the shell's `ANALYTICS` (YES builds analytics in; NO, the default, is v1's) and `APTABASE_KEY`, Aptabase's
   app key, into Info.plist's `Analytics` and `AptabaseKey`, over `Config/Local.xcconfig` (gitignored), which
-  `Config/Unstir.xcconfig` includes for Xcode's own builds and archives; without both analytics is off. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
+  `Config/Unstir.xcconfig` includes for Xcode's own builds and archives; without both analytics is off. The same way,
+  `SUPPORT_ADDRESS` and `POLICY_URL` (Jack's, never in a tracked file; `testNoTrackedConfigHoldsAPrivateValue`) set
+  Info.plist's `SupportAddress` and `PolicyURL`; in an xcconfig a URL is written `https:/$()/...`, as `//` starts a
+  comment. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
   build's events as Debug.
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
@@ -637,8 +640,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   "music", "sounds" and "haptics" (`Settings`, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while
   on; Jack's call C17, round 13), "colour letters" (`Letters`), the analytics switch (`NeonToggle`, which calls
   `decide`) where the build has analytics, "restore purchases" (`Store.restore`, saying what it found as the cards do),
-  "send log", which hands `Log.url` to the share sheet, and "privacy policy", which opens `SettingsSheet.policy`
-  (Apple's guideline 5.1.1(i)), for now the github.com page of `docs/privacy-policy.md`, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
+  "report a problem", a mail (`MailSheet`) to Info.plist's `SupportAddress` with `Log.url` attached as
+  `unstir-log.txt` and `UnstirApp.device` in the body, or, with no address or no mail account, `Log.url` handed to the
+  share sheet, and "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)) in Safari's view
+  (`SafariSheet`): Info.plist's `PolicyURL`, Jack's own domain, or the github.com page of `docs/privacy-policy.md` where
+  the build has none, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
   its content outgrows the screen. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);

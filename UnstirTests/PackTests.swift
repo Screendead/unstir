@@ -97,6 +97,26 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(Settings.music)
     }
 
+    /// The support address and the policy's page are Jack's, so they live in Config/Local.xcconfig (gitignored) or the
+    /// shell, never in a tracked file: the tracked config leaves both empty.
+    func testNoTrackedConfigHoldsAPrivateValue() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let config = try String(contentsOf: root.appending(path: "Config/Unstir.xcconfig"), encoding: .utf8)
+        let project = try String(contentsOf: root.appending(path: "project.yml"), encoding: .utf8)
+        for key in ["SUPPORT_ADDRESS", "POLICY_URL"] {
+            let set = config.split(separator: "\n").filter { $0.hasPrefix("\(key) =") || $0.hasPrefix("\(key)=") }
+            XCTAssertEqual(set, ["\(key) ="], key)
+            XCTAssertTrue(project.contains("$(\(key))"), key)
+        }
+        let keys = ["SUPPORT_ADDRESS", "POLICY_URL", "SupportAddress", "PolicyURL"]
+        for line in (config + "\n" + project).split(separator: "\n").map({ $0.trimmingCharacters(in: .whitespaces) })
+        where !line.hasPrefix("//") && !line.hasPrefix("#") && keys.contains(where: line.contains) {
+            let value = line.drop { $0 != "=" && $0 != ":" }
+            XCTAssertFalse(value.contains("@"), String(line))
+            XCTAssertFalse(value.contains("$()/") || value.contains("://"), String(line))
+        }
+    }
+
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
     @MainActor func testAMistypedPackIdFailsClosed() {
         for id in ["lens_7", "Lens-7", "lens-", "escapement-7"] {

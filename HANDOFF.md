@@ -406,6 +406,9 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 
 - In App Store Connect's availability, exclude the EU and EEA storefronts (EU1 = B).
 - Opt out of the Mac and Vision Pro App Stores for v1 (C22 = A).
+- Publish the privacy policy on Jack's own domain, then give App Store Connect its URL, and set `POLICY_URL` and
+  `SUPPORT_ADDRESS` (both in HANDOFF.private.md) in `Config/Local.xcconfig` or the shell for the archive build, so
+  settings opens that page and "report a problem" mails the log (C17 = A).
 - Analytics items (the consent question, the age bracket, the privacy label's analytics rows, Aptabase's region and key)
   are moot for v1 (AN1 = A).
 
