@@ -141,8 +141,9 @@ final class Game {
     private var elapsed: TimeInterval = 0
     /// Away from the front after the clock started: it runs again on coming back.
     private var paused = false
-    /// False once an earlier visit committed a move: a daily is then practice, and nothing else can be clean.
-    let firstTry: Bool
+    /// False once an earlier visit committed a move, or after "again" on a solved daily: a daily is then practice, and
+    /// nothing else can be clean.
+    private(set) var firstTry: Bool
     /// Escapement's demonstration is on the stack: its commits are not the player's, so they try nothing.
     private(set) var demoing = false
     /// The calls that succeeded since the level opened, for its resume (Jack's call C2, round 13); the demonstration's
@@ -261,9 +262,9 @@ final class Game {
     /// Practice saves nothing.
     var counts: Bool { firstTry || !level.id.hasPrefix("daily-") }
 
-    /// The result card's "again": any finish that isn't clean, but endless's and the daily's, which counts only its first
-    /// visit's solve, so a retry from its card would save a second.
-    var offersAgain: Bool { level.run == nil && !clean && Share.day(of: level.id) == nil }
+    /// The result card's "again": any finish that isn't clean, but endless's. On the daily it plays as practice (Jack's
+    /// call P1 = B, 2026-11-01).
+    var offersAgain: Bool { level.run == nil && !clean }
 
     /// The sandbox starts on the clean picture, so it is never solved, which keeps it from finishing or saving.
     var solved: Bool { stack.isEmpty && !level.sandbox }
@@ -595,6 +596,11 @@ final class Game {
         guard !checking, level.run == nil else { return false }
         let played = !history.isEmpty
         if played { resets += 1 }
+        // The daily counts only its first try's solve, so "again" from its card is practice.
+        if solved && Share.day(of: level.id) != nil {
+            firstTry = false
+            bests = nil
+        }
         entries = Self.dealt(level)
         restart()
         log("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
