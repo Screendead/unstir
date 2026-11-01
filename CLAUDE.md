@@ -358,7 +358,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: the rod's tick, the tank's
   clunk. While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
-  main actor and the fine pass off it. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
+  main actor and the fine pass off it. Under Reduce Motion the opening fades through black (`curtain`, 0.2 s each way)
+  in place of the wind-in, a replay level keeping its rod turns, which are the information; the solve swells the
+  picture's contrast where it stands, with no wave, pulse or glass easing home; the lessons' ghost fingers rest
+  mid-sweep; the lost stamp lands without its scale. Under it or Dim Flashing Lights the picture fades on rather than
+  flickering (`PictureLayer.strike(calm:)`). Endless's pour and the live pictures keep their motion. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset.
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry

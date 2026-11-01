@@ -92,6 +92,8 @@ struct SceneLayer: View {
     let side: CGFloat
     var onStrike: () -> Void = {}
     @Environment(\.displayScale) private var scale
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityDimFlashingLights) private var dimFlashing
     @State private var layers: SceneLayers?
     /// The fraction of the window the time is wound back from, and when the rewind began.
     @State private var rewind: (from: Double, at: Date)?
@@ -116,7 +118,7 @@ struct SceneLayer: View {
         .frame(width: side, height: side)
         .drawingGroup(colorMode: .extendedLinear)
         .keyframeAnimator(initialValue: 0.0, trigger: layers != nil) { picture, o in picture.opacity(o) } keyframes: { _ in
-            PictureLayer.strike
+            PictureLayer.strike(calm: reduceMotion || dimFlashing)
         }
         .onChange(of: layers != nil) { if layers != nil { onStrike() } }
         .onAppear {
