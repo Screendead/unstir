@@ -534,9 +534,9 @@ shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone
 shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
 shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
   CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
-shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
-  CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
-shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
+shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked." \
+  CARD=lens STORE=lens:unowned CARDSCROLL=1 CLOCK=5.4
+shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDSCROLL=1 CLOCK=5.4
 shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
