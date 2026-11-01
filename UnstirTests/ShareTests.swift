@@ -98,4 +98,18 @@ final class ShareTests: XCTestCase {
         XCTAssertFalse(game.counts)
         XCTAssertEqual(game.shareText, "Unstir 2026-11-02 \u{00B7} practice \u{00B7} 1 move (par 1)\n\u{1F7EA}")
     }
+
+    /// The daily counts only its first visit's solve, so its card offers no "again", which would save a second.
+    @MainActor func testTheDailysCardOffersNoAgain() {
+        func tried(_ id: String) -> Game {
+            let game = Game(level: Level(id: id, label: "", title: "", layout: .tri, scramble: .parse("0:+4", in: .tri)),
+                            tankTurned: true, bank: (10, nil))
+            game.commit(rod: 1, steps: 2)
+            XCTAssertTrue(game.reset())
+            XCTAssertFalse(game.clean)
+            return game
+        }
+        XCTAssertFalse(tried("daily-20261103").offersAgain)
+        XCTAssertTrue(tried("test").offersAgain)
+    }
 }

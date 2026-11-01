@@ -32,7 +32,9 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
-        UILaunchScreen: {}
+        # Black whatever the phone's appearance, as the app is, so a cold launch never flashes white.
+        UILaunchScreen:
+          UIColorName: LaunchBackground
         CADisableMinimumFrameDurationOnPhone: true
         UIUserInterfaceStyle: Dark
         Analytics: $(ANALYTICS)

@@ -32,6 +32,14 @@ struct Sounding: PrimitiveButtonStyle {
     }
 }
 
+extension View {
+    /// A bare label's target grown to Apple's 44 pt minimum round it, laid out as the label alone, so nothing moves.
+    func hit(_ vertical: CGFloat = 14, _ horizontal: CGFloat = 8) -> some View {
+        padding(.vertical, vertical).padding(.horizontal, horizontal).contentShape(Rectangle())
+            .padding(.vertical, -vertical).padding(.horizontal, -horizontal)
+    }
+}
+
 extension ShareLink {
     /// A share link taps as it opens, beside its own action rather than through `Sounding`, which has not been seen to
     /// open the sheet.
