@@ -588,4 +588,19 @@ struct Best: Codable {
         get { UserDefaults.standard.integer(forKey: "endless.tanks") }
         set { UserDefaults.standard.set(newValue, forKey: "endless.tanks") }
     }
+
+    /// Set as a fresh install's first launch opens straight into plughole 01, so it does so once (Jack's call C4, round 13).
+    static var welcomed: Bool {
+        get { UserDefaults.standard.bool(forKey: "welcomed") }
+        set { UserDefaults.standard.set(newValue, forKey: "welcomed") }
+    }
+
+    /// Set the first time the daily or endless opens: until then, once open, their rows are marked new. Unstored, the
+    /// harness's, it lasts only this launch.
+    static var modesSeen: Bool { UserDefaults.standard.bool(forKey: "modes.seen") }
+    static func seeModes(store: Bool = true) {
+        if store { UserDefaults.standard.set(true, forKey: "modes.seen") } else {
+            UserDefaults.standard.register(defaults: ["modes.seen": true])
+        }
+    }
 }

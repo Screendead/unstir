@@ -668,7 +668,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs.
-- **Menu.swift** holds `MenuView`. A row with a committed move and no best reads tried, faint, as a pack card's list
+- **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
+  round 13): until 01 has a best, the tank's rule as a tagline over the tier's list, with the sandbox under the list;
+  then "next: 07 · Sprinkle ›" in the tagline's place, a button opening the shown tier's frontier (none once it has
+  none), and the sandbox over the list. The daily and endless rows show only once open, each marked new until either is
+  first opened (`Best.modesSeen`). A row with a committed move and no best reads tried, faint, as a pack card's list
   does (Jack's call C3, round 13). Under the title, a strip names every tier, dimmed with a lock while locked, and
   keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
   list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
@@ -684,8 +688,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ticks the levels short of par as runs (`Tier.short`: "short: 05 · 12 · 21–27"), each a button opening its first,
   which is always open. A closed row
   still takes a tap: it shakes, sounds `seized` and says for two seconds what opens it ("solve 06 to open", or on a
-  locked tier "par every plughole level to open"), which VoiceOver reads as its value; shut, the daily and endless say
-  "opens after plughole 23" in place of their detail. The daily's title names its day in the locale's words ("Daily ·
+  locked tier "par every plughole level to open"), which VoiceOver reads as its value. The daily's title names its day in the locale's words ("Daily ·
   Sun 1 Nov"; its id stays `daily-yyyymmdd`), and the menu deals it afresh on coming to the front and at midnight
   (`NSCalendarDayChanged`), so a menu left up overnight opens the new day's. The first level without a best (`Tier.frontier`) keeps its
   hairline lit. A hidden stir in
@@ -740,7 +743,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
   unless `UNSTIR_SOUND=1`. An undo steps the heal notes back, so the next heal plays the undone one's note again
   (Jack, SN1).
-- **UnstirApp.swift** holds `RootView` and the `Harness`. The harness reads `UNSTIR_*` environment variables at launch
+- **UnstirApp.swift** holds `RootView` and the `Harness`. A fresh install's first launch opens straight into plughole
+  01 (`RootView.opening`, Jack's call C4, round 13), once: `Best.welcomed` is stored as it appears, so a player who
+  backs out without a move gets the menu next time. Never under the harness or the test host, but `UNSTIR_FRESH=1`
+  takes that first screen without storing it. The harness reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch and `UNSTIR_LETTERS=1` shows Differentiate Without Colour's letters and swatches), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank

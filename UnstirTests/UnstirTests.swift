@@ -1343,6 +1343,48 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(daily.title.contains(date.formatted(.dateTime.weekday(.abbreviated))), daily.title)
     }
 
+    /// The menu's top follows plughole 01 and 23: the tagline, then the way on; the daily and endless only once open.
+    @MainActor func testTheMenuLeadsWithLevelOne() {
+        func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {
+            let ids = Set(Tier.plughole.levels.prefix(tier == .plughole ? n : 27).map(\.id) + tier.levels.prefix(n).map(\.id))
+            return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+        }
+        let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
+        XCTAssertFalse(fresh.modes)
+        XCTAssertFalse(fresh.sandboxFirst)
+        XCTAssertNil(fresh.next)
+        let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
+        XCTAssertFalse(one.modes)
+        XCTAssertTrue(one.sandboxFirst)
+        XCTAssertEqual(one.next?.id, Level.plughole[1].id)
+        XCTAssertNil(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(1)).next, "a locked tier has no way on")
+        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
+        let modes = MenuView.lead(tier: .plughole, unlocked: false, best: solved(23))
+        XCTAssertTrue(modes.modes)
+        XCTAssertEqual(modes.next?.id, Level.plughole[23].id)
+        XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: false, best: solved(27)).next, "every level has a best")
+        XCTAssertEqual(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(4, of: .whirlpool)).next?.id,
+                       Level.whirlpool[4].id)
+        let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
+        XCTAssertTrue(unlocked.modes)
+        XCTAssertFalse(unlocked.sandboxFirst)
+    }
+
+    /// Only a fresh install's first launch opens on plughole 01, and never the harness's.
+    @MainActor func testAFreshInstallOpensOnTheFirstLevel() {
+        let first = Level.plughole[0]
+        func opening(harnessed: Bool = false, welcomed: Bool = false, best: Bool = false, started: Bool = false) -> String? {
+            RootView.opening(harnessed: harnessed, welcomed: welcomed,
+                             best: { $0 == first.id && best ? Best(over: 0, seconds: 9) : nil },
+                             started: { $0 == first.id && started })?.id
+        }
+        XCTAssertEqual(opening(), first.id)
+        XCTAssertNil(opening(welcomed: true), "backed out of 01 without a move: the menu, not 01 again")
+        XCTAssertNil(opening(best: true))
+        XCTAssertNil(opening(started: true))
+        XCTAssertNil(opening(harnessed: true))
+    }
+
     /// The pack dock waits for plughole 09, unless a pack is owned or asked for, or the developer unlock is on.
     @MainActor func testTheDockWaitsForLevelNine() {
         func solved(_ n: Int) -> (String) -> Best? {
@@ -1718,6 +1760,10 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Spoken.row(first, result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, started: true).value, "tried")
         XCTAssertEqual(Spoken.row(first, result: Best(over: 1, seconds: 9), tanks: 0, detail: nil, enabled: true, needs: nil,
                                   started: true).value, "1 over par")
+        XCTAssertEqual(Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value, "new")
+        XCTAssertEqual(Spoken.row(.endless(Run(seed: 7)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value,
+                       "new")
+        XCTAssertEqual(Spoken.next(seventh), "Next: level 7, \(seventh.title)")
         XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
         XCTAssertEqual(Spoken.back(first), "Back to levels")
         XCTAssertEqual(Spoken.back(Pack.lens.levels[0]), "Back to Lens")

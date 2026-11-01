@@ -43,7 +43,8 @@ final class PackTests: XCTestCase {
     @MainActor func testStorageKeysNeverChange() throws {
         let d = UserDefaults.standard, id = "pin-test"
         let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
-                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown"]
+                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "welcomed",
+                    "modes.seen"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -72,6 +73,10 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(d.integer(forKey: "undos.unseen"), 2)
         Best.refillShown = true
         XCTAssertTrue(d.bool(forKey: "undos.shown"))
+        Best.welcomed = true
+        XCTAssertTrue(d.bool(forKey: "welcomed"))
+        Best.seeModes()
+        XCTAssertTrue(d.bool(forKey: "modes.seen"))
     }
 
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
