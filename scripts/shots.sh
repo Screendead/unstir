@@ -146,6 +146,8 @@ shot endless-spilled "The same, 6 s in: the picture stirred together, its finest
   MODE=endless BRIM=7 TURNED=1:1 CLOCK=6
 shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch)." \
   LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
+shot reset-armed "Level 12 with two moves played, reset tapped once: it reads reset? tap again." \
+  LEVEL=12 PLAYED=0:+1,1:+1 RESETARMED=1
 shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
   MODE=sandbox CLOCK=3
 full=$(for i in $(seq 0 35); do printf '%d:+1,' $((i % 2)); done)

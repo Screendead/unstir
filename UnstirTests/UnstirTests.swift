@@ -166,6 +166,23 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(LevelView.haze(over: 10), 0.2)
     }
 
+    /// Jack's call C12 (round 13): with moves played, reset takes a second tap within 2 s; with none it resets at once.
+    func testResetTakesASecondTap() throws {
+        let t0 = Date(timeIntervalSinceReferenceDate: 0)
+        let first = ResetArm.tap(now: t0, armedAt: nil, played: true)
+        XCTAssertFalse(first.reset)
+        XCTAssertEqual(first.armedAt, t0)
+        let armed = try XCTUnwrap(first.armedAt)
+        XCTAssertEqual(ResetArm.tap(now: t0 + 1.9, armedAt: armed, played: true).reset, true)
+        XCTAssertNil(ResetArm.tap(now: t0 + 1.9, armedAt: armed, played: true).armedAt)
+        // Too late: it arms afresh rather than reset.
+        let late = ResetArm.tap(now: t0 + 2.1, armedAt: armed, played: true)
+        XCTAssertFalse(late.reset)
+        XCTAssertEqual(late.armedAt, t0 + 2.1)
+        XCTAssertTrue(ResetArm.tap(now: t0, armedAt: nil, played: false).reset)
+        XCTAssertNil(ResetArm.tap(now: t0, armedAt: nil, played: false).armedAt)
+    }
+
     /// A tank of a run, on scramble `word`, opening with `brim` notches.
     private func tank(_ word: String, _ layout: Layout = .tri, brim: Int = 0) -> Level {
         Level(id: "endless", label: "", title: "", layout: layout, scramble: .parse(word, in: layout), run: Run(seed: 1, tank: 4, brim: brim))

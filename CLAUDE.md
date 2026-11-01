@@ -377,7 +377,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   bank empty it stays live only to put "undos refill +2 each day you play" in the caption for three seconds (the
   lost card's under its buttons), which plays the undo and reset sounds as the bottom controls do. An undo tapped
   while a let-go settles is taken once it has. A reset with nothing played only replays the opening and counts no
-  reset, so it costs no clean. The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
+  reset, so it costs no clean. With moves played, the play screen's reset takes a second tap: the first only taps and
+  arms it, "reset? tap again", for 2 s (`ResetArm`), and any move, undo or finish disarms it; the cards' "again" resets
+  at once (Jack's call C12, round 13). The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
   (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
@@ -771,7 +773,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lesson's ghost finger, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
   and it holds the swirl's breath at 0. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
   first slosh starts at 1.5 s, for stills, even under `UNSTIR_CLOCK`, and never with `UNSTIR_SWIRLED=1`, which has none. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
-  pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
+  pushes until it spills. `UNSTIR_RESETARMED=1` holds the reset control armed, "reset? tap again". `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
   takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag or the swirl's: they
   read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch. Nor

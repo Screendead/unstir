@@ -87,6 +87,8 @@ struct Harness {
     let breath: Double?
     /// UNSTIR_BRIMDEMO=1: endless plays the approved film's run of the brim, two heals and then pushes until it spills.
     let brimDemo: Bool
+    /// UNSTIR_RESETARMED=1: the reset control held armed by a first tap, "reset? tap again", for stills.
+    let resetArmed: Bool
     /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card. ShareLink can't be opened without a tap,
     /// so this presents the UIKit sheet it wraps, with the same text.
     let shareSheet: Bool
@@ -309,6 +311,7 @@ struct Harness {
         rest = env["UNSTIR_REST"].flatMap(Double.init) ?? 2
         breath = env["UNSTIR_BREATH"].flatMap(Double.init)
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"
+        resetArmed = env["UNSTIR_RESETARMED"] == "1"
         icon = env["UNSTIR_ICON"].flatMap(Int.init)
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
         card = env["UNSTIR_CARD"].flatMap(Offer.init(name:)).flatMap { $0.sold ? $0 : nil }
