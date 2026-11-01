@@ -736,6 +736,15 @@ struct PackCard: View {
                     .animation(reduceMotion ? nil : .snappy(duration: 0.45), value: state)
                 }
                 .scrollBounceBehavior(.basedOnSize)
+                // Scrolled words would run on under the status bar's clock: they fade out at the safe area's top
+                // instead, over less than the 18 pt above "‹ menu", and run on under the home indicator.
+                .mask {
+                    VStack(spacing: 0) {
+                        LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom).frame(height: 12)
+                        Color.black
+                    }
+                    .padding(.bottom, -g.safeAreaInsets.bottom - 40)
+                }
                 .onAppear {
                     // The gate's arrival opens on buying, else UNSTIR_CARDSCROLL on the list, else on the row left.
                     if arrived {
