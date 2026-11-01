@@ -98,6 +98,12 @@ import XCTest
         g.commit(rod: 0, steps: -4)
         XCTAssertTrue(g.solved)
         XCTAssertNil(Resume.load(id), "a solve clears it")
+        // "Again" deals afresh: its save replays through the solve without stopping there.
+        g.reset()
+        let again = try XCTUnwrap(Game.resumed(level, from: try XCTUnwrap(Resume.load(id)), bank: (10, nil), storesResume: false))
+        XCTAssertEqual(again.resets, 1)
+        XCTAssertEqual(again.stack, level.scramble)
+        XCTAssertFalse(again.clean)
 
         // A run's cleared tank saves the next, empty, with the brim it carries.
         let run = Game(level: .endless(Run(seed: 7)), storesProgress: false, storesResume: true)

@@ -150,6 +150,9 @@ final class Game {
     private(set) var actions: [Resume.Action] = []
     /// Inside `Game.resumed`: the line was the player's already, so nothing is spent, logged or saved again.
     private(set) var replaying = false
+    /// The replay has a call left after this one, which the try could make only on a tank the fine pass didn't call
+    /// solved, or after "again", which deals afresh whatever it called.
+    private var replayGoesOn = false
     /// Only a plain launch's level saves its try: never the harness's, the sandbox, a placeholder, a clip or a test.
     let storesResume: Bool
     /// Whether the player has ever turned the tank, on any level: the rim shows how until they have.
@@ -704,8 +707,8 @@ final class Game {
         // Only the coarse pass runs here: the fine one takes ~0.1 s exactly when it passes, which would hitch the win.
         if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses, masks: level.masks) {
             let stack = stack, layout = level.layout, lenses = level.lenses, masks = level.masks
-            // A replay has no frame to hitch, and the next action needs the answer.
-            if replaying { return confirm(layout.looksSolved(stack, lenses: lenses, masks: masks), healed: healed) }
+            // A replay has no frame to hitch, and only its last call can have left the answer unknown.
+            if replaying { return confirm(!replayGoesOn && layout.looksSolved(stack, lenses: lenses, masks: masks), healed: healed) }
             checking = true
             Task {
                 let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack, lenses: lenses, masks: masks) }.value
@@ -798,6 +801,7 @@ final class Game {
                         firstTry: r.firstTry, storesResume: storesResume)
         game.replaying = true
         for (i, action) in r.actions.enumerated() {
+            game.replayGoesOn = i + 1 < r.actions.count
             switch action {
             case .turn(let knob, let steps): game.commit(rod: knob, steps: steps)
             case .tank(let steps): game.turnTank(steps)
