@@ -480,6 +480,8 @@ fi
 shot shelf-menu "Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
   OWNED=lens STORE=escapement:pending CLOCK=5.4
+shot shelf-approved "The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header." \
+  BESTS=plughole:000000000 OWNED=lens APPROVED=lens CLOCK=1
 for state in unowned owned pending failed revoked; do
   saves=": Complete's line saves \$5.97 on the four packs a Debug build sells"
   [[ $state == owned ]] && saves=""

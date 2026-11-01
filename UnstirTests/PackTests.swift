@@ -43,7 +43,7 @@ final class PackTests: XCTestCase {
     @MainActor func testStorageKeysNeverChange() throws {
         let d = UserDefaults.standard, id = "pin-test"
         let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
-                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown"]
+                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -72,6 +72,8 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(d.integer(forKey: "undos.unseen"), 2)
         Best.refillShown = true
         XCTAssertTrue(d.bool(forKey: "undos.shown"))
+        Asked.add(Pack.lens.productID)
+        XCTAssertTrue(d.bool(forKey: "asked.com.screendead.Unstir.pack.lens"))
     }
 
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
@@ -170,6 +172,37 @@ final class PackTests: XCTestCase {
         XCTAssertNil(store.saving)
         store.pretend(Ledger())
         XCTAssertNil(store.saving, "no prices yet")
+    }
+
+    /// An Ask to Buy approval is said once: a request then its approval says it, and once said it is forgotten; a pack
+    /// owned without asking says nothing; a revocation forgets the request unsaid (Jack's call C21, round 13).
+    func testAnApprovalIsSaidOnce() {
+        let lens = Pack.lens.productID
+        var ledger = Ledger()
+        ledger.record(lens, .pending)
+        XCTAssertEqual(ledger.answers(to: [lens]).approved, [])
+        ledger.record(lens, .owned)
+        XCTAssertEqual(ledger.answers(to: [lens]).approved, [lens])
+        XCTAssertEqual(ledger.answers(to: []).approved, [], "said, so no longer asked")
+        var bought = Ledger()
+        bought.record(Pack.prism.productID, .owned)
+        XCTAssertEqual(bought.answers(to: []).approved, [])
+        ledger.record(lens, .revoked)
+        XCTAssertEqual(ledger.answers(to: [lens]).approved, [])
+        XCTAssertEqual(ledger.answers(to: [lens]).revoked, [lens])
+        XCTAssertEqual(Offer.pack(.lens).yours, "Lens is yours")
+        XCTAssertEqual(Offer.complete.yours, "every pack is yours")
+    }
+
+    /// The store says each approval until it is said, and the harness's last only the launch.
+    @MainActor func testTheStoreSaysAnApprovalUntilItIsSaid() {
+        let store = Store()
+        store.pretend(Ledger(), approved: [.pack(.lens), .complete])
+        XCTAssertEqual(store.approved, [.pack(.lens), .complete])
+        store.said(.pack(.prism))
+        store.said(.pack(.lens))
+        XCTAssertEqual(store.approved, [.complete])
+        XCTAssertEqual(Harness(["UNSTIR_APPROVED": "lens,nothing"]).approved, [.pack(.lens)])
     }
 
     /// A pack's ids never read as another pack's or a tier's.

@@ -84,6 +84,9 @@ enum Offer: Hashable, Sendable {
         }
     }
 
+    /// The dock's header once its Ask to Buy is approved.
+    var yours: String { pack.map { "\($0.name) is yours" } ?? "every pack is yours" }
+
     var free: String {
         switch self {
         case .pack(let p): "levels 1\u{2013}\(p.taste) free, no purchase"
@@ -778,6 +781,7 @@ struct PackCard: View {
         .task { await store.fetchPrices() }
         .onAppear {
             Log.write("card \(offer.key) opens")
+            if state == .owned { store.said(offer) }
             if let pack = offer.pack { Analytics.shared.cardSeen(pack) }
         }
         .onChange(of: Reading(state: state, ready: store.ready)) { old, new in
@@ -788,6 +792,8 @@ struct PackCard: View {
             if Self.lands(old.state, new.state, ready: old.ready) {
                 landings += 1
                 Sound.shared.play(.solve)
+                // An approved Ask to Buy landing here is said by the landing, not the dock.
+                store.said(offer)
             }
         }
         .sensoryFeedback(.success, trigger: landings)
@@ -1132,6 +1138,8 @@ struct PackDock: View {
     var held: Double?
     /// The card covers it.
     var paused = false
+    /// A card or the settings sheet is over it, so an approval waits to be said until it shows.
+    var covered = false
     var store = Store.shared
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -1139,8 +1147,13 @@ struct PackDock: View {
         VStack(spacing: 10) {
             let owned = Pack.sold().filter { store.state($0) == .owned }
             HStack {
-                Text(owned.isEmpty ? "PACKS \u{00B7} PAID ADD-ONS" : "PACKS").font(.mono(.caption2, .semibold)).tracking(2)
-                    .opacity(0.38)
+                if let yours = store.approved.first {
+                    Text(yours.yours).font(.mono(.caption2, .semibold)).tracking(1).foregroundStyle(yours.glow)
+                        .shadow(color: yours.glow.opacity(0.6), radius: 4).transition(.opacity)
+                } else {
+                    Text(owned.isEmpty ? "PACKS \u{00B7} PAID ADD-ONS" : "PACKS").font(.mono(.caption2, .semibold)).tracking(2)
+                        .opacity(0.38).transition(.opacity)
+                }
                 Spacer()
                 if typeSize < .xxLarge, owned.count < Pack.sold().count {
                     Text("first 3 levels of each free").font(.mono(.caption2)).opacity(0.3)
@@ -1149,6 +1162,16 @@ struct PackDock: View {
             .padding(.horizontal, 20)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
+            .animation(.easeInOut(duration: 0.4), value: store.approved.first)
+            .task(id: Saying(offer: store.approved.first, covered: covered)) {
+                // Held under UNSTIR_CLOCK, for its shot.
+                guard let offer = store.approved.first, !covered else { return }
+                AccessibilityNotification.Announcement(offer.yours).post()
+                guard held == nil else { return }
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { return }
+                store.said(offer)
+            }
             HStack(alignment: .top, spacing: 0) {
                 // Complete only while it costs less than the packs left: owned, it saves nothing.
                 let shelf = Offer.shelf().filter { $0 != .complete || store.saving != nil }
@@ -1201,5 +1224,10 @@ struct PackDock: View {
         .overlay(alignment: .top) {
             Rectangle().fill(Offer.complete.gradient).frame(height: 0.5).opacity(0.45).padding(.horizontal, 20)
         }
+    }
+
+    private struct Saying: Equatable {
+        let offer: Offer?
+        let covered: Bool
     }
 }

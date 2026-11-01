@@ -257,7 +257,8 @@ struct MenuView: View {
                 if !Offer.shelf().isEmpty {
                     // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
                     PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle)
+                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle,
+                             covered: card != nil || settings)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }

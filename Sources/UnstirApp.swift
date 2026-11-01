@@ -154,6 +154,8 @@ struct Harness {
     let canPay: Bool
     /// UNSTIR_RESTORED=lens,prism (none, failed): what the last restore found.
     let restored: Restored?
+    /// UNSTIR_APPROVED=lens (or complete): with the store's states set, that offer's Ask to Buy approval waits to be said.
+    let approved: [Offer]
 
     /// UNSTIR_STOPLOOK=left: what an Escapement tank lost to its last clock stopping shows (`StopLook`), stamp unset.
     let stopLook: StopLook?
@@ -226,6 +228,7 @@ struct Harness {
         case "failed": .failed
         case let names?: .found(Set(names.split(separator: ",").compactMap { Pack(rawValue: String($0)) }))
         }
+        approved = env["UNSTIR_APPROVED"]?.split(separator: ",").compactMap { Offer(name: String($0)) } ?? []
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE", "PACK"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
@@ -389,7 +392,7 @@ struct RootView: View {
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
-                                 restored: h.restored)
+                                 restored: h.restored, approved: h.approved)
         }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
         _level = State(initialValue: h.screen == "menu" || gate != nil ? nil : h.level)
