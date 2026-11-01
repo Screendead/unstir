@@ -339,8 +339,7 @@ struct MenuView: View {
                              detail: kept.map { "continue \u{00B7} tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)" }
                                  ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
                              best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true,
-                             new: new && kept == nil,
-                             pick: pick, refuse: refuse)
+                             new: new && kept == nil, continues: kept != nil, pick: pick, refuse: refuse)
                         .overlay(alignment: .trailing) { if kept != nil { newRun } }
                 }
                 if lead.sandboxFirst { sandbox }
@@ -848,6 +847,8 @@ private struct LevelRow: View {
     var gate: Tier?
     /// The daily and endless, until either is first opened.
     var new = false
+    /// Endless's row while a run is saved.
+    var continues = false
     let pick: (Level) -> Void
     /// A tap on a locked row: false while a stir is under the finger.
     let refuse: () -> Bool
@@ -913,7 +914,7 @@ private struct LevelRow: View {
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs,
-                                    gate: gate, started: tried, new: new)))
+                                    gate: gate, started: tried || continues, new: new)))
         .rowHairline(level.colour, max(lit, frontier ? 0.75 : 0))
         .onAppear {
             guard flash, !reduceMotion else { return }

@@ -1973,6 +1973,9 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value, "new")
         XCTAssertEqual(Spoken.row(.endless(Run(seed: 7)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value,
                        "new")
+        let continued = Spoken.row(.endless(Run(seed: 7, tank: 5)), result: nil, tanks: 9, detail: "continue \u{00B7} tank 6 \u{00B7} brim 3",
+                                   enabled: true, needs: nil, started: true)
+        XCTAssertEqual([continued.value, continued.hint], ["run in progress", "continue, tank 6, brim 3"])
         XCTAssertEqual(Spoken.next(seventh), "Next: level 7, \(seventh.title)")
         XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
         XCTAssertEqual(Spoken.back(first), "Back to levels")

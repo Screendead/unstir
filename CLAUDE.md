@@ -710,7 +710,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
   the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
-  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "tried" (started, no best),
+  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
   "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, par
   every Plughole level first") and hint (its rods and par), the menu's next button (`Spoken.next`: "Next:
   level 2, Drip"), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
