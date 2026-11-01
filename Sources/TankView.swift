@@ -829,8 +829,10 @@ struct LevelView: View {
     private let frozenBreath: Double?
     /// UNSTIR_REST: seconds at rest before a drawn fingertip lands.
     private let rest: Double
-    /// When a first tap armed the reset control, which then says "reset? tap again" for `ResetArm.window`.
+    /// When a first tap armed the reset control, which then says "reset? tap again" for `ResetArm.window`, or under
+    /// VoiceOver until a move or focus leaves it.
     @State private var armedAt: Date?
+    @AccessibilityFocusState private var resetFocused: Bool
     /// UNSTIR_RESETARMED: the control armed for good, for stills.
     private let holdArmed: Bool
     /// The swirl's breath while the tank rests, and the last one a touch, the opening or the win cut, fading out.
@@ -842,6 +844,7 @@ struct LevelView: View {
     @State private var lifted = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityDimFlashingLights) private var dimFlashing
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     /// Under Reduce Motion the opening fades through black, by this much, in place of the wind-in.
     @State private var curtain = 0.0
     /// A live picture: its clock starts at zero on every visit.
@@ -1255,19 +1258,23 @@ struct LevelView: View {
             .buttonStyle(Sounding(effect: armedAt != nil || game.history.isEmpty ? .reset : .tap))
             .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
             .disabled(settling)
+            .accessibilityFocused($resetFocused)
             .task(id: armedAt) {
-                guard armedAt != nil, !holdArmed, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
+                // VoiceOver's announcement and its double tap take longer than the window.
+                guard armedAt != nil, !holdArmed, !voiceOver,
+                      (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
                 armedAt = nil
             }
             // Any move, undo or finish disarms it, so a second tap always resets what the first was shown.
             .onChange(of: game.history) { if !holdArmed { armedAt = nil } }
             .onChange(of: game.finished) { armedAt = nil }
+            .onChange(of: resetFocused) { if !resetFocused && voiceOver { armedAt = nil } }
     }
 
     /// The play screen's reset asks for a second tap; the cards' "again" resets at once, as a finished tank has nothing
     /// a slip could lose.
     private func tapReset() {
-        let tap = ResetArm.tap(now: .now, armedAt: armedAt, played: !game.history.isEmpty)
+        let tap = ResetArm.tap(now: .now, armedAt: armedAt, played: !game.history.isEmpty, held: voiceOver)
         armedAt = tap.armedAt
         if tap.reset { reset() } else { AccessibilityNotification.Announcement("Tap again to reset").post() }
     }
@@ -2453,13 +2460,14 @@ struct LevelView: View {
 }
 
 /// The reset control's two taps (Jack's call C12, round 13): with moves played, a first tap arms it and only a second
-/// within `window` resets; with nothing played it resets at once, as that only replays the opening.
+/// within `window` resets; with nothing played it resets at once, as that only replays the opening. `held`, under
+/// VoiceOver, keeps the arm past the window, until a move or focus leaving the control disarms it.
 enum ResetArm {
     static let window: TimeInterval = 2
 
-    static func tap(now: Date, armedAt: Date?, played: Bool) -> (reset: Bool, armedAt: Date?) {
+    static func tap(now: Date, armedAt: Date?, played: Bool, held: Bool = false) -> (reset: Bool, armedAt: Date?) {
         guard played else { return (true, nil) }
-        if let armedAt, now.timeIntervalSince(armedAt) < window { return (true, nil) }
+        if let armedAt, held || now.timeIntervalSince(armedAt) < window { return (true, nil) }
         return (false, now)
     }
 }

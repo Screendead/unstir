@@ -179,6 +179,9 @@ final class UnstirTests: XCTestCase {
         let late = ResetArm.tap(now: t0 + 2.1, armedAt: armed, played: true)
         XCTAssertFalse(late.reset)
         XCTAssertEqual(late.armedAt, t0 + 2.1)
+        // Under VoiceOver the arm holds past the window.
+        XCTAssertTrue(ResetArm.tap(now: t0 + 30, armedAt: armed, played: true, held: true).reset)
+        XCTAssertFalse(ResetArm.tap(now: t0, armedAt: nil, played: true, held: true).reset)
         XCTAssertTrue(ResetArm.tap(now: t0, armedAt: nil, played: false).reset)
         XCTAssertNil(ResetArm.tap(now: t0, armedAt: nil, played: false).armedAt)
     }
