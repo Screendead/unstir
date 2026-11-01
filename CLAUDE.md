@@ -566,7 +566,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   out a level different whichever vignettes had played, which the Mac never showed: keep a cloud bank inside the
   tank's width.
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
-  Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
+  Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu, once plughole 09 is solved, a pack is owned or asked
+  for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and Complete; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
   (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused where it stands under a card or the settings sheet, while `Power` saves

@@ -133,7 +133,7 @@ film prism-05-solve 24 "$tank,fps=1.5,scale=200:-1,tile=9x4:padding=4" PACK=pris
   MOVES=0:+3,1:-2,0:-4,2:-5,3:-4,4:-3,2:+3
 # The pack dock on the menu, Lens's cover tapped, its card grown out of it and its clip played through, then back
 # (UNSTIR_SHELFDEMO, through the calls a finger makes).
-film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned
+film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=lens:unowned BESTS=plughole:000000000
 # Each card's clip (`Clip`), twice round its loop.
 clip=crop=1100:1180:110:610  # the card's clip and First Stir's time under it
 # A Debug build bakes Lens's halftone some 20 s the first time a size is asked for; one launch caches it for the films.
@@ -147,7 +147,7 @@ film clip-escapement 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=esca
 film clip-prism 16 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=prism STORE=lens:unowned
 film clip-complete 18 "$clip,fps=3,scale=200:-1,tile=12x4:padding=4" CARD=complete STORE=lens:unowned
 # The menu's dock of covers, which keep their own loops.
-film shelf-dock 9 "crop=1320:420:0:2380,fps=2,scale=440:-1,tile=4x4:padding=4" STORE=lens:unowned
+film shelf-dock 9 "crop=1320:420:0:2380,fps=2,scale=440:-1,tile=4x4:padding=4" STORE=lens:unowned BESTS=plughole:000000000
 # Escapement 1: the demonstration a first-time player sees before the first stir (a heal ticks the clock, a wait ticks it
 # again, then the problem winds in), and lines played by a drawn fingertip: won, and a slip whose tick pushes, played on
 # until the ticks run out. A ratchet's move (0:1) is a tap on it. Screen, so the header's budget shows with the tank.

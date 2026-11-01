@@ -1115,6 +1115,13 @@ private struct PulsingDot: View {
 /// The menu's shelf: a live cover per pack and Complete along the bottom, each opening its card. Out of step, so the
 /// dock never stirs all at once.
 struct PackDock: View {
+    /// The dock waits for plughole 09 (Jack's call C5, round 13). A pack owned or asked for keeps it after a reinstall
+    /// that lost the bests.
+    static func shown(best: (String) -> Best? = Best.load, unlocked: Bool = Best.unlocked,
+                      state: (Pack) -> Purchase = { Store.shared.state($0) }) -> Bool {
+        best(Level.plughole[8].id) != nil || unlocked || Pack.sold().contains { ![.unowned, .failed].contains(state($0)) }
+    }
+
     let open: (Offer, UnitPoint) -> Void
     var held: Double?
     /// The card covers it.

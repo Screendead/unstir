@@ -254,7 +254,7 @@ struct MenuView: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !Offer.shelf().isEmpty {
+                if !Offer.shelf().isEmpty && PackDock.shown() {
                     // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
                     PackDock(open: { show($0, from: $1) }, held: clock,
                              paused: card != nil || settings || Power.shared.saving || Power.shared.idle)

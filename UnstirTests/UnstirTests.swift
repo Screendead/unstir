@@ -1343,6 +1343,23 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(daily.title.contains(date.formatted(.dateTime.weekday(.abbreviated))), daily.title)
     }
 
+    /// The pack dock waits for plughole 09, unless a pack is owned or asked for, or the developer unlock is on.
+    @MainActor func testTheDockWaitsForLevelNine() {
+        func solved(_ n: Int) -> (String) -> Best? {
+            let ids = Set(Level.plughole.prefix(n).map(\.id))
+            return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+        }
+        let none: (Pack) -> Purchase = { _ in .unowned }
+        XCTAssertFalse(PackDock.shown(best: solved(8), unlocked: false, state: none))
+        XCTAssertTrue(PackDock.shown(best: solved(9), unlocked: false, state: none))
+        XCTAssertTrue(PackDock.shown(best: solved(0), unlocked: true, state: none))
+        let pack = Pack.sold()[0]
+        for (state, shown) in [(Purchase.owned, true), (.pending, true), (.revoked, true), (.failed, false), (.unowned, false)] {
+            XCTAssertEqual(PackDock.shown(best: solved(0), unlocked: false, state: { $0 == pack ? state : .unowned }), shown,
+                           "\(state)")
+        }
+    }
+
     /// The gate lists what is short of par as runs, each opening at a level the player can open.
     func testTheGateListsTheLevelsShortOfParAsRuns() {
         var bests: [String: Best] = [:]

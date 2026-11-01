@@ -63,6 +63,8 @@ shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, h
   TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33
 # Where the list opens: a cold launch, and back from a level through RootView's own exit (UNSTIR_EXIT).
 upto13=0000000000000
+# What the menu leads with (C4, C5, C18, C3's tried mark).
+shot menu-no-dock "Plughole 01 to 08 solved: no pack dock yet." BESTS=plughole:00000000
 shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
   BESTS=plughole:$upto13
 shot menu-locktap "Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit." \
@@ -477,9 +479,12 @@ if [[ -z "$pattern" || card-lens == *$pattern* || clip-lens == *$pattern* || she
 fi
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in. Prices are the StoreKit configuration's, as a US storefront shows them.
-shot shelf-menu "Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
+# The dock shows once plughole 09 is solved.
+nine=000000000
+shot shelf-menu "Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." \
+  STORE=lens:unowned CLOCK=5.4 BESTS=plughole:$nine
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
-  OWNED=lens STORE=escapement:pending CLOCK=5.4
+  OWNED=lens STORE=escapement:pending CLOCK=5.4 BESTS=plughole:$nine
 for state in unowned owned pending failed revoked; do
   shot card-lens-$state "Lens's card, $state." CARD=lens STORE=lens:$state CLOCK=5.4
 done
@@ -546,7 +551,7 @@ shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's mag
 shot card-lens-replay "Lens's card, unowned, the taste played: replay 01-03 in try free's place." \
   CARD=lens STORE=lens:unowned BESTS=lens:000 CLOCK=5.4
 shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
-  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5 BESTS=plughole:$nine
 shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
   CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
 shot card-lens-xxxl "Lens's card at xxxLarge, the largest size short of the accessibility ones: each key whole beside its fact." \
