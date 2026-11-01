@@ -160,6 +160,14 @@ struct MenuView: View {
     @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
     @State private var list = CGRect.zero
+    @State private var scroller: ScrollViewProxy?
+    /// The list has opened on its focus.
+    @State private var arrived = false
+    /// Mid-switch, the incoming tier's landing row in its list's own space, measured on the stirred copy: the scroll
+    /// view still holds the outgoing list, so it scrolls to a mark placed there instead.
+    @State private var mark: CGRect?
+    /// The mark has moved and the list scrolls to it once it is laid out there.
+    @State private var arriving = false
     @Namespace private var strip
     /// The gear's sheet; UNSTIR_SETTINGS=1 opens with it up.
     @State private var settings: Bool
@@ -205,7 +213,7 @@ struct MenuView: View {
         let asking = analytics.asks && analytics.consent == .undecided
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center) {
-                title
+                title.simultaneousGesture(swipe)
                 Spacer(minLength: 8)
                 Button { settings = true } label: {
                     Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
@@ -215,17 +223,13 @@ struct MenuView: View {
                 .accessibilityLabel("Settings")
             }
             .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
-            tiers.padding(.top, 6)
+            // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
+            tiers.padding(.top, 6).scrollDisabled(true).simultaneousGesture(swipe)
             ScrollViewReader { proxy in
                 ScrollView { rows(modes: modes) }
                 .onAppear {
-                    // Unanimated, under the dip that brings the menu in; a tick on, once the rows are laid out.
-                    DispatchQueue.main.async {
-                        if let focus, listed.levels.contains(where: { $0.id == focus.id }) {
-                            proxy.scrollTo(focus.id, anchor: .center)
-                        }
-                        flashing = nil
-                    }
+                    scroller = proxy
+                    arrive()
                 }
             }
             // Once a drag is taken as sideways, the list stops scrolling under the stir.
@@ -269,7 +273,7 @@ struct MenuView: View {
     private func rows(modes: Bool) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Every stir in this tank has an exact inverse.")
-                .font(.mono(13)).opacity(0.55).padding(.top, 10)
+                .font(.mono(13)).opacity(0.55).padding(.top, 10).id(Self.top)
             // Daily and endless say what opens them while they're shut.
             let shut = "opens after plughole \(Level.plughole[22].label)"
             LevelRow(level: Level.daily(), detail: modes ? nil : shut, enabled: modes, pick: pick, refuse: refuse)
@@ -280,8 +284,20 @@ struct MenuView: View {
             LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                      pick: pick, refuse: refuse)
             TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held).equatable()
+                .overlay(alignment: .topLeading) {
+                    Color.clear.frame(width: 1, height: mark?.height ?? 1).id(Self.mark)
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { _ in
+                            guard arriving else { return }
+                            arriving = false
+                            scroller?.scrollTo(Self.mark, anchor: .center)
+                        }
+                        .padding(.top, mark?.minY ?? 0)
+                }
                 .opacity(twisting ? 0 : 1)
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { list = $0 }
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: {
+                    list = $0
+                    arrive()
+                }
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 28)
@@ -319,9 +335,10 @@ struct MenuView: View {
         let w = list.width, top = band.lowerBound, h = band.upperBound - top
         return ZStack(alignment: .top) {
             if twisting {
-                TierList(tier: shown, pick: pick, refuse: refuse).equatable()
+                TierList(tier: shown, pick: pick, refuse: refuse, report: reach).equatable()
                     .fixedSize(horizontal: false, vertical: true).frame(width: w)
-                    .alignmentGuide(.top) { _ in top }
+                    // An alignment guide on a lone child moves nothing, so the copy drew the list from its top.
+                    .offset(y: -top)
             }
         }
         .frame(width: w, height: h, alignment: .top)
@@ -421,6 +438,10 @@ struct MenuView: View {
     }
 
     private func select(_ t: Tier) {
+        if t == shown, !busy {
+            withAnimation(.snappy(duration: 0.5)) { land(on: t) }
+            return
+        }
         guard let from = Tier.allCases.firstIndex(of: shown), let to = Tier.allCases.firstIndex(of: t) else { return }
         go(to: t, turning: to > from ? 1 : -1)
     }
@@ -437,6 +458,9 @@ struct MenuView: View {
             fade = dim
         } completion: {
             shown = t
+            // Under the stir's peak, so the jump never shows: a landing row scrolls in once the copy has measured it.
+            mark = nil
+            if t.landing() == nil { scroller?.scrollTo(Self.top, anchor: .top) }
             spin = -dir * turn
             withAnimation(.easeOut(duration: 0.62)) {
                 spin = 0
@@ -446,6 +470,32 @@ struct MenuView: View {
                 busy = false
             }
         }
+    }
+
+    private static let top = "top", mark = "mark"
+
+    /// Unanimated, under the dip that brings the menu in, once the rows are laid out and the scroll view's reader is in
+    /// hand, whichever comes last.
+    private func arrive() {
+        guard !arrived, let scroller, list.height > 0 else { return }
+        arrived = true
+        DispatchQueue.main.async {
+            if let focus, listed.levels.contains(where: { $0.id == focus.id }) { scroller.scrollTo(focus.id, anchor: .center) }
+            flashing = nil
+        }
+    }
+
+    /// The tier's landing row centred, or the top where it has none.
+    private func land(on t: Tier) {
+        if let row = t.landing() { scroller?.scrollTo(row.id, anchor: .center) } else { scroller?.scrollTo(Self.top, anchor: .top) }
+    }
+
+    /// The stirred copy's landing row, measured. Mid-switch, the mark moves there and the outgoing list scrolls to it,
+    /// so the incoming list unstirs, and is then rebuilt, centred on its landing.
+    private func reach(_ row: CGRect) {
+        guard shown != listed, mark == nil else { return }
+        mark = row
+        arriving = true
     }
 
     /// A drag is the strip's once its first 15 points run at least twice as far sideways as up or down; the scroll view
@@ -541,23 +591,31 @@ private struct TierList: View, Equatable {
     var flash: String?
     /// UNSTIR_LOCKTAP: the locked row held tapped.
     var held: String?
+    /// Given the landing row's frame in the list's own space, once laid out.
+    var report: ((CGRect) -> Void)?
 
     nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier }
+
+    private static let space = "tierList"
 
     var body: some View {
         let open = tier.isOpen()
         return VStack(alignment: .leading, spacing: 0) {
             header(open: open)
             if !open, let below = tier.below { gate(below) }
-            let levels = tier.levels, frontier = tier.frontier()
+            let levels = tier.levels, frontier = tier.frontier(), landing = report == nil ? nil : tier.landing()
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
                 let reached = Best.unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
                 let opens = !open ? tier.below.map { "par every \($0.rawValue) level to open" }
                     : reached ? nil : "solve \(levels[i - 1].label) to open"
                 LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,
                          flash: level.id == flash, held: level.id == held, pick: pick, refuse: refuse)
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
+                        if level.id == landing?.id { report?(frame) }
+                    }
             }
         }
+        .coordinateSpace(.named(Self.space))
     }
 
     /// The tier's rule, named, with its progress.

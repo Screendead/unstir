@@ -11,6 +11,8 @@ menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred 
 menu-locktap.png  Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit.
 menu-back-left.png  Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12.
 menu-back-solved.png  Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens.
+menu-mid-switch-scrolled.png  The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top.
+menu-switch-landing.png  Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir.
 menu-back-up.png  Up a notch from plughole 27 into whirlpool 01, then back: the menu on whirlpool, not plughole.
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
 grid-d2.png  grid, depth-2 scramble 1:+5,2:-4 (rod:steps, 30 degrees per step, bottom first).

@@ -596,13 +596,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   takes property keys of up to 40 characters and event names of up to 60, cuts strings at 180, and drops without an
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
-  scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
-  dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
+  keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
+  list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
   (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
   at the swap. A drag is the switcher's only if its first 15 points run at least twice as far sideways as up or down
   (`isSideways`); then the list stops scrolling, and a row lifted over doesn't open. While it turns, the list is drawn
   again over the scroll view, cut to its visible part, and that copy is what stirs; the scroll view's own list
-  (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. A locked tier can be
+  (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. At the swap the scroll
+  view lands on the new tier's landing, or its top where it has none: the copy reports where that row lies in its
+  list, a mark in the outgoing list moves there, and the scroll view scrolls to it once it is laid out, so the jump
+  happens under the stir's peak. Tapping the picked tier scrolls to its landing. A locked tier can be
   looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par, and under the
   ticks the levels short of par as runs (`Tier.short`: "short: 05 · 12 · 21–27"), each a button opening its first,
   which is always open. A closed row
