@@ -361,15 +361,9 @@ struct ClipTank: View {
         }
         let ratchet = LevelView.ratchetSize(core)
         return ZStack {
-            Group {
-                if let scene = level.story?.scene {
-                    SceneLayer(scene: scene, played: f.played, wound: f.wound, count: level.scramble.count, side: side)
-                } else {
-                    PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: t)
-                }
-            }
-            .modifier(unstirred)
-            .clipShape(Circle())
+            LevelPicture(level: level, played: f.played, wound: f.wound, side: side, clock: t)
+                .modifier(unstirred)
+                .clipShape(Circle())
             if let e = level.clocks.first?.rod, !f.finished {
                 ClockHint(radius: disc(e)).position(at(e))
             }
@@ -422,6 +416,24 @@ struct ClipTank: View {
         }
         .frame(width: side, height: side)
         .scaleEffect(f.solved.map { 1 + 0.02 * sin(min($0.s / 0.9, 1) * .pi) } ?? 1)
+    }
+}
+
+/// A level's picture as the game draws it: its story's scene, with `played` of its vignettes and `wound` of its
+/// scramble's entries gone, or its picture, black until a bake lands.
+struct LevelPicture: View {
+    let level: Level
+    var played: Set<Int> = []
+    var wound = 0
+    let side: CGFloat
+    var clock = 0.0
+
+    var body: some View {
+        if let scene = level.story?.scene {
+            SceneLayer(scene: scene, played: played, wound: wound, count: level.scramble.count, side: side)
+        } else {
+            PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock)
+        }
     }
 }
 
