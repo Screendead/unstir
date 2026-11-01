@@ -676,8 +676,10 @@ final class Game {
         finish(healed: healed)
     }
 
-    /// Every level of this level's pack, or of the last tier, has a best.
+    /// Every level of this level's pack, or of the last tier, has a best. A pack short of its plan isn't complete: its
+    /// card still promises the rest.
     private var completion: Completion? {
+        if let p = level.pack, p.levels.count < p.planned { return nil }
         let (list, done): ([Level], Completion) = if let p = level.pack { (p.levels, .pack(p)) } else {
             (Tier.allCases.last!.levels, .free)
         }
