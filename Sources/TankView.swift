@@ -1014,6 +1014,9 @@ struct LevelView: View {
     let onPeek: (Bool?) -> Void
     /// The back swipe's touch, by its global start, and what it decided.
     @State private var swipeTouch: (start: CGPoint, call: BackSwipe)?
+    /// The same decision as the tank's gesture saw it, by the touch's start in the tank's points: once made it holds,
+    /// though a swipe's later course may no longer read as one.
+    @State private var edgeTouch: (start: CGPoint, call: BackSwipe)?
     /// The system can cancel the swipe's touch, which its onEnded never sees.
     @GestureState private var swipeHeld = false
     /// How far across the screen the back swipe has slid the level, 0 to 1.
@@ -2471,8 +2474,14 @@ struct LevelView: View {
             .onChanged { v in
                 // A touch from the screen's left edge is the back swipe's until it decides; one it passes is taken up
                 // from where it landed, before it skips the opening.
-                if drag?.start != v.startLocation,
-                   BackSwipe.decide(start: global(v.startLocation), translation: v.translation) != .pass { return }
+                if drag?.start != v.startLocation, global(v.startLocation).x < BackSwipe.band {
+                    if edgeTouch?.start != v.startLocation {
+                        let call = BackSwipe.decide(start: global(v.startLocation), translation: v.translation)
+                        guard call != .undecided else { return }
+                        edgeTouch = (v.startLocation, call)
+                    }
+                    guard edgeTouch?.call == .pass else { return }
+                }
                 guard !settling, !game.finished, !swipedAway, v.startLocation != skippedDemo else { return }
                 // A touch skips the opening as it lands, then takes up what it landed on; one that skips the clock's
                 // demonstration holds nothing, as the problem has still to wind in.
