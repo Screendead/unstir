@@ -478,7 +478,7 @@ shot card-lens-complete-failed "Lens's card after Complete, bought from it, fail
   CARD=lens STORE=complete:failed CLOCK=5.4
 shot card-complete-owned "Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, play First Stir 01 (a Debug build sells it)." \
   CARD=complete OWNED=complete CLOCK=5.4
-shot card-lens-complete-pending "Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line dimmed." \
+shot card-lens-complete-pending "Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled." \
   CARD=lens STORE=complete:pending CLOCK=5.4
 shot card-lens-asked-offline "Lens's card after asking again offline: still waiting for approval, asked, no connection under it." \
   CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
