@@ -3111,9 +3111,9 @@ struct ResultCard: View {
                 }
             }
             .font(.mono(15, .medium))
-            if game.level.id.hasPrefix("daily-") {
+            if let day = Share.day(of: game.level.id) {
                 TimelineView(.everyMinute) { t in
-                    Text(Daily.untilNext(now: now ?? t.date)).font(.mono(12)).opacity(0.55)
+                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.mono(12)).opacity(0.55)
                 }
             }
             if let up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil) {

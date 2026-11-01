@@ -1436,14 +1436,18 @@ final class UnstirTests: XCTestCase {
         func at(_ m: Int, _ d: Int, _ h: Int, _ min: Int) throws -> Date {
             try XCTUnwrap(c.date(from: DateComponents(year: 2026, month: m, day: d, hour: h, minute: min)))
         }
-        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 17, 0), calendar: c), "next daily in 7 h")
-        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 23, 30), calendar: c), "next daily in 30 min")
-        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 23, 59), calendar: c), "next daily in 1 min")
-        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 22, 40), calendar: c), "next daily in 1 h")
-        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 0, 0), calendar: c), "next daily in 24 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 17, 0), calendar: c), "next daily in 7 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 23, 30), calendar: c), "next daily in 30 min")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 23, 59), calendar: c), "next daily in 1 min")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 22, 40), calendar: c), "next daily in 1 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 0, 0), calendar: c), "next daily in 24 h")
         // The clocks go forward an hour on 29 March and back on 25 October.
-        XCTAssertEqual(Daily.untilNext(now: try at(3, 29, 0, 0), calendar: c), "next daily in 23 h")
-        XCTAssertEqual(Daily.untilNext(now: try at(10, 25, 0, 0), calendar: c), "next daily in 25 h")
+        XCTAssertEqual(Daily.untilNext(day: 20260329, now: try at(3, 29, 0, 0), calendar: c), "next daily in 23 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261025, now: try at(10, 25, 0, 0), calendar: c), "next daily in 25 h")
+        // Sunday's daily solved, or its card still up, past midnight: Monday's is out, and the card counts from Sunday's.
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 2, 0, 5), calendar: c), "next daily is out")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 2, 0, 0), calendar: c), "next daily is out")
+        XCTAssertEqual(Daily.untilNext(day: 20261102, now: try at(11, 2, 0, 5), calendar: c), "next daily in 24 h")
     }
 
     /// The gate lists what is short of par as runs, each opening at a level the player can open.

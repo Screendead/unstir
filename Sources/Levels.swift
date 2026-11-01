@@ -406,11 +406,14 @@ struct SplitMix64: RandomNumberGenerator {
 }
 
 enum Daily {
-    /// Until the next local midnight, when the day's id and so its tank change: "next daily in 7 h", hours to the
-    /// nearest; under an hour, minutes. Tomorrow's start of day, so a day the clocks change on is 23 or 25 hours long.
-    static func untilNext(now: Date = .now, calendar: Calendar = Calendar(identifier: .gregorian)) -> String {
-        let midnight = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: now)!)
+    /// Until the local midnight that ends `day` (a daily's yyyymmdd), when the id and so the tank change: "next daily in
+    /// 7 h", hours to the nearest; under an hour, minutes; past it, "next daily is out", since the menu has dealt it. The
+    /// next day's start, so a day the clocks change on is 23 or 25 hours long.
+    static func untilNext(day: Int, now: Date = .now, calendar: Calendar = Calendar(identifier: .gregorian)) -> String {
+        let start = calendar.date(from: DateComponents(year: day / 10000, month: day / 100 % 100, day: day % 100))!
+        let midnight = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: start)!)
         let s = midnight.timeIntervalSince(now)
+        guard s > 0 else { return "next daily is out" }
         let minutes = max(1, Int((s / 60).rounded()))
         return minutes < 60 ? "next daily in \(minutes) min" : "next daily in \(max(1, Int((s / 3600).rounded()))) h"
     }
