@@ -15,19 +15,10 @@ extension LevelView {
     }
 }
 
-/// Every level's started flag, which a commit on any level that keeps progress writes, forgotten, so a test opens each
-/// level as its first try whatever ran before it.
-func forgetStarted() {
-    for key in UserDefaults.standard.dictionaryRepresentation().keys where key.hasPrefix("started.") {
-        UserDefaults.standard.removeObject(forKey: key)
-    }
-}
-
 final class UnstirTests: XCTestCase {
     /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full, never
-    /// refilled or anchored, the tank never turned and no level tried.
+    /// refilled or anchored and the tank never turned (`FreshDefaults` sees to the levels tried).
     override func setUp() {
-        forgetStarted()
         UserDefaults.standard.removeObject(forKey: "undos.spent")
         UserDefaults.standard.removeObject(forKey: "undos.day")
         UserDefaults.standard.removeObject(forKey: "undos.anchor")
@@ -121,7 +112,6 @@ final class UnstirTests: XCTestCase {
     /// Jack's call C3 (round 13): a level counts as tried on its first committed move, a turn, a tank turn or a wait;
     /// a look, a refused turn and the clock's demonstration try nothing.
     @MainActor func testALookIsFree() throws {
-        defer { forgetStarted() }
         let plughole = Level.plughole[0]
         let look = Game(level: plughole, bank: (10, nil))
         XCTAssertFalse(Best.started(plughole.id))
