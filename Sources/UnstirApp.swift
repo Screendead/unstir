@@ -197,6 +197,8 @@ struct Harness {
                 if let over = c.wholeNumberValue { Best(over: over, seconds: 60).fake(level.id) }
             }
         }
+        // UNSTIR_TRIED=L14,lens-2: those levels started, for this launch only.
+        for id in env["UNSTIR_TRIED"]?.split(separator: ",") ?? [] { Best.start(String(id), store: false) }
         tierDemo = env["UNSTIR_TIERDEMO"] == "1"
         let spin = env["UNSTIR_TIERSPIN"]?.split(separator: ":").compactMap { Double($0) } ?? []
         tierSpin = spin.first.map { ($0, spin.count > 1 ? spin[1] : 0) }

@@ -668,7 +668,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs.
-- **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
+- **Menu.swift** holds `MenuView`. A row with a committed move and no best reads tried, faint, as a pack card's list
+  does (Jack's call C3, round 13). Under the title, a strip names every tier, dimmed with a lock while locked, and
   keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
   list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
   (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
@@ -779,7 +780,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tiers through the same calls a finger makes. `UNSTIR_EXIT=left` leaves the harness's level for the menu a second
   after it opens, through `RootView`'s own exit (`=solved` as its result card does after a solve; `=up` opens the next
   tier's first level, as "up a notch" does, then leaves that). `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
-  leaves it, saying what opens it. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  leaves it, saying what opens it. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, for that launch only. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which

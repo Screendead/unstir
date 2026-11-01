@@ -64,6 +64,7 @@ shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, h
 # Where the list opens: a cold launch, and back from a level through RootView's own exit (UNSTIR_EXIT).
 upto13=0000000000000
 # What the menu leads with (C4, C5, C18, C3's tried mark).
+shot menu-tried "Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row." BESTS=plughole:$upto13 TRIED=L14
 shot menu-no-dock "Plughole 01 to 08 solved: no pack dock yet." BESTS=plughole:00000000
 shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
   BESTS=plughole:$upto13
@@ -525,6 +526,8 @@ shot card-lens-asked-offline "Lens's card after asking again offline: still wait
   CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
 shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
   CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
+shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row." \
+  CARD=lens OWNED=lens BESTS=lens:0 TRIED=lens-2 CARDSCROLL=1 CLOCK=5.4
 shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \
   OWNED=complete CLOCK=5.4
 shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4

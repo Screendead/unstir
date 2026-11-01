@@ -837,6 +837,7 @@ struct PackCard: View {
                     heading(chapter, of: levels.filter { $0.chapter == chapter }).padding(.top, i == 0 ? 0 : 18)
                 }
                 let open = store.access(level) != .needsCard, best = Best.load(level.id)
+                let tried = best == nil && Best.started(level.id)
                 // A locked row points at buying rather than doing nothing.
                 Button {
                     if open { return onPlay(level) }
@@ -856,6 +857,8 @@ struct PackCard: View {
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.mono(.caption2))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
+                        } else if tried {
+                            Text("tried").font(.mono(.caption2)).opacity(0.4)
                         }
                     }
                     .padding(.vertical, 9)
@@ -865,8 +868,8 @@ struct PackCard: View {
                 }
                 .buttonStyle(Sounding())
                 .rowHairline(offer.glow, level.id == focus?.id ? lit : 0, inset: 10)
-                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" } ?? ""
-                                    : "locked, needs the pack")
+                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" }
+                                        ?? (tried ? "tried" : "") : "locked, needs the pack")
                 .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
             }
         }

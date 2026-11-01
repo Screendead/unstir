@@ -769,6 +769,8 @@ private struct LevelRow: View {
 
     var body: some View {
         let result = Best.load(level.id)
+        // A move committed and no best yet; the modes' rows say their own.
+        let tried = result == nil && level.run == nil && !level.sandbox && Best.started(level.id)
         let rods = level.layout.base.map { "\($0.rods.count) rods + swirl" } ?? "\(level.layout.rods.count) rods"
         let saying = (said || held) && opens != nil
         return Button { enabled ? pick(level) : tapped() } label: {
@@ -798,6 +800,8 @@ private struct LevelRow: View {
                         Text("par").foregroundStyle(Color.amber)
                     } else if let result {
                         Text("+\(result.over)").foregroundStyle(Color.magenta)
+                    } else if tried {
+                        Text("tried").opacity(0.4)
                     }
                 }
                 .font(.mono(11))
@@ -816,7 +820,7 @@ private struct LevelRow: View {
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs,
-                                    gate: gate)))
+                                    gate: gate, started: tried)))
         .rowHairline(level.colour, max(lit, frontier ? 0.75 : 0))
         .onAppear {
             guard flash, !reduceMotion else { return }

@@ -1715,6 +1715,9 @@ final class UnstirTests: XCTestCase {
                                  enabled: true, needs: nil)
         XCTAssertEqual([endless.label, endless.value, endless.hint], ["Endless", "best 1 tank", "deeper every tank, wrong stirs fill the brim"])
         XCTAssertEqual(Spoken.row(.sandbox, result: nil, tanks: 0, detail: "nothing counts", enabled: true, needs: nil).value, "")
+        XCTAssertEqual(Spoken.row(first, result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, started: true).value, "tried")
+        XCTAssertEqual(Spoken.row(first, result: Best(over: 1, seconds: 9), tanks: 0, detail: nil, enabled: true, needs: nil,
+                                  started: true).value, "1 over par")
         XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
         XCTAssertEqual(Spoken.back(first), "Back to levels")
         XCTAssertEqual(Spoken.back(Pack.lens.levels[0]), "Back to Lens")

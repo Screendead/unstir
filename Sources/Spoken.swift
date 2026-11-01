@@ -15,9 +15,10 @@ enum Spoken {
     static func back(_ level: Level) -> String { "Back to " + (level.pack?.name ?? "levels") }
 
     /// A menu row: its name, its result or why it is shut, and its shape. `needs` is the level whose solve opens it, and
-    /// `gate` the tier below a closed tier, every level of which at par opens it.
-    static func row(_ level: Level, result: Best?, tanks: Int, detail: String?, enabled: Bool, needs: Level?, gate: Tier? = nil)
-        -> (label: String, value: String, hint: String) {
+    /// `gate` the tier below a closed tier, every level of which at par opens it. `started`: a move committed, no best
+    /// yet.
+    static func row(_ level: Level, result: Best?, tanks: Int, detail: String?, enabled: Bool, needs: Level?, gate: Tier? = nil,
+                    started: Bool = false) -> (label: String, value: String, hint: String) {
         let numbered = Int(level.label)
         let label = numbered.map { "Level \($0), \(level.title)." } ?? (level.id.hasPrefix("daily-") ? "Today's daily" : level.title)
         let value: String
@@ -33,7 +34,7 @@ enum Spoken {
         } else if let result {
             value = result.clean == true ? "clean" : result.over == 0 ? "at par" : "\(result.over) over par"
         } else {
-            value = level.sandbox ? "" : "not played"
+            value = level.sandbox ? "" : started ? "tried" : "not played"
         }
         let hint = detail.map { $0.replacingOccurrences(of: " \u{00B7} ", with: ", ") } ?? "\(rods(level.layout)), par \(level.par)"
         return (label, value, hint)
