@@ -1562,6 +1562,28 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Log.trimmed(line), line)
     }
 
+    /// A log past the cap, cut through a real file: its newest bytes from a whole line, then whatever was written after
+    /// the read.
+    func testTheLogCutsAFileAndKeepsWhatCameAfterTheRead() throws {
+        let line = Data("09-29 10:11:07.772 touch rod(1) at 0.412,-0.118\n".utf8)
+        let log = Data((0..<30_000).flatMap { _ in line })
+        XCTAssertGreaterThan(log.count, Log.cap)
+        let url = FileManager.default.temporaryDirectory.appending(path: "log-\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try log.write(to: url)
+        let cut = try XCTUnwrap(Log.cut(url))
+        XCTAssertEqual(cut.read, log.count)
+        let late = Data("09-29 10:11:08.001 late\n".utf8)
+        let h = try FileHandle(forWritingTo: url)
+        try h.seekToEnd()
+        try h.write(contentsOf: late)
+        try h.close()
+        Log.replace(url, with: cut.kept, after: cut.read)
+        let back = try Data(contentsOf: url)
+        XCTAssertEqual(back, Log.trimmed(log) + late)
+        XCTAssertEqual(back.prefix(line.count), line)
+    }
+
     /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one.
     /// Whirlpool's prefix predates its name and stays, so the rename kept what was played; maelstrom's set replaced
     /// nightmare+'s, so its prefix moved off N+ and no old best lands on a new level.

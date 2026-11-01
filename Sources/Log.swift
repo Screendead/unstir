@@ -6,18 +6,45 @@ import Foundation
 /// newest `keep` bytes, from a whole line, once it passes `cap`. scripts/pull-log.sh copies it off.
 @MainActor
 enum Log {
-    static let url = URL.libraryDirectory.appending(path: "unstir-log.txt")
+    nonisolated static let url = URL.libraryDirectory.appending(path: "unstir-log.txt")
     nonisolated static let cap = 1 << 20, keep = 512 << 10
-    /// Opened at the first write, before the first frame, so most launches only read the file's size.
-    private static let file: FileHandle? = {
-        if let data = try? Data(contentsOf: url, options: .alwaysMapped), data.count > cap {
-            try? trimmed(data).write(to: url)
-        }
+    /// Opened at the first write, before the first frame; `trim` cuts it back later.
+    private static var file: FileHandle? = open()
+
+    nonisolated private static func open() -> FileHandle? {
         if !FileManager.default.fileExists(atPath: url.path) { FileManager.default.createFile(atPath: url.path, contents: nil) }
         let file = try? FileHandle(forWritingTo: url)
         _ = try? file?.seekToEnd()
         return file
-    }()
+    }
+
+    /// Cuts the log back once it passes `cap`, after the first frame: the read and the cut off the main actor, then on
+    /// it, where no write can land between, the lines written meanwhile added and the file replaced.
+    static func trim() async {
+        guard let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > cap else { return }
+        let url = url
+        guard let done = await Task.detached(priority: .utility, operation: { Log.cut(url) }).value else { return }
+        try? file?.close()
+        replace(url, with: done.kept, after: done.read)
+        file = open()
+    }
+
+    /// The log at `url` cut to its newest `keep` bytes, and how many bytes were read.
+    nonisolated static func cut(_ url: URL) -> (kept: Data, read: Int)? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return (trimmed(data), data.count)
+    }
+
+    /// Replaces the log at `url` with `kept` and whatever was written past its first `read` bytes. Atomic, so the
+    /// file is never left cut short or empty.
+    nonisolated static func replace(_ url: URL, with kept: Data, after read: Int) {
+        var since = Data()
+        if let h = try? FileHandle(forReadingFrom: url) {
+            if (try? h.seek(toOffset: UInt64(read))) != nil { since = (try? h.readToEnd()) ?? Data() }
+            try? h.close()
+        }
+        try? (kept + since).write(to: url, options: .atomic)
+    }
 
     /// The newest `keep` bytes of a log, from the first whole line in them.
     nonisolated static func trimmed(_ data: Data) -> Data {

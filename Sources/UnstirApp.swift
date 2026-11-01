@@ -403,6 +403,7 @@ struct RootView: View {
         .task {
             Log.write(UnstirApp.device)
             Power.shared.watch()
+            await Log.trim()
         }
         .task {
             // A test host's listener would finish the transactions the StoreKit tests watch, and its analytics would
