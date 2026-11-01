@@ -129,6 +129,9 @@ import XCTest
         g.undo()
         XCTAssertFalse(g.deadTick)
         XCTAssertEqual(g.caption, level.note)
+        let spent = Game(level: level, tankTurned: true, bank: (0, nil))
+        spent.commit(rod: move.rod, steps: move.steps)
+        XCTAssertEqual(spent.caption, "That tick can't come back. Reset.")
     }
 
     func testAWaitWhoseTickPushesPlaysOn() {

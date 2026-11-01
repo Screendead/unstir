@@ -76,7 +76,7 @@ extension Game {
     /// The line under the tank: Escapement's word on a pushed tick, a scene's time, stepping back with each entry gone,
     /// else the level's note.
     var caption: String {
-        if deadTick { return Game.deadTick }
+        if deadTick { return deadTickWords }
         guard let scene = level.story?.scene else { return level.note }
         return type(of: scene).clock(scene.minutes(wound: wound, of: level.scramble.count))
     }
