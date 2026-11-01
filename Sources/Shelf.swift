@@ -900,7 +900,8 @@ struct PackCard: View {
                         .accessibilityLabel(state == .pending ? "Ask again for \(offer.name)" : "\(label.capitalized) \(offer.name)")
                         .accessibilityValue(price ?? store.pricing.words ?? "")
                 }
-                if let (level, replay) = Self.taste(levels) ?? Self.placeholder(offer).map({ ($0, false) }) {
+                if let taste = Self.taste(levels) ?? Self.placeholder(offer).map({ (level: $0, replay: false) }) {
+                    let (level, replay) = taste
                     let n = offer.pack?.taste ?? 3
                     Button { onPlay(level) } label: {
                         Text(replay ? "replay 01\u{2013}\(String(format: "%02d", n)) \u{203A}" : "try \(n) free \u{203A}")
