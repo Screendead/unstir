@@ -576,7 +576,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
   gesture recognizer on the window that fails at once, and from a drag on the list), each carrying on from the frame
   it held (`PausingTimeline`), a glyph by its name for its state (`Purchase.mark`: a check owned, an hourglass waiting on Ask
-  to Buy, nothing else, a revocation being the card's to say). An Ask to Buy
+  to Buy, nothing else, a revocation being the card's to say). Under the name a line says "new", in the pack's glow,
+  once its pack fits the player's progress (`Pack.fits`: Lens and Prism once every plughole level has a best,
+  Escapement once maelstrom is open, First Stir never) until its card opens, and again when an update adds levels
+  since it last opened (`Marks`, stored as `shelf.fit.<pack>` and `shelf.levels.<pack>`, never by a harnessed launch),
+  owned or not; else, under an unowned pack once any free level is started or solved, "2/3 free", counting those with
+  a best (`Pack.tastePlayed`), kept at "3/3 free"; Complete's never marks (Jack's call C6, round 13). An Ask to Buy
   approval landing on its open card is said by the landing; otherwise the dock's header reads "Lens is yours"
   ("every pack is yours" for Complete) in its glow for 5 s once nothing covers the dock, and VoiceOver hears it
   (`Store.approved`, `Store.said`; Jack's call C21, round 13). `PackCard` grows out
@@ -761,7 +766,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   in place of StoreKit's, never stored, with the StoreKit file's prices, in dollars (none with `UNSTIR_PRICES=0`, as while they load, or `UNSTIR_PRICES=unreachable`, as after a failed fetch);
   `UNSTIR_FAILED=offline` (`storefront`, `refused`) says why a failed product failed, or a pending one's ask again, `UNSTIR_PAYMENTS=0` turns
   purchases off, and `UNSTIR_RESTORED=lens,prism` (`none`, `failed`) sets what the last restore found;
-  `UNSTIR_APPROVED=lens` (or `complete`) has that Ask to Buy approval wait to be said (held under `UNSTIR_CLOCK`).
+  `UNSTIR_APPROVED=lens` (or `complete`) has that Ask to Buy approval wait to be said (held under `UNSTIR_CLOCK`), and
+  `UNSTIR_SEENLEVELS=lens:20` has that pack's card last opened when it had 20 levels, for the launch only.
   `UNSTIR_CARD=lens` (or `complete`) opens that card over the menu; in Debug `UNSTIR_CARDLEVELS=n` lists n placeholder
   levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list; `UNSTIR_BESTS`
   takes a pack's prefix as it takes a tier's. A pack level past

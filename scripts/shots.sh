@@ -480,6 +480,11 @@ fi
 shot shelf-menu "Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
   OWNED=lens STORE=escapement:pending CLOCK=5.4
+shot shelf-new "Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir." \
+  BESTS=plughole:$par27 STORE=lens:unowned CLOCK=5.4
+shot shelf-taste-count "Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens." BESTS=plughole:000000000,lens:00 STORE=lens:unowned CLOCK=5.4
+shot shelf-new-levels "Lens owned, its card last opened with 20 levels: new under Lens beside the check." \
+  BESTS=plughole:000000000 OWNED=lens SEENLEVELS=lens:20 CLOCK=5.4
 shot shelf-approved "The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header." \
   BESTS=plughole:000000000 OWNED=lens APPROVED=lens CLOCK=1
 for state in unowned owned pending failed revoked; do

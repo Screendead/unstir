@@ -43,7 +43,8 @@ final class PackTests: XCTestCase {
     @MainActor func testStorageKeysNeverChange() throws {
         let d = UserDefaults.standard, id = "pin-test"
         let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
-                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)"]
+                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)",
+                    "shelf.fit.\(Pack.lens.rawValue)", "shelf.levels.\(Pack.lens.rawValue)"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -74,6 +75,9 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(d.bool(forKey: "undos.shown"))
         Asked.add(Pack.lens.productID)
         XCTAssertTrue(d.bool(forKey: "asked.com.screendead.Unstir.pack.lens"))
+        Marks.seen(.lens, fits: true, store: true)
+        XCTAssertTrue(d.bool(forKey: "shelf.fit.lens"))
+        XCTAssertEqual(d.integer(forKey: "shelf.levels.lens"), Pack.lens.levels.count)
     }
 
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
@@ -203,6 +207,62 @@ final class PackTests: XCTestCase {
         store.said(.pack(.lens))
         XCTAssertEqual(store.approved, [.complete])
         XCTAssertEqual(Harness(["UNSTIR_APPROVED": "lens,nothing"]).approved, [.pack(.lens)])
+    }
+
+    /// Lens and Prism fit once every plughole level has a best, Escapement once maelstrom is open; a cover marks new
+    /// once it fits until its card opens, and again when an update adds levels (Jack's call C6, round 13).
+    @MainActor func testACoverMarksNewOnceItFits() throws {
+        let plughole = Set(Tier.plughole.levels.map(\.id)), sea = Set(Tier.vortex.levels.map(\.id))
+        let atPar = Best(over: 0, seconds: 60)
+        XCTAssertFalse(Pack.lens.fits(best: { _ in nil }))
+        XCTAssertFalse(Pack.lens.fits(best: { $0 == "L1" ? atPar : nil }))
+        XCTAssertTrue(Pack.lens.fits(best: { plughole.contains($0) ? Best(over: 2, seconds: 60) : nil }))
+        XCTAssertTrue(Pack.prism.fits(best: { plughole.contains($0) ? atPar : nil }))
+        XCTAssertFalse(Pack.escapement.fits(best: { plughole.contains($0) ? atPar : nil }))
+        XCTAssertTrue(Pack.escapement.fits(best: { sea.contains($0) ? atPar : nil }), "maelstrom opens on vortex at par")
+        XCTAssertFalse(Pack.firstStir.fits(best: { _ in atPar }))
+
+        let d = try XCTUnwrap(UserDefaults(suiteName: "marks-test"))
+        d.removePersistentDomain(forName: "marks-test")
+        defer { d.removePersistentDomain(forName: "marks-test") }
+        XCTAssertFalse(Marks.new(.lens, fits: false, in: d))
+        XCTAssertTrue(Marks.new(.lens, fits: true, in: d))
+        Marks.seen(.lens, fits: false, store: true, in: d)
+        XCTAssertTrue(Marks.new(.lens, fits: true, in: d), "opened before it fit")
+        Marks.seen(.lens, fits: true, store: true, in: d)
+        XCTAssertFalse(Marks.new(.lens, fits: true, in: d))
+        d.set(Pack.lens.levels.count - 5, forKey: Marks.levelsKey(.lens))
+        XCTAssertTrue(Marks.new(.lens, fits: true, in: d), "an update added five")
+        XCTAssertTrue(Marks.new(.lens, fits: false, in: d))
+        // The registration domain is the process's, whichever defaults register, so on a pack no other test marks.
+        XCTAssertTrue(Marks.new(.escapement, fits: true, in: d))
+        Marks.seen(.escapement, fits: true, store: false, in: d)
+        XCTAssertFalse(Marks.new(.escapement, fits: true, in: d))
+        XCTAssertNil(d.persistentDomain(forName: "marks-test")?[Marks.fitKey(.escapement)], "a harnessed launch registers, never stores")
+    }
+
+    /// "2/3 free" under an unowned pack once any free level is started or solved, counting those with a best, and
+    /// "3/3 free" kept once all are; "new" takes the line, and an owner sees only "new".
+    @MainActor func testTheTasteCountShowsOnceStarted() throws {
+        let ids = Pack.lens.levels.prefix(3).map(\.id)
+        XCTAssertNil(Pack.lens.tastePlayed(best: { _ in nil }, started: { _ in false }))
+        XCTAssertEqual(Pack.lens.tastePlayed(best: { _ in nil }, started: { $0 == ids[0] }), 0)
+        let two: (String) -> Best? = { ids.prefix(2).contains($0) ? Best(over: 1, seconds: 60) : nil }
+        XCTAssertEqual(Pack.lens.tastePlayed(best: two, started: { _ in false }), 2)
+        XCTAssertEqual(Pack.lens.tastePlayed(best: { _ in Best(over: 0, seconds: 60) }, started: { _ in false }), 3)
+        XCTAssertNil(Pack.lens.tastePlayed(best: { $0 == Pack.lens.id(4) ? Best(over: 0, seconds: 60) : nil }, started: { _ in false }))
+
+        let d = UserDefaults.standard, keys = [Marks.fitKey(.lens), Marks.levelsKey(.lens)]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
+        Marks.seen(.lens, fits: true, store: true)
+        XCTAssertEqual(Marks.line(.lens, owned: false, fits: true, played: 2)?.words, "2/3 free")
+        XCTAssertEqual(Marks.line(.lens, owned: false, fits: true, played: 2)?.spoken, "2 of 3 free levels played")
+        XCTAssertNil(Marks.line(.lens, owned: true, fits: true, played: 2))
+        XCTAssertNil(Marks.line(.lens, owned: false, fits: true, played: nil))
+        d.removeObject(forKey: Marks.fitKey(.lens))
+        XCTAssertEqual(Marks.line(.lens, owned: false, fits: true, played: 2)?.words, "new")
+        XCTAssertEqual(Marks.line(.lens, owned: true, fits: true, played: nil)?.words, "new")
     }
 
     /// A pack's ids never read as another pack's or a tier's.

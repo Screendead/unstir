@@ -238,6 +238,36 @@ extension Font {
     }
 }
 
+/// What each pack's cover has shown: whether its card has opened since the pack fit the player, and how many levels it
+/// had then, so the cover says "new" once for each (Jack's call C6, round 13).
+enum Marks {
+    /// False for a harnessed launch, whose cards' openings last only that launch.
+    @MainActor static var stored = true
+
+    static func fitKey(_ pack: Pack) -> String { "shelf.fit.\(pack.rawValue)" }
+    static func levelsKey(_ pack: Pack) -> String { "shelf.levels.\(pack.rawValue)" }
+
+    /// It fits and its card hasn't opened since, or an update added levels since it last opened.
+    static func new(_ pack: Pack, fits: Bool, in defaults: UserDefaults = .standard) -> Bool {
+        let seen = defaults.integer(forKey: levelsKey(pack))
+        return (fits && !defaults.bool(forKey: fitKey(pack))) || (seen > 0 && pack.levels.count > seen)
+    }
+
+    /// Its card has opened.
+    @MainActor static func seen(_ pack: Pack, fits: Bool, store: Bool = stored, in defaults: UserDefaults = .standard) {
+        var marks: [String: Any] = [levelsKey(pack): pack.levels.count]
+        if fits { marks[fitKey(pack)] = true }
+        if store { for (key, value) in marks { defaults.set(value, forKey: key) } } else { defaults.register(defaults: marks) }
+    }
+
+    /// The line under a cover's name: "new", else an unowned pack's free levels played, else nothing.
+    static func line(_ pack: Pack, owned: Bool, fits: Bool, played: Int?) -> (words: String, spoken: String)? {
+        if new(pack, fits: fits) { return ("new", "new") }
+        guard !owned, let played else { return nil }
+        return ("\(played)/\(pack.taste) free", "\(played) of \(pack.taste) free levels played")
+    }
+}
+
 // MARK: - Covers
 
 /// Each offer's cover, baked once per size: the picture its clip stirs.
@@ -782,7 +812,10 @@ struct PackCard: View {
         .onAppear {
             Log.write("card \(offer.key) opens")
             if state == .owned { store.said(offer) }
-            if let pack = offer.pack { Analytics.shared.cardSeen(pack) }
+            if let pack = offer.pack {
+                Analytics.shared.cardSeen(pack)
+                Marks.seen(pack, fits: pack.fits())
+            }
         }
         .onChange(of: Reading(state: state, ready: store.ready)) { old, new in
             // Until the launch's first read has finished, an owned pack reads as unowned: that read is no change.
@@ -1177,6 +1210,9 @@ struct PackDock: View {
                 let shelf = Offer.shelf().filter { $0 != .complete || store.saving != nil }
                 ForEach(Array(shelf.enumerated()), id: \.offset) { i, offer in
                     let x = (Double(i) + 0.5) / Double(shelf.count), state = store.state(offer)
+                    // Unowned until the launch's first read has finished, so a pack's free levels wait for it.
+                    let line = offer.pack.flatMap { Marks.line($0, owned: state == .owned || !store.ready, fits: $0.fits(),
+                                                                played: $0.tastePlayed()) }
                     Button { open(offer, UnitPoint(x: x, y: 0.88)) } label: {
                         VStack(spacing: 8) {
                             LoopingTank(offer: offer, side: 66, held: held, offset: 1.75 * Double(i), interval: 1.0 / 30,
@@ -1191,14 +1227,20 @@ struct PackDock: View {
                                         .accessibilityHidden(true)
                                 }
                             }
+                            if let line {
+                                Text(line.words).font(.mono(.caption2, line.words == "new" ? .semibold : .regular))
+                                    .foregroundStyle(line.words == "new" ? offer.glow : Color.text.opacity(0.45))
+                                    .shadow(color: line.words == "new" ? offer.glow.opacity(0.6) : .clear, radius: 3)
+                                    .padding(.top, -4)
+                            }
                         }
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(Sounding())
                     .accessibilityLabel("\(offer.name), \(offer.pack == nil ? "every pack" : "pack")")
-                    .accessibilityValue((store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
-                                        ?? store.price(offer.productID) ?? "")
+                    .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
+                                         ?? store.price(offer.productID), line?.spoken].compactMap { $0 }.joined(separator: ", "))
                     .accessibilityHint(offer.pitch)
                     .accessibilityShowsLargeContentViewer {
                         Text(offer.name)

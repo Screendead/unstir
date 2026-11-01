@@ -229,6 +229,13 @@ struct Harness {
         case let names?: .found(Set(names.split(separator: ",").compactMap { Pack(rawValue: String($0)) }))
         }
         approved = env["UNSTIR_APPROVED"]?.split(separator: ",").compactMap { Offer(name: String($0)) } ?? []
+        // UNSTIR_SEENLEVELS=lens:20: that pack's card last opened when the pack had 20 levels, for this launch only.
+        for part in env["UNSTIR_SEENLEVELS"]?.split(separator: ",") ?? [] {
+            let f = part.split(separator: ":")
+            if f.count == 2, let pack = Pack(rawValue: String(f[0])), let n = Int(f[1]) {
+                UserDefaults.standard.register(defaults: [Marks.levelsKey(pack): n])
+            }
+        }
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE", "PACK"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
@@ -389,6 +396,7 @@ struct RootView: View {
         let env = ProcessInfo.processInfo.environment
         let h = Harness(env)
         harnessed = h.harnessed
+        Marks.stored = !h.harnessed
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
