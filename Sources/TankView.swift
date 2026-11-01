@@ -131,6 +131,8 @@ final class Game {
     private(set) var refusedKnob = 0
     /// The tier this solve opened, on whichever level was the last to reach par: the card goes up a notch.
     private(set) var opened: Tier?
+    /// What this solve completed, the one that gave the last of a pack's levels, or of the last tier's, a best.
+    private(set) var completed: Completion?
     /// The level's best before this solve and this solve's own, for the card's line; nil where nothing is saved.
     private(set) var bests: (was: Best?, now: Best)?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it. Nil while the app is away, with
@@ -139,8 +141,20 @@ final class Game {
     private var elapsed: TimeInterval = 0
     /// Away from the front after the clock started: it runs again on coming back.
     private var paused = false
-    /// False once an earlier visit touched a rod: a daily is then practice, and nothing else can be clean.
+    /// False once an earlier visit committed a move: a daily is then practice, and nothing else can be clean.
     let firstTry: Bool
+    /// Escapement's demonstration is on the stack: its commits are not the player's, so they try nothing.
+    private(set) var demoing = false
+    /// The calls that succeeded since the level opened, for its resume (Jack's call C2, round 13); the demonstration's
+    /// are not the player's.
+    private(set) var actions: [Resume.Action] = []
+    /// Inside `Game.resumed`: the line was the player's already, so nothing is spent, logged or saved again.
+    private(set) var replaying = false
+    /// The replay has a call left after this one, which the try could make only on a tank the fine pass didn't call
+    /// solved, or after "again", which deals afresh whatever it called.
+    private var replayGoesOn = false
+    /// Only a plain launch's level saves its try: never the harness's, the sandbox, a placeholder, a clip or a test.
+    let storesResume: Bool
     /// Whether the player has ever turned the tank, on any level: the rim shows how until they have.
     private(set) var tankTurned: Bool
     /// False when the caller set `tankTurned`, which then lasts only as long as this game.
@@ -190,6 +204,11 @@ final class Game {
         let dir = level.woundBack.contains(clock) ? -1 : 1
         return stack.filter { $0.rod == clock && $0.steps * dir > 0 }.reduce(0) { $0 + abs($1.steps) }
     }
+    /// Escapement: a pushed tick stands on the stack, so no line from here unstirs the tank: the caption says so until
+    /// an undo takes it back or the ticks run out (Jack's call C14, round 13).
+    var deadTick: Bool { !finished && level.clocks.contains { overdue($0.rod) > 0 } }
+    /// With the bank empty undo can't take the tick back, so the words point only at reset (Jack's call, round 13).
+    var deadTickWords: String { bank == 0 ? "That tick can't come back. Reset." : "That tick can't come back. Undo, or again." }
     /// Escapement: the ticks clock `clock` has left, its hub's count (Jack's call ES2, round 12). Only its own ticks
     /// change its rod's steps, each by one whether it merges or pushes, so this is what it owed as dealt less its ticks:
     /// nothing needs storing, and undo and reset bring it back with the stack.
@@ -203,13 +222,15 @@ final class Game {
     /// stops it.
     func canTick(_ rod: Int) -> Bool { owed(rod) > 0 && running(rod) }
 
+    /// `firstTry`: a resumed try's, as it began; its first move has since marked the level started.
     init(level: Level, tankTurned: Bool? = nil, swirled: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil,
-         storesProgress: Bool = true) {
+         storesProgress: Bool = true, firstTry: Bool? = nil, storesResume: Bool = false) {
         self.level = level
         self.storesProgress = storesProgress
+        self.storesResume = storesResume && !level.sandbox && level.keepsProgress
         entries = Self.dealt(level)
         brim = level.run?.brim ?? 0
-        firstTry = level.run != nil || !Best.started(level.id)
+        self.firstTry = level.run != nil || (firstTry ?? !Best.started(level.id))
         self.tankTurned = tankTurned ?? Best.tankTurned
         storesTankTurned = tankTurned == nil
         self.swirled = swirled ?? Best.swirled
@@ -284,10 +305,11 @@ final class Game {
             : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
                              lenses: level.lenses, masks: level.masks, popped: { if !$0.pushed { healed += 1 } })
         guard result != .refused else {
-            Log.write("commit \(Twist(rod: rod, steps: steps)) refused")
+            log("commit \(Twist(rod: rod, steps: steps)) refused")
             if level.kind(of: rod) == .working { refuse(rod) }
             return
         }
+        started()
         if rod == level.layout.swirl, !swirled {
             swirled = true
             if storesSwirled { Best.swirled = true }
@@ -318,9 +340,28 @@ final class Game {
         if heals { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
-        Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
-                  + "\(level.run == nil ? "" : "brim=\(brim) ")stack=\(stack.count) \(stack)")
+        log("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
+            + "\(level.run == nil ? "" : "brim=\(brim) ")stack=\(stack.count) \(stack)")
+        record(.turn(knob: rod, steps: steps))
         settle(healed: healed > 0)
+    }
+
+    /// Before the settle, whose finish clears the save: a save after it would bring a finished try back.
+    private func record(_ action: Resume.Action) {
+        guard !demoing else { return }
+        actions.append(action)
+        Resume.save(self)
+    }
+
+    /// A replay's lines would repeat the try's, which the log already holds.
+    private func log(_ line: @autoclosure () -> String) {
+        if !replaying { Log.write(line()) }
+    }
+
+    /// A level counts as tried on its first committed move; a look, a touch or a turn let go where it began, is free
+    /// (Jack's call C3, round 13).
+    private func started() {
+        if !level.sandbox && level.keepsProgress && !demoing { Best.start(level.id, store: storesProgress) }
     }
 
     private func refuse(_ knob: Int) {
@@ -333,7 +374,10 @@ final class Game {
     }
 
     private func noteBrim(from was: Int) {
-        if brim != was { brimEvents.append(Brim.Event(from: was, to: brim, time: Date.now.timeIntervalSinceReferenceDate)) }
+        // A replayed change is long over, so the rim opens on it settled.
+        if brim != was {
+            brimEvents.append(Brim.Event(from: was, to: brim, time: replaying ? 0 : Date.now.timeIntervalSinceReferenceDate))
+        }
     }
 
     /// The tank stir a turn of `steps` would leave open: joined to the open one, a whole turn dropped, and the short way
@@ -350,6 +394,7 @@ final class Game {
     func turnTank(_ steps: Int) {
         let order = level.layout.order
         guard !finished, steps % order != 0 else { return }
+        started()
         if !tankTurned {
             tankTurned = true
             if storesTankTurned { Best.tankTurned = true }
@@ -367,7 +412,8 @@ final class Game {
             before.append(was)
             healsBefore.append(healsWere)
         }
-        Log.write("tank \(steps) position=\(position) moves=\(moves)")
+        log("tank \(steps) position=\(position) moves=\(moves)")
+        record(.tank(steps))
         settle()
     }
 
@@ -382,10 +428,11 @@ final class Game {
                           masks: level.masks, popped: { if !$0.pushed { healed += 1 } })
         // A full stack refuses a tick as it would a push, so it refuses the move.
         guard result != .refused, !ticksRefused(next) else {
-            Log.write("commit \(Twist(rod: knob, steps: steps)) refused")
+            log("commit \(Twist(rod: knob, steps: steps)) refused")
             if level.kind(of: knob) == .working { refuse(knob) }
             return
         }
+        started()
         before.append((entries, escapement))
         healsBefore.append(heals)
         openBefore.append(open)
@@ -398,7 +445,8 @@ final class Game {
         if result == .pushed { pushes += 1 }
         if result == .cancelled { cancels += 1; cancelledRod = knob }
         healed += landTicks()
-        Log.write("commit \(Twist(rod: knob, steps: steps)) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        log("commit \(Twist(rod: knob, steps: steps)) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        record(.turn(knob: knob, steps: steps))
         settle(healed: healed > 0)
     }
 
@@ -406,7 +454,8 @@ final class Game {
     /// nothing to wait for. False when refused.
     @discardableResult func wait(on ratchet: Int) -> Bool {
         guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return false }
-        guard !ticksRefused(entries) else { Log.write("wait refused"); refuse(ratchet); return false }
+        guard !ticksRefused(entries) else { log("wait refused"); refuse(ratchet); return false }
+        started()
         before.append((entries, escapement))
         healsBefore.append(heals)
         openBefore.append(open)
@@ -415,7 +464,8 @@ final class Game {
         lastCommit = (ratchet, .reduced)
         turns += 1
         let healed = landTicks()
-        Log.write("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        log("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        record(.wait(ratchet: ratchet))
         settle(healed: healed > 0)
         return true
     }
@@ -452,7 +502,7 @@ final class Game {
            !level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses, masks: level.masks) {
             escapement.lost = true
         }
-        Log.write("ticks \(tick.map { "\($0.rod):\($0.dir > 0 ? "+" : "-")" }.joined(separator: ",")) budget=\(budget) stack=\(stack)")
+        log("ticks \(tick.map { "\($0.rod):\($0.dir > 0 ? "+" : "-")" }.joined(separator: ",")) budget=\(budget) stack=\(stack)")
         return healed
     }
 
@@ -477,12 +527,14 @@ final class Game {
     /// Escapement: the opening's demonstration plays on a stack of its own, through the real rules.
     func demo(_ stack: [Twist]) {
         entries = stack.map { Entry(twist: $0, pushed: false) }
+        demoing = true
         restart()
     }
 
     /// Escapement: back to the level's own scramble once the demonstration is over, as if nothing had been played.
     func endDemo() {
         entries = Self.dealt(level)
+        demoing = false
         restart()
         start = nil
         elapsed = 0
@@ -503,9 +555,10 @@ final class Game {
     /// Endless has none: it would take back a red flash. A pack's puts the stack back as the stir found it, marks, tags
     /// and the clock's tick and all; elsewhere it commits the stir's negation.
     func undo() {
-        // The sandbox counts nothing, so its undos are free. A lost tank can be undone.
-        guard !solved, !spilled, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast()
-        else { return }
+        // The sandbox counts nothing, so its undos are free, and a replayed one was paid for when it was made. A lost
+        // tank can be undone.
+        guard !solved, !spilled, !checking, level.run == nil, level.sandbox || bank > 0 || replaying,
+              let last = history.popLast() else { return }
         let was = before.removeLast()
         heals = healsBefore.removeLast()
         if level.pack != nil || !level.ratchets.isEmpty {
@@ -525,13 +578,14 @@ final class Game {
             turns += 1
         }
         open = openBefore.removeLast()
-        if !level.sandbox {
-            undos += 1
+        if !level.sandbox { undos += 1 }
+        if !level.sandbox && !replaying {
             bank -= 1
             if storesBank { Best.undos = bank }
             Analytics.shared.undid()
         }
-        Log.write("undo \(last) moves=\(moves) bank=\(bank) pushes=\(pushes) stack=\(stack.count) \(stack)")
+        log("undo \(last) moves=\(moves) bank=\(bank) pushes=\(pushes) stack=\(stack.count) \(stack)")
+        record(.undo)
         settle()
     }
 
@@ -539,10 +593,13 @@ final class Game {
     /// has already settled on. With nothing played it only replays the opening, so it costs no clean.
     @discardableResult func reset() -> Bool {
         guard !checking, level.run == nil else { return false }
-        if !history.isEmpty { resets += 1 }
+        let played = !history.isEmpty
+        if played { resets += 1 }
         entries = Self.dealt(level)
         restart()
-        Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
+        log("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
+        // One with nothing played changes nothing a replay needs.
+        if played { record(.reset) }
         return true
     }
 
@@ -650,46 +707,166 @@ final class Game {
         // Only the coarse pass runs here: the fine one takes ~0.1 s exactly when it passes, which would hitch the win.
         if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses, masks: level.masks) {
             let stack = stack, layout = level.layout, lenses = level.lenses, masks = level.masks
+            // A replay has no frame to hitch, and only its last call can have left the answer unknown.
+            if replaying { return confirm(!replayGoesOn && layout.looksSolved(stack, lenses: lenses, masks: masks), healed: healed) }
             checking = true
             Task {
                 let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack, lenses: lenses, masks: masks) }.value
                 self.checking = false
                 // A move made meanwhile settled itself.
                 guard self.stack == stack else { return }
-                if solved {
-                    Log.write("looks solved \(stack)")
-                    // The tank's last heal, where the move that made it healed none of the scramble's entries itself.
-                    if !healed && self.entries.contains(where: { !$0.pushed }) {
-                        let was = self.brim
-                        self.settleBrim(1)
-                        self.noteBrim(from: was)
-                    }
-                    // A story's vignettes left play with the solve wave, which rings for them.
-                    self.entries = []
-                }
-                self.finish(healed: healed)
+                self.confirm(solved, healed: healed)
             }
             return
         }
         finish(healed: healed)
     }
 
+    /// The fine pass's answer on a stack that looks solved.
+    private func confirm(_ solved: Bool, healed: Bool) {
+        if solved {
+            log("looks solved \(stack)")
+            // The tank's last heal, where the move that made it healed none of the scramble's entries itself.
+            if !healed && entries.contains(where: { !$0.pushed }) {
+                let was = brim
+                settleBrim(1)
+                noteBrim(from: was)
+            }
+            // A story's vignettes left play with the solve wave, which rings for them.
+            entries = []
+        }
+        finish(healed: healed)
+    }
+
+    /// Every level of this level's pack, or of the last tier, has a best. A pack short of its plan isn't complete: its
+    /// card still promises the rest.
+    private var completion: Completion? {
+        if let p = level.pack, p.levels.count < p.planned { return nil }
+        let (list, done): ([Level], Completion) = if let p = level.pack { (p.levels, .pack(p)) } else {
+            (Tier.allCases.last!.levels, .free)
+        }
+        guard list.contains(where: { $0.id == level.id }), list.allSatisfy({ Best.load($0.id) != nil }) else { return nil }
+        return done
+    }
+
     private func finish(healed: Bool) {
         if healed && !finished { heals += 1 }
         guard finished else { return }
         seconds = Int(played())
-        Log.write("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
-                  + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
+        log("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
+            + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
             if solved && storesProgress { Best.tanks = max(Best.tanks, run.tank + 1) }
         } else if solved && counts && level.keepsProgress {
             let up = level.pack == nil ? level.tier.step(1) : nil, shut = up.map { !$0.isOpen() } ?? false
             let best = Best(over: over, seconds: seconds, clean: clean)
             bests = (Best.load(level.id), best)
+            let done = completion
             best.save(level.id, store: storesProgress)
-            if shut, let up, up.isOpen() { opened = up }
+            if shut, let up, up.isOpen() {
+                opened = up
+                if up == .whirlpool { Review.shared.pending = true }
+            }
+            completed = done == nil ? completion : nil
         }
+        // A replay passes through a lost tank its line then undid; `resumed` closes one that ends finished.
+        guard !replaying else { return }
+        close()
         Analytics.shared.finished(self)
+    }
+
+    /// A finish clears the try's save, out of ticks too, so the lost card's undo doesn't outlive the app (C2's
+    /// implementer call, round 13). A cleared tank of a run saves the next one, empty, so the run outlasts the card.
+    private func close() {
+        guard storesResume else { return }
+        if solved, let next = nextTank, let run = next.run {
+            Resume.save(Resume(id: next.id, print: next.print, firstTry: true, run: run))
+        } else {
+            Resume.remove(level.id)
+        }
+    }
+
+    /// The try `r` saved, replayed through the calls that made it, before any view shows it: nil, and the level opens
+    /// afresh, where `r` was saved on a level that deals differently now, where the level refuses one of its calls, or
+    /// where the line finished, as when the app died inside the solving move's fine pass, whose best its finish saves.
+    /// The bank, the stored flags and the analytics stay as the try left them.
+    static func resumed(_ level: Level, from r: Resume, tankTurned: Bool? = nil, swirled: Bool? = nil,
+                        bank: (undos: Int, refilled: String?)? = nil, storesProgress: Bool = true,
+                        storesResume: Bool = true) -> Game? {
+        guard r.version == 1, r.id == level.id, r.print == level.print else {
+            Log.write("resume \(r.id) dropped: the level deals differently now")
+            return nil
+        }
+        let game = Game(level: level, tankTurned: tankTurned, swirled: swirled, bank: bank, storesProgress: storesProgress,
+                        firstTry: r.firstTry, storesResume: storesResume)
+        game.replaying = true
+        // Before the line, whose last call may finish the try and save its best with the time played.
+        game.elapsed = r.seconds
+        for (i, action) in r.actions.enumerated() {
+            game.replayGoesOn = i + 1 < r.actions.count
+            switch action {
+            case .turn(let knob, let steps): game.commit(rod: knob, steps: steps)
+            case .tank(let steps): game.turnTank(steps)
+            case .wait(let ratchet): game.wait(on: ratchet)
+            case .undo: game.undo()
+            case .reset: game.reset()
+            }
+            guard game.actions.count == i + 1 else {
+                Log.write("resume \(r.id) dropped: \(action), its call \(i + 1), refused")
+                return nil
+            }
+        }
+        game.replaying = false
+        // The newest move's ticks are long played.
+        game.tick = []
+        Log.write("resume \(r.id) actions=\(r.actions.count) moves=\(game.moves) stack=\(game.stack.count) \(game.stack)")
+        guard !game.finished else {
+            game.close()
+            return nil
+        }
+        return game
+    }
+}
+
+/// The edge swipe back (Jack's call C19, round 13). A touch landing within `band` of the screen's left edge is
+/// undecided for its first `travel`; then rightward and mostly sideways it is the swipe, and anything else passes to
+/// what it landed on, as iOS's own edge pan fails on motion that isn't away from the edge (Jack's call S2, round 13).
+enum BackSwipe: Equatable {
+    case undecided, swipe, pass
+
+    static let band: CGFloat = 20
+    static let travel: CGFloat = 10
+
+    /// `start` in global points, `t` the travel since.
+    static func decide(start: CGPoint, translation t: CGSize) -> BackSwipe {
+        guard start.x < band else { return .pass }
+        guard hypot(t.width, t.height) >= travel else { return .undecided }
+        return t.width > 0 && t.width >= 2 * abs(t.height) ? .swipe : .pass
+    }
+
+    /// Let go `dx` across a screen `width` wide, heading for `predicted`, the swipe leaves; as iOS's own, a flick back
+    /// left cancels it however far it had gone.
+    static func commits(dx: CGFloat, predicted: CGFloat, width: CGFloat) -> Bool {
+        predicted > width / 2 || dx > width / 3 && predicted >= dx - 8
+    }
+
+    /// An edge touch as the tank saw it land: `start` in the tank's points, `global` the same point on the screen.
+    struct Edge: Equatable {
+        let start: CGPoint
+        let global: CGPoint
+        let call: BackSwipe
+    }
+
+    /// The tank's view of a touch from `start`, in its own points, with its origin on the screen at `origin` now:
+    /// recorded as it lands, before anything slides, and from then on read by its start alone, since the slide moves
+    /// the tank's origin and with it where `start` would seem to lie. Nil: not an edge touch.
+    static func edge(_ held: Edge?, start: CGPoint, origin: CGPoint, translation t: CGSize) -> Edge? {
+        if let held, held.start == start {
+            guard held.call == .undecided else { return held }
+            return Edge(start: start, global: held.global, call: decide(start: held.global, translation: t))
+        }
+        let global = CGPoint(x: origin.x + start.x, y: origin.y + start.y)
+        return global.x < band ? Edge(start: start, global: global, call: decide(start: global, translation: t)) : nil
     }
 }
 
@@ -772,8 +949,6 @@ struct LevelView: View {
     @State private var replays = 0
     /// Escapement: the demonstration has had its turn on opening, once the problem has been solved; outside the harness.
     private let demoRetired: Bool
-    /// The touch that skipped the opening, which goes on to hold what it landed on.
-    @State private var skipped: CGPoint?
     /// The last reset was of a tank with nothing played: the opening, a demonstration and all, plays again.
     @State private var fresh = false
     /// The day's refill as the badge shows it: set once the opening is over, and only once, so a reset's opening doesn't
@@ -815,6 +990,14 @@ struct LevelView: View {
     private let frozenBreath: Double?
     /// UNSTIR_REST: seconds at rest before a drawn fingertip lands.
     private let rest: Double
+    /// The game replayed a saved line: the first opening, and Escapement's demonstration, don't play.
+    private let resumed: Bool
+    /// When a first tap armed the reset control, which then says "reset? tap again" for `ResetArm.window`, or under
+    /// VoiceOver until a move or focus leaves it.
+    @State private var armedAt: Date?
+    @AccessibilityFocusState private var resetFocused: Bool
+    /// UNSTIR_RESETARMED: the control armed for good, for stills.
+    private let holdArmed: Bool
     /// The swirl's breath while the tank rests, and the last one a touch, the opening or the win cut, fading out.
     @State private var breath: Breath?
     @State private var faded: Breath?
@@ -824,6 +1007,7 @@ struct LevelView: View {
     @State private var lifted = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityDimFlashingLights) private var dimFlashing
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     /// Under Reduce Motion the opening fades through black, by this much, in place of the wind-in.
     @State private var curtain = 0.0
     /// A live picture: its clock starts at zero on every visit.
@@ -838,18 +1022,50 @@ struct LevelView: View {
     /// Escapement: what a tank lost to its last clock stopping shows, while Jack decides (UNSTIR_STOPLOOK).
     private let stopLook: StopLook
     private let shareSheet: Bool
+    /// UNSTIR_NOW: the clock the daily's card reads the next daily from.
+    private let now: Date?
     /// Back to the menu, with whether the level is solved.
     let onExit: (Bool) -> Void
     let onNext: (Level) -> Void
     /// Back to the menu on a tier other than the stored one: a closed tier's gate.
     let onLook: (Tier) -> Void
+    /// A pack's card, from a completion's pointer.
+    let onOffer: (Pack) -> Void
+    /// The menu drawn under a back swipe, focused as leaving with whether the level is solved would; nil once the swipe
+    /// has sprung back.
+    let onPeek: (Bool?) -> Void
+    /// The back swipe's touch, by its global start, and what it decided.
+    @State private var swipeTouch: (start: CGPoint, call: BackSwipe)?
+    /// The same decision as the tank's gesture saw it: once made it holds, though a swipe's later course may no longer
+    /// read as one.
+    @State private var edgeTouch: BackSwipe.Edge?
+    /// The system can cancel the swipe's touch, which its onEnded never sees.
+    @GestureState private var swipeHeld = false
+    /// How far across the screen the back swipe has slid the level, 0 to 1.
+    @State private var swiped = 0.0
+    /// The swipe let go past its threshold: the level is leaving.
+    @State private var swipedAway = false
+    @State private var width: CGFloat = 0
+    /// The tank's origin in global points, where the edge band is.
+    @State private var tankOrigin = CGPoint.zero
+    /// UNSTIR_BACKSWIPE=0.4: the level held that far into a back swipe.
+    private let heldSwipe: Double?
+    /// UNSTIR_BACKSWIPE=run, or UNSTIR_EXIT=swipe: a second in, the swipe drawn by a fingertip, or only its commit.
+    private let playsSwipe: Bool
+    private let exitsBySwipe: Bool
+    @State private var swipeFinger = false
 
-    init(level: Level, harness: Harness?, onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void,
-         onLook: @escaping (Tier) -> Void) {
-        let game = Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
-                        storesProgress: harness?.harnessed != true)
-        game.turnTank(harness?.tank ?? 0)
-        if let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
+    /// `resumed`: the try a save brought back (`Game.resumed`), built before the view, as SwiftUI reruns this init for a
+    /// level it already shows. `storesResume`: the game built here saves its try, as on any launch but the harness's.
+    init(level: Level, harness: Harness?, resumed: Game? = nil, storesResume: Bool = false,
+         onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void, onLook: @escaping (Tier) -> Void,
+         onOffer: @escaping (Pack) -> Void, onPeek: @escaping (Bool?) -> Void = { _ in }) {
+        let game = resumed ?? Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
+                                   storesProgress: harness?.harnessed != true, storesResume: storesResume)
+        // A save with no line yet, a run's next tank, opens as any tank does.
+        self.resumed = !(resumed?.actions.isEmpty ?? true)
+        if resumed == nil { game.turnTank(harness?.tank ?? 0) }
+        if resumed == nil, let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
             // Solved through the real commit path; "result" first wastes two stirs, so taking them back costs moves.
             if h.screen == "result", let top = game.stack.last {
                 let count = level.layout.rods.count, home = game.knob(over: top.rod)
@@ -866,8 +1082,8 @@ struct LevelView: View {
                 if let t = game.reachable { game.commit(rod: t.rod, steps: t.steps); idle = 0 } else { game.turnTank(1); idle += 1 }
             }
         }
-        if let t = harness?.turned { game.commit(rod: t.rod, steps: t.steps) }
-        for m in harness?.played ?? [] {
+        if resumed == nil, let t = harness?.turned { game.commit(rod: t.rod, steps: t.steps) }
+        for m in resumed == nil ? harness?.played ?? [] : [] {
             if level.kind(of: m.rod) == .ratchet { game.wait(on: m.rod) } else { game.commit(rod: m.rod, steps: m.steps) }
         }
         _game = State(initialValue: game)
@@ -910,6 +1126,7 @@ struct LevelView: View {
         brimDemo = harness?.brimDemo ?? false
         stopLook = harness?.stopLook ?? .stamp
         shareSheet = harness?.shareSheet ?? false
+        now = harness?.now
         bench = harness?.bench ?? false
         _isolated = State(initialValue: harness?.swatch)
         letters = harness?.letters ?? false
@@ -919,14 +1136,109 @@ struct LevelView: View {
         today = harness?.today
         frozenBreath = harness?.breath
         rest = harness?.rest ?? 2
+        holdArmed = harness?.resetArmed ?? false
+        _armedAt = State(initialValue: holdArmed ? .now : nil)
         demoRetired = harness == nil && Best.load(level.id) != nil
-        _shown = State(initialValue: still || level.sandbox ? nil : 0)
+        // A resumed try opens where it was left, with no opening.
+        _shown = State(initialValue: still || level.sandbox || self.resumed ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
         self.onLook = onLook
+        self.onOffer = onOffer
+        self.onPeek = onPeek
+        heldSwipe = harness?.backSwipe
+        playsSwipe = harness?.backSwipeRun ?? false
+        exitsBySwipe = harness?.exit == "swipe"
     }
 
     var body: some View {
+        screen
+            // The level's edge, over the menu it slides off across: a hairline, as every line over the glass is.
+            .overlay(alignment: .leading) {
+                if swiped > 0 {
+                    Rectangle().fill(Color.text.opacity(0.2)).frame(width: 0.5).ignoresSafeArea().allowsHitTesting(false)
+                }
+            }
+            .offset(x: swiped * width)
+            .background { if swiped > 0 { Color.black.opacity(0.4 * (1 - swiped)).ignoresSafeArea() } }
+            .overlay(alignment: .leading) {
+                if swipeFinger {
+                    Circle().fill(Color.white.opacity(0.28)).overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 1))
+                        .frame(width: 40, height: 40).offset(x: swiped * width - 12).allowsHitTesting(false)
+                }
+            }
+            .simultaneousGesture(backSwipe)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+            .onChange(of: swipeHeld) {
+                // After onEnded, which may follow this, has had its say.
+                guard !swipeHeld else { return }
+                Task { if swipeTouch?.call == .swipe, !swipedAway { swipeTouch = nil; springBack() } }
+            }
+            .task {
+                if let heldSwipe { peek(); swiped = heldSwipe }
+                guard playsSwipe || exitsBySwipe, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
+                peek()
+                if playsSwipe, !reduceMotion {
+                    swipeFinger = true
+                    withAnimation(.easeInOut(duration: 0.5)) { swiped = 0.45 }
+                    guard (try? await Task.sleep(for: .seconds(0.5))) != nil else { return }
+                    swipeFinger = false
+                }
+                swipeAway()
+            }
+    }
+
+    /// The edge swipe back: the level follows the finger off over the menu, which `onPeek` draws under it, and past
+    /// `BackSwipe.commits` leaves as ‹ levels does. Under Reduce Motion nothing slides; past the threshold it dips.
+    private var backSwipe: some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .global)
+            .updating($swipeHeld) { _, held, _ in held = true }
+            .onChanged { v in
+                guard !swipedAway else { return }
+                if swipeTouch?.start != v.startLocation {
+                    let call = BackSwipe.decide(start: v.startLocation, translation: v.translation)
+                    guard call != .undecided else { return }
+                    // A finger already holding the tank keeps it.
+                    swipeTouch = (v.startLocation, call == .swipe && drag == nil && !spun ? .swipe : .pass)
+                    guard swipeTouch?.call == .swipe else { return }
+                    Log.write("back swipe")
+                    if !reduceMotion { peek() }
+                }
+                guard swipeTouch?.call == .swipe, !reduceMotion, width > 0 else { return }
+                swiped = max(0, v.translation.width) / width
+            }
+            .onEnded { v in
+                guard swipeTouch?.start == v.startLocation, swipeTouch?.call == .swipe, !swipedAway else { return }
+                swipeTouch = nil
+                if BackSwipe.commits(dx: v.translation.width, predicted: v.predictedEndTranslation.width, width: width) {
+                    swipeAway()
+                } else {
+                    springBack()
+                }
+            }
+    }
+
+    /// The menu under the level reads the endless run's save as it is built, so the save is written first, as leaving
+    /// writes it.
+    private func peek() {
+        Resume.save(game)
+        onPeek(game.solved)
+    }
+
+    private func swipeAway() {
+        swipedAway = true
+        Log.write("back swipe leaves")
+        guard !reduceMotion else { leave(); return }
+        withAnimation(.easeOut(duration: 0.2)) { swiped = 1 } completion: { leave() }
+    }
+
+    private func springBack() {
+        withAnimation(.spring(duration: 0.3)) { swiped = 0 } completion: {
+            if swiped == 0, swipeTouch?.call != .swipe { onPeek(nil) }
+        }
+    }
+
+    private var screen: some View {
         GeometryReader { geo in
             // The rim sits outside the glass, 0.045 of the radius on each side.
             let side = min(geo.size.width, geo.size.height - 290) / 1.045
@@ -947,8 +1259,8 @@ struct LevelView: View {
                         // Endless has no par; its brim is on the rim.
                         Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
                             // On black the wasted-twist alarm reads at full contrast, whatever the picture shows.
-                            .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { text, t in
-                                text.foregroundStyle(t > 0.5 ? Color.alarm : Color.text)
+                            .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { [tone = countTone] text, t in
+                                text.foregroundStyle(t > 0.5 ? Color.alarm : tone)
                             } keyframes: { _ in
                                 // Red for 0.4 s. A trailing MoveKeyframe never lands, so the ramp ends the flash.
                                 MoveKeyframe(1.0)
@@ -1009,7 +1321,7 @@ struct LevelView: View {
                 // exactly where it was played.
                 Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
-                    .font(.mono(12)).opacity(showResult || ending ? 0 : notice != nil ? 0.9 : noteLit ? 1 : 0.55)
+                    .font(.mono(12)).opacity(captionOpacity)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
@@ -1021,14 +1333,14 @@ struct LevelView: View {
                                 .padding(.top, 14)
                                 .transition(reveal)
                         } else if showResult {
-                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset)
+                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
                         }
                     }
                 // Only where colour can't carry the read, so for everyone else the read stays by colour.
-                if !game.level.masks.isEmpty, letters || differentiate || isolated != nil {
+                if !game.level.masks.isEmpty, letters || Letters.shown(system: differentiate) || isolated != nil {
                     ChannelSwatches(isolated: $isolated)
                         .opacity(showResult || ending || shown != nil ? 0 : 1)
                         .allowsHitTesting(!showResult && shown == nil)
@@ -1047,10 +1359,7 @@ struct LevelView: View {
                         .opacity(game.history.isEmpty || spent ? 0.35 : 1)
                         .overlay(alignment: .topTrailing) { refillBadge }
                     Spacer()
-                    control("reset", reset)
-                        .buttonStyle(Sounding(effect: .reset))
-                        .accessibilityLabel("Reset")
-                        .disabled(settling)
+                    resetControl
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
@@ -1066,8 +1375,9 @@ struct LevelView: View {
         .background(Color.black)
         .accessibilityAction(.escape) { leave() }
         .task(id: replays) {
-            if !game.level.demo.isEmpty && !still && (replays == 0 ? !demoRetired : fresh) { await clockDemo() }
-            if !game.level.sandbox, replays > 0 || !still { await open() }
+            let opens = replays > 0 || !resumed
+            if opens && !game.level.demo.isEmpty && !still && (replays == 0 ? !demoRetired : fresh) { await clockDemo() }
+            if opens, !game.level.sandbox, replays > 0 || !still { await open() }
             if autoplay && replays == 0 { await play() }
             if let moves, replays == 0 { await play(moves) }
             if brimDemo && replays == 0 { await demo() }
@@ -1227,7 +1537,8 @@ struct LevelView: View {
             if shown == nil { badge = game.badge }
         }
         .onChange(of: phase) {
-            if phase == .background { Analytics.shared.suspended(game); game.pauseClock() }
+            // The seconds since the last move, which the app may not come back for.
+            if phase == .background { Analytics.shared.suspended(game); game.pauseClock(); Resume.save(game) }
             if phase == .active { Analytics.shared.resumed(); game.resumeClock(); if knocks { Knock.warm(hold: false) } }
         }
         .onDisappear {
@@ -1236,6 +1547,34 @@ struct LevelView: View {
             Awake.hold(awakeID, false)
             Log.write("level \(game.level.id) exits \(state)")
         }
+    }
+
+    /// Out of `body`, whose one long expression an older compiler gives up on.
+    private var resetControl: some View {
+        control(armedAt == nil ? "reset" : "reset? tap again", tapReset)
+            // The tap that arms only taps; the one that resets sounds as a reset.
+            .buttonStyle(Sounding(effect: armedAt != nil || game.history.isEmpty ? .reset : .tap))
+            .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
+            .disabled(settling)
+            .accessibilityFocused($resetFocused)
+            .task(id: armedAt) {
+                // VoiceOver's announcement and its double tap take longer than the window.
+                guard armedAt != nil, !holdArmed, !voiceOver,
+                      (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
+                armedAt = nil
+            }
+            // Any move, undo or finish disarms it, so a second tap always resets what the first was shown.
+            .onChange(of: game.history) { if !holdArmed { armedAt = nil } }
+            .onChange(of: game.finished) { armedAt = nil }
+            .onChange(of: resetFocused) { if !resetFocused && voiceOver { armedAt = nil } }
+    }
+
+    /// The play screen's reset asks for a second tap; the cards' "again" resets at once, as a finished tank has nothing
+    /// a slip could lose.
+    private func tapReset() {
+        let tap = ResetArm.tap(now: .now, armedAt: armedAt, played: !game.history.isEmpty, held: voiceOver)
+        armedAt = tap.armedAt
+        if tap.reset { reset() } else { AccessibilityNotification.Announcement("Tap again to reset").post() }
     }
 
     private func reset() {
@@ -1262,6 +1601,25 @@ struct LevelView: View {
 
     nonisolated static let refills = "undos refill +2 each day you play"
 
+    /// A notice, or Escapement's dead tick, reads above the resting caption.
+    private var captionOpacity: Double {
+        if showResult || ending { return 0 }
+        if notice != nil || game.deadTick { return 0.9 }
+        return noteLit ? 1 : 0.55
+    }
+
+    /// Endless has no par to warn of.
+    private var countTone: Color { game.level.run == nil ? Self.parTone(moves: game.moves, par: game.par) : .text }
+
+    /// The header's count: amber at par, so the next move is over it, and magenta past it (Jack's call C11, round 13).
+    nonisolated static func parTone(moves: Int, par: Int) -> Color {
+        moves < par ? .text : moves == par ? .amber : .magenta
+    }
+
+    /// The solved picture's veil under the card, light enough that an over-par solve still shows what it unstirred
+    /// (Jack's call C11, round 13).
+    nonisolated static func haze(over: Int) -> Double { min(0.05 * Double(over), 0.2) }
+
     private func say(_ text: String) {
         notice = text
         notices += 1
@@ -1271,12 +1629,20 @@ struct LevelView: View {
     /// Back to the menu, the only way out short of a finish or the next tank.
     private func leave() {
         Analytics.shared.left(game)
+        Resume.save(game)
         onExit(game.solved)
     }
 
     private func look(_ tier: Tier) {
         Analytics.shared.left(game)
+        Resume.save(game)
         onLook(tier)
+    }
+
+    private func offer(_ pack: Pack) {
+        Analytics.shared.left(game)
+        Resume.save(game)
+        onOffer(pack)
     }
 
     /// Everything that decides what the tank draws, as the log shows it.
@@ -1597,7 +1963,7 @@ struct LevelView: View {
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
         let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
-                                  wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
+                                  wind: wind, side: side, haze: showResult ? Self.haze(over: game.over) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries, isolate: isolated)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
         let source = game.history.last.map { $0.rod == Game.tank ? .zero : centre(game.knob(over: $0.rod)) } ?? centre(0)
@@ -1795,7 +2161,7 @@ struct LevelView: View {
             }
             // A spilled tank keeps its caps over the murk, and a lost one its clock.
             .opacity(showResult && !game.spilled && !game.lost ? 0 : 1)
-            .environment(\.channelLetters, letters || differentiate)
+            .environment(\.channelLetters, letters || Letters.shown(system: differentiate))
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
             // knobs, which would hide it. The swirl's is a ring just inside the glass's edge, over the picture, so a
             // hairline. One view either way, so the first push on either animates.
@@ -1853,26 +2219,27 @@ struct LevelView: View {
         .onChange(of: holding) { _, now in if !now, let g = drag { cut(g) } }
         // Not .none: that also switches off the gesture above.
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
-        .sensoryFeedback(.impact(weight: .light, intensity: 0.7), trigger: grabs)
-        .sensoryFeedback(.selection, trigger: ticks)
-        .sensoryFeedback(.selection, trigger: misses)
+        .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
+        .haptic(.selection, trigger: ticks)
+        .haptic(.selection, trigger: misses)
         .onChange(of: ticks) { Sound.shared.play(.tick) }
         .onChange(of: tankTicks) { Knock.clunk.play(); Sound.shared.play(.tank) }
-        .sensoryFeedback(.impact(weight: .heavy), trigger: game.cancels)
+        .haptic(.impact(weight: .heavy), trigger: game.cancels)
         // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
         .onChange(of: game.heals) { was, now in if now > was { Sound.shared.play(.heal(now)) } }
-        .sensoryFeedback(.warning, trigger: game.pushes)
+        .haptic(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
-        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
-        .sensoryFeedback(.error, trigger: game.tickPushes)
-        .sensoryFeedback(.success, trigger: game.solved) { _, solved in solved }
+        .haptic(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
+        .haptic(.error, trigger: game.tickPushes)
+        .haptic(.success, trigger: game.solved) { _, solved in solved }
         // One sound for the end, as its card shows it.
         .onChange(of: game.finished) { if game.finished { Sound.shared.play(game.solved ? .solve : .spilled) } }
         // Keeps texture pixels on device pixels, so the untwisted picture is not blurred by half a pixel.
         .offset(snap)
         .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { o in
             snap = CGSize(width: (o.x * scale).rounded() / scale - o.x, height: (o.y * scale).rounded() / scale - o.y)
+            tankOrigin = o
         }
         .padding(0.045 * r)
     }
@@ -1921,6 +2288,7 @@ struct LevelView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(game.budget) ticks left")
+        .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(game.deadTickWords).post() } }
     }
 
     /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
@@ -2139,11 +2507,17 @@ struct LevelView: View {
         return DragGesture(minimumDistance: 0)
             .updating($holding) { _, holding, _ in holding = true }
             .onChanged { v in
-                guard !settling, !game.finished, v.startLocation != skippedDemo else { return }
+                // A touch from the screen's left edge is the back swipe's until it decides; one it passes is taken up
+                // from where it landed, before it skips the opening.
+                if drag?.start != v.startLocation {
+                    edgeTouch = BackSwipe.edge(edgeTouch, start: v.startLocation, origin: tankOrigin, translation: v.translation)
+                    if let edge = edgeTouch, edge.call != .pass { return }
+                }
+                guard !settling, !game.finished, !swipedAway, v.startLocation != skippedDemo else { return }
                 // A touch skips the opening as it lands, then takes up what it landed on; one that skips the clock's
                 // demonstration holds nothing, as the problem has still to wind in.
                 if demoing { skip(); skippedDemo = v.startLocation; return }
-                if shown != nil { skip(); skipped = v.startLocation }
+                if shown != nil { skip() }
                 let q = norm(v.location)
                 let level = game.level
                 // Keyed on the start point because a cancelled drag never reaches onEnded; a new touch starts afresh.
@@ -2185,8 +2559,12 @@ struct LevelView: View {
                 }
             }
             .onEnded { v in
-                defer { skipped = nil }
                 if v.startLocation == skippedDemo { skippedDemo = nil; return }
+                // An edge touch never taken up was the back swipe's, or a tap.
+                if edgeTouch?.start == v.startLocation {
+                    edgeTouch = nil
+                    if drag?.start != v.startLocation { return }
+                }
                 if skip() { return }
                 // The lift can carry movement no change reported.
                 if let down = path?.down { path!.trail.add(norm(v.location), ms: Self.ms(v.time, since: down)) }
@@ -2239,12 +2617,6 @@ struct LevelView: View {
         } else {
             liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
         }
-        // A touch that skipped the opening was not yet a try, so it counts once it commits.
-        if drag?.start != skipped { markStarted() }
-    }
-
-    private func markStarted() {
-        if !game.level.sandbox && game.level.keepsProgress { Best.start(game.level.id, store: game.storesProgress) }
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
@@ -2373,7 +2745,6 @@ struct LevelView: View {
         } completion: {
             liveTurn = nil
             settling = false
-            if steps % game.level.layout.order != 0 { markStarted() }
             game.turnTank(steps)
         }
     }
@@ -2404,9 +2775,21 @@ struct LevelView: View {
             liveAngle = 0
             settling = false
             guard steps != 0 else { return }
-            markStarted()
             game.commit(rod: k, steps: steps)
         }
+    }
+}
+
+/// The reset control's two taps (Jack's call C12, round 13): with moves played, a first tap arms it and only a second
+/// within `window` resets; with nothing played it resets at once, as that only replays the opening. `held`, under
+/// VoiceOver, keeps the arm past the window, until a move or focus leaving the control disarms it.
+enum ResetArm {
+    static let window: TimeInterval = 2
+
+    static func tap(now: Date, armedAt: Date?, played: Bool, held: Bool = false) -> (reset: Bool, armedAt: Date?) {
+        guard played else { return (true, nil) }
+        if let armedAt, held || now.timeIntervalSince(armedAt) < window { return (true, nil) }
+        return (false, now)
     }
 }
 
@@ -2569,7 +2952,7 @@ struct KnobLesson: View {
     /// Starts the engine ahead of the first knock, whose start would otherwise hitch the frame it lands on.
     static func warm(hold: Bool = true) {
         if hold { holders += 1 }
-        guard !running, let engine else { return }
+        guard Settings.haptics, !running, let engine else { return }
         running = (try? engine.start()) != nil
     }
 
@@ -2581,7 +2964,7 @@ struct KnobLesson: View {
     }
 
     func play() {
-        guard let engine = Self.engine, let pattern = self == .clunk ? Self.clunkPattern : Self.thudPattern else { return }
+        guard Settings.haptics, let engine = Self.engine, let pattern = self == .clunk ? Self.clunkPattern : Self.thudPattern else { return }
         if !Self.running {
             guard (try? engine.start()) != nil else { return }
             Self.running = true
@@ -2602,6 +2985,8 @@ struct Unstirred: ViewModifier, Animatable {
     var liveRod: Int?
     var liveAngle: Double
     var wind = 1.0
+    /// Each entry's own share of its turn, in place of `wind`: a dock cover winds its stack an entry at a time.
+    var shares: [Double]?
     var side: CGFloat
     /// Drains the colour towards grey.
     var haze = 0.0
@@ -2636,7 +3021,7 @@ struct Unstirred: ViewModifier, Animatable {
             floats.append(Float(lens ? -rods[rod].z : rods[rod].z))
             floats.append(Float(lens ? angle / Tank.step * Tank.lensRate : angle))
         }
-        for t in stack { add(t.rod, Double(t.steps) * Tank.step * min(wind, 1)) }
+        for (i, t) in stack.enumerated() { add(t.rod, Double(t.steps) * Tank.step * min(shares?[i] ?? wind, 1)) }
         if let tick { add(tick.rod, tick.angle) }
         if let liveRod { add(liveRod, liveAngle) }
         let breathes = breath.map { $0.angle != 0 } ?? false
@@ -2692,12 +3077,28 @@ extension Channels {
     var name: String { self == .red ? "red" : self == .green ? "green" : "blue" }
 }
 
+/// The settings' colour letters, stored as `letters`. Absent until the player chooses, so the letters follow
+/// Differentiate Without Colour, today's and any later change of it, until then.
+enum Letters {
+    static var choice: Bool? {
+        get {
+            if let held = Settings.held.withLock({ $0 }) { return held["letters"] }
+            return UserDefaults.standard.object(forKey: "letters") as? Bool
+        }
+        set {
+            if !Settings.keep("letters", newValue) { UserDefaults.standard.set(newValue, forKey: "letters") }
+        }
+    }
+
+    static func shown(system: Bool) -> Bool { choice ?? system }
+}
+
 extension EnvironmentValues {
-    /// Prism's knobs spell out their channels: Differentiate Without Colour, or the harness's UNSTIR_LETTERS.
+    /// Prism's knobs spell out their channels: the settings' colour letters, or the harness's UNSTIR_LETTERS.
     @Entry var channelLetters = false
 }
 
-/// Prism's swatches, red, green and blue, shown under Differentiate Without Colour: holding one draws that channel alone
+/// Prism's swatches, red, green and blue, shown with the colour letters: holding one draws that channel alone
 /// in white, the others hidden, so which lines a channel has stirred reads by shape alone. VoiceOver toggles one instead
 /// of holding it.
 struct ChannelSwatches: View {
@@ -3010,6 +3411,28 @@ struct RodView: View {
     }
 }
 
+/// The last of a pack's levels, or of the last tier's, given a best (Jack's call C8, round 13).
+enum Completion: Equatable {
+    case pack(Pack), free
+
+    var pack: Pack? { if case .pack(let p) = self { p } else { nil } }
+
+    var line: String {
+        switch self {
+        case .pack(let p): "\(p.name) complete \u{00B7} \(p.levels.count) \(p.noun)"
+        case .free: "every tier unstirred"
+        }
+    }
+
+    /// The line as VoiceOver says it, without the middle dot.
+    var spoken: String {
+        switch self {
+        case .pack(let p): "\(p.name) complete, \(p.levels.count) \(p.noun)."
+        case .free: "Every tier unstirred."
+        }
+    }
+}
+
 struct ResultCard: View {
     let game: Game
     let onExit: () -> Void
@@ -3018,6 +3441,9 @@ struct ResultCard: View {
     @AccessibilityFocusState private var focused: Bool
     /// A reset from the card, for another go at a solve that wasn't clean.
     let again: () -> Void
+    /// The harness's clock for the daily's next one; nil reads the time.
+    let now: Date?
+    let onOffer: (Pack) -> Void
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
@@ -3037,47 +3463,58 @@ struct ResultCard: View {
         }
         let accent = game.level.pack.map { Offer.pack($0).glow } ?? tierAccent
         let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
-        let time = String(format: "%d:%02d", game.seconds / 60, game.seconds % 60)
         VStack(spacing: 26) {
-            VStack(spacing: 8) {
-                if let run {
-                    Text("moves \(game.moves) \u{00B7} \(time)")
-                    if game.spilled && run.tank > run.best {
-                        Text("tanks cleared \(run.tank) \u{00B7} ") + Text("new best").foregroundStyle(Color.lime)
+            VStack(spacing: 10) {
+                VStack(spacing: 8) {
+                    if let run {
+                        Text("moves \(game.moves)")
+                        if game.spilled && run.tank > run.best {
+                            Text("tanks cleared \(run.tank) \u{00B7} ") + Text("new best").foregroundStyle(Color.lime)
+                        } else {
+                            Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
+                                 : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                        }
+                    } else if !game.level.ratchets.isEmpty {
+                        // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round
+                        // 11), so the ticks say nothing.
+                        Text("solved in \(game.moves) moves")
+                        if game.clean {
+                            Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
+                        } else {
+                            Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
+                                .foregroundStyle(Color.amber)
+                        }
                     } else {
-                        Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
-                             : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                        Text("moves \(game.moves) \u{00B7} par \(game.par)")
+                        if game.clean {
+                            Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
+                        } else if game.over > 0 {
+                            Text("+\(game.over) over par").foregroundStyle(Color.magenta)
+                        } else {
+                            Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
+                                .foregroundStyle(Color.amber)
+                        }
                     }
-                } else if !game.level.ratchets.isEmpty {
-                    // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round 11), so
-                    // the ticks say nothing.
-                    Text("solved in \(game.moves) moves \u{00B7} \(time)")
-                    if game.clean {
-                        Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-                    } else {
-                        Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-                            .foregroundStyle(Color.amber)
+                    if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
+                        Text(line).opacity(0.6)
                     }
-                } else {
-                    Text("moves \(game.moves) \u{00B7} par \(game.par) \u{00B7} \(time)")
-                    if game.clean {
-                        Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-                    } else if game.over > 0 {
-                        Text("+\(game.over) over par").foregroundStyle(Color.magenta)
-                    } else {
-                        Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-                            .foregroundStyle(Color.amber)
+                    if let done = game.completed {
+                        Text(done.line).fontWeight(.semibold).foregroundStyle(accent).shadow(color: accent, radius: 3)
+                            .padding(.top, 4)
                     }
                 }
-                if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
-                    Text(line).opacity(0.6)
+                .font(.mono(13))
+                // Focus lands on the finish itself: an announcement before a focus move is cut short.
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(game.finishSpoken)
+                .accessibilityFocused($focused)
+                if let pack = Offer.pointer(after: game.completed) {
+                    // Quiet: the card's way on is still next, or up a notch.
+                    Button { onOffer(pack) } label: { Text("try \(pack.name) \u{203A}").hit() }
+                        .font(.mono(.caption)).opacity(0.6)
+                        .accessibilityLabel("Try \(pack.name)")
                 }
             }
-            .font(.mono(13))
-            // Focus lands on the finish itself: an announcement before a focus move is cut short.
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(game.finishSpoken)
-            .accessibilityFocused($focused)
             HStack(spacing: 32) {
                 Button(action: onExit) { Text(game.level.back).hit() }
                     .accessibilityLabel(Spoken.back(game.level))
@@ -3101,11 +3538,35 @@ struct ResultCard: View {
                 }
             }
             .font(.mono(15, .medium))
+            if let day = Share.day(of: game.level.id) {
+                TimelineView(.everyMinute) { t in
+                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.mono(12)).opacity(0.55)
+                        .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
+                }
+            }
             if let up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil) {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
         .onAppear { focused = true }
+    }
+}
+
+/// The one rating request (Jack's call C20, round 13): on the card of the solve that opens whirlpool, a tier's worth of
+/// play in and on a high. A launch that saw a purchase land skips it, and since that solve comes once, never asks.
+/// `RootView` makes it, not the card: a tap on within the wait would take it with the card, for good.
+@MainActor @Observable final class Review {
+    static let shared = Review()
+    /// The solve that opens whirlpool came this launch, and the request hasn't been made.
+    var pending = false
+    /// The launch's: a harnessed one, or the test host, never asks, and UNSTIR_REVIEW=log logs the request in place of
+    /// making it.
+    static var harnessed = false, logs = false
+    /// 2 s after the card, which shows 1.4 s after the solve.
+    static let wait = 3.4
+
+    static func due(opened: Tier?, asked: Bool, harnessed: Bool, purchased: Bool) -> Bool {
+        opened == .whirlpool && !asked && !harnessed && !purchased
     }
 }
 

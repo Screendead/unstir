@@ -325,4 +325,21 @@ final class PrismTests: XCTestCase {
             XCTAssertEqual(Solver(level.layout, masks: level.masks).optimum(level.scramble), level.par, level.id)
         }
     }
+
+    /// Until the player chooses in settings, the letters follow Differentiate Without Colour either way; a choice holds
+    /// whatever the system says. Jack's call C16, round 13.
+    func testLettersFollowTheSystemUntilChosen() {
+        let saved = UserDefaults.standard.object(forKey: "letters")
+        defer { UserDefaults.standard.set(saved, forKey: "letters") }
+        Letters.choice = nil
+        XCTAssertNil(UserDefaults.standard.object(forKey: "letters"))
+        XCTAssertTrue(Letters.shown(system: true))
+        XCTAssertFalse(Letters.shown(system: false))
+        Letters.choice = false
+        XCTAssertFalse(Letters.shown(system: true))
+        Letters.choice = true
+        XCTAssertTrue(Letters.shown(system: false))
+        XCTAssertEqual(Offer.pack(.prism).note, "letters for colour-blind play, in settings")
+        XCTAssertNil(Offer.pack(.lens).note)
+    }
 }

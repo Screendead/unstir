@@ -44,12 +44,12 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch (in a build with analytics, the question answered): only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23." CONSENT=yes
+shot menu "Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock." CONSENT=yes
 shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
-shot menu-whirlpool-locked "Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
+shot menu-whirlpool-locked "Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
 shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked." \
   TIER=whirlpool BESTS=plughole:$par27
 shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played)." \
@@ -63,18 +63,29 @@ shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, h
   TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33
 # Where the list opens: a cold launch, and back from a level through RootView's own exit (UNSTIR_EXIT).
 upto13=0000000000000
+# What the menu leads with (C4, C5, C18, C3's tried mark).
+shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it." FRESH=1 OPEN=1
+shot menu-after-01 "Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list." BESTS=plughole:0
+shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox." \
+  TIER=whirlpool BESTS=plughole:$par27
+shot menu-daily-run "The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more." \
+  TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
+shot menu-tried "Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row." BESTS=plughole:$upto13 TRIED=L14
+shot menu-no-dock "Plughole 01 to 08 solved: no pack dock yet." BESTS=plughole:00000000
 shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
   BESTS=plughole:$upto13
 shot menu-locktap "Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit." \
   BESTS=plughole:$upto13 LOCKTAP=L15
 shot menu-back-left "Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12." \
   LEVEL=12 EXIT=left BESTS=plughole:00000000000000000000
+shot back-swipe "Plughole 05 held 40% into an edge swipe back: the level sliding right over the menu, centred on 05, 01 to 04 solved." LEVEL=5 BACKSWIPE=0.4 BESTS=plughole:0000
+shot menu-back-swiped "Back from plughole 12 by the edge swipe: the list centred on 12." LEVEL=12 EXIT=swipe BESTS=plughole:00000000000000000000
 shot menu-back-solved "Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens." \
   SCREEN=clean LEVEL=14 EXIT=solved BESTS=plughole:$upto13
 shot menu-mid-switch-scrolled "The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin." \
   BESTS=plughole:$upto13 TIERSPIN=0.25:0.1
 # A switch lands on the new tier's first level without a best, a locked tier's header over its gate, or the top.
-hold=4.4 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
+hold=3.9 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
 hold=8.5 shot menu-switch-locked "Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 17 of whirlpool's 27 at par: vortex is locked, so the list landed on its header, over the gate and its short list." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
@@ -146,6 +157,13 @@ shot endless-spilled "The same, 6 s in: the picture stirred together, its finest
   MODE=endless BRIM=7 TURNED=1:1 CLOCK=6
 shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch)." \
   LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
+shot reset-armed "Level 12 with two moves played, reset tapped once: it reads reset? tap again." \
+  LEVEL=12 PLAYED=0:+1,1:+1 RESETARMED=1
+# UNSTIR_RESUME saves the level's try with that line for the launch: UNSTIR_MOVES's form, plus u an undo and r a reset.
+shot level-resumed "Level 12 reopened mid-try, its saved line replayed (rod 2 healed, a wasted stir on rod 0 undone, rod 1 healed): four entries left, moves 2 / par 6, the undo already spent from the bank, and no opening." \
+  LEVEL=12 UNDOS=9 RESUME=2:+5,0:+2,u,1:+3
+shot menu-endless-continue "The menu with an endless run saved on tank 6, brim 3, best 9 tanks: the endless row reads continue · tank 6 · brim 3 · best 9, with new run on its title's line in place of the best." \
+  BESTS=plughole:$par27,endless:9 MODE=endless SCREEN=menu RESUME= RESUMETANK=5 BRIM=3
 shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
   MODE=sandbox CLOCK=3
 full=$(for i in $(seq 0 35); do printf '%d:+1,' $((i % 2)); done)
@@ -157,11 +175,20 @@ hold=9 shot knob-lesson "Level 01 left untouched 4 s (no opening: a still launch
   LEVEL=1 CLOCK=0
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
+shot level-at-par "Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber." \
+  LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
+shot level-over-par "The same a push later: moves 6 / par 5 in magenta." LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2,3:+2
+shot result-veil "Level 11 solved in 9, four over par: the picture under the card veiled at 0.2, its most." \
+  LEVEL=11 PLAYED=0:+1,2:-6,0:-1,3:+1,1:+4,3:+4,0:+1,2:+4,0:-5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
 shot result-again-best "Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside levels and next." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006
 shot result-fullest "Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows." \
   SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
+shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels in Lens's magenta, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's)." \
+  PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
+shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred in maelstrom's red, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
+  SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir BESTS=plughole:000000000000000000000000000,whirlpool:000000000000000000000000000,vortex:000000000000000000000000000,maelstrom:00000000000000000000000000- CLOCK=0
 shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
 shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate." \
@@ -170,8 +197,8 @@ shot tier-up-midway "Plughole 05 solved at par, the last plughole level to reach
   SCREEN=clean LEVEL=5 BESTS=plughole:0000-0000000000000000000000 CLOCK=0
 shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over)." \
   TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:000100000010000000000200000
-shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels." \
-  SCREEN=result MODE=daily
+shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00)." \
+  SCREEN=result MODE=daily NOW=17:00
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
   SCREEN=result MODE=daily SHARESHEET=1
 for w in 0.4 0.8 1.2; do
@@ -479,18 +506,40 @@ if [[ -z "$pattern" || card-lens == *$pattern* || clip-lens == *$pattern* || she
 fi
 # The pack shelf: a dock of live covers along the bottom of the menu, each opening its pack's card (UNSTIR_CARD). Clips
 # held 5.4 s in. Prices are the StoreKit configuration's, as a US storefront shows them.
-shot shelf-menu "Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." STORE=lens:unowned CLOCK=5.4
+# The dock shows once plughole 09 is solved.
+nine=000000000
+shot shelf-menu "Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." \
+  STORE=lens:unowned CLOCK=5.4 BESTS=plughole:$nine
+shot shelf-menu-stirred "The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Complete (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's grid clean, Prism's fern just stirring in." \
+  STORE=lens:unowned CLOCK=2.8 BESTS=plughole:$nine
+shot shelf-menu-clean "The dock at the top of its loop: First Stir and Complete clean, Lens stirring in, Escapement and Prism unstirring." \
+  STORE=lens:unowned CLOCK=0 BESTS=plughole:$nine
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
-  OWNED=lens STORE=escapement:pending CLOCK=5.4
+  OWNED=lens STORE=escapement:pending CLOCK=5.4 BESTS=plughole:$nine
+shot shelf-new "Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir." \
+  BESTS=plughole:$par27 STORE=lens:unowned CLOCK=5.4
+shot shelf-taste-count "Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens." BESTS=plughole:000000000,lens:00 STORE=lens:unowned CLOCK=5.4
+shot shelf-new-levels "Lens owned, its card last opened with 20 levels: new under Lens beside the check." \
+  BESTS=plughole:000000000 OWNED=lens SEENLEVELS=lens:20 CLOCK=5.4
+shot shelf-approved "The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header." \
+  BESTS=plughole:000000000 OWNED=lens APPROVED=lens CLOCK=1
 for state in unowned owned pending failed revoked; do
-  shot card-lens-$state "Lens's card, $state." CARD=lens STORE=lens:$state CLOCK=5.4
+  saves=": Complete's line saves \$5.97 on the four packs a Debug build sells"
+  [[ $state == owned ]] && saves=""
+  shot card-lens-$state "Lens's card, $state$saves." CARD=lens STORE=lens:$state CLOCK=5.4
 done
+shot card-prism-no-complete "Prism's card with Lens and First Stir owned (a Debug build sells four): no Complete line, since \$5.99 is more than the two packs left." \
+  CARD=prism OWNED=lens,first-stir CLOCK=5.4
+shot shelf-menu-lens-owned "The dock with Lens and First Stir owned: no Complete cover, since it costs more than the two packs left." \
+  BESTS=plughole:000000000 OWNED=lens,first-stir CLOCK=5.4
 shot card-first-stir "First Stir's card, unowned." CARD=first-stir STORE=lens:unowned CLOCK=5.4
 shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:unowned CLOCK=5.4
-shot card-prism "Prism's card, unowned: the fern printed off register in red, green and blue, its clip, and its 30 specimens under five tray headings." \
+shot card-prism "Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings." \
   CARD=prism STORE=lens:unowned CLOCK=5.4
 shot card-prism-levels "Prism's card, owned, scrolled to its specimens under the five trays." CARD=prism OWNED=prism CARDSCROLL=1 CLOCK=5.4
-shot card-complete "Complete's card, unowned." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-complete "Complete's card, unowned: save \$5.97 on the packs you don't have." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-complete-saves-nothing "UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover." \
+  CARD=complete OWNED=lens,first-stir CLOCK=5.4
 # Each card's clip (`Clip`) held on the frame Reduce Motion holds, and a few frames either side of it.
 shot clip-first-stir-still "First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm." \
   CARD=first-stir STORE=lens:unowned CLOCK=4.2
@@ -522,10 +571,12 @@ shot card-lens-asked-offline "Lens's card after asking again offline: still wait
   CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
 shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
   CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
+shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74)." \
+  CARD=lens OWNED=lens BESTS=lens:0 TRIED=lens-2 CARDSCROLL=1 CLOCK=5.4
 shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \
   OWNED=complete CLOCK=5.4
-shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
-shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live." \
+shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading, and no Complete line until the prices say what it saves." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
+shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Complete line." \
   CARD=lens STORE=lens:unowned PRICES=unreachable CLOCK=5.4
 shot card-lens-unshared "Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey." \
   CARD=lens STORE=lens:unshared CLOCK=5.4
@@ -536,11 +587,13 @@ shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone
 shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
 shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
   CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
-shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
-  CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
-shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
+shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked." \
+  CARD=lens STORE=lens:unowned CARDSCROLL=1 CLOCK=5.4
+shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDSCROLL=1 CLOCK=5.4
 shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
+shot card-gate-ax "The same at accessibility3: the Complete line under buy wraps only before · save." \
+  PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4 TYPESIZE=accessibility3
 shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
   PACK=lens LEVEL=3 SCREEN=clean STORE=lens:unowned CLOCK=5.4
 shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's magenta." \
@@ -548,7 +601,7 @@ shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's mag
 shot card-lens-replay "Lens's card, unowned, the taste played: replay 01-03 in try free's place." \
   CARD=lens STORE=lens:unowned BESTS=lens:000 CLOCK=5.4
 shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
-  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
+  STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5 BESTS=plughole:$nine
 shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \
   CARD=lens STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
 shot card-lens-xxxl "Lens's card at xxxLarge, the largest size short of the accessibility ones: each key whole beside its fact." \
@@ -558,9 +611,10 @@ shot card-lens-xxxl "Lens's card at xxxLarge, the largest size short of the acce
 shot consent-ask "First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no." CONSENT=ask
 shot consent-sends "First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again." CONSENT=sends
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
-shot consent-settings-on "The gear's sheet: the analytics switch on, send log and privacy policy." CONSENT=yes SETTINGS=1
-shot consent-settings-off "The gear's sheet: the analytics switch off, send log and privacy policy." CONSENT=no SETTINGS=1
-shot settings "The gear's sheet in a build without analytics, v1's: restore purchases, send log and privacy policy, no switch, the version under them." SETTINGS=1
+shot consent-settings-on "The gear's sheet: music, sounds, haptics and colour letters, the analytics switch on, report a problem and privacy policy." CONSENT=yes SETTINGS=1
+shot consent-settings-off "The gear's sheet: music, sounds, haptics and colour letters, the analytics switch off, report a problem and privacy policy." CONSENT=no SETTINGS=1
+shot settings "Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version." SETTINGS=1
+shot settings-quiet "Settings with music and haptics off." SETTINGS=1 MUSIC=0 HAPTICS=0
 shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
   SETTINGS=1 STORE=lens:unowned RESTORED=none
 
@@ -575,8 +629,10 @@ shot escapement-card "Escapement's card, owned, scrolled to its levels under the
 # in 3 by 2:+4, a wait (a ratchet's move, 0:1) and 1:-3. UNSTIR_PLAYED plays a line through the real path as it opens.
 shot escapement-2-ticked "Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02." \
   PACK=escapement LEVEL=2 PLAYED=2:4
-shot escapement-2-pushed "Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left." \
+shot escapement-2-pushed "Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3
+shot escapement-dead-tick "Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again." \
+  PACK=escapement OWNED=escapement LEVEL=4 PLAYED=1:1
 shot escapement-2-out "Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
@@ -632,6 +688,7 @@ for c in r g b; do
 done
 hold=5 shot prism-letters-8 "Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB." \
   PACK=prism LEVEL=8 OWNED=prism LETTERS=1
+hold=5 shot prism-letters-chosen "Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches." PACK=prism LEVEL=1 LETTERSCHOICE=1
 hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG." PACK=prism LEVEL=14 OWNED=prism LETTERS=1
 for plate in seeds medusae radiolaria nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1

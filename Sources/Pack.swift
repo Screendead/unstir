@@ -46,8 +46,36 @@ enum Pack: String, CaseIterable, Sendable {
         return names.count < 2 ? names.joined() : names.dropLast().joined(separator: ", ") + " and " + names.last!
     }
 
+    /// What its levels are, as its card and a completion say them.
+    var noun: String {
+        switch self {
+        case .firstStir: "scenes"
+        case .lens: "panels"
+        case .escapement: "problems"
+        case .prism: "specimens"
+        }
+    }
+
     /// Levels 1 to `taste` play without the pack.
     var taste: Int { 3 }
+
+    /// The player's progress has reached what the pack assumes, so its cover marks it new (Jack's call C6, round 13):
+    /// Lens and Prism once every plughole level has a best, Escapement once maelstrom is open. First Stir, out of v1,
+    /// never marks.
+    func fits(best: (String) -> Best? = Best.load) -> Bool {
+        switch self {
+        case .lens, .prism: Tier.plughole.levels.allSatisfy { best($0.id) != nil }
+        case .escapement: Tier.maelstrom.isOpen(unlocked: false, best)
+        case .firstStir: false
+        }
+    }
+
+    /// How many of the free levels have a best, once any of them is started or has one; nil before.
+    func tastePlayed(best: (String) -> Best? = Best.load, started: (String) -> Bool = Best.started) -> Int? {
+        let free = levels.prefix(taste)
+        guard free.contains(where: { started($0.id) || best($0.id) != nil }) else { return nil }
+        return free.filter { best($0.id) != nil }.count
+    }
 
     /// How many levels its design plans; until it has them all, its card says more arrive in an update.
     var planned: Int {

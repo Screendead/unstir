@@ -2,7 +2,7 @@
 
 import Foundation
 
-struct Run: Hashable, Sendable {
+struct Run: Hashable, Sendable, Codable {
     var seed: UInt64
     var tank = 0
     /// Notches on the brim as this tank opens, as the tank before left them.
@@ -306,16 +306,23 @@ struct Level: Hashable, Sendable {
               motion: .tank, fixedPar: l.3)
     }
 
+    /// The day's yyyymmdd on the Gregorian calendar in the current zone: the daily's seed and, in its id, its best's key.
+    static func dailyDay(_ date: Date) -> Int {
+        let c = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: date)
+        return c.year! * 10000 + c.month! * 100 + c.day!
+    }
+
+    static func dailyID(_ date: Date) -> String { "daily-\(dailyDay(date))" }
+
     /// Everyone gets the same tank that day: seeded from yyyymmdd.
     static func daily(_ date: Date = .now) -> Level {
-        let c = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: date)
-        let ymd = c.year! * 10000 + c.month! * 100 + c.day!
+        let ymd = dailyDay(date)
         var rng = SplitMix64(state: UInt64(ymd))
         let layout = generated[rng.below(4)]
         let depth = 10 + rng.below(5)
         // The id keys the day's stored best, so it stays yyyymmdd; only the title follows the locale.
         let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        return Level(id: "daily-\(ymd)", label: "day", title: "Daily \u{00B7} \(day)",
+        return Level(id: dailyID(date), label: "day", title: "Daily \u{00B7} \(day)",
                      layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng))
     }
 
@@ -405,6 +412,34 @@ struct SplitMix64: RandomNumberGenerator {
     mutating func below(_ n: Int) -> Int { Int(next() % UInt64(n)) }
 }
 
+enum Daily {
+    /// Until the local midnight that ends `day` (a daily's yyyymmdd), when the id and so the tank change: "next daily in
+    /// 7 h", hours to the nearest; under an hour, minutes; past it, "next daily is out", since the menu has dealt it. The
+    /// next day's start, so a day the clocks change on is 23 or 25 hours long. `spoken` names the units for VoiceOver.
+    static func untilNext(day: Int, now: Date = .now, calendar: Calendar = Calendar(identifier: .gregorian),
+                          spoken: Bool = false) -> String {
+        let start = calendar.date(from: DateComponents(year: day / 10000, month: day / 100 % 100, day: day % 100))!
+        let midnight = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: start)!)
+        let s = midnight.timeIntervalSince(now)
+        guard s > 0 else { return "next daily is out" }
+        let minutes = max(1, Int((s / 60).rounded())), hours = max(1, Int((s / 3600).rounded()))
+        if minutes < 60 { return "next daily in " + (spoken ? Spoken.count(minutes, "minute") : "\(minutes) min") }
+        return "next daily in " + (spoken ? Spoken.count(hours, "hour") : "\(hours) h")
+    }
+
+    /// Once today's daily has a best, the days in a row ending today that have one: only a first try saves a daily's
+    /// best, so practice never counts. 0 before today's solve, so a broken run is never announced.
+    static func run(today: Date, best: (String) -> Best? = Best.load) -> Int {
+        let calendar = Calendar(identifier: .gregorian)
+        var day = today, n = 0
+        while best(Level.dailyID(day)) != nil, let before = calendar.date(byAdding: .day, value: -1, to: day) {
+            n += 1
+            day = before
+        }
+        return n
+    }
+}
+
 /// Saves from before hints went also hold a `hints` count, which decoding ignores, so those bests still load and count.
 struct Best: Codable {
     var over: Int, seconds: Int
@@ -424,16 +459,15 @@ struct Best: Codable {
     /// Clean, then fewer over par: what a result card names, so it calls a best new only when that changes.
     var standing: (Int, Int) { (clean == true ? 0 : 1, over) }
 
-    /// Keeps the better of this and the stored result: clean, then fewer over par, then faster. Unstored, the
-    /// harness's, it lasts only this launch, as `fake`'s does.
+    /// Keeps the better of this and the stored result: clean, then fewer over par, never faster (Jack's call C10, round
+    /// 13), so a tie keeps the older. Unstored, the harness's, it lasts only this launch, as `fake`'s does.
     func save(_ id: String, store: Bool = true) {
-        func rank(_ b: Best) -> (Int, Int, Int) { (b.standing.0, b.standing.1, b.seconds) }
-        if let old = Best.load(id), rank(old) <= rank(self) { return }
+        if let old = Best.load(id), old.standing <= standing { return }
         if store { UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)") } else { fake(id) }
     }
 
-    /// Set when a rod is first touched: probing counts as trying, only studying the still is free. Unstored, the
-    /// harness's, it lasts only this launch.
+    /// Set by the first committed move: a look, a touch or a turn let go where it began, is free (Jack's call C3, round
+    /// 13). Unstored, the harness's, it lasts only this launch.
     static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
     static func start(_ id: String, store: Bool = true) {
         guard !started(id) else { return }
@@ -465,6 +499,12 @@ struct Best: Codable {
     static var refillShown: Bool {
         get { UserDefaults.standard.bool(forKey: "undos.shown") }
         set { UserDefaults.standard.set(newValue, forKey: "undos.shown") }
+    }
+
+    /// The one rating request has been made (`Review`); Apple's own cap is three a year.
+    static var reviewAsked: Bool {
+        get { UserDefaults.standard.bool(forKey: "review.asked") }
+        set { UserDefaults.standard.set(newValue, forKey: "review.asked") }
     }
 
     /// A calendar day in `zone` as yyyy-MM-dd, so days compare as strings. Gregorian whatever the phone's calendar, so a
@@ -587,5 +627,20 @@ struct Best: Codable {
     static var tanks: Int {
         get { UserDefaults.standard.integer(forKey: "endless.tanks") }
         set { UserDefaults.standard.set(newValue, forKey: "endless.tanks") }
+    }
+
+    /// Set as a fresh install's first launch opens straight into plughole 01, so it does so once (Jack's call C4, round 13).
+    static var welcomed: Bool {
+        get { UserDefaults.standard.bool(forKey: "welcomed") }
+        set { UserDefaults.standard.set(newValue, forKey: "welcomed") }
+    }
+
+    /// Set the first time the daily or endless opens: until then, once open, their rows are marked new. Unstored, the
+    /// harness's, it lasts only this launch.
+    static var modesSeen: Bool { UserDefaults.standard.bool(forKey: "modes.seen") }
+    static func seeModes(store: Bool = true) {
+        if store { UserDefaults.standard.set(true, forKey: "modes.seen") } else {
+            UserDefaults.standard.register(defaults: ["modes.seen": true])
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 import Metal
 import os
+import struct SwiftUI.Color
 import struct SwiftUI.EnvironmentValues
 import XCTest
 import simd
@@ -16,7 +17,7 @@ extension LevelView {
 
 final class UnstirTests: XCTestCase {
     /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full, never
-    /// refilled or anchored, and the tank never turned.
+    /// refilled or anchored and the tank never turned (`FreshDefaults` sees to the levels tried).
     override func setUp() {
         UserDefaults.standard.removeObject(forKey: "undos.spent")
         UserDefaults.standard.removeObject(forKey: "undos.day")
@@ -106,6 +107,73 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(game.solved)
         XCTAssertEqual(game.over, 0)
         XCTAssertFalse(game.clean)
+    }
+
+    /// Jack's call C3 (round 13): a level counts as tried on its first committed move, a turn, a tank turn or a wait;
+    /// a look, a refused turn and the clock's demonstration try nothing.
+    @MainActor func testALookIsFree() throws {
+        let plughole = Level.plughole[0]
+        let look = Game(level: plughole, bank: (10, nil))
+        XCTAssertFalse(Best.started(plughole.id))
+        look.commit(rod: 1, steps: 2)
+        XCTAssertTrue(Best.started(plughole.id))
+        XCTAssertTrue(look.firstTry, "the visit that tries a level is still its first try")
+
+        let maelstrom = Level.maelstrom[0], seized = try XCTUnwrap(maelstrom.seized.first)
+        let tank = Game(level: maelstrom, tankTurned: true, bank: (10, nil))
+        tank.commit(rod: seized, steps: 1)
+        XCTAssertFalse(Best.started(maelstrom.id), "a seized knob refuses the turn")
+        tank.turnTank(maelstrom.layout.order)
+        XCTAssertFalse(Best.started(maelstrom.id), "a whole turn of the tank is no move")
+        tank.turnTank(1)
+        XCTAssertTrue(Best.started(maelstrom.id))
+
+        let escapement = Level.escapement[0]
+        let clock = Game(level: escapement, tankTurned: true, bank: (10, nil))
+        clock.demo(escapement.demo)
+        clock.commit(rod: 1, steps: -2)
+        XCTAssertTrue(clock.wait(on: 0))
+        XCTAssertFalse(Best.started(escapement.id), "the demonstration's moves are not the player's")
+        clock.endDemo()
+        XCTAssertTrue(clock.wait(on: 0))
+        XCTAssertTrue(Best.started(escapement.id))
+    }
+
+    /// Jack's call C11 (round 13): the header's count turns amber at par and magenta past it.
+    func testTheCountWarnsAtPar() {
+        XCTAssertEqual(LevelView.parTone(moves: 0, par: 5), .text)
+        XCTAssertEqual(LevelView.parTone(moves: 4, par: 5), .text)
+        XCTAssertEqual(LevelView.parTone(moves: 5, par: 5), .amber)
+        XCTAssertEqual(LevelView.parTone(moves: 6, par: 5), .magenta)
+        XCTAssertEqual(LevelView.parTone(moves: 20, par: 5), .magenta)
+    }
+
+    /// Jack's call C11 (round 13): the card's veil over an over-par solve is 0.05 a move, never past 0.2.
+    func testTheVeilIsLight() {
+        XCTAssertEqual(LevelView.haze(over: 0), 0)
+        XCTAssertEqual(LevelView.haze(over: 1), 0.05, accuracy: 1e-12)
+        XCTAssertEqual(LevelView.haze(over: 4), 0.2, accuracy: 1e-12)
+        XCTAssertEqual(LevelView.haze(over: 10), 0.2)
+    }
+
+    /// Jack's call C12 (round 13): with moves played, reset takes a second tap within 2 s; with none it resets at once.
+    func testResetTakesASecondTap() throws {
+        let t0 = Date(timeIntervalSinceReferenceDate: 0)
+        let first = ResetArm.tap(now: t0, armedAt: nil, played: true)
+        XCTAssertFalse(first.reset)
+        XCTAssertEqual(first.armedAt, t0)
+        let armed = try XCTUnwrap(first.armedAt)
+        XCTAssertEqual(ResetArm.tap(now: t0 + 1.9, armedAt: armed, played: true).reset, true)
+        XCTAssertNil(ResetArm.tap(now: t0 + 1.9, armedAt: armed, played: true).armedAt)
+        // Too late: it arms afresh rather than reset.
+        let late = ResetArm.tap(now: t0 + 2.1, armedAt: armed, played: true)
+        XCTAssertFalse(late.reset)
+        XCTAssertEqual(late.armedAt, t0 + 2.1)
+        // Under VoiceOver the arm holds past the window.
+        XCTAssertTrue(ResetArm.tap(now: t0 + 30, armedAt: armed, played: true, held: true).reset)
+        XCTAssertFalse(ResetArm.tap(now: t0, armedAt: nil, played: true, held: true).reset)
+        XCTAssertTrue(ResetArm.tap(now: t0, armedAt: nil, played: false).reset)
+        XCTAssertNil(ResetArm.tap(now: t0, armedAt: nil, played: false).armedAt)
     }
 
     /// A tank of a run, on scramble `word`, opening with `brim` notches.
@@ -442,10 +510,84 @@ final class UnstirTests: XCTestCase {
             XCTAssertTrue(game.solved)
             return game
         }
+        // The rating request waits on the launch, not on the card, from the solve that opens whirlpool alone.
+        let pending = Review.shared.pending
+        defer { Review.shared.pending = pending }
+        Review.shared.pending = false
         XCTAssertNil(solve(over: true).opened)
+        XCTAssertFalse(Review.shared.pending)
         XCTAssertFalse(Tier.whirlpool.isOpen())
         XCTAssertEqual(solve(over: false).opened, .whirlpool)
+        XCTAssertTrue(Review.shared.pending)
+        Review.shared.pending = false
         XCTAssertNil(solve(over: false).opened)
+        XCTAssertFalse(Review.shared.pending)
+    }
+
+    /// The rating request comes once, on the solve that opens whirlpool, and never in the harness or after a purchase
+    /// landed that launch.
+    @MainActor func testTheRatingRequestComesOnce() {
+        XCTAssertTrue(Review.due(opened: .whirlpool, asked: false, harnessed: false, purchased: false))
+        XCTAssertFalse(Review.due(opened: .whirlpool, asked: true, harnessed: false, purchased: false))
+        XCTAssertFalse(Review.due(opened: .whirlpool, asked: false, harnessed: true, purchased: false))
+        XCTAssertFalse(Review.due(opened: .whirlpool, asked: false, harnessed: false, purchased: true))
+        XCTAssertFalse(Review.due(opened: nil, asked: false, harnessed: false, purchased: false))
+        XCTAssertFalse(Review.due(opened: .vortex, asked: false, harnessed: false, purchased: false))
+    }
+
+    /// A completion shows on the solve that gives the last of the pack's levels a best, whichever it is, and never on a
+    /// re-solve; the free tiers complete on the last tier's last best.
+    @MainActor func testCompletionShowsOnTheSolveThatCompletes() {
+        let ids = (Pack.lens.levels + Tier.maelstrom.levels).map(\.id) + ["L1"]
+        let saved = ids.map { UserDefaults.standard.data(forKey: "best.\($0)") }
+        defer { for (id, data) in zip(ids, saved) { UserDefaults.standard.set(data, forKey: "best.\(id)") } }
+        for id in ids { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
+        func solve(_ id: String, pack: Pack? = nil, tier: Tier = .plughole) -> Completion? {
+            let level = Level(id: id, tier: tier, pack: pack, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)])
+            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+            game.commit(rod: 0, steps: -4)
+            XCTAssertTrue(game.solved, id)
+            return game.completed
+        }
+        let lens = Pack.lens.levels.map(\.id)
+        for id in lens where id != lens[5] && id != lens.last { Best(over: 0, seconds: 9).save(id) }
+        XCTAssertNil(solve(lens.last!, pack: .lens))
+        XCTAssertEqual(solve(lens[5], pack: .lens), .pack(.lens))
+        XCTAssertNil(solve(lens[5], pack: .lens))
+        // Again from the card, on the same tank: the re-solve completes nothing.
+        let level = Level(id: lens[5], pack: .lens, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)])
+        UserDefaults.standard.removeObject(forKey: "best.\(lens[5])")
+        // The solves above committed moves, which mark a level started, and only a first try is clean.
+        UserDefaults.standard.removeObject(forKey: "started.\(lens[5])")
+        let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+        game.commit(rod: 0, steps: -4)
+        XCTAssertEqual(game.completed, .pack(.lens))
+        XCTAssertEqual(game.finishSpoken, "Unstirred. 1 move, par 1. Clean. Lens complete, 25 panels.")
+        XCTAssertTrue(game.reset())
+        game.commit(rod: 0, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertNil(game.completed)
+        XCTAssertEqual(Completion.pack(.lens).line, "Lens complete \u{00B7} 25 panels")
+        XCTAssertEqual(Completion.free.spoken, "Every tier unstirred.")
+
+        let sea = Tier.maelstrom.levels.map(\.id)
+        for id in sea.dropLast() { Best(over: 3, seconds: 9).save(id) }
+        XCTAssertNil(solve("L1"))
+        XCTAssertEqual(solve(sea.last!, tier: .maelstrom), .free)
+        XCTAssertNil(solve(sea.last!, tier: .maelstrom))
+    }
+
+    /// The pointer names the first pack on the shelf the player doesn't own, never the one just completed, and none
+    /// once all are owned or nothing completed.
+    @MainActor func testThePointerSkipsOwnedPacks() {
+        let shelf: [Offer] = [.pack(.lens), .pack(.escapement), .pack(.prism), .complete]
+        func owning(_ packs: Set<Pack>) -> (Pack) -> Bool { { packs.contains($0) } }
+        XCTAssertNil(Offer.pointer(after: nil, shelf: shelf, owned: owning([])))
+        XCTAssertEqual(Offer.pointer(after: .free, shelf: shelf, owned: owning([])), .lens)
+        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: shelf, owned: owning([.lens])), .escapement)
+        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: shelf, owned: owning([.escapement])), .prism)
+        XCTAssertNil(Offer.pointer(after: .pack(.prism), shelf: shelf, owned: owning([.lens, .escapement, .prism])))
+        XCTAssertNil(Offer.pointer(after: .free, shelf: shelf, owned: owning([.lens, .escapement, .prism])))
     }
 
     /// The card calls a best new only when what it names improves: clean, then over par; a faster time at the same
@@ -458,6 +600,19 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, 10), par: true), "best \u{00B7} par")
         XCTAssertEqual(ResultCard.bestLine(was: best(0, clean: true), now: best(3), par: true), "best \u{00B7} clean")
         XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: false), "new best \u{00B7} was solved")
+    }
+
+    /// A faster solve at the same mark keeps the older best, seconds and all; a cleaner one replaces it however slow.
+    @MainActor func testABestIsNeverRankedByTime() throws {
+        let id = "test-time", saved = UserDefaults.standard.data(forKey: "best.\(id)")
+        defer { UserDefaults.standard.set(saved, forKey: "best.\(id)") }
+        UserDefaults.standard.removeObject(forKey: "best.\(id)")
+        Best(over: 0, seconds: 60, clean: false).save(id)
+        Best(over: 0, seconds: 5, clean: false).save(id)
+        XCTAssertEqual(try XCTUnwrap(Best.load(id)).seconds, 60)
+        Best(over: 0, seconds: 90, clean: true).save(id)
+        XCTAssertEqual(try XCTUnwrap(Best.load(id)).seconds, 90)
+        XCTAssertEqual(Best.load(id)?.clean, true)
     }
 
     /// A run carries the best as it began from tank to tank, so its spill can tell a new best though each tank cleared
@@ -1302,7 +1457,9 @@ final class UnstirTests: XCTestCase {
         Best(over: 0, seconds: 40).save(id)
         XCTAssertEqual(Best.load(id)?.seconds, 30)
         Best(over: 0, seconds: 20).save(id)
-        XCTAssertEqual(Best.load(id)?.seconds, 20)
+        XCTAssertEqual(Best.load(id)?.seconds, 30)
+        Best(over: 0, seconds: 50, clean: true).save(id)
+        XCTAssertEqual(Best.load(id)?.clean, true)
         let saved = try XCTUnwrap(UserDefaults.standard.data(forKey: "best.\(id)"))
         XCTAssertFalse(String(decoding: saved, as: UTF8.self).contains("hints"))
     }
@@ -1341,6 +1498,118 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(daily.title, "Daily \u{00B7} " + date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
         // In words: the weekday, which no numeric date carries.
         XCTAssertTrue(daily.title.contains(date.formatted(.dateTime.weekday(.abbreviated))), daily.title)
+    }
+
+    /// The next daily is the next local midnight: hours to the nearest, minutes under an hour, and a day the clocks
+    /// change on is as long as it really is.
+    func testTheNextDailyIsAtMidnight() throws {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = try XCTUnwrap(TimeZone(identifier: "Europe/London"))
+        func at(_ m: Int, _ d: Int, _ h: Int, _ min: Int) throws -> Date {
+            try XCTUnwrap(c.date(from: DateComponents(year: 2026, month: m, day: d, hour: h, minute: min)))
+        }
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 17, 0), calendar: c), "next daily in 7 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 23, 30), calendar: c), "next daily in 30 min")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 23, 59), calendar: c), "next daily in 1 min")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 22, 40), calendar: c), "next daily in 1 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 0, 0), calendar: c), "next daily in 24 h")
+        // The clocks go forward an hour on 29 March and back on 25 October.
+        XCTAssertEqual(Daily.untilNext(day: 20260329, now: try at(3, 29, 0, 0), calendar: c), "next daily in 23 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261025, now: try at(10, 25, 0, 0), calendar: c), "next daily in 25 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 17, 0), calendar: c, spoken: true), "next daily in 7 hours")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 22, 40), calendar: c, spoken: true), "next daily in 1 hour")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 23, 20), calendar: c, spoken: true), "next daily in 40 minutes")
+        // Sunday's daily solved, or its card still up, past midnight: Monday's is out, and the card counts from Sunday's.
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 2, 0, 5), calendar: c), "next daily is out")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 2, 0, 0), calendar: c), "next daily is out")
+        XCTAssertEqual(Daily.untilNext(day: 20261102, now: try at(11, 2, 0, 5), calendar: c), "next daily in 24 h")
+    }
+
+    /// Today's daily and the days before it with a best, back to the first without one; nothing until today's solve.
+    func testTheDailyRunCountsDaysInARow() throws {
+        let calendar = Calendar(identifier: .gregorian)
+        let today = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 11, day: 1, hour: 12)))
+        XCTAssertEqual(Level.dailyID(today), "daily-20261101")
+        XCTAssertEqual(Level.dailyID(today), Level.daily(today).id)
+        func run(_ solved: some Sequence<Int>) -> Int {
+            let ids = Set(solved.map { Level.dailyID(calendar.date(byAdding: .day, value: -$0, to: today)!) })
+            return Daily.run(today: today) { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+        }
+        XCTAssertEqual(run([]), 0)
+        XCTAssertEqual(run([1, 2, 3]), 0, "today unsolved says nothing of the run before it")
+        XCTAssertEqual(run([0]), 1)
+        XCTAssertEqual(run([0, 1, 2, 3]), 4)
+        XCTAssertEqual(run([0, 1, 3, 4]), 2, "a gap ends the run")
+        XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
+    }
+
+    /// The menu's top follows plughole 01 and 23: the tagline, then the way on; the daily and endless only once open.
+    @MainActor func testTheMenuLeadsWithLevelOne() {
+        func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {
+            let ids = Set(Tier.plughole.levels.prefix(tier == .plughole ? n : 27).map(\.id) + tier.levels.prefix(n).map(\.id))
+            return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+        }
+        let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
+        XCTAssertFalse(fresh.modes)
+        XCTAssertFalse(fresh.sandboxFirst)
+        XCTAssertNil(fresh.next)
+        let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
+        XCTAssertFalse(one.modes)
+        XCTAssertTrue(one.sandboxFirst)
+        XCTAssertEqual(one.next?.id, Level.plughole[1].id)
+        XCTAssertNil(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(1)).next, "a locked tier has no way on")
+        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
+        let modes = MenuView.lead(tier: .plughole, unlocked: false, best: solved(23))
+        XCTAssertTrue(modes.modes)
+        XCTAssertEqual(modes.next?.id, Level.plughole[23].id)
+        XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: false, best: solved(27)).next, "every level has a best")
+        XCTAssertEqual(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(4, of: .whirlpool)).next?.id,
+                       Level.whirlpool[4].id)
+        let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
+        XCTAssertTrue(unlocked.modes)
+        XCTAssertFalse(unlocked.sandboxFirst)
+    }
+
+    /// Only a fresh install's first launch opens on plughole 01, and never the harness's.
+    @MainActor func testAFreshInstallOpensOnTheFirstLevel() {
+        let first = Level.plughole[0]
+        func opening(harnessed: Bool = false, welcomed: Bool = false, best: Bool = false, started: Bool = false) -> String? {
+            RootView.opening(harnessed: harnessed, welcomed: welcomed,
+                             best: { $0 == first.id && best ? Best(over: 0, seconds: 9) : nil },
+                             started: { $0 == first.id && started })?.id
+        }
+        XCTAssertEqual(opening(), first.id)
+        XCTAssertNil(opening(welcomed: true), "backed out of 01 without a move: the menu, not 01 again")
+        XCTAssertNil(opening(best: true))
+        XCTAssertNil(opening(started: true))
+        XCTAssertNil(opening(harnessed: true))
+    }
+
+    /// Opening the daily or endless retires the modes' new mark; nothing else does, nor one that doesn't open.
+    @MainActor func testOpeningADailyOrEndlessSeesTheModes() {
+        XCTAssertTrue(RootView.seesModes(.daily(), opens: true))
+        XCTAssertTrue(RootView.seesModes(.endless(Run(seed: 1)), opens: true))
+        XCTAssertFalse(RootView.seesModes(.daily(), opens: false))
+        XCTAssertFalse(RootView.seesModes(Level.plughole[0], opens: true))
+        XCTAssertFalse(RootView.seesModes(.sandbox, opens: true))
+        XCTAssertFalse(RootView.seesModes(nil, opens: true))
+    }
+
+    /// The pack dock waits for plughole 09, unless a pack is owned or asked for, or the developer unlock is on.
+    @MainActor func testTheDockWaitsForLevelNine() {
+        func solved(_ n: Int) -> (String) -> Best? {
+            let ids = Set(Level.plughole.prefix(n).map(\.id))
+            return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
+        }
+        let none: (Pack) -> Purchase = { _ in .unowned }
+        XCTAssertFalse(PackDock.shown(best: solved(8), unlocked: false, state: none))
+        XCTAssertTrue(PackDock.shown(best: solved(9), unlocked: false, state: none))
+        XCTAssertTrue(PackDock.shown(best: solved(0), unlocked: true, state: none))
+        let pack = Pack.sold()[0]
+        for (state, shown) in [(Purchase.owned, true), (.pending, true), (.revoked, true), (.failed, false), (.unowned, false)] {
+            XCTAssertEqual(PackDock.shown(best: solved(0), unlocked: false, state: { $0 == pack ? state : .unowned }), shown,
+                           "\(state)")
+        }
     }
 
     /// The gate lists what is short of par as runs, each opening at a level the player can open.
@@ -1413,6 +1682,51 @@ final class UnstirTests: XCTestCase {
         simd_distance(p, centre(layout, k)) / layout.rods[k].z
     }
     private func under(_ layout: Layout, _ p: SIMD2<Double>) -> [Int] { layout.rods.indices.filter { depth(layout, $0, p) < 1 } }
+
+    /// The back swipe takes only a touch landing in the screen's left edge band, and only once it has gone 10 pt right
+    /// and mostly sideways; a vertical or leftward one there passes to the tank, a rim turn (Jack's call S2, round 13).
+    func testTheBackSwipeTakesOnlyTheEdge() {
+        let edge = CGPoint(x: 6, y: 400), inside = CGPoint(x: 21, y: 400)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: .zero), .undecided, "a tap there never decides")
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 7, height: 2)), .undecided)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 12, height: 3)), .swipe)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 12, height: 6)), .swipe, "twice as far across")
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 12, height: -7)), .pass)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 1, height: 14)), .pass, "vertical")
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: -12, height: 0)), .pass, "leftward")
+        XCTAssertEqual(BackSwipe.decide(start: inside, translation: .zero), .pass, "outside the band")
+        XCTAssertEqual(BackSwipe.decide(start: inside, translation: CGSize(width: 60, height: 0)), .pass)
+    }
+
+    /// Let go, the swipe leaves past a third of the width, or heading past half, unless flicked back; otherwise the
+    /// level springs back.
+    func testTheBackSwipeCommitsPastAThird() {
+        XCTAssertFalse(BackSwipe.commits(dx: 140, predicted: 180, width: 440))
+        XCTAssertTrue(BackSwipe.commits(dx: 150, predicted: 150, width: 440))
+        XCTAssertTrue(BackSwipe.commits(dx: 60, predicted: 230, width: 440), "a flick")
+        XCTAssertFalse(BackSwipe.commits(dx: 0, predicted: 0, width: 440))
+        XCTAssertFalse(BackSwipe.commits(dx: 220, predicted: 120, width: 440), "flicked back")
+        XCTAssertTrue(BackSwipe.commits(dx: 220, predicted: 215, width: 440), "held still")
+    }
+
+    /// The tank reads an edge touch by where it landed, though the slide carries the tank's origin right under it.
+    func testTheTankKeepsAnEdgeTouchsCallThroughTheSlide() {
+        let start = CGPoint(x: 28, y: 300)
+        func edge(_ held: BackSwipe.Edge?, at x: CGFloat, moved dx: CGFloat, _ dy: CGFloat) -> BackSwipe.Edge? {
+            BackSwipe.edge(held, start: start, origin: CGPoint(x: x, y: 100), translation: CGSize(width: dx, height: dy))
+        }
+        let landed = edge(nil, at: -20, moved: 0, 0)
+        XCTAssertEqual(landed?.call, .undecided, "recorded as it lands")
+        let decided = edge(landed, at: -20, moved: 12, 2)
+        XCTAssertEqual(decided?.call, .swipe)
+        XCTAssertEqual(edge(decided, at: 40, moved: 60, 40), decided, "slid past the band and off sideways")
+        XCTAssertEqual(edge(landed, at: 40, moved: 12, 2)?.call, .swipe, "decided where it landed")
+        let down = edge(landed, at: -20, moved: 2, 12)
+        XCTAssertEqual(down?.call, .pass)
+        XCTAssertEqual(edge(down, at: 0, moved: 40, 12), down)
+        XCTAssertNil(edge(nil, at: 10, moved: 0, 0), "landed past the band")
+        XCTAssertNil(BackSwipe.edge(decided, start: CGPoint(x: 60, y: 300), origin: .zero, translation: .zero), "a new touch")
+    }
 
     /// Deep in one disc a finger holds that rod the moment it lands.
     func testGrabInOneDiscIsImmediate() {
@@ -1698,6 +2012,19 @@ final class UnstirTests: XCTestCase {
                                  enabled: true, needs: nil)
         XCTAssertEqual([endless.label, endless.value, endless.hint], ["Endless", "best 1 tank", "deeper every tank, wrong stirs fill the brim"])
         XCTAssertEqual(Spoken.row(.sandbox, result: nil, tanks: 0, detail: "nothing counts", enabled: true, needs: nil).value, "")
+        XCTAssertEqual(Spoken.row(first, result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, started: true).value, "tried")
+        XCTAssertEqual(Spoken.row(first, result: Best(over: 1, seconds: 9), tanks: 0, detail: nil, enabled: true, needs: nil,
+                                  started: true).value, "1 over par")
+        XCTAssertEqual(Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value, "new")
+        XCTAssertEqual(Spoken.row(.endless(Run(seed: 7)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value,
+                       "new")
+        let continued = Spoken.row(.endless(Run(seed: 7, tank: 5)), result: nil, tanks: 9,
+                                   detail: "continue \u{00B7} tank 6 \u{00B7} brim 3 \u{00B7} best 9", enabled: true, needs: nil,
+                                   started: true)
+        XCTAssertEqual([continued.value, continued.hint], ["run in progress, best 9 tanks", "continue, tank 6, brim 3, best 9"])
+        XCTAssertEqual(Spoken.row(.endless(Run(seed: 7, tank: 5)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil,
+                                  started: true).value, "run in progress")
+        XCTAssertEqual(Spoken.next(seventh), "Next: level 7, \(seventh.title)")
         XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
         XCTAssertEqual(Spoken.back(first), "Back to levels")
         XCTAssertEqual(Spoken.back(Pack.lens.levels[0]), "Back to Lens")
@@ -1713,13 +2040,20 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(game.solved)
         XCTAssertGreaterThan(game.over, 0)
         XCTAssertEqual(game.finishSpoken, "Unstirred. \(game.moves) moves, par \(level.par). \(game.over) over par.")
+        XCTAssertEqual(game.movesSpoken, "\(game.moves) moves, par \(level.par), over par")
         let clean = Game(level: level)
         while let t = clean.reachable { clean.commit(rod: t.rod, steps: t.steps) }
         XCTAssertEqual(clean.finishSpoken, "Unstirred. \(level.par) moves, par \(level.par). " + (clean.clean ? "Clean." : "At par."))
+        XCTAssertEqual(clean.movesSpoken, "\(level.par) moves, par \(level.par), at par")
         let run = Game(level: .endless(Run(seed: 7)))
         XCTAssertEqual(run.movesSpoken, "0 moves")
         XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")
         XCTAssertEqual(game.tankSpoken, game.movesSpoken)
+        // The sandbox has no par, so it never reads as at or over one.
+        let sandbox = Game(level: .sandbox)
+        XCTAssertEqual(sandbox.tankSpoken, "0 moves")
+        sandbox.commit(rod: 0, steps: 1)
+        XCTAssertEqual(sandbox.tankSpoken, "1 move")
     }
 
     /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.

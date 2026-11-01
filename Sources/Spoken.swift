@@ -11,13 +11,17 @@ enum Spoken {
         layout.base.map { count($0.rods.count, "rod") + " and a swirl" } ?? count(layout.rods.count, "rod")
     }
 
+    /// The menu's way on: the tier's first level without a best.
+    static func next(_ level: Level) -> String { "Next: level \(Int(level.label) ?? 0), \(level.title)" }
+
     /// Where a level's back button goes: a pack's level returns to its card.
     static func back(_ level: Level) -> String { "Back to " + (level.pack?.name ?? "levels") }
 
     /// A menu row: its name, its result or why it is shut, and its shape. `needs` is the level whose solve opens it, and
-    /// `gate` the tier below a closed tier, every level of which at par opens it.
-    static func row(_ level: Level, result: Best?, tanks: Int, detail: String?, enabled: Bool, needs: Level?, gate: Tier? = nil)
-        -> (label: String, value: String, hint: String) {
+    /// `gate` the tier below a closed tier, every level of which at par opens it. `started`: a move committed, no best
+    /// yet. `new`: the daily or endless, marked until either is opened.
+    static func row(_ level: Level, result: Best?, tanks: Int, detail: String?, enabled: Bool, needs: Level?, gate: Tier? = nil,
+                    started: Bool = false, new: Bool = false) -> (label: String, value: String, hint: String) {
         let numbered = Int(level.label)
         let label = numbered.map { "Level \($0), \(level.title)." } ?? (level.id.hasPrefix("daily-") ? "Today's daily" : level.title)
         let value: String
@@ -29,11 +33,13 @@ enum Spoken {
             }
             value = what.map { "locked, solve \($0) first" } ?? gate.map { "locked, par every \($0.name) level first" } ?? "locked"
         } else if level.run != nil {
-            value = tanks > 0 ? "best \(count(tanks, "tank"))" : "not played"
+            // Started, for a run: one is saved, which the row continues.
+            let best = tanks > 0 ? "best \(count(tanks, "tank"))" : nil
+            value = started ? ["run in progress", best].compactMap { $0 }.joined(separator: ", ") : best ?? (new ? "new" : "not played")
         } else if let result {
             value = result.clean == true ? "clean" : result.over == 0 ? "at par" : "\(result.over) over par"
         } else {
-            value = level.sandbox ? "" : "not played"
+            value = level.sandbox ? "" : new ? "new" : started ? "tried" : "not played"
         }
         let hint = detail.map { $0.replacingOccurrences(of: " \u{00B7} ", with: ", ") } ?? "\(rods(level.layout)), par \(level.par)"
         return (label, value, hint)
@@ -41,9 +47,10 @@ enum Spoken {
 }
 
 extension Game {
-    /// The header's count.
+    /// The header's count, and what its colour says at and past par. Endless and the sandbox have no par.
     var movesSpoken: String {
-        level.run == nil ? "\(Spoken.count(moves, "move")), par \(par)" : Spoken.count(moves, "move")
+        guard level.run == nil, !level.sandbox else { return Spoken.count(moves, "move") }
+        return "\(Spoken.count(moves, "move")), par \(par)" + (moves == par ? ", at par" : moves > par ? ", over par" : "")
     }
 
     /// The tank's value: Escapement's ticks left, a run's brim, or the header's count.
@@ -53,7 +60,9 @@ extension Game {
     }
 
     /// The card's account of how the level ended, where VoiceOver lands as it shows.
-    var finishSpoken: String {
+    var finishSpoken: String { ended + (completed.map { " \($0.spoken)" } ?? "") }
+
+    private var ended: String {
         let moved = Spoken.count(moves, "move")
         if lost { return "Out of ticks on move \(moves)." }
         if let run = level.run {
