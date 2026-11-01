@@ -254,6 +254,25 @@ final class PackTests: XCTestCase {
         XCTAssertNil(PackCard.pickUp(levels, best: best))
     }
 
+    /// Try free plays the taste's first level without a best, then offers the three again; the gate's note counts
+    /// what is left.
+    @MainActor func testTryFreeGoesWhereTheTasteLeftOff() {
+        let levels = Pack.lens.levels
+        var bests: [String: Best] = [:]
+        func best(_ id: String) -> Best? { bests[id] }
+        XCTAssertEqual(PackCard.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["01", "false"])
+        bests[levels[0].id] = Best(over: 1, seconds: 60)
+        bests[levels[2].id] = Best(over: 0, seconds: 60)
+        XCTAssertEqual(PackCard.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["02", "false"])
+        bests[levels[1].id] = Best(over: 0, seconds: 60)
+        XCTAssertEqual(PackCard.taste(levels, best: best).map { [$0.level.label, "\($0.replay)"] }, ["01", "true"])
+        XCTAssertNil(PackCard.taste([], best: best))
+        XCTAssertEqual(PackCard.arrival(.pack(.lens), levels), "You've played the free three. 22 more in Lens.")
+        XCTAssertEqual(PackCard.arrival(.pack(.escapement), Pack.escapement.levels),
+                       "You've played the free three. 27 more in Escapement.")
+        XCTAssertNil(PackCard.arrival(.complete, []))
+    }
+
     @MainActor func testHarnessSetsTheCardsMessages() {
         let h = Harness(["UNSTIR_CARD": "lens", "UNSTIR_STORE": "lens:failed", "UNSTIR_FAILED": "offline",
                          "UNSTIR_PRICES": "unreachable", "UNSTIR_PAYMENTS": "0", "UNSTIR_RESTORED": "lens,prism"])

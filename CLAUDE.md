@@ -555,9 +555,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   card (`onOffer`), so each taste is a tap away. A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
-  card (`Store.forgetFailures`), and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
+  card (`Store.forgetFailures`) and as a level opens, and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from a row or
-  from the level before it. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
+  from the level before it. The last taste level's result card says where its next goes ("more in Lens ›", in the
+  pack's colour, words pending Jack's call C1), and the card that gate opens (`RootView.arrived`, that showing only)
+  is scrolled to buying under "You've played the free three. 22 more in Lens." (`PackCard.arrival`). "try 3 free ›"
+  opens the taste's first level without a best, and is "replay 01–03 ›" once all have one (`PackCard.taste`); a
+  locked row scrolls to buying and pulses the pill. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
   and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
   of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
   reads each cover's state or price and each button's price, hides the menu under a card, and announces a change of

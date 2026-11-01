@@ -618,6 +618,8 @@ struct PackCard: View {
     var levels: [Level]
     /// UNSTIR_CARDSCROLL: opens scrolled to the list.
     var scrolled = false
+    /// Opened by a level past the taste: it opens on buying, under a line that says the free levels are played.
+    var arrived = false
     let onBack: () -> Void
     let onPlay: (Level) -> Void
     /// Complete's card opens a pack's card from its name.
@@ -625,6 +627,7 @@ struct PackCard: View {
     var store = Store.shared
     @State private var buying = false
     @State private var landings = 0
+    @State private var pulses = 0
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The facts' key column, grown with the keys' own type size.
@@ -667,9 +670,19 @@ struct PackCard: View {
                         }
                         // Buying comes before the list, so it is on the first screen whatever the pack holds.
                         if levels.isEmpty { Spacer(minLength: 24) }
-                        status(state).id(state).transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
-                            .padding(.top, levels.isEmpty ? 0 : 32)
-                        action(state).padding(.top, 14)
+                        VStack(alignment: .leading, spacing: 0) {
+                            if arrived, state != .owned, let note = Self.arrival(offer, levels) {
+                                Text(note).font(.mono(.footnote)).opacity(0.85).padding(.bottom, 14)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            status(state).id(state)
+                                .transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
+                            action(state).padding(.top, 14)
+                        }
+                        // Half inside the anchor, so a scroll to it leaves a margin above the note.
+                        .padding(.top, levels.isEmpty ? 0 : 16)
+                        .id("buy")
+                        .padding(.top, levels.isEmpty ? 0 : 16)
                         if offer.pack != nil, state != .owned, store.canPay, store.state(.complete) != .owned,
                            Offer.shelf().contains(.complete) {
                             completeLine.padding(.top, 14)
@@ -677,14 +690,20 @@ struct PackCard: View {
                         if Pack.sold().contains(where: { store.state($0) != .owned }) {
                             restore.padding(.top, 18).padding(.bottom, 10)
                         }
-                        if !levels.isEmpty { list.padding(.top, 26).padding(.bottom, 10).id("list") }
+                        if !levels.isEmpty { list(reader).padding(.top, 26).padding(.bottom, 10).id("list") }
                     }
                     .padding(.horizontal, 24)
                     .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
                     .animation(reduceMotion ? nil : .snappy(duration: 0.45), value: state)
                 }
                 .scrollBounceBehavior(.basedOnSize)
-                .onAppear { if scrolled { reader.scrollTo("list", anchor: .top) } }
+                .onAppear {
+                    if arrived {
+                        reader.scrollTo("buy", anchor: .top)
+                    } else if scrolled {
+                        reader.scrollTo("list", anchor: .top)
+                    }
+                }
             }
         }
         .foregroundStyle(Color.text)
@@ -746,7 +765,7 @@ struct PackCard: View {
 
     /// Every level, those past the taste locked until the pack is owned, under a heading for each chapter where the
     /// pack has chapters, as the menu heads each tier.
-    private var list: some View {
+    private func list(_ reader: ScrollViewProxy) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if levels.first?.chapter == nil { heading("levels", of: []) }
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
@@ -754,7 +773,12 @@ struct PackCard: View {
                     heading(chapter, of: levels.filter { $0.chapter == chapter }).padding(.top, i == 0 ? 0 : 18)
                 }
                 let open = store.access(level) != .needsCard, best = Best.load(level.id)
-                Button { onPlay(level) } label: {
+                // A locked row points at buying rather than doing nothing.
+                Button {
+                    if open { return onPlay(level) }
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.35)) { reader.scrollTo("buy", anchor: .top) }
+                    pulses += 1
+                } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text(level.label).font(.mono(.footnote, .semibold)).foregroundStyle(offer.glow)
                             .opacity(open ? 1 : 0.5).frame(minWidth: 30, alignment: .leading)
@@ -775,9 +799,9 @@ struct PackCard: View {
                                value: open)
                 }
                 .buttonStyle(Sounding())
-                .disabled(!open)
                 .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" } ?? ""
                                     : "locked, needs the pack")
+                .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
             }
         }
     }
@@ -865,15 +889,25 @@ struct PackCard: View {
                 if store.canPay {
                     pill(label, trailing: price ?? store.pricing.words, colour: offer.glow, dim: price == nil) { buy(offer) }
                         .disabled(buying)
+                        .keyframeAnimator(initialValue: 1.0, trigger: pulses) { pill, scale in
+                            pill.scaleEffect(reduceMotion ? 1 : scale)
+                        } keyframes: { _ in
+                            // Held while the list scrolls up to it.
+                            LinearKeyframe(1.0, duration: 0.35)
+                            CubicKeyframe(1.08, duration: 0.14)
+                            CubicKeyframe(1.0, duration: 0.3)
+                        }
                         .accessibilityLabel(state == .pending ? "Ask again for \(offer.name)" : "\(label.capitalized) \(offer.name)")
                         .accessibilityValue(price ?? store.pricing.words ?? "")
                 }
-                if let level = levels.first ?? Self.placeholder(offer) {
+                if let (level, replay) = Self.taste(levels) ?? Self.placeholder(offer).map({ ($0, false) }) {
+                    let n = offer.pack?.taste ?? 3
                     Button { onPlay(level) } label: {
-                        Text("try \(offer.pack?.taste ?? 3) free \u{203A}").font(.mono(.footnote)).opacity(0.7)
+                        Text(replay ? "replay 01\u{2013}\(String(format: "%02d", n)) \u{203A}" : "try \(n) free \u{203A}")
+                            .font(.mono(replay ? .caption : .footnote)).opacity(replay ? 0.5 : 0.7)
                     }
                     .buttonStyle(Sounding())
-                    .accessibilityLabel("Try the first \(offer.pack?.taste ?? 3) levels free")
+                    .accessibilityLabel(replay ? "Replay the \(n) free levels" : "Try the first \(n) levels free")
                 }
             }
         }
@@ -884,6 +918,19 @@ struct PackCard: View {
     /// Where an owner picks up: the first level without a best, then the first not at par; none once all are at par.
     static func pickUp(_ levels: [Level], best: (String) -> Best? = Best.load) -> Level? {
         levels.first { best($0.id) == nil } ?? levels.first { best($0.id)?.over != 0 }
+    }
+
+    /// The taste's first level without a best, or, once all have one, its first to replay.
+    static func taste(_ levels: [Level], best: (String) -> Best? = Best.load) -> (level: Level, replay: Bool)? {
+        let free = levels.prefix(levels.first?.pack?.taste ?? 0)
+        if let level = free.first(where: { best($0.id) == nil }) { return (level, false) }
+        return free.first.map { ($0, true) }
+    }
+
+    /// Over buying, when a level past the taste opened the card.
+    static func arrival(_ offer: Offer, _ levels: [Level]) -> String? {
+        guard let pack = offer.pack, levels.count > pack.taste else { return nil }
+        return "You've played the free \(Offer.countWord(pack.taste)). \(levels.count - pack.taste) more in \(pack.name)."
     }
 
     /// Play, until a level past the taste has been solved: then the owner continues.

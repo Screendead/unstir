@@ -497,8 +497,12 @@ shot card-lens-restored-none "Lens's card after a restore found nothing: nothing
 shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
   CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
 shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
-shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place." \
+shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
   PACK=lens LEVEL=5 STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
+shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
+  PACK=lens LEVEL=3 SCREEN=clean STORE=lens:unowned CLOCK=5.4
+shot card-lens-replay "Lens's card, unowned, the taste played: replay 01-03 in try free's place." \
+  CARD=lens STORE=lens:unowned BESTS=lens:000 CLOCK=5.4
 shot shelf-menu-ax "The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5)." \
   STORE=lens:unowned CLOCK=5.4 TYPESIZE=accessibility5
 shot card-lens-ax "Lens's card at the largest accessibility text size, its facts stacked." \

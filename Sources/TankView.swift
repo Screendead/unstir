@@ -2709,8 +2709,12 @@ struct ResultCard: View {
                         .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
                 }
                 if let next {
-                    Button(game.spilled ? "new run \u{203A}" : "next \u{203A}") { onNext(next) }
-                        .foregroundStyle(accent).shadow(color: accent, radius: 4)
+                    // Past a pack's free taste, unowned, next opens its card: the button says so, in the pack's colour.
+                    let gate = Store.shared.card(for: next)
+                    let colour = gate.map { Offer.pack($0).glow } ?? accent
+                    let label = game.spilled ? "new run \u{203A}" : gate.map { "more in \($0.name) \u{203A}" } ?? "next \u{203A}"
+                    Button(label) { onNext(next) }
+                    .foregroundStyle(colour).shadow(color: colour, radius: 4)
                 }
             }
             .font(.mono(15, .medium))
