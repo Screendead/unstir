@@ -1472,6 +1472,22 @@ names and product ids, and Complete's promise to older owners.
    always swirls it (V4, the charybdis rule under round 3); the table stands as provisional (V5); vortex has a
    picture family of its own (V6), all three of isobars, ephemeris and cords (P1), merged 2026-10-25 (PR #28); a
    swirl on all five layouts (V3, round 4). Charybdis's orbit solver is not started.
+72. The UI's design pass (Jack, 2026-11-01): the game itself looks right, but the text, buttons, cards and sheets
+    around it read unpolished and need a designer's eye, which Claude supplies. Every screen is shot
+    (`scripts/shots.sh`), critiqued and redrawn as a design system and mock-ups for Jack's call before any SwiftUI
+    changes. Claude Design (now Artifact types in Claude: Design System and Design) is the review surface: Jack
+    comments inline on the mock-ups, and Claude ports the agreed design to SwiftUI.
+73. A full audit of every level name, tiers and packs alike (Jack, 2026-11-01). Many read as nonsense, as in-jokes
+    too technical or niche for a mass market, or as unrelated to their level. They need not all be clever or
+    descriptive: a naming system per tier or pack (or one for the game) is welcome. Jack gave philosophers
+    ("Aurelius", "Seneca", ...) only as an example of a system, and not a good one, so not that. Ids never change
+    (progress is stored by id); only titles and chapter headings. To Jack as a pitch: the audit, the systems and
+    one recommendation.
+74. The pedantic polish pass (Jack, 2026-11-01): every UI action's behaviour and every edge case, so the app is as
+    pleasing and intuitive as it can be, and funnels players to the paid packs without bombarding or begging them.
+    Jack's examples: what happens when a player finishes the third (last free) level of a pack they haven't bought,
+    and whether the level list scrolls to the right place when the player goes back from a level, finished or not,
+    by button or swipe. Plain fixes go in as PRs; each choice of taste or business goes to Jack as a call.
 
 ## Side task: the difficulty tiers (started 2026-09-28)
 
