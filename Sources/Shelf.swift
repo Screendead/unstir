@@ -1177,6 +1177,9 @@ struct PackDock: View, Equatable {
     var store = Store.shared
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Approvals already announced: a card or the settings covering the dock restarts the header's time, not its
+    /// announcement.
+    @State private var announced: Set<Offer> = []
 
     nonisolated static func == (a: PackDock, b: PackDock) -> Bool {
         a.held == b.held && a.paused == b.paused && a.covered == b.covered
@@ -1207,7 +1210,8 @@ struct PackDock: View, Equatable {
             .task(id: Saying(offer: store.approved.first, covered: covered)) {
                 // Held under UNSTIR_CLOCK, for its shot.
                 guard let offer = store.approved.first, !covered else { return }
-                AccessibilityNotification.Announcement(offer.yours).post()
+                if announced.insert(offer).inserted { AccessibilityNotification.Announcement(offer.yours).post() }
+                // Five seconds in sight: covered, it waits.
                 guard held == nil else { return }
                 try? await Task.sleep(for: .seconds(5))
                 guard !Task.isCancelled else { return }

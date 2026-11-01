@@ -583,8 +583,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   owned or not; else, under an unowned pack once any free level is started or solved, "2/3 free", counting those with
   a best (`Pack.tastePlayed`), kept at "3/3 free"; Complete's never marks (Jack's call C6, round 13). An Ask to Buy
   approval landing on its open card is said by the landing; otherwise the dock's header reads "Lens is yours"
-  ("every pack is yours" for Complete) in its glow for 5 s once nothing covers the dock, and VoiceOver hears it
-  (`Store.approved`, `Store.said`; Jack's call C21, round 13). `PackCard` grows out
+  ("every pack is yours" for Complete) in its glow for 5 s in sight, waiting while anything covers the dock, and
+  VoiceOver hears it once (`Store.approved`, `Store.said`; Jack's call C21, round 13). `PackCard` grows out
   of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
   purchase state, buy at the App Store's price, try free, Complete beside an unowned pack, and on the dock, only
