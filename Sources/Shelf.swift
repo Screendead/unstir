@@ -630,6 +630,8 @@ struct PackCard: View {
     var scrolled = false
     /// Opened by a level past the taste: it opens on buying, under a line that says the free levels are played.
     var arrived = false
+    /// Where back goes: the menu, or Complete's card when this card was opened from it.
+    var backTo = "menu"
     let onBack: () -> Void
     let onPlay: (Level) -> Void
     /// Complete's card opens a pack's card from its name.
@@ -652,7 +654,7 @@ struct PackCard: View {
             ScrollViewReader { reader in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        Button(action: onBack) { Text("\u{2039} back").font(.mono(.subheadline, .medium)) }
+                        Button(action: onBack) { Text("\u{2039} \(backTo)").font(.mono(.subheadline, .medium)).hit() }
                             .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
                             .accessibilityLabel("Back")
                         Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
@@ -1033,6 +1035,8 @@ struct PackCard: View {
                     Text("\u{203A}").opacity(0.55)
                 }
                 .font(.mono(.caption))
+                // Its failure line is 6 pt below.
+                .hit(10, 8)
             }
             .buttonStyle(Sounding())
             // Complete's own request is asked again only from Complete's card.
@@ -1052,7 +1056,7 @@ struct PackCard: View {
             let words = restoreWords
             Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
                 .font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
-                .fixedSize(horizontal: false, vertical: true)
+                .fixedSize(horizontal: false, vertical: true).hit(16)
         }
         .buttonStyle(Sounding())
         .disabled(store.restoring)

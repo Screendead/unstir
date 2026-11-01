@@ -3,10 +3,14 @@
 import SwiftUI
 
 extension Level {
-    /// Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
+    /// Where leaving goes: a pack's level back to its card.
+    var back: String { "\u{2039} " + (pack?.name ?? "levels") }
+
+    /// A pack's level takes the pack's glow. Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
     /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
     /// magenta.
     var colour: Color {
+        if let pack { return Offer.pack(pack).glow }
         guard let n = Int(label) else { return sandbox ? .magenta : run == nil ? .amber : .neonCyan }
         let t = Double((n - 1) % 12) / 11
         return switch tier {
@@ -182,7 +186,7 @@ struct MenuView: View {
                         .font(.mono(13)).opacity(0.55).padding(.top, 10)
                     LevelRow(level: Level.daily(), enabled: modes, pick: pick).padding(.top, 22)
                     LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                             detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
+                             detail: "deeper every tank \u{00B7} eight wrong stirs and it spills",
                              best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, pick: pick)
                     LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                              pick: pick)
@@ -235,6 +239,7 @@ struct MenuView: View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
                      arrived: card.pack != nil && card.pack == arrived,
+                     backTo: cameFrom.flatMap { $0.card == card ? $0.back.name : nil } ?? "menu",
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)
