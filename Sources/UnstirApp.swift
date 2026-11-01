@@ -518,7 +518,7 @@ struct RootView: View {
                              frozen: harness?.tierSpin, settings: $settings, card: $card, clock: harness?.clock,
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
                              cardScroll: harness?.cardScroll ?? false, focus: focus, held: harness?.lockTap, arrived: arrived,
-                             run: Self.save("endless", harnessed: harnessed, harnessSave)) {
+                             run: Self.save("endless", harnessed: harnessed, harnessSave), peeking: level != nil) {
                         show($0)
                     }
                     .allowsHitTesting(level == nil)
