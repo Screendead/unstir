@@ -688,12 +688,16 @@ struct PackCard: View {
                     Text(asked ? "waiting for approval" : "Complete is waiting for approval")
                         .font(.mono(.footnote, .semibold)).foregroundStyle(Color.amber)
                 }
-                Text(asked ? "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again."
-                     : "Ask to Buy: \(offer.name) opens here once Complete is approved.")
-                    .font(.mono(.caption2)).opacity(0.5)
-                    .fixedSize(horizontal: false, vertical: true)
-                // Asking again failed, and the first request is still with the parent.
-                if let why = store.failures[offer.productID]?.words { detail(why) }
+                // Asking again failed, and the first request is still with the parent: the failure stands in for
+                // Ask to Buy's explanation, so buy stays on the first screen of the smallest phone.
+                if let why = store.failures[offer.productID]?.words {
+                    detail(why)
+                } else {
+                    Text(asked ? "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again."
+                         : "Ask to Buy: \(offer.name) opens here once Complete is approved.")
+                        .font(.mono(.caption2)).opacity(0.5)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .accessibilityElement(children: .combine)
         case .failed:
