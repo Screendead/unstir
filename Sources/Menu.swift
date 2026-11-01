@@ -689,17 +689,22 @@ private struct TierList: View, Equatable {
                 Text("short:").font(.mono(12)).opacity(0.45).frame(minHeight: 36).padding(.trailing, 2)
                 ForEach(Array(runs.enumerated()), id: \.offset) { i, run in
                     let first = levels[run.lowerBound], last = levels[run.upperBound]
-                    if i > 0 { Text("\u{00B7}").font(.mono(12)).opacity(0.3).frame(minHeight: 36) }
-                    Button { pick(first) } label: {
-                        Text(run.count == 1 ? first.label : "\(first.label)\u{2013}\(last.label)")
-                            .font(.mono(12, .semibold)).foregroundStyle(first.colour)
-                            .shadow(color: first.colour.opacity(0.6), radius: 3)
-                            .padding(.horizontal, 6).frame(minWidth: 32, minHeight: 36).contentShape(Rectangle())
+                    // One view with the dot after it, so a wrapped line never starts on a dot.
+                    HStack(spacing: 0) {
+                        Button { pick(first) } label: {
+                            Text(run.count == 1 ? first.label : "\(first.label)\u{2013}\(last.label)")
+                                .font(.mono(12, .semibold)).foregroundStyle(first.colour)
+                                .shadow(color: first.colour.opacity(0.6), radius: 3)
+                                .padding(.horizontal, 6).frame(minWidth: 32, minHeight: 36).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(run.count == 1 ? "\(below.rawValue) \(first.label), short of par"
+                                            : "\(below.rawValue) \(first.label) to \(last.label), short of par")
+                        .accessibilityHint("Opens \(below.rawValue) \(first.label)")
+                        if i < runs.count - 1 {
+                            Text("\u{00B7}").font(.mono(12)).opacity(0.3).frame(minHeight: 36).accessibilityHidden(true)
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(run.count == 1 ? "\(below.rawValue) \(first.label), short of par"
-                                        : "\(below.rawValue) \(first.label) to \(last.label), short of par")
-                    .accessibilityHint("Opens \(below.rawValue) \(first.label)")
                 }
             }
             .padding(.bottom, 6)
