@@ -959,6 +959,8 @@ struct LevelView: View {
                     if let pack = game.level.pack {
                         Text(pack.name.uppercased()).font(.mono(10, .semibold)).tracking(2)
                             .foregroundStyle(game.level.colour).opacity(0.75).offset(y: -15)
+                            // The way out already names the pack.
+                            .accessibilityHidden(true)
                     }
                 }
                 .padding(.top, 18)
@@ -1232,6 +1234,7 @@ struct LevelView: View {
     private func say(_ text: String) {
         notice = text
         notices += 1
+        AccessibilityNotification.Announcement(text).post()
     }
 
     /// Back to the menu, the only way out short of a finish or the next tank.
@@ -2975,6 +2978,7 @@ struct ResultCard: View {
                 Button(action: onExit) { Text(game.level.back).hit() }
                 if game.offersAgain {
                     Button(action: again) { Text("again \u{21BA}").hit() }.buttonStyle(Sounding(effect: .reset))
+                        .accessibilityLabel("Again")
                 }
                 if let share = game.shareText {
                     ShareLink(item: share) { Text("share \u{2197}").hit() }
