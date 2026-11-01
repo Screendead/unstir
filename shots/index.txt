@@ -550,6 +550,7 @@ escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken t
 escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
 escapement-dead-tick.png  Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again.
 escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
+escapement-2-lost-resumed.png  Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out.
 escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
 escapement-budget-16-dealt.png  Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6.
 escapement-budget-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left.
