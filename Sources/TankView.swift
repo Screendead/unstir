@@ -1453,8 +1453,9 @@ struct LevelView: View {
                                 u.stack = t.stack
                                 u.tick = (t.rod, Self.flight(p, i) * Double(t.dir) * Tank.step)
                             }
-                            return picture.modifier(u).modifier(Murk(stirs: murk, side: side))
-                                .contrast(calm ? 1 + 0.5 * max(sin(.pi * w / 1.9), 0) : 1)
+                            let drawn = picture.modifier(u).modifier(Murk(stirs: murk, side: side))
+                            // Only Reduce Motion pays for the contrast filter, over the hottest draw in the app.
+                            return Group { if calm { drawn.contrast(1 + 0.5 * max(sin(.pi * w / 1.9), 0)) } else { drawn } }
                         } keyframes: { _ in
                             // A light wave from the last-turned rod, over the clean picture. The animator holds its last value, so
                             // the band runs out past the farthest rim of any layout (1.56 from a ring rod) rather than parking on it.
