@@ -48,13 +48,26 @@ extension Tier {
     var spoken: String {
         guard let below, !isOpen() else { return rawValue }
         let par = below.atPar(), lit = par.filter { $0 }.count
-        return "\(rawValue), locked, opens with every \(below.rawValue) tank at par, \(lit) of \(par.count)"
+        return "\(rawValue), locked, opens with every \(below.rawValue) level at par, \(lit) of \(par.count)"
     }
 
     /// The first level with no best, on an open tier: where the player is. Every level before it has a best, so it is
     /// open.
     func frontier(_ best: (String) -> Best? = Best.load) -> Level? {
         isOpen(best) ? levels.first { best($0.id) == nil } : nil
+    }
+
+    /// The levels short of par, as runs of neighbours by index. The first of each run is open: the level before it is at
+    /// par, or it is the first.
+    func short(_ best: (String) -> Best? = Best.load) -> [ClosedRange<Int>] {
+        atPar(best).enumerated().reduce(into: []) { runs, level in
+            guard !level.element else { return }
+            if let last = runs.last, last.upperBound == level.offset - 1 {
+                runs[runs.count - 1] = last.lowerBound ... level.offset
+            } else {
+                runs.append(level.offset ... level.offset)
+            }
+        }
     }
 
     /// The row a launch centres on: the frontier, else the first level short of par. Nil, the top, once every level is
@@ -559,12 +572,12 @@ private struct TierList: View, Equatable {
     }
 
     /// What opens a locked tier: a tick per level of the tier below, lit once that level is at par.
-    private func gate(_ below: Tier) -> some View {
+    @ViewBuilder private func gate(_ below: Tier) -> some View {
         let par = below.atPar(), lit = par.filter { $0 }.count
-        return VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "lock.fill").font(.system(size: 11, weight: .semibold))
-                Text("opens with every \(below.rawValue) tank at par").font(.mono(12))
+                Text("opens with every \(below.rawValue) level at par").font(.mono(12))
                 Spacer(minLength: 0)
                 Text("\(lit)/\(par.count)").font(.mono(13, .semibold))
             }
@@ -578,9 +591,36 @@ private struct TierList: View, Equatable {
                 }
             }
         }
-        .padding(.vertical, 12)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Locked. Opens with every \(below.rawValue) tank at par: \(lit) of \(par.count).")
+        .accessibilityLabel("Locked. Opens with every \(below.rawValue) level at par: \(lit) of \(par.count).")
+        .padding(.top, 12)
+        .padding(.bottom, lit == par.count ? 12 : 0)
+        shortList(below)
+    }
+
+    /// The levels still short of par, each run a button that opens its first.
+    @ViewBuilder private func shortList(_ below: Tier) -> some View {
+        let runs = below.short(), levels = below.levels
+        if !runs.isEmpty {
+            Flow {
+                Text("short:").font(.mono(12)).opacity(0.45).frame(minHeight: 36).padding(.trailing, 2)
+                ForEach(Array(runs.enumerated()), id: \.offset) { i, run in
+                    let first = levels[run.lowerBound], last = levels[run.upperBound]
+                    if i > 0 { Text("\u{00B7}").font(.mono(12)).opacity(0.3).frame(minHeight: 36) }
+                    Button { pick(first) } label: {
+                        Text(run.count == 1 ? first.label : "\(first.label)\u{2013}\(last.label)")
+                            .font(.mono(12, .semibold)).foregroundStyle(first.colour)
+                            .shadow(color: first.colour.opacity(0.6), radius: 3)
+                            .padding(.horizontal, 6).frame(minWidth: 32, minHeight: 36).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(run.count == 1 ? "\(below.rawValue) \(first.label), short of par"
+                                        : "\(below.rawValue) \(first.label) to \(last.label), short of par")
+                    .accessibilityHint("Opens \(below.rawValue) \(first.label)")
+                }
+            }
+            .padding(.bottom, 6)
+        }
     }
 }
 
@@ -676,5 +716,39 @@ private struct LevelRow: View {
             try? await Task.sleep(for: .seconds(2))
             if taps == tap { said = false }
         }
+    }
+}
+
+/// Its views left to right, wrapping onto lines as wide as it is, each line's views on a common centre.
+private struct Flow: SwiftUI.Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let lines = self.lines(subviews, width: proposal.width ?? .infinity)
+        return CGSize(width: lines.map(\.width).max() ?? 0, height: lines.reduce(0) { $0 + $1.height })
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for line in lines(subviews, width: bounds.width) {
+            var x = bounds.minX
+            for i in line.views {
+                let size = subviews[i].sizeThatFits(.unspecified)
+                subviews[i].place(at: CGPoint(x: x, y: y + line.height / 2), anchor: .leading, proposal: .unspecified)
+                x += size.width
+            }
+            y += line.height
+        }
+    }
+
+    private func lines(_ subviews: Subviews, width: CGFloat) -> [(views: [Int], width: CGFloat, height: CGFloat)] {
+        var lines: [(views: [Int], width: CGFloat, height: CGFloat)] = []
+        for (i, view) in subviews.enumerated() {
+            let size = view.sizeThatFits(.unspecified)
+            if let last = lines.last, last.width + size.width <= width {
+                lines[lines.count - 1] = (last.views + [i], last.width + size.width, max(last.height, size.height))
+            } else {
+                lines.append(([i], size.width, size.height))
+            }
+        }
+        return lines
     }
 }

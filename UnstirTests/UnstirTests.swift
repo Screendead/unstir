@@ -1211,6 +1211,19 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(landing(.whirlpool), "N1")
     }
 
+    /// The gate lists what is short of par as runs, each opening at a level the player can open.
+    func testTheGateListsTheLevelsShortOfParAsRuns() {
+        var bests: [String: Best] = [:]
+        XCTAssertEqual(Tier.plughole.short { bests[$0] }, [0 ... 26])
+        for level in Level.plughole.prefix(20) { bests[level.id] = Best(over: 0, seconds: 30) }
+        for id in ["L5", "L12", "L13"] { bests[id] = Best(over: 1, seconds: 30) }
+        let runs = Tier.plughole.short { bests[$0] }
+        XCTAssertEqual(runs, [4 ... 4, 11 ... 12, 20 ... 26])
+        for run in runs { XCTAssert(run.lowerBound == 0 || bests[Level.plughole[run.lowerBound - 1].id] != nil) }
+        for level in Level.plughole { bests[level.id] = Best(over: 0, seconds: 30) }
+        XCTAssertEqual(Tier.plughole.short { bests[$0] }, [])
+    }
+
     /// Back from a level the menu centres on it, or after a solve on the one after it, the last level on itself; the
     /// daily, endless and the sandbox leave the list at its top, and a pack's level centres its own list.
     func testLeavingALevelFocusesItsRow() {

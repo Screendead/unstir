@@ -603,7 +603,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`isSideways`); then the list stops scrolling, and a row lifted over doesn't open. While it turns, the list is drawn
   again over the scroll view, cut to its visible part, and that copy is what stirs; the scroll view's own list
   (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. A locked tier can be
-  looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par. A closed row
+  looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par, and under the
+  ticks the levels short of par as runs (`Tier.short`: "short: 05 · 12 · 21–27"), each a button opening its first,
+  which is always open. A closed row
   still takes a tap: it shakes, sounds `seized` and says for two seconds what opens it ("solve 06 to open", or on a
   locked tier "par every plughole level to open"), which VoiceOver reads as its value; shut, the daily and endless say
   "opens after plughole 23" in place of their detail. The first level without a best (`Tier.frontier`) keeps its

@@ -50,11 +50,11 @@ shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONS
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
 shot menu-whirlpool-locked "Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
-shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, vortex still locked." \
+shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked." \
   TIER=whirlpool BESTS=plughole:$par27
-shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par)." \
+shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played)." \
   TIER=vortex BESTS=plughole:$par27,whirlpool:$some
-shot menu-vortex-open "Menu on vortex, opened by every whirlpool tank at par: its level 01 playable, maelstrom still locked." \
+shot menu-vortex-open "Menu on vortex, opened by every whirlpool level at par: its level 01 playable, maelstrom still locked." \
   TIER=vortex BESTS=plughole:$par27,whirlpool:$par27
 shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit." \
   TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:01
