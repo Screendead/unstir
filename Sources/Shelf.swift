@@ -68,7 +68,7 @@ enum Offer: Hashable, Sendable {
     var holds: String {
         switch self {
         case .pack(.firstStir): "\(Pack.firstStir.planned) scenes in five chapters"
-        case .pack(.lens): "\(Pack.lens.planned) panels"
+        case .pack(.lens): "\(Pack.lens.planned) panels in four issues"
         case .pack(.escapement): "\(Pack.escapement.planned) problems in five chapters"
         case .pack(.prism): "\(Pack.prism.planned) specimens in five trays"
         case .complete: "\(Pack.named(Pack.sold())) \u{00B7} \(Pack.sold().map(\.planned).reduce(0, +)) levels"
