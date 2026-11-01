@@ -1578,6 +1578,21 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
     }
 
+    /// Jack's call N1 (round 13): every v1 title is one or two words in sentence case with no full stop, at most 16
+    /// characters, and no title repeats anywhere in the game, First Stir's kept titles included.
+    func testEveryTitleIsItsOwn() {
+        let v1 = Tier.allCases.flatMap(\.levels) + [Pack.lens, .escapement, .prism].flatMap(\.levels)
+        XCTAssertEqual(v1.count, 193)
+        for level in v1 {
+            XCTAssertLessThanOrEqual(level.title.count, 16, level.id)
+            XCTAssertLessThanOrEqual(level.title.split(separator: " ").count, 2, level.id)
+            XCTAssertFalse(level.title.hasSuffix("."), level.id)
+            XCTAssertFalse(level.title.first?.isLowercase ?? true, level.id)
+        }
+        let titles = (v1 + Pack.firstStir.levels).map { $0.title.lowercased() }
+        XCTAssertEqual(Set(titles).count, titles.count)
+    }
+
     /// Against the design table. Coral reads only to 6 stirs and neurons to 14. The sandbox cycles every picture but
     /// the twins, vortex's after whirlpool's, and steps from a twin to the picture after its sibling.
     func testWhirlpoolPictures() {
