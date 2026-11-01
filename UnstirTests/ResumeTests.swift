@@ -141,6 +141,22 @@ import XCTest
         XCTAssertNotNil(Game.resumed(clock, from: saved, bank: (c.bank, nil), storesResume: false), "a replay passes through the loss")
     }
 
+    /// A reset with nothing played changes nothing a replay needs, so it isn't recorded (C2's implementer call, round 13).
+    func testAResetWithNothingPlayedIsNotSaved() throws {
+        let level = Level.plughole[11]
+        let g = Game(level: level, bank: (10, nil))
+        let t = try XCTUnwrap(g.reachable)
+        g.commit(rod: t.rod, steps: t.steps)
+        g.undo()
+        g.reset()
+        XCTAssertEqual(Resume(of: g).actions, [.turn(knob: t.rod, steps: t.steps), .undo])
+        let back = try XCTUnwrap(Game.resumed(level, from: Resume(of: g), bank: (g.bank, nil), storesResume: false))
+        XCTAssertEqual(back.resets, g.resets)
+        XCTAssertEqual(back.undos, g.undos)
+        XCTAssertEqual(back.clean, g.clean)
+        XCTAssertEqual(back.stack, level.scramble)
+    }
+
     /// The app dying inside the solving move's fine pass: the replay finishes the try, its best taking the time played.
     func testALineThatSolvesSavesItsBestWithItsTime() throws {
         let id = "resume-test", level = Level(id: id, label: "", title: "", layout: .tri, scramble: .parse("0:+4", in: .tri))
@@ -170,11 +186,11 @@ import XCTest
         XCTAssertEqual(Resume.actions("\(ratchet):1", on: escapement), [.wait(ratchet: ratchet)])
 
         let d = UserDefaults.standard
-        defer { Resume.remove("daily-20000101"); Resume.remove("L12") }
-        Resume.save(Resume(id: "daily-20000101", print: "", firstTry: true, actions: [.undo]))
-        Resume.save(Resume(id: "L12", print: "", firstTry: true, actions: [.undo]))
+        defer { for id in ["daily-20000101", "L999", "L12"] { Resume.remove(id) } }
+        for id in ["daily-20000101", "L999", "L12"] { Resume.save(Resume(id: id, print: "", firstTry: true, actions: [.undo])) }
         Resume.prune(known: Resume.known)
         XCTAssertNil(d.data(forKey: "resume.daily-20000101"), "yesterday's daily goes")
+        XCTAssertNil(d.data(forKey: "resume.L999"), "a level an update took out goes")
         XCTAssertNotNil(d.data(forKey: "resume.L12"))
     }
 
