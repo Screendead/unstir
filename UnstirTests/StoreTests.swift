@@ -174,6 +174,16 @@ final class StoreTests: XCTestCase {
         XCTAssertNotEqual(store.price(Pack.lens.productID), store.price(Pack.completeID))
     }
 
+    /// The gate waits for the launch's first read, which `start` finishes before it returns.
+    func testTheStoreIsReadyOnceItHasReadTheEntitlements() async throws {
+        let store = Store()
+        XCTAssertFalse(store.ready)
+        await store.settled()
+        await store.start()
+        XCTAssertTrue(store.ready)
+        await store.settled()
+    }
+
     func testPurchaseGrantsOnePack() async throws {
         let store = Store()
         await store.start()

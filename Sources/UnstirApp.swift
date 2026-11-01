@@ -426,6 +426,18 @@ struct RootView: View {
     /// A level past its pack's taste that the player doesn't own shows the pack's card over the menu instead.
     /// `look`: the tier the menu opens on in place of the stored one, locked or not.
     private func show(_ next: Level?, keep: Bool = false, look: Tier? = nil) {
+        // Just after launch the store may not yet have read what the player owns, so a gate waits for it.
+        if let next, !Store.shared.ready, Store.shared.card(for: next) != nil {
+            Task {
+                await Store.shared.settled()
+                open(next, keep: keep, look: look)
+            }
+        } else {
+            open(next, keep: keep, look: look)
+        }
+    }
+
+    private func open(_ next: Level?, keep: Bool, look: Tier?) {
         if !keep { harness = nil }
         self.look = look
         let gate = next.flatMap { Store.shared.card(for: $0) }

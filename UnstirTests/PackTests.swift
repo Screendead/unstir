@@ -94,7 +94,10 @@ final class PackTests: XCTestCase {
         XCTAssertNil(store.card(for: Level.plughole[5]))
         var ledger = Ledger()
         ledger.record(Pack.lens.productID, .owned)
+        XCTAssertFalse(store.ready)
         store.pretend(ledger)
+        // The harness's states are known at launch, so nothing waits on StoreKit.
+        XCTAssertTrue(store.ready)
         XCTAssertNil(store.card(for: level(.lens, 4)))
         XCTAssertEqual(store.card(for: level(.escapement, 4)), .escapement)
         ledger.record(Pack.lens.productID, .revoked)

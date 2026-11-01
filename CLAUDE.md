@@ -418,7 +418,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   sets what StoreKit is asked for (`Pack.productIDs`), what Complete grants and needs, Complete's cover, words
   (`Pack.named`; the card's "or all three in Complete" counts them, `Offer.countWord`), and clip, and analytics' snapshot (`testFirstStirIsOutOfV1`).
   `Store` is StoreKit 2 with no server and nothing stored: entitlements from `Transaction.currentEntitlements` at
-  launch, a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
+  launch (`Store.ready` once that first read has finished: until then `RootView.show` waits on it, `Store.settled`,
+  before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked), and `Store.failures` why each failure failed (`Failure`:

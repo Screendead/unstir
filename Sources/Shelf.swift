@@ -933,7 +933,7 @@ struct PackDock: View {
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
                                 Text(offer.name).font(.mono(.caption2)).opacity(0.7).lineLimit(2)
                                     .multilineTextAlignment(.center).minimumScaleFactor(0.8)
-                                if let tag = state.tag {
+                                if store.ready, let tag = state.tag {
                                     Circle().fill(tag.colour).frame(width: 4, height: 4).shadow(color: tag.colour, radius: 2)
                                 }
                             }
@@ -943,7 +943,7 @@ struct PackDock: View {
                     }
                     .buttonStyle(Sounding())
                     .accessibilityLabel("\(offer.name), \(offer.pack == nil ? "every pack" : "pack")")
-                    .accessibilityValue(state.tag?.word ?? store.price(offer.productID) ?? "")
+                    .accessibilityValue((store.ready ? state.tag?.word : nil) ?? store.price(offer.productID) ?? "")
                     .accessibilityHint(offer.pitch)
                     .accessibilityShowsLargeContentViewer {
                         Text(offer.name)

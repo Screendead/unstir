@@ -78,6 +78,9 @@ final class Store {
     private(set) var restored: Restored?
     private(set) var restoring = false
     @ObservationIgnored private var payments: Bool?
+    /// The launch's first read of the entitlements has finished, so a pack the player owns reads as owned.
+    private(set) var ready = false
+    @ObservationIgnored private var first: Task<Void, Never>?
     @ObservationIgnored private var products: [String: Product] = [:]
     @ObservationIgnored private var updates: Task<Void, Never>?
     @ObservationIgnored private var attempt = 0
@@ -114,7 +117,11 @@ final class Store {
         failures = ledger.products.filter { $0.value == .failed }.mapValues { _ in failure }
         payments = canPay
         self.restored = restored
+        ready = true
     }
+
+    /// Returns once the first read has finished, or at once before `start`.
+    func settled() async { await first?.value }
 
     /// Listens for purchases made or revoked elsewhere (Ask to Buy approvals, refunds, other devices, Family Sharing) and
     /// for any left unfinished, then reads what the player owns.
@@ -123,7 +130,12 @@ final class Store {
         updates = Task { [weak self] in
             for await result in Transaction.updates { await self?.apply(result) }
         }
-        await refresh()
+        let read = Task {
+            await refresh()
+            ready = true
+        }
+        first = read
+        await read.value
         await fetchPrices()
     }
 
