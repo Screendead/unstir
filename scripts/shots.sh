@@ -44,12 +44,12 @@ pattern=${1:-}
 # The same level-like scrambles (bottom first, three-rod layout) for every picture, one per depth.
 depths=("0:+4" "1:+5,2:-4" "0:-6,1:+4,2:-5" "0:+5,2:-6,1:+3,0:-4" "2:-5,0:+4,1:-7,2:+3,0:-6")
 
-shot menu "Menu on first launch (in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock." CONSENT=yes
+shot menu "Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock." CONSENT=yes
 shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
-shot menu-whirlpool-locked "Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
+shot menu-whirlpool-locked "Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
 shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked." \
   TIER=whirlpool BESTS=plughole:$par27
 shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played)." \

@@ -819,7 +819,8 @@ private struct LevelRow: View {
 
     var body: some View {
         let result = Best.load(level.id)
-        // A move committed and no best yet; the modes' rows say their own.
+        // Started and no best yet: endless and the sandbox have none; a daily left on its first visit stays tried all day,
+        // as practice saves no best.
         let tried = result == nil && level.run == nil && !level.sandbox && Best.started(level.id)
         let rods = level.layout.base.map { "\($0.rods.count) rods + swirl" } ?? "\(level.layout.rods.count) rods"
         let saying = (said || held) && opens != nil

@@ -630,7 +630,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   manifest declares no collected data, so a build with `ANALYTICS = YES` must declare analytics's three types again.
   The rest of this paragraph is that build. Until yes nothing is queued or sent and no `Sender` exists, and a
   no deletes the queue. `Analytics.configure` runs in `RootView.init`, before `start` (which waits for the store), so
-  the question shows at once and an answer given before `start` is stored. **Consent.swift** asks it and holds every
+  the question shows as soon as the menu does (after plughole 01 on a fresh install, C4) and an answer given before `start` is stored. **Consent.swift** asks it and holds every
   word it and settings say (`ConsentWords`): on a plain launch while undecided,
   `ConsentCard` covers the menu, which waits for the answer (hidden from VoiceOver meanwhile): a title, one line and a
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
@@ -661,9 +661,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
   the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
-  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "locked, solve level 6 first",
-  or in a closed tier "locked, par every Plughole level first") and hint (its rods and par), the header's "3 moves, par
-  7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
+  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "tried" (started, no best),
+  "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, par
+  every Plughole level first") and hint (its rods and par), the menu's next button (`Spoken.next`: "Next:
+  level 2, Drip"), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
   the finish ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared."), which
   labels the result or lost card's summary, where VoiceOver's focus lands as the card shows, so no announcement is cut
   short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
@@ -673,9 +674,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
   round 13): until 01 has a best, the tank's rule as a tagline over the tier's list, with the sandbox under the list;
   then "next: 07 · Sprinkle ›" in the tagline's place, a button opening the shown tier's frontier (none once it has
-  none), and the sandbox over the list. The daily and endless rows show only once open, each marked new until either is
-  first opened (`Best.modesSeen`). A row with a committed move and no best reads tried, faint, as a pack card's list
-  does (Jack's call C3, round 13); the daily's adds "4 days running" (`Daily.run`) to its detail from two. Under the title, a strip names every tier, dimmed with a lock while locked, and
+  none), and the sandbox over the list. The daily and endless rows show only once open, each marked new, in plain
+  white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
+  (`Best.started`) and has no best reads tried, faint, as a pack card's list does (Jack's call C3, round 13; endless
+  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. Under the title, a strip names every tier, dimmed with a lock while locked, and
   keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
   list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
   (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
