@@ -804,6 +804,8 @@ struct PackCard: View {
                     Text("\u{203A}").opacity(0.55)
                 }
                 .font(.mono(.caption))
+                // Its failure line is 6 pt below.
+                .hit(10, 8)
             }
             .buttonStyle(Sounding())
             .disabled(buying || store.state(.complete) == .pending)
@@ -826,7 +828,7 @@ struct PackCard: View {
         } label: {
             let s = restoring ? "restoring\u{2026}" : restored == false ? "couldn't reach the App Store \u{00B7} restore purchases"
                 : restored == true ? "restored \u{00B7} restore purchases" : "restore purchases"
-            Text(s).font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
+            Text(s).font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot).hit(16)
         }
         .buttonStyle(Sounding())
         .disabled(restoring)
