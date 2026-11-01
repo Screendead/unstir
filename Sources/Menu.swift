@@ -190,6 +190,11 @@ struct MenuView: View {
     @State private var daily: (level: Level, run: Int)
     /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
     @State private var leading: Lead
+    /// Endless's saved run, which its row continues (Jack's call C2, round 13).
+    @State private var saved = Resume.load("endless")
+    /// When a first tap armed the endless row's "new run", which then says "new run? tap again" for `ResetArm.window`.
+    @State private var newRunArmed: Date?
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -329,10 +334,14 @@ struct MenuView: View {
                     LevelRow(level: day, detail: run < 2 ? nil
                                  : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
                              enabled: true, new: new, pick: pick, refuse: refuse)
-                    LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                             detail: "deeper every tank \u{00B7} eight wrong stirs and it spills",
-                             best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true, new: new, pick: pick,
-                             refuse: refuse)
+                    let kept = saved?.run
+                    LevelRow(level: .endless(kept ?? Run(seed: .random(in: .min ... .max))),
+                             detail: kept.map { "continue \u{00B7} tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)" }
+                                 ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
+                             best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true,
+                             new: new && kept == nil,
+                             pick: pick, refuse: refuse)
+                        .overlay(alignment: .trailing) { if kept != nil { newRun } }
                 }
                 if lead.sandboxFirst { sandbox }
             }
@@ -675,6 +684,28 @@ struct MenuView: View {
     }
 
     /// A touch that ends a stir must not open the row it lifted over, nor tap.
+    /// Over the endless row's trailing edge while a run is saved: a second tap within the window drops the run and
+    /// starts another, so a slip never loses one. VoiceOver's double tap is deliberate already.
+    private var newRun: some View {
+        Button {
+            let tap = ResetArm.tap(now: .now, armedAt: newRunArmed, played: !voiceOver)
+            newRunArmed = tap.armedAt
+            guard tap.reset else { return Sound.shared.play(.tap) }
+            Resume.remove("endless")
+            saved = nil
+            pick(.endless(Run(seed: .random(in: .min ... .max))))
+        } label: {
+            Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.mono(11)).lineLimit(1).opacity(0.55).hit()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("New run")
+        .accessibilityHint("Drops the saved run and starts another.")
+        .task(id: newRunArmed) {
+            guard newRunArmed != nil, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
+            newRunArmed = nil
+        }
+    }
+
     private func pick(_ level: Level) {
         guard !twisting else { return }
         Sound.shared.play(.tap)

@@ -160,6 +160,8 @@ shot reset-armed "Level 12 with two moves played, reset tapped once: it reads re
 # UNSTIR_RESUME saves the level's try with that line for the launch: UNSTIR_MOVES's form, plus u an undo and r a reset.
 shot level-resumed "Level 12 reopened mid-try, its saved line replayed (rod 2 healed, a wasted stir on rod 0 undone, rod 1 healed): four entries left, moves 2 / par 6, the undo already spent from the bank, and no opening." \
   LEVEL=12 UNDOS=9 RESUME=2:+5,0:+2,u,1:+3
+shot menu-endless-continue "The menu with an endless run saved on tank 6, brim 3: the endless row reads continue · tank 6 · brim 3, with new run at its trailing edge in place of the best." \
+  BESTS=plughole:$par27 MODE=endless SCREEN=menu RESUME= RESUMETANK=5 BRIM=3
 shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
   MODE=sandbox CLOCK=3
 full=$(for i in $(seq 0 35); do printf '%d:+1,' $((i % 2)); done)
