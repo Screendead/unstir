@@ -391,7 +391,7 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | C10. The timer | **A:** off the result card and out of the best's ranking. Built on `r13-result`, PR #92 |
 | C11. Par warning and the over-par veil | **A:** the count amber at par and magenta past it; the veil at 0.05 a move, capped at 0.2. Built on `r13-play`, PR #93 |
 | C12. Reset | **A:** "reset? tap again" for 2 s. Built on `r13-play`, PR #93 |
-| C13. A drag the system cuts off | **A:** commit everywhere, as V26; after a phone check of which handler runs first |
+| C13. A drag the system cuts off | **A:** commit everywhere, as V26; after a phone check of which handler runs first. Built on `r13-cutoff`, PR #100; waits on the phone check, whose procedure is in the PR |
 | C14. Escapement's pushed tick | **A:** the caption says at once "That tick can't come back. Undo, or again."; the tank plays on (EL1 kept). Built on `r13-play`, PR #93. Open, for Jack: the words name "again", the lost card's button, where the play screen's control reads "reset"; Claude recommends keeping both. Also open, for Jack: with the undo bank at 0 the words still point at undo, which then only says when undos refill; Jack's call (2026-11-01): A, "That tick can't come back. Reset." while the bank is empty |
 | C15. Teaching Lens's taste | **A:** a ghost finger rides the lens's track on Lens 01 until the first lens commit |
 | C16. Prism's letters | **B:** a "colour letters" switch in settings, defaulting to Differentiate Without Colour, and one line on Prism's card. Built on `r13-settings`, PR #94 |
