@@ -1470,13 +1470,26 @@ struct LevelView: View {
     }
 
     private func sandboxControls(named: Bool) -> some View {
-        let picture = game.level.picture.rawValue, rods = game.level.layout.rods.count
+        let picture = game.level.picture.rawValue
         return HStack(spacing: 8) {
             control(named ? "picture: \(picture) \u{203A}" : "\(picture) \u{203A}", inset: 14, game.nextPicture)
             // A turn in hand, or snapping to commit, names a rod of the current layout.
-            control(named ? "rods: \(rods) \u{203A}" : "\(rods) rods \u{203A}", inset: 14) {
+            control(Self.layoutLabel(game.level.layout, named: named), inset: 14) {
                 if liveRod == nil { game.nextLayout() }
             }
+        }
+    }
+
+    /// The sandbox's layout control. Where another layout has as many rods it names the layout too, or the tap from
+    /// quad to eye would leave the label as it was.
+    nonisolated static func layoutLabel(_ layout: Layout, named: Bool) -> String {
+        let base = layout.base ?? layout, rods = layout.rods.count
+        let shared = Layout.allCases.contains { $0 != base && $0.rods.count == base.rods.count }
+        return switch (named, shared) {
+        case (true, false): "rods: \(rods) \u{203A}"
+        case (true, true): "rods: \(rods) \u{00B7} \(base.rawValue) \u{203A}"
+        case (false, false): "\(rods) rods \u{203A}"
+        case (false, true): "\(base.rawValue) \u{203A}"
         }
     }
 

@@ -475,6 +475,16 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(tanks.map(\.best), [3, 3, 3, 3])
     }
 
+    /// The sandbox's layout control names quad and eye, which share a count of rods, so a tap between them reads.
+    func testTheSandboxNamesALayoutThatSharesItsCount() {
+        XCTAssertEqual(LevelView.layoutLabel(.tri, named: true), "rods: 3 \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.tri, named: false), "3 rods \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.quad, named: true), "rods: 4 \u{00B7} quad \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.eye, named: false), "eye \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.hex, named: true), "rods: 7 \u{203A}")
+        XCTAssertEqual(LevelView.layoutLabel(.quadSwirl, named: true), "rods: 5 \u{00B7} quad \u{203A}")
+    }
+
     /// A turn a full stack refuses counts as a refusal, for the knob to shake and the caption to say so, and changes
     /// nothing else.
     @MainActor func testAFullStackSaysItRefused() {
