@@ -420,7 +420,11 @@ struct RootView: View {
                 LevelView(level: level, harness: harness,
                           onExit: { show(nil, solved: $0) },
                           onNext: { show($0) },
-                          onLook: { show(nil, look: $0) })
+                          onLook: { show(nil, look: $0) },
+                          onOffer: { pack in
+                              card = .pack(pack)
+                              show(nil, solved: true)
+                          })
                     .id(level)
                     .transition(dip)
             } else {

@@ -53,7 +53,9 @@ extension Game {
     }
 
     /// The card's account of how the level ended, where VoiceOver lands as it shows.
-    var finishSpoken: String {
+    var finishSpoken: String { ended + (completed.map { " \($0.line)." } ?? "") }
+
+    private var ended: String {
         let moved = Spoken.count(moves, "move")
         if lost { return "Out of ticks on move \(moves)." }
         if let run = level.run {

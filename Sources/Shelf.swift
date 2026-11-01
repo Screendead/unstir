@@ -20,6 +20,14 @@ enum Offer: Hashable, Sendable {
         return packs.map(Offer.pack) + (packs.count == sold.count ? [.complete] : [])
     }
 
+    /// The pack a completion's card points to: the first on the shelf the player doesn't own, other than the one just
+    /// completed; none once every pack is owned.
+    @MainActor static func pointer(after completed: Completion?, shelf: [Offer] = Offer.shelf(),
+                                   owned: (Pack) -> Bool = { Store.shared.state($0) == .owned }) -> Pack? {
+        guard let completed else { return nil }
+        return shelf.compactMap(\.pack).first { $0 != completed.pack && !owned($0) }
+    }
+
     /// Whether this build sells it.
     var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
 
@@ -67,10 +75,10 @@ enum Offer: Hashable, Sendable {
 
     var holds: String {
         switch self {
-        case .pack(.firstStir): "\(Pack.firstStir.planned) scenes in five chapters"
-        case .pack(.lens): "\(Pack.lens.planned) panels in four issues"
-        case .pack(.escapement): "\(Pack.escapement.planned) problems in five chapters"
-        case .pack(.prism): "\(Pack.prism.planned) specimens in five trays"
+        case .pack(.firstStir): "\(Pack.firstStir.planned) \(Pack.firstStir.noun) in five chapters"
+        case .pack(.lens): "\(Pack.lens.planned) \(Pack.lens.noun) in four issues"
+        case .pack(.escapement): "\(Pack.escapement.planned) \(Pack.escapement.noun) in five chapters"
+        case .pack(.prism): "\(Pack.prism.planned) \(Pack.prism.noun) in five trays"
         case .complete: "\(Pack.named(Pack.sold())) \u{00B7} \(Pack.sold().map(\.planned).reduce(0, +)) levels"
         }
     }

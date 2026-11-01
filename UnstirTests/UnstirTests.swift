@@ -459,6 +459,47 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(Review.due(opened: .vortex, asked: false, harnessed: false, purchased: false))
     }
 
+    /// A completion shows on the solve that gives the last of the pack's levels a best, whichever it is, and never on a
+    /// re-solve; the free tiers complete on the last tier's last best.
+    @MainActor func testCompletionShowsOnTheSolveThatCompletes() {
+        let ids = (Pack.lens.levels + Tier.maelstrom.levels).map(\.id) + ["L1"]
+        let saved = ids.map { UserDefaults.standard.data(forKey: "best.\($0)") }
+        defer { for (id, data) in zip(ids, saved) { UserDefaults.standard.set(data, forKey: "best.\(id)") } }
+        for id in ids { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
+        func solve(_ id: String, pack: Pack? = nil, tier: Tier = .plughole) -> Completion? {
+            let level = Level(id: id, tier: tier, pack: pack, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)])
+            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+            game.commit(rod: 0, steps: -4)
+            XCTAssertTrue(game.solved, id)
+            return game.completed
+        }
+        let lens = Pack.lens.levels.map(\.id)
+        for id in lens where id != lens[5] && id != lens.last { Best(over: 0, seconds: 9).save(id) }
+        XCTAssertNil(solve(lens.last!, pack: .lens))
+        XCTAssertEqual(solve(lens[5], pack: .lens), .pack(.lens))
+        XCTAssertNil(solve(lens[5], pack: .lens))
+        XCTAssertEqual(Completion.pack(.lens).line, "Lens complete \u{00B7} 25 panels")
+
+        let sea = Tier.maelstrom.levels.map(\.id)
+        for id in sea.dropLast() { Best(over: 3, seconds: 9).save(id) }
+        XCTAssertNil(solve("L1"))
+        XCTAssertEqual(solve(sea.last!, tier: .maelstrom), .free)
+        XCTAssertNil(solve(sea.last!, tier: .maelstrom))
+    }
+
+    /// The pointer names the first pack on the shelf the player doesn't own, never the one just completed, and none
+    /// once all are owned or nothing completed.
+    @MainActor func testThePointerSkipsOwnedPacks() {
+        let shelf: [Offer] = [.pack(.lens), .pack(.escapement), .pack(.prism), .complete]
+        func owning(_ packs: Set<Pack>) -> (Pack) -> Bool { { packs.contains($0) } }
+        XCTAssertNil(Offer.pointer(after: nil, shelf: shelf, owned: owning([])))
+        XCTAssertEqual(Offer.pointer(after: .free, shelf: shelf, owned: owning([])), .lens)
+        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: shelf, owned: owning([.lens])), .escapement)
+        XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: shelf, owned: owning([.escapement])), .prism)
+        XCTAssertNil(Offer.pointer(after: .pack(.prism), shelf: shelf, owned: owning([.lens, .escapement, .prism])))
+        XCTAssertNil(Offer.pointer(after: .free, shelf: shelf, owned: owning([.lens, .escapement, .prism])))
+    }
+
     /// The card calls a best new only when what it names improves: clean, then over par; a faster time at the same
     /// mark is still the old best's line, and a first solve has none.
     @MainActor func testTheCardsBestLine() {

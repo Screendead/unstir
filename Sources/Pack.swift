@@ -46,6 +46,16 @@ enum Pack: String, CaseIterable, Sendable {
         return names.count < 2 ? names.joined() : names.dropLast().joined(separator: ", ") + " and " + names.last!
     }
 
+    /// What its levels are, as its card and a completion say them.
+    var noun: String {
+        switch self {
+        case .firstStir: "scenes"
+        case .lens: "panels"
+        case .escapement: "problems"
+        case .prism: "specimens"
+        }
+    }
+
     /// Levels 1 to `taste` play without the pack.
     var taste: Int { 3 }
 
