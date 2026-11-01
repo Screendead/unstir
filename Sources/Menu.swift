@@ -341,9 +341,10 @@ struct MenuView: View {
 
     /// While it turns, the list is drawn again, cut to the part on screen, over the scroll view, and that is what
     /// twists: a layer effect blanks a scroll view, and on the whole list its margin is too big. Flattened first, or
-    /// with a margin the effect draws only some of the rows.
+    /// with a margin the effect draws only some of the rows. The cut takes in the list's side margins, where the rows'
+    /// hairlines lie.
     private var twisted: some View {
-        let w = list.width, top = band.lowerBound, h = band.upperBound - top
+        let w = list.width, m = list.minX, top = band.lowerBound, h = band.upperBound - top
         return ZStack(alignment: .top) {
             if twisting {
                 TierList(tier: shown, pick: pick, refuse: refuse, report: reach).equatable()
@@ -352,13 +353,12 @@ struct MenuView: View {
                     .offset(y: -top)
             }
         }
-        .frame(width: w, height: h, alignment: .top)
+        .frame(width: w + 2 * m, height: h, alignment: .top)
         .clipped()
         .drawingGroup()
-        .modifier(Stirred(angle: spin, fade: fade, centre: CGPoint(x: w / 2, y: h / 2), radius: reach))
+        .modifier(Stirred(angle: spin, fade: fade, centre: CGPoint(x: m + w / 2, y: h / 2), radius: reach))
         // The effect draws its sampling margin too, opaque.
         .clipped()
-        .padding(.leading, list.minX)
         .padding(.top, list.minY + top)
         .allowsHitTesting(false)
     }
