@@ -191,6 +191,9 @@ extension Level {
 
     /// The book's chapters, six problems each.
     static let escapementChapters = ["The Clock", "The Waiting Move", "Two Clocks", "Wound Back", "Grand Complication"]
+    /// Each chapter's opener adds its rule to the stipulation, as its old title taught it (Jack's call N1, round 13).
+    static let escapementRules = ["A clock ticks after every move.", "Sometimes the first move is to wait.",
+                                  "Two clocks tick in turn.", "A wound-back clock ticks the other way.", "Three clocks."]
 
     private static func problem(_ n: Int, _ title: String, _ layout: Layout, _ scramble: String, clocks: [Int],
                                 back: [Int] = [], par: Int) -> Level {
@@ -199,7 +202,7 @@ extension Level {
                           chapter: escapementChapters[(n - 1) / 6],
                           // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
                           demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)
-        level.note = "Unstir in \(level.budget) ticks."
+        level.note = "Unstir in \(level.budget) ticks." + ((n - 1) % 6 == 0 ? " " + escapementRules[(n - 1) / 6] : "")
         return level
     }
 

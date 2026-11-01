@@ -29,7 +29,7 @@ import XCTest
         XCTAssertEqual(level.clocks.map(\.rod), [0])
         XCTAssertEqual(level.par, 2)
         XCTAssertEqual(level.budget, 2)
-        XCTAssertEqual(level.note, "Unstir in 2 ticks.")
+        XCTAssertEqual(level.note, "Unstir in 2 ticks. A clock ticks after every move.")
         XCTAssertEqual(level.demo, tri("0:-3,1:+2"))
         XCTAssertTrue(Level.escapement.dropFirst().allSatisfy(\.demo.isEmpty))
     }
@@ -293,6 +293,8 @@ import XCTest
         XCTAssertEqual(levels.map(\.label), (1...30).map { String(format: "%02d", $0) })
         XCTAssertEqual(levels.compactMap(\.chapter), (0..<30).map { Level.escapementChapters[$0 / 6] })
         XCTAssertEqual(Level.escapementChapters, ["The Clock", "The Waiting Move", "Two Clocks", "Wound Back", "Grand Complication"])
+        let rules = [1: " A clock ticks after every move.", 7: " Sometimes the first move is to wait.",
+                     13: " Two clocks tick in turn.", 19: " A wound-back clock ticks the other way.", 25: " Three clocks."]
         XCTAssertEqual(levels.map(\.title), [
             "Mainspring", "Pendulum", "Clock face", "Cogwheel", "Winding key", "Clockwork",
             "Pause", "Snooze", "Hourglass", "Egg timer", "Stopwatch", "Standstill",
@@ -304,7 +306,7 @@ import XCTest
             XCTAssertEqual(level.layout, row.layout, level.id)
             XCTAssertEqual(clocks(level), row.clocks, level.id)
             XCTAssertEqual(level.par, row.par, level.id)
-            XCTAssertEqual(level.note, "Unstir in \(level.budget) ticks.", level.id)
+            XCTAssertEqual(level.note, "Unstir in \(level.budget) ticks." + (rules[Int(level.label)!] ?? ""), level.id)
             XCTAssertEqual(level.motion, .none, level.id)
             XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty, level.id)
             XCTAssertTrue(level.ratchets.allSatisfy { level.kind(of: $0) == .ratchet }, level.id)

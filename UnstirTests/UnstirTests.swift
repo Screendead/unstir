@@ -1546,8 +1546,8 @@ final class UnstirTests: XCTestCase {
             XCTAssertLessThanOrEqual(level.scramble.count, Tank.fourTaps - level.picture.fillEntries, level.id)
         }
         XCTAssertEqual(Set(levels.map(\.scramble)).count, levels.count)
-        XCTAssertFalse(levels[0].note.isEmpty)
-        XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
+        // V1 teaches the rim; the rest of the notes are what the old titles taught (Jack's call N1, round 13).
+        XCTAssertEqual(levels.filter { !$0.note.isEmpty }.map(\.id), ["V1", "V2", "V3", "V12"])
     }
 
     /// Against the design table: quad, then pent, then hex, one or two seized knobs, never the hub; the twin of each
@@ -1575,7 +1575,7 @@ final class UnstirTests: XCTestCase {
             if level.picture == .neuronsTwin { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
         }
         XCTAssertEqual(levels[0].note, "One knob has seized. Turn the tank.")
-        XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
+        XCTAssertEqual(levels.filter { !$0.note.isEmpty }.map(\.id), ["M1", "M2", "M3", "M8", "M10", "M18"])
     }
 
     /// Jack's call N1 (round 13): every v1 title is one or two words in sentence case with no full stop, at most 16
