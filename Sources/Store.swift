@@ -215,23 +215,25 @@ final class Store {
     }
 
     /// What a sync found that wasn't owned before it; nil when the player cancels the App Store sign-in. A failed sync
-    /// keeps what was already known.
+    /// keeps what was already known. Said only on the card it was asked from, as a purchase's failure is.
     @discardableResult
     func restore() async -> Restored? {
-        let before = ledger.owned
+        let before = ledger.owned, started = attempt
         restoring = true
         defer { restoring = false }
+        func said(_ outcome: Restored?) -> Restored? {
+            if attempt == started { restored = outcome }
+            return outcome
+        }
         do {
             try await AppStore.sync()
         } catch {
             Log.write("restore failed: \(error)")
-            restored = Failure(error) == .cancelled ? nil : .failed
-            return restored
+            return said(Failure(error) == .cancelled ? nil : .failed)
         }
         await refresh()
         let found = ledger.owned.subtracting(before)
-        restored = found.isEmpty ? .nothing : .found(found)
-        return restored
+        return said(found.isEmpty ? .nothing : .found(found))
     }
 
     /// Fetched again for an id the last fetch lacked, so a product missing once is not missing all launch.
