@@ -366,14 +366,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
   one clock's tick can uncover the next's seam on the same move (the book's 17 and 18 need it), and the stack's last
-  tick solves on the spot; a clock that can't tick (`canTick`) has stopped, and once all have there is nothing to wait for. A
+  tick solves on the spot; a clock that can't tick (`canTick`) has stopped, and once all have there is nothing to wait for, and a tap that would wait thuds. A
   move is one working knob's stir or a wait, a tap on any ratchet. Every
   let-go is a move of its own and final (Jack's call E1, round 9): its tick lands with it, nothing joins it, and the
   same knob grabbed again is the next move with its own tick, so a stir's dial always counts from zero. Escapement has
   no par (Jack's calls EL1, round 11, which replaced round 9's E1/E2 loss rule, and ES2, round 12): each clock has its
   own count, what it owes on the stack (`Game.owed(_:)`, `Level.owed`), and each of its ticks spends one of it; the
   header's budget is every clock's together (`Game.budget`, `Level.budget(on:)`; `Level.budget` as dealt, which the note
-  states: "Unstir in 9 ticks."), so a move with three running clocks spends three. Only a clock's own ticks change its
+  states: "Unstir in 9 ticks.", and problem 1's adds that each let-go is a move the clock ticks after), so a move with three running clocks spends three. Only a clock's own ticks change its
   rod's steps, each by one whether it merges or pushes, so the counts are read off the stack and nothing stores them.
   A clock ticks while its rod holds an entry and its count is above 0 (`canTick`); at 0 it stops. A tick that pushes
   buries a clock entry of the wrong sign, `overdue(_:)`, that no continuation pops (`testAPushedTickNeverPops`), and
@@ -385,7 +385,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   book owes more than 9, so a hub shows one digit (`testEveryHubCountFitsOneDigit`). A solve spends the budget to the
   last tick, so `over` is always 0 and its best stores as solved. One clock stopping while another runs loses nothing.
   A full stack refuses a move whose tick it would refuse. Undo is the pack's, the stack and the clocks as the move found
-  them, and works on a tank out of ticks; reset deals the counts afresh. The header shows the budget, not moves against
+  them, and works on a tank out of ticks; reset deals the counts afresh. The result card says "solved in N moves", as a solve always spends the budget. The header shows the budget, not moves against
   par: "ticks" and a split-flap numeral (`FlipCounter`), driven by the ticks' own keyframes, whose old digit's top half
   falls over the hinge as each clock's tick starts to turn, one flap per tick in turn; Reduce Motion swaps without the
   fall; it goes vermilion at 00 and stays up over the card. The view draws
@@ -401,7 +401,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the twists left as a count; rings, a ring on each knob still twisted), and `LostCard`'s "out of ticks on move N",
   undo and again, whose
   exit goes through `leave` as the result card's does. A clock stopping sends an amber ring out as its last tick lands. A level with a
-  `demo` plays it before the problem opens, every time, unless the harness holds the tank still: a drawn fingertip
+  `demo` plays it before the problem opens until the problem has been solved (always in the harness, unless it holds the
+  tank still), and after a reset of a tank with nothing played, which replays the opening: a drawn fingertip
   heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,

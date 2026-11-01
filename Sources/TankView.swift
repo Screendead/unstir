@@ -382,10 +382,10 @@ final class Game {
     }
 
     /// Escapement's waiting move, a tap on any ratchet: it only ticks the clocks. Once every clock has stopped there is
-    /// nothing to wait for.
-    func wait(on ratchet: Int) {
-        guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return }
-        guard !ticksRefused(entries) else { Log.write("wait refused"); return }
+    /// nothing to wait for. False when refused.
+    @discardableResult func wait(on ratchet: Int) -> Bool {
+        guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return false }
+        guard !ticksRefused(entries) else { Log.write("wait refused"); return false }
         before.append((entries, escapement))
         healsBefore.append(heals)
         openBefore.append(open)
@@ -396,6 +396,7 @@ final class Game {
         let healed = landTicks()
         Log.write("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
         settle(healed: healed > 0)
+        return true
     }
 
     /// Escapement: after a move, each clock with a tick left that still holds an entry as its turn comes ticks its step,
@@ -746,6 +747,10 @@ struct LevelView: View {
     /// Scramble entries on screen during the opening; nil once the tank is the player's.
     @State private var shown: Int?
     @State private var replays = 0
+    /// Escapement: the demonstration has had its turn on opening, once the problem has been solved; outside the harness.
+    private let demoRetired: Bool
+    /// The last reset was of a tank with nothing played: the opening, a demonstration and all, plays again.
+    @State private var fresh = false
     /// The day's refill as the badge shows it: set once the opening is over, and only once, so a reset's opening doesn't
     /// show it again.
     @State private var badge = 0
@@ -877,6 +882,7 @@ struct LevelView: View {
         today = harness?.today
         frozenBreath = harness?.breath
         rest = harness?.rest ?? 2
+        demoRetired = harness == nil && Best.load(level.id) != nil
         _shown = State(initialValue: still || level.sandbox ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
@@ -952,15 +958,11 @@ struct LevelView: View {
                     .padding(.top, 14)
                     .overlay(alignment: .top) {
                         if showResult && game.lost {
-                            LostCard(game: game, notice: notice, onExit: leave, undo: undo,
-                                     again: { if game.reset() { replays += 1 } })
+                            LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
                                 .padding(.top, 14)
                                 .transition(reveal)
                         } else if showResult {
-                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: {
-                                // The glass eases home on a solve; the next try turns it from where it stands.
-                                if game.reset() { eased = false; replays += 1 }
-                            })
+                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
@@ -985,7 +987,7 @@ struct LevelView: View {
                         .opacity(game.history.isEmpty || spent ? 0.35 : 1)
                         .overlay(alignment: .topTrailing) { refillBadge }
                     Spacer()
-                    control("reset") { if game.reset() { replays += 1 } }
+                    control("reset", reset)
                         .buttonStyle(Sounding(effect: .reset))
                         .disabled(settling)
                 }
@@ -1002,7 +1004,7 @@ struct LevelView: View {
         .padding(.horizontal, 16)
         .background(Color.black)
         .task(id: replays) {
-            if !game.level.demo.isEmpty && replays == 0 && !still { await clockDemo() }
+            if !game.level.demo.isEmpty && !still && (replays == 0 ? !demoRetired : fresh) { await clockDemo() }
             if !game.level.sandbox, replays > 0 || !still { await open() }
             if autoplay && replays == 0 { await play() }
             if let moves, replays == 0 { await play(moves) }
@@ -1130,6 +1132,15 @@ struct LevelView: View {
             if phase == .active { Analytics.shared.resumed(); game.resumeClock() }
         }
         .onDisappear { endPath(); endTwist(); Log.write("level \(game.level.id) exits \(state)") }
+    }
+
+    private func reset() {
+        let untouched = game.history.isEmpty
+        guard game.reset() else { return }
+        fresh = untouched
+        // The glass eases home on a solve; the next try turns it from where it stands.
+        eased = false
+        replays += 1
     }
 
     /// An empty bank says when it refills instead.
@@ -2101,7 +2112,8 @@ struct LevelView: View {
     private func tapped(_ k: Int, from start: SIMD2<Double>, to end: SIMD2<Double>) {
         pressing = nil
         if Self.waits(from: start, to: end, centre: centre(k)) {
-            game.wait(on: k)
+            // A wait no clock can take thuds, as a seized knob does.
+            if !game.wait(on: k) && !game.finished { jammed = k; jams += 1; Knock.thud.play() }
         } else if simd_distance(start, end) < 0.06 {
             missed = (k, simd_distance(start, centre(k))); misses += 1
         } else {
@@ -2782,8 +2794,9 @@ struct ResultCard: View {
                              : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
                     }
                 } else if !game.level.ratchets.isEmpty {
-                    // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round 11).
-                    Text("moves \(game.moves) \u{00B7} \(game.level.budget) ticks \u{00B7} \(time)")
+                    // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round 11), so
+                    // the ticks say nothing.
+                    Text("solved in \(game.moves) moves \u{00B7} \(time)")
                     if game.clean {
                         Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
                     } else {

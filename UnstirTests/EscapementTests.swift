@@ -28,9 +28,17 @@ import XCTest
         XCTAssertEqual(level.clocks.map(\.rod), [0])
         XCTAssertEqual(level.par, 2)
         XCTAssertEqual(level.budget, 2)
-        XCTAssertEqual(level.note, "Unstir in 2 ticks.")
+        XCTAssertEqual(level.note, "Unstir in 2 ticks. Each let-go is a move. The clock ticks after it.")
         XCTAssertEqual(level.demo, tri("0:-3,1:+2"))
         XCTAssertTrue(Level.escapement.dropFirst().allSatisfy(\.demo.isEmpty))
+    }
+
+    /// A wait no clock can take is refused, so the view can thud; one a clock takes is a move.
+    func testAWaitNoClockCanTakeIsRefused() {
+        let idle = game("1:+3,2:-4")
+        XCTAssertFalse(idle.wait(on: 0))
+        XCTAssertEqual(idle.moves, 0)
+        XCTAssertTrue(game().wait(on: 0))
     }
 
     func testTheSecondProblemIsTheMockUps() {
@@ -300,7 +308,7 @@ import XCTest
             XCTAssertEqual(level.layout, row.layout, level.id)
             XCTAssertEqual(clocks(level), row.clocks, level.id)
             XCTAssertEqual(level.par, row.par, level.id)
-            XCTAssertEqual(level.note, "Unstir in \(level.budget) ticks.", level.id)
+            XCTAssertTrue(level.note.hasPrefix("Unstir in \(level.budget) ticks."), level.id)
             XCTAssertEqual(level.motion, .none, level.id)
             XCTAssertTrue(level.seized.isEmpty && level.sockets.isEmpty, level.id)
             XCTAssertTrue(level.ratchets.allSatisfy { level.kind(of: $0) == .ratchet }, level.id)

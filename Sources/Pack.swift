@@ -194,7 +194,7 @@ extension Level {
                           chapter: escapementChapters[(n - 1) / 6],
                           // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
                           demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)
-        level.note = "Unstir in \(level.budget) ticks."
+        level.note = "Unstir in \(level.budget) ticks." + (n == 1 ? " Each let-go is a move. The clock ticks after it." : "")
         return level
     }
 
