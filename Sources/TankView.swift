@@ -134,6 +134,8 @@ final class Game {
     private(set) var swirled: Bool
     /// False when the caller set `swirled`, which then lasts only as long as this game.
     private let storesSwirled: Bool
+    /// False under the harness: its bests, started flags and endless's best last only this launch.
+    let storesProgress: Bool
     /// The swirl's breath shows what the rim does only until the player has stirred with it once.
     var breathes: Bool { level.layout.swirl != nil && !swirled }
     /// Endless: notches on the brim, carried from tank to tank through the run. A red flash (a push) adds one, which
@@ -186,8 +188,10 @@ final class Game {
     /// stops it.
     func canTick(_ rod: Int) -> Bool { owed(rod) > 0 && running(rod) }
 
-    init(level: Level, tankTurned: Bool? = nil, swirled: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil) {
+    init(level: Level, tankTurned: Bool? = nil, swirled: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil,
+         storesProgress: Bool = true) {
         self.level = level
+        self.storesProgress = storesProgress
         entries = Self.dealt(level)
         brim = level.run?.brim ?? 0
         firstTry = level.run != nil || !Best.started(level.id)
@@ -614,9 +618,9 @@ final class Game {
         Log.write("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
                   + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
-            if solved { Best.tanks = max(Best.tanks, run.tank + 1) }
+            if solved && storesProgress { Best.tanks = max(Best.tanks, run.tank + 1) }
         } else if solved && counts && level.keepsProgress {
-            Best(over: over, seconds: seconds, clean: clean).save(level.id)
+            Best(over: over, seconds: seconds, clean: clean).save(level.id, store: storesProgress)
         }
         Analytics.shared.finished(self)
     }
@@ -752,7 +756,8 @@ struct LevelView: View {
 
     init(level: Level, harness: Harness?, onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void,
          onLook: @escaping (Tier) -> Void) {
-        let game = Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank)
+        let game = Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
+                        storesProgress: harness?.harnessed != true)
         game.turnTank(harness?.tank ?? 0)
         if let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
             // Solved through the real commit path; "result" first wastes two stirs, so taking them back costs moves.
@@ -1971,7 +1976,7 @@ struct LevelView: View {
         } else {
             liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
         }
-        if !game.level.sandbox && game.level.keepsProgress { Best.start(game.level.id) }
+        if !game.level.sandbox && game.level.keepsProgress { Best.start(game.level.id, store: game.storesProgress) }
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.

@@ -416,16 +416,23 @@ struct Best: Codable {
         if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.register(defaults: ["best.\(id)": data]) }
     }
 
-    /// Keeps the better of this and the stored result: clean, then fewer over par, then faster.
-    func save(_ id: String) {
+    /// Keeps the better of this and the stored result: clean, then fewer over par, then faster. Unstored, the
+    /// harness's, it lasts only this launch, as `fake`'s does.
+    func save(_ id: String, store: Bool = true) {
         func rank(_ b: Best) -> (Int, Int, Int) { (b.clean == true ? 0 : 1, b.over, b.seconds) }
         if let old = Best.load(id), rank(old) <= rank(self) { return }
-        UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)")
+        if store { UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)") } else { fake(id) }
     }
 
-    /// Set when a rod is first touched: probing counts as trying, only studying the still is free.
+    /// Set when a rod is first touched: probing counts as trying, only studying the still is free. Unstored, the
+    /// harness's, it lasts only this launch.
     static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
-    static func start(_ id: String) { if !started(id) { UserDefaults.standard.set(true, forKey: "started.\(id)") } }
+    static func start(_ id: String, store: Bool = true) {
+        guard !started(id) else { return }
+        if store { UserDefaults.standard.set(true, forKey: "started.\(id)") } else {
+            UserDefaults.standard.register(defaults: ["started.\(id)": true])
+        }
+    }
 
     /// Banked undos, shared by every level and mode: 10 to start, and `refill` adds 2 a day played, up to 10. Stored as
     /// the number spent, so a fresh install reads 10.
