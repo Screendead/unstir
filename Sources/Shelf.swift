@@ -188,6 +188,15 @@ extension Pricing {
 }
 
 extension Purchase {
+    /// The dock's glyph beside a cover's name.
+    var mark: String? {
+        switch self {
+        case .owned: "checkmark"
+        case .pending: "hourglass"
+        case .unowned, .failed, .revoked: nil
+        }
+    }
+
     /// The shelf's one word for a state, nil when there is nothing to say.
     var tag: (word: String, colour: Color)? {
         switch self {
@@ -937,8 +946,11 @@ struct PackDock: View {
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
                                 Text(offer.name).font(.mono(.caption2)).opacity(0.7).lineLimit(2)
                                     .multilineTextAlignment(.center).minimumScaleFactor(0.8)
-                                if store.ready, let tag = state.tag {
-                                    Circle().fill(tag.colour).frame(width: 4, height: 4).shadow(color: tag.colour, radius: 2)
+                                // A glyph, so the state reads without its colour; a revocation is the card's to say.
+                                if store.ready, let mark = state.mark {
+                                    Image(systemName: mark).font(.system(size: 8, weight: .bold)).foregroundStyle(state.tag?.colour ?? .text)
+                                        .shadow(color: state.tag?.colour ?? .clear, radius: 2)
+                                        .accessibilityHidden(true)
                                 }
                             }
                         }
