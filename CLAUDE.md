@@ -428,7 +428,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   core a step on screen in turn, `tickTurn` apart after `tickBeat` (`Game.tick` holds each with the stack it changed; `Unstirred.tick`,
   one entry over in the four-tap budget, like the drag) and the wheel a tooth; `ClockHint` dashes the clock's disc at all
   times (Jack's call, 2026-10-25); a pushed tick flashes the ratchet red and stands as a vermilion +N, and the
-  caption says at once that the line can't come back ("That tick can't come back. Undo, or again.", `Game.deadTick`,
+  caption says at once that the line can't come back ("That tick can't come back. Undo, or again.", or "... Reset." with the undo bank empty, `Game.deadTickWords`,
   at a notice's strength and read off the stack, so it stays until an undo takes the tick back; Jack's call C14, round
   13); a
   tank out of ticks shows "out of ticks." (`LostStamp`) by the clock whose tick spent the last, with or without a +N

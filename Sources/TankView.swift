@@ -195,7 +195,8 @@ final class Game {
     /// Escapement: a pushed tick stands on the stack, so no line from here unstirs the tank: the caption says so until
     /// an undo takes it back or the ticks run out (Jack's call C14, round 13).
     var deadTick: Bool { !finished && level.clocks.contains { overdue($0.rod) > 0 } }
-    nonisolated static let deadTick = "That tick can't come back. Undo, or again."
+    /// With the bank empty undo can't take the tick back, so the words point only at reset (Jack's call, round 13).
+    var deadTickWords: String { bank == 0 ? "That tick can't come back. Reset." : "That tick can't come back. Undo, or again." }
     /// Escapement: the ticks clock `clock` has left, its hub's count (Jack's call ES2, round 12). Only its own ticks
     /// change its rod's steps, each by one whether it merges or pushes, so this is what it owed as dealt less its ticks:
     /// nothing needs storing, and undo and reset bring it back with the stack.
@@ -1978,7 +1979,7 @@ struct LevelView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(game.budget) ticks left")
-        .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(Game.deadTick).post() } }
+        .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(game.deadTickWords).post() } }
     }
 
     /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
