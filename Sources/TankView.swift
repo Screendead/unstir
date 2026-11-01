@@ -126,6 +126,8 @@ final class Game {
     private var healsBefore: [Int] = []
     /// The rod and outcome of the newest commit or undo, for the commit flash.
     private(set) var lastCommit: (rod: Int, result: Commit)?
+    /// The tier this solve opened, on whichever level was the last to reach par: the card goes up a notch.
+    private(set) var opened: Tier?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it. Nil while the app is away, with
     /// the time played before then in `elapsed`.
     private var start: Date?
@@ -656,7 +658,9 @@ final class Game {
         if let run = level.run {
             if solved { Best.tanks = max(Best.tanks, run.tank + 1) }
         } else if solved && counts && level.keepsProgress {
+            let up = level.pack == nil ? level.tier.step(1) : nil, shut = up.map { !$0.isOpen() } ?? false
             Best(over: over, seconds: seconds, clean: clean).save(level.id)
+            if shut, let up, up.isOpen() { opened = up }
         }
         Analytics.shared.finished(self)
     }
@@ -2790,15 +2794,16 @@ struct ResultCard: View {
                 }
             }
             .font(.mono(15, .medium))
-            if game.level.id == game.level.tier.levels.last?.id, let up = game.level.tier.step(1) {
+            if let up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil) {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
     }
 }
 
-/// The last level of a tier goes on up the ladder, in the next tier's own colours. A tier still closed keeps its
-/// glow behind a lock and opens the menu on its gate, which shows the levels still short of par.
+/// The solve that opens the next tier, and the last level of a tier, go on up the ladder, in the next tier's own
+/// colours. A tier still closed keeps its glow behind a lock, says how many levels are short of par and opens the menu
+/// on its gate, which shows which.
 private struct TierUp: View {
     let from: Tier
     let to: Tier
@@ -2808,10 +2813,11 @@ private struct TierUp: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let open = to.isOpen()
+        let open = to.isOpen(), short = from.atPar().filter { !$0 }.count
+        let shortLine = "\(short) \(from.name.lowercased()) level\(short == 1 ? "" : "s") short of par"
         Button { open ? onNext(to.levels[0]) : onLook(to) } label: {
             VStack(spacing: 6) {
-                Text(open ? "up a notch" : "par every \(from.name.lowercased()) level to open")
+                Text(open ? "up a notch" : shortLine)
                     .font(.mono(11, .semibold)).tracking(open ? 3 : 0.5).textCase(open ? .uppercase : nil).opacity(0.6)
                 HStack(spacing: 10) {
                     if !open { Image(systemName: "lock.fill").font(.system(size: 16, weight: .semibold)) }
@@ -2825,7 +2831,7 @@ private struct TierUp: View {
             .background { Capsule().strokeBorder(to.sweep, lineWidth: 1.5).shadow(color: to.glow, radius: glint ? 10 : 5) }
         }
         .buttonStyle(Sounding())
-        .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. Par every \(from.name) level to open it")
+        .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. \(shortLine), and par on every one opens it")
         .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
         .onAppear {
             guard !reduceMotion else { return }

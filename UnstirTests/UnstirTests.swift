@@ -422,6 +422,32 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(game.clean)
     }
 
+    /// The solve that brings the last of a tier's levels to par goes up a notch, wherever that level stands in the
+    /// tier; a solve with the next tier already open, or one short of par, does not.
+    @MainActor func testTheSolveThatOpensATierSaysSo() {
+        let ids = Tier.plughole.levels.map(\.id), flag = Best.unlocked
+        let saved = ids.map { UserDefaults.standard.data(forKey: "best.\($0)") }
+        defer {
+            Best.unlocked = flag
+            for (id, data) in zip(ids, saved) { UserDefaults.standard.set(data, forKey: "best.\(id)") }
+        }
+        Best.unlocked = false
+        for id in ids { UserDefaults.standard.removeObject(forKey: "best.\(id)") }
+        for id in ids where id != ids[4] { Best(over: 0, seconds: 9, clean: false).save(id) }
+        Best(over: 2, seconds: 9, clean: false).save(ids[4])
+        func solve(over: Bool) -> Game {
+            let game = Game(level: Tier.plughole.levels[4], tankTurned: true, swirled: true, bank: (5, nil))
+            if over { game.commit(rod: 0, steps: 1); game.commit(rod: 1, steps: 1) }
+            while let t = game.reachable { game.commit(rod: t.rod, steps: t.steps) }
+            XCTAssertTrue(game.solved)
+            return game
+        }
+        XCTAssertNil(solve(over: true).opened)
+        XCTAssertFalse(Tier.whirlpool.isOpen())
+        XCTAssertEqual(solve(over: false).opened, .whirlpool)
+        XCTAssertNil(solve(over: false).opened)
+    }
+
     /// The level's clock stops while the app is away, and a reset's replay never restarts it.
     @MainActor func testTheClockStopsWhileTheAppIsAway() {
         let game = Game(level: Level.plughole[0], tankTurned: true, swirled: true, bank: (5, nil))
