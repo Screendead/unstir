@@ -25,6 +25,8 @@ enum ConsentWords {
     static let restore = "restore purchases"
     static let restoreDetail = "packs bought on this Apple ID"
     static let policyDetail = "what the game keeps, and why"
+    static let letters = "colour letters"
+    static let lettersDetail = "R, G and B on Prism's knobs"
 }
 
 /// The first launch's question, over the menu, which waits for an answer. Yes and no are the same control: same type,
@@ -132,14 +134,17 @@ struct NeonToggle: ToggleStyle {
     }
 }
 
-/// The gear's sheet: the analytics switch where the build has analytics, restore, the log and the privacy policy, and the
-/// version under them, black, sized to what it holds.
+/// The gear's sheet: the colour letters, the analytics switch where the build has analytics, restore, the log and the
+/// privacy policy, and the version under them, black, sized to what it holds.
 struct SettingsSheet: View {
     /// Apple's guideline 5.1.1(i) wants it reachable in the app. The plain github.com page until docs/ is served as a
     /// site.
     static let policy = URL(string: "https://github.com/Screendead/unstir/blob/master/docs/privacy-policy.md")!
 
     @State private var height: CGFloat = 220
+    /// The stored choice, mirrored so the switch moves as it is tapped.
+    @State private var letters = Letters.choice
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
     var store = Store.shared
 
     var body: some View {
@@ -150,6 +155,12 @@ struct SettingsSheet: View {
                 Text(ConsentWords.settings).font(.mono(11, .semibold)).opacity(0.5).padding(.top, 26)
                     .accessibilityAddTraits(.isHeader)
                 VStack(alignment: .leading, spacing: 0) {
+                    Toggle(isOn: Binding(get: { letters ?? differentiate }, set: { Letters.choice = $0; letters = $0 })) {
+                        row(ConsentWords.letters, ConsentWords.lettersDetail)
+                    }
+                    .toggleStyle(NeonToggle())
+                    .padding(.vertical, 12)
+                    rule
                     if analytics.shown {
                         Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
                             row(ConsentWords.analytics,

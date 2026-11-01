@@ -75,6 +75,9 @@ enum Offer: Hashable, Sendable {
         }
     }
 
+    /// A line under the facts, owned or not.
+    var note: String? { self == .pack(.prism) ? "letters for colour-blind play, in settings" : nil }
+
     var free: String {
         switch self {
         case .pack(let p): "levels 1\u{2013}\(p.taste) free, no purchase"
@@ -702,6 +705,7 @@ struct PackCard: View {
                             }
                         }
                         .padding(.top, 32)
+                        if let note = offer.note { detail(note).padding(.top, 12) }
                         if offer.arriving {
                             Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
                                 .fixedSize(horizontal: false, vertical: true)

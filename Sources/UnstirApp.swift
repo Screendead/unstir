@@ -91,8 +91,9 @@ struct Harness {
     /// so this presents the UIKit sheet it wraps, with the same text.
     let shareSheet: Bool
     let bench: Bool
-    /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism as Differentiate Without
-    /// Colour has it, its knobs spelling out their channels over the swatches.
+    /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism with the colour letters,
+    /// its knobs spelling out their channels over the swatches, whatever the settings say. UNSTIR_LETTERSCHOICE=0 or 1:
+    /// the settings' colour letters chosen off or on, for this launch only.
     let swatch: Channels?
     let letters: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
@@ -205,6 +206,9 @@ struct Harness {
         swatch = env["UNSTIR_SWATCH"].flatMap { $0.count == 1 ? Channels(letter: $0.first!) : nil }
             .flatMap { Channels.each.contains($0) ? $0 : nil }
         letters = env["UNSTIR_LETTERS"] == "1"
+        if let c = env["UNSTIR_LETTERSCHOICE"], ["0", "1"].contains(c) {
+            UserDefaults.standard.register(defaults: ["letters": c == "1"])
+        }
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"

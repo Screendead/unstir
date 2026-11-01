@@ -1026,7 +1026,7 @@ struct LevelView: View {
                         }
                     }
                 // Only where colour can't carry the read, so for everyone else the read stays by colour.
-                if !game.level.masks.isEmpty, letters || differentiate || isolated != nil {
+                if !game.level.masks.isEmpty, letters || Letters.shown(system: differentiate) || isolated != nil {
                     ChannelSwatches(isolated: $isolated)
                         .opacity(showResult || ending || shown != nil ? 0 : 1)
                         .allowsHitTesting(!showResult && shown == nil)
@@ -1786,7 +1786,7 @@ struct LevelView: View {
             }
             // A spilled tank keeps its caps over the murk, and a lost one its clock.
             .opacity(showResult && !game.spilled && !game.lost ? 0 : 1)
-            .environment(\.channelLetters, letters || differentiate)
+            .environment(\.channelLetters, letters || Letters.shown(system: differentiate))
             // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
             // knobs, which would hide it. The swirl's is a ring just inside the glass's edge, over the picture, so a
             // hairline. One view either way, so the first push on either animates.
@@ -2647,12 +2647,23 @@ extension Channels {
     var name: String { self == .red ? "red" : self == .green ? "green" : "blue" }
 }
 
+/// The settings' colour letters, stored as `letters`. Absent until the player chooses, so the letters follow
+/// Differentiate Without Colour, today's and any later change of it, until then.
+enum Letters {
+    static var choice: Bool? {
+        get { UserDefaults.standard.object(forKey: "letters") as? Bool }
+        set { UserDefaults.standard.set(newValue, forKey: "letters") }
+    }
+
+    static func shown(system: Bool) -> Bool { choice ?? system }
+}
+
 extension EnvironmentValues {
-    /// Prism's knobs spell out their channels: Differentiate Without Colour, or the harness's UNSTIR_LETTERS.
+    /// Prism's knobs spell out their channels: the settings' colour letters, or the harness's UNSTIR_LETTERS.
     @Entry var channelLetters = false
 }
 
-/// Prism's swatches, red, green and blue, shown under Differentiate Without Colour: holding one draws that channel alone
+/// Prism's swatches, red, green and blue, shown with the colour letters: holding one draws that channel alone
 /// in white, the others hidden, so which lines a channel has stirred reads by shape alone. VoiceOver toggles one instead
 /// of holding it.
 struct ChannelSwatches: View {
