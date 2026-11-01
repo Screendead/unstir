@@ -696,3 +696,14 @@ hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt o
 for plate in seeds medusae radiolaria nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1
 done
+# App Store art with no interface (UNSTIR_CLEAN): each look mid-turn with a finger down on rod 0, which would draw its
+# dial, count and fingertip, the glass and its picture alone in the bezel.
+hold=5 shot clean-plughole-05 "Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar." \
+  LEVEL=5 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
+# The live glass compiles its shader on its first draw after an install, which takes longer than a baked picture.
+hold=9 shot clean-whirlpool-01 "Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture." \
+  TIER=whirlpool LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
+hold=5 shot clean-lens-03 "Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count." \
+  PACK=lens LEVEL=3 CLEAN=1 LIVE=0:+1 TOUCH=0,-0.8
+hold=5 shot clean-prism-01 "Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption." \
+  PACK=prism LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
