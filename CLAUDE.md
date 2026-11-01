@@ -642,8 +642,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stored), "colour letters" (`Letters`), the analytics switch (`NeonToggle`, which calls
   `decide`) where the build has analytics, "restore purchases" (`Store.restore`, saying what it found as the cards do),
   "report a problem", a mail (`MailSheet`) to Info.plist's `SupportAddress` with `Log.url` attached as
-  `unstir-log.txt` and `UnstirApp.device` in the body, or, with no address or no mail account, `Log.url` handed to the
-  share sheet, and "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)) in Safari's view
+  `unstir-log.txt` and `UnstirApp.device` in the body, or, with no account in Apple's Mail, `Log.url` handed to the
+  share sheet with that subject and body and the address on its first line (with no address, the log alone), and
+  "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)) in Safari's view
   (`SafariSheet`): Info.plist's `PolicyURL`, Jack's own domain, or the github.com page of `docs/privacy-policy.md` where
   the build has none, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
   its content outgrows the screen. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out

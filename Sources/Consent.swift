@@ -28,7 +28,7 @@ enum ConsentWords {
     static let haptics = "haptics"
     static let hapticsDetail = "the tank's knocks and taps"
     static let report = "report a problem"
-    static let reportDetail = "with the log: touches, moves, purchases and errors\u{00A0}\u{00B7} never who you are"
+    static let reportDetail = "with the log: touches, moves, purchases and errors"
     static let policy = "privacy policy"
     static let restore = "restore purchases"
     static let restoreDetail = "packs bought on this Apple ID"
@@ -213,6 +213,14 @@ struct SettingsSheet: View {
                         Button { mailing = true } label: { outward(ConsentWords.report, ConsentWords.reportDetail) }
                             .buttonStyle(Sounding())
                             .sheet(isPresented: $mailing) { MailSheet(to: to).ignoresSafeArea() }
+                    } else if let to = SettingsSheet.support {
+                        // No account in Apple's Mail, as for most who use another mail app: the address, subject and
+                        // device line ride in the share sheet into whichever app takes it.
+                        ShareLink(item: Log.url, subject: Text(MailSheet.subject),
+                                  message: Text("To: \(to)\n\n\(MailSheet.body)")) {
+                            outward(ConsentWords.report, ConsentWords.reportDetail)
+                        }
+                        .shareTap()
                     } else {
                         ShareLink(item: Log.url) { outward(ConsentWords.report, ConsentWords.reportDetail) }
                             .shareTap()
@@ -264,7 +272,7 @@ struct SettingsSheet: View {
         }
     }
 
-    /// A row that hands off to another app, marked with the amber arrow.
+    /// A row that opens something outside the game's own screens, a mail or a web page, marked with the amber arrow.
     private func outward(_ name: String, _ detail: String) -> some View {
         HStack(alignment: .center, spacing: 12) {
             row(name, detail)
@@ -288,14 +296,18 @@ struct SettingsSheet: View {
 /// "report a problem": a mail to the support address, its log attached and the device line in the body.
 private struct MailSheet: UIViewControllerRepresentable {
     let to: String
+
+    static var subject: String { "\(SettingsSheet.version): a problem" }
+    /// The device line, read as the report is written.
+    static var body: String { "What happened:\n\n\n\u{2014}\n\(UnstirApp.device)\n" }
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> MFMailComposeViewController {
         let mail = MFMailComposeViewController()
         mail.mailComposeDelegate = context.coordinator
         mail.setToRecipients([to])
-        mail.setSubject("\(SettingsSheet.version): a problem")
-        mail.setMessageBody("What happened:\n\n\n\u{2014}\n\(UnstirApp.device)\n", isHTML: false)
+        mail.setSubject(MailSheet.subject)
+        mail.setMessageBody(MailSheet.body, isHTML: false)
         if let log = try? Data(contentsOf: Log.url) {
             mail.addAttachmentData(log, mimeType: "text/plain", fileName: "unstir-log.txt")
         }
