@@ -2,6 +2,7 @@
 
 import Metal
 import os
+import struct SwiftUI.Color
 import struct SwiftUI.EnvironmentValues
 import XCTest
 import simd
@@ -146,6 +147,23 @@ final class UnstirTests: XCTestCase {
         clock.endDemo()
         XCTAssertTrue(clock.wait(on: 0))
         XCTAssertTrue(Best.started(escapement.id))
+    }
+
+    /// Jack's call C11 (round 13): the header's count turns amber at par and magenta past it.
+    func testTheCountWarnsAtPar() {
+        XCTAssertEqual(LevelView.parTone(moves: 0, par: 5), .text)
+        XCTAssertEqual(LevelView.parTone(moves: 4, par: 5), .text)
+        XCTAssertEqual(LevelView.parTone(moves: 5, par: 5), .amber)
+        XCTAssertEqual(LevelView.parTone(moves: 6, par: 5), .magenta)
+        XCTAssertEqual(LevelView.parTone(moves: 20, par: 5), .magenta)
+    }
+
+    /// Jack's call C11 (round 13): the card's veil over an over-par solve is 0.05 a move, never past 0.2.
+    func testTheVeilIsLight() {
+        XCTAssertEqual(LevelView.haze(over: 0), 0)
+        XCTAssertEqual(LevelView.haze(over: 1), 0.05, accuracy: 1e-12)
+        XCTAssertEqual(LevelView.haze(over: 4), 0.2, accuracy: 1e-12)
+        XCTAssertEqual(LevelView.haze(over: 10), 0.2)
     }
 
     /// A tank of a run, on scramble `word`, opening with `brim` notches.
@@ -1753,9 +1771,11 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(game.solved)
         XCTAssertGreaterThan(game.over, 0)
         XCTAssertEqual(game.finishSpoken, "Unstirred. \(game.moves) moves, par \(level.par). \(game.over) over par.")
+        XCTAssertEqual(game.movesSpoken, "\(game.moves) moves, par \(level.par), over par")
         let clean = Game(level: level)
         while let t = clean.reachable { clean.commit(rod: t.rod, steps: t.steps) }
         XCTAssertEqual(clean.finishSpoken, "Unstirred. \(level.par) moves, par \(level.par). " + (clean.clean ? "Clean." : "At par."))
+        XCTAssertEqual(clean.movesSpoken, "\(level.par) moves, par \(level.par), at par")
         let run = Game(level: .endless(Run(seed: 7)))
         XCTAssertEqual(run.movesSpoken, "0 moves")
         XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")

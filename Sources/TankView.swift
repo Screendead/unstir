@@ -957,8 +957,8 @@ struct LevelView: View {
                         // Endless has no par; its brim is on the rim.
                         Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
                             // On black the wasted-twist alarm reads at full contrast, whatever the picture shows.
-                            .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { text, t in
-                                text.foregroundStyle(t > 0.5 ? Color.alarm : Color.text)
+                            .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { [tone = countTone] text, t in
+                                text.foregroundStyle(t > 0.5 ? Color.alarm : tone)
                             } keyframes: { _ in
                                 // Red for 0.4 s. A trailing MoveKeyframe never lands, so the ramp ends the flash.
                                 MoveKeyframe(1.0)
@@ -1264,6 +1264,18 @@ struct LevelView: View {
     }
 
     nonisolated static let refills = "undos refill +2 each day you play"
+
+    /// Endless has no par to warn of.
+    private var countTone: Color { game.level.run == nil ? Self.parTone(moves: game.moves, par: game.par) : .text }
+
+    /// The header's count: amber at par, so the next move is over it, and magenta past it (Jack's call C11, round 13).
+    nonisolated static func parTone(moves: Int, par: Int) -> Color {
+        moves < par ? .text : moves == par ? .amber : .magenta
+    }
+
+    /// The solved picture's veil under the card, light enough that an over-par solve still shows what it unstirred
+    /// (Jack's call C11, round 13).
+    nonisolated static func haze(over: Int) -> Double { min(0.05 * Double(over), 0.2) }
 
     private func say(_ text: String) {
         notice = text
@@ -1600,7 +1612,7 @@ struct LevelView: View {
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
         let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
-                                  wind: wind, side: side, haze: showResult ? min(0.12 * Double(game.over), 0.6) : 0, turn: turn,
+                                  wind: wind, side: side, haze: showResult ? Self.haze(over: game.over) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries, isolate: isolated)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
         let source = game.history.last.map { $0.rod == Game.tank ? .zero : centre(game.knob(over: $0.rod)) } ?? centre(0)

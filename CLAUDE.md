@@ -302,7 +302,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   knob is seized (`testTheRimKeysOnMotionAndADiscOnItsKind`), and `UNSTIR_SEIZED` sets both. `par` is `fixedPar`, else
   `scramble.count`.
 - **TankView.swift** holds `Game`, the per-level state: stirs, moves against par, undo, clean-solve rules and
-  endless's brim, which the rim shows (the header shows moves, and the title the tank). `Game.commit` takes a physical
+  endless's brim, which the rim shows (the header shows moves, and the title the tank). The header's count flashes red
+  on a push, and otherwise reads amber at par and magenta past it (`LevelView.parTone`; VoiceOver adds "at par" or
+  "over par"), and an over-par solve veils its picture under the card by 0.05 a move over, to 0.2 at most
+  (`LevelView.haze`; Jack's call C11, round 13). `Game.commit` takes a physical
   knob and commits to the slot under it. Endless has no par, undo or reset: each red flash (a `.pushed` commit) adds a
   notch to `Game.brim`, each of the scramble's entries that pops settles one (the heal's `.cancelled` commit, or a push
   that the heal lets fall cancelling it), and at `Run.room` (8) the run spills. The stack's entries mark the player's

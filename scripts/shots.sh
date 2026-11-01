@@ -155,6 +155,11 @@ shot sandbox-chainmail "The sandbox on chainmail and pent: the header's controls
   MODE=sandbox PICTURE=chainmail LAYOUT=pent STACK= CLOCK=3
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
+shot level-at-par "Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber." \
+  LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
+shot level-over-par "The same a push later: moves 6 / par 5 in magenta." LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2,3:+2
+shot result-veil "Level 11 solved in 9, four over par: the picture under the card veiled at 0.2, its most." \
+  LEVEL=11 PLAYED=0:+1,2:-6,0:-1,3:+1,1:+4,3:+4,0:+1,2:+4,0:-5
 shot result-clean "Level 06 (city) result card after a harness solve with nothing wasted." SCREEN=clean LEVEL=6
 shot result-again-best "Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside levels and next." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006

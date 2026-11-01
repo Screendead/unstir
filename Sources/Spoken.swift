@@ -41,9 +41,10 @@ enum Spoken {
 }
 
 extension Game {
-    /// The header's count.
+    /// The header's count, and what its colour says at and past par.
     var movesSpoken: String {
-        level.run == nil ? "\(Spoken.count(moves, "move")), par \(par)" : Spoken.count(moves, "move")
+        guard level.run == nil else { return Spoken.count(moves, "move") }
+        return "\(Spoken.count(moves, "move")), par \(par)" + (moves == par ? ", at par" : moves > par ? ", over par" : "")
     }
 
     /// The tank's value: Escapement's ticks left, a run's brim, or the header's count.
