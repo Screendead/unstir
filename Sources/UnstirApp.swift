@@ -387,6 +387,8 @@ struct RootView: View {
     @State private var typeSize: DynamicTypeSize?
     /// The tier the next menu opens on, set by a closed tier's button on a result card.
     @State private var look: Tier?
+    /// The menu's settings sheet; UNSTIR_SETTINGS=1 opens with it up.
+    @State private var settings: Bool
     /// The row the next menu, or the pack's card over it, centres on (`MenuView.focus`).
     @State private var focus: Level?
     /// Kept apart from `harness`, which a first move to another screen drops.
@@ -406,8 +408,10 @@ struct RootView: View {
                                  restored: h.restored)
         }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
-        _level = State(initialValue: h.screen == "menu" || gate != nil ? nil : h.level)
+        let menu = h.screen == "menu" || gate != nil
+        _level = State(initialValue: menu ? nil : h.level)
         _harness = State(initialValue: h)
+        _settings = State(initialValue: menu && h.settings)
         mute = h.mute
         _card = State(initialValue: gate.map(Offer.pack) ?? h.card)
         _arrived = State(initialValue: gate)
@@ -432,7 +436,7 @@ struct RootView: View {
                     .transition(dip)
             } else {
                 MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
-                         settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
+                         settings: $settings, card: $card, clock: harness?.clock, placeholders: placeholders,
                          shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false, focus: focus,
                          held: harness?.lockTap, arrived: arrived) {
                     show($0)
@@ -456,6 +460,9 @@ struct RootView: View {
             Sound.shared.foreground(phase != .background)
         }
         .onAppear { Sound.shared.use(on: !mute) }
+        .modifier(AgeChecked(menu: level == nil && card == nil && !settings
+                                 && !(Analytics.shared.asks && Analytics.shared.consent == .undecided),
+                             played: !harnessed && ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil))
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
         .task {
