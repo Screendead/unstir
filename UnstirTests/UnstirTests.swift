@@ -14,10 +14,19 @@ extension LevelView {
     }
 }
 
+/// Every level's started flag, which a commit on any level that keeps progress writes, forgotten, so a test opens each
+/// level as its first try whatever ran before it.
+func forgetStarted() {
+    for key in UserDefaults.standard.dictionaryRepresentation().keys where key.hasPrefix("started.") {
+        UserDefaults.standard.removeObject(forKey: key)
+    }
+}
+
 final class UnstirTests: XCTestCase {
     /// The undo bank and the tank's lesson live in the shared defaults, so every run starts with the bank full, never
-    /// refilled or anchored, and the tank never turned.
+    /// refilled or anchored, the tank never turned and no level tried.
     override func setUp() {
+        forgetStarted()
         UserDefaults.standard.removeObject(forKey: "undos.spent")
         UserDefaults.standard.removeObject(forKey: "undos.day")
         UserDefaults.standard.removeObject(forKey: "undos.anchor")
@@ -106,6 +115,37 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(game.solved)
         XCTAssertEqual(game.over, 0)
         XCTAssertFalse(game.clean)
+    }
+
+    /// Jack's call C3 (round 13): a level counts as tried on its first committed move, a turn, a tank turn or a wait;
+    /// a look, a refused turn and the clock's demonstration try nothing.
+    @MainActor func testALookIsFree() throws {
+        defer { forgetStarted() }
+        let plughole = Level.plughole[0]
+        let look = Game(level: plughole, bank: (10, nil))
+        XCTAssertFalse(Best.started(plughole.id))
+        look.commit(rod: 1, steps: 2)
+        XCTAssertTrue(Best.started(plughole.id))
+        XCTAssertTrue(look.firstTry, "the visit that tries a level is still its first try")
+
+        let maelstrom = Level.maelstrom[0], seized = try XCTUnwrap(maelstrom.seized.first)
+        let tank = Game(level: maelstrom, tankTurned: true, bank: (10, nil))
+        tank.commit(rod: seized, steps: 1)
+        XCTAssertFalse(Best.started(maelstrom.id), "a seized knob refuses the turn")
+        tank.turnTank(maelstrom.layout.order)
+        XCTAssertFalse(Best.started(maelstrom.id), "a whole turn of the tank is no move")
+        tank.turnTank(1)
+        XCTAssertTrue(Best.started(maelstrom.id))
+
+        let escapement = Level.escapement[0]
+        let clock = Game(level: escapement, tankTurned: true, bank: (10, nil))
+        clock.demo(escapement.demo)
+        clock.commit(rod: 1, steps: -2)
+        XCTAssertTrue(clock.wait(on: 0))
+        XCTAssertFalse(Best.started(escapement.id), "the demonstration's moves are not the player's")
+        clock.endDemo()
+        XCTAssertTrue(clock.wait(on: 0))
+        XCTAssertTrue(Best.started(escapement.id))
     }
 
     /// A tank of a run, on scramble `word`, opening with `brim` notches.

@@ -139,8 +139,10 @@ final class Game {
     private var elapsed: TimeInterval = 0
     /// Away from the front after the clock started: it runs again on coming back.
     private var paused = false
-    /// False once an earlier visit touched a rod: a daily is then practice, and nothing else can be clean.
+    /// False once an earlier visit committed a move: a daily is then practice, and nothing else can be clean.
     let firstTry: Bool
+    /// Escapement's demonstration is on the stack: its commits are not the player's, so they try nothing.
+    private(set) var demoing = false
     /// Whether the player has ever turned the tank, on any level: the rim shows how until they have.
     private(set) var tankTurned: Bool
     /// False when the caller set `tankTurned`, which then lasts only as long as this game.
@@ -288,6 +290,7 @@ final class Game {
             if level.kind(of: rod) == .working { refuse(rod) }
             return
         }
+        started()
         if rod == level.layout.swirl, !swirled {
             swirled = true
             if storesSwirled { Best.swirled = true }
@@ -323,6 +326,12 @@ final class Game {
         settle(healed: healed > 0)
     }
 
+    /// A level counts as tried on its first committed move; a look, a touch or a turn let go where it began, is free
+    /// (Jack's call C3, round 13).
+    private func started() {
+        if !level.sandbox && level.keepsProgress && !demoing { Best.start(level.id, store: storesProgress) }
+    }
+
     private func refuse(_ knob: Int) {
         refusals += 1
         refusedKnob = knob
@@ -350,6 +359,7 @@ final class Game {
     func turnTank(_ steps: Int) {
         let order = level.layout.order
         guard !finished, steps % order != 0 else { return }
+        started()
         if !tankTurned {
             tankTurned = true
             if storesTankTurned { Best.tankTurned = true }
@@ -386,6 +396,7 @@ final class Game {
             if level.kind(of: knob) == .working { refuse(knob) }
             return
         }
+        started()
         before.append((entries, escapement))
         healsBefore.append(heals)
         openBefore.append(open)
@@ -407,6 +418,7 @@ final class Game {
     @discardableResult func wait(on ratchet: Int) -> Bool {
         guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return false }
         guard !ticksRefused(entries) else { Log.write("wait refused"); refuse(ratchet); return false }
+        started()
         before.append((entries, escapement))
         healsBefore.append(heals)
         openBefore.append(open)
@@ -477,12 +489,14 @@ final class Game {
     /// Escapement: the opening's demonstration plays on a stack of its own, through the real rules.
     func demo(_ stack: [Twist]) {
         entries = stack.map { Entry(twist: $0, pushed: false) }
+        demoing = true
         restart()
     }
 
     /// Escapement: back to the level's own scramble once the demonstration is over, as if nothing had been played.
     func endDemo() {
         entries = Self.dealt(level)
+        demoing = false
         restart()
         start = nil
         elapsed = 0
@@ -770,8 +784,6 @@ struct LevelView: View {
     @State private var replays = 0
     /// Escapement: the demonstration has had its turn on opening, once the problem has been solved; outside the harness.
     private let demoRetired: Bool
-    /// The touch that skipped the opening, which goes on to hold what it landed on.
-    @State private var skipped: CGPoint?
     /// The last reset was of a tank with nothing played: the opening, a demonstration and all, plays again.
     @State private var fresh = false
     /// The day's refill as the badge shows it: set once the opening is over, and only once, so a reset's opening doesn't
@@ -2131,7 +2143,7 @@ struct LevelView: View {
                 // A touch skips the opening as it lands, then takes up what it landed on; one that skips the clock's
                 // demonstration holds nothing, as the problem has still to wind in.
                 if demoing { skip(); skippedDemo = v.startLocation; return }
-                if shown != nil { skip(); skipped = v.startLocation }
+                if shown != nil { skip() }
                 let q = norm(v.location)
                 let level = game.level
                 // Keyed on the start point because a cancelled drag never reaches onEnded; a new touch starts afresh.
@@ -2173,7 +2185,6 @@ struct LevelView: View {
                 }
             }
             .onEnded { v in
-                defer { skipped = nil }
                 if v.startLocation == skippedDemo { skippedDemo = nil; return }
                 if skip() { return }
                 // The lift can carry movement no change reported.
@@ -2227,12 +2238,6 @@ struct LevelView: View {
         } else {
             liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
         }
-        // A touch that skipped the opening was not yet a try, so it counts once it commits.
-        if drag?.start != skipped { markStarted() }
-    }
-
-    private func markStarted() {
-        if !game.level.sandbox && game.level.keepsProgress { Best.start(game.level.id, store: game.storesProgress) }
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
@@ -2361,7 +2366,6 @@ struct LevelView: View {
         } completion: {
             liveTurn = nil
             settling = false
-            if steps % game.level.layout.order != 0 { markStarted() }
             game.turnTank(steps)
         }
     }
@@ -2392,7 +2396,6 @@ struct LevelView: View {
             liveAngle = 0
             settling = false
             guard steps != 0 else { return }
-            markStarted()
             game.commit(rod: k, steps: steps)
         }
     }

@@ -6,6 +6,9 @@ import XCTest
 private let first = 2026_10_25
 
 final class ShareTests: XCTestCase {
+    /// A daily already tried shares as practice.
+    override func setUp() { forgetStarted() }
+
     func testDailiesNumberFromTheFirstDay() {
         XCTAssertEqual(Share.number(first, from: first), 1)
         XCTAssertEqual(Share.number(2026_10_26, from: first), 2)

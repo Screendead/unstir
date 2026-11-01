@@ -376,8 +376,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   while a let-go settles is taken once it has. A reset with nothing played only replays the opening and counts no
   reset, so it costs no clean. The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
-  takes up what it landed on, the level counting as started only once that touch commits, and one that skips
-  Escapement's demonstration holds nothing. A level's note shows at full strength for its first 4 s of play, then at
+  takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
+  (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
+  demonstration's commits (Jack's call C3, round 13). A level's note shows at full strength for its first 4 s of play, then at
   0.55, as every caption rests. While a level is open and unfinished the screen stays awake (`Awake`) until two
   minutes after the last touch.
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
