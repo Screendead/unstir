@@ -89,8 +89,9 @@ import XCTest
 
     func testResumeClearsOnFinish() throws {
         let id = "resume-test", level = Level(id: id, label: "", title: "", layout: .tri, scramble: .parse("0:+4", in: .tri))
-        defer { Resume.remove(id); Resume.remove("endless") }
-        let g = Game(level: level, bank: (10, nil), storesProgress: false, storesResume: true)
+        // Progress is stored, never registered, where it can be: a registered flag outlives the test (`FreshDefaults`).
+        defer { Resume.remove(id); Resume.remove("endless"); UserDefaults.standard.removeObject(forKey: "best.\(id)") }
+        let g = Game(level: level, bank: (10, nil), storesResume: true)
         g.commit(rod: 1, steps: 2)
         XCTAssertEqual(Resume.load(id)?.actions, [.turn(knob: 1, steps: 2)])
         g.commit(rod: 1, steps: -2)
@@ -127,7 +128,7 @@ import XCTest
         // Out of ticks clears it too; the lost card's undo saves it again.
         let clock = Level.escapement[1]
         defer { Resume.remove(clock.id) }
-        let c = Game(level: clock, bank: (10, nil), storesProgress: false, storesResume: true)
+        let c = Game(level: clock, bank: (10, nil), storesResume: true)
         let ratchet = try XCTUnwrap(clock.clocks.first?.rod)
         if let w = c.wasting { c.commit(rod: w.rod, steps: w.steps) }
         while !c.finished, c.wait(on: ratchet) {}
@@ -143,7 +144,7 @@ import XCTest
     func testResumeKeepsTheDailysFirstTry() throws {
         let daily = Level.daily()
         defer { Resume.remove(daily.id) }
-        let g = Game(level: daily, bank: (10, nil), storesProgress: false, storesResume: true)
+        let g = Game(level: daily, bank: (10, nil), storesResume: true)
         heal(g)
         XCTAssertTrue(Best.started(daily.id))
         XCTAssertFalse(Game(level: daily).firstTry, "opened afresh, it would be practice")
