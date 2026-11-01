@@ -122,6 +122,8 @@ struct MenuView: View {
     let cardScroll: Bool
     /// The row the list, or the card, centres on as it opens: the level just left, or on launch the tier's landing.
     let focus: Level?
+    /// UNSTIR_LOCKTAP: a locked row held tapped.
+    let held: String?
     /// The focused row's id until its flash has started, so a later rebuild of its tier's list doesn't flash it again.
     @State private var flashing: String?
     /// The tier picked in the strip, open or not. `shown` trails it while the old list stirs away, and `listed`, the
@@ -158,7 +160,7 @@ struct MenuView: View {
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
-         cardScroll: Bool = false, focus: Level? = nil, onPick: @escaping (Level) -> Void) {
+         cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = State(initialValue: settings)
         self.onPick = onPick
@@ -168,6 +170,7 @@ struct MenuView: View {
         self.shelfDemo = shelfDemo
         self.cardScroll = cardScroll
         self.focus = focus
+        self.held = held
         _flashing = State(initialValue: focus?.id)
         // A tier's own level left lands on its tier, which "up a notch" may have opened since the menu was last up.
         let tier = start ?? focus.flatMap { f in f.tier.levels.contains { $0.id == f.id } ? f.tier : nil } ?? Tier.stored()
@@ -254,13 +257,16 @@ struct MenuView: View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Every stir in this tank has an exact inverse.")
                 .font(.mono(13)).opacity(0.55).padding(.top, 10)
-            LevelRow(level: Level.daily(), enabled: modes, pick: pick).padding(.top, 22)
+            // Daily and endless say what opens them while they're shut.
+            let shut = "opens after plughole \(Level.plughole[22].label)"
+            LevelRow(level: Level.daily(), detail: modes ? nil : shut, enabled: modes, pick: pick, refuse: refuse)
+                .padding(.top, 22)
             LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                     detail: "deeper every tank \u{00B7} wrong stirs fill the brim",
-                     best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, pick: pick)
+                     detail: modes ? "deeper every tank \u{00B7} wrong stirs fill the brim" : shut,
+                     best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: modes, pick: pick, refuse: refuse)
             LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
-                     pick: pick)
-            TierList(tier: listed, pick: pick, flash: flashing).equatable()
+                     pick: pick, refuse: refuse)
+            TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held).equatable()
                 .opacity(twisting ? 0 : 1)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { list = $0 }
         }
@@ -300,7 +306,7 @@ struct MenuView: View {
         let w = list.width, top = band.lowerBound, h = band.upperBound - top
         return ZStack(alignment: .top) {
             if twisting {
-                TierList(tier: shown, pick: pick).equatable()
+                TierList(tier: shown, pick: pick, refuse: refuse).equatable()
                     .fixedSize(horizontal: false, vertical: true).frame(width: w)
                     .alignmentGuide(.top) { _ in top }
             }
@@ -503,6 +509,13 @@ struct MenuView: View {
         Sound.shared.play(.tap)
         onPick(level)
     }
+
+    /// A locked row tapped sounds as a seized knob does, unless the touch ends a stir.
+    private func refuse() -> Bool {
+        guard !twisting else { return false }
+        Sound.shared.play(.seized)
+        return true
+    }
 }
 
 /// A tier's rule and rows, and a locked tier's gate. Compared by tier alone, so a frame of a drag or a stir doesn't
@@ -510,8 +523,11 @@ struct MenuView: View {
 private struct TierList: View, Equatable {
     let tier: Tier
     let pick: (Level) -> Void
+    let refuse: () -> Bool
     /// The row that flashes as it appears.
     var flash: String?
+    /// UNSTIR_LOCKTAP: the locked row held tapped.
+    var held: String?
 
     nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier }
 
@@ -520,10 +536,13 @@ private struct TierList: View, Equatable {
         return VStack(alignment: .leading, spacing: 0) {
             header(open: open)
             if !open, let below = tier.below { gate(below) }
-            let levels = tier.levels
+            let levels = tier.levels, frontier = tier.frontier()
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
                 let reached = Best.unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
-                LevelRow(level: level, enabled: open && reached, flash: level.id == flash, pick: pick)
+                let opens = !open ? tier.below.map { "par every \($0.rawValue) level to open" }
+                    : reached ? nil : "solve \(levels[i - 1].label) to open"
+                LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,
+                         flash: level.id == flash, held: level.id == held, pick: pick, refuse: refuse)
             }
         }
     }
@@ -570,26 +589,43 @@ private struct LevelRow: View {
     var detail: String?
     var best: Text?
     let enabled: Bool
+    /// What opens a locked row, said for a moment when it is tapped.
+    var opens: String?
+    /// The first level without a best: its hairline stays lit.
+    var frontier = false
     /// Its hairline lights once as the row appears, the row just left or the landing.
     var flash = false
+    /// UNSTIR_LOCKTAP: a tap on this locked row held, its line up.
+    var held = false
     let pick: (Level) -> Void
+    /// A tap on a locked row: false while a stir is under the finger.
+    let refuse: () -> Bool
     @State private var lit = 0.0
+    @State private var said = false
+    @State private var taps = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let result = Best.load(level.id)
         let rods = level.layout.base.map { "\($0.rods.count) rods + swirl" } ?? "\(level.layout.rods.count) rods"
-        return Button { pick(level) } label: {
+        let saying = (said || held) && opens != nil
+        return Button { enabled ? pick(level) : tapped() } label: {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 // A locked number stays bright enough that the hue walk still reads on first launch.
                 Text(level.label).font(.mono(13, .semibold)).foregroundStyle(level.colour)
                     .shadow(color: enabled ? level.colour : .clear, radius: 4).opacity(enabled ? 1 : 0.7)
                     .frame(width: 34, alignment: .leading)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(level.title).font(.mono(14)).multilineTextAlignment(.leading)
-                    Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.mono(11)).opacity(0.32)
+                    Text(level.title).font(.mono(14)).multilineTextAlignment(.leading).opacity(enabled ? 1 : 0.38)
+                    if saying, let opens {
+                        Text(opens).font(.mono(11)).foregroundStyle(level.colour).transition(.opacity)
+                    } else {
+                        Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.mono(11))
+                            // A locked row's own detail is its reason, as on the daily, so it stays readable.
+                            .opacity(enabled || detail != nil ? 0.32 : 0.12).transition(.opacity)
+                    }
                 }
-                .opacity(enabled ? 1 : 0.38)
+                .animation(.easeOut(duration: 0.2), value: saying)
                 Spacer(minLength: 8)
                 Group {
                     if let best {
@@ -606,19 +642,39 @@ private struct LevelRow: View {
             }
             .padding(.vertical, 11)
             .contentShape(Rectangle())
+            .keyframeAnimator(initialValue: 0.0, trigger: taps) { row, x in
+                row.offset(x: reduceMotion ? 0 : x)
+            } keyframes: { _ in
+                LinearKeyframe(-5.0, duration: 0.06)
+                LinearKeyframe(4.0, duration: 0.08)
+                LinearKeyframe(-2.0, duration: 0.07)
+                LinearKeyframe(0.0, duration: 0.07)
+            }
         }
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
-        .disabled(!enabled)
+        .accessibilityValue(enabled ? "" : "locked, \(opens ?? detail ?? "")")
         // In the list's left margin, clear of the number.
         .overlay(alignment: .leading) {
             Capsule().fill(level.colour).frame(width: 2).padding(.vertical, 13).shadow(color: level.colour, radius: 4)
-                .offset(x: -11).opacity(lit).allowsHitTesting(false)
+                .offset(x: -11).opacity(max(lit, frontier ? 0.75 : 0)).allowsHitTesting(false)
         }
         .onAppear {
             guard flash, !reduceMotion else { return }
             lit = 1
             withAnimation(.easeOut(duration: 1.4).delay(0.35)) { lit = 0 }
+        }
+    }
+
+    /// A light shake, and what opens the row for two seconds.
+    private func tapped() {
+        guard refuse() else { return }
+        taps += 1
+        said = true
+        let tap = taps
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            if taps == tap { said = false }
         }
     }
 }

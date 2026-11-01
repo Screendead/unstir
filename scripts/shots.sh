@@ -65,6 +65,8 @@ shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, h
 upto13=0000000000000
 shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
   BESTS=plughole:$upto13
+shot menu-locktap "Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit." \
+  BESTS=plughole:$upto13 LOCKTAP=L15
 shot menu-back-left "Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12." \
   LEVEL=12 EXIT=left BESTS=plughole:00000000000000000000
 shot menu-back-solved "Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens." \

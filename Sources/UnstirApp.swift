@@ -93,6 +93,8 @@ struct Harness {
     /// UNSTIR_EXIT=left: the level, once open, left for the menu by "‹ levels"; =solved, as from its result card after
     /// a solve; =up, its tier's next tier's first level opened, as "up a notch" opens it, and that one left.
     let exit: String?
+    /// UNSTIR_LOCKTAP=L8: on the menu, that locked row held as a tap leaves it, saying what opens it.
+    let lockTap: String?
     /// UNSTIR_TIER=whirlpool: the tier the menu opens on, locked or not, plughole when unset. Nil on a launch without
     /// the harness, which opens on the stored tier.
     let menuTier: Tier?
@@ -181,6 +183,7 @@ struct Harness {
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
+        lockTap = env["UNSTIR_LOCKTAP"]
         exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up"].contains($0) ? $0 : nil }
         stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
@@ -372,7 +375,8 @@ struct RootView: View {
             } else {
                 MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
                          settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
-                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false, focus: focus) {
+                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false, focus: focus,
+                         held: harness?.lockTap) {
                     show($0)
                 }
                 .transition(dip)

@@ -603,7 +603,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`isSideways`); then the list stops scrolling, and a row lifted over doesn't open. While it turns, the list is drawn
   again over the scroll view, cut to its visible part, and that copy is what stirs; the scroll view's own list
   (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. A locked tier can be
-  looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par. A hidden stir in
+  looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par. A closed row
+  still takes a tap: it shakes, sounds `seized` and says for two seconds what opens it ("solve 06 to open", or on a
+  locked tier "par every plughole level to open"), which VoiceOver reads as its value; shut, the daily and endless say
+  "opens after plughole 23" in place of their detail. The first level without a best (`Tier.frontier`) keeps its
+  hairline lit. A hidden stir in
   the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
   the list, and the card (`RootView`'s, bound in) lies over the whole menu. The list opens centred, unanimated under
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
@@ -681,7 +685,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
   tiers through the same calls a finger makes. `UNSTIR_EXIT=left` leaves the harness's level for the menu a second
   after it opens, through `RootView`'s own exit (`=solved` as its result card does after a solve; `=up` opens the next
-  tier's first level, as "up a notch" does, then leaves that). `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  tier's first level, as "up a notch" does, then leaves that). `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
+  leaves it, saying what opens it. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
