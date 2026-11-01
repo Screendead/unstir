@@ -627,6 +627,8 @@ struct PackCard: View {
     @State private var landings = 0
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The facts' key column, grown with the keys' own type size.
+    @ScaledMetric(relativeTo: .caption2) private var keyWidth = 52.0
 
     var body: some View {
         let state = store.state(offer)
@@ -727,8 +729,8 @@ struct PackCard: View {
         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 0))
         layout {
-            Text(key).font(.mono(.caption2)).opacity(0.38).fixedSize()
-                .frame(minWidth: typeSize.isAccessibilitySize ? nil : 52, alignment: .leading)
+            Text(key).font(.mono(.caption2)).opacity(0.38)
+                .frame(width: typeSize.isAccessibilitySize ? nil : keyWidth, alignment: .leading)
             value.font(.mono(.footnote)).opacity(0.85).fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
