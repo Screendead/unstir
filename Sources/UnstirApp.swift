@@ -59,6 +59,8 @@ struct Harness {
     let bank: (undos: Int, refilled: String?)?
     /// UNSTIR_TODAY=yyyy-MM-dd: the day the level opens on, for the bank's refill.
     let today: String?
+    /// UNSTIR_NOW=HH:mm: the daily's result card reads the next daily from that time today.
+    let now: Date?
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
     let autoplay: Bool
@@ -284,6 +286,8 @@ struct Harness {
         swirled = harnessed ? env["UNSTIR_SWIRLED"] == "1" : nil
         shake = env["UNSTIR_SHAKE"].flatMap(Double.init)
         today = env["UNSTIR_TODAY"].flatMap { $0.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) == nil ? nil : $0 }
+        let hm = env["UNSTIR_NOW"]?.split(separator: ":").compactMap { Int($0) } ?? []
+        now = hm.count == 2 ? Calendar(identifier: .gregorian).date(bySettingHour: hm[0], minute: hm[1], second: 0, of: .now) : nil
         let undos = env["UNSTIR_UNDOS"].flatMap(Int.init).map { min(max($0, 0), 10) } ?? Best.undos
         bank = harnessed ? (undos, Best.refilled ?? (today == nil ? nil : "0000-00-00")) : nil
         let f = env["UNSTIR_LIVE"]?.split(separator: ":") ?? []

@@ -1356,6 +1356,24 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(daily.title.contains(date.formatted(.dateTime.weekday(.abbreviated))), daily.title)
     }
 
+    /// The next daily is the next local midnight: hours to the nearest, minutes under an hour, and a day the clocks
+    /// change on is as long as it really is.
+    func testTheNextDailyIsAtMidnight() throws {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = try XCTUnwrap(TimeZone(identifier: "Europe/London"))
+        func at(_ m: Int, _ d: Int, _ h: Int, _ min: Int) throws -> Date {
+            try XCTUnwrap(c.date(from: DateComponents(year: 2026, month: m, day: d, hour: h, minute: min)))
+        }
+        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 17, 0), calendar: c), "next daily in 7 h")
+        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 23, 30), calendar: c), "next daily in 30 min")
+        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 23, 59), calendar: c), "next daily in 1 min")
+        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 22, 40), calendar: c), "next daily in 1 h")
+        XCTAssertEqual(Daily.untilNext(now: try at(11, 1, 0, 0), calendar: c), "next daily in 24 h")
+        // The clocks go forward an hour on 29 March and back on 25 October.
+        XCTAssertEqual(Daily.untilNext(now: try at(3, 29, 0, 0), calendar: c), "next daily in 23 h")
+        XCTAssertEqual(Daily.untilNext(now: try at(10, 25, 0, 0), calendar: c), "next daily in 25 h")
+    }
+
     /// The gate lists what is short of par as runs, each opening at a level the player can open.
     func testTheGateListsTheLevelsShortOfParAsRuns() {
         var bests: [String: Best] = [:]

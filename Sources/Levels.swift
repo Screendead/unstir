@@ -405,6 +405,17 @@ struct SplitMix64: RandomNumberGenerator {
     mutating func below(_ n: Int) -> Int { Int(next() % UInt64(n)) }
 }
 
+enum Daily {
+    /// Until the next local midnight, when the day's id and so its tank change: "next daily in 7 h", hours to the
+    /// nearest; under an hour, minutes. Tomorrow's start of day, so a day the clocks change on is 23 or 25 hours long.
+    static func untilNext(now: Date = .now, calendar: Calendar = Calendar(identifier: .gregorian)) -> String {
+        let midnight = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: now)!)
+        let s = midnight.timeIntervalSince(now)
+        let minutes = max(1, Int((s / 60).rounded()))
+        return minutes < 60 ? "next daily in \(minutes) min" : "next daily in \(max(1, Int((s / 3600).rounded()))) h"
+    }
+}
+
 /// Saves from before hints went also hold a `hints` count, which decoding ignores, so those bests still load and count.
 struct Best: Codable {
     var over: Int, seconds: Int

@@ -836,6 +836,8 @@ struct LevelView: View {
     /// Escapement: what a tank lost to its last clock stopping shows, while Jack decides (UNSTIR_STOPLOOK).
     private let stopLook: StopLook
     private let shareSheet: Bool
+    /// UNSTIR_NOW: the clock the daily's card reads the next daily from.
+    private let now: Date?
     /// Back to the menu, with whether the level is solved.
     let onExit: (Bool) -> Void
     let onNext: (Level) -> Void
@@ -908,6 +910,7 @@ struct LevelView: View {
         brimDemo = harness?.brimDemo ?? false
         stopLook = harness?.stopLook ?? .stamp
         shareSheet = harness?.shareSheet ?? false
+        now = harness?.now
         bench = harness?.bench ?? false
         _isolated = State(initialValue: harness?.swatch)
         letters = harness?.letters ?? false
@@ -1019,7 +1022,7 @@ struct LevelView: View {
                                 .padding(.top, 14)
                                 .transition(reveal)
                         } else if showResult {
-                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset)
+                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 14)
                                 .transition(reveal)
@@ -2973,6 +2976,8 @@ struct ResultCard: View {
     @AccessibilityFocusState private var focused: Bool
     /// A reset from the card, for another go at a solve that wasn't clean.
     let again: () -> Void
+    /// The harness's clock for the daily's next one; nil reads the time.
+    var now: Date?
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
@@ -3055,6 +3060,11 @@ struct ResultCard: View {
                 }
             }
             .font(.mono(15, .medium))
+            if game.level.id.hasPrefix("daily-") {
+                TimelineView(.everyMinute) { t in
+                    Text(Daily.untilNext(now: now ?? t.date)).font(.mono(12)).opacity(0.55)
+                }
+            }
             if let up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil) {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
