@@ -46,6 +46,12 @@ extension Game {
         level.run == nil ? "\(Spoken.count(moves, "move")), par \(par)" : Spoken.count(moves, "move")
     }
 
+    /// The tank's value: Escapement's ticks left, a run's brim, or the header's count.
+    var tankSpoken: String {
+        if !level.ratchets.isEmpty { return "\(budget) ticks left" }
+        return level.run == nil ? movesSpoken : "\(movesSpoken), brim \(brim) of \(Run.room)"
+    }
+
     /// The card's account of how the level ended, where VoiceOver lands as it shows.
     var finishSpoken: String {
         let moved = Spoken.count(moves, "move")

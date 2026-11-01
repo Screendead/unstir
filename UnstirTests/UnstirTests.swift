@@ -1535,6 +1535,8 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(clean.finishSpoken, "Unstirred. \(level.par) moves, par \(level.par). " + (clean.clean ? "Clean." : "At par."))
         let run = Game(level: .endless(Run(seed: 7)))
         XCTAssertEqual(run.movesSpoken, "0 moves")
+        XCTAssertEqual(run.tankSpoken, "0 moves, brim \(run.brim) of \(Run.room)")
+        XCTAssertEqual(game.tankSpoken, game.movesSpoken)
     }
 
     /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.

@@ -877,7 +877,7 @@ struct LevelView: View {
                     // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
-                    .accessibilityValue(game.level.ratchets.isEmpty ? game.movesSpoken : "\(game.budget) ticks left")
+                    .accessibilityValue(game.tankSpoken)
                     .accessibilityHint("Played by sight: drag a knob to turn its rod.")
                     .accessibilityAddTraits(.allowsDirectInteraction)
                     .overlay {
