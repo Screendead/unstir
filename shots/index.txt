@@ -427,16 +427,23 @@ firststir-ending-60.png  The night forwards 83 s in: the Flood's upstairs window
 firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
 shelf-menu.png  Menu with the pack dock (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought.
 shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass.
-card-lens-unowned.png  Lens's card, unowned.
+shelf-new.png  Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir.
+shelf-taste-count.png  Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens.
+shelf-new-levels.png  Lens owned, its card last opened with 20 levels: new under Lens beside the check.
+shelf-approved.png  The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header.
+card-lens-unowned.png  Lens's card, unowned: Complete's line saves $5.97 on the four packs a Debug build sells.
 card-lens-owned.png  Lens's card, owned.
-card-lens-pending.png  Lens's card, pending.
-card-lens-failed.png  Lens's card, failed.
-card-lens-revoked.png  Lens's card, revoked.
+card-lens-pending.png  Lens's card, pending: Complete's line saves $5.97 on the four packs a Debug build sells.
+card-lens-failed.png  Lens's card, failed: Complete's line saves $5.97 on the four packs a Debug build sells.
+card-lens-revoked.png  Lens's card, revoked: Complete's line saves $5.97 on the four packs a Debug build sells.
+card-prism-no-complete.png  Prism's card with Lens and First Stir owned (a Debug build sells four): no Complete line, since $5.99 is more than the two packs left.
+shelf-menu-lens-owned.png  The dock with Lens and First Stir owned: no Complete cover, since it costs more than the two packs left.
 card-first-stir.png  First Stir's card, unowned.
 card-escapement.png  Escapement's card, unowned.
 card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings.
 card-prism-levels.png  Prism's card, owned, scrolled to its specimens under the five trays.
-card-complete.png  Complete's card, unowned.
+card-complete.png  Complete's card, unowned: save $5.97 on the packs you don't have.
+card-complete-saves-nothing.png  UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover.
 clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
 clip-first-stir-1.4.png  First Stir's clip 1.4 s in.
 clip-first-stir-2.1.png  First Stir's clip 2.1 s in.
@@ -464,8 +471,8 @@ card-lens-complete-pending.png  Lens's card while Complete waits on Ask to Buy: 
 card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
 card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
 shelf-menu-owned.png  The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone.
-card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading.
-card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live.
+card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Complete line until the prices say what it saves.
+card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Complete line.
 card-lens-unshared.png  Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey.
 card-lens-offline.png  Lens's card after a purchase failed offline: no connection, try again when you're online.
 card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Complete, try free kept.
@@ -474,6 +481,7 @@ card-lens-restored-none.png  Lens's card after a restore found nothing: nothing 
 card-lens-levels.png  Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked.
 card-lens-levels-owned.png  The same, owned: every level open.
 card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note.
+card-gate-ax.png  The same at accessibility3: the Complete line under buy wraps only before · save.
 card-lens-taste-end.png  Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta.
 card-lens-taste-end-owned.png  The same, owned: next again, still in Lens's magenta.
 card-lens-replay.png  Lens's card, unowned, the taste played: replay 01-03 in try free's place.

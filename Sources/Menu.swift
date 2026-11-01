@@ -257,7 +257,9 @@ struct MenuView: View {
                 if !Offer.shelf().isEmpty {
                     // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
                     PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle)
+                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle,
+                             covered: card != nil || settings)
+                        .equatable()
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
@@ -336,7 +338,7 @@ struct MenuView: View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
                      focus: cardFocus, arrived: card.pack != nil && card.pack == arrived,
-                     backTo: cameFrom.flatMap { $0.card == card ? $0.back.name : nil } ?? "menu",
+                     backTo: returns?.name ?? "menu",
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)
@@ -355,9 +357,15 @@ struct MenuView: View {
         withAnimation(.snappy(duration: 0.42)) { card = offer }
     }
 
-    /// The card a pack's card was opened from, or the menu.
+    /// The card a pack's card was opened from, while it is still on offer: Complete stops saving once a pack is bought.
+    private var returns: Offer? {
+        guard let cameFrom, cameFrom.card == card, cameFrom.back != .complete || Store.shared.offersComplete else { return nil }
+        return cameFrom.back
+    }
+
+    /// That card, or the menu.
     private func back() {
-        show(cameFrom.flatMap { $0.card == card ? $0.back : nil })
+        show(returns)
     }
 
     /// The menu, Lens's cover tapped, its card's clip played through, then back.

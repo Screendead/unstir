@@ -151,6 +151,8 @@ struct Harness {
     /// With `purchases`, the prices StoreKit/Unstir.storekit sets, as the App Store would show them on a US storefront;
     /// none with UNSTIR_PRICES=0, as before StoreKit answers, or UNSTIR_PRICES=unreachable, after its fetch failed.
     let prices: [String: String]
+    /// The same prices as numbers, for Complete's saving.
+    let amounts: [String: Decimal]
     let pricing: Pricing
     /// UNSTIR_FAILED=offline (storefront, refused): why each failed product failed, or each pending one's ask again.
     let failure: Failure
@@ -158,6 +160,8 @@ struct Harness {
     let canPay: Bool
     /// UNSTIR_RESTORED=lens,prism (none, failed): what the last restore found.
     let restored: Restored?
+    /// UNSTIR_APPROVED=lens (or complete): with the store's states set, that offer's Ask to Buy approval waits to be said.
+    let approved: [Offer]
 
     /// UNSTIR_STOPLOOK=left: what an Escapement tank lost to its last clock stopping shows (`StopLook`), stamp unset.
     let stopLook: StopLook?
@@ -227,9 +231,10 @@ struct Harness {
         exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up"].contains($0) ? $0 : nil }
         stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
-        prices = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
-            : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, $0 == Pack.completeID ? "$5.99" : "$2.99") })
-        pricing = env["UNSTIR_PRICES"] == "unreachable" ? .unreachable : .fetching
+        amounts = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
+            : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, Decimal(string: $0 == Pack.completeID ? "5.99" : "2.99")!) })
+        prices = amounts.mapValues { "$\($0)" }
+        pricing = env["UNSTIR_PRICES"] == "unreachable" ? .unreachable : amounts.isEmpty ? .fetching : .fetched
         failure = env["UNSTIR_FAILED"].flatMap(Failure.init(rawValue:)) ?? .other
         canPay = env["UNSTIR_PAYMENTS"] != "0"
         restored = switch env["UNSTIR_RESTORED"] {
@@ -237,6 +242,14 @@ struct Harness {
         case "none": .nothing
         case "failed": .failed
         case let names?: .found(Set(names.split(separator: ",").compactMap { Pack(rawValue: String($0)) }))
+        }
+        approved = env["UNSTIR_APPROVED"]?.split(separator: ",").compactMap { Offer(name: String($0)) } ?? []
+        // UNSTIR_SEENLEVELS=lens:20: that pack's card last opened when the pack had 20 levels, for this launch only.
+        for part in env["UNSTIR_SEENLEVELS"]?.split(separator: ",") ?? [] {
+            let f = part.split(separator: ":")
+            if f.count == 2, let pack = Pack(rawValue: String(f[0])), let n = Int(f[1]) {
+                UserDefaults.standard.register(defaults: [Marks.levelsKey(pack): n])
+            }
         }
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE", "PACK"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
@@ -400,12 +413,13 @@ struct RootView: View {
         let env = ProcessInfo.processInfo.environment
         let h = Harness(env)
         harnessed = h.harnessed
+        Marks.stored = !h.harnessed
         // Here, not in Harness, which the tests build too.
         Settings.held.withLock { $0 = h.switches }
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
         if let purchases = h.purchases {
-            Store.shared.pretend(purchases, prices: h.prices, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
-                                 restored: h.restored)
+            Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
+                                 restored: h.restored, approved: h.approved)
         }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
         let menu = h.screen == "menu" || gate != nil
@@ -413,7 +427,9 @@ struct RootView: View {
         _harness = State(initialValue: h)
         _settings = State(initialValue: menu && h.settings)
         mute = h.mute
-        _card = State(initialValue: gate.map(Offer.pack) ?? h.card)
+        // Complete's card opens, as from the dock, only while it is on offer, or as an owner's home.
+        let card = h.card.flatMap { $0 != .complete || Store.shared.offersComplete || Store.shared.state(.complete) == .owned ? $0 : nil }
+        _card = State(initialValue: gate.map(Offer.pack) ?? card)
         _arrived = State(initialValue: gate)
         _placeholders = State(initialValue: h.cardLevels)
         _focus = State(initialValue: (h.menuTier ?? Tier.stored()).landing())

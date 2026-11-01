@@ -384,8 +384,8 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | C3. When a level counts as tried | **A:** the first committed move; a look is free; "tried" shows on the row |
 | C4. A new player's first screen | **B:** a fresh install opens straight into plughole 01; the menu leads with 01, daily and endless hidden until they open |
 | C5. The pack dock | **C:** it appears once plughole 09 is solved |
-| C6. Pulls toward the dock | **C:** a one-time "new" mark on a cover when its pack fits the player's progress or an update adds levels, and "2/3 free" under a started pack |
-| C7. Complete once a pack is owned | **C:** shown only while it costs less than the unowned packs, with the saving said |
+| C6. Pulls toward the dock | **C:** a one-time "new" mark on a cover when its pack fits the player's progress or an update adds levels, and "2/3 free" under a started pack. Built on `r13-shop`, PR #95 (implementer calls in the PR: Escapement fits once maelstrom is open; "3/3 free" stays; First Stir never marks) |
+| C7. Complete once a pack is owned | **C:** shown only while it costs less than the unowned packs, with the saving said. Built on `r13-shop`, PR #95 (the cards' line and fact wait for the prices; the dock's cover waits too unless no pack is owned, so a launch keeps it; back from a pack's card opened from Complete's goes to the menu once Complete saves nothing) |
 | C8. Finishing a pack or the last free tier | **C:** one completion line, plus one quiet "try <pack> ›" while a pack is unowned |
 | C9. Results | **B:** three marks (solved, at par, clean), drawn in the design pass (to-do 72) |
 | C10. The timer | **A:** off the result card and out of the best's ranking |
@@ -399,7 +399,7 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | C18. The daily | **A:** the gate stays at plughole 23 for v1; a quiet run count on the row and "next daily in 7 h" on the card |
 | C19. Swiping back | **Jack: an edge swipe back, as everywhere else in iOS** ("it's little things like this that Apple looks for"). Claude's recommendation (none in play) is set aside. The swipe starts only from the screen's left edge and wins over a rim turn that lands there; with C2's resume an accidental swipe loses nothing |
 | C20. A rating request | **B:** once, after the solve that opens whirlpool; never after a loss, a spill or a purchase |
-| C21. After a purchase | **A:** the card stays with "play 04 ›" lit; an Ask to Buy approval says "Lens is yours" once on the menu |
+| C21. After a purchase | **A:** the card stays with "play 04 ›" lit; an Ask to Buy approval says "Lens is yours" once on the menu. Built on `r13-shop`, PR #95: the dock's header says it unless its own card is up, and waits while a card or the settings cover the dock |
 | C22. Mac and Vision Pro | **A:** opt out for v1 in App Store Connect. Jack will bench the GPU on his old iPhone XS if it still runs |
 
 
