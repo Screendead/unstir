@@ -1543,6 +1543,9 @@ names and product ids, and Complete's promise to older owners.
     "tried", which waits on C3's build, F21 (a switch lands on the frontier, or a locked tier's header; the strip and
     title take the swipe; re-tapping the tier scrolls to its frontier) and F22 (the daily named in words and dealt
     afresh at midnight). The new menu shots in `scripts/shots.sh` still want a simulator run.
+    Open, a plain fix for this pass: a pack card scrolled down draws its pill and "restore purchases" under the status
+    bar, over the clock (`card-prism-levels`, `card-lens-tried`), since its scroll content runs under the top safe area
+    unclipped; it wants a black backing or a mask there. Found in `r13-menu`'s review, outside its lane.
 
 ## Side task: the difficulty tiers (started 2026-09-28)
 

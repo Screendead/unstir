@@ -532,7 +532,7 @@ shot card-lens-asked-offline "Lens's card after asking again offline: still wait
   CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
 shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
   CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
-shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row." \
+shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74)." \
   CARD=lens OWNED=lens BESTS=lens:0 TRIED=lens-2 CARDSCROLL=1 CLOCK=5.4
 shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \
   OWNED=complete CLOCK=5.4
