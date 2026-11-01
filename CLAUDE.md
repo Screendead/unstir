@@ -613,9 +613,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ..."; the daily, endless and the sandbox by name), value (its result, "not played", "locked, solve level 6 first",
   or in a closed tier "locked, par every Plughole level first") and hint (its rods and par), the header's "3 moves, par
   7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
-  the finish ("Unstirred. 7 moves, par 7. Clean.",
-  "Out of ticks on move 9.", "Spilled. 6 tanks cleared."), which labels the result or lost card's summary, where
-  VoiceOver's focus lands as the card shows, so no announcement is cut short by a focus move. The tank is one element that allows direct interaction, so a
+  the finish ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared."), which
+  labels the result or lost card's summary, where VoiceOver's focus lands as the card shows, so no announcement is cut
+  short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
   VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs.

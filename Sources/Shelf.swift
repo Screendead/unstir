@@ -561,7 +561,7 @@ struct PackClip: View {
         ClipPlayer(clip: .of(offer), side: side, held: held, paused: !seen)
             .onGeometryChange(for: Bool.self) { Self.seen($0.size, in: $0.bounds(of: .scrollView)) } action: { seen = $0 }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(offer.pack == nil ? "A level from each pack, played" : "A \(offer.name) level, played")
+            .accessibilityLabel("\(offer.name): \(offer.pitch). " + (offer.pack == nil ? "A level from each pack, played." : "A level played."))
             .accessibilityAddTraits(.isImage)
     }
 
