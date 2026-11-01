@@ -66,10 +66,20 @@ endless-spill-pour.png  The same, 1.1 s in: the crest has broken and the liquid 
 endless-spill-drip.png  The same, 2 s in: the runs have slowed just past three and nine o'clock and a drop falls from each head onto the black.
 endless-spilled.png  The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best.
 undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
+reset-armed.png  Level 12 with two moves played, reset tapped once: it reads reset? tap again.
+sandbox.png  The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here.
+sandbox-full.png  The sandbox with a full stack of 36, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset.
+sandbox-chainmail.png  The sandbox on chainmail and pent: the header's controls in full where they fit.
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
+level-at-par.png  Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber.
+level-over-par.png  The same a push later: moves 6 / par 5 in magenta.
+result-veil.png  Level 11 solved in 9, four over par: the picture under the card veiled at 0.2, its most.
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
+result-again-best.png  Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside levels and next.
+result-fullest.png  Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows.
 tier-up.png  Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing.
-tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying par every vortex level opens it; it opens the menu on maelstrom's gate.
+tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate.
+tier-up-midway.png  Plughole 05 solved at par, the last plughole level to reach it: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
 tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over).
 daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels.
 daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap).
@@ -227,6 +237,7 @@ lens-23.png  Lens 23 as dealt, on the halftone (docs/lens-tables.md), the pack o
 lens-24.png  Lens 24 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
 lens-25.png  Lens 25 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
 lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
+lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
 lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger.
 lens-glitter-big-1.png  Lens on tri rod 0 at +1, still.
@@ -452,7 +463,9 @@ clip-prism-2.4.png  Prism's clip 2.4 s in: the buried red stir off first, then t
 clip-prism-3.6.png  Prism's clip 3.6 s in: the buried red stir off first, then the cyan, then the white.
 clip-prism-5.0.png  Prism's clip 5.0 s in: the buried red stir off first, then the cyan, then the white.
 card-lens-complete-failed.png  Lens's card after Complete, bought from it, failed: the line under Complete's button says so.
-card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card.
+card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, play First Stir 01 (a Debug build sells it).
+card-lens-complete-pending.png  Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled.
+card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
 card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
 shelf-menu-owned.png  The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading.
@@ -510,7 +523,8 @@ escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5
 escapement-book-30.png  Escapement 30 as dealt: hex, clocks 1+,3+, scramble 1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2.
 escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's five chapter headings.
 escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02.
-escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left.
+escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
+escapement-dead-tick.png  Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again.
 escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
 escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
 escapement-budget-16-dealt.png  Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6.
