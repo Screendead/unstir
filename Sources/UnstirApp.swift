@@ -384,6 +384,8 @@ struct RootView: View {
             Sound.shared.foreground(phase != .background)
         }
         .onAppear { Sound.shared.use(on: !mute) }
+        .modifier(AgeChecked(menu: level == nil && card == nil,
+                             played: !harnessed && ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil))
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
         .task {

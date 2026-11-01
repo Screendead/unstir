@@ -60,6 +60,13 @@ the data protection authority where you live.
 If this policy changes, the new version will be posted here with a new date. If a later version of the game sends
 anything, it will ask you first.
 
+## Your age range
+
+Where the law asks apps to check their players' ages (some US states), the game asks Apple for your age range once
+each time it starts, and Apple may ask you whether to share it. Every level is for everyone, so the answer changes
+nothing: the game keeps none of it and sends it nowhere. To tell us about anything in the game at odds with its age
+rating, write to `{{CONTACT_ADDRESS}}`.
+
 ## Contact
 
 `{{CONTACT_ADDRESS}}`
