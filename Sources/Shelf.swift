@@ -543,8 +543,8 @@ struct LoopingTank: View {
         } else if reduceMotion {
             PackTank(offer: offer, side: side)
         } else {
-            TimelineView(.animation(minimumInterval: interval > 0 ? interval : nil, paused: paused)) { tl in
-                PackTank(offer: offer, side: side, clock: tl.date.timeIntervalSinceReferenceDate + offset)
+            PausingTimeline(interval: interval > 0 ? interval : nil, paused: paused) { now in
+                PackTank(offer: offer, side: side, clock: now + offset)
             }
         }
     }

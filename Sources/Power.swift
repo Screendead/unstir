@@ -67,3 +67,40 @@ private final class TouchWatch: UIGestureRecognizer {
         state = .failed
     }
 }
+
+/// An animation timeline whose clock, in seconds since the reference date less the time spent paused, stops while
+/// `paused` and carries on from where it stopped, so a loop picks up on the frame it held, never the wall clock's.
+struct PausingTimeline<Content: View>: View {
+    let interval: Double?
+    let paused: Bool
+    let content: (Double) -> Content
+    @State private var lost = 0.0
+    /// When the pause in progress began.
+    @State private var since: Double?
+    @State private var halted: Bool
+
+    init(interval: Double? = nil, paused: Bool, @ViewBuilder content: @escaping (Double) -> Content) {
+        self.interval = interval
+        self.paused = paused
+        self.content = content
+        _halted = State(initialValue: paused)
+        _since = State(initialValue: paused ? Date.now.timeIntervalSinceReferenceDate : nil)
+    }
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: interval, paused: halted)) { tl in
+            let now = tl.date.timeIntervalSinceReferenceDate
+            // Held at the pause's own moment, whatever date a paused timeline hands a redraw.
+            content((halted ? since ?? now : now) - lost)
+        }
+        .onAppear {
+            lost = 0
+            since = halted ? Date.now.timeIntervalSinceReferenceDate : nil
+        }
+        .onChange(of: paused) {
+            let now = Date.now.timeIntervalSinceReferenceDate
+            if paused { since = now } else if let since { lost += now - since; self.since = nil }
+            halted = paused
+        }
+    }
+}
