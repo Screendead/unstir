@@ -1126,9 +1126,13 @@ struct LevelView: View {
         defer { if demoDip > 0 { withAnimation(.easeOut(duration: 0.3)) { demoDip = 0 } } }
         defer { if curtain > 0 { withAnimation(.easeOut(duration: 0.2)) { curtain = 0 } } }
         guard await pause(demoDip > 0 ? 0.3 : 1) else { return }
-        // A bake that outlasts the still (Lens's halftone on an old phone) would wind in over black; one that never
-        // lands lets the opening go on after 3 s.
-        for _ in 0..<60 where !struck { guard await pause(0.05) else { return } }
+        // A bake that outlasts the still (Lens's halftone on an old phone) would wind in over black or through the
+        // strike's flicker, so the opening waits for the strike to land and settle. Only a picture that never lands
+        // lets it go on, after 30 s.
+        if !struck {
+            for _ in 0..<600 where !struck { guard await pause(0.05) else { return } }
+            guard await pause(PictureLayer.strikeLength(calm: reduceMotion || dimFlashing)) else { return }
+        }
         if demoDip > 0 { withAnimation(.easeInOut(duration: 1.4)) { demoDip = 0 } }
         if game.level.replay {
             for (i, t) in scramble.enumerated() {
@@ -2443,6 +2447,9 @@ struct PictureLayer: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityDimFlashingLights) private var dimFlashing
     @State private var image: UIImage?
+
+    /// How long `strike` runs.
+    static func strikeLength(calm: Bool) -> Double { KeyframeTimeline(initialValue: 0.0) { strike(calm: calm) }.duration }
 
     /// The picture's opacity as it lands: a flicker, or under Reduce Motion or Dim Flashing Lights (`calm`) a fade.
     @KeyframesBuilder<Double> static func strike(calm: Bool) -> some Keyframes<Double> {

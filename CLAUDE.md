@@ -641,7 +641,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
   It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max (unmeasured on a phone), so every build keeps it in
   Caches, per size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
-  time. The opening waits for a picture to strike, up to 3 s past its still, so a slow bake never winds in over black. Prism's plates
+  time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
+  the flicker; only one that never lands lets it go on, after 30 s. Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white
