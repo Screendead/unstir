@@ -116,6 +116,9 @@ measure planning only. Reading the seams, which is most of what makes a tank har
 the last move, where only a heal finishes, can now lose at once (the last clock stops) where before it lost a move
 later, so it drops out of the count: 15 problems measure one bit less than in the first draft. The grades are as drafted.
 
+The problems' names below are the book's own. The app's titles are round 13's (Jack's call N1: a clock taken
+apart, Mainspring to Midnight), and each chapter's opener adds its rule after the stipulation.
+
 ### Chapter 1. The Clock
 
 One forward clock. From problem 4 on, no move is spare: every move takes off a seam.

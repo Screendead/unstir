@@ -171,6 +171,10 @@ final class LensTests: XCTestCase {
     @MainActor func testLensLevels() {
         XCTAssertEqual(Level.lens.count, 25)
         XCTAssertEqual(Level.lens.map(\.id), (1...25).map { "lens-\($0)" })
+        XCTAssertEqual(Level.lensChapters, ["Close-up", "Cut-in", "Double-take", "Big Picture"])
+        XCTAssertEqual(Level.lens.compactMap(\.chapter), [6, 6, 6, 7].enumerated().flatMap { c, n in
+            Array(repeating: Level.lensChapters[c], count: n)
+        })
         for (level, (layout, lenses, scramble)) in zip(Level.lens, Self.table) {
             XCTAssertEqual(level.layout, layout, level.id)
             XCTAssertEqual(level.lenses, lenses, level.id)

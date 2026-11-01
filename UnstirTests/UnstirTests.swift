@@ -1655,8 +1655,8 @@ final class UnstirTests: XCTestCase {
             XCTAssertLessThanOrEqual(level.scramble.count, Tank.fourTaps - level.picture.fillEntries, level.id)
         }
         XCTAssertEqual(Set(levels.map(\.scramble)).count, levels.count)
-        XCTAssertFalse(levels[0].note.isEmpty)
-        XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
+        // V1 teaches the rim; the rest of the notes are what the old titles taught (Jack's call N1, round 13).
+        XCTAssertEqual(levels.filter { !$0.note.isEmpty }.map(\.id), ["V1", "V2", "V3", "V12"])
     }
 
     /// Against the design table: quad, then pent, then hex, one or two seized knobs, never the hub; the twin of each
@@ -1684,7 +1684,22 @@ final class UnstirTests: XCTestCase {
             if level.picture == .neuronsTwin { XCTAssertLessThanOrEqual(level.scramble.count, 14, level.id) }
         }
         XCTAssertEqual(levels[0].note, "One knob has seized. Turn the tank. Turns count as moves.")
-        XCTAssertTrue(levels.dropFirst().allSatisfy(\.note.isEmpty))
+        XCTAssertEqual(levels.filter { !$0.note.isEmpty }.map(\.id), ["M1", "M2", "M3", "M8", "M10", "M18"])
+    }
+
+    /// Jack's call N1 (round 13): every v1 title is one or two words in sentence case with no full stop, at most 16
+    /// characters, and no title repeats anywhere in the game, First Stir's kept titles included.
+    func testEveryTitleIsItsOwn() {
+        let v1 = Tier.allCases.flatMap(\.levels) + [Pack.lens, .escapement, .prism].flatMap(\.levels)
+        XCTAssertEqual(v1.count, 193)
+        for level in v1 {
+            XCTAssertLessThanOrEqual(level.title.count, 16, level.id)
+            XCTAssertLessThanOrEqual(level.title.split(separator: " ").count, 2, level.id)
+            XCTAssertFalse(level.title.hasSuffix("."), level.id)
+            XCTAssertFalse(level.title.first?.isLowercase ?? true, level.id)
+        }
+        let titles = (v1 + Pack.firstStir.levels).map { $0.title.lowercased() }
+        XCTAssertEqual(Set(titles).count, titles.count)
     }
 
     /// Against the design table. Coral reads only to 6 stirs and neurons to 14. The sandbox cycles every picture but
