@@ -396,9 +396,9 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | C15. Teaching Lens's taste | **A:** a ghost finger rides the lens's track on Lens 01 until the first lens commit |
 | C16. Prism's letters | **B:** a "colour letters" switch in settings, defaulting to Differentiate Without Colour, and one line on Prism's card |
 | C17. Settings | **A:** music, sounds and haptics switches; "report a problem" mails the log to the support address (kept out of the repo); the policy on Jack's own domain |
-| C18. The daily | **A:** the gate stays at plughole 23 for v1; a quiet run count on the row and "next daily in 7 h" on the card. The card's part built on `r13-result`, PR #92; the row's run count is the menu lane's (`r13-menu`) |
+| C18. The daily | **A:** the gate stays at plughole 23 for v1; a quiet run count on the row and "next daily in 7 h" on the card. The card's part built on `r13-result`, PR #92; the row's run count is the menu lane's (`r13-menu`). Implementer call: past the midnight that ends the card's daily it reads "next daily is out" (the other choice: drop the line) |
 | C19. Swiping back | **Jack: an edge swipe back, as everywhere else in iOS** ("it's little things like this that Apple looks for"). Claude's recommendation (none in play) is set aside. The swipe starts only from the screen's left edge and wins over a rim turn that lands there; with C2's resume an accidental swipe loses nothing |
-| C20. A rating request | **B:** once, after the solve that opens whirlpool; never after a loss, a spill or a purchase. Built on `r13-result`, PR #92 |
+| C20. A rating request | **B:** once, after the solve that opens whirlpool; never after a loss, a spill or a purchase. Built on `r13-result`, PR #92. Open, waits on Jack: a TestFlight or playtest install that opens whirlpool spends the one trigger where Apple shows no sheet, so the App Store build over it never asks; keeping the ask needs a broader trigger, which changes the call. Recommendation: keep it as decided |
 | C21. After a purchase | **A:** the card stays with "play 04 ›" lit; an Ask to Buy approval says "Lens is yours" once on the menu |
 | C22. Mac and Vision Pro | **A:** opt out for v1 in App Store Connect. Jack will bench the GPU on his old iPhone XS if it still runs |
 
