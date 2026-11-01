@@ -356,7 +356,7 @@ Round 11 (2026-10-29, on the review page after round 10's notes):
 | FS17. First Stir | **C:** the clearer ending (the fade fix, the longer night and a caption per vignette, merged in #54). With it, Jack's note: First Stir leaves v1 and is reworked later, because the art's constraints made the story hard to read from the illustrations alone; something else with at least one new mechanic takes its place as the third paid pack. #54 merged 2026-10-29; PR #60 is v1 without it |
 | LG1. The EU and analytics | **C, conditionally:** "C if those hurdles can't be overcome", meaning no EU release if the EU representative and trader-page hurdles can't be cleared. He asked how solo developers handle the EU representative; the answer fed round 12's EU1 |
 | LG2. Children and the consent card | **A:** an age bracket before the card, the threshold read from one setting |
-| LG3. The rest of the legal work, required either way | **No answer.** Jack objected to the UK data-protection registration fee. Round 13's recommendation (Fable 5.1 checked against primary texts, 2026-11-01; Jack's pitch page is outside the repo): register and pay the ICO fee with the address withheld, after the ICO confirms on the phone that it will withhold it, and keep send log. If the ICO won't, pay nothing, take send log out, and invite testers only through TestFlight's public link. Nothing is due until the first tester, log or support email. Unless Jack says no, Claude will also: take boot time out of the flight log; make send log say what it holds; fix the privacy policy (drop portability, say StoreKit reaches Apple, the objection and legal-duty wording); add Apple's age-range check before launch (California AB 1856 joins TX, UT, LA, AL); note Texas's significant-change notice before a new paid pack, and Self Assessment once App Store income passes the trading allowance. Still open: whether UK e-commerce rules need a geographic address on the store page |
+| LG3. The rest of the legal work, required either way | **A (Jack, 2026-11-01): keep send log; register with the ICO and pay its fee with the address withheld, but not yet.** Jack will check with the ICO closer to release (reminder under "The Apple Developer account"). Nothing is due until the first emailed tester, received log or support email. With A, Claude also: takes boot time out of the flight log; makes send log say what it holds; fixes the privacy policy (drop portability, say StoreKit reaches Apple, the objection and legal-duty wording); adds Apple's age-range check before launch (California AB 1856 joins TX, UT, LA, AL); notes Texas's significant-change notice before a new paid pack, and Self Assessment once App Store income passes the trading allowance. Still open: whether UK e-commerce rules need a geographic address on the store page |
 
 Round 12 (decided, 2026-10-29). Jack's words are kept in `HANDOFF.private.md`.
 
@@ -2072,6 +2072,13 @@ TestFlight is ready, not earlier; that gives the first year the most selling tim
 - The daily share line, the clips, and the screenshots and preview video for the store page
 - Checking whether the name "Unstir" is taken. A web search on 2026-09-28 found no app by that name, but only App
   Store Connect can confirm it
+
+**Before the first TestFlight build (remind Jack):**
+- Check in with the ICO (LG3 = A): ask whether a home-based sole trader's register entry can show "Address: Withheld",
+  then register and pay before the first emailed tester, received log or support email. If the ICO won't withhold the
+  address, bring it back to Jack (the fallback was: no fee, send log out, TestFlight's public link only).
+- Turn on the Declared Age Range capability in the app's entitlements once the paid team signs the build.
+- Before each paid pack ships, send Apple the significant-change notice Texas requires (a new purchase is one).
 
 ## The repo is public (Jack's call, 2026-09-28)
 
