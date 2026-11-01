@@ -324,7 +324,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   sends a magenta hairline out from the knob. Every line a turn draws over the picture is a hairline but the count's
   dashes, 2 pt, and none has a glow or a dark band under it: the pictures are fine lines themselves, and whatever a
   heavy line covers the player cannot read. The opening replay's ring is not a hairline. A
-  seized knob touched shakes a few degrees, plays `Knock.thud` (duller than the tank step's `Knock.clunk`) and pulses
+  seized knob touched shakes a few degrees, plays `Knock.thud` (duller than the tank step's `Knock.clunk`, both on one
+  haptic engine that a level able to knock starts as it appears and on coming back to the front, `Knock.warm`, so the
+  first knock never hitches its frame, and stops once no such level is on screen) and pulses
   the rim's lesson: `RimLesson`, a two-headed amber arc just outside the bezel at the top and a ghost finger rocking
   along the rim under it, shown on any level whose rim turns the tank until the player's first turn of the tank commits. That
   turn sets `Game.tankTurned` and the stored flag (`Best.tankTurned`) behind it, on every level; a rod stir never does.

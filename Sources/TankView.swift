@@ -1151,15 +1151,20 @@ struct LevelView: View {
             } ?? ""
             Log.write("level \(game.level.id) opens, \(rules)\(pack) \(game.stack)")
             // Not in Game.init: SwiftUI reruns LevelView.init for a level it already shows, on a game it then drops.
+            if knocks { Knock.warm() }
             if let today { game.refill(today: today) } else { game.refill() }
             // Where there is no opening, onChange's initial call may run before the refill.
             if shown == nil { badge = game.badge }
         }
         .onChange(of: phase) {
             if phase == .background { Analytics.shared.suspended(game); game.pauseClock() }
-            if phase == .active { Analytics.shared.resumed(); game.resumeClock() }
+            if phase == .active { Analytics.shared.resumed(); game.resumeClock(); if knocks { Knock.warm(hold: false) } }
         }
-        .onDisappear { endPath(); endTwist(); Log.write("level \(game.level.id) exits \(state)") }
+        .onDisappear {
+            endPath(); endTwist()
+            if knocks { Knock.rest() }
+            Log.write("level \(game.level.id) exits \(state)")
+        }
     }
 
     private func reset() {
@@ -1169,6 +1174,11 @@ struct LevelView: View {
         // The glass eases home on a solve; the next try turns it from where it stands.
         eased = false
         replays += 1
+    }
+
+    /// The tank's haptics can play here: a turn of the tank clunks, and a seized knob or a clock's disc thuds.
+    private var knocks: Bool {
+        game.level.motion != .none || game.level.layout.rods.indices.contains { game.level.kind(of: $0) != .working }
     }
 
     /// An empty bank says when it refills instead.
@@ -2398,6 +2408,23 @@ struct Detent {
                 .init(relativeTime: 0, value: 1), .init(relativeTime: length / 3, value: hold), .init(relativeTime: length + 0.005, value: 0),
             ], relativeTime: 0),
         ])
+    }
+
+    /// Levels on screen that keep the engine warm: the next one can appear before the last has gone.
+    private static var holders = 0
+
+    /// Starts the engine ahead of the first knock, whose start would otherwise hitch the frame it lands on.
+    static func warm(hold: Bool = true) {
+        if hold { holders += 1 }
+        guard !running, let engine else { return }
+        running = (try? engine.start()) != nil
+    }
+
+    static func rest() {
+        holders = max(holders - 1, 0)
+        guard holders == 0, running, let engine else { return }
+        engine.stop()
+        running = false
     }
 
     func play() {
