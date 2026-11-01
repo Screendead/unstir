@@ -2502,15 +2502,21 @@ struct KnobLesson: View {
     var body: some View {
         // Reduce Motion holds it at 0 s, mid-sweep.
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
-            Circle().fill(Color.live.opacity(0.22))
-                .overlay(Circle().stroke(Color.live.opacity(0.6), lineWidth: 1.5))
-                .shadow(color: .live.opacity(0.4), radius: 6)
-                .frame(width: 30, height: 30)
-                .position(Self.finger(centre: centre, reach: reach,
-                                      at: clock ?? (reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)))
+            GhostFinger().position(Self.finger(centre: centre, reach: reach,
+                                               at: clock ?? (reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)))
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// Every lesson's fingertip.
+struct GhostFinger: View {
+    var body: some View {
+        Circle().fill(Color.live.opacity(0.22))
+            .overlay(Circle().stroke(Color.live.opacity(0.6), lineWidth: 1.5))
+            .shadow(color: .live.opacity(0.4), radius: 6)
+            .frame(width: 30, height: 30)
     }
 }
 
