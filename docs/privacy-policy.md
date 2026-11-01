@@ -33,6 +33,13 @@ Packs and Complete are sold through Apple's App Store. Apple handles payment, an
 Apple ID. The game checks Apple's signed record of what you own on the phone, with no server of ours. Apple's privacy
 policy covers Apple's part.
 
+## Your age range
+
+Where the law asks apps to check their players' ages (some US states), the game asks Apple for your age range once
+each time it starts, and Apple may ask you whether to share it. Every level is for everyone, so the answer changes
+nothing: the game keeps none of it and sends it nowhere. To tell us about anything in the game at odds with its age
+rating, write to `{{CONTACT_ADDRESS}}`.
+
 ## If you send a log
 
 Settings has a "send log" button. It opens your phone's share sheet with the play log described above, and you choose
@@ -59,13 +66,6 @@ the data protection authority where you live.
 
 If this policy changes, the new version will be posted here with a new date. If a later version of the game sends
 anything, it will ask you first.
-
-## Your age range
-
-Where the law asks apps to check their players' ages (some US states), the game asks Apple for your age range once
-each time it starts, and Apple may ask you whether to share it. Every level is for everyone, so the answer changes
-nothing: the game keeps none of it and sends it nowhere. To tell us about anything in the game at odds with its age
-rating, write to `{{CONTACT_ADDRESS}}`.
 
 ## Contact
 
