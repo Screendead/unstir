@@ -239,6 +239,7 @@ struct MenuView: View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
                      arrived: card.pack != nil && card.pack == arrived,
+                     backTo: cameFrom.flatMap { $0.card == card ? $0.back.name : nil } ?? "menu",
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)
