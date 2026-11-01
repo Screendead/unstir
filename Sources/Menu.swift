@@ -98,6 +98,8 @@ struct MenuView: View {
     let shelfDemo: Bool
     /// UNSTIR_CARDSCROLL: the card opens scrolled to its levels.
     let cardScroll: Bool
+    /// The pack whose card a level past its taste opened, for this showing of it.
+    let arrived: Pack?
     /// The tier picked in the strip, open or not. `shown` trails it while the old list stirs away, and `listed`, the
     /// scroll view's own list, trails that to the end of the switch: rebuilding it stalls a frame (about 40 ms on the
     /// simulator), unseen once the stir has settled over it.
@@ -134,7 +136,7 @@ struct MenuView: View {
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Bool = false,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
-         cardScroll: Bool = false, onPick: @escaping (Level) -> Void) {
+         cardScroll: Bool = false, arrived: Pack? = nil, onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = State(initialValue: settings)
         self.onPick = onPick
@@ -143,6 +145,7 @@ struct MenuView: View {
         self.placeholders = placeholders
         self.shelfDemo = shelfDemo
         self.cardScroll = cardScroll
+        self.arrived = arrived
         let tier = start ?? Tier.stored()
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
@@ -231,6 +234,7 @@ struct MenuView: View {
     @ViewBuilder private var cardView: some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
+                     arrived: card.pack != nil && card.pack == arrived,
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)

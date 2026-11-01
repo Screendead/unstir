@@ -344,6 +344,8 @@ struct RootView: View {
     @State private var harness: Harness?
     /// The pack card over the menu: a level past its pack's taste opens it in the level's place.
     @State private var card: Offer?
+    /// The pack whose card a level past its taste opened in the level's place, while that card is up.
+    @State private var arrived: Pack?
     /// UNSTIR_CARDLEVELS, kept past the harness's first launch so the card's list stays while it is played from.
     @State private var placeholders = 0
     @State private var typeSize: DynamicTypeSize?
@@ -368,6 +370,7 @@ struct RootView: View {
         _harness = State(initialValue: h)
         mute = h.mute
         _card = State(initialValue: gate.map(Offer.pack) ?? h.card)
+        _arrived = State(initialValue: gate)
         _placeholders = State(initialValue: h.cardLevels)
         _typeSize = State(initialValue: h.typeSize)
     }
@@ -389,7 +392,8 @@ struct RootView: View {
             } else {
                 MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
                          settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
-                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false) {
+                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false,
+                         arrived: arrived) {
                     show($0)
                 }
                 .transition(dip)
@@ -400,7 +404,10 @@ struct RootView: View {
         .modifier(TypeSize(size: typeSize))
         // A failure belongs to the card that showed it, so every change of card forgets it: back, another pack, or a
         // level's gate. Here, since the menu isn't up while a level is, and a card shown again doesn't always appear anew.
-        .onChange(of: card) { Store.shared.forgetFailures() }
+        .onChange(of: card) {
+            Store.shared.forgetFailures()
+            if card != arrived.map(Offer.pack) { arrived = nil }
+        }
         .onChange(of: phase) {
             Log.write("phase \(phase)")
             Analytics.shared.phase(phase)
@@ -451,6 +458,10 @@ struct RootView: View {
         if !keep { harness = nil }
         self.look = look
         let gate = next.flatMap { Store.shared.card(for: $0) }
+        // The gate's note shows on the showing it opens, never again on a return to the card.
+        arrived = gate
+        // A failure shown before a level isn't still there after it, though the card it was on comes back.
+        if next != nil { Store.shared.forgetFailures() }
         if gate != nil { card = gate.map(Offer.pack) }
         let opens = next.map(Store.shared.opens) ?? true
         withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil && opens ? next : nil }
