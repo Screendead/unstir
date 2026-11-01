@@ -8,13 +8,28 @@ import SwiftUI
 /// 2027). Where the system says the law reaches the player, the age range is requested once a launch, while the menu
 /// is up, never over a level. Every level is for all ages, so the answer changes nothing and is dropped: nothing of it
 /// is kept, logged or sent.
+@MainActor
 enum AgeCheck {
-    @MainActor static var asked = false
+    static var asked = false
+    /// Past the dip into the menu (0.27 s), so a request made as a level is left never lands over the black.
+    static let settle = Duration.seconds(0.3)
 
-    /// Whether to request the range now. `eligible` is `isEligibleForAgeFeatures`; `menu`, that the menu is up with
-    /// no card over it; `played`, that a person is playing, not the harness or the test host.
-    static func due(eligible: Bool, asked: Bool, menu: Bool, played: Bool) -> Bool {
-        eligible && !asked && menu && played
+    /// Whether the range may be requested now. `eligible` is `isEligibleForAgeFeatures`; `menu`, that the menu is up
+    /// with nothing over it (a card, the consent question, the settings sheet); `played`, that a person is playing, not
+    /// the harness or the test host.
+    static func ready(eligible: Bool, menu: Bool, played: Bool) -> Bool {
+        eligible && menu && played
+    }
+
+    /// Requests the range once a launch. A request whose task is cancelled, before or during it (the menu covered or
+    /// left), leaves `asked` false, so the menu asks again when it is next up. One that fails is not retried.
+    static func ask(_ request: () async -> Void) async {
+        guard !asked else { return }
+        try? await Task.sleep(for: settle)
+        guard !Task.isCancelled else { return }
+        asked = true
+        await request()
+        if Task.isCancelled { asked = false }
     }
 }
 
@@ -39,17 +54,16 @@ private struct AgeRequest: ViewModifier {
     @State private var eligible = false
 
     func body(content: Content) -> some View {
-        let due = AgeCheck.due(eligible: eligible, asked: AgeCheck.asked, menu: menu, played: played)
+        let ready = AgeCheck.ready(eligible: eligible, menu: menu, played: played)
         content
             .task {
                 guard played else { return }
                 // Apple's docs require the Declared Age Range entitlement, which waits for the paid team's signing.
                 eligible = (try? await AgeRangeService.shared.isEligibleForAgeFeatures) ?? false
             }
-            .task(id: due) {
-                guard due else { return }
-                AgeCheck.asked = true
-                _ = try? await requestAgeRange(ageGates: 18)
+            .task(id: ready) {
+                guard ready else { return }
+                await AgeCheck.ask { _ = try? await requestAgeRange(ageGates: 18) }
             }
     }
 }
