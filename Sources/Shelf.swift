@@ -152,14 +152,14 @@ extension Store {
 }
 
 extension Store {
-    /// The restore control's words, on a card and in settings.
-    var restoreWords: String {
+    /// What the last restore came to, on a card and in settings; nil before one.
+    var restoreNote: String? {
         if restoring { return "restoring\u{2026}" }
         return switch restored {
         case .found(let packs): "restored \(Pack.named(Pack.sold().filter(packs.contains)))"
         case .nothing: "nothing to restore on this Apple ID"
-        case .failed: "couldn't reach the App Store \u{00B7} restore purchases"
-        case nil: "restore purchases"
+        case .failed: "couldn't reach the App Store"
+        case nil: nil
         }
     }
 }
@@ -925,12 +925,16 @@ struct PackCard: View {
 
     private var restore: some View {
         Button { Task { await store.restore() } } label: {
-            Text(store.restoreWords).font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
+            let words = restoreWords
+            Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
+                .font(.mono(.caption2)).opacity(0.4).underline(pattern: .dot)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .buttonStyle(Sounding())
         .disabled(store.restoring)
     }
+
+    private var restoreWords: String { ConsentWords.restore }
 
     private func buy(_ o: Offer) {
         buying = true

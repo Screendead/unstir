@@ -510,7 +510,9 @@ shot consent-sends "First launch: the analytics question with its link opened, t
 shot consent-gear "Menu with the settings gear beside the title, analytics answered yes." CONSENT=yes
 shot consent-settings-on "The gear's sheet: the analytics switch on, send log and privacy policy." CONSENT=yes SETTINGS=1
 shot consent-settings-off "The gear's sheet: the analytics switch off, send log and privacy policy." CONSENT=no SETTINGS=1
-shot settings "The gear's sheet in a build without analytics, v1's: send log and privacy policy, no switch." SETTINGS=1
+shot settings "The gear's sheet in a build without analytics, v1's: restore purchases, send log and privacy policy, no switch, the version under them." SETTINGS=1
+shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
+  SETTINGS=1 STORE=lens:unowned RESTORED=none
 
 # Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
 # sub-dial (a wound-back clock's mirrored), the stipulation under the tank. Clocks are rods, + forward, - wound back.
