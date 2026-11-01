@@ -196,7 +196,9 @@ struct MenuView: View {
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !Offer.shelf().isEmpty {
-                    PackDock(open: { show($0, from: $1) }, held: clock, paused: card != nil)
+                    // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
+                    PackDock(open: { show($0, from: $1) }, held: clock,
+                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
@@ -209,6 +211,8 @@ struct MenuView: View {
         }
         .animation(.easeOut(duration: 0.25), value: asking)
         .sheet(isPresented: $settings) { SettingsSheet() }
+        // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
+        .onChange(of: card == nil && !settings) { Power.shared.touched() }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()
@@ -216,6 +220,7 @@ struct MenuView: View {
         }
         .background(Color.black)
         .onChange(of: dragging) {
+            if dragging { Power.shared.touched() }
             // Cancelled, so `onEnded` never ran.
             if !dragging, sideways != nil {
                 if sideways == true { released(0, predicted: 0) }

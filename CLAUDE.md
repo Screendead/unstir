@@ -541,7 +541,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens alone; outside Release every cover (`Cover`, drawn in code in each pack's look until it has art) stirred and unstirred by the tank's own shader
-  (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused under a card, a dot for its state. `PackCard` grows out
+  (`Swirled`) on a 7 s loop, each out of step, at 30 Hz, paused where it stands under a card or the settings sheet, while `Power` saves
+  (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
+  gesture recognizer on the window that fails at once, and from a drag on the list), a dot for its state. `PackCard` grows out
   of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
   purchase state, buy at the App Store's price, try free, Complete beside an unowned pack while Complete is on the
@@ -559,7 +561,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Game`. A frame (`Reel.frame(at:)`) is a pure function of the clip's time, drawn by the level's own views (`Unstirred`,
   `SceneLayer` or `PictureLayer`, `RodView`, `RatchetView`, `ClockHint`, `Bezel`) with the game's heal, push, tick and
   stop rings and its solve wave timed as `LevelView`'s keyframes are; `ClipPlayer` loops it from when it appears, holds
-  it at `UNSTIR_CLOCK`, and under Reduce Motion holds `Clip.still`. A reel that dips is black at both ends, so the
+  it at `UNSTIR_CLOCK`, under Reduce Motion holds `Clip.still`, and pauses while the card has it scrolled out of sight
+  (`PackClip.seen`). A reel that dips is black at both ends, so the
   seam never jumps. First Stir: level 1, the sunrise, healed top first, the time under the tank stepping back with each
   heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
@@ -627,7 +630,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
   twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's cells take the
-  raw clock; the neural web is static per seed, built once off the main actor. Vortex's own family (isobars, ephemeris,
+  raw clock; the neural web is static per seed, built once off the main actor. The tank redraws a live picture at 60 Hz, 30 while `Power` saves. Vortex's own family (isobars, ephemeris,
   cords; **VortexPictures.swift**, **Flow.metal**, **Sky.metal**, **Loom.metal**) is drawn live the same way, with no
   twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. The sandbox's cycle
   (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's

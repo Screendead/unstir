@@ -1415,13 +1415,14 @@ struct LevelView: View {
             + (lensTrack.map { x in (-3...3).map { (CGPoint(x: x, y: at(rodCount!.k).y + CGFloat($0) * Self.trackPitch), Self.countRoom + 4) } } ?? [])
         // Endless: when the push that spilled the brim was made. UNSTIR_CLOCK holds the brim that long after its last change.
         let spillAt = game.spilled ? game.brimEvents.last?.time : nil
-        // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow.
+        // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow,
+        // and 30 Hz while the phone saves power.
         // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
         // breathes.
         let moving = game.level.picture.isLive || spillAt != nil && brimMoving || breathing
         let tickNow = game.tick, clocks = game.level.clocks, playable = shown == nil
         return ZStack {
-            TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !moving || frozenClock != nil)) { timeline in
+            TimelineView(.animation(minimumInterval: 1.0 / (Power.shared.saving ? 30 : 60), paused: !moving || frozenClock != nil)) { timeline in
                 let murk = spillAt.flatMap { at -> [Float]? in
                     let since = (frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil

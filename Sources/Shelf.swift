@@ -555,12 +555,20 @@ struct PackClip: View {
     let offer: Offer
     let side: CGFloat
     var held: Double?
+    @State private var seen = true
 
     var body: some View {
-        ClipPlayer(clip: .of(offer), side: side, held: held)
+        ClipPlayer(clip: .of(offer), side: side, held: held, paused: !seen)
+            .onGeometryChange(for: Bool.self) { Self.seen($0.size, in: $0.bounds(of: .scrollView)) } action: { seen = $0 }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(offer.pack == nil ? "A level from each pack, played" : "A \(offer.name) level, played")
             .accessibilityAddTraits(.isImage)
+    }
+
+    /// Whether any of a view `size` across lies inside its scroll view's `viewport`, in its own space; with no scroll
+    /// view, it shows.
+    nonisolated static func seen(_ size: CGSize, in viewport: CGRect?) -> Bool {
+        viewport.map { $0.intersects(CGRect(origin: .zero, size: size)) } ?? true
     }
 }
 

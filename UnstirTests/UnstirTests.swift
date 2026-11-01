@@ -1535,6 +1535,21 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run.movesSpoken, "0 moves")
     }
 
+    /// Decoration gives way under Low Power Mode or a hot phone, and a card's clip stops once scrolled out of sight.
+    func testDecorationGivesWayToPowerAndSight() {
+        XCTAssertFalse(Power.saving(lowPower: false, thermal: .nominal))
+        XCTAssertFalse(Power.saving(lowPower: false, thermal: .fair))
+        XCTAssertTrue(Power.saving(lowPower: false, thermal: .serious))
+        XCTAssertTrue(Power.saving(lowPower: false, thermal: .critical))
+        XCTAssertTrue(Power.saving(lowPower: true, thermal: .nominal))
+        let clip = CGSize(width: 320, height: 320)
+        XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: -100, width: 390, height: 800)))
+        XCTAssertTrue(PackClip.seen(clip, in: CGRect(x: 0, y: 300, width: 390, height: 800)))
+        XCTAssertFalse(PackClip.seen(clip, in: CGRect(x: 0, y: 330, width: 390, height: 800)))
+        XCTAssertFalse(PackClip.seen(clip, in: CGRect(x: 0, y: -900, width: 390, height: 800)))
+        XCTAssertTrue(PackClip.seen(clip, in: nil))
+    }
+
     /// The log keeps its newest bytes from a whole line on, and a log under the cut is left as it is.
     func testTheLogTrimsToWholeLines() {
         let line = Data("09-29 10:11:07.772 touch rod(1) at 0.412,-0.118\n".utf8)

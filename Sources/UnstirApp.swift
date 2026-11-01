@@ -400,7 +400,10 @@ struct RootView: View {
         .onAppear { Sound.shared.use(on: !mute) }
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
-        .task { Log.write(UnstirApp.device) }
+        .task {
+            Log.write(UnstirApp.device)
+            Power.shared.watch()
+        }
         .task {
             // A test host's listener would finish the transactions the StoreKit tests watch, and its analytics would
             // count the tests.
