@@ -184,7 +184,12 @@ struct MenuView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
     /// When the daily row was dealt: a menu left up past midnight, or coming back to the front, deals the new day's.
-    @State private var today = Date.now
+    @State private var today: Date
+    /// Today's daily and its run, worked out once a day rather than on every frame of a swipe. The menu is built anew
+    /// each time it comes up, so a solve's run shows on return.
+    @State private var daily: (level: Level, run: Int)
+    /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
+    @State private var leading: Lead
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -214,6 +219,10 @@ struct MenuView: View {
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
         _listed = State(initialValue: tier)
+        let now = Date.now
+        _today = State(initialValue: now)
+        _daily = State(initialValue: Self.daily(now))
+        _leading = State(initialValue: Self.lead(tier: tier))
         if let frozen {
             _spin = State(initialValue: frozen.spin)
             _fade = State(initialValue: frozen.fade)
@@ -224,11 +233,13 @@ struct MenuView: View {
     /// What the menu leads with (Jack's call C4, round 13). `modes`: the daily and endless, which draw on every layout, so
     /// they open, and show, after the first hex level. `sandboxFirst`: plughole 01 has a best, so the sandbox is over the
     /// list, not under it, and in the tagline's place `next` opens the tier's frontier, if it has one.
-    static func lead(tier: Tier, unlocked: Bool = Best.unlocked, best: (String) -> Best? = Best.load)
-        -> (modes: Bool, sandboxFirst: Bool, next: Level?) {
+    typealias Lead = (modes: Bool, sandboxFirst: Bool, next: Level?)
+    static func lead(tier: Tier, unlocked: Bool = Best.unlocked, best: (String) -> Best? = Best.load) -> Lead {
         let played = best(Level.plughole[0].id) != nil
         return (unlocked || best(Level.plughole[22].id) != nil, played, played ? tier.frontier(unlocked: unlocked, best) : nil)
     }
+
+    private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
 
     var body: some View {
         let analytics = Analytics.shared
@@ -249,7 +260,7 @@ struct MenuView: View {
             // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
             tiers.padding(.top, 6).scrollDisabled(true).simultaneousGesture(swipe)
             ScrollViewReader { proxy in
-                ScrollView { rows(Self.lead(tier: shown)) }
+                ScrollView { rows(leading) }
                 .onAppear {
                     scroller = proxy
                     arrive()
@@ -294,6 +305,7 @@ struct MenuView: View {
             }
         }
         .onChange(of: phase) { if phase == .active { today = .now } }
+        .onChange(of: today) { daily = Self.daily(today) }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
             today = .now
         }
@@ -303,7 +315,7 @@ struct MenuView: View {
 
     /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox over them once
     /// plughole 01 has a best.
-    private func rows(_ lead: (modes: Bool, sandboxFirst: Bool, next: Level?)) -> some View {
+    private func rows(_ lead: Lead) -> some View {
         let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                                pick: pick, refuse: refuse)
         return VStack(alignment: .leading, spacing: 0) {
@@ -311,9 +323,9 @@ struct MenuView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if lead.modes {
                     // Marked until either is first opened.
-                    let new = !Best.modesSeen, daily = Level.daily(today), run = Daily.run(today: today)
-                    LevelRow(level: daily, detail: run < 2 ? nil
-                                 : "\(daily.layout.rods.count) rods \u{00B7} par \(daily.par) \u{00B7} \(run) days running",
+                    let new = !Best.modesSeen, (day, run) = daily
+                    LevelRow(level: day, detail: run < 2 ? nil
+                                 : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
                              enabled: true, new: new, pick: pick, refuse: refuse)
                     LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
                              detail: "deeper every tank \u{00B7} eight wrong stirs and it spills",
@@ -345,7 +357,7 @@ struct MenuView: View {
     }
 
     /// The tank's rule until plughole 01 has a best, then the shown tier's frontier, a tap away.
-    @ViewBuilder private func tagline(_ lead: (modes: Bool, sandboxFirst: Bool, next: Level?)) -> some View {
+    @ViewBuilder private func tagline(_ lead: Lead) -> some View {
         if let next = lead.next {
             Button { pick(next) } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
@@ -536,6 +548,7 @@ struct MenuView: View {
             fade = dim
         } completion: {
             shown = t
+            leading = Self.lead(tier: t)
             // Under the stir's peak, so the jump never shows: a landing row scrolls in once the copy has measured it.
             mark = nil
             if !t.isOpen() {
