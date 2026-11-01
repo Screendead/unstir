@@ -127,7 +127,7 @@ struct Harness {
     /// none with UNSTIR_PRICES=0, as before StoreKit answers, or UNSTIR_PRICES=unreachable, after its fetch failed.
     let prices: [String: String]
     let pricing: Pricing
-    /// UNSTIR_FAILED=offline (storefront, refused): why each failed product failed.
+    /// UNSTIR_FAILED=offline (storefront, refused): why each failed product failed, or each pending one's ask again.
     let failure: Failure
     /// UNSTIR_PAYMENTS=0: purchases turned off on the device.
     let canPay: Bool

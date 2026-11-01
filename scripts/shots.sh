@@ -476,8 +476,12 @@ for t in 1.4 2.4 3.6 5.0; do
 done
 shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
   CARD=lens STORE=complete:failed CLOCK=5.4
-shot card-complete-owned "Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card." \
+shot card-complete-owned "Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, play First Stir 01 (a Debug build sells it)." \
   CARD=complete OWNED=complete CLOCK=5.4
+shot card-lens-complete-pending "Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line dimmed." \
+  CARD=lens STORE=complete:pending CLOCK=5.4
+shot card-lens-asked-offline "Lens's card after asking again offline: still waiting for approval, asked, no connection under it." \
+  CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
 shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
   CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
 shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \

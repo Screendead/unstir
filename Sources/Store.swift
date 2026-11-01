@@ -128,7 +128,7 @@ final class Store {
         harness = ledger
         self.prices = prices
         self.pricing = pricing
-        failures = ledger.products.filter { $0.value == .failed }.mapValues { _ in failure }
+        failures = ledger.products.filter { $0.value == .failed || $0.value == .pending }.mapValues { _ in failure }
         payments = canPay
         self.restored = restored
         ready = true
