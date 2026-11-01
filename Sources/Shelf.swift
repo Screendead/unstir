@@ -1102,11 +1102,13 @@ struct PackCard: View {
     private func completeLine(_ saving: String) -> some View {
         let complete = store.price(Pack.completeID) ?? ""
         let quiet = Color.text.opacity(0.55)
+        // Non-breaking within each part, so a narrow phone or a large size wraps the line only before "· save".
+        func joined(_ s: String) -> String { s.replacingOccurrences(of: " ", with: "\u{00A0}") }
         return VStack(alignment: .leading, spacing: 6) {
             Button { buy(.complete) } label: {
-                let all = Text("or all \(Offer.countWord(Pack.sold().count)) in Complete \u{00B7}").foregroundStyle(quiet)
-                let save = Text("\u{00B7} save \(saving) \u{203A}").foregroundStyle(quiet)
-                Text("\(all) \(Text(complete).foregroundStyle(Color.text.opacity(0.75))) \(save)")
+                let all = Text("or all \(Offer.countWord(Pack.sold().count)) in Complete\u{00A0}\u{00B7}\u{00A0}").foregroundStyle(quiet)
+                let save = Text(joined("\u{00B7} save \(saving) \u{203A}")).foregroundStyle(quiet)
+                Text("\(all)\(Text(joined(complete)).foregroundStyle(Color.text.opacity(0.75))) \(save)")
                 .font(.mono(.caption))
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)

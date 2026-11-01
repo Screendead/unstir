@@ -589,7 +589,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
   purchase state, buy at the App Store's price, try free, Complete beside an unowned pack, and on the dock, only
   while it costs less than the sold packs left unowned, saying the saving ("or all three in Complete · $5.99 · save
-  $2.98 ›", and a "save" fact on Complete's own card; `Offer.saving`, from
+  $2.98 ›", broken only before "· save", and a "save" fact on Complete's own card; `Offer.saving`, from
   `Product.price`; the line and the fact wait for the prices, and the dock's cover too unless no sold pack is owned,
   `Store.offersComplete`, so a launch's dock keeps its cover) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
   locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
