@@ -145,6 +145,13 @@ final class Game {
     let firstTry: Bool
     /// Escapement's demonstration is on the stack: its commits are not the player's, so they try nothing.
     private(set) var demoing = false
+    /// The calls that succeeded since the level opened, for its resume (Jack's call C2, round 13); the demonstration's
+    /// are not the player's.
+    private(set) var actions: [Resume.Action] = []
+    /// Inside `Game.resumed`: the line was the player's already, so nothing is spent, logged or saved again.
+    private(set) var replaying = false
+    /// Only a plain launch's level saves its try: never the harness's, the sandbox, a placeholder, a clip or a test.
+    let storesResume: Bool
     /// Whether the player has ever turned the tank, on any level: the rim shows how until they have.
     private(set) var tankTurned: Bool
     /// False when the caller set `tankTurned`, which then lasts only as long as this game.
@@ -212,13 +219,15 @@ final class Game {
     /// stops it.
     func canTick(_ rod: Int) -> Bool { owed(rod) > 0 && running(rod) }
 
+    /// `firstTry`: a resumed try's, as it began; its first move has since marked the level started.
     init(level: Level, tankTurned: Bool? = nil, swirled: Bool? = nil, bank: (undos: Int, refilled: String?)? = nil,
-         storesProgress: Bool = true) {
+         storesProgress: Bool = true, firstTry: Bool? = nil, storesResume: Bool = false) {
         self.level = level
         self.storesProgress = storesProgress
+        self.storesResume = storesResume && !level.sandbox && level.keepsProgress
         entries = Self.dealt(level)
         brim = level.run?.brim ?? 0
-        firstTry = level.run != nil || !Best.started(level.id)
+        self.firstTry = level.run != nil || (firstTry ?? !Best.started(level.id))
         self.tankTurned = tankTurned ?? Best.tankTurned
         storesTankTurned = tankTurned == nil
         self.swirled = swirled ?? Best.swirled
@@ -293,7 +302,7 @@ final class Game {
             : entries.commit(Entry(twist: Twist(rod: slot, steps: steps), pushed: true), in: level.layout,
                              lenses: level.lenses, masks: level.masks, popped: { if !$0.pushed { healed += 1 } })
         guard result != .refused else {
-            Log.write("commit \(Twist(rod: rod, steps: steps)) refused")
+            log("commit \(Twist(rod: rod, steps: steps)) refused")
             if level.kind(of: rod) == .working { refuse(rod) }
             return
         }
@@ -328,9 +337,22 @@ final class Game {
         if heals { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
-        Log.write("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
-                  + "\(level.run == nil ? "" : "brim=\(brim) ")stack=\(stack.count) \(stack)")
+        log("commit \(Twist(rod: rod, steps: steps)) slot=\(slot) \(result) moves=\(moves) pushes=\(pushes) "
+            + "\(level.run == nil ? "" : "brim=\(brim) ")stack=\(stack.count) \(stack)")
+        record(.turn(knob: rod, steps: steps))
         settle(healed: healed > 0)
+    }
+
+    /// Before the settle, whose finish clears the save: a save after it would bring a finished try back.
+    private func record(_ action: Resume.Action) {
+        guard !demoing else { return }
+        actions.append(action)
+        Resume.save(self)
+    }
+
+    /// A replay's lines would repeat the try's, which the log already holds.
+    private func log(_ line: @autoclosure () -> String) {
+        if !replaying { Log.write(line()) }
     }
 
     /// A level counts as tried on its first committed move; a look, a touch or a turn let go where it began, is free
@@ -349,7 +371,10 @@ final class Game {
     }
 
     private func noteBrim(from was: Int) {
-        if brim != was { brimEvents.append(Brim.Event(from: was, to: brim, time: Date.now.timeIntervalSinceReferenceDate)) }
+        // A replayed change is long over, so the rim opens on it settled.
+        if brim != was {
+            brimEvents.append(Brim.Event(from: was, to: brim, time: replaying ? 0 : Date.now.timeIntervalSinceReferenceDate))
+        }
     }
 
     /// The tank stir a turn of `steps` would leave open: joined to the open one, a whole turn dropped, and the short way
@@ -384,7 +409,8 @@ final class Game {
             before.append(was)
             healsBefore.append(healsWere)
         }
-        Log.write("tank \(steps) position=\(position) moves=\(moves)")
+        log("tank \(steps) position=\(position) moves=\(moves)")
+        record(.tank(steps))
         settle()
     }
 
@@ -399,7 +425,7 @@ final class Game {
                           masks: level.masks, popped: { if !$0.pushed { healed += 1 } })
         // A full stack refuses a tick as it would a push, so it refuses the move.
         guard result != .refused, !ticksRefused(next) else {
-            Log.write("commit \(Twist(rod: knob, steps: steps)) refused")
+            log("commit \(Twist(rod: knob, steps: steps)) refused")
             if level.kind(of: knob) == .working { refuse(knob) }
             return
         }
@@ -416,7 +442,8 @@ final class Game {
         if result == .pushed { pushes += 1 }
         if result == .cancelled { cancels += 1; cancelledRod = knob }
         healed += landTicks()
-        Log.write("commit \(Twist(rod: knob, steps: steps)) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        log("commit \(Twist(rod: knob, steps: steps)) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        record(.turn(knob: knob, steps: steps))
         settle(healed: healed > 0)
     }
 
@@ -424,7 +451,7 @@ final class Game {
     /// nothing to wait for. False when refused.
     @discardableResult func wait(on ratchet: Int) -> Bool {
         guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return false }
-        guard !ticksRefused(entries) else { Log.write("wait refused"); refuse(ratchet); return false }
+        guard !ticksRefused(entries) else { log("wait refused"); refuse(ratchet); return false }
         started()
         before.append((entries, escapement))
         healsBefore.append(heals)
@@ -434,7 +461,8 @@ final class Game {
         lastCommit = (ratchet, .reduced)
         turns += 1
         let healed = landTicks()
-        Log.write("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        log("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
+        record(.wait(ratchet: ratchet))
         settle(healed: healed > 0)
         return true
     }
@@ -471,7 +499,7 @@ final class Game {
            !level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses, masks: level.masks) {
             escapement.lost = true
         }
-        Log.write("ticks \(tick.map { "\($0.rod):\($0.dir > 0 ? "+" : "-")" }.joined(separator: ",")) budget=\(budget) stack=\(stack)")
+        log("ticks \(tick.map { "\($0.rod):\($0.dir > 0 ? "+" : "-")" }.joined(separator: ",")) budget=\(budget) stack=\(stack)")
         return healed
     }
 
@@ -524,9 +552,10 @@ final class Game {
     /// Endless has none: it would take back a red flash. A pack's puts the stack back as the stir found it, marks, tags
     /// and the clock's tick and all; elsewhere it commits the stir's negation.
     func undo() {
-        // The sandbox counts nothing, so its undos are free. A lost tank can be undone.
-        guard !solved, !spilled, !checking, level.run == nil, level.sandbox || bank > 0, let last = history.popLast()
-        else { return }
+        // The sandbox counts nothing, so its undos are free, and a replayed one was paid for when it was made. A lost
+        // tank can be undone.
+        guard !solved, !spilled, !checking, level.run == nil, level.sandbox || bank > 0 || replaying,
+              let last = history.popLast() else { return }
         let was = before.removeLast()
         heals = healsBefore.removeLast()
         if level.pack != nil || !level.ratchets.isEmpty {
@@ -546,13 +575,14 @@ final class Game {
             turns += 1
         }
         open = openBefore.removeLast()
-        if !level.sandbox {
-            undos += 1
+        if !level.sandbox { undos += 1 }
+        if !level.sandbox && !replaying {
             bank -= 1
             if storesBank { Best.undos = bank }
             Analytics.shared.undid()
         }
-        Log.write("undo \(last) moves=\(moves) bank=\(bank) pushes=\(pushes) stack=\(stack.count) \(stack)")
+        log("undo \(last) moves=\(moves) bank=\(bank) pushes=\(pushes) stack=\(stack.count) \(stack)")
+        record(.undo)
         settle()
     }
 
@@ -560,10 +590,13 @@ final class Game {
     /// has already settled on. With nothing played it only replays the opening, so it costs no clean.
     @discardableResult func reset() -> Bool {
         guard !checking, level.run == nil else { return false }
-        if !history.isEmpty { resets += 1 }
+        let played = !history.isEmpty
+        if played { resets += 1 }
         entries = Self.dealt(level)
         restart()
-        Log.write("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
+        log("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
+        // One with nothing played changes nothing a replay needs.
+        if played { record(.reset) }
         return true
     }
 
@@ -671,26 +704,33 @@ final class Game {
         // Only the coarse pass runs here: the fine one takes ~0.1 s exactly when it passes, which would hitch the win.
         if !spilled && !entries.isEmpty && level.layout.same(stack, [], at: Tank.samples, within: Tank.halfPixel, lenses: level.lenses, masks: level.masks) {
             let stack = stack, layout = level.layout, lenses = level.lenses, masks = level.masks
+            // A replay has no frame to hitch, and the next action needs the answer.
+            if replaying { return confirm(layout.looksSolved(stack, lenses: lenses, masks: masks), healed: healed) }
             checking = true
             Task {
                 let solved = await Task.detached(priority: .userInitiated) { layout.looksSolved(stack, lenses: lenses, masks: masks) }.value
                 self.checking = false
                 // A move made meanwhile settled itself.
                 guard self.stack == stack else { return }
-                if solved {
-                    Log.write("looks solved \(stack)")
-                    // The tank's last heal, where the move that made it healed none of the scramble's entries itself.
-                    if !healed && self.entries.contains(where: { !$0.pushed }) {
-                        let was = self.brim
-                        self.settleBrim(1)
-                        self.noteBrim(from: was)
-                    }
-                    // A story's vignettes left play with the solve wave, which rings for them.
-                    self.entries = []
-                }
-                self.finish(healed: healed)
+                self.confirm(solved, healed: healed)
             }
             return
+        }
+        finish(healed: healed)
+    }
+
+    /// The fine pass's answer on a stack that looks solved.
+    private func confirm(_ solved: Bool, healed: Bool) {
+        if solved {
+            log("looks solved \(stack)")
+            // The tank's last heal, where the move that made it healed none of the scramble's entries itself.
+            if !healed && entries.contains(where: { !$0.pushed }) {
+                let was = brim
+                settleBrim(1)
+                noteBrim(from: was)
+            }
+            // A story's vignettes left play with the solve wave, which rings for them.
+            entries = []
         }
         finish(healed: healed)
     }
@@ -710,8 +750,8 @@ final class Game {
         if healed && !finished { heals += 1 }
         guard finished else { return }
         seconds = Int(played())
-        Log.write("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
-                  + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
+        log("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
+            + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
             if solved && storesProgress { Best.tanks = max(Best.tanks, run.tank + 1) }
         } else if solved && counts && level.keepsProgress {
@@ -726,7 +766,60 @@ final class Game {
             }
             completed = done == nil ? completion : nil
         }
+        // A replay passes through a lost tank its line then undid; `resumed` closes one that ends finished.
+        guard !replaying else { return }
+        close()
         Analytics.shared.finished(self)
+    }
+
+    /// A finish clears the try's save, out of ticks too, so the lost card's undo doesn't outlive the app (C2's
+    /// implementer call, round 13). A cleared tank of a run saves the next one, empty, so the run outlasts the card.
+    private func close() {
+        guard storesResume else { return }
+        if solved, let next = nextTank, let run = next.run {
+            Resume.save(Resume(id: next.id, print: next.print, firstTry: true, run: run))
+        } else {
+            Resume.remove(level.id)
+        }
+    }
+
+    /// The try `r` saved, replayed through the calls that made it, before any view shows it: nil, and the level opens
+    /// afresh, where `r` was saved on a level that deals differently now, where the level refuses one of its calls, or
+    /// where the line finished, as when the app died inside the solving move's fine pass, whose best its finish saves.
+    /// The bank, the stored flags and the analytics stay as the try left them.
+    static func resumed(_ level: Level, from r: Resume, tankTurned: Bool? = nil, swirled: Bool? = nil,
+                        bank: (undos: Int, refilled: String?)? = nil, storesProgress: Bool = true,
+                        storesResume: Bool = true) -> Game? {
+        guard r.version == 1, r.id == level.id, r.print == level.print else {
+            Log.write("resume \(r.id) dropped: the level deals differently now")
+            return nil
+        }
+        let game = Game(level: level, tankTurned: tankTurned, swirled: swirled, bank: bank, storesProgress: storesProgress,
+                        firstTry: r.firstTry, storesResume: storesResume)
+        game.replaying = true
+        for (i, action) in r.actions.enumerated() {
+            switch action {
+            case .turn(let knob, let steps): game.commit(rod: knob, steps: steps)
+            case .tank(let steps): game.turnTank(steps)
+            case .wait(let ratchet): game.wait(on: ratchet)
+            case .undo: game.undo()
+            case .reset: game.reset()
+            }
+            guard game.actions.count == i + 1 else {
+                Log.write("resume \(r.id) dropped: \(action), its call \(i + 1), refused")
+                return nil
+            }
+        }
+        game.replaying = false
+        game.elapsed = r.seconds
+        // The newest move's ticks are long played.
+        game.tick = []
+        Log.write("resume \(r.id) actions=\(r.actions.count) moves=\(game.moves) stack=\(game.stack.count) \(game.stack)")
+        guard !game.finished else {
+            game.close()
+            return nil
+        }
+        return game
     }
 }
 
@@ -848,6 +941,8 @@ struct LevelView: View {
     private let frozenBreath: Double?
     /// UNSTIR_REST: seconds at rest before a drawn fingertip lands.
     private let rest: Double
+    /// The game replayed a saved line: the first opening, and Escapement's demonstration, don't play.
+    private let resumed: Bool
     /// When a first tap armed the reset control, which then says "reset? tap again" for `ResetArm.window`, or under
     /// VoiceOver until a move or focus leaves it.
     @State private var armedAt: Date?
@@ -888,12 +983,17 @@ struct LevelView: View {
     /// A pack's card, from a completion's pointer.
     let onOffer: (Pack) -> Void
 
-    init(level: Level, harness: Harness?, onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void,
-         onLook: @escaping (Tier) -> Void, onOffer: @escaping (Pack) -> Void) {
-        let game = Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
-                        storesProgress: harness?.harnessed != true)
-        game.turnTank(harness?.tank ?? 0)
-        if let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
+    /// `resumed`: the try a save brought back (`Game.resumed`), built before the view, as SwiftUI reruns this init for a
+    /// level it already shows. `storesResume`: the game built here saves its try, as on any launch but the harness's.
+    init(level: Level, harness: Harness?, resumed: Game? = nil, storesResume: Bool = false,
+         onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void, onLook: @escaping (Tier) -> Void,
+         onOffer: @escaping (Pack) -> Void) {
+        let game = resumed ?? Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
+                                   storesProgress: harness?.harnessed != true, storesResume: storesResume)
+        // A save with no line yet, a run's next tank, opens as any tank does.
+        self.resumed = !(resumed?.actions.isEmpty ?? true)
+        if resumed == nil { game.turnTank(harness?.tank ?? 0) }
+        if resumed == nil, let h = harness, h.screen == "result" || h.screen == "clean" || h.wave != nil {
             // Solved through the real commit path; "result" first wastes two stirs, so taking them back costs moves.
             if h.screen == "result", let top = game.stack.last {
                 let count = level.layout.rods.count, home = game.knob(over: top.rod)
@@ -910,8 +1010,8 @@ struct LevelView: View {
                 if let t = game.reachable { game.commit(rod: t.rod, steps: t.steps); idle = 0 } else { game.turnTank(1); idle += 1 }
             }
         }
-        if let t = harness?.turned { game.commit(rod: t.rod, steps: t.steps) }
-        for m in harness?.played ?? [] {
+        if resumed == nil, let t = harness?.turned { game.commit(rod: t.rod, steps: t.steps) }
+        for m in resumed == nil ? harness?.played ?? [] : [] {
             if level.kind(of: m.rod) == .ratchet { game.wait(on: m.rod) } else { game.commit(rod: m.rod, steps: m.steps) }
         }
         _game = State(initialValue: game)
@@ -967,7 +1067,8 @@ struct LevelView: View {
         holdArmed = harness?.resetArmed ?? false
         _armedAt = State(initialValue: holdArmed ? .now : nil)
         demoRetired = harness == nil && Best.load(level.id) != nil
-        _shown = State(initialValue: still || level.sandbox ? nil : 0)
+        // A resumed try opens where it was left, with no opening.
+        _shown = State(initialValue: still || level.sandbox || self.resumed ? nil : 0)
         self.onExit = onExit
         self.onNext = onNext
         self.onLook = onLook
@@ -1111,8 +1212,9 @@ struct LevelView: View {
         .background(Color.black)
         .accessibilityAction(.escape) { leave() }
         .task(id: replays) {
-            if !game.level.demo.isEmpty && !still && (replays == 0 ? !demoRetired : fresh) { await clockDemo() }
-            if !game.level.sandbox, replays > 0 || !still { await open() }
+            let opens = replays > 0 || !resumed
+            if opens && !game.level.demo.isEmpty && !still && (replays == 0 ? !demoRetired : fresh) { await clockDemo() }
+            if opens, !game.level.sandbox, replays > 0 || !still { await open() }
             if autoplay && replays == 0 { await play() }
             if let moves, replays == 0 { await play(moves) }
             if brimDemo && replays == 0 { await demo() }
@@ -1265,7 +1367,8 @@ struct LevelView: View {
             if shown == nil { badge = game.badge }
         }
         .onChange(of: phase) {
-            if phase == .background { Analytics.shared.suspended(game); game.pauseClock() }
+            // The seconds since the last move, which the app may not come back for.
+            if phase == .background { Analytics.shared.suspended(game); game.pauseClock(); Resume.save(game) }
             if phase == .active { Analytics.shared.resumed(); game.resumeClock(); if knocks { Knock.warm(hold: false) } }
         }
         .onDisappear {
@@ -1356,16 +1459,19 @@ struct LevelView: View {
     /// Back to the menu, the only way out short of a finish or the next tank.
     private func leave() {
         Analytics.shared.left(game)
+        Resume.save(game)
         onExit(game.solved)
     }
 
     private func look(_ tier: Tier) {
         Analytics.shared.left(game)
+        Resume.save(game)
         onLook(tier)
     }
 
     private func offer(_ pack: Pack) {
         Analytics.shared.left(game)
+        Resume.save(game)
         onOffer(pack)
     }
 
