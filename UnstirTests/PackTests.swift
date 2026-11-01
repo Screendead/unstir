@@ -174,6 +174,16 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Pack.named([.lens]), "Lens")
     }
 
+    /// The developer unlock opens a pack past its taste in a Release build only when `scripts/run-ios.sh` installed it as
+    /// a playtest, never in one that ships, and the harness's packs never in Release.
+    func testThePlaytestUnlockOpensAPackOnlyInAPlaytest() {
+        XCTAssertEqual(Pack.prism.access(4, owned: [], unlocked: true, release: true, playtest: true), .owned)
+        XCTAssertEqual(Pack.prism.access(4, owned: [], unlocked: true, release: true, playtest: false), .needsCard)
+        XCTAssertEqual(Pack.prism.access(4, owned: [], unlocked: false, release: true, playtest: true), .needsCard)
+        XCTAssertEqual(Pack.prism.access(4, owned: [], unlocked: false, harness: [.prism], release: true, playtest: true), .needsCard)
+        XCTAssertEqual(Pack.firstStir.access(4, owned: [], unlocked: true, release: true, playtest: true), .withheld)
+    }
+
     func testPackIdsBelongToOnePack() {
         let tierIds = Tier.allCases.flatMap { $0.levels.map(\.id) } + ["endless", "sandbox", "daily-20261025"]
         for pack in Pack.allCases {
