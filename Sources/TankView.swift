@@ -1029,7 +1029,7 @@ struct LevelView: View {
                 // exactly where it was played.
                 Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
-                    .font(.mono(12)).opacity(showResult || ending ? 0 : notice != nil || game.deadTick ? 0.9 : noteLit ? 1 : 0.55)
+                    .font(.mono(12)).opacity(captionOpacity)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
@@ -1069,7 +1069,7 @@ struct LevelView: View {
                     Spacer()
                     control(armedAt == nil ? "reset" : "reset? tap again", tapReset)
                         // The tap that arms only taps; the one that resets sounds as a reset.
-                        .buttonStyle(Sounding(effect: armedAt != nil || game.history.isEmpty ? .reset : .tap))
+                        .buttonStyle(Sounding(effect: resetSound))
                         .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
                         .disabled(settling)
                 }
@@ -1259,6 +1259,8 @@ struct LevelView: View {
         }
     }
 
+    private var resetSound: Sound.Effect { armedAt != nil || game.history.isEmpty ? .reset : .tap }
+
     /// The play screen's reset asks for a second tap; the cards' "again" resets at once, as a finished tank has nothing
     /// a slip could lose.
     private func tapReset() {
@@ -1290,6 +1292,13 @@ struct LevelView: View {
     }
 
     nonisolated static let refills = "undos refill +2 each day you play"
+
+    /// A notice, or Escapement's dead tick, reads above the resting caption.
+    private var captionOpacity: Double {
+        if showResult || ending { return 0 }
+        if notice != nil || game.deadTick { return 0.9 }
+        return noteLit ? 1 : 0.55
+    }
 
     /// Endless has no par to warn of.
     private var countTone: Color { game.level.run == nil ? Self.parTone(moves: game.moves, par: game.par) : .text }
