@@ -2940,6 +2940,8 @@ struct Unstirred: ViewModifier, Animatable {
     var liveRod: Int?
     var liveAngle: Double
     var wind = 1.0
+    /// Each entry's own share of its turn, in place of `wind`: a dock cover winds its stack an entry at a time.
+    var shares: [Double]?
     var side: CGFloat
     /// Drains the colour towards grey.
     var haze = 0.0
@@ -2974,7 +2976,7 @@ struct Unstirred: ViewModifier, Animatable {
             floats.append(Float(lens ? -rods[rod].z : rods[rod].z))
             floats.append(Float(lens ? angle / Tank.step * Tank.lensRate : angle))
         }
-        for t in stack { add(t.rod, Double(t.steps) * Tank.step * min(wind, 1)) }
+        for (i, t) in stack.enumerated() { add(t.rod, Double(t.steps) * Tank.step * min(shares?[i] ?? wind, 1)) }
         if let tick { add(tick.rod, tick.angle) }
         if let liveRod { add(liveRod, liveAngle) }
         let breathes = breath.map { $0.angle != 0 } ?? false
