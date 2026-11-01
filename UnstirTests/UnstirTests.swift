@@ -492,11 +492,13 @@ final class UnstirTests: XCTestCase {
         let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
         game.commit(rod: 0, steps: -4)
         XCTAssertEqual(game.completed, .pack(.lens))
+        XCTAssertEqual(game.finishSpoken, "Unstirred. 1 move, par 1. Clean. Lens complete, 25 panels.")
         XCTAssertTrue(game.reset())
         game.commit(rod: 0, steps: -4)
         XCTAssertTrue(game.solved)
         XCTAssertNil(game.completed)
         XCTAssertEqual(Completion.pack(.lens).line, "Lens complete \u{00B7} 25 panels")
+        XCTAssertEqual(Completion.free.spoken, "Every tier unstirred.")
 
         let sea = Tier.maelstrom.levels.map(\.id)
         for id in sea.dropLast() { Best(over: 3, seconds: 9).save(id) }
@@ -1444,6 +1446,9 @@ final class UnstirTests: XCTestCase {
         // The clocks go forward an hour on 29 March and back on 25 October.
         XCTAssertEqual(Daily.untilNext(day: 20260329, now: try at(3, 29, 0, 0), calendar: c), "next daily in 23 h")
         XCTAssertEqual(Daily.untilNext(day: 20261025, now: try at(10, 25, 0, 0), calendar: c), "next daily in 25 h")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 17, 0), calendar: c, spoken: true), "next daily in 7 hours")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 22, 40), calendar: c, spoken: true), "next daily in 1 hour")
+        XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 1, 23, 20), calendar: c, spoken: true), "next daily in 40 minutes")
         // Sunday's daily solved, or its card still up, past midnight: Monday's is out, and the card counts from Sunday's.
         XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 2, 0, 5), calendar: c), "next daily is out")
         XCTAssertEqual(Daily.untilNext(day: 20261101, now: try at(11, 2, 0, 0), calendar: c), "next daily is out")

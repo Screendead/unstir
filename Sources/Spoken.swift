@@ -53,7 +53,7 @@ extension Game {
     }
 
     /// The card's account of how the level ended, where VoiceOver lands as it shows.
-    var finishSpoken: String { ended + (completed.map { " \($0.line)." } ?? "") }
+    var finishSpoken: String { ended + (completed.map { " \($0.spoken)" } ?? "") }
 
     private var ended: String {
         let moved = Spoken.count(moves, "move")

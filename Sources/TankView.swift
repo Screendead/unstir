@@ -3004,6 +3004,14 @@ enum Completion: Equatable {
         case .free: "every tier unstirred"
         }
     }
+
+    /// The line as VoiceOver says it, without the middle dot.
+    var spoken: String {
+        switch self {
+        case .pack(let p): "\(p.name) complete, \(p.levels.count) \(p.noun)."
+        case .free: "Every tier unstirred."
+        }
+    }
 }
 
 struct ResultCard: View {
@@ -3114,6 +3122,7 @@ struct ResultCard: View {
             if let day = Share.day(of: game.level.id) {
                 TimelineView(.everyMinute) { t in
                     Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.mono(12)).opacity(0.55)
+                        .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
                 }
             }
             if let up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil) {
