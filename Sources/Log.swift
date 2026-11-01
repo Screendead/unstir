@@ -9,9 +9,9 @@ enum Log {
     nonisolated static let url = URL.libraryDirectory.appending(path: "unstir-log.txt")
     nonisolated static let cap = 1 << 20, keep = 512 << 10
     /// Opened at the first write, before the first frame; `trim` cuts it back later.
-    private static var file: FileHandle? = open()
+    private static var file: FileHandle? = opened()
 
-    nonisolated private static func open() -> FileHandle? {
+    nonisolated private static func opened() -> FileHandle? {
         if !FileManager.default.fileExists(atPath: url.path) { FileManager.default.createFile(atPath: url.path, contents: nil) }
         let file = try? FileHandle(forWritingTo: url)
         _ = try? file?.seekToEnd()
@@ -22,11 +22,10 @@ enum Log {
     /// it, where no write can land between, the lines written meanwhile added and the file replaced.
     static func trim() async {
         guard let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > cap else { return }
-        let url = url
-        guard let done = await Task.detached(priority: .utility, operation: { Log.cut(url) }).value else { return }
+        guard let done = await Task.detached(priority: .utility, operation: { Log.cut(Log.url) }).value else { return }
         try? file?.close()
         replace(url, with: done.kept, after: done.read)
-        file = open()
+        file = opened()
     }
 
     /// The log at `url` cut to its newest `keep` bytes, and how many bytes were read.
