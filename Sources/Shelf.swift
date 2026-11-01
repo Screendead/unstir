@@ -699,16 +699,27 @@ struct PackCard: View {
             Log.write("card \(offer.key) opens")
             if let pack = offer.pack { Analytics.shared.cardSeen(pack) }
         }
-        .onChange(of: state) { old, state in
-            if let tag = state.tag { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
+        .onChange(of: Reading(state: state, ready: store.ready)) { old, new in
+            // Until the launch's first read has finished, an owned pack reads as unowned: that read is no change.
+            guard old.ready, new.state != old.state else { return }
+            if let tag = new.state.tag { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
             // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
-            if state == .owned, old != .owned {
+            if Self.lands(old.state, new.state, ready: old.ready) {
                 landings += 1
                 Sound.shared.play(.solve)
             }
         }
         .sensoryFeedback(.success, trigger: landings)
     }
+
+    private struct Reading: Equatable {
+        let state: Purchase
+        let ready: Bool
+    }
+
+    /// A purchase landing on the card: owned now, read after the launch's first read of the entitlements had finished,
+    /// so an owner's card opened in that read's window never chimes.
+    static func lands(_ old: Purchase, _ new: Purchase, ready: Bool) -> Bool { ready && old != .owned && new == .owned }
 
     private var price: String? { store.price(offer.productID) }
 

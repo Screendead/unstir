@@ -557,7 +557,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   once every one is, and Complete's cover once Complete is owned; Complete's card names each pack as a link to its
   card (`onOffer`), so each taste is a tap away. A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
-  another, the card staying put; under Reduce Motion the state just changes. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
+  entitlements is no landing (`PackCard.lands`): an owner's card opened before `Store.ready` reads unowned, then owned,
+  without a chime or an announcement. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
   card (`Store.forgetFailures`), and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from a row or
   from the level before it. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts

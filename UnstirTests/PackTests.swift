@@ -254,6 +254,15 @@ final class PackTests: XCTestCase {
         XCTAssertNil(PackCard.pickUp(levels, best: best))
     }
 
+    /// Only a change after the launch's first read lands: before it, an owner's card reads unowned until the read does.
+    @MainActor func testTheLaunchsFirstReadIsNoLanding() {
+        XCTAssertFalse(PackCard.lands(.unowned, .owned, ready: false))
+        XCTAssertTrue(PackCard.lands(.unowned, .owned, ready: true))
+        XCTAssertTrue(PackCard.lands(.pending, .owned, ready: true))
+        XCTAssertFalse(PackCard.lands(.owned, .owned, ready: true))
+        XCTAssertFalse(PackCard.lands(.unowned, .pending, ready: true))
+    }
+
     @MainActor func testHarnessSetsTheCardsMessages() {
         let h = Harness(["UNSTIR_CARD": "lens", "UNSTIR_STORE": "lens:failed", "UNSTIR_FAILED": "offline",
                          "UNSTIR_PRICES": "unreachable", "UNSTIR_PAYMENTS": "0", "UNSTIR_RESTORED": "lens,prism"])
