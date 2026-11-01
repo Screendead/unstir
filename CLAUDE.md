@@ -638,7 +638,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   link, "What does it send?", that opens and closes the full list of what is sent under it; Yes and No the same
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds:
   "music", "sounds" and "haptics" (`Settings`, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while
-  on; Jack's call C17, round 13), "colour letters" (`Letters`), the analytics switch (`NeonToggle`, which calls
+  on; Jack's call C17, round 13; a harnessed launch holds them and the letters in memory, `Settings.held`, never
+  stored), "colour letters" (`Letters`), the analytics switch (`NeonToggle`, which calls
   `decide`) where the build has analytics, "restore purchases" (`Store.restore`, saying what it found as the cards do),
   "report a problem", a mail (`MailSheet`) to Info.plist's `SupportAddress` with `Log.url` attached as
   `unstir-log.txt` and `UnstirApp.device` in the body, or, with no address or no mail account, `Log.url` handed to the

@@ -1,6 +1,7 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
 import AVFoundation
+import os
 import SwiftUI
 
 extension Level {
@@ -40,21 +41,48 @@ extension View {
     }
 }
 
-/// The settings' switches, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while on.
+/// The settings' switches, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while on, and the colour
+/// letters' choice (`Letters`).
 enum Settings {
+    /// A harnessed launch's switches, read in place of the stored ones and never stored, so a tap in one shot lasts only
+    /// that launch. Keyed `music`, `sounds`, `haptics` and `letters` (absent while unchosen).
+    static let held = OSAllocatedUnfairLock<[String: Bool]?>(initialState: nil)
+
     static var music: Bool {
-        get { !UserDefaults.standard.bool(forKey: "music.off") }
-        set { UserDefaults.standard.set(!newValue, forKey: "music.off") }
+        get { on("music") }
+        set { set("music", newValue) }
     }
 
     static var sounds: Bool {
-        get { !UserDefaults.standard.bool(forKey: "sounds.off") }
-        set { UserDefaults.standard.set(!newValue, forKey: "sounds.off") }
+        get { on("sounds") }
+        set { set("sounds", newValue) }
     }
 
     static var haptics: Bool {
-        get { !UserDefaults.standard.bool(forKey: "haptics.off") }
-        set { UserDefaults.standard.set(!newValue, forKey: "haptics.off") }
+        get { on("haptics") }
+        set { set("haptics", newValue) }
+    }
+
+    private static func on(_ name: String) -> Bool {
+        held.withLock { $0.map { $0[name] ?? true } } ?? !UserDefaults.standard.bool(forKey: "\(name).off")
+    }
+
+    /// Writes into `held` where the harness holds the switches; false where they are stored.
+    static func keep(_ name: String, _ value: Bool?) -> Bool {
+        held.withLock { held in
+            guard held != nil else { return false }
+            held![name] = value
+            return true
+        }
+    }
+
+    private static func set(_ name: String, _ on: Bool) {
+        guard !keep(name, on) else { return }
+        if on {
+            UserDefaults.standard.removeObject(forKey: "\(name).off")
+        } else {
+            UserDefaults.standard.set(true, forKey: "\(name).off")
+        }
     }
 }
 

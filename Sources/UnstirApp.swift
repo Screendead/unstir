@@ -93,7 +93,7 @@ struct Harness {
     let bench: Bool
     /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism with the colour letters,
     /// its knobs spelling out their channels over the swatches, whatever the settings say. UNSTIR_LETTERSCHOICE=0 or 1:
-    /// the settings' colour letters chosen off or on, for this launch only.
+    /// the settings' colour letters chosen off or on, for this launch only (`switches`).
     let swatch: Channels?
     let letters: Bool
     /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
@@ -117,8 +117,11 @@ struct Harness {
     /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
     let tierSpin: (spin: Double, fade: Double)?
     /// UNSTIR_SETTINGS=1: the menu opens with the gear's sheet up. UNSTIR_CONSENT is read by `Analytics.configure`.
-    /// UNSTIR_MUSIC=0, UNSTIR_SOUNDS=0 and UNSTIR_HAPTICS=0: the sheet's switches off, for this launch only.
     let settings: Bool
+    /// UNSTIR_MUSIC=0, UNSTIR_SOUNDS=0 and UNSTIR_HAPTICS=0: the sheet's switches off, with UNSTIR_LETTERSCHOICE, for
+    /// `Settings.held`. A harnessed launch's switches start on and unchosen whatever is stored, and a tap on one lasts
+    /// only that launch; nil on a plain launch.
+    let switches: [String: Bool]?
     /// UNSTIR_OWNED and UNSTIR_STORE, in place of StoreKit's for this launch; never stored, and nil in Release.
     let purchases: Ledger?
 
@@ -207,11 +210,14 @@ struct Harness {
         swatch = env["UNSTIR_SWATCH"].flatMap { $0.count == 1 ? Channels(letter: $0.first!) : nil }
             .flatMap { Channels.each.contains($0) ? $0 : nil }
         letters = env["UNSTIR_LETTERS"] == "1"
-        if let c = env["UNSTIR_LETTERSCHOICE"], ["0", "1"].contains(c) {
-            UserDefaults.standard.register(defaults: ["letters": c == "1"])
-        }
-        for name in ["music", "sounds", "haptics"] where env["UNSTIR_\(name.uppercased())"] == "0" {
-            UserDefaults.standard.register(defaults: ["\(name).off": true])
+        if harnessed {
+            var held = ["music", "sounds", "haptics"].reduce(into: [String: Bool]()) {
+                $0[$1] = env["UNSTIR_\($1.uppercased())"] != "0"
+            }
+            if let c = env["UNSTIR_LETTERSCHOICE"], ["0", "1"].contains(c) { held["letters"] = c == "1" }
+            switches = held
+        } else {
+            switches = nil
         }
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
@@ -391,6 +397,8 @@ struct RootView: View {
         let env = ProcessInfo.processInfo.environment
         let h = Harness(env)
         harnessed = h.harnessed
+        // Here, not in Harness, which the tests build too.
+        Settings.held.withLock { $0 = h.switches }
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, pricing: h.pricing, failure: h.failure, canPay: h.canPay,

@@ -2651,8 +2651,13 @@ extension Channels {
 /// Differentiate Without Colour, today's and any later change of it, until then.
 enum Letters {
     static var choice: Bool? {
-        get { UserDefaults.standard.object(forKey: "letters") as? Bool }
-        set { UserDefaults.standard.set(newValue, forKey: "letters") }
+        get {
+            if let held = Settings.held.withLock({ $0 }) { return held["letters"] }
+            return UserDefaults.standard.object(forKey: "letters") as? Bool
+        }
+        set {
+            if !Settings.keep("letters", newValue) { UserDefaults.standard.set(newValue, forKey: "letters") }
+        }
     }
 
     static func shown(system: Bool) -> Bool { choice ?? system }

@@ -95,6 +95,34 @@ final class PackTests: XCTestCase {
         Settings.haptics = false
         XCTAssertFalse(Settings.haptics)
         XCTAssertTrue(Settings.music)
+        Settings.haptics = true
+        XCTAssertNil(d.object(forKey: "haptics.off"))
+    }
+
+    /// A harnessed launch holds the switches in memory: a tap lasts only that launch, and a stored choice never shows.
+    func testHeldSettingsAreNeverStored() {
+        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off", "letters"]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer {
+            Settings.held.withLock { $0 = nil }
+            for (key, value) in zip(keys, saved) { d.set(value, forKey: key) }
+        }
+        d.set(true, forKey: "music.off")
+        d.set(true, forKey: "letters")
+        d.removeObject(forKey: "sounds.off")
+        Settings.held.withLock { $0 = ["music": true, "sounds": true, "haptics": false] }
+        XCTAssertTrue(Settings.music)
+        XCTAssertFalse(Settings.haptics)
+        XCTAssertNil(Letters.choice)
+        Settings.sounds = false
+        Letters.choice = false
+        XCTAssertFalse(Settings.sounds)
+        XCTAssertEqual(Letters.choice, false)
+        XCTAssertNil(d.object(forKey: "sounds.off"))
+        XCTAssertEqual(d.object(forKey: "letters") as? Bool, true)
+        Settings.held.withLock { $0 = nil }
+        XCTAssertFalse(Settings.music)
+        XCTAssertEqual(Letters.choice, true)
     }
 
     /// The support address and the policy's page are Jack's, so they live in Config/Local.xcconfig (gitignored) or the
