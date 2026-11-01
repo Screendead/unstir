@@ -329,6 +329,8 @@ for n in $(seq -w 1 25); do
   hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens
 done
 hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 STACK=1:+2,0:+2
+hold=5 shot lens-result "Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens." \
+  PACK=lens LEVEL=2 SCREEN=result CLOCK=0
 hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 STACK=0:+2,1:+2
 hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger." \
   PACK=lens LEVEL=1 LIVE=0:+1.4 TOUCH=0,-0.42

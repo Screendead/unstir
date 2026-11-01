@@ -587,7 +587,7 @@ struct PackCard: View {
             ScrollViewReader { reader in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        Button(action: onBack) { Text("\u{2039} back").font(.mono(.subheadline, .medium)) }
+                        Button(action: onBack) { Text("\u{2039} menu").font(.mono(.subheadline, .medium)) }
                             .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
                             .accessibilityLabel("Back")
                         Text(offer.pack == nil ? "BUNDLE \u{00B7} PAID ADD-ON" : "PACK \u{00B7} PAID ADD-ON").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)

@@ -895,7 +895,7 @@ struct LevelView: View {
             let side = min(geo.size.width, geo.size.height - 290) / 1.045
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
-                    Button("\u{2039} levels", action: leave)
+                    Button(game.level.back, action: leave)
                     Spacer()
                     if game.level.sandbox {
                         // Each says what it steps through where there is room for it.
@@ -928,6 +928,13 @@ struct LevelView: View {
                 }
                 .font(.mono(15, .medium))
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(alignment: .topLeading) {
+                    // In the gap above the title, so a pack level's tank sits where every other level's does.
+                    if let pack = game.level.pack {
+                        Text(pack.name.uppercased()).font(.mono(10, .semibold)).tracking(2)
+                            .foregroundStyle(game.level.colour).opacity(0.75).offset(y: -15)
+                    }
+                }
                 .padding(.top, 18)
                 Spacer(minLength: 12)
                 let reveal = AnyTransition.opacity.animation(.easeOut(duration: 0.4).delay(0.3))
@@ -2789,7 +2796,7 @@ struct ResultCard: View {
 
     var body: some View {
         let run = game.level.run
-        let accent: Color = switch game.level.tier {
+        let accent: Color = game.level.pack.map { Offer.pack($0).glow } ?? switch game.level.tier {
         case .plughole: .neonCyan
         case .vortex: game.level.tier.glow
         case .whirlpool, .maelstrom: .blood
@@ -2833,7 +2840,7 @@ struct ResultCard: View {
             }
             .font(.mono(13))
             HStack(spacing: 32) {
-                Button("\u{2039} levels", action: onExit)
+                Button(game.level.back, action: onExit)
                 if game.level.run == nil && !game.clean {
                     Button("again \u{21BA}", action: again).buttonStyle(Sounding(effect: .reset))
                 }
@@ -3129,7 +3136,7 @@ struct LostCard: View {
         VStack(spacing: 26) {
             Text("out of ticks on move \(game.moves)").font(.mono(13))
             HStack(spacing: 32) {
-                Button("\u{2039} levels", action: onExit)
+                Button(game.level.back, action: onExit)
                 Button("undo \u{00B7} \(game.bank)", action: undo)
                     .buttonStyle(Sounding(effect: game.bank == 0 ? .tap : .undo))
                     .opacity(game.bank == 0 ? 0.35 : 1)

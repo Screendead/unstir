@@ -3,10 +3,14 @@
 import SwiftUI
 
 extension Level {
-    /// Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
+    /// Where leaving goes: a pack's level back to its card.
+    var back: String { "\u{2039} " + (pack?.name ?? "levels") }
+
+    /// A pack's level takes the pack's glow. Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
     /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
     /// magenta.
     var colour: Color {
+        if let pack { return Offer.pack(pack).glow }
         guard let n = Int(label) else { return sandbox ? .magenta : run == nil ? .amber : .neonCyan }
         let t = Double((n - 1) % 12) / 11
         return switch tier {
