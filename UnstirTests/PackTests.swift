@@ -198,19 +198,26 @@ final class PackTests: XCTestCase {
     /// An Ask to Buy approval is said once: a request then its approval says it, and once said it is forgotten; a pack
     /// owned without asking says nothing; a revocation forgets the request unsaid (Jack's call C21, round 13).
     func testAnApprovalIsSaidOnce() {
-        let lens = Pack.lens.productID
+        let lens = Pack.lens.productID, prism = Pack.prism.productID
+        let d = UserDefaults.standard, keys = [Asked.key(lens), Asked.key(prism)]
+        let saved = keys.map { d.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
+        for key in keys { d.removeObject(forKey: key) }
+
         var ledger = Ledger()
         ledger.record(lens, .pending)
-        XCTAssertEqual(ledger.answers(to: [lens]).approved, [])
+        Asked.add(lens)
+        XCTAssertEqual(ledger.answers(to: Asked.all).approved, [])
         ledger.record(lens, .owned)
-        XCTAssertEqual(ledger.answers(to: [lens]).approved, [lens])
-        XCTAssertEqual(ledger.answers(to: []).approved, [], "said, so no longer asked")
-        var bought = Ledger()
-        bought.record(Pack.prism.productID, .owned)
-        XCTAssertEqual(bought.answers(to: []).approved, [])
-        ledger.record(lens, .revoked)
-        XCTAssertEqual(ledger.answers(to: [lens]).approved, [])
-        XCTAssertEqual(ledger.answers(to: [lens]).revoked, [lens])
+        ledger.record(prism, .owned)
+        XCTAssertEqual(ledger.answers(to: Asked.all).approved, [lens], "Prism was owned without asking")
+        // As `Store.said` does once the dock or the card has said it.
+        Asked.remove(lens)
+        XCTAssertEqual(ledger.answers(to: Asked.all).approved, [], "said, so never again")
+        Asked.add(prism)
+        ledger.record(prism, .revoked)
+        XCTAssertEqual(ledger.answers(to: Asked.all).approved, [])
+        XCTAssertEqual(ledger.answers(to: Asked.all).revoked, [prism])
         XCTAssertEqual(Offer.pack(.lens).yours, "Lens is yours")
         XCTAssertEqual(Offer.complete.yours, "every pack is yours")
     }
@@ -241,7 +248,11 @@ final class PackTests: XCTestCase {
 
         let d = try XCTUnwrap(UserDefaults(suiteName: "marks-test"))
         d.removePersistentDomain(forName: "marks-test")
-        defer { d.removePersistentDomain(forName: "marks-test") }
+        defer {
+            d.removePersistentDomain(forName: "marks-test")
+            // The registration domain outlives the test, so its marks are put back as nothing seen.
+            UserDefaults.standard.register(defaults: [Marks.fitKey(.escapement): false, Marks.levelsKey(.escapement): 0])
+        }
         XCTAssertFalse(Marks.new(.lens, fits: false, in: d))
         XCTAssertTrue(Marks.new(.lens, fits: true, in: d))
         Marks.seen(.lens, fits: false, store: true, in: d)
