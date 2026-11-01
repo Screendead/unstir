@@ -729,8 +729,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`Best.started`) and has no best reads tried, faint, as a pack card's list does (Jack's call C3, round 13; endless
   and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. With a run saved, endless's row
   continues it, "continue · tank 6 · brim 3" in place of its detail, and "new run" at its trailing edge in place of
-  the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s, at once under VoiceOver), and the second
-  drops the run and starts another. Under the title, a strip names every tier, dimmed with a lock while locked, and
+  the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s; under VoiceOver until focus leaves, as
+  reset), the second drops the run and starts another, and a touch that ends a stir does neither. Under the title, a strip names every tier, dimmed with a lock while locked, and
   keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
   list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
   (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep

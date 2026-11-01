@@ -194,6 +194,7 @@ struct MenuView: View {
     @State private var saved: Resume?
     /// When a first tap armed the endless row's "new run", which then says "new run? tap again" for `ResetArm.window`.
     @State private var newRunArmed: Date?
+    @AccessibilityFocusState private var newRunFocused: Bool
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
@@ -683,14 +684,18 @@ struct MenuView: View {
         select(.plughole)
     }
 
-    /// A touch that ends a stir must not open the row it lifted over, nor tap.
     /// Over the endless row's trailing edge while a run is saved: a second tap within the window drops the run and
-    /// starts another, so a slip never loses one. VoiceOver's double tap is deliberate already.
+    /// starts another, so a slip never loses one; under VoiceOver it stays armed until focus leaves, as reset does.
+    /// Plain, as the rows are: a touch that ends a stir neither arms it nor taps.
     private var newRun: some View {
         Button {
-            let tap = ResetArm.tap(now: .now, armedAt: newRunArmed, played: !voiceOver)
+            guard !twisting else { return }
+            let tap = ResetArm.tap(now: .now, armedAt: newRunArmed, played: true, held: voiceOver)
             newRunArmed = tap.armedAt
-            guard tap.reset else { return Sound.shared.play(.tap) }
+            guard tap.reset else {
+                AccessibilityNotification.Announcement("Tap again for a new run").post()
+                return Sound.shared.play(.tap)
+            }
             Resume.remove("endless")
             saved = nil
             pick(.endless(Run(seed: .random(in: .min ... .max))))
@@ -698,14 +703,18 @@ struct MenuView: View {
             Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.mono(11)).lineLimit(1).opacity(0.55).hit()
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("New run")
+        .accessibilityLabel(newRunArmed == nil ? "New run" : "New run, tap again to confirm")
         .accessibilityHint("Drops the saved run and starts another.")
+        .accessibilityFocused($newRunFocused)
+        .onChange(of: newRunFocused) { if !newRunFocused && voiceOver { newRunArmed = nil } }
         .task(id: newRunArmed) {
-            guard newRunArmed != nil, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
+            // VoiceOver's announcement and its double tap take longer than the window.
+            guard newRunArmed != nil, !voiceOver, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
             newRunArmed = nil
         }
     }
 
+    /// A touch that ends a stir must not open the row it lifted over, nor tap.
     private func pick(_ level: Level) {
         guard !twisting else { return }
         Sound.shared.play(.tap)
