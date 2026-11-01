@@ -338,11 +338,16 @@ struct MenuView: View {
                              enabled: true, new: new, pick: pick, refuse: refuse)
                     let kept = saved?.run
                     LevelRow(level: .endless(kept ?? Run(seed: .random(in: .min ... .max))),
-                             detail: kept.map { "continue \u{00B7} tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)" }
-                                 ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
+                             detail: kept.map {
+                                 "continue \u{00B7} tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)"
+                                     + (Best.tanks > 0 ? " \u{00B7} best \(Best.tanks)" : "")
+                             } ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
                              best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true,
                              new: new && kept == nil, continues: kept != nil, pick: pick, refuse: refuse)
-                        .overlay(alignment: .trailing) { if kept != nil { newRun } }
+                        // On the title's line, where every row's mark sits and "Endless" leaves room.
+                        .overlay(alignment: Alignment(horizontal: .trailing, vertical: .firstTextBaseline)) {
+                            if kept != nil { newRun }
+                        }
                 }
                 if lead.sandboxFirst { sandbox }
             }

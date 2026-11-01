@@ -74,7 +74,7 @@ endless-spilled.png  The same, 6 s in: the picture stirred together, its finest 
 undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
 reset-armed.png  Level 12 with two moves played, reset tapped once: it reads reset? tap again.
 level-resumed.png  Level 12 reopened mid-try, its saved line replayed (rod 2 healed, a wasted stir on rod 0 undone, rod 1 healed): four entries left, moves 2 / par 6, the undo already spent from the bank, and no opening.
-menu-endless-continue.png  The menu with an endless run saved on tank 6, brim 3: the endless row reads continue · tank 6 · brim 3, with new run at its trailing edge in place of the best.
+menu-endless-continue.png  The menu with an endless run saved on tank 6, brim 3, best 9 tanks: the endless row reads continue · tank 6 · brim 3 · best 9, with new run on its title's line in place of the best.
 sandbox.png  The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here.
 sandbox-full.png  The sandbox with a full stack of 36, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset.
 sandbox-chainmail.png  The sandbox on chainmail and pent: the header's controls in full where they fit.

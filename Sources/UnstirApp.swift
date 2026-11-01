@@ -212,6 +212,8 @@ struct Harness {
         // character each: a digit is that many over par, - is none. For this launch only.
         for part in env["UNSTIR_BESTS"]?.split(separator: ",") ?? [] {
             let f = part.split(separator: ":")
+            // endless:9: the run's best, 9 tanks.
+            if f.count == 2, f[0] == "endless", let n = Int(f[1]) { UserDefaults.standard.register(defaults: ["endless.tanks": n]) }
             guard f.count == 2, let levels = Tier(rawValue: String(f[0]))?.levels ?? Pack(rawValue: String(f[0]))?.levels
             else { continue }
             for (level, c) in zip(levels, f[1]) {
