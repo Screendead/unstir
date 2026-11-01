@@ -139,8 +139,13 @@ extension Level {
         let (layout, slots, scramble, title): (Layout, [Int], String, String) = row
         let lenses = Set(slots)
         return Level(id: Pack.lens.id(i + 1), pack: .lens, label: String(format: "%02d", i + 1), title: title,
-                     picture: .halftone, layout: layout, scramble: .parse(scramble, in: layout, lenses: lenses), lenses: lenses)
+                     picture: .halftone, layout: layout, scramble: .parse(scramble, in: layout, lenses: lenses),
+                     chapter: lensChapters[min(i / 6, 3)], lenses: lenses)
     }
+
+    /// Lens's chapters (Jack's call N1b, round 13): six levels each, the last seven.
+    static let lensChapters = ["Close-up", "Cut-in", "Double-take", "Big Picture"]
+
     /// The problem book (docs/escapement-problems.md, scripts/escapement/problems.tsv) in its order: five chapters of
     /// six, each opening on a problem that teaches without words. Each problem's `par`, never shown, is the moves its
     /// slowest clock owes, which the prover (`Solver.escapement`) shows a line reaches; its note, the stipulation, states
