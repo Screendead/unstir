@@ -1523,6 +1523,18 @@ names and product ids, and Complete's promise to older owners.
     Jack's examples: what happens when a player finishes the third (last free) level of a pack they haven't bought,
     and whether the level list scrolls to the right place when the player goes back from a level, finished or not,
     by button or swipe. Plain fixes go in as PRs; each choice of taste or business goes to Jack as a call.
+   Round 13's plain fixes for play are on `play-polish` (PR #87): F3, F5, F10, F11, F17, F18, F23, F24, F25, F30,
+   F31, F32 and F33. Two lines depart from the inventory's words: endless's first tank says "Eight and it spills."
+   (the inventory had "Eight spills."), and after the merge of N1's notes F31's and F32's sentences went in only where
+   they add a rule, so M1 reads "One knob has seized. Turn the tank. Turns count as moves." and Escapement chapter 1's
+   rule "A clock ticks after every move. Each let-go is a move." Two calls for Jack came out of the review:
+   - The daily's "again" (from F18). A retry from the daily's card would save a second solve over its one counted
+     try, so the PR leaves "again" off the daily's card, which keeps the daily as it was. The other ways: a retry
+     from the card that plays as practice, saving nothing, or one that counts. Recommendation: off, as built.
+   - Prism's level colour (from F17). Prism's glow is white, so on its levels the number, PRISM and "next ›" are
+     about the body text's colour, marked only by a white glow. The options: keep white; the cover's red (FF2A2A);
+     or neon cyan. Recommendation: keep white for now, since colour on Prism means a channel and a red or cyan
+     "next" would read as one, and settle it in the design pass (to-do 72), which redraws this chrome.
 
 ## Side task: the difficulty tiers (started 2026-09-28)
 
