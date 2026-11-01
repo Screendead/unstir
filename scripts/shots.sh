@@ -50,17 +50,38 @@ shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONS
 par27=$(printf '0%.0s' {1..27})
 some=00001000000200000100  # whirlpool 01 to 20 played, 17 of them at par
 shot menu-whirlpool-locked "Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit." TIER=whirlpool
-shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, vortex still locked." \
+shot menu-whirlpool-open "Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked." \
   TIER=whirlpool BESTS=plughole:$par27
-shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par)." \
+shot menu-vortex-locked "Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played)." \
   TIER=vortex BESTS=plughole:$par27,whirlpool:$some
-shot menu-vortex-open "Menu on vortex, opened by every whirlpool tank at par: its level 01 playable, maelstrom still locked." \
+shot menu-vortex-open "Menu on vortex, opened by every whirlpool level at par: its level 01 playable, maelstrom still locked." \
   TIER=vortex BESTS=plughole:$par27,whirlpool:$par27
 shot menu-maelstrom-locked "Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit." \
   TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:01
 shot menu-maelstrom "Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK)." TIER=maelstrom UNLOCK=1
 shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN)." \
   TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33
+# Where the list opens: a cold launch, and back from a level through RootView's own exit (UNSTIR_EXIT).
+upto13=0000000000000
+shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
+  BESTS=plughole:$upto13
+shot menu-locktap "Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit." \
+  BESTS=plughole:$upto13 LOCKTAP=L15
+shot menu-back-left "Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12." \
+  LEVEL=12 EXIT=left BESTS=plughole:00000000000000000000
+shot menu-back-solved "Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens." \
+  SCREEN=clean LEVEL=14 EXIT=solved BESTS=plughole:$upto13
+shot menu-mid-switch-scrolled "The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin." \
+  BESTS=plughole:$upto13 TIERSPIN=0.25:0.1
+# A switch lands on the new tier's first level without a best, a locked tier's header over its gate, or the top.
+hold=4.4 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
+  TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
+hold=8.5 shot menu-switch-locked "Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 17 of whirlpool's 27 at par: vortex is locked, so the list landed on its header, over the gate and its short list." \
+  TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
+shot menu-back-up "Up a notch from plughole 27 into whirlpool 01, then back: the menu on whirlpool, not plughole." \
+  LEVEL=27 EXIT=up BESTS=plughole:$par27
+shot card-back-solved "Back from Lens 02's result card after a solve, Lens's card up (UNSTIR_CARD): the card centred on 03, the row next › opens." \
+  SCREEN=clean PACK=lens LEVEL=2 CARD=lens EXIT=solved
 for picture in grid; do
   for d in 1 2 3 4 5; do
     stack=${depths[$((d - 1))]}

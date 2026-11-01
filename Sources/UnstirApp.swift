@@ -103,6 +103,11 @@ struct Harness {
     let clock: Double?
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
+    /// UNSTIR_EXIT=left: the level, once open, left for the menu by "‹ levels"; =solved, as from its result card after
+    /// a solve; =up, its tier's next tier's first level opened, as "up a notch" opens it, and that one left.
+    let exit: String?
+    /// UNSTIR_LOCKTAP=L8: on the menu, that locked row held as a tap leaves it, saying what opens it.
+    let lockTap: String?
     /// UNSTIR_TIER=whirlpool: the tier the menu opens on, locked or not, plughole when unset. Nil on a launch without
     /// the harness, which opens on the stored tier.
     let menuTier: Tier?
@@ -203,6 +208,8 @@ struct Harness {
         wave = env["UNSTIR_WAVE"].flatMap(Double.init)
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
+        lockTap = env["UNSTIR_LOCKTAP"]
+        exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up"].contains($0) ? $0 : nil }
         stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
         prices = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
@@ -365,6 +372,8 @@ struct RootView: View {
     @State private var typeSize: DynamicTypeSize?
     /// The tier the next menu opens on, set by a closed tier's button on a result card.
     @State private var look: Tier?
+    /// The row the next menu, or the pack's card over it, centres on (`MenuView.focus`).
+    @State private var focus: Level?
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     @Environment(\.scenePhase) private var phase
@@ -386,6 +395,7 @@ struct RootView: View {
         _card = State(initialValue: gate.map(Offer.pack) ?? h.card)
         _arrived = State(initialValue: gate)
         _placeholders = State(initialValue: h.cardLevels)
+        _focus = State(initialValue: (h.menuTier ?? Tier.stored()).landing())
         _typeSize = State(initialValue: h.typeSize)
     }
 
@@ -398,7 +408,7 @@ struct RootView: View {
                 IconView(n: n)
             } else if let level {
                 LevelView(level: level, harness: harness,
-                          onExit: { show(nil) },
+                          onExit: { show(nil, solved: $0) },
                           onNext: { show($0) },
                           onLook: { show(nil, look: $0) })
                     .id(level)
@@ -406,8 +416,8 @@ struct RootView: View {
             } else {
                 MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
                          settings: harness?.settings ?? false, card: $card, clock: harness?.clock, placeholders: placeholders,
-                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false,
-                         arrived: arrived) {
+                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false, focus: focus,
+                         held: harness?.lockTap, arrived: arrived) {
                     show($0)
                 }
                 .transition(dip)
@@ -457,23 +467,32 @@ struct RootView: View {
             try? await Task.sleep(for: .seconds(4))
             show(nil)
         }
+        .task {
+            guard let exit = harness?.exit, let left = level else { return }
+            try? await Task.sleep(for: .seconds(1))
+            if exit == "up", let up = left.tier.step(1)?.levels.first {
+                show(up)
+                try? await Task.sleep(for: .seconds(1))
+            }
+            show(nil, solved: exit == "solved")
+        }
     }
 
     /// A level past its pack's taste that the player doesn't own shows the pack's card over the menu instead.
-    /// `look`: the tier the menu opens on in place of the stored one, locked or not.
-    private func show(_ next: Level?, keep: Bool = false, look: Tier? = nil) {
+    /// `look`: the tier the menu opens on in place of the stored one, locked or not. `solved`: the level left is.
+    private func show(_ next: Level?, keep: Bool = false, look: Tier? = nil, solved: Bool = false) {
         // Just after launch the store may not yet have read what the player owns, so a gate waits for it.
         if let next, !Store.shared.ready, Store.shared.card(for: next) != nil {
             Task {
                 await Store.shared.settled()
-                open(next, keep: keep, look: look)
+                open(next, keep: keep, look: look, solved: solved)
             }
         } else {
-            open(next, keep: keep, look: look)
+            open(next, keep: keep, look: look, solved: solved)
         }
     }
 
-    private func open(_ next: Level?, keep: Bool, look: Tier?) {
+    private func open(_ next: Level?, keep: Bool, look: Tier?, solved: Bool) {
         if !keep { harness = nil }
         self.look = look
         let gate = next.flatMap { Store.shared.card(for: $0) }
@@ -482,7 +501,11 @@ struct RootView: View {
         // A failure shown before a level isn't still there after it, though the card it was on comes back.
         if next != nil { Store.shared.forgetFailures() }
         if gate != nil { card = gate.map(Offer.pack) }
+        // A gate's card opens on buying (`arrived`), not on a row.
+        if let level { focus = gate == nil ? level.focus(solved: solved) : nil }
         let opens = next.map(Store.shared.opens) ?? true
+        // So a launch after the app dies in a level comes back on its tier too.
+        if let next, gate == nil, opens, next.tier.levels.contains(where: { $0.id == next.id }) { Tier.store(next.tier) }
         withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil && opens ? next : nil }
     }
 }

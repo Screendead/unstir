@@ -313,7 +313,9 @@ struct Level: Hashable, Sendable {
         var rng = SplitMix64(state: UInt64(ymd))
         let layout = generated[rng.below(4)]
         let depth = 10 + rng.below(5)
-        return Level(id: "daily-\(ymd)", label: "day", title: String(format: "Daily, %04d-%02d-%02d", c.year!, c.month!, c.day!),
+        // The id keys the day's stored best, so it stays yyyymmdd; only the title follows the locale.
+        let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        return Level(id: "daily-\(ymd)", label: "day", title: "Daily \u{00B7} \(day)",
                      layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng))
     }
 
@@ -422,16 +424,23 @@ struct Best: Codable {
     /// Clean, then fewer over par: what a result card names, so it calls a best new only when that changes.
     var standing: (Int, Int) { (clean == true ? 0 : 1, over) }
 
-    /// Keeps the better of this and the stored result: clean, then fewer over par, then faster.
-    func save(_ id: String) {
+    /// Keeps the better of this and the stored result: clean, then fewer over par, then faster. Unstored, the
+    /// harness's, it lasts only this launch, as `fake`'s does.
+    func save(_ id: String, store: Bool = true) {
         func rank(_ b: Best) -> (Int, Int, Int) { (b.standing.0, b.standing.1, b.seconds) }
         if let old = Best.load(id), rank(old) <= rank(self) { return }
-        UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)")
+        if store { UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)") } else { fake(id) }
     }
 
-    /// Set when a rod is first touched: probing counts as trying, only studying the still is free.
+    /// Set when a rod is first touched: probing counts as trying, only studying the still is free. Unstored, the
+    /// harness's, it lasts only this launch.
     static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
-    static func start(_ id: String) { if !started(id) { UserDefaults.standard.set(true, forKey: "started.\(id)") } }
+    static func start(_ id: String, store: Bool = true) {
+        guard !started(id) else { return }
+        if store { UserDefaults.standard.set(true, forKey: "started.\(id)") } else {
+            UserDefaults.standard.register(defaults: ["started.\(id)": true])
+        }
+    }
 
     /// Banked undos, shared by every level and mode: 10 to start, and `refill` adds 2 a day played, up to 10. Stored as
     /// the number spent, so a fresh install reads 10.

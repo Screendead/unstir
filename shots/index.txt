@@ -1,12 +1,21 @@
 menu.png  Menu on first launch (in a build with analytics, the question answered): only level 01 unlocked, whirlpool, vortex and maelstrom locked; daily and endless open after level 23.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
 menu-whirlpool-locked.png  Menu on first launch, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
-menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole tank at par: its level 01 playable, vortex still locked.
-menu-vortex-locked.png  Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par).
-menu-vortex-open.png  Menu on vortex, opened by every whirlpool tank at par: its level 01 playable, maelstrom still locked.
+menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked.
+menu-vortex-locked.png  Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played).
+menu-vortex-open.png  Menu on vortex, opened by every whirlpool level at par: its level 01 playable, maelstrom still locked.
 menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
+menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best.
+menu-locktap.png  Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit.
+menu-back-left.png  Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12.
+menu-back-solved.png  Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens.
+menu-mid-switch-scrolled.png  The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin.
+menu-switch-landing.png  Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir.
+menu-switch-locked.png  Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 17 of whirlpool's 27 at par: vortex is locked, so the list landed on its header, over the gate and its short list.
+menu-back-up.png  Up a notch from plughole 27 into whirlpool 01, then back: the menu on whirlpool, not plughole.
+card-back-solved.png  Back from Lens 02's result card after a solve, Lens's card up (UNSTIR_CARD): the card centred on 03, the row next › opens.
 grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
 grid-d2.png  grid, depth-2 scramble 1:+5,2:-4 (rod:steps, 30 degrees per step, bottom first).
 grid-d3.png  grid, depth-3 scramble 0:-6,1:+4,2:-5 (rod:steps, 30 degrees per step, bottom first).

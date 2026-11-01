@@ -668,16 +668,35 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs.
 - **Menu.swift** holds `MenuView`. Under the title, a strip names every tier, dimmed with a lock while locked, and
-  scrolls sideways once there are more than fit; VoiceOver reads it as one adjustable element. Tapping a name, or
-  dragging the list sideways, stirs the list away round the middle of its visible part with the tank's own shader
+  keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
+  list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
   (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
   at the swap. A drag is the switcher's only if its first 15 points run at least twice as far sideways as up or down
   (`isSideways`); then the list stops scrolling, and a row lifted over doesn't open. While it turns, the list is drawn
   again over the scroll view, cut to its visible part, and that copy is what stirs; the scroll view's own list
-  (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. A locked tier can be
-  looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par. A hidden stir in
+  (`listed`) catches up only once the stir has settled, since rebuilding it stalls a frame. At the swap the scroll
+  view lands on the new tier's landing, its header while it is locked, or else its top: the copy reports where that
+  row lies in its list, a mark in the outgoing list moves there, and the scroll view scrolls to it once it is laid out, so the jump
+  happens under the stir's peak. Tapping the picked tier scrolls to its landing. A locked tier can be
+  looked at: its rows dimmed and closed, over the gate, a tick per level of the tier below, lit at par, and under the
+  ticks the levels short of par as runs (`Tier.short`: "short: 05 · 12 · 21–27"), each a button opening its first,
+  which is always open. A closed row
+  still takes a tap: it shakes, sounds `seized` and says for two seconds what opens it ("solve 06 to open", or on a
+  locked tier "par every plughole level to open"), which VoiceOver reads as its value; shut, the daily and endless say
+  "opens after plughole 23" in place of their detail. The daily's title names its day in the locale's words ("Daily ·
+  Sun 1 Nov"; its id stays `daily-yyyymmdd`), and the menu deals it afresh on coming to the front and at midnight
+  (`NSCalendarDayChanged`), so a menu left up overnight opens the new day's. The first level without a best (`Tier.frontier`) keeps its
+  hairline lit. A hidden stir in
   the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
-  the list, and the card (`RootView`'s, bound in) lies over the whole menu.
+  the list, and the card (`RootView`'s, bound in) lies over the whole menu. The list opens centred, unanimated under
+  the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
+  `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
+  the first short of par, else the top). The daily, endless and the sandbox leave it at the top. That row's hairline,
+  in the list's left margin, lights once and fades (not under Reduce Motion). The menu opens on the tier of a level
+  of a tier left, and a tier's level opening stores its tier (`Tier.store`, so only an open one), so "up a notch" then
+  back lands on the new tier, and so does a launch after the app dies in it. Back from a pack's level, the card over
+  the menu opens centred on its row the same way (`PackCard.focus`), but a gate's card opens on buying
+  (`arrived`), and `UNSTIR_CARDSCROLL` on the list: arrived first, then scrolled, then the row.
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
@@ -751,10 +770,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   pushes until it spills. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;
   a harnessed launch never stores the bank, the refill's day or its anchor, and with `UNSTIR_TODAY` and no day stored it
   takes the last refill as long ago, so the level opens on a refill. Nor does it store the tank flag or the swirl's: they
-  read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch, so shot order never
+  read as never turned unless `UNSTIR_TANKTURNED=1` or `UNSTIR_SWIRLED=1`, and whatever the launch turns lasts only that launch. Nor
+  does the harness's level store a best, a started flag or endless's best (`Game.storesProgress`): a solve registers
+  its best for that launch only, as `UNSTIR_BESTS` does, so the menu it exits to sees it. So shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
   many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
-  tiers through the same calls a finger makes. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  tiers through the same calls a finger makes. `UNSTIR_EXIT=left` leaves the harness's level for the menu a second
+  after it opens, through `RootView`'s own exit (`=solved` as its result card does after a solve; `=up` opens the next
+  tier's first level, as "up a notch" does, then leaves that). `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
+  leaves it, saying what opens it. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which

@@ -639,6 +639,8 @@ struct PackCard: View {
     var levels: [Level]
     /// UNSTIR_CARDSCROLL: opens scrolled to the list.
     var scrolled = false
+    /// The row it opens centred on, the pack's level just left, or after a solve the one after it.
+    var focus: Level?
     /// Opened by a level past the taste: it opens on buying, under a line that says the free levels are played.
     var arrived = false
     /// Where back goes: the menu, or Complete's card when this card was opened from it.
@@ -649,10 +651,12 @@ struct PackCard: View {
     var onOffer: (Offer) -> Void = { _ in }
     var store = Store.shared
     @State private var buying = false
+    /// The focused row's hairline, lit once as the card opens on it.
+    @State private var lit = 0.0
     @State private var landings = 0
     @State private var pulses = 0
     /// Where VoiceOver goes when the card sends the player to buying.
-    @AccessibilityFocusState private var focus: Focus?
+    @AccessibilityFocusState private var spoken: Focus?
     private enum Focus: Hashable { case note, buy }
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -708,7 +712,7 @@ struct PackCard: View {
                             if arrived, let note = Self.arrival(offer, levels, state: state) {
                                 Text(note).font(.mono(.footnote)).opacity(0.85).padding(.bottom, 14)
                                     .fixedSize(horizontal: false, vertical: true)
-                                    .accessibilityFocused($focus, equals: .note)
+                                    .accessibilityFocused($spoken, equals: .note)
                             }
                             status(state).id(state)
                                 .transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
@@ -733,10 +737,17 @@ struct PackCard: View {
                 }
                 .scrollBounceBehavior(.basedOnSize)
                 .onAppear {
+                    // The gate's arrival opens on buying, else UNSTIR_CARDSCROLL on the list, else on the row left.
                     if arrived {
                         reader.scrollTo("buy", anchor: .top)
                     } else if scrolled {
                         reader.scrollTo("list", anchor: .top)
+                    } else if let focus, levels.contains(where: { $0.id == focus.id }) {
+                        DispatchQueue.main.async { reader.scrollTo(focus.id, anchor: .center) }
+                        if !reduceMotion {
+                            lit = 1
+                            withAnimation(.easeOut(duration: 1.4).delay(0.35)) { lit = 0 }
+                        }
                     }
                 }
                 .task {
@@ -744,7 +755,7 @@ struct PackCard: View {
                     // card to its top again; the wait lets that land first.
                     guard arrived else { return }
                     try? await Task.sleep(for: .milliseconds(600))
-                    focus = Self.arrival(offer, levels, state: store.state(offer)) == nil ? .buy : .note
+                    spoken = Self.arrival(offer, levels, state: store.state(offer)) == nil ? .buy : .note
                 }
             }
         }
@@ -831,7 +842,7 @@ struct PackCard: View {
                     if open { return onPlay(level) }
                     withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.35)) { reader.scrollTo("buy", anchor: .top) }
                     pulses += 1
-                    focus = .buy
+                    spoken = .buy
                 } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text(level.label).font(.mono(.footnote, .semibold)).foregroundStyle(offer.glow)
@@ -853,6 +864,7 @@ struct PackCard: View {
                                value: open)
                 }
                 .buttonStyle(Sounding())
+                .rowHairline(offer.glow, level.id == focus?.id ? lit : 0, inset: 10)
                 .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" } ?? ""
                                     : "locked, needs the pack")
                 .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
@@ -966,7 +978,7 @@ struct PackCard: View {
                         .accessibilityLabel(state == .pending && asked && !buying ? "Ask again for \(offer.name)"
                                             : "\(label.capitalized) \(offer.name)")
                         .accessibilityValue(price ?? store.pricing.words ?? "")
-                        .accessibilityFocused($focus, equals: .buy)
+                        .accessibilityFocused($spoken, equals: .buy)
                 }
                 if let taste = Self.taste(levels) ?? Self.placeholder(offer).map({ (level: $0, replay: false) }) {
                     let (level, replay) = taste
