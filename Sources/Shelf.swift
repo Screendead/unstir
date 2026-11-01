@@ -624,7 +624,9 @@ struct PackCard: View {
     var onOffer: (Offer) -> Void = { _ in }
     var store = Store.shared
     @State private var buying = false
+    @State private var landings = 0
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let state = store.state(offer)
@@ -663,7 +665,8 @@ struct PackCard: View {
                         }
                         // Buying comes before the list, so it is on the first screen whatever the pack holds.
                         if levels.isEmpty { Spacer(minLength: 24) }
-                        status(state).padding(.top, levels.isEmpty ? 0 : 32)
+                        status(state).id(state).transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
+                            .padding(.top, levels.isEmpty ? 0 : 32)
                         action(state).padding(.top, 14)
                         if offer.pack != nil, state != .owned, store.canPay, store.state(.complete) != .owned,
                            Offer.shelf().contains(.complete) {
@@ -676,6 +679,7 @@ struct PackCard: View {
                     }
                     .padding(.horizontal, 24)
                     .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
+                    .animation(reduceMotion ? nil : .snappy(duration: 0.45), value: state)
                 }
                 .scrollBounceBehavior(.basedOnSize)
                 .onAppear { if scrolled { reader.scrollTo("list", anchor: .top) } }
@@ -690,9 +694,15 @@ struct PackCard: View {
             Log.write("card \(offer.key) opens")
             if let pack = offer.pack { Analytics.shared.cardSeen(pack) }
         }
-        .onChange(of: state) {
+        .onChange(of: state) { old, state in
             if let tag = state.tag { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
+            // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
+            if state == .owned, old != .owned {
+                landings += 1
+                Sound.shared.play(.solve)
+            }
         }
+        .sensoryFeedback(.success, trigger: landings)
     }
 
     private var price: String? { store.price(offer.productID) }
@@ -751,6 +761,7 @@ struct PackCard: View {
                         Spacer(minLength: 8)
                         if !open {
                             Image(systemName: "lock.fill").font(.caption2).opacity(0.4)
+                                .transition(.opacity.combined(with: .scale(scale: 1.8)))
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.mono(.caption2))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
@@ -758,6 +769,8 @@ struct PackCard: View {
                     }
                     .padding(.vertical, 9)
                     .contentShape(Rectangle())
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.4).delay(0.3 + 0.05 * Double(max(0, i - (offer.pack?.taste ?? 0)))),
+                               value: open)
                 }
                 .buttonStyle(Sounding())
                 .disabled(!open)

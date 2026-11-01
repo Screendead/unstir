@@ -148,6 +148,8 @@ struct Harness {
     let shelfDemo: Bool
     /// UNSTIR_CARDSCROLL=1: with UNSTIR_CARD, the card opens scrolled to its list of levels.
     let cardScroll: Bool
+    /// UNSTIR_LANDS=s: with UNSTIR_CARD and the store's states set, the card's product is bought s seconds in.
+    let lands: Double?
     /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
     let typeSize: DynamicTypeSize?
     /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
@@ -291,6 +293,7 @@ struct Harness {
         shareSheet = env["UNSTIR_SHARESHEET"] == "1"
         card = env["UNSTIR_CARD"].flatMap(Offer.init(name:)).flatMap { $0.sold ? $0 : nil }
         cardScroll = env["UNSTIR_CARDSCROLL"] == "1"
+        lands = env["UNSTIR_LANDS"].flatMap(Double.init)
         cardLevels = env["UNSTIR_CARDLEVELS"].flatMap(Int.init).map { min(max($0, 0), 30) } ?? 0
         shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
         typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
@@ -416,6 +419,11 @@ struct RootView: View {
             await Store.shared.start()
             // After the store, so a snapshot sees the packs owned.
             Analytics.shared.start(env: env, harnessed: harnessed)
+        }
+        .task {
+            guard let s = harness?.lands, let id = card?.productID else { return }
+            try? await Task.sleep(for: .seconds(s))
+            Store.shared.land(id)
         }
         .task {
             guard harness?.tour == true else { return }

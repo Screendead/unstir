@@ -131,6 +131,9 @@ final class Store {
         ready = true
     }
 
+    /// UNSTIR_LANDS: a purchase landing in the harness's states, as an approval or a restore would.
+    func land(_ id: String) { harness?.record(id, .owned) }
+
     /// Returns once the first read has finished, or at once before `start`.
     func settled() async { await first?.value }
 

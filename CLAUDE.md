@@ -552,7 +552,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
   once all are (`PackCard.pickUp`, `continues`). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
   once every one is, and Complete's cover once Complete is owned; Complete's card names each pack as a link to its
-  card (`onOffer`), so each taste is a tap away. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  card (`onOffer`), so each taste is a tap away. A purchase landing on an open card (bought, approved or restored)
+  plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
+  another, the card staying put; under Reduce Motion the state just changes. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
   card (`Store.forgetFailures`), and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from a row or
   from the level before it. Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
@@ -677,7 +679,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list; `UNSTIR_BESTS`
   takes a pack's prefix as it takes a tier's. A pack level past
   the taste needs `UNSTIR_OWNED` too, or it opens the card. `UNSTIR_STOPLOOK=left` picks how an Escapement tank out of
-  ticks as its last clock stops looks. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, and
+  ticks as its last clock stops looks. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, `UNSTIR_LANDS=s`
+  buys the open card's product s seconds in (with the store's states set), and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
   tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
