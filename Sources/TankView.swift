@@ -1067,11 +1067,7 @@ struct LevelView: View {
                         .opacity(game.history.isEmpty || spent ? 0.35 : 1)
                         .overlay(alignment: .topTrailing) { refillBadge }
                     Spacer()
-                    control(armedAt == nil ? "reset" : "reset? tap again", tapReset)
-                        // The tap that arms only taps; the one that resets sounds as a reset.
-                        .buttonStyle(Sounding(effect: resetSound))
-                        .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
-                        .disabled(settling)
+                    resetControl
                 }
                 // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
                 // other level's does.
@@ -1172,12 +1168,6 @@ struct LevelView: View {
             guard notice != nil, (try? await Task.sleep(for: .seconds(3))) != nil else { return }
             withAnimation(.easeOut(duration: 0.3)) { notice = nil }
         }
-        .task(id: armedAt) {
-            guard armedAt != nil, !holdArmed, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
-            armedAt = nil
-        }
-        // Any move, undo or finish disarms it, so a second tap always resets what the first was shown.
-        .onChange(of: game.history) { if !holdArmed { armedAt = nil } }
         .onChange(of: badge) {
             guard badge > 0 else { return }
             game.refillSeen()
@@ -1203,7 +1193,6 @@ struct LevelView: View {
             }
         }
         .onChange(of: game.finished) {
-            armedAt = nil
             // An undo or reset from the lost card.
             guard game.finished else { showResult = false; return }
             // The fine pass can call the win ~0.1 s after the commit: a finger down in that gap would hold its turn frozen
@@ -1259,7 +1248,21 @@ struct LevelView: View {
         }
     }
 
-    private var resetSound: Sound.Effect { armedAt != nil || game.history.isEmpty ? .reset : .tap }
+    /// Out of `body`, whose one long expression an older compiler gives up on.
+    private var resetControl: some View {
+        control(armedAt == nil ? "reset" : "reset? tap again", tapReset)
+            // The tap that arms only taps; the one that resets sounds as a reset.
+            .buttonStyle(Sounding(effect: armedAt != nil || game.history.isEmpty ? .reset : .tap))
+            .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
+            .disabled(settling)
+            .task(id: armedAt) {
+                guard armedAt != nil, !holdArmed, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
+                armedAt = nil
+            }
+            // Any move, undo or finish disarms it, so a second tap always resets what the first was shown.
+            .onChange(of: game.history) { if !holdArmed { armedAt = nil } }
+            .onChange(of: game.finished) { armedAt = nil }
+    }
 
     /// The play screen's reset asks for a second tap; the cards' "again" resets at once, as a finished tank has nothing
     /// a slip could lose.
@@ -1913,7 +1916,6 @@ struct LevelView: View {
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
         .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
         .sensoryFeedback(.error, trigger: game.tickPushes)
-        .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(Game.deadTick).post() } }
         .sensoryFeedback(.success, trigger: game.solved) { _, solved in solved }
         // One sound for the end, as its card shows it.
         .onChange(of: game.finished) { if game.finished { Sound.shared.play(game.solved ? .solve : .spilled) } }
@@ -1969,6 +1971,7 @@ struct LevelView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(game.budget) ticks left")
+        .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(Game.deadTick).post() } }
     }
 
     /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
