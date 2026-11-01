@@ -1492,6 +1492,18 @@ final class UnstirTests: XCTestCase {
         XCTAssertLessThan(logged.count, 600, logged)
     }
 
+    /// The log keeps its newest bytes from a whole line on, and a log under the cut is left as it is.
+    func testTheLogTrimsToWholeLines() {
+        let line = Data("09-29 10:11:07.772 touch rod(1) at 0.412,-0.118\n".utf8)
+        let log = Data((0..<20_000).flatMap { _ in line })
+        let kept = Log.trimmed(log)
+        XCTAssertLessThanOrEqual(kept.count, Log.keep)
+        XCTAssertGreaterThan(kept.count, Log.keep - line.count)
+        XCTAssertEqual(kept.count % line.count, 0)
+        XCTAssertEqual(kept.prefix(line.count), line)
+        XCTAssertEqual(Log.trimmed(line), line)
+    }
+
     /// Progress is stored by id: each is its tier's prefix and the level's number, and no two levels share one.
     /// Whirlpool's prefix predates its name and stays, so the rename kept what was played; maelstrom's set replaced
     /// nightmare+'s, so its prefix moved off N+ and no old best lands on a new level.

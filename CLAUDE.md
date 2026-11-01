@@ -167,7 +167,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
   the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs
-  its rotation), so a pick or turn can be checked against the finger.
+  its rotation), so a pick or turn can be checked against the finger. Past 1 MB (`Log.cap`) the first write cuts it to
+  its newest 512 KB from a whole line (`Log.trimmed`), so most launches only read its size. Once the first screen is up
+  it logs a `device:` line (app version and build, iOS, model, locale, type size, Reduce Motion, VoiceOver, Low Power),
+  never the phone's name. `UILaunchScreen`'s colour (`LaunchBackground`, black) keeps a cold launch black in light
+  appearance too.
 
 ## Architecture
 

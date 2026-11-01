@@ -2,18 +2,29 @@
 
 import Foundation
 
-/// A flight recorder for bugs seen only on the phone: one line per event in Library/unstir-log.txt, the last 3000
-/// kept across launches. scripts/pull-log.sh copies it off.
+/// A flight recorder for bugs seen only on the phone: one line per event in Library/unstir-log.txt, cut back to its
+/// newest `keep` bytes, from a whole line, once it passes `cap`. scripts/pull-log.sh copies it off.
 @MainActor
 enum Log {
     static let url = URL.libraryDirectory.appending(path: "unstir-log.txt")
+    nonisolated static let cap = 1 << 20, keep = 512 << 10
+    /// Opened at the first write, before the first frame, so most launches only read the file's size.
     private static let file: FileHandle? = {
-        let kept = ((try? String(contentsOf: url, encoding: .utf8)) ?? "").split(separator: "\n").suffix(3000)
-        FileManager.default.createFile(atPath: url.path, contents: Data(kept.map { $0 + "\n" }.joined().utf8))
+        if let data = try? Data(contentsOf: url, options: .alwaysMapped), data.count > cap {
+            try? trimmed(data).write(to: url)
+        }
+        if !FileManager.default.fileExists(atPath: url.path) { FileManager.default.createFile(atPath: url.path, contents: nil) }
         let file = try? FileHandle(forWritingTo: url)
         _ = try? file?.seekToEnd()
         return file
     }()
+
+    /// The newest `keep` bytes of a log, from the first whole line in them.
+    nonisolated static func trimmed(_ data: Data) -> Data {
+        guard data.count > keep else { return data }
+        let tail = data.suffix(keep)
+        return tail.firstIndex(of: 0x0A).map { tail[($0 + 1)...] } ?? tail
+    }
     private static let clock = {
         let f = DateFormatter()
         f.dateFormat = "MM-dd HH:mm:ss.SSS"
