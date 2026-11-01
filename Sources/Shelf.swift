@@ -1228,12 +1228,12 @@ struct PackDock: View {
                                         .accessibilityHidden(true)
                                 }
                             }
-                            if let line {
-                                Text(line.words).font(.mono(.caption2, line.words == "new" ? .semibold : .regular))
-                                    .foregroundStyle(line.words == "new" ? offer.glow : Color.text.opacity(0.45))
-                                    .shadow(color: line.words == "new" ? offer.glow.opacity(0.6) : .clear, radius: 3)
-                                    .padding(.top, -4)
-                            }
+                            // Its room kept without one, so a mark clearing never moves the dock.
+                            let new = line?.words == "new"
+                            Text(line?.words ?? " ").font(.mono(.caption2, new ? .semibold : .regular))
+                                .foregroundStyle(new ? offer.glow : Color.text.opacity(0.45))
+                                .shadow(color: new ? offer.glow.opacity(0.6) : .clear, radius: 3)
+                                .padding(.top, -4)
                         }
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())

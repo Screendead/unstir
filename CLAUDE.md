@@ -598,7 +598,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   once all are (`PackCard.pickUp`, `continues`); Complete's owned card plays on in the first sold pack with a level
   left ("play Lens 04 ›"). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
   once every one is, and Complete's cover once it saves nothing (Complete owned, or the packs left cost no more than
-  it), animating the shelf's change; Complete's card names each pack as a link to its
+  it), animating the shelf's change, its height kept whatever the covers' lines say; Complete's card names each pack as a link to its
   card (`onOffer`, and a VoiceOver action per pack), so each taste is a tap away, and back from that card returns to
   Complete's while Complete is still on offer, else to the menu (`UNSTIR_CARD=complete` opens it on the same terms, or
   owned). A purchase landing on an open card (bought, approved or restored)
