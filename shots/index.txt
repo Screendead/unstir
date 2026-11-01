@@ -66,10 +66,16 @@ endless-spill-pour.png  The same, 1.1 s in: the crest has broken and the liquid 
 endless-spill-drip.png  The same, 2 s in: the runs have slowed just past three and nine o'clock and a drop falls from each head onto the black.
 endless-spilled.png  The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best.
 undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
+sandbox.png  The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here.
+sandbox-full.png  The sandbox with a full stack of 36, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset.
+sandbox-chainmail.png  The sandbox on chainmail and pent: the header's controls in full where they fit.
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
+result-again-best.png  Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside levels and next.
+result-fullest.png  Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows.
 tier-up.png  Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing.
-tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying par every vortex level opens it; it opens the menu on maelstrom's gate.
+tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate.
+tier-up-midway.png  Plughole 05 solved at par, the last plughole level to reach it: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
 tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over).
 daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels.
 daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap).
@@ -227,6 +233,7 @@ lens-23.png  Lens 23 as dealt, on the halftone (docs/lens-tables.md), the pack o
 lens-24.png  Lens 24 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
 lens-25.png  Lens 25 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
 lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
+lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
 lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger.
 lens-glitter-big-1.png  Lens on tri rod 0 at +1, still.
@@ -427,7 +434,7 @@ card-lens-failed.png  Lens's card, failed.
 card-lens-revoked.png  Lens's card, revoked.
 card-first-stir.png  First Stir's card, unowned.
 card-escapement.png  Escapement's card, unowned.
-card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, and its 30 specimens under five tray headings.
+card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings.
 card-prism-levels.png  Prism's card, owned, scrolled to its specimens under the five trays.
 card-complete.png  Complete's card, unowned.
 clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
@@ -452,7 +459,9 @@ clip-prism-2.4.png  Prism's clip 2.4 s in: the buried red stir off first, then t
 clip-prism-3.6.png  Prism's clip 3.6 s in: the buried red stir off first, then the cyan, then the white.
 clip-prism-5.0.png  Prism's clip 5.0 s in: the buried red stir off first, then the cyan, then the white.
 card-lens-complete-failed.png  Lens's card after Complete, bought from it, failed: the line under Complete's button says so.
-card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card.
+card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, play First Stir 01 (a Debug build sells it).
+card-lens-complete-pending.png  Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled.
+card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
 card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
 shelf-menu-owned.png  The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading.
@@ -474,9 +483,10 @@ card-lens-xxxl.png  Lens's card at xxxLarge, the largest size short of the acces
 consent-ask.png  First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no.
 consent-sends.png  First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again.
 consent-gear.png  Menu with the settings gear beside the title, analytics answered yes.
-consent-settings-on.png  The gear's sheet: the analytics switch on, send log and privacy policy.
-consent-settings-off.png  The gear's sheet: the analytics switch off, send log and privacy policy.
-settings.png  The gear's sheet in a build without analytics, v1's: restore purchases, send log and privacy policy, no switch, the version under them.
+consent-settings-on.png  The gear's sheet: music, sounds, haptics and colour letters, the analytics switch on, report a problem and privacy policy.
+consent-settings-off.png  The gear's sheet: music, sounds, haptics and colour letters, the analytics switch off, report a problem and privacy policy.
+settings.png  Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version.
+settings-quiet.png  Settings with music and haptics off.
 settings-restored.png  The gear's sheet after a restore found nothing: nothing to restore on this Apple ID.
 escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
 escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
@@ -569,6 +579,7 @@ prism-swatch-r.png  Prism specimen 8 with the r swatch held: that channel's line
 prism-swatch-g.png  Prism specimen 8 with the g swatch held: that channel's lines alone, in white, the others hidden.
 prism-swatch-b.png  Prism specimen 8 with the b swatch held: that channel's lines alone, in white, the others hidden.
 prism-letters-8.png  Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB.
+prism-letters-chosen.png  Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches.
 prism-letters-14.png  Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG.
 prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.

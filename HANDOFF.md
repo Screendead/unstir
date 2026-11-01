@@ -394,8 +394,8 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | C13. A drag the system cuts off | **A:** commit everywhere, as V26; after a phone check of which handler runs first |
 | C14. Escapement's pushed tick | **A:** the caption says at once "That tick can't come back. Undo, or again."; the tank plays on (EL1 kept) |
 | C15. Teaching Lens's taste | **A:** a ghost finger rides the lens's track on Lens 01 until the first lens commit |
-| C16. Prism's letters | **B:** a "colour letters" switch in settings, defaulting to Differentiate Without Colour, and one line on Prism's card |
-| C17. Settings | **A:** music, sounds and haptics switches; "report a problem" mails the log to the support address (kept out of the repo); the policy on Jack's own domain |
+| C16. Prism's letters | **B:** a "colour letters" switch in settings, defaulting to Differentiate Without Colour, and one line on Prism's card. Built on `r13-settings`, PR #94 |
+| C17. Settings | **A:** music, sounds and haptics switches; "report a problem" mails the log to the support address (kept out of the repo); the policy on Jack's own domain. Built on `r13-settings`, PR #94 |
 | C18. The daily | **A:** the gate stays at plughole 23 for v1; a quiet run count on the row and "next daily in 7 h" on the card |
 | C19. Swiping back | **Jack: an edge swipe back, as everywhere else in iOS** ("it's little things like this that Apple looks for"). Claude's recommendation (none in play) is set aside. The swipe starts only from the screen's left edge and wins over a rim turn that lands there; with C2's resume an accidental swipe loses nothing |
 | C20. A rating request | **B:** once, after the solve that opens whirlpool; never after a loss, a spill or a purchase |
@@ -423,6 +423,9 @@ The iPhone XS doesn't power on (2026-11-01): its bench and bake-time checks wait
 
 - In App Store Connect's availability, exclude the EU and EEA storefronts (EU1 = B).
 - Opt out of the Mac and Vision Pro App Stores for v1 (C22 = A).
+- Publish the privacy policy on Jack's own domain, then give App Store Connect its URL, and set `POLICY_URL` and
+  `SUPPORT_ADDRESS` (both in HANDOFF.private.md) in `Config/Local.xcconfig` or the shell for the archive build, so
+  settings opens that page and "report a problem" mails the log (C17 = A).
 - Analytics items (the consent question, the age bracket, the privacy label's analytics rows, Aptabase's region and key)
   are moot for v1 (AN1 = A).
 

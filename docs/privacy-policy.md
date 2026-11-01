@@ -25,6 +25,7 @@ The game keeps these on your phone only, and never sends them anywhere:
   keeps the last time it trusted, the phone's time since it started up, and an identifier of that start-up that the
   system provides.
 - Which lessons you have learnt (turning the tank, using the swirl).
+- Your settings: music, sounds, haptics and colour letters.
 - A log of recent play, kept for finding bugs: the last 3,000 lines of where each touch landed and moved, each move,
   undo and reset, the levels opened, whether you own a pack as its levels open, failed purchases and the App Store's
   errors, when the app started, and similar notes of the game's state, each with the time on your phone. It holds nothing about who you
@@ -47,10 +48,14 @@ each time it starts, and Apple may ask you whether to share it. Every level is f
 nothing: the game keeps none of it and sends it nowhere. To tell us about anything in the game at odds with its age
 rating, write to `{{CONTACT_ADDRESS}}`.
 
-## If you send a log
+## If you report a problem
 
-Settings has a "send log" button. It opens your phone's share sheet with the play log described above, and you choose
-where it goes, for example an email to us. The game sends nothing by itself.
+Settings has a "report a problem" button. It opens an email to us with the play log described above attached, and a
+line in the message about the phone: the app's version, the iOS version, the phone's model, its language and region,
+the text size, whether Reduce Motion, VoiceOver and Low Power Mode are on, and the game's own settings. You can read and
+change the email, and it goes only if you send it. Where Apple's Mail app has no account on the phone, as when you use
+another mail app, the button opens your phone's share sheet instead, with the log, our address and the same line, and
+you choose where it goes. The game sends nothing by itself.
 
 If you email it, or email us at all, we receive your email address, your message and anything you attach. We use them
 only to answer you and to fix the game. Our legal basis is our legitimate interest in answering you and keeping the
