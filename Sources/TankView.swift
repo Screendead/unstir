@@ -1127,6 +1127,9 @@ struct LevelView: View {
         defer { if demoDip > 0 { withAnimation(.easeOut(duration: 0.3)) { demoDip = 0 } } }
         defer { if curtain > 0 { withAnimation(.easeOut(duration: 0.2)) { curtain = 0 } } }
         guard await pause(demoDip > 0 ? 0.3 : 1) else { return }
+        // A bake that outlasts the still (Lens's halftone on an old phone) would wind in over black; one that never
+        // lands lets the opening go on after 3 s.
+        for _ in 0..<60 where !struck { guard await pause(0.05) else { return } }
         if demoDip > 0 { withAnimation(.easeInOut(duration: 1.4)) { demoDip = 0 } }
         if game.level.replay {
             for (i, t) in scramble.enumerated() {

@@ -121,21 +121,27 @@ enum Picture: String, CaseIterable {
         return UIImage(cgImage: image, scale: scale, orientation: .up)
     }
 
-    /// The panel's pixels. An unoptimised build takes some 20 s to bake them, so it keeps them in Caches under the
-    /// build's own timestamp, which a rebuild changes, so an edit to the panel never shows a stale bake.
+    /// The panel's pixels, kept in Caches so only the first open of each size pays for the bake: some 20 s
+    /// unoptimised, 0.9 s optimised on an M2 Max, longer on an older phone. Keyed on the build's number and its
+    /// executable's timestamp, which a rebuild changes, so an edit to the panel never shows a stale bake; an older key
+    /// is removed.
     nonisolated private static func halftonePixels(_ n: Int) -> Data {
-        #if DEBUG
         let built = Bundle.main.executableURL.flatMap { try? $0.resourceValues(forKeys: [.contentModificationDateKey]) }?
             .contentModificationDate?.timeIntervalSince1970 ?? 0
-        let file = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("halftone-\(n)-\(Int(built)).rgba")
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        let key = "-\(build)-\(Int(built)).rgba", file = caches.appendingPathComponent("halftone-\(n)\(key)")
         if let data = try? Data(contentsOf: file), data.count == 4 * n * n { return data }
+        let start = Date.now
         let data = Data(Halftone.pixels(n))
+        let ms = Int(Date.now.timeIntervalSince(start) * 1000)
+        Task { @MainActor in Log.write("halftone \(n) px baked in \(ms) ms") }
+        for old in (try? FileManager.default.contentsOfDirectory(atPath: caches.path)) ?? []
+            where old.hasPrefix("halftone-") && !old.hasSuffix(key) {
+            try? FileManager.default.removeItem(at: caches.appendingPathComponent(old))
+        }
         try? data.write(to: file)
         return data
-        #else
-        return Data(Halftone.pixels(n))
-        #endif
     }
 
     /// The grid's colour at (x, y): hue sweeps cyan to orange left to right, lightness falls top to bottom.
