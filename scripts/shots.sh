@@ -851,12 +851,16 @@ hold=10 shot duo-open-card-owned "Duo open: Lens owned, its card home beside the
   "${duo[@]}" SCREEN=menu BESTS=plughole:$nine,lens:000 OWNED=lens CARD=lens CLOCK=1
 hold=10 shot duo-open-archive "Duo open: the archive's calendar beside the list, Lens owned." \
   "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens ARCHIVE=1 ARCHIVED=5:c,6:0,8:2,11:t
+shot duo-open-mid-switch "Duo open: the menu mid-switch, whirlpool's list unstirring into place inside the leading half (UNSTIR_TIERSPIN)." \
+  "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33 OWNED= CLOCK=1
 hold=10 shot duo-folded-book-menu "Duo half open like a book: the list in the leading half and Escapement's card in the trailing half, each clear of the fold's band." \
   "${duo[@]}" FOLD=466,0,19,669 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=escapement CLOCK=1
 hold=10 shot duo-open-upright-menu "Duo open and turned upright (669 x 951 pt): today's menu, Prism's card over it." \
   FRAME=669x951 INSETS=59,0,34,0 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
 hold=10 shot duo-tabletop-menu "Duo tabletop: today's menu, its list running through the fold (unchanged in this stage)." \
   "${table[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CLOCK=1
+hold=10 shot duo-folding-menu "Duo open with Prism's card beside the list, half folded a second in: the list and the card each drew back clear of the fold's band." \
+  "${duo[@]}" THEN=1 THENFOLD=466,0,19,669 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
 hold=5 shot duo-opened-menu "Duo closed with Prism's card over the menu, opened a second in: the card moved beside the list, the list where it was." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
 hold=5 shot duo-opened "Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept." \
