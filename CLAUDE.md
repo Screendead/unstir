@@ -821,7 +821,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `Best.save` keeps: a daily kept on its day before one the archive saved, so a synced archive solve never moves
   `Daily.run`, then clean, then over par; a tie keeps the side's own), stores what the phone takes as the store's own bytes and never writes over a store entry it can't
   read. A best that lands makes no card, sound or report: `Best.load` reads `Sync.revision` where the build syncs, so
-  every view that shows a best draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`).
+  every view that shows a best draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
+  `ICLOUD` turns YES for a release, as its comment lists: the App ID's capability, a two-device test, and the privacy
+  policy and store page, which say the bests stay on the phone and that sync isn't built.
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`). v1 ships without them: the build's `ANALYTICS`
   (`Config/Unstir.xcconfig`, NO) sets Info.plist's `Analytics`, read as `Analytics.built`, and while it is off a plain
