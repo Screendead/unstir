@@ -122,6 +122,20 @@ struct PlayLayout: Equatable {
 enum PlayPart: LayoutValueKey {
     case spacer, stage, chrome
     static let defaultValue = PlayPart.spacer
+
+    /// A part tagged for `PlayStack`, read by VoiceOver as one group at `read`: the higher, the sooner.
+    struct Tagged: ViewModifier {
+        let part: PlayPart
+        let read: Double
+
+        func body(content: Content) -> some View {
+            content.accessibilityElement(children: .contain).accessibilitySortPriority(read)
+                .layoutValue(key: PlayPart.self, value: part)
+        }
+    }
+
+    static func chrome(read: Double) -> Tagged { Tagged(part: .chrome, read: read) }
+    static func stage(read: Double) -> Tagged { Tagged(part: .stage, read: read) }
 }
 
 /// The split's and the tabletop's arrangement of the play screen's parts: the stage alone in the tank's pane, the rest

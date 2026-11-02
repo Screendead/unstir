@@ -1487,23 +1487,26 @@ struct LevelView: View {
             let layout = playLayout(geo)
             let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout))
             stack {
-                header.layoutValue(key: PlayPart.self, value: .chrome)
-                titleRow.layoutValue(key: PlayPart.self, value: .chrome)
+                header.modifier(PlayPart.chrome(read: 5))
+                titleRow.modifier(PlayPart.chrome(read: 4))
                 Spacer(minLength: 12)
                 stage(layout.side, words: layout.words, bounds: layout.bounds, filmFoot: layout.filmFoot)
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
-                    .layoutValue(key: PlayPart.self, value: .stage)
+                    .modifier(PlayPart.stage(read: 3))
                 caption
                     // The card hangs from the caption unmeasured, over the controls it hides. In the split and the
                     // tabletop the stack must make room for it, or in the tabletop it runs into "unstirred.".
                     .frame(minHeight: layout.kind == .column || !showResult ? nil : cardReach, alignment: .top)
-                    .layoutValue(key: PlayPart.self, value: .chrome)
-                swatches.layoutValue(key: PlayPart.self, value: .chrome)
+                    .modifier(PlayPart.chrome(read: 2))
+                swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
-                controls.layoutValue(key: PlayPart.self, value: .chrome)
+                controls.modifier(PlayPart.chrome(read: 0))
             }
+            // VoiceOver reads the parts in the column's order, header to controls, whatever the pose puts where: by
+            // place alone the tabletop's tank, below the fold, would come last.
+            .accessibilityElement(children: .contain)
             // Not from a first measure, which can be empty, nor under Reduce Motion.
             .animation(pose.map { $0.side > 0 } == true && !reduceMotion ? .smooth(duration: 0.45) : nil, value: layout)
             .onChange(of: layout, initial: true) { was, now in
