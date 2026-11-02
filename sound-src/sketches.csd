@@ -217,7 +217,7 @@ endop
 ; small piece of metal"), none tuned to the key: 2 a watch's escapement, the pallet unlocking and the tooth dropping
 ; on it 4 to 5 ms later, almost pure click above 6 kHz; 3 a steel pawl snapping onto a steel ratchet wheel, a bright
 ; tink near 2.4 kHz with one bounce of the pawl; 4 a counter's click spring on its wheel, a larger part, a short clack
-; with a body near 1.4 kHz under faster overtones.
+; with a body near 1.5 kHz under faster overtones.
 instr rtick
   p3 = 0.25
   ij random -0.03, 0.03
