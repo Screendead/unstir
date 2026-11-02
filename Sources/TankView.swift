@@ -998,6 +998,8 @@ struct LevelView: View {
     @State private var deadTouch: CGPoint?
     /// A two-finger twist the window's change of pose let go.
     @State private var deadSpin: CGPoint?
+    /// Where the finger now on the tank landed, whether or not anything has taken it up yet.
+    @State private var touchStart: CGPoint?
     /// The play layout last laid out, so a change of pose glides from it and lets go of what the fingers hold.
     @State private var pose: PlayLayout?
     /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
@@ -2695,6 +2697,7 @@ struct LevelView: View {
         return DragGesture(minimumDistance: 0)
             .updating($holding) { _, holding, _ in holding = true }
             .onChanged { v in
+                if touchStart != v.startLocation { touchStart = v.startLocation }
                 // A touch from the screen's left edge is the back swipe's until it decides; one it passes is taken up
                 // from where it landed, before it skips the opening.
                 if drag?.start != v.startLocation {
@@ -2975,9 +2978,10 @@ struct LevelView: View {
             deadSpin = spinBase.start
             letGoSpin(lastSpin, now: true)
         }
-        guard let g = drag else { return }
-        deadTouch = g.start
-        cut(g, now: true)
+        if let g = drag { cut(g, now: true) }
+        // Not only a drag: an edge touch the back swipe hasn't decided, or one waiting on a settle, is taken up later
+        // from where it landed, in the old frame.
+        if holding, let t = touchStart { deadTouch = t }
     }
 
     /// `now` lands the let-go without the settle, whose completion waits on a frame.
