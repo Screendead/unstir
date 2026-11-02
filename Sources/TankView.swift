@@ -302,7 +302,7 @@ final class Game {
         guard !level.archived else { return nil }
         return Share.day(of: level.id).map {
             Share.text(day: $0, moves: moves, par: par, firstTry: firstTry, clean: clean, undos: undos, resets: resets,
-                       marks: marks)
+                       marks: marks, supporter: Store.shared.bought && Settings.supporter)
         }
     }
 
@@ -944,6 +944,10 @@ struct LevelView: View {
     @State private var ghost: (at: SIMD2<Double>, pivot: SIMD2<Double>, rim: Bool, lens: Bool)?
     /// The knob, or `Game.tank`, touched last: its open stir's count stays up, faint, after letting go.
     @State private var counted: Int?
+    /// L1, left untouched after its opening: a ghost finger shows the knob's turn until the first stir commits.
+    @State private var knobLesson = false
+    /// When Lens 01's lesson last appeared, so each showing rides from the top; nil while it is hidden.
+    @State private var lensLesson: Date?
     @State private var grabs = 0
     /// The seized knob touched last, and every such touch: it shakes, the rim pulses and a thud plays.
     @State private var jammed: Int?
@@ -984,6 +988,12 @@ struct LevelView: View {
     @State private var skippedDemo: CGPoint?
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
+    /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
+    /// SwiftUI reruns the init after the flag is stored, and the line stays the visit out.
+    @State private var pointing: Bool
+    @State private var pointed = false
+    /// Only a plain launch stores that it has; under the harness UNSTIR_FRESH shows it.
+    private let storesPointing: Bool
     /// A line the caption shows for a few seconds in place of its own, saying why a control or a turn did nothing.
     @State private var notice: String?
     @State private var notices = 0
@@ -1005,7 +1015,7 @@ struct LevelView: View {
     private let bench: Bool
     /// UNSTIR_WAVE: the solve wave held at this radius.
     private let frozenWave: Double?
-    /// UNSTIR_CLOCK: a live background, and the rim's ghost finger, held at this many seconds.
+    /// UNSTIR_CLOCK: a live background, and the rim and knob lessons' ghost fingers, held at this many seconds.
     private let frozenClock: Double?
     /// UNSTIR_SHAKE: a seized knob's shake and the rim's pulse held this many seconds in.
     private let frozenShake: Double?
@@ -1165,6 +1175,10 @@ struct LevelView: View {
         holdArmed = harness?.resetArmed ?? false
         _armedAt = State(initialValue: holdArmed ? .now : nil)
         demoRetired = harness == nil && Best.load(level.id) != nil
+        let harnessed = harness?.harnessed == true
+        _pointing = State(initialValue: Self.points(at: level, harnessed: harnessed, fresh: harness?.fresh == true,
+                                                    pointed: Best.pointedAtSettings))
+        storesPointing = !harnessed
         // A resumed try opens where it was left, with no opening.
         _shown = State(initialValue: still || level.sandbox || self.resumed ? nil : 0)
         self.onExit = onExit
@@ -1353,6 +1367,18 @@ struct LevelView: View {
                      : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
                     .font(.mono(12)).opacity(captionOpacity)
+                    // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does.
+                    .overlay(alignment: .bottom) {
+                        if pointing {
+                            Self.pointer.font(.mono(12)).fixedSize()
+                                .opacity(showResult || ending || shown != nil ? 0 : 0.55)
+                                .animation(.easeOut(duration: 0.4), value: shown == nil)
+                                .accessibilityLabel(Self.pointerSpoken)
+                                .accessibilityHidden(showResult || ending || shown != nil)
+                                // A line of 12 pt mono and a gap below the note's last line.
+                                .offset(y: 21)
+                        }
+                    }
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
@@ -1458,6 +1484,11 @@ struct LevelView: View {
                 game.startClock()
                 badge = game.badge
                 noteLit = frozenClock == nil && game.counts && !game.level.note.isEmpty && game.level.story == nil
+                if pointing && !pointed {
+                    pointed = true
+                    if storesPointing { Best.pointedAtSettings = true }
+                    AccessibilityNotification.Announcement(Self.pointerSpoken).post()
+                }
             } else {
                 lifted = false
             }
@@ -1499,6 +1530,20 @@ struct LevelView: View {
             guard badge > 0 else { return }
             game.refillSeen()
             AccessibilityNotification.Announcement("\(badge) undos added, \(game.bank) in the bank").post()
+        }
+        .task(id: [shown == nil, touching, game.history.isEmpty]) {
+            // The first level shows its verb only to a player who has waited on it, and never once it has been solved.
+            withAnimation(.easeOut(duration: 0.2)) { knobLesson = false }
+            guard game.level.id == Tier.plughole.levels[0].id, Best.load(game.level.id) == nil, shown == nil, !touching,
+                  game.history.isEmpty, (try? await Task.sleep(for: .seconds(KnobLesson.wait))) != nil else { return }
+            withAnimation(.easeIn(duration: 0.4)) { knobLesson = true }
+        }
+        .onChange(of: lensLessonDue, initial: true) { _, due in
+            if due {
+                withAnimation(.easeIn(duration: 0.4)) { lensLesson = .now }
+            } else if lensLesson != nil {
+                withAnimation(.easeOut(duration: 0.2)) { lensLesson = nil }
+            }
         }
         .onChange(of: resting, initial: true) {
             let t = Date.now.timeIntervalSinceReferenceDate
@@ -1568,6 +1613,8 @@ struct LevelView: View {
             if phase == .background { Analytics.shared.suspended(game); game.pauseClock(); Resume.save(game) }
             if phase == .active { Analytics.shared.resumed(); game.resumeClock(); if knocks { Knock.warm(hold: false) } }
         }
+        // A promoted purchase's card opens over the menu: the level leaves as its back does, so its quit and save go too.
+        .onChange(of: Store.shared.promoted) { if Store.shared.promoted != nil { leave() } }
         .onDisappear {
             endPath(); endTwist()
             if knocks { Knock.rest() }
@@ -1628,6 +1675,15 @@ struct LevelView: View {
 
     nonisolated static let refills = "undos refill +2 each day you play"
 
+    /// Plughole 01's pointer to the settings sheet, drawn with the menu's own gear.
+    static var pointer: Text { Text("sound, haptics, colour letters: \(Image(systemName: "gearshape")) on the menu") }
+    nonisolated static let pointerSpoken = "Sound, haptics and colour letters are in settings, the gear on the menu."
+
+    /// Whether this level opens pointing at the settings: plughole 01 until it has, or under the harness UNSTIR_FRESH.
+    nonisolated static func points(at level: Level, harnessed: Bool, fresh: Bool, pointed: Bool) -> Bool {
+        level.id == Tier.plughole.levels.first?.id && (harnessed ? fresh : !pointed)
+    }
+
     /// A notice, or Escapement's dead tick, reads above the resting caption.
     private var captionOpacity: Double {
         if showResult || ending { return 0 }
@@ -1681,7 +1737,16 @@ struct LevelView: View {
 
     private var stack: [Twist] { shown.map { Array(game.stack.prefix($0)) } ?? game.stack }
     /// A finger, two, or a drawn fingertip is on the tank, or a turn is still settling from one.
+    /// Lens 01's lesson, out of the way while a finger is down or the card is up.
+    private var lensLessonDue: Bool {
+        shown == nil && !game.finished && !touching
+            && LensLesson.shows(level: game.level, history: game.history, best: Best.load(game.level.id))
+    }
+
     private var touching: Bool { drag != nil || liveRod != nil || liveTurn != nil || spun || ghost != nil }
+    /// Endless's rim, and a spill's murk and words, held this many seconds after the brim's last change: UNSTIR_CLOCK's,
+    /// or under Reduce Motion where it comes to rest.
+    private var brimHeld: Double? { frozenClock ?? (reduceMotion ? Brim.rest(spilled: game.spilled) : nil) }
     /// The tank is the player's and untouched, and the game breathes: its breath may run. Never under Reduce Motion,
     /// and never in a harness launch that holds the clock.
     private var resting: Bool {
@@ -2016,8 +2081,8 @@ struct LevelView: View {
         // A lens's count runs up and down a track beside its knob, on the side away from the finger.
         let lensTrack: CGFloat? = rodCount.flatMap { c in
             guard game.level.lenses.contains(game.slot(of: c.k)) else { return nil }
-            let side: CGFloat = ((landed ?? finger).map { $0.x > rods[c.k].x } ?? false) ? -1 : 1
-            return at(c.k).x + side * (core / 2 + Self.trackGap)
+            let side = (landed ?? finger).map { Self.trackSide(landing: $0.x, knob: rods[c.k].x) } ?? 1
+            return Self.trackX(knob: at(c.k).x, core: core, side: side)
         }
         // Out of the way while the tank is held.
         let lesson = shown == nil && !game.finished && held == nil
@@ -2035,13 +2100,13 @@ struct LevelView: View {
         // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow,
         // and 30 Hz while the phone saves power.
         // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
-        // breathes.
-        let moving = game.level.picture.isLive || spillAt != nil && brimMoving || breathing
+        // breathes. Under Reduce Motion a live picture and a spill hold still.
+        let moving = !reduceMotion && (game.level.picture.isLive || spillAt != nil && brimMoving) || breathing
         let tickNow = game.tick, clocks = game.level.clocks, playable = shown == nil
         return ZStack {
             TimelineView(.animation(minimumInterval: 1.0 / (Power.shared.saving ? 30 : 60), paused: !moving || frozenClock != nil)) { timeline in
                 let murk = spillAt.flatMap { at -> [Float]? in
-                    let since = (frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
+                    let since = (brimHeld ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
@@ -2052,7 +2117,8 @@ struct LevelView: View {
                                        onStrike: { struck = true })
                         } else {
                             PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
-                                         clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
+                                         clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
+                                         onStrike: { struck = true })
                         }
                     }
                         .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
@@ -2137,7 +2203,8 @@ struct LevelView: View {
                 ZStack {
                     if let run = game.level.run, let rimColours {
                         // Moving for a while after each change, and all the while the room runs short.
-                        BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: frozenClock,
+                        BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: brimHeld,
+                                 still: frozenClock == nil && reduceMotion,
                                  paused: !(brimMoving || !game.spilled && game.brim >= Run.room - 1))
                     }
                 }
@@ -2212,9 +2279,16 @@ struct LevelView: View {
                     lostMarks(at(k), size: Self.ratchetSize(core), r: r,
                               twisted: Set(game.stack.map(\.rod)).sorted().map { (at($0), disc($0)) })
                 }
+                if knobLesson && shown == nil && !touching {
+                    KnobLesson(centre: at(0), reach: 0.5 * disc(0), clock: frozenClock).transition(.opacity)
+                }
+                if let since = lensLesson, let k = game.level.lenses.min().map(game.knob(over:)) {
+                    LensLesson(knob: at(k), core: core, step: Self.lensPitch * r, since: since, clock: frozenClock)
+                        .transition(.opacity)
+                }
                 if let spillAt {
-                    TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || frozenClock != nil)) { timeline in
-                        SpillWords(r: r, at: frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
+                    TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || brimHeld != nil)) { timeline in
+                        SpillWords(r: r, at: brimHeld ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
                     }
                 }
                 if let c = rodCount, c.steps != 0 {
@@ -2437,11 +2511,11 @@ struct LevelView: View {
     }
 
     /// Wide enough to read, too thin to hide the picture: 1.5 px on a 3x screen.
-    private static let hairline: CGFloat = 0.5
+    static let hairline: CGFloat = 0.5
     /// How far inside the glass's edge the swirl's push flashes.
     private static let swirlFlash: CGFloat = 5
     /// A drag's count: its dashes, and the trace under them. No glow and no dark band: with them the count hid the picture.
-    private static let dash: CGFloat = 2, dashTone = 0.85, trace = hairline, traceTone = 0.4
+    static let dash: CGFloat = 2, dashTone = 0.85, trace = hairline, traceTone = 0.4
     /// A dial's opacity while letting go would change nothing, and while its stir stays open after the finger lifts.
     private static let idle = 0.7, lifted = 0.45
 
@@ -2471,7 +2545,14 @@ struct LevelView: View {
     }
 
     /// How far a lens's track stands off its knob's edge, and its dashes' spacing: a short track, not the finger's travel.
-    private static let trackGap: CGFloat = 16, trackPitch: CGFloat = 16
+    nonisolated static let trackGap: CGFloat = 16, trackPitch: CGFloat = 16
+
+    /// A lens's track stands on the side of its knob away from where the finger landed: right for a landing on the
+    /// knob's centre or left of it. Any one unit, points or the tank's.
+    nonisolated static func trackSide(landing x: Double, knob: Double) -> CGFloat { x > knob ? -1 : 1 }
+
+    /// The track's x, `side` of a knob at `knob`, in points.
+    nonisolated static func trackX(knob: CGFloat, core: CGFloat, side: CGFloat) -> CGFloat { knob + side * (core / 2 + trackGap) }
 
     /// A lens's count, which follows the finger up and down (Jack, 2026-10-26): on a vertical hairline at `x` beside a
     /// disc of `radius` about `c`, the disc's own hairline round it, a long mark level with the knob where the stir
@@ -2890,6 +2971,102 @@ struct Detent {
         let now = Self.steps(angle, of: step)
         defer { steps = now }
         return abs(now - steps)
+    }
+}
+
+/// L1's lesson: a ghost finger, as the rim's, rocking round knob 0 halfway out its disc, the turn the level asks for.
+struct KnobLesson: View {
+    /// The knob's centre and the finger's distance from it, in points.
+    let centre: CGPoint
+    let reach: CGFloat
+    /// Holds the finger this many seconds in.
+    let clock: Double?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Seconds of the tank untouched before it shows.
+    static let wait = 4.0
+    private static let sweep = 40 * Double.pi / 180, period = 2.4, rest = Double.pi / 4
+
+    /// Where the finger is `t` seconds in: rocking either side of up and to the right of the knob.
+    static func finger(centre: CGPoint, reach: CGFloat, at t: Double) -> CGPoint {
+        let a = rest + sweep * sin(2 * .pi * t / period)
+        return CGPoint(x: centre.x + reach * sin(a), y: centre.y - reach * cos(a))
+    }
+
+    var body: some View {
+        // Reduce Motion holds it at 0 s, mid-sweep.
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
+            GhostFinger().position(Self.finger(centre: centre, reach: reach,
+                                               at: clock ?? (reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)))
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Lens 01's lesson: a ghost finger on the lens's knob riding down beside its track, as far as a drag that undoes the
+/// level's zoom, over the track's rail drawn faintly where that drag draws its count.
+struct LensLesson: View {
+    /// The knob's centre, its core's width and the finger's travel for one of the lens's steps, in points.
+    let knob: CGPoint
+    let core: CGFloat
+    let step: CGFloat
+    /// When this showing began, so it rides from the top.
+    let since: Date
+    /// Holds the finger this many seconds in.
+    let clock: Double?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Lens 01 deals `0:+2`.
+    nonisolated static let steps = 2.0
+    private nonisolated static let period = 2.2, ride = 1.6, fade = 0.4
+    /// Halfway down: where Reduce Motion holds it.
+    nonisolated static let middle = ride / 2
+
+    /// Until the level is solved, and in each game while no lens's stir is in `history` (slots, as `lenses` holds):
+    /// an undo that takes the stir back brings it back.
+    nonisolated static func shows(level: Level, history: [Twist], best: Best?) -> Bool {
+        level.id == Pack.lens.levels.first?.id && best == nil && !history.contains { level.lenses.contains($0.rod) }
+    }
+
+    /// The finger's x: the knob's left edge, so a finger landing where it shows draws its track on the rail.
+    nonisolated static func landing(knob: CGPoint, core: CGFloat) -> CGFloat { knob.x - core / 2 }
+
+    /// The rail's x: the track a drag landing at the finger draws.
+    nonisolated static func rail(knob: CGPoint, core: CGFloat) -> CGFloat {
+        LevelView.trackX(knob: knob.x, core: core, side: LevelView.trackSide(landing: landing(knob: knob, core: core), knob: knob.x))
+    }
+
+    /// Where the finger is `t` seconds into a showing, and how strongly it shows: eased down from the knob's height,
+    /// faded out at its foot and faded in again at the top.
+    nonisolated static func finger(knob: CGPoint, core: CGFloat, step: CGFloat, at t: Double) -> (at: CGPoint, opacity: Double) {
+        let t = t.truncatingRemainder(dividingBy: period) + (t < 0 ? period : 0)
+        let u = min(t / ride, 1), down = u * u * (3 - 2 * u)
+        let opacity = t < ride ? 1 : t < ride + fade ? 1 - (t - ride) / fade : max(0, t - ride - fade) / (period - ride - fade)
+        return (CGPoint(x: landing(knob: knob, core: core), y: knob.y + CGFloat(t < ride + fade ? down * steps : 0) * step), opacity)
+    }
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
+            let f = Self.finger(knob: knob, core: core, step: step,
+                                at: clock ?? (reduceMotion ? Self.middle : timeline.date.timeIntervalSince(since)))
+            let x = Self.rail(knob: knob, core: core), pitch = LevelView.trackPitch
+            ZStack {
+                Path { $0.move(to: CGPoint(x: x, y: knob.y - 3.5 * pitch)); $0.addLine(to: CGPoint(x: x, y: knob.y + 3.5 * pitch)) }
+                    .stroke(Color.live.opacity(LevelView.traceTone / 2), lineWidth: LevelView.hairline)
+                GhostFinger().position(f.at).opacity(f.opacity)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Every lesson's fingertip.
+struct GhostFinger: View {
+    var body: some View {
+        Circle().fill(Color.live.opacity(0.22))
+            .overlay(Circle().stroke(Color.live.opacity(0.6), lineWidth: 1.5))
+            .shadow(color: .live.opacity(0.4), radius: 6)
+            .frame(width: 30, height: 30)
     }
 }
 
@@ -3440,6 +3617,8 @@ struct ResultCard: View {
     /// The harness's clock for the daily's next one; nil reads the time.
     let now: Date?
     let onOffer: (Pack) -> Void
+    /// The pack "more puzzles in the packs ›" opens, read as the card appears, which spends its one showing.
+    @State private var packs: Pack?
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
@@ -3509,6 +3688,10 @@ struct ResultCard: View {
                     Button { onOffer(pack) } label: { Text("try \(pack.name) \u{203A}").hit() }
                         .font(.mono(.caption)).opacity(0.6)
                         .accessibilityLabel("Try \(pack.name)")
+                } else if let pack = packs {
+                    Button { onOffer(pack) } label: { Text("more puzzles in the packs \u{203A}").hit() }
+                        .font(.mono(.caption)).opacity(0.6)
+                        .accessibilityLabel("More puzzles in the packs")
                 }
             }
             HStack(spacing: 32) {
@@ -3544,7 +3727,13 @@ struct ResultCard: View {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
-        .onAppear { focused = true }
+        .onAppear {
+            focused = true
+            guard packs == nil, let pack = Offer.ladderEnd(game.level, completed: game.completed, shown: Best.packsPointed)
+            else { return }
+            packs = pack
+            if game.storesProgress { Best.packsPointed = true }
+        }
     }
 }
 

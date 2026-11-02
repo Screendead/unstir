@@ -30,7 +30,7 @@ enum Archive {
         bought || ((!release || playtest) && unlocked)
     }
 
-    @MainActor static var open: Bool { opens(bought: Store.shared.boughtAny) }
+    @MainActor static var open: Bool { opens(bought: Store.shared.bought) }
 
     /// A day's result in the menu's words.
     enum Mark: Equatable {

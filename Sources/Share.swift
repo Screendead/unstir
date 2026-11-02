@@ -41,10 +41,14 @@ enum Share {
         id.hasPrefix("daily-") ? Int(id.dropFirst(6)) : nil
     }
 
+    /// The supporter mark's glyph, after the daily's name, as the menu draws it after the title.
+    static let supporter = "\u{2726}"
+
     static func text(day: Int, moves: Int, par: Int, firstTry: Bool, clean: Bool, undos: Int, resets: Int,
-                     marks: [Mark], firstDay: Int? = firstDay) -> String {
-        let name = number(day, from: firstDay).map { "Unstir #\($0)" }
-            ?? String(format: "Unstir %04d-%02d-%02d", day / 10000, day / 100 % 100, day % 100)
+                     marks: [Mark], supporter: Bool = false, firstDay: Int? = firstDay) -> String {
+        let name = (number(day, from: firstDay).map { "Unstir #\($0)" }
+            ?? String(format: "Unstir %04d-%02d-%02d", day / 10000, day / 100 % 100, day % 100))
+            + (supporter ? " \(Self.supporter)" : "")
         var head = [name]
         if !firstTry { head.append("practice") }
         head.append("\(moves) \(moves == 1 ? "move" : "moves") (par \(par))")

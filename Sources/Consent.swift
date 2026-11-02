@@ -35,6 +35,10 @@ enum ConsentWords {
     static let policyDetail = "what the game keeps, and why"
     static let letters = "colour letters"
     static let lettersDetail = "R, G and B on Prism's knobs"
+    static let supporter = "supporter mark"
+    static let supporterDetail = "\u{2726} by the title and in the daily's share line"
+    static let editors = "open every tier"
+    static let editorsDetail = "every level and pack too, without buying"
 }
 
 /// The first launch's question, over the menu, which waits for an answer. Yes and no are the same control: same type,
@@ -142,9 +146,11 @@ struct NeonToggle: ToggleStyle {
     }
 }
 
-/// The gear's sheet: music, sounds, haptics, the colour letters, the analytics switch where the build has analytics,
-/// restore, a report of a problem and the privacy policy, and the version under them, black, sized to what it holds.
+/// The gear's sheet: music, sounds, haptics, the colour letters, the supporter mark once a pack is owned, the analytics
+/// switch where the build has analytics, restore, a report of a problem and the privacy policy, and the version under them, black, sized to what it holds.
 struct SettingsSheet: View {
+    /// The presenting window's height, which in Split View or on a folding phone's displays is not the screen's.
+    let window: CGFloat
     /// Apple's guideline 5.1.1(i) wants it reachable in the app. Info.plist's `PolicyURL`, set outside the repo, or
     /// the plain github.com page where the build has none.
     static var policy: URL {
@@ -165,6 +171,9 @@ struct SettingsSheet: View {
     @State private var haptics = Settings.haptics
     /// Nil until chosen, so the switch shows Differentiate Without Colour's state until then.
     @State private var letters = Letters.choice
+    /// The menu's, so its title gains or drops the mark behind the sheet as the switch moves.
+    @Binding var supporter: Bool
+    @State private var unlocked = Best.unlocked
     @State private var mailing = false
     @State private var reading = false
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
@@ -191,6 +200,14 @@ struct SettingsSheet: View {
                     switchRow(ConsentWords.haptics, ConsentWords.hapticsDetail, $haptics) { Settings.haptics = $0 }
                     switchRow(ConsentWords.letters, ConsentWords.lettersDetail,
                               Binding(get: { letters ?? differentiate }, set: { letters = $0 })) { Letters.choice = $0 }
+                    if store.bought {
+                        switchRow(ConsentWords.supporter, ConsentWords.supporterDetail, $supporter) { Settings.supporter = $0 }
+                    }
+                    #if EDITORS || DEBUG
+                    if Build.editorsSwitch {
+                        switchRow(ConsentWords.editors, ConsentWords.editorsDetail, $unlocked) { Best.unlocked = $0 }
+                    }
+                    #endif
                     if analytics.shown {
                         Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
                             row(ConsentWords.analytics,
@@ -242,21 +259,18 @@ struct SettingsSheet: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .frame(maxHeight: .infinity, alignment: .top)
-        .presentationDetents(height > SettingsSheet.screen * 0.9 ? [.height(SettingsSheet.screen * 0.6), .large]
+        .presentationDetents(height > window * 0.9 ? [.height(window * 0.6), .large]
                              : [.height(height)])
         .presentationDragIndicator(.visible)
         .presentationBackground(Color(0x0B0C10))
         .presentationCornerRadius(24)
     }
 
-    /// "Unstir 1.0 (1)": the version and build.
+    /// "Unstir 1.0 (1)": the version and build, "Unstir 1.0 (1) editors" in the editors' build.
     static var version: String {
         let info = Bundle.main.infoDictionary ?? [:]
-        return "Unstir \(info["CFBundleShortVersionString"] as? String ?? "?") (\(info["CFBundleVersion"] as? String ?? "?"))"
-    }
-
-    private static var screen: CGFloat {
-        UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.screen.bounds.height }.max() ?? 800
+        let build = "Unstir \(info["CFBundleShortVersionString"] as? String ?? "?") (\(info["CFBundleVersion"] as? String ?? "?"))"
+        return Build.editors ? build + " editors" : build
     }
 
     private var rule: some View { Rectangle().fill(Color.text.opacity(0.12)).frame(height: 1) }

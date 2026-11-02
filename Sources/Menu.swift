@@ -170,6 +170,8 @@ struct MenuView: View {
     @GestureState private var dragging = false
     /// The scroll view's height and its bottom safe area: the list draws on under the home indicator.
     @State private var viewport: CGFloat = 0
+    /// The window's whole height, bars and all, which sizes the settings sheet.
+    @State private var window: CGFloat = 800
     /// The pack dock's height: the scroll view counts it in its bottom safe area, but the list ends at it.
     @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
@@ -185,6 +187,8 @@ struct MenuView: View {
     @Namespace private var strip
     /// The gear's sheet.
     @Binding var settings: Bool
+    /// The settings' supporter mark switch, mirrored here as the sheet moves it.
+    @State private var supporter = Settings.supporter
     /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
     @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -315,9 +319,14 @@ struct MenuView: View {
             if asking { ConsentCard(tier: shown).transition(.opacity) }
         }
         .animation(.easeOut(duration: 0.25), value: asking)
-        .sheet(isPresented: $settings) { SettingsSheet() }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: {
+            window = $0
+        }
+        .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
         .onChange(of: card == nil && !archive && !settings) { Power.shared.touched() }
+        // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
+        .onChange(of: settings) { if !settings { leading = Self.lead(tier: shown) } }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()
@@ -522,9 +531,14 @@ struct MenuView: View {
 
     /// Cuts to the new tier's sweep at the swap: a gradient doesn't interpolate, and a cross-fade runs through grey.
     private var title: some View {
-        Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
-            .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)
-            .accessibilityLabel("Unstir").accessibilityAddTraits(.isHeader)
+        let supporter = Store.shared.bought && self.supporter
+        return HStack(alignment: .top, spacing: 2) {
+            Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
+                .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)
+            if supporter { SupporterMark(sweep: shown.sweep, glow: shown.glow).padding(.top, 3) }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(supporter ? "Unstir, supporter" : "Unstir").accessibilityAddTraits(.isHeader)
     }
 
     /// Every tier by name. A strip wider than the screen moves only to keep the picked name in view, so a sideways drag
@@ -543,7 +557,9 @@ struct MenuView: View {
                             .id(t)
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.leading, 20)
+                // Past the trailing fade, so the last name reads whole once scrolled to.
+                .padding(.trailing, 40)
             }
             .scrollIndicators(.hidden)
             // Names run out into the black at the edges, so a strip wider than the screen reads as running on past them.
@@ -551,6 +567,7 @@ struct MenuView: View {
                                          .init(color: .black, location: 0.9), .init(color: .clear, location: 1)],
                                  startPoint: .leading, endPoint: .trailing))
             .onChange(of: picked) { withAnimation { proxy.scrollTo(picked, anchor: .center) } }
+            .onAppear { proxy.scrollTo(picked, anchor: .center) }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Tier")
@@ -789,8 +806,10 @@ private struct TierList: View, Equatable {
     var held: String?
     /// Given the landing row's frame in the list's own space, once laid out.
     var report: ((CGRect) -> Void)?
+    /// Read as the menu redraws, so the editors' switch opens the rows as its sheet closes.
+    var unlocked = Best.unlocked
 
-    nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier }
+    nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier && a.unlocked == b.unlocked }
 
     private static let space = "tierList"
     /// The header's id: the same on every tier, so mid-switch the outgoing list's header stands where the incoming one's
@@ -804,7 +823,7 @@ private struct TierList: View, Equatable {
             if !open, let below = tier.below { gate(below) }
             let levels = tier.levels, frontier = tier.frontier(), landing = report == nil ? nil : tier.landing()
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
-                let reached = Best.unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
+                let reached = unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
                 let opens = !open ? tier.below.map { "par every \($0.rawValue) level to open" }
                     : reached ? nil : "solve \(levels[i - 1].label) to open"
                 LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,
@@ -1035,5 +1054,31 @@ private struct Flow: SwiftUI.Layout {
             }
         }
         return lines
+    }
+}
+
+/// The thank-you for a purchase (Jack's call M6, round 14): a four-pointed glint in hairline after the title, in the
+/// tier's sweep, the glyph the daily's share line carries. It never moves or asks for anything.
+struct SupporterMark: View {
+    let sweep: LinearGradient
+    let glow: Color
+
+    var body: some View {
+        Sparkle().stroke(sweep, lineWidth: 1).frame(width: 13, height: 13)
+            .shadow(color: glow.opacity(0.7), radius: 3)
+    }
+}
+
+/// Four points joined by curves bowed in to the centre.
+private struct Sparkle: Shape {
+    func path(in rect: CGRect) -> Path {
+        let c = CGPoint(x: rect.midX, y: rect.midY), r = min(rect.width, rect.height) / 2
+        let tips = [CGPoint(x: c.x, y: c.y - r), CGPoint(x: c.x + r, y: c.y), CGPoint(x: c.x, y: c.y + r),
+                    CGPoint(x: c.x - r, y: c.y)]
+        var p = Path()
+        p.move(to: tips[0])
+        for k in 1...4 { p.addQuadCurve(to: tips[k % 4], control: c) }
+        p.closeSubpath()
+        return p
     }
 }

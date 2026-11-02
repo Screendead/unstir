@@ -74,6 +74,66 @@ final class LensTests: XCTestCase {
         XCTAssertEqual(LevelView.lensTurn(from: 0.3, to: 0.3), 0)
     }
 
+    /// Lens 01's ghost finger starts level with the knob, rides only down, the way that undoes the level's zoom, fades
+    /// out at the foot and comes back at the top, showing fully halfway down.
+    func testTheLensLessonRidesDownTheTrack() {
+        let knob = CGPoint(x: 80, y: 100), step: CGFloat = 30
+        func f(_ t: Double) -> (at: CGPoint, opacity: Double) { LensLesson.finger(knob: knob, core: 28, step: step, at: t) }
+        XCTAssertEqual(f(0).at, CGPoint(x: 66, y: 100))
+        XCTAssertEqual(f(0).opacity, 1)
+        var y = f(0).at.y
+        for t in stride(from: 0.1, through: 1.6, by: 0.1) {
+            XCTAssertGreaterThan(f(t).at.y, y, "down at \(t) s")
+            XCTAssertEqual(f(t).at.x, 66)
+            y = f(t).at.y
+        }
+        XCTAssertEqual(f(1.6).at.y, 160, accuracy: 1e-9)
+        XCTAssertEqual(f(LensLesson.middle).at.y, 130, accuracy: 1e-9)
+        XCTAssertEqual(f(LensLesson.middle).opacity, 1)
+        XCTAssertEqual(f(2.0).opacity, 0, accuracy: 1e-9)
+        XCTAssertEqual(f(2.1).at.y, 100)
+        XCTAssertEqual(f(2.2).at.y, f(0).at.y, accuracy: 1e-9)
+        XCTAssertEqual(f(2.2 + 0.8).at.y, f(0.8).at.y, accuracy: 1e-9)
+        for t in stride(from: 0.0, through: 4.4, by: 0.05) { XCTAssert((0...1).contains(f(t).opacity), "\(t) s") }
+    }
+
+    /// A drag that copies the lesson solves Lens 01 whatever the glass's size: it lands on the lens's knob, its track
+    /// stands where the lesson's rail does, and its ride, through the lens's own turn and detent, is the level's `0:-2`.
+    @MainActor func testCopyingTheLensLessonSolvesLens01() {
+        let level = Pack.lens.levels[0]
+        XCTAssertEqual(level.scramble, [Twist(rod: 0, steps: 2)])
+        for r: CGFloat in [150, 167, 195, 215] {
+            let rod = level.layout.rods[0], knob = CGPoint(x: r + rod.x * r, y: r + rod.y * r), core = 2 * Tank.coreRadius * r
+            let top = LensLesson.finger(knob: knob, core: core, step: LevelView.lensPitch * r, at: 0).at
+            let foot = LensLesson.finger(knob: knob, core: core, step: LevelView.lensPitch * r, at: 1.6).at
+            let landing = SIMD2(Double((top.x - r) / r), Double((top.y - r) / r))
+            XCTAssertEqual(LevelView.grab(level.layout, motion: level.motion, kind: level.kind(of:), at: landing), .rod(0), "r \(r)")
+            XCTAssertEqual(LevelView.trackX(knob: knob.x, core: core, side: LevelView.trackSide(landing: landing.x, knob: rod.x)),
+                           LensLesson.rail(knob: knob, core: core), "r \(r)")
+            XCTAssertEqual(LensLesson.rail(knob: knob, core: core), LevelView.trackX(knob: knob.x, core: core, side: 1))
+            let angle = LevelView.lensTurn(from: landing.y, to: Double((foot.y - r) / r))
+            XCTAssertEqual(Detent.steps(angle, of: Tank.step), -2, "r \(r)")
+        }
+    }
+
+    /// The lesson shows on Lens 01 alone, until it is solved, and in a game while no lens's stir is in the history: a
+    /// twist's stir first leaves it up, and an undo of the lens's stir brings it back.
+    @MainActor func testTheLensLessonShowsUntilALensCommit() {
+        let one = Pack.lens.levels[0], two = Pack.lens.levels[1]
+        XCTAssertEqual(one.lenses, [0])
+        XCTAssertTrue(LensLesson.shows(level: one, history: [], best: nil))
+        XCTAssertTrue(LensLesson.shows(level: one, history: [Twist(rod: 1, steps: 2)], best: nil))
+        XCTAssertFalse(LensLesson.shows(level: one, history: [Twist(rod: 1, steps: 2), Twist(rod: 0, steps: -1)], best: nil))
+        XCTAssertFalse(LensLesson.shows(level: one, history: [], best: Best(over: 0, seconds: 30, clean: true)))
+        XCTAssertFalse(LensLesson.shows(level: two, history: [], best: nil))
+        XCTAssertFalse(LensLesson.shows(level: Tier.plughole.levels[0], history: [], best: nil))
+        let game = Game(level: one, tankTurned: true, swirled: true, bank: (5, nil))
+        game.commit(rod: 0, steps: -1)
+        XCTAssertFalse(LensLesson.shows(level: one, history: game.history, best: nil))
+        game.undo()
+        XCTAssertTrue(LensLesson.shows(level: one, history: game.history, best: nil))
+    }
+
     /// The lens set reaches every merge: on tri, two lenses' cores never meet, so rod 0's second stir merges past rod
     /// 1's; as twists their discs overlap, and it pushes. A game on the level merges as `parse` does.
     @MainActor func testTheLensSetChangesHowAStackMerges() {

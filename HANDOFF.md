@@ -32,7 +32,10 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | Merged 2026-11-01 | PR #72 turned Escapement's pawl to trail the wheel's free turn (it pointed against the turn), and let playtest builds (`scripts/run-ios.sh`) open every pack level with `UNSTIR_UNLOCK=1`, since the phone cannot buy through StoreKit. PR #73 added to-dos 72 to 74: the UI design pass, the level-name audit and the pedantic polish pass |
 | Round 13's store lane (2026-11-01, PR #81, `store-polish`) | Built: F13 (a) to (e), F14, F15, F16 (Lens keeps "four issues", now N1b heads its list), F29's restore and version, F34, F35, F36, F38; F13 (f), a stored "asked" date, is not, so the store still stores nothing. A review's fixes are on the branch: the pending pill reads "asked" (F13c's word) and asks again only for the product's own request; a pack waiting on Complete's Ask to Buy says Complete is waiting, its pill buys the pack alone (Claude's reading; master disabled it) and Complete's line waits; an ask again that fails keeps the request pending and says why; the launch's first read never chimes on an open card (F14's "checking purchases…" placeholder on the card is not built); a restore is announced to VoiceOver and said only on its own card; back from a pack's card opened on Complete's returns there, its button reading "‹ Complete" (Claude's call in the merge, `108901c`; Jack kept it, 2026-11-01); an owned Complete card plays on in the first pack with a level left. CI passed on the fixes (2026-11-01). Waiting on: the shots retaken when the Mac is free (those indexed predate N1's titles and Lens's chapters), then Jack's review |
 | Round 13's F8, F9, F26, F27 and F28 (PR #83, `a11y-system`) | Built: VoiceOver basics (F8); Reduce Motion where it was missing (F9); the dock's covers and the card's clip held still under the settings sheet, Low Power Mode, a hot phone, 20 s idle or out of sight, carrying on from the frame they held (F26); Lens's halftone bake cached in every build, the opening waiting for its strike (F27); a black launch screen, the log cut after the first frame off the main actor, and a device line (F28). A review's fixes went in on 2026-11-01. Open checks, on a device: the light-appearance cold launch; the halftone's bake time on the oldest phone (the XS, C22), to record in CLAUDE.md's halftone paragraph in place of "unmeasured on a phone"; VoiceOver end to end, the finish taking focus as the card shows among it; the GPU bench (`scripts/gpu-bench.sh phone`). Films to take once the Mac is free: `scripts/film.sh calm-` (the Reduce Motion opening and solve) and the dock waking from idle |
+| Round 14's F2 and F3 (`r14-a11y`) | Built: under Reduce Motion every live picture holds one frame (`Picture.rest`, between the twins' beats) and endless's rim cuts to where each change settles, a spill to its end (F2); plughole 01's first open hangs one line under its note, "sound, haptics, colour letters: ⚙ on the menu" (sound for both the music and sounds switches), once (F3). Claude's recommendations, not decided: the line leaves out motion, as settings has no motion switch (motion follows iOS's Reduce Motion); the spill's card still waits its 2 s on the held end state. Waiting on Jack's look at the PR |
 | Round 12 (decided, 2026-10-29) | AN1 = A (v1 ships with no analytics), EU1 = B (no EU storefronts at launch; revisit when sales cover a business address), PK1 = A (Prism replaces First Stir as the third pack, capped at depth 8), ES2 = B (each hub shows its own flip clock, plus a total counter elsewhere; a hub that reaches 0 shows plainly that it has run out; built on `esc-hub-flaps`), PL1 (Prism's plates 3 and 4 redrawn as Haeckel's medusae and radiolarians). See round 12 under "Jack's calls on the pitch" |
+| Round 14's store lane (2026-11-02, branch `r14-store`) | Jack's call M6 = A (all six), this lane's four: promoted purchases (`PurchaseIntent` opens the offer's card and buys there; the four 1024 px images from `scripts/promo.sh`), the supporter mark (to-do 48), "more puzzles in the packs ›" once on maelstrom 27's card, and the known dailies below. The daily archive is lane `r14-archive`; mid-level state surviving a kill is C2, built. `Store.bought` is the one "has the player bought anything" check both lanes read |
+| Dailies the solver beats (known, 2026-11-02) | On 4 of 2027's 365 dailies the solver's optimum is one under par (`par` = `scramble.count`): 2027-03-08 hex 14→13, 2027-08-29 pent 12→11, 2027-08-30 pent 13→12 (plain untwisting takes 13), 2027-12-29 pent 10→9 (measured for round 14's gap 1 against the frozen generator). Recorded as known: the generator is frozen (`testDailyVectors`) and stays unchanged (Jack's call M6). A player can finish those four under par; no test pins a daily's par to the optimum |
 | Apple Developer membership | See `HANDOFF.private.md` |
 
 2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
@@ -365,7 +368,7 @@ Round 12 (decided, 2026-10-29). Jack's words are kept in `HANDOFF.private.md`.
 | Call | Decision |
 |---|---|
 | AN1. Analytics in v1 | **A:** none. v1 ships through `v1-no-analytics` (App Store Connect's numbers only); `keep-analytics` holds the other side, for an update. Every analytics item in the to-dos and in the launch checklist below is moot for v1 |
-| EU1. Selling in the EU at launch | **B:** no EU or EEA storefronts at launch. Revisit if sales cover the cost of a business address for the trader details the Digital Services Act asks of an EU seller (no vendor names or prices in tracked files) |
+| EU1. Selling in the EU at launch | **B:** no EU or EEA storefronts at launch. Revisit if sales cover the cost of a business address for the trader details the Digital Services Act asks of an EU seller (no vendor names or prices in tracked files) | (Round 14, F12 = A: the EU stays closed.)
 | PK1. Prism as First Stir's replacement | **A:** Prism, capped at depth 8, since depth 9 reads too busy. Built and on the Release shelf (PRs #59, #67, #68, #69 and the ship PR, 2026-10-29); Jack's play of the specimens and the phone bench remain |
 | ES2. Escapement's budget display | **B:** the flip-clock numbers also show in each hub, and a total counter elsewhere; the numbers must never contradict each other, and a hub at 0 must show clearly that it has run out. Jack's words: "just don't let the numbers contradict each other? they should render as flip-clock numbers in the hubs too. and when the hubs reach 0, it should show clearly that they've run out (e.g. greying out the hub/escapement, or what you already built to show it, or something else)", and "i want the flip clocks for each hub in that hub, plus a counter for the total elsewhere." Built on `esc-hub-flaps` (2026-10-29), the rule Claude settled under the note: each clock's count is what it owed as dealt, each of its ticks takes one off it, a pushed tick too; the header is the hubs' sum after every tick; a clock at 0 stops ticking and greys (wheel, sub-dial, card, dashed disc) as its last tick lands, with the amber stop ring; out of ticks once no clock can tick with twists left. On a clean line each count reaches 0 as its rod empties, so the book stands. Each hub is a one-digit split-flap card (no clock owes more than 9) |
 | PL1. Prism's plates 3 and 4 | **Redrawn.** Jack found the watch movement (tray 3, Colour Order) and the cathedral's west front (tray 4, Overprint) messy, and chose from six redraws, three a plate: Haeckel's medusae for tray 3 and Haeckel's radiolarians for tray 4 (2026-10-29). Shipped as he saw them, without the later polish passes, on `prism-plates-v2`; the plates, their `Picture` cases and the trays' headings take the new names |
@@ -391,16 +394,16 @@ Round 13 (decided, 2026-11-01): every recommendation on the names-and-polish pag
 | C10. The timer | **A:** off the result card and out of the best's ranking. Built on `r13-result`, PR #92 |
 | C11. Par warning and the over-par veil | **A:** the count amber at par and magenta past it; the veil at 0.05 a move, capped at 0.2. Built on `r13-play`, PR #93 |
 | C12. Reset | **A:** "reset? tap again" for 2 s. Built on `r13-play`, PR #93 |
-| C13. A drag the system cuts off | **A:** commit everywhere, as V26; after a phone check of which handler runs first |
+| C13. A drag the system cuts off | **A:** commit everywhere, as V26; after a phone check of which handler runs first | (Round 14: PR100-V26 = A; the phone check of #100 still waits.)
 | C14. Escapement's pushed tick | **A:** the caption says at once "That tick can't come back. Undo, or again."; the tank plays on (EL1 kept). Built on `r13-play`, PR #93. Open, for Jack: the words name "again", the lost card's button, where the play screen's control reads "reset"; Claude recommends keeping both. Also open, for Jack: with the undo bank at 0 the words still point at undo, which then only says when undos refill; Jack's call (2026-11-01): A, "That tick can't come back. Reset." while the bank is empty |
-| C15. Teaching Lens's taste | **A:** a ghost finger rides the lens's track on Lens 01 until the first lens commit |
+| C15. Teaching Lens's taste | **A:** a ghost finger rides the lens's track on Lens 01 until the first lens commit. Built on `r13-lesson`, PR #91 (stacks on #85); shows at once, with no 4 s wait (implementer call); the finger starts on the knob's left edge and rides the drag's real two steps beside the rail, so copying it solves on any phone (implementer call on the spec's 2.5 track pitches and finger on the rail, recommendation, for Jack's look at the PR) |
 | C16. Prism's letters | **B:** a "colour letters" switch in settings, defaulting to Differentiate Without Colour, and one line on Prism's card. Built on `r13-settings`, PR #94 |
 | C17. Settings | **A:** music, sounds and haptics switches; "report a problem" mails the log to the support address (kept out of the repo); the policy on Jack's own domain. Built on `r13-settings`, PR #94 |
 | C18. The daily | **A:** the gate stays at plughole 23 for v1; a quiet run count on the row and "next daily in 7 h" on the card. The row's run count built on `r13-menu`, PR #90; the card's part on `r13-result`, PR #92. Implementer call: past the midnight that ends the card's daily it reads "next daily is out" (the other choice: drop the line) |
-| C19. Swiping back | **Jack: an edge swipe back, as everywhere else in iOS** ("it's little things like this that Apple looks for"). Claude's recommendation (none in play) is set aside. The swipe starts only from the screen's left edge and wins over a rim turn that lands there; with C2's resume an accidental swipe loses nothing. Built on `r13-swipe`, PR #102 (stacked on `r13-resume`; implementer call in the PR: interactive, the level sliding off over the menu, with threshold-then-dip the fallback if drawing the menu under the level costs a frame on the oldest phone, unmeasured while the XS is down: it won't turn on, and Jack may fix it before TestFlight day; the dock's covers hold still under the slide to lower the risk). Open, side effect for Jack, waits on him: Escapement's out-of-ticks card is where the premise fails. C2's resume clears a lost tank's save (its implementer call), so a graze from the edge on the lost card drops the tank and the card's undo, which before C19 took a tap on the back button. Options: keep a lost tank's save until "again" or a solve clears it, reopening on the lost card (the swipe loses nothing, as the premise says; a change to the resume's replay, which closes a line that ends lost); or keep C2 as built and accept it. Claude recommended the first. **Jack's call (2026-11-01): A, built on `lost-resume`, PR #103** |
+| C19. Swiping back (round 14: see PR100-V26, the two-finger twist) | **Jack: an edge swipe back, as everywhere else in iOS** ("it's little things like this that Apple looks for"). Claude's recommendation (none in play) is set aside. The swipe starts only from the screen's left edge and wins over a rim turn that lands there; with C2's resume an accidental swipe loses nothing. Built on `r13-swipe`, PR #102 (stacked on `r13-resume`; implementer call in the PR: interactive, the level sliding off over the menu, with threshold-then-dip the fallback if drawing the menu under the level costs a frame on the oldest phone, unmeasured while the XS is down: it won't turn on, and Jack may fix it before TestFlight day; the dock's covers hold still under the slide to lower the risk). Open, side effect for Jack, waits on him: Escapement's out-of-ticks card is where the premise fails. C2's resume clears a lost tank's save (its implementer call), so a graze from the edge on the lost card drops the tank and the card's undo, which before C19 took a tap on the back button. Options: keep a lost tank's save until "again" or a solve clears it, reopening on the lost card (the swipe loses nothing, as the premise says; a change to the resume's replay, which closes a line that ends lost); or keep C2 as built and accept it. Claude recommended the first. **Jack's call (2026-11-01): A, built on `lost-resume`, PR #103** |
 | C20. A rating request | **B:** once, after the solve that opens whirlpool; never after a loss, a spill or a purchase. Built on `r13-result`, PR #92. Open, waits on Jack: a TestFlight or playtest install that opens whirlpool spends the one trigger where Apple shows no sheet, so the App Store build over it never asks; keeping the ask needs a broader trigger, which changes the call. Recommendation: keep it as decided |
 | C21. After a purchase | **A:** the card stays with "play 04 ›" lit; an Ask to Buy approval says "Lens is yours" once on the menu. Built on `r13-shop`, PR #95: the dock's header says it unless its own card is up, and waits while a card or the settings cover the dock |
-| C22. Mac and Vision Pro | **A:** opt out for v1 in App Store Connect. Jack will bench the GPU on his old iPhone XS if it still runs |
+| C22. Mac and Vision Pro | **A:** opt out for v1 in App Store Connect. Jack will bench the GPU on his old iPhone XS if it still runs | (Round 14, F7 = C: Mac and Vision Pro off at launch, QA at month 1, the Mac on with its own nomination; revisits this call.)
 
 
 Round 13's later calls (Jack, 2026-11-01, on the open-calls page; every one as recommended but P1):
@@ -413,12 +416,42 @@ Round 13's later calls (Jack, 2026-11-01, on the open-calls page; every one as r
 | D4. The second "‹ levels" on the solved and out-of-ticks cards | **A:** removed; the top "‹ levels" and the edge swipe go back |
 | AR1. The age-range sheet (PR #79) | **A:** on the menu, never over a level or its opening; merged 2026-11-01 |
 | EC1. A geographic address | **A:** publish nothing more: the seller's name, a working support email and the GitHub page, Apple's standard EULA; the address given to anyone who asks, and put on the support page the day an enforcer writes. A knowing gap on one limb, not compliance |
-| P1. "again" on the daily's card (from F18) | **B:** a retry from the card that plays the daily as practice and saves nothing (best, started flag, analytics' first-try count and the card's best line untouched). Built on `daily-again`, PR #105: "again" after the daily's solve turns the try into practice, the later visit's path (`Game.firstTry` false). Implementer call: a clean daily offers no again, as on every level |
+| P1. "again" on the daily's card (from F18) | **B:** a retry from the card that plays the daily as practice and saves nothing (best, started flag, analytics' first-try count and the card's best line untouched). Built on `daily-again`, PR #105: "again" after the daily's solve turns the try into practice, the later visit's path (`Game.firstTry` false). Implementer call: a clean daily offers no again, as on every level. Round 14, P1-clean = A: Jack approved that |
 | P2. Prism's level colour (from F17) | **A:** white for now; the design pass settles it |
 | S1. "Undo, or again." against "reset" (C14) | **A:** both words kept |
 | S2. A vertical touch in C19's edge band | **A:** a rim turn, as iOS's own edge pan |
 
 The iPhone XS doesn't power on (2026-11-01): its bench and bake-time checks wait until Jack has fixed it, before TestFlight day.
+
+Round 14's calls (Jack, 2026-11-02, on his decisions page; the game and the build. The money and marketing calls are
+in `HANDOFF.private.md`). P is the day the paid account opens and L is launch, as the marketing plan counts them.
+Jack's own words are quoted; the rest is the option he picked.
+
+| Call | Decision |
+|---|---|
+| F1. The launch timeline | **B:** launch at P+91, nominate for featuring at P+4 to P+7, open the pre-order at P+49 |
+| F2. Reduce Motion and the live pictures | **B:** live pictures hold a still frame and endless's pour cuts to its end under Reduce Motion |
+| F3. Pointing at settings | **B:** one quiet line on plughole 01's first open, pointing at settings, once |
+| F4. Languages | **C:** a String Catalog at launch; languages as their own update, nominated at L+6 to L+8 weeks. Replaces marketing decision 15; "English only" below stays for launch |
+| F5. Game Center | **B:** sign-in plus achievements, no leaderboards, if the sign-in overlay test on an iOS 26.2+ phone passes. Replaces marketing decision 8 and "no Game Center at v1". The achievements list goes to Jack as a pitch |
+| F6. iPad | **A:** iPhone only at launch; native iPad as the first big update |
+| F7. Mac and Vision Pro | **C:** both off at launch, QA at month 1, then the Mac on with its own nomination. Revisits C22 |
+| F8. Play without sight | **Undecided.** Jack wants to see how it could work, even in theory, before committing; he knows no blind testers |
+| F9. Apple Arcade | **A:** one Arcade pitch on P, a reply by P+28; the pre-order waits for it |
+| F10. iPhone Duo | **A:** Claude scopes it. Jack: it must be polished and well done on Duo, Apple will be paying attention; he has no Duo |
+| F11. What editors play | **B+C:** an editors' TestFlight build with a visible "open every tier" switch, never in the App Store build, plus a 60 s film of the later tiers |
+| F12. EU storefronts | **A:** they stay closed. Jack: "screw the EU". The UK is unaffected |
+| M1. Complete's name | **B2:** rename Complete now to a self-limiting bundle, one per three packs. The name goes to Jack as a pitch |
+| M2. The share line's link | **A:** a tracked App Store link on its own last line of the share line, in the build that goes to review |
+| M6. Smaller marketing builds | **All six:** promoted purchases with four images; the daily archive (to-do 47); the supporter mark with an off switch (to-do 48); mid-level state surviving a kill, done as C2; a "more puzzles in the packs ›" line once on the last free tier's result card; a HANDOFF note on the four 2027 dailies the solver beats by one (not yet written) |
+| M7. The daily's gate | **A:** keep the gate after plughole 23, with honest copy that the daily opens after the ladder |
+| PR100-V26. A two-finger twist over a held rod | **A:** it commits the rod's turn, then turns the tank |
+| PR85. L1's ghost finger | **A:** approved |
+| PR104. The two pack-card wordings | **A:** approved |
+| P1-clean. "again" after a clean first-try daily | **A:** none |
+| CAP. The clean capture | **A:** it keeps the bezel and the solve wave |
+
+Still waiting on Jack: the phone check of PR #100 (`r13-cutoff`, C13).
 **Launch checklist** (App Store Connect and the rest; to be extended)
 
 - In App Store Connect's availability, exclude the EU and EEA storefronts (EU1 = B).
@@ -833,10 +866,10 @@ names and product ids, and Complete's promise to older owners.
   line (plan step 2) is separate and stays before TestFlight.
 - **Relief's audience.** No paid chapter; a free "Eyes Shut" mode after v1, prototyped with a blind tester before any
   art.
-- **Game Center and a web domain.** Neither at v1; a domain comes with sharing and Music Box's Composer links.
+- **Game Center and a web domain.** Neither at v1; a domain comes with sharing and Music Box's Composer links. *Round 14, F5 = B replaces the Game Center half: sign-in plus achievements, no leaderboards, if the overlay test passes.*
 - **Languages at v1.** English only, with every string in a String Catalog from the first pack (captions, the shelf
   and pack cards, Escapement's stipulations, purchase text), so a language is a translation job. Store metadata in
-  English on every storefront.
+  English on every storefront. *(Round 14, F4 = C: this stands for launch; languages come as their own update.)*
 - **Progress backup.** Bests and pack progress sync through iCloud key-value storage from v1.
   The undo bank and its clock anchor never sync.
 - **How to read testers' play.** Jack said yes to analytics done respectfully (round 2): anonymous counts only, no
@@ -1406,9 +1439,15 @@ names and product ids, and Complete's promise to older owners.
 47. The daily archive: a calendar screen, bests under `daily-yyyymmdd` ids, back-filled to Jack's date, opened by any
     purchase.
    Jack's call (2026-10-25, round 6): back-filled to 30 days before launch day (`Share.firstDay`).
+   Round 14, M6: to build, as one of the six marketing builds.
    Built 2026-11-02 on `r14-archive` (PR #108) (confirmed in M6): a row under today's daily, locked until any purchase, opening a
    calendar over the menu. Waits for Jack's look; its implementer calls are listed in the PR under "For Jack".
 48. The supporter mark (menu and share line), after any purchase. ~~The tip jar~~ dropped (Jack: "No begging").
+    Round 14, M6: to build, with an off switch.
+    Built 2026-11-02 on `r14-store` (Jack's call M6, round 14): a still hairline four-pointed glint after the menu's
+    title in the tier's sweep and ✦ after the share line's name, with a "supporter mark" switch in settings once a pack
+    is owned, on until switched off. Shots `menu-supporter`, `menu-supporter-off`, `menu-no-supporter`,
+    `daily-share-supporter`, `settings-supporter`.
 49. The daily share line (plan step 2), separate from sharing, before TestFlight.
    Merged 2026-10-25 (PR #24). Jack's call (2026-10-25, D1): daily #1 is launch day; until `Share.firstDay` is set,
    the line shows the date instead of a number.
@@ -1426,6 +1465,8 @@ names and product ids, and Complete's promise to older owners.
     `firststir-content` level 1 becomes Sunrise on `SceneLayer` with its own clock, so the First Stir reel must then
     draw with the level's own layer and read its `late`/`early`; `ClipTests` will flag it. Complete keeps three
     tanks drawn, two clear: its cost on the phone is unmeasured. Still open: the purchase art and the social cut.
+    The purchase art is built on `r14-store` (2026-11-02): `scripts/promo.sh` renders each sold offer's dock cover at
+    1024 x 1024 (Lens, Escapement, Prism and Complete with Release's three). The social cut is still open.
 51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
     agreement, tax and banking, and the in-app purchases with review screenshots and promoted purchases.
 52. The privacy manifest, new work (no `PrivacyInfo.xcprivacy` exists): UserDefaults with reason CA92.1, the uptime
@@ -1456,6 +1497,7 @@ names and product ids, and Complete's promise to older owners.
    the answers itself; the legal summary is kept outside the repo. Open: the pack screenshots and the 25 s film are
    still to make, and AN1 and EU1 (round 12) are decided, so the no-analytics policy is the one that stays.
 55. Check App Review's rules on Complete before naming or pricing it.
+    Round 14, M1 = B2: rename Complete now to a self-limiting bundle, one per three packs; the name goes to Jack as a pitch.
 56. ~~Offer codes for press and reviewers.~~ Dropped (Jack: "No.").
 57. TestFlight with 20 to 50 strangers and sandbox purchases. What it measures (shelf and card taps, free-taste
     completion and sandbox purchases per pack, beside day-2 return) waits on Jack's call on how to read testers' play.
