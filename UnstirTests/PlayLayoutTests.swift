@@ -232,4 +232,57 @@ final class PlayLayoutTests: XCTestCase {
         // The split has room under the glass, as the column has.
         XCTAssertNil(layout(window: open.window, insets: open.insets).filmFoot)
     }
+
+    // MARK: The menu (stage 4)
+
+    /// As the menu measures the window: its safe area's size, the insets round it and the fold in its own space.
+    private func menu(window: CGSize, insets i: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat),
+                      fold: CGRect? = nil) -> MenuLayout {
+        MenuLayout.of(size: CGSize(width: window.width - i.leading - i.trailing, height: window.height - i.top - i.bottom),
+                      insets: EdgeInsets(top: i.top, leading: i.leading, bottom: i.bottom, trailing: i.trailing),
+                      fold: fold.map { $0.offsetBy(dx: -i.leading, dy: -i.top) })
+    }
+
+    func testEveryIPhoneKeepsTodaysMenu() {
+        // The SE, the Pro Max, the Duo closed, the Duo open upright and flat, and a tall half of Split View.
+        for (window, insets) in [(CGSize(width: 375, height: 667), (20.0, 0.0, 0.0, 0.0)), (CGSize(width: 440, height: 956), (62, 0, 34, 0)),
+                                 (CGSize(width: 466, height: 678), (0, 0, 34, 84)), (CGSize(width: 669, height: 951), (59, 0, 34, 0)),
+                                 (CGSize(width: 475, height: 669), (24, 0, 21, 0))] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat))] {
+            let m = menu(window: window, insets: insets)
+            XCTAssertEqual(m, .column, "\(window)")
+            XCTAssertFalse(m.wide)
+        }
+    }
+
+    func testTheTabletopKeepsTodaysMenu() {
+        XCTAssertEqual(menu(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table), .column)
+    }
+
+    func testTheOpenDuosMenuPutsTheListAndTheCardEitherSideOfTheFold() {
+        for fold in [nil, book] as [CGRect?] {
+            let m = menu(window: open.window, insets: open.insets, fold: fold)
+            let list = try! XCTUnwrap(m.list), side = try! XCTUnwrap(m.side)
+            // In window points (the leading inset is 0): each half 16 pt clear of the fold, or of the middle.
+            let f = fold ?? CGRect(x: open.window.width / 2, y: 0, width: 0, height: open.window.height)
+            XCTAssertEqual(list.minX, 0, "the list keeps its own 20 pt margin from the screen's edge")
+            XCTAssertEqual(list.maxX, f.minX - PlayLayout.margin, accuracy: 0.001)
+            XCTAssertEqual(side.minX, f.maxX + PlayLayout.margin, accuracy: 0.001)
+            XCTAssertEqual(side.maxX, open.window.width - open.insets.trailing, accuracy: 0.001, "the card stops at the status column")
+            XCTAssertGreaterThanOrEqual(min(list.width, side.width), PlayLayout.minPane)
+            XCTAssertEqual(list.height, open.window.height - open.insets.top - open.insets.bottom)
+            XCTAssertEqual(side.height, list.height)
+            // A readable width, near a phone's: the Pro Max's list is 440 pt across.
+            XCTAssertEqual(list.width, 459.5, accuracy: fold == nil ? 0.001 : 10)
+        }
+    }
+
+    func testTheMenuSplitsWherePlaySplits() {
+        // The same rule, so the list and the tank share the leading half wherever either splits.
+        for (window, insets, fold) in [(open.window, open.insets, nil), (open.window, open.insets, book),
+                                       (CGSize(width: 669, height: 951), (59, 0, 34, 0), table),
+                                       (CGSize(width: 600, height: 400), (0, 0, 0, 0), nil)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
+            XCTAssertEqual(menu(window: window, insets: insets, fold: fold).wide,
+                           layout(window: window, insets: insets, fold: fold).kind == .split, "\(window)")
+        }
+    }
 }

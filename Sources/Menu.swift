@@ -193,6 +193,10 @@ struct MenuView: View {
     @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
+    /// UNSTIR_FOLD's fold, in the harness window's points.
+    @Environment(\.harnessFold) private var harnessFold
+    /// Where the list goes, and a card or the archive, from the window as last measured.
+    @State private var layout = MenuLayout.column
     /// When the daily row was dealt: a menu left up past midnight, or coming back to the front, deals the new day's.
     @State private var today: Date
     /// Today's daily and its run, worked out once a day rather than on every frame of a swipe. The menu is built anew
@@ -273,48 +277,28 @@ struct MenuView: View {
         let analytics = Analytics.shared
         // The menu waits for the question's answer, for VoiceOver too.
         let asking = analytics.asks && analytics.consent == .undecided
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .center) {
-                title.simultaneousGesture(swipe)
-                Spacer(minLength: 8)
-                Button { settings = true } label: {
-                    Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
+        let wide = layout.wide, fold = harnessFold
+        column
+        .frame(width: layout.list?.width)
+        // Wide, a card or the archive opens beside the list, which stays live.
+        .accessibilityHidden(asking || !wide && (card != nil || archive))
+        .overlay { if !wide { archiveView(beside: false) } }
+        .overlay { if !wide { cardView(beside: false) } }
+        .frame(maxWidth: wide ? .infinity : nil, alignment: .leading)
+        .overlay(alignment: .topLeading) {
+            if let side = layout.side {
+                ZStack {
+                    archiveView(beside: true)
+                    cardView(beside: true)
                 }
-                .buttonStyle(Sounding()).opacity(0.5)
-                .accessibilityLabel("Settings")
-            }
-            .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
-            // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
-            tiers.padding(.top, 6).scrollDisabled(true).simultaneousGesture(swipe)
-            ScrollViewReader { proxy in
-                ScrollView { rows(leading) }
-                .onAppear {
-                    scroller = proxy
-                    arrive()
-                }
-            }
-            // Once a drag is taken as sideways, the list stops scrolling under the stir.
-            .scrollDisabled(sideways == true)
-            .overlay(alignment: .topLeading) { twisted }
-            .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
-            .simultaneousGesture(swipe)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !Offer.shelf().isEmpty && PackDock.shown() {
-                    // Held still under a card, the settings or a level sliding off, when the phone saves power, or
-                    // once nobody touches it.
-                    PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || archive || settings || peeking || Power.shared.saving || Power.shared.idle,
-                             covered: card != nil || archive || settings)
-                        .equatable()
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
-                }
+                .frame(width: side.width, height: side.height)
+                .padding(.leading, side.minX)
+                .accessibilityHidden(asking)
             }
         }
-        .foregroundStyle(Color.text)
-        .accessibilityHidden(card != nil || archive || asking)
-        .overlay { archiveView }
-        .overlay { cardView }
+        .onGeometryChange(for: MenuLayout.self) {
+            MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: fold))
+        } action: { layout = $0 }
         .overlay {
             if asking { ConsentCard(tier: shown).transition(.opacity) }
         }
@@ -351,6 +335,50 @@ struct MenuView: View {
         }
         .task { if demo { await tour() } }
         .task { if shelfDemo { await shelfTour() } }
+    }
+
+    /// The title, the tier strip and the tier's list over the dock: the whole menu on a phone, its leading half wide.
+    private var column: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center) {
+                title.simultaneousGesture(swipe)
+                Spacer(minLength: 8)
+                Button { settings = true } label: {
+                    Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(Sounding()).opacity(0.5)
+                .accessibilityLabel("Settings")
+            }
+            .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
+            // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
+            tiers.padding(.top, 6).scrollDisabled(true).simultaneousGesture(swipe)
+            ScrollViewReader { proxy in
+                ScrollView { rows(leading) }
+                .onAppear {
+                    scroller = proxy
+                    arrive()
+                }
+            }
+            // Once a drag is taken as sideways, the list stops scrolling under the stir.
+            .scrollDisabled(sideways == true)
+            .overlay(alignment: .topLeading) { twisted }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
+            .simultaneousGesture(swipe)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !Offer.shelf().isEmpty && PackDock.shown() {
+                    // Held still under a card, the settings or a level sliding off, when the phone saves power, or
+                    // once nobody touches it. A card or the archive beside the list leaves it in sight and live.
+                    let over = !layout.wide && (card != nil || archive)
+                    PackDock(open: { show($0, from: $1) }, held: clock,
+                             paused: over || settings || peeking || Power.shared.saving || Power.shared.idle,
+                             covered: over || settings)
+                        .equatable()
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
+                }
+            }
+        }
+        .foregroundStyle(Color.text)
     }
 
     /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox over them once
@@ -429,8 +457,9 @@ struct MenuView: View {
         }
     }
 
-    /// The card grows out of its cover, or fades in under Reduce Motion.
-    @ViewBuilder private var cardView: some View {
+    /// The card grows out of its cover, or fades in under Reduce Motion; `beside` the list, it comes in from the
+    /// trailing edge, as the archive does.
+    @ViewBuilder private func cardView(beside: Bool) -> some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
                      focus: cardFocus, arrived: card.pack != nil && card.pack == arrived,
@@ -438,17 +467,19 @@ struct MenuView: View {
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)
-                     })
+                     }, beside: beside)
                 .id(card)
-                .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
+                .transition(reduceMotion ? .opacity
+                            : beside ? .move(edge: .trailing).combined(with: .opacity)
+                            : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
     }
 
-    /// The calendar, over the menu as a card is, from its row.
-    @ViewBuilder private var archiveView: some View {
+    /// The calendar, over the menu as a card is, or beside the list as a card is, from its row.
+    @ViewBuilder private func archiveView(beside: Bool) -> some View {
         if archive {
-            ArchiveView(days: past.days, today: today, focus: focus?.archived == true ? focus?.id : nil,
+            ArchiveView(days: past.days, today: today, focus: focus?.archived == true ? focus?.id : nil, beside: beside,
                         onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
                         onPlay: { onPick($0) })
                 .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))

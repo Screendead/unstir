@@ -446,6 +446,8 @@ struct PackCard: View {
     let onPlay: (Level) -> Void
     /// Complete's card opens a pack's card from its name.
     var onOffer: (Offer) -> Void = { _ in }
+    /// Beside the menu's list in a wide window, not over it, so VoiceOver reaches both.
+    var beside = false
     var store = Store.shared
     @State private var buying = false
     /// The focused row's hairline, lit once as the card opens on it.
@@ -571,7 +573,7 @@ struct PackCard: View {
         }
         .foregroundStyle(Color.text)
         .background(Color.black.ignoresSafeArea())
-        .accessibilityAddTraits(.isModal)
+        .accessibilityAddTraits(beside ? [] : .isModal)
         .accessibilityAction(.escape, onBack)
         .task { await store.fetchPrices() }
         // A promoted purchase buys as the card's buy does, once the launch knows what the player owns.

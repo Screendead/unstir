@@ -133,6 +133,31 @@ extension PlayLayout {
     }
 }
 
+/// Where the menu puts its list and a pack card or the archive. Wherever play splits, the list takes the leading half
+/// and a card or the archive opens in the trailing half beside it, not over it, so the fold never runs through either;
+/// the list's own 20 pt margins sit inside its half, and its dock under it, as on a phone. Anywhere else, every
+/// iPhone and the tabletop among them, the menu is today's: the card over the whole of it.
+struct MenuLayout: Equatable {
+    /// In the menu's safe area. Nil in the column.
+    let list: CGRect?
+    let side: CGRect?
+
+    var wide: Bool { list != nil }
+
+    static let column = MenuLayout(list: nil, side: nil)
+
+    /// From the menu's GeometryReader, as `PlayLayout.of` takes the play screen's: its size, the window's safe-area
+    /// insets round it and the fold in its own space.
+    static func of(size: CGSize, insets: EdgeInsets, fold: CGRect? = nil) -> MenuLayout {
+        // The split's rule is play's, panes and all; play's are inside its 16 pt side margins, the menu's are not.
+        let play = PlayLayout.of(size: size, insets: insets, fold: fold, scale: 1)
+        guard play.kind == .split else { return .column }
+        let m = PlayLayout.margin, leading = play.chromePane.minX + m
+        return MenuLayout(list: CGRect(x: 0, y: 0, width: play.tankPane.maxX + m, height: size.height),
+                          side: CGRect(x: leading, y: 0, width: size.width - leading, height: size.height))
+    }
+}
+
 /// What each part of the play screen is to `PlayStack`; a spacer is untagged.
 enum PlayPart: LayoutValueKey {
     case spacer, stage, chrome

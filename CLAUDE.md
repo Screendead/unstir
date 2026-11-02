@@ -698,7 +698,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   before the chrome runs past its pane. `PlayPart.Tagged`'s sort priorities set VoiceOver's order to header, title,
   tank, caption, swatches, controls in every pose (not yet heard; the tabletop's places alone would end with the
   tank). The play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest
-  cards fit each pane.
+  cards fit each pane. The fold is read in one place (`PlayLayout.fold`, the harness's or the system's), for the menu
+  too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule, so the tabletop keeps today's menu: the
+  list, its dock under it as on a phone, in the leading half (about 460 pt on the open Duo, a phone's width), and a
+  pack's card or the archive in the trailing half beside it rather than over it, coming in from the trailing edge,
+  neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4). With
+  neither open the trailing half is empty. The column measures the layout with `onGeometryChange` on today's tree, so
+  every iPhone's menu is unchanged, and a change of pose keeps the list's place.
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
@@ -892,7 +898,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`NSCalendarDayChanged`), so a menu left up overnight opens the new day's. The first level without a best (`Tier.frontier`) keeps its
   hairline lit. A hidden stir in
   the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
-  the list, and the card (`RootView`'s, bound in) lies over the whole menu. The list opens centred, unanimated under
+  the list, and the card (`RootView`'s, bound in) lies over the whole menu, or beside the list in a wide window
+  (`MenuLayout`), as the archive does. The list opens centred, unanimated under
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
   `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
   the first short of par, else the top). The daily, endless and the sandbox leave it at the top. That row's hairline,
