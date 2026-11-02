@@ -160,7 +160,9 @@ struct PlayStack: SwiftUI.Layout {
             case .stage: break
             }
         }
-        let gap = max(12, (pane.height - used) / CGFloat(max(spacers, 1)))
+        // The column's 12 pt where there is room for it; where there isn't (a tall card, large type), the spacers give
+        // way before the chrome runs past its pane.
+        let gap = max(0, (pane.height - used) / CGFloat(max(spacers, 1)))
         var y = pane.minY
         for s in subviews {
             switch s[PlayPart.self] {
