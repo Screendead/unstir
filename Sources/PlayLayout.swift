@@ -57,4 +57,78 @@ struct PlayLayout: Equatable {
         let chrome = CGRect(x: mid + margin, y: 0, width: trail, height: content.height)
         return PlayLayout(kind: .split, side: min(min(tank.width, tank.height - splitReserve) / rim, cap), tankPane: tank, chromePane: chrome)
     }
+
+    /// Where the glass and its rim stand in the split, in the content's space: centred in the tank's pane.
+    var stage: CGRect {
+        let s = side * Self.rim
+        return CGRect(x: tankPane.midX - s / 2, y: tankPane.midY - s / 2, width: s, height: s)
+    }
+}
+
+/// What each part of the play screen is to `PlayStack`; a spacer is untagged.
+enum PlayPart: LayoutValueKey {
+    case spacer, stage, chrome
+    static let defaultValue = PlayPart.spacer
+}
+
+/// The split's arrangement of the play screen's parts: the stage alone in the tank's pane, the rest
+/// stacked in the chrome's pane as the column stacks them, its spacers sharing what is left. The column is a plain
+/// `VStackLayout`, and both go through one `AnyLayout`, so every part keeps its identity, and so its state and
+/// animations, as the window changes between them.
+struct PlayStack: SwiftUI.Layout {
+    let layout: PlayLayout
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: LayoutSubviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: LayoutSubviews, cache: inout ()) {
+        let pane = layout.chromePane.offsetBy(dx: bounds.minX, dy: bounds.minY)
+        let across = ProposedViewSize(width: pane.width, height: nil)
+        var used: CGFloat = 0, spacers = 0
+        for s in subviews {
+            switch s[PlayPart.self] {
+            case .chrome: used += s.sizeThatFits(across).height
+            case .spacer: spacers += 1
+            case .stage: break
+            }
+        }
+        let gap = max(12, (pane.height - used) / CGFloat(max(spacers, 1)))
+        var y = pane.minY
+        for s in subviews {
+            switch s[PlayPart.self] {
+            case .stage:
+                let r = layout.stage.offsetBy(dx: bounds.minX, dy: bounds.minY)
+                s.place(at: CGPoint(x: r.midX, y: r.midY), anchor: .center, proposal: ProposedViewSize(r.size))
+            case .spacer:
+                s.place(at: CGPoint(x: pane.midX, y: y), anchor: .top, proposal: ProposedViewSize(width: pane.width, height: gap))
+                y += gap
+            case .chrome:
+                let h = s.sizeThatFits(across).height
+                s.place(at: CGPoint(x: pane.midX, y: y), anchor: .top, proposal: ProposedViewSize(width: pane.width, height: h))
+                y += h
+            }
+        }
+    }
+}
+
+/// The tank, laid out at its new side at once (its picture, rings and knobs all drawn for it), scaled from the side it
+/// had: animated, it glides from one pose's size to the other's.
+struct Glide: ViewModifier, Animatable {
+    var shown: CGFloat
+    let side: CGFloat
+
+    init(side: CGFloat) {
+        shown = side
+        self.side = side
+    }
+
+    nonisolated var animatableData: CGFloat {
+        get { shown }
+        set { shown = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        content.scaleEffect(side > 0 && shown > 0 ? shown / side : 1)
+    }
 }
