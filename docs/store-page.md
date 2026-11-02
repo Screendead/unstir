@@ -189,8 +189,8 @@ Notes:
   picture if the grid reads too plain beside 1.
 - 3 is plughole level 13 solved; a solve wave on a live picture would need a new case (`UNSTIR_TIER=whirlpool` with the
   same harness solve).
-- 4 is vortex 13 on the ephemeris. Of the three vortex pictures shot, it reads darkest at thumbnail size and cords
-  (vortex 16) best, so cords is the recommendation, awaiting Jack's call; isobars (vortex 14) is the third.
+- 4 is vortex 14, Monsoon, on the isobars (Jack's call VORTEXSHOT, round 16). Of the three vortex pictures shot, the
+  ephemeris (vortex 13, the first pick) read darkest at thumbnail size and cords (vortex 16) was the recommendation.
 - 6 and 7 are harnessed states a player reaches (a solved daily, a brim at 5 of 8), so they show nothing a player can't
   see. The menu shots with `UNSTIR_UNLOCK` (`menu-unlocked`, `menu-maelstrom`) would show every tier open, which no new
   player sees; `menu-vortex-open` is the honest menu if B wants one.
