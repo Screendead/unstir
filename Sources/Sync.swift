@@ -67,14 +67,10 @@ final class Sync {
         if took > 0 { Self.revision.bump() }
     }
 
-    /// Whether `a` replaces `b` on the other side: a daily's best kept on its day before one the archive saved after it,
-    /// as on one phone the archive replays a day kept on its day as practice, so it never moves `Daily.run`; then
-    /// clean, then fewer over par, never time (`Best.standing`, Jack's call C10, round 13). A tie keeps `b`, the one
-    /// that side already holds.
-    nonisolated static func beats(_ a: Best, _ b: Best) -> Bool {
-        let rank = { (x: Best) in (x.archived == true ? 1 : 0, x.standing.0, x.standing.1) }
-        return rank(a) < rank(b)
-    }
+    /// Whether `a` replaces `b` on the other side, by the rank `Best.save` keeps (`Best.standing`): as on one phone the
+    /// archive replays a day kept on its day as practice, a synced archive solve never moves `Daily.run`. A tie keeps
+    /// `b`, the one that side already holds.
+    nonisolated static func beats(_ a: Best, _ b: Best) -> Bool { a.standing < b.standing }
 
     /// What each side takes from the other: every id whose best there beats its own, or that it lacks.
     nonisolated static func merge(local: [String: Best], cloud: [String: Best])

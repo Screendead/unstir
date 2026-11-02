@@ -3781,9 +3781,10 @@ struct ResultCard: View {
     @State private var packs: Pack?
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
-    /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
+    /// then over par), and nothing on a first solve, which a daily's first on its day is over a best the archive saved
+    /// (`Best.standing` puts it first). Escapement has no par, so its marks are clean and solved.
     static func bestLine(was: Best?, now: Best, par: Bool) -> String? {
-        guard let was else { return nil }
+        guard let was, (was.archived == true) == (now.archived == true) else { return nil }
         func mark(_ b: Best) -> String { b.clean == true ? "clean" : !par ? "solved" : b.over == 0 ? "par" : "+\(b.over)" }
         return now.standing < was.standing ? "new best \u{00B7} was \(mark(was))" : "best \u{00B7} \(mark(was))"
     }

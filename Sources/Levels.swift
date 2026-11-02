@@ -464,11 +464,13 @@ struct Best: Codable {
         if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.register(defaults: ["best.\(id)": data]) }
     }
 
-    /// Clean, then fewer over par: what a result card names, so it calls a best new only when that changes.
-    var standing: (Int, Int) { (clean == true ? 0 : 1, over) }
+    /// The one rank of bests, which saving, iCloud's merge (`Sync.beats`) and the result card all read, lower first: a
+    /// daily's best kept on its day before one the archive saved after it, which `Daily.run` never counts; then clean,
+    /// then fewer over par, never time (Jack's call C10, round 13).
+    var standing: (Int, Int, Int) { (archived == true ? 1 : 0, clean == true ? 0 : 1, over) }
 
-    /// Keeps the better of this and the stored result: clean, then fewer over par, never faster (Jack's call C10, round
-    /// 13), so a tie keeps the older. Unstored, the harness's, it lasts only this launch, as `fake`'s does.
+    /// Keeps the better of this and the stored result by `standing`, so a tie keeps the older. Unstored, the harness's,
+    /// it lasts only this launch, as `fake`'s does.
     func save(_ id: String, store: Bool = true) {
         if let old = Best.load(id), old.standing <= standing { return }
         if store { UserDefaults.standard.set(try? JSONEncoder().encode(self), forKey: "best.\(id)") } else { fake(id) }
