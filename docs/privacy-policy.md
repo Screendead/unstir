@@ -14,7 +14,8 @@ Unstir is a puzzle game made by {{DEVELOPER_NAME}}, its developer ("we", "us").
 ## In short
 
 The game itself collects no personal data. It has no account, no ads, no analytics and no tracking, and it connects to
-no server of ours. The only thing it talks to is Apple's App Store, through Apple's StoreKit, for prices and purchases.
+no server of ours. The only things it talks to are Apple's services: the App Store, through StoreKit, for prices and
+purchases, and, where a US state law asks, Apple's age-range check.
 The only data we ever receive is an email you choose to send us.
 
 ## What stays on your phone
