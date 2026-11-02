@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import StoreKit
 import XCTest
 @testable import Unstir
 
@@ -164,6 +165,26 @@ final class PackTests: XCTestCase {
             XCTAssertFalse(value.contains("@"), String(line))
             XCTAssertFalse(value.contains("$()/") || value.contains("://"), String(line))
         }
+    }
+
+    /// The log keeps what tells one StoreKit failure from another and none of the words or userInfo an error carries.
+    func testAStoreErrorLogsItsCaseAndCodeAlone() {
+        let inner = NSError(domain: "ASDErrorDomain", code: 500, userInfo: [
+            NSLocalizedDescriptionKey: "inner words",
+            NSUnderlyingErrorKey: NSError(domain: "AMSErrorDomain", code: 301,
+                                          userInfo: [NSLocalizedDescriptionKey: "deeper"]),
+        ])
+        let url = URL(string: "https://example.com/a")!
+        let offline = URLError(.notConnectedToInternet, userInfo: [NSURLErrorFailingURLErrorKey: url])
+        let cases: [(Error, String)] = [
+            (StoreKitError.unknown, "StoreKitError.unknown"),
+            (StoreKitError.notEntitled, "StoreKitError.notEntitled"),
+            (StoreKitError.systemError(inner), "StoreKitError.systemError(ASDErrorDomain 500 < AMSErrorDomain 301)"),
+            (StoreKitError.networkError(offline), "StoreKitError.networkError(NSURLErrorDomain -1009)"),
+            (Product.PurchaseError.purchaseNotAllowed, "PurchaseError.purchaseNotAllowed"),
+            (CocoaError(.fileNoSuchFile, userInfo: [NSFilePathErrorKey: "a/b"]), "NSCocoaErrorDomain 4"),
+        ]
+        for (error, logged) in cases { XCTAssertEqual(Store.described(error), logged) }
     }
 
     /// The editors' switch (Jack's call F11) is in the editors' build alone: the tracked config builds without it, this

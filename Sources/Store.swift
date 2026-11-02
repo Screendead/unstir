@@ -256,7 +256,7 @@ final class Store {
             try await fetch()
             pricing = .fetched
         } catch {
-            Log.write("products failed: \(error)")
+            Log.write("products failed: \(Self.described(error))")
             pricing = .unreachable
         }
     }
@@ -318,7 +318,26 @@ final class Store {
             @unknown default: failed("unknown result")
             }
         } catch {
-            failed("\(error)", Failure(error))
+            failed(Self.described(error), Failure(error))
+        }
+    }
+
+    /// A StoreKit error's case, else its domain and code, a wrapped error's too: never a message or userInfo, as the
+    /// log can leave the phone and those can carry a URL, the wrapped error's own words or the player's language.
+    nonisolated static func described(_ error: Error) -> String {
+        // Cut at the payload, in case a later SDK's case carries one.
+        func name(_ e: Error) -> Substring { "\(e)".prefix { $0 != "(" } }
+        func code(_ e: Error) -> String {
+            let ns = e as NSError
+            let under = (ns.userInfo[NSUnderlyingErrorKey] as? NSError).map { " < \($0.domain) \($0.code)" } ?? ""
+            return "\(ns.domain) \(ns.code)\(under)"
+        }
+        return switch error {
+        case StoreKitError.networkError(let e): "StoreKitError.networkError(\(code(e)))"
+        case StoreKitError.systemError(let e): "StoreKitError.systemError(\(code(e)))"
+        case let e as StoreKitError: "StoreKitError.\(name(e))"
+        case let e as Product.PurchaseError: "PurchaseError.\(name(e))"
+        default: code(error)
         }
     }
 
@@ -336,7 +355,7 @@ final class Store {
         do {
             try await AppStore.sync()
         } catch {
-            Log.write("restore failed: \(error)")
+            Log.write("restore failed: \(Self.described(error))")
             return said(Failure(error) == .cancelled ? nil : .failed)
         }
         await refresh()
