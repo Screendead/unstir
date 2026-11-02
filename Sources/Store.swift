@@ -223,6 +223,7 @@ final class Store {
         let read = Task {
             await refresh()
             ready = true
+            Log.write("store ready")
         }
         first = read
         await read.value
