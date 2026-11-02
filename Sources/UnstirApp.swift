@@ -27,7 +27,13 @@ struct UnstirApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if GPUBench.wanted { GPUBenchView() } else { RootView() }
+            if GPUBench.wanted {
+                GPUBenchView()
+            } else if let window = HarnessWindow.wanted {
+                window.body(RootView())
+            } else {
+                RootView()
+            }
         }
     }
 }
@@ -419,6 +425,37 @@ struct Harness {
         shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
         typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
         mute = (harnessed || env.keys.contains { $0.hasPrefix("XCTest") }) && env["UNSTIR_SOUND"] != "1"
+    }
+}
+
+/// UNSTIR_FRAME=951x669 lays the app out in a window of that size, shrunk to fit the simulator, with UNSTIR_INSETS
+/// (top,leading,bottom,trailing points) as its safe area: the iPhone Duo's inner display, which no simulator can be
+/// driven to headlessly. It shows Unstir's own layout, not the system's bars or fold.
+struct HarnessWindow {
+    let size: CGSize
+    let insets: EdgeInsets
+
+    static let wanted: HarnessWindow? = {
+        let env = ProcessInfo.processInfo.environment
+        guard let f = env["UNSTIR_FRAME"]?.split(separator: "x").compactMap({ Double($0) }), f.count == 2 else { return nil }
+        let i = (env["UNSTIR_INSETS"] ?? "").split(separator: ",").compactMap { Double($0) }
+        let e = i.count == 4 ? EdgeInsets(top: i[0], leading: i[1], bottom: i[2], trailing: i[3]) : EdgeInsets()
+        return HarnessWindow(size: CGSize(width: f[0], height: f[1]), insets: e)
+    }()
+
+    func body(_ content: some View) -> some View {
+        GeometryReader { screen in
+            let k = min(1, screen.size.width / size.width, screen.size.height / size.height)
+            content
+                .safeAreaPadding(insets)
+                .frame(width: size.width, height: size.height)
+                .background(Color.black)
+                .clipped()
+                .scaleEffect(k)
+                .frame(width: screen.size.width, height: screen.size.height)
+        }
+        .ignoresSafeArea()
+        .background(Color(white: 0.25))
     }
 }
 

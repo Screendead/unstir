@@ -1,0 +1,66 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
+
+import XCTest
+@testable import Unstir
+
+final class PlayLayoutTests: XCTestCase {
+    /// Content inside the side margins, as the play screen's GeometryReader measures it, beside the whole window.
+    private func layout(window: CGSize, insets: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat),
+                        scale: CGFloat = 3) -> PlayLayout {
+        let content = CGSize(width: window.width - insets.leading - insets.trailing - 2 * PlayLayout.margin,
+                             height: window.height - insets.top - insets.bottom)
+        return PlayLayout.of(content: content, window: window, middle: window.width / 2 - insets.leading - PlayLayout.margin,
+                             scale: scale)
+    }
+
+    func testEveryIPhoneKeepsTodaysColumn() {
+        // Content sizes measured on each simulator (PR #112): SE, Pro Max, the Duo closed.
+        for (window, content, scale) in [(CGSize(width: 375, height: 667), CGSize(width: 343, height: 647), 2.0),
+                                         (CGSize(width: 440, height: 956), CGSize(width: 408, height: 860), 3),
+                                         (CGSize(width: 466, height: 678), CGSize(width: 350, height: 644), 3)] {
+            let l = PlayLayout.of(content: content, window: window, scale: scale)
+            XCTAssertEqual(l.kind, .column, "\(window)")
+            XCTAssertEqual(l.side, min(content.width, content.height - 290) / 1.045, "\(window): today's formula")
+            XCTAssertLessThan(l.side * scale, PlayLayout.maxPixels, "\(window): no phone reaches the cap")
+        }
+    }
+
+    func testTheOpenDuoSplitsWithTheTankWhollyInTheLeadingHalf() {
+        // The inner display opened like a book: the status column on the trailing edge (its width assumed from the
+        // closed display's 84 pt), the home indicator below.
+        let window = CGSize(width: 951, height: 669)
+        let l = layout(window: window, insets: (24, 0, 21, 84))
+        XCTAssertEqual(l.kind, .split)
+        // In window points: the tank's pane ends short of the fold, the chrome's starts past it.
+        let fold = window.width / 2
+        XCTAssertLessThanOrEqual(PlayLayout.margin + l.tankPane.maxX, fold - PlayLayout.margin)
+        XCTAssertGreaterThanOrEqual(PlayLayout.margin + l.chromePane.minX, fold + PlayLayout.margin)
+        XCTAssertGreaterThanOrEqual(l.chromePane.width, PlayLayout.minPane)
+        // The glass and its rim fit the pane, near the size the shader's limits were tuned at.
+        XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
+        XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.height - PlayLayout.splitReserve)
+        XCTAssertEqual(l.side, 424, accuracy: 1)
+        XCTAssertLessThanOrEqual(l.side * 3, PlayLayout.maxPixels)
+    }
+
+    func testTheOpenDuoUprightKeepsTheColumnAtTheCap() {
+        let l = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0))
+        XCTAssertEqual(l.kind, .column)
+        XCTAssertEqual(l.side, PlayLayout.maxPixels / 3, accuracy: 0.001, "1800 px uncapped")
+    }
+
+    func testANarrowOrSmallWindowKeepsTheColumn() {
+        // Split View's half of the open Duo is tall.
+        XCTAssertEqual(layout(window: CGSize(width: 475, height: 669), insets: (24, 0, 21, 0)).kind, .column)
+        // Wider than tall, but each half too narrow for the chrome.
+        XCTAssertEqual(layout(window: CGSize(width: 600, height: 500), insets: (0, 0, 0, 0)).kind, .column)
+    }
+
+    func testTheSplitFollowsTheWindowsMiddleNotTheContents() {
+        // A status column on the leading edge moves the content, not the fold.
+        let a = layout(window: CGSize(width: 951, height: 669), insets: (24, 84, 21, 0))
+        XCTAssertEqual(a.kind, .split)
+        XCTAssertEqual(84 + PlayLayout.margin + a.tankPane.maxX, 951 / 2 - PlayLayout.margin, accuracy: 0.001)
+        XCTAssertEqual(84 + PlayLayout.margin + a.chromePane.minX, 951 / 2 + PlayLayout.margin, accuracy: 0.001)
+    }
+}

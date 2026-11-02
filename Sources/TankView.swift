@@ -1090,6 +1090,8 @@ struct LevelView: View {
     /// The swipe let go past its threshold: the level is leaving.
     @State private var swipedAway = false
     @State private var width: CGFloat = 0
+    /// The whole window in global points, safe areas and all, which the play layout splits at its middle.
+    @State private var window = CGRect.zero
     /// The tank's origin in global points, where the edge band is.
     @State private var tankOrigin = CGPoint.zero
     /// UNSTIR_BACKSWIPE=0.4: the level held that far into a back swipe.
@@ -1289,158 +1291,217 @@ struct LevelView: View {
         }
     }
 
+    /// The play screen's way out and its count: moves against par, Escapement's ticks or the sandbox's controls.
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Button(action: leave) { Text(game.level.back).hit() }
+                .accessibilityLabel(Spoken.back(game.level))
+            Spacer()
+            if game.level.sandbox {
+                // Each says what it steps through where there is room for it.
+                ViewThatFits(in: .horizontal) {
+                    sandboxControls(named: true)
+                    sandboxControls(named: false)
+                }
+            } else if !game.level.ratchets.isEmpty {
+                tickBudget.opacity(showResult && !game.lost ? 0 : 1)
+            } else {
+                // Endless has no par; its brim is on the rim.
+                Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
+                    // On black the wasted-twist alarm reads at full contrast, whatever the picture shows.
+                    .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { [tone = countTone] text, t in
+                        text.foregroundStyle(t > 0.5 ? Color.alarm : tone)
+                    } keyframes: { _ in
+                        // Red for 0.4 s. A trailing MoveKeyframe never lands, so the ramp ends the flash.
+                        MoveKeyframe(1.0)
+                        LinearKeyframe(0.0, duration: 0.8)
+                    }
+                    .opacity(showResult || ending ? 0 : 1)
+                    .accessibilityLabel(game.movesSpoken)
+            }
+        }
+        .font(.mono(13))
+        .padding(.top, 8)
+        .modifier(Unseen(clean))
+    }
+
+    private var titleRow: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Text(game.level.label).foregroundStyle(game.level.colour).shadow(color: game.level.colour, radius: 4)
+            // Endless's tank beside its name, where it can't read as the brim's count.
+            Text(game.level.title + (game.level.run.map { ", tank \($0.tank + 1)" } ?? ""))
+        }
+        .font(.mono(15, .medium))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .topLeading) {
+            // In the gap above the title, so a pack level's tank sits where every other level's does.
+            if let pack = game.level.pack {
+                Text(pack.name.uppercased()).font(.mono(10, .semibold)).tracking(2)
+                    .foregroundStyle(game.level.colour).opacity(0.75).offset(y: -15)
+                    // The way out already names the pack.
+                    .accessibilityHidden(true)
+            }
+        }
+        .padding(.top, 18)
+        .modifier(Unseen(clean))
+    }
+
+    private var reveal: AnyTransition { .opacity.animation(.easeOut(duration: 0.4).delay(0.3)) }
+
+    /// The tank with what stands over it: the night forwards and "unstirred.".
+    private func stage(_ side: CGFloat) -> some View {
+        tank(side)
+            // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
+            .accessibilityValue(game.tankSpoken)
+            .accessibilityHint("Played by sight: drag a knob to turn its rod.")
+            .accessibilityAddTraits(.allowsDirectInteraction)
+            .overlay {
+                if ending {
+                    NightForwardsFilm(side: side, frozen: frozenEnding) {
+                        withAnimation(.easeOut(duration: 0.5)) { ending = false }
+                        withAnimation(.easeIn(duration: 0.3).delay(0.4)) { showResult = true }
+                        Log.write("night forwards ended")
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .overlay(alignment: .top) {
+                // A spill says so over the tank itself.
+                if showResult && game.solved && !clean {
+                    Text("unstirred.").font(.mono(22, .semibold))
+                        .shadow(color: .white.opacity(0.5), radius: 6)
+                        .offset(y: -62)
+                        .transition(reveal)
+                }
+            }
+    }
+
+    /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
+    /// is an overlay, so the solved tank stays exactly where it was played.
+    private var caption: some View {
+        Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
+             : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
+             : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
+            .font(.mono(12)).opacity(captionOpacity)
+            // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does.
+            .overlay(alignment: .bottom) {
+                if pointing {
+                    Self.pointer.font(.mono(12)).fixedSize()
+                        .opacity(showResult || ending || shown != nil ? 0 : 0.55)
+                        .animation(.easeOut(duration: 0.4), value: shown == nil)
+                        .accessibilityLabel(Self.pointerSpoken)
+                        .accessibilityHidden(showResult || ending || shown != nil)
+                        // A line of 12 pt mono and a gap below the note's last line.
+                        .offset(y: 21)
+                }
+            }
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
+            .padding(.top, 14)
+            .accessibilityHidden(showResult || ending)
+            .modifier(SkipButton(on: demoing || shown != nil) { skip() })
+            .overlay(alignment: .top) {
+                if showResult && game.lost {
+                    LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
+                        .padding(.top, 14)
+                        .transition(reveal)
+                } else if showResult {
+                    ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 14)
+                        .transition(reveal)
+                }
+            }
+            .modifier(Unseen(clean))
+    }
+
+    @ViewBuilder private var swatches: some View {
+        // Only where colour can't carry the read, so for everyone else the read stays by colour.
+        if !game.level.masks.isEmpty, letters || Letters.shown(system: differentiate) || isolated != nil {
+            ChannelSwatches(isolated: $isolated)
+                .opacity(showResult || ending || shown != nil ? 0 : 1)
+                .allowsHitTesting(!showResult && shown == nil)
+                .modifier(Unseen(clean))
+        }
+    }
+
+    private var controls: some View {
+        HStack {
+            // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats too.
+            control(game.level.sandbox ? "undo" : "undo \u{00B7} \(game.bank)") {
+                if settling { undoQueued = true } else { undo() }
+            }
+                .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
+                // An empty bank only says when it refills, so it only taps.
+                .buttonStyle(Sounding(effect: spent ? .tap : .undo))
+                .disabled(game.history.isEmpty)
+                // The plain button style does not grey a disabled label.
+                .opacity(game.history.isEmpty || spent ? 0.35 : 1)
+                .overlay(alignment: .topTrailing) { refillBadge }
+            Spacer()
+            resetControl
+        }
+        // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
+        // other level's does.
+        .disabled(game.finished || shown != nil || demoing || game.level.run != nil || holding)
+        .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
+        .accessibilityHidden(game.level.run != nil || showResult || ending)
+        .padding(.bottom, 8)
+        .modifier(Unseen(clean))
+    }
+
+    /// The play layout for the content's geometry, split where the window is wide at the window's middle.
+    private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
+        let frame = geo.frame(in: .global)
+        // Global points are scaled where the harness shrinks a window to fit the simulator (UNSTIR_FRAME).
+        let k = geo.size.width > 0 ? frame.width / geo.size.width : 0
+        guard window.width > 0, k > 0 else { return PlayLayout.of(content: geo.size, window: geo.size, scale: scale) }
+        return PlayLayout.of(content: geo.size, window: CGSize(width: window.width / k, height: window.height / k),
+                             middle: (window.midX - frame.minX) / k, scale: scale)
+    }
+
     private var screen: some View {
         GeometryReader { geo in
-            // The rim sits outside the glass, 0.045 of the radius on each side.
-            let side = min(geo.size.width, geo.size.height - 290) / 1.045
-            VStack(spacing: 0) {
-                HStack(alignment: .firstTextBaseline) {
-                    Button(action: leave) { Text(game.level.back).hit() }
-                        .accessibilityLabel(Spoken.back(game.level))
-                    Spacer()
-                    if game.level.sandbox {
-                        // Each says what it steps through where there is room for it.
-                        ViewThatFits(in: .horizontal) {
-                            sandboxControls(named: true)
-                            sandboxControls(named: false)
-                        }
-                    } else if !game.level.ratchets.isEmpty {
-                        tickBudget.opacity(showResult && !game.lost ? 0 : 1)
-                    } else {
-                        // Endless has no par; its brim is on the rim.
-                        Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
-                            // On black the wasted-twist alarm reads at full contrast, whatever the picture shows.
-                            .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { [tone = countTone] text, t in
-                                text.foregroundStyle(t > 0.5 ? Color.alarm : tone)
-                            } keyframes: { _ in
-                                // Red for 0.4 s. A trailing MoveKeyframe never lands, so the ramp ends the flash.
-                                MoveKeyframe(1.0)
-                                LinearKeyframe(0.0, duration: 0.8)
-                            }
-                            .opacity(showResult || ending ? 0 : 1)
-                            .accessibilityLabel(game.movesSpoken)
-                    }
+            let layout = playLayout(geo)
+            switch layout.kind {
+            case .column:
+                VStack(spacing: 0) {
+                    header
+                    titleRow
+                    Spacer(minLength: 12)
+                    stage(layout.side)
+                    caption
+                    swatches
+                    Spacer(minLength: 12)
+                    controls
                 }
-                .font(.mono(13))
-                .padding(.top, 8)
-                .modifier(Unseen(clean))
-                HStack(alignment: .firstTextBaseline, spacing: 14) {
-                    Text(game.level.label).foregroundStyle(game.level.colour).shadow(color: game.level.colour, radius: 4)
-                    // Endless's tank beside its name, where it can't read as the brim's count.
-                    Text(game.level.title + (game.level.run.map { ", tank \($0.tank + 1)" } ?? ""))
+            case .split:
+                // The fold runs down the window's middle, between the halves, so neither half reaches it.
+                HStack(spacing: 0) {
+                    stage(layout.side).frame(width: layout.tankPane.width, height: layout.tankPane.height)
+                    Spacer(minLength: 0)
+                    VStack(spacing: 0) {
+                        header
+                        titleRow
+                        Spacer(minLength: 12)
+                        caption
+                        swatches
+                        Spacer(minLength: 12)
+                        controls
+                    }
+                    .frame(width: layout.chromePane.width)
                 }
-                .font(.mono(15, .medium))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .overlay(alignment: .topLeading) {
-                    // In the gap above the title, so a pack level's tank sits where every other level's does.
-                    if let pack = game.level.pack {
-                        Text(pack.name.uppercased()).font(.mono(10, .semibold)).tracking(2)
-                            .foregroundStyle(game.level.colour).opacity(0.75).offset(y: -15)
-                            // The way out already names the pack.
-                            .accessibilityHidden(true)
-                    }
-                }
-                .padding(.top, 18)
-                .modifier(Unseen(clean))
-                Spacer(minLength: 12)
-                let reveal = AnyTransition.opacity.animation(.easeOut(duration: 0.4).delay(0.3))
-                tank(side)
-                    // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
-                    .accessibilityValue(game.tankSpoken)
-                    .accessibilityHint("Played by sight: drag a knob to turn its rod.")
-                    .accessibilityAddTraits(.allowsDirectInteraction)
-                    .overlay {
-                        if ending {
-                            NightForwardsFilm(side: side, frozen: frozenEnding) {
-                                withAnimation(.easeOut(duration: 0.5)) { ending = false }
-                                withAnimation(.easeIn(duration: 0.3).delay(0.4)) { showResult = true }
-                                Log.write("night forwards ended")
-                            }
-                            .transition(.opacity)
-                        }
-                    }
-                    .overlay(alignment: .top) {
-                        // A spill says so over the tank itself.
-                        if showResult && game.solved && !clean {
-                            Text("unstirred.").font(.mono(22, .semibold))
-                                .shadow(color: .white.opacity(0.5), radius: 6)
-                                .offset(y: -62)
-                                .transition(reveal)
-                        }
-                    }
-                // The play controls fade rather than leave, and the result is an overlay, so the solved tank stays
-                // exactly where it was played.
-                Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
-                     : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
-                     : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
-                    .font(.mono(12)).opacity(captionOpacity)
-                    // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does.
-                    .overlay(alignment: .bottom) {
-                        if pointing {
-                            Self.pointer.font(.mono(12)).fixedSize()
-                                .opacity(showResult || ending || shown != nil ? 0 : 0.55)
-                                .animation(.easeOut(duration: 0.4), value: shown == nil)
-                                .accessibilityLabel(Self.pointerSpoken)
-                                .accessibilityHidden(showResult || ending || shown != nil)
-                                // A line of 12 pt mono and a gap below the note's last line.
-                                .offset(y: 21)
-                        }
-                    }
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
-                    .padding(.top, 14)
-                    .accessibilityHidden(showResult || ending)
-                    .modifier(SkipButton(on: demoing || shown != nil) { skip() })
-                    .overlay(alignment: .top) {
-                        if showResult && game.lost {
-                            LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
-                                .padding(.top, 14)
-                                .transition(reveal)
-                        } else if showResult {
-                            ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.top, 14)
-                                .transition(reveal)
-                        }
-                    }
-                    .modifier(Unseen(clean))
-                // Only where colour can't carry the read, so for everyone else the read stays by colour.
-                if !game.level.masks.isEmpty, letters || Letters.shown(system: differentiate) || isolated != nil {
-                    ChannelSwatches(isolated: $isolated)
-                        .opacity(showResult || ending || shown != nil ? 0 : 1)
-                        .allowsHitTesting(!showResult && shown == nil)
-                        .modifier(Unseen(clean))
-                }
-                Spacer(minLength: 12)
-                HStack {
-                    // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats too.
-                    control(game.level.sandbox ? "undo" : "undo \u{00B7} \(game.bank)") {
-                        if settling { undoQueued = true } else { undo() }
-                    }
-                        .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
-                        // An empty bank only says when it refills, so it only taps.
-                        .buttonStyle(Sounding(effect: spent ? .tap : .undo))
-                        .disabled(game.history.isEmpty)
-                        // The plain button style does not grey a disabled label.
-                        .opacity(game.history.isEmpty || spent ? 0.35 : 1)
-                        .overlay(alignment: .topTrailing) { refillBadge }
-                    Spacer()
-                    resetControl
-                }
-                // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
-                // other level's does.
-                .disabled(game.finished || shown != nil || demoing || game.level.run != nil || holding)
-                .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
-                .accessibilityHidden(game.level.run != nil || showResult || ending)
-                .padding(.bottom, 8)
-                .modifier(Unseen(clean))
             }
         }
         .foregroundStyle(Color.text)
         .tint(Color.text)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, PlayLayout.margin)
+        .background {
+            Color.clear.ignoresSafeArea()
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { window = $0 }
+        }
         .background(Color.black)
         .accessibilityAction(.escape) { leave() }
         .task(id: replays) {
