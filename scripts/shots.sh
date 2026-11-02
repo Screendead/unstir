@@ -732,7 +732,7 @@ for c in r g b; do
   hold=5 shot "prism-swatch-$c" "Prism specimen 8 with the $c swatch held: that channel's lines alone, in its own colour, the others hidden." \
     PACK=prism LEVEL=8 OWNED=prism SWATCH=$c
 done
-if [[ -z "$pattern" || prism-swatch-white == *$pattern* ]]; then
+if [[ -z "$pattern" || prism-swatch-white-r == *$pattern* || prism-swatch-white-b == *$pattern* ]]; then
   plain() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility DifferentiateWithoutColor -bool "$1"; }
   trap 'plain false' EXIT
   plain true
