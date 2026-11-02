@@ -641,6 +641,12 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "packs.pointed") }
     }
 
+    /// Set as plughole 01's first open points at the settings, so it does so once (Jack's call F3, round 14).
+    static var pointedAtSettings: Bool {
+        get { UserDefaults.standard.bool(forKey: "settings.pointed") }
+        set { UserDefaults.standard.set(newValue, forKey: "settings.pointed") }
+    }
+
     /// Set the first time the daily or endless opens: until then, once open, their rows are marked new. Unstored, the
     /// harness's, it lasts only this launch.
     static var modesSeen: Bool { UserDefaults.standard.bool(forKey: "modes.seen") }

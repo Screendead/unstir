@@ -64,7 +64,8 @@ shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, h
 # Where the list opens: a cold launch, and back from a level through RootView's own exit (UNSTIR_EXIT).
 upto13=0000000000000
 # What the menu leads with (C4, C5, C18, C3's tried mark).
-shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it." FRESH=1 OPEN=1
+shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings." FRESH=1 OPEN=1
+hold=9 shot first-launch-pointer "The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both." FRESH=1 OPEN=1
 shot menu-after-01 "Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list." BESTS=plughole:0
 shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox." \
   TIER=whirlpool BESTS=plughole:$par27
@@ -733,3 +734,23 @@ hold=5 shot clean-lens-03 "Lens 03 on the halftone, its lens held mid-zoom, draw
   PACK=lens LEVEL=3 CLEAN=1 LIVE=0:+1 TOUCH=0,-0.8
 hold=5 shot clean-prism-01 "Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption." \
   PACK=prism LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
+# Under Reduce Motion (set on the simulator, as film.sh's calm films do): every live picture holds Picture.rest's frame,
+# the brim holds where a change settles, and a spill cuts to its end.
+calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
+# Off again however the shots end, or every later shot records the calm look.
+trap 'calm false' EXIT
+calm true
+for picture in glass chainmail coral neurons marbling glassTwin chainmailTwin coralTwin neuronsTwin marblingTwin isobars ephemeris cords; do
+  hold=5 shot "calm-$picture" "Reduce Motion: the sandbox on $picture, stirred twice, held on its still frame (Picture.rest)." \
+    MODE=sandbox PICTURE=$picture STACK=1:+5,2:-4
+done
+hold=9 shot calm-chainmailTwin-later "Reduce Motion: the same, 9 s in: the same frame, the heartbeat at rest between beats." \
+  MODE=sandbox PICTURE=chainmailTwin STACK=1:+5,2:-4
+shot calm-endless-brim-7 "Reduce Motion: endless opened at 7 notches, one from spilling: the rim still, no bob or tremble, the pin's pulse held lit." \
+  MODE=endless BRIM=7
+shot calm-endless-notch "Reduce Motion: endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 in place at once, settled, no slosh or surge." \
+  MODE=endless BRIM=4 TURNED=1:1
+shot calm-endless-spilled "Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card." \
+  MODE=endless BRIM=7 TURNED=1:1
+calm false
+trap - EXIT

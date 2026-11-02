@@ -51,6 +51,14 @@ enum Picture: String, CaseIterable {
         }
     }
 
+    /// The clock a live picture is drawn at, `seconds` after the level opened: under Reduce Motion (`still`) the one
+    /// frame `rest` holds.
+    func clock(_ seconds: Double, still: Bool) -> Double { still ? Self.rest : seconds }
+
+    /// Reduce Motion's frame for every live picture: 0.88 into a second, so a twin's beat, which reaches no point more
+    /// than 0.4 late, has passed everywhere and the next has yet to start (`testATwinRestsBetweenBeatsUnderReduceMotion`).
+    static let rest = 20.88
+
     /// A live picture's own cost per frame, in stack entries of four-tap unstir work. The glass's is about four (Mac GPU
     /// microbench); the others are the glass's scaled by their Mac GPU cost against it, not yet confirmed on the phone.
     var fillEntries: Int {

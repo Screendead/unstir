@@ -984,6 +984,12 @@ struct LevelView: View {
     @State private var skippedDemo: CGPoint?
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
+    /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
+    /// SwiftUI reruns the init after the flag is stored, and the line stays the visit out.
+    @State private var pointing: Bool
+    @State private var pointed = false
+    /// Only a plain launch stores that it has; under the harness UNSTIR_FRESH shows it.
+    private let storesPointing: Bool
     /// A line the caption shows for a few seconds in place of its own, saying why a control or a turn did nothing.
     @State private var notice: String?
     @State private var notices = 0
@@ -1165,6 +1171,10 @@ struct LevelView: View {
         holdArmed = harness?.resetArmed ?? false
         _armedAt = State(initialValue: holdArmed ? .now : nil)
         demoRetired = harness == nil && Best.load(level.id) != nil
+        let harnessed = harness?.harnessed == true
+        _pointing = State(initialValue: Self.points(at: level, harnessed: harnessed, fresh: harness?.fresh == true,
+                                                    pointed: Best.pointedAtSettings))
+        storesPointing = !harnessed
         // A resumed try opens where it was left, with no opening.
         _shown = State(initialValue: still || level.sandbox || self.resumed ? nil : 0)
         self.onExit = onExit
@@ -1352,6 +1362,18 @@ struct LevelView: View {
                 Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
                     .font(.mono(12)).opacity(captionOpacity)
+                    // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does.
+                    .overlay(alignment: .bottom) {
+                        if pointing {
+                            Self.pointer.font(.mono(12)).fixedSize()
+                                .opacity(showResult || ending || shown != nil ? 0 : 0.55)
+                                .animation(.easeOut(duration: 0.4), value: shown == nil)
+                                .accessibilityLabel(Self.pointerSpoken)
+                                .accessibilityHidden(showResult || ending || shown != nil)
+                                // A line of 12 pt mono and a gap below the note's last line.
+                                .offset(y: 21)
+                        }
+                    }
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
                     .padding(.top, 14)
@@ -1457,6 +1479,11 @@ struct LevelView: View {
                 game.startClock()
                 badge = game.badge
                 noteLit = frozenClock == nil && game.counts && !game.level.note.isEmpty && game.level.story == nil
+                if pointing && !pointed {
+                    pointed = true
+                    if storesPointing { Best.pointedAtSettings = true }
+                    AccessibilityNotification.Announcement(Self.pointerSpoken).post()
+                }
             } else {
                 lifted = false
             }
@@ -1643,6 +1670,15 @@ struct LevelView: View {
 
     nonisolated static let refills = "undos refill +2 each day you play"
 
+    /// Plughole 01's pointer to the settings sheet, drawn with the menu's own gear.
+    static var pointer: Text { Text("sound, haptics, colour letters: \(Image(systemName: "gearshape")) on the menu") }
+    nonisolated static let pointerSpoken = "Sound, haptics and colour letters are in settings, the gear on the menu."
+
+    /// Whether this level opens pointing at the settings: plughole 01 until it has, or under the harness UNSTIR_FRESH.
+    nonisolated static func points(at level: Level, harnessed: Bool, fresh: Bool, pointed: Bool) -> Bool {
+        level.id == Tier.plughole.levels.first?.id && (harnessed ? fresh : !pointed)
+    }
+
     /// A notice, or Escapement's dead tick, reads above the resting caption.
     private var captionOpacity: Double {
         if showResult || ending { return 0 }
@@ -1703,6 +1739,9 @@ struct LevelView: View {
     }
 
     private var touching: Bool { drag != nil || liveRod != nil || liveTurn != nil || spun || ghost != nil }
+    /// Endless's rim, and a spill's murk and words, held this many seconds after the brim's last change: UNSTIR_CLOCK's,
+    /// or under Reduce Motion where it comes to rest.
+    private var brimHeld: Double? { frozenClock ?? (reduceMotion ? Brim.rest(spilled: game.spilled) : nil) }
     /// The tank is the player's and untouched, and the game breathes: its breath may run. Never under Reduce Motion,
     /// and never in a harness launch that holds the clock.
     private var resting: Bool {
@@ -2056,13 +2095,13 @@ struct LevelView: View {
         // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow,
         // and 30 Hz while the phone saves power.
         // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
-        // breathes.
-        let moving = game.level.picture.isLive || spillAt != nil && brimMoving || breathing
+        // breathes. Under Reduce Motion a live picture and a spill hold still.
+        let moving = !reduceMotion && (game.level.picture.isLive || spillAt != nil && brimMoving) || breathing
         let tickNow = game.tick, clocks = game.level.clocks, playable = shown == nil
         return ZStack {
             TimelineView(.animation(minimumInterval: 1.0 / (Power.shared.saving ? 30 : 60), paused: !moving || frozenClock != nil)) { timeline in
                 let murk = spillAt.flatMap { at -> [Float]? in
-                    let since = (frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
+                    let since = (brimHeld ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
@@ -2073,7 +2112,8 @@ struct LevelView: View {
                                        onStrike: { struck = true })
                         } else {
                             PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
-                                         clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
+                                         clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
+                                         onStrike: { struck = true })
                         }
                     }
                         .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
@@ -2158,7 +2198,8 @@ struct LevelView: View {
                 ZStack {
                     if let run = game.level.run, let rimColours {
                         // Moving for a while after each change, and all the while the room runs short.
-                        BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: frozenClock,
+                        BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: brimHeld,
+                                 still: frozenClock == nil && reduceMotion,
                                  paused: !(brimMoving || !game.spilled && game.brim >= Run.room - 1))
                     }
                 }
@@ -2241,8 +2282,8 @@ struct LevelView: View {
                         .transition(.opacity)
                 }
                 if let spillAt {
-                    TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || frozenClock != nil)) { timeline in
-                        SpillWords(r: r, at: frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
+                    TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || brimHeld != nil)) { timeline in
+                        SpillWords(r: r, at: brimHeld ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
                     }
                 }
                 if let c = rodCount, c.steps != 0 {
