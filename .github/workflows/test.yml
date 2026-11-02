@@ -46,6 +46,9 @@ jobs:
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
           UNSTIR_SIM=$udid scripts/test-store.sh -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+      # Measures the app the test step built, so it costs no build of its own.
+      - name: App size
+        run: scripts/app-size.sh build/store/Build/Products/Debug-iphonesimulator/Unstir.app
       - name: Slowest tests
         if: always()
         run: scripts/ci-times.sh "$RUNNER_TEMP/test.log"
