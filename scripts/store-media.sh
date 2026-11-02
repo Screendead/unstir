@@ -26,11 +26,18 @@ take() {  # film.sh case...
   for name in "$@"; do scripts/film.sh "$name\$"; done
 }
 
-# Seconds into a take from just before its picture strikes.
-struck() {
-  local s
-  s=$(scripts/strike.sh "shots/film/$1.mp4")
-  [[ -n "$s" ]] || { echo "$1: no picture struck in its take; film it again (scripts/film.sh $1)" >&2; exit 1; }
+# Seconds into take $1 to start from, $2 after just before its picture strikes, for $3 s, which the take must hold at the
+# screen's full size: a shrunk take, or one from another simulator, would be scaled into the store's sizes unasked.
+span() {
+  local mp4="shots/film/$1.mp4" s size length
+  size=$(ffprobe -v error -select_streams v -show_entries stream=width,height -of csv=s=x:p=0 "$mp4")
+  [[ "$size" == 1320x2868 ]] || { echo "$1: its take is $size, not 1320x2868; film it again (FILM_FULL=1 scripts/film.sh '$1\$')" >&2; exit 1; }
+  s=$(scripts/strike.sh "$mp4")
+  [[ -n "$s" ]] || { echo "$1: no picture struck in its take; film it again (scripts/film.sh '$1\$')" >&2; exit 1; }
+  s=$(awk -v a="$s" -v b="$2" 'BEGIN { print a + b }')
+  length=$(ffprobe -v error -select_streams v -show_entries stream=duration -of csv=p=0 "$mp4")
+  awk -v a="$s" -v k="$3" -v l="$length" 'BEGIN { exit !(a + k <= l) }' ||
+    { echo "$1: keeping $3 s from $s s runs past its take's end at $length s; film it longer" >&2; exit 1; }
   echo "$s"
 }
 
@@ -55,8 +62,7 @@ if [[ "$what" == preview || "$what" == all ]]; then
   inputs=() chains="" labels="" n=${#preview[@]}
   for i in "${!preview[@]}"; do
     IFS='|' read -r name from keep words <<< "${preview[i]}"
-    start=$(struck "$name")
-    start=$(awk -v a="$start" -v b="$from" 'BEGIN { print a + b }')
+    start=$(span "$name" "$from" "$keep")
     python3 scripts/store-captions.py film "$words" "$work/caption-$i.png"
     inputs+=(-i "shots/film/$name.mp4" -i "$work/caption-$i.png")
     # recordVideo writes a frame only when the screen changes, so fps= first.
@@ -97,8 +103,7 @@ if [[ "$what" == social || "$what" == sound || "$what" == all ]]; then
   mkdir -p "$out/social"
   for clip in "${social[@]}"; do
     IFS='|' read -r name from keep <<< "$clip"
-    start=$(struck "$name")
-    start=$(awk -v a="$start" -v b="$from" 'BEGIN { print a + b }')
+    start=$(span "$name" "$from" "$keep")
     suffix="" audio=(-an)
     if [[ "$what" == sound ]]; then
       suffix=-sound audio=(-map 0:a -c:a aac -b:a 256k -af "loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=out:st=$(awk -v k="$keep" 'BEGIN { print k - 0.3 }'):d=0.3")
