@@ -2651,24 +2651,26 @@ struct LevelView: View {
     /// disc of `radius` about `c`, the disc's own hairline round it, a long mark level with the knob where the stir
     /// began, a dash per step up for in and down for out, `pitch` apart, over a rail with a mark at `now`
     /// steps, where the drag stands.
-    /// Its rail stops at `bounds`' top and foot, the tank's pane, where the drag runs long.
+    /// The rail, its dashes and its marks stop at `bounds`' top and foot, the tank's pane, where the drag runs long.
     private func track(_ c: CGPoint, _ radius: CGFloat, x: CGFloat, pitch: CGFloat, steps: Int, bounds: CGRect?, now: Double)
         -> some View {
-        func y(_ s: Double) -> CGFloat { c.y - CGFloat(s) * pitch }
         func held(_ y: CGFloat) -> CGFloat { bounds.map { min(max(y, $0.minY), $0.maxY) } ?? y }
+        func y(_ s: Double) -> CGFloat { held(c.y - CGFloat(s) * pitch) }
         let reach = max(3.5, abs(now) + 0.5), dir = steps > 0 ? 1.0 : -1.0, gap = 3 / Double(pitch)
         let dashes = Path { p in
             for i in 0..<abs(steps) {
-                p.move(to: CGPoint(x: x, y: y(dir * (Double(i) + gap))))
-                p.addLine(to: CGPoint(x: x, y: y(dir * (Double(i + 1) - gap))))
+                let a = y(dir * (Double(i) + gap)), b = y(dir * (Double(i + 1) - gap))
+                guard a != b else { continue }
+                p.move(to: CGPoint(x: x, y: a))
+                p.addLine(to: CGPoint(x: x, y: b))
             }
         }
         return ZStack {
             Path(ellipseIn: CGRect(x: c.x - radius, y: c.y - radius, width: 2 * radius, height: 2 * radius))
                 .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
-            Path { $0.move(to: CGPoint(x: x, y: held(y(-reach)))); $0.addLine(to: CGPoint(x: x, y: held(y(reach)))) }
+            Path { $0.move(to: CGPoint(x: x, y: y(-reach))); $0.addLine(to: CGPoint(x: x, y: y(reach))) }
                 .stroke(Color.live.opacity(Self.traceTone), lineWidth: Self.hairline)
-            Path { $0.move(to: CGPoint(x: x - 6, y: c.y)); $0.addLine(to: CGPoint(x: x + 6, y: c.y)) }
+            Path { $0.move(to: CGPoint(x: x - 6, y: y(0))); $0.addLine(to: CGPoint(x: x + 6, y: y(0))) }
                 .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
             Path { $0.move(to: CGPoint(x: x - 3, y: y(now))); $0.addLine(to: CGPoint(x: x + 3, y: y(now))) }
                 .stroke(Color.live.opacity(Self.dashTone), lineWidth: Self.hairline)

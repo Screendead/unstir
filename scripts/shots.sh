@@ -833,6 +833,8 @@ shot duo-tabletop-lesson "Duo tabletop: maelstrom 01, the tank never turned: the
   "${table[@]}" TIER=maelstrom LEVEL=1 CLOCK=3
 shot duo-tabletop-lesson-count "Duo tabletop: whirlpool 25 with knobs 2 and 5 seized, rod 1 at the top turned +1: its count beside the lesson's arc, both below the fold." \
   "${table[@]}" TIER=whirlpool LEVEL=25 SEIZED=2,5 LIVE=1:+1 TOUCH=0,-0.3 CLOCK=3
+shot duo-tabletop-lens-long "Duo tabletop: Lens 01's top lens dragged up nine steps, past the pane's top: the track's rail, dashes and now mark stop at the pane, clear of the fold." \
+  "${table[@]}" PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42
 shot duo-tabletop-ending "Duo tabletop: the night forwards 1 s in, its lines (the beat, the time, tap to skip) at the foot of the upright half, where unstirred. stands, as the glass fills the lower half." \
   "${table[@]}" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=1.1
 shot duo-tabletop-ladder-end-ax5 "Duo tabletop at the largest accessibility text size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold." \
