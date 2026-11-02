@@ -216,7 +216,7 @@ struct BrimRing: View {
     /// The notches the tank opened with.
     let base: Int
     let colours: (hue: [Float], lines: [Float])
-    /// UNSTIR_CLOCK: the rim held this many seconds after the newest change.
+    /// The rim held this many seconds after the newest change: UNSTIR_CLOCK's, or Reduce Motion's where it rests.
     let held: Double?
     /// Reduce Motion's: held where it rests, not mid-motion as UNSTIR_CLOCK's frame is.
     var still = false

@@ -1669,8 +1669,8 @@ struct LevelView: View {
     nonisolated static let refills = "undos refill +2 each day you play"
 
     /// Plughole 01's pointer to the settings sheet, drawn with the menu's own gear.
-    static var pointer: Text { Text("sounds, haptics, colour letters: \(Image(systemName: "gearshape")) on the menu") }
-    nonisolated static let pointerSpoken = "Sounds, haptics and colour letters are in settings, the gear on the menu."
+    static var pointer: Text { Text("sound, haptics, colour letters: \(Image(systemName: "gearshape")) on the menu") }
+    nonisolated static let pointerSpoken = "Sound, haptics and colour letters are in settings, the gear on the menu."
 
     /// Whether this level opens pointing at the settings: plughole 01 until it has, or under the harness UNSTIR_FRESH.
     nonisolated static func points(at level: Level, harnessed: Bool, fresh: Bool, pointed: Bool) -> Bool {
