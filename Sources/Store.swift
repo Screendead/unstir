@@ -120,7 +120,7 @@ final class Store {
     /// The launch's first read of the entitlements has finished, so a pack the player owns reads as owned.
     private(set) var ready = false
     /// The launch's read and its first price fetch have both finished, however the fetch went, or `shelfWait` has
-    /// passed since the read: the dock shows from then, so what they bring never changes it in sight.
+    /// passed since the read: the dock shows from then, so what they bring never changes it in sight, unless a fetch outlasts the wait.
     private(set) var shelved = false
     /// How long the dock waits on the launch's price fetch after the read.
     static let shelfWait = 3.0

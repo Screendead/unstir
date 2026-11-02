@@ -1030,9 +1030,10 @@ struct PackDock: View, Equatable {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             .animation(.easeInOut(duration: 0.4), value: store.approved.first)
-            .task(id: Saying(offer: store.approved.first, covered: covered)) {
+            .task(id: Saying(offer: Self.saying(store.approved.first, covered: covered, shelved: store.shelved),
+                             covered: covered || !store.shelved)) {
                 // Held under UNSTIR_CLOCK, for its shot.
-                guard let offer = store.approved.first, !covered else { return }
+                guard let offer = Self.saying(store.approved.first, covered: covered, shelved: store.shelved) else { return }
                 if announced.insert(offer).inserted { AccessibilityNotification.Announcement(offer.yours).post() }
                 // Five seconds in sight: covered, it waits.
                 guard held == nil else { return }
@@ -1093,7 +1094,7 @@ struct PackDock: View, Equatable {
             .onGeometryChange(for: CGFloat.self) { $0.size.width - 16 } action: { row = $0 }
         }
         // Unseen until the launch's read of what is owned and its price fetch have settled (`Store.shelved`), then a new
-        // dock fading in whole, so neither the header nor the bundle's cover ever changes in sight as they land. Laid
+        // dock fading in whole, so neither the header nor the bundle's cover changes in sight as they land, unless a fetch outlasts the wait. Laid
         // out meanwhile from what is known so far, at first nothing owned and no prices, most players' settled dock,
         // so its height rarely moves.
         .opacity(store.shelved ? 1 : 0)
@@ -1117,6 +1118,11 @@ struct PackDock: View, Equatable {
         .overlay(alignment: .top) {
             Rectangle().fill(Offer.complete.gradient).frame(height: 0.5).opacity(0.45).padding(.horizontal, 20)
         }
+    }
+
+    /// The approval the header says now: none while a card or the settings covers the dock, or before it shows.
+    static func saying(_ approved: Offer?, covered: Bool, shelved: Bool) -> Offer? {
+        covered || !shelved ? nil : approved
     }
 
     private struct Saying: Equatable {

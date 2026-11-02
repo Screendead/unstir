@@ -364,6 +364,9 @@ final class PackTests: XCTestCase {
 
         let store = Store()
         XCTAssertFalse(store.shelved, "the dock waits for the launch's read and price fetch")
+        XCTAssertNil(PackDock.saying(.pack(.lens), covered: false, shelved: false), "no approval said over a blank dock")
+        XCTAssertNil(PackDock.saying(.pack(.lens), covered: true, shelved: true))
+        XCTAssertEqual(PackDock.saying(.pack(.lens), covered: false, shelved: true), .pack(.lens))
         for prices in [[:], amounts] {
             let read = [Pricing.fetching, .fetched, .unreachable].map { pricing in
                 store.pretend(Ledger(), amounts: prices, pricing: pricing)
