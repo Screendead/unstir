@@ -658,7 +658,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   portrait lock) splits at the fold, 16 pt clear of it either side: the tank alone, centred, in the leading half, and
   `LevelView`'s header, title, caption (and the cards hung from it), swatches and controls in the trailing half. The
   fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
-  the phone is folded), else the window's middle. A tall window folded across (the Duo upright on a table) is the
+  the phone is folded; compiled in only from an SDK whose SwiftUI is 8.1 or later, as CI's older Xcode lacks it), else
+  the window's middle. A tall window folded across (the Duo upright on a table) is the
   tabletop: the rest in the upright half, the tank filling the half lying flat, and "unstirred." at the upright half's
   foot (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
   shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1300 px), the size the stack's limits

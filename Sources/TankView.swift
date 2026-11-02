@@ -1466,8 +1466,13 @@ struct LevelView: View {
     /// The fold while the phone is folded, in the reader's space: the harness's, else the system's division region.
     private func fold(_ geo: GeometryProxy) -> CGRect? {
         if let f = harnessFold { return f.offsetBy(dx: -geo.safeAreaInsets.leading, dy: -geo.safeAreaInsets.top) }
+        // The iOS 27.1 SDK's SwiftUI (8.1) brought the regions; CI's Xcode has an older one.
+        #if canImport(SwiftUI, _version: 8.1)
         guard #available(iOS 27.1, *) else { return nil }
         return geo.reservedRegions(kind: .division).first { $0.isActive }?.frame
+        #else
+        return nil
+        #endif
     }
 
     private var screen: some View {
