@@ -851,6 +851,8 @@ hold=10 shot duo-open-card-owned "Duo open: Lens owned, its card home beside the
   "${duo[@]}" SCREEN=menu BESTS=plughole:$nine,lens:000 OWNED=lens CARD=lens CLOCK=1
 hold=10 shot duo-open-archive "Duo open: the archive's calendar beside the list, Lens owned." \
   "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens ARCHIVE=1 ARCHIVED=5:c,6:0,8:2,11:t
+hold=16 shot duo-open-card-over-archive "Duo open: the archive beside the list, Lens's card opened from the dock 4.5 s in and closed again (UNSTIR_SHELFDEMO): the trailing half empty, as the card closed the archive rather than lying over it." \
+  "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens ARCHIVE=1 SHELFDEMO=1
 shot duo-open-mid-switch "Duo open: the menu mid-switch, whirlpool's list unstirring into place inside the leading half (UNSTIR_TIERSPIN)." \
   "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33 OWNED= CLOCK=1
 hold=10 shot duo-folded-book-menu "Duo half open like a book: the list in the leading half and Escapement's card in the trailing half, each clear of the fold's band." \

@@ -702,8 +702,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule, so the tabletop keeps today's menu: the
   list, its dock under it as on a phone, in the leading half (about 460 pt on the open Duo, a phone's width), and a
   pack's card or the archive in the trailing half beside it rather than over it, coming in from the trailing edge,
-  neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4). With
-  neither open the trailing half is empty. The column measures the layout with `onGeometryChange` on today's tree, so
+  neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4). It holds
+  one at a time: whichever opens last, from the list, the dock or `RootView`, closes the other, and unfolding with a
+  card over the archive keeps the card. With neither open the trailing half is empty. The column measures the layout with `onGeometryChange` on today's tree, so
   every iPhone's menu is unchanged, and a change of pose keeps the list's place.
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so

@@ -307,6 +307,12 @@ struct MenuView: View {
             window = $0
         }
         .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
+        // Wide, the trailing half holds one at a time, as both stay live there: the one opened last, from the list,
+        // the dock or the root (a gate, a promoted purchase), closes the other, which would lie unseen and still read
+        // to VoiceOver under it. Unfolding with a card over the archive keeps the card, the one in sight.
+        .onChange(of: card) { if layout.wide, card != nil, archive { withAnimation(.snappy(duration: 0.42)) { archive = false } } }
+        .onChange(of: archive) { if layout.wide, archive, card != nil { show(nil) } }
+        .onChange(of: layout.wide) { if layout.wide, card != nil, archive { archive = false } }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
         .onChange(of: card == nil && !archive && !settings) { Power.shared.touched() }
         // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
