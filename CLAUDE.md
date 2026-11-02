@@ -131,6 +131,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
   Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives.
+- Editors' reel: `scripts/editors-film.sh [--join]` films `scripts/film.sh editors-` (whirlpool 03 and vortex 02 drawn
+  clean, maelstrom 01, Escapement 02 and Prism 01, each solved at par by a drawn fingertip) and joins them, each from
+  just before its picture strikes for the seconds its list keeps, into `shots/film/editors-reel.mp4`, about a minute,
+  for the App Store nomination's supplemental links (Jack's call F11); `--join` only rejoins.
   Git ignores `shots/` apart from `index.txt`: show pictures and films in a PR by attaching them to a comment through
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
 - Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` and prints each file's
