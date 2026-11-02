@@ -30,15 +30,26 @@ film() {  # name seconds strip-filter KEY=VALUE...
   wants "$name" || return 0
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
-  xcrun simctl io "$udid" recordVideo --codec=h264 --force "$mp4" >/dev/null 2>&1 &
-  local rec=$! snd=""
+  local snd="" began="" wav="shots/film/$name.nut"
   # FILM_SOUND=1 plays the take's sound and records it from BlackHole, which the caller has made the Mac's output
-  # (scripts/store-media.sh sound); recordVideo records no audio.
+  # (scripts/store-media.sh sound); recordVideo records no audio. Neither recorder's file says when it started, so
+  # both are placed on the host clock (CLOCK_UPTIME_RAW, which avfoundation stamps audio on): the audio keeps its own
+  # stamps (-copyts), so a buffer a busy Mac drops stays a gap rather than pulling the rest early, and the video starts
+  # when recordVideo says it has.
   if [[ -n "${FILM_SOUND:-}" ]]; then
     vars+=(SIMCTL_CHILD_UNSTIR_SOUND=1)
-    ffmpeg -loglevel error -y -f avfoundation -i ":BlackHole 2ch" "shots/film/$name.wav" < /dev/null &
+    ffmpeg -loglevel error -y -thread_queue_size 8192 -f avfoundation -i ":BlackHole 2ch" -copyts -c:a pcm_f32le "$wav" \
+      < /dev/null &
     snd=$!
+    began=$(mktemp)
+    sleep 1  # the audio first, so the take's first sounds are in it
   fi
+  xcrun simctl io "$udid" recordVideo --codec=h264 --force "$mp4" >/dev/null 2> >(python3 -u -c '
+import sys, time
+for line in sys.stdin:
+    if "Recording started" in line:
+        print(time.clock_gettime(time.CLOCK_UPTIME_RAW))' > "${began:-/dev/null}") &
+  local rec=$!
   sleep 1.5  # the recorder takes a moment to start
   env "${vars[@]}" xcrun simctl launch "$udid" "$bundle" >/dev/null
   sleep "$secs"
@@ -47,10 +58,17 @@ film() {  # name seconds strip-filter KEY=VALUE...
   if [[ -n "$snd" ]]; then
     kill -INT "$snd"
     wait "$snd" || true
-    ffmpeg -loglevel error -y -i "$mp4" -i "shots/film/$name.wav" -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k \
+    local v0 a0
+    v0=$(cat "$began")
+    trash "$began"
+    [[ -n "$v0" ]] || { echo "$name: recordVideo never said it started, so its sound can't be placed" >&2; exit 1; }
+    a0=$(ffprobe -v error -show_entries stream=start_time -of csv=p=0 "$wav")
+    # async fills a dropped buffer's gap with silence; apad lets the video, not the sound, set the length.
+    ffmpeg -loglevel error -y -i "$mp4" -itsoffset "$(awk -v a="$a0" -v v="$v0" 'BEGIN { print a - v }')" -i "$wav" \
+      -map 0:v -map 1:a -c:v copy -af aresample=async=1:first_pts=0,apad -shortest -c:a aac -b:a 256k \
       "${mp4%.mp4}-sound.mp4"
     mv "${mp4%.mp4}-sound.mp4" "$mp4"
-    trash "shots/film/$name.wav"
+    trash "$wav"
   fi
   # The strip starts at the first dark frame: the home screen is bright and the app is black.
   local start
