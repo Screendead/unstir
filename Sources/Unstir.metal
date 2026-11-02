@@ -81,7 +81,7 @@ template <typename L>
 static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius, device const float *twists, int count,
                                 device const float *masks, int maskCount, float n, float cost, float fourTaps,
                                 float plateau, float swirlPlateau, float lensEdge, float scale, float haze, float3 wave,
-                                float turn, float isolate) {
+                                float turn, float isolate, float3 tint) {
     int stride = cost > fourTaps ? 3 : 1;
     int alone = int(isolate);
     float ct = cos(turn), st = sin(turn);
@@ -93,7 +93,7 @@ static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius
         chains(min(int(n), min(count / 4, maskCount)), twists, masks, plateau, swirlPlateau, lensEdge, qr, qg, qb);
         float3 s = float3(layer.sample(centre + qr * radius).r, layer.sample(centre + qg * radius).g,
                           layer.sample(centre + qb * radius).b);
-        if (alone != 0) s = float3(alone == 1 ? s.r : alone == 2 ? s.g : s.b);
+        if (alone != 0) s = (alone == 1 ? s.r : alone == 2 ? s.g : s.b) * tint;
         acc += lit(s, p, wave);
     }
     return finish(acc, stride, haze);
@@ -115,13 +115,15 @@ static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius
 
 // Prism's: each of red, green and blue sampled through its own word, the entries whose mask (masks[i], a Channels raw
 // value) holds it. cost is the work in entries, against fourTaps as n is above. isolate, a single channel's raw value or
-// 0, draws that channel alone in white and hides the others: the held swatch, which reads without telling colours apart.
+// 0, draws that channel alone in tint and hides the others: the held swatch, in its own colour, or white under
+// Differentiate Without Colour, where it reads without telling colours apart.
 [[ stitchable ]] half4 unstirChannels(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
                                       device const float *twists, int count, device const float *masks, int maskCount,
                                       float n, float cost, float fourTaps, float plateau, float swirlPlateau,
-                                      float lensEdge, float scale, float haze, float3 wave, float turn, float isolate) {
+                                      float lensEdge, float scale, float haze, float3 wave, float turn, float isolate,
+                                      float3 tint) {
     return unstirChannelsBody(pos, layer, centre, radius, twists, count, masks, maskCount, n, cost, fourTaps, plateau,
-                              swirlPlateau, lensEdge, scale, haze, wave, turn, isolate);
+                              swirlPlateau, lensEdge, scale, haze, wave, turn, isolate, tint);
 }
 
 // The GPU bench (UNSTIR_GPUBENCH, GPUBench.swift): the stitchables' own bodies on a texture of the picture, one thread a
@@ -148,7 +150,7 @@ kernel void benchUnstir(texture2d<half> picture [[texture(0)]], texture2d<half, 
     float2 pos = (float2(gid) + 0.5) / a.scale, centre = float2(a.radius);
     half4 c = a.channels != 0
         ? unstirChannelsBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost, a.fourTaps,
-                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0)
+                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0, float3(1))
         : unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
                      a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0);
     out.write(c, gid);

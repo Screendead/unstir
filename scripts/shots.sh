@@ -725,12 +725,24 @@ done
 for layout in quad eye pent hex; do
   hold=5 shot "prism-bare-$layout" "Prism's fern under $layout's knobs, unstirred: some line in every core." PACK=prism LAYOUT=$layout STACK=0:+1 BARE=1
 done
-# Colour-blind reading: each swatch held on specimen 8 (red, green and blue rods), its channel alone in white; and the
+# Colour-blind reading: each swatch held on specimen 8 (red, green and blue rods), its channel alone in its own colour,
+# and in white under Differentiate Without Colour (set on the simulator, as the calm shots set Reduce Motion); and the
 # knobs' letters, as Differentiate Without Colour shows them, on 8 and on 14 (the inks).
 for c in r g b; do
-  hold=5 shot "prism-swatch-$c" "Prism specimen 8 with the $c swatch held: that channel's lines alone, in white, the others hidden." \
+  hold=5 shot "prism-swatch-$c" "Prism specimen 8 with the $c swatch held: that channel's lines alone, in its own colour, the others hidden." \
     PACK=prism LEVEL=8 OWNED=prism SWATCH=$c
 done
+if [[ -z "$pattern" || prism-swatch-white == *$pattern* ]]; then
+  plain() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility DifferentiateWithoutColor -bool "$1"; }
+  trap 'plain false' EXIT
+  plain true
+  for c in r b; do
+    hold=5 shot "prism-swatch-white-$c" "Prism specimen 8 with the $c swatch held under Differentiate Without Colour: that channel's lines alone in white, the knobs lettered." \
+      PACK=prism LEVEL=8 OWNED=prism SWATCH=$c
+  done
+  plain false
+  trap - EXIT
+fi
 hold=5 shot prism-letters-8 "Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB." \
   PACK=prism LEVEL=8 OWNED=prism LETTERS=1
 hold=5 shot prism-letters-chosen "Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches." PACK=prism LEVEL=1 LETTERSCHOICE=1

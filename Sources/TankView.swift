@@ -2068,7 +2068,8 @@ struct LevelView: View {
             : Double(game.position) * step + (held ?? 0)
         let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? Self.haze(over: game.over) : 0, turn: turn,
-                                  fillEntries: game.level.picture.fillEntries, isolate: isolated)
+                                  fillEntries: game.level.picture.fillEntries, isolate: isolated,
+                                  whiteIsolate: differentiate)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
         let source = game.history.last.map { $0.rod == Game.tank ? .zero : centre(game.knob(over: $0.rod)) } ?? centre(0)
         let frozenWave = frozenWave
@@ -3204,8 +3205,10 @@ struct Unstirred: ViewModifier, Animatable {
     var breath: (rod: Int, angle: Double)?
     /// Escapement: the clock's tick part way, on top of the stack and under the live twist.
     var tick: (rod: Int, angle: Double)?
-    /// Prism: one channel drawn alone in white, the others hidden, while its swatch is held.
+    /// Prism: one channel drawn alone, the others hidden, while its swatch is held: in its own colour, or in white under
+    /// Differentiate Without Colour (`whiteIsolate`).
     var isolate: Channels?
+    var whiteIsolate = false
     @Environment(\.displayScale) private var scale
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>> {
@@ -3240,6 +3243,7 @@ struct Unstirred: ViewModifier, Animatable {
         let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
         if let cost = Self.channelCost(channels) {
             // The in-flight entry rides over by its own cost, as above, so a touch never changes the taps.
+            let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
             let flight = [liveRod, breathes ? breath?.rod : nil, tick?.rod].compactMap { $0 }
                 .map { (masks[$0] ?? .white).rawValue.nonzeroBitCount }.max() ?? 0
             return content.layerEffect(
@@ -3247,7 +3251,7 @@ struct Unstirred: ViewModifier, Animatable {
                                              .float(Float(cost)), .float(Float(Tank.fourTaps - fillEntries + flight)), .float(Float(Tank.plateau)),
                                              .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)),
                                              .float3(wave.x, wave.y, wave.z), .float(Float(turn)),
-                                             .float(Float(isolate?.rawValue ?? 0))),
+                                             .float(Float(isolate?.rawValue ?? 0)), .float3(tint.x, tint.y, tint.z)),
                 maxSampleOffset: CGSize(width: side, height: side))
         }
         return content.layerEffect(
@@ -3259,11 +3263,13 @@ struct Unstirred: ViewModifier, Animatable {
 
 extension Channels {
     /// A knob's tint: the cover's red, green and blue, and each mix their brightest.
-    var colour: Color {
+    var colour: Color { Color(.sRGB, red: tint.x, green: tint.y, blue: tint.z) }
+
+    /// `colour`'s sRGB components, which a held swatch's channel is drawn in.
+    var tint: SIMD3<Double> {
         let parts: [(Channels, SIMD3<Double>)] = [(.red, SIMD3(0xFF, 0x2A, 0x2A)), (.green, SIMD3(0x2A, 0xFF, 0x5A)),
                                                   (.blue, SIMD3(0x3A, 0x6B, 0xFF))]
-        let c = parts.filter { contains($0.0) }.map(\.1).reduce(SIMD3<Double>(0, 0, 0)) { simd_max($0, $1) } / 255
-        return Color(.sRGB, red: c.x, green: c.y, blue: c.z)
+        return parts.filter { contains($0.0) }.map(\.1).reduce(SIMD3<Double>(0, 0, 0)) { simd_max($0, $1) } / 255
     }
 }
 
@@ -3302,9 +3308,9 @@ extension EnvironmentValues {
     @Entry var channelLetters = false
 }
 
-/// Prism's swatches, red, green and blue, shown with the colour letters: holding one draws that channel alone
-/// in white, the others hidden, so which lines a channel has stirred reads by shape alone. VoiceOver toggles one instead
-/// of holding it.
+/// Prism's swatches, red, green and blue, shown with the colour letters: holding one draws that channel alone in its own
+/// colour, the others hidden, so which lines a channel has stirred reads by shape alone; in white under Differentiate
+/// Without Colour, where pure red or blue on black can read dark. VoiceOver toggles one instead of holding it.
 struct ChannelSwatches: View {
     @Binding var isolated: Channels?
 

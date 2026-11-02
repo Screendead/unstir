@@ -552,8 +552,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ticks, pointer and a jewel at the cap's centre. Under the settings' colour letters, which follow Differentiate
   Without Colour until chosen (`Letters`, stored as `letters`, absent until then; Jack's call C16, round 13), or
   `UNSTIR_LETTERS=1`, Prism reads without colour: each knob spells out the primaries it holds under its cap (`Channels.letters`: R, GB, RGB),
-  and `ChannelSwatches` (R, G and B) sit under the caption; holding one draws that channel alone in white and hides the
-  others (`Unstirred.isolate`, the `unstirChannels` shader's `isolate`), and VoiceOver toggles it. Neither shows
+  and `ChannelSwatches` (R, G and B) sit under the caption; holding one draws that channel alone in its own
+  colour (`Channels.tint`, its knob's; Jack, round 15) and hides the others (`Unstirred.isolate`, the `unstirChannels`
+  shader's `isolate` and `tint`), in white instead under the system's Differentiate Without Colour, whatever the
+  letters' choice (`Unstirred.whiteIsolate`), and VoiceOver toggles it. Neither shows
   otherwise, so the read stays by colour for everyone else, and Prism's card says "letters for colour-blind play, in
   settings" under its facts (`Offer.note`), owned or not. `scripts/colour-blind.py <out> <shots>...` lays shots out
   beside their protanopia, deuteranopia and tritanopia simulations. A lens follows the finger up and down, not round
