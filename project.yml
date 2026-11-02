@@ -40,6 +40,7 @@ targets:
         Analytics: $(ANALYTICS)
         AptabaseKey: $(APTABASE_KEY)
         AnalyticsPlaytest: $(ANALYTICS_PLAYTEST)
+        GameCenter: $(GAME_CENTER)
         SupportAddress: $(SUPPORT_ADDRESS)
         PolicyURL: $(POLICY_URL)
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]

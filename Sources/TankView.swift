@@ -323,7 +323,7 @@ final class Game {
         started()
         if rod == level.layout.swirl, !swirled {
             swirled = true
-            if storesSwirled { Best.swirled = true }
+            if storesSwirled { Best.swirled = true; GameCenter.shared.report() }
         }
         let brimWas = brim
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
@@ -408,7 +408,7 @@ final class Game {
         started()
         if !tankTurned {
             tankTurned = true
-            if storesTankTurned { Best.tankTurned = true }
+            if storesTankTurned { Best.tankTurned = true; GameCenter.shared.report() }
         }
         let joins = open && history.last?.rod == Game.tank
         let net = tankStir(after: steps)
@@ -790,6 +790,7 @@ final class Game {
         guard !replaying else { return }
         close()
         Analytics.shared.finished(self)
+        GameCenter.shared.report()
     }
 
     /// A solve or a spill clears the try's save. A tank out of ticks keeps it, its losing move too, which `record` passed

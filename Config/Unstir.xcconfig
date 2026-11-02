@@ -21,4 +21,8 @@ POLICY_URL =
 EDITORS = NO
 EDITORS_CONDITION_YES = EDITORS
 SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(EDITORS_CONDITION_$(EDITORS))
+// YES builds Game Center in: a sign-in at the menu and the achievements (Sources/GameCenter.swift). NO, v1's until the
+// sign-in overlay test passes, makes no GameKit call. A build with it YES needs the Game Center capability on its App
+// ID and the com.apple.developer.game-center entitlement.
+GAME_CENTER = NO
 #include? "Local.xcconfig"
