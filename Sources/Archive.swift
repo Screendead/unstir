@@ -161,6 +161,7 @@ struct ArchiveView: View {
         self.days = days
         // Laid out on the player's week, keyed on the Gregorian days the ids use.
         var c = Calendar(identifier: .gregorian)
+        c.locale = .current
         c.firstWeekday = Calendar.current.firstWeekday
         calendar = c
         self.today = c.startOfDay(for: today)
@@ -230,7 +231,8 @@ struct ArchiveView: View {
     @ViewBuilder private func block(_ month: Date, marks: [Archive.Mark]) -> some View {
         let inMonth = days.indices.filter { calendar.isDate(days[$0].date, equalTo: month, toGranularity: .month) }
         VStack(alignment: .leading, spacing: 10) {
-            Text(month.formatted(.dateTime.month(.wide).year()).uppercased())
+            // Named on the Gregorian calendar its days are laid out on, whatever calendar the phone reads dates in.
+            Text(month.formatted(Date.FormatStyle(calendar: calendar).month(.wide).year()).uppercased())
                 .font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
                 .accessibilityAddTraits(.isHeader)
             if typeSize.isAccessibilitySize {
