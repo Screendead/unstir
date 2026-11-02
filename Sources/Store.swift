@@ -119,6 +119,11 @@ final class Store {
     @ObservationIgnored private var payments: Bool?
     /// The launch's first read of the entitlements has finished, so a pack the player owns reads as owned.
     private(set) var ready = false
+    /// The launch's read and its first price fetch have both finished, however the fetch went, or `shelfWait` has
+    /// passed since the read: the dock shows from then, so what they bring never changes it in sight, unless a fetch outlasts the wait.
+    private(set) var shelved = false
+    /// How long the dock waits on the launch's price fetch after the read.
+    static let shelfWait = 3.0
     /// A purchase, an approval or a restore landed on a card this launch, so the rating request keeps away.
     @ObservationIgnored var landed = false
     /// The offer a purchase started on the App Store's product page is buying (a promoted purchase): `RootView` opens its
@@ -154,11 +159,10 @@ final class Store {
         return styles[Pack.completeID].map { s.formatted($0) }
     }
 
-    /// Complete is on offer, on the dock and as a card to go back to: while it saves, or, while the prices are still
-    /// loading, while none of its packs is owned, when it holds them for less, so a launch's dock keeps its cover.
+    /// The bundle is on offer, on the dock and as a card to go back to (`Offer.offersComplete`): with none of its packs
+    /// owned it stays whether the prices are in, loading or unreachable, so the dock keeps its cover from launch.
     var offersComplete: Bool {
-        if saving != nil { return true }
-        return pricing == .fetching && amounts[Pack.completeID] == nil && Pack.bundled.allSatisfy { state($0) != .owned }
+        Offer.offersComplete(amounts: amounts, owned: (harness ?? ledger).owned)
     }
 
     /// Screen Time, or a child's account without Ask to Buy, can turn purchases off; read afresh as a card draws.
@@ -187,6 +191,7 @@ final class Store {
         payments = canPay
         self.restored = restored
         ready = true
+        shelved = true
     }
 
     /// UNSTIR_LANDS: a purchase landing in the harness's states, as an approval or a restore would.
@@ -224,10 +229,23 @@ final class Store {
         let read = Task {
             await refresh()
             ready = true
+            Log.write("store ready")
         }
         first = read
         await read.value
+        let wait = Task { [weak self] in
+            guard (try? await Task.sleep(for: .seconds(Self.shelfWait))) != nil else { return }
+            self?.shelve("waited")
+        }
         await fetchPrices()
+        wait.cancel()
+        shelve("prices settled")
+    }
+
+    private func shelve(_ why: String) {
+        guard !shelved else { return }
+        shelved = true
+        Log.write("shelf shown: \(why)")
     }
 
     /// A failed fetch leaves the prices missing, and the card asks again when it opens.
@@ -333,7 +351,10 @@ final class Store {
     }
 
     private func fetch() async throws {
-        for p in try await Product.products(for: Pack.productIDs) {
+        let found = try await Product.products(for: Pack.productIDs)
+        // A product the App Store doesn't return is no error: the count is the only trace of it.
+        Log.write("products: \(found.count) of \(Pack.productIDs.count)")
+        for p in found {
             products[p.id] = p
             prices[p.id] = p.displayPrice
             amounts[p.id] = p.price

@@ -510,6 +510,7 @@ card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, o
 shelf-menu-owned.png  The dock with every pack owned, the three through Triptych and First Stir (outside it) on its own: PACKS alone, no taste line, Triptych's cover gone.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Triptych line until the prices say what it saves.
 card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Triptych line.
+shelf-menu-unreachable.png  The dock after the price fetch failed, nothing bought: Triptych's cover stays, since with none of its packs owned it holds them all for less, so a card's fetch never moves it while none is owned.
 card-lens-unshared.png  Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey.
 card-lens-offline.png  Lens's card after a purchase failed offline: no connection, try again when you're online.
 card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Triptych, try free kept.
