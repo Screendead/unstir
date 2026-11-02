@@ -1406,7 +1406,7 @@ names and product ids, and Complete's promise to older owners.
 47. The daily archive: a calendar screen, bests under `daily-yyyymmdd` ids, back-filled to Jack's date, opened by any
     purchase.
    Jack's call (2026-10-25, round 6): back-filled to 30 days before launch day (`Share.firstDay`).
-   Built 2026-11-02 on `r14-archive` (confirmed in M6): a row under today's daily, locked until any purchase, opening a
+   Built 2026-11-02 on `r14-archive` (PR #108) (confirmed in M6): a row under today's daily, locked until any purchase, opening a
    calendar over the menu. Waits for Jack's look; its implementer calls are listed in the PR under "For Jack".
 48. The supporter mark (menu and share line), after any purchase. ~~The tip jar~~ dropped (Jack: "No begging").
 49. The daily share line (plan step 2), separate from sharing, before TestFlight.
