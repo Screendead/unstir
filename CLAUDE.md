@@ -498,8 +498,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   2.99 a pack and 5.99 for Complete (Jack, 2026-10-25, when Complete held three packs, as it does again in Release); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice` (and `amounts` its `price`, written in its
   `priceFormatStyle` for Complete's saving, `Store.saving`), fetched at launch and again when a card
-  opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" once the fetch
-  has failed (`Store.pricing`), the pill still live, since the App Store's sheet shows the price.
+  opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" under it once the fetch
+  has failed (`Store.pricing`; beside it, the SE wrapped it inside the pill), the pill still live, since the App Store's sheet shows the price.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
   rods only, is the alternative on branch `lens-levels-big`), on the halftone: each dealt lens entry +1 to +3, each lens
   netting at most +3, no entry merging as it is dealt, and par the depth (`testLensLevels`, which pins the table), the
