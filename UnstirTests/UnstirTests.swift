@@ -442,6 +442,9 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Double(spilt[1]), Brim.levelY(Double(room), room: room), accuracy: 0.01)
         // The calm, the crest's flash and what ran over, soaked away.
         for i in [7, 16, 18] { XCTAssertEqual(spilt[i], 0, accuracy: 0.01, "float \(i)") }
+        // The spill's card waits for the pour, but not over a rim that already rests at its end (R-spill, round 15).
+        XCTAssertEqual(Brim.card(still: false), Brim.card)
+        XCTAssertEqual(Brim.card(still: true), 0)
     }
 
     /// The surface crosses the bezel's middle at the tick for its fill on both sides, and clears the bezel empty and full:

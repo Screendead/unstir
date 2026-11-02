@@ -132,8 +132,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
   Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives.
 - Editors' reel: `scripts/editors-film.sh [--join]` films `scripts/film.sh editors-` (whirlpool 03 and vortex 02 drawn
-  clean, maelstrom 01, Escapement 02 and Prism 01, each solved at par by a drawn fingertip) and joins them, each from
-  just before its picture strikes for the seconds its list keeps, into `shots/film/editors-reel.mp4`, about a minute,
+  clean, maelstrom 01, Lens 03, Escapement 02 and Prism 01, each solved at par by a drawn fingertip; Lens from a warm
+  start, a launch first baking its halftone into Caches, R-reel, round 15) and joins them, each from just before its
+  picture strikes for the seconds its list keeps, into `shots/film/editors-reel.mp4`, about a minute,
   for the App Store nomination's supplemental links (Jack's call F11); `--join` only rejoins.
   Git ignores `shots/` apart from `index.txt`: show pictures and films in a PR by attaching them to a comment through
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
@@ -272,7 +273,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   then) stirs the picture together on `Brim.murk`'s stirs, carrying each pixel's footprint back through them (each
   stir is area-preserving, so it becomes a thin sliver) and averaging up to 48 taps along it in linear light, so
   lines finer than a pixel mix instead of glittering. `SpillWords` stamps "spilled." over the tank, whose caps stay,
-  and the card follows at `Brim.card`. The tests reach only the Swift side.
+  and the card follows at `Brim.card`, or at once under Reduce Motion (Jack's call R-spill, round 15). The tests reach only the Swift side.
 - **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom (charybdis will go past
   maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best at par
@@ -409,7 +410,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   mid-sweep; the lost stamp lands without its scale. Under it or Dim Flashing Lights the picture fades on rather than
   flickering (`PictureLayer.strike(calm:)`). A live picture holds one frame (`Picture.rest`, between the twins' beats,
   `Picture.clock(_:still:)`), and endless's rim cuts to where each change comes to rest, a spill to its end, murk and
-  words and all (`Brim.rest`), with no bob or tremble as room runs short and the last notch's pulse held lit
+  words and all (`Brim.rest`), its card over it at once, with no bob or tremble as room runs short and the last notch's pulse held lit
   (`Brim.frame`'s `still`), so nothing moves without the player (Jack's call F2, round 14); the stirs themselves still
   turn. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
@@ -552,8 +553,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ticks, pointer and a jewel at the cap's centre. Under the settings' colour letters, which follow Differentiate
   Without Colour until chosen (`Letters`, stored as `letters`, absent until then; Jack's call C16, round 13), or
   `UNSTIR_LETTERS=1`, Prism reads without colour: each knob spells out the primaries it holds under its cap (`Channels.letters`: R, GB, RGB),
-  and `ChannelSwatches` (R, G and B) sit under the caption; holding one draws that channel alone in white and hides the
-  others (`Unstirred.isolate`, the `unstirChannels` shader's `isolate`), and VoiceOver toggles it. Neither shows
+  and `ChannelSwatches` (R, G and B) sit under the caption; holding one draws that channel alone in its own
+  colour (`Channels.tint`, its knob's; Jack, round 15) and hides the others (`Unstirred.isolate`, the `unstirChannels`
+  shader's `isolate` and `tint`), in white instead under the system's Differentiate Without Colour, whatever the
+  letters' choice (`Unstirred.whiteIsolate`), and VoiceOver toggles it. Neither shows
   otherwise, so the read stays by colour for everyone else, and Prism's card says "letters for colour-blind play, in
   settings" under its facts (`Offer.note`), owned or not. `scripts/colour-blind.py <out> <shots>...` lays shots out
   beside their protanopia, deuteranopia and tritanopia simulations. A lens follows the finger up and down, not round
@@ -660,7 +663,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
   unlock where it opens packs (`Archive.opens`). `ArchiveRow` sits under today's daily on the menu: until then a quiet
-  lock, "comes with any pack", which a tap shakes and answers as a closed row does, never opening the shelf.
+  lock, "comes with any pack", which a tap shakes and answers as a closed row does, saying "unlocked by purchasing any
+  pack" for 2 s (Jack's words, R-arch-lock, round 15), never opening the shelf.
   `ArchiveView` lies over the menu as a card does, a month to a block on the player's week, each day's number over its
   result in the menu's words (`Archive.Mark`: clean, par, +n, tried), a list of days at accessibility sizes. A day
   opens `Level.daily(_:archived:)`, the day's own tank under its own id, whose back reads "‹ archive" and returns there

@@ -100,7 +100,7 @@ struct ArchiveRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Archive").font(.mono(14)).opacity(open ? 1 : 0.38)
                     if said {
-                        Text("any pack on the shelf opens it").font(.mono(11)).foregroundStyle(Color.amber).transition(.opacity)
+                        Text("unlocked by purchasing any pack").font(.mono(11)).foregroundStyle(Color.amber).transition(.opacity)
                     } else {
                         Text(!known ? "\(days) past dailies" : open ? "\(days) past dailies \u{00B7} \(atPar) at par"
                              : "\(days) past dailies \u{00B7} comes with any pack")

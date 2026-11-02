@@ -725,12 +725,24 @@ done
 for layout in quad eye pent hex; do
   hold=5 shot "prism-bare-$layout" "Prism's fern under $layout's knobs, unstirred: some line in every core." PACK=prism LAYOUT=$layout STACK=0:+1 BARE=1
 done
-# Colour-blind reading: each swatch held on specimen 8 (red, green and blue rods), its channel alone in white; and the
+# Colour-blind reading: each swatch held on specimen 8 (red, green and blue rods), its channel alone in its own colour,
+# and in white under Differentiate Without Colour (set on the simulator, as the calm shots set Reduce Motion); and the
 # knobs' letters, as Differentiate Without Colour shows them, on 8 and on 14 (the inks).
 for c in r g b; do
-  hold=5 shot "prism-swatch-$c" "Prism specimen 8 with the $c swatch held: that channel's lines alone, in white, the others hidden." \
+  hold=5 shot "prism-swatch-$c" "Prism specimen 8 with the $c swatch held: that channel's lines alone, in its own colour, the others hidden." \
     PACK=prism LEVEL=8 OWNED=prism SWATCH=$c
 done
+if [[ -z "$pattern" || prism-swatch-white-r == *$pattern* || prism-swatch-white-b == *$pattern* ]]; then
+  plain() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility DifferentiateWithoutColor -bool "$1"; }
+  trap 'plain false' EXIT
+  plain true
+  for c in r b; do
+    hold=5 shot "prism-swatch-white-$c" "Prism specimen 8 with the $c swatch held under Differentiate Without Colour: that channel's lines alone in white, the knobs lettered." \
+      PACK=prism LEVEL=8 OWNED=prism SWATCH=$c
+  done
+  plain false
+  trap - EXIT
+fi
 hold=5 shot prism-letters-8 "Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB." \
   PACK=prism LEVEL=8 OWNED=prism LETTERS=1
 hold=5 shot prism-letters-chosen "Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches." PACK=prism LEVEL=1 LETTERSCHOICE=1
@@ -768,7 +780,7 @@ shot duo-open-daily-result "Duo open: today's daily solved two over par, the car
 shot duo-open-upright "Duo open and turned upright (669 x 951 pt): today's column, its glass stopped at 1300 px (433 pt)." \
   FRAME=669x951 INSETS=59,0,34,0 LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
 # Under Reduce Motion (set on the simulator, as film.sh's calm films do): every live picture holds Picture.rest's frame,
-# the brim holds where a change settles, and a spill cuts to its end.
+# the brim holds where a change settles, and a spill cuts to its end, its card at once.
 calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
 # Off again however the shots end, or every later shot records the calm look.
 trap 'calm false' EXIT
@@ -783,7 +795,7 @@ shot calm-endless-brim-7 "Reduce Motion: endless opened at 7 notches, one from s
   MODE=endless BRIM=7
 shot calm-endless-notch "Reduce Motion: endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 in place at once, settled, no slosh or surge." \
   MODE=endless BRIM=4 TURNED=1:1
-shot calm-endless-spilled "Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card." \
+shot calm-endless-spilled "Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card, up at once rather than 2 s after the spill (R-spill)." \
   MODE=endless BRIM=7 TURNED=1:1
 calm false
 trap - EXIT
