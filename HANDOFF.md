@@ -1407,6 +1407,10 @@ names and product ids, and Complete's promise to older owners.
     purchase.
    Jack's call (2026-10-25, round 6): back-filled to 30 days before launch day (`Share.firstDay`).
 48. The supporter mark (menu and share line), after any purchase. ~~The tip jar~~ dropped (Jack: "No begging").
+    Built 2026-11-02 on `r14-store` (Jack's call M6, round 14): a still hairline four-pointed glint after the menu's
+    title in the tier's sweep and ✦ after the share line's name, with a "supporter mark" switch in settings once a pack
+    is owned, on until switched off. Shots `menu-supporter`, `menu-supporter-off`, `menu-no-supporter`,
+    `daily-share-supporter`, `settings-supporter`.
 49. The daily share line (plan step 2), separate from sharing, before TestFlight.
    Merged 2026-10-25 (PR #24). Jack's call (2026-10-25, D1): daily #1 is launch day; until `Share.firstDay` is set,
    the line shows the date instead of a number.

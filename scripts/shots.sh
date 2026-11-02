@@ -203,6 +203,8 @@ shot daily-practice "Today's daily solved at par as practice, as again on its ca
   SCREEN=clean MODE=daily NOW=17:00 TRIED=daily-$(date +%Y%m%d)
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
   SCREEN=result MODE=daily SHARESHEET=1
+hold=8 shot daily-share-supporter "The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦." \
+  SCREEN=result MODE=daily SHARESHEET=1 OWNED=lens
 for w in 0.4 0.8 1.2; do
   shot "wave-$w" "Level 13 solved through the real commit path, solve wave held at radius $w from the last-turned rod." LEVEL=13 WAVE=$w
 done
@@ -633,6 +635,12 @@ shot settings "Settings: music, sounds and haptics on, colour letters, restore p
 shot settings-quiet "Settings with music and haptics off." SETTINGS=1 MUSIC=0 HAPTICS=0
 shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
   SETTINGS=1 STORE=lens:unowned RESTORED=none
+shot settings-supporter "The gear's sheet with a pack owned: a supporter mark switch, on, under colour letters." SETTINGS=1 OWNED=lens
+shot menu-supporter "Menu with a pack owned: the supporter mark, a hairline four-pointed glint in plughole's sweep, after the title." \
+  OWNED=lens BESTS=plughole:000000000 CONSENT=yes
+shot menu-supporter-off "The same with the settings' supporter mark switched off: the title alone, as before any purchase." \
+  OWNED=lens BESTS=plughole:000000000 CONSENT=yes SUPPORTER=0
+shot menu-no-supporter "The same with nothing owned: no mark." BESTS=plughole:000000000 CONSENT=yes
 
 # Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
 # sub-dial (a wound-back clock's mirrored), the stipulation under the tank. Clocks are rods, + forward, - wound back.

@@ -117,7 +117,7 @@ final class PackTests: XCTestCase {
 
     /// A harnessed launch holds the switches in memory: a tap lasts only that launch, and a stored choice never shows.
     func testHeldSettingsAreNeverStored() {
-        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off", "letters"]
+        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off", "supporter.off", "letters"]
         let saved = keys.map { d.object(forKey: $0) }
         defer {
             Settings.held.withLock { $0 = nil }
@@ -131,12 +131,14 @@ final class PackTests: XCTestCase {
         XCTAssertFalse(Settings.haptics)
         XCTAssertNil(Letters.choice)
         Settings.sounds = false
+        Settings.supporter = false
         Letters.choice = false
         XCTAssertFalse(Settings.sounds)
+        XCTAssertNil(d.object(forKey: "supporter.off"))
         XCTAssertEqual(Letters.choice, false)
         XCTAssertNil(d.object(forKey: "sounds.off"))
         XCTAssertEqual(d.object(forKey: "letters") as? Bool, true)
-        XCTAssertEqual(Settings.summary, "music on, sounds off, haptics off, letters off")
+        XCTAssertEqual(Settings.summary, "music on, sounds off, haptics off, supporter off, letters off")
         Settings.held.withLock { $0 = nil }
         XCTAssertFalse(Settings.music)
         XCTAssertEqual(Letters.choice, true)
@@ -188,6 +190,26 @@ final class PackTests: XCTestCase {
         store.pretend(Ledger())
         await store.purchase(Pack.prism.productID)
         XCTAssertEqual(store.state(.prism), .owned)
+    }
+
+    /// The supporter mark and the daily archive open on any pack owned, Complete or a family's share included, and on
+    /// nothing pending, revoked or failed.
+    @MainActor func testAnyPackOwnedHasBought() {
+        let store = Store()
+        XCTAssertFalse(store.bought)
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .pending)
+        ledger.record(Pack.prism.productID, .revoked, shared: true)
+        ledger.record(Pack.escapement.productID, .failed)
+        store.pretend(ledger)
+        XCTAssertFalse(store.bought)
+        ledger.record(Pack.completeID, .owned)
+        store.pretend(ledger)
+        XCTAssertTrue(store.bought)
+        var one = Ledger()
+        one.record(Pack.escapement.productID, .owned)
+        store.pretend(one)
+        XCTAssertTrue(store.bought)
     }
 
     /// Opening a level past the taste of a pack the player doesn't own shows the pack's card in its place, from the menu

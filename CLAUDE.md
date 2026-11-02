@@ -500,8 +500,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Store's product page (a promoted purchase) sets `Store.promoted` to the offer this build sells (`Offer.promoted`),
   keeping its product, `RootView` opens that card over the menu (leaving a level, whose try its save keeps, and the
   settings sheet), and the card takes it and buys as its own buy does once `Store.settled`, unless owned or payments
-  are off, landing as any purchase lands (Jack's call M6, round 14). Under the harness's states a purchase lands in
-  them, never StoreKit. Only a verified transaction grants; Complete (`Pack.completeID`) grants
+  are off, landing as any purchase lands (Jack's call M6, round 14). `Store.bought`, any pack owned (Complete or a
+  family's share too), is the one check of whether the player has bought anything: the supporter mark reads it, as
+  the daily archive does. Under the harness's states a purchase lands in them, never StoreKit. Only a verified transaction grants; Complete (`Pack.completeID`) grants
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked), and `Store.failures` why each failure failed (`Failure`:
   offline, a storefront without it, purchases turned off), which the card says under it. A pending pill reads
@@ -711,7 +712,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   control, neither preselected. The gear beside the menu's title opens `SettingsSheet`, sized to what it holds:
   "music", "sounds" and "haptics" (`Settings`, stored as `music.off`, `sounds.off` and `haptics.off`, each absent while
   on; Jack's call C17, round 13; a harnessed launch holds them and the letters in memory, `Settings.held`, never
-  stored), "colour letters" (`Letters`), the analytics switch (`NeonToggle`, which calls
+  stored), "colour letters" (`Letters`), "supporter mark" once `Store.bought` (`Settings.supporter`, stored as
+  `supporter.off`, on until switched off), the analytics switch (`NeonToggle`, which calls
   `decide`) where the build has analytics, "restore purchases" (`Store.restore`, saying what it found as the cards do),
   "report a problem", a mail (`MailSheet`) to Info.plist's `SupportAddress` with `Log.url` attached as
   `unstir-log.txt` and `UnstirApp.device` in the body, or, with no account in Apple's Mail, `Log.url` handed to the
@@ -776,7 +778,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ticks the levels short of par as runs (`Tier.short`: "short: 05 · 12 · 21–27"), each a button opening its first,
   which is always open. A closed row
   still takes a tap: it shakes, sounds `seized` and says for two seconds what opens it ("solve 06 to open", or on a
-  locked tier "par every plughole level to open"), which VoiceOver reads as its value. The daily's title names its day in the locale's words ("Daily ·
+  locked tier "par every plughole level to open"), which VoiceOver reads as its value. Once the player owns a pack (`Store.bought`) and until the settings' switch is off, the title carries the supporter mark (`SupporterMark`; Jack's call M6, round 14, the thank-you, as there is no tip jar): a hairline four-pointed glint after it in the tier's sweep, still, which VoiceOver reads as "Unstir, supporter", and the daily's share line puts the same glyph, ✦ (`Share.supporter`), after its name. The daily's title names its day in the locale's words ("Daily ·
   Sun 1 Nov"; its id stays `daily-yyyymmdd`), and the menu deals it afresh on coming to the front and at midnight
   (`NSCalendarDayChanged`), so a menu left up overnight opens the new day's. The first level without a best (`Tier.frontier`) keeps its
   hairline lit. A hidden stir in
@@ -871,7 +873,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ticks as its last clock stops looks. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, `UNSTIR_LANDS=s`
   buys the open card's product s seconds in (with the store's states set), `UNSTIR_PROMOTED=lens` (or `complete`)
   starts a promoted purchase of it a second in, `UNSTIR_PROMO=lens` shows that offer's promoted-purchase image alone,
-  and
+  `UNSTIR_SUPPORTER=0` switches the supporter mark off for the launch, and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
   tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's

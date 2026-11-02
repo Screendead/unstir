@@ -131,6 +131,10 @@ final class Store {
 
     func unshared(_ pack: Pack) -> Bool { (harness ?? ledger).unshared(pack) }
 
+    /// The player owns a pack, by a purchase of their own, Complete or a family's share: what the supporter mark and the
+    /// daily archive both open on.
+    var bought: Bool { !(harness ?? ledger).owned.isEmpty }
+
     /// Nil for a level in no pack. A pack's level whose id names no number of that pack needs the card.
     func access(_ level: Level) -> Pack.Access? {
         guard let pack = level.pack else { return nil }

@@ -137,9 +137,9 @@ struct Harness {
     let tierSpin: (spin: Double, fade: Double)?
     /// UNSTIR_SETTINGS=1: the menu opens with the gear's sheet up. UNSTIR_CONSENT is read by `Analytics.configure`.
     let settings: Bool
-    /// UNSTIR_MUSIC=0, UNSTIR_SOUNDS=0 and UNSTIR_HAPTICS=0: the sheet's switches off, with UNSTIR_LETTERSCHOICE, for
-    /// `Settings.held`. A harnessed launch's switches start on and unchosen whatever is stored, and a tap on one lasts
-    /// only that launch; nil on a plain launch.
+    /// UNSTIR_MUSIC=0, UNSTIR_SOUNDS=0, UNSTIR_HAPTICS=0 and UNSTIR_SUPPORTER=0: the sheet's switches off, with
+    /// UNSTIR_LETTERSCHOICE, for `Settings.held`. A harnessed launch's switches start on and unchosen whatever is
+    /// stored, and a tap on one lasts only that launch; nil on a plain launch.
     let switches: [String: Bool]?
     /// UNSTIR_OWNED and UNSTIR_STORE, in place of StoreKit's for this launch; never stored, and nil in Release.
     let purchases: Ledger?
@@ -253,7 +253,7 @@ struct Harness {
             .flatMap { Channels.each.contains($0) ? $0 : nil }
         letters = env["UNSTIR_LETTERS"] == "1"
         if harnessed {
-            var held = ["music", "sounds", "haptics"].reduce(into: [String: Bool]()) {
+            var held = ["music", "sounds", "haptics", "supporter"].reduce(into: [String: Bool]()) {
                 $0[$1] = env["UNSTIR_\($1.uppercased())"] != "0"
             }
             if let c = env["UNSTIR_LETTERSCHOICE"], ["0", "1"].contains(c) { held["letters"] = c == "1" }

@@ -298,7 +298,7 @@ final class Game {
     var shareText: String? {
         Share.day(of: level.id).map {
             Share.text(day: $0, moves: moves, par: par, firstTry: firstTry, clean: clean, undos: undos, resets: resets,
-                       marks: marks)
+                       marks: marks, supporter: Store.shared.bought && Settings.supporter)
         }
     }
 
