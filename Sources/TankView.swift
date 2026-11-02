@@ -1159,7 +1159,7 @@ struct LevelView: View {
         _ending = State(initialValue: ending)
         frozenEnding = harness?.ending.flatMap { $0 < 0 ? nil : $0 }
         _showResult = State(initialValue: game.finished && harness?.wave == nil && !ending
-                            && (!game.spilled || (harness?.clock ?? 0) >= Brim.card(still: UIAccessibility.isReduceMotionEnabled)))
+                            && (!game.spilled || (harness?.clock ?? 0) >= Brim.card(still: harness?.clock == nil && UIAccessibility.isReduceMotionEnabled)))
         _eased = State(initialValue: game.solved)
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
