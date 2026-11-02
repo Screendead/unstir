@@ -363,6 +363,7 @@ final class PackTests: XCTestCase {
         XCTAssertFalse(Offer.offersComplete(amounts: [:], owned: Set(sold), bundled: sold), "every pack owned")
 
         let store = Store()
+        XCTAssertFalse(store.shelved, "the dock waits for the launch's read and price fetch")
         for prices in [[:], amounts] {
             let read = [Pricing.fetching, .fetched, .unreachable].map { pricing in
                 store.pretend(Ledger(), amounts: prices, pricing: pricing)

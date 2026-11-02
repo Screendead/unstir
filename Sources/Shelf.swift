@@ -1012,9 +1012,7 @@ struct PackDock: View, Equatable {
         VStack(spacing: 10) {
             let owned = Pack.sold().filter { store.state($0) == .owned }
             // Complete only while it costs less than the packs left: owned, it saves nothing.
-            // The bundle waits for the launch's read of what is owned, as the marks do, so an owner's dock never
-            // shows it and drops it.
-            let shelf = Offer.shelf().filter { $0 != .complete || (store.ready && store.offersComplete) }
+            let shelf = Offer.shelf().filter { $0 != .complete || store.offersComplete }
             HStack {
                 if let yours = store.approved.first {
                     Text(yours.yours).font(.mono(.caption2, .semibold)).tracking(1).foregroundStyle(yours.glow)
@@ -1092,14 +1090,16 @@ struct PackDock: View, Equatable {
             }
             .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: shelf)
             .padding(.horizontal, 8)
-            // Laid out but unseen until the launch's read lands, a tenth of a second to over half on the simulator after
-            // the menu shows, then a new row fading in whole: the bundle's cover joining or not is never seen as a reflow.
-            .opacity(store.ready ? 1 : 0)
-            .id(store.ready)
-            .transition(.opacity)
-            .animation(reduceMotion ? nil : .easeIn(duration: 0.25), value: store.ready)
             .onGeometryChange(for: CGFloat.self) { $0.size.width - 16 } action: { row = $0 }
         }
+        // Unseen until the launch's read of what is owned and its price fetch have settled (`Store.shelved`), then a new
+        // dock fading in whole, so neither the header nor the bundle's cover ever changes in sight as they land. Laid
+        // out meanwhile from what is known so far, at first nothing owned and no prices, most players' settled dock,
+        // so its height rarely moves.
+        .opacity(store.shelved ? 1 : 0)
+        .id(store.shelved)
+        .transition(.opacity)
+        .animation(reduceMotion ? nil : .easeIn(duration: 0.25), value: store.shelved)
         // A bar, like a tab bar: its names stop growing where four no longer fit, and a long press shows one large.
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .padding(.top, 12)
