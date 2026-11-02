@@ -304,10 +304,23 @@ final class Store {
         }
     }
 
-    /// An error's type and message, never the error whole: the log can leave the phone, and an error's own description
-    /// carries everything it wraps.
-    private static func described(_ error: Error) -> String {
-        "\(type(of: error)): \(error.localizedDescription)"
+    /// A StoreKit error's case, else its domain and code, a wrapped error's too: never a message or userInfo, as the
+    /// log can leave the phone and those can carry a URL, the wrapped error's own words or the player's language.
+    nonisolated static func described(_ error: Error) -> String {
+        // Cut at the payload, in case a later SDK's case carries one.
+        func name(_ e: Error) -> Substring { "\(e)".prefix { $0 != "(" } }
+        func code(_ e: Error) -> String {
+            let ns = e as NSError
+            let under = (ns.userInfo[NSUnderlyingErrorKey] as? NSError).map { " < \($0.domain) \($0.code)" } ?? ""
+            return "\(ns.domain) \(ns.code)\(under)"
+        }
+        return switch error {
+        case StoreKitError.networkError(let e): "StoreKitError.networkError(\(code(e)))"
+        case StoreKitError.systemError(let e): "StoreKitError.systemError(\(code(e)))"
+        case let e as StoreKitError: "StoreKitError.\(name(e))"
+        case let e as Product.PurchaseError: "PurchaseError.\(name(e))"
+        default: code(error)
+        }
     }
 
     /// What a sync found that wasn't owned before it; nil when the player cancels the App Store sign-in. A failed sync
