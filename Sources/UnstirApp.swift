@@ -71,6 +71,9 @@ struct Harness {
     /// UNSTIR_BARE=1: the picture drawn unstirred whatever the stack, so a still shows a story's art as the stack has
     /// played it.
     let bare: Bool
+    /// UNSTIR_CLEAN=1: a level drawn as its glass and picture alone, every control, count, line and fingertip hidden
+    /// and the status bar too, for App Store art that may show no interface.
+    let clean: Bool
     /// UNSTIR_ENDING=s: First Stir's last scene opens solved with the night forwards held s seconds in, or running from
     /// the start at -1, for films. Needs UNSTIR_SCREEN=clean.
     let ending: Double?
@@ -113,8 +116,13 @@ struct Harness {
     /// UNSTIR_TOUR: menu, then level 01, then back, for filming the cross-fades.
     let tour: Bool
     /// UNSTIR_EXIT=left: the level, once open, left for the menu by "‹ levels"; =solved, as from its result card after
-    /// a solve; =up, its tier's next tier's first level opened, as "up a notch" opens it, and that one left.
+    /// a solve; =up, its tier's next tier's first level opened, as "up a notch" opens it, and that one left; =swipe,
+    /// left through the back swipe's commit, sliding off over the menu.
     let exit: String?
+    /// UNSTIR_BACKSWIPE=0.4: the level held that share of the way into a back swipe, the menu under it; =run, the
+    /// swipe played a second in by a drawn fingertip and let go.
+    let backSwipe: Double?
+    let backSwipeRun: Bool
     /// UNSTIR_LOCKTAP=L8: on the menu, that locked row held as a tap leaves it, saying what opens it.
     let lockTap: String?
     /// UNSTIR_FRESH=1: the launch takes a plain launch's first screen as a fresh install would, into plughole 01, and
@@ -193,6 +201,7 @@ struct Harness {
     /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
     /// logs it, and stores nothing either way.
     let harnessed: Bool
+    let resume: Resume?
     /// Shots, films, the bench and the test host play no sound unless UNSTIR_SOUND=1. Not stored, so the next launch on
     /// the phone sounds; UNSTIR_UNLOCK alone is a phone launch.
     let mute: Bool
@@ -211,6 +220,8 @@ struct Harness {
         // character each: a digit is that many over par, - is none. For this launch only.
         for part in env["UNSTIR_BESTS"]?.split(separator: ",") ?? [] {
             let f = part.split(separator: ":")
+            // endless:9: the run's best, 9 tanks.
+            if f.count == 2, f[0] == "endless", let n = Int(f[1]) { UserDefaults.standard.register(defaults: ["endless.tanks": n]) }
             guard f.count == 2, let levels = Tier(rawValue: String(f[0]))?.levels ?? Pack(rawValue: String(f[0]))?.levels
             else { continue }
             for (level, c) in zip(levels, f[1]) {
@@ -248,7 +259,9 @@ struct Harness {
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
         lockTap = env["UNSTIR_LOCKTAP"]
-        exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up"].contains($0) ? $0 : nil }
+        exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up", "swipe"].contains($0) ? $0 : nil }
+        backSwipe = env["UNSTIR_BACKSWIPE"].flatMap(Double.init).map { min(max($0, 0), 1) }
+        backSwipeRun = env["UNSTIR_BACKSWIPE"] == "run"
         stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
         purchases = Harness.purchases(env)
         amounts = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
@@ -277,7 +290,9 @@ struct Harness {
         var level = switch env["UNSTIR_MODE"] ?? env["UNSTIR_LEVEL"] {
         case "daily": Level.daily()
         // UNSTIR_BRIM=n: endless opens with n notches on the brim, short of the spill, which only a push may bring.
-        case "endless": Level.endless(Run(seed: 7, brim: min(max(Int(env["UNSTIR_BRIM"] ?? "") ?? 0, 0), Run.room - 1)))
+        // UNSTIR_RESUMETANK=n, with UNSTIR_RESUME: on the run's tank n, from 0.
+        case "endless": Level.endless(Run(seed: 7, tank: env["UNSTIR_RESUME"] == nil ? 0 : max(Int(env["UNSTIR_RESUMETANK"] ?? "") ?? 0, 0),
+                                          brim: min(max(Int(env["UNSTIR_BRIM"] ?? "") ?? 0, 0), Run.room - 1)))
         case "sandbox": Level.sandbox
         default: tier.levels[n - 1]
         }
@@ -322,6 +337,13 @@ struct Harness {
             level.motion = level.seized.isEmpty ? .none : .tank
         }
         self.level = level
+        // UNSTIR_RESUME=0:+2,1:-3,u: the level's try saved with that line, the launch's only save. Empty, with endless,
+        // the run saved on its tank with no move yet.
+        resume = env["UNSTIR_RESUME"].map {
+            Resume(id: level.id, print: level.print, firstTry: true, actions: Resume.actions($0, on: level), run: level.run)
+        }
+        // A run saved was opened, so the modes' rows are no longer new.
+        if resume?.run != nil { Best.seeModes(store: false) }
         tank = env["UNSTIR_TANK"].flatMap(Int.init) ?? 0
         tankLive = env["UNSTIR_TANKLIVE"].flatMap(Double.init)
         let xy = env["UNSTIR_TOUCH"]?.split(separator: ",").compactMap { Double($0) } ?? []
@@ -346,6 +368,7 @@ struct Harness {
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
         pace = env["UNSTIR_PACE"].flatMap(Double.init) ?? 0.3
         bare = env["UNSTIR_BARE"] == "1"
+        clean = harnessed && env["UNSTIR_CLEAN"] == "1"
         ending = env["UNSTIR_ENDING"].flatMap(Double.init)
         func line(_ line: String) -> [Twist] {
             line.split(separator: ",").compactMap { move in
@@ -428,8 +451,14 @@ struct RootView: View {
     @State private var settings: Bool
     /// The row the next menu, or the pack's card over it, centres on (`MenuView.focus`).
     @State private var focus: Level?
+    /// The level's saved try, replayed as it opens (Jack's call C2, round 13).
+    @State private var resumed: Game?
+    /// The menu is drawn under the level while a back swipe slides it off (Jack's call C19, round 13).
+    @State private var peeking = false
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
+    /// The harness's one save, so a plain launch's left on the simulator never reaches a shot.
+    private let harnessSave: Resume?
     /// A fresh install's first launch, opening straight into plughole 01.
     private let welcoming: Bool
     @Environment(\.scenePhase) private var phase
@@ -440,6 +469,7 @@ struct RootView: View {
         let env = ProcessInfo.processInfo.environment
         let h = Harness(env)
         harnessed = h.harnessed
+        harnessSave = h.resume
         Marks.stored = !h.harnessed
         // Here, not in Harness, which the tests build too.
         Settings.held.withLock { $0 = h.switches }
@@ -459,6 +489,11 @@ struct RootView: View {
         welcoming = welcome != nil && !h.harnessed
         let menu = h.screen == "menu" || gate != nil
         _level = State(initialValue: welcome ?? (menu ? nil : h.level))
+        // Yesterday's daily and a level an update took out leave no save behind; a harnessed launch's are its own.
+        if !h.harnessed { Resume.prune(known: Resume.known) }
+        _resumed = State(initialValue: welcome != nil || menu ? nil
+                         : Self.resume(h.level, from: Self.save(h.level.id, harnessed: h.harnessed, h.resume), harness: h,
+                                       stores: !h.harnessed))
         // A plain launch's level has no harness, so it stores what it plays.
         _harness = State(initialValue: welcoming ? nil : h)
         _settings = State(initialValue: welcome == nil && menu && h.settings)
@@ -479,25 +514,37 @@ struct RootView: View {
         ZStack {
             if let n = harness?.icon {
                 IconView(n: n)
-            } else if let level {
-                LevelView(level: level, harness: harness,
-                          onExit: { show(nil, solved: $0) },
-                          onNext: { show($0) },
-                          onLook: { show(nil, look: $0) },
-                          onOffer: { pack in
-                              card = .pack(pack)
-                              show(nil, solved: true)
-                          })
-                    .id(level)
-                    .transition(dip)
             } else {
-                MenuView(start: harness?.menuTier ?? look, demo: harness?.tierDemo ?? false, frozen: harness?.tierSpin,
-                         settings: $settings, card: $card, clock: harness?.clock, placeholders: placeholders,
-                         shelfDemo: harness?.shelfDemo ?? false, cardScroll: harness?.cardScroll ?? false, focus: focus,
-                         held: harness?.lockTap, arrived: arrived) {
-                    show($0)
+                // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
+                // level it opens as leaving would open it, not on the harness's tier.
+                if level == nil || peeking {
+                    MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
+                             frozen: harness?.tierSpin, settings: $settings, card: $card, clock: harness?.clock,
+                             placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
+                             cardScroll: harness?.cardScroll ?? false, focus: focus, held: harness?.lockTap, arrived: arrived,
+                             run: Self.save("endless", harnessed: harnessed, harnessSave), peeking: level != nil) {
+                        show($0)
+                    }
+                    .allowsHitTesting(level == nil)
+                    .accessibilityHidden(level != nil)
+                    .transition(level == nil ? dip : .identity)
                 }
-                .transition(dip)
+                if let level {
+                    LevelView(level: level, harness: harness, resumed: resumed, storesResume: !harnessed,
+                              onExit: { show(nil, solved: $0) },
+                              onNext: { show($0) },
+                              onLook: { show(nil, look: $0) },
+                              onOffer: { pack in
+                                  card = .pack(pack)
+                                  show(nil, solved: true)
+                              },
+                              onPeek: { solved in
+                                  if let solved { focus = level.focus(solved: solved) }
+                                  peeking = solved != nil
+                              })
+                        .id(level)
+                        .transition(dip)
+                }
             }
         }
         .background(Color.black)
@@ -563,7 +610,8 @@ struct RootView: View {
             show(nil)
         }
         .task {
-            guard let exit = harness?.exit, let left = level else { return }
+            // The swipe's leaves through the level's own commit.
+            guard let exit = harness?.exit, exit != "swipe", let left = level else { return }
             try? await Task.sleep(for: .seconds(1))
             if exit == "up", let up = left.tier.step(1)?.levels.first {
                 show(up)
@@ -571,6 +619,24 @@ struct RootView: View {
             }
             show(nil, solved: exit == "solved")
         }
+    }
+
+    /// The save for `id`: on disk, or under the harness UNSTIR_RESUME's alone.
+    static func save(_ id: String, harnessed: Bool, _ harnessSave: Resume?) -> Resume? {
+        harnessed ? harnessSave.flatMap { $0.id == id ? $0 : nil } : Resume.load(id)
+    }
+
+    /// `level`'s saved try `r` replayed, or nil to open it afresh. `stores`: the try saves on, as on any launch but the
+    /// harness's; a save it drops goes.
+    static func resume(_ level: Level, from r: Resume?, harness: Harness?, stores: Bool) -> Game? {
+        guard !level.sandbox, level.keepsProgress, let r else { return nil }
+        guard let game = Game.resumed(level, from: r, tankTurned: harness?.tankTurned, swirled: harness?.swirled,
+                                      bank: harness?.bank, storesProgress: harness?.harnessed != true, storesResume: stores)
+        else {
+            if stores { Resume.remove(level.id) }
+            return nil
+        }
+        return game
     }
 
     /// A fresh install's first launch opens straight into plughole 01 (Jack's call C4, round 13), and only the first: a
@@ -617,7 +683,16 @@ struct RootView: View {
         if Self.seesModes(next, opens: opens), !Best.modesSeen { Best.seeModes(store: !harnessed) }
         // So a launch after the app dies in a level comes back on its tier too.
         if let next, gate == nil, opens, next.tier.levels.contains(where: { $0.id == next.id }) { Tier.store(next.tier) }
-        withAnimation(.easeInOut(duration: 0.25)) { level = gate == nil && opens ? next : nil }
+        // Here, never in LevelView's init, which SwiftUI reruns for a level it already shows.
+        resumed = next.flatMap {
+            gate == nil && opens ? Self.resume($0, from: Self.save($0.id, harnessed: harnessed, harnessSave), harness: harness,
+                                               stores: !harnessed) : nil
+        }
+        // Together, so a menu a back swipe uncovered stays up as the level goes.
+        withAnimation(.easeInOut(duration: 0.25)) {
+            level = gate == nil && opens ? next : nil
+            peeking = false
+        }
     }
 }
 

@@ -78,12 +78,14 @@ shot menu-locktap "Plughole 01 to 13 solved, 15 tapped though locked: it shakes 
   BESTS=plughole:$upto13 LOCKTAP=L15
 shot menu-back-left "Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12." \
   LEVEL=12 EXIT=left BESTS=plughole:00000000000000000000
+shot back-swipe "Plughole 05 held 40% into an edge swipe back: the level sliding right over the menu, centred on 05, 01 to 04 solved." LEVEL=5 BACKSWIPE=0.4 BESTS=plughole:0000
+shot menu-back-swiped "Back from plughole 12 by the edge swipe: the list centred on 12." LEVEL=12 EXIT=swipe BESTS=plughole:00000000000000000000
 shot menu-back-solved "Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens." \
   SCREEN=clean LEVEL=14 EXIT=solved BESTS=plughole:$upto13
 shot menu-mid-switch-scrolled "The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin." \
   BESTS=plughole:$upto13 TIERSPIN=0.25:0.1
 # A switch lands on the new tier's first level without a best, a locked tier's header over its gate, or the top.
-hold=4.4 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
+hold=3.9 shot menu-switch-landing "Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
 hold=8.5 shot menu-switch-locked "Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 17 of whirlpool's 27 at par: vortex is locked, so the list landed on its header, over the gate and its short list." \
   TIERDEMO=1 BESTS=plughole:$par27,whirlpool:$some
@@ -157,6 +159,11 @@ shot undo-refill "Level 12 opened on a new day with 6 undos banked: the bank ref
   LEVEL=12 UNDOS=6 TODAY=2026-10-01 CLOCK=1
 shot reset-armed "Level 12 with two moves played, reset tapped once: it reads reset? tap again." \
   LEVEL=12 PLAYED=0:+1,1:+1 RESETARMED=1
+# UNSTIR_RESUME saves the level's try with that line for the launch: UNSTIR_MOVES's form, plus u an undo and r a reset.
+shot level-resumed "Level 12 reopened mid-try, its saved line replayed (rod 2 healed, a wasted stir on rod 0 undone, rod 1 healed): four entries left, moves 2 / par 6, the undo already spent from the bank, and no opening." \
+  LEVEL=12 UNDOS=9 RESUME=2:+5,0:+2,u,1:+3
+shot menu-endless-continue "The menu with an endless run saved on tank 6, brim 3, best 9 tanks: the endless row reads continue · tank 6 · brim 3 · best 9, with new run on its title's line in place of the best." \
+  BESTS=plughole:$par27,endless:9 MODE=endless SCREEN=menu RESUME= RESUMETANK=5 BRIM=3
 shot sandbox "The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here." \
   MODE=sandbox CLOCK=3
 full=$(for i in $(seq 0 35); do printf '%d:+1,' $((i % 2)); done)
@@ -190,8 +197,10 @@ shot tier-up-midway "Plughole 05 solved at par, the last plughole level to reach
   SCREEN=clean LEVEL=5 BESTS=plughole:0000-0000000000000000000000 CLOCK=0
 shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over)." \
   TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:000100000010000000000200000
-shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00)." \
+shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00)." \
   SCREEN=result MODE=daily NOW=17:00
+shot daily-practice "Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h." \
+  SCREEN=clean MODE=daily NOW=17:00 TRIED=daily-$(date +%Y%m%d)
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
   SCREEN=result MODE=daily SHARESHEET=1
 for w in 0.4 0.8 1.2; do
@@ -508,6 +517,10 @@ fi
 nine=000000000
 shot shelf-menu "Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought." \
   STORE=lens:unowned CLOCK=5.4 BESTS=plughole:$nine
+shot shelf-menu-stirred "The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Complete (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's grid clean, Prism's fern just stirring in." \
+  STORE=lens:unowned CLOCK=2.8 BESTS=plughole:$nine
+shot shelf-menu-clean "The dock at the top of its loop: First Stir and Complete clean, Lens stirring in, Escapement and Prism unstirring." \
+  STORE=lens:unowned CLOCK=0 BESTS=plughole:$nine
 shot shelf-menu-states "The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass." \
   OWNED=lens STORE=escapement:pending CLOCK=5.4 BESTS=plughole:$nine
 shot shelf-new "Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir." \
@@ -581,9 +594,9 @@ shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone
 shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
 shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
   CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
-shot card-lens-levels "Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked." \
-  CARD=lens STORE=lens:unowned CARDLEVELS=6 CLOCK=5.4
-shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDLEVELS=6 CLOCK=5.4
+shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked." \
+  CARD=lens STORE=lens:unowned CARDSCROLL=1 CLOCK=5.4
+shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDSCROLL=1 CLOCK=5.4
 shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-gate-ax "The same at accessibility3: the Complete line under buy wraps only before · save." \
@@ -629,6 +642,9 @@ shot escapement-dead-tick "Escapement 04 after 1:+1, whose tick pushed: +1 stand
   PACK=escapement OWNED=escapement LEVEL=4 PLAYED=1:1
 shot escapement-2-out "Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1
+# Jack's call (2026-11-01, on C19): a tank out of ticks keeps its save, so a level left on its lost card reopens there.
+shot escapement-2-lost-resumed "Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out." \
+  PACK=escapement LEVEL=2 RESUME=2:4,1:-3,0:1
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
 # The tick budget on 16 (clocks 1, owing 3, and 4, owing 6, so 9; line 3:-2, 5:-2, a wait, 6:-4, 5:+3, 2:-5): as dealt,
 # after the wait that stops clock 1, and one move from the end.
@@ -687,3 +703,14 @@ hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt o
 for plate in seeds medusae radiolaria nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1
 done
+# App Store art with no interface (UNSTIR_CLEAN): each look mid-turn with a finger down on rod 0, which would draw its
+# dial, count and fingertip, the glass and its picture alone in the bezel.
+hold=5 shot clean-plughole-05 "Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar." \
+  LEVEL=5 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
+# The live glass compiles its shader on its first draw after an install, which takes longer than a baked picture.
+hold=9 shot clean-whirlpool-01 "Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture." \
+  TIER=whirlpool LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
+hold=5 shot clean-lens-03 "Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count." \
+  PACK=lens LEVEL=3 CLEAN=1 LIVE=0:+1 TOUCH=0,-0.8
+hold=5 shot clean-prism-01 "Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption." \
+  PACK=prism LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8

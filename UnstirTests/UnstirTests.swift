@@ -1612,6 +1612,18 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// The dock's names share one size, set by the widest word against its cover, and never grow past the type's own.
+    func testTheDockNamesShareTheSizeTheirWidestWordNeeds() {
+        let width: (String) -> CGFloat = { CGFloat($0.count) * 10 }
+        let names = [(name: "First Stir", marked: false), (name: "Escapement", marked: false), (name: "Lens", marked: true)]
+        XCTAssertEqual(PackDock.nameScale(names, cover: 200, width: width), 1)
+        // "Escapement", 100 wide, sets the row's size in an 80 pt cover; "First Stir" breaks between its words instead.
+        XCTAssertEqual(PackDock.nameScale(names, cover: 80, width: width), 0.8 * 0.97, accuracy: 1e-9)
+        // A cover's glyph takes its room from its own name.
+        XCTAssertEqual(PackDock.nameScale([(name: "Escapement", marked: true)], cover: 112, width: width), 0.97, accuracy: 1e-9)
+        XCTAssertEqual(PackDock.nameScale(names, cover: 10, width: width), 0.5)
+    }
+
     /// The gate lists what is short of par as runs, each opening at a level the player can open.
     func testTheGateListsTheLevelsShortOfParAsRuns() {
         var bests: [String: Best] = [:]
@@ -1682,6 +1694,51 @@ final class UnstirTests: XCTestCase {
         simd_distance(p, centre(layout, k)) / layout.rods[k].z
     }
     private func under(_ layout: Layout, _ p: SIMD2<Double>) -> [Int] { layout.rods.indices.filter { depth(layout, $0, p) < 1 } }
+
+    /// The back swipe takes only a touch landing in the screen's left edge band, and only once it has gone 10 pt right
+    /// and mostly sideways; a vertical or leftward one there passes to the tank, a rim turn (Jack's call S2, round 13).
+    func testTheBackSwipeTakesOnlyTheEdge() {
+        let edge = CGPoint(x: 6, y: 400), inside = CGPoint(x: 21, y: 400)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: .zero), .undecided, "a tap there never decides")
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 7, height: 2)), .undecided)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 12, height: 3)), .swipe)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 12, height: 6)), .swipe, "twice as far across")
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 12, height: -7)), .pass)
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: 1, height: 14)), .pass, "vertical")
+        XCTAssertEqual(BackSwipe.decide(start: edge, translation: CGSize(width: -12, height: 0)), .pass, "leftward")
+        XCTAssertEqual(BackSwipe.decide(start: inside, translation: .zero), .pass, "outside the band")
+        XCTAssertEqual(BackSwipe.decide(start: inside, translation: CGSize(width: 60, height: 0)), .pass)
+    }
+
+    /// Let go, the swipe leaves past a third of the width, or heading past half, unless flicked back; otherwise the
+    /// level springs back.
+    func testTheBackSwipeCommitsPastAThird() {
+        XCTAssertFalse(BackSwipe.commits(dx: 140, predicted: 180, width: 440))
+        XCTAssertTrue(BackSwipe.commits(dx: 150, predicted: 150, width: 440))
+        XCTAssertTrue(BackSwipe.commits(dx: 60, predicted: 230, width: 440), "a flick")
+        XCTAssertFalse(BackSwipe.commits(dx: 0, predicted: 0, width: 440))
+        XCTAssertFalse(BackSwipe.commits(dx: 220, predicted: 120, width: 440), "flicked back")
+        XCTAssertTrue(BackSwipe.commits(dx: 220, predicted: 215, width: 440), "held still")
+    }
+
+    /// The tank reads an edge touch by where it landed, though the slide carries the tank's origin right under it.
+    func testTheTankKeepsAnEdgeTouchsCallThroughTheSlide() {
+        let start = CGPoint(x: 28, y: 300)
+        func edge(_ held: BackSwipe.Edge?, at x: CGFloat, moved dx: CGFloat, _ dy: CGFloat) -> BackSwipe.Edge? {
+            BackSwipe.edge(held, start: start, origin: CGPoint(x: x, y: 100), translation: CGSize(width: dx, height: dy))
+        }
+        let landed = edge(nil, at: -20, moved: 0, 0)
+        XCTAssertEqual(landed?.call, .undecided, "recorded as it lands")
+        let decided = edge(landed, at: -20, moved: 12, 2)
+        XCTAssertEqual(decided?.call, .swipe)
+        XCTAssertEqual(edge(decided, at: 40, moved: 60, 40), decided, "slid past the band and off sideways")
+        XCTAssertEqual(edge(landed, at: 40, moved: 12, 2)?.call, .swipe, "decided where it landed")
+        let down = edge(landed, at: -20, moved: 2, 12)
+        XCTAssertEqual(down?.call, .pass)
+        XCTAssertEqual(edge(down, at: 0, moved: 40, 12), down)
+        XCTAssertNil(edge(nil, at: 10, moved: 0, 0), "landed past the band")
+        XCTAssertNil(BackSwipe.edge(decided, start: CGPoint(x: 60, y: 300), origin: .zero, translation: .zero), "a new touch")
+    }
 
     /// Deep in one disc a finger holds that rod the moment it lands.
     func testGrabInOneDiscIsImmediate() {
@@ -1973,6 +2030,12 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value, "new")
         XCTAssertEqual(Spoken.row(.endless(Run(seed: 7)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value,
                        "new")
+        let continued = Spoken.row(.endless(Run(seed: 7, tank: 5)), result: nil, tanks: 9,
+                                   detail: "continue \u{00B7} tank 6 \u{00B7} brim 3 \u{00B7} best 9", enabled: true, needs: nil,
+                                   started: true)
+        XCTAssertEqual([continued.value, continued.hint], ["run in progress, best 9 tanks", "continue, tank 6, brim 3, best 9"])
+        XCTAssertEqual(Spoken.row(.endless(Run(seed: 7, tank: 5)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil,
+                                  started: true).value, "run in progress")
         XCTAssertEqual(Spoken.next(seventh), "Next: level 7, \(seventh.title)")
         XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
         XCTAssertEqual(Spoken.back(first), "Back to levels")

@@ -105,4 +105,21 @@ import XCTest
         XCTAssertEqual(f.finger!.at.y, at.y - steps * LevelView.lensPitch, accuracy: 1e-9)
         XCTAssertEqual(f.finger!.at.x, at.x, accuracy: 1e-9)
     }
+
+    /// The dock's covers stir what the cards' clips play, on pictures baked once rather than redrawn each frame, and their
+    /// loop runs from clean to clean and holds the dealt stack between.
+    func testEveryCoverStirsItsClipsLevel() {
+        XCTAssertEqual(Offer.pack(.lens).covers.map(\.id), [Level.lens[2].id])
+        XCTAssertEqual(Offer.pack(.escapement).covers.map(\.id), [Level.escapement[1].id])
+        XCTAssertEqual(Offer.pack(.prism).covers.map(\.id), [Level.prism[0].id])
+        XCTAssertEqual(Offer.complete.covers.map(\.pack), Pack.sold())
+        for offer in Offer.all {
+            for level in offer.covers { XCTAssertFalse(level.picture.isLive, "\(offer.name) cover: \(level.id)") }
+        }
+        for m in [3, 4, 7] {
+            XCTAssertEqual(PackTank.wind(m, at: 0), Array(repeating: 0, count: m))
+            XCTAssertEqual(PackTank.wind(m, at: 2.8), Array(repeating: 1, count: m))
+            XCTAssertEqual(PackTank.wind(m, at: PackTank.period - 0.05), Array(repeating: 0, count: m))
+        }
+    }
 }

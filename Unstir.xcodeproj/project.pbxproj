@@ -30,8 +30,10 @@
 		6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */; };
 		64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */; };
 		650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B80E0606D266BF05C66786E /* FirstStir.swift */; };
+		652A1046F612B40F05EC8A23 /* Resume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D9845C51771ED7A1D7776C /* Resume.swift */; };
 		730654ACB29B80F0DED02225 /* EscapementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD78B993A35245B095AA159 /* EscapementTests.swift */; };
 		7387F87E72AA8B35A9B1C115 /* Engraving.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA44B6DE028AB83D502C8EC5 /* Engraving.swift */; };
+		73CE5E561F50B4F1DEC2E63C /* ResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C894A517DFF2C4F5F12AFC3B /* ResumeTests.swift */; };
 		79D52A8EF45A795194455A50 /* Sky.metal in Sources */ = {isa = PBXBuildFile; fileRef = 2926E44D61C37EEF53C771BA /* Sky.metal */; };
 		826769813DDDA6BD96FAE06E /* Spoken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CE724B24586C771A00348BD /* Spoken.swift */; };
 		87529D1AE6435E7B409D5D4E /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89654A86FE88E89D5339382 /* Sound.swift */; };
@@ -85,6 +87,7 @@
 		059E21DBCF779B91F994E8E5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0B80E0606D266BF05C66786E /* FirstStir.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStir.swift; sourceTree = "<group>"; };
 		0D958FCA92212546745A433D /* Marbling.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Marbling.metal; sourceTree = "<group>"; };
+		11D9845C51771ED7A1D7776C /* Resume.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resume.swift; sourceTree = "<group>"; };
 		12E8193F7A9FB37B678695D2 /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
 		25930862609F89911BFB5015 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = SOURCE_ROOT; };
 		27E5962A6708954A5E564099 /* Coral.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Coral.metal; sourceTree = "<group>"; };
@@ -131,6 +134,7 @@
 		BD9BF77535C50E24D360E2ED /* UnstirApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnstirApp.swift; sourceTree = "<group>"; };
 		C22F2052D681E2C63BE5D832 /* PrismTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrismTests.swift; sourceTree = "<group>"; };
 		C45CEE9950106BAFE3A297A1 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
+		C894A517DFF2C4F5F12AFC3B /* ResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeTests.swift; sourceTree = "<group>"; };
 		CBBF51F07B822677549432BB /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
 		D1F91870B1E87E24EFC084E0 /* Glass.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Glass.metal; sourceTree = "<group>"; };
 		D322AA44C06018F3A665792F /* Brim.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Brim.metal; sourceTree = "<group>"; };
@@ -178,6 +182,7 @@
 				3CB4A9DE240F63330597A189 /* LensTests.swift */,
 				D692C82FAF648856F00B09E0 /* PackTests.swift */,
 				C22F2052D681E2C63BE5D832 /* PrismTests.swift */,
+				C894A517DFF2C4F5F12AFC3B /* ResumeTests.swift */,
 				2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */,
 				7DE72E9F1CCE362B73E2FA79 /* Solver.swift */,
 				6EE69789D7FB741D6D04AA1A /* SolverTests.swift */,
@@ -244,6 +249,7 @@
 				7147B0B195AAB46DE31D870D /* Pictures.swift */,
 				97D4F0C0BBFEBFFFB3BA8313 /* Power.swift */,
 				39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */,
+				11D9845C51771ED7A1D7776C /* Resume.swift */,
 				02DCBCEAE9EA5C16D6101548 /* Share.swift */,
 				DB7B4A291F2734F1B961F3FE /* Shelf.swift */,
 				2926E44D61C37EEF53C771BA /* Sky.metal */,
@@ -396,6 +402,7 @@
 				ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */,
 				F40291CB604E0F77378217A9 /* Pictures.swift in Sources */,
 				A4810ECE2020837953FD00AF /* Power.swift in Sources */,
+				652A1046F612B40F05EC8A23 /* Resume.swift in Sources */,
 				FF92A9DDE01E5F17039DBCBB /* Share.swift in Sources */,
 				90101FC5060304F2B0AA3F01 /* Shelf.swift in Sources */,
 				79D52A8EF45A795194455A50 /* Sky.metal in Sources */,
@@ -424,6 +431,7 @@
 				B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */,
 				E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */,
 				FFA2BB437A22E17329EBA485 /* PrismTests.swift in Sources */,
+				73CE5E561F50B4F1DEC2E63C /* ResumeTests.swift in Sources */,
 				89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */,
 				A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */,
 				1A5F105A934D627FC90E16AE /* SolverTests.swift in Sources */,

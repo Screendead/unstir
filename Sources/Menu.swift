@@ -141,6 +141,8 @@ struct MenuView: View {
     let focus: Level?
     /// UNSTIR_LOCKTAP: a locked row held tapped.
     let held: String?
+    /// Drawn under a level a back swipe is sliding off.
+    let peeking: Bool
     /// The focused row's id until its flash has started, so a later rebuild of its tier's list doesn't flash it again.
     @State private var flashing: String?
     /// `focus` for the card up as the menu opens, gone once a card is opened or closed, so a dock tap opens at the top.
@@ -190,6 +192,12 @@ struct MenuView: View {
     @State private var daily: (level: Level, run: Int)
     /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
     @State private var leading: Lead
+    /// Endless's saved run, which its row continues (Jack's call C2, round 13).
+    @State private var saved: Resume?
+    /// When a first tap armed the endless row's "new run", which then says "new run? tap again" for `ResetArm.window`.
+    @State private var newRunArmed: Date?
+    @AccessibilityFocusState private var newRunFocused: Bool
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -199,8 +207,8 @@ struct MenuView: View {
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
          card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
-         cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil,
-         onPick: @escaping (Level) -> Void) {
+         cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil, run: Resume? = nil,
+         peeking: Bool = false, onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = settings
         self.onPick = onPick
@@ -211,8 +219,10 @@ struct MenuView: View {
         self.cardScroll = cardScroll
         self.focus = focus
         self.held = held
+        self.peeking = peeking
         self.arrived = arrived
         _flashing = State(initialValue: focus?.id)
+        _saved = State(initialValue: run)
         _cardFocus = State(initialValue: focus)
         // A tier's own level left lands on its tier, which "up a notch" may have opened since the menu was last up.
         let tier = start ?? focus.flatMap { f in f.tier.levels.contains { $0.id == f.id } ? f.tier : nil } ?? Tier.stored()
@@ -273,9 +283,10 @@ struct MenuView: View {
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !Offer.shelf().isEmpty && PackDock.shown() {
-                    // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
+                    // Held still under a card, the settings or a level sliding off, when the phone saves power, or
+                    // once nobody touches it.
                     PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle,
+                             paused: card != nil || settings || peeking || Power.shared.saving || Power.shared.idle,
                              covered: card != nil || settings)
                         .equatable()
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
@@ -329,10 +340,18 @@ struct MenuView: View {
                     LevelRow(level: day, detail: run < 2 ? nil
                                  : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
                              enabled: true, new: new, pick: pick, refuse: refuse)
-                    LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                             detail: "deeper every tank \u{00B7} eight wrong stirs and it spills",
-                             best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true, new: new, pick: pick,
-                             refuse: refuse)
+                    let kept = saved?.run
+                    LevelRow(level: .endless(kept ?? Run(seed: .random(in: .min ... .max))),
+                             detail: kept.map {
+                                 "continue \u{00B7} tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)"
+                                     + (Best.tanks > 0 ? " \u{00B7} best \(Best.tanks)" : "")
+                             } ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
+                             best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true,
+                             new: new && kept == nil, continues: kept != nil, pick: pick, refuse: refuse)
+                        // On the title's line, where every row's mark sits and "Endless" leaves room.
+                        .overlay(alignment: Alignment(horizontal: .trailing, vertical: .firstTextBaseline)) {
+                            if kept != nil { newRun }
+                        }
                 }
                 if lead.sandboxFirst { sandbox }
             }
@@ -674,6 +693,36 @@ struct MenuView: View {
         select(.plughole)
     }
 
+    /// Over the endless row's trailing edge while a run is saved: a second tap within the window drops the run and
+    /// starts another, so a slip never loses one; under VoiceOver it stays armed until focus leaves, as reset does.
+    /// Plain, as the rows are: a touch that ends a stir neither arms it nor taps.
+    private var newRun: some View {
+        Button {
+            guard !twisting else { return }
+            let tap = ResetArm.tap(now: .now, armedAt: newRunArmed, played: true, held: voiceOver)
+            newRunArmed = tap.armedAt
+            guard tap.reset else {
+                AccessibilityNotification.Announcement("Tap again for a new run").post()
+                return Sound.shared.play(.tap)
+            }
+            Resume.remove("endless")
+            saved = nil
+            pick(.endless(Run(seed: .random(in: .min ... .max))))
+        } label: {
+            Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.mono(11)).lineLimit(1).opacity(0.55).hit()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(newRunArmed == nil ? "New run" : "New run, tap again to confirm")
+        .accessibilityHint("Drops the saved run and starts another.")
+        .accessibilityFocused($newRunFocused)
+        .onChange(of: newRunFocused) { if !newRunFocused && voiceOver { newRunArmed = nil } }
+        .task(id: newRunArmed) {
+            // VoiceOver's announcement and its double tap take longer than the window.
+            guard newRunArmed != nil, !voiceOver, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
+            newRunArmed = nil
+        }
+    }
+
     /// A touch that ends a stir must not open the row it lifted over, nor tap.
     private func pick(_ level: Level) {
         guard !twisting else { return }
@@ -817,6 +866,8 @@ private struct LevelRow: View {
     var gate: Tier?
     /// The daily and endless, until either is first opened.
     var new = false
+    /// Endless's row while a run is saved.
+    var continues = false
     let pick: (Level) -> Void
     /// A tap on a locked row: false while a stir is under the finger.
     let refuse: () -> Bool
@@ -882,7 +933,7 @@ private struct LevelRow: View {
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs,
-                                    gate: gate, started: tried, new: new)))
+                                    gate: gate, started: tried || continues, new: new)))
         .rowHairline(level.colour, max(lit, frontier ? 0.75 : 0))
         .onAppear {
             guard flash, !reduceMotion else { return }
