@@ -53,6 +53,29 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
    See whether anyone cares before spending money.
 4. **Choose the model from what testers do**, then set up the App Store page, preview video and a featuring request.
 
+### iPhone Duo (F10): the staged plan
+
+Jack's calls (2026-11-02): **D-layout = 3** (split play plus the menu beside play), **D-tent = A** (portrait on the
+closed display), **D-margin = A** (the 16 pt side margin stays). Closed-display fixes merged (#112). Each stage is a PR
+that leaves `master` shippable: the wide layout only reaches windows wider than tall, so no other iPhone changes.
+
+1. **Split play** (`duo-split`): `PlayLayout` (column for tall windows, split at the window's middle for wide ones,
+   the glass capped at 1300 px), the play screen's parts laid out by it, `UNSTIR_FRAME` and the `duo-open-*` shots.
+2. **Poses**: the tank keeps its identity and glides between column and split (no rebake), a drag in flight is
+   cancelled cleanly, the opening, demos and keyframes survive a resize; the fold from `reservedRegions(kind:
+   .division)` behind `#available(iOS 27.1, *)`; tabletop (tall and folded: chrome up, tank down).
+3. **Round the tank and in the chrome pane**: brim and spill, rim lesson, knurl, lens track, clock hints and the night
+   forwards measured against the tank's pane; VoiceOver order (header, title, tank, caption, controls) and Dynamic
+   Type in the chrome pane.
+4. **Menu, wide**: the list at a readable width, the pack card beside it rather than over it, the dock's covers sized.
+5. **Menu beside play** (option 3): the menu stays up in one half while a level plays in the other; back, next and
+   focus get their second meaning, and the menu's live covers and tier stir pause beside a playing tank.
+6. **Device and store**: the GPU bench at each pose's pixel size, Duo App Store screenshots (1398 × 2034, 2853 × 2007,
+   2007 × 2853) from the harness, Split View's sizes; hairlines and the crease on a real Duo (needs a device or tester).
+
+Open for Jack (recommendations, not decided): where the menu sits beside play (stage 5), and whether the upright
+open Duo keeps its glass at the cap. See stage 1's PR.
+
 ### Recommended model (Jack ruled it out, 2026-09-28: he won't put tiers behind a purchase)
 
 Free, with one purchase that unlocks the rest (full campaign, Nightmare and Nightmare+, endless). The daily stays free
