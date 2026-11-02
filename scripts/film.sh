@@ -30,7 +30,7 @@ film() {  # name seconds strip-filter KEY=VALUE...
   wants "$name" || return 0
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
-  local snd="" began wav="shots/film/$name.nut" v0 v1 a0 length=()
+  local snd="" began wav="shots/film/$name.nut" v0 v1 a0 took length=()
   began=$(mktemp)
   # FILM_SOUND=1 plays the take's sound and records it from BlackHole, which the caller has made the Mac's output
   # (scripts/store-media.sh sound); recordVideo records no audio. Neither recorder's file says when it started, so
@@ -60,15 +60,15 @@ for line in sys.stdin:
   trash "$began"
   # recordVideo writes a frame only when the screen changes, so a take that ends on a still screen ends early; its
   # comment keeps how long it ran, which scripts/store-media.sh cuts by.
-  [[ -n "$v0" ]] && length=(-metadata comment="take $(awk -v a="$v0" -v b="$v1" 'BEGIN { printf "%.3f", b - a }') s")
+  [[ -n "$v0" ]] && took=$(awk -v a="$v0" -v b="$v1" 'BEGIN { printf "%.3f", b - a }') length=(-metadata comment="take $took s")
   if [[ -n "$snd" ]]; then
     kill -INT "$snd"
     wait "$snd" || true
     [[ -n "$v0" ]] || { echo "$name: recordVideo never said it started, so its sound can't be placed" >&2; exit 1; }
     a0=$(ffprobe -v error -show_entries stream=start_time -of csv=p=0 "$wav")
-    # async fills a dropped buffer's gap with silence; apad lets the video, not the sound, set the length.
+    # async fills a dropped buffer's gap with silence; the sound runs to the take's end, past a still screen's last frame.
     ffmpeg -loglevel error -y -i "$mp4" -itsoffset "$(awk -v a="$a0" -v v="$v0" 'BEGIN { print a - v }')" -i "$wav" \
-      -map 0:v -map 1:a -c:v copy -af aresample=async=1:first_pts=0,apad -shortest -c:a aac -b:a 256k "${length[@]}" \
+      -map 0:v -map 1:a -c:v copy -af aresample=async=1:first_pts=0,apad -t "$took" -c:a aac -b:a 256k "${length[@]}" \
       "${mp4%.mp4}-sound.mp4"
     mv "${mp4%.mp4}-sound.mp4" "$mp4"
     trash "$wav"

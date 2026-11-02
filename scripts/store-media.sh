@@ -69,8 +69,9 @@ if [[ "$what" == preview || "$what" == all ]]; then
     start=$(span "$name" "$from" "$keep")
     python3 scripts/store-captions.py film "$words" "$work/caption-$i.png"
     inputs+=(-i "shots/film/$name.mp4" -i "$work/caption-$i.png")
-    # recordVideo writes a frame only when the screen changes, so fps= first, after holding the last frame to the keep's end.
-    chains+="[$((2 * i)):v]trim=start=$start:duration=$keep,setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration=$keep,fps=30,trim=duration=$keep,scale=1320:2868,setsar=1[f$i];"
+    # recordVideo writes a frame only when the screen changes, so fps= before the trim, which would otherwise start on
+    # the first change after it, and tpad holds the last frame to the keep's end.
+    chains+="[$((2 * i)):v]fps=30,trim=start=$start:duration=$keep,setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration=$keep,trim=duration=$keep,scale=1320:2868,setsar=1[f$i];"
     chains+="[f$i][$((2 * i + 1)):v]overlay=0:0[v$i];"
     labels+="[v$i]"
     echo "preview: $name from $start s, $keep s, \"$words\""
@@ -112,11 +113,11 @@ if [[ "$what" == social || "$what" == sound || "$what" == all ]]; then
     start=$(span "$name" "$from" "$keep")
     suffix="" audio=(-an)
     if [[ "$what" == sound ]]; then
-      suffix=-sound audio=(-map 0:a -c:a aac -b:a 256k -af "loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=out:st=$(awk -v k="$keep" 'BEGIN { print k - 0.3 }'):d=0.3")
+      suffix=-sound audio=(-map 0:a -c:a aac -b:a 256k -af "atrim=start=$start:duration=$keep,asetpts=PTS-STARTPTS,loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=out:st=$(awk -v k="$keep" 'BEGIN { print k - 0.3 }'):d=0.3,apad")
     fi
     # 9:16 out of the 1320 x 2868 screen, centred on the tank.
-    ffmpeg -loglevel error -y -ss "$start" -t "$keep" -i "shots/film/$name.mp4" -map 0:v \
-      -vf "tpad=stop_mode=clone:stop_duration=$keep,fps=30,scale=1320:2868,crop=1320:2347:0:252,scale=1080:1920,setsar=1" \
+    ffmpeg -loglevel error -y -i "shots/film/$name.mp4" -map 0:v \
+      -vf "fps=30,trim=start=$start:duration=$keep,setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration=$keep,scale=1320:2868,crop=1320:2347:0:252,scale=1080:1920,setsar=1" \
       "${audio[@]}" -t "$keep" -c:v libx264 -profile:v high -crf 18 -preset slow -pix_fmt yuv420p -movflags +faststart "$out/social/$name$suffix.mp4"
     echo "social: $name$suffix from $start s, $keep s"
   done
