@@ -12,6 +12,11 @@ first-launch-pointer.png  The same, its note at rest after 4 s: the note and the
 menu-after-01.png  Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list.
 menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox.
 menu-daily-run.png  The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more.
+menu-archive-locked.png  The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack.
+menu-archive-open.png  The same with Lens owned: the archive's row open, 30 past dailies and how many are at par.
+archive.png  The archive's calendar, Lens owned: the 30 days before today a month to a block, the three days before today solved on their day at par, others from the archive clean, par, +2, +1 or tried, today's number marked today.
+archive-large.png  The same at accessibility type (accessibility3): a list of days in place of the week grid.
+archive-day.png  The daily from five days ago, opened from the archive: its own tank, and its way out reads archive.
 menu-tried.png  Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row.
 menu-no-dock.png  Plughole 01 to 08 solved: no pack dock yet.
 menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best.

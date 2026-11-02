@@ -15,7 +15,17 @@ enum Spoken {
     static func next(_ level: Level) -> String { "Next: level \(Int(level.label) ?? 0), \(level.title)" }
 
     /// Where a level's back button goes: a pack's level returns to its card.
-    static func back(_ level: Level) -> String { "Back to " + (level.pack?.name ?? "levels") }
+    static func back(_ level: Level) -> String { "Back to " + (level.pack?.name ?? (level.archived ? "the archive" : "levels")) }
+
+    /// The archive's row on the menu: shut until any purchase, then how much of it is at par.
+    static func archiveRow(open: Bool, days: Int, atPar: Int) -> (label: String, value: String, hint: String) {
+        ("Daily archive", open ? "\(atPar) of \(days) at par" : "locked, comes with any pack", "\(days) past dailies")
+    }
+
+    /// A day of the archive: its date in words, its result, and its shape.
+    static func archiveDay(_ date: Date, level: Level, mark: Archive.Mark) -> (label: String, value: String, hint: String) {
+        (date.formatted(.dateTime.weekday(.wide).day().month(.wide)), mark.spoken, "\(rods(level.layout)), par \(level.par)")
+    }
 
     /// A menu row: its name, its result or why it is shut, and its shape. `needs` is the level whose solve opens it, and
     /// `gate` the tier below a closed tier, every level of which at par opens it. `started`: a move committed, no best

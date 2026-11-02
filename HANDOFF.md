@@ -1440,6 +1440,8 @@ names and product ids, and Complete's promise to older owners.
     purchase.
    Jack's call (2026-10-25, round 6): back-filled to 30 days before launch day (`Share.firstDay`).
    Round 14, M6: to build, as one of the six marketing builds.
+   Built 2026-11-02 on `r14-archive` (PR #108) (confirmed in M6): a row under today's daily, locked until any purchase, opening a
+   calendar over the menu. Waits for Jack's look; its implementer calls are listed in the PR under "For Jack".
 48. The supporter mark (menu and share line), after any purchase. ~~The tip jar~~ dropped (Jack: "No begging").
     Round 14, M6: to build, with an off switch.
     Built 2026-11-02 on `r14-store` (Jack's call M6, round 14): a still hairline four-pointed glint after the menu's

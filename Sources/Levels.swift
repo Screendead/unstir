@@ -119,6 +119,8 @@ struct Level: Hashable, Sendable {
     var fixedPar: Int?
     /// First Stir's scene, drawn in place of `picture`; each of its vignettes plays once no entry holds it back.
     var story: Story?
+    /// A past daily, opened from the archive: its best is its own, and never counts toward `Daily.run`.
+    var archived = false
     var par: Int { fixedPar ?? scramble.count }
 
     var sandbox: Bool { id == "sandbox" }
@@ -314,8 +316,8 @@ struct Level: Hashable, Sendable {
 
     static func dailyID(_ date: Date) -> String { "daily-\(dailyDay(date))" }
 
-    /// Everyone gets the same tank that day: seeded from yyyymmdd.
-    static func daily(_ date: Date = .now) -> Level {
+    /// Everyone gets the same tank that day: seeded from yyyymmdd. `archived`: dealt from the archive, after its day.
+    static func daily(_ date: Date = .now, archived: Bool = false) -> Level {
         let ymd = dailyDay(date)
         var rng = SplitMix64(state: UInt64(ymd))
         let layout = generated[rng.below(4)]
@@ -323,7 +325,7 @@ struct Level: Hashable, Sendable {
         // The id keys the day's stored best, so it stays yyyymmdd; only the title follows the locale.
         let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
         return Level(id: dailyID(date), label: "day", title: "Daily \u{00B7} \(day)",
-                     layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng))
+                     layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng), archived: archived)
     }
 
     /// Tank n of a run: 5 + 5n/4 stirs, n/2 of them hidden under louder ones (more where no rod can go louder), up to half
@@ -428,11 +430,11 @@ enum Daily {
     }
 
     /// Once today's daily has a best, the days in a row ending today that have one: only a first try saves a daily's
-    /// best, so practice never counts. 0 before today's solve, so a broken run is never announced.
+    /// best, so practice never counts, and nor does a best the archive saved after its day.
     static func run(today: Date, best: (String) -> Best? = Best.load) -> Int {
         let calendar = Calendar(identifier: .gregorian)
         var day = today, n = 0
-        while best(Level.dailyID(day)) != nil, let before = calendar.date(byAdding: .day, value: -1, to: day) {
+        while let b = best(Level.dailyID(day)), b.archived != true, let before = calendar.date(byAdding: .day, value: -1, to: day) {
             n += 1
             day = before
         }
@@ -446,6 +448,8 @@ struct Best: Codable {
     /// Stored, because only a first try can be clean and a later one can match its numbers. Optional so saves from the
     /// test builds that predate it still decode and keep the next level open; v1 saves never decode, as they lack `over`.
     var clean: Bool?
+    /// A daily's best saved from the archive, after its day; nil for every other, so older saves count as on the day.
+    var archived: Bool?
 
     static func load(_ id: String) -> Best? {
         UserDefaults.standard.data(forKey: "best.\(id)").flatMap { try? JSONDecoder().decode(Best.self, from: $0) }

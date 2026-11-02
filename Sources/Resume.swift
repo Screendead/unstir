@@ -57,8 +57,8 @@ struct Resume: Codable, Equatable {
         if !game.actions.isEmpty { save(Resume(of: game)) } else if game.level.run == nil { remove(game.level.id) }
     }
 
-    /// At launch: every save but those of `known` ids goes, so yesterday's daily and a level an update took out never
-    /// come back.
+    /// At launch: every save but those of `known` ids goes, so a daily the archive no longer holds and a level an update
+    /// took out never come back.
     @MainActor static func prune(known: Set<String>, defaults: UserDefaults = .standard) {
         for key in defaults.dictionaryRepresentation().keys where key.hasPrefix("resume.") {
             let id = String(key.dropFirst("resume.".count))
@@ -70,7 +70,8 @@ struct Resume: Codable, Equatable {
 
     /// Every id a save can belong to today.
     static var known: Set<String> {
-        Set(Tier.allCases.flatMap(\.levels).map(\.id) + Pack.allCases.flatMap(\.levels).map(\.id) + ["endless", Level.daily().id])
+        Set(Tier.allCases.flatMap(\.levels).map(\.id) + Pack.allCases.flatMap(\.levels).map(\.id) + ["endless", Level.daily().id]
+            + Archive.days().map(Level.dailyID))
     }
 
     /// UNSTIR_RESUME's line: UNSTIR_MOVES's `rod:steps`, rod -1 the tank and a ratchet's turn a wait, with `u` an undo

@@ -65,6 +65,9 @@ struct Ledger: Equatable, Sendable {
 
     var owned: Set<Pack> { Set(Pack.sold().filter { state($0) == .owned }) }
 
+    /// Any purchase, a pack or Complete, which grants every pack.
+    var bought: Bool { !owned.isEmpty }
+
     /// A failure belongs to the attempt, so it goes when the card that showed it closes.
     mutating func forgetFailures() {
         for (id, state) in products where state == .failed { products[id] = .unowned }
@@ -133,7 +136,7 @@ final class Store {
 
     /// The player owns a pack, by a purchase of their own, Complete or a family's share: what the supporter mark and the
     /// daily archive both open on.
-    var bought: Bool { !(harness ?? ledger).owned.isEmpty }
+    var bought: Bool { (harness ?? ledger).bought }
 
     /// Nil for a level in no pack. A pack's level whose id names no number of that pack needs the card.
     func access(_ level: Level) -> Pack.Access? {
