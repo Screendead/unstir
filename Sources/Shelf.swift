@@ -62,6 +62,18 @@ enum Offer: Hashable, Sendable {
         return saving > 0 ? saving : nil
     }
 
+    /// Whether the bundle is on offer: once every price `saving` takes is in, while it saves; until then, while none of
+    /// the `bundled` packs is owned, when it holds them all for less. The prices decide, never whether a fetch is
+    /// running, so a card's fetch never moves the dock under it.
+    static func offersComplete(amounts: [String: Decimal], owned: Set<Pack>, bundled: [Pack] = Pack.bundled) -> Bool {
+        let left = bundled.filter { !owned.contains($0) }
+        guard !left.isEmpty else { return false }
+        if ([Pack.completeID] + left.map(\.productID)).allSatisfy({ amounts[$0] != nil }) {
+            return saving(amounts: amounts, owned: owned, bundled: bundled) != nil
+        }
+        return left.count == bundled.count
+    }
+
     /// Whether this build sells it.
     var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
 

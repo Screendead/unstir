@@ -688,7 +688,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   while it costs less than its packs left unowned, saying the saving ("or all three in Triptych I · $5.99 · save
   $2.98 ›", broken only before "· save", and a "save" fact on the bundle's own card; `Offer.saving`, from
   `Product.price`; the line and the fact wait for the prices, and the dock's cover too unless none of its packs is owned,
-  `Store.offersComplete`, so a launch's dock keeps its cover) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
+  `Offer.offersComplete`, read off the prices known and the packs owned, never whether a fetch is running, so the dock
+  keeps its cover from launch however the fetch went and a card's fetch never moves it) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
   locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none

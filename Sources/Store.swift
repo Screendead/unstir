@@ -154,11 +154,10 @@ final class Store {
         return styles[Pack.completeID].map { s.formatted($0) }
     }
 
-    /// Complete is on offer, on the dock and as a card to go back to: while it saves, or, while the prices are still
-    /// loading, while none of its packs is owned, when it holds them for less, so a launch's dock keeps its cover.
+    /// The bundle is on offer, on the dock and as a card to go back to (`Offer.offersComplete`): with none of its packs
+    /// owned it stays whether the prices are in, loading or unreachable, so the dock keeps its cover from launch.
     var offersComplete: Bool {
-        if saving != nil { return true }
-        return pricing == .fetching && amounts[Pack.completeID] == nil && Pack.bundled.allSatisfy { state($0) != .owned }
+        Offer.offersComplete(amounts: amounts, owned: (harness ?? ledger).owned)
     }
 
     /// Screen Time, or a child's account without Ask to Buy, can turn purchases off; read afresh as a card draws.
