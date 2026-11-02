@@ -117,12 +117,12 @@ extension ShareLink {
 
 /// Effects on a pool of players, so quick ones overlap, and one looping bed under the menu or a level. Only `queue`
 /// touches the engine and the buffers: callers post to it, so the main actor never waits on a file load or an engine
-/// start. A bed decodes on it too, so a tick can wait behind one, but beds change only between screens.
+/// start. A bed decodes on it too, so an effect can wait behind one, but beds change only between screens.
 final class Sound: @unchecked Sendable {
     static let shared = Sound()
 
     enum Effect: Equatable, Sendable {
-        case tick, push, tank, seized, solve, spilled, tap, undo, reset, tier
+        case push, tank, seized, solve, spilled, tap, undo, reset, tier
         /// The nth heal since the level opened or was reset.
         case heal(Int)
     }
@@ -156,13 +156,12 @@ final class Sound: @unchecked Sendable {
     /// The glass set's beds. Each is 18 MB decoded, so only the wanted one and any still fading out are kept.
     private var bedFiles: [String: URL] = [:]
     private var beds: [String: AVAudioPCMBuffer] = [:]
-    private var ticks = 0
     private var taps = 0
     private var bed: Bed?
     private var fader: DispatchSourceTimer?
     /// In the background, where the engine cannot start.
     private var suspended = false
-    /// Logs a failed start once, not on every tick while it keeps failing.
+    /// Logs a failed start once, not on every effect while it keeps failing.
     private var failed = false
     /// Another app's music is playing: the bed gives way to it, and effects still sound.
     private var hushed = false
@@ -233,9 +232,8 @@ final class Sound: @unchecked Sendable {
     }
 
     @MainActor func play(_ effect: Effect) {
-        // A drag ticks up to ten times a second, which would crowd the recorder's 3000 lines, and a sound switched
-        // off never plays.
-        if effect != .tick, Settings.sounds { Log.write("sound \(effect)") }
+        // A sound switched off never plays.
+        if Settings.sounds { Log.write("sound \(effect)") }
         queue.async { self.start(effect) }
     }
 
@@ -291,7 +289,6 @@ final class Sound: @unchecked Sendable {
     private func start(_ effect: Effect) {
         guard soundsOn else { return }
         let name = switch effect {
-        case .tick: "tick-\(ticks % 4 + 1)"
         case .tap: "tap-\(taps % 4 + 1)"
         case .push: "push"
         case .tank: "tank"
@@ -303,7 +300,6 @@ final class Sound: @unchecked Sendable {
         case .tier: "switch"
         case .heal(let n): "heal-\(((n - 1) % 6 + 6) % 6 + 1)"
         }
-        if effect == .tick { ticks += 1 }
         if effect == .tap { taps += 1 }
         guard !suspended, let buffer = buffers[name], run(),
               let i = ends.indices.min(by: { ends[$0] < ends[$1] }) else { return }
@@ -319,7 +315,7 @@ final class Sound: @unchecked Sendable {
             let session = AVAudioSession.sharedInstance()
             // Mixes with the player's own music and falls silent with the ring switch.
             try session.setCategory(.ambient)
-            // Short IO buffers, so a tick lands with its haptic.
+            // Short IO buffers, so the tank's clunk lands with its haptic.
             try? session.setPreferredIOBufferDuration(0.005)
             try session.setActive(true)
             try (engine ?? build()).start()

@@ -2418,7 +2418,6 @@ struct LevelView: View {
         .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .haptic(.selection, trigger: ticks)
         .haptic(.selection, trigger: misses)
-        .onChange(of: ticks) { Sound.shared.play(.tick) }
         .onChange(of: tankTicks) { Knock.clunk.play(); Sound.shared.play(.tank) }
         .haptic(.impact(weight: .heavy), trigger: game.cancels)
         // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
@@ -3100,8 +3099,8 @@ struct Breath: Equatable {
     }
 }
 
-/// A turn's clicks: one each time what letting go would commit changes, at every half step, either way. So a rod's tick
-/// and the tank's clunk land with the drag's count, and every step a turn commits has had one.
+/// A turn's clicks: one each time what letting go would commit changes, at every half step, either way. So a rod's
+/// haptic and the tank's clunk land with the drag's count, and every step a turn commits has had one.
 struct Detent {
     let step: Double
     /// What letting go now would commit.

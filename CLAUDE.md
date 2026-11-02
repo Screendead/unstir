@@ -418,8 +418,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   count: a long mark on the disc's hairline (on one just inside the rim, for the tank) where its stir began, a dash per
   step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
-  (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: the rod's tick, the tank's
-  clunk. While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
+  (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: a rod's a selection
+  haptic and no sound (Jack's call SND1 = B, round 16: the haptic and the dashes carry the steps), the tank's its clunk,
+  haptic and sound. While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
   main actor and the fine pass off it. Under Reduce Motion the opening fades through black (`curtain`, 0.2 s each way)
   in place of the wind-in, a replay level keeping its rod turns, which are the information; the solve swells the
@@ -938,7 +939,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
   a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
   target to 44 pt round it without moving anything. Nothing sounds during a drag but the
-  detent's tick, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
+  tank's clunk, a step at a time, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
   out over the crossfade and back (`Sound.music`), its sounds switch every effect and button (`Sound.sounds`), and its
   haptics switch `Knock` and every system haptic, which all go through `haptic(_:trigger:when:)`; none of the three is
   read anywhere else. The session is ambient, and while
