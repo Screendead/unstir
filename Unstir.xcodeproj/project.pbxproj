@@ -58,6 +58,7 @@
 		BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */ = {isa = PBXBuildFile; fileRef = D1F91870B1E87E24EFC084E0 /* Glass.metal */; };
 		BD8503AA80BACF958F3E6355 /* ArchiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64C2CE0EF090746C7B6799A /* ArchiveTests.swift */; };
 		C3596BB291D30EF520836782 /* Chainmail.metal in Sources */ = {isa = PBXBuildFile; fileRef = E302013539F573E3F8C8FBC5 /* Chainmail.metal */; };
+		C6A87E52582D8C010F9C77A1 /* PlayLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7460F8510A57CE405402E04F /* PlayLayoutTests.swift */; };
 		CB8FCA0E33DA80181C177486 /* Archive.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9DE31F264F1D40389BD4802 /* Archive.swift */; };
 		CCD56B4404CDF1979D62B556 /* VortexPictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C424A58661F8E2D8F67C740 /* VortexPictures.swift */; };
 		D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0CD5709FED7976550A2E52 /* TankView.swift */; };
@@ -68,6 +69,7 @@
 		E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D692C82FAF648856F00B09E0 /* PackTests.swift */; };
 		ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283B1A56B07119D483F58617 /* Pack.swift */; };
 		F09FECAA611D270EE52C8307 /* FirstStirTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B662DA049B8A76E76E38BF /* FirstStirTests.swift */; };
+		F143AF69AD4B8E639FFD959B /* PlayLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = F935F37F140F0E82EFAD71CA /* PlayLayout.swift */; };
 		F1D5DFB747CEEE7F2DC62166 /* Coral.metal in Sources */ = {isa = PBXBuildFile; fileRef = 27E5962A6708954A5E564099 /* Coral.metal */; };
 		F40291CB604E0F77378217A9 /* Pictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7147B0B195AAB46DE31D870D /* Pictures.swift */; };
 		FA7C0CC5ADD8583855C61026 /* FirstStirFlood.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */; };
@@ -119,6 +121,7 @@
 		6DC78A03B7B4D5363A8E010A /* AgeRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgeRange.swift; sourceTree = "<group>"; };
 		6EE69789D7FB741D6D04AA1A /* SolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolverTests.swift; sourceTree = "<group>"; };
 		7147B0B195AAB46DE31D870D /* Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pictures.swift; sourceTree = "<group>"; };
+		7460F8510A57CE405402E04F /* PlayLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayLayoutTests.swift; sourceTree = "<group>"; };
 		7898E0AEAFE90492DC3EB64C /* Neurons.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Neurons.metal; sourceTree = "<group>"; };
 		7DE72E9F1CCE362B73E2FA79 /* Solver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Solver.swift; sourceTree = "<group>"; };
 		7FD78B993A35245B095AA159 /* EscapementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementTests.swift; sourceTree = "<group>"; };
@@ -157,6 +160,7 @@
 		E9DE31F264F1D40389BD4802 /* Archive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Archive.swift; sourceTree = "<group>"; };
 		EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirDuskBefore.swift; sourceTree = "<group>"; };
 		EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirFlood.swift; sourceTree = "<group>"; };
+		F935F37F140F0E82EFAD71CA /* PlayLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayLayout.swift; sourceTree = "<group>"; };
 		FED6B7A35E47B3475841C4DC /* ClipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipTests.swift; sourceTree = "<group>"; };
 		FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryScene.swift; sourceTree = "<group>"; };
 		FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
@@ -193,6 +197,7 @@
 				AEBFE666F4DC4F4EC543A103 /* FreshDefaults.swift */,
 				3CB4A9DE240F63330597A189 /* LensTests.swift */,
 				D692C82FAF648856F00B09E0 /* PackTests.swift */,
+				7460F8510A57CE405402E04F /* PlayLayoutTests.swift */,
 				C22F2052D681E2C63BE5D832 /* PrismTests.swift */,
 				C894A517DFF2C4F5F12AFC3B /* ResumeTests.swift */,
 				2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */,
@@ -262,6 +267,7 @@
 				7898E0AEAFE90492DC3EB64C /* Neurons.metal */,
 				283B1A56B07119D483F58617 /* Pack.swift */,
 				7147B0B195AAB46DE31D870D /* Pictures.swift */,
+				F935F37F140F0E82EFAD71CA /* PlayLayout.swift */,
 				97D4F0C0BBFEBFFFB3BA8313 /* Power.swift */,
 				39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */,
 				11D9845C51771ED7A1D7776C /* Resume.swift */,
@@ -419,6 +425,7 @@
 				0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */,
 				ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */,
 				F40291CB604E0F77378217A9 /* Pictures.swift in Sources */,
+				F143AF69AD4B8E639FFD959B /* PlayLayout.swift in Sources */,
 				A4810ECE2020837953FD00AF /* Power.swift in Sources */,
 				652A1046F612B40F05EC8A23 /* Resume.swift in Sources */,
 				FF92A9DDE01E5F17039DBCBB /* Share.swift in Sources */,
@@ -450,6 +457,7 @@
 				0ED25749C2CA58123B100D5E /* FreshDefaults.swift in Sources */,
 				B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */,
 				E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */,
+				C6A87E52582D8C010F9C77A1 /* PlayLayoutTests.swift in Sources */,
 				FFA2BB437A22E17329EBA485 /* PrismTests.swift in Sources */,
 				73CE5E561F50B4F1DEC2E63C /* ResumeTests.swift in Sources */,
 				89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */,

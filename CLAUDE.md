@@ -652,6 +652,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   changes), the test past 8 at 512 px; the test is the judge. On the simulator one long cloud bank's flat base row came
   out a level different whichever vignettes had played, which the Mac never showed: keep a cloud bank inside the
   tank's width.
+- **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
+  any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
+  `min(width, height - 290) / 1.045`, as on every iPhone; a wider one (the iPhone Duo opened like a book, whatever the
+  portrait lock) splits at the window's middle, where the fold runs, 16 pt clear of it either side: the tank alone,
+  centred, in the leading half, and `LevelView`'s header, title, caption (and the cards hung from it), swatches and
+  controls in the trailing half. Neither half narrower than `minPane` (300 pt) splits. The glass never passes
+  `maxPixels` (1300 px), the size the stack's limits were tuned at, so the Duo upright keeps a 433 pt glass.
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
@@ -956,7 +963,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only.
   `UNSTIR_ARCHIVE=1` opens the archive over the menu, `UNSTIR_ARCHIVED=1:c,3:0,6:2,9:t` gives the daily that many days
   back a best from the archive (clean, that many over par) or a try, and `UNSTIR_MODE=archive UNSTIR_DAY=n` opens the
-  daily n days back from the archive. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  daily n days back from the archive. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_FRAME=951x669` lays the app out in a window of that size, shrunk to fit the simulator, with `UNSTIR_INSETS=top,leading,bottom,trailing` as its safe area: the iPhone Duo's inner display, which no simulator can be driven to headlessly (`HarnessWindow`; the system's bars and fold are not drawn; `duo-open-*` shots). In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which

@@ -761,6 +761,24 @@ hold=5 shot clean-lens-03 "Lens 03 on the halftone, its lens held mid-zoom, draw
   PACK=lens LEVEL=3 CLEAN=1 LIVE=0:+1 TOUCH=0,-0.8
 hold=5 shot clean-prism-01 "Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption." \
   PACK=prism LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
+# The iPhone Duo opened like a book: a 951 x 669 pt window whatever the portrait lock, its status column on the trailing
+# edge (84 pt assumed from the closed display). UNSTIR_FRAME draws that window shrunk to fit this simulator, without the
+# system's bars or the fold. The tank takes the leading half, everything else the trailing half.
+duo=(FRAME=951x669 INSETS=24,0,21,84)
+shot duo-open-level "Duo open: plughole 11 five moves in, the tank wholly in the leading half, header, note and controls in the trailing half." \
+  "${duo[@]}" LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
+shot duo-open-result "Duo open: plughole 06 solved clean, the card in the trailing half beside the tank where it was played." \
+  "${duo[@]}" SCREEN=clean LEVEL=6
+shot duo-open-escapement "Duo open: Escapement 02 a move in, the ticks' counter over the trailing half." \
+  "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=2:4
+shot duo-open-prism "Duo open: Prism 01 with the colour letters, the swatches under the note in the trailing half." \
+  "${duo[@]}" PACK=prism OWNED=prism LEVEL=1 LETTERS=1
+shot duo-open-endless "Duo open: endless at three notches, the brim round the tank in the leading half." \
+  "${duo[@]}" MODE=endless BRIM=3
+shot duo-open-daily-result "Duo open: today's daily solved two over par, the card's again, share and next daily beside the tank." \
+  "${duo[@]}" SCREEN=result MODE=daily NOW=17:00
+shot duo-open-upright "Duo open and turned upright (669 x 951 pt): today's column, its glass stopped at 1300 px (433 pt)." \
+  FRAME=669x951 INSETS=59,0,34,0 LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
 # Under Reduce Motion (set on the simulator, as film.sh's calm films do): every live picture holds Picture.rest's frame,
 # the brim holds where a change settles, and a spill cuts to its end, its card at once.
 calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
