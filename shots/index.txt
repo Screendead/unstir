@@ -674,6 +674,7 @@ duo-folded-spill.png  Duo half open like a book, endless spilling 1.1 s in: the 
 duo-tabletop-brim.png  Duo tabletop: endless at seven notches, the pin's pulse at its peak, the brim's bloom whole in the lower half, clear of the fold.
 duo-tabletop-lesson.png  Duo tabletop: maelstrom 01, the tank never turned: the rim lesson's arc and ghost finger over twelve, below the fold, the glass sat on the half's foot to make room.
 duo-tabletop-lesson-count.png  Duo tabletop: whirlpool 25 with knobs 2 and 5 seized, rod 1 at the top turned +1: its count beside the lesson's arc, both below the fold.
+duo-tabletop-lens-long.png  Duo tabletop: Lens 01's top lens dragged up nine steps, past the pane's top: the track's rail, dashes and now mark stop at the pane, clear of the fold.
 duo-tabletop-ending.png  Duo tabletop: the night forwards 1 s in, its lines (the beat, the time, tap to skip) at the foot of the upright half, where unstirred. stands, as the glass fills the lower half.
 duo-tabletop-ladder-end-ax5.png  Duo tabletop at the largest accessibility text size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold.
 duo-opened.png  Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept.
