@@ -303,6 +303,8 @@ struct MenuView: View {
         .sheet(isPresented: $settings) { SettingsSheet() }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
         .onChange(of: card == nil && !settings) { Power.shared.touched() }
+        // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
+        .onChange(of: settings) { if !settings { leading = Self.lead(tier: shown) } }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()
