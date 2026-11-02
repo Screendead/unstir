@@ -220,10 +220,10 @@ The cut, in order:
 | Seconds | Source | What it shows | Caption (muted playback) |
 |---|---|---|---|
 | 0–4 | `store-open-L12` (`open-L12`, taken long enough to wind in whole) | The clean picture, then every stir growing over it | A picture, stirred |
-| 4–12 | `store-whirlpool-03`: whirlpool 03 unstirred at par by a drawn fingertip to its solve | A hand turning the rods back in order, the seams healing, the wave | Turn the rods back in order |
-| 12–16.5 | `rim-swirl` | Vortex's swirl held from the rim | Vortex: the swirl |
-| 16.5–21 | `rim-seized` | Maelstrom's tank turned past a seized knob | Maelstrom: the tank turns |
-| 21–25 | `endless-brim-run` (its spill) | The brim filling and spilling | Endless, and a daily |
+| 4–14.6 | `store-whirlpool-03`: whirlpool 03 unstirred at par by a drawn fingertip to its solve | A hand turning the rods back in order, the seams healing, the wave | Turn the rods back in order |
+| 14.6–19.1 | `rim-swirl` | Vortex's swirl held from the rim | Vortex: the swirl |
+| 19.1–23.6 | `rim-seized` | Maelstrom's tank turned past a seized knob | Maelstrom: the tank turns |
+| 23.6–27.6 | `endless-brim-run` (its spill) | The brim filling and spilling | Endless, and a daily |
 
 `store-whirlpool-03` also serves plan step 3's social clips, beside three drawn clean (`clean-plughole-05`,
 `clean-whirlpool-01`, `editors-vortex-02`).

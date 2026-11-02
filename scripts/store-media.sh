@@ -4,7 +4,7 @@
 # The App Store's media (Jack's calls ST4 and ST5 = A, docs/store-page.md) and plan step 3's social clips, from the
 # harness, into $STORE_OUT (shots/store unless set):
 #   screens/   the ten screenshots (shots.sh store-) at 1320 x 2868, RGB without alpha, each also captioned
-#   preview/   the 25 s free-game preview, captioned for muted playback
+#   preview/   the 27.6 s free-game preview, captioned for muted playback
 #   social/    short vertical clips of a picture snapping back, 1080 x 1920, silent; with sound, each again as
 #              <name>-sound.mp4 (sound, which all leaves out, as it takes the Mac's audio output while it films)
 # --cut reuses the shots and films already taken. Takes the simulator shots.sh and film.sh take (UNSTIR_SIM); needs
@@ -46,10 +46,12 @@ if [[ "$what" == screens || "$what" == all ]]; then
   python3 scripts/store-captions.py screens shots "$out/screens"
 fi
 
-# Each segment: film case, seconds after the strike it starts, seconds it keeps, caption.
+# Each segment: film case, seconds after the strike it starts, seconds it keeps, caption. A strike is the bezel lighting,
+# about a second before the picture; a keep that ends on a solve runs a second or more past its wave, as the time from
+# strike to solve varies from take to take.
 preview=(
   "store-open-L12|0.3|4|A picture, stirred"
-  "store-whirlpool-03|2.4|8|Turn the rods back in order"
+  "store-whirlpool-03|2.8|10.6|Turn the rods back in order"
   "rim-swirl|1|4.5|Vortex: the swirl"
   "rim-seized|1.8|4.5|Maelstrom: the tank turns"
   "endless-brim-run|4.5|4|Endless, and a daily"
@@ -76,16 +78,18 @@ if [[ "$what" == preview || "$what" == all ]]; then
     -filter_complex "${chains}${labels}concat=n=$n:v=1:a=0,scale=886:1925,crop=886:1920:0:0,setsar=1[out]" \
     -map "[out]" -map "$((2 * n)):a" -shortest -r 30 -c:v libx264 -profile:v high -level 4.0 -b:v 11M -maxrate 12M \
     -bufsize 24M -preset slow -pix_fmt yuv420p -c:a aac -b:a 256k -movflags +faststart "$out/preview/preview.mp4"
-  echo "preview: $(ffprobe -v error -show_entries format=duration -of csv=p=0 "$out/preview/preview.mp4") s"
+  length=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$out/preview/preview.mp4")
+  echo "preview: $length s"
+  awk -v l="$length" 'BEGIN { exit !(l >= 15 && l <= 30) }' || { echo "preview: Apple takes 15 to 30 s" >&2; exit 1; }
 fi
 
 # Each clip: film case, seconds after the strike it starts, seconds it keeps. The clean takes show the picture alone
 # (no finger, knob or count); store-whirlpool-03 shows the hand and the game round it.
 social=(
-  "clean-plughole-05|0|11.5"
-  "clean-whirlpool-01|0|10"
-  "editors-vortex-02|0|9.4"
-  "store-whirlpool-03|0|11.5"
+  "clean-plughole-05|0|13.2"
+  "clean-whirlpool-01|0|10.7"
+  "editors-vortex-02|0|12"
+  "store-whirlpool-03|0|13.9"
 )
 # sound: the same clips with the game's sound, played through BlackHole (Homebrew's blackhole-2ch and switchaudio-osx),
 # which is the Mac's output for the takes and nothing else; the output goes back however the script ends.

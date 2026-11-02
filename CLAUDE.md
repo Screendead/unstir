@@ -146,7 +146,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Store media: `scripts/store-media.sh [screens|preview|social|sound|all] [--cut]` makes the App Store's set (Jack's calls
   ST4 and ST5 = A, `docs/store-page.md`) into `$STORE_OUT` (`shots/store` unless set): the ten `shots.sh store-`
   screenshots, at 1320 x 2868 without alpha and again captioned (`scripts/store-captions.py`, Pillow and the Mac's SF
-  Mono, as this ffmpeg has no drawtext; its look is a draft), the 25 s free-game preview at 886 x 1920 and 30 fps with a
+  Mono, as this ffmpeg has no drawtext; its look is a draft), the 27.6 s free-game preview at 886 x 1920 and 30 fps with a
   silent stereo track, its five segments (`store-open-L12`, `store-whirlpool-03`, `rim-swirl`, `rim-seized`,
   `endless-brim-run`) cut from their strikes and captioned, and plan step 3's social clips, 1080 x 1920 and silent,
   three drawn clean and one with the hand. `sound` films those clips again with the game's sound, switching the
