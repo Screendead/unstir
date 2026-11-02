@@ -2623,6 +2623,17 @@ final class UnstirTests: XCTestCase {
         XCTAssertFalse(Best.swirled)
     }
 
+    /// Only plughole 01 points at the settings, and only until it has; under the harness only UNSTIR_FRESH shows it.
+    func testOnlyPlughole01PointsAtTheSettingsOnce() {
+        let first = Tier.plughole.levels[0], second = Tier.plughole.levels[1]
+        XCTAssertTrue(LevelView.points(at: first, harnessed: false, fresh: false, pointed: false))
+        XCTAssertFalse(LevelView.points(at: first, harnessed: false, fresh: false, pointed: true))
+        XCTAssertFalse(LevelView.points(at: second, harnessed: false, fresh: false, pointed: false))
+        XCTAssertFalse(LevelView.points(at: first, harnessed: true, fresh: false, pointed: false))
+        XCTAssertTrue(LevelView.points(at: first, harnessed: true, fresh: true, pointed: true))
+        XCTAssertFalse(LevelView.points(at: Tier.whirlpool.levels[0], harnessed: true, fresh: true, pointed: false))
+    }
+
     /// The swirl breathes only until the player's first stir of it commits, the moment its lesson goes: a stir of another
     /// rod or a turn of the tank leaves it breathing, and after that stir no level breathes again. A layout without a
     /// swirl never does.

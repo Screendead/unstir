@@ -410,7 +410,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
   (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
   demonstration's commits (Jack's call C3, round 13). A level's note shows at full strength for its first 4 s of play, then at
-  0.55, as every caption rests. While a level is open and unfinished the screen stays awake (`Awake`) until two
+  0.55, as every caption rests. Plughole 01's first open hangs one line under it, at 0.55, pointing at the settings
+  ("sounds, haptics, colour letters: ⚙ on the menu", `LevelView.pointer`, Jack's call F3, round 14), and announces it
+  to VoiceOver as the opening ends, when `Best.pointedAtSettings` is stored; the line stays the visit out. While a level is open and unfinished the screen stays awake (`Awake`) until two
   minutes after the last touch.
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
@@ -824,7 +826,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   The entitlement Apple's docs require is a HANDOFF item. DeclaredAgeRange links weak, as the app runs from iOS 17.
   A fresh install's first launch opens straight into plughole 01 (`RootView.opening`, Jack's call C4, round 13), once:
   `Best.welcomed` is stored as it appears, so a player who backs out without a move gets the menu next time. Never
-  under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen without storing it. While a back
+  under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen, settings line and all, without storing it. While a back
   swipe slides a level off, `RootView` draws the menu under it (`LevelView.onPeek`, `RootView.peeking`), focused as
   leaving would focus it, first in its `ZStack`, so the menu uncovered is the one that stays up. The harness
   reads `UNSTIR_*` environment variables at launch
