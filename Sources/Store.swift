@@ -238,7 +238,7 @@ final class Store {
             try await fetch()
             pricing = .fetched
         } catch {
-            Log.write("products failed: \(error)")
+            Log.write("products failed: \(Self.described(error))")
             pricing = .unreachable
         }
     }
@@ -300,8 +300,14 @@ final class Store {
             @unknown default: failed("unknown result")
             }
         } catch {
-            failed("\(error)", Failure(error))
+            failed(Self.described(error), Failure(error))
         }
+    }
+
+    /// An error's type and message, never the error whole: the log can leave the phone, and an error's own description
+    /// carries everything it wraps.
+    private static func described(_ error: Error) -> String {
+        "\(type(of: error)): \(error.localizedDescription)"
     }
 
     /// What a sync found that wasn't owned before it; nil when the player cancels the App Store sign-in. A failed sync
@@ -318,7 +324,7 @@ final class Store {
         do {
             try await AppStore.sync()
         } catch {
-            Log.write("restore failed: \(error)")
+            Log.write("restore failed: \(Self.described(error))")
             return said(Failure(error) == .cancelled ? nil : .failed)
         }
         await refresh()
