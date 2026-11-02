@@ -75,6 +75,7 @@ endless-spill-pour.png  The same, 1.1 s in: the crest has broken and the liquid 
 endless-spill-drip.png  The same, 2 s in: the runs have slowed just past three and nine o'clock and a drop falls from each head onto the black.
 endless-spilled.png  The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best.
 undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
+knob-lesson.png  Level 01 left untouched 4 s (no opening: a still launch): the ghost finger halfway out knob 0's disc, held mid-rock.
 reset-armed.png  Level 12 with two moves played, reset tapped once: it reads reset? tap again.
 level-resumed.png  Level 12 reopened mid-try, its saved line replayed (rod 2 healed, a wasted stir on rod 0 undone, rod 1 healed): four entries left, moves 2 / par 6, the undo already spent from the bank, and no opening.
 menu-endless-continue.png  The menu with an endless run saved on tank 6, brim 3, best 9 tanks: the endless row reads continue · tank 6 · brim 3 · best 9, with new run on its title's line in place of the best.
@@ -254,6 +255,8 @@ lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cu
 lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
 lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger.
+lens-lesson.png  Lens 01 as the tank becomes the player's: a ghost finger on the lens's knob halfway through its ride down, a lens step's travel, beside the track's rail, faint, on the right.
+lens-lesson-copied.png  Lens 01 held mid-drag where its lesson rides: landed on the knob's left edge and dragged two steps down, the count's -2 dashes on the lesson's rail.
 lens-glitter-big-1.png  Lens on tri rod 0 at +1, still.
 lens-glitter-big-1-drag.png  Lens on tri rod 0 held at +0.5, mid-drag up.
 lens-glitter-big-1-twist.png  Lens on tri rod 0 at +1, rod 1 held 1.5 steps into a twist over it.
