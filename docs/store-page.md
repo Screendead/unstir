@@ -173,13 +173,13 @@ the captions in a draft look:
 
 | # | Case | Caption | Chars |
 |---|---|---|---|
-| 1 | `whirlpool25-marbling` | Rods under the glass stirred this picture. | 42 |
-| 2 | `count-quad-minus2` | Turn a knob back. The newest seam goes first. | 45 |
-| 3 | `wave-0.8` | Get the order right and it snaps clean. | 39 |
-| 4 | `vortex-family-ephemeris-13` | Vortex: one swirl as wide as the glass. | 39 |
-| 5 | `seized-m23-half` | Maelstrom: knobs seize. Turn the whole tank. | 44 |
-| 6 | `daily-result` | A new daily every day, the same for everyone. | 45 |
-| 7 | `endless-brim` | Endless: waste a stir and the brim rises. | 41 |
+| 1 | `store-01-marbling` | Rods under the glass stirred this picture. | 42 |
+| 2 | `store-02-count` | Turn a knob back. The newest seam goes first. | 45 |
+| 3 | `store-03-wave` | Get the order right and it snaps clean. | 39 |
+| 4 | `store-04-vortex` | Vortex: one swirl as wide as the glass. | 39 |
+| 5 | `store-05-maelstrom` | Maelstrom: knobs seize. Turn the whole tank. | 44 |
+| 6 | `store-06-daily` | A new daily every day, the same for everyone. | 45 |
+| 7 | `store-07-endless` | Endless: waste a stir and the brim rises. | 41 |
 | 8 | `store-08-prism` | Paid pack · Prism: three colours, one line | 42 |
 | 9 | `store-09-lens` | Paid pack · Lens: rods that zoom and spiral | 43 |
 | 10 | `store-10-escapement` | Paid pack · Escapement: a clock in every problem | 48 |
@@ -189,8 +189,8 @@ Notes:
   picture if the grid reads too plain beside 1.
 - 3 is plughole level 13 solved; a solve wave on a live picture would need a new case (`UNSTIR_TIER=whirlpool` with the
   same harness solve).
-- 4 could be `vortex-family-isobars-14` or `vortex-family-cords-16` instead; the planets are the most legible at
-  thumbnail size (guessed).
+- 4 is vortex 13 on the ephemeris. Of the three vortex pictures shot, it reads darkest at thumbnail size and cords
+  (vortex 16) best, so cords is the recommendation, awaiting Jack's call; isobars (vortex 14) is the third.
 - 6 and 7 are harnessed states a player reaches (a solved daily, a brim at 5 of 8), so they show nothing a player can't
   see. The menu shots with `UNSTIR_UNLOCK` (`menu-unlocked`, `menu-maelstrom`) would show every tier open, which no new
   player sees; `menu-vortex-open` is the honest menu if B wants one.
