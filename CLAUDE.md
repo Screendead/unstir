@@ -712,7 +712,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   unlock where it opens packs (`Archive.opens`). `ArchiveRow` sits under today's daily on the menu: until then a quiet
   lock, "comes with any pack", which a tap shakes and answers as a closed row does, saying "unlocked by purchasing any
   pack" for 2 s (Jack's words, R-arch-lock, round 15), never opening the shelf.
-  `ArchiveView` lies over the menu as a card does, a month to a block on the player's week, each day's number over its
+  `ArchiveView` lies over the menu as a card does (beside the list in a wide window, `MenuLayout`), a month to a block on the player's week, each day's number over its
   result in the menu's words (`Archive.Mark`: clean, par, +n, tried), a list of days at accessibility sizes. A day
   opens `Level.daily(_:archived:)`, the day's own tank under its own id, whose back reads "‹ archive" and returns there
   (`RootView.archive`, `Level.focus(solved:)`), the day ringed once. It plays as any level: its best saves marked
@@ -778,7 +778,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
   and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
   of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
-  reads each cover's state or price and each button's price, hides the menu under a card, and announces a change of
+  reads each cover's state or price and each button's price, hides the menu under a card (beside the list in a wide window it leaves the menu readable), and announces a change of
   state. Reduce Motion holds the covers and clip still, stills the pending dot and fades the card in.
   **Clip.swift** draws each card's clip live, never a committed video (to-do 50): a `Clip` is one or more `Reel`s,
   each a real level played by a drawn fingertip at `UNSTIR_FINGER`'s pace, every move through `Array.commit` and, on a
