@@ -629,6 +629,10 @@ shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-gate-ax "The same at accessibility3: the Triptych line under buy wraps only before · save." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4 TYPESIZE=accessibility3
+shot card-gate-fewer "Lens's level 5, unowned, opened with only 03 solved (01 and 02 skipped): scrolled to buying under The first three are free. 22 more in Lens." \
+  PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:--0 CARDLEVELS=6 CLOCK=5.4
+shot card-gate-refunded "Lens's level 5 opened by a refunded owner, the free three at par: no free-three line, the revocation's own grey line in its place, buy again." \
+  PACK=lens LEVEL=5 STORE=lens:revoked BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
   PACK=lens LEVEL=3 SCREEN=clean STORE=lens:unowned CLOCK=5.4
 shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's magenta." \

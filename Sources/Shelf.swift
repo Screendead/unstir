@@ -847,13 +847,15 @@ struct PackCard: View {
         return free.first.map { ($0, true) }
     }
 
-    /// Over buying, when a level past the taste opened the card: only while it is true, every free level with a best
-    /// and the pack never owned. A row opens any free level, so the gate can come before all of them are played.
+    /// Over buying, when a level past the taste opened the card of a pack never owned: that the free levels are
+    /// played, once every one has a best, else, for a player who skipped ahead (a row opens any free level), that they
+    /// are free (Jack's call C1A = B, round 16). A refunded owner has the revocation's line instead.
     static func arrival(_ offer: Offer, _ levels: [Level], state: Purchase,
                         best: (String) -> Best? = Best.load) -> String? {
-        guard let pack = offer.pack, levels.count > pack.taste, state != .owned, state != .revoked,
-              taste(levels, best: best)?.replay == true else { return nil }
-        return "You've played the free \(Offer.countWord(pack.taste)). \(levels.count - pack.taste) more in \(pack.name)."
+        guard let pack = offer.pack, levels.count > pack.taste, state != .owned, state != .revoked else { return nil }
+        let free = Offer.countWord(pack.taste), more = "\(levels.count - pack.taste) more in \(pack.name)."
+        return taste(levels, best: best)?.replay == true ? "You've played the free \(free). \(more)"
+            : "The first \(free) are free. \(more)"
     }
 
     /// Play, until a level past the taste has been solved: then the owner continues.

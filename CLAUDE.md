@@ -765,9 +765,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from the level
   before it (a locked row scrolls to buying instead). The last taste level's result card says where its next goes
   ("more in Lens ›"; Jack's call C1 = B, round 13), and every pack level's next is in the pack's colour, owned or not.
-  The card that gate opens (`RootView.arrived`, that showing only) is scrolled to buying, under "You've played the
-  free three. 22 more in Lens." (`PackCard.arrival`) only while that is true: every free level has a best and the pack
-  was never owned. "try 3 free ›" opens the taste's first level without a best, and is "replay 01–03 ›" once all have
+  The card that gate opens (`RootView.arrived`, that showing only) is scrolled to buying, under a line for a pack
+  never owned (`PackCard.arrival`): "You've played the free three. 22 more in Lens." once every free level has a best,
+  else, for a player who skipped ahead, "The first three are free. 22 more in Lens." (Jack's call C1A = B, round 16); a
+  refunded owner has only the revocation's line. "try 3 free ›" opens the taste's first level without a best, and is "replay 01–03 ›" once all have
   one (`PackCard.taste`); a locked row scrolls to buying and pulses the pill. VoiceOver follows: a locked row moves
   its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
   and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
