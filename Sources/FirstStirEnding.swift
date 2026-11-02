@@ -162,12 +162,24 @@ extension Level {
 /// two scenes' layers at a time, the next while the current plays, and lets each go once it has passed. A tap ends it.
 struct NightForwardsFilm: View {
     let side: CGFloat
+    /// Where its lines end, down from the glass's top; nil just under the glass.
+    var foot: CGFloat?
     /// UNSTIR_ENDING=s: the film held this many seconds in.
     var frozen: Double?
     let onDone: () -> Void
+    /// The black's diameter, in sides: it hides the bezel and knobs, and its foot is the lines' frame's.
+    nonisolated static let backing: CGFloat = 1.12
+
+    /// How far the lines are moved down from the black's foot so they end `foot` below the glass's top, or 48 pt under
+    /// the black with no foot.
+    nonisolated static func linesOffset(foot: CGFloat?, side: CGFloat) -> CGFloat {
+        foot.map { $0 - (1 + backing) / 2 * side } ?? 48
+    }
     @Environment(\.displayScale) private var scale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var layers: [Int: SceneLayers] = [:]
+    /// Each scene's layers with the side they were baked at: a change of pose bakes again, drawing the old ones
+    /// stretched until the new land.
+    @State private var layers: [Int: (side: CGFloat, layers: SceneLayers)] = [:]
     @State private var start: Date?
     @State private var index = 0
     @State private var done = false
@@ -177,11 +189,12 @@ struct NightForwardsFilm: View {
             let t = frozen ?? start.map { timeline.date.timeIntervalSince($0) } ?? 0
             let now = NightForwards.at(t)
             ZStack {
-                Circle().fill(.black).frame(width: side * 1.12, height: side * 1.12)
+                Circle().fill(.black)
                 frame(now)
                     .frame(width: side, height: side)
                     .clipShape(Circle())
             }
+            .frame(width: side * Self.backing, height: side * Self.backing)
             .opacity(reduceMotion ? 1 : min(t / NightForwards.open, 1))
             .overlay(alignment: .bottom) {
                 VStack(spacing: 6) {
@@ -190,7 +203,7 @@ struct NightForwardsFilm: View {
                     Text(clock(now)).font(.mono(12)).opacity(0.55)
                     Text("tap to skip").font(.mono(12)).opacity(0.35)
                 }
-                .offset(y: 48)
+                .offset(y: Self.linesOffset(foot: foot, side: side))
             }
             .onChange(of: now.index, initial: true) { index = now.index }
             .onChange(of: t >= NightForwards.duration) { if t >= NightForwards.duration { finish() } }
@@ -201,7 +214,7 @@ struct NightForwardsFilm: View {
         .accessibilityLabel("The night, played forwards")
         .accessibilityAddTraits(.isButton)
         .accessibilityHint("Skips it")
-        .task(id: index) { await bake(around: index) }
+        .task(id: "\(index) \(side) \(scale)") { await bake(around: index) }
     }
 
     @ViewBuilder private func frame(_ now: (index: Int, run: Double, seconds: Double, next: Double)) -> some View {
@@ -219,7 +232,7 @@ struct NightForwardsFilm: View {
 
     @ViewBuilder private func composite(_ i: Int, run: Double, seconds: Double) -> some View {
         let level = NightForwards.levels[i]
-        if let scene = level.story?.scene, let baked = layers[i] {
+        if let scene = level.story?.scene, let baked = layers[i]?.layers {
             SceneComposite(scene: scene, layers: baked, sky: 1 - run, minutes: scene.early + (scene.late - scene.early) * run,
                            side: side, shown: NightForwards.shown(level, seconds: seconds, cut: reduceMotion))
         }
@@ -241,7 +254,7 @@ struct NightForwardsFilm: View {
     /// Bakes scene `i` and the next, then drops the ones behind. The film starts once its first two are in.
     private func bake(around i: Int) async {
         let s = min(SceneLayer.bakeScale(side: side, scale: scale), 2)
-        for k in [i, i + 1] where NightForwards.levels.indices.contains(k) && layers[k] == nil {
+        for k in [i, i + 1] where NightForwards.levels.indices.contains(k) && layers[k]?.side != side {
             guard let scene = NightForwards.levels[k].story?.scene else { continue }
             var images: [UIImage] = []
             for sky in [scene.late, scene.early, nil] as [Double?] {
@@ -250,7 +263,7 @@ struct NightForwardsFilm: View {
                 await Task.yield()
             }
             guard let played = scene.render(played: scene.vignettes, side: side, scale: s), !Task.isCancelled else { return }
-            layers[k] = (images[0], images[1], images[2], played, SceneComposite.cores(scene, side: side, scale: s))
+            layers[k] = (side, (images[0], images[1], images[2], played, SceneComposite.cores(scene, side: side, scale: s)))
         }
         for k in layers.keys where k < i { layers[k] = nil }
         if start == nil { start = .now }

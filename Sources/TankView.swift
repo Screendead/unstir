@@ -1357,9 +1357,10 @@ struct LevelView: View {
 
     private var reveal: AnyTransition { .opacity.animation(.easeOut(duration: 0.4).delay(0.3)) }
 
-    /// The tank with what stands over it: the night forwards and "unstirred.".
-    private func stage(_ side: CGFloat, words: CGFloat) -> some View {
-        tank(side)
+    /// The tank with what stands over it: the night forwards and "unstirred.". `bounds` is the tank's pane in the glass's
+    /// frame, nil in the column; `filmFoot` where the night forwards' lines end, nil under the glass.
+    private func stage(_ side: CGFloat, words: CGFloat, bounds: CGRect?, filmFoot: CGFloat?) -> some View {
+        tank(side, bounds: bounds)
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
@@ -1368,7 +1369,7 @@ struct LevelView: View {
             .accessibilityAddTraits(.allowsDirectInteraction)
             .overlay {
                 if ending {
-                    NightForwardsFilm(side: side, frozen: frozenEnding) {
+                    NightForwardsFilm(side: side, foot: filmFoot, frozen: frozenEnding) {
                         withAnimation(.easeOut(duration: 0.5)) { ending = false }
                         withAnimation(.easeIn(duration: 0.3).delay(0.4)) { showResult = true }
                         Log.write("night forwards ended")
@@ -1466,7 +1467,7 @@ struct LevelView: View {
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
     /// window's middle where the window is wide.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: fold(geo), scale: scale)
+        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: fold(geo), halo: PlayLayout.Halo(game.level), scale: scale)
     }
 
     /// The fold while the phone is folded, in the reader's space: the harness's, else the system's division region.
@@ -1486,23 +1487,26 @@ struct LevelView: View {
             let layout = playLayout(geo)
             let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout))
             stack {
-                header.layoutValue(key: PlayPart.self, value: .chrome)
-                titleRow.layoutValue(key: PlayPart.self, value: .chrome)
+                header.modifier(PlayPart.chrome(read: 5))
+                titleRow.modifier(PlayPart.chrome(read: 4))
                 Spacer(minLength: 12)
-                stage(layout.side, words: layout.words)
+                stage(layout.side, words: layout.words, bounds: layout.bounds, filmFoot: layout.filmFoot)
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
-                    .layoutValue(key: PlayPart.self, value: .stage)
+                    .modifier(PlayPart.stage(read: 3))
                 caption
                     // The card hangs from the caption unmeasured, over the controls it hides. In the split and the
                     // tabletop the stack must make room for it, or in the tabletop it runs into "unstirred.".
                     .frame(minHeight: layout.kind == .column || !showResult ? nil : cardReach, alignment: .top)
-                    .layoutValue(key: PlayPart.self, value: .chrome)
-                swatches.layoutValue(key: PlayPart.self, value: .chrome)
+                    .modifier(PlayPart.chrome(read: 2))
+                swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
-                controls.layoutValue(key: PlayPart.self, value: .chrome)
+                controls.modifier(PlayPart.chrome(read: 0))
             }
+            // VoiceOver reads the parts in the column's order, header to controls, whatever the pose puts where: by
+            // place alone the tabletop's tank, below the fold, would come last.
+            .accessibilityElement(children: .contain)
             // Not from a first measure, which can be empty, nor under Reduce Motion.
             .animation(pose.map { $0.side > 0 } == true && !reduceMotion ? .smooth(duration: 0.45) : nil, value: layout)
             .onChange(of: layout, initial: true) { was, now in
@@ -2122,7 +2126,8 @@ struct LevelView: View {
         return Double(steps) * Tank.step
     }
 
-    private func tank(_ side: CGFloat) -> some View {
+    /// `bounds`: the tank's pane in the glass's frame, which counts and a lens's track keep inside; nil in the column.
+    private func tank(_ side: CGFloat, bounds: CGRect?) -> some View {
         let r = side / 2
         func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
         // A disc's lines, a swirl's too, kept clear of the bezel's own hairline at the glass's edge, as the tank's dial is.
@@ -2254,7 +2259,7 @@ struct LevelView: View {
                 if let c = rodCount, c.live || c.steps != 0 {
                     Group {
                         if let x = lensTrack {
-                            track(at(c.k), disc(c.k), x: x, pitch: Self.trackPitch, steps: c.steps,
+                            track(at(c.k), disc(c.k), x: x, pitch: Self.trackPitch, steps: c.steps, bounds: bounds,
                                   now: Double(c.steps) + (c.live ? liveAngle / Tank.step - Double(Detent.steps(liveAngle, of: Tank.step)) : 0))
                         } else {
                             dial(at(c.k), disc(c.k), inner: dashes(c.k, r), from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
@@ -2381,10 +2386,10 @@ struct LevelView: View {
                 }
                 if let c = rodCount, c.steps != 0 {
                     countLabel(c.steps).opacity(c.live ? 1 : 0.45)
-                        .position(countSpot(at(c.k), reach: countReach(c.k, r), side: side, avoid: others))
+                        .position(countSpot(at(c.k), reach: countReach(c.k, r), side: side, bounds: bounds, avoid: others))
                 }
                 if let c = tankCount, c.steps != 0 {
-                    countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side))
+                    countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side, bounds: bounds))
                 }
                 if let ghost {
                     // Turned with the stir it holds, about its pivot, so it rides the same animation round the arc; on a
@@ -2646,13 +2651,18 @@ struct LevelView: View {
     /// disc of `radius` about `c`, the disc's own hairline round it, a long mark level with the knob where the stir
     /// began, a dash per step up for in and down for out, `pitch` apart, over a rail with a mark at `now`
     /// steps, where the drag stands.
-    private func track(_ c: CGPoint, _ radius: CGFloat, x: CGFloat, pitch: CGFloat, steps: Int, now: Double) -> some View {
-        func y(_ s: Double) -> CGFloat { c.y - CGFloat(s) * pitch }
+    /// The rail, its dashes and its marks stop at `bounds`' top and foot, the tank's pane, where the drag runs long.
+    private func track(_ c: CGPoint, _ radius: CGFloat, x: CGFloat, pitch: CGFloat, steps: Int, bounds: CGRect?, now: Double)
+        -> some View {
+        func held(_ y: CGFloat) -> CGFloat { bounds.map { min(max(y, $0.minY), $0.maxY) } ?? y }
+        func y(_ s: Double) -> CGFloat { held(c.y - CGFloat(s) * pitch) }
         let reach = max(3.5, abs(now) + 0.5), dir = steps > 0 ? 1.0 : -1.0, gap = 3 / Double(pitch)
         let dashes = Path { p in
             for i in 0..<abs(steps) {
-                p.move(to: CGPoint(x: x, y: y(dir * (Double(i) + gap))))
-                p.addLine(to: CGPoint(x: x, y: y(dir * (Double(i + 1) - gap))))
+                let a = y(dir * (Double(i) + gap)), b = y(dir * (Double(i + 1) - gap))
+                guard a != b else { continue }
+                p.move(to: CGPoint(x: x, y: a))
+                p.addLine(to: CGPoint(x: x, y: b))
             }
         }
         return ZStack {
@@ -2660,7 +2670,7 @@ struct LevelView: View {
                 .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
             Path { $0.move(to: CGPoint(x: x, y: y(-reach))); $0.addLine(to: CGPoint(x: x, y: y(reach))) }
                 .stroke(Color.live.opacity(Self.traceTone), lineWidth: Self.hairline)
-            Path { $0.move(to: CGPoint(x: x - 6, y: c.y)); $0.addLine(to: CGPoint(x: x + 6, y: c.y)) }
+            Path { $0.move(to: CGPoint(x: x - 6, y: y(0))); $0.addLine(to: CGPoint(x: x + 6, y: y(0))) }
                 .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
             Path { $0.move(to: CGPoint(x: x - 3, y: y(now))); $0.addLine(to: CGPoint(x: x + 3, y: y(now))) }
                 .stroke(Color.live.opacity(Self.dashTone), lineWidth: Self.hairline)
@@ -2676,6 +2686,15 @@ struct LevelView: View {
 
     /// Room for a count round its centre: half its width at two digits.
     private static let countRoom: CGFloat = 18
+    /// Half a count's height, its capsule round a line of 13 pt mono.
+    private static let countHalfHeight: CGFloat = 11
+
+    /// A count's centre `p` moved the least that keeps the count whole inside `bounds`.
+    private static func inside(_ bounds: CGRect?, _ p: CGPoint) -> CGPoint {
+        guard let b = bounds else { return p }
+        return CGPoint(x: min(max(p.x, b.minX + countRoom), b.maxX - countRoom),
+                       y: min(max(p.y, b.minY + countHalfHeight), b.maxY - countHalfHeight))
+    }
 
     /// The circle a rod's count's dashes run on: 14 pt inside its disc.
     private func dashes(_ k: Int, _ r: CGFloat) -> CGFloat { min(rods[k].z * r, r - 4) - 14 }
@@ -2687,14 +2706,17 @@ struct LevelView: View {
     }
 
     /// Where a turn's count sits: `reach` out from `c` on the far side from the finger, but never below it, where the
-    /// hand is, swung the least that keeps it as far from each point in `avoid` as that point asks; kept on the screen.
-    private func countSpot(_ c: CGPoint, reach: CGFloat, side: CGFloat, avoid: [(CGPoint, CGFloat)] = []) -> CGPoint {
+    /// hand is, swung the least that keeps it as far from each point in `avoid` as that point asks; kept on the screen,
+    /// and whole inside `bounds`, the tank's pane, where it has one.
+    private func countSpot(_ c: CGPoint, reach: CGFloat, side: CGFloat, bounds: CGRect? = nil, avoid: [(CGPoint, CGFloat)] = [])
+        -> CGPoint {
         let r = side / 2, edge = 0.045 * r
         var d = finger.map { CGVector(dx: c.x - ($0.x + 1) * r, dy: min(c.y - ($0.y + 1) * r, 0)) } ?? CGVector(dx: 0, dy: -1)
         if hypot(d.dx, d.dy) < 1 { d = CGVector(dx: c.x > r ? -1 : 1, dy: 0) }
         let a = atan2(d.dy, d.dx), swings: [CGFloat] = [0] + (1...6).flatMap { [CGFloat($0), -CGFloat($0)] }
         let spots = swings.map { a + $0 * .pi / 12 }.filter { sin($0) < 1e-6 }.map { b in
-            CGPoint(x: min(max(c.x + cos(b) * reach, 4 - edge), side + edge - 4), y: min(max(c.y + sin(b) * reach, -edge - 20), side + edge + 20))
+            Self.inside(bounds, CGPoint(x: min(max(c.x + cos(b) * reach, 4 - edge), side + edge - 4),
+                                        y: min(max(c.y + sin(b) * reach, -edge - 20), side + edge + 20)))
         }
         func room(_ p: CGPoint) -> CGFloat { avoid.map { hypot(p.x - $0.0.x, p.y - $0.0.y) - $0.1 }.min() ?? 0 }
         return spots.first { room($0) >= 0 } ?? spots.max { room($0) < room($1) }!
@@ -3527,6 +3549,9 @@ struct RimLesson: View {
     private static let span = 34 * Double.pi / 180, sweep = 26 * Double.pi / 180, period = 3.6
     /// The arc's stroke at the height of its pulse. Nothing of it, arrowheads included, lies further than this from its line.
     static let width: CGFloat = 14
+    /// How far the tank's lesson reaches over the rim at twelve: its arc's line 10 pt out, half its stroke, and the
+    /// ghost finger's glow, which rides just inside the line.
+    static let overRim: CGFloat = 10 + width / 2 + 3
     /// The tank's arc rides outside the bezel it turns; the swirl's lies inside the glass, a thin line over the picture.
     private static func radius(_ r: CGFloat, _ kind: Kind) -> CGFloat { kind == .tank ? 1.045 * r + 10 : r - 10 }
     /// Where the lesson sits, clockwise from twelve.

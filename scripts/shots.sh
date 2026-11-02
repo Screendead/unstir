@@ -823,6 +823,22 @@ shot duo-tabletop-escapement "Duo tabletop: Escapement 02 a move in, the ticks' 
   "${table[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=2:4
 shot duo-tabletop-prism "Duo tabletop: Prism 01 with the colour letters, the swatches under the note in the upright half." \
   "${table[@]}" PACK=prism OWNED=prism LEVEL=1 LETTERS=1
+# Stage 3: what each level draws round its glass (the brim, the rim lesson, counts, the night forwards) kept inside
+# the tank's pane, the glass smaller where it needs the room.
+shot duo-folded-spill "Duo half open like a book, endless spilling 1.1 s in: the brim's pour, glow and drops whole inside the leading half, the glass smaller than other levels' so the brim clears the fold." \
+  "${duo[@]}" FOLD=466,0,19,669 MODE=endless BRIM=7 TURNED=1:1 CLOCK=1.1
+shot duo-tabletop-brim "Duo tabletop: endless at seven notches, the pin's pulse at its peak, the brim's bloom whole in the lower half, clear of the fold." \
+  "${table[@]}" MODE=endless BRIM=7 CLOCK=0.38
+shot duo-tabletop-lesson "Duo tabletop: maelstrom 01, the tank never turned: the rim lesson's arc and ghost finger over twelve, below the fold, the glass sat on the half's foot to make room." \
+  "${table[@]}" TIER=maelstrom LEVEL=1 CLOCK=3
+shot duo-tabletop-lesson-count "Duo tabletop: whirlpool 25 with knobs 2 and 5 seized, rod 1 at the top turned +1: its count beside the lesson's arc, both below the fold." \
+  "${table[@]}" TIER=whirlpool LEVEL=25 SEIZED=2,5 LIVE=1:+1 TOUCH=0,-0.3 CLOCK=3
+shot duo-tabletop-lens-long "Duo tabletop: Lens 01's top lens dragged up nine steps, past the pane's top: the track's rail, dashes and now mark stop at the pane, clear of the fold." \
+  "${table[@]}" PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42
+shot duo-tabletop-ending "Duo tabletop: the night forwards 1 s in, its lines (the beat, the time, tap to skip) at the foot of the upright half, where unstirred. stands, as the glass fills the lower half." \
+  "${table[@]}" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=1.1
+shot duo-tabletop-ladder-end-ax5 "Duo tabletop at the largest accessibility text size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold." \
+  "${table[@]}" SCREEN=result TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0 TYPESIZE=accessibility5
 hold=5 shot duo-opened "Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 "${played[@]}"
 hold=4 shot duo-opened-mid-drag "Duo closed with rod 1 held two steps round, opened 1.5 s in: the turn let go as a lift would (moves 1), nothing held." \

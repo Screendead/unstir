@@ -7,11 +7,11 @@ import XCTest
 final class PlayLayoutTests: XCTestCase {
     /// As the play screen's GeometryReader measures the window: the safe area's size and the insets round it.
     private func layout(window: CGSize, insets: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat),
-                        fold: CGRect? = nil, scale: CGFloat = 3) -> PlayLayout {
+                        fold: CGRect? = nil, halo: PlayLayout.Halo = PlayLayout.Halo(), scale: CGFloat = 3) -> PlayLayout {
         PlayLayout.of(size: CGSize(width: window.width - insets.leading - insets.trailing,
                                    height: window.height - insets.top - insets.bottom),
                       insets: EdgeInsets(top: insets.top, leading: insets.leading, bottom: insets.bottom, trailing: insets.trailing),
-                      fold: fold.map { $0.offsetBy(dx: -insets.leading, dy: -insets.top) }, scale: scale)
+                      fold: fold.map { $0.offsetBy(dx: -insets.leading, dy: -insets.top) }, halo: halo, scale: scale)
     }
 
     func testEveryIPhoneKeepsTodaysColumn() {
@@ -19,10 +19,14 @@ final class PlayLayoutTests: XCTestCase {
         for (window, content, scale) in [(CGSize(width: 375, height: 667), CGSize(width: 343, height: 647), 2.0),
                                          (CGSize(width: 440, height: 956), CGSize(width: 408, height: 860), 3),
                                          (CGSize(width: 466, height: 678), CGSize(width: 350, height: 644), 3)] {
-            let l = PlayLayout.of(content: content, window: window, scale: scale)
-            XCTAssertEqual(l.kind, .column, "\(window)")
-            XCTAssertEqual(l.side, min(content.width, content.height - 290) / 1.045, "\(window): today's formula")
-            XCTAssertLessThan(l.side * scale, PlayLayout.maxPixels, "\(window): no phone reaches the cap")
+            for halo in [PlayLayout.Halo(), .init(ring: 0.23, above: 20)] {
+                let l = PlayLayout.of(content: content, window: window, halo: halo, scale: scale)
+                XCTAssertEqual(l.kind, .column, "\(window)")
+                XCTAssertEqual(l.side, min(content.width, content.height - 290) / 1.045, "\(window): today's formula, whatever is drawn round the glass")
+                XCTAssertLessThan(l.side * scale, PlayLayout.maxPixels, "\(window): no phone reaches the cap")
+                XCTAssertNil(l.bounds, "the column's limits are the screen's")
+                XCTAssertNil(l.filmFoot)
+            }
         }
     }
 
@@ -134,5 +138,98 @@ final class PlayLayoutTests: XCTestCase {
     func testTheColumnAndSplitKeepTheirWordsWhereTheyWere() {
         XCTAssertEqual(layout(window: CGSize(width: 440, height: 956), insets: (62, 0, 34, 0)).words, 62)
         XCTAssertEqual(layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84)).words, 62)
+    }
+
+    // Stage 3: what each level draws round its glass, kept inside the tank's pane.
+
+    private let open = (window: CGSize(width: 951, height: 669), insets: (top: CGFloat(24), leading: CGFloat(0), bottom: CGFloat(21), trailing: CGFloat(84)))
+    private let book = CGRect(x: 466, y: 0, width: 19, height: 669)
+    private let table = CGRect(x: 0, y: 466, width: 669, height: 19)
+
+    /// The stage grown by what `halo` draws round it.
+    private func reach(_ l: PlayLayout) -> CGRect {
+        let ring = l.halo.ring * l.side / 2
+        return CGRect(x: l.stage.minX - ring, y: l.stage.minY - max(ring, l.halo.above),
+                      width: l.stage.width + 2 * ring, height: l.stage.height + ring + max(ring, l.halo.above))
+    }
+
+    private func inside(_ r: CGRect, _ pane: CGRect, _ what: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertGreaterThanOrEqual(r.minX, pane.minX - 0.001, what, file: file, line: line)
+        XCTAssertGreaterThanOrEqual(r.minY, pane.minY - 0.001, what, file: file, line: line)
+        XCTAssertLessThanOrEqual(r.maxX, pane.maxX + 0.001, what, file: file, line: line)
+        XCTAssertLessThanOrEqual(r.maxY, pane.maxY + 0.001, what, file: file, line: line)
+    }
+
+    func testEachLevelsHaloIsItsShape() {
+        let endless = PlayLayout.Halo(Level.endless(Run(seed: 7)))
+        XCTAssertEqual(endless.ring, CGFloat((Brim.rOut + Brim.reach) / Brim.unit) - PlayLayout.rim, accuracy: 1e-9)
+        XCTAssertEqual(endless.ring, 0.229, accuracy: 0.001, "the brim's glow and drops, out to Brim.reach")
+        XCTAssertEqual(endless.above, 0)
+        XCTAssertEqual(PlayLayout.Halo(Level.maelstrom[0]), PlayLayout.Halo(ring: 0, above: RimLesson.overRim), "the rim lesson's arc")
+        XCTAssertEqual(PlayLayout.Halo(Level.plughole[10]), PlayLayout.Halo(), "drawn wholly on the glass and rim")
+        XCTAssertEqual(PlayLayout.Halo(Level.lens[0]), PlayLayout.Halo())
+        XCTAssertEqual(PlayLayout.Halo(Level.escapement[1]), PlayLayout.Halo())
+    }
+
+    func testEndlesssBrimStaysInsideTheTanksPaneInEveryPose() {
+        let halo = PlayLayout.Halo(Level.endless(Run(seed: 7)))
+        for (pose, fold) in [("open", nil), ("book", book)] as [(String, CGRect?)] {
+            let l = layout(window: open.window, insets: open.insets, fold: fold, halo: halo)
+            XCTAssertEqual(l.kind, .split, pose)
+            inside(reach(l), l.tankPane, pose)
+            XCTAssertEqual(reach(l).width, l.tankPane.width, accuracy: 0.001, "\(pose): as large as the brim allows")
+        }
+        let t = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table, halo: halo)
+        XCTAssertEqual(t.kind, .tabletop)
+        inside(reach(t), t.tankPane, "tabletop")
+        XCTAssertEqual(reach(t).height, t.tankPane.height, accuracy: 0.001)
+        // Smaller than every other level's glass in the same pose, by the brim's reach.
+        XCTAssertEqual(layout(window: open.window, insets: open.insets).side, 424, accuracy: 1)
+        XCTAssertEqual(layout(window: open.window, insets: open.insets, halo: halo).side, 348, accuracy: 1)
+        XCTAssertEqual(t.side, 326, accuracy: 1)
+    }
+
+    func testTheRimLessonStaysAboveTheGlassInsideTheTabletopsLowerHalf() {
+        let halo = PlayLayout.Halo(Level.maelstrom[0])
+        let l = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table, halo: halo)
+        XCTAssertEqual(l.kind, .tabletop)
+        inside(reach(l), l.tankPane, "tabletop")
+        XCTAssertEqual(l.stage.maxY, l.tankPane.maxY, accuracy: 0.001, "sat on the pane's foot")
+        XCTAssertEqual(l.stage.minY - l.tankPane.minY, halo.above, accuracy: 0.001, "the lesson's room above, no more")
+        // The split's room for "unstirred." holds the lesson already, so the glass keeps its size there.
+        let split = layout(window: open.window, insets: open.insets, fold: book, halo: halo)
+        XCTAssertEqual(split.side, layout(window: open.window, insets: open.insets, fold: book).side)
+        inside(reach(split), split.tankPane, "book")
+    }
+
+    func testAHaloLeavesNoRoomItDoesntNeed() {
+        // Nothing drawn round the glass: the tabletop's tank still fills its half, as stage 2 laid it out.
+        let l = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table)
+        XCTAssertEqual(l.stage.minY, l.tankPane.minY, accuracy: 0.001)
+        XCTAssertEqual(l.stage.maxY, l.tankPane.maxY, accuracy: 0.001)
+    }
+
+    func testBoundsAreTheTanksPaneInTheGlasssFrame() {
+        for l in [layout(window: open.window, insets: open.insets, fold: book),
+                  layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table, halo: .init(ring: 0, above: 20))] {
+            let b = try! XCTUnwrap(l.bounds)
+            let glass = CGRect(x: l.stage.midX - l.side / 2, y: l.stage.midY - l.side / 2, width: l.side, height: l.side)
+            XCTAssertEqual(b.minX + glass.minX, l.tankPane.minX, accuracy: 0.001)
+            XCTAssertEqual(b.minY + glass.minY, l.tankPane.minY, accuracy: 0.001)
+            XCTAssertEqual(b.size, l.tankPane.size)
+            XCTAssertTrue(b.contains(CGRect(x: 0, y: 0, width: l.side, height: l.side)), "the glass lies inside its pane")
+        }
+    }
+
+    func testTheNightForwardsLinesEndAboveTheFoldInTheTabletop() {
+        let t = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table)
+        XCTAssertNotNil(t.filmFoot)
+        // The film is centred on the glass, its lines hung from the black's foot and moved by the film's own offset.
+        let blackFoot = t.stage.midY + NightForwardsFilm.backing / 2 * t.side
+        let lines = blackFoot + NightForwardsFilm.linesOffset(foot: t.filmFoot, side: t.side)
+        XCTAssertEqual(lines, t.chromePane.maxY, accuracy: 0.001, "at the foot of the upright half")
+        XCTAssertLessThanOrEqual(59 + lines, table.minY - PlayLayout.margin + 0.001)
+        // The split has room under the glass, as the column has.
+        XCTAssertNil(layout(window: open.window, insets: open.insets).filmFoot)
     }
 }

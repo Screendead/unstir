@@ -686,7 +686,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   glides there by `Glide`'s scale, its old bake stretched until the new one lands (none under Reduce Motion, nor from a
   first measure; a bake that lands after a later change of size is dropped). A drag in flight lets go as a lift would
   (`LevelView.letGoOnResize`), and the finger then on the tank, taken up or not yet (an edge touch the back swipe hasn't
-  decided), holds nothing more until it lifts.
+  decided), holds nothing more until it lifts. What a level draws past the rim stays inside the tank's pane in the split
+  and the tabletop (the column leaves it to the screen's edges, as ever): `PlayLayout.Halo`, read from the level's
+  shape alone so no state resizes the glass, is endless's brim all round (`ring`, out to `Brim.reach`, 0.229 of the
+  radius past the rim) and the tank's rim lesson over twelve (`above`, `RimLesson.overRim`), and the glass shrinks to
+  hold it: endless's to about 348 pt in the open split and 326 in the tabletop, whose glass sits on its half's foot
+  with the room left above it. Counts and a lens's track keep inside the pane too (`PlayLayout.bounds`, the pane in the
+  glass's frame, which `countSpot` and `track` clamp to), and the tabletop's night forwards end their lines at the
+  upright half's foot (`filmFoot`); its scenes bake again at a new side, drawn stretched meanwhile, as `SceneLayer`'s
+  are. Knurl, clock hints and the out-of-ticks marks lie on the glass and rim already. `PlayStack`'s spacers give way
+  before the chrome runs past its pane. `PlayPart.Tagged`'s sort priorities set VoiceOver's order to header, title,
+  tank, caption, swatches, controls in every pose (not yet heard; the tabletop's places alone would end with the
+  tank). The play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest
+  cards fit each pane.
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
