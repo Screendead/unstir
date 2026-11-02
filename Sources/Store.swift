@@ -118,9 +118,13 @@ final class Store {
     private(set) var ready = false
     /// A purchase, an approval or a restore landed on a card this launch, so the rating request keeps away.
     @ObservationIgnored var landed = false
+    /// The offer a purchase started on the App Store's product page is buying (a promoted purchase): `RootView` opens its
+    /// card, and the card buys it as its own buy does, which takes it.
+    var promoted: Offer?
     @ObservationIgnored private var first: Task<Void, Never>?
     @ObservationIgnored private var products: [String: Product] = [:]
     @ObservationIgnored private var updates: Task<Void, Never>?
+    @ObservationIgnored private var intents: Task<Void, Never>?
     @ObservationIgnored private var attempt = 0
 
     func state(_ pack: Pack) -> Purchase { (harness ?? ledger).state(pack) }
@@ -181,6 +185,15 @@ final class Store {
     /// UNSTIR_LANDS: a purchase landing in the harness's states, as an approval or a restore would.
     func land(_ id: String) { harness?.record(id, .owned) }
 
+    /// A purchase the App Store's product page started, for an offer this build sells. Its product is kept, so the card's
+    /// buy needs no fetch.
+    func promote(_ id: String, product: Product? = nil) {
+        guard let offer = Offer.promoted(id) else { return Log.write("promoted \(id): not sold here") }
+        Log.write("promoted \(offer.key)")
+        if let product { products[id] = product }
+        promoted = offer
+    }
+
     /// An approval has been said, so it is never said again.
     func said(_ offer: Offer) {
         guard let i = approved.firstIndex(of: offer) else { return }
@@ -197,6 +210,9 @@ final class Store {
         guard harness == nil, updates == nil else { return }
         updates = Task { [weak self] in
             for await result in Transaction.updates { await self?.apply(result) }
+        }
+        intents = Task { [weak self] in
+            for await intent in PurchaseIntent.intents { self?.promote(intent.product.id, product: intent.product) }
         }
         let read = Task {
             await refresh()
@@ -252,6 +268,8 @@ final class Store {
     func purchase(_ pack: Pack) async { await purchase(pack.productID) }
 
     func purchase(_ id: String) async {
+        // The harness's states stand in for StoreKit's, so its purchase lands in them.
+        if harness != nil { return land(id) }
         let started = attempt
         failures[id] = nil
         func failed(_ why: String, _ failure: Failure = .other) {

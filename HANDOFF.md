@@ -1424,6 +1424,8 @@ names and product ids, and Complete's promise to older owners.
     `firststir-content` level 1 becomes Sunrise on `SceneLayer` with its own clock, so the First Stir reel must then
     draw with the level's own layer and read its `late`/`early`; `ClipTests` will flag it. Complete keeps three
     tanks drawn, two clear: its cost on the phone is unmeasured. Still open: the purchase art and the social cut.
+    The purchase art is built on `r14-store` (2026-11-02): `scripts/promo.sh` renders each sold offer's dock cover at
+    1024 x 1024 (Lens, Escapement, Prism and Complete with Release's three). The social cut is still open.
 51. Buy the developer account when TestFlight is ready (see "The Apple Developer account"); then the paid apps
     agreement, tax and banking, and the in-app purchases with review screenshots and promoted purchases.
 52. The privacy manifest, new work (no `PrivacyInfo.xcprivacy` exists): UserDefaults with reason CA92.1, the uptime

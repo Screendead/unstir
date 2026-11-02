@@ -138,6 +138,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
+- Promoted-purchase images: `scripts/promo.sh` shoots each sold offer's (`shots.sh promo-`, `UNSTIR_PROMO`,
+  `PromoArt` in Icon.swift: its dock cover as dealt inside the bezel, Complete's with Release's packs whatever the
+  build) and crops each to `shots/promo-<offer>-1024.png`, as App Store Connect asks: 1024 x 1024, RGB without alpha,
+  square corners, 72 dpi (needs Pillow).
 - Picture lab: `scripts/picture-lab.sh render <picture> <out.png> [seed] [t] [side px] [layout stack]` draws a live
   picture on the Mac's GPU, stirred by a stack if given; `scripts/picture-lab.sh bench <picture>...` times each
   picture's fill against the glass and a stack entry of four-tap work. It knows the glass and vortex's family, and
@@ -492,7 +496,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   once: `Asked`, `Ledger.answers`, read after the launch's entitlements and each update): entitlements from `Transaction.currentEntitlements` at
   launch (`Store.ready` once that first read has finished: until then `RootView.show` waits on it, `Store.settled`,
   before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
-  `purchase` and `restore` (`AppStore.sync`). Only a verified transaction grants; Complete (`Pack.completeID`) grants
+  `purchase` and `restore` (`AppStore.sync`), and a `PurchaseIntent.intents` listener: a purchase started on the App
+  Store's product page (a promoted purchase) sets `Store.promoted` to the offer this build sells (`Offer.promoted`),
+  keeping its product, `RootView` opens that card over the menu (leaving a level, whose try its save keeps, and the
+  settings sheet), and the card takes it and buys as its own buy does once `Store.settled`, unless owned or payments
+  are off, landing as any purchase lands (Jack's call M6, round 14). Under the harness's states a purchase lands in
+  them, never StoreKit. Only a verified transaction grants; Complete (`Pack.completeID`) grants
   every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked), and `Store.failures` why each failure failed (`Failure`:
   offline, a storefront without it, purchases turned off), which the card says under it. A pending pill reads
@@ -860,7 +869,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   takes a pack's prefix as it takes a tier's, and `endless:9` the run's best. A pack level past
   the taste needs `UNSTIR_OWNED` too, or it opens the card. `UNSTIR_STOPLOOK=left` picks how an Escapement tank out of
   ticks as its last clock stops looks. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, `UNSTIR_LANDS=s`
-  buys the open card's product s seconds in (with the store's states set), and
+  buys the open card's product s seconds in (with the store's states set), `UNSTIR_PROMOTED=lens` (or `complete`)
+  starts a promoted purchase of it a second in, `UNSTIR_PROMO=lens` shows that offer's promoted-purchase image alone,
+  and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
   tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's

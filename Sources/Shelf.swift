@@ -28,6 +28,11 @@ enum Offer: Hashable, Sendable {
         return shelf.compactMap(\.pack).first { $0 != completed.pack && !owned($0) }
     }
 
+    /// The offer a promoted purchase of product `id` buys, if this build sells it.
+    static func promoted(_ id: String, release: Bool = Build.release) -> Offer? {
+        all.first { $0.productID == id && ($0.pack.map { Pack.sold(release: release).contains($0) } ?? true) }
+    }
+
     /// What Complete saves over buying the `sold` packs not `owned` one by one (a pending pack is unowned): nil unless
     /// it saves something and every price that takes is known (Jack's call C7, round 13).
     static func saving(amounts: [String: Decimal], owned: Set<Pack>, sold: [Pack]) -> Decimal? {
@@ -275,11 +280,13 @@ struct PackTank: View {
     let offer: Offer
     let side: CGFloat
     var clock: Double?
+    /// In place of the offer's own covers.
+    var covers: [Level]?
 
     static let period = 7.0
 
     var body: some View {
-        let levels = offer.covers, span = 360 / Double(levels.count), start = -90 - span / 2, r = side / 2
+        let levels = covers ?? offer.covers, span = 360 / Double(levels.count), start = -90 - span / 2, r = side / 2
         ZStack {
             ForEach(levels.indices, id: \.self) { k in
                 tank(levels[k]).clipShape(Wedge(from: start + span * Double(k), to: start + span * Double(k + 1)))
@@ -536,6 +543,14 @@ struct PackCard: View {
         .accessibilityAddTraits(.isModal)
         .accessibilityAction(.escape, onBack)
         .task { await store.fetchPrices() }
+        // A promoted purchase buys as the card's buy does, once the launch knows what the player owns.
+        .task(id: store.promoted) {
+            guard store.promoted == offer else { return }
+            store.promoted = nil
+            await store.settled()
+            guard store.state(offer) != .owned, store.canPay, !buying else { return }
+            buy(offer)
+        }
         .onAppear {
             Log.write("card \(offer.key) opens")
             if state == .owned { store.said(offer) }

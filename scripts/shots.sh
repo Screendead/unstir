@@ -429,6 +429,15 @@ done
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# Each sold offer's promoted-purchase image, a 1024-pixel square centred on the screen; scripts/promo.sh crops them.
+hold=30 shot promo-lens "Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black." PROMO=lens
+shot promo-escapement "Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black." PROMO=escapement
+shot promo-prism "Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black." PROMO=prism
+hold=12 shot promo-complete "Complete's promoted-purchase image: a wedge of each of Release's three packs' covers, inside the bezel on black." PROMO=complete
+hold=4 shot promoted-menu "A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned." \
+  PROMOTED=lens STORE=lens:unowned BESTS=plughole:000000000
+hold=4 shot promoted-level "The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned." \
+  PROMOTED=lens STORE=lens:unowned LEVEL=5
 # First Stir's chapters 1, Dawn After (scenes 1 to 5, 6:40 back to 4:45 am), 2, The Rescue (6 to 10, 4:45 back to
 # 2:30 am), 3, The Flood (11 to 15, 2:30 back to 12:30 am), 4, The Storm (16 to 20, 12:30 am back to 9:30 pm), and
 # 5, Dusk Before (21 to 25, 9:30 back to 7:40 pm), three vignettes a scene. UNSTIR_BARE draws the picture unstirred, so the art shows as the stack has played

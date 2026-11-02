@@ -364,6 +364,12 @@ lens-order-small-under-3.png  Lens on eye rod 2, 2:+2,0:+3: the twist newest.
 icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
 icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
 icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.
+promo-lens.png  Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black.
+promo-escapement.png  Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black.
+promo-prism.png  Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black.
+promo-complete.png  Complete's promoted-purchase image: a wedge of each of Release's three packs' covers, inside the bezel on black.
+promoted-menu.png  A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned.
+promoted-level.png  The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned.
 firststir-01.png  First Stir 1 as dealt: every core turned, the time under the tank.
 firststir-01-held.png  First Stir 1 drawn unstirred, held back. Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney.
 firststir-01-played.png  First Stir 1 drawn unstirred, every vignette played: a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke.

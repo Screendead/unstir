@@ -196,6 +196,12 @@ struct Harness {
     let cardScroll: Bool
     /// UNSTIR_LANDS=s: with UNSTIR_CARD and the store's states set, the card's product is bought s seconds in.
     let lands: Double?
+    /// UNSTIR_PROMOTED=lens (a pack's prefix, or complete): a second in, a purchase of it started on the App Store's
+    /// product page; with the store's states set, it lands in them.
+    let promoted: Offer?
+    /// UNSTIR_PROMO=lens (a pack's prefix, or complete): that offer's promoted-purchase image alone, 1024 px square at the
+    /// screen's centre, for scripts/promo.sh.
+    let promo: Offer?
     /// UNSTIR_TYPESIZE=accessibility3: Dynamic Type at that size (a `DynamicTypeSize` case), whatever the device's.
     let typeSize: DynamicTypeSize?
     /// Any UNSTIR_ variable but UNSTIR_UNLOCK and UNSTIR_ANALYTICS: analytics is then off unless UNSTIR_ANALYTICS=log
@@ -389,6 +395,8 @@ struct Harness {
         card = env["UNSTIR_CARD"].flatMap(Offer.init(name:)).flatMap { $0.sold ? $0 : nil }
         cardScroll = env["UNSTIR_CARDSCROLL"] == "1"
         lands = env["UNSTIR_LANDS"].flatMap(Double.init)
+        promoted = env["UNSTIR_PROMOTED"].flatMap(Offer.init(name:))
+        promo = env["UNSTIR_PROMO"].flatMap(Offer.init(name:))
         cardLevels = env["UNSTIR_CARDLEVELS"].flatMap(Int.init).map { min(max($0, 0), 30) } ?? 0
         shelfDemo = env["UNSTIR_SHELFDEMO"] == "1"
         typeSize = env["UNSTIR_TYPESIZE"].flatMap { s in DynamicTypeSize.allCases.first { "\($0)" == s } }
@@ -514,6 +522,8 @@ struct RootView: View {
         ZStack {
             if let n = harness?.icon {
                 IconView(n: n)
+            } else if let offer = harness?.promo {
+                PromoArt(offer: offer)
             } else {
                 // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
                 // level it opens as leaving would open it, not on the harness's tier.
@@ -556,6 +566,13 @@ struct RootView: View {
             Store.shared.forgetFailures()
             if card != arrived.map(Offer.pack) { arrived = nil }
         }
+        // A promoted purchase opens its offer's card over the menu, from a level too, which keeps its try.
+        .onChange(of: Store.shared.promoted, initial: true) {
+            guard let offer = Store.shared.promoted else { return }
+            settings = false
+            if level != nil { show(nil) }
+            card = offer
+        }
         .onChange(of: phase) {
             Log.write("phase \(phase)")
             Analytics.shared.phase(phase)
@@ -596,6 +613,11 @@ struct RootView: View {
             guard !Review.logs else { return }
             Best.reviewAsked = true
             requestReview()
+        }
+        .task {
+            guard let offer = harness?.promoted else { return }
+            try? await Task.sleep(for: .seconds(1))
+            Store.shared.promote(offer.productID)
         }
         .task {
             guard let s = harness?.lands, let id = card?.productID else { return }

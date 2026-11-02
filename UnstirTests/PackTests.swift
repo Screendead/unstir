@@ -171,6 +171,25 @@ final class PackTests: XCTestCase {
         XCTAssertNil(Store().access(Level(id: "L7", label: "", title: "", layout: .tri, scramble: [])))
     }
 
+    /// A purchase started on the App Store's product page opens the card of the offer it buys, for each pack the build
+    /// sells and Complete, and nothing for a product it doesn't sell; under the harness's states the card's buy lands.
+    @MainActor func testAPromotedPurchaseOpensItsOffersCard() async {
+        for offer in Offer.all where offer.sold {
+            let store = Store()
+            store.promote(offer.productID)
+            XCTAssertEqual(store.promoted, offer)
+        }
+        let store = Store()
+        store.promote("not.a.product")
+        XCTAssertNil(store.promoted)
+        XCTAssertNil(Offer.promoted(Pack.firstStir.productID, release: true), "Release doesn't sell First Stir")
+        XCTAssertEqual(Offer.promoted(Pack.lens.productID, release: true), .pack(.lens))
+        XCTAssertEqual(Offer.promoted(Pack.completeID, release: true), .complete)
+        store.pretend(Ledger())
+        await store.purchase(Pack.prism.productID)
+        XCTAssertEqual(store.state(.prism), .owned)
+    }
+
     /// Opening a level past the taste of a pack the player doesn't own shows the pack's card in its place, from the menu
     /// or from the level before it; the taste and an owned pack play, and so does a level in no pack.
     @MainActor func testALevelPastTheTasteShowsItsCard() {
