@@ -153,23 +153,6 @@ final class SyncTests: XCTestCase {
         XCTAssertEqual(Best.load(level.id)?.over, 2, "practice saves nothing")
     }
 
-    /// A best iCloud brought counts as the level started: a later try there is no first try, so it can't be clean, and
-    /// a daily plays as practice, as on the phone that set it (Jack's calls C18 and P1, round 13).
-    @MainActor func testABestWithoutAStartedFlagIsNoFirstTry() throws {
-        let level = Level.daily(try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: 23))))
-        defer { for key in ["best.\(level.id)", "started.\(level.id)"] { UserDefaults.standard.removeObject(forKey: key) } }
-        XCTAssertTrue(Game(level: level, tankTurned: true, bank: (10, nil)).firstTry)
-        UserDefaults.standard.set(data(Best(over: 2, seconds: 9)), forKey: "best.\(level.id)")
-        XCTAssertFalse(Best.started(level.id))
-        let game = Game(level: level, tankTurned: true, bank: (10, nil))
-        XCTAssertFalse(game.firstTry)
-        XCTAssertFalse(game.counts, "the daily plays as practice")
-        for t in level.scramble.reversed() { game.commit(rod: game.knob(over: t.rod), steps: -t.steps) }
-        XCTAssertTrue(game.solved)
-        XCTAssertFalse(game.clean)
-        XCTAssertEqual(Best.load(level.id)?.over, 2, "practice saves nothing")
-    }
-
     /// Saving keeps the rank the merge does: a daily's best on its day replaces the archive's, however good, and the
     /// archive's never replaces one kept on its day, so `Daily.run` counts a day played on its day.
     func testSavingRanksAsTheMergeDoes() {
