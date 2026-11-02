@@ -223,10 +223,12 @@ final class PlayLayoutTests: XCTestCase {
 
     func testTheNightForwardsLinesEndAboveTheFoldInTheTabletop() {
         let t = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table)
-        let foot = try! XCTUnwrap(t.filmFoot)
-        let glassTop = t.stage.midY - t.side / 2
-        XCTAssertEqual(glassTop + foot, t.chromePane.maxY, accuracy: 0.001, "at the foot of the upright half")
-        XCTAssertLessThanOrEqual(59 + glassTop + foot, table.minY - PlayLayout.margin + 0.001)
+        XCTAssertNotNil(t.filmFoot)
+        // The film is centred on the glass, its lines hung from the black's foot and moved by the film's own offset.
+        let blackFoot = t.stage.midY + NightForwardsFilm.backing / 2 * t.side
+        let lines = blackFoot + NightForwardsFilm.linesOffset(foot: t.filmFoot, side: t.side)
+        XCTAssertEqual(lines, t.chromePane.maxY, accuracy: 0.001, "at the foot of the upright half")
+        XCTAssertLessThanOrEqual(59 + lines, table.minY - PlayLayout.margin + 0.001)
         // The split has room under the glass, as the column has.
         XCTAssertNil(layout(window: open.window, insets: open.insets).filmFoot)
     }

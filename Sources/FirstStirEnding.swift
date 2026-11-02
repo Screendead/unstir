@@ -167,6 +167,14 @@ struct NightForwardsFilm: View {
     /// UNSTIR_ENDING=s: the film held this many seconds in.
     var frozen: Double?
     let onDone: () -> Void
+    /// The black's diameter, in sides: it hides the bezel and knobs, and its foot is the lines' frame's.
+    nonisolated static let backing: CGFloat = 1.12
+
+    /// How far the lines are moved down from the black's foot so they end `foot` below the glass's top, or 48 pt under
+    /// the black with no foot.
+    nonisolated static func linesOffset(foot: CGFloat?, side: CGFloat) -> CGFloat {
+        foot.map { $0 - (1 + backing) / 2 * side } ?? 48
+    }
     @Environment(\.displayScale) private var scale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Each scene's layers with the side they were baked at: a change of pose bakes again, drawing the old ones
@@ -181,11 +189,12 @@ struct NightForwardsFilm: View {
             let t = frozen ?? start.map { timeline.date.timeIntervalSince($0) } ?? 0
             let now = NightForwards.at(t)
             ZStack {
-                Circle().fill(.black).frame(width: side * 1.12, height: side * 1.12)
+                Circle().fill(.black)
                 frame(now)
                     .frame(width: side, height: side)
                     .clipShape(Circle())
             }
+            .frame(width: side * Self.backing, height: side * Self.backing)
             .opacity(reduceMotion ? 1 : min(t / NightForwards.open, 1))
             .overlay(alignment: .bottom) {
                 VStack(spacing: 6) {
@@ -194,7 +203,7 @@ struct NightForwardsFilm: View {
                     Text(clock(now)).font(.mono(12)).opacity(0.55)
                     Text("tap to skip").font(.mono(12)).opacity(0.35)
                 }
-                .offset(y: foot.map { $0 - 1.06 * side } ?? 48)
+                .offset(y: Self.linesOffset(foot: foot, side: side))
             }
             .onChange(of: now.index, initial: true) { index = now.index }
             .onChange(of: t >= NightForwards.duration) { if t >= NightForwards.duration { finish() } }
