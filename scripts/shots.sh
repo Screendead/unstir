@@ -750,7 +750,7 @@ hold=5 shot clean-lens-03 "Lens 03 on the halftone, its lens held mid-zoom, draw
 hold=5 shot clean-prism-01 "Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption." \
   PACK=prism LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
 # Under Reduce Motion (set on the simulator, as film.sh's calm films do): every live picture holds Picture.rest's frame,
-# the brim holds where a change settles, and a spill cuts to its end.
+# the brim holds where a change settles, and a spill cuts to its end, its card at once.
 calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
 # Off again however the shots end, or every later shot records the calm look.
 trap 'calm false' EXIT
@@ -765,7 +765,7 @@ shot calm-endless-brim-7 "Reduce Motion: endless opened at 7 notches, one from s
   MODE=endless BRIM=7
 shot calm-endless-notch "Reduce Motion: endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 in place at once, settled, no slosh or surge." \
   MODE=endless BRIM=4 TURNED=1:1
-shot calm-endless-spilled "Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card." \
+shot calm-endless-spilled "Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card, up at once rather than 2 s after the spill (R-spill)." \
   MODE=endless BRIM=7 TURNED=1:1
 calm false
 trap - EXIT

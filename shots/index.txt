@@ -657,4 +657,4 @@ calm-cords.png  Reduce Motion: the sandbox on cords, stirred twice, held on its 
 calm-chainmailTwin-later.png  Reduce Motion: the same, 9 s in: the same frame, the heartbeat at rest between beats.
 calm-endless-brim-7.png  Reduce Motion: endless opened at 7 notches, one from spilling: the rim still, no bob or tremble, the pin's pulse held lit.
 calm-endless-notch.png  Reduce Motion: endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 in place at once, settled, no slosh or surge.
-calm-endless-spilled.png  Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card.
+calm-endless-spilled.png  Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card, up at once rather than 2 s after the spill (R-spill).

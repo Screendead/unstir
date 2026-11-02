@@ -272,7 +272,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   then) stirs the picture together on `Brim.murk`'s stirs, carrying each pixel's footprint back through them (each
   stir is area-preserving, so it becomes a thin sliver) and averaging up to 48 taps along it in linear light, so
   lines finer than a pixel mix instead of glittering. `SpillWords` stamps "spilled." over the tank, whose caps stay,
-  and the card follows at `Brim.card`. The tests reach only the Swift side.
+  and the card follows at `Brim.card`, or at once under Reduce Motion (Jack's call R-spill, round 15). The tests reach only the Swift side.
 - **Levels.swift** holds `Tier`, the difficulty ladder: plughole, whirlpool, vortex, maelstrom (charybdis will go past
   maelstrom). Declaration order is the ladder, and the raw value is stored as the menu's tier, so it
   never changes. Plughole is always open; any other tier opens when every level of the tier just below has a best at par
@@ -409,7 +409,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   mid-sweep; the lost stamp lands without its scale. Under it or Dim Flashing Lights the picture fades on rather than
   flickering (`PictureLayer.strike(calm:)`). A live picture holds one frame (`Picture.rest`, between the twins' beats,
   `Picture.clock(_:still:)`), and endless's rim cuts to where each change comes to rest, a spill to its end, murk and
-  words and all (`Brim.rest`), with no bob or tremble as room runs short and the last notch's pulse held lit
+  words and all (`Brim.rest`), its card over it at once, with no bob or tremble as room runs short and the last notch's pulse held lit
   (`Brim.frame`'s `still`), so nothing moves without the player (Jack's call F2, round 14); the stirs themselves still
   turn. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three

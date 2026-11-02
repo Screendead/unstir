@@ -24,6 +24,9 @@ enum Brim {
     static let murk = meet + 0.1
     static let words = 1.3
     static let card = 2.0
+    /// When the spill's card shows: after the pour, or at once under Reduce Motion, whose rim already rests at the
+    /// spill's end (Jack's call R-spill, round 15).
+    static func card(still: Bool) -> Double { still ? 0 : card }
     /// How long the rim moves after a change: the liquid settles still, and the spill has run its course.
     static let settle = 3.0, spillSettle = 4.8
 

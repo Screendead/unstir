@@ -1159,7 +1159,7 @@ struct LevelView: View {
         _ending = State(initialValue: ending)
         frozenEnding = harness?.ending.flatMap { $0 < 0 ? nil : $0 }
         _showResult = State(initialValue: game.finished && harness?.wave == nil && !ending
-                            && (!game.spilled || (harness?.clock ?? 0) >= Brim.card))
+                            && (!game.spilled || (harness?.clock ?? 0) >= Brim.card(still: UIAccessibility.isReduceMotionEnabled)))
         _eased = State(initialValue: game.solved)
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
@@ -1470,7 +1470,7 @@ struct LevelView: View {
         .task {
             // A launch that spilled before the view appeared has no change of `finished` to bring the card.
             guard game.spilled, !showResult, frozenClock == nil, let last = game.brimEvents.last else { return }
-            let left = Brim.card - (Date.now.timeIntervalSinceReferenceDate - last.time)
+            let left = Brim.card(still: reduceMotion) - (Date.now.timeIntervalSinceReferenceDate - last.time)
             guard (try? await Task.sleep(for: .seconds(max(left, 0)))) != nil else { return }
             withAnimation(.easeIn(duration: 0.3)) { showResult = true }
         }
@@ -1583,9 +1583,10 @@ struct LevelView: View {
             // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
             // centre among them.
             if game.solved { withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true } }
+            // A spill's card waits for the pour and the word; a lost clock's for its stamp.
+            let wait = game.spilled ? Brim.card(still: reduceMotion) : game.lost ? 0.7 : 1.4
             Task {
-                // A spill's card waits for the pour and the word; a lost clock's for its stamp.
-                try? await Task.sleep(for: .seconds(game.spilled ? Brim.card : game.lost ? 0.7 : 1.4))
+                try? await Task.sleep(for: .seconds(wait))
                 guard game.finished else { return }
                 if game.solved && game.level.endsFirstStir {
                     ending = true
