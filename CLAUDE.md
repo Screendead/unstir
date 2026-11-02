@@ -39,7 +39,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   build system to ignore inode changes; the restored build then stays incremental. A hit saves compile work but not
   time: `xcodebuild test` boots the simulator while it compiles, so the job's time is the boot, about 110 s, and the
   tests, about 45 s. After the tests it measures the app they built (`scripts/app-size.sh`, Jack's call APPSIZE = B)
-  and fails past 100 MB: that build is Debug for the simulator, one architecture, whose debug dylib is far larger
+  less the test bundle and Xcode's testing frameworks the test host carries, and fails past 100 MB: that build is Debug for the simulator, one architecture, whose debug dylib is far larger
   than a Release binary, so it overstates what a player downloads and the guard is conservative.
   `.github/workflows/codeql.yml` scans the workflows on every PR to
   `master`, `*.md`-only ones too, in case the `master` ruleset requires code scanning. It scans Swift, which takes
