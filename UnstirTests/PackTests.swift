@@ -278,38 +278,45 @@ final class PackTests: XCTestCase {
         XCTAssertFalse(Offer.pack(.firstStir).arriving)
     }
 
-    /// Complete reads as owned once every pack is, however they were bought.
-    @MainActor func testCompleteIsOwnedOnceEveryPackIs() {
+    /// The bundle reads as owned once every pack it grants is, however they were bought; a pack outside it counts for
+    /// nothing.
+    @MainActor func testTheBundleIsOwnedOnceEveryPackItGrantsIs() {
         let store = Store()
         var ledger = Ledger()
-        for pack in Pack.allCases.dropLast() { ledger.record(pack.productID, .owned) }
+        for pack in [Pack.firstStir, .lens, .escapement] { ledger.record(pack.productID, .owned) }
         store.pretend(ledger)
         XCTAssertEqual(store.state(.complete), .unowned)
-        ledger.record(Pack.allCases.last!.productID, .owned)
+        ledger.record(Pack.prism.productID, .owned)
         store.pretend(ledger)
         XCTAssertEqual(store.state(.complete), .owned)
+        var three = Ledger()
+        for pack in Pack.bundled { three.record(pack.productID, .owned) }
+        store.pretend(three)
+        XCTAssertEqual(store.state(.complete), .owned, "a pack outside the bundle is not needed")
         XCTAssertEqual(Offer.all.map(\.key), Pack.allCases.map(\.rawValue) + ["complete"])
         XCTAssertEqual(Offer.all.map { Offer(name: $0.key) }, Offer.all)
     }
 
-    /// Complete is offered only while it costs less than the sold packs left unowned, and only once every price that
-    /// takes is in (Jack's call C7, round 13).
-    @MainActor func testCompleteSavesOnlyWhileItCostsLessThanThePacksLeft() {
-        let sold: [Pack] = [.lens, .escapement, .prism]
+    /// The bundle is offered only while it costs less than the packs it grants left unowned, and only once every price
+    /// that takes is in (Jack's call C7, round 13).
+    @MainActor func testTheBundleSavesOnlyWhileItCostsLessThanThePacksLeft() {
         let amounts = Dictionary(uniqueKeysWithValues: Pack.allCases.map { ($0.productID, Decimal(string: "2.99")!) })
             .merging([Pack.completeID: Decimal(string: "5.99")!]) { $1 }
-        XCTAssertEqual(Offer.saving(amounts: amounts, owned: [], sold: sold), Decimal(string: "2.98"))
-        XCTAssertNil(Offer.saving(amounts: amounts, owned: [.lens], sold: sold), "5.98 against 5.99")
-        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.prism.productID }, owned: [], sold: sold))
-        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.completeID }, owned: [], sold: sold))
-        XCTAssertNil(Offer.saving(amounts: amounts, owned: Set(sold), sold: sold))
+        XCTAssertEqual(Offer.saving(amounts: amounts, owned: []), Decimal(string: "2.98"))
+        XCTAssertNil(Offer.saving(amounts: amounts, owned: [.lens]), "5.98 against 5.99")
+        XCTAssertEqual(Offer.saving(amounts: amounts, owned: [.firstStir]), Decimal(string: "2.98"),
+                       "a pack outside the bundle changes nothing")
+        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.prism.productID }, owned: []))
+        XCTAssertNotNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.firstStir.productID }, owned: []))
+        XCTAssertNil(Offer.saving(amounts: amounts.filter { $0.key != Pack.completeID }, owned: []))
+        XCTAssertNil(Offer.saving(amounts: amounts, owned: Set(Pack.bundled)))
 
-        // The store reads it off its own ledger: a pending pack is unowned, and Complete owned owns every pack.
+        // The store reads it off its own ledger: a pending pack is unowned, and the bundle owned owns all it grants.
         let store = Store()
         var ledger = Ledger()
         ledger.record(Pack.lens.productID, .pending)
         store.pretend(ledger, amounts: amounts)
-        XCTAssertEqual(store.saving, Pack.sold().count == 4 ? "$5.97" : "$2.98")
+        XCTAssertEqual(store.saving, "$2.98")
         ledger.record(Pack.completeID, .owned)
         store.pretend(ledger, amounts: amounts)
         XCTAssertNil(store.saving)
@@ -317,7 +324,7 @@ final class PackTests: XCTestCase {
         XCTAssertNil(store.saving, "no prices yet")
 
         // On offer while it saves, or while the prices load and no pack is owned; never once they say it saves nothing.
-        XCTAssertTrue(store.offersComplete, "loading, nothing owned: it holds every pack for less")
+        XCTAssertTrue(store.offersComplete, "loading, nothing owned: it holds its three packs for less")
         store.pretend(Ledger(), pricing: .unreachable)
         XCTAssertFalse(store.offersComplete, "unreachable: nothing to say it saves")
         var one = Ledger()
@@ -327,7 +334,7 @@ final class PackTests: XCTestCase {
         store.pretend(Ledger(), amounts: amounts, pricing: .fetched)
         XCTAssertTrue(store.offersComplete)
         store.pretend(one, amounts: amounts, pricing: .fetched)
-        XCTAssertEqual(store.offersComplete, Pack.sold().count == 4, "a Debug build sells four, so three are left")
+        XCTAssertFalse(store.offersComplete, "two left cost 5.98 against 5.99, whatever else the build sells")
         var all = Ledger()
         all.record(Pack.completeID, .owned)
         store.pretend(all)
@@ -358,7 +365,7 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(ledger.answers(to: Asked.all).approved, [])
         XCTAssertEqual(ledger.answers(to: Asked.all).revoked, [prism])
         XCTAssertEqual(Offer.pack(.lens).yours, "Lens is yours")
-        XCTAssertEqual(Offer.complete.yours, "every pack is yours")
+        XCTAssertEqual(Offer.complete.yours, "\(Offer.bundleName) is yours")
     }
 
     /// The store says each approval until it is said, and the harness's last only the launch.
@@ -445,7 +452,7 @@ final class PackTests: XCTestCase {
                            pack.name)
             XCTAssertEqual(Offer.pack(pack).arriving, pack.levels.count < pack.planned, pack.name)
         }
-        XCTAssertEqual(Offer.complete.arriving, Pack.allCases.contains { $0.levels.count < $0.planned })
+        XCTAssertEqual(Offer.complete.arriving, Pack.bundled.contains { $0.levels.count < $0.planned })
     }
 
     /// First Stir is out of v1 (Jack, FS17), and Prism takes its place (PK1): a Release build neither sells First Stir nor
@@ -501,13 +508,32 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Tier.stored(open: { $0.isOpen(unlocked: false, best(packIds)) }), .plughole)
     }
 
+    /// The bundle is self-limiting (Jack's call M1 = B2, round 14): it grants Lens, Escapement and Prism and nothing
+    /// else, so no later pack joins it. Every pack outside it, First Stir today, stands in for a later one.
+    @MainActor func testNoLaterPackJoinsTheBundle() {
+        XCTAssertEqual(Pack.bundled, [.lens, .escapement, .prism])
+        XCTAssertEqual(Pack.completeID, "com.screendead.Unstir.complete")
+        var ledger = Ledger()
+        ledger.record(Pack.completeID, .owned)
+        let outside = Pack.allCases.filter { !Pack.bundled.contains($0) }
+        XCTAssertFalse(outside.isEmpty, "First Stir is outside it")
+        for pack in outside {
+            XCTAssertEqual(ledger.state(pack), .unowned, pack.name)
+            XCTAssertFalse(Offer.complete.holds.contains(pack.name), pack.name)
+            XCTAssertFalse(Clip.complete.reels.contains { $0.level.pack == pack }, pack.name)
+        }
+        XCTAssertEqual(Offer.complete.holds, "Lens, Escapement and Prism \u{00B7} 85 levels")
+        XCTAssertEqual(Offer.shelf(release: true, ready: { Pack.bundled.contains($0) }).last, .complete)
+        XCTAssertEqual(Offer.complete.name, Offer.bundleName)
+    }
+
     /// UNSTIR_OWNED and UNSTIR_STORE never reach a Release build.
     func testHarnessPurchasesAreDebugOnly() {
         let env = ["UNSTIR_OWNED": "lens,complete", "UNSTIR_STORE": "escapement:pending"]
         XCTAssertNil(Harness.purchases(env, release: true))
         XCTAssertNil(Harness.purchases(["UNSTIR_PACK": "lens"], release: false))
         XCTAssertEqual(Harness.purchases(["UNSTIR_OWNED": "lens"], release: false)?.owned, [.lens])
-        XCTAssertEqual(Harness.purchases(["UNSTIR_OWNED": "complete"], release: false)?.owned, Set(Pack.allCases))
+        XCTAssertEqual(Harness.purchases(["UNSTIR_OWNED": "complete"], release: false)?.owned, Set(Pack.bundled))
     }
 
     func testHarnessSetsEachPurchaseState() throws {
@@ -516,7 +542,7 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(Pack.allCases.map(ledger.state), [.pending, .failed, .revoked, .unowned])
         let complete = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "complete:revoked", "UNSTIR_OWNED": "lens"],
                                                        release: false))
-        XCTAssertEqual(Pack.allCases.map(complete.state), [.revoked, .owned, .revoked, .revoked])
+        XCTAssertEqual(Pack.allCases.map(complete.state), [.unowned, .owned, .revoked, .revoked])
         XCTAssertEqual(Harness.purchases(["UNSTIR_STORE": "lens:unowned"], release: false)?.state(.lens), .unowned)
         let unshared = try XCTUnwrap(Harness.purchases(["UNSTIR_STORE": "lens:unshared"], release: false))
         XCTAssertEqual(unshared.state(.lens), .revoked)
