@@ -712,6 +712,23 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   vignette (the sunrise from just after its first heal, which plays nothing, through its second), a zoom, a tick and Prism's buried red stir coming off (Jack, CL2, before Prism);
   in Release, without First Stir, the zoom, the tick and Prism's red stir coming off, about 8 s. Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
+- **Achievements.swift** and **GameCenter.swift** hold Game Center's achievements (Jack's call F5 = B, round 14: sign-in
+  and achievements, no leaderboards; the list is the pitch's 16, 255 points, awaiting his pick, its pressure flags kept
+  and marked `flagged`). `Achievement`'s raw value ends its id (`com.screendead.Unstir.achievement.first-drop`), and
+  `AchievementTests` pins every id, title, point and hidden flag as literals: a live achievement can't be deleted nor
+  its points changed, so never rename one. Each is earned from what the game already stores, read afresh
+  (`Achievement.Record.stored()`: the bests, a clean one anywhere, dailies with a best, `Best.tankTurned`, `swirled`,
+  `tanks`), never a counter of its own, so a late sign-in is reported all it has done; the one key kept for them is
+  `Best.spilled` (`endless.spilled`), set by a spill that stores progress. Tiers read `isOpen(unlocked: false)`, so the
+  developer unlock earns nothing; a pack's needs every planned level with a best, and Whole Shelf the three fixed packs
+  (`Achievement.shelf`). Only A Week of Tanks and Brim report a share on the way, and `due` sends only a rise past 0,
+  so a hidden one never shows unearned. The build's `GAME_CENTER` (`Config/Unstir.xcconfig`, NO until the sign-in
+  overlay test on an iOS 26.2 phone passes) sets Info.plist's `GameCenter`, read as `GameCenter.built`; off, no GameKit
+  call is made. On, a plain launch (`GameCenter.plays`: never the harness or the test host) signs in once the menu has
+  been up with nothing over it for `settle` (`RootView.calm`, the age check's moment), holding a sign-in sheet GameKit
+  hands over until the menu is calm again, hides the access point, loads what Game Center has, and reports after every
+  finish and the first turn of the tank or the swirl. It needs the Game Center capability and entitlement, which
+  aren't set up.
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`). v1 ships without them: the build's `ANALYTICS`
   (`Config/Unstir.xcconfig`, NO) sets Info.plist's `Analytics`, read as `Analytics.built`, and while it is off a plain
