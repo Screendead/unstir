@@ -784,6 +784,7 @@ final class Game {
             bests = (Best.load(level.id), best)
             let done = completion
             best.save(level.id, store: storesProgress)
+            if storesProgress { Sync.shared.saved() }
             if shut, let up, up.isOpen() {
                 opened = up
                 if up == .whirlpool { Review.shared.pending = true }

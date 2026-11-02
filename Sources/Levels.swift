@@ -452,8 +452,12 @@ struct Best: Codable {
     var archived: Bool?
 
     static func load(_ id: String) -> Best? {
-        UserDefaults.standard.data(forKey: "best.\(id)").flatMap { try? JSONDecoder().decode(Best.self, from: $0) }
+        // Read so a view that shows a best draws again when iCloud brings one (`Sync.revision`).
+        if Sync.built { _ = Sync.revision.count }
+        return UserDefaults.standard.data(forKey: "best.\(id)").flatMap(decode)
     }
+
+    static func decode(_ data: Data) -> Best? { try? JSONDecoder().decode(Best.self, from: data) }
 
     /// The harness's: this launch sees it as the id's best, and it is never written to disk.
     func fake(_ id: String) {
