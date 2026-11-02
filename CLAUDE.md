@@ -695,10 +695,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   glass's frame, which `countSpot` and `track` clamp to), and the tabletop's night forwards end their lines at the
   upright half's foot (`filmFoot`); its scenes bake again at a new side, drawn stretched meanwhile, as `SceneLayer`'s
   are. Knurl, clock hints and the out-of-ticks marks lie on the glass and rim already. `PlayStack`'s spacers give way
-  before the chrome runs past its pane. VoiceOver reads the parts header, title, tank, caption, swatches, controls in
-  every pose (`PlayPart.Tagged`'s sort priorities), which the tabletop's places alone would end with the tank. The
-  play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest cards fit each
-  pane.
+  before the chrome runs past its pane. `PlayPart.Tagged`'s sort priorities set VoiceOver's order to header, title,
+  tank, caption, swatches, controls in every pose (not yet heard; the tabletop's places alone would end with the
+  tank). The play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest
+  cards fit each pane.
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
