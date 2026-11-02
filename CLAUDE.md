@@ -131,6 +131,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
 - Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
   Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives.
+  `scripts/strike.sh <film>` prints the seconds into a take just before its picture strikes, past the home screen and
+  the launch's black.
 - Editors' reel: `scripts/editors-film.sh [--join]` films `scripts/film.sh editors-` (whirlpool 03 and vortex 02 drawn
   clean, maelstrom 01, Lens 03, Escapement 02 and Prism 01, each solved at par by a drawn fingertip; Lens from a warm
   start, a launch first baking its halftone into Caches, R-reel, round 15) and joins them, each from just before its
