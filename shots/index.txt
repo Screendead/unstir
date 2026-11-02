@@ -516,6 +516,7 @@ consent-settings-off.png  The gear's sheet: music, sounds, haptics and colour le
 settings.png  Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version.
 settings-quiet.png  Settings with music and haptics off.
 settings-restored.png  The gear's sheet after a restore found nothing: nothing to restore on this Apple ID.
+settings-editors.png  The editors' build's settings: open every tier, its line saying every tier, level and pack open, under colour letters.
 escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
 escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
 escapement-book-03.png  Escapement 3 as dealt: quad, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.

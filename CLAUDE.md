@@ -78,7 +78,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `SUPPORT_ADDRESS` and `POLICY_URL` (Jack's, never in a tracked file; `testNoTrackedConfigHoldsAPrivateValue`) set
   Info.plist's `SupportAddress` and `PolicyURL`; in an xcconfig a URL is written `https:/$()/...`, as `//` starts a
   comment. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
-  build's events as Debug.
+  build's events as Debug. `EDITORS=YES` (or `EDITORS = YES` in `Config/Local.xcconfig` for an Xcode archive) makes the
+  editors' build, for App Store editors on its own TestFlight group (Jack's call F11): it sets the `EDITORS` compilation
+  condition (`Build.editors`), and settings shows a labelled switch, "open every tier", that sets `Best.unlocked`, every
+  tier, level and pack open, and the version line ends "editors". Any other Release build compiles the switch out
+  (guideline 2.5.19 bars a hidden one; `testADefaultBuildHasNoEditorsSwitch`).
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
   numbers (Jack, 2026-10-27). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level, packs' too, on the phone
@@ -469,8 +473,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
-  always, past it only a pack StoreKit grants, with `Best.unlocked` counted outside Release or in a playtest build
-  (`Build.playtest`, what `scripts/run-ios.sh` installs), and the harness outside Release only.
+  always, past it only a pack StoreKit grants, with `Best.unlocked` counted outside Release, in a playtest build
+  (`Build.playtest`, what `scripts/run-ios.sh` installs) or in the editors' build (`Build.editors`), and the harness outside Release only.
   First Stir is out of v1, to be reworked (Jack's call FS17), and Prism takes its place (PK1): `Pack.ships` is
   false for First Stir alone, and `Pack.sold()`, the packs a build sells (Lens, Escapement and Prism in Release), leaves it out in Release only, so its code, levels,
   ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`) still reach them. In Release its every level, taste and all, is `.withheld`, which opens
@@ -877,7 +881,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
   opens the card's list); `UNSTIR_CONSENT=yes`
-  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up (`UNSTIR_MUSIC=0`, `UNSTIR_SOUNDS=0` and `UNSTIR_HAPTICS=0` set its switches off for the launch). `UNSTIR_UNLOCK` alone
+  or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up (in Debug `UNSTIR_EDITORS=1` shows the editors' switch in it) (`UNSTIR_MUSIC=0`, `UNSTIR_SOUNDS=0` and `UNSTIR_HAPTICS=0` set its switches off for the launch). `UNSTIR_UNLOCK` alone
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
   `UNSTIR_SOUND=1`. This is how screenshots and films

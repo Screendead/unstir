@@ -471,6 +471,10 @@ struct RootView: View {
         harnessed = h.harnessed
         harnessSave = h.resume
         Marks.stored = !h.harnessed
+        #if DEBUG
+        // UNSTIR_EDITORS=1: settings shows the editors' switch, for its shot.
+        Build.editorsSwitch = Build.editors || h.harnessed && env["UNSTIR_EDITORS"] == "1"
+        #endif
         // Here, not in Harness, which the tests build too.
         Settings.held.withLock { $0 = h.switches }
         Analytics.shared.configure(env: env, harnessed: h.harnessed)

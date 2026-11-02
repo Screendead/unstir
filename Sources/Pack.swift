@@ -106,14 +106,16 @@ enum Pack: String, CaseIterable, Sendable {
     /// `withheld`: a pack this build doesn't sell, which opens neither its levels nor its card.
     enum Access: Equatable { case taste, owned, needsCard, withheld }
 
-    /// Whether `number` plays. `owned` is what StoreKit grants; the developer unlock counts only outside Release or in a
-    /// playtest build, and the harness's packs only outside Release, so a shipped build opens a pack past its taste for
-    /// nothing but a purchase.
+    /// Whether `number` plays. `owned` is what StoreKit grants; the developer unlock counts only outside Release, in a
+    /// playtest build or in the editors' build, and the harness's packs only outside Release, so a shipped build opens a
+    /// pack past its taste for nothing but a purchase.
     func access(_ number: Int, owned: Set<Pack>, unlocked: Bool = Best.unlocked, harness: Set<Pack> = [],
-                release: Bool = Build.release, playtest: Bool = Build.playtest) -> Access {
+                release: Bool = Build.release, playtest: Bool = Build.playtest, editors: Bool = Build.editors) -> Access {
         if release && !ships { return .withheld }
         if number <= taste { return .taste }
-        if owned.contains(self) || ((!release || playtest) && unlocked) || (!release && harness.contains(self)) { return .owned }
+        if owned.contains(self) || ((!release || playtest || editors) && unlocked) || (!release && harness.contains(self)) {
+            return .owned
+        }
         return .needsCard
     }
 
@@ -306,4 +308,18 @@ enum Build {
     }()
     /// A build `scripts/run-ios.sh` installs on the reference phone (Info.plist's `AnalyticsPlaytest`), never an archive.
     static let playtest = Bundle.main.infoDictionary?["AnalyticsPlaytest"] as? String == "YES"
+    /// The editors' build (`EDITORS = YES`, Config/Unstir.xcconfig), for App Store editors on its own TestFlight group:
+    /// settings shows a switch that opens every tier. Any other Release build compiles the switch out (guideline 2.5.19
+    /// bars a hidden one, so it is in no build but this).
+    static let editors: Bool = {
+        #if EDITORS
+        true
+        #else
+        false
+        #endif
+    }()
+    #if EDITORS || DEBUG
+    /// Whether settings shows the editors' switch: the editors' build, or a Debug launch with UNSTIR_EDITORS=1.
+    @MainActor static var editorsSwitch = editors
+    #endif
 }

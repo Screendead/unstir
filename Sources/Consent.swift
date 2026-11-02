@@ -35,6 +35,8 @@ enum ConsentWords {
     static let policyDetail = "what the game keeps, and why"
     static let letters = "colour letters"
     static let lettersDetail = "R, G and B on Prism's knobs"
+    static let editors = "open every tier"
+    static let editorsDetail = "editors' build: every tier, level and pack open"
 }
 
 /// The first launch's question, over the menu, which waits for an answer. Yes and no are the same control: same type,
@@ -165,6 +167,7 @@ struct SettingsSheet: View {
     @State private var haptics = Settings.haptics
     /// Nil until chosen, so the switch shows Differentiate Without Colour's state until then.
     @State private var letters = Letters.choice
+    @State private var unlocked = Best.unlocked
     @State private var mailing = false
     @State private var reading = false
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
@@ -191,6 +194,11 @@ struct SettingsSheet: View {
                     switchRow(ConsentWords.haptics, ConsentWords.hapticsDetail, $haptics) { Settings.haptics = $0 }
                     switchRow(ConsentWords.letters, ConsentWords.lettersDetail,
                               Binding(get: { letters ?? differentiate }, set: { letters = $0 })) { Letters.choice = $0 }
+                    #if EDITORS || DEBUG
+                    if Build.editorsSwitch {
+                        switchRow(ConsentWords.editors, ConsentWords.editorsDetail, $unlocked) { Best.unlocked = $0 }
+                    }
+                    #endif
                     if analytics.shown {
                         Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
                             row(ConsentWords.analytics,
@@ -249,10 +257,11 @@ struct SettingsSheet: View {
         .presentationCornerRadius(24)
     }
 
-    /// "Unstir 1.0 (1)": the version and build.
+    /// "Unstir 1.0 (1)": the version and build, "Unstir 1.0 (1) editors" in the editors' build.
     static var version: String {
         let info = Bundle.main.infoDictionary ?? [:]
-        return "Unstir \(info["CFBundleShortVersionString"] as? String ?? "?") (\(info["CFBundleVersion"] as? String ?? "?"))"
+        let build = "Unstir \(info["CFBundleShortVersionString"] as? String ?? "?") (\(info["CFBundleVersion"] as? String ?? "?"))"
+        return Build.editors ? build + " editors" : build
     }
 
     private static var screen: CGFloat {

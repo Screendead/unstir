@@ -617,6 +617,9 @@ shot settings "Settings: music, sounds and haptics on, colour letters, restore p
 shot settings-quiet "Settings with music and haptics off." SETTINGS=1 MUSIC=0 HAPTICS=0
 shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
   SETTINGS=1 STORE=lens:unowned RESTORED=none
+# The editors' build's switch (EDITORS=YES), which UNSTIR_EDITORS=1 shows in a Debug build.
+shot settings-editors "The editors' build's settings: open every tier, its line saying every tier, level and pack open, under colour letters." \
+  SETTINGS=1 EDITORS=1
 
 # Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
 # sub-dial (a wound-back clock's mirrored), the stipulation under the tank. Clocks are rods, + forward, - wound back.
