@@ -560,12 +560,14 @@ struct PackCard: View {
         .accessibilityAction(.escape, onBack)
         .task { await store.fetchPrices() }
         // A promoted purchase buys as the card's buy does, once the launch knows what the player owns.
-        .task(id: store.promoted) {
+        .onChange(of: store.promoted, initial: true) {
             guard store.promoted == offer else { return }
             store.promoted = nil
-            await store.settled()
-            guard store.state(offer) != .owned, store.canPay, !buying else { return }
-            buy(offer)
+            Task {
+                await store.settled()
+                guard store.state(offer) != .owned, store.canPay, !buying else { return }
+                buy(offer)
+            }
         }
         .onAppear {
             Log.write("card \(offer.key) opens")
