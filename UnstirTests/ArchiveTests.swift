@@ -57,7 +57,7 @@ final class ArchiveTests: XCTestCase {
         func bought(_ products: [String: Purchase]) -> Bool {
             var ledger = Ledger()
             for (id, state) in products { ledger.record(id, state) }
-            return !ledger.owned.isEmpty
+            return ledger.boughtAny
         }
         XCTAssertFalse(bought([:]))
         XCTAssertTrue(bought([Pack.lens.productID: .owned]))
