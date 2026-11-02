@@ -310,6 +310,8 @@ struct MenuView: View {
         .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
         .onChange(of: card == nil && !settings) { Power.shared.touched() }
+        // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
+        .onChange(of: settings) { if !settings { leading = Self.lead(tier: shown) } }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()
@@ -765,8 +767,10 @@ private struct TierList: View, Equatable {
     var held: String?
     /// Given the landing row's frame in the list's own space, once laid out.
     var report: ((CGRect) -> Void)?
+    /// Read as the menu redraws, so the editors' switch opens the rows as its sheet closes.
+    var unlocked = Best.unlocked
 
-    nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier }
+    nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier && a.unlocked == b.unlocked }
 
     private static let space = "tierList"
     /// The header's id: the same on every tier, so mid-switch the outgoing list's header stands where the incoming one's
@@ -780,7 +784,7 @@ private struct TierList: View, Equatable {
             if !open, let below = tier.below { gate(below) }
             let levels = tier.levels, frontier = tier.frontier(), landing = report == nil ? nil : tier.landing()
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
-                let reached = Best.unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
+                let reached = unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
                 let opens = !open ? tier.below.map { "par every \($0.rawValue) level to open" }
                     : reached ? nil : "solve \(levels[i - 1].label) to open"
                 LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,

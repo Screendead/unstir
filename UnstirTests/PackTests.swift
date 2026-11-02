@@ -164,6 +164,22 @@ final class PackTests: XCTestCase {
         }
     }
 
+    /// The editors' switch (Jack's call F11) is in the editors' build alone: the tracked config builds without it, this
+    /// build has none, and only the editors' build lets the unlock open a pack in Release.
+    @MainActor func testADefaultBuildHasNoEditorsSwitch() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let config = try String(contentsOf: root.appending(path: "Config/Unstir.xcconfig"), encoding: .utf8)
+        XCTAssertEqual(config.split(separator: "\n").filter { $0.hasPrefix("EDITORS =") }, ["EDITORS = NO"])
+        XCTAssertFalse(Build.editors)
+        XCTAssertFalse(Build.editorsSwitch)
+        XCTAssertFalse(SettingsSheet.version.hasSuffix(" editors"))
+        XCTAssertEqual(Pack.lens.access(4, owned: [], unlocked: true, release: true, playtest: false), .needsCard)
+        XCTAssertEqual(Pack.lens.access(4, owned: [], unlocked: true, release: true, playtest: false, editors: true), .owned)
+        XCTAssertEqual(Pack.lens.access(4, owned: [], unlocked: false, release: true, playtest: false, editors: true),
+                       .needsCard)
+        XCTAssertEqual(Pack.firstStir.access(4, owned: [], unlocked: true, release: true, editors: true), .withheld)
+    }
+
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
     @MainActor func testAMistypedPackIdFailsClosed() {
         for id in ["lens_7", "Lens-7", "lens-", "escapement-7"] {

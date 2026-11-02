@@ -37,6 +37,8 @@ enum ConsentWords {
     static let lettersDetail = "R, G and B on Prism's knobs"
     static let supporter = "supporter mark"
     static let supporterDetail = "\u{2726} by the title and in the daily's share line"
+    static let editors = "open every tier"
+    static let editorsDetail = "every level and pack too, without buying"
 }
 
 /// The first launch's question, over the menu, which waits for an answer. Yes and no are the same control: same type,
@@ -171,6 +173,7 @@ struct SettingsSheet: View {
     @State private var letters = Letters.choice
     /// The menu's, so its title gains or drops the mark behind the sheet as the switch moves.
     @Binding var supporter: Bool
+    @State private var unlocked = Best.unlocked
     @State private var mailing = false
     @State private var reading = false
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
@@ -200,6 +203,11 @@ struct SettingsSheet: View {
                     if store.bought {
                         switchRow(ConsentWords.supporter, ConsentWords.supporterDetail, $supporter) { Settings.supporter = $0 }
                     }
+                    #if EDITORS || DEBUG
+                    if Build.editorsSwitch {
+                        switchRow(ConsentWords.editors, ConsentWords.editorsDetail, $unlocked) { Best.unlocked = $0 }
+                    }
+                    #endif
                     if analytics.shown {
                         Toggle(isOn: Binding(get: { analytics.consent == .yes }, set: { analytics.decide($0) })) {
                             row(ConsentWords.analytics,
@@ -258,10 +266,11 @@ struct SettingsSheet: View {
         .presentationCornerRadius(24)
     }
 
-    /// "Unstir 1.0 (1)": the version and build.
+    /// "Unstir 1.0 (1)": the version and build, "Unstir 1.0 (1) editors" in the editors' build.
     static var version: String {
         let info = Bundle.main.infoDictionary ?? [:]
-        return "Unstir \(info["CFBundleShortVersionString"] as? String ?? "?") (\(info["CFBundleVersion"] as? String ?? "?"))"
+        let build = "Unstir \(info["CFBundleShortVersionString"] as? String ?? "?") (\(info["CFBundleVersion"] as? String ?? "?"))"
+        return Build.editors ? build + " editors" : build
     }
 
     private var rule: some View { Rectangle().fill(Color.text.opacity(0.12)).frame(height: 1) }

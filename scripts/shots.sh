@@ -644,6 +644,9 @@ shot menu-supporter "Menu with a pack owned: the supporter mark, a hairline four
 shot menu-supporter-off "The same with the settings' supporter mark switched off: the title alone, as before any purchase." \
   OWNED=lens BESTS=plughole:000000000 CONSENT=yes SUPPORTER=0
 shot menu-no-supporter "The same with nothing owned: no mark." BESTS=plughole:000000000 CONSENT=yes
+# The editors' build's switch (EDITORS=YES), which UNSTIR_EDITORS=1 shows in a Debug build.
+shot settings-editors "The editors' build's settings: open every tier, every level and pack too, without buying, under colour letters, off." \
+  SETTINGS=1 EDITORS=1
 
 # Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
 # sub-dial (a wound-back clock's mirrored), the stipulation under the tank. Clocks are rods, + forward, - wound back.
