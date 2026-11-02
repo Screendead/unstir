@@ -35,7 +35,9 @@ span() {
   s=$(scripts/strike.sh "$mp4")
   [[ -n "$s" ]] || { echo "$1: no picture struck in its take; film it again (scripts/film.sh '$1\$')" >&2; exit 1; }
   s=$(awk -v a="$s" -v b="$2" 'BEGIN { print a + b }')
-  length=$(ffprobe -v error -select_streams v -show_entries stream=duration -of csv=p=0 "$mp4")
+  # A take ending on a still screen has no frame after its last change; film.sh notes how long it really ran.
+  length=$(ffprobe -v error -show_entries format_tags=comment -of csv=p=0 "$mp4" | awk '/^take / { print $2 }')
+  [[ -n "$length" ]] || length=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$mp4")
   awk -v a="$s" -v k="$3" -v l="$length" 'BEGIN { exit !(a + k <= l) }' ||
     { echo "$1: keeping $3 s from $s s runs past its take's end at $length s; film it longer" >&2; exit 1; }
   echo "$s"
@@ -67,8 +69,8 @@ if [[ "$what" == preview || "$what" == all ]]; then
     start=$(span "$name" "$from" "$keep")
     python3 scripts/store-captions.py film "$words" "$work/caption-$i.png"
     inputs+=(-i "shots/film/$name.mp4" -i "$work/caption-$i.png")
-    # recordVideo writes a frame only when the screen changes, so fps= first.
-    chains+="[$((2 * i)):v]trim=start=$start:duration=$keep,setpts=PTS-STARTPTS,fps=30,trim=duration=$keep,scale=1320:2868,setsar=1[f$i];"
+    # recordVideo writes a frame only when the screen changes, so fps= first, after holding the last frame to the keep's end.
+    chains+="[$((2 * i)):v]trim=start=$start:duration=$keep,setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration=$keep,fps=30,trim=duration=$keep,scale=1320:2868,setsar=1[f$i];"
     chains+="[f$i][$((2 * i + 1)):v]overlay=0:0[v$i];"
     labels+="[v$i]"
     echo "preview: $name from $start s, $keep s, \"$words\""
@@ -114,8 +116,8 @@ if [[ "$what" == social || "$what" == sound || "$what" == all ]]; then
     fi
     # 9:16 out of the 1320 x 2868 screen, centred on the tank.
     ffmpeg -loglevel error -y -ss "$start" -t "$keep" -i "shots/film/$name.mp4" -map 0:v \
-      -vf "fps=30,scale=1320:2868,crop=1320:2347:0:252,scale=1080:1920,setsar=1" "${audio[@]}" \
-      -c:v libx264 -profile:v high -crf 18 -preset slow -pix_fmt yuv420p -movflags +faststart "$out/social/$name$suffix.mp4"
+      -vf "tpad=stop_mode=clone:stop_duration=$keep,fps=30,scale=1320:2868,crop=1320:2347:0:252,scale=1080:1920,setsar=1" \
+      "${audio[@]}" -t "$keep" -c:v libx264 -profile:v high -crf 18 -preset slow -pix_fmt yuv420p -movflags +faststart "$out/social/$name$suffix.mp4"
     echo "social: $name$suffix from $start s, $keep s"
   done
 fi

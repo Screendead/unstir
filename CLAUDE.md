@@ -133,7 +133,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   a pattern ending in `$` films only the case of that name, as `rim-swirl` alone would also film `rim-swirl-push`.
   Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives. A film over 9.5 MB is shrunk
   to 660 px wide for a PR comment unless `FILM_FULL=1`; `FILM_SOUND=1` plays the take's sound and records it from
-  BlackHole into the film, with the Mac's output already switched there (`store-media.sh sound`).
+  BlackHole into the film, with the Mac's output already switched there (`store-media.sh sound`), placed on the
+  video's clock by when each recorder started. recordVideo writes a frame only when the screen changes, so a take
+  ending on a still screen ends early: each take's comment tag says how long it really ran (`take 19.520 s`).
   `scripts/strike.sh <film>` prints the seconds into a take just before its picture strikes, past the home screen and
   the launch's black.
 - Editors' reel: `scripts/editors-film.sh [--join]` films `scripts/film.sh editors-` (whirlpool 03 and vortex 02 drawn
