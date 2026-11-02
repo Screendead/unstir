@@ -1090,8 +1090,6 @@ struct LevelView: View {
     /// The swipe let go past its threshold: the level is leaving.
     @State private var swipedAway = false
     @State private var width: CGFloat = 0
-    /// The whole window in global points, safe areas and all, which the play layout splits at its middle.
-    @State private var window = CGRect.zero
     /// The tank's origin in global points, where the edge band is.
     @State private var tankOrigin = CGPoint.zero
     /// UNSTIR_BACKSWIPE=0.4: the level held that far into a back swipe.
@@ -1452,56 +1450,53 @@ struct LevelView: View {
         .modifier(Unseen(clean))
     }
 
-    /// The play layout for the content's geometry, split where the window is wide at the window's middle.
+    /// The play layout for the safe area `geo` measures, split where the window is wide at the window's middle. Read
+    /// from the one proxy in the one pass, so the back swipe's offset and a first layout never move the middle.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        let frame = geo.frame(in: .global)
-        // Global points are scaled where the harness shrinks a window to fit the simulator (UNSTIR_FRAME).
-        let k = geo.size.width > 0 ? frame.width / geo.size.width : 0
-        guard window.width > 0, k > 0 else { return PlayLayout.of(content: geo.size, window: geo.size, scale: scale) }
-        return PlayLayout.of(content: geo.size, window: CGSize(width: window.width / k, height: window.height / k),
-                             middle: (window.midX - frame.minX) / k, scale: scale)
+        let m = PlayLayout.margin, i = geo.safeAreaInsets
+        let window = CGSize(width: geo.size.width + i.leading + i.trailing, height: geo.size.height + i.top + i.bottom)
+        return PlayLayout.of(content: CGSize(width: max(geo.size.width - 2 * m, 0), height: geo.size.height),
+                             window: window, middle: window.width / 2 - i.leading - m, scale: scale)
     }
 
     private var screen: some View {
         GeometryReader { geo in
             let layout = playLayout(geo)
-            switch layout.kind {
-            case .column:
-                VStack(spacing: 0) {
-                    header
-                    titleRow
-                    Spacer(minLength: 12)
-                    stage(layout.side)
-                    caption
-                    swatches
-                    Spacer(minLength: 12)
-                    controls
-                }
-            case .split:
-                // The fold runs down the window's middle, between the halves, so neither half reaches it.
-                HStack(spacing: 0) {
-                    stage(layout.side).frame(width: layout.tankPane.width, height: layout.tankPane.height)
-                    Spacer(minLength: 0)
+            Group {
+                switch layout.kind {
+                case .column:
                     VStack(spacing: 0) {
                         header
                         titleRow
                         Spacer(minLength: 12)
+                        stage(layout.side)
                         caption
                         swatches
                         Spacer(minLength: 12)
                         controls
                     }
-                    .frame(width: layout.chromePane.width)
+                case .split:
+                    // The fold runs down the window's middle, between the halves, so neither half reaches it.
+                    HStack(spacing: 0) {
+                        stage(layout.side).frame(width: layout.tankPane.width, height: layout.tankPane.height)
+                        Spacer(minLength: 0)
+                        VStack(spacing: 0) {
+                            header
+                            titleRow
+                            Spacer(minLength: 12)
+                            caption
+                            swatches
+                            Spacer(minLength: 12)
+                            controls
+                        }
+                        .frame(width: layout.chromePane.width)
+                    }
                 }
             }
+            .padding(.horizontal, PlayLayout.margin)
         }
         .foregroundStyle(Color.text)
         .tint(Color.text)
-        .padding(.horizontal, PlayLayout.margin)
-        .background {
-            Color.clear.ignoresSafeArea()
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { window = $0 }
-        }
         .background(Color.black)
         .accessibilityAction(.escape) { leave() }
         .task(id: replays) {
