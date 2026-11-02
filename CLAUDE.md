@@ -667,8 +667,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `PlayStack`, through one `AnyLayout`, so a change of pose keeps every part's identity, the tank's picture, opening,
   demonstration and keyframes with it: the parts glide to their new places, and the tank, drawn at its new size at once,
   glides there by `Glide`'s scale, its old bake stretched until the new one lands (none under Reduce Motion, nor from a
-  first measure). A drag in flight lets go as a lift would (`LevelView.letGoOnResize`), and its finger holds nothing
-  more until it lifts.
+  first measure; a bake that lands after a later change of size is dropped). A drag in flight lets go as a lift would
+  (`LevelView.letGoOnResize`), and the finger then on the tank, taken up or not yet (an edge touch the back swipe hasn't
+  decided), holds nothing more until it lifts.
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
