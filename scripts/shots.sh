@@ -611,7 +611,7 @@ shot shelf-menu-owned "The dock with every pack owned, the three through Triptyc
 shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading, and no Triptych line until the prices say what it saves." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
 shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Triptych line." \
   CARD=lens STORE=lens:unowned PRICES=unreachable CLOCK=5.4
-shot shelf-menu-unreachable "The dock after the price fetch failed, nothing bought: Triptych's cover stays, since with none of its packs owned it holds them all for less, so a card's fetch never moves it." \
+shot shelf-menu-unreachable "The dock after the price fetch failed, nothing bought: Triptych's cover stays, since with none of its packs owned it holds them all for less, so a card's fetch never moves it while none is owned." \
   STORE=lens:unowned PRICES=unreachable CLOCK=5.4 BESTS=plughole:$nine
 shot card-lens-unshared "Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey." \
   CARD=lens STORE=lens:unshared CLOCK=5.4

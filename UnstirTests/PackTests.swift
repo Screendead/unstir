@@ -351,8 +351,10 @@ final class PackTests: XCTestCase {
         let amounts = Dictionary(uniqueKeysWithValues: sold.map { ($0.productID, Decimal(string: "2.99")!) })
             .merging([Pack.completeID: Decimal(string: "5.99")!]) { $1 }
         XCTAssertTrue(Offer.offersComplete(amounts: [:], owned: [], bundled: sold), "no prices, nothing owned")
-        XCTAssertTrue(Offer.offersComplete(amounts: amounts.filter { $0.key != Pack.completeID }, owned: [], bundled: sold),
-                      "the bundle's own price missing, nothing owned")
+        XCTAssertFalse(Offer.offersComplete(amounts: amounts.filter { $0.key != Pack.completeID }, owned: [], bundled: sold),
+                       "the packs' prices in and the bundle's missing, as where it isn't sold: nothing to buy")
+        XCTAssertFalse(Offer.offersComplete(amounts: amounts.filter { $0.key == Pack.lens.productID }, owned: [], bundled: sold),
+                       "some prices in, the bundle's missing")
         XCTAssertFalse(Offer.offersComplete(amounts: [:], owned: [.lens], bundled: sold), "no prices, a pack owned")
         XCTAssertTrue(Offer.offersComplete(amounts: amounts, owned: [], bundled: sold))
         XCTAssertFalse(Offer.offersComplete(amounts: amounts, owned: [.lens], bundled: sold), "5.98 against 5.99")
@@ -368,6 +370,8 @@ final class PackTests: XCTestCase {
             }
             XCTAssertEqual(Set(read), [true], "the fetch's state never moves it")
         }
+        store.pretend(Ledger(), amounts: amounts.filter { $0.key != Pack.completeID }, pricing: .fetched)
+        XCTAssertFalse(store.offersComplete, "a storefront that sells the packs but not the bundle")
     }
 
     /// An Ask to Buy approval is said once: a request then its approval says it, and once said it is forgotten; a pack
