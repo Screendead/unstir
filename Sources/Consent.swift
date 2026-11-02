@@ -36,7 +36,7 @@ enum ConsentWords {
     static let letters = "colour letters"
     static let lettersDetail = "R, G and B on Prism's knobs"
     static let editors = "open every tier"
-    static let editorsDetail = "editors' build: every tier, level and pack open"
+    static let editorsDetail = "every level and pack too, without buying"
 }
 
 /// The first launch's question, over the menu, which waits for an answer. Yes and no are the same control: same type,

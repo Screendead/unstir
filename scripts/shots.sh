@@ -618,7 +618,7 @@ shot settings-quiet "Settings with music and haptics off." SETTINGS=1 MUSIC=0 HA
 shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
   SETTINGS=1 STORE=lens:unowned RESTORED=none
 # The editors' build's switch (EDITORS=YES), which UNSTIR_EDITORS=1 shows in a Debug build.
-shot settings-editors "The editors' build's settings: open every tier, its line saying every tier, level and pack open, under colour letters." \
+shot settings-editors "The editors' build's settings: open every tier, every level and pack too, without buying, under colour letters, off." \
   SETTINGS=1 EDITORS=1
 
 # Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
