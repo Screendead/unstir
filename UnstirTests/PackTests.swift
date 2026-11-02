@@ -173,9 +173,9 @@ final class PackTests: XCTestCase {
         XCTAssertNil(Store().access(Level(id: "L7", label: "", title: "", layout: .tri, scramble: [])))
     }
 
-    /// A purchase started on the App Store's product page opens the card of the offer it buys, for each pack the build
-    /// sells and Complete, and nothing for a product it doesn't sell; under the harness's states the card's buy lands.
-    @MainActor func testAPromotedPurchaseOpensItsOffersCard() async {
+    /// A purchase started on the App Store's product page names the offer whose card it opens, for each pack the build
+    /// sells and Complete, and none for a product it doesn't sell; under the harness's states the card's buy lands.
+    @MainActor func testAPromotedPurchaseNamesTheOfferItBuys() async {
         for offer in Offer.all where offer.sold {
             let store = Store()
             store.promote(offer.productID)
