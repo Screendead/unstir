@@ -29,7 +29,8 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   its vignette render takes two minutes), which `.github/workflows/nightly.yml` runs with every other test, bar the
   `UNSTIR_SLOW_TESTS` ones (they ran past 25 minutes on the runner), on `master` at 03:17 UTC and on `workflow_dispatch`: a break in them shows a night late. Both jobs print each
   suite's and the slowest tests' times (`scripts/ci-times.sh`) in the log. Add a suite to the skip list only here and in
-  `test.yml`, so the nightly keeps running it.
+  `test.yml`, so the nightly keeps running it. Both Test steps pipe the tests through `grep`, so they set `shell: bash`
+  for pipefail: under the default shell the step's status is grep's, which passes once any test has run.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
