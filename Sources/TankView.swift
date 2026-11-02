@@ -349,9 +349,9 @@ final class Game {
             pushes += 1
             if level.run != nil { brim += 1 }
         }
-        // A run's heal ring marks only what settles the brim, and a story's only a commit that plays a vignette:
-        // cancelling the player's own push flashes white, as a merge.
-        let heals = level.story != nil ? !played.isSubset(of: playedWas) : level.run == nil ? result == .cancelled : healed > 0
+        // The heal ring marks only a commit that pops one of the scramble's entries, and a story's only one that plays
+        // a vignette: cancelling the player's own push flashes white, as a merge (Jack's call SND2 = A, round 16).
+        let heals = level.story != nil ? !played.isSubset(of: playedWas) : healed > 0
         if heals { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
@@ -458,7 +458,8 @@ final class Game {
         lastCommit = (knob, result)
         turns += 1
         if result == .pushed { pushes += 1 }
-        if result == .cancelled { cancels += 1; cancelledRod = knob }
+        // The move's own heal: a tick's pop is the clock's, not the knob's.
+        if healed > 0 { cancels += 1; cancelledRod = knob }
         healed += landTicks()
         log("commit \(Twist(rod: knob, steps: steps)) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
         record(.turn(knob: knob, steps: steps))

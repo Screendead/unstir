@@ -135,13 +135,14 @@ struct Reel: Sendable {
         var entries = opening, t = rest, beats: [Beat] = []
         for (i, g) in gestures.enumerated() {
             let land = t, start = land + Self.settle, playedWas = Self.played(level, entries)
-            var lift = start + Self.press, result: Commit?
+            var lift = start + Self.press, result: Commit?, popped = false
             var moved = entries
             if case .turn(let k, let keys) = g {
                 lift = start + keys.reduce(0) { $0 + $1.seconds } + Self.hold
                 let net = Int(keys.last!.steps.rounded())
                 if net != 0 {
-                    result = moved.commit(Game.Entry(twist: Twist(rod: k, steps: net), pushed: true), in: level.layout, lenses: level.lenses, masks: level.masks)
+                    result = moved.commit(Game.Entry(twist: Twist(rod: k, steps: net), pushed: true), in: level.layout, lenses: level.lenses,
+                                          masks: level.masks, popped: { if !$0.pushed { popped = true } })
                 }
             }
             var after = moved, ticked = false, stops = false
@@ -149,7 +150,7 @@ struct Reel: Sendable {
                 ticked = true
                 stops = !after.contains { $0.twist.rod == c.rod }
             }
-            let heals = level.story != nil ? !Self.played(level, after).isSubset(of: playedWas) : result == .cancelled
+            let heals = level.story != nil ? !Self.played(level, after).isSubset(of: playedWas) : popped
             beats.append(Beat(gesture: g, land: land, start: start, lift: lift, before: entries, moved: moved, after: after,
                               result: result, heals: heals, ticked: ticked, stops: stops))
             entries = after

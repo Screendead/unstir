@@ -60,11 +60,15 @@ import XCTest
         XCTAssertEqual(g.budget, 3)
         g.commit(rod: 2, steps: 4)
         XCTAssertEqual(g.lastCommit?.result, .cancelled)
+        XCTAssertEqual(g.cancels, 1)
+        XCTAssertEqual(g.cancelledRod, 2)
         // Its tick takes the clock's upper seam from -2 to -1.
         XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1"))
         XCTAssertEqual(g.budget, 2)
         g.wait(on: 0)
         XCTAssertEqual(g.stack, tri("0:-1,1:+3"))
+        // The tick's pop is the clock's, which rings no knob.
+        XCTAssertEqual(g.cancels, 1)
         XCTAssertEqual(g.moves, 2)
         XCTAssertFalse(g.finished)
         g.commit(rod: 1, steps: -3)
