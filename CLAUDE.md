@@ -508,8 +508,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`Offer.complete`, sold as `Pack.completeID`, its old name Complete kept in its ids) is self-limiting (Jack's call
   M1 = B2, round 14): it grants a fixed `Pack.bundled`, Lens, Escapement and Prism, in every build, and no later pack
   ever joins it (`testNoLaterPackJoinsTheBundle`); a later bundle would be a product of its own. What it grants and
-  needs, its cover, words (`Pack.named`; the card's "or all three in Triptych" counts them, `Offer.countWord`) and clip
-  all read `Pack.bundled`. Its name, wherever a player reads it, is `Offer.bundleName`, "Triptych" until Jack picks
+  needs, its cover, words (`Pack.named`; the card's "or all three in Triptych I" counts them, `Offer.countWord`) and clip
+  all read `Pack.bundled`. Its name, wherever a player reads it, is `Offer.bundleName`, "Triptych I" (Jack's call M1, round 15: a numeral from day one, so a second bundle is Triptych II)
   (runner-up Folio), and the `.storekit` file's display name with it.
   `Store` is StoreKit 2 with no server and nothing that grants stored (`asked.<product>` only remembers an Ask to Buy
   made here, from `purchase`'s pending result until its approval is said or it is revoked, so the approval is said
@@ -677,12 +677,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   owned or not; else, under an unowned pack once any free level is started or solved, "2/3 free", counting those with
   a best (`Pack.tastePlayed`), kept at "3/3 free"; the bundle's never marks (Jack's call C6, round 13). An Ask to Buy
   approval landing on its open card is said by the landing; otherwise the dock's header reads "Lens is yours"
-  ("Triptych is yours" for the bundle) in its glow for 5 s in sight, waiting while anything covers the dock, and
+  ("Triptych I is yours" for the bundle) in its glow for 5 s in sight, waiting while anything covers the dock, and
   VoiceOver hears it once (`Store.approved`, `Store.said`; Jack's call C21, round 13). `PackCard` grows out
   of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
   purchase state, buy at the App Store's price, try free, the bundle beside an unowned pack it grants, and on the dock, only
-  while it costs less than its packs left unowned, saying the saving ("or all three in Triptych · $5.99 · save
+  while it costs less than its packs left unowned, saying the saving ("or all three in Triptych I · $5.99 · save
   $2.98 ›", broken only before "· save", and a "save" fact on the bundle's own card; `Offer.saving`, from
   `Product.price`; the line and the fact wait for the prices, and the dock's cover too unless none of its packs is owned,
   `Store.offersComplete`, so a launch's dock keeps its cover) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
@@ -694,7 +694,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   once every one is, and the bundle's cover once it saves nothing (the bundle owned, or the packs left cost no more than
   it), animating the shelf's change, its height kept whatever the covers' lines say; the bundle's card names each pack as a link to its
   card (`onOffer`, and a VoiceOver action per pack), so each taste is a tap away, and back from that card returns to
-  the bundle's ("‹ Triptych") while the bundle is still on offer, else to the menu (`UNSTIR_CARD=complete` opens it on the same terms, or
+  the bundle's ("‹ Triptych I") while the bundle is still on offer, else to the menu (`UNSTIR_CARD=complete` opens it on the same terms, or
   owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the

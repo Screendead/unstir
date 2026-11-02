@@ -85,13 +85,13 @@ Three packs add their own pictures, tanks and rules. The first three levels of e
 - Escapement: a book of composed problems with a clock in them. One rod ticks a step by itself after every move you make. Time your heals so the clock always finds its seam.
 - Prism: every picture is drawn three times, in red, green and blue light, and each rod stirs only some of the colours. Unstir until the ghosts snap back into one white line.
 
-Triptych unlocks Lens, Escapement and Prism in one purchase. Packs and Triptych can be shared with your family through Family Sharing.
+Triptych I unlocks Lens, Escapement and Prism in one purchase. Packs and Triptych I can be shared with your family through Family Sharing.
 
 No ads. No timers. No account. Your progress stays on your phone, and the game sends nothing.
 ```
 
 Choices and checks in it:
-- **Triptych.** The bundle, named until Jack picks (M1 = B2; runner-up Folio). It grants Lens, Escapement and Prism
+- **Triptych.** The bundle, Triptych I in the app and the store (Jack's call, round 15: a numeral from day one). It grants Lens, Escapement and Prism
   and no later pack ever joins it, so the page names the three and promises nothing about later ones **(check)**.
 - **Family Sharing.** On for all four products (Jack, ST6): `StoreKit/Unstir.storekit` already marks each
   family-shareable, and the store code handles family grants. Turn it on for each in App Store Connect too; once on it
@@ -234,7 +234,7 @@ The 4–12 s film doesn't exist and is the one new case the plan needs; it also 
   recorded in `HANDOFF.private.md` only, and filled in App Store Connect and in the published pages at publishing.
 - **Marketing URL** (optional). None until a domain exists.
 - **Copyright.** The year and holder of the source files' copyright headers.
-- **In-app purchases.** Display names: "Lens", "Escapement", "Prism", "Triptych". Descriptions (Apple's limit is
+- **In-app purchases.** Display names: "Lens", "Escapement", "Prism", "Triptych I". Descriptions (Apple's limit is
   assumed to be 45 characters; check):
 
   | Product | Description | Chars |

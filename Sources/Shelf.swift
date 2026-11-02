@@ -5,7 +5,7 @@ import SwiftUI
 /// What the shelf sells: a pack, or the bundle (`complete`, its old name), which grants `Pack.bundled`.
 enum Offer: Hashable, Sendable {
     /// The bundle's name wherever a player reads it, and the App Store's display name with it (Jack's pick, M1).
-    static let bundleName = "Triptych"
+    static let bundleName = "Triptych I"
 
     /// A count of packs in words.
     static func countWord(_ n: Int) -> String { n < 2 || n > 6 ? "\(n)" : ["two", "three", "four", "five", "six"][n - 2] }
