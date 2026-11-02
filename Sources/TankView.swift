@@ -918,9 +918,16 @@ struct LevelView: View {
     @State private var liveTurn: Double?
     /// Two fingers' twist, on top of `liveTurn`.
     @GestureState private var spin: Double?
-    /// The two-finger twist has the tank, and only its own onEnded lets go: `spin` may reset before that folds the twist
-    /// into `liveTurn`, and the finger's drag may end on either side of it.
+    /// The two-finger twist has the tank; its onEnded lets go, or the phase handler when the system cuts it off (C13),
+    /// or a new touch that finds it cancelled. `spin` may reset before any of them folds the twist into `liveTurn`, and
+    /// the finger's drag may end on either side of it.
     @State private var spun = false
+    /// The twist's rotation as last reported, since it was taken up: drawn and let go in place of `spin`, which the
+    /// system resets on its own clock.
+    @State private var lastSpin = 0.0
+    /// Where the twist began and the rotation it had when last let go: a twist whose fingers outlast a let-go the system
+    /// forced turns on from there, never committing a rotation twice.
+    @State private var spinBase = (start: CGPoint.zero, rotation: 0.0)
     /// Solved, the glass eases to the nearest home: the level ends wherever the tank stands.
     @State private var eased: Bool
     /// Scales every committed angle; the open winds it 0 to 1, all rods at once, so it shows nothing about order.
@@ -1587,14 +1594,21 @@ struct LevelView: View {
                 Log.write("result shown")
             }
         }
-        // SwiftUI never calls onEnded for a cancelled drag (lock, Siri, a call), so drop the uncommitted turn here. Only on
-        // the way out: the launch's own turn to active would drop a finger the harness holds.
+        // SwiftUI never calls onEnded for a cancelled drag (lock, Siri, a call), so let go here as the lift would, and
+        // whichever of this and `holding`'s reset comes second finds nothing held (Jack's call C13, round 13). At once,
+        // without the settle: nothing renders behind the lock, so its completion could wait for the return, or never
+        // come, and the suspend below reads the game with the move in it. Not on .active: the launch's turn to active
+        // would let go of a finger the harness holds. The .inactive step of a return finds nothing held.
         .onChange(of: phase) {
-            guard phase != .active else { return }
-            endPath(); endTwist()
-            if drag != nil || spun {
-                Log.write("\(phase) drops drag \(state)"); drag = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; spun = false
+            if phase != .active {
+                if drag != nil || spun { Log.write("\(phase) lets go \(state)") }
+                // Not `else`: a twist holds the rim as its drag, which `cut` leaves to the twist's own let-go.
+                if let g = drag { cut(g, now: true) }
+                if spun { letGoSpin(lastSpin, now: true) }
+                endPath(); endTwist()
             }
+            if phase == .background { Analytics.shared.suspended(game); game.pauseClock(); Resume.save(game) }
+            if phase == .active { Analytics.shared.resumed(); game.resumeClock(); if knocks { Knock.warm(hold: false) } }
         }
         .onAppear {
             let rules = game.level.run.map { "tank \($0.tank) brim \($0.brim)" } ?? "par \(game.par)"
@@ -1607,11 +1621,6 @@ struct LevelView: View {
             if let today { game.refill(today: today) } else { game.refill() }
             // Where there is no opening, onChange's initial call may run before the refill.
             if shown == nil { badge = game.badge }
-        }
-        .onChange(of: phase) {
-            // The seconds since the last move, which the app may not come back for.
-            if phase == .background { Analytics.shared.suspended(game); game.pauseClock(); Resume.save(game) }
-            if phase == .active { Analytics.shared.resumed(); game.resumeClock(); if knocks { Knock.warm(hold: false) } }
         }
         // A promoted purchase's card opens over the menu: the level leaves as its back does, so its quit and save go too.
         .onChange(of: Store.shared.promoted) { if Store.shared.promoted != nil { leave() } }
@@ -2051,7 +2060,7 @@ struct LevelView: View {
                 || game.stack.landing(rod: game.slot(of: k), steps: steps, in: game.level.layout, lenses: game.level.lenses, masks: game.level.masks) != nil)
         } ?? false
         let step = game.level.layout.tankStep
-        let held = liveTurn.map { $0 + (spin ?? 0) }
+        let held = liveTurn.map { $0 + (spun ? lastSpin : 0) }
         let turn = eased ? (Double(game.position) / Double(game.level.layout.order)).rounded() * 2 * .pi
             : Double(game.position) * step + (held ?? 0)
         let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
@@ -2636,8 +2645,10 @@ struct LevelView: View {
                     if let g = drag, cut(g) { return }
                     endPath()
                     drag = nil; liveRod = nil; liveAngle = 0; pressing = nil
-                    // A twist cancelled without onEnded leaves its turn behind.
-                    if spin == nil { liveTurn = nil; spun = false; endTwist() }
+                    // A twist cancelled without onEnded lets go as the lift would; this touch is taken up once that
+                    // settles.
+                    if spin == nil, spun { letGoSpin(lastSpin); if settling { return } }
+                    if spin == nil { liveTurn = nil; endTwist() }
                     // Where it landed: the first change seen can come later, once a release or a reset's stir settles.
                     let landed = norm(v.startLocation)
                     self.landed = landed
@@ -2807,27 +2818,38 @@ struct LevelView: View {
             .updating($spin) { v, spin, _ in spin = v.rotation.radians }
             .onChanged { v in
                 guard !settling, !game.finished, shown == nil else { return }
+                if v.startLocation != spinBase.start { spinBase = (v.startLocation, 0) }
+                let rotation = v.rotation.radians - spinBase.rotation
                 if !spun { endPath(); twist = (v.time, Trail(gap: 0.05) { abs($0 - $1) }) }
                 spun = true
-                if let down = twist?.down { twist!.trail.add(v.rotation.radians, ms: Self.ms(v.time, since: down)) }
+                lastSpin = rotation
+                if let down = twist?.down { twist!.trail.add(rotation, ms: Self.ms(v.time, since: down)) }
                 if liveTurn == nil {
+                    // The rod a first finger held lets go as the lift would, so its turn never snaps back (V26).
+                    if case .rod(let k)? = drag?.grab { release(k, now: true) }
                     drag?.grab = .rim; liveRod = nil; liveAngle = 0; liveTurn = 0; counted = Game.tank
                     Log.write("spin \(state)")
                     detent = Detent(step: game.level.layout.tankStep)
                 }
-                tankTicks += detent.turn(to: liveTurn! + v.rotation.radians)
+                tankTicks += detent.turn(to: liveTurn! + rotation)
             }
             .onEnded { v in
                 guard spun else { return }
-                spun = false
-                if let down = twist?.down { twist!.trail.add(v.rotation.radians, ms: Self.ms(v.time, since: down)) }
-                endTwist()
-                guard shown == nil, let turn = liveTurn else { return }
-                liveTurn = turn + v.rotation.radians
+                let rotation = v.rotation.radians - spinBase.rotation
+                if let down = twist?.down { twist!.trail.add(rotation, ms: Self.ms(v.time, since: down)) }
                 // The end can carry rotation no change reported, and it commits.
-                tankTicks += detent.turn(to: liveTurn!)
-                releaseTank()
+                letGoSpin(rotation)
             }
+    }
+
+    private func letGoSpin(_ rotation: Double, now: Bool = false) {
+        spun = false
+        spinBase.rotation += rotation
+        endTwist()
+        guard shown == nil, let turn = liveTurn else { return }
+        liveTurn = turn + rotation
+        tankTicks += detent.turn(to: liveTurn!)
+        releaseTank(now: now)
     }
 
     private static func ms(_ time: Date, since down: Date) -> Int { Int((time.timeIntervalSince(down) * 1000).rounded()) }
@@ -2844,49 +2866,55 @@ struct LevelView: View {
         twist = nil
     }
 
-    private func releaseTank() {
+    /// `now` lands the let-go without the settle, whose completion waits on a frame.
+    private func releaseTank(now: Bool = false) {
         guard !settling, let turn = liveTurn else { return }
         let step = game.level.layout.tankStep, steps = Detent.steps(turn, of: step)
         Log.write("release tank angle=\(turn) steps=\(steps)")
-        settling = true
         counted = Game.tank
-        withAnimation(.snappy(duration: 0.3)) {
-            liveTurn = Double(steps) * step
-        } completion: {
+        func land() {
             liveTurn = nil
             settling = false
             game.turnTank(steps)
         }
+        guard !now else { land(); return }
+        settling = true
+        withAnimation(.snappy(duration: 0.3)) {
+            liveTurn = Double(steps) * step
+        } completion: { land() }
     }
 
     /// A drag the system cut off, or a second finger took over, before the lift lets go as the lift would, so a turn
     /// shown whole never snaps back uncommitted (Jack, V26 on the phone, 2026-10-27). True when it has a turn to settle.
-    @discardableResult private func cut(_ g: (start: CGPoint, grab: Grab, last: Double)) -> Bool {
+    @discardableResult private func cut(_ g: (start: CGPoint, grab: Grab, last: Double), now: Bool = false) -> Bool {
         Log.write("cut \(state)")
         endPath()
         drag = nil
         switch g.grab {
-        case .rod(let k): release(k); return true
-        case .rim where !spun && liveTurn != nil: releaseTank(); return true
+        case .rod(let k): release(k, now: now); return true
+        case .rim where !spun && liveTurn != nil: releaseTank(now: now); return true
         case .ratchet: pressing = nil; return false
         default: return false
         }
     }
 
-    private func release(_ k: Int) {
+    /// `now` lands the let-go without the settle, whose completion waits on a frame.
+    private func release(_ k: Int, now: Bool = false) {
         let steps = Detent.steps(liveAngle, of: Tank.step)
         Log.write("release \(k) angle=\(liveAngle) steps=\(steps)")
-        settling = true
         counted = k
-        withAnimation(.snappy(duration: 0.22)) {
-            liveAngle = Double(steps) * Tank.step
-        } completion: {
+        func land() {
             liveRod = nil
             liveAngle = 0
             settling = false
             guard steps != 0 else { return }
             game.commit(rod: k, steps: steps)
         }
+        guard !now else { land(); return }
+        settling = true
+        withAnimation(.snappy(duration: 0.22)) {
+            liveAngle = Double(steps) * Tank.step
+        } completion: { land() }
     }
 }
 
