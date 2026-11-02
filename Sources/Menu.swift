@@ -194,8 +194,9 @@ struct MenuView: View {
     /// Today's daily and its run, worked out once a day rather than on every frame of a swipe. The menu is built anew
     /// each time it comes up, so a solve's run shows on return.
     @State private var daily: (level: Level, run: Int)
-    /// The archive's days and how many have a best, with the daily.
-    @State private var past: (days: Int, solved: Int)
+    /// The archive's days dealt, and how many are at par, with the daily: dealing thirty tanks is too slow for every
+    /// frame of a swipe.
+    @State private var past: (days: [(date: Date, level: Level)], atPar: Int)
     /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
     @State private var leading: Lead
     /// Endless's saved run, which its row continues (Jack's call C2, round 13).
@@ -259,9 +260,9 @@ struct MenuView: View {
 
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
 
-    private static func past(_ day: Date) -> (days: Int, solved: Int) {
-        let days = Archive.days(today: day)
-        return (days.count, days.filter { Best.load(Level.dailyID($0)) != nil }.count)
+    private static func past(_ day: Date) -> (days: [(date: Date, level: Level)], atPar: Int) {
+        let days = Archive.days(today: day).map { ($0, Level.daily($0, archived: true)) }
+        return (days, days.filter { Best.load($0.1.id)?.over == 0 }.count)
     }
 
     var body: some View {
@@ -357,7 +358,9 @@ struct MenuView: View {
                     LevelRow(level: day, detail: run < 2 ? nil
                                  : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
                              enabled: true, new: new, pick: pick, refuse: refuse)
-                    ArchiveRow(open: Archive.open, days: past.days, solved: past.solved, pick: openArchive, refuse: refuse)
+                    // Unsaid until the store has read what the player owns, so an owner never meets the lock.
+                    ArchiveRow(open: Store.shared.ready ? Archive.open : nil, days: past.days.count, atPar: past.atPar,
+                               pick: openArchive, refuse: refuse)
                     let kept = saved?.run
                     LevelRow(level: .endless(kept ?? Run(seed: .random(in: .min ... .max))),
                              detail: kept.map {
@@ -436,7 +439,7 @@ struct MenuView: View {
     /// The calendar, over the menu as a card is, from its row.
     @ViewBuilder private var archiveView: some View {
         if archive {
-            ArchiveView(today: today, focus: focus?.archived == true ? focus?.id : nil,
+            ArchiveView(days: past.days, today: today, focus: focus?.archived == true ? focus?.id : nil,
                         onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
                         onPlay: { onPick($0) })
                 .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))

@@ -79,9 +79,10 @@ enum Archive {
 
 /// The archive's row under today's daily: a quiet lock that says what opens it, never a way to the shop.
 struct ArchiveRow: View {
-    let open: Bool
+    /// Nil until the store has read what the player owns.
+    let open: Bool?
     let days: Int
-    let solved: Int
+    let atPar: Int
     let pick: () -> Void
     /// A tap on the locked row: false while a stir is under the finger.
     let refuse: () -> Bool
@@ -90,7 +91,8 @@ struct ArchiveRow: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Button { open ? pick() : tapped() } label: {
+        let open = open ?? true, known = self.open != nil
+        return Button { open ? pick() : tapped() } label: {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text("past").font(.mono(13, .semibold)).foregroundStyle(Color.amber)
                     .shadow(color: open ? .amber : .clear, radius: 4).opacity(open ? 1 : 0.7)
@@ -100,13 +102,14 @@ struct ArchiveRow: View {
                     if said {
                         Text("any pack on the shelf opens it").font(.mono(11)).foregroundStyle(Color.amber).transition(.opacity)
                     } else {
-                        Text(open ? "\(days) past dailies \u{00B7} \(solved) solved" : "\(days) past dailies \u{00B7} comes with any pack")
+                        Text(!known ? "\(days) past dailies" : open ? "\(days) past dailies \u{00B7} \(atPar) at par"
+                             : "\(days) past dailies \u{00B7} comes with any pack")
                             .font(.mono(11)).opacity(0.32).transition(.opacity)
                     }
                 }
                 .animation(.easeOut(duration: 0.2), value: said)
                 Spacer(minLength: 8)
-                if !open { Image(systemName: "lock").font(.system(size: 10)).opacity(0.3) }
+                if known && !open { Image(systemName: "lock").font(.system(size: 10)).opacity(0.3) }
             }
             .padding(.vertical, 11)
             .contentShape(Rectangle())
@@ -121,7 +124,8 @@ struct ArchiveRow: View {
         }
         // Plain: `pick` taps, as a row does.
         .buttonStyle(.plain)
-        .modifier(Speech(Spoken.archiveRow(open: open, days: days, solved: solved)))
+        .disabled(!known)
+        .modifier(Speech(Spoken.archiveRow(open: open, days: days, atPar: atPar)))
     }
 
     private func tapped() {
@@ -142,18 +146,19 @@ struct ArchiveView: View {
     var focus: String?
     let onBack: () -> Void
     let onPlay: (Level) -> Void
-    private let days: [(date: Date, level: Level)]
+    /// The archive's days dealt, oldest first.
+    let days: [(date: Date, level: Level)]
     private let calendar: Calendar
     private let today: Date
     @State private var lit = 0.0
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    init(today: Date = .now, focus: String? = nil, onBack: @escaping () -> Void, onPlay: @escaping (Level) -> Void) {
+    init(days: [(date: Date, level: Level)], today: Date = .now, focus: String? = nil, onBack: @escaping () -> Void, onPlay: @escaping (Level) -> Void) {
         self.focus = focus
         self.onBack = onBack
         self.onPlay = onPlay
-        days = Archive.days(today: today).map { ($0, Level.daily($0, archived: true)) }
+        self.days = days
         // Laid out on the player's week, keyed on the Gregorian days the ids use.
         var c = Calendar(identifier: .gregorian)
         c.firstWeekday = Calendar.current.firstWeekday

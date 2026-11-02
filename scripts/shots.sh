@@ -73,7 +73,7 @@ shot menu-daily-run "The same with today's daily and the three before it solved:
 # The daily archive (to-do 47): a row under today's daily, shut until any purchase.
 shot menu-archive-locked "The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack." \
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
-shot menu-archive-open "The same with Lens owned: the archive's row open, 30 past dailies and how many are solved." \
+shot menu-archive-open "The same with Lens owned: the archive's row open, 30 past dailies and how many are at par." \
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens
 archived=5:c,6:0,8:2,11:t,14:c,17:1,22:0
 shot archive "The archive's calendar, Lens owned: the 30 days before today a month to a block, the three days before today solved on their day at par, others from the archive clean, par, +2, +1 or tried, today's number marked today." \

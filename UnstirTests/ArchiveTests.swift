@@ -132,8 +132,8 @@ final class ArchiveTests: XCTestCase {
         let spoken = Spoken.archiveDay(day, level: Level.daily(day, archived: true), mark: .over(3))
         XCTAssertTrue(spoken.label.contains("20"), spoken.label)
         XCTAssertEqual(spoken.value, "3 over par")
-        XCTAssertEqual(Spoken.archiveRow(open: false, days: 30, solved: 0).value, "locked, comes with any pack")
-        XCTAssertEqual(Spoken.archiveRow(open: true, days: 30, solved: 4).value, "4 of 30 solved")
+        XCTAssertEqual(Spoken.archiveRow(open: false, days: 30, atPar: 0).value, "locked, comes with any pack")
+        XCTAssertEqual(Spoken.archiveRow(open: true, days: 30, atPar: 4).value, "4 of 30 at par")
     }
 
     /// An archive day's try survives a launch, as today's daily's does.

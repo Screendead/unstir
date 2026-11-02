@@ -17,9 +17,9 @@ enum Spoken {
     /// Where a level's back button goes: a pack's level returns to its card.
     static func back(_ level: Level) -> String { "Back to " + (level.pack?.name ?? (level.archived ? "the archive" : "levels")) }
 
-    /// The archive's row on the menu: shut until any purchase, then how much of it is solved.
-    static func archiveRow(open: Bool, days: Int, solved: Int) -> (label: String, value: String, hint: String) {
-        ("Daily archive", open ? "\(solved) of \(days) solved" : "locked, comes with any pack", "\(days) past dailies")
+    /// The archive's row on the menu: shut until any purchase, then how much of it is at par.
+    static func archiveRow(open: Bool, days: Int, atPar: Int) -> (label: String, value: String, hint: String) {
+        ("Daily archive", open ? "\(atPar) of \(days) at par" : "locked, comes with any pack", "\(days) past dailies")
     }
 
     /// A day of the archive: its date in words, its result, and its shape.
