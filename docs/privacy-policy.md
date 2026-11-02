@@ -36,7 +36,7 @@ backup's own terms.
 
 ## Purchases
 
-Packs and Complete are sold through Apple's App Store. Apple handles payment, and we never see your payment details or
+Packs and bundles of packs are sold through Apple's App Store. Apple handles payment, and we never see your payment details or
 Apple ID. The game checks Apple's signed record of what you own on the phone, with no server of ours. To show prices
 and know what you own, the game asks Apple's App Store when it starts and when you buy or restore. That is Apple's
 service, and Apple's privacy policy covers it.

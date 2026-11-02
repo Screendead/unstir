@@ -4,6 +4,9 @@ import SwiftUI
 
 /// What the shelf sells: a pack, or the bundle (`complete`, its old name), which grants `Pack.bundled`.
 enum Offer: Hashable, Sendable {
+    /// The bundle's name wherever a player reads it, and the App Store's display name with it (Jack's pick, M1).
+    static let bundleName = "Triptych"
+
     /// A count of packs in words.
     static func countWord(_ n: Int) -> String { n < 2 || n > 6 ? "\(n)" : ["two", "three", "four", "five", "six"][n - 2] }
 
@@ -79,7 +82,7 @@ enum Offer: Hashable, Sendable {
 
     var pack: Pack? { if case .pack(let p) = self { p } else { nil } }
 
-    var name: String { pack?.name ?? "Complete" }
+    var name: String { pack?.name ?? Offer.bundleName }
 
     var productID: String { pack?.productID ?? Pack.completeID }
 
@@ -115,7 +118,7 @@ enum Offer: Hashable, Sendable {
     }
 
     /// The dock's header once its Ask to Buy is approved.
-    var yours: String { pack.map { "\($0.name) is yours" } ?? "every pack is yours" }
+    var yours: String { "\(name) is yours" }
     /// A line under the facts, owned or not.
     var note: String? { self == .pack(.prism) ? "letters for colour-blind play, in settings" : nil }
 
@@ -710,14 +713,14 @@ struct PackCard: View {
         switch state {
         case .unowned: EmptyView()
         case .owned:
-            line(offer.pack == nil ? "\u{2713} owned \u{00B7} every pack open" : "\u{2713} owned \u{00B7} every level open", .lime)
+            line(offer.pack == nil ? "\u{2713} owned \u{00B7} all \(Offer.countWord(Pack.bundled.count)) packs open" : "\u{2713} owned \u{00B7} every level open", .lime)
         case .pending:
             // A pack can wait on Complete's request alone, which only Complete's card asks again.
             let asked = store.asked(offer)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     PulsingDot(colour: .amber)
-                    Text(asked ? "waiting for approval" : "Complete is waiting for approval")
+                    Text(asked ? "waiting for approval" : "\(Offer.bundleName) is waiting for approval")
                         .font(.mono(.footnote, .semibold)).foregroundStyle(Color.amber)
                 }
                 // Asking again failed, and the first request is still with the parent: the failure stands in for
@@ -726,7 +729,7 @@ struct PackCard: View {
                     detail(why)
                 } else {
                     Text(asked ? "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again."
-                         : "Ask to Buy: \(offer.name) opens here once Complete is approved.")
+                         : "Ask to Buy: \(offer.name) opens here once \(Offer.bundleName) is approved.")
                         .font(.mono(.caption2)).opacity(0.5)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -878,7 +881,7 @@ struct PackCard: View {
         func joined(_ s: String) -> String { s.replacingOccurrences(of: " ", with: "\u{00A0}") }
         return VStack(alignment: .leading, spacing: 6) {
             Button { buy(.complete) } label: {
-                let all = Text("or all \(Offer.countWord(Pack.bundled.count)) in Complete\u{00A0}\u{00B7}\u{00A0}").foregroundStyle(quiet)
+                let all = Text("or all \(Offer.countWord(Pack.bundled.count)) in \(Offer.bundleName)\u{00A0}\u{00B7}\u{00A0}").foregroundStyle(quiet)
                 let save = Text(joined("\u{00B7} save \(saving) \u{203A}")).foregroundStyle(quiet)
                 Text("\(all)\(Text(joined(complete)).foregroundStyle(Color.text.opacity(0.75))) \(save)")
                 .font(.mono(.caption))
@@ -890,10 +893,10 @@ struct PackCard: View {
             .buttonStyle(Sounding())
             // Complete's own request is asked again only from Complete's card.
             .disabled(buying || store.state(.complete) == .pending)
-            .accessibilityLabel("Buy Complete, \(Pack.named(Pack.bundled))")
+            .accessibilityLabel("Buy \(Offer.bundleName), \(Pack.named(Pack.bundled))")
             .accessibilityValue("\(complete), saves \(saving)")
             if store.state(.complete) == .failed {
-                Text("Complete's purchase didn't go through").font(.mono(.caption, .semibold)).foregroundStyle(Color.magenta)
+                Text("\(Offer.bundleName)'s purchase didn't go through").font(.mono(.caption, .semibold)).foregroundStyle(Color.magenta)
                     .fixedSize(horizontal: false, vertical: true)
                 if let why = store.failures[Pack.completeID]?.words { detail(why) }
             }
@@ -1062,7 +1065,7 @@ struct PackDock: View, Equatable {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(Sounding())
-                    .accessibilityLabel("\(offer.name), \(offer.pack == nil ? "every pack" : "pack")")
+                    .accessibilityLabel("\(offer.name), \(offer.pack == nil ? Pack.named(Pack.bundled) : "pack")")
                     .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
                                          ?? store.price(offer.productID), line?.spoken].compactMap { $0 }.joined(separator: ", "))
                     .accessibilityHint(offer.pitch)

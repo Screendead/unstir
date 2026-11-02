@@ -365,7 +365,7 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(ledger.answers(to: Asked.all).approved, [])
         XCTAssertEqual(ledger.answers(to: Asked.all).revoked, [prism])
         XCTAssertEqual(Offer.pack(.lens).yours, "Lens is yours")
-        XCTAssertEqual(Offer.complete.yours, "every pack is yours")
+        XCTAssertEqual(Offer.complete.yours, "\(Offer.bundleName) is yours")
     }
 
     /// The store says each approval until it is said, and the harness's last only the launch.
@@ -524,6 +524,7 @@ final class PackTests: XCTestCase {
         }
         XCTAssertEqual(Offer.complete.holds, "Lens, Escapement and Prism \u{00B7} 85 levels")
         XCTAssertEqual(Offer.shelf(release: true, ready: { Pack.bundled.contains($0) }).last, .complete)
+        XCTAssertEqual(Offer.complete.name, Offer.bundleName)
     }
 
     /// UNSTIR_OWNED and UNSTIR_STORE never reach a Release build.
