@@ -3,8 +3,8 @@
 import SwiftUI
 
 extension Level {
-    /// Where leaving goes: a pack's level back to its card.
-    var back: String { "\u{2039} " + (pack?.name ?? "levels") }
+    /// Where leaving goes: a pack's level back to its card, a past daily to the archive.
+    var back: String { "\u{2039} " + (pack?.name ?? (archived ? "archive" : "levels")) }
 
     /// A pack's level takes the pack's glow. Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
     /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
@@ -83,8 +83,10 @@ extension Tier {
 
 extension Level {
     /// The row the menu, or a pack's card, centres on once this level is left: after a solve the one after it, which
-    /// "next ›" opens, or itself as its list's last. Nil for the daily, endless and the sandbox, which sit at the top.
+    /// "next ›" opens, or itself as its list's last; a past daily itself, in the archive. Nil for today's daily, endless
+    /// and the sandbox, which sit at the top.
     func focus(solved: Bool) -> Level? {
+        if archived { return self }
         let list = pack?.levels ?? tier.levels
         guard let i = list.firstIndex(where: { $0.id == id }) else { return nil }
         return list[solved ? min(i + 1, list.count - 1) : i]
@@ -127,6 +129,8 @@ struct MenuView: View {
     let onPick: (Level) -> Void
     /// The pack card over the menu, opened from the dock or by a level that needs it.
     @Binding var card: Offer?
+    /// The archive's calendar over the menu.
+    @Binding var archive: Bool
     /// Where the tapped cover sits, for the card to grow from.
     @State private var cardFrom = UnitPoint.center
     /// UNSTIR_CLOCK: the dock's and the card's clips held that many seconds in.
@@ -190,6 +194,8 @@ struct MenuView: View {
     /// Today's daily and its run, worked out once a day rather than on every frame of a swipe. The menu is built anew
     /// each time it comes up, so a solve's run shows on return.
     @State private var daily: (level: Level, run: Int)
+    /// The archive's days and how many have a best, with the daily.
+    @State private var past: (days: Int, solved: Int)
     /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
     @State private var leading: Lead
     /// Endless's saved run, which its row continues (Jack's call C2, round 13).
@@ -206,13 +212,14 @@ struct MenuView: View {
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
-         card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
+         card: Binding<Offer?>, archive: Binding<Bool> = .constant(false), clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil, run: Resume? = nil,
          peeking: Bool = false, onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = settings
         self.onPick = onPick
         _card = card
+        _archive = archive
         self.clock = clock
         self.placeholders = placeholders
         self.shelfDemo = shelfDemo
@@ -232,6 +239,7 @@ struct MenuView: View {
         let now = Date.now
         _today = State(initialValue: now)
         _daily = State(initialValue: Self.daily(now))
+        _past = State(initialValue: Self.past(now))
         _leading = State(initialValue: Self.lead(tier: tier))
         if let frozen {
             _spin = State(initialValue: frozen.spin)
@@ -250,6 +258,11 @@ struct MenuView: View {
     }
 
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
+
+    private static func past(_ day: Date) -> (days: Int, solved: Int) {
+        let days = Archive.days(today: day)
+        return (days.count, days.filter { Best.load(Level.dailyID($0)) != nil }.count)
+    }
 
     var body: some View {
         let analytics = Analytics.shared
@@ -286,15 +299,16 @@ struct MenuView: View {
                     // Held still under a card, the settings or a level sliding off, when the phone saves power, or
                     // once nobody touches it.
                     PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || settings || peeking || Power.shared.saving || Power.shared.idle,
-                             covered: card != nil || settings)
+                             paused: card != nil || archive || settings || peeking || Power.shared.saving || Power.shared.idle,
+                             covered: card != nil || archive || settings)
                         .equatable()
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
         }
         .foregroundStyle(Color.text)
-        .accessibilityHidden(card != nil || asking)
+        .accessibilityHidden(card != nil || archive || asking)
+        .overlay { archiveView }
         .overlay { cardView }
         .overlay {
             if asking { ConsentCard(tier: shown).transition(.opacity) }
@@ -302,7 +316,7 @@ struct MenuView: View {
         .animation(.easeOut(duration: 0.25), value: asking)
         .sheet(isPresented: $settings) { SettingsSheet() }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
-        .onChange(of: card == nil && !settings) { Power.shared.touched() }
+        .onChange(of: card == nil && !archive && !settings) { Power.shared.touched() }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()
@@ -318,7 +332,10 @@ struct MenuView: View {
             }
         }
         .onChange(of: phase) { if phase == .active { today = .now } }
-        .onChange(of: today) { daily = Self.daily(today) }
+        .onChange(of: today) {
+            daily = Self.daily(today)
+            past = Self.past(today)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
             today = .now
         }
@@ -340,6 +357,7 @@ struct MenuView: View {
                     LevelRow(level: day, detail: run < 2 ? nil
                                  : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
                              enabled: true, new: new, pick: pick, refuse: refuse)
+                    ArchiveRow(open: Archive.open, days: past.days, solved: past.solved, pick: openArchive, refuse: refuse)
                     let kept = saved?.run
                     LevelRow(level: .endless(kept ?? Run(seed: .random(in: .min ... .max))),
                              detail: kept.map {
@@ -413,6 +431,24 @@ struct MenuView: View {
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
+    }
+
+    /// The calendar, over the menu as a card is, from its row.
+    @ViewBuilder private var archiveView: some View {
+        if archive {
+            ArchiveView(today: today, focus: focus?.archived == true ? focus?.id : nil,
+                        onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
+                        onPlay: { onPick($0) })
+                .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+                .zIndex(1)
+        }
+    }
+
+    private func openArchive() {
+        guard !twisting else { return }
+        Sound.shared.play(.tap)
+        Log.write("archive shown")
+        withAnimation(.snappy(duration: 0.42)) { archive = true }
     }
 
     private func show(_ offer: Offer?, from: UnitPoint = .center) {

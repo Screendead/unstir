@@ -242,6 +242,7 @@ final class Game {
         entries = Self.dealt(level)
         brim = level.run?.brim ?? 0
         self.firstTry = level.run != nil || (firstTry ?? !Best.started(level.id))
+        keptOnItsDay = level.archived && Best.load(level.id).map { $0.archived != true } ?? false
         self.tankTurned = tankTurned ?? Best.tankTurned
         storesTankTurned = tankTurned == nil
         self.swirled = swirled ?? Best.swirled
@@ -269,8 +270,10 @@ final class Game {
         level.story.map { $0.vignettes.subtracting(entries.flatMap(\.tags)) } ?? []
     }
 
-    /// Practice saves nothing.
-    var counts: Bool { firstTry || !level.id.hasPrefix("daily-") }
+    /// Practice saves nothing. A past daily from the archive plays as any level, unless its day kept a best: that best
+    /// stands, so the archive never takes a day off the days running.
+    var counts: Bool { level.archived ? !keptOnItsDay : firstTry || !level.id.hasPrefix("daily-") }
+    private let keptOnItsDay: Bool
 
     /// The result card's "again": any finish that isn't clean, but endless's. On the daily it plays as practice (Jack's
     /// call P1 = B, 2026-11-01).
@@ -294,9 +297,10 @@ final class Game {
         }
     }
 
-    /// The daily's share line; nil on any other level.
+    /// The daily's share line, on its day; nil on any other level.
     var shareText: String? {
-        Share.day(of: level.id).map {
+        guard !level.archived else { return nil }
+        return Share.day(of: level.id).map {
             Share.text(day: $0, moves: moves, par: par, firstTry: firstTry, clean: clean, undos: undos, resets: resets,
                        marks: marks)
         }
@@ -607,7 +611,7 @@ final class Game {
         let played = !history.isEmpty
         if played { resets += 1 }
         // The daily counts only its first try's solve, so "again" from its card is practice.
-        if solved && Share.day(of: level.id) != nil {
+        if solved && Share.day(of: level.id) != nil && !level.archived {
             firstTry = false
             bests = nil
         }
@@ -775,7 +779,7 @@ final class Game {
             if solved && storesProgress { Best.tanks = max(Best.tanks, run.tank + 1) }
         } else if solved && counts && level.keepsProgress {
             let up = level.pack == nil ? level.tier.step(1) : nil, shut = up.map { !$0.isOpen() } ?? false
-            let best = Best(over: over, seconds: seconds, clean: clean)
+            let best = Best(over: over, seconds: seconds, clean: clean, archived: level.archived ? true : nil)
             bests = (Best.load(level.id), best)
             let done = completion
             best.save(level.id, store: storesProgress)
@@ -1345,7 +1349,8 @@ struct LevelView: View {
                     }
                 // The play controls fade rather than leave, and the result is an overlay, so the solved tank stays
                 // exactly where it was played.
-                Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption : "Practice: only the first try counts."
+                Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
+                     : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
                      : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
                     .font(.mono(12)).opacity(captionOpacity)
                     .multilineTextAlignment(.center)
@@ -3529,7 +3534,7 @@ struct ResultCard: View {
                 }
             }
             .font(.mono(15, .medium))
-            if let day = Share.day(of: game.level.id) {
+            if let day = Share.day(of: game.level.id), !game.level.archived {
                 TimelineView(.everyMinute) { t in
                     Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.mono(12)).opacity(0.55)
                         .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))

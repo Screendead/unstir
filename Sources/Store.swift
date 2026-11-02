@@ -127,6 +127,9 @@ final class Store {
 
     func unshared(_ pack: Pack) -> Bool { (harness ?? ledger).unshared(pack) }
 
+    /// Any purchase, a pack or Complete, which grants every pack: what opens the daily archive.
+    var boughtAny: Bool { !(harness ?? ledger).owned.isEmpty }
+
     /// Nil for a level in no pack. A pack's level whose id names no number of that pack needs the card.
     func access(_ level: Level) -> Pack.Access? {
         guard let pack = level.pack else { return nil }

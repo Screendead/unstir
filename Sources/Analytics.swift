@@ -283,7 +283,7 @@ final class Analytics {
                             "moves": .int(game.moves)])
         }
         guard !level.sandbox else { return nil }
-        return ("level", ["id": .text(level.id.hasPrefix("daily-") ? "daily" : level.id), "outcome": .text(outcome),
+        return ("level", ["id": .text(level.archived ? "archive" : level.id.hasPrefix("daily-") ? "daily" : level.id), "outcome": .text(outcome),
                           // Escapement has no par: its budget stands in.
                           "moves": .int(game.moves), "par": .int(level.ratchets.isEmpty ? game.par : level.budget),
                           "undos": .int(game.undos), "resets": .int(game.resets)])
@@ -330,8 +330,11 @@ final class Analytics {
             started += tier.levels.filter { Best.started($0.id) }.count
         }
         p["started"] = .int(started)
-        // Only a daily solved on its first try keeps a best.
-        p["dailies"] = .int(defaults.dictionaryRepresentation().keys.filter { $0.hasPrefix("best.daily-") }.count)
+        // Only a daily solved on its first try keeps a best, on its day; the archive's are their own.
+        p["dailies"] = .int(defaults.dictionaryRepresentation().keys.filter {
+            $0.hasPrefix("best.daily-")
+                && defaults.data(forKey: $0).flatMap { try? JSONDecoder().decode(Best.self, from: $0) }?.archived != true
+        }.count)
         let owned = Store.shared.ledger.owned
         for pack in Pack.sold() {
             let flags = [tally.seen.contains("card.\(pack.rawValue)") ? "card" : nil,

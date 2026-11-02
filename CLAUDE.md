@@ -284,7 +284,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
   prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. A daily's id and seed are
   its day's yyyymmdd (`Level.dailyID`), and `Daily.run` counts, once today's has a best, the days in a row ending today
-  that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13). Endless changes only what
+  that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13), and a best the archive
+  saved (`Best.archived`) never counts. Endless changes only what
   it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to 28, at least n/2 of them hidden, to half), which
   `testEndlessVectors` pins. A `Run` is endless's seed, tank and the brim's notches as that tank opens. Progress
   (`Best`, started flags, undo bank, and each unfinished level's resume) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most) refills by 2
@@ -605,6 +606,18 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   changes), the test past 8 at 512 px; the test is the judge. On the simulator one long cloud bank's flat base row came
   out a level different whichever vignettes had played, which the Mac never showed: keep a cloud bank inside the
   tank's width.
+- **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
+  before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
+  today's daily stays on the menu. Any purchase opens it (`Store.boughtAny`, a pack or Complete owned), and the developer
+  unlock where it opens packs (`Archive.opens`). `ArchiveRow` sits under today's daily on the menu: until then a quiet
+  lock, "comes with any pack", which a tap shakes and answers as a closed row does, never opening the shelf.
+  `ArchiveView` lies over the menu as a card does, a month to a block on the player's week, each day's number over its
+  result in the menu's words (`Archive.Mark`: clean, par, +n, tried), a list of days at accessibility sizes. A day
+  opens `Level.daily(_:archived:)`, the day's own tank under its own id, whose back reads "‹ archive" and returns there
+  (`RootView.archive`, `Level.focus(solved:)`), the day ringed once. It plays as any level: its best saves marked
+  `archived`, again is no practice, and it has no share line or next daily's time; but a day that kept a best on its
+  day keeps it, the archive replaying it as practice (`Game.counts`), so the archive never moves `Daily.run`.
+  `Resume.known` holds its days, so a try left there survives a launch.
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
   Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu, once plughole 09 is solved, a pack is owned or asked
   for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
@@ -872,7 +885,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_BACKSWIPE=0.4` holds the level that share of the way into a back swipe, the menu under it, and `=run` plays
   the swipe a second in by a drawn fingertip. `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
   leaves it, saying what opens it. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
-  today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only.
+  `UNSTIR_ARCHIVE=1` opens the archive over the menu, `UNSTIR_ARCHIVED=1:c,3:0,6:2,9:t` gives the daily that many days
+  back a best from the archive (clean, that many over par) or a try, and `UNSTIR_MODE=archive UNSTIR_DAY=n` opens the
+  daily n days back from the archive. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
