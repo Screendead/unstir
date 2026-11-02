@@ -27,6 +27,9 @@ enum Brim {
     /// How long the rim moves after a change: the liquid settles still, and the spill has run its course.
     static let settle = 3.0, spillSettle = 4.8
 
+    /// Under Reduce Motion the rim cuts to where a change has settled, or the spill has run its course, and holds it.
+    static func rest(spilled: Bool) -> Double { spilled ? spillSettle : settle }
+
     /// A change of the brim, from and to how many notches, `time` in seconds since the reference date.
     struct Event: Equatable {
         var from: Int

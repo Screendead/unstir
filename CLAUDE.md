@@ -382,7 +382,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   in place of the wind-in, a replay level keeping its rod turns, which are the information; the solve swells the
   picture's contrast where it stands, with no wave, pulse or glass easing home; the lessons' ghost fingers rest
   mid-sweep; the lost stamp lands without its scale. Under it or Dim Flashing Lights the picture fades on rather than
-  flickering (`PictureLayer.strike(calm:)`). Endless's pour and the live pictures keep their motion. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
+  flickering (`PictureLayer.strike(calm:)`). A live picture holds one frame (`Picture.rest`, between the twins' beats, `Picture.clock(_:still:)`), and endless's rim cuts to where each change comes to rest, a spill to its end, murk and words and all (`Brim.rest`), so nothing moves without the player (Jack's call F2, round 14); the stirs themselves still turn. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset. The first refill
   ever reads "+2 undos" (`Best.refillShown`), and VoiceOver announces each; one left unseen during its opening

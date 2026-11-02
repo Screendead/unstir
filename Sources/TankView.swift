@@ -1677,6 +1677,9 @@ struct LevelView: View {
     private var stack: [Twist] { shown.map { Array(game.stack.prefix($0)) } ?? game.stack }
     /// A finger, two, or a drawn fingertip is on the tank, or a turn is still settling from one.
     private var touching: Bool { drag != nil || liveRod != nil || liveTurn != nil || spun || ghost != nil }
+    /// Endless's rim, and a spill's murk and words, held this many seconds after the brim's last change: UNSTIR_CLOCK's,
+    /// or under Reduce Motion where it comes to rest.
+    private var brimHeld: Double? { frozenClock ?? (reduceMotion ? Brim.rest(spilled: game.spilled) : nil) }
     /// The tank is the player's and untouched, and the game breathes: its breath may run. Never under Reduce Motion,
     /// and never in a harness launch that holds the clock.
     private var resting: Bool {
@@ -2030,13 +2033,13 @@ struct LevelView: View {
         // A live picture is the only kind that redraws while the player is still; 60 Hz is plenty for motion this slow,
         // and 30 Hz while the phone saves power.
         // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
-        // breathes.
-        let moving = game.level.picture.isLive || spillAt != nil && brimMoving || breathing
+        // breathes. Under Reduce Motion a live picture and a spill hold still.
+        let moving = !reduceMotion && (game.level.picture.isLive || spillAt != nil && brimMoving) || breathing
         let tickNow = game.tick, clocks = game.level.clocks, playable = shown == nil
         return ZStack {
             TimelineView(.animation(minimumInterval: 1.0 / (Power.shared.saving ? 30 : 60), paused: !moving || frozenClock != nil)) { timeline in
                 let murk = spillAt.flatMap { at -> [Float]? in
-                    let since = (frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
+                    let since = (brimHeld ?? timeline.date.timeIntervalSinceReferenceDate - at) - Brim.murk
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
@@ -2047,7 +2050,8 @@ struct LevelView: View {
                                        onStrike: { struck = true })
                         } else {
                             PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
-                                         clock: frozenClock ?? timeline.date.timeIntervalSince(opened), onStrike: { struck = true })
+                                         clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
+                                         onStrike: { struck = true })
                         }
                     }
                         .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
@@ -2132,7 +2136,7 @@ struct LevelView: View {
                 ZStack {
                     if let run = game.level.run, let rimColours {
                         // Moving for a while after each change, and all the while the room runs short.
-                        BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: frozenClock,
+                        BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: brimHeld,
                                  paused: !(brimMoving || !game.spilled && game.brim >= Run.room - 1))
                     }
                 }
@@ -2208,8 +2212,8 @@ struct LevelView: View {
                               twisted: Set(game.stack.map(\.rod)).sorted().map { (at($0), disc($0)) })
                 }
                 if let spillAt {
-                    TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || frozenClock != nil)) { timeline in
-                        SpillWords(r: r, at: frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
+                    TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || brimHeld != nil)) { timeline in
+                        SpillWords(r: r, at: brimHeld ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
                     }
                 }
                 if let c = rodCount, c.steps != 0 {

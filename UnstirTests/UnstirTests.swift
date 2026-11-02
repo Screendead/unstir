@@ -419,6 +419,22 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Brim.level(at: 1 + Brim.meet, spill, base: room - 1, room: room), Double(room))
     }
 
+    /// Under Reduce Motion the rim holds where a change comes to rest: the level on its notch, with no slosh, bob, wet
+    /// film or kick; and a spill held where its pour has run and soaked away.
+    func testTheBrimRestsUnderReduceMotion() {
+        let room = Run.room, events = [Brim.Event(from: 3, to: 4, time: 1), Brim.Event(from: 4, to: 5, time: 1.5)]
+        let held = Brim.rest(spilled: false)
+        let rest = Brim.frame(at: 1.5 + held, events, base: 3, room: room, clock: Brim.Clock(), held: held)
+        XCTAssertEqual(Double(rest[1]), Brim.levelY(5, room: room), accuracy: 0.01)
+        // The tilt, bob, calm, wet film and kick.
+        for i in [2, 3, 7, 11, 12] { XCTAssertEqual(rest[i], 0, accuracy: 0.01, "float \(i)") }
+        let spill = [Brim.Event(from: room - 1, to: room, time: 1)], after = Brim.rest(spilled: true)
+        let spilt = Brim.frame(at: 1 + after, spill, base: room - 1, room: room, clock: Brim.Clock(), held: after)
+        XCTAssertEqual(Double(spilt[1]), Brim.levelY(Double(room), room: room), accuracy: 0.01)
+        // The calm, the crest's flash and what ran over, soaked away.
+        for i in [7, 16, 18] { XCTAssertEqual(spilt[i], 0, accuracy: 0.01, "float \(i)") }
+    }
+
     /// The surface crosses the bezel's middle at the tick for its fill on both sides, and clears the bezel empty and full:
     /// empty, by more than the meniscus's 3.4 up the wall and the bob's 1.8, so no glint lies on the edge at six.
     func testTheSurfaceMeetsTheTicks() {
@@ -2256,6 +2272,22 @@ final class UnstirTests: XCTestCase {
                     XCTAssertLessThan(zip(a, b).map { abs($0 - $1) }.max()!, 1e-5, "\(picture) seed \(seed) t \(t)")
                 }
             }
+        }
+    }
+
+    /// Under Reduce Motion every live picture is handed one clock whatever the time, and a twin's heartbeat (each
+    /// shader's `heartbeat`, copied) stands between beats at every point of its delay grid, so the still shows the lines
+    /// at rest rather than a front caught crossing the tank.
+    func testATwinRestsBetweenBeatsUnderReduceMotion() {
+        for picture in Picture.allCases where picture.isLive {
+            XCTAssertEqual(picture.clock(0, still: true), picture.clock(1000, still: true), "\(picture)")
+            XCTAssertEqual(picture.clock(7, still: false), 7, "\(picture)")
+        }
+        let twin = Picture.glassTwin, t = twin.clock(0, still: true).truncatingRemainder(dividingBy: twin.period)
+        for d in Picture.delays(t: t) {
+            let x = (t - Double(d)) - (t - Double(d)).rounded(.down)
+            let a = (x - 0.06 - (x - 0.06).rounded()) / 0.04, b = (x - 0.30) / 0.05
+            XCTAssertLessThan(exp(-a * a) + 0.55 * exp(-b * b), 0.02, "delay \(d)")
         }
     }
 

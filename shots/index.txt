@@ -619,3 +619,20 @@ clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn cle
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
 clean-prism-01.png  Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption.
+calm-glass.png  Reduce Motion: the sandbox on glass, stirred twice, held on its still frame (Picture.rest).
+calm-chainmail.png  Reduce Motion: the sandbox on chainmail, stirred twice, held on its still frame (Picture.rest).
+calm-coral.png  Reduce Motion: the sandbox on coral, stirred twice, held on its still frame (Picture.rest).
+calm-neurons.png  Reduce Motion: the sandbox on neurons, stirred twice, held on its still frame (Picture.rest).
+calm-marbling.png  Reduce Motion: the sandbox on marbling, stirred twice, held on its still frame (Picture.rest).
+calm-glassTwin.png  Reduce Motion: the sandbox on glassTwin, stirred twice, held on its still frame (Picture.rest).
+calm-chainmailTwin.png  Reduce Motion: the sandbox on chainmailTwin, stirred twice, held on its still frame (Picture.rest).
+calm-coralTwin.png  Reduce Motion: the sandbox on coralTwin, stirred twice, held on its still frame (Picture.rest).
+calm-neuronsTwin.png  Reduce Motion: the sandbox on neuronsTwin, stirred twice, held on its still frame (Picture.rest).
+calm-marblingTwin.png  Reduce Motion: the sandbox on marblingTwin, stirred twice, held on its still frame (Picture.rest).
+calm-isobars.png  Reduce Motion: the sandbox on isobars, stirred twice, held on its still frame (Picture.rest).
+calm-ephemeris.png  Reduce Motion: the sandbox on ephemeris, stirred twice, held on its still frame (Picture.rest).
+calm-cords.png  Reduce Motion: the sandbox on cords, stirred twice, held on its still frame (Picture.rest).
+calm-chainmailTwin-later.png  Reduce Motion: the same, 9 s in: the same frame, the heartbeat at rest between beats.
+calm-endless-brim-7.png  Reduce Motion: endless opened at 7 notches, one from spilling: the rim still, with no pulse or tremble.
+calm-endless-notch.png  Reduce Motion: endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 in place at once, settled, no slosh or surge.
+calm-endless-spilled.png  Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card.
