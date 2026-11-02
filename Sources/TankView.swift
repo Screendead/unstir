@@ -1467,20 +1467,9 @@ struct LevelView: View {
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
     /// window's middle where the window is wide.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: fold(geo), halo: PlayLayout.Halo(game.level), scale: scale)
+        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold), halo: PlayLayout.Halo(game.level), scale: scale)
     }
 
-    /// The fold while the phone is folded, in the reader's space: the harness's, else the system's division region.
-    private func fold(_ geo: GeometryProxy) -> CGRect? {
-        if let f = harnessFold { return f.offsetBy(dx: -geo.safeAreaInsets.leading, dy: -geo.safeAreaInsets.top) }
-        // The iOS 27.1 SDK's SwiftUI (8.1) brought the regions; CI's Xcode has an older one.
-        #if canImport(SwiftUI, _version: 8.1)
-        guard #available(iOS 27.1, *) else { return nil }
-        return geo.reservedRegions(kind: .division).first { $0.isActive }?.frame
-        #else
-        return nil
-        #endif
-    }
 
     private var screen: some View {
         GeometryReader { geo in

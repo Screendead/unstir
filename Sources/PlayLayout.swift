@@ -118,6 +118,21 @@ struct PlayLayout: Equatable {
     static let wordsHeight: CGFloat = 28
 }
 
+extension PlayLayout {
+    /// The fold while the phone is folded, in `geo`'s own space: the harness's (in window points), else the system's
+    /// division region.
+    static func fold(_ geo: GeometryProxy, harness: CGRect?) -> CGRect? {
+        if let f = harness { return f.offsetBy(dx: -geo.safeAreaInsets.leading, dy: -geo.safeAreaInsets.top) }
+        // The iOS 27.1 SDK's SwiftUI (8.1) brought the regions; CI's Xcode has an older one.
+        #if canImport(SwiftUI, _version: 8.1)
+        guard #available(iOS 27.1, *) else { return nil }
+        return geo.reservedRegions(kind: .division).first { $0.isActive }?.frame
+        #else
+        return nil
+        #endif
+    }
+}
+
 /// What each part of the play screen is to `PlayStack`; a spacer is untagged.
 enum PlayPart: LayoutValueKey {
     case spacer, stage, chrome
