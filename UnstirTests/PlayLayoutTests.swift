@@ -280,9 +280,18 @@ final class PlayLayoutTests: XCTestCase {
         // The same rule, so the list and the tank share the leading half wherever either splits.
         for (window, insets, fold) in [(open.window, open.insets, nil), (open.window, open.insets, book),
                                        (CGSize(width: 669, height: 951), (59, 0, 34, 0), table),
-                                       (CGSize(width: 600, height: 400), (0, 0, 0, 0), nil)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
-            XCTAssertEqual(menu(window: window, insets: insets, fold: fold).wide,
-                           layout(window: window, insets: insets, fold: fold).kind == .split, "\(window)")
+                                       (CGSize(width: 600, height: 400), (0, 0, 0, 0), nil),
+                                       (CGSize(width: 1000, height: 500), (0, 30, 0, 20), nil)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
+            let m = menu(window: window, insets: insets, fold: fold), play = layout(window: window, insets: insets, fold: fold)
+            XCTAssertEqual(m.wide, play.kind == .split, "\(window)")
+            guard let list = m.list, let side = m.side else { continue }
+            // Play's panes are inside its 16 pt side margins, the menu's in the whole safe area.
+            let tank = play.tankPane.offsetBy(dx: PlayLayout.margin, dy: 0)
+            let chrome = play.chromePane.offsetBy(dx: PlayLayout.margin, dy: 0)
+            XCTAssertLessThanOrEqual(list.minX, tank.minX, "\(window)")
+            XCTAssertEqual(list.maxX, tank.maxX, accuracy: 0.001, "the list's half ends where the tank's pane does, \(window)")
+            XCTAssertEqual(side.minX, chrome.minX, accuracy: 0.001, "the card's starts where play's chrome does, \(window)")
+            XCTAssertGreaterThan(side.minX - list.maxX, 2 * PlayLayout.margin - 0.001, "\(window)")
         }
     }
 }
