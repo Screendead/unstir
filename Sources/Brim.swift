@@ -94,9 +94,10 @@ enum Brim {
     }
 
     /// Everything Brim.metal needs for the rim at `now`, in its order (see its comment). With `held`, the liquid's
-    /// clock stands at that many seconds instead of `clock`'s.
-    static func frame(at now: Double, _ events: [Event], base: Int, room: Int, clock: Clock, held: Double?)
-        -> [Float] {
+    /// clock stands at that many seconds instead of `clock`'s. `still`, Reduce Motion's, also stills what runs on while
+    /// room runs short: no bob, tremble or slosh, and the last notch's pulse held lit.
+    static func frame(at now: Double, _ events: [Event], base: Int, room: Int, clock: Clock, held: Double?,
+                      still: Bool = false) -> [Float] {
         let n = Double(room)
         let spill = events.last.flatMap { $0.to >= room ? $0.time : nil }
         let met = spill.map { now >= $0 + meet } ?? false
@@ -111,9 +112,9 @@ enum Brim {
             clock.advance(to: now, alive: live, warn: warn)
             (t, phase) = (clock.time, clock.phase)
         }
-        let calm = met ? 0 : live
+        let calm = met || still ? 0 : live
         var slosh = 0.0
-        if !met {
+        if !met && !still {
             for (i, e) in events.enumerated() where now > e.time {
                 slosh += (i % 2 == 0 ? 4.5 : -4.5) * exp(-(now - e.time) / 0.4) * sin(2 * .pi * 2 * (now - e.time))
             }
@@ -126,7 +127,7 @@ enum Brim {
             let s = Double(side), fast: Double = 0.55 * sin(2 * .pi * 9.3 * t + j[0] + s)
             return warn * 2.4 * (fast + 0.3 * j[1 + side] + 0.25 * sin(2 * .pi * 14.1 * t + 2 * s))
         }
-        let trem = [tremble(0), tremble(1)]
+        let trem = still ? [0, 0] : [tremble(0), tremble(1)]
         // Where the liquid stood a moment ago, drying back at 1.1 ticks a second.
         var wet = fill
         if let last = events.last, now - last.time < 3 {
@@ -143,7 +144,7 @@ enum Brim {
             return (levelY(g(e.time), room: room), now - e.time - 0.08)
         }
         let (old, tau) = spread(rises.last), (old2, tau2) = spread(rises.dropLast().last)
-        let pulse = 0.5 + 0.5 * sin(phase)
+        let pulse = still ? 1 : 0.5 + 0.5 * sin(phase)
         let tb = spill.map { now - $0 - meet } ?? -1e3
         let flash = tb >= 0 ? exp(-tb / 0.3) : 0
         var bri = 0.9 + warn * (0.25 + 0.75 * pulse * pulse) + 1.4 * flash
@@ -217,13 +218,16 @@ struct BrimRing: View {
     let colours: (hue: [Float], lines: [Float])
     /// UNSTIR_CLOCK: the rim held this many seconds after the newest change.
     let held: Double?
+    /// Reduce Motion's: held where it rests, not mid-motion as UNSTIR_CLOCK's frame is.
+    var still = false
     let paused: Bool
     @State private var clock = Brim.Clock()
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: paused || held != nil)) { timeline in
             let now = held.map { (events.last?.time ?? 0) + $0 } ?? timeline.date.timeIntervalSinceReferenceDate
-            let floats = Brim.frame(at: now, events, base: base, room: Run.room, clock: clock, held: held)
+            let floats = Brim.frame(at: now, events, base: base, room: Run.room, clock: clock, held: held,
+                                     still: still)
             let outer = CGFloat(Brim.rOut + Brim.reach) / CGFloat(Brim.unit) * r
             Circle()
                 .stroke(ShaderLibrary.brim(.float2((r + outer) / 2, (r + outer) / 2), .float(r), .floatArray(floats),

@@ -420,16 +420,25 @@ final class UnstirTests: XCTestCase {
     }
 
     /// Under Reduce Motion the rim holds where a change comes to rest: the level on its notch, with no slosh, bob, wet
-    /// film or kick; and a spill held where its pour has run and soaked away.
+    /// film or kick; at the last notch with no tremble either, its pulse held lit; and a spill held where its pour has
+    /// run and soaked away.
     func testTheBrimRestsUnderReduceMotion() {
-        let room = Run.room, events = [Brim.Event(from: 3, to: 4, time: 1), Brim.Event(from: 4, to: 5, time: 1.5)]
-        let held = Brim.rest(spilled: false)
-        let rest = Brim.frame(at: 1.5 + held, events, base: 3, room: room, clock: Brim.Clock(), held: held)
-        XCTAssertEqual(Double(rest[1]), Brim.levelY(5, room: room), accuracy: 0.01)
-        // The tilt, bob, calm, wet film and kick.
-        for i in [2, 3, 7, 11, 12] { XCTAssertEqual(rest[i], 0, accuracy: 0.01, "float \(i)") }
+        let room = Run.room, held = Brim.rest(spilled: false)
+        for to in [5, room - 1] {
+            let events = [Brim.Event(from: to - 2, to: to - 1, time: 1), Brim.Event(from: to - 1, to: to, time: 1.5)]
+            let rest = Brim.frame(at: 1.5 + held, events, base: to - 2, room: room, clock: Brim.Clock(), held: held,
+                                  still: true)
+            XCTAssertEqual(Double(rest[1]), Brim.levelY(Double(to), room: room), accuracy: 0.01)
+            // The tilt, bob, tremble, calm, wet film and kick.
+            for i in [2, 3, 4, 5, 7, 11, 12] { XCTAssertEqual(rest[i], 0, accuracy: 0.01, "brim \(to), float \(i)") }
+            XCTAssertEqual(rest[13], 1, "brim \(to)'s pulse")
+            // UNSTIR_CLOCK's frame, held without `still`, catches the last notch mid-bob.
+            let caught = Brim.frame(at: 1.5 + held, events, base: to - 2, room: room, clock: Brim.Clock(), held: held)
+            if to == room - 1 { XCTAssertGreaterThan(abs(caught[3]), 0.05) }
+        }
         let spill = [Brim.Event(from: room - 1, to: room, time: 1)], after = Brim.rest(spilled: true)
-        let spilt = Brim.frame(at: 1 + after, spill, base: room - 1, room: room, clock: Brim.Clock(), held: after)
+        let spilt = Brim.frame(at: 1 + after, spill, base: room - 1, room: room, clock: Brim.Clock(), held: after,
+                               still: true)
         XCTAssertEqual(Double(spilt[1]), Brim.levelY(Double(room), room: room), accuracy: 0.01)
         // The calm, the crest's flash and what ran over, soaked away.
         for i in [7, 16, 18] { XCTAssertEqual(spilt[i], 0, accuracy: 0.01, "float \(i)") }

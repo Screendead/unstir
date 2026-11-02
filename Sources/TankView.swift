@@ -2197,6 +2197,7 @@ struct LevelView: View {
                     if let run = game.level.run, let rimColours {
                         // Moving for a while after each change, and all the while the room runs short.
                         BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: brimHeld,
+                                 still: frozenClock == nil && reduceMotion,
                                  paused: !(brimMoving || !game.spilled && game.brim >= Run.room - 1))
                     }
                 }
