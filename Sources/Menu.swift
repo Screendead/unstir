@@ -181,6 +181,8 @@ struct MenuView: View {
     @Namespace private var strip
     /// The gear's sheet.
     @Binding var settings: Bool
+    /// The settings' supporter mark switch, mirrored here as the sheet moves it.
+    @State private var supporter = Settings.supporter
     /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
     @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -300,7 +302,7 @@ struct MenuView: View {
             if asking { ConsentCard(tier: shown).transition(.opacity) }
         }
         .animation(.easeOut(duration: 0.25), value: asking)
-        .sheet(isPresented: $settings) { SettingsSheet() }
+        .sheet(isPresented: $settings) { SettingsSheet(supporter: $supporter) }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
         .onChange(of: card == nil && !settings) { Power.shared.touched() }
         .background {
@@ -482,9 +484,8 @@ struct MenuView: View {
     private var reach: CGFloat { hypot(list.width, band.upperBound - band.lowerBound) / 2 }
 
     /// Cuts to the new tier's sweep at the swap: a gradient doesn't interpolate, and a cross-fade runs through grey.
-    /// Settings.supporter isn't observed: the sheet closing redraws the menu, and with it this.
     private var title: some View {
-        let supporter = Store.shared.bought && Settings.supporter
+        let supporter = Store.shared.bought && self.supporter
         return HStack(alignment: .top, spacing: 2) {
             Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
                 .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)

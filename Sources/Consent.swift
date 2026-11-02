@@ -36,7 +36,7 @@ enum ConsentWords {
     static let letters = "colour letters"
     static let lettersDetail = "R, G and B on Prism's knobs"
     static let supporter = "supporter mark"
-    static let supporterDetail = "\u{2726} by the title and on the daily's share"
+    static let supporterDetail = "\u{2726} by the title and in the daily's share line"
 }
 
 /// The first launch's question, over the menu, which waits for an answer. Yes and no are the same control: same type,
@@ -167,7 +167,8 @@ struct SettingsSheet: View {
     @State private var haptics = Settings.haptics
     /// Nil until chosen, so the switch shows Differentiate Without Colour's state until then.
     @State private var letters = Letters.choice
-    @State private var supporter = Settings.supporter
+    /// The menu's, so its title gains or drops the mark behind the sheet as the switch moves.
+    @Binding var supporter: Bool
     @State private var mailing = false
     @State private var reading = false
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
