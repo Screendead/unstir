@@ -372,8 +372,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lights at once with a light tap, so the rod that lights is the rod that turns: its knob's ticks and a ring on the dark
   band round it, never past it, and one 0.5 pt hairline round its disc, dimmer until letting go would commit. On lift
   the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red (the swirl's, a hairline `swirlFlash`, 5 pt, inside the glass's edge), and one that cancels
-  sends a magenta hairline out from the knob. A drag the system cuts off (a call, Control Center, Siri, the lock) or a
-  second finger takes over lets go as the lift would, whichever of the phase change and the cancelled gesture comes
+  sends a magenta hairline out from the knob. A drag the system cuts off (a call, Control Center, Siri, the lock), a
+  second finger takes over or a change of pose moves the tank under (`PlayLayout`) lets go as the lift would, whichever of the phase change and the cancelled gesture comes
   first, and the phase change's at once, without the settle, whose completion waits on a frame (Jack's V26 call,
   2026-10-27, extended by his call C13, round 13). Every line a turn draws over the picture is a hairline but the count's
   dashes, 2 pt, and none has a glow or a dark band under it: the pictures are fine lines themselves, and whatever a
@@ -672,10 +672,21 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
   `min(width, height - 290) / 1.045`, as on every iPhone; a wider one (the iPhone Duo opened like a book, whatever the
-  portrait lock) splits at the window's middle, where the fold runs, 16 pt clear of it either side: the tank alone,
-  centred, in the leading half, and `LevelView`'s header, title, caption (and the cards hung from it), swatches and
-  controls in the trailing half. Neither half narrower than `minPane` (300 pt) splits. The glass never passes
-  `maxPixels` (1300 px), the size the stack's limits were tuned at, so the Duo upright keeps a 433 pt glass.
+  portrait lock) splits at the fold, 16 pt clear of it either side: the tank alone, centred, in the leading half, and
+  `LevelView`'s header, title, caption (and the cards hung from it, which the caption stretches to hold there, as
+  `PlayStack` measures no overlay), swatches and controls in the trailing half. The fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
+  the phone is folded; compiled in only from an SDK whose SwiftUI is 8.1 or later, as CI's older Xcode lacks it), else
+  the window's middle. A tall window folded across (the Duo upright on a table) is the
+  tabletop: the rest in the upright half, the tank filling the half lying flat, and "unstirred." at the upright half's
+  foot (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
+  shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1300 px), the size the stack's limits
+  were tuned at, so the Duo upright keeps a 433 pt glass. The column is a `VStackLayout` and the split and tabletop
+  `PlayStack`, through one `AnyLayout`, so a change of pose keeps every part's identity, the tank's picture, opening,
+  demonstration and keyframes with it: the parts glide to their new places, and the tank, drawn at its new size at once,
+  glides there by `Glide`'s scale, its old bake stretched until the new one lands (none under Reduce Motion, nor from a
+  first measure; a bake that lands after a later change of size is dropped). A drag in flight lets go as a lift would
+  (`LevelView.letGoOnResize`), and the finger then on the tank, taken up or not yet (an edge touch the back swipe hasn't
+  decided), holds nothing more until it lifts.
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
@@ -986,7 +997,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only.
   `UNSTIR_ARCHIVE=1` opens the archive over the menu, `UNSTIR_ARCHIVED=1:c,3:0,6:2,9:t` gives the daily that many days
   back a best from the archive (clean, that many over par) or a try, and `UNSTIR_MODE=archive UNSTIR_DAY=n` opens the
-  daily n days back from the archive. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_FRAME=951x669` lays the app out in a window of that size, shrunk to fit the simulator, with `UNSTIR_INSETS=top,leading,bottom,trailing` as its safe area: the iPhone Duo's inner display, which no simulator can be driven to headlessly (`HarnessWindow`; the system's bars and fold are not drawn; `duo-open-*` shots). In a build with
+  daily n days back from the archive. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_FRAME=951x669` lays the app out in a window of that size, shrunk to fit the simulator, with `UNSTIR_INSETS=top,leading,bottom,trailing` as its safe area: the iPhone Duo's inner display, which no simulator can be driven to headlessly (`HarnessWindow`; the system's bars are not drawn; `duo-*` shots). `UNSTIR_FOLD=x,y,w,h` (window points) folds it there, standing in for the system's division region, and draws the fold as a grey band. `UNSTIR_THEN=s` changes pose s seconds in, to `UNSTIR_THENFRAME`, `UNSTIR_THENINSETS` and `UNSTIR_THENFOLD` (each the first pose's unless given; `none` lies it flat), as opening, closing or folding the phone would; every pose is drawn at one scale. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which

@@ -30,7 +30,7 @@ struct UnstirApp: App {
             if GPUBench.wanted {
                 GPUBenchView()
             } else if let window = HarnessWindow.wanted {
-                window.body(RootView())
+                HarnessWindow(window, content: RootView())
             } else {
                 RootView()
             }
@@ -430,33 +430,87 @@ struct Harness {
 
 /// UNSTIR_FRAME=951x669 lays the app out in a window of that size, shrunk to fit the simulator, with UNSTIR_INSETS
 /// (top,leading,bottom,trailing points) as its safe area: the iPhone Duo's inner display, which no simulator can be
-/// driven to headlessly. It shows Unstir's own layout, not the system's bars or fold.
-struct HarnessWindow {
-    let size: CGSize
-    let insets: EdgeInsets
+/// driven to headlessly. UNSTIR_FOLD=x,y,w,h (window points) folds it there, as the system's division region would, and
+/// draws the fold as a band. UNSTIR_THEN=s changes pose s seconds in, to UNSTIR_THENFRAME, UNSTIR_THENINSETS and
+/// UNSTIR_THENFOLD (each the first pose's unless given; UNSTIR_THENFOLD=none lies it flat), as opening, closing or
+/// folding the phone would. It shows Unstir's own layout, not the system's bars.
+struct HarnessWindow: View {
+    struct Pose {
+        let size: CGSize
+        let insets: EdgeInsets
+        let fold: CGRect?
+    }
 
-    static let wanted: HarnessWindow? = {
+    let poses: [Pose]
+    /// When the second pose comes, in seconds.
+    let then: Double?
+    let content: AnyView
+    @State private var at = 0
+
+    struct Spec {
+        let poses: [Pose]
+        let then: Double?
+    }
+
+    static let wanted: Spec? = {
         let env = ProcessInfo.processInfo.environment
-        guard let f = env["UNSTIR_FRAME"]?.split(separator: "x").compactMap({ Double($0) }), f.count == 2 else { return nil }
-        let i = (env["UNSTIR_INSETS"] ?? "").split(separator: ",").compactMap { Double($0) }
-        let e = i.count == 4 ? EdgeInsets(top: i[0], leading: i[1], bottom: i[2], trailing: i[3]) : EdgeInsets()
-        return HarnessWindow(size: CGSize(width: f[0], height: f[1]), insets: e)
+        func numbers(_ key: String, _ by: Character) -> [Double]? {
+            env[key].map { $0.split(separator: by).compactMap { Double($0) } }
+        }
+        guard let f = numbers("UNSTIR_FRAME", "x"), f.count == 2 else { return nil }
+        func insets(_ i: [Double]?) -> EdgeInsets? {
+            i.flatMap { $0.count == 4 ? EdgeInsets(top: $0[0], leading: $0[1], bottom: $0[2], trailing: $0[3]) : nil }
+        }
+        func fold(_ r: [Double]?) -> CGRect? { r.flatMap { $0.count == 4 ? CGRect(x: $0[0], y: $0[1], width: $0[2], height: $0[3]) : nil } }
+        let first = Pose(size: CGSize(width: f[0], height: f[1]), insets: insets(numbers("UNSTIR_INSETS", ",")) ?? EdgeInsets(),
+                         fold: fold(numbers("UNSTIR_FOLD", ",")))
+        guard let then = env["UNSTIR_THEN"].flatMap(Double.init) else { return Spec(poses: [first], then: nil) }
+        let g = numbers("UNSTIR_THENFRAME", "x")
+        let second = Pose(size: g?.count == 2 ? CGSize(width: g![0], height: g![1]) : first.size,
+                          insets: insets(numbers("UNSTIR_THENINSETS", ",")) ?? first.insets,
+                          fold: env["UNSTIR_THENFOLD"] == "none" ? nil : fold(numbers("UNSTIR_THENFOLD", ",")) ?? first.fold)
+        return Spec(poses: [first, second], then: then)
     }()
 
-    func body(_ content: some View) -> some View {
+    init(_ spec: Spec, content: some View) {
+        poses = spec.poses
+        then = spec.then
+        self.content = AnyView(content)
+    }
+
+    var body: some View {
+        let pose = poses[at], size = pose.size
         GeometryReader { screen in
-            let k = min(1, screen.size.width / size.width, screen.size.height / size.height)
+            // One scale for every pose, so a change of pose changes only the window.
+            let k = poses.map { min(1, screen.size.width / $0.size.width, screen.size.height / $0.size.height) }.min() ?? 1
             content
-                .safeAreaPadding(insets)
+                .environment(\.harnessFold, pose.fold)
+                .safeAreaPadding(pose.insets)
                 .frame(width: size.width, height: size.height)
                 .background(Color.black)
+                .overlay(alignment: .topLeading) {
+                    if let f = pose.fold {
+                        Rectangle().fill(Color(white: 0.5).opacity(0.35))
+                            .frame(width: f.width, height: f.height).offset(x: f.minX, y: f.minY).allowsHitTesting(false)
+                    }
+                }
                 .clipped()
                 .scaleEffect(k)
                 .frame(width: screen.size.width, height: screen.size.height)
         }
         .ignoresSafeArea()
         .background(Color(white: 0.25))
+        .task {
+            guard let then, (try? await Task.sleep(for: .seconds(then))) != nil else { return }
+            Log.write("harness pose \(poses[1].size)")
+            at = 1
+        }
     }
+}
+
+extension EnvironmentValues {
+    /// UNSTIR_FOLD's fold, in the harness window's points.
+    @Entry var harnessFold: CGRect? = nil
 }
 
 /// UNSTIR_BENCH: turns a rod every frame for 20 s, as a drag that never stops would, then prints the frame intervals.

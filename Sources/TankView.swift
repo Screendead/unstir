@@ -993,8 +993,19 @@ struct LevelView: View {
     /// Bumped by every touch: the screen stays awake for two minutes after the last.
     @State private var awake = 0
     @State private var awakeID = UUID()
-    /// A touch that skipped the clock's demonstration: it holds nothing, as the problem has still to wind in.
-    @State private var skippedDemo: CGPoint?
+    /// A touch that holds nothing until it lifts: one that skipped the clock's demonstration, as the problem has still
+    /// to wind in, or one the window's change of pose let go, whose start lies in the tank's old frame.
+    @State private var deadTouch: CGPoint?
+    /// A two-finger twist the window's change of pose let go.
+    @State private var deadSpin: CGPoint?
+    /// Where the finger now on the tank landed, whether or not anything has taken it up yet.
+    @State private var touchStart: CGPoint?
+    /// How far the result or lost card reaches below the caption's top, which `PlayStack` makes room for.
+    @State private var cardReach: CGFloat = 0
+    /// The play layout last laid out, so a change of pose glides from it and lets go of what the fingers hold.
+    @State private var pose: PlayLayout?
+    /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
+    @Environment(\.harnessFold) private var harnessFold
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
     /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
@@ -1347,7 +1358,7 @@ struct LevelView: View {
     private var reveal: AnyTransition { .opacity.animation(.easeOut(duration: 0.4).delay(0.3)) }
 
     /// The tank with what stands over it: the night forwards and "unstirred.".
-    private func stage(_ side: CGFloat) -> some View {
+    private func stage(_ side: CGFloat, words: CGFloat) -> some View {
         tank(side)
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
@@ -1370,7 +1381,7 @@ struct LevelView: View {
                 if showResult && game.solved && !clean {
                     Text("unstirred.").font(.mono(22, .semibold))
                         .shadow(color: .white.opacity(0.5), radius: 6)
-                        .offset(y: -62)
+                        .offset(y: -words)
                         .transition(reveal)
                 }
             }
@@ -1404,11 +1415,13 @@ struct LevelView: View {
                 if showResult && game.lost {
                     LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
                         .padding(.top, 14)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
                         .transition(reveal)
                 } else if showResult {
                     ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 14)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
                         .transition(reveal)
                 }
             }
@@ -1450,44 +1463,54 @@ struct LevelView: View {
         .modifier(Unseen(clean))
     }
 
-    /// The play layout for the safe area `geo` measures, split where the window is wide at the window's middle.
+    /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
+    /// window's middle where the window is wide.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, scale: scale)
+        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: fold(geo), scale: scale)
+    }
+
+    /// The fold while the phone is folded, in the reader's space: the harness's, else the system's division region.
+    private func fold(_ geo: GeometryProxy) -> CGRect? {
+        if let f = harnessFold { return f.offsetBy(dx: -geo.safeAreaInsets.leading, dy: -geo.safeAreaInsets.top) }
+        // The iOS 27.1 SDK's SwiftUI (8.1) brought the regions; CI's Xcode has an older one.
+        #if canImport(SwiftUI, _version: 8.1)
+        guard #available(iOS 27.1, *) else { return nil }
+        return geo.reservedRegions(kind: .division).first { $0.isActive }?.frame
+        #else
+        return nil
+        #endif
     }
 
     private var screen: some View {
         GeometryReader { geo in
             let layout = playLayout(geo)
-            Group {
-                switch layout.kind {
-                case .column:
-                    VStack(spacing: 0) {
-                        header
-                        titleRow
-                        Spacer(minLength: 12)
-                        stage(layout.side)
-                        caption
-                        swatches
-                        Spacer(minLength: 12)
-                        controls
-                    }
-                case .split:
-                    // The fold runs down the window's middle, between the halves, so neither half reaches it.
-                    HStack(spacing: 0) {
-                        stage(layout.side).frame(width: layout.tankPane.width, height: layout.tankPane.height)
-                        Spacer(minLength: 0)
-                        VStack(spacing: 0) {
-                            header
-                            titleRow
-                            Spacer(minLength: 12)
-                            caption
-                            swatches
-                            Spacer(minLength: 12)
-                            controls
-                        }
-                        .frame(width: layout.chromePane.width)
-                    }
+            let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout))
+            stack {
+                header.layoutValue(key: PlayPart.self, value: .chrome)
+                titleRow.layoutValue(key: PlayPart.self, value: .chrome)
+                Spacer(minLength: 12)
+                stage(layout.side, words: layout.words)
+                    // Drawn at its new size at once; only the glide scales it there.
+                    .animation(nil, value: layout)
+                    .modifier(Glide(side: layout.side))
+                    .layoutValue(key: PlayPart.self, value: .stage)
+                caption
+                    // The card hangs from the caption unmeasured, over the controls it hides. In the split and the
+                    // tabletop the stack must make room for it, or in the tabletop it runs into "unstirred.".
+                    .frame(minHeight: layout.kind == .column || !showResult ? nil : cardReach, alignment: .top)
+                    .layoutValue(key: PlayPart.self, value: .chrome)
+                swatches.layoutValue(key: PlayPart.self, value: .chrome)
+                Spacer(minLength: 12)
+                controls.layoutValue(key: PlayPart.self, value: .chrome)
+            }
+            // Not from a first measure, which can be empty, nor under Reduce Motion.
+            .animation(pose.map { $0.side > 0 } == true && !reduceMotion ? .smooth(duration: 0.45) : nil, value: layout)
+            .onChange(of: layout, initial: true) { was, now in
+                if pose != nil, was != now {
+                    Log.write("pose \(now.kind) side=\(Int(now.side))")
+                    letGoOnResize()
                 }
+                pose = now
             }
             .padding(.horizontal, PlayLayout.margin)
         }
@@ -2682,16 +2705,17 @@ struct LevelView: View {
         return DragGesture(minimumDistance: 0)
             .updating($holding) { _, holding, _ in holding = true }
             .onChanged { v in
+                if touchStart != v.startLocation { touchStart = v.startLocation }
                 // A touch from the screen's left edge is the back swipe's until it decides; one it passes is taken up
                 // from where it landed, before it skips the opening.
                 if drag?.start != v.startLocation {
                     edgeTouch = BackSwipe.edge(edgeTouch, start: v.startLocation, origin: tankOrigin, translation: v.translation)
                     if let edge = edgeTouch, edge.call != .pass { return }
                 }
-                guard !settling, !game.finished, !swipedAway, v.startLocation != skippedDemo else { return }
+                guard !settling, !game.finished, !swipedAway, v.startLocation != deadTouch else { return }
                 // A touch skips the opening as it lands, then takes up what it landed on; one that skips the clock's
                 // demonstration holds nothing, as the problem has still to wind in.
-                if demoing { skip(); skippedDemo = v.startLocation; return }
+                if demoing { skip(); deadTouch = v.startLocation; return }
                 if shown != nil { skip() }
                 let q = norm(v.location)
                 let level = game.level
@@ -2736,7 +2760,7 @@ struct LevelView: View {
                 }
             }
             .onEnded { v in
-                if v.startLocation == skippedDemo { skippedDemo = nil; return }
+                if v.startLocation == deadTouch { deadTouch = nil; return }
                 // An edge touch never taken up was the back swipe's, or a tap.
                 if edgeTouch?.start == v.startLocation {
                     edgeTouch = nil
@@ -2873,7 +2897,7 @@ struct LevelView: View {
         RotateGesture()
             .updating($spin) { v, spin, _ in spin = v.rotation.radians }
             .onChanged { v in
-                guard !settling, !game.finished, shown == nil else { return }
+                guard !settling, !game.finished, shown == nil, v.startLocation != deadSpin else { return }
                 if v.startLocation != spinBase.start { spinBase = (v.startLocation, 0) }
                 let rotation = v.rotation.radians - spinBase.rotation
                 if !spun { endPath(); twist = (v.time, Trail(gap: 0.05) { abs($0 - $1) }) }
@@ -2890,6 +2914,7 @@ struct LevelView: View {
                 tankTicks += detent.turn(to: liveTurn! + rotation)
             }
             .onEnded { v in
+                if v.startLocation == deadSpin { deadSpin = nil; return }
                 guard spun else { return }
                 let rotation = v.rotation.radians - spinBase.rotation
                 if let down = twist?.down { twist!.trail.add(rotation, ms: Self.ms(v.time, since: down)) }
@@ -2952,6 +2977,19 @@ struct LevelView: View {
         case .ratchet: pressing = nil; return false
         default: return false
         }
+    }
+
+    /// The window changed pose under the fingers: the tank moved, so what they hold lets go as a lift would (V26), at
+    /// once, and each holds nothing more until it lifts.
+    private func letGoOnResize() {
+        if spun {
+            deadSpin = spinBase.start
+            letGoSpin(lastSpin, now: true)
+        }
+        if let g = drag { cut(g, now: true) }
+        // Not only a drag: an edge touch the back swipe hasn't decided, or one waiting on a settle, is taken up later
+        // from where it landed, in the old frame.
+        if holding, let t = touchStart { deadTouch = t }
     }
 
     /// `now` lands the let-go without the settle, whose completion waits on a frame.
@@ -3442,8 +3480,11 @@ struct PictureLayer: View {
                 Rectangle().fill(ShaderFunction(library: .default, name: "\(picture)")(
                     .float(side / 2), .float(2 / (side * scale)), .floatArray(data),
                     .float(Float(clock.truncatingRemainder(dividingBy: picture.period)))))
-            } else if let image {
+            } else if let image, abs(image.size.width - side) < 1 {
                 Image(uiImage: image)
+            } else if let image {
+                // The size it had, until a change of pose's bake at the new size lands.
+                Image(uiImage: image).resizable()
             } else {
                 Color.black
             }
@@ -3458,7 +3499,10 @@ struct PictureLayer: View {
         // A live picture bakes nothing: the empty image only strikes the tube, once its data is ready.
         .task(id: [picture.rawValue, "\(seed)", "\(side)", "\(scale)"]) {
             if picture.isLive { await picture.prepare(seed: seed) }
-            image = picture.isLive ? UIImage() : await picture.render(side: side, scale: scale)
+            let baked = picture.isLive ? UIImage() : await picture.render(side: side, scale: scale)
+            // The halftone's detached bake runs on when a change of pose cancels it, and may land after the new one.
+            guard !Task.isCancelled else { return }
+            image = baked
         }
     }
 }

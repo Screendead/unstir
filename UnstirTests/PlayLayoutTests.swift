@@ -7,11 +7,11 @@ import XCTest
 final class PlayLayoutTests: XCTestCase {
     /// As the play screen's GeometryReader measures the window: the safe area's size and the insets round it.
     private func layout(window: CGSize, insets: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat),
-                        scale: CGFloat = 3) -> PlayLayout {
+                        fold: CGRect? = nil, scale: CGFloat = 3) -> PlayLayout {
         PlayLayout.of(size: CGSize(width: window.width - insets.leading - insets.trailing,
                                    height: window.height - insets.top - insets.bottom),
                       insets: EdgeInsets(top: insets.top, leading: insets.leading, bottom: insets.bottom, trailing: insets.trailing),
-                      scale: scale)
+                      fold: fold.map { $0.offsetBy(dx: -insets.leading, dy: -insets.top) }, scale: scale)
     }
 
     func testEveryIPhoneKeepsTodaysColumn() {
@@ -79,5 +79,60 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(l.kind, .split)
         XCTAssertEqual(l.tankPane.width, 951 / 2 - 2 * PlayLayout.margin, accuracy: 0.001)
         XCTAssertEqual(l.side, 443.5 / PlayLayout.rim, accuracy: 0.001)
+    }
+
+    // The folds below are in window points, 19 pt across (assumed: no Duo simulator reports one headlessly), as the
+    // harness's UNSTIR_FOLD gives them.
+
+    func testABookFoldedSplitsClearOfTheFoldsBand() {
+        let fold = CGRect(x: 466, y: 0, width: 19, height: 669)
+        let l = layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84), fold: fold)
+        XCTAssertEqual(l.kind, .split)
+        XCTAssertEqual(PlayLayout.margin + l.tankPane.maxX, fold.minX - PlayLayout.margin, accuracy: 0.001)
+        XCTAssertEqual(PlayLayout.margin + l.chromePane.minX, fold.maxX + PlayLayout.margin, accuracy: 0.001)
+        XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
+        XCTAssertLessThanOrEqual(PlayLayout.margin + l.stage.maxX, fold.minX - PlayLayout.margin)
+        // Flat, the same window splits at its middle, so folding the phone moves the tank by a quarter of the band.
+        let flat = layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84))
+        XCTAssertEqual(flat.kind, .split)
+        XCTAssertEqual(flat.stage.midX - l.stage.midX, (951 / 2 - fold.minX) / 2, accuracy: 0.001)
+    }
+
+    func testTheTabletopPutsTheTankWhollyBelowTheFoldAndTheRestAbove() {
+        let fold = CGRect(x: 0, y: 466, width: 669, height: 19), top: CGFloat = 59
+        let l = layout(window: CGSize(width: 669, height: 951), insets: (top, 0, 34, 0), fold: fold)
+        XCTAssertEqual(l.kind, .tabletop)
+        // In window points.
+        XCTAssertLessThanOrEqual(top + l.chromePane.maxY, fold.minY - PlayLayout.margin)
+        XCTAssertGreaterThanOrEqual(top + l.tankPane.minY, fold.maxY + PlayLayout.margin)
+        XCTAssertGreaterThanOrEqual(top + l.stage.minY, fold.maxY + PlayLayout.margin - 0.001)
+        XCTAssertLessThanOrEqual(l.stage.maxY, l.tankPane.maxY + 0.001)
+        XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
+        // The tank fills the half lying flat: about 398 pt, near the Pro Max's 408.
+        XCTAssertEqual(l.side, (858 - (fold.maxY - top) - PlayLayout.margin) / PlayLayout.rim, accuracy: 0.001)
+        // "unstirred." stands in the upright half, clear of the fold.
+        let wordsTop = top + l.stage.minY - l.words
+        XCTAssertGreaterThanOrEqual(wordsTop, top + l.chromePane.minY)
+        XCTAssertLessThanOrEqual(wordsTop + PlayLayout.wordsHeight, fold.minY - PlayLayout.margin + 0.001)
+    }
+
+    func testFlatUprightTheDuoKeepsTheColumnAndFoldedTheTabletop() {
+        let window = CGSize(width: 669, height: 951)
+        XCTAssertEqual(layout(window: window, insets: (59, 0, 34, 0)).kind, .column)
+        XCTAssertEqual(layout(window: window, insets: (59, 0, 34, 0), fold: CGRect(x: 0, y: 466, width: 669, height: 19)).kind,
+                       .tabletop)
+    }
+
+    func testAFoldLeavingAHalfTooSmallKeepsTheColumn() {
+        // Folded near the top, the upright part can't hold the chrome; near the leading edge, the tank's half is too narrow.
+        XCTAssertEqual(layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0),
+                              fold: CGRect(x: 0, y: 300, width: 669, height: 19)).kind, .column)
+        XCTAssertEqual(layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84),
+                              fold: CGRect(x: 250, y: 0, width: 19, height: 669)).kind, .column)
+    }
+
+    func testTheColumnAndSplitKeepTheirWordsWhereTheyWere() {
+        XCTAssertEqual(layout(window: CGSize(width: 440, height: 956), insets: (62, 0, 34, 0)).words, 62)
+        XCTAssertEqual(layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84)).words, 62)
     }
 }
