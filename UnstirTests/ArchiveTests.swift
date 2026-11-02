@@ -120,6 +120,23 @@ final class ArchiveTests: XCTestCase {
         XCTAssertEqual(Daily.run(today: day), 1)
     }
 
+    /// A day tried on its day and left unsolved can be finished from the archive, and saves its best, but never clean.
+    @MainActor func testAnArchiveDayTriedOnItsDayIsNeverClean() throws {
+        let day = try date(20261022)
+        let level = Level.daily(day, archived: true)
+        defer { for key in ["best.\(level.id)", "started.\(level.id)"] { UserDefaults.standard.removeObject(forKey: key) } }
+        Best.start(level.id)
+        let game = Game(level: level, tankTurned: true, bank: (10, nil))
+        XCTAssertTrue(game.counts)
+        for t in level.scramble.reversed() { game.commit(rod: game.knob(over: t.rod), steps: -t.steps) }
+        XCTAssertTrue(game.solved)
+        let best = try XCTUnwrap(Best.load(level.id))
+        XCTAssertEqual(best.over, 0)
+        XCTAssertEqual(best.clean, false)
+        XCTAssertEqual(best.archived, true)
+        XCTAssertEqual(Archive.Mark(level.id), .par)
+    }
+
     /// Each day says its result in the menu's words, and in VoiceOver's.
     func testEachDayShowsItsResult() throws {
         XCTAssertEqual(Archive.Mark(Best(over: 0, seconds: 9, clean: true), started: true), .clean)
