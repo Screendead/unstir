@@ -30,6 +30,6 @@ echo "$(basename "$app"): $(mb "$total") MB (limit $limit MB)"
 [[ $left -eq 0 ]] || echo "  left out: $(mb "$left") MB of the test bundle and Xcode's testing frameworks"
 while read -r b name; do
   if [[ -n "$name" ]] && ! xcode "$name"; then echo "$b $name"; fi
-done <<< "$lines" | sort -rn | head -12 | while read -r b name; do printf '  %7s MB  %s\n' "$(mb "$b")" "$name"; done
+done <<< "$lines" | sort -rn | sed -n 1,12p | while read -r b name; do printf '  %7s MB  %s\n' "$(mb "$b")" "$name"; done
 awk -v t="$total" -v l="$limit" 'BEGIN { exit !(t > l * 1e6) }' && { echo "error: the app is past $limit MB" >&2; exit 1; }
 exit 0
