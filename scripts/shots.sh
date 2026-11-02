@@ -839,6 +839,26 @@ shot duo-tabletop-ending "Duo tabletop: the night forwards 1 s in, its lines (th
   "${table[@]}" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=1.1
 shot duo-tabletop-ladder-end-ax5 "Duo tabletop at the largest accessibility text size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold." \
   "${table[@]}" SCREEN=result TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0 TYPESIZE=accessibility5
+# Stage 4: the menu wide. The list keeps the leading half, its dock under it as on a phone; a pack's card or the archive
+# opens in the trailing half beside it, not over it. A tall window, folded or not, keeps today's menu.
+hold=10 shot duo-open-menu "Duo open: the menu with plughole 01 to 09 at par, the list and its dock at a phone's width in the leading half, the trailing half empty until a card opens." \
+  "${duo[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CLOCK=1
+hold=10 shot duo-open-card "Duo open: Prism's card from the dock, in the trailing half beside the list, which stays live, the dock's covers still turning." \
+  "${duo[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
+hold=10 shot duo-open-card-gate "Duo open: Lens 04 opened past the taste, its card beside the list, scrolled to buying under you've played the free three." \
+  "${duo[@]}" PACK=lens LEVEL=4 BESTS=plughole:$nine,lens:000 OWNED= CLOCK=1
+hold=10 shot duo-open-card-owned "Duo open: Lens owned, its card home beside the list: done 3/25 at par, play 04, the levels." \
+  "${duo[@]}" SCREEN=menu BESTS=plughole:$nine,lens:000 OWNED=lens CARD=lens CLOCK=1
+hold=10 shot duo-open-archive "Duo open: the archive's calendar beside the list, Lens owned." \
+  "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens ARCHIVE=1 ARCHIVED=5:c,6:0,8:2,11:t
+hold=10 shot duo-folded-book-menu "Duo half open like a book: the list in the leading half and Escapement's card in the trailing half, each clear of the fold's band." \
+  "${duo[@]}" FOLD=466,0,19,669 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=escapement CLOCK=1
+hold=10 shot duo-open-upright-menu "Duo open and turned upright (669 x 951 pt): today's menu, Prism's card over it." \
+  FRAME=669x951 INSETS=59,0,34,0 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
+hold=10 shot duo-tabletop-menu "Duo tabletop: today's menu, its list running through the fold (unchanged in this stage)." \
+  "${table[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CLOCK=1
+hold=5 shot duo-opened-menu "Duo closed with Prism's card over the menu, opened a second in: the card moved beside the list, the list where it was." \
+  "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
 hold=5 shot duo-opened "Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 "${played[@]}"
 hold=4 shot duo-opened-mid-drag "Duo closed with rod 1 held two steps round, opened 1.5 s in: the turn let go as a lift would (moves 1), nothing held." \
