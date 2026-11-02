@@ -655,10 +655,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
   `min(width, height - 290) / 1.045`, as on every iPhone; a wider one (the iPhone Duo opened like a book, whatever the
-  portrait lock) splits at the window's middle, where the fold runs, 16 pt clear of it either side: the tank alone,
-  centred, in the leading half, and `LevelView`'s header, title, caption (and the cards hung from it), swatches and
-  controls in the trailing half. Neither half narrower than `minPane` (300 pt) splits. The glass never passes
-  `maxPixels` (1300 px), the size the stack's limits were tuned at, so the Duo upright keeps a 433 pt glass.
+  portrait lock) splits at the fold, 16 pt clear of it either side: the tank alone, centred, in the leading half, and
+  `LevelView`'s header, title, caption (and the cards hung from it), swatches and controls in the trailing half. The
+  fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
+  the phone is folded), else the window's middle. A tall window folded across (the Duo upright on a table) is the
+  tabletop: the rest in the upright half, the tank filling the half lying flat, and "unstirred." at the upright half's
+  foot (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
+  shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1300 px), the size the stack's limits
+  were tuned at, so the Duo upright keeps a 433 pt glass. The column is a `VStackLayout` and the split and tabletop
+  `PlayStack`, through one `AnyLayout`, so a change of pose keeps every part's identity, the tank's picture, opening,
+  demonstration and keyframes with it: the parts glide to their new places, and the tank, drawn at its new size at once,
+  glides there by `Glide`'s scale, its old bake stretched until the new one lands (none under Reduce Motion, nor from a
+  first measure). A drag in flight lets go as a lift would (`LevelView.letGoOnResize`), and its finger holds nothing
+  more until it lifts.
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer

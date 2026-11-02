@@ -779,6 +779,29 @@ shot duo-open-daily-result "Duo open: today's daily solved two over par, the car
   "${duo[@]}" SCREEN=result MODE=daily NOW=17:00
 shot duo-open-upright "Duo open and turned upright (669 x 951 pt): today's column, its glass stopped at 1300 px (433 pt)." \
   FRAME=669x951 INSETS=59,0,34,0 LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
+# Folded, the fold as UNSTIR_FOLD draws it: a 19 pt band (assumed), where the system's division region would be.
+# UNSTIR_THEN changes pose that many seconds in, as opening or folding the phone would.
+played=(LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2)
+table=(FRAME=669x951 INSETS=59,0,34,0 FOLD=0,466,669,19)
+closed=(FRAME=466x678 INSETS=0,0,34,84)
+shot duo-folded-book "Duo half open like a book: the split clear of the fold's band either side, the tank wholly in the leading half." \
+  "${duo[@]}" FOLD=466,0,19,669 "${played[@]}"
+shot duo-tabletop "Duo upright and folded on a table: header, note and controls in the upright half, the tank filling the half lying flat." \
+  "${table[@]}" "${played[@]}"
+shot duo-tabletop-result "Duo tabletop: plughole 06 solved clean, the card and unstirred. in the upright half, above the fold." \
+  "${table[@]}" SCREEN=clean LEVEL=6
+shot duo-tabletop-daily-result "Duo tabletop: today's daily two over par, its card's again, share and next daily all above the fold." \
+  "${table[@]}" SCREEN=result MODE=daily NOW=17:00
+shot duo-tabletop-escapement "Duo tabletop: Escapement 02 a move in, the ticks' counter in the upright half." \
+  "${table[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=2:4
+shot duo-tabletop-prism "Duo tabletop: Prism 01 with the colour letters, the swatches under the note in the upright half." \
+  "${table[@]}" PACK=prism OWNED=prism LEVEL=1 LETTERS=1
+hold=5 shot duo-opened "Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept." \
+  "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 "${played[@]}"
+hold=4 shot duo-opened-mid-drag "Duo closed with rod 1 held two steps round, opened 1.5 s in: the turn let go as a lift would (moves 1), nothing held." \
+  "${closed[@]}" THEN=1.5 THENFRAME=951x669 THENINSETS=24,0,21,84 LEVEL=11 LIVE=1:+2 TOUCH=0.3,0.2
+hold=5 shot duo-folded-to-tabletop "Duo upright, folded a second in: the tank glided down into the lower half." \
+  FRAME=669x951 INSETS=59,0,34,0 THEN=1 THENFOLD=0,466,669,19 "${played[@]}"
 # Under Reduce Motion (set on the simulator, as film.sh's calm films do): every live picture holds Picture.rest's frame,
 # the brim holds where a change settles, and a spill cuts to its end, its card at once.
 calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }

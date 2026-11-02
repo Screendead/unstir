@@ -1000,6 +1000,8 @@ struct LevelView: View {
     @State private var deadSpin: CGPoint?
     /// The play layout last laid out, so a change of pose glides from it and lets go of what the fingers hold.
     @State private var pose: PlayLayout?
+    /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
+    @Environment(\.harnessFold) private var harnessFold
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
     /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
@@ -1352,7 +1354,7 @@ struct LevelView: View {
     private var reveal: AnyTransition { .opacity.animation(.easeOut(duration: 0.4).delay(0.3)) }
 
     /// The tank with what stands over it: the night forwards and "unstirred.".
-    private func stage(_ side: CGFloat) -> some View {
+    private func stage(_ side: CGFloat, words: CGFloat) -> some View {
         tank(side)
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
@@ -1375,7 +1377,7 @@ struct LevelView: View {
                 if showResult && game.solved && !clean {
                     Text("unstirred.").font(.mono(22, .semibold))
                         .shadow(color: .white.opacity(0.5), radius: 6)
-                        .offset(y: -62)
+                        .offset(y: -words)
                         .transition(reveal)
                 }
             }
@@ -1455,9 +1457,17 @@ struct LevelView: View {
         .modifier(Unseen(clean))
     }
 
-    /// The play layout for the safe area `geo` measures, split where the window is wide at the window's middle.
+    /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
+    /// window's middle where the window is wide.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, scale: scale)
+        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: fold(geo), scale: scale)
+    }
+
+    /// The fold while the phone is folded, in the reader's space: the harness's, else the system's division region.
+    private func fold(_ geo: GeometryProxy) -> CGRect? {
+        if let f = harnessFold { return f.offsetBy(dx: -geo.safeAreaInsets.leading, dy: -geo.safeAreaInsets.top) }
+        guard #available(iOS 27.1, *) else { return nil }
+        return geo.reservedRegions(kind: .division).first { $0.isActive }?.frame
     }
 
     private var screen: some View {
@@ -1468,7 +1478,7 @@ struct LevelView: View {
                 header.layoutValue(key: PlayPart.self, value: .chrome)
                 titleRow.layoutValue(key: PlayPart.self, value: .chrome)
                 Spacer(minLength: 12)
-                stage(layout.side)
+                stage(layout.side, words: layout.words)
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
