@@ -145,6 +145,8 @@ struct NeonToggle: ToggleStyle {
 /// The gear's sheet: music, sounds, haptics, the colour letters, the analytics switch where the build has analytics,
 /// restore, a report of a problem and the privacy policy, and the version under them, black, sized to what it holds.
 struct SettingsSheet: View {
+    /// The presenting window's height, which in Split View or on a folding phone's displays is not the screen's.
+    let window: CGFloat
     /// Apple's guideline 5.1.1(i) wants it reachable in the app. Info.plist's `PolicyURL`, set outside the repo, or
     /// the plain github.com page where the build has none.
     static var policy: URL {
@@ -242,7 +244,7 @@ struct SettingsSheet: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .frame(maxHeight: .infinity, alignment: .top)
-        .presentationDetents(height > SettingsSheet.screen * 0.9 ? [.height(SettingsSheet.screen * 0.6), .large]
+        .presentationDetents(height > window * 0.9 ? [.height(window * 0.6), .large]
                              : [.height(height)])
         .presentationDragIndicator(.visible)
         .presentationBackground(Color(0x0B0C10))
@@ -253,10 +255,6 @@ struct SettingsSheet: View {
     static var version: String {
         let info = Bundle.main.infoDictionary ?? [:]
         return "Unstir \(info["CFBundleShortVersionString"] as? String ?? "?") (\(info["CFBundleVersion"] as? String ?? "?"))"
-    }
-
-    private static var screen: CGFloat {
-        UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.screen.bounds.height }.max() ?? 800
     }
 
     private var rule: some View { Rectangle().fill(Color.text.opacity(0.12)).frame(height: 1) }
