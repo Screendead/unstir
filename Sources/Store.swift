@@ -57,13 +57,16 @@ struct Ledger: Equatable, Sendable {
     /// Owned through its own product or Complete; otherwise its own product's state, else Complete's.
     func state(_ pack: Pack) -> Purchase {
         let own = products[pack.productID] ?? .unowned
-        let complete = Pack.sold().contains(pack) ? products[Pack.completeID] ?? .unowned : .unowned
+        let complete = Pack.bundled.contains(pack) ? products[Pack.completeID] ?? .unowned : .unowned
         if own == .owned || complete == .owned { return .owned }
         // Complete's failed attempt was made on Complete's card, and says nothing about this pack.
         return own != .unowned ? own : complete == .failed ? .unowned : complete
     }
 
     var owned: Set<Pack> { Set(Pack.sold().filter { state($0) == .owned }) }
+
+    /// Any purchase, a pack or the bundle.
+    var bought: Bool { !owned.isEmpty }
 
     /// A failure belongs to the attempt, so it goes when the card that showed it closes.
     mutating func forgetFailures() {
@@ -133,7 +136,7 @@ final class Store {
 
     /// The player owns a pack, by a purchase of their own, Complete or a family's share: what the supporter mark and the
     /// daily archive both open on.
-    var bought: Bool { !(harness ?? ledger).owned.isEmpty }
+    var bought: Bool { (harness ?? ledger).bought }
 
     /// Nil for a level in no pack. A pack's level whose id names no number of that pack needs the card.
     func access(_ level: Level) -> Pack.Access? {
@@ -144,18 +147,18 @@ final class Store {
 
     func price(_ id: String) -> String? { prices[id] }
 
-    /// What Complete saves on the sold packs left unowned, in Complete's own currency; nil while it saves nothing, or
-    /// before every price it needs is in. Complete owned owns every pack, so it saves nothing.
+    /// What the bundle saves on the packs it grants left unowned, in its own currency; nil while it saves nothing, or
+    /// before every price it needs is in. The bundle owned owns all it grants, so it saves nothing.
     var saving: String? {
-        guard let s = Offer.saving(amounts: amounts, owned: (harness ?? ledger).owned, sold: Pack.sold()) else { return nil }
+        guard let s = Offer.saving(amounts: amounts, owned: (harness ?? ledger).owned) else { return nil }
         return styles[Pack.completeID].map { s.formatted($0) }
     }
 
     /// Complete is on offer, on the dock and as a card to go back to: while it saves, or, while the prices are still
-    /// loading, while no sold pack is owned, when it holds every pack for less, so a launch's dock keeps its cover.
+    /// loading, while none of its packs is owned, when it holds them for less, so a launch's dock keeps its cover.
     var offersComplete: Bool {
         if saving != nil { return true }
-        return pricing == .fetching && amounts[Pack.completeID] == nil && Pack.sold().allSatisfy { state($0) != .owned }
+        return pricing == .fetching && amounts[Pack.completeID] == nil && Pack.bundled.allSatisfy { state($0) != .owned }
     }
 
     /// Screen Time, or a child's account without Ask to Buy, can turn purchases off; read afresh as a card draws.

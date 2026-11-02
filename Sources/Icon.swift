@@ -83,9 +83,7 @@ struct PromoArt: View {
         let s = 1024 / scale
         ZStack {
             Color.black
-            // Complete's as Release sells it, whatever the build.
-            PackTank(offer: offer, side: s * 0.84,
-                     covers: offer == .complete ? Clip.cut(of: Pack.sold(release: true)).reels.map(\.level) : nil)
+            PackTank(offer: offer, side: s * 0.84)
         }
         .frame(width: s, height: s)
         .clipped()

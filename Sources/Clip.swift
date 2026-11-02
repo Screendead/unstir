@@ -49,8 +49,8 @@ struct Clip: Sendable {
     /// only the red ghosts snap back.
     static let prism = Clip(reels: [.prism()], still: 0.5)
 
-    /// Each sold pack's telling beat in turn: a vignette, a zoom, a tick, a buried colour coming off.
-    static let complete = cut(of: Pack.sold())
+    /// Each bundled pack's telling beat in turn: a zoom, a tick, a buried colour coming off.
+    static let complete = cut(of: Pack.bundled)
 
     /// Each of `packs`' beats in turn, held at the first one's still.
     static func cut(of packs: [Pack]) -> Clip {

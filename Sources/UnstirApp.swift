@@ -135,6 +135,8 @@ struct Harness {
     let tierDemo: Bool
     /// UNSTIR_TIERSPIN=angle[:fade]: the menu's list held mid-twist.
     let tierSpin: (spin: Double, fade: Double)?
+    /// UNSTIR_ARCHIVE=1: the menu opens with the archive's calendar up.
+    let archive: Bool
     /// UNSTIR_SETTINGS=1: the menu opens with the gear's sheet up. UNSTIR_CONSENT is read by `Analytics.configure`.
     let settings: Bool
     /// UNSTIR_MUSIC=0, UNSTIR_SOUNDS=0, UNSTIR_HAPTICS=0 and UNSTIR_SUPPORTER=0: the sheet's switches off, with
@@ -248,6 +250,19 @@ struct Harness {
         let spin = env["UNSTIR_TIERSPIN"]?.split(separator: ":").compactMap { Double($0) } ?? []
         tierSpin = spin.first.map { ($0, spin.count > 1 ? spin[1] : 0) }
         settings = env["UNSTIR_SETTINGS"] == "1"
+        archive = env["UNSTIR_ARCHIVE"] == "1"
+        // UNSTIR_ARCHIVED=1:c,3:0,6:2,9:t: the daily that many days before today kept a best from the archive, clean,
+        // that many over par, or only tried, for this launch only.
+        for part in env["UNSTIR_ARCHIVED"]?.split(separator: ",") ?? [] {
+            let f = part.split(separator: ":")
+            guard f.count == 2, let k = Int(f[0]), let day = calendar.date(byAdding: .day, value: -k, to: .now) else { continue }
+            let id = Level.dailyID(day)
+            if f[1] == "t" { Best.start(id, store: false) } else if f[1] == "c" {
+                Best(over: 0, seconds: 60, clean: true, archived: true).fake(id)
+            } else if let over = Int(f[1]) {
+                Best(over: over, seconds: 60, archived: true).fake(id)
+            }
+        }
         bench = env["UNSTIR_BENCH"] == "1"
         swatch = env["UNSTIR_SWATCH"].flatMap { $0.count == 1 ? Channels(letter: $0.first!) : nil }
             .flatMap { Channels.each.contains($0) ? $0 : nil }
@@ -295,6 +310,9 @@ struct Harness {
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
         var level = switch env["UNSTIR_MODE"] ?? env["UNSTIR_LEVEL"] {
         case "daily": Level.daily()
+        // UNSTIR_DAY=n: the daily n days back, from the archive; yesterday's when unset.
+        case "archive": Level.daily(calendar.date(byAdding: .day, value: -max(Int(env["UNSTIR_DAY"] ?? "") ?? 1, 1),
+                                                      to: .now)!, archived: true)
         // UNSTIR_BRIM=n: endless opens with n notches on the brim, short of the spill, which only a push may bring.
         // UNSTIR_RESUMETANK=n, with UNSTIR_RESUME: on the run's tank n, from 0.
         case "endless": Level.endless(Run(seed: 7, tank: env["UNSTIR_RESUME"] == nil ? 0 : max(Int(env["UNSTIR_RESUMETANK"] ?? "") ?? 0, 0),
@@ -457,6 +475,8 @@ struct RootView: View {
     @State private var look: Tier?
     /// The menu's settings sheet; UNSTIR_SETTINGS=1 opens with it up.
     @State private var settings: Bool
+    /// The archive's calendar over the menu, kept while a past daily is played from it so leaving returns there.
+    @State private var archive: Bool
     /// The row the next menu, or the pack's card over it, centres on (`MenuView.focus`).
     @State private var focus: Level?
     /// The level's saved try, replayed as it opens (Jack's call C2, round 13).
@@ -510,6 +530,7 @@ struct RootView: View {
         // A plain launch's level has no harness, so it stores what it plays.
         _harness = State(initialValue: welcoming ? nil : h)
         _settings = State(initialValue: welcome == nil && menu && h.settings)
+        _archive = State(initialValue: welcome == nil && (h.archive || h.level.archived && !menu))
         mute = h.mute
         // Complete's card opens, as from the dock, only while it is on offer, or as an owner's home.
         let card = h.card.flatMap { $0 != .complete || Store.shared.offersComplete || Store.shared.state(.complete) == .owned ? $0 : nil }
@@ -522,7 +543,7 @@ struct RootView: View {
 
     /// The menu is up with nothing over it: a card, the consent question, the settings sheet.
     private var calm: Bool {
-        level == nil && card == nil && !settings && !(Analytics.shared.asks && Analytics.shared.consent == .undecided)
+        level == nil && card == nil && !archive && !settings && !(Analytics.shared.asks && Analytics.shared.consent == .undecided)
     }
 
     var body: some View {
@@ -539,7 +560,7 @@ struct RootView: View {
                 // level it opens as leaving would open it, not on the harness's tier.
                 if level == nil || peeking {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
-                             frozen: harness?.tierSpin, settings: $settings, card: $card, clock: harness?.clock,
+                             frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock,
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
                              cardScroll: harness?.cardScroll ?? false, focus: focus, held: harness?.lockTap, arrived: arrived,
                              run: Self.save("endless", harnessed: harnessed, harnessSave), peeking: level != nil) {

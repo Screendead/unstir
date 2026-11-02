@@ -147,8 +147,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
 - Promoted-purchase images: `scripts/promo.sh` shoots each sold offer's (`shots.sh promo-`, `UNSTIR_PROMO`,
-  `PromoArt` in Icon.swift: its dock cover as dealt inside the bezel, Complete's with Release's packs whatever the
-  build) and crops each to `shots/promo-<offer>-1024.png`, as App Store Connect asks: 1024 x 1024, RGB without alpha,
+  `PromoArt` in Icon.swift: its dock cover as dealt inside the bezel) and crops each to `shots/promo-<offer>-1024.png`, as App Store Connect asks: 1024 x 1024, RGB without alpha,
   square corners, 72 dpi (needs Pillow).
 - Picture lab: `scripts/picture-lab.sh render <picture> <out.png> [seed] [t] [side px] [layout stack]` draws a live
   picture on the Mac's GPU, stirred by a stack if given; `scripts/picture-lab.sh bench <picture>...` times each
@@ -296,7 +295,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
   prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. A daily's id and seed are
   its day's yyyymmdd (`Level.dailyID`), and `Daily.run` counts, once today's has a best, the days in a row ending today
-  that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13). Endless changes only what
+  that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13), and a best the archive
+  saved (`Best.archived`) never counts. Endless changes only what
   it asks for (`Level.endless`: tank n has 5 + 5n/4 stirs up to 28, at least n/2 of them hidden, to half), which
   `testEndlessVectors` pins. A `Run` is endless's seed, tank and the brim's notches as that tank opens. Progress
   (`Best`, started flags, undo bank, and each unfinished level's resume) is kept in `UserDefaults`. The undo bank (`Best.undos`, 10 at most) refills by 2
@@ -354,7 +354,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lights at once with a light tap, so the rod that lights is the rod that turns: its knob's ticks and a ring on the dark
   band round it, never past it, and one 0.5 pt hairline round its disc, dimmer until letting go would commit. On lift
   the disc's hairline flashes and fades, a twist that stacks an entry flashes the knob's ring red (the swirl's, a hairline `swirlFlash`, 5 pt, inside the glass's edge), and one that cancels
-  sends a magenta hairline out from the knob. Every line a turn draws over the picture is a hairline but the count's
+  sends a magenta hairline out from the knob. A drag the system cuts off (a call, Control Center, Siri, the lock) or a
+  second finger takes over lets go as the lift would, whichever of the phase change and the cancelled gesture comes
+  first, and the phase change's at once, without the settle, whose completion waits on a frame (Jack's V26 call,
+  2026-10-27, extended by his call C13, round 13). Every line a turn draws over the picture is a hairline but the count's
   dashes, 2 pt, and none has a glow or a dark band under it: the pictures are fine lines themselves, and whatever a
   heavy line covers the player cannot read. The opening replay's ring is not a hairline. A
   seized knob touched shakes a few degrees, plays `Knock.thud` (duller than the tank step's `Knock.clunk`, both on one
@@ -422,7 +425,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   settle, and on leaving or going to the background; `RootView.show` replays the record through the same calls
   (`Game.resumed`) before the level appears, with no opening, the bank, flags and analytics untouched, the fine pass
   inline and the brim's replayed changes long settled. A save whose level no longer deals the same (`Level.print`)
-  or that the level refuses is dropped, and a launch drops yesterday's dailies and ids no level has (`Resume.prune`).
+  or that the level refuses is dropped, and a launch drops dailies the archive doesn't hold (`Archive.days`) and ids no level has (`Resume.prune`).
   A solve clears it; a tank out of ticks keeps it, the losing move too, and reopens on its lost card, its undo live
   and the loss's rings, sounds and analytics not played again, until "again" or a solve clears it, so a back swipe off
   the lost card loses nothing (Jack's call, 2026-11-01, on C19); a cleared tank of a run
@@ -494,7 +497,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   prover, its one key pinned,
   `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
-  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu", or "‹ Complete" when Complete's card opened it (`PackCard.backTo`). A pack's undo spends the shared bank like any other, but
+  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu", or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`). A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
@@ -504,8 +507,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   false for First Stir alone, and `Pack.sold()`, the packs a build sells (Lens, Escapement and Prism in Release), leaves it out in Release only, so its code, levels,
   ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`) still reach them. In Release its every level, taste and all, is `.withheld`, which opens
   neither the level (`Store.opens`, checked by `RootView.show`) nor its card (nor `UNSTIR_CARD`), and `Pack.sold()`
-  sets what StoreKit is asked for (`Pack.productIDs`), what Complete grants and needs, Complete's cover, words
-  (`Pack.named`; the card's "or all three in Complete" counts them, `Offer.countWord`), and clip, and analytics' snapshot (`testFirstStirIsOutOfV1`).
+  sets what StoreKit is asked for (`Pack.productIDs`) and analytics' snapshot (`testFirstStirIsOutOfV1`). The bundle
+  (`Offer.complete`, sold as `Pack.completeID`, its old name Complete kept in its ids) is self-limiting (Jack's call
+  M1 = B2, round 14): it grants a fixed `Pack.bundled`, Lens, Escapement and Prism, in every build, and no later pack
+  ever joins it (`testNoLaterPackJoinsTheBundle`); a later bundle would be a product of its own. What it grants and
+  needs, its cover, words (`Pack.named`; the card's "or all three in Triptych I" counts them, `Offer.countWord`) and clip
+  all read `Pack.bundled`. Its name, wherever a player reads it, is `Offer.bundleName`, "Triptych I" (Jack's call M1, round 15: a numeral from day one, so a second bundle is Triptych II)
+  (runner-up Folio), and the `.storekit` file's display name with it.
   `Store` is StoreKit 2 with no server and nothing that grants stored (`asked.<product>` only remembers an Ask to Buy
   made here, from `purchase`'s pending result until its approval is said or it is revoked, so the approval is said
   once: `Asked`, `Ledger.answers`, read after the launch's entitlements and each update): entitlements from `Transaction.currentEntitlements` at
@@ -515,24 +523,24 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Store's product page (a promoted purchase) sets `Store.promoted` to the offer this build sells (`Offer.promoted`),
   keeping its product, `RootView` opens that card over the menu, closing the settings sheet (an open level leaves
   through its own way out, `LevelView.leave`, its try saved and its quit sent as the back's are), and the card takes it and buys as its own buy does once `Store.settled`, unless owned or payments
-  are off, landing as any purchase lands (Jack's call M6, round 14). `Store.bought`, any pack owned (Complete or a
+  are off, landing as any purchase lands (Jack's call M6, round 14). `Store.bought`, any pack owned (the bundle or a
   family's share too), is the one check of whether the player has bought anything: the supporter mark reads it, as
-  the daily archive does. Under the harness's states a purchase lands in them, never StoreKit. Only a verified transaction grants; Complete (`Pack.completeID`) grants
-  every pack, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
+  the daily archive does. Under the harness's states a purchase lands in them, never StoreKit. Only a verified transaction grants; the bundle (`Pack.completeID`) grants
+  `Pack.bundled`, and a revocation takes back only what that product alone granted. `Ledger` keeps each product's
   `Purchase` (unowned, owned, pending, failed, revoked), and `Store.failures` why each failure failed (`Failure`:
   offline, a storefront without it, purchases turned off), which the card says under it. A pending pill reads
   "asked" and stays live, since StoreKit sends nothing for a declined Ask to Buy and a new purchase sends a new request;
-  an ask again that fails leaves the product pending and says why under it. A pack waiting only on Complete's request
-  (`Store.asked`, its own product's state) says Complete is the one waiting, and its pill buys the pack alone; Complete's
-  line under it waits too. Where
+  an ask again that fails leaves the product pending and says why under it. A pack waiting only on the bundle's request
+  (`Store.asked`, its own product's state) says the bundle is the one waiting, and its pill buys the pack alone; the
+  bundle's line under it waits too. Where
   `AppStore.canMakePayments` is false (`Store.canPay`) the card offers only the taste and says why; and a restore says
   what it found that wasn't owned (`Restored`, `Store.restoreNote`), and nothing on a cancelled sign-in. A revocation
   says, in grey, that the pack isn't on this Apple ID any more, or, where its transaction was family-shared
   (`Ledger.unshared`), that it is no longer shared, and that the progress is kept. A revoked pack keeps its bests; past the taste it needs the
-  card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and Complete as family-shareable non-consumables at
-  2.99 a pack and 5.99 for Complete (Jack, 2026-10-25, when Complete held three packs, as it does again in Release); the scheme's run action and `StoreTests` use it. Prices are
+  card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and the bundle as family-shareable non-consumables at
+  2.99 a pack and 5.99 for the bundle (Jack, 2026-10-25, when it held three packs, as it does again); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice` (and `amounts` its `price`, written in its
-  `priceFormatStyle` for Complete's saving, `Store.saving`), fetched at launch and again when a card
+  `priceFormatStyle` for the bundle's saving, `Store.saving`), fetched at launch and again when a card
   opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" under it once the fetch
   has failed (`Store.pricing`; beside it, the SE wrapped it inside the pill), the pill still live, since the App Store's sheet shows the price.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
@@ -641,13 +649,25 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   changes), the test past 8 at 512 px; the test is the judge. On the simulator one long cloud bank's flat base row came
   out a level different whichever vignettes had played, which the Mac never showed: keep a cloud bank inside the
   tank's width.
+- **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
+  before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
+  today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
+  unlock where it opens packs (`Archive.opens`). `ArchiveRow` sits under today's daily on the menu: until then a quiet
+  lock, "comes with any pack", which a tap shakes and answers as a closed row does, never opening the shelf.
+  `ArchiveView` lies over the menu as a card does, a month to a block on the player's week, each day's number over its
+  result in the menu's words (`Archive.Mark`: clean, par, +n, tried), a list of days at accessibility sizes. A day
+  opens `Level.daily(_:archived:)`, the day's own tank under its own id, whose back reads "‹ archive" and returns there
+  (`RootView.archive`, `Level.focus(solved:)`), the day ringed once. It plays as any level: its best saves marked
+  `archived`, again is no practice, and it has no share line or next daily's time; but a day that kept a best on its
+  day keeps it, the archive replaying it as practice (`Game.counts`), so the archive never moves `Daily.run`.
+  `Resume.known` holds its days, so a try left there survives a launch.
 - **Shelf.swift** holds the shelf (Jack's pick, round 3, S2: a dock of live covers) and the cards. `Offer` is a pack or
-  Complete, with its card's words and colours. `PackDock` sits at the bottom of the menu, once plughole 09 is solved, a pack is owned or asked
+  the bundle, with its card's words and colours. `PackDock` sits at the bottom of the menu, once plughole 09 is solved, a pack is owned or asked
   for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
-  `Offer.shelf`: in Release a pack only once it has levels past its taste and Complete only once every pack is there
-  (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and Complete; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
-  draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's grid, the fern; Complete a wedge of
-  each sold pack's, cut from the centre, `testEveryCoverStirsItsClipsLevel`), stirred and unstirred by `Unstirred` on
+  `Offer.shelf`: in Release a pack only once it has levels past its taste and the bundle only once every pack it grants is there
+  (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
+  draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's grid, the fern; the bundle a wedge of
+  each of its packs', cut from the centre, `testEveryCoverStirsItsClipsLevel`), stirred and unstirred by `Unstirred` on
   the level's dealt stack, an entry at a time (`Unstirred.shares`), on a 7 s loop, each out of step, held as dealt under
   Reduce Motion, at 30 Hz, paused where it stands under a card, the settings sheet or a level a back swipe slides off, while `Power` saves
   (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
@@ -658,26 +678,26 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Escapement once maelstrom is open, First Stir never) until its card opens, and again when an update adds levels
   since it last opened (`Marks`, stored as `shelf.fit.<pack>` and `shelf.levels.<pack>`, never by a harnessed launch),
   owned or not; else, under an unowned pack once any free level is started or solved, "2/3 free", counting those with
-  a best (`Pack.tastePlayed`), kept at "3/3 free"; Complete's never marks (Jack's call C6, round 13). An Ask to Buy
+  a best (`Pack.tastePlayed`), kept at "3/3 free"; the bundle's never marks (Jack's call C6, round 13). An Ask to Buy
   approval landing on its open card is said by the landing; otherwise the dock's header reads "Lens is yours"
-  ("every pack is yours" for Complete) in its glow for 5 s in sight, waiting while anything covers the dock, and
+  ("Triptych I is yours" for the bundle) in its glow for 5 s in sight, waiting while anything covers the dock, and
   VoiceOver hears it once (`Store.approved`, `Store.said`; Jack's call C21, round 13). `PackCard` grows out
   of its cover: the clip (`PackClip`), what it
   assumes, the taste, holds (`Pack.planned`), "More levels arrive in an update." while any of its levels aren't in, the
-  purchase state, buy at the App Store's price, try free, Complete beside an unowned pack, and on the dock, only
-  while it costs less than the sold packs left unowned, saying the saving ("or all three in Complete · $5.99 · save
-  $2.98 ›", broken only before "· save", and a "save" fact on Complete's own card; `Offer.saving`, from
-  `Product.price`; the line and the fact wait for the prices, and the dock's cover too unless no sold pack is owned,
+  purchase state, buy at the App Store's price, try free, the bundle beside an unowned pack it grants, and on the dock, only
+  while it costs less than its packs left unowned, saying the saving ("or all three in Triptych I · $5.99 · save
+  $2.98 ›", broken only before "· save", and a "save" fact on the bundle's own card; `Offer.saving`, from
+  `Product.price`; the line and the fact wait for the prices, and the dock's cover too unless none of its packs is owned,
   `Store.offersComplete`, so a launch's dock keeps its cover) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
   locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
-  once all are (`PackCard.pickUp`, `continues`); Complete's owned card plays on in the first sold pack with a level
+  once all are (`PackCard.pickUp`, `continues`); the bundle's owned card plays on in the first of its packs with a level
   left ("play Lens 04 ›"). The dock drops "PAID ADD-ONS" once any pack is owned, its taste line
-  once every one is, and Complete's cover once it saves nothing (Complete owned, or the packs left cost no more than
-  it), animating the shelf's change, its height kept whatever the covers' lines say; Complete's card names each pack as a link to its
+  once every one is, and the bundle's cover once it saves nothing (the bundle owned, or the packs left cost no more than
+  it), animating the shelf's change, its height kept whatever the covers' lines say; the bundle's card names each pack as a link to its
   card (`onOffer`, and a VoiceOver action per pack), so each taste is a tap away, and back from that card returns to
-  Complete's while Complete is still on offer, else to the menu (`UNSTIR_CARD=complete` opens it on the same terms, or
+  the bundle's ("‹ Triptych I") while the bundle is still on offer, else to the menu (`UNSTIR_CARD=complete` opens it on the same terms, or
   owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
@@ -708,9 +728,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
   Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
   no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves, its hub counting 3 down to 0. Prism: specimen 1
-  in its par of three, the red stir buried under the cyan one first. Complete (`Clip.cut(of:)`): each sold pack's first beat in turn, a
-  vignette (the sunrise from just after its first heal, which plays nothing, through its second), a zoom, a tick and Prism's buried red stir coming off (Jack, CL2, before Prism);
-  in Release, without First Stir, the zoom, the tick and Prism's red stir coming off, about 8 s. Every reel stays drawn,
+  in its par of three, the red stir buried under the cyan one first. The bundle (`Clip.cut(of:)`): each of its packs' first beat in turn, the zoom, the tick and
+  Prism's red stir coming off, about 8 s, in every build (Jack, CL2; a cut can also take First Stir's vignette, the
+  sunrise from just after its first heal, which plays nothing, through its second). Every reel stays drawn,
   the idle ones clear, so a cut never waits on a bake. The dock keeps its covers' own loops (`PackTank`).
 - **Achievements.swift** and **GameCenter.swift** hold Game Center's achievements (Jack's call F5 = B, round 14: sign-in
   and achievements, no leaderboards; the list is the pitch's 16, 255 points, awaiting his pick, its pressure flags kept
@@ -929,7 +949,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_BACKSWIPE=0.4` holds the level that share of the way into a back swipe, the menu under it, and `=run` plays
   the swipe a second in by a drawn fingertip. `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
   leaves it, saying what opens it. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
-  today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
+  today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only.
+  `UNSTIR_ARCHIVE=1` opens the archive over the menu, `UNSTIR_ARCHIVED=1:c,3:0,6:2,9:t` gives the daily that many days
+  back a best from the archive (clean, that many over par) or a try, and `UNSTIR_MODE=archive UNSTIR_DAY=n` opens the
+  daily n days back from the archive. `UNSTIR_ICON=n` shows app-icon candidate n alone. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which

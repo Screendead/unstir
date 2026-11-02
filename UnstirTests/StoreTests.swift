@@ -7,10 +7,10 @@ import XCTest
 
 /// The entitlement rules, without StoreKit.
 final class LedgerTests: XCTestCase {
-    func testCompleteGrantsEveryPack() {
+    func testTheBundleGrantsItsThreePacks() {
         var ledger = Ledger()
         ledger.record(Pack.completeID, .owned)
-        XCTAssertEqual(ledger.owned, Set(Pack.allCases))
+        XCTAssertEqual(ledger.owned, Set(Pack.bundled))
     }
 
     func testOnlyARevocationTakesAPackAway() {
@@ -238,8 +238,8 @@ final class StoreTests: XCTestCase {
         let store = Store()
         await store.start()
         await store.purchase(Pack.completeID)
-        XCTAssertEqual(store.ledger.owned, Set(Pack.allCases))
-        try await relaunch(owns: Set(Pack.allCases))
+        XCTAssertEqual(store.ledger.owned, Set(Pack.bundled))
+        try await relaunch(owns: Set(Pack.bundled))
     }
 
     func testRefundRevokesThePack() async throws {

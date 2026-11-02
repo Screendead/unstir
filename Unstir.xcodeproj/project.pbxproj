@@ -56,7 +56,9 @@
 		AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */; };
 		B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB4A9DE240F63330597A189 /* LensTests.swift */; };
 		BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */ = {isa = PBXBuildFile; fileRef = D1F91870B1E87E24EFC084E0 /* Glass.metal */; };
+		BD8503AA80BACF958F3E6355 /* ArchiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64C2CE0EF090746C7B6799A /* ArchiveTests.swift */; };
 		C3596BB291D30EF520836782 /* Chainmail.metal in Sources */ = {isa = PBXBuildFile; fileRef = E302013539F573E3F8C8FBC5 /* Chainmail.metal */; };
+		CB8FCA0E33DA80181C177486 /* Archive.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9DE31F264F1D40389BD4802 /* Archive.swift */; };
 		CCD56B4404CDF1979D62B556 /* VortexPictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C424A58661F8E2D8F67C740 /* VortexPictures.swift */; };
 		D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0CD5709FED7976550A2E52 /* TankView.swift */; };
 		D743967665795B21B03B6D88 /* AchievementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAAABE968196C7403939ADC9 /* AchievementTests.swift */; };
@@ -151,6 +153,8 @@
 		DB7B4A291F2734F1B961F3FE /* Shelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shelf.swift; sourceTree = "<group>"; };
 		E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirTheStorm.swift; sourceTree = "<group>"; };
 		E302013539F573E3F8C8FBC5 /* Chainmail.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Chainmail.metal; sourceTree = "<group>"; };
+		E64C2CE0EF090746C7B6799A /* ArchiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveTests.swift; sourceTree = "<group>"; };
+		E9DE31F264F1D40389BD4802 /* Archive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Archive.swift; sourceTree = "<group>"; };
 		EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirDuskBefore.swift; sourceTree = "<group>"; };
 		EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirFlood.swift; sourceTree = "<group>"; };
 		FED6B7A35E47B3475841C4DC /* ClipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipTests.swift; sourceTree = "<group>"; };
@@ -182,6 +186,7 @@
 				CAAABE968196C7403939ADC9 /* AchievementTests.swift */,
 				BABEC41CC980BB057133BC8D /* AgeCheckTests.swift */,
 				FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */,
+				E64C2CE0EF090746C7B6799A /* ArchiveTests.swift */,
 				FED6B7A35E47B3475841C4DC /* ClipTests.swift */,
 				7FD78B993A35245B095AA159 /* EscapementTests.swift */,
 				59B662DA049B8A76E76E38BF /* FirstStirTests.swift */,
@@ -225,6 +230,7 @@
 				6CDB9648767C314FCCCA618D /* Achievements.swift */,
 				6DC78A03B7B4D5363A8E010A /* AgeRange.swift */,
 				8958A26903CC2506CCC43FBF /* Analytics.swift */,
+				E9DE31F264F1D40389BD4802 /* Archive.swift */,
 				059E21DBCF779B91F994E8E5 /* Assets.xcassets */,
 				D322AA44C06018F3A665792F /* Brim.metal */,
 				6499D4977A88A7764419D373 /* Brim.swift */,
@@ -383,6 +389,7 @@
 				004B89CB4B51B3A6DC483356 /* Achievements.swift in Sources */,
 				9D7E172AE1903B5595EF8A96 /* AgeRange.swift in Sources */,
 				4B90EE14EB243B161D6EBD17 /* Analytics.swift in Sources */,
+				CB8FCA0E33DA80181C177486 /* Archive.swift in Sources */,
 				4C24D2DED659D4353BEA9998 /* Brim.metal in Sources */,
 				500060DF38B729F0EB090EBA /* Brim.swift in Sources */,
 				C3596BB291D30EF520836782 /* Chainmail.metal in Sources */,
@@ -436,6 +443,7 @@
 				D743967665795B21B03B6D88 /* AchievementTests.swift in Sources */,
 				23DF5B72FA36860C3F80A6C5 /* AgeCheckTests.swift in Sources */,
 				6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */,
+				BD8503AA80BACF958F3E6355 /* ArchiveTests.swift in Sources */,
 				2F4A4627C3976608D2D99D66 /* ClipTests.swift in Sources */,
 				730654ACB29B80F0DED02225 /* EscapementTests.swift in Sources */,
 				F09FECAA611D270EE52C8307 /* FirstStirTests.swift in Sources */,

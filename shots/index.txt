@@ -12,6 +12,11 @@ first-launch-pointer.png  The same, its note at rest after 4 s: the note and the
 menu-after-01.png  Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list.
 menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox.
 menu-daily-run.png  The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more.
+menu-archive-locked.png  The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack.
+menu-archive-open.png  The same with Lens owned: the archive's row open, 30 past dailies and how many are at par.
+archive.png  The archive's calendar, Lens owned: the 30 days before today a month to a block, the three days before today solved on their day at par, others from the archive clean, par, +2, +1 or tried, today's number marked today.
+archive-large.png  The same at accessibility type (accessibility3): a list of days in place of the week grid.
+archive-day.png  The daily from five days ago, opened from the archive: its own tank, and its way out reads archive.
 menu-tried.png  Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row.
 menu-no-dock.png  Plughole 01 to 08 solved: no pack dock yet.
 menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best.
@@ -370,7 +375,7 @@ icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl ins
 promo-lens.png  Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black.
 promo-escapement.png  Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black.
 promo-prism.png  Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black.
-promo-complete.png  Complete's promoted-purchase image: a wedge of each of Release's three packs' covers, inside the bezel on black.
+promo-complete.png  Triptych's promoted-purchase image: a wedge of each of its three packs' covers, inside the bezel on black.
 promoted-menu.png  A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned.
 promoted-level.png  The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned.
 firststir-01.png  First Stir 1 as dealt: every core turned, the time under the tank.
@@ -454,27 +459,27 @@ firststir-ending-02.png  The night forwards 1 s in: scene 25 played, the tea sti
 firststir-ending-05.png  The night forwards 7 s in: scene 25 at its end, the tea still, crossfading to scene 24 at 7:55 pm.
 firststir-ending-60.png  The night forwards 83 s in: the Flood's upstairs window, 1:39 am, the water rising.
 firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
-shelf-menu.png  Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought.
-shelf-menu-stirred.png  The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Complete (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's grid clean, Prism's fern just stirring in.
-shelf-menu-clean.png  The dock at the top of its loop: First Stir and Complete clean, Lens stirring in, Escapement and Prism unstirring.
+shelf-menu.png  Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Triptych, nothing bought.
+shelf-menu-stirred.png  The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Triptych (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's grid clean, Prism's fern just stirring in.
+shelf-menu-clean.png  The dock at the top of its loop: First Stir and Triptych clean, Lens stirring in, Escapement and Prism unstirring.
 shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass.
 shelf-new.png  Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir.
 shelf-taste-count.png  Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens.
 shelf-new-levels.png  Lens owned, its card last opened with 20 levels: new under Lens beside the check.
 shelf-approved.png  The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header.
-card-lens-unowned.png  Lens's card, unowned: Complete's line saves $5.97 on the four packs a Debug build sells.
+card-lens-unowned.png  Lens's card, unowned: Triptych's line saves $2.98 on its three packs.
 card-lens-owned.png  Lens's card, owned.
-card-lens-pending.png  Lens's card, pending: Complete's line saves $5.97 on the four packs a Debug build sells.
-card-lens-failed.png  Lens's card, failed: Complete's line saves $5.97 on the four packs a Debug build sells.
-card-lens-revoked.png  Lens's card, revoked: Complete's line saves $5.97 on the four packs a Debug build sells.
-card-prism-no-complete.png  Prism's card with Lens and First Stir owned (a Debug build sells four): no Complete line, since $5.99 is more than the two packs left.
-shelf-menu-lens-owned.png  The dock with Lens and First Stir owned: no Complete cover, since it costs more than the two packs left.
+card-lens-pending.png  Lens's card, pending: Triptych's line saves $2.98 on its three packs.
+card-lens-failed.png  Lens's card, failed: Triptych's line saves $2.98 on its three packs.
+card-lens-revoked.png  Lens's card, revoked: Triptych's line saves $2.98 on its three packs.
+card-prism-no-complete.png  Prism's card with Lens and First Stir owned (First Stir is outside the bundle): no Triptych line, since $5.99 is more than the two packs left.
+shelf-menu-lens-owned.png  The dock with Lens and First Stir owned: no Triptych cover, since it costs more than the two packs left.
 card-first-stir.png  First Stir's card, unowned.
 card-escapement.png  Escapement's card, unowned.
 card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings.
 card-prism-levels.png  Prism's card, owned, scrolled to its specimens under the five trays.
-card-complete.png  Complete's card, unowned: save $5.97 on the packs you don't have.
-card-complete-saves-nothing.png  UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover.
+card-complete.png  Triptych's card, unowned: save $2.98 on the packs you don't have.
+card-complete-saves-nothing.png  UNSTIR_CARD=complete with Lens and First Stir owned: Triptych saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Triptych cover.
 clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
 clip-first-stir-1.4.png  First Stir's clip 1.4 s in.
 clip-first-stir-2.1.png  First Stir's clip 2.1 s in.
@@ -496,24 +501,24 @@ clip-prism-1.4.png  Prism's clip 1.4 s in: the buried red stir off first, then t
 clip-prism-2.4.png  Prism's clip 2.4 s in: the buried red stir off first, then the cyan, then the white.
 clip-prism-3.6.png  Prism's clip 3.6 s in: the buried red stir off first, then the cyan, then the white.
 clip-prism-5.0.png  Prism's clip 5.0 s in: the buried red stir off first, then the cyan, then the white.
-card-lens-complete-failed.png  Lens's card after Complete, bought from it, failed: the line under Complete's button says so.
-card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, play First Stir 01 (a Debug build sells it).
-card-lens-complete-pending.png  Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled.
+card-lens-complete-failed.png  Lens's card after Triptych, bought from it, failed: the line under Triptych's button says so.
+card-complete-owned.png  Triptych's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, playing on in Lens.
+card-lens-complete-pending.png  Lens's card while Triptych waits on Ask to Buy: Triptych is waiting, buy Lens alone, Triptych's line disabled.
 card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
 card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
 card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74).
-shelf-menu-owned.png  The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone.
-card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Complete line until the prices say what it saves.
-card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Complete line.
+shelf-menu-owned.png  The dock with every pack owned, the three through Triptych and First Stir (outside it) on its own: PACKS alone, no taste line, Triptych's cover gone.
+card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Triptych line until the prices say what it saves.
+card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Triptych line.
 card-lens-unshared.png  Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey.
 card-lens-offline.png  Lens's card after a purchase failed offline: no connection, try again when you're online.
-card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Complete, try free kept.
+card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Triptych, try free kept.
 card-lens-restored.png  Lens's card, owned, after a restore found it: restored Lens.
 card-lens-restored-none.png  Lens's card after a restore found nothing: nothing to restore on this Apple ID.
 card-lens-levels.png  Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked.
 card-lens-levels-owned.png  The same, owned: every level open.
 card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note.
-card-gate-ax.png  The same at accessibility3: the Complete line under buy wraps only before · save.
+card-gate-ax.png  The same at accessibility3: the Triptych line under buy wraps only before · save.
 card-lens-taste-end.png  Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta.
 card-lens-taste-end-owned.png  The same, owned: next again, still in Lens's magenta.
 card-lens-replay.png  Lens's card, unowned, the taste played: replay 01-03 in try free's place.

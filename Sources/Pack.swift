@@ -28,8 +28,12 @@ enum Pack: String, CaseIterable, Sendable {
         }
     }
 
-    /// Grants every pack. A later pack joins it, so an older Complete owns it too.
+    /// The bundle's product, which grants `bundled`. Its id says Complete, its old name, and never changes.
     static let completeID = "com.screendead.Unstir.complete"
+
+    /// What the bundle grants, fixed: a later pack never joins it, and a bundle after it holds three packs of its own
+    /// under a new product (Jack's call M1 = B2, round 14).
+    static let bundled: [Pack] = [.lens, .escapement, .prism]
 
     static var productIDs: [String] { sold().map(\.productID) + [completeID] }
 
@@ -37,7 +41,7 @@ enum Pack: String, CaseIterable, Sendable {
     /// (PK1); a build outside Release keeps First Stir, so its levels, tests and films still run.
     var ships: Bool { self != .firstStir }
 
-    /// The packs a build sells, and Complete grants.
+    /// The packs a build sells.
     static func sold(release: Bool = Build.release) -> [Pack] { allCases.filter { !release || $0.ships } }
 
     /// "Lens and Escapement".

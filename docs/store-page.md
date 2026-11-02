@@ -11,7 +11,7 @@ Store Connect and the hosted pages, never into a tracked file. The same goes for
 `{{DEVELOPER_NAME}}`.
 
 What it is true to: `master` with `v1-no-analytics` (four tiers of 27 levels, the daily, endless, the sandbox, StoreKit
-for the packs and Complete) and the packs' levels as built: Lens's 25 and Escapement's 30. Prism, the third pack
+for the packs and the bundle) and the packs' levels as built: Lens's 25 and Escapement's 30. Prism, the third pack
 (PK1 = A, replacing First Stir, which is out of v1), is being built; its lines below describe its design and are to be
 checked against it once it ships. Not built, so left out of the copy: the daily archive, the supporter mark, iCloud
 sync and charybdis.
@@ -85,14 +85,14 @@ Three packs add their own pictures, tanks and rules. The first three levels of e
 - Escapement: a book of composed problems with a clock in them. One rod ticks a step by itself after every move you make. Time your heals so the clock always finds its seam.
 - Prism: every picture is drawn three times, in red, green and blue light, and each rod stirs only some of the colours. Unstir until the ghosts snap back into one white line.
 
-Complete unlocks Lens, Escapement and Prism in one purchase. Packs and Complete can be shared with your family through Family Sharing.
+Triptych I unlocks Lens, Escapement and Prism in one purchase. Packs and Triptych I can be shared with your family through Family Sharing.
 
 No ads. No timers. No account. Your progress stays on your phone, and the game sends nothing.
 ```
 
 Choices and checks in it:
-- **Complete.** It names the three packs and promises nothing about later ones (HANDOFF: the store page never promises
-  later packs to Complete owners; to-do 55, App Review's rules on Complete, is still open) **(check)**.
+- **Triptych.** The bundle, Triptych I in the app and the store (Jack's call, round 15: a numeral from day one). It grants Lens, Escapement and Prism
+  and no later pack ever joins it, so the page names the three and promises nothing about later ones **(check)**.
 - **Family Sharing.** On for all four products (Jack, ST6): `StoreKit/Unstir.storekit` already marks each
   family-shareable, and the store code handles family grants. Turn it on for each in App Store Connect too; once on it
   can't be turned off (check).
@@ -146,7 +146,7 @@ version exists.
 | Unrestricted web access | No | The app has no web view: the privacy policy row opens Safari |
 | User-generated content, messaging, chat | No | The share line is a text the player sends through the system share sheet; nothing is received |
 | Advertising | No | |
-| In-app purchases | Yes | Three packs and Complete |
+| In-app purchases | Yes | Three packs and a bundle of them |
 | Parental controls, age assurance | Yes (open) | The game calls Apple's Declared Age Range API and gates nothing; either answer keeps 4+ |
 | In-app controls, capabilities, medical or wellness topics, violent themes (added 2025) | None or No | |
 
@@ -234,7 +234,7 @@ The 4–12 s film doesn't exist and is the one new case the plan needs; it also 
   recorded in `HANDOFF.private.md` only, and filled in App Store Connect and in the published pages at publishing.
 - **Marketing URL** (optional). None until a domain exists.
 - **Copyright.** The year and holder of the source files' copyright headers.
-- **In-app purchases.** Display names: "Lens", "Escapement", "Prism", "Complete". Descriptions (Apple's limit is
+- **In-app purchases.** Display names: "Lens", "Escapement", "Prism", "Triptych I". Descriptions (Apple's limit is
   assumed to be 45 characters; check):
 
   | Product | Description | Chars |
@@ -242,7 +242,7 @@ The 4–12 s film doesn't exist and is the one new case the plan needs; it also 
   | Lens | Rods that zoom and spiral | 25 |
   | Escapement | Composed problems with a clock | 30 |
   | Prism | Three colours, one white line | 29 |
-  | Complete | Lens, Escapement and Prism | 26 |
+  | Triptych | Lens, Escapement and Prism | 26 |
 
   Each also needs a review screenshot and, if promoted, its own art (to-do 50 and 51).
 - **Review notes.** App Review can't open the later tiers without playing every level at par, and the developer unlock
