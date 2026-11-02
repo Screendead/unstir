@@ -154,9 +154,10 @@ Expected result: 4+.
 
 ## Screenshots
 
-Each is a `scripts/shots.sh <name>` case, rendered on a Pro Max simulator at 1320 × 2868, which is assumed to be the
-6.9-inch size App Store Connect asks for (check). No render was looked at for this draft: Jack judges each from the
-shots. HANDOFF's rule: lead with the free game, then the packs, each pack shot labelled as a paid add-on (guideline
+Each is a `scripts/shots.sh <name>` case, rendered on a Pro Max simulator at 1320 × 2868, one of the sizes App
+Store Connect accepts for "iPhone with Dynamic Island (large display)", which also covers the required Face ID (large)
+set (its "Screenshot specifications" page, read 2026-11-02: PNG or JPEG, no alpha, up to ten). Jack judges each from
+the shots. HANDOFF's rule: lead with the free game, then the packs, each pack shot labelled as a paid add-on (guideline
 2.3.2, assumed).
 
 | Option | Set |

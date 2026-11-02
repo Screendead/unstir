@@ -53,8 +53,8 @@ film() {  # name seconds strip-filter KEY=VALUE...
   # recordVideo writes a frame only when the screen changes; fps= resamples to even time steps.
   ffmpeg -loglevel error -y -i "$mp4" -vf "trim=start=${start:-0},setpts=PTS-STARTPTS,$strip" -frames:v 1 "shots/film/$name-strip.png"
   # GitHub takes videos under 10 MB; a live picture changes every frame, so a long film can pass that.
-  # FILM_FULL=1 keeps the recorded size, for the store's preview and clips.
-  if [[ -z "${FILM_FULL:-}" ]] && (( $(stat -f %z "$mp4") > 9500000 )); then
+  # FILM_FULL=1 keeps the recorded size, for the store's preview and clips; the shrink would drop a take's sound.
+  if [[ -z "${FILM_FULL:-}" && -z "$snd" ]] && (( $(stat -f %z "$mp4") > 9500000 )); then
     ffmpeg -loglevel error -y -i "$mp4" -vf scale=660:-2 -c:v libx264 -crf 24 -pix_fmt yuv420p -an "${mp4%.mp4}-small.mp4"
     mv "${mp4%.mp4}-small.mp4" "$mp4"
   fi
