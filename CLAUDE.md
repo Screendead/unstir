@@ -150,9 +150,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Store media: `scripts/store-media.sh [screens|preview|social|sound|all] [--cut]` makes the App Store's set (Jack's calls
   ST4 and ST5 = A, `docs/store-page.md`) into `$STORE_OUT` (`shots/store` unless set): the ten `shots.sh store-`
   screenshots, at 1320 x 2868 without alpha and again captioned (`scripts/store-captions.py`, Pillow and the Mac's SF
-  Mono, as this ffmpeg has no drawtext; its look is a draft), the 27.6 s free-game preview at 886 x 1920 and 30 fps with a
-  silent stereo track, its five segments (`store-open-L12`, `store-whirlpool-03`, `rim-swirl`, `rim-seized`,
-  `endless-brim-run`) cut from their strikes and captioned, and plan step 3's social clips, 1080 x 1920 and silent,
+  Mono, as this ffmpeg has no drawtext; its look is a draft), the 25 s free-game preview (Jack's call STOREMEDIA = B,
+  round 16; `STORE_PREVIEW` sets 15 to 27.6) at 886 x 1920 and 30 fps with a silent stereo track, its five segments
+  (`store-open-L12`, `store-whirlpool-03`, `rim-swirl`, `rim-seized`, `endless-brim-run`) cut from their strikes and
+  captioned, whirlpool 03 keeping its whole solve and the other four each giving up the same share of the 27.6 s that
+  all five hold, from the end their line names, and plan step 3's social clips, 1080 x 1920 and silent,
   three drawn clean and one with the hand. `sound` films those clips again with the game's sound, switching the
   Mac's output to BlackHole for the takes and back (needs Homebrew's `blackhole-2ch` and `switchaudio-osx`), into
   `<name>-sound.mp4`, aimed at -16 LUFS (one-pass loudnorm lands them near -15). It films with `FILM_FULL=1`; `--cut` reuses what is taken. Apple's limits
