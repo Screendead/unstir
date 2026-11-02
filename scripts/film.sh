@@ -218,9 +218,9 @@ film clean-prism-01 15 "$whole" PACK=prism LEVEL=1 CLEAN=1 OPEN=1 FINGER=1 MOVES
 # by a drawn fingertip. Whirlpool 03 on chainmail and vortex 02 on the ephemeris drawn clean; maelstrom 01 on coral's
 # twin, Escapement 02 and Prism 01 with their knobs, whose kinds are the point. Lens is left out: its halftone bakes for
 # half a minute on a fresh install, which the opening waits on.
-film editors-whirlpool-03 18 "$whole" TIER=whirlpool LEVEL=3 CLEAN=1 OPEN=1 FINGER=1 REST=1 MOVES=1:-4,0:+4,2:-3,1:+6
-film editors-vortex-02 18 "$whole" TIER=vortex LEVEL=2 CLEAN=1 OPEN=1 FINGER=1 REST=1 MOVES=3:+8,4:+7,0:-4
-film editors-maelstrom-01 18 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 OPEN=1 FINGER=1 REST=1 \
+film editors-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 CLEAN=1 OPEN=1 FINGER=1 REST=1 MOVES=1:-4,0:+4,2:-3,1:+6
+film editors-vortex-02 24 "$whole" TIER=vortex LEVEL=2 CLEAN=1 OPEN=1 FINGER=1 REST=1 MOVES=3:+8,4:+7,0:-4
+film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 OPEN=1 FINGER=1 REST=1 \
   MOVES=-1:+1,2:+8,3:-7,0:+4
-film editors-escapement-02 18 "$whole" PACK=escapement LEVEL=2 OPEN=1 FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
-film editors-prism-01 18 "$whole" PACK=prism LEVEL=1 OPEN=1 FINGER=1 REST=1 MOVES=0:-4,1:+3,2:-3
+film editors-escapement-02 24 "$whole" PACK=escapement LEVEL=2 OPEN=1 FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
+film editors-prism-01 24 "$whole" PACK=prism LEVEL=1 OPEN=1 FINGER=1 REST=1 MOVES=0:-4,1:+3,2:-3

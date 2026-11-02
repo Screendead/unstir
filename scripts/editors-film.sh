@@ -13,7 +13,7 @@ segments=(
   editors-vortex-02:11
   editors-maelstrom-01:13.5
   editors-escapement-02:10
-  editors-prism-01:11.5
+  editors-prism-01:11
 )
 
 [[ "${1:-}" == --join ]] || scripts/film.sh editors-
@@ -26,13 +26,15 @@ for i in "${!segments[@]}"; do
   start=$(ffprobe -v error -f lavfi -i "movie=$mp4,signalstats" -show_entries frame=pts_time:frame_tags=lavfi.signalstats.YAVG \
     -of csv=p=0 | awk -F, '$2 >= 40 { lit = 1 } lit && $2 < 40 && dark == "" { dark = $1; floor = $2 }
       dark != "" && on == "" { if ($2 < floor) floor = $2; if ($1 > dark + 0.3 && $2 > floor + 0.6) on = $1 }
-      END { print (on > 0.2 ? on - 0.2 : 0) }')
+      END { if (on != "") print (on > 0.2 ? on - 0.2 : 0) }')
+  # A launch that stalls past the take leaves no strike: film that segment again (scripts/film.sh <name>).
+  [[ -n "$start" ]] || { echo "$name: no picture struck in its take" >&2; exit 1; }
   inputs+=(-i "$mp4")
   # recordVideo writes a frame only when the screen changes, so fps= first; film.sh may have shrunk a large segment,
   # so every one is scaled to the same size.
-  chains+="[$i:v]trim=start=${start:-0}:duration=$keep,setpts=PTS-STARTPTS,fps=30,scale=1080:2346,setsar=1[v$i];"
+  chains+="[$i:v]trim=start=$start:duration=$keep,setpts=PTS-STARTPTS,fps=30,scale=1080:2346,setsar=1[v$i];"
   labels+="[v$i]"
-  echo "$name from ${start:-0} s, $keep s"
+  echo "$name from $start s, $keep s"
 done
 ffmpeg -loglevel error -y "${inputs[@]}" -filter_complex "${chains}${labels}concat=n=${#segments[@]}:v=1:a=0[out]" \
   -map "[out]" -c:v libx264 -crf 22 -preset slow -pix_fmt yuv420p -movflags +faststart shots/film/editors-reel.mp4
