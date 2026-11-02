@@ -643,6 +643,16 @@ clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn cle
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
 clean-prism-01.png  Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption.
+store-01-marbling.png  Store 1: whirlpool 25 (hex, marbling) with its full scramble.
+store-02-count.png  Store 2: plughole 12, rod 1 carried -2 steps round, its dashes and count off the finger.
+store-03-wave.png  Store 3: plughole 13 solved, the solve wave at radius 0.8.
+store-04-vortex.png  Store 4: vortex 13 on the ephemeris with its full scramble, its lesson learnt.
+store-05-maelstrom.png  Store 5: maelstrom 23 (hex), knobs 2 and 5 seized, the tank held half a step round from the rim.
+store-06-daily.png  Store 6: today's daily, its result card, share and next daily in 7 h.
+store-07-endless.png  Store 7: endless's first tank with 5 of the brim's 8 notches.
+store-08-prism.png  Store 8: Prism 01, the red stir healed and the cyan held halfway back, its ghosts closing on the white line.
+store-09-lens.png  Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 steps of the 3 it heals at.
+store-10-escapement.png  Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left.
 calm-glass.png  Reduce Motion: the sandbox on glass, stirred twice, held on its still frame (Picture.rest).
 calm-chainmail.png  Reduce Motion: the sandbox on chainmail, stirred twice, held on its still frame (Picture.rest).
 calm-coral.png  Reduce Motion: the sandbox on coral, stirred twice, held on its still frame (Picture.rest).

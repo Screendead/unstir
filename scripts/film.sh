@@ -25,12 +25,27 @@ film() {  # name seconds strip-filter KEY=VALUE...
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
   xcrun simctl io "$udid" recordVideo --codec=h264 --force "$mp4" >/dev/null 2>&1 &
-  local rec=$!
+  local rec=$! snd=""
+  # FILM_SOUND=1 plays the take's sound and records it from BlackHole, which the caller has made the Mac's output
+  # (scripts/store-media.sh sound); recordVideo records no audio.
+  if [[ -n "${FILM_SOUND:-}" ]]; then
+    vars+=(SIMCTL_CHILD_UNSTIR_SOUND=1)
+    ffmpeg -loglevel error -y -f avfoundation -i ":BlackHole 2ch" "shots/film/$name.wav" < /dev/null &
+    snd=$!
+  fi
   sleep 1.5  # the recorder takes a moment to start
   env "${vars[@]}" xcrun simctl launch "$udid" "$bundle" >/dev/null
   sleep "$secs"
   kill -INT "$rec"
   wait "$rec" || true
+  if [[ -n "$snd" ]]; then
+    kill -INT "$snd"
+    wait "$snd" || true
+    ffmpeg -loglevel error -y -i "$mp4" -i "shots/film/$name.wav" -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k \
+      "${mp4%.mp4}-sound.mp4"
+    mv "${mp4%.mp4}-sound.mp4" "$mp4"
+    trash "shots/film/$name.wav"
+  fi
   # The strip starts at the first dark frame: the home screen is bright and the app is black.
   local start
   start=$(ffprobe -v error -f lavfi -i "movie=$mp4,signalstats" -show_entries frame=pts_time:frame_tags=lavfi.signalstats.YAVG \
@@ -38,7 +53,8 @@ film() {  # name seconds strip-filter KEY=VALUE...
   # recordVideo writes a frame only when the screen changes; fps= resamples to even time steps.
   ffmpeg -loglevel error -y -i "$mp4" -vf "trim=start=${start:-0},setpts=PTS-STARTPTS,$strip" -frames:v 1 "shots/film/$name-strip.png"
   # GitHub takes videos under 10 MB; a live picture changes every frame, so a long film can pass that.
-  if (( $(stat -f %z "$mp4") > 9500000 )); then
+  # FILM_FULL=1 keeps the recorded size, for the store's preview and clips.
+  if [[ -z "${FILM_FULL:-}" ]] && (( $(stat -f %z "$mp4") > 9500000 )); then
     ffmpeg -loglevel error -y -i "$mp4" -vf scale=660:-2 -c:v libx264 -crf 24 -pix_fmt yuv420p -an "${mp4%.mp4}-small.mp4"
     mv "${mp4%.mp4}-small.mp4" "$mp4"
   fi
@@ -235,3 +251,7 @@ fi
 film editors-lens-03 24 "$whole" PACK=lens LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=0:-3,2:-4,1:+2
 film editors-escapement-02 24 "$whole" PACK=escapement LEVEL=2 OPEN=1 FINGER=1 REST=0.2 MOVES=2:4,0:1,1:-3
 film editors-prism-01 24 "$whole" PACK=prism LEVEL=1 OPEN=1 FINGER=1 REST=0.2 MOVES=0:-4,1:+3,2:-3
+# The store preview's opening and unstir (ST5 = A, scripts/store-media.sh): open-L12 long enough to wind in whole, and
+# editors-whirlpool-03 with the interface, as the preview's other segments have it.
+film store-open-L12 10 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=12 OPEN=1
+film store-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=1:-4,0:+4,2:-3,1:+6

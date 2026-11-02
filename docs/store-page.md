@@ -167,7 +167,8 @@ shots. HANDOFF's rule: lead with the free game, then the packs, each pack shot l
 
 A shows each pack's look, which is what sells it, and the free game still leads.
 
-The set, in order, with a caption each (captions are composited onto the shot, which no script does yet):
+The set, in order, with a caption each. `scripts/store-media.sh screens` shoots it (the `store-` cases) and composites
+the captions in a draft look:
 
 | # | Case | Caption | Chars |
 |---|---|---|---|
@@ -178,9 +179,9 @@ The set, in order, with a caption each (captions are composited onto the shot, w
 | 5 | `seized-m23-half` | Maelstrom: knobs seize. Turn the whole tank. | 44 |
 | 6 | `daily-result` | A new daily every day, the same for everyone. | 45 |
 | 7 | `endless-brim` | Endless: waste a stir and the brim rises. | 41 |
-| 8 | to make: a Prism specimen, ghosts half-merged | Paid pack · Prism: three colours, one line | 42 |
-| 9 | to make: a Lens panel with a zoom seam | Paid pack · Lens: rods that zoom and spiral | 43 |
-| 10 | to make: an Escapement plate, clock mid-tick | Paid pack · Escapement: a clock in every problem | 48 |
+| 8 | `store-08-prism` | Paid pack · Prism: three colours, one line | 42 |
+| 9 | `store-09-lens` | Paid pack · Lens: rods that zoom and spiral | 43 |
+| 10 | `store-10-escapement` | Paid pack · Escapement: a clock in every problem | 48 |
 
 Notes:
 - 2 shows the drag's dashes and count on plughole's grid; `whirlpool-count-marbling` is the same moment on a live
@@ -192,14 +193,16 @@ Notes:
 - 6 and 7 are harnessed states a player reaches (a solved daily, a brim at 5 of 8), so they show nothing a player can't
   see. The menu shots with `UNSTIR_UNLOCK` (`menu-unlocked`, `menu-maelstrom`) would show every tier open, which no new
   player sees; `menu-vortex-open` is the honest menu if B wants one.
-- 8 to 10 wait on the packs' art and a harness case each (`UNSTIR_PACK=` with a level).
+- 8 to 10 are each pack's taste, so none needs owning: Prism 01 with the red stir healed and the cyan held halfway
+  back, Lens 03 held mid-zoom, Escapement 02 with its first tick landed. The harness can't hold a tick mid-turn, so 10
+  shows the tick landed, not mid-tick.
 
 ## Preview video
 
 Each source is a `scripts/film.sh <name>` case. Only films run with `UNSTIR_FINGER=1` show a fingertip; `autoplay-L09`,
-`tour` and `open-L12` show the picture moving with no hand. Master has no sound, so a preview is silent unless the
-`sound` branch is merged first. Apple's current preview limits (length, resolution per device, frame rate) are not
-restated here from memory: check them before cutting **(check)**.
+`tour` and `open-L12` show the picture moving with no hand. `scripts/store-media.sh preview` films and cuts it to
+Apple's limits as read on 2026-11-02 (in the script's header): 886 × 1920, 30 fps, H.264, with a silent stereo track,
+since the page doesn't say whether a preview needs one.
 
 | Option | Plan |
 |---|---|
@@ -215,13 +218,14 @@ The cut, in order:
 
 | Seconds | Source | What it shows | Caption (muted playback) |
 |---|---|---|---|
-| 0–4 | `open-L12` | The clean picture, then every stir growing over it | A picture, stirred |
-| 4–12 | **new**: a finger-driven unstir of one level to its solve wave (`UNSTIR_MOVES` with `UNSTIR_FINGER=1`, on a whirlpool level) | A hand turning the rods back in order, the seams healing, the wave | Turn the rods back in order |
-| 12–16 | `rim-swirl` | Vortex's swirl held from the rim | Vortex: the swirl |
-| 16–21 | `rim-seized` | Maelstrom's tank turned past a seized knob | Maelstrom: the tank turns |
+| 0–4 | `store-open-L12` (`open-L12`, taken long enough to wind in whole) | The clean picture, then every stir growing over it | A picture, stirred |
+| 4–12 | `store-whirlpool-03`: whirlpool 03 unstirred at par by a drawn fingertip to its solve | A hand turning the rods back in order, the seams healing, the wave | Turn the rods back in order |
+| 12–16.5 | `rim-swirl` | Vortex's swirl held from the rim | Vortex: the swirl |
+| 16.5–21 | `rim-seized` | Maelstrom's tank turned past a seized knob | Maelstrom: the tank turns |
 | 21–25 | `endless-brim-run` (its spill) | The brim filling and spilling | Endless, and a daily |
 
-The 4–12 s film doesn't exist and is the one new case the plan needs; it also serves plan step 3's social clips.
+`store-whirlpool-03` also serves plan step 3's social clips, beside three drawn clean (`clean-plughole-05`,
+`clean-whirlpool-01`, `editors-vortex-02`).
 
 ## Other fields App Store Connect asks for
 
@@ -278,6 +282,7 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
 ## Still open
 
 1. Before submitting: the checks marked **(check)** above, against App Store Connect's live pages.
-2. Screenshots 8 to 10 and the 4–12 s film are still to make, and captions need a compositing step that doesn't exist.
+2. The captions' look (band, type, size) is a draft for the UI design pass to set; `scripts/store-media.sh` makes the
+   set, the preview and the social clips again in one run.
 3. The Prism lines describe its design; check them against the pack as it ships.
 4. In App Store Connect's availability, exclude the EU/EEA storefronts (EU1 = B); the EU is out at launch.
