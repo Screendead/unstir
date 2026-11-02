@@ -509,6 +509,7 @@ struct RootView: View {
         // The launch's, not the level's harness, which a level opened from the card's next no longer has.
         Review.harnessed = h.harnessed && !h.reviewLog || env["XCTestConfigurationFilePath"] != nil
         Review.logs = h.reviewLog
+        GameCenter.shared.plays = GameCenter.built && !h.harnessed && env["XCTestConfigurationFilePath"] == nil
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
                                  restored: h.restored, approved: h.approved)
@@ -538,6 +539,11 @@ struct RootView: View {
         _placeholders = State(initialValue: h.cardLevels)
         _focus = State(initialValue: (h.menuTier ?? Tier.stored()).landing())
         _typeSize = State(initialValue: h.typeSize)
+    }
+
+    /// The menu is up with nothing over it: a card, the consent question, the settings sheet.
+    private var calm: Bool {
+        level == nil && card == nil && !archive && !settings && !(Analytics.shared.asks && Analytics.shared.consent == .undecided)
     }
 
     var body: some View {
@@ -607,9 +613,15 @@ struct RootView: View {
             Sound.shared.use(on: !mute)
             if welcoming { Best.welcomed = true }
         }
-        .modifier(AgeChecked(menu: level == nil && card == nil && !archive && !settings
-                                 && !(Analytics.shared.asks && Analytics.shared.consent == .undecided),
+        .modifier(AgeChecked(menu: calm,
                              played: !harnessed && ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil))
+        // Game Center signs in only once the menu has settled, and holds its sheet while anything covers the menu.
+        .task(id: calm) {
+            GameCenter.shared.calm = false
+            guard calm, GameCenter.shared.plays, (try? await Task.sleep(for: GameCenter.settle)) != nil else { return }
+            GameCenter.shared.calm = true
+            GameCenter.shared.signIn()
+        }
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
         .task {

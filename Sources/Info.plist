@@ -26,6 +26,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>GameCenter</key>
+	<string>$(GAME_CENTER)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>PolicyURL</key>

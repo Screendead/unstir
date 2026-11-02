@@ -633,6 +633,12 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "endless.tanks") }
     }
 
+    /// Set once an endless run spills: Over the Lip's, which nothing else records.
+    static var spilled: Bool {
+        get { UserDefaults.standard.bool(forKey: "endless.spilled") }
+        set { UserDefaults.standard.set(newValue, forKey: "endless.spilled") }
+    }
+
     /// Set as a fresh install's first launch opens straight into plughole 01, so it does so once (Jack's call C4, round 13).
     static var welcomed: Bool {
         get { UserDefaults.standard.bool(forKey: "welcomed") }
