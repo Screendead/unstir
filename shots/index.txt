@@ -8,7 +8,7 @@ menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 ov
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
 first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings.
-first-launch-pointer.png  The same, its note at rest after 4 s: the note and the settings line under it at one strength.
+first-launch-pointer.png  The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both.
 menu-after-01.png  Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list.
 menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox.
 menu-daily-run.png  The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more.

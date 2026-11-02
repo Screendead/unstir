@@ -65,7 +65,7 @@ shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, h
 upto13=0000000000000
 # What the menu leads with (C4, C5, C18, C3's tried mark).
 shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings." FRESH=1 OPEN=1
-hold=9 shot first-launch-pointer "The same, its note at rest after 4 s: the note and the settings line under it at one strength." FRESH=1 OPEN=1
+hold=9 shot first-launch-pointer "The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both." FRESH=1 OPEN=1
 shot menu-after-01 "Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list." BESTS=plughole:0
 shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox." \
   TIER=whirlpool BESTS=plughole:$par27
