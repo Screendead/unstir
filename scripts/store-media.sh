@@ -67,7 +67,7 @@ if [[ "$what" == preview || "$what" == all ]]; then
   done
   # 1320 x 2868 is 886 x 1925 at the preview's width: the 5 rows over go off the bottom, under the controls.
   ffmpeg -loglevel error -y "${inputs[@]}" -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=48000 \
-    -filter_complex "${chains}${labels}concat=n=$n:v=1:a=0,scale=886:1925,crop=886:1920:0:0[out]" \
+    -filter_complex "${chains}${labels}concat=n=$n:v=1:a=0,scale=886:1925,crop=886:1920:0:0,setsar=1[out]" \
     -map "[out]" -map "$((2 * n)):a" -shortest -r 30 -c:v libx264 -profile:v high -level 4.0 -b:v 11M -maxrate 12M \
     -bufsize 24M -preset slow -pix_fmt yuv420p -c:a aac -b:a 256k -movflags +faststart "$out/preview/preview.mp4"
   echo "preview: $(ffprobe -v error -show_entries format=duration -of csv=p=0 "$out/preview/preview.mp4") s"
