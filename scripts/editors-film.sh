@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/editors-film.sh [--join]   Films the editors' reel's segments (scripts/film.sh editors-) and joins them
-# into shots/film/editors-reel.mp4, about a minute of the later tiers and two packs for the App Store nomination's
+# into shots/film/editors-reel.mp4, about a minute of the later tiers and three packs for the App Store nomination's
 # supplemental links. --join only joins segments already filmed. Takes the simulator scripts/film.sh takes (UNSTIR_SIM).
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -9,11 +9,12 @@ cd "$(dirname "$0")/.."
 # Each segment and the seconds it keeps from the picture's strike: the opening, the moves and the solve's wave, cut
 # before the result card.
 segments=(
-  editors-whirlpool-03:13.5
-  editors-vortex-02:11
-  editors-maelstrom-01:13.5
-  editors-escapement-02:10
-  editors-prism-01:11
+  editors-whirlpool-03:12.2
+  editors-vortex-02:9.4
+  editors-maelstrom-01:13
+  editors-lens-03:8.7
+  editors-escapement-02:8.7
+  editors-prism-01:9.8
 )
 
 [[ "${1:-}" == --join ]] || scripts/film.sh editors-
