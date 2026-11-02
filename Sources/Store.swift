@@ -333,7 +333,10 @@ final class Store {
     }
 
     private func fetch() async throws {
-        for p in try await Product.products(for: Pack.productIDs) {
+        let found = try await Product.products(for: Pack.productIDs)
+        // A product the App Store doesn't return is no error: the count is the only trace of it.
+        Log.write("products: \(found.count) of \(Pack.productIDs.count)")
+        for p in found {
             products[p.id] = p
             prices[p.id] = p.displayPrice
             amounts[p.id] = p.price
