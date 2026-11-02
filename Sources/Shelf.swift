@@ -2,9 +2,9 @@
 
 import SwiftUI
 
-/// What the shelf sells: a pack, or Complete, which grants every pack.
+/// What the shelf sells: a pack, or the bundle (`complete`, its old name), which grants `Pack.bundled`.
 enum Offer: Hashable, Sendable {
-    /// How many packs Complete grants, in words: Release sells three, a build outside it four.
+    /// A count of packs in words.
     static func countWord(_ n: Int) -> String { n < 2 || n > 6 ? "\(n)" : ["two", "three", "four", "five", "six"][n - 2] }
 
     case pack(Pack)
@@ -12,12 +12,13 @@ enum Offer: Hashable, Sendable {
 
     static let all: [Offer] = Pack.allCases.map(Offer.pack) + [.complete]
 
-    /// The covers the dock shows. A pack goes on sale only once it has levels past its taste, and Complete only once every
-    /// pack is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the shop can be looked at.
+    /// The covers the dock shows. A pack goes on sale only once it has levels past its taste, and the bundle only once
+    /// every pack it grants is on sale (Jack, 2026-10-26, S1); a build outside Release shows every cover, so the shop can
+    /// be looked at.
     static func shelf(release: Bool = Build.release, ready: (Pack) -> Bool = { $0.levels.count > $0.taste }) -> [Offer] {
         guard release else { return all }
         let sold = Pack.sold(release: release), packs = sold.filter(ready)
-        return packs.map(Offer.pack) + (packs.count == sold.count ? [.complete] : [])
+        return packs.map(Offer.pack) + (Pack.bundled.allSatisfy(packs.contains) ? [.complete] : [])
     }
 
     /// The pack a completion's card points to: the first on the shelf the player doesn't own, other than the one just
@@ -49,10 +50,10 @@ enum Offer: Hashable, Sendable {
         all.first { $0.productID == id && ($0.pack.map { Pack.sold(release: release).contains($0) } ?? true) }
     }
 
-    /// What Complete saves over buying the `sold` packs not `owned` one by one (a pending pack is unowned): nil unless
-    /// it saves something and every price that takes is known (Jack's call C7, round 13).
-    static func saving(amounts: [String: Decimal], owned: Set<Pack>, sold: [Pack]) -> Decimal? {
-        let left = sold.filter { !owned.contains($0) }.map { amounts[$0.productID] }
+    /// What the bundle saves over buying the `bundled` packs not `owned` one by one (a pending pack is unowned): nil
+    /// unless it saves something and every price that takes is known (Jack's call C7, round 13).
+    static func saving(amounts: [String: Decimal], owned: Set<Pack>, bundled: [Pack] = Pack.bundled) -> Decimal? {
+        let left = bundled.filter { !owned.contains($0) }.map { amounts[$0.productID] }
         guard !left.isEmpty, let complete = amounts[Pack.completeID], !left.contains(nil) else { return nil }
         let saving = left.compactMap { $0 }.reduce(0, +) - complete
         return saving > 0 ? saving : nil
@@ -62,7 +63,7 @@ enum Offer: Hashable, Sendable {
     var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
 
     /// Some of what it sells is still to come.
-    var arriving: Bool { (pack.map { [$0] } ?? Pack.sold()).contains { $0.levels.count < $0.planned } }
+    var arriving: Bool { (pack.map { [$0] } ?? Pack.bundled).contains { $0.levels.count < $0.planned } }
 
     /// A pack's prefix, or "complete", as the harness names it and the clip's file is named.
     init?(name: String) {
@@ -88,7 +89,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.lens): "some rods zoom instead of turning"
         case .pack(.escapement): "clocks tick after every move, on a budget of ticks"
         case .pack(.prism): "each rod stirs only some colours"
-        case .complete: "every pack, for less"
+        case .complete: "three packs, for less"
         }
     }
 
@@ -99,7 +100,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.lens): "after plughole"
         case .pack(.escapement): "hard \u{00B7} composed problems"
         case .pack(.prism): "after plughole \u{00B7} reading by colour"
-        case .complete: Pack.sold().contains(.firstStir) ? "anyone, then harder" : "after plughole, then harder"
+        case .complete: "after plughole, then harder"
         }
     }
 
@@ -109,7 +110,7 @@ enum Offer: Hashable, Sendable {
         case .pack(.lens): "\(Pack.lens.planned) \(Pack.lens.noun) in four issues"
         case .pack(.escapement): "\(Pack.escapement.planned) \(Pack.escapement.noun) in five chapters"
         case .pack(.prism): "\(Pack.prism.planned) \(Pack.prism.noun) in five trays"
-        case .complete: "\(Pack.named(Pack.sold())) \u{00B7} \(Pack.sold().map(\.planned).reduce(0, +)) levels"
+        case .complete: "\(Pack.named(Pack.bundled)) \u{00B7} \(Pack.bundled.map(\.planned).reduce(0, +)) levels"
         }
     }
 
@@ -158,13 +159,13 @@ enum Offer: Hashable, Sendable {
 }
 
 extension Store {
-    /// Complete is owned once its own product or every pack is.
+    /// The bundle is owned once its own product or every pack it grants is.
     func state(_ offer: Offer) -> Purchase {
         switch offer {
         case .pack(let p): return state(p)
         case .complete:
             let l = harness ?? ledger
-            if Pack.sold().allSatisfy({ l.state($0) == .owned }) { return .owned }
+            if Pack.bundled.allSatisfy({ l.state($0) == .owned }) { return .owned }
             return l.products[Pack.completeID] ?? .unowned
         }
     }
@@ -284,7 +285,7 @@ enum Marks {
 // MARK: - Covers
 
 extension Offer {
-    /// The levels its cover stirs: its clip's, so the dock shows what the card plays; Complete's, each sold pack's.
+    /// The levels its cover stirs: its clip's, so the dock shows what the card plays; the bundle's, each pack it grants.
     var covers: [Level] { Clip.of(self).reels.map(\.level) }
 }
 
@@ -296,13 +297,11 @@ struct PackTank: View {
     let offer: Offer
     let side: CGFloat
     var clock: Double?
-    /// In place of the offer's own covers.
-    var covers: [Level]?
 
     static let period = 7.0
 
     var body: some View {
-        let levels = covers ?? offer.covers, span = 360 / Double(levels.count), start = -90 - span / 2, r = side / 2
+        let levels = offer.covers, span = 360 / Double(levels.count), start = -90 - span / 2, r = side / 2
         ZStack {
             ForEach(levels.indices, id: \.self) { k in
                 tank(levels[k]).clipShape(Wedge(from: start + span * Double(k), to: start + span * Double(k + 1)))
@@ -476,7 +475,7 @@ struct PackCard: View {
                                     .accessibilityActions {
                                         // The names' links, which a combined element may not offer VoiceOver.
                                         if offer.pack == nil {
-                                            ForEach(Pack.sold(), id: \.self) { pack in
+                                            ForEach(Pack.bundled, id: \.self) { pack in
                                                 Button("Open \(pack.name)") { onOffer(.pack(pack)) }
                                             }
                                         }
@@ -604,10 +603,10 @@ struct PackCard: View {
 
     private var price: String? { store.price(offer.productID) }
 
-    /// Complete's names each pack, each opening that pack's card, so its taste is a tap away.
+    /// The bundle's names each pack, each opening that pack's card, so its taste is a tap away.
     private var holds: Text {
         guard offer.pack == nil else { return Text(offer.holds) }
-        let sold = Pack.sold()
+        let sold = Pack.bundled
         var s = AttributedString()
         for (i, pack) in sold.enumerated() {
             if i > 0 { s += AttributedString(i == sold.count - 1 ? " and " : ", ") }
@@ -760,8 +759,8 @@ struct PackCard: View {
     /// Owned, play; otherwise buy at the App Store's price, and the taste beside it.
     @ViewBuilder private func action(_ state: Purchase) -> some View {
         if state == .owned {
-            // Complete has no levels of its own: its owner goes on in the first pack with a level left to play.
-            let pack = offer.pack == nil ? Pack.sold().first(where: { Self.pickUp($0.levels) != nil }) : nil
+            // The bundle has no levels of its own: its owner goes on in the first pack with a level left to play.
+            let pack = offer.pack == nil ? Pack.bundled.first(where: { Self.pickUp($0.levels) != nil }) : nil
             if let level = pack.flatMap({ Self.pickUp($0.levels) }) ?? next {
                 let verb = Self.continues(pack?.levels ?? levels) ? "continue" : "play"
                 let name = pack.map { $0.name + " " } ?? ""
@@ -879,7 +878,7 @@ struct PackCard: View {
         func joined(_ s: String) -> String { s.replacingOccurrences(of: " ", with: "\u{00A0}") }
         return VStack(alignment: .leading, spacing: 6) {
             Button { buy(.complete) } label: {
-                let all = Text("or all \(Offer.countWord(Pack.sold().count)) in Complete\u{00A0}\u{00B7}\u{00A0}").foregroundStyle(quiet)
+                let all = Text("or all \(Offer.countWord(Pack.bundled.count)) in Complete\u{00A0}\u{00B7}\u{00A0}").foregroundStyle(quiet)
                 let save = Text(joined("\u{00B7} save \(saving) \u{203A}")).foregroundStyle(quiet)
                 Text("\(all)\(Text(joined(complete)).foregroundStyle(Color.text.opacity(0.75))) \(save)")
                 .font(.mono(.caption))
@@ -891,7 +890,7 @@ struct PackCard: View {
             .buttonStyle(Sounding())
             // Complete's own request is asked again only from Complete's card.
             .disabled(buying || store.state(.complete) == .pending)
-            .accessibilityLabel("Buy Complete, every pack")
+            .accessibilityLabel("Buy Complete, \(Pack.named(Pack.bundled))")
             .accessibilityValue("\(complete), saves \(saving)")
             if store.state(.complete) == .failed {
                 Text("Complete's purchase didn't go through").font(.mono(.caption, .semibold)).foregroundStyle(Color.magenta)

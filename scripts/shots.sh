@@ -450,7 +450,7 @@ shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl in
 hold=30 shot promo-lens "Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black." PROMO=lens
 shot promo-escapement "Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black." PROMO=escapement
 shot promo-prism "Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black." PROMO=prism
-hold=12 shot promo-complete "Complete's promoted-purchase image: a wedge of each of Release's three packs' covers, inside the bezel on black." PROMO=complete
+hold=12 shot promo-complete "Complete's promoted-purchase image: a wedge of each of its three packs' covers, inside the bezel on black." PROMO=complete
 hold=4 shot promoted-menu "A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned." \
   PROMOTED=lens STORE=lens:unowned BESTS=plughole:000000000
 hold=4 shot promoted-level "The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned." \
@@ -557,11 +557,11 @@ shot shelf-new-levels "Lens owned, its card last opened with 20 levels: new unde
 shot shelf-approved "The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header." \
   BESTS=plughole:000000000 OWNED=lens APPROVED=lens CLOCK=1
 for state in unowned owned pending failed revoked; do
-  saves=": Complete's line saves \$5.97 on the four packs a Debug build sells"
+  saves=": Complete's line saves \$2.98 on its three packs"
   [[ $state == owned ]] && saves=""
   shot card-lens-$state "Lens's card, $state$saves." CARD=lens STORE=lens:$state CLOCK=5.4
 done
-shot card-prism-no-complete "Prism's card with Lens and First Stir owned (a Debug build sells four): no Complete line, since \$5.99 is more than the two packs left." \
+shot card-prism-no-complete "Prism's card with Lens and First Stir owned (First Stir is outside the bundle): no Complete line, since \$5.99 is more than the two packs left." \
   CARD=prism OWNED=lens,first-stir CLOCK=5.4
 shot shelf-menu-lens-owned "The dock with Lens and First Stir owned: no Complete cover, since it costs more than the two packs left." \
   BESTS=plughole:000000000 OWNED=lens,first-stir CLOCK=5.4
@@ -570,7 +570,7 @@ shot card-escapement "Escapement's card, unowned." CARD=escapement STORE=lens:un
 shot card-prism "Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings." \
   CARD=prism STORE=lens:unowned CLOCK=5.4
 shot card-prism-levels "Prism's card, owned, scrolled to its specimens under the five trays." CARD=prism OWNED=prism CARDSCROLL=1 CLOCK=5.4
-shot card-complete "Complete's card, unowned: save \$5.97 on the packs you don't have." CARD=complete STORE=lens:unowned CLOCK=5.4
+shot card-complete "Complete's card, unowned: save \$2.98 on the packs you don't have." CARD=complete STORE=lens:unowned CLOCK=5.4
 shot card-complete-saves-nothing "UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover." \
   CARD=complete OWNED=lens,first-stir CLOCK=5.4
 # Each card's clip (`Clip`) held on the frame Reduce Motion holds, and a few frames either side of it.
@@ -596,7 +596,7 @@ for t in 1.4 2.4 3.6 5.0; do
 done
 shot card-lens-complete-failed "Lens's card after Complete, bought from it, failed: the line under Complete's button says so." \
   CARD=lens STORE=complete:failed CLOCK=5.4
-shot card-complete-owned "Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, play First Stir 01 (a Debug build sells it)." \
+shot card-complete-owned "Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, playing on in Lens." \
   CARD=complete OWNED=complete CLOCK=5.4
 shot card-lens-complete-pending "Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled." \
   CARD=lens STORE=complete:pending CLOCK=5.4
@@ -606,8 +606,8 @@ shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PA
   CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
 shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74)." \
   CARD=lens OWNED=lens BESTS=lens:0 TRIED=lens-2 CARDSCROLL=1 CLOCK=5.4
-shot shelf-menu-owned "The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone." \
-  OWNED=complete CLOCK=5.4
+shot shelf-menu-owned "The dock with every pack owned, the three through Complete and First Stir (outside it) on its own: PACKS alone, no taste line, Complete's cover gone." \
+  OWNED=complete,first-stir CLOCK=5.4
 shot card-lens-noprice "Lens's card before the App Store answers: buy, price loading, and no Complete line until the prices say what it saves." CARD=lens STORE=lens:unowned PRICES=0 CLOCK=5.4
 shot card-lens-unreachable "Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Complete line." \
   CARD=lens STORE=lens:unowned PRICES=unreachable CLOCK=5.4

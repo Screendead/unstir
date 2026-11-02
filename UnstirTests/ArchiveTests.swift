@@ -52,7 +52,7 @@ final class ArchiveTests: XCTestCase {
         XCTAssertFalse(Archive.opens(bought: false, unlocked: false, release: false, playtest: false))
     }
 
-    /// Any one purchase: a pack, or Complete, which grants every pack. A pending or revoked one isn't bought.
+    /// Any one purchase: a pack, or the bundle. A pending or revoked one isn't bought.
     func testAnyPurchaseIsBought() {
         func bought(_ products: [String: Purchase]) -> Bool {
             var ledger = Ledger()

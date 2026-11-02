@@ -375,7 +375,7 @@ icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl ins
 promo-lens.png  Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black.
 promo-escapement.png  Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black.
 promo-prism.png  Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black.
-promo-complete.png  Complete's promoted-purchase image: a wedge of each of Release's three packs' covers, inside the bezel on black.
+promo-complete.png  Complete's promoted-purchase image: a wedge of each of its three packs' covers, inside the bezel on black.
 promoted-menu.png  A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned.
 promoted-level.png  The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned.
 firststir-01.png  First Stir 1 as dealt: every core turned, the time under the tank.
@@ -467,18 +467,18 @@ shelf-new.png  Plughole all solved: Lens and Prism marked new on the dock, Escap
 shelf-taste-count.png  Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens.
 shelf-new-levels.png  Lens owned, its card last opened with 20 levels: new under Lens beside the check.
 shelf-approved.png  The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header.
-card-lens-unowned.png  Lens's card, unowned: Complete's line saves $5.97 on the four packs a Debug build sells.
+card-lens-unowned.png  Lens's card, unowned: Complete's line saves $2.98 on its three packs.
 card-lens-owned.png  Lens's card, owned.
-card-lens-pending.png  Lens's card, pending: Complete's line saves $5.97 on the four packs a Debug build sells.
-card-lens-failed.png  Lens's card, failed: Complete's line saves $5.97 on the four packs a Debug build sells.
-card-lens-revoked.png  Lens's card, revoked: Complete's line saves $5.97 on the four packs a Debug build sells.
-card-prism-no-complete.png  Prism's card with Lens and First Stir owned (a Debug build sells four): no Complete line, since $5.99 is more than the two packs left.
+card-lens-pending.png  Lens's card, pending: Complete's line saves $2.98 on its three packs.
+card-lens-failed.png  Lens's card, failed: Complete's line saves $2.98 on its three packs.
+card-lens-revoked.png  Lens's card, revoked: Complete's line saves $2.98 on its three packs.
+card-prism-no-complete.png  Prism's card with Lens and First Stir owned (First Stir is outside the bundle): no Complete line, since $5.99 is more than the two packs left.
 shelf-menu-lens-owned.png  The dock with Lens and First Stir owned: no Complete cover, since it costs more than the two packs left.
 card-first-stir.png  First Stir's card, unowned.
 card-escapement.png  Escapement's card, unowned.
 card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings.
 card-prism-levels.png  Prism's card, owned, scrolled to its specimens under the five trays.
-card-complete.png  Complete's card, unowned: save $5.97 on the packs you don't have.
+card-complete.png  Complete's card, unowned: save $2.98 on the packs you don't have.
 card-complete-saves-nothing.png  UNSTIR_CARD=complete with Lens and First Stir owned: Complete saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Complete cover.
 clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
 clip-first-stir-1.4.png  First Stir's clip 1.4 s in.
@@ -502,12 +502,12 @@ clip-prism-2.4.png  Prism's clip 2.4 s in: the buried red stir off first, then t
 clip-prism-3.6.png  Prism's clip 3.6 s in: the buried red stir off first, then the cyan, then the white.
 clip-prism-5.0.png  Prism's clip 5.0 s in: the buried red stir off first, then the cyan, then the white.
 card-lens-complete-failed.png  Lens's card after Complete, bought from it, failed: the line under Complete's button says so.
-card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, play First Stir 01 (a Debug build sells it).
+card-complete-owned.png  Complete's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, playing on in Lens.
 card-lens-complete-pending.png  Lens's card while Complete waits on Ask to Buy: Complete is waiting, buy Lens alone, Complete's line disabled.
 card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
 card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
 card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74).
-shelf-menu-owned.png  The dock with every pack owned through Complete: PACKS alone, no taste line, Complete's cover gone.
+shelf-menu-owned.png  The dock with every pack owned, the three through Complete and First Stir (outside it) on its own: PACKS alone, no taste line, Complete's cover gone.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Complete line until the prices say what it saves.
 card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Complete line.
 card-lens-unshared.png  Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey.

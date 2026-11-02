@@ -6,7 +6,7 @@ import XCTest
 /// The pack cards' clips: each plays its level as a real `Game` would, loops without a jump, and holds a still inside it.
 @MainActor final class ClipTests: XCTestCase {
     private let clips: [(String, Clip)] = [("first stir", .firstStir), ("lens", .lens), ("escapement", .escapement), ("prism", .prism),
-                                           ("complete", .complete), ("complete as sold", Clip.cut(of: Pack.sold(release: true)))]
+                                           ("complete", .complete), ("every pack", Clip.cut(of: Pack.allCases))]
 
     /// Each reel's stacks are the ones a `Game` shows after the same moves, under an id of no pack level so a win keeps
     /// no best.
@@ -66,10 +66,10 @@ import XCTest
         XCTAssertEqual(a.knobs.values.reduce(0, +), b.knobs.values.reduce(0, +), accuracy: 1e-9)
     }
 
-    /// Complete's cut as a Release build sells it, without First Stir: a zoom, a tick, then Prism's buried red stir
-    /// coming off under the cyan one, and its still on the tank.
-    func testCompletesCutWithoutFirstStir() {
-        let clip = Clip.cut(of: Pack.sold(release: true))
+    /// The bundle's cut, whatever the build sells: a zoom, a tick, then Prism's buried red stir coming off under the cyan
+    /// one, and its still on the tank.
+    func testTheBundlesCutIsItsThreePacks() {
+        let clip = Clip.complete
         XCTAssertEqual(clip.reels.map(\.level.pack), [.lens, .escapement, .prism])
         let prism = clip.reels[2], healed = prism.frame(at: prism.to).stack
         XCTAssertEqual(healed.map(\.rod), [2, 1], "the red stir, under the cyan one, comes off first")
@@ -78,12 +78,11 @@ import XCTest
         let f = reel.frame(at: t)
         XCTAssertEqual(f.dip, 0)
         XCTAssertNil(f.finger)
-        XCTAssertEqual(Clip.cut(of: Pack.allCases).period, Clip.complete.period, accuracy: 1e-9)
     }
 
     func testAboutSevenSecondsAndAStillInside() {
-        // Complete outside Release cuts First Stir in too, a fourth beat.
-        for (name, clip) in clips where name != "complete" {
+        // A cut of every pack has a fourth beat, First Stir's.
+        for (name, clip) in clips where name != "every pack" {
             XCTAssertEqual(clip.period, 7, accuracy: 1.2, name)
         }
         for (name, clip) in clips {
@@ -112,7 +111,7 @@ import XCTest
         XCTAssertEqual(Offer.pack(.lens).covers.map(\.id), [Level.lens[2].id])
         XCTAssertEqual(Offer.pack(.escapement).covers.map(\.id), [Level.escapement[1].id])
         XCTAssertEqual(Offer.pack(.prism).covers.map(\.id), [Level.prism[0].id])
-        XCTAssertEqual(Offer.complete.covers.map(\.pack), Pack.sold())
+        XCTAssertEqual(Offer.complete.covers.map(\.pack), Pack.bundled)
         for offer in Offer.all {
             for level in offer.covers { XCTAssertFalse(level.picture.isLive, "\(offer.name) cover: \(level.id)") }
         }
