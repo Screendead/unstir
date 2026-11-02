@@ -653,7 +653,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
   unlock where it opens packs (`Archive.opens`). `ArchiveRow` sits under today's daily on the menu: until then a quiet
-  lock, "comes with any pack", which a tap shakes and answers as a closed row does, never opening the shelf.
+  lock, "comes with any pack", which a tap shakes and answers as a closed row does, saying "unlocked by purchasing any
+  pack" for 2 s (Jack's words, R-arch-lock, round 15), never opening the shelf.
   `ArchiveView` lies over the menu as a card does, a month to a block on the player's week, each day's number over its
   result in the menu's words (`Archive.Mark`: clean, par, +n, tried), a list of days at accessibility sizes. A day
   opens `Level.daily(_:archived:)`, the day's own tank under its own id, whose back reads "‹ archive" and returns there
