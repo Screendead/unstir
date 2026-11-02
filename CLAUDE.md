@@ -823,10 +823,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   read. A best that lands makes no card, sound or report: `Best.load` reads `Sync.revision` where the build syncs, so
   every view that shows a best draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
   `ICLOUD` turns YES for a release, as its comment lists: the App ID's capability, a two-device test, and the privacy
-  policy and store page, which say the bests stay on the phone and that sync isn't built. Every build that signs in
-  syncs, the editors' build and `run-ios.sh`'s playtests too, so bests made there with the levels opened
+  policy and store page, which say the bests stay on the phone and that sync isn't built. Every build with `ICLOUD`
+  on syncs, the editors' build and `run-ios.sh`'s playtests too, so bests made there with the levels opened
   (`Best.unlocked`) reach the same Apple ID's App Store install: a tier they par opens there, and an unowned pack's
-  card counts its bests and marks its locked rows, which stay locked, as `Pack.access` reads ownership.
+  card and cover read its bests (its rows' results, `Pack.tastePlayed`), its rows past the taste staying locked, as
+  `Pack.access` reads ownership.
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`). v1 ships without them: the build's `ANALYTICS`
   (`Config/Unstir.xcconfig`, NO) sets Info.plist's `Analytics`, read as `Analytics.built`, and while it is off a plain
