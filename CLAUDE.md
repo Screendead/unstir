@@ -457,7 +457,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
   (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
-  demonstration's commits (Jack's call C3, round 13). A level's note shows at full strength for its first 4 s of play, then at
+  demonstration's commits (Jack's call C3, round 13). A level with a best counts as started for `Game.firstTry`, as
+  iCloud (`Sync`) brings bests to a phone where their levels never started, so a try there is never a first. A level's note shows at full strength for its first 4 s of play, then at
   0.55, as every caption rests. Plughole 01's first open hangs one line under it, at 0.55, pointing at the settings
   ("sound, haptics, colour letters: ⚙ on the menu", `LevelView.pointer`, Jack's call F3, round 14; it fits the SE's
   width with little to spare), and announces it to VoiceOver as the opening ends, when `Best.pointedAtSettings` is

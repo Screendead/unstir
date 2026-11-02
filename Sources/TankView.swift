@@ -241,7 +241,8 @@ final class Game {
         self.storesResume = storesResume && !level.sandbox && level.keepsProgress
         entries = Self.dealt(level)
         brim = level.run?.brim ?? 0
-        self.firstTry = level.run != nil || (firstTry ?? !Best.started(level.id))
+        // A best counts as started: iCloud brings bests to a phone where their levels never were (`Sync`).
+        self.firstTry = level.run != nil || (firstTry ?? !(Best.started(level.id) || Best.load(level.id) != nil))
         keptOnItsDay = level.archived && Best.load(level.id).map { $0.archived != true } ?? false
         self.tankTurned = tankTurned ?? Best.tankTurned
         storesTankTurned = tankTurned == nil
