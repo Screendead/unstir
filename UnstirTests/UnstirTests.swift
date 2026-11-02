@@ -1612,6 +1612,18 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// The dock's names share one size, set by the widest word against its cover, and never grow past the type's own.
+    func testTheDockNamesShareTheSizeTheirWidestWordNeeds() {
+        let width: (String) -> CGFloat = { CGFloat($0.count) * 10 }
+        let names = [(name: "First Stir", marked: false), (name: "Escapement", marked: false), (name: "Lens", marked: true)]
+        XCTAssertEqual(PackDock.nameScale(names, cover: 200, width: width), 1)
+        // "Escapement", 100 wide, sets the row's size in an 80 pt cover; "First Stir" breaks between its words instead.
+        XCTAssertEqual(PackDock.nameScale(names, cover: 80, width: width), 0.8 * 0.97, accuracy: 1e-9)
+        // A cover's glyph takes its room from its own name.
+        XCTAssertEqual(PackDock.nameScale([(name: "Escapement", marked: true)], cover: 112, width: width), 0.97, accuracy: 1e-9)
+        XCTAssertEqual(PackDock.nameScale(names, cover: 10, width: width), 0.5)
+    }
+
     /// The gate lists what is short of par as runs, each opening at a level the player can open.
     func testTheGateListsTheLevelsShortOfParAsRuns() {
         var bests: [String: Best] = [:]

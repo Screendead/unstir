@@ -197,8 +197,10 @@ shot tier-up-midway "Plughole 05 solved at par, the last plughole level to reach
   SCREEN=clean LEVEL=5 BESTS=plughole:0000-0000000000000000000000 CLOCK=0
 shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over)." \
   TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:000100000010000000000200000
-shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00)." \
+shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00)." \
   SCREEN=result MODE=daily NOW=17:00
+shot daily-practice "Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h." \
+  SCREEN=clean MODE=daily NOW=17:00 TRIED=daily-$(date +%Y%m%d)
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
   SCREEN=result MODE=daily SHARESHEET=1
 for w in 0.4 0.8 1.2; do
@@ -635,6 +637,9 @@ shot escapement-dead-tick "Escapement 04 after 1:+1, whose tick pushed: +1 stand
   PACK=escapement OWNED=escapement LEVEL=4 PLAYED=1:1
 shot escapement-2-out "Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1
+# Jack's call (2026-11-01, on C19): a tank out of ticks keeps its save, so a level left on its lost card reopens there.
+shot escapement-2-lost-resumed "Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out." \
+  PACK=escapement LEVEL=2 RESUME=2:4,1:-3,0:1
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
 # The tick budget on 16 (clocks 1, owing 3, and 4, owing 6, so 9; line 3:-2, 5:-2, a wait, 6:-4, 5:+3, 2:-5): as dealt,
 # after the wait that stops clock 1, and one move from the end.
@@ -693,3 +698,14 @@ hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt o
 for plate in seeds medusae radiolaria nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1
 done
+# App Store art with no interface (UNSTIR_CLEAN): each look mid-turn with a finger down on rod 0, which would draw its
+# dial, count and fingertip, the glass and its picture alone in the bezel.
+hold=5 shot clean-plughole-05 "Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar." \
+  LEVEL=5 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
+# The live glass compiles its shader on its first draw after an install, which takes longer than a baked picture.
+hold=9 shot clean-whirlpool-01 "Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture." \
+  TIER=whirlpool LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
+hold=5 shot clean-lens-03 "Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count." \
+  PACK=lens LEVEL=3 CLEAN=1 LIVE=0:+1 TOUCH=0,-0.8
+hold=5 shot clean-prism-01 "Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption." \
+  PACK=prism LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8

@@ -61,6 +61,16 @@ private func glowRing(_ colour: Color, _ width: CGFloat, _ underlay: CGFloat, un
     }
 }
 
+/// UNSTIR_CLEAN: a part of the play screen kept where it lies but not drawn, so the tank stays where films crop it.
+private struct Unseen: ViewModifier {
+    let hidden: Bool
+    init(_ hidden: Bool) { self.hidden = hidden }
+
+    func body(content: Content) -> some View {
+        content.opacity(hidden ? 0 : 1).allowsHitTesting(!hidden).accessibilityHidden(hidden)
+    }
+}
+
 @MainActor @Observable
 final class Game {
     /// A stack entry, and whether a turn of the player's pushed it: any other is one of the scramble's, perhaps changed
@@ -141,8 +151,9 @@ final class Game {
     private var elapsed: TimeInterval = 0
     /// Away from the front after the clock started: it runs again on coming back.
     private var paused = false
-    /// False once an earlier visit committed a move: a daily is then practice, and nothing else can be clean.
-    let firstTry: Bool
+    /// False once an earlier visit committed a move, or after "again" on a solved daily: a daily is then practice, and
+    /// nothing else can be clean.
+    private(set) var firstTry: Bool
     /// Escapement's demonstration is on the stack: its commits are not the player's, so they try nothing.
     private(set) var demoing = false
     /// The calls that succeeded since the level opened, for its resume (Jack's call C2, round 13); the demonstration's
@@ -261,9 +272,9 @@ final class Game {
     /// Practice saves nothing.
     var counts: Bool { firstTry || !level.id.hasPrefix("daily-") }
 
-    /// The result card's "again": any finish that isn't clean, but endless's and the daily's, which counts only its first
-    /// visit's solve, so a retry from its card would save a second.
-    var offersAgain: Bool { level.run == nil && !clean && Share.day(of: level.id) == nil }
+    /// The result card's "again": any finish that isn't clean, but endless's. On the daily it plays as practice (Jack's
+    /// call P1 = B, 2026-11-01).
+    var offersAgain: Bool { level.run == nil && !clean }
 
     /// The sandbox starts on the clean picture, so it is never solved, which keeps it from finishing or saving.
     var solved: Bool { stack.isEmpty && !level.sandbox }
@@ -595,6 +606,11 @@ final class Game {
         guard !checking, level.run == nil else { return false }
         let played = !history.isEmpty
         if played { resets += 1 }
+        // The daily counts only its first try's solve, so "again" from its card is practice.
+        if solved && Share.day(of: level.id) != nil {
+            firstTry = false
+            bests = nil
+        }
         entries = Self.dealt(level)
         restart()
         log("reset resets=\(resets) pushes=\(pushes) stack=\(stack.count) \(stack)")
@@ -769,17 +785,21 @@ final class Game {
             }
             completed = done == nil ? completion : nil
         }
-        // A replay passes through a lost tank its line then undid; `resumed` closes one that ends finished.
+        // A replay passes through a lost tank its line then undid; `resumed` closes one that ends solved or spilled.
         guard !replaying else { return }
         close()
         Analytics.shared.finished(self)
     }
 
-    /// A finish clears the try's save, out of ticks too, so the lost card's undo doesn't outlive the app (C2's
-    /// implementer call, round 13). A cleared tank of a run saves the next one, empty, so the run outlasts the card.
+    /// A solve or a spill clears the try's save. A tank out of ticks keeps it, its losing move too, which `record` passed
+    /// over as the move finished the try, so a back swipe off the lost card loses nothing: the level reopens on it, its
+    /// undo still live, until again or a solve clears it (Jack's call, 2026-11-01, on C19). A cleared tank of a run saves
+    /// the next one, empty, so the run outlasts the card.
     private func close() {
         guard storesResume else { return }
-        if solved, let next = nextTank, let run = next.run {
+        if lost {
+            Resume.save(Resume(of: self))
+        } else if solved, let next = nextTank, let run = next.run {
             Resume.save(Resume(id: next.id, print: next.print, firstTry: true, run: run))
         } else {
             Resume.remove(level.id)
@@ -788,8 +808,9 @@ final class Game {
 
     /// The try `r` saved, replayed through the calls that made it, before any view shows it: nil, and the level opens
     /// afresh, where `r` was saved on a level that deals differently now, where the level refuses one of its calls, or
-    /// where the line finished, as when the app died inside the solving move's fine pass, whose best its finish saves.
-    /// The bank, the stored flags and the analytics stay as the try left them.
+    /// where the line solved or spilled, as when the app died inside the solving move's fine pass, whose best its finish
+    /// saves. A line that ends out of ticks opens on its lost card. The bank, the stored flags and the analytics stay as
+    /// the try left them: the loss was counted as it happened.
     static func resumed(_ level: Level, from r: Resume, tankTurned: Bool? = nil, swirled: Bool? = nil,
                         bank: (undos: Int, refilled: String?)? = nil, storesProgress: Bool = true,
                         storesResume: Bool = true) -> Game? {
@@ -820,7 +841,7 @@ final class Game {
         // The newest move's ticks are long played.
         game.tick = []
         Log.write("resume \(r.id) actions=\(r.actions.count) moves=\(game.moves) stack=\(game.stack.count) \(game.stack)")
-        guard !game.finished else {
+        guard !game.finished || game.lost else {
             game.close()
             return nil
         }
@@ -975,6 +996,8 @@ struct LevelView: View {
     private let pace: Double
     /// UNSTIR_BARE: the picture drawn unstirred, as the stack has played it.
     private let bare: Bool
+    /// UNSTIR_CLEAN: the glass and its picture alone.
+    private let clean: Bool
     private let moves: [Twist]?
     private let fingered: Bool
     private let bench: Bool
@@ -1121,6 +1144,7 @@ struct LevelView: View {
         autoplay = harness?.autoplay ?? false
         pace = harness?.pace ?? 0.3
         bare = harness?.bare ?? false
+        clean = harness?.clean ?? false
         moves = harness?.moves
         fingered = harness?.finger ?? false
         brimDemo = harness?.brimDemo ?? false
@@ -1153,6 +1177,8 @@ struct LevelView: View {
 
     var body: some View {
         screen
+            .statusBarHidden(clean)
+            .persistentSystemOverlays(clean ? .hidden : .automatic)
             // The level's edge, over the menu it slides off across: a hairline, as every line over the glass is.
             .overlay(alignment: .leading) {
                 if swiped > 0 {
@@ -1272,6 +1298,7 @@ struct LevelView: View {
                 }
                 .font(.mono(13))
                 .padding(.top, 8)
+                .modifier(Unseen(clean))
                 HStack(alignment: .firstTextBaseline, spacing: 14) {
                     Text(game.level.label).foregroundStyle(game.level.colour).shadow(color: game.level.colour, radius: 4)
                     // Endless's tank beside its name, where it can't read as the brim's count.
@@ -1289,6 +1316,7 @@ struct LevelView: View {
                     }
                 }
                 .padding(.top, 18)
+                .modifier(Unseen(clean))
                 Spacer(minLength: 12)
                 let reveal = AnyTransition.opacity.animation(.easeOut(duration: 0.4).delay(0.3))
                 tank(side)
@@ -1310,7 +1338,7 @@ struct LevelView: View {
                     }
                     .overlay(alignment: .top) {
                         // A spill says so over the tank itself.
-                        if showResult && game.solved {
+                        if showResult && game.solved && !clean {
                             Text("unstirred.").font(.mono(22, .semibold))
                                 .shadow(color: .white.opacity(0.5), radius: 6)
                                 .offset(y: -62)
@@ -1339,11 +1367,13 @@ struct LevelView: View {
                                 .transition(reveal)
                         }
                     }
+                    .modifier(Unseen(clean))
                 // Only where colour can't carry the read, so for everyone else the read stays by colour.
                 if !game.level.masks.isEmpty, letters || Letters.shown(system: differentiate) || isolated != nil {
                     ChannelSwatches(isolated: $isolated)
                         .opacity(showResult || ending || shown != nil ? 0 : 1)
                         .allowsHitTesting(!showResult && shown == nil)
+                        .modifier(Unseen(clean))
                 }
                 Spacer(minLength: 12)
                 HStack {
@@ -1367,6 +1397,7 @@ struct LevelView: View {
                 .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
                 .accessibilityHidden(game.level.run != nil || showResult || ending)
                 .padding(.bottom, 8)
+                .modifier(Unseen(clean))
             }
         }
         .foregroundStyle(Color.text)
@@ -2053,160 +2084,165 @@ struct LevelView: View {
             }
             .clipShape(Circle())
             .opacity((1 - demoDip) * (1 - curtain))
-            if !game.finished {
-                ForEach(clocks, id: \.rod) { c in
-                    // Grey as its last tick lands, in the move's turn.
-                    ClockHint(radius: disc(c.rod), spent: !game.canTick(c.rod) && shown == nil && !demoing,
-                              lands: Self.tickBeat + Self.tickTurn * Double((game.tick.firstIndex { $0.rod == c.rod } ?? -1) + 1))
-                        .position(at(c.rod)).opacity(1 - demoDip).allowsHitTesting(false)
-                }
-            }
-            if let k = liveRod, shown != nil {
-                glowRing(.magenta, 2.5, 6, under: .black.opacity(0.7))
-                    .frame(width: 2 * disc(k), height: 2 * disc(k))
-                    .position(at(k))
-            }
-            if let c = rodCount, c.live || c.steps != 0 {
-                Group {
-                    if let x = lensTrack {
-                        track(at(c.k), disc(c.k), x: x, pitch: Self.trackPitch, steps: c.steps,
-                              now: Double(c.steps) + (c.live ? liveAngle / Tank.step - Double(Detent.steps(liveAngle, of: Tank.step)) : 0))
-                    } else {
-                        dial(at(c.k), disc(c.k), inner: dashes(c.k, r), from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
-                             to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps, step: Tank.step)
+            // The bezel stays: it is the tank's steel, which no touch or state changes, so not interface.
+            if clean {
+                Bezel(r: r)
+            } else {
+                if !game.finished {
+                    ForEach(clocks, id: \.rod) { c in
+                        // Grey as its last tick lands, in the move's turn.
+                        ClockHint(radius: disc(c.rod), spent: !game.canTick(c.rod) && shown == nil && !demoing,
+                                  lands: Self.tickBeat + Self.tickTurn * Double((game.tick.firstIndex { $0.rod == c.rod } ?? -1) + 1))
+                            .position(at(c.rod)).opacity(1 - demoDip).allowsHitTesting(false)
                     }
                 }
-                .opacity(c.live ? (commits ? 1 : Self.idle) : Self.lifted)
-            }
-            if let c = tankCount, c.live || c.steps != 0 {
-                // Inset clear of the bezel's own hairline at the glass's edge.
-                let turns = held.map { Detent.steps($0, of: step) % game.level.layout.order != 0 } ?? false
-                dial(CGPoint(x: r, y: r), r - 4, inner: r - 16, from: Double(game.position - joined(Game.tank)) * step,
-                     to: Double(game.position) * step + (held ?? 0), steps: c.steps, step: step)
-                    .opacity(c.live ? (turns ? 1 : Self.idle) : Self.lifted)
-            }
-            // Always present, so the first commit on a rod animates rather than inserting a view that never sees its trigger change.
-            // The dial's hairline brightening as the finger lifts. An undo, which has no dial, flashes it too.
-            let fk = flash?.rod ?? 0
-            Circle().stroke(Color.live, lineWidth: Self.hairline)
-                .frame(width: 2 * disc(fk), height: 2 * disc(fk))
-                .keyframeAnimator(initialValue: 1.0, trigger: game.turns) { ring, t in
-                    ring.opacity(t >= 1 ? 0 : 0.9 * (1 - t))
-                } keyframes: { _ in
-                    MoveKeyframe(0.0)
-                    LinearKeyframe(1.0, duration: 0.3, timingCurve: .easeOut)
+                if let k = liveRod, shown != nil {
+                    glowRing(.magenta, 2.5, 6, under: .black.opacity(0.7))
+                        .frame(width: 2 * disc(k), height: 2 * disc(k))
+                        .position(at(k))
                 }
-                .position(at(fk))
-            Bezel(r: r)
-            if game.level.motion != .none {
-                Knurl(r: r, angle: turn, held: held != nil).opacity(showResult && !game.spilled ? 0 : 1)
-            }
-            // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
-            // animator of its own that misses the strike when the colours land after it.
-            ZStack {
-                if let run = game.level.run, let rimColours {
-                    // Moving for a while after each change, and all the while the room runs short.
-                    BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: frozenClock,
-                             paused: !(brimMoving || !game.spilled && game.brim >= Run.room - 1))
+                if let c = rodCount, c.live || c.steps != 0 {
+                    Group {
+                        if let x = lensTrack {
+                            track(at(c.k), disc(c.k), x: x, pitch: Self.trackPitch, steps: c.steps,
+                                  now: Double(c.steps) + (c.live ? liveAngle / Tank.step - Double(Detent.steps(liveAngle, of: Tank.step)) : 0))
+                        } else {
+                            dial(at(c.k), disc(c.k), inner: dashes(c.k, r), from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
+                                 to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps, step: Tank.step)
+                        }
+                    }
+                    .opacity(c.live ? (commits ? 1 : Self.idle) : Self.lifted)
                 }
-            }
-            .keyframeAnimator(initialValue: 0.0, trigger: struck) { ring, o in
-                ring.opacity(o)
-            } keyframes: { _ in PictureLayer.strike(calm: reduceMotion || dimFlashing) }
-            if game.level.motion != .none {
-                KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
-                    RimLesson(kind: .tank, r: r, showing: lesson && !game.tankTurned,
-                              pulse: lesson && jammed.map { game.level.kind(of: $0) != .working } == true
-                                  ? Self.pulse(frozenShake ?? s) : 0, clock: frozenClock)
-                } keyframes: { _ in Self.jolt }
-            }
-            if game.level.layout.swirl != nil {
-                // Inside the glass, in the middle of its grab: the tank's lesson keeps the bezel.
-                RimLesson(kind: .swirl, r: r, showing: swirlLesson, pulse: 0, clock: frozenClock,
-                          reach: ((game.level.motion == .none ? Self.rim : Self.swirlBand) + 1) / 2)
-            }
-            let ck = game.cancelledRod, across = 2 * disc(ck)
-            Circle().stroke(Color.magenta, lineWidth: Self.hairline)
-                .keyframeAnimator(initialValue: 1.0, trigger: game.cancels) { ring, t in
-                    // Grown by frame, not scale, so the stroke stays a hairline out to the disc edge.
-                    ring.frame(width: across * (0.3 + 0.7 * t), height: across * (0.3 + 0.7 * t)).opacity(t >= 1 ? 0 : 0.9 * (1 - t * t))
-                } keyframes: { _ in
-                    MoveKeyframe(0.0)
-                    LinearKeyframe(1.0, duration: 0.45, timingCurve: .easeOut)
+                if let c = tankCount, c.live || c.steps != 0 {
+                    // Inset clear of the bezel's own hairline at the glass's edge.
+                    let turns = held.map { Detent.steps($0, of: step) % game.level.layout.order != 0 } ?? false
+                    dial(CGPoint(x: r, y: r), r - 4, inner: r - 16, from: Double(game.position - joined(Game.tank)) * step,
+                         to: Double(game.position) * step + (held ?? 0), steps: c.steps, step: step)
+                        .opacity(c.live ? (turns ? 1 : Self.idle) : Self.lifted)
                 }
-                .position(at(ck))
-            ForEach(knobs, id: \.self) { k in
-                // On a device pixel, so the knob's ticks can be.
-                let p = at(k)
-                if let c = clocks.first(where: { $0.rod == k }) {
-                    KeyframeAnimator(initialValue: Self.ticksDone, trigger: game.tickEvents) { v in
-                        // Where this clock's tick stands in the move's turn: before it, it is still to come.
-                        let i = tickNow.firstIndex { $0.rod == k }, f = i.map { Self.flight(v, $0) } ?? 1
-                        let ride = f < 1 && v >= Double(i ?? 0) ? sin(.pi * f) : 0
-                        KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
-                            ratchet(k, back: c.dir < 0, at: v, of: i, flight: f, pawl: ride, shake: s, core: core,
-                                    plate: Self.ratchetReach * r)
-                        } keyframes: { _ in Self.jolt }
-                    } keyframes: { _ in Self.tickKeys }
-                    .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
-                } else {
+                // Always present, so the first commit on a rod animates rather than inserting a view that never sees its trigger change.
+                // The dial's hairline brightening as the finger lifts. An undo, which has no dial, flashes it too.
+                let fk = flash?.rod ?? 0
+                Circle().stroke(Color.live, lineWidth: Self.hairline)
+                    .frame(width: 2 * disc(fk), height: 2 * disc(fk))
+                    .keyframeAnimator(initialValue: 1.0, trigger: game.turns) { ring, t in
+                        ring.opacity(t >= 1 ? 0 : 0.9 * (1 - t))
+                    } keyframes: { _ in
+                        MoveKeyframe(0.0)
+                        LinearKeyframe(1.0, duration: 0.3, timingCurve: .easeOut)
+                    }
+                    .position(at(fk))
+                Bezel(r: r)
+                if game.level.motion != .none {
+                    Knurl(r: r, angle: turn, held: held != nil).opacity(showResult && !game.spilled ? 0 : 1)
+                }
+                // The picture's own colours, so they strike with it. A ZStack, not a Group, which would give the ring an
+                // animator of its own that misses the strike when the colours land after it.
+                ZStack {
+                    if let run = game.level.run, let rimColours {
+                        // Moving for a while after each change, and all the while the room runs short.
+                        BrimRing(r: r, brim: game.brim, events: game.brimEvents, base: run.brim, colours: rimColours, held: frozenClock,
+                                 paused: !(brimMoving || !game.spilled && game.brim >= Run.room - 1))
+                    }
+                }
+                .keyframeAnimator(initialValue: 0.0, trigger: struck) { ring, o in
+                    ring.opacity(o)
+                } keyframes: { _ in PictureLayer.strike(calm: reduceMotion || dimFlashing) }
+                if game.level.motion != .none {
                     KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
-                        RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                                size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
-                                lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)),
-                                channels: game.level.channels(of: game.slot(of: k)))
+                        RimLesson(kind: .tank, r: r, showing: lesson && !game.tankTurned,
+                                  pulse: lesson && jammed.map { game.level.kind(of: $0) != .working } == true
+                                      ? Self.pulse(frozenShake ?? s) : 0, clock: frozenClock)
                     } keyframes: { _ in Self.jolt }
+                }
+                if game.level.layout.swirl != nil {
+                    // Inside the glass, in the middle of its grab: the tank's lesson keeps the bezel.
+                    RimLesson(kind: .swirl, r: r, showing: swirlLesson, pulse: 0, clock: frozenClock,
+                              reach: ((game.level.motion == .none ? Self.rim : Self.swirlBand) + 1) / 2)
+                }
+                let ck = game.cancelledRod, across = 2 * disc(ck)
+                Circle().stroke(Color.magenta, lineWidth: Self.hairline)
+                    .keyframeAnimator(initialValue: 1.0, trigger: game.cancels) { ring, t in
+                        // Grown by frame, not scale, so the stroke stays a hairline out to the disc edge.
+                        ring.frame(width: across * (0.3 + 0.7 * t), height: across * (0.3 + 0.7 * t)).opacity(t >= 1 ? 0 : 0.9 * (1 - t * t))
+                    } keyframes: { _ in
+                        MoveKeyframe(0.0)
+                        LinearKeyframe(1.0, duration: 0.45, timingCurve: .easeOut)
+                    }
+                    .position(at(ck))
+                ForEach(knobs, id: \.self) { k in
+                    // On a device pixel, so the knob's ticks can be.
+                    let p = at(k)
+                    if let c = clocks.first(where: { $0.rod == k }) {
+                        KeyframeAnimator(initialValue: Self.ticksDone, trigger: game.tickEvents) { v in
+                            // Where this clock's tick stands in the move's turn: before it, it is still to come.
+                            let i = tickNow.firstIndex { $0.rod == k }, f = i.map { Self.flight(v, $0) } ?? 1
+                            let ride = f < 1 && v >= Double(i ?? 0) ? sin(.pi * f) : 0
+                            KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
+                                ratchet(k, back: c.dir < 0, at: v, of: i, flight: f, pawl: ride, shake: s, core: core,
+                                        plate: Self.ratchetReach * r)
+                            } keyframes: { _ in Self.jolt }
+                        } keyframes: { _ in Self.tickKeys }
                         .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
+                    } else {
+                        KeyframeAnimator(initialValue: 1.0, trigger: jams) { s in
+                            RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
+                                    size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
+                                    lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)),
+                                    channels: game.level.channels(of: game.slot(of: k)))
+                        } keyframes: { _ in Self.jolt }
+                            .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
+                    }
                 }
-            }
-            // A spilled tank keeps its caps over the murk, and a lost one its clock.
-            .opacity(showResult && !game.spilled && !game.lost ? 0 : 1)
-            .environment(\.channelLetters, letters || Letters.shown(system: differentiate))
-            // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
-            // knobs, which would hide it. The swirl's is a ring just inside the glass's edge, over the picture, so a
-            // hairline. One view either way, so the first push on either animates.
-            let swirlPushed = fk == game.level.layout.swirl
-            Circle().strokeBorder(Color.alarm, lineWidth: swirlPushed ? Self.hairline : 1)
-                .padding(swirlPushed ? Self.swirlFlash - Self.hairline / 2 : -3)
-                .frame(width: swirlPushed ? side : core, height: swirlPushed ? side : core)
-                .keyframeAnimator(initialValue: 1.0, trigger: game.pushes) { ring, t in
-                    ring.opacity(t >= 1 ? 0 : 1 - t)
-                } keyframes: { _ in
-                    MoveKeyframe(0.0)
-                    LinearKeyframe(1.0, duration: 0.4, timingCurve: .easeOut)
+                // A spilled tank keeps its caps over the murk, and a lost one its clock.
+                .opacity(showResult && !game.spilled && !game.lost ? 0 : 1)
+                .environment(\.channelLetters, letters || Letters.shown(system: differentiate))
+                // A twist that stacked an entry: on the knob, as red would not read over the picture's red lines. After the
+                // knobs, which would hide it. The swirl's is a ring just inside the glass's edge, over the picture, so a
+                // hairline. One view either way, so the first push on either animates.
+                let swirlPushed = fk == game.level.layout.swirl
+                Circle().strokeBorder(Color.alarm, lineWidth: swirlPushed ? Self.hairline : 1)
+                    .padding(swirlPushed ? Self.swirlFlash - Self.hairline / 2 : -3)
+                    .frame(width: swirlPushed ? side : core, height: swirlPushed ? side : core)
+                    .keyframeAnimator(initialValue: 1.0, trigger: game.pushes) { ring, t in
+                        ring.opacity(t >= 1 ? 0 : 1 - t)
+                    } keyframes: { _ in
+                        MoveKeyframe(0.0)
+                        LinearKeyframe(1.0, duration: 0.4, timingCurve: .easeOut)
+                    }
+                    .position(at(fk))
+                ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core), r: r) }
+                if game.lost && shown == nil, let k = game.tick.last?.rod ?? game.pushedClock ?? game.lastStopped {
+                    lostMarks(at(k), size: Self.ratchetSize(core), r: r,
+                              twisted: Set(game.stack.map(\.rod)).sorted().map { (at($0), disc($0)) })
                 }
-                .position(at(fk))
-            if knobLesson && shown == nil && !touching {
-                KnobLesson(centre: at(0), reach: 0.5 * disc(0), clock: frozenClock).transition(.opacity)
-            }
-            ForEach(clocks, id: \.rod) { c in clockMarks(c.rod, dir: c.dir, at(c.rod), disc: disc(c.rod), size: Self.ratchetSize(core), r: r) }
-            if game.lost && shown == nil, let k = game.tick.last?.rod ?? game.pushedClock ?? game.lastStopped {
-                lostMarks(at(k), size: Self.ratchetSize(core), r: r,
-                          twisted: Set(game.stack.map(\.rod)).sorted().map { (at($0), disc($0)) })
-            }
-            if let spillAt {
-                TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || frozenClock != nil)) { timeline in
-                    SpillWords(r: r, at: frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
+                if knobLesson && shown == nil && !touching {
+                    KnobLesson(centre: at(0), reach: 0.5 * disc(0), clock: frozenClock).transition(.opacity)
                 }
-            }
-            if let c = rodCount, c.steps != 0 {
-                countLabel(c.steps).opacity(c.live ? 1 : 0.45)
-                    .position(countSpot(at(c.k), reach: countReach(c.k, r), side: side, avoid: others))
-            }
-            if let c = tankCount, c.steps != 0 {
-                countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side))
-            }
-            if let ghost {
-                // Turned with the stir it holds, about its pivot, so it rides the same animation round the arc; on a
-                // lens, carried up and down as a finger drives one.
-                let a = ghost.rim ? held ?? 0 : liveAngle
-                Circle().fill(Color.white.opacity(0.28)).overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 1))
-                    .frame(width: 40, height: 40)
-                    .position(x: r + ghost.at.x * r, y: r + ghost.at.y * r)
-                    .frame(width: side, height: side)
-                    .rotationEffect(.radians(ghost.lens ? 0 : a), anchor: UnitPoint(x: (ghost.pivot.x + 1) / 2, y: (ghost.pivot.y + 1) / 2))
-                    .offset(y: ghost.lens ? -a / Tank.step * Self.lensPitch * r : 0)
-                    .allowsHitTesting(false)
+                if let spillAt {
+                    TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || frozenClock != nil)) { timeline in
+                        SpillWords(r: r, at: frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
+                    }
+                }
+                if let c = rodCount, c.steps != 0 {
+                    countLabel(c.steps).opacity(c.live ? 1 : 0.45)
+                        .position(countSpot(at(c.k), reach: countReach(c.k, r), side: side, avoid: others))
+                }
+                if let c = tankCount, c.steps != 0 {
+                    countLabel(c.steps).opacity(c.live ? 1 : 0.45).position(countSpot(CGPoint(x: r, y: r), reach: 1.045 * r + 16, side: side))
+                }
+                if let ghost {
+                    // Turned with the stir it holds, about its pivot, so it rides the same animation round the arc; on a
+                    // lens, carried up and down as a finger drives one.
+                    let a = ghost.rim ? held ?? 0 : liveAngle
+                    Circle().fill(Color.white.opacity(0.28)).overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 1))
+                        .frame(width: 40, height: 40)
+                        .position(x: r + ghost.at.x * r, y: r + ghost.at.y * r)
+                        .frame(width: side, height: side)
+                        .rotationEffect(.radians(ghost.lens ? 0 : a), anchor: UnitPoint(x: (ghost.pivot.x + 1) / 2, y: (ghost.pivot.y + 1) / 2))
+                        .offset(y: ghost.lens ? -a / Tank.step * Self.lensPitch * r : 0)
+                        .allowsHitTesting(false)
+                }
             }
         }
         .frame(width: side, height: side)

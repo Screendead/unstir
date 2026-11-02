@@ -99,17 +99,57 @@ final class ShareTests: XCTestCase {
         XCTAssertEqual(game.shareText, "Unstir 2026-11-02 \u{00B7} practice \u{00B7} 1 move (par 1)\n\u{1F7EA}")
     }
 
-    /// The daily counts only its first visit's solve, so its card offers no "again", which would save a second.
-    @MainActor func testTheDailysCardOffersNoAgain() {
-        func tried(_ id: String) -> Game {
+    /// "again" on the daily's card plays it as practice: it saves no best, so the first try's stands, and no streak
+    /// day (Jack's call P1 = B).
+    @MainActor func testTheDailysAgainIsPractice() throws {
+        let id = "daily-20261103"
+        defer {
+            for key in ["best.\(id)", "started.\(id)", Resume.key(id)] { UserDefaults.standard.removeObject(forKey: key) }
+        }
+        let day = try XCTUnwrap(DateComponents(calendar: Calendar(identifier: .gregorian), year: 2026, month: 11, day: 3).date)
+        let game = Game(level: Level(id: id, label: "", title: "", layout: .tri, scramble: .parse("0:+4", in: .tri)),
+                        tankTurned: true, bank: (10, nil), storesResume: true)
+        // Rod 1's stir turned back between them splits rod 0's heal in two moves: one over par.
+        for (rod, steps) in [(0, -2), (1, 1), (1, -1), (0, -2)] { game.commit(rod: rod, steps: steps) }
+        XCTAssertTrue(game.solved)
+        XCTAssertTrue(game.counts)
+        XCTAssertEqual(Best.load(id)?.over, 1)
+        XCTAssertEqual(Daily.run(today: day), 1)
+        XCTAssertTrue(game.offersAgain)
+        XCTAssertTrue(game.reset())
+        XCTAssertFalse(game.firstTry)
+        XCTAssertFalse(game.counts)
+        XCTAssertNil(game.bests, "the card would show the first try's best line again")
+        XCTAssertEqual(Resume.load(id)?.firstTry, false, "a resumed practice stays practice")
+        game.commit(rod: 0, steps: -4)
+        XCTAssertTrue(game.solved)
+        XCTAssertEqual(Best.load(id)?.over, 1, "a practice at par would beat the first try's +1 if it saved")
+        XCTAssertNil(game.bests)
+        XCTAssertEqual(Daily.run(today: day), 1)
+        XCTAssertTrue(Best.started(id))
+        XCTAssertEqual(game.shareText, "Unstir 2026-11-03 \u{00B7} practice \u{00B7} 1 move (par 1) \u{00B7} 1 reset\n\u{1F7EA}")
+    }
+
+    /// Only "again" after a daily's solve makes practice: a reset mid-try, or another level's again, keeps the first try.
+    @MainActor func testOnlyTheDailysAgainEndsTheFirstTry() {
+        let ids = ["daily-20261104", "test"]
+        defer {
+            for id in ids { for key in ["best.\(id)", "started.\(id)"] { UserDefaults.standard.removeObject(forKey: key) } }
+        }
+        func tried(_ id: String, solve: Bool) -> Game {
             let game = Game(level: Level(id: id, label: "", title: "", layout: .tri, scramble: .parse("0:+4", in: .tri)),
-                            tankTurned: true, bank: (10, nil))
-            game.commit(rod: 1, steps: 2)
+                            tankTurned: true, bank: (10, nil), firstTry: true)
+            game.commit(rod: 0, steps: -2)
+            if solve {
+                for (rod, steps) in [(1, 1), (1, -1), (0, -2)] { game.commit(rod: rod, steps: steps) }
+                XCTAssertTrue(game.offersAgain, id)
+            }
             XCTAssertTrue(game.reset())
-            XCTAssertFalse(game.clean)
             return game
         }
-        XCTAssertFalse(tried("daily-20261103").offersAgain)
-        XCTAssertTrue(tried("test").offersAgain)
+        let reset = tried("daily-20261104", solve: false)
+        XCTAssertTrue(reset.firstTry)
+        XCTAssertTrue(reset.counts)
+        XCTAssertTrue(tried("test", solve: true).firstTry)
     }
 }

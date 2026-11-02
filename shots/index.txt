@@ -94,7 +94,8 @@ tier-up.png  Vortex 27 result card, maelstrom open: under the row, up a notch to
 tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate.
 tier-up-midway.png  Plughole 05 solved at par, the last plughole level to reach it: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
 tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over).
-daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00).
+daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00).
+daily-practice.png  Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h.
 daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap).
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
 wave-0.8.png  Level 13 solved through the real commit path, solve wave held at radius 0.8 from the last-turned rod.
@@ -551,6 +552,7 @@ escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken t
 escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
 escapement-dead-tick.png  Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again.
 escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
+escapement-2-lost-resumed.png  Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out.
 escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
 escapement-budget-16-dealt.png  Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6.
 escapement-budget-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left.
@@ -614,3 +616,7 @@ prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
 prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
 prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.
+clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
+clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
+clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
+clean-prism-01.png  Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption.

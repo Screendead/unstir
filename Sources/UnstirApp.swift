@@ -71,6 +71,9 @@ struct Harness {
     /// UNSTIR_BARE=1: the picture drawn unstirred whatever the stack, so a still shows a story's art as the stack has
     /// played it.
     let bare: Bool
+    /// UNSTIR_CLEAN=1: a level drawn as its glass and picture alone, every control, count, line and fingertip hidden
+    /// and the status bar too, for App Store art that may show no interface.
+    let clean: Bool
     /// UNSTIR_ENDING=s: First Stir's last scene opens solved with the night forwards held s seconds in, or running from
     /// the start at -1, for films. Needs UNSTIR_SCREEN=clean.
     let ending: Double?
@@ -365,6 +368,7 @@ struct Harness {
         autoplay = env["UNSTIR_AUTOPLAY"] == "1"
         pace = env["UNSTIR_PACE"].flatMap(Double.init) ?? 0.3
         bare = env["UNSTIR_BARE"] == "1"
+        clean = harnessed && env["UNSTIR_CLEAN"] == "1"
         ending = env["UNSTIR_ENDING"].flatMap(Double.init)
         func line(_ line: String) -> [Twist] {
             line.split(separator: ",").compactMap { move in
