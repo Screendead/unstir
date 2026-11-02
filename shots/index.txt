@@ -645,6 +645,7 @@ clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean:
 clean-prism-01.png  Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption.
 duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, header, note and controls in the trailing half.
 duo-open-result.png  Duo open: plughole 06 solved clean, the card in the trailing half beside the tank where it was played.
+duo-open-fullest.png  Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole in the trailing half.
 duo-open-escapement.png  Duo open: Escapement 02 a move in, the ticks' counter over the trailing half.
 duo-open-prism.png  Duo open: Prism 01 with the colour letters, the swatches under the note in the trailing half.
 duo-open-endless.png  Duo open: endless at three notches, the brim round the tank in the leading half.
@@ -654,6 +655,8 @@ duo-folded-book.png  Duo half open like a book: the split clear of the fold's ba
 duo-tabletop.png  Duo upright and folded on a table: header, note and controls in the upright half, the tank filling the half lying flat.
 duo-tabletop-result.png  Duo tabletop: plughole 06 solved clean, the card and unstirred. in the upright half, above the fold.
 duo-tabletop-daily-result.png  Duo tabletop: today's daily two over par, its card's again, share and next daily all above the fold.
+duo-tabletop-fullest.png  Duo tabletop: plughole 27 over par against a best of +6, the fullest card a tier level shows (new best, again, up a notch locked): the caption risen so the card ends above unstirred., clear of the fold.
+duo-tabletop-pack-complete.png  Duo tabletop: Lens 25 solved, Lens complete and its pointer under the card, all above unstirred. and the fold.
 duo-tabletop-escapement.png  Duo tabletop: Escapement 02 a move in, the ticks' counter in the upright half.
 duo-tabletop-prism.png  Duo tabletop: Prism 01 with the colour letters, the swatches under the note in the upright half.
 duo-opened.png  Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept.

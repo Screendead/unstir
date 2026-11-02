@@ -656,8 +656,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
   `min(width, height - 290) / 1.045`, as on every iPhone; a wider one (the iPhone Duo opened like a book, whatever the
   portrait lock) splits at the fold, 16 pt clear of it either side: the tank alone, centred, in the leading half, and
-  `LevelView`'s header, title, caption (and the cards hung from it), swatches and controls in the trailing half. The
-  fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
+  `LevelView`'s header, title, caption (and the cards hung from it, which the caption stretches to hold there, as
+  `PlayStack` measures no overlay), swatches and controls in the trailing half. The fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
   the phone is folded; compiled in only from an SDK whose SwiftUI is 8.1 or later, as CI's older Xcode lacks it), else
   the window's middle. A tall window folded across (the Duo upright on a table) is the
   tabletop: the rest in the upright half, the tank filling the half lying flat, and "unstirred." at the upright half's

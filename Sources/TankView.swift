@@ -1000,6 +1000,8 @@ struct LevelView: View {
     @State private var deadSpin: CGPoint?
     /// Where the finger now on the tank landed, whether or not anything has taken it up yet.
     @State private var touchStart: CGPoint?
+    /// How far the result or lost card reaches below the caption's top, which `PlayStack` makes room for.
+    @State private var cardReach: CGFloat = 0
     /// The play layout last laid out, so a change of pose glides from it and lets go of what the fingers hold.
     @State private var pose: PlayLayout?
     /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
@@ -1413,11 +1415,13 @@ struct LevelView: View {
                 if showResult && game.lost {
                     LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
                         .padding(.top, 14)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
                         .transition(reveal)
                 } else if showResult {
                     ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 14)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
                         .transition(reveal)
                 }
             }
@@ -1490,7 +1494,11 @@ struct LevelView: View {
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
                     .layoutValue(key: PlayPart.self, value: .stage)
-                caption.layoutValue(key: PlayPart.self, value: .chrome)
+                caption
+                    // The card hangs from the caption unmeasured, over the controls it hides. In the split and the
+                    // tabletop the stack must make room for it, or in the tabletop it runs into "unstirred.".
+                    .frame(minHeight: layout.kind == .column || !showResult ? nil : cardReach, alignment: .top)
+                    .layoutValue(key: PlayPart.self, value: .chrome)
                 swatches.layoutValue(key: PlayPart.self, value: .chrome)
                 Spacer(minLength: 12)
                 controls.layoutValue(key: PlayPart.self, value: .chrome)

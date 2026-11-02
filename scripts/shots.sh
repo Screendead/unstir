@@ -769,6 +769,8 @@ shot duo-open-level "Duo open: plughole 11 five moves in, the tank wholly in the
   "${duo[@]}" LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
 shot duo-open-result "Duo open: plughole 06 solved clean, the card in the trailing half beside the tank where it was played." \
   "${duo[@]}" SCREEN=clean LEVEL=6
+shot duo-open-fullest "Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole in the trailing half." \
+  "${duo[@]}" SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
 shot duo-open-escapement "Duo open: Escapement 02 a move in, the ticks' counter over the trailing half." \
   "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=2:4
 shot duo-open-prism "Duo open: Prism 01 with the colour letters, the swatches under the note in the trailing half." \
@@ -792,6 +794,10 @@ shot duo-tabletop-result "Duo tabletop: plughole 06 solved clean, the card and u
   "${table[@]}" SCREEN=clean LEVEL=6
 shot duo-tabletop-daily-result "Duo tabletop: today's daily two over par, its card's again, share and next daily all above the fold." \
   "${table[@]}" SCREEN=result MODE=daily NOW=17:00
+shot duo-tabletop-fullest "Duo tabletop: plughole 27 over par against a best of +6, the fullest card a tier level shows (new best, again, up a notch locked): the caption risen so the card ends above unstirred., clear of the fold." \
+  "${table[@]}" SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
+shot duo-tabletop-pack-complete "Duo tabletop: Lens 25 solved, Lens complete and its pointer under the card, all above unstirred. and the fold." \
+  "${table[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 shot duo-tabletop-escapement "Duo tabletop: Escapement 02 a move in, the ticks' counter in the upright half." \
   "${table[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=2:4
 shot duo-tabletop-prism "Duo tabletop: Prism 01 with the colour letters, the swatches under the note in the upright half." \
