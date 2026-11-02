@@ -45,7 +45,7 @@ extension View {
 /// letters' choice (`Letters`).
 enum Settings {
     /// A harnessed launch's switches, read in place of the stored ones and never stored, so a tap in one shot lasts only
-    /// that launch. Keyed `music`, `sounds`, `haptics` and `letters` (absent while unchosen).
+    /// that launch. Keyed `music`, `sounds`, `haptics`, `supporter` and `letters` (absent while unchosen).
     static let held = OSAllocatedUnfairLock<[String: Bool]?>(initialState: nil)
 
     static var music: Bool {
@@ -63,10 +63,17 @@ enum Settings {
         set { set("haptics", newValue) }
     }
 
-    /// For the log and a report: "music on, sounds off, haptics on, letters system".
+    /// The supporter mark on the menu and the daily's share line, shown once the player owns a pack (Jack's call M6,
+    /// round 14); on until switched off.
+    static var supporter: Bool {
+        get { on("supporter") }
+        set { set("supporter", newValue) }
+    }
+
+    /// For the log and a report: "music on, sounds off, haptics on, supporter on, letters system".
     static var summary: String {
         let letters = Letters.choice.map { $0 ? "on" : "off" } ?? "system"
-        return ["music", "sounds", "haptics"].map { "\($0) \(on($0) ? "on" : "off")" }.joined(separator: ", ")
+        return ["music", "sounds", "haptics", "supporter"].map { "\($0) \(on($0) ? "on" : "off")" }.joined(separator: ", ")
             + ", letters \(letters)"
     }
 

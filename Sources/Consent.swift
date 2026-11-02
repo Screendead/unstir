@@ -35,6 +35,8 @@ enum ConsentWords {
     static let policyDetail = "what the game keeps, and why"
     static let letters = "colour letters"
     static let lettersDetail = "R, G and B on Prism's knobs"
+    static let supporter = "supporter mark"
+    static let supporterDetail = "\u{2726} by the title and in the daily's share line"
     static let editors = "open every tier"
     static let editorsDetail = "every level and pack too, without buying"
 }
@@ -144,8 +146,8 @@ struct NeonToggle: ToggleStyle {
     }
 }
 
-/// The gear's sheet: music, sounds, haptics, the colour letters, the analytics switch where the build has analytics,
-/// restore, a report of a problem and the privacy policy, and the version under them, black, sized to what it holds.
+/// The gear's sheet: music, sounds, haptics, the colour letters, the supporter mark once a pack is owned, the analytics
+/// switch where the build has analytics, restore, a report of a problem and the privacy policy, and the version under them, black, sized to what it holds.
 struct SettingsSheet: View {
     /// Apple's guideline 5.1.1(i) wants it reachable in the app. Info.plist's `PolicyURL`, set outside the repo, or
     /// the plain github.com page where the build has none.
@@ -167,6 +169,8 @@ struct SettingsSheet: View {
     @State private var haptics = Settings.haptics
     /// Nil until chosen, so the switch shows Differentiate Without Colour's state until then.
     @State private var letters = Letters.choice
+    /// The menu's, so its title gains or drops the mark behind the sheet as the switch moves.
+    @Binding var supporter: Bool
     @State private var unlocked = Best.unlocked
     @State private var mailing = false
     @State private var reading = false
@@ -194,6 +198,9 @@ struct SettingsSheet: View {
                     switchRow(ConsentWords.haptics, ConsentWords.hapticsDetail, $haptics) { Settings.haptics = $0 }
                     switchRow(ConsentWords.letters, ConsentWords.lettersDetail,
                               Binding(get: { letters ?? differentiate }, set: { letters = $0 })) { Letters.choice = $0 }
+                    if store.bought {
+                        switchRow(ConsentWords.supporter, ConsentWords.supporterDetail, $supporter) { Settings.supporter = $0 }
+                    }
                     #if EDITORS || DEBUG
                     if Build.editorsSwitch {
                         switchRow(ConsentWords.editors, ConsentWords.editorsDetail, $unlocked) { Best.unlocked = $0 }

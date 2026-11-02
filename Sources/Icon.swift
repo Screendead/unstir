@@ -71,3 +71,26 @@ struct IconView: View {
                          maxSampleOffset: CGSize(width: side, height: side))
     }
 }
+
+/// UNSTIR_PROMO=lens: an offer's promoted-purchase image, its dock cover stirred as dealt inside a 1024-pixel black
+/// square centred on the screen, for scripts/promo.sh to crop. The App Store frames it, so the tank keeps clear of the
+/// edges.
+struct PromoArt: View {
+    let offer: Offer
+    @Environment(\.displayScale) private var scale
+
+    var body: some View {
+        let s = 1024 / scale
+        ZStack {
+            Color.black
+            // Complete's as Release sells it, whatever the build.
+            PackTank(offer: offer, side: s * 0.84,
+                     covers: offer == .complete ? Clip.cut(of: Pack.sold(release: true)).reels.map(\.level) : nil)
+        }
+        .frame(width: s, height: s)
+        .clipped()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
+        .ignoresSafeArea()
+    }
+}

@@ -64,7 +64,8 @@ shot menu-mid-switch "Menu mid-switch: whirlpool's list unstirring into place, h
 # Where the list opens: a cold launch, and back from a level through RootView's own exit (UNSTIR_EXIT).
 upto13=0000000000000
 # What the menu leads with (C4, C5, C18, C3's tried mark).
-shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it." FRESH=1 OPEN=1
+shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings." FRESH=1 OPEN=1
+hold=9 shot first-launch-pointer "The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both." FRESH=1 OPEN=1
 shot menu-after-01 "Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list." BESTS=plughole:0
 shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox." \
   TIER=whirlpool BESTS=plughole:$par27
@@ -171,6 +172,8 @@ hold=2 shot sandbox-full "The sandbox with a full stack of 36, then rod 2 turned
   MODE=sandbox STACK=${full%,} MOVES=2:1
 shot sandbox-chainmail "The sandbox on chainmail and pent: the header's controls in full where they fit." \
   MODE=sandbox PICTURE=chainmail LAYOUT=pent STACK= CLOCK=3
+hold=9 shot knob-lesson "Level 01 left untouched 4 s (no opening: a still launch): the ghost finger halfway out knob 0's disc, held mid-rock." \
+  LEVEL=1 CLOCK=0
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot level-at-par "Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber." \
@@ -187,6 +190,8 @@ shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens com
   PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred in maelstrom's red, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
   SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir BESTS=plughole:000000000000000000000000000,whirlpool:000000000000000000000000000,vortex:000000000000000000000000000,maelstrom:00000000000000000000000000- CLOCK=0
+shot result-ladder-end "Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it)." \
+  SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0
 shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
 shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate." \
@@ -201,6 +206,8 @@ shot daily-practice "Today's daily solved at par as practice, as again on its ca
   SCREEN=clean MODE=daily NOW=17:00 TRIED=daily-$(date +%Y%m%d)
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
   SCREEN=result MODE=daily SHARESHEET=1
+hold=8 shot daily-share-supporter "The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦." \
+  SCREEN=result MODE=daily SHARESHEET=1 OWNED=lens
 for w in 0.4 0.8 1.2; do
   shot "wave-$w" "Level 13 solved through the real commit path, solve wave held at radius $w from the last-turned rod." LEVEL=13 WAVE=$w
 done
@@ -374,19 +381,24 @@ shot swirl-tri "Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3." LAYOUT=triS
 shot swirl-eye "Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3." LAYOUT=eyeSwirl STACK=0:+3,4:+2,2:-4,4:-3 SWIRLED=1 CLOCK=3
 shot swirl-pent "Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3." LAYOUT=pentSwirl STACK=0:+3,5:+2,2:-4,5:-3 SWIRLED=1 CLOCK=3
 shot swirl-hex "Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3." LAYOUT=hexSwirl STACK=1:+3,7:+2,4:-4,7:-3 SWIRLED=1 CLOCK=3
-# Lens: rod 0 of tri is a lens on the halftone panel.
+# Lens: rod 0 of tri is a lens on the halftone panel. A best on Lens 01 keeps its lesson off the rig's stills.
 hold=5 shot lens-plus "Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies." \
-  PACK=lens LEVEL=1 STACK=0:+3
-hold=5 shot lens-minus "Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim." PACK=lens LEVEL=1 STACK=0:-2
+  PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:+3
+hold=5 shot lens-minus "Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim." PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:-2
 for n in $(seq -w 1 25); do
-  hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens
+  hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens \
+    $([[ $n == 01 ]] && echo BESTS=lens:0)
 done
-hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 STACK=1:+2,0:+2
+hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 BESTS=lens:0 STACK=1:+2,0:+2
 hold=5 shot lens-result "Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens." \
   PACK=lens LEVEL=2 SCREEN=result CLOCK=0
-hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 STACK=0:+2,1:+2
+hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:+2,1:+2
 hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger." \
   PACK=lens LEVEL=1 LIVE=0:+1.4 TOUCH=0,-0.42
+hold=6 shot lens-lesson "Lens 01 as the tank becomes the player's: a ghost finger on the lens's knob halfway through its ride down, a lens step's travel, beside the track's rail, faint, on the right." \
+  PACK=lens LEVEL=1 CLOCK=0.8
+hold=5 shot lens-lesson-copied "Lens 01 held mid-drag where its lesson rides: landed on the knob's left edge and dragged two steps down, the count's -2 dashes on the lesson's rail." \
+  PACK=lens LEVEL=1 LIVE=0:-2 TOUCH=-0.07,-0.42
 # The rim band at each dealt step on each rod size, for glitter: tri's big rod 0 (0.58), quad's rod 0 (0.48) and eye's
 # small top rod 2 (0.44), each beside a neighbour that overlaps it. Still, the lens held half a step short, and the
 # neighbour held mid-twist over the lens.
@@ -394,7 +406,7 @@ for size in "big tri 0 1 0,-0.42" "mid quad 0 1 -0.35,-0.35" "small eye 2 0 0,-0
   read -r name layout lens twist touch <<< "$size"
   for n in 1 2 3; do
     hold=5 shot "lens-glitter-$name-$n" "Lens on $layout rod $lens at +$n, still." \
-      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+$n
+      PACK=lens LEVEL=1 BESTS=lens:0 LAYOUT=$layout LENSES=$lens STACK=$lens:+$n
     below=$( ((n > 1)) && echo "$lens:+$((n - 1))" || true )
     hold=5 shot "lens-glitter-$name-$n-drag" "Lens on $layout rod $lens held at +$((n - 1)).5, mid-drag up." \
       PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$below LIVE=$lens:+0.5 TOUCH=$touch
@@ -413,15 +425,24 @@ for size in "big tri 0 1 0,-0.42" "mid quad 0 1 -0.35,-0.35" "small eye 2 0 0,-0
   # The order read at x2: the lens at +2 newest (its rim whole) or under a twist of 1 or 3 steps (its rim dragged).
   for k in 1 3; do
     hold=5 shot "lens-order-$name-over-$k" "Lens on $layout rod $lens, $twist:+$k,$lens:+2: the lens newest." \
-      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$twist:+$k,$lens:+2
+      PACK=lens LEVEL=1 BESTS=lens:0 LAYOUT=$layout LENSES=$lens STACK=$twist:+$k,$lens:+2
     hold=5 shot "lens-order-$name-under-$k" "Lens on $layout rod $lens, $lens:+2,$twist:+$k: the twist newest." \
-      PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens STACK=$lens:+2,$twist:+$k
+      PACK=lens LEVEL=1 BESTS=lens:0 LAYOUT=$layout LENSES=$lens STACK=$lens:+2,$twist:+$k
   done
 done
 # App-icon candidates, each a 1024-pixel square centred on the screen; scripts/icon.sh crops them and lays out the sheet.
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# Each sold offer's promoted-purchase image, a 1024-pixel square centred on the screen; scripts/promo.sh crops them.
+hold=30 shot promo-lens "Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black." PROMO=lens
+shot promo-escapement "Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black." PROMO=escapement
+shot promo-prism "Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black." PROMO=prism
+hold=12 shot promo-complete "Complete's promoted-purchase image: a wedge of each of Release's three packs' covers, inside the bezel on black." PROMO=complete
+hold=4 shot promoted-menu "A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned." \
+  PROMOTED=lens STORE=lens:unowned BESTS=plughole:000000000
+hold=4 shot promoted-level "The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned." \
+  PROMOTED=lens STORE=lens:unowned LEVEL=5
 # First Stir's chapters 1, Dawn After (scenes 1 to 5, 6:40 back to 4:45 am), 2, The Rescue (6 to 10, 4:45 back to
 # 2:30 am), 3, The Flood (11 to 15, 2:30 back to 12:30 am), 4, The Storm (16 to 20, 12:30 am back to 9:30 pm), and
 # 5, Dusk Before (21 to 25, 9:30 back to 7:40 pm), three vignettes a scene. UNSTIR_BARE draws the picture unstirred, so the art shows as the stack has played
@@ -617,6 +638,12 @@ shot settings "Settings: music, sounds and haptics on, colour letters, restore p
 shot settings-quiet "Settings with music and haptics off." SETTINGS=1 MUSIC=0 HAPTICS=0
 shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
   SETTINGS=1 STORE=lens:unowned RESTORED=none
+shot settings-supporter "The gear's sheet with a pack owned: a supporter mark switch, on, under colour letters." SETTINGS=1 OWNED=lens
+shot menu-supporter "Menu with a pack owned: the supporter mark, a hairline four-pointed glint in plughole's sweep, after the title." \
+  OWNED=lens BESTS=plughole:000000000 CONSENT=yes
+shot menu-supporter-off "The same with the settings' supporter mark switched off: the title alone, as before any purchase." \
+  OWNED=lens BESTS=plughole:000000000 CONSENT=yes SUPPORTER=0
+shot menu-no-supporter "The same with nothing owned: no mark." BESTS=plughole:000000000 CONSENT=yes
 # The editors' build's switch (EDITORS=YES), which UNSTIR_EDITORS=1 shows in a Debug build.
 shot settings-editors "The editors' build's settings: open every tier, every level and pack too, without buying, under colour letters, off." \
   SETTINGS=1 EDITORS=1
@@ -710,3 +737,23 @@ hold=5 shot clean-lens-03 "Lens 03 on the halftone, its lens held mid-zoom, draw
   PACK=lens LEVEL=3 CLEAN=1 LIVE=0:+1 TOUCH=0,-0.8
 hold=5 shot clean-prism-01 "Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption." \
   PACK=prism LEVEL=1 CLEAN=1 LIVE=0:+2 TOUCH=0,-0.8
+# Under Reduce Motion (set on the simulator, as film.sh's calm films do): every live picture holds Picture.rest's frame,
+# the brim holds where a change settles, and a spill cuts to its end.
+calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
+# Off again however the shots end, or every later shot records the calm look.
+trap 'calm false' EXIT
+calm true
+for picture in glass chainmail coral neurons marbling glassTwin chainmailTwin coralTwin neuronsTwin marblingTwin isobars ephemeris cords; do
+  hold=5 shot "calm-$picture" "Reduce Motion: the sandbox on $picture, stirred twice, held on its still frame (Picture.rest)." \
+    MODE=sandbox PICTURE=$picture STACK=1:+5,2:-4
+done
+hold=9 shot calm-chainmailTwin-later "Reduce Motion: the same, 9 s in: the same frame, the heartbeat at rest between beats." \
+  MODE=sandbox PICTURE=chainmailTwin STACK=1:+5,2:-4
+shot calm-endless-brim-7 "Reduce Motion: endless opened at 7 notches, one from spilling: the rim still, no bob or tremble, the pin's pulse held lit." \
+  MODE=endless BRIM=7
+shot calm-endless-notch "Reduce Motion: endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 in place at once, settled, no slosh or surge." \
+  MODE=endless BRIM=4 TURNED=1:1
+shot calm-endless-spilled "Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card." \
+  MODE=endless BRIM=7 TURNED=1:1
+calm false
+trap - EXIT

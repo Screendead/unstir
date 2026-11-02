@@ -419,6 +419,31 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Brim.level(at: 1 + Brim.meet, spill, base: room - 1, room: room), Double(room))
     }
 
+    /// Under Reduce Motion the rim holds where a change comes to rest: the level on its notch, with no slosh, bob, wet
+    /// film or kick; at the last notch with no tremble either, its pulse held lit; and a spill held where its pour has
+    /// run and soaked away.
+    func testTheBrimRestsUnderReduceMotion() {
+        let room = Run.room, held = Brim.rest(spilled: false)
+        for to in [5, room - 1] {
+            let events = [Brim.Event(from: to - 2, to: to - 1, time: 1), Brim.Event(from: to - 1, to: to, time: 1.5)]
+            let rest = Brim.frame(at: 1.5 + held, events, base: to - 2, room: room, clock: Brim.Clock(), held: held,
+                                  still: true)
+            XCTAssertEqual(Double(rest[1]), Brim.levelY(Double(to), room: room), accuracy: 0.01)
+            // The tilt, bob, tremble, calm, wet film and kick.
+            for i in [2, 3, 4, 5, 7, 11, 12] { XCTAssertEqual(rest[i], 0, accuracy: 0.01, "brim \(to), float \(i)") }
+            XCTAssertEqual(rest[13], 1, "brim \(to)'s pulse")
+            // UNSTIR_CLOCK's frame, held without `still`, catches the last notch mid-bob.
+            let caught = Brim.frame(at: 1.5 + held, events, base: to - 2, room: room, clock: Brim.Clock(), held: held)
+            if to == room - 1 { XCTAssertGreaterThan(abs(caught[3]), 0.05) }
+        }
+        let spill = [Brim.Event(from: room - 1, to: room, time: 1)], after = Brim.rest(spilled: true)
+        let spilt = Brim.frame(at: 1 + after, spill, base: room - 1, room: room, clock: Brim.Clock(), held: after,
+                               still: true)
+        XCTAssertEqual(Double(spilt[1]), Brim.levelY(Double(room), room: room), accuracy: 0.01)
+        // The calm, the crest's flash and what ran over, soaked away.
+        for i in [7, 16, 18] { XCTAssertEqual(spilt[i], 0, accuracy: 0.01, "float \(i)") }
+    }
+
     /// The surface crosses the bezel's middle at the tick for its fill on both sides, and clears the bezel empty and full:
     /// empty, by more than the meniscus's 3.4 up the wall and the bob's 1.8, so no glint lies on the edge at six.
     func testTheSurfaceMeetsTheTicks() {
@@ -588,6 +613,24 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Offer.pointer(after: .pack(.lens), shelf: shelf, owned: owning([.escapement])), .prism)
         XCTAssertNil(Offer.pointer(after: .pack(.prism), shelf: shelf, owned: owning([.lens, .escapement, .prism])))
         XCTAssertNil(Offer.pointer(after: .free, shelf: shelf, owned: owning([.lens, .escapement, .prism])))
+    }
+
+    /// "more puzzles in the packs ›" shows on maelstrom 27's card alone, once, opening the first pack on the shelf the
+    /// player doesn't own; never where a completion already points to one, nor once every pack is owned.
+    @MainActor func testTheLadderEndPointsToThePacksOnce() {
+        let shelf: [Offer] = [.pack(.lens), .pack(.escapement), .pack(.prism), .complete]
+        func owning(_ packs: Set<Pack>) -> (Pack) -> Bool { { packs.contains($0) } }
+        let end = Level.maelstrom.last!
+        XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: shelf, owned: owning([])), .lens)
+        XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: shelf, owned: owning([.lens])), .escapement)
+        XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: true, shelf: shelf, owned: owning([])))
+        XCTAssertNil(Offer.ladderEnd(end, completed: .free, shown: false, shelf: shelf, owned: owning([])),
+                     "the completion's own pointer says it")
+        XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: false, shelf: shelf,
+                                     owned: owning([.lens, .escapement, .prism])))
+        for level in [Level.maelstrom[25], Level.vortex.last!, Level.plughole.last!] {
+            XCTAssertNil(Offer.ladderEnd(level, completed: nil, shown: false, shelf: shelf, owned: owning([])), level.id)
+        }
     }
 
     /// The card calls a best new only when what it names improves: clean, then over par; a faster time at the same
@@ -2259,6 +2302,22 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// Under Reduce Motion every live picture is handed one clock whatever the time, and a twin's heartbeat (each
+    /// shader's `heartbeat`, copied) stands between beats at every point of its delay grid, so the still shows the lines
+    /// at rest rather than a front caught crossing the tank.
+    func testATwinRestsBetweenBeatsUnderReduceMotion() {
+        for picture in Picture.allCases where picture.isLive {
+            XCTAssertEqual(picture.clock(0, still: true), picture.clock(1000, still: true), "\(picture)")
+            XCTAssertEqual(picture.clock(7, still: false), 7, "\(picture)")
+        }
+        let twin = Picture.glassTwin, t = twin.clock(0, still: true).truncatingRemainder(dividingBy: twin.period)
+        for d in Picture.delays(t: t) {
+            let x = (t - Double(d)) - (t - Double(d)).rounded(.down)
+            let a = (x - 0.06 - (x - 0.06).rounded()) / 0.04, b = (x - 0.30) / 0.05
+            XCTAssertLessThan(exp(-a * a) + 0.55 * exp(-b * b), 0.02, "delay \(d)")
+        }
+    }
+
     /// The neural web's shader draws only p's nearest node (by its own search) and that node's dendrites, so every line,
     /// glow, knob and soma must lie where that search finds its node. Checked against a brute force over every node in a
     /// 5 x 5 window, on each seed that shows the web (the sandbox's and its levels'), for the web and its twin, whose
@@ -2589,6 +2648,17 @@ final class UnstirTests: XCTestCase {
         harnessed.commit(rod: 4, steps: -3)
         XCTAssertTrue(harnessed.swirled)
         XCTAssertFalse(Best.swirled)
+    }
+
+    /// Only plughole 01 points at the settings, and only until it has; under the harness only UNSTIR_FRESH shows it.
+    func testOnlyPlughole01PointsAtTheSettingsOnce() {
+        let first = Tier.plughole.levels[0], second = Tier.plughole.levels[1]
+        XCTAssertTrue(LevelView.points(at: first, harnessed: false, fresh: false, pointed: false))
+        XCTAssertFalse(LevelView.points(at: first, harnessed: false, fresh: false, pointed: true))
+        XCTAssertFalse(LevelView.points(at: second, harnessed: false, fresh: false, pointed: false))
+        XCTAssertFalse(LevelView.points(at: first, harnessed: true, fresh: false, pointed: false))
+        XCTAssertTrue(LevelView.points(at: first, harnessed: true, fresh: true, pointed: true))
+        XCTAssertFalse(LevelView.points(at: Tier.whirlpool.levels[0], harnessed: true, fresh: true, pointed: false))
     }
 
     /// The swirl breathes only until the player's first stir of it commits, the moment its lesson goes: a stir of another
