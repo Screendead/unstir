@@ -189,6 +189,8 @@ shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens com
   PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred in maelstrom's red, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
   SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir BESTS=plughole:000000000000000000000000000,whirlpool:000000000000000000000000000,vortex:000000000000000000000000000,maelstrom:00000000000000000000000000- CLOCK=0
+shot result-ladder-end "Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it)." \
+  SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0
 shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
 shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate." \

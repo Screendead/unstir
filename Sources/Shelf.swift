@@ -25,7 +25,23 @@ enum Offer: Hashable, Sendable {
     @MainActor static func pointer(after completed: Completion?, shelf: [Offer] = Offer.shelf(),
                                    owned: (Pack) -> Bool = { Store.shared.state($0) == .owned }) -> Pack? {
         guard let completed else { return nil }
-        return shelf.compactMap(\.pack).first { $0 != completed.pack && !owned($0) }
+        return unowned(except: completed.pack, shelf: shelf, owned: owned)
+    }
+
+    /// The first pack on the shelf the player doesn't own, other than `except`.
+    @MainActor static func unowned(except: Pack? = nil, shelf: [Offer] = Offer.shelf(),
+                                   owned: (Pack) -> Bool = { Store.shared.state($0) == .owned }) -> Pack? {
+        shelf.compactMap(\.pack).first { $0 != except && !owned($0) }
+    }
+
+    /// The pack "more puzzles in the packs ›" opens, once, on the card of the free ladder's last level (Jack's call M6,
+    /// round 14); none where the card already points to a pack from a completion, once it has shown, or once every pack is
+    /// owned.
+    @MainActor static func ladderEnd(_ level: Level, completed: Completion?, shown: Bool, shelf: [Offer] = Offer.shelf(),
+                                     owned: (Pack) -> Bool = { Store.shared.state($0) == .owned }) -> Pack? {
+        guard level.pack == nil, level.run == nil, level.id == Tier.allCases.last?.levels.last?.id, !shown,
+              pointer(after: completed, shelf: shelf, owned: owned) == nil else { return nil }
+        return unowned(shelf: shelf, owned: owned)
     }
 
     /// The offer a promoted purchase of product `id` buys, if this build sells it.

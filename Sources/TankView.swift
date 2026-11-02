@@ -3569,6 +3569,8 @@ struct ResultCard: View {
     /// The harness's clock for the daily's next one; nil reads the time.
     let now: Date?
     let onOffer: (Pack) -> Void
+    /// The pack "more puzzles in the packs ›" opens, read as the card appears, which spends its one showing.
+    @State private var packs: Pack?
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
@@ -3638,6 +3640,10 @@ struct ResultCard: View {
                     Button { onOffer(pack) } label: { Text("try \(pack.name) \u{203A}").hit() }
                         .font(.mono(.caption)).opacity(0.6)
                         .accessibilityLabel("Try \(pack.name)")
+                } else if let pack = packs {
+                    Button { onOffer(pack) } label: { Text("more puzzles in the packs \u{203A}").hit() }
+                        .font(.mono(.caption)).opacity(0.6)
+                        .accessibilityLabel("More puzzles in the packs")
                 }
             }
             HStack(spacing: 32) {
@@ -3673,7 +3679,13 @@ struct ResultCard: View {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
-        .onAppear { focused = true }
+        .onAppear {
+            focused = true
+            guard packs == nil, let pack = Offer.ladderEnd(game.level, completed: game.completed, shown: Best.packsPointed)
+            else { return }
+            packs = pack
+            if game.storesProgress { Best.packsPointed = true }
+        }
     }
 }
 

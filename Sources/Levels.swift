@@ -635,6 +635,12 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "welcomed") }
     }
 
+    /// Set once the free ladder's last card has said "more puzzles in the packs ›", which it says once.
+    static var packsPointed: Bool {
+        get { UserDefaults.standard.bool(forKey: "packs.pointed") }
+        set { UserDefaults.standard.set(newValue, forKey: "packs.pointed") }
+    }
+
     /// Set the first time the daily or endless opens: until then, once open, their rows are marked new. Unstored, the
     /// harness's, it lasts only this launch.
     static var modesSeen: Bool { UserDefaults.standard.bool(forKey: "modes.seen") }
