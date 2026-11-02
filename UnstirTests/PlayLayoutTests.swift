@@ -46,7 +46,13 @@ final class PlayLayoutTests: XCTestCase {
     func testTheOpenDuoUprightKeepsTheColumnAtTheCap() {
         let l = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0))
         XCTAssertEqual(l.kind, .column)
-        XCTAssertEqual(l.side, PlayLayout.maxPixels / 3, accuracy: 0.001, "1800 px uncapped")
+        XCTAssertEqual(l.side, PlayLayout.maxPixels / 3, accuracy: 0.001, "about 1630 px uncapped")
+    }
+
+    func testTheCapBindsTheSplitToo() {
+        let l = PlayLayout.of(content: CGSize(width: 1300, height: 1000), window: CGSize(width: 1332, height: 1000), scale: 3)
+        XCTAssertEqual(l.kind, .split)
+        XCTAssertEqual(l.side, PlayLayout.maxPixels / 3, accuracy: 0.001, "uncapped the half would hold about 607 pt")
     }
 
     func testANarrowOrSmallWindowKeepsTheColumn() {
