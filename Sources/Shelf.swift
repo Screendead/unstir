@@ -62,6 +62,19 @@ enum Offer: Hashable, Sendable {
         return saving > 0 ? saving : nil
     }
 
+    /// Whether the bundle is on offer: once every price `saving` takes is in, while it saves; while none is in (loading,
+    /// unreachable, or no product came back), only while none of the `bundled` packs is owned, when it holds them all
+    /// for less; and with some in but not all, as when the App Store sells the packs here but not the bundle, never.
+    /// The prices decide, never whether a fetch is running, so with none of its packs owned a card's fetch never moves
+    /// the dock under it.
+    static func offersComplete(amounts: [String: Decimal], owned: Set<Pack>, bundled: [Pack] = Pack.bundled) -> Bool {
+        let left = bundled.filter { !owned.contains($0) }
+        guard !left.isEmpty else { return false }
+        let needed = [Pack.completeID] + left.map(\.productID)
+        if needed.allSatisfy({ amounts[$0] != nil }) { return saving(amounts: amounts, owned: owned, bundled: bundled) != nil }
+        return left.count == bundled.count && needed.allSatisfy { amounts[$0] == nil }
+    }
+
     /// Whether this build sells it.
     var sold: Bool { pack.map { Pack.sold().contains($0) } ?? true }
 
@@ -1017,9 +1030,10 @@ struct PackDock: View, Equatable {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             .animation(.easeInOut(duration: 0.4), value: store.approved.first)
-            .task(id: Saying(offer: store.approved.first, covered: covered)) {
+            .task(id: Saying(offer: Self.saying(store.approved.first, covered: covered, shelved: store.shelved),
+                             covered: covered || !store.shelved)) {
                 // Held under UNSTIR_CLOCK, for its shot.
-                guard let offer = store.approved.first, !covered else { return }
+                guard let offer = Self.saying(store.approved.first, covered: covered, shelved: store.shelved) else { return }
                 if announced.insert(offer).inserted { AccessibilityNotification.Announcement(offer.yours).post() }
                 // Five seconds in sight: covered, it waits.
                 guard held == nil else { return }
@@ -1079,6 +1093,14 @@ struct PackDock: View, Equatable {
             .padding(.horizontal, 8)
             .onGeometryChange(for: CGFloat.self) { $0.size.width - 16 } action: { row = $0 }
         }
+        // Unseen until the launch's read of what is owned and its price fetch have settled (`Store.shelved`), then a new
+        // dock fading in whole, so neither the header nor the bundle's cover changes in sight as they land, unless a fetch outlasts the wait. Laid
+        // out meanwhile from what is known so far, at first nothing owned and no prices, most players' settled dock,
+        // so its height rarely moves.
+        .opacity(store.shelved ? 1 : 0)
+        .id(store.shelved)
+        .transition(.opacity)
+        .animation(reduceMotion ? nil : .easeIn(duration: 0.25), value: store.shelved)
         // A bar, like a tab bar: its names stop growing where four no longer fit, and a long press shows one large.
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .padding(.top, 12)
@@ -1096,6 +1118,11 @@ struct PackDock: View, Equatable {
         .overlay(alignment: .top) {
             Rectangle().fill(Offer.complete.gradient).frame(height: 0.5).opacity(0.45).padding(.horizontal, 20)
         }
+    }
+
+    /// The approval the header says now: none while a card or the settings covers the dock, or before it shows.
+    static func saying(_ approved: Offer?, covered: Bool, shelved: Bool) -> Offer? {
+        covered || !shelved ? nil : approved
     }
 
     private struct Saying: Equatable {

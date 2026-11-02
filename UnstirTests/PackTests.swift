@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import StoreKit
 import XCTest
 @testable import Unstir
 
@@ -166,6 +167,26 @@ final class PackTests: XCTestCase {
         }
     }
 
+    /// The log keeps what tells one StoreKit failure from another and none of the words or userInfo an error carries.
+    func testAStoreErrorLogsItsCaseAndCodeAlone() {
+        let inner = NSError(domain: "ASDErrorDomain", code: 500, userInfo: [
+            NSLocalizedDescriptionKey: "inner words",
+            NSUnderlyingErrorKey: NSError(domain: "AMSErrorDomain", code: 301,
+                                          userInfo: [NSLocalizedDescriptionKey: "deeper"]),
+        ])
+        let url = URL(string: "https://example.com/a")!
+        let offline = URLError(.notConnectedToInternet, userInfo: [NSURLErrorFailingURLErrorKey: url])
+        let cases: [(Error, String)] = [
+            (StoreKitError.unknown, "StoreKitError.unknown"),
+            (StoreKitError.notEntitled, "StoreKitError.notEntitled"),
+            (StoreKitError.systemError(inner), "StoreKitError.systemError(ASDErrorDomain 500 < AMSErrorDomain 301)"),
+            (StoreKitError.networkError(offline), "StoreKitError.networkError(NSURLErrorDomain -1009)"),
+            (Product.PurchaseError.purchaseNotAllowed, "PurchaseError.purchaseNotAllowed"),
+            (CocoaError(.fileNoSuchFile, userInfo: [NSFilePathErrorKey: "a/b"]), "NSCocoaErrorDomain 4"),
+        ]
+        for (error, logged) in cases { XCTAssertEqual(Store.described(error), logged) }
+    }
+
     /// The editors' switch (Jack's call F11) is in the editors' build alone: the tracked config builds without it, this
     /// build has none, and only the editors' build lets the unlock open a pack in Release.
     @MainActor func testADefaultBuildHasNoEditorsSwitch() throws {
@@ -325,10 +346,13 @@ final class PackTests: XCTestCase {
         store.pretend(Ledger())
         XCTAssertNil(store.saving, "no prices yet")
 
-        // On offer while it saves, or while the prices load and no pack is owned; never once they say it saves nothing.
+        // On offer while it saves, or while the prices are missing and no pack is owned; never once they say it saves
+        // nothing.
         XCTAssertTrue(store.offersComplete, "loading, nothing owned: it holds its three packs for less")
         store.pretend(Ledger(), pricing: .unreachable)
-        XCTAssertFalse(store.offersComplete, "unreachable: nothing to say it saves")
+        XCTAssertTrue(store.offersComplete, "unreachable, nothing owned: still its three packs for less")
+        store.pretend(Ledger(), pricing: .fetched)
+        XCTAssertTrue(store.offersComplete, "fetched without a product, nothing owned: still its three packs for less")
         var one = Ledger()
         one.record(Pack.lens.productID, .owned)
         store.pretend(one)
@@ -341,6 +365,40 @@ final class PackTests: XCTestCase {
         all.record(Pack.completeID, .owned)
         store.pretend(all)
         XCTAssertFalse(store.offersComplete)
+    }
+
+    /// Whether Complete is on offer is read off the prices and the packs owned alone: a fetch that returns no products
+    /// left the dock without its cover, and a card's fetch put it back for the fetch's length, under the opening card.
+    @MainActor func testCompleteIsOfferedWhateverTheFetchIsDoing() {
+        let sold = Pack.bundled
+        let amounts = Dictionary(uniqueKeysWithValues: sold.map { ($0.productID, Decimal(string: "2.99")!) })
+            .merging([Pack.completeID: Decimal(string: "5.99")!]) { $1 }
+        XCTAssertTrue(Offer.offersComplete(amounts: [:], owned: [], bundled: sold), "no prices, nothing owned")
+        XCTAssertFalse(Offer.offersComplete(amounts: amounts.filter { $0.key != Pack.completeID }, owned: [], bundled: sold),
+                       "the packs' prices in and the bundle's missing, as where it isn't sold: nothing to buy")
+        XCTAssertFalse(Offer.offersComplete(amounts: amounts.filter { $0.key == Pack.lens.productID }, owned: [], bundled: sold),
+                       "some prices in, the bundle's missing")
+        XCTAssertFalse(Offer.offersComplete(amounts: [:], owned: [.lens], bundled: sold), "no prices, a pack owned")
+        XCTAssertTrue(Offer.offersComplete(amounts: amounts, owned: [], bundled: sold))
+        XCTAssertFalse(Offer.offersComplete(amounts: amounts, owned: [.lens], bundled: sold), "5.98 against 5.99")
+        XCTAssertFalse(Offer.offersComplete(amounts: amounts.merging([Pack.completeID: 9]) { $1 }, owned: [], bundled: sold),
+                       "the prices say it saves nothing")
+        XCTAssertFalse(Offer.offersComplete(amounts: [:], owned: Set(sold), bundled: sold), "every pack owned")
+
+        let store = Store()
+        XCTAssertFalse(store.shelved, "the dock waits for the launch's read and price fetch")
+        XCTAssertNil(PackDock.saying(.pack(.lens), covered: false, shelved: false), "no approval said over a blank dock")
+        XCTAssertNil(PackDock.saying(.pack(.lens), covered: true, shelved: true))
+        XCTAssertEqual(PackDock.saying(.pack(.lens), covered: false, shelved: true), .pack(.lens))
+        for prices in [[:], amounts] {
+            let read = [Pricing.fetching, .fetched, .unreachable].map { pricing in
+                store.pretend(Ledger(), amounts: prices, pricing: pricing)
+                return store.offersComplete
+            }
+            XCTAssertEqual(Set(read), [true], "the fetch's state never moves it")
+        }
+        store.pretend(Ledger(), amounts: amounts.filter { $0.key != Pack.completeID }, pricing: .fetched)
+        XCTAssertFalse(store.offersComplete, "a storefront that sells the packs but not the bundle")
     }
 
     /// An Ask to Buy approval is said once: a request then its approval says it, and once said it is forgotten; a pack

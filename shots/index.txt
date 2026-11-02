@@ -510,6 +510,7 @@ card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, o
 shelf-menu-owned.png  The dock with every pack owned, the three through Triptych and First Stir (outside it) on its own: PACKS alone, no taste line, Triptych's cover gone.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Triptych line until the prices say what it saves.
 card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Triptych line.
+shelf-menu-unreachable.png  The dock after the price fetch failed, nothing bought: Triptych's cover stays, since with none of its packs owned it holds them all for less, so a card's fetch never moves it while none is owned.
 card-lens-unshared.png  Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey.
 card-lens-offline.png  Lens's card after a purchase failed offline: no connection, try again when you're online.
 card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Triptych, try free kept.
@@ -643,6 +644,16 @@ clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn cle
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
 clean-prism-01.png  Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption.
+store-01-marbling.png  Store 1: whirlpool 25 (hex, marbling) with its full scramble.
+store-02-count.png  Store 2: plughole 12, rod 1 carried -2 steps round, its dashes and count off the finger.
+store-03-wave.png  Store 3: plughole 13 solved, the solve wave at radius 0.8.
+store-04-vortex.png  Store 4: vortex 13 on the ephemeris with its full scramble, its lesson learnt.
+store-05-maelstrom.png  Store 5: maelstrom 23 (hex), knobs 2 and 5 seized, the tank held half a step round from the rim.
+store-06-daily.png  Store 6: today's daily, its result card, share and next daily in 7 h.
+store-07-endless.png  Store 7: endless's first tank with 5 of the brim's 8 notches.
+store-08-prism.png  Store 8: Prism 01, the red stir healed and the cyan held halfway back, its ghosts closing on the white line.
+store-09-lens.png  Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 steps of the 3 it heals at.
+store-10-escapement.png  Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left.
 duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, header, note and controls in the trailing half.
 duo-open-result.png  Duo open: plughole 06 solved clean, the card in the trailing half beside the tank where it was played.
 duo-open-fullest.png  Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole in the trailing half.

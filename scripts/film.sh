@@ -1,6 +1,7 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/film.sh [pattern]   Records the animations in the simulator into shots/film/, each with a frame strip.
+# Usage: scripts/film.sh [pattern]   Records the animations in the simulator into shots/film/, each with a frame strip:
+# every case whose name holds pattern, or with a trailing $ (quoted), the one case of that name.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 bundle=com.screendead.Unstir
@@ -16,21 +17,65 @@ xcrun simctl install "$udid" build/Build/Products/Debug-iphonesimulator/Unstir.a
 xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 2>/dev/null || true
 mkdir -p shots/film
 pattern=${1:-}
+wants() {  # case
+  [[ -z "$pattern" ]] && return 0
+  [[ "$pattern" == *\$ ]] && { [[ "$1" == "${pattern%\$}" ]]; return; }
+  [[ "$1" == *$pattern* ]]
+}
 
 tank=crop=1200:1200:60:820  # the tank on a 1320 x 2868 Pro Max screen
 film() {  # name seconds strip-filter KEY=VALUE...
   local name=$1 secs=$2 strip=$3 vars=() mp4="shots/film/$1.mp4"
   shift 3
-  [[ -n "$pattern" && "$name" != *$pattern* ]] && return
+  wants "$name" || return 0
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
-  xcrun simctl io "$udid" recordVideo --codec=h264 --force "$mp4" >/dev/null 2>&1 &
+  local snd="" began wav="shots/film/$name.nut" v0 v1 a0 took length=()
+  began=$(mktemp)
+  # FILM_SOUND=1 plays the take's sound and records it from BlackHole, which the caller has made the Mac's output
+  # (scripts/store-media.sh sound); recordVideo records no audio. Neither recorder's file says when it started, so
+  # both are placed on the host clock (CLOCK_UPTIME_RAW, which avfoundation stamps audio on): the audio keeps its own
+  # stamps (-copyts), so a buffer a busy Mac drops stays a gap rather than pulling the rest early, and the video starts
+  # when recordVideo says it has.
+  if [[ -n "${FILM_SOUND:-}" ]]; then
+    vars+=(SIMCTL_CHILD_UNSTIR_SOUND=1)
+    ffmpeg -loglevel error -y -thread_queue_size 8192 -f avfoundation -i ":BlackHole 2ch" -copyts -c:a pcm_f32le "$wav" \
+      < /dev/null &
+    snd=$!
+    sleep 1  # the audio first, so the take's first sounds are in it
+  fi
+  xcrun simctl io "$udid" recordVideo --codec=h264 --force "$mp4" >/dev/null 2> >(python3 -u -c '
+import sys, time
+for line in sys.stdin:
+    if "Recording started" in line:
+        print(time.clock_gettime(time.CLOCK_UPTIME_RAW))' > "$began") &
   local rec=$!
   sleep 1.5  # the recorder takes a moment to start
   env "${vars[@]}" xcrun simctl launch "$udid" "$bundle" >/dev/null
   sleep "$secs"
+  v1=$(python3 -c 'import time; print(time.clock_gettime(time.CLOCK_UPTIME_RAW))')
   kill -INT "$rec"
   wait "$rec" || true
+  v0=$(cat "$began")
+  trash "$began"
+  # recordVideo writes a frame only when the screen changes, so a take that ends on a still screen ends early; its
+  # comment keeps how long it ran, which scripts/store-media.sh cuts by.
+  [[ -n "$v0" ]] && took=$(awk -v a="$v0" -v b="$v1" 'BEGIN { printf "%.3f", b - a }') length=(-metadata comment="take $took s")
+  if [[ -n "$snd" ]]; then
+    kill -INT "$snd"
+    wait "$snd" || true
+    [[ -n "$v0" ]] || { echo "$name: recordVideo never said it started, so its sound can't be placed" >&2; exit 1; }
+    a0=$(ffprobe -v error -show_entries stream=start_time -of csv=p=0 "$wav")
+    # async fills a dropped buffer's gap with silence; the sound runs to the take's end, past a still screen's last frame.
+    ffmpeg -loglevel error -y -i "$mp4" -itsoffset "$(awk -v a="$a0" -v v="$v0" 'BEGIN { print a - v }')" -i "$wav" \
+      -map 0:v -map 1:a -c:v copy -af aresample=async=1:first_pts=0,apad -t "$took" -c:a aac -b:a 256k "${length[@]}" \
+      "${mp4%.mp4}-sound.mp4"
+    mv "${mp4%.mp4}-sound.mp4" "$mp4"
+    trash "$wav"
+  elif (( ${#length[@]} )); then
+    ffmpeg -loglevel error -y -i "$mp4" -map 0 -c copy "${length[@]}" "${mp4%.mp4}-tagged.mp4"
+    mv "${mp4%.mp4}-tagged.mp4" "$mp4"
+  fi
   # The strip starts at the first dark frame: the home screen is bright and the app is black.
   local start
   start=$(ffprobe -v error -f lavfi -i "movie=$mp4,signalstats" -show_entries frame=pts_time:frame_tags=lavfi.signalstats.YAVG \
@@ -38,7 +83,8 @@ film() {  # name seconds strip-filter KEY=VALUE...
   # recordVideo writes a frame only when the screen changes; fps= resamples to even time steps.
   ffmpeg -loglevel error -y -i "$mp4" -vf "trim=start=${start:-0},setpts=PTS-STARTPTS,$strip" -frames:v 1 "shots/film/$name-strip.png"
   # GitHub takes videos under 10 MB; a live picture changes every frame, so a long film can pass that.
-  if (( $(stat -f %z "$mp4") > 9500000 )); then
+  # FILM_FULL=1 keeps the recorded size, for the store's preview and clips; the shrink would drop a take's sound.
+  if [[ -z "${FILM_FULL:-}" && -z "$snd" ]] && (( $(stat -f %z "$mp4") > 9500000 )); then
     ffmpeg -loglevel error -y -i "$mp4" -vf scale=660:-2 -c:v libx264 -crf 24 -pix_fmt yuv420p -an "${mp4%.mp4}-small.mp4"
     mv "${mp4%.mp4}-small.mp4" "$mp4"
   fi
@@ -52,7 +98,7 @@ film ignition-L12 2.5 "$tank,fps=30,scale=200:-1,tile=8x3:padding=4" LEVEL=12 OP
 film autoplay-L09 9 "fps=3,scale=220:-1,tile=9x3:padding=4" LEVEL=9 OPEN=1 AUTOPLAY=1
 # Under Reduce Motion: the opening fades through black instead of winding in, the picture fades on, and the solve
 # swells in place with no wave, pulse or easing home.
-if [[ -z "$pattern" || calm-open-L12 == *$pattern* || calm-autoplay-L09 == *$pattern* ]]; then
+if wants calm-open-L12 || wants calm-autoplay-L09; then
   calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
   # Off again however the films end, or every later shot and film records the calm opening.
   trap 'calm false' EXIT
@@ -139,7 +185,7 @@ film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=le
 # Each card's clip (`Clip`), twice round its loop.
 clip=crop=1100:1180:110:610  # the card's clip and First Stir's time under it
 # A Debug build bakes Lens's halftone some 20 s the first time a size is asked for; one launch caches it for the films.
-if [[ -z "$pattern" || clip-lens == *$pattern* || clip-complete == *$pattern* ]]; then
+if wants clip-lens || wants clip-complete; then
   SIMCTL_CHILD_UNSTIR_CARD=lens xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   sleep 25
 fi
@@ -180,7 +226,7 @@ film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" P
 film escapement-tap 15 "$tank,fps=3,scale=200:-1,tile=9x5:padding=4" PACK=escapement OWNED=escapement LEVEL=7 FINGER=1 REST=1 \
   MOVES=0:2,0:1,1:2,2:-3
 # Lens: a launch first bakes the halftone into Caches, which takes 20 s or more in Debug; the films then read it.
-if [[ -z "$pattern" || lens == *$pattern* || "$pattern" == lens* ]]; then
+if wants lens || [[ "$pattern" == lens* ]]; then
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
   SIMCTL_CHILD_UNSTIR_PACK=lens xcrun simctl launch "$udid" "$bundle" >/dev/null
   sleep 35
@@ -206,10 +252,11 @@ film card-lens-lands-list 7 "fps=4,scale=200:-1,tile=7x4:padding=4" CARD=lens ST
   CLOCK=5.4 CARDSCROLL=1
 # App Store art with no interface (UNSTIR_CLEAN), the Today card's video: each look wound in, then unstirred at par by a
 # drawn fingertip that isn't drawn, the glass and its picture the only thing on the screen. Plughole 05 on the sunset,
-# whirlpool 01 on the live glass, Lens 03 on the halftone and Prism 01 on the fern.
+# whirlpool 01 on the live glass, Lens 03 on the halftone and Prism 01 on the fern. The first two are store-media.sh's
+# social clips, so each runs on past its solve for the clip's last second after the wave.
 whole="fps=2,scale=150:-1,tile=8x4:padding=4"  # the whole screen, so anything left over the level would show
-film clean-plughole-05 15 "$whole" LEVEL=5 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:+6,2:-4,1:+2
-film clean-whirlpool-01 12 "$whole" TIER=whirlpool LEVEL=1 CLEAN=1 OPEN=1 FINGER=1 MOVES=1:-3,0:+5
+film clean-plughole-05 18 "$whole" LEVEL=5 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:+6,2:-4,1:+2
+film clean-whirlpool-01 15 "$whole" TIER=whirlpool LEVEL=1 CLEAN=1 OPEN=1 FINGER=1 MOVES=1:-3,0:+5
 # The halftone bakes for half a minute on a Debug install that hasn't drawn it, and the opening waits for it, so its strip
 # starts 12 s in, a frame a second.
 film clean-lens-03 46 "trim=start=12,setpts=PTS-STARTPTS,fps=1,scale=150:-1,tile=8x4:padding=4" PACK=lens LEVEL=3 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:-3,2:-4,1:+2
@@ -224,7 +271,7 @@ film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNE
   MOVES=-1:+1,2:+8,3:-7,0:+4
 # Lens from a warm start (R-reel = B): its halftone bakes for half a minute on a fresh install and the opening waits
 # on it, so a launch first bakes it into Caches, which the take then reads.
-if [[ -z "$pattern" || editors-lens-03 == *$pattern* ]]; then
+if wants editors-lens-03; then
   SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL=3 \
     xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
@@ -235,3 +282,7 @@ fi
 film editors-lens-03 24 "$whole" PACK=lens LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=0:-3,2:-4,1:+2
 film editors-escapement-02 24 "$whole" PACK=escapement LEVEL=2 OPEN=1 FINGER=1 REST=0.2 MOVES=2:4,0:1,1:-3
 film editors-prism-01 24 "$whole" PACK=prism LEVEL=1 OPEN=1 FINGER=1 REST=0.2 MOVES=0:-4,1:+3,2:-3
+# The store preview's opening and unstir (ST5 = A, scripts/store-media.sh): open-L12 long enough to wind in whole, and
+# editors-whirlpool-03 with the interface, as the preview's other segments have it.
+film store-open-L12 10 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=12 OPEN=1
+film store-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=1:-4,0:+4,2:-3,1:+6
