@@ -169,7 +169,9 @@ struct NightForwardsFilm: View {
     let onDone: () -> Void
     @Environment(\.displayScale) private var scale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var layers: [Int: SceneLayers] = [:]
+    /// Each scene's layers with the side they were baked at: a change of pose bakes again, drawing the old ones
+    /// stretched until the new land.
+    @State private var layers: [Int: (side: CGFloat, layers: SceneLayers)] = [:]
     @State private var start: Date?
     @State private var index = 0
     @State private var done = false
@@ -203,7 +205,7 @@ struct NightForwardsFilm: View {
         .accessibilityLabel("The night, played forwards")
         .accessibilityAddTraits(.isButton)
         .accessibilityHint("Skips it")
-        .task(id: index) { await bake(around: index) }
+        .task(id: "\(index) \(side) \(scale)") { await bake(around: index) }
     }
 
     @ViewBuilder private func frame(_ now: (index: Int, run: Double, seconds: Double, next: Double)) -> some View {
@@ -221,7 +223,7 @@ struct NightForwardsFilm: View {
 
     @ViewBuilder private func composite(_ i: Int, run: Double, seconds: Double) -> some View {
         let level = NightForwards.levels[i]
-        if let scene = level.story?.scene, let baked = layers[i] {
+        if let scene = level.story?.scene, let baked = layers[i]?.layers {
             SceneComposite(scene: scene, layers: baked, sky: 1 - run, minutes: scene.early + (scene.late - scene.early) * run,
                            side: side, shown: NightForwards.shown(level, seconds: seconds, cut: reduceMotion))
         }
@@ -243,7 +245,7 @@ struct NightForwardsFilm: View {
     /// Bakes scene `i` and the next, then drops the ones behind. The film starts once its first two are in.
     private func bake(around i: Int) async {
         let s = min(SceneLayer.bakeScale(side: side, scale: scale), 2)
-        for k in [i, i + 1] where NightForwards.levels.indices.contains(k) && layers[k] == nil {
+        for k in [i, i + 1] where NightForwards.levels.indices.contains(k) && layers[k]?.side != side {
             guard let scene = NightForwards.levels[k].story?.scene else { continue }
             var images: [UIImage] = []
             for sky in [scene.late, scene.early, nil] as [Double?] {
@@ -252,7 +254,7 @@ struct NightForwardsFilm: View {
                 await Task.yield()
             }
             guard let played = scene.render(played: scene.vignettes, side: side, scale: s), !Task.isCancelled else { return }
-            layers[k] = (images[0], images[1], images[2], played, SceneComposite.cores(scene, side: side, scale: s))
+            layers[k] = (side, (images[0], images[1], images[2], played, SceneComposite.cores(scene, side: side, scale: s)))
         }
         for k in layers.keys where k < i { layers[k] = nil }
         if start == nil { start = .now }

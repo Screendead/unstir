@@ -188,11 +188,11 @@ struct SceneComposite: View {
         ZStack {
             skies
             Canvas { ctx, size in scene.drawLive(ctx, r: size.width / 2, minutes: minutes) }
-            Image(uiImage: layers.held)
+            sized(layers.held)
             ForEach(cut, id: \.self) { k in
                 ZStack {
                     skies
-                    Image(uiImage: layers.played)
+                    sized(layers.played)
                 }
                 .mask(core(k))
                 // Faded as one layer: faded apart, its two skies land over the sky beneath at the wrong weights, and
@@ -207,10 +207,16 @@ struct SceneComposite: View {
 
     private var cut: [Int] { scene.layout.rods.indices.filter(scene.vignettes.contains) }
 
+    /// A layer at its own size, or stretched to the side, as a change of pose draws the layers baked at the old side
+    /// until the new side's land.
+    @ViewBuilder private func sized(_ image: UIImage) -> some View {
+        if abs(image.size.width - side) < 1 { Image(uiImage: image) } else { Image(uiImage: image).resizable() }
+    }
+
     private var skies: some View {
         ZStack {
-            Image(uiImage: layers.late)
-            Image(uiImage: layers.early).opacity(sky)
+            sized(layers.late)
+            sized(layers.early).opacity(sky)
         }
         .frame(width: side, height: side)
     }
