@@ -131,8 +131,14 @@ final class SyncTests: XCTestCase {
         XCTAssertEqual(cloud.dictionary(forKey: Sync.key)?["L2"] as? Data, unreadable)
     }
 
-    /// The test host never syncs, so no test's best reaches a store.
-    @MainActor func testTheTestHostNeverSyncs() {
+    /// Only a plain launch of a build with sync syncs: the test host and the harness never do, so no test's or shot's
+    /// best reaches a store.
+    @MainActor func testOnlyAPlainLaunchOfABuildWithSyncSyncs() {
+        let host = ["XCTestConfigurationFilePath": "/x.xctestconfiguration"]
+        XCTAssertTrue(Sync.plays(built: true, harnessed: false, env: [:]))
+        XCTAssertFalse(Sync.plays(built: true, harnessed: false, env: host), "the test host")
+        XCTAssertFalse(Sync.plays(built: true, harnessed: true, env: [:]), "the harness")
+        XCTAssertFalse(Sync.plays(built: false, harnessed: false, env: [:]), "a build without sync")
         XCTAssertFalse(Sync.shared.plays)
     }
 

@@ -601,7 +601,7 @@ struct RootView: View {
         Review.harnessed = h.harnessed && !h.reviewLog || env["XCTestConfigurationFilePath"] != nil
         Review.logs = h.reviewLog
         GameCenter.shared.plays = GameCenter.built && !h.harnessed && env["XCTestConfigurationFilePath"] == nil
-        Sync.shared.plays = Sync.built && !h.harnessed && env["XCTestConfigurationFilePath"] == nil
+        Sync.shared.plays = Sync.plays(built: Sync.built, harnessed: h.harnessed, env: env)
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
                                  restored: h.restored, approved: h.approved)

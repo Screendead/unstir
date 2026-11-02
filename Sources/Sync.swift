@@ -21,9 +21,14 @@ final class Sync {
     /// Bumped whenever a reconcile writes a best to the phone, so every view that read one draws again.
     nonisolated static let revision = Revision()
 
-    /// A plain launch of a build with sync: set once, by `RootView`.
+    /// A plain launch of a build with sync: set once, by `RootView`, from `plays(built:harnessed:env:)`.
     var plays = false
     private var started = false
+
+    /// Whether a launch syncs: only a build with sync, and never the harness or the test host.
+    nonisolated static func plays(built: Bool, harnessed: Bool, env: [String: String]) -> Bool {
+        built && !harnessed && env["XCTestConfigurationFilePath"] == nil
+    }
 
     func start() {
         guard plays, !started else { return }
