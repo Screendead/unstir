@@ -22,12 +22,7 @@ segments=(
 inputs=() chains="" labels=""
 for i in "${!segments[@]}"; do
   name=${segments[i]%%:*} keep=${segments[i]##*:} mp4="shots/film/${segments[i]%%:*}.mp4"
-  # From just before the picture strikes: past the home screen (bright) and the app's black, whose wait varies with what
-  # the launch compiles.
-  start=$(ffprobe -v error -f lavfi -i "movie=$mp4,signalstats" -show_entries frame=pts_time:frame_tags=lavfi.signalstats.YAVG \
-    -of csv=p=0 | awk -F, '$2 >= 40 { lit = 1 } lit && $2 < 40 && dark == "" { dark = $1; floor = $2 }
-      dark != "" && on == "" { if ($2 < floor) floor = $2; if ($1 > dark + 0.3 && $2 > floor + 0.6) on = $1 }
-      END { if (on != "") print (on > 0.2 ? on - 0.2 : 0) }')
+  start=$(scripts/strike.sh "$mp4")
   # A launch that stalls past the take leaves no strike: film that segment again (scripts/film.sh <name>).
   [[ -n "$start" ]] || { echo "$name: no picture struck in its take" >&2; exit 1; }
   inputs+=(-i "$mp4")

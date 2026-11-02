@@ -129,8 +129,15 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   entry count. It builds `build/plughole-levels/measure` like `build/solve`.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
-- Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
-  Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives.
+- Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg);
+  a pattern ending in `$` films only the case of that name, as `rim-swirl` alone would also film `rim-swirl-push`.
+  Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives. A film over 9.5 MB is shrunk
+  to 660 px wide for a PR comment unless `FILM_FULL=1`; `FILM_SOUND=1` plays the take's sound and records it from
+  BlackHole into the film, with the Mac's output already switched there (`store-media.sh sound`), placed on the
+  video's clock by when each recorder started. recordVideo writes a frame only when the screen changes, so a take
+  ending on a still screen ends early: each take's comment tag says how long it really ran (`take 19.520 s`).
+  `scripts/strike.sh <film>` prints the seconds into a take just before its picture strikes, past the home screen and
+  the launch's black.
 - Editors' reel: `scripts/editors-film.sh [--join]` films `scripts/film.sh editors-` (whirlpool 03 and vortex 02 drawn
   clean, maelstrom 01, Lens 03, Escapement 02 and Prism 01, each solved at par by a drawn fingertip; Lens from a warm
   start, a launch first baking its halftone into Caches, R-reel, round 15) and joins them, each from just before its
@@ -138,6 +145,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   for the App Store nomination's supplemental links (Jack's call F11); `--join` only rejoins.
   Git ignores `shots/` apart from `index.txt`: show pictures and films in a PR by attaching them to a comment through
   Chrome (GitHub has no API for attachments; videos under 10 MB), never by committing them.
+- Store media: `scripts/store-media.sh [screens|preview|social|sound|all] [--cut]` makes the App Store's set (Jack's calls
+  ST4 and ST5 = A, `docs/store-page.md`) into `$STORE_OUT` (`shots/store` unless set): the ten `shots.sh store-`
+  screenshots, at 1320 x 2868 without alpha and again captioned (`scripts/store-captions.py`, Pillow and the Mac's SF
+  Mono, as this ffmpeg has no drawtext; its look is a draft), the 27.6 s free-game preview at 886 x 1920 and 30 fps with a
+  silent stereo track, its five segments (`store-open-L12`, `store-whirlpool-03`, `rim-swirl`, `rim-seized`,
+  `endless-brim-run`) cut from their strikes and captioned, and plan step 3's social clips, 1080 x 1920 and silent,
+  three drawn clean and one with the hand. `sound` films those clips again with the game's sound, switching the
+  Mac's output to BlackHole for the takes and back (needs Homebrew's `blackhole-2ch` and `switchaudio-osx`), into
+  `<name>-sound.mp4`, aimed at -16 LUFS (one-pass loudnorm lands them near -15). It films with `FILM_FULL=1`; `--cut` reuses what is taken. Apple's limits
+  it meets are in its header, with where they were read.
 - Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` and prints each file's
   loudness, peaks, onset, phone-speaker loss and size, and each bed's seam (needs Homebrew's `csound` and `ffmpeg`).
   Every source is seeded, so a rerun renders the same samples, but the AAC encoder isn't byte-deterministic, so a
