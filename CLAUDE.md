@@ -392,7 +392,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   in place of the wind-in, a replay level keeping its rod turns, which are the information; the solve swells the
   picture's contrast where it stands, with no wave, pulse or glass easing home; the lessons' ghost fingers rest
   mid-sweep; the lost stamp lands without its scale. Under it or Dim Flashing Lights the picture fades on rather than
-  flickering (`PictureLayer.strike(calm:)`). Endless's pour and the live pictures keep their motion. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
+  flickering (`PictureLayer.strike(calm:)`). A live picture holds one frame (`Picture.rest`, between the twins' beats,
+  `Picture.clock(_:still:)`), and endless's rim cuts to where each change comes to rest, a spill to its end, murk and
+  words and all (`Brim.rest`), with no bob or tremble as room runs short and the last notch's pulse held lit
+  (`Brim.frame`'s `still`), so nothing moves without the player (Jack's call F2, round 14); the stirs themselves still
+  turn. `Game.refill` runs as `LevelView` appears, never in `Game.init`, which SwiftUI
   reruns for a level already on screen on a game it then drops; a refill shows its "+2" over the undo count for three
   seconds once the opening ends or is skipped, as the control comes live, and not again on a reset. The first refill
   ever reads "+2 undos" (`Best.refillShown`), and VoiceOver announces each; one left unseen during its opening
@@ -420,7 +424,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
   (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
   demonstration's commits (Jack's call C3, round 13). A level's note shows at full strength for its first 4 s of play, then at
-  0.55, as every caption rests. While a level is open and unfinished the screen stays awake (`Awake`) until two
+  0.55, as every caption rests. Plughole 01's first open hangs one line under it, at 0.55, pointing at the settings
+  ("sound, haptics, colour letters: ⚙ on the menu", `LevelView.pointer`, Jack's call F3, round 14; it fits the SE's
+  width with little to spare), and announces it to VoiceOver as the opening ends, when `Best.pointedAtSettings` is
+  stored; the line stays the visit out. While a level is open and unfinished the screen stays awake (`Awake`) until two
   minutes after the last touch.
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
@@ -835,9 +842,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   The entitlement Apple's docs require is a HANDOFF item. DeclaredAgeRange links weak, as the app runs from iOS 17.
   A fresh install's first launch opens straight into plughole 01 (`RootView.opening`, Jack's call C4, round 13), once:
   `Best.welcomed` is stored as it appears, so a player who backs out without a move gets the menu next time. Never
-  under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen without storing it. While a back
-  swipe slides a level off, `RootView` draws the menu under it (`LevelView.onPeek`, `RootView.peeking`), focused as
-  leaving would focus it, first in its `ZStack`, so the menu uncovered is the one that stays up. The harness
+  under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen, settings line and all, without
+  storing it. While a back swipe slides a level off, `RootView` draws the menu under it (`LevelView.onPeek`,
+  `RootView.peeking`), focused as leaving would focus it, first in its `ZStack`, so the menu uncovered is the one that
+  stays up. The harness
   reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch, `UNSTIR_LETTERS=1` shows the colour letters and swatches, and `UNSTIR_LETTERSCHOICE=0` or `1` sets the settings' choice for the launch), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a

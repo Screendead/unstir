@@ -7,7 +7,8 @@ menu-vortex-open.png  Menu on vortex, opened by every whirlpool level at par: it
 menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
-first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it.
+first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings.
+first-launch-pointer.png  The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both.
 menu-after-01.png  Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list.
 menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox.
 menu-daily-run.png  The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more.
@@ -74,13 +75,13 @@ endless-spill-pour.png  The same, 1.1 s in: the crest has broken and the liquid 
 endless-spill-drip.png  The same, 2 s in: the runs have slowed just past three and nine o'clock and a drop falls from each head onto the black.
 endless-spilled.png  The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best.
 undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
-knob-lesson.png  Level 01 left untouched 4 s (no opening: a still launch): the ghost finger halfway out knob 0's disc, held mid-rock.
 reset-armed.png  Level 12 with two moves played, reset tapped once: it reads reset? tap again.
 level-resumed.png  Level 12 reopened mid-try, its saved line replayed (rod 2 healed, a wasted stir on rod 0 undone, rod 1 healed): four entries left, moves 2 / par 6, the undo already spent from the bank, and no opening.
 menu-endless-continue.png  The menu with an endless run saved on tank 6, brim 3, best 9 tanks: the endless row reads continue · tank 6 · brim 3 · best 9, with new run on its title's line in place of the best.
 sandbox.png  The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here.
 sandbox-full.png  The sandbox with a full stack of 36, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset.
 sandbox-chainmail.png  The sandbox on chainmail and pent: the header's controls in full where they fit.
+knob-lesson.png  Level 01 left untouched 4 s (no opening: a still launch): the ghost finger halfway out knob 0's disc, held mid-rock.
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 level-at-par.png  Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber.
 level-over-par.png  The same a push later: moves 6 / par 5 in magenta.
@@ -622,3 +623,20 @@ clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn cle
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
 clean-prism-01.png  Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption.
+calm-glass.png  Reduce Motion: the sandbox on glass, stirred twice, held on its still frame (Picture.rest).
+calm-chainmail.png  Reduce Motion: the sandbox on chainmail, stirred twice, held on its still frame (Picture.rest).
+calm-coral.png  Reduce Motion: the sandbox on coral, stirred twice, held on its still frame (Picture.rest).
+calm-neurons.png  Reduce Motion: the sandbox on neurons, stirred twice, held on its still frame (Picture.rest).
+calm-marbling.png  Reduce Motion: the sandbox on marbling, stirred twice, held on its still frame (Picture.rest).
+calm-glassTwin.png  Reduce Motion: the sandbox on glassTwin, stirred twice, held on its still frame (Picture.rest).
+calm-chainmailTwin.png  Reduce Motion: the sandbox on chainmailTwin, stirred twice, held on its still frame (Picture.rest).
+calm-coralTwin.png  Reduce Motion: the sandbox on coralTwin, stirred twice, held on its still frame (Picture.rest).
+calm-neuronsTwin.png  Reduce Motion: the sandbox on neuronsTwin, stirred twice, held on its still frame (Picture.rest).
+calm-marblingTwin.png  Reduce Motion: the sandbox on marblingTwin, stirred twice, held on its still frame (Picture.rest).
+calm-isobars.png  Reduce Motion: the sandbox on isobars, stirred twice, held on its still frame (Picture.rest).
+calm-ephemeris.png  Reduce Motion: the sandbox on ephemeris, stirred twice, held on its still frame (Picture.rest).
+calm-cords.png  Reduce Motion: the sandbox on cords, stirred twice, held on its still frame (Picture.rest).
+calm-chainmailTwin-later.png  Reduce Motion: the same, 9 s in: the same frame, the heartbeat at rest between beats.
+calm-endless-brim-7.png  Reduce Motion: endless opened at 7 notches, one from spilling: the rim still, no bob or tremble, the pin's pulse held lit.
+calm-endless-notch.png  Reduce Motion: endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 in place at once, settled, no slosh or surge.
+calm-endless-spilled.png  Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card.
