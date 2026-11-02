@@ -17,6 +17,17 @@ struct PlayLayout: Equatable {
     /// both the whole content.
     let tankPane: CGRect
     let chromePane: CGRect
+    /// What the level draws round its glass, which the split and the tabletop keep inside the tank's pane.
+    var halo = Halo()
+
+    /// How far a level draws past the rim, from its shape alone, never its state, so no lesson or spill resizes the
+    /// glass. The column leaves all of it to the screen's edges, as every iPhone always has.
+    struct Halo: Equatable {
+        /// All the way round, as a share of the glass's radius: endless's brim, glow and drops out to `Brim.reach`.
+        var ring: CGFloat = 0
+        /// Above the rim only, in points: the tank's rim lesson, its arc and ghost finger over twelve o'clock.
+        var above: CGFloat = 0
+    }
 
     /// The rim sits outside the glass, 0.045 of the radius on each side.
     static let rim: CGFloat = 1.045
@@ -39,18 +50,19 @@ struct PlayLayout: Equatable {
     /// From what the play screen's GeometryReader measures, outside the side margins: its size, the window's safe-area
     /// insets round it, and the fold, the system's division region in the reader's own space (nil while the phone lies
     /// flat, or where the system has none). One proxy in one pass, so no offset or earlier layout moves the middle.
-    static func of(size: CGSize, insets i: EdgeInsets, fold: CGRect? = nil, scale: CGFloat) -> PlayLayout {
+    static func of(size: CGSize, insets i: EdgeInsets, fold: CGRect? = nil, halo: Halo = Halo(), scale: CGFloat) -> PlayLayout {
         let window = CGSize(width: size.width + i.leading + i.trailing, height: size.height + i.top + i.bottom)
         let middle = window.width / 2 - i.leading - margin
         return of(content: CGSize(width: max(size.width - 2 * margin, 0), height: size.height), window: window,
                   fold: fold?.offsetBy(dx: -margin, dy: 0) ?? CGRect(x: middle, y: 0, width: 0, height: size.height),
-                  scale: scale)
+                  halo: halo, scale: scale)
     }
 
     /// `content` is the size inside the side margins; `fold` where the window divides, in the content's space: a band
     /// the system reports, or else a line down the window's middle (the content's own middle if nil); `window` the
-    /// whole window's size, safe areas and all; `scale` the display's pixels per point.
-    static func of(content: CGSize, window: CGSize, fold: CGRect? = nil, scale: CGFloat) -> PlayLayout {
+    /// whole window's size, safe areas and all; `halo` what the level draws past the rim; `scale` the display's pixels
+    /// per point.
+    static func of(content: CGSize, window: CGSize, fold: CGRect? = nil, halo h: Halo = Halo(), scale: CGFloat) -> PlayLayout {
         let cap = maxPixels / max(scale, 1)
         let whole = CGRect(origin: .zero, size: content)
         let column = PlayLayout(kind: .column, side: min(min(content.width, content.height - reserve) / rim, cap),
@@ -60,22 +72,40 @@ struct PlayLayout: Equatable {
             let chrome = CGRect(x: 0, y: 0, width: content.width, height: f.minY - margin)
             let tank = CGRect(x: 0, y: f.maxY + margin, width: content.width, height: content.height - f.maxY - margin)
             guard min(chrome.height, tank.height) >= minPane else { return column }
-            return PlayLayout(kind: .tabletop, side: min(min(tank.width, tank.height) / rim, cap),
-                              tankPane: tank, chromePane: chrome)
+            // The ring below the stage, and above it the ring or the lesson, whichever reaches further.
+            let side = min(tank.width / (rim + h.ring), tank.height / (rim + h.ring), (tank.height - h.above) / (rim + h.ring / 2))
+            return PlayLayout(kind: .tabletop, side: min(side, cap), tankPane: tank, chromePane: chrome, halo: h)
         }
         let tank = CGRect(x: 0, y: 0, width: f.minX - margin, height: content.height)
         let chrome = CGRect(x: f.maxX + margin, y: 0, width: content.width - f.maxX - margin, height: content.height)
         // A band the system reports is a fold whatever the window's shape; the window's middle splits only a wide one.
         guard window.width > window.height || f.width > 0, min(tank.width, chrome.width) >= minPane else { return column }
-        return PlayLayout(kind: .split, side: min(min(tank.width, tank.height - splitReserve) / rim, cap),
-                          tankPane: tank, chromePane: chrome)
+        // Centred, so what reaches above the stage takes as much below.
+        let side = min(tank.width / (rim + h.ring), (tank.height - max(splitReserve, 2 * h.above)) / rim,
+                       tank.height / (rim + h.ring))
+        return PlayLayout(kind: .split, side: min(side, cap), tankPane: tank, chromePane: chrome, halo: h)
     }
 
     /// Where the glass and its rim stand in the split and the tabletop, in the content's space: centred in the tank's
-    /// pane.
+    /// pane, the tabletop's sat on its foot less the ring, so what reaches above has the room left over.
     var stage: CGRect {
         let s = side * Self.rim
-        return CGRect(x: tankPane.midX - s / 2, y: tankPane.midY - s / 2, width: s, height: s)
+        let y = kind == .tabletop ? tankPane.maxY - halo.ring * side / 2 - s : tankPane.midY - s / 2
+        return CGRect(x: tankPane.midX - s / 2, y: y, width: s, height: s)
+    }
+
+    /// The tank's pane in the glass's own frame, its origin at the glass's top left: what is drawn round the glass
+    /// keeps inside it. Nil in the column, whose limits are the screen's.
+    var bounds: CGRect? {
+        guard kind != .column else { return nil }
+        let inset = (stage.width - side) / 2
+        return tankPane.offsetBy(dx: -(stage.minX + inset), dy: -(stage.minY + inset))
+    }
+
+    /// Where the night forwards' lines end, down from the glass's top: nil under the glass, where the column and the
+    /// split have room; in the tabletop, whose glass fills its half, at the foot of the upright half, as "unstirred.".
+    var filmFoot: CGFloat? {
+        kind == .tabletop ? chromePane.maxY - (stage.minY + (stage.width - side) / 2) : nil
     }
 
     /// How far "unstirred." stands above the stage's top, top to top. The tabletop's tank fills its half, so the word
@@ -153,5 +183,14 @@ struct Glide: ViewModifier, Animatable {
 
     func body(content: Content) -> some View {
         content.scaleEffect(side > 0 && shown > 0 ? shown / side : 1)
+    }
+}
+
+extension PlayLayout.Halo {
+    /// What `level` draws past the rim: endless's brim all round, and over twelve the rim lesson of a level whose rim
+    /// turns the tank.
+    init(_ level: Level) {
+        ring = level.run == nil ? 0 : CGFloat((Brim.rOut + Brim.reach) / Brim.unit) - PlayLayout.rim
+        above = level.motion == .none ? 0 : RimLesson.overRim
     }
 }

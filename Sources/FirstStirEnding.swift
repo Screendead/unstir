@@ -162,6 +162,8 @@ extension Level {
 /// two scenes' layers at a time, the next while the current plays, and lets each go once it has passed. A tap ends it.
 struct NightForwardsFilm: View {
     let side: CGFloat
+    /// Where its lines end, down from the glass's top; nil just under the glass.
+    var foot: CGFloat?
     /// UNSTIR_ENDING=s: the film held this many seconds in.
     var frozen: Double?
     let onDone: () -> Void
@@ -190,7 +192,7 @@ struct NightForwardsFilm: View {
                     Text(clock(now)).font(.mono(12)).opacity(0.55)
                     Text("tap to skip").font(.mono(12)).opacity(0.35)
                 }
-                .offset(y: 48)
+                .offset(y: foot.map { $0 - 1.06 * side } ?? 48)
             }
             .onChange(of: now.index, initial: true) { index = now.index }
             .onChange(of: t >= NightForwards.duration) { if t >= NightForwards.duration { finish() } }
