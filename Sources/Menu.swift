@@ -166,6 +166,8 @@ struct MenuView: View {
     @GestureState private var dragging = false
     /// The scroll view's height and its bottom safe area: the list draws on under the home indicator.
     @State private var viewport: CGFloat = 0
+    /// The window's whole height, bars and all, which sizes the settings sheet.
+    @State private var window: CGFloat = 800
     /// The pack dock's height: the scroll view counts it in its bottom safe area, but the list ends at it.
     @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
@@ -302,7 +304,10 @@ struct MenuView: View {
             if asking { ConsentCard(tier: shown).transition(.opacity) }
         }
         .animation(.easeOut(duration: 0.25), value: asking)
-        .sheet(isPresented: $settings) { SettingsSheet(supporter: $supporter) }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: {
+            window = $0
+        }
+        .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
         .onChange(of: card == nil && !settings) { Power.shared.touched() }
         .background {
@@ -511,7 +516,9 @@ struct MenuView: View {
                             .id(t)
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.leading, 20)
+                // Past the trailing fade, so the last name reads whole once scrolled to.
+                .padding(.trailing, 40)
             }
             .scrollIndicators(.hidden)
             // Names run out into the black at the edges, so a strip wider than the screen reads as running on past them.
@@ -519,6 +526,7 @@ struct MenuView: View {
                                          .init(color: .black, location: 0.9), .init(color: .clear, location: 1)],
                                  startPoint: .leading, endPoint: .trailing))
             .onChange(of: picked) { withAnimation { proxy.scrollTo(picked, anchor: .center) } }
+            .onAppear { proxy.scrollTo(picked, anchor: .center) }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Tier")
