@@ -183,6 +183,8 @@ struct MenuView: View {
     @Namespace private var strip
     /// The gear's sheet.
     @Binding var settings: Bool
+    /// The settings' supporter mark switch, mirrored here as the sheet moves it.
+    @State private var supporter = Settings.supporter
     /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
     @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -305,7 +307,7 @@ struct MenuView: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: {
             window = $0
         }
-        .sheet(isPresented: $settings) { SettingsSheet(window: window) }
+        .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
         .onChange(of: card == nil && !settings) { Power.shared.touched() }
         .background {
@@ -488,9 +490,14 @@ struct MenuView: View {
 
     /// Cuts to the new tier's sweep at the swap: a gradient doesn't interpolate, and a cross-fade runs through grey.
     private var title: some View {
-        Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
-            .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)
-            .accessibilityLabel("Unstir").accessibilityAddTraits(.isHeader)
+        let supporter = Store.shared.bought && self.supporter
+        return HStack(alignment: .top, spacing: 2) {
+            Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
+                .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)
+            if supporter { SupporterMark(sweep: shown.sweep, glow: shown.glow).padding(.top, 3) }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(supporter ? "Unstir, supporter" : "Unstir").accessibilityAddTraits(.isHeader)
     }
 
     /// Every tier by name. A strip wider than the screen moves only to keep the picked name in view, so a sideways drag
@@ -1004,5 +1011,31 @@ private struct Flow: SwiftUI.Layout {
             }
         }
         return lines
+    }
+}
+
+/// The thank-you for a purchase (Jack's call M6, round 14): a four-pointed glint in hairline after the title, in the
+/// tier's sweep, the glyph the daily's share line carries. It never moves or asks for anything.
+struct SupporterMark: View {
+    let sweep: LinearGradient
+    let glow: Color
+
+    var body: some View {
+        Sparkle().stroke(sweep, lineWidth: 1).frame(width: 13, height: 13)
+            .shadow(color: glow.opacity(0.7), radius: 3)
+    }
+}
+
+/// Four points joined by curves bowed in to the centre.
+private struct Sparkle: Shape {
+    func path(in rect: CGRect) -> Path {
+        let c = CGPoint(x: rect.midX, y: rect.midY), r = min(rect.width, rect.height) / 2
+        let tips = [CGPoint(x: c.x, y: c.y - r), CGPoint(x: c.x + r, y: c.y), CGPoint(x: c.x, y: c.y + r),
+                    CGPoint(x: c.x - r, y: c.y)]
+        var p = Path()
+        p.move(to: tips[0])
+        for k in 1...4 { p.addQuadCurve(to: tips[k % 4], control: c) }
+        p.closeSubpath()
+        return p
     }
 }
