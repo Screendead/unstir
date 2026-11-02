@@ -254,6 +254,8 @@ lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cu
 lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
 lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger.
+lens-lesson.png  Lens 01 as the tank becomes the player's: a ghost finger on the lens's knob halfway through its ride down, a lens step's travel, beside the track's rail, faint, on the right.
+lens-lesson-copied.png  Lens 01 held mid-drag where its lesson rides: landed on the knob's left edge and dragged two steps down, the count's -2 dashes on the lesson's rail.
 lens-glitter-big-1.png  Lens on tri rod 0 at +1, still.
 lens-glitter-big-1-drag.png  Lens on tri rod 0 held at +0.5, mid-drag up.
 lens-glitter-big-1-twist.png  Lens on tri rod 0 at +1, rod 1 held 1.5 steps into a twist over it.

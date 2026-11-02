@@ -360,7 +360,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   inside the glass. It goes while the swirl is held. The lessons go once learnt, so two standing cues keep saying
   what the rim does. L1, until it has a best, shows the knob's verb with a lesson of its own (`KnobLesson`): left
   untouched for 4 s after its opening, a ghost finger rocks round knob 0 halfway out its disc until the first stir
-  commits, gone while any finger is down and held mid-rock under Reduce Motion.
+  commits, gone while any finger is down and held mid-rock under Reduce Motion. Lens 01, until it has a best, shows
+  the lens's verb with `LensLesson`, from the moment the tank is the player's, with no wait, as the rim's lessons: a
+  ghost finger (`GhostFinger`, `KnobLesson`'s too) on the knob's left edge rides down the finger's real travel for the
+  level's two steps (`2 * lensPitch` of the radius), eased, then fades and starts again at the top, every 2.2 s, beside
+  the track's rail drawn faintly on the right, where a drag landing there draws its count (`trackSide`, `trackX`), so
+  copying it solves (`testCopyingTheLensLessonSolvesLens01`). It fades in and out, each showing from the top, while no
+  lens's stir is in the game's history (an undo of one brings it back), gone while any finger is down, and held
+  halfway down under Reduce Motion.
   `Knurl` mills the bezel wherever the rim turns the tank: dark grooves between ridges every 4 pt or so,
   faintly amber at rest (the tank's colour, as its lesson), turning with the glass and brighter while the rim holds
   it, gone under the result card unless the run spilled. `Breath` shows the swirl: while the tank rests, on a layout
@@ -521,7 +528,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   one, which magnifies, so the dealt entries are undone dragging down (`testALensDraggedUpZoomsIn`). The step goes
   through the rod's own `liveAngle` and detent, so its count, clicks and the iris's turn are a rod's, a step at a time,
   but its dashes run up a short vertical track beside the knob for a zoom in and down it for out (`track`, on the side
-  away from the finger), not round the disc. A drawn fingertip (`UNSTIR_FINGER`) on a lens rides up and down too.
+  away from the finger), not round the disc. A drawn fingertip (`UNSTIR_FINGER`) on a lens rides up and down too, and Lens 01
+  teaches the drag with a ghost finger down that track (`LensLesson`).
   `Level.prism` holds Prism's 30 specimens from `docs/prism-design.md`, five trays of six (`Level.prismTrays`, each a
   `chapter` the card heads, on its own plate, `Level.prismPlates`, its opener's note saying the rule it adds): Two
   Colours (red and cyan), Three Colours (the primaries), Colour Order (the inks), Overprint (both) and Spectrum (any).
@@ -857,8 +865,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
-  round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim
-  and knob lessons' ghost fingers, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
+  round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim,
+  knob and lens lessons' ghost fingers, a refill's "+2", and endless's brim that many seconds after its last change (a spill's too),
   and it holds the swirl's breath at 0. `UNSTIR_BREATH=s` holds the breath s seconds into the tank's first rest, whose
   first slosh starts at 1.5 s, for stills, even under `UNSTIR_CLOCK`, and never with `UNSTIR_SWIRLED=1`, which has none. `UNSTIR_BRIMDEMO=1` plays the approved film's run of the brim through the same calls a finger makes: two heals, then
   pushes until it spills. `UNSTIR_RESETARMED=1` holds the reset control armed, "reset? tap again". `UNSTIR_REVIEW=log` logs the rating request in place of making it, as a plain launch would make it. `UNSTIR_NOW=HH:mm` sets the clock the daily's card reads the next daily from. `UNSTIR_RESUME=2:+5,0:+2,u,1:+3` is the harness's one save, for the launch, so whatever a plain launch left stored never reaches a shot: the level's try with that line (`UNSTIR_MOVES`'s form, plus `u` an undo and `r` a reset), so it opens resumed, and with `UNSTIR_MODE=endless` `UNSTIR_RESUMETANK=n` puts the saved run on tank n (from 0; empty `UNSTIR_RESUME` is the run with no move yet), which the menu's endless row continues. `UNSTIR_UNDOS=n` sets the undo bank and `UNSTIR_TODAY=yyyy-MM-dd` the day the level opens on;

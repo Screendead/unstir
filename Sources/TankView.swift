@@ -942,6 +942,8 @@ struct LevelView: View {
     @State private var counted: Int?
     /// L1, left untouched after its opening: a ghost finger shows the knob's turn until the first stir commits.
     @State private var knobLesson = false
+    /// When Lens 01's lesson last appeared, so each showing rides from the top; nil while it is hidden.
+    @State private var lensLesson: Date?
     @State private var grabs = 0
     /// The seized knob touched last, and every such touch: it shakes, the rim pulses and a thud plays.
     @State private var jammed: Int?
@@ -1504,6 +1506,13 @@ struct LevelView: View {
                   game.history.isEmpty, (try? await Task.sleep(for: .seconds(KnobLesson.wait))) != nil else { return }
             withAnimation(.easeIn(duration: 0.4)) { knobLesson = true }
         }
+        .onChange(of: lensLessonDue, initial: true) { _, due in
+            if due {
+                withAnimation(.easeIn(duration: 0.4)) { lensLesson = .now }
+            } else if lensLesson != nil {
+                withAnimation(.easeOut(duration: 0.2)) { lensLesson = nil }
+            }
+        }
         .onChange(of: resting, initial: true) {
             let t = Date.now.timeIntervalSinceReferenceDate
             if resting {
@@ -1685,6 +1694,12 @@ struct LevelView: View {
 
     private var stack: [Twist] { shown.map { Array(game.stack.prefix($0)) } ?? game.stack }
     /// A finger, two, or a drawn fingertip is on the tank, or a turn is still settling from one.
+    /// Lens 01's lesson, out of the way while a finger is down or the card is up.
+    private var lensLessonDue: Bool {
+        shown == nil && !game.finished && !touching
+            && LensLesson.shows(level: game.level, history: game.history, best: Best.load(game.level.id))
+    }
+
     private var touching: Bool { drag != nil || liveRod != nil || liveTurn != nil || spun || ghost != nil }
     /// The tank is the player's and untouched, and the game breathes: its breath may run. Never under Reduce Motion,
     /// and never in a harness launch that holds the clock.
@@ -2020,8 +2035,8 @@ struct LevelView: View {
         // A lens's count runs up and down a track beside its knob, on the side away from the finger.
         let lensTrack: CGFloat? = rodCount.flatMap { c in
             guard game.level.lenses.contains(game.slot(of: c.k)) else { return nil }
-            let side: CGFloat = ((landed ?? finger).map { $0.x > rods[c.k].x } ?? false) ? -1 : 1
-            return at(c.k).x + side * (core / 2 + Self.trackGap)
+            let side = (landed ?? finger).map { Self.trackSide(landing: $0.x, knob: rods[c.k].x) } ?? 1
+            return Self.trackX(knob: at(c.k).x, core: core, side: side)
         }
         // Out of the way while the tank is held.
         let lesson = shown == nil && !game.finished && held == nil
@@ -2218,6 +2233,10 @@ struct LevelView: View {
                 }
                 if knobLesson && shown == nil && !touching {
                     KnobLesson(centre: at(0), reach: 0.5 * disc(0), clock: frozenClock).transition(.opacity)
+                }
+                if let since = lensLesson, let k = game.level.lenses.min().map(game.knob(over:)) {
+                    LensLesson(knob: at(k), core: core, step: Self.lensPitch * r, since: since, clock: frozenClock)
+                        .transition(.opacity)
                 }
                 if let spillAt {
                     TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || frozenClock != nil)) { timeline in
@@ -2444,11 +2463,11 @@ struct LevelView: View {
     }
 
     /// Wide enough to read, too thin to hide the picture: 1.5 px on a 3x screen.
-    private static let hairline: CGFloat = 0.5
+    static let hairline: CGFloat = 0.5
     /// How far inside the glass's edge the swirl's push flashes.
     private static let swirlFlash: CGFloat = 5
     /// A drag's count: its dashes, and the trace under them. No glow and no dark band: with them the count hid the picture.
-    private static let dash: CGFloat = 2, dashTone = 0.85, trace = hairline, traceTone = 0.4
+    static let dash: CGFloat = 2, dashTone = 0.85, trace = hairline, traceTone = 0.4
     /// A dial's opacity while letting go would change nothing, and while its stir stays open after the finger lifts.
     private static let idle = 0.7, lifted = 0.45
 
@@ -2478,7 +2497,14 @@ struct LevelView: View {
     }
 
     /// How far a lens's track stands off its knob's edge, and its dashes' spacing: a short track, not the finger's travel.
-    private static let trackGap: CGFloat = 16, trackPitch: CGFloat = 16
+    nonisolated static let trackGap: CGFloat = 16, trackPitch: CGFloat = 16
+
+    /// A lens's track stands on the side of its knob away from where the finger landed: right for a landing on the
+    /// knob's centre or left of it. Any one unit, points or the tank's.
+    nonisolated static func trackSide(landing x: Double, knob: Double) -> CGFloat { x > knob ? -1 : 1 }
+
+    /// The track's x, `side` of a knob at `knob`, in points.
+    nonisolated static func trackX(knob: CGFloat, core: CGFloat, side: CGFloat) -> CGFloat { knob + side * (core / 2 + trackGap) }
 
     /// A lens's count, which follows the finger up and down (Jack, 2026-10-26): on a vertical hairline at `x` beside a
     /// disc of `radius` about `c`, the disc's own hairline round it, a long mark level with the knob where the stir
@@ -2921,15 +2947,78 @@ struct KnobLesson: View {
     var body: some View {
         // Reduce Motion holds it at 0 s, mid-sweep.
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
-            Circle().fill(Color.live.opacity(0.22))
-                .overlay(Circle().stroke(Color.live.opacity(0.6), lineWidth: 1.5))
-                .shadow(color: .live.opacity(0.4), radius: 6)
-                .frame(width: 30, height: 30)
-                .position(Self.finger(centre: centre, reach: reach,
-                                      at: clock ?? (reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)))
+            GhostFinger().position(Self.finger(centre: centre, reach: reach,
+                                               at: clock ?? (reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)))
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// Lens 01's lesson: a ghost finger on the lens's knob riding down beside its track, as far as a drag that undoes the
+/// level's zoom, over the track's rail drawn faintly where that drag draws its count.
+struct LensLesson: View {
+    /// The knob's centre, its core's width and the finger's travel for one of the lens's steps, in points.
+    let knob: CGPoint
+    let core: CGFloat
+    let step: CGFloat
+    /// When this showing began, so it rides from the top.
+    let since: Date
+    /// Holds the finger this many seconds in.
+    let clock: Double?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Lens 01 deals `0:+2`.
+    nonisolated static let steps = 2.0
+    private nonisolated static let period = 2.2, ride = 1.6, fade = 0.4
+    /// Halfway down: where Reduce Motion holds it.
+    nonisolated static let middle = ride / 2
+
+    /// Until the level is solved, and in each game while no lens's stir is in `history` (slots, as `lenses` holds):
+    /// an undo that takes the stir back brings it back.
+    nonisolated static func shows(level: Level, history: [Twist], best: Best?) -> Bool {
+        level.id == Pack.lens.levels.first?.id && best == nil && !history.contains { level.lenses.contains($0.rod) }
+    }
+
+    /// The finger's x: the knob's left edge, so a finger landing where it shows draws its track on the rail.
+    nonisolated static func landing(knob: CGPoint, core: CGFloat) -> CGFloat { knob.x - core / 2 }
+
+    /// The rail's x: the track a drag landing at the finger draws.
+    nonisolated static func rail(knob: CGPoint, core: CGFloat) -> CGFloat {
+        LevelView.trackX(knob: knob.x, core: core, side: LevelView.trackSide(landing: landing(knob: knob, core: core), knob: knob.x))
+    }
+
+    /// Where the finger is `t` seconds into a showing, and how strongly it shows: eased down from the knob's height,
+    /// faded out at its foot and faded in again at the top.
+    nonisolated static func finger(knob: CGPoint, core: CGFloat, step: CGFloat, at t: Double) -> (at: CGPoint, opacity: Double) {
+        let t = t.truncatingRemainder(dividingBy: period) + (t < 0 ? period : 0)
+        let u = min(t / ride, 1), down = u * u * (3 - 2 * u)
+        let opacity = t < ride ? 1 : t < ride + fade ? 1 - (t - ride) / fade : max(0, t - ride - fade) / (period - ride - fade)
+        return (CGPoint(x: landing(knob: knob, core: core), y: knob.y + CGFloat(t < ride + fade ? down * steps : 0) * step), opacity)
+    }
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
+            let f = Self.finger(knob: knob, core: core, step: step,
+                                at: clock ?? (reduceMotion ? Self.middle : timeline.date.timeIntervalSince(since)))
+            let x = Self.rail(knob: knob, core: core), pitch = LevelView.trackPitch
+            ZStack {
+                Path { $0.move(to: CGPoint(x: x, y: knob.y - 3.5 * pitch)); $0.addLine(to: CGPoint(x: x, y: knob.y + 3.5 * pitch)) }
+                    .stroke(Color.live.opacity(LevelView.traceTone / 2), lineWidth: LevelView.hairline)
+                GhostFinger().position(f.at).opacity(f.opacity)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Every lesson's fingertip.
+struct GhostFinger: View {
+    var body: some View {
+        Circle().fill(Color.live.opacity(0.22))
+            .overlay(Circle().stroke(Color.live.opacity(0.6), lineWidth: 1.5))
+            .shadow(color: .live.opacity(0.4), radius: 6)
+            .frame(width: 30, height: 30)
     }
 }
 
