@@ -843,8 +843,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   A fresh install's first launch opens straight into plughole 01 (`RootView.opening`, Jack's call C4, round 13), once:
   `Best.welcomed` is stored as it appears, so a player who backs out without a move gets the menu next time. Never
   under the harness or the test host, but `UNSTIR_FRESH=1` takes that first screen, settings line and all, without
-  storing it. While a back swipe slides a level off, `RootView` draws the menu under it (`LevelView.onPeek`, `RootView.peeking`), focused as
-  leaving would focus it, first in its `ZStack`, so the menu uncovered is the one that stays up. The harness
+  storing it. While a back swipe slides a level off, `RootView` draws the menu under it (`LevelView.onPeek`,
+  `RootView.peeking`), focused as leaving would focus it, first in its `ZStack`, so the menu uncovered is the one that
+  stays up. The harness
   reads `UNSTIR_*` environment variables at launch
   (passed as `SIMCTL_CHILD_UNSTIR_*` by the scripts). They pick a screen, tier (`UNSTIR_TIER`, which the menu opens on
   even when locked), level, mode, stack, lens slots (`UNSTIR_LENSES=0,2`, parsed before the stack, which they change), channel masks (`UNSTIR_MASKS=0:r,1:c`, the same, never the swirl; `UNSTIR_SWATCH=r` holds a Prism swatch, `UNSTIR_LETTERS=1` shows the colour letters and swatches, and `UNSTIR_LETTERSCHOICE=0` or `1` sets the settings' choice for the launch), seized knobs (`UNSTIR_SEIZED`, never a swirl, so `UNSTIR_TIER=vortex UNSTIR_LEVEL=1 UNSTIR_SEIZED=1` opens a level with both) or tank position (`UNSTIR_TANK`), and can hold a
