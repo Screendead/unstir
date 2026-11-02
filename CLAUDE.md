@@ -39,7 +39,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
   build system to ignore inode changes; the restored build then stays incremental. A hit saves compile work but not
   time: `xcodebuild test` boots the simulator while it compiles, so the job's time is the boot, about 110 s, and the
-  tests, about 45 s. After the tests it measures the app they built (`scripts/app-size.sh`, Jack's call APPSIZE = B)
+  tests, about 45 s. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's call APPSIZE = B)
   less the test bundle and Xcode's testing frameworks the test host carries, and fails past 100 MB. That build is Debug
   for the simulator, one architecture: its debug dylib (16.6 MB on 2026-11-02) outweighs the Release binary (11.2 MB),
   and the resources are the same bytes in both, so it reads about 6 MB over a Release bundle (27.6 against 21.9). Grown
