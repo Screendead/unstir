@@ -43,7 +43,7 @@ final class PackTests: XCTestCase {
     @MainActor func testStorageKeysNeverChange() throws {
         let d = UserDefaults.standard, id = "pin-test"
         let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
-                    "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)",
+                    "tank.turned", "swirled", "endless.tanks", "endless.spilled", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)",
                     "shelf.fit.\(Pack.lens.rawValue)", "shelf.levels.\(Pack.lens.rawValue)",
                     "letters", "music.off", "sounds.off", "haptics.off",
                     "welcomed", "modes.seen", "review.asked", "resume.\(id)"]
@@ -71,6 +71,8 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(d.bool(forKey: "swirled"))
         Best.tanks = 4
         XCTAssertEqual(d.integer(forKey: "endless.tanks"), 4)
+        Best.spilled = true
+        XCTAssertTrue(d.bool(forKey: "endless.spilled"))
         Best.unseenRefill = 2
         XCTAssertEqual(d.integer(forKey: "undos.unseen"), 2)
         Best.refillShown = true
