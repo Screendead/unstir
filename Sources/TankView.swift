@@ -3487,7 +3487,10 @@ struct PictureLayer: View {
         // A live picture bakes nothing: the empty image only strikes the tube, once its data is ready.
         .task(id: [picture.rawValue, "\(seed)", "\(side)", "\(scale)"]) {
             if picture.isLive { await picture.prepare(seed: seed) }
-            image = picture.isLive ? UIImage() : await picture.render(side: side, scale: scale)
+            let baked = picture.isLive ? UIImage() : await picture.render(side: side, scale: scale)
+            // The halftone's detached bake runs on when a change of pose cancels it, and may land after the new one.
+            guard !Task.isCancelled else { return }
+            image = baked
         }
     }
 }
