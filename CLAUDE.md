@@ -190,8 +190,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   rerun may rewrite a bed's .m4a with new bytes; restore those rather than commit them. `scripts/sounds.sh listen
   <dir>` writes every effect and bed as m4a to `<dir>`, with a few effects played in turn over a bed, for listening
   off the phone, then renders the packs' sketches (`sound-src/sketches.csd`: two takes each of Lens's, Escapement's
-  and Prism's layers on one motif at 75 bpm, and of the ratchet's tick, for Jack's ear and never played by the app)
-  alone and over plughole's bed, as `sketch-*.m4a`.
+  and Prism's layers on one motif at 75 bpm, and five of the ratchet's tick, the last three also in Escapement B's
+  layer, for Jack's ear and never played by the app) alone and over plughole's bed, as `sketch-*.m4a`.
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).

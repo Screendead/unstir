@@ -91,8 +91,9 @@ if [ "${1:-}" = listen ]; then
         ratchet-3@12.55 ratchet-4@12.85"
     aac "$L/ratchet-in-play.wav" "$D/ratchet-in-play.m4a"
 
-    # Sketches: file, sketch, seconds, seed, the meter (I a layer's integrated loudness, M a tick's loudest 400 ms) and
-    # its target. A layer sits 2 LU under the bed, so a heal still stands about 8 LU over the two.
+    # Sketches: file, sketch, seconds, seed, the meter (I a layer's integrated loudness, M a tick's loudest 400 ms, or
+    # = to take an earlier file's gain) and its target. A layer sits 2 LU under the bed, so a heal still stands about
+    # 8 LU over the two. A take of a tick in a kept layer takes the layer's gain, so the layer plays as it was heard.
     SKETCHES="
 sketch-lens-a lensA 20 2001 I -30
 sketch-lens-b lensB 20 2002 I -30
@@ -104,6 +105,15 @@ sketch-tick-a tickA 0.4 2301 M -27
 sketch-tick-b tickB 0.4 2302 M -27
 sketch-ticks-a ticksA 14 2303 M -27
 sketch-ticks-b ticksB 14 2304 M -27
+sketch-tick-c tickC 0.4 2305 M -27
+sketch-tick-d tickD 0.4 2306 M -27
+sketch-tick-e tickE 0.4 2307 M -27
+sketch-ticks-c ticksC 14 2308 M -27
+sketch-ticks-d ticksD 14 2309 M -27
+sketch-ticks-e ticksE 14 2310 M -27
+sketch-escapement-b-tick-c escBtickC 20 2102 = sketch-escapement-b
+sketch-escapement-b-tick-d escBtickD 20 2102 = sketch-escapement-b
+sketch-escapement-b-tick-e escBtickE 20 2102 = sketch-escapement-b
 "
     pids=()
     while read -r name sk secs seed _; do
@@ -116,8 +126,13 @@ sketch-ticks-b ticksB 14 2304 M -27
     while read -r name _ _ _ meter target; do
         [ -z "$name" ] && continue
         grep -q "0 errors in performance" "$L/$name.log" || { echo "csound failed: $L/$name.log"; tail -20 "$L/$name.log"; exit 1; }
-        read -r m i p < <(loud "$L/$name-raw.wav")
-        g=$(gain "$([ "$meter" = I ] && echo "$i" || echo "$m")" "$target" "$p")
+        if [ "$meter" = = ]; then
+            g=$(cat "$L/$target.gain")
+        else
+            read -r m i p < <(loud "$L/$name-raw.wav")
+            g=$(gain "$([ "$meter" = I ] && echo "$i" || echo "$m")" "$target" "$p")
+        fi
+        echo "$g" >"$L/$name.gain"
         ffmpeg -hide_banner -nostdin -v error -y -i "$L/$name-raw.wav" -af "volume=${g}dB" -c:a pcm_f32le "$L/$name.wav"
         aac "$L/$name.wav" "$D/$name.m4a"
         read -r m i p < <(loud "$L/$name.wav")
@@ -140,9 +155,10 @@ sketch-ticks-b ticksB 14 2304 M -27
             -filter_complex "$chain${mix}amix=inputs=$k:normalize=0:duration=first" -c:a pcm_f32le "$L/$out.wav"
         aac "$L/$out.wav" "$D/$out.m4a"
     }
-    for f in lens-a lens-b escapement-a escapement-b prism-a prism-b; do over "sketch-$f-over-plughole" 22 "sketch-$f"; done
+    for f in lens-a lens-b escapement-a escapement-b escapement-b-tick-c escapement-b-tick-d escapement-b-tick-e \
+        prism-a prism-b; do over "sketch-$f-over-plughole" 22 "sketch-$f"; done
     # The ticks in play, with a heal on the second move's tick and the fifth's, as a tick that pops an entry heals.
-    for f in ticks-a ticks-b; do over "sketch-$f-over-plughole" 16 "sketch-$f" "heal-1@4.35 heal-2@9.95"; done
+    for f in ticks-a ticks-b ticks-c ticks-d ticks-e; do over "sketch-$f-over-plughole" 16 "sketch-$f" "heal-1@4.35 heal-2@9.95"; done
     ls "$D"
     exit 0
 fi

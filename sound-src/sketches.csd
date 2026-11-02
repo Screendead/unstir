@@ -1,8 +1,8 @@
 ; Copyright © 2026 Jack Lusher. All rights reserved.
 ; Rough sketches of the packs' sound for Jack's ear, never in the app: each sold pack's layer over plughole's bed
-; (Lens, Escapement, Prism) and Escapement's ratchet tick, two takes of each. scripts/sounds.sh listen passes the
-; sketch (SKETCH), the seed (SEED), the length (DUR) and the output (OUT). Stereo, 48 kHz, 32-bit float; the script
-; sets the level.
+; (Lens, Escapement, Prism), two takes of each, and Escapement's ratchet tick, five takes. scripts/sounds.sh listen
+; passes the sketch (SKETCH), the seed (SEED), the length (DUR) and the output (OUT). Stereo, 48 kHz, 32-bit float;
+; the script sets the level.
 ;
 ; Every layer plays one motif, the piece's (giMN, giMD), at 75 bpm, a bar 3.2 s. Bars 1 to 5 are play; bar 6, at
 ; 16 s, is the solve, the only place any layer lands on D.
@@ -191,12 +191,38 @@ instr scuff
 endin
 
 ; ------------------------------------------------------------------ the ratchet's tick
-; One tooth dropping: p4 take (0 a pencil's tap on paper over wood, 1 a brass pawl lifting and falling on its
-; tooth, its ring in D and muted), p5 level, p6 pan. Each tick a few percent off the last, nearly dry.
+; One mode of a small steel part, struck by ain: ifq Hz, decaying as Decay's itau, its impulse response iamp high. A
+; two-pole resonator, unscaled, rings 1 / sin(w) high; mode would put the upper modes sharp (14.9 kHz near 19).
+opcode Ring, a, aiii
+  ain, ifq, itau, iamp xin
+  xout iamp * sin(2 * $M_PI * ifq / sr) * reson(ain, ifq, 1 / ($M_PI * itau), 0)
+endop
+
+; Six modes at ifq times each ratio, each with its decay and level. Written out, as an opcode called in a loop is one
+; instance, and the filters would share their state.
+opcode Steel, a, aii[]i[]i[]
+  ain, ifq, ir[], itau[], iamp[] xin
+  a0 Ring ain, ifq * ir[0], itau[0], iamp[0]
+  a1 Ring ain, ifq * ir[1], itau[1], iamp[1]
+  a2 Ring ain, ifq * ir[2], itau[2], iamp[2]
+  a3 Ring ain, ifq * ir[3], itau[3], iamp[3]
+  a4 Ring ain, ifq * ir[4], itau[4], iamp[4]
+  a5 Ring ain, ifq * ir[5], itau[5], iamp[5]
+  xout a0 + a1 + a2 + a3 + a4 + a5
+endop
+
+; One tooth dropping: p4 take, p5 level, p6 pan. Each tick a few percent off the last. Round 15's two, both soft and
+; through a room: 0 a pencil's tap on paper over wood, 1 a brass pawl lifting and falling on its tooth, its ring in D
+; and muted. Round 16's three, metal on metal and dry (Jack: "an actual small piece of metal ticking against another
+; small piece of metal"), none tuned to the key: 2 a watch's escapement, the pallet unlocking and the tooth dropping
+; on it 4 to 5 ms later, almost pure click above 6 kHz; 3 a steel pawl snapping onto a steel ratchet wheel, a bright
+; tink near 2.4 kHz with one bounce of the pawl; 4 a counter's click spring on its wheel, a larger part, a short clack
+; with a body near 1.4 kHz under faster overtones.
 instr rtick
   p3 = 0.25
   ij random -0.03, 0.03
   anz Noise
+  aimp mpulse 1, 0
   if p4 == 0 then
     a1 butterbp anz * Decay(0.0015), 3200 * (1 + ij), 2500
     a2 butterbp anz * Decay(0.006), 5500, 3000
@@ -204,7 +230,7 @@ instr rtick
     a3 += Mode(1370 * (1 + ij), 0.004, 0.3, 1)
     a3 += Mode(240 * (1 + ij), 0.012, 0.25, 2)
     ay = a1 + 0.25 * a2 + a3
-  else
+  elseif p4 == 1 then
     alift butterhp anz * Decay(0.0006), 3000
     alift = 0.1 * alift + Mode(4100, 0.0015, 0.12)
     ifq = Hz(86) * (1 + ij / 3)
@@ -215,9 +241,41 @@ instr rtick
     adrop += Mode(330, 0.01, 0.35, 0.5)
     adrop delay adrop, 0.022
     ay butterlp alift + adrop, 6000
+  elseif p4 == 2 then
+    ahit butterhp anz * Decay(0.00012), 5000
+    ahit = aimp + 0.15 * ahit
+    ahit = 0.4 * ahit + delay(ahit, 0.0045 * (1 + 5 * ij))
+    ir[] fillarray 1, 1.41, 1.83, 2.37, 0.74, 1.12
+    itau[] fillarray 0.004, 0.003, 0.002, 0.0014, 0.0025, 0.0035
+    iamp[] fillarray 0.6, 0.45, 0.3, 0.2, 0.25, 0.3
+    ay Steel ahit, 6300 * (1 + ij / 2), ir, itau, iamp
+    ay = butterhp(ay, 3000) + 0.15 * ahit
+  elseif p4 == 3 then
+    ahit butterhp anz * Decay(0.0003), 3000
+    ahit = aimp + 0.12 * ahit
+    ahit += 0.3 * delay(ahit, 0.0018 * (1 + 3 * ij))
+    ir[] fillarray 1, 1.47, 2.31, 3.62, 3.67, 1.013
+    itau[] fillarray 0.008, 0.0065, 0.005, 0.0035, 0.003, 0.0075
+    iamp[] fillarray 0.4, 0.4, 0.6, 0.65, 0.5, 0.25
+    ay Steel ahit, 2400 * (1 + ij / 2), ir, itau, iamp
+    ay += 0.1 * ahit
+  else
+    ahit butterbp anz * Decay(0.0006), 3500, 4000
+    ahit = aimp + 0.2 * ahit
+    ir[] fillarray 1, 1.06, 2.2, 3.4, 5.1, 7.3
+    itau[] fillarray 0.007, 0.006, 0.0045, 0.0035, 0.0022, 0.0015
+    iamp[] fillarray 0.4, 0.25, 0.6, 0.7, 0.65, 0.45
+    ay Steel ahit, 1500 * (1 + ij / 2), ir, itau, iamp
+    ay += 0.12 * ahit
   endif
   aatk cosseg 0, 0.0002, 1
-  ay Room ay * aatk, 0.12, 0.15, 0.08, 0.06
+  if p4 < 2 then
+    ay Room ay * aatk, 0.12, 0.15, 0.08, 0.06
+  else
+    ; Each take's level to round 15's brass pawl's loudest 400 ms, so a take stands in Escapement's layer as that did.
+    igain[] fillarray 0, 0, 5.8, -0.3, 1.8
+    ay *= aatk * ampdb(igain[p4] + 30 * ij)
+  endif
   aL, aR Pan p5 * ay, p6
   Bus aL, aR, 0
 endin
@@ -297,8 +355,9 @@ instr escA
 endin
 
 ; Escapement B, the pawl: the foot drum on 1 and the and of 2, scuffs on 2 and 4 with faint ghosts; a muted reed,
-; its notes on the next eighth after the lift; the brass pawl's ticks.
-instr escB
+; its notes on the next eighth after the lift; ticks of take itake (rtick's p4), round 15's the brass pawl's.
+opcode EscB, 0, i
+  itake xin
   ib = 0
   while ib < 5 do
     is = ib * 3.2
@@ -311,7 +370,23 @@ instr escB
     ib += 1
   od
   schedule "kick", giSolve, 0.5, 0.4
-  Escape "reed", 0.45, 0.55, 1, 1
+  Escape "reed", 0.45, 0.55, itake, 1
+endop
+instr escB
+  EscB 1
+  turnoff
+endin
+; Jack kept Escapement B's layer (round 16); these play it with round 16's ticks.
+instr escBtickC
+  EscB 2
+  turnoff
+endin
+instr escBtickD
+  EscB 3
+  turnoff
+endin
+instr escBtickE
+  EscB 4
   turnoff
 endin
 
@@ -368,6 +443,18 @@ instr tickB
   schedule "rtick", 0.02, 0.25, 1, 0.6, 0
   turnoff
 endin
+instr tickC
+  schedule "rtick", 0.02, 0.25, 2, 0.6, 0
+  turnoff
+endin
+instr tickD
+  schedule "rtick", 0.02, 0.25, 3, 0.6, 0
+  turnoff
+endin
+instr tickE
+  schedule "rtick", 0.02, 0.25, 4, 0.6, 0
+  turnoff
+endin
 
 ; Ticks in play: seven moves on one, two and three clocks.
 opcode TickRun, 0, i
@@ -386,6 +473,18 @@ instr ticksA
 endin
 instr ticksB
   TickRun 1
+  turnoff
+endin
+instr ticksC
+  TickRun 2
+  turnoff
+endin
+instr ticksD
+  TickRun 3
+  turnoff
+endin
+instr ticksE
+  TickRun 4
   turnoff
 endin
 
