@@ -504,7 +504,9 @@ struct MenuView: View {
                             .id(t)
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.leading, 20)
+                // Past the trailing fade, so the last name reads whole once scrolled to.
+                .padding(.trailing, 40)
             }
             .scrollIndicators(.hidden)
             // Names run out into the black at the edges, so a strip wider than the screen reads as running on past them.
@@ -512,6 +514,7 @@ struct MenuView: View {
                                          .init(color: .black, location: 0.9), .init(color: .clear, location: 1)],
                                  startPoint: .leading, endPoint: .trailing))
             .onChange(of: picked) { withAnimation { proxy.scrollTo(picked, anchor: .center) } }
+            .onAppear { proxy.scrollTo(picked, anchor: .center) }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Tier")
