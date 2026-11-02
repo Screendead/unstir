@@ -8,9 +8,33 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
 
+# The ceiling for every file's true peak: under the -1 dBTP limit, with room for the 16-bit rounding and for AAC.
+CEILING=-1.2
+
+# file [mono] [filter]: the loudest 400 ms (M), the integrated loudness (I) and the true peak, by ffmpeg's EBU R128
+# meter. A mono file is measured as dual mono, since the phone plays it on both speakers. Half a second of silence
+# after it gives a short sound its full windows.
+loud() {
+    local dual="" filter="apad=pad_dur=0.5"
+    [ "${2:-0}" = 1 ] && dual=":dualmono=true"
+    [ -n "${3:-}" ] && filter="$3,$filter"
+    ffmpeg -hide_banner -nostdin -nostats -i "$1" -af "$filter,ebur128=peak=true$dual:framelog=info" -f null - 2>&1 |
+        awk '/ M:/ { sub(/.* M: */, ""); m = $1 + 0; if (!seen || m > max) max = m; seen = 1 }
+             /^ *I: / { i = $2 }
+             /True peak:/ { tp = 1 }
+             tp && /Peak:/ { p = $2; tp = 0 }
+             END { printf "%.2f %s %s\n", max, i, p }'
+}
+
+# measured target peak: the gain in dB to the target, pulled back if it would take the true peak over the ceiling.
+gain() {
+    awk -v m="$1" -v t="$2" -v p="$3" -v c="$CEILING" 'BEGIN { g = t - m; if (p + g > c) g = c - p; printf "%.4f\n", g }'
+}
+
 # listen <dir>: every effect and bed in Sounds/glass as m4a in <dir>, and a few effects played in turn over a bed: the
 # undo after a push, a heal undone and healed again, and Escapement's ticks through a few moves. An effect plays on
-# both channels at its full level, as the app plays it, and the plays sit on plughole's bed at its own level.
+# both channels at its full level, as the app plays it, and the plays sit on plughole's bed at its own level. Then the
+# packs' sketches (sound-src/sketches.csd), which the app never plays, each alone and over plughole's bed.
 if [ "${1:-}" = listen ]; then
     D=${2:?usage: scripts/sounds.sh listen <dir>}
     L=build/sounds/listen
@@ -66,6 +90,59 @@ if [ "${1:-}" = listen ]; then
         heal-2@8.8 ratchet-2@8.95 ratchet-3@9.25 ratchet-4@10.65 ratchet-1@10.95 ratchet-2@11.25 solve@12.4
         ratchet-3@12.55 ratchet-4@12.85"
     aac "$L/ratchet-in-play.wav" "$D/ratchet-in-play.m4a"
+
+    # Sketches: file, sketch, seconds, seed, the meter (I a layer's integrated loudness, M a tick's loudest 400 ms) and
+    # its target. A layer sits 2 LU under the bed, so a heal still stands about 8 LU over the two.
+    SKETCHES="
+sketch-lens-a lensA 20 2001 I -30
+sketch-lens-b lensB 20 2002 I -30
+sketch-escapement-a escA 20 2101 I -30
+sketch-escapement-b escB 20 2102 I -30
+sketch-prism-a prismA 20 2201 I -30
+sketch-prism-b prismB 20 2202 I -30
+sketch-tick-a tickA 0.4 2301 M -27
+sketch-tick-b tickB 0.4 2302 M -27
+sketch-ticks-a ticksA 14 2303 M -27
+sketch-ticks-b ticksB 14 2304 M -27
+"
+    pids=()
+    while read -r name sk secs seed _; do
+        [ -z "$name" ] && continue
+        (cd sound-src && csound --omacro:SKETCH="$sk" --omacro:SEED="$seed" --omacro:DUR="$secs" \
+            --omacro:OUT="$ROOT/$L/$name-raw.wav" sketches.csd >"$ROOT/$L/$name.log" 2>&1) &
+        pids+=($!)
+    done <<<"$SKETCHES"
+    for pid in "${pids[@]}"; do wait "$pid"; done
+    while read -r name _ _ _ meter target; do
+        [ -z "$name" ] && continue
+        grep -q "0 errors in performance" "$L/$name.log" || { echo "csound failed: $L/$name.log"; tail -20 "$L/$name.log"; exit 1; }
+        read -r m i p < <(loud "$L/$name-raw.wav")
+        g=$(gain "$([ "$meter" = I ] && echo "$i" || echo "$m")" "$target" "$p")
+        ffmpeg -hide_banner -nostdin -v error -y -i "$L/$name-raw.wav" -af "volume=${g}dB" -c:a pcm_f32le "$L/$name.wav"
+        aac "$L/$name.wav" "$D/$name.m4a"
+        read -r m i p < <(loud "$L/$name.wav")
+        echo "$name: M $m, I $i, true peak $p"
+    done <<<"$SKETCHES"
+    # over out seconds sketch "effect@time ...": a stereo sketch from 1 s into plughole's bed, with effects as play's.
+    over() {
+        local out=$1 secs=$2
+        local inputs=(-i "$L/bed-loop.wav" -i "$L/$3.wav")
+        local chain="[0]atrim=0:$secs,afade=t=out:st=$((secs - 2)):d=2[b];[1]adelay=1000|1000[s];" mix="[b][s]" k=2
+        for ev in ${4:-}; do
+            inputs+=(-i "$L/${ev%@*}.wav")
+            local ms
+            ms=$(awk -v t="${ev#*@}" 'BEGIN { printf "%d", t * 1000 }')
+            chain="$chain[$k]pan=stereo|c0=c0|c1=c0,adelay=$ms|$ms[e$k];"
+            mix="$mix[e$k]"
+            k=$((k + 1))
+        done
+        ffmpeg -hide_banner -nostdin -v error -y "${inputs[@]}" \
+            -filter_complex "$chain${mix}amix=inputs=$k:normalize=0:duration=first" -c:a pcm_f32le "$L/$out.wav"
+        aac "$L/$out.wav" "$D/$out.m4a"
+    }
+    for f in lens-a lens-b escapement-a escapement-b prism-a prism-b; do over "sketch-$f-over-plughole" 22 "sketch-$f"; done
+    # The ticks in play, with a heal on the second move's tick and the fifth's, as a tick that pops an entry heals.
+    for f in ticks-a ticks-b; do over "sketch-$f-over-plughole" 16 "sketch-$f" "heal-1@4.35 heal-2@9.95"; done
     ls "$D"
     exit 0
 fi
@@ -77,8 +154,6 @@ mkdir -p "$B/raw" "$B/wav" "$B/spec" "$OUT"
 swiftc -O scripts/sounds.swift -o "$B/tool"
 TOOL="$B/tool"
 
-# The ceiling for every file's true peak: under the -1 dBTP limit, with room for the 16-bit rounding and for AAC.
-CEILING=-1.2
 # An 8th-order Butterworth highpass at 250 Hz, as four biquads: roughly what an iPhone's speaker keeps.
 PHONE="highpass=f=250:width_type=q:width=0.50980,highpass=f=250:width_type=q:width=0.60134"
 PHONE="$PHONE,highpass=f=250:width_type=q:width=0.89998,highpass=f=250:width_type=q:width=2.56292"
@@ -120,26 +195,6 @@ vortex vortex 875 -28
 maelstrom maelstrom 900 -28
 menu menu 950 -29
 "
-
-# file [mono] [filter]: the loudest 400 ms (M), the integrated loudness (I) and the true peak, by ffmpeg's EBU R128
-# meter. A mono file is measured as dual mono, since the phone plays it on both speakers. Half a second of silence
-# after it gives a short sound its full windows.
-loud() {
-    local dual="" filter="apad=pad_dur=0.5"
-    [ "${2:-0}" = 1 ] && dual=":dualmono=true"
-    [ -n "${3:-}" ] && filter="$3,$filter"
-    ffmpeg -hide_banner -nostdin -nostats -i "$1" -af "$filter,ebur128=peak=true$dual:framelog=info" -f null - 2>&1 |
-        awk '/ M:/ { sub(/.* M: */, ""); m = $1 + 0; if (!seen || m > max) max = m; seen = 1 }
-             /^ *I: / { i = $2 }
-             /True peak:/ { tp = 1 }
-             tp && /Peak:/ { p = $2; tp = 0 }
-             END { printf "%.2f %s %s\n", max, i, p }'
-}
-
-# measured target peak: the gain in dB to the target, pulled back if it would take the true peak over the ceiling.
-gain() {
-    awk -v m="$1" -v t="$2" -v p="$3" -v c="$CEILING" 'BEGIN { g = t - m; if (p + g > c) g = c - p; printf "%.4f\n", g }'
-}
 
 echo "rendering"
 pids=()
