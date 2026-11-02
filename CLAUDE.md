@@ -153,7 +153,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `endless-brim-run`) cut from their strikes and captioned, and plan step 3's social clips, 1080 x 1920 and silent,
   three drawn clean and one with the hand. `sound` films those clips again with the game's sound, switching the
   Mac's output to BlackHole for the takes and back (needs Homebrew's `blackhole-2ch` and `switchaudio-osx`), into
-  `<name>-sound.mp4` at -16 LUFS. It films with `FILM_FULL=1`; `--cut` reuses what is taken. Apple's limits
+  `<name>-sound.mp4`, aimed at -16 LUFS (one-pass loudnorm lands them near -15). It films with `FILM_FULL=1`; `--cut` reuses what is taken. Apple's limits
   it meets are in its header, with where they were read.
 - Sounds: `scripts/sounds.sh` renders the Csound sources in `sound-src/` into `Sounds/glass` and prints each file's
   loudness, peaks, onset, phone-speaker loss and size, and each bed's seam (needs Homebrew's `csound` and `ffmpeg`).
