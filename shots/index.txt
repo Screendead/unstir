@@ -91,6 +91,7 @@ result-again-best.png  Level 05 result card over par against a stored best of +6
 result-fullest.png  Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows.
 result-pack-complete.png  Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels in Lens's magenta, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's).
 result-every-tier.png  Maelstrom 27 solved, every other free level at par: every tier unstirred in maelstrom's red, and a quiet try Lens (First Stir owned, as Release doesn't sell it).
+result-ladder-end.png  Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it).
 tier-up.png  Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing.
 tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate.
 tier-up-midway.png  Plughole 05 solved at par, the last plughole level to reach it: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
@@ -98,6 +99,7 @@ tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate,
 daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00).
 daily-practice.png  Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h.
 daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap).
+daily-share-supporter.png  The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦.
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
 wave-0.8.png  Level 13 solved through the real commit path, solve wave held at radius 0.8 from the last-turned rod.
 wave-1.2.png  Level 13 solved through the real commit path, solve wave held at radius 1.2 from the last-turned rod.
@@ -365,6 +367,12 @@ lens-order-small-under-3.png  Lens on eye rod 2, 2:+2,0:+3: the twist newest.
 icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
 icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
 icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.
+promo-lens.png  Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black.
+promo-escapement.png  Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black.
+promo-prism.png  Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black.
+promo-complete.png  Complete's promoted-purchase image: a wedge of each of Release's three packs' covers, inside the bezel on black.
+promoted-menu.png  A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned.
+promoted-level.png  The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned.
 firststir-01.png  First Stir 1 as dealt: every core turned, the time under the tank.
 firststir-01-held.png  First Stir 1 drawn unstirred, held back. Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney.
 firststir-01-played.png  First Stir 1 drawn unstirred, every vignette played: a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke.
@@ -520,6 +528,10 @@ consent-settings-off.png  The gear's sheet: music, sounds, haptics and colour le
 settings.png  Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version.
 settings-quiet.png  Settings with music and haptics off.
 settings-restored.png  The gear's sheet after a restore found nothing: nothing to restore on this Apple ID.
+settings-supporter.png  The gear's sheet with a pack owned: a supporter mark switch, on, under colour letters.
+menu-supporter.png  Menu with a pack owned: the supporter mark, a hairline four-pointed glint in plughole's sweep, after the title.
+menu-supporter-off.png  The same with the settings' supporter mark switched off: the title alone, as before any purchase.
+menu-no-supporter.png  The same with nothing owned: no mark.
 escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
 escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
 escapement-book-03.png  Escapement 3 as dealt: quad, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.

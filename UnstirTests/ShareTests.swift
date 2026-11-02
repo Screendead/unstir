@@ -22,6 +22,16 @@ final class ShareTests: XCTestCase {
                        "Unstir 2026-10-25 \u{00B7} 3 moves (par 3) \u{00B7} clean")
     }
 
+    /// A player who owns a pack carries the supporter mark after the daily's name.
+    func testTheSupporterMarkFollowsTheName() {
+        XCTAssertEqual(Share.text(day: 2026_10_25, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0, marks: [],
+                                  supporter: true, firstDay: nil),
+                       "Unstir 2026-10-25 \u{2726} \u{00B7} 3 moves (par 3) \u{00B7} clean")
+        XCTAssertEqual(Share.text(day: 2026_11_04, moves: 1, par: 1, firstTry: false, clean: false, undos: 0, resets: 0, marks: [],
+                                  supporter: true, firstDay: 2026_10_25),
+                       "Unstir #11 \u{2726} \u{00B7} practice \u{00B7} 1 move (par 1)")
+    }
+
     func testTheNumberFollowsTheDailysOwnDay() throws {
         // Either side of the US clocks going forward (14 Mar 2027), at 1 a.m. in the runner's zone.
         for (day, n) in [(13, 140), (14, 141), (15, 142)] {

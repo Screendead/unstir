@@ -635,6 +635,12 @@ struct Best: Codable {
         set { UserDefaults.standard.set(newValue, forKey: "welcomed") }
     }
 
+    /// Set once the free ladder's last card has said "more puzzles in the packs ›", which it says once.
+    static var packsPointed: Bool {
+        get { UserDefaults.standard.bool(forKey: "packs.pointed") }
+        set { UserDefaults.standard.set(newValue, forKey: "packs.pointed") }
+    }
+
     /// Set as plughole 01's first open points at the settings, so it does so once (Jack's call F3, round 14).
     static var pointedAtSettings: Bool {
         get { UserDefaults.standard.bool(forKey: "settings.pointed") }

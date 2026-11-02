@@ -298,7 +298,7 @@ final class Game {
     var shareText: String? {
         Share.day(of: level.id).map {
             Share.text(day: $0, moves: moves, par: par, firstTry: firstTry, clean: clean, undos: undos, resets: resets,
-                       marks: marks)
+                       marks: marks, supporter: Store.shared.bought && Settings.supporter)
         }
     }
 
@@ -1608,6 +1608,8 @@ struct LevelView: View {
             if phase == .background { Analytics.shared.suspended(game); game.pauseClock(); Resume.save(game) }
             if phase == .active { Analytics.shared.resumed(); game.resumeClock(); if knocks { Knock.warm(hold: false) } }
         }
+        // A promoted purchase's card opens over the menu: the level leaves as its back does, so its quit and save go too.
+        .onChange(of: Store.shared.promoted) { if Store.shared.promoted != nil { leave() } }
         .onDisappear {
             endPath(); endTwist()
             if knocks { Knock.rest() }
@@ -3610,6 +3612,8 @@ struct ResultCard: View {
     /// The harness's clock for the daily's next one; nil reads the time.
     let now: Date?
     let onOffer: (Pack) -> Void
+    /// The pack "more puzzles in the packs ›" opens, read as the card appears, which spends its one showing.
+    @State private var packs: Pack?
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
@@ -3679,6 +3683,10 @@ struct ResultCard: View {
                     Button { onOffer(pack) } label: { Text("try \(pack.name) \u{203A}").hit() }
                         .font(.mono(.caption)).opacity(0.6)
                         .accessibilityLabel("Try \(pack.name)")
+                } else if let pack = packs {
+                    Button { onOffer(pack) } label: { Text("more puzzles in the packs \u{203A}").hit() }
+                        .font(.mono(.caption)).opacity(0.6)
+                        .accessibilityLabel("More puzzles in the packs")
                 }
             }
             HStack(spacing: 32) {
@@ -3714,7 +3722,13 @@ struct ResultCard: View {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
-        .onAppear { focused = true }
+        .onAppear {
+            focused = true
+            guard packs == nil, let pack = Offer.ladderEnd(game.level, completed: game.completed, shown: Best.packsPointed)
+            else { return }
+            packs = pack
+            if game.storesProgress { Best.packsPointed = true }
+        }
     }
 }
 

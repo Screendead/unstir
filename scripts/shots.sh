@@ -190,6 +190,8 @@ shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens com
   PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred in maelstrom's red, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
   SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir BESTS=plughole:000000000000000000000000000,whirlpool:000000000000000000000000000,vortex:000000000000000000000000000,maelstrom:00000000000000000000000000- CLOCK=0
+shot result-ladder-end "Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it)." \
+  SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0
 shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
 shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate." \
@@ -204,6 +206,8 @@ shot daily-practice "Today's daily solved at par as practice, as again on its ca
   SCREEN=clean MODE=daily NOW=17:00 TRIED=daily-$(date +%Y%m%d)
 hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
   SCREEN=result MODE=daily SHARESHEET=1
+hold=8 shot daily-share-supporter "The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦." \
+  SCREEN=result MODE=daily SHARESHEET=1 OWNED=lens
 for w in 0.4 0.8 1.2; do
   shot "wave-$w" "Level 13 solved through the real commit path, solve wave held at radius $w from the last-turned rod." LEVEL=13 WAVE=$w
 done
@@ -430,6 +434,15 @@ done
 shot icon-1 "App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre." ICON=1
 shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl." ICON=2
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
+# Each sold offer's promoted-purchase image, a 1024-pixel square centred on the screen; scripts/promo.sh crops them.
+hold=30 shot promo-lens "Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black." PROMO=lens
+shot promo-escapement "Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black." PROMO=escapement
+shot promo-prism "Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black." PROMO=prism
+hold=12 shot promo-complete "Complete's promoted-purchase image: a wedge of each of Release's three packs' covers, inside the bezel on black." PROMO=complete
+hold=4 shot promoted-menu "A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned." \
+  PROMOTED=lens STORE=lens:unowned BESTS=plughole:000000000
+hold=4 shot promoted-level "The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned." \
+  PROMOTED=lens STORE=lens:unowned LEVEL=5
 # First Stir's chapters 1, Dawn After (scenes 1 to 5, 6:40 back to 4:45 am), 2, The Rescue (6 to 10, 4:45 back to
 # 2:30 am), 3, The Flood (11 to 15, 2:30 back to 12:30 am), 4, The Storm (16 to 20, 12:30 am back to 9:30 pm), and
 # 5, Dusk Before (21 to 25, 9:30 back to 7:40 pm), three vignettes a scene. UNSTIR_BARE draws the picture unstirred, so the art shows as the stack has played
@@ -625,6 +638,12 @@ shot settings "Settings: music, sounds and haptics on, colour letters, restore p
 shot settings-quiet "Settings with music and haptics off." SETTINGS=1 MUSIC=0 HAPTICS=0
 shot settings-restored "The gear's sheet after a restore found nothing: nothing to restore on this Apple ID." \
   SETTINGS=1 STORE=lens:unowned RESTORED=none
+shot settings-supporter "The gear's sheet with a pack owned: a supporter mark switch, on, under colour letters." SETTINGS=1 OWNED=lens
+shot menu-supporter "Menu with a pack owned: the supporter mark, a hairline four-pointed glint in plughole's sweep, after the title." \
+  OWNED=lens BESTS=plughole:000000000 CONSENT=yes
+shot menu-supporter-off "The same with the settings' supporter mark switched off: the title alone, as before any purchase." \
+  OWNED=lens BESTS=plughole:000000000 CONSENT=yes SUPPORTER=0
+shot menu-no-supporter "The same with nothing owned: no mark." BESTS=plughole:000000000 CONSENT=yes
 
 # Escapement's problem book, each problem as dealt: its clocks' discs dashed vermilion, each ratchet read against its
 # sub-dial (a wound-back clock's mirrored), the stipulation under the tank. Clocks are rods, + forward, - wound back.

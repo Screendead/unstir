@@ -615,6 +615,24 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(Offer.pointer(after: .free, shelf: shelf, owned: owning([.lens, .escapement, .prism])))
     }
 
+    /// "more puzzles in the packs ›" shows on maelstrom 27's card alone, once, opening the first pack on the shelf the
+    /// player doesn't own; never where a completion already points to one, nor once every pack is owned.
+    @MainActor func testTheLadderEndPointsToThePacksOnce() {
+        let shelf: [Offer] = [.pack(.lens), .pack(.escapement), .pack(.prism), .complete]
+        func owning(_ packs: Set<Pack>) -> (Pack) -> Bool { { packs.contains($0) } }
+        let end = Level.maelstrom.last!
+        XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: shelf, owned: owning([])), .lens)
+        XCTAssertEqual(Offer.ladderEnd(end, completed: nil, shown: false, shelf: shelf, owned: owning([.lens])), .escapement)
+        XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: true, shelf: shelf, owned: owning([])))
+        XCTAssertNil(Offer.ladderEnd(end, completed: .free, shown: false, shelf: shelf, owned: owning([])),
+                     "the completion's own pointer says it")
+        XCTAssertNil(Offer.ladderEnd(end, completed: nil, shown: false, shelf: shelf,
+                                     owned: owning([.lens, .escapement, .prism])))
+        for level in [Level.maelstrom[25], Level.vortex.last!, Level.plughole.last!] {
+            XCTAssertNil(Offer.ladderEnd(level, completed: nil, shown: false, shelf: shelf, owned: owning([])), level.id)
+        }
+    }
+
     /// The card calls a best new only when what it names improves: clean, then over par; a faster time at the same
     /// mark is still the old best's line, and a first solve has none.
     @MainActor func testTheCardsBestLine() {
