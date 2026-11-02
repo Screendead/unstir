@@ -604,7 +604,7 @@ shot card-lens-asked-offline "Lens's card after asking again offline: still wait
   CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
 shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
   CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
-shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74)." \
+shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row, ‹ menu pinned over the scroll." \
   CARD=lens OWNED=lens BESTS=lens:0 TRIED=lens-2 CARDSCROLL=1 CLOCK=5.4
 shot shelf-menu-owned "The dock with every pack owned, the three through Triptych and First Stir (outside it) on its own: PACKS alone, no taste line, Triptych's cover gone." \
   OWNED=complete,first-stir CLOCK=5.4
@@ -622,10 +622,10 @@ shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone
 shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
 shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
   CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
-shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked." \
+shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked, ‹ menu still pinned at the top." \
   CARD=lens STORE=lens:unowned CARDSCROLL=1 CLOCK=5.4
 shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDSCROLL=1 CLOCK=5.4
-shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
+shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note, ‹ menu pinned over the scroll." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-gate-ax "The same at accessibility3: the Triptych line under buy wraps only before · save." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4 TYPESIZE=accessibility3
