@@ -171,6 +171,8 @@ hold=2 shot sandbox-full "The sandbox with a full stack of 36, then rod 2 turned
   MODE=sandbox STACK=${full%,} MOVES=2:1
 shot sandbox-chainmail "The sandbox on chainmail and pent: the header's controls in full where they fit." \
   MODE=sandbox PICTURE=chainmail LAYOUT=pent STACK= CLOCK=3
+hold=9 shot knob-lesson "Level 01 left untouched 4 s (no opening: a still launch): the ghost finger halfway out knob 0's disc, held mid-rock." \
+  LEVEL=1 CLOCK=0
 shot result "Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par)." \
   SCREEN=result LEVEL=5
 shot level-at-par "Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber." \

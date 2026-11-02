@@ -940,6 +940,8 @@ struct LevelView: View {
     @State private var ghost: (at: SIMD2<Double>, pivot: SIMD2<Double>, rim: Bool, lens: Bool)?
     /// The knob, or `Game.tank`, touched last: its open stir's count stays up, faint, after letting go.
     @State private var counted: Int?
+    /// L1, left untouched after its opening: a ghost finger shows the knob's turn until the first stir commits.
+    @State private var knobLesson = false
     @State private var grabs = 0
     /// The seized knob touched last, and every such touch: it shakes, the rim pulses and a thud plays.
     @State private var jammed: Int?
@@ -1001,7 +1003,7 @@ struct LevelView: View {
     private let bench: Bool
     /// UNSTIR_WAVE: the solve wave held at this radius.
     private let frozenWave: Double?
-    /// UNSTIR_CLOCK: a live background, and the rim's ghost finger, held at this many seconds.
+    /// UNSTIR_CLOCK: a live background, and the rim and knob lessons' ghost fingers, held at this many seconds.
     private let frozenClock: Double?
     /// UNSTIR_SHAKE: a seized knob's shake and the rim's pulse held this many seconds in.
     private let frozenShake: Double?
@@ -1494,6 +1496,13 @@ struct LevelView: View {
             guard badge > 0 else { return }
             game.refillSeen()
             AccessibilityNotification.Announcement("\(badge) undos added, \(game.bank) in the bank").post()
+        }
+        .task(id: [shown == nil, touching, game.history.isEmpty]) {
+            // The first level shows its verb only to a player who has waited on it, and never once it has been solved.
+            withAnimation(.easeOut(duration: 0.2)) { knobLesson = false }
+            guard game.level.id == Tier.plughole.levels[0].id, Best.load(game.level.id) == nil, shown == nil, !touching,
+                  game.history.isEmpty, (try? await Task.sleep(for: .seconds(KnobLesson.wait))) != nil else { return }
+            withAnimation(.easeIn(duration: 0.4)) { knobLesson = true }
         }
         .onChange(of: resting, initial: true) {
             let t = Date.now.timeIntervalSinceReferenceDate
@@ -2207,6 +2216,9 @@ struct LevelView: View {
                     lostMarks(at(k), size: Self.ratchetSize(core), r: r,
                               twisted: Set(game.stack.map(\.rod)).sorted().map { (at($0), disc($0)) })
                 }
+                if knobLesson && shown == nil && !touching {
+                    KnobLesson(centre: at(0), reach: 0.5 * disc(0), clock: frozenClock).transition(.opacity)
+                }
                 if let spillAt {
                     TimelineView(.animation(minimumInterval: 1.0 / 60, paused: !brimMoving || frozenClock != nil)) { timeline in
                         SpillWords(r: r, at: frozenClock ?? timeline.date.timeIntervalSinceReferenceDate - spillAt)
@@ -2885,6 +2897,39 @@ struct Detent {
         let now = Self.steps(angle, of: step)
         defer { steps = now }
         return abs(now - steps)
+    }
+}
+
+/// L1's lesson: a ghost finger, as the rim's, rocking round knob 0 halfway out its disc, the turn the level asks for.
+struct KnobLesson: View {
+    /// The knob's centre and the finger's distance from it, in points.
+    let centre: CGPoint
+    let reach: CGFloat
+    /// Holds the finger this many seconds in.
+    let clock: Double?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Seconds of the tank untouched before it shows.
+    static let wait = 4.0
+    private static let sweep = 40 * Double.pi / 180, period = 2.4, rest = Double.pi / 4
+
+    /// Where the finger is `t` seconds in: rocking either side of up and to the right of the knob.
+    static func finger(centre: CGPoint, reach: CGFloat, at t: Double) -> CGPoint {
+        let a = rest + sweep * sin(2 * .pi * t / period)
+        return CGPoint(x: centre.x + reach * sin(a), y: centre.y - reach * cos(a))
+    }
+
+    var body: some View {
+        // Reduce Motion holds it at 0 s, mid-sweep.
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clock != nil || reduceMotion)) { timeline in
+            Circle().fill(Color.live.opacity(0.22))
+                .overlay(Circle().stroke(Color.live.opacity(0.6), lineWidth: 1.5))
+                .shadow(color: .live.opacity(0.4), radius: 6)
+                .frame(width: 30, height: 30)
+                .position(Self.finger(centre: centre, reach: reach,
+                                      at: clock ?? (reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate)))
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
