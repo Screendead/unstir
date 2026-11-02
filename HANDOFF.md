@@ -42,7 +42,7 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 ### Open work (finish-and-pitch, 2026-11-02)
 
-The run's list. **Decided** (Claude does it): #115; LG3's leftovers (Store.swift's two whole-`error` logs, privacy-policy.md's "only thing it talks to" without the age-range check, the undo-bank row's monotonic-clock text, from local `legal-lg3`'s three commits); the Duo's stages 2 to 4; the shots and films owed (#81's indexed shots, `film.sh calm-`, the dock waking, nav-focus's menu shots); the store screenshots and 25 s preview (ST4, ST5); plan step 3's clips; the architecture pass's ranked list; pack sound sketches (to-do 45, ends at Jack's ear). **Blocked on Jack's calls**: the String Catalog migration (F4 = C, about five days): its first commit sets the development language and its last marks what isn't translated, the plan's calls 6, 1, 2 and 7, so it waits for his answers to the plan's eight; after the Duo's stages, which share TankView with it. **Undecided** (to Jack's pitch): #115's delayed fade-in; Duo stage 5's menu placement and the upright cap; the catalog plan's eight calls; Eyes Shut's hosting and thank-you; C1's side effects; C20's trigger under TestFlight; L2's note; the sound row's three small calls; the age questionnaire's two rows; Escapement J5 and J8 and its paper ground; iCloud sync and the app-size budget; the UI design pass (to-do 72). **Jack's to-dos**: device checks, the developer account and App Store Connect, Triptych's trademark check, Eyes Shut's outreach.
+The run's list. **Decided** (Claude does it): #115; LG3's leftovers (Store.swift's two whole-`error` logs, privacy-policy.md's "only thing it talks to" without the age-range check, the undo-bank row's monotonic-clock text, from local `legal-lg3`'s three commits); the Duo's stages 2 to 4; the shots and films owed (#81's indexed shots, `film.sh calm-`, the dock waking, nav-focus's menu shots); the store screenshots and 25 s preview (ST4, ST5); plan step 3's clips; the architecture pass's ranked list; pack sound sketches (to-do 45, ends at Jack's ear). **Unblocked by round 16**: the String Catalog migration (F4 = C, about five days; CAT1 to CAT8 = A), in ORDER's place after the design pass. **Undecided** (to Jack's pitch): #115's delayed fade-in; Duo stage 5's menu placement and the upright cap; the catalog plan's eight calls; Eyes Shut's hosting and thank-you; C1's side effects; C20's trigger under TestFlight; L2's note; the sound row's three small calls; the age questionnaire's two rows; Escapement J5 and J8 and its paper ground; iCloud sync and the app-size budget; the UI design pass (to-do 72). **Jack's to-dos**: device checks, the developer account and App Store Connect, Eyes Shut's outreach (Triptych's trademark check is done: clear). **Round 16 answered every call** (the table under round 15's): the work it decides follows ORDER.
 
 ### The plan
 
@@ -505,6 +505,43 @@ Jack's own words are quoted; the rest is the option he picked. Built on `r15-cal
 | R-arch-lock. Tapping the locked archive | **A**, in Jack's words: it shakes and says "unlocked by purchasing any pack" for 2 s (was "any pack on the shelf opens it"), never opening the shop. The row's own quiet line, "30 past dailies · comes with any pack", stays |
 | R-arch-best. Archive days and bests | **A:** as built |
 | P3. Prism's isolated channel (new, from Jack) | Holding a swatch draws its channel alone in its own colour, red, green or blue, not white: "Makes it more clear." Not Jack's call, a refinement in the build, his to overrule: under the system's Differentiate Without Colour it stays white (the system flag, not the colour letters' choice), as pure red and blue can read dark on black to a colour-blind player. Measured on specimen 8's shots: the knob colours' lines sit at about a quarter of white's luminance (red 0.26, blue 0.23, green 0.65, white 0.89), near 5:1 against black; protanopia turns red olive at 0.21. Kept at the knobs' colours, not lightened |
+Round 16's calls (Jack, 2026-11-02, on the finish-and-pitch page). Jack's own words are quoted; the rest is the option he picked.
+
+| Call | Decision |
+|---|---|
+| ORDER. The three big UI jobs | **A:** the Duo's stages 2 to 4, then the architecture pass's three (ARCH), then the UI design pass (to-do 72), then the String Catalog, then the store media taken again on the finished chrome |
+| ARCH. The architecture pass | **A:** all three of its top list (split TankView.swift; CLAUDE.md and HANDOFF.md cut to a short map plus area docs; a typed shader-argument encoder), after the Duo's stages and before the design pass |
+| DOCKFADE. The dock on launch | **A:** keep #115's one fade-in (merged) |
+| DUO2. Stage 2's two choices (#120) | **A:** both as built: tabletop's "unstirred." at the foot of the upright half, the glass 398 pt; a turn in flight as the phone folds lands as the steps it shows |
+| DUOMENU. Stage 5, a level opened beside the menu | **B:** the tank left at stage 1's glass, the menu on the right with the header and controls. Unblocks stage 5 |
+| DUOCAP. The open Duo upright | **C:** a higher cap than 1300 px, with shallower stacks allowed at that size (not the recommendation, A) |
+| VORTEXSHOT. Store screenshot 4 | Vortex 14, "Monsoon" (isobars). The page's left, middle and right labels were wrong |
+| STOREMEDIA. Store media (#121) | **B:** the preview cut to 25 s (not the recommendation, A). Jack: "The preview jumps on 01: Calm when the rim is turned. It just snaps straight to the end of the animation." A bug to fix |
+| SOUNDSK. Pack sound layers | Lens B, Escapement B, Prism A. The ratchet's tick: neither sketch; it "should sound like an actual small piece of metal ticking against another small piece of metal". A new sketch goes to Jack's ear |
+| CAT1 to CAT8. The String Catalog plan's eight calls | **A** on all eight: pack names never translate; tier names translate; Prism's R, G, B kept for v1, reopened with the first language; the report mail always English; the share line follows the device, "Unstir #n" and the grid fixed; development language `en`, with a note that the source is British; the editors' build words do-not-translate; translated consent against an English-only policy deferred to the first non-English release with analytics. Unblocks the migration |
+| EYES1. Eyes Shut's prototype host | **A:** GitHub Pages, a new small public repo |
+| EYES2. The blind testers' thank-you | **B:** the smaller voucher each (not the recommendation, A); the amount is in HANDOFF.private.md |
+| C1A. A player gated before three free levels | **B:** a line for the skip-ahead case only, "The first three are free. 22 more in Lens." above buying |
+| C1B. The card's back when it lands on buying | **A:** "‹ back" pinned over the card's top at every scroll position |
+| C20. TestFlight installs and the rating request | **A:** as decided |
+| N1. A note for plughole 02, Drip | **A:** no note, as built (not the recommendation, D) |
+| SND1. The detent tick during a drag | **B:** dropped; the haptic and dashes carry the steps (not the recommendation, A) |
+| SND2. Cancelling your own push in the free tiers | **A:** endless's rule everywhere: it flashes white; magenta and the heavy tap mean a real heal |
+| SND3. The share links on a device | **B:** they tap: a button that taps and opens the share sheet itself |
+| AGE1. The age gate asked for | **A:** 18 alone, as built |
+| AGE2. The questionnaire's age-assurance row | **A:** Yes |
+| J5. Escapement's forced waits | **A:** keep the rule |
+| J8. Problems 9 and 11's many lines at par | **A:** accept them |
+| ESC-PAPER. Escapement's paper ground | **B:** build the bone-paper page for v1 (not the recommendation, C) |
+| ICLOUD. iCloud key-value sync of bests | **A:** build for v1 (not the recommendation, B) |
+| APPSIZE. An app-size budget (to-do 22) | **B:** a CI size guard: a test fails past a set size (not the recommendation, A) |
+| A5. Defending the name on Apple Ads | **B:** armed: a campaign ready, spent only once a rival bids on the name |
+| A6. A UK pre-order push | **A:** no |
+| M10. Organic reach | **A:** new accounts in the studio's name, from zero; personal accounts stay out |
+| M14. An address for a paid Android port | **C:** neither for now; a paid port is closed until Jack revisits |
+| HISTORY. Rewriting history for an old device identifier | **A:** leave it. Jack: the repo goes private at launch. Then GitHub Actions draws on the allowance, macOS minutes at 10x: cost the PR and nightly runs before then |
+| TRIPTYCH. The bundle's name in the registers (Jack's to-do) | Clear. UK IPO: two class 41 marks (Triptych, Tryptich), both business training and education, nothing in class 9. USPTO, live marks in classes 9, 28 and 41: the four spelled like it are cinema cameras and film production, travel guides, a fishing-trip app and medical-records software; none covers games. "Triptych I" can go into App Store Connect |
+
 **Launch checklist** (App Store Connect and the rest; to be extended)
 
 - In App Store Connect's availability, exclude the EU and EEA storefronts (EU1 = B).
