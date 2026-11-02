@@ -23,7 +23,7 @@ trap 'trash "$work" 2>/dev/null || true' EXIT
 
 take() {  # film.sh case...
   [[ "$cut" == --cut ]] && return
-  for name in "$@"; do scripts/film.sh "$name"; done
+  for name in "$@"; do scripts/film.sh "$name\$"; done
 }
 
 # Seconds into a take from just before its picture strikes.

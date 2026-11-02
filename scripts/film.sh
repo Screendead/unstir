@@ -1,6 +1,7 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/film.sh [pattern]   Records the animations in the simulator into shots/film/, each with a frame strip.
+# Usage: scripts/film.sh [pattern]   Records the animations in the simulator into shots/film/, each with a frame strip:
+# every case whose name holds pattern, or with a trailing $ (quoted), the one case of that name.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 bundle=com.screendead.Unstir
@@ -16,12 +17,17 @@ xcrun simctl install "$udid" build/Build/Products/Debug-iphonesimulator/Unstir.a
 xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --batteryLevel 100 2>/dev/null || true
 mkdir -p shots/film
 pattern=${1:-}
+wants() {  # case
+  [[ -z "$pattern" ]] && return 0
+  [[ "$pattern" == *\$ ]] && { [[ "$1" == "${pattern%\$}" ]]; return; }
+  [[ "$1" == *$pattern* ]]
+}
 
 tank=crop=1200:1200:60:820  # the tank on a 1320 x 2868 Pro Max screen
 film() {  # name seconds strip-filter KEY=VALUE...
   local name=$1 secs=$2 strip=$3 vars=() mp4="shots/film/$1.mp4"
   shift 3
-  [[ -n "$pattern" && "$name" != *$pattern* ]] && return
+  wants "$name" || return 0
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
   xcrun simctl io "$udid" recordVideo --codec=h264 --force "$mp4" >/dev/null 2>&1 &
@@ -68,7 +74,7 @@ film ignition-L12 2.5 "$tank,fps=30,scale=200:-1,tile=8x3:padding=4" LEVEL=12 OP
 film autoplay-L09 9 "fps=3,scale=220:-1,tile=9x3:padding=4" LEVEL=9 OPEN=1 AUTOPLAY=1
 # Under Reduce Motion: the opening fades through black instead of winding in, the picture fades on, and the solve
 # swells in place with no wave, pulse or easing home.
-if [[ -z "$pattern" || calm-open-L12 == *$pattern* || calm-autoplay-L09 == *$pattern* ]]; then
+if wants calm-open-L12 || wants calm-autoplay-L09; then
   calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
   # Off again however the films end, or every later shot and film records the calm opening.
   trap 'calm false' EXIT
@@ -155,7 +161,7 @@ film shelf-card 15 "fps=2,scale=180:-1,tile=15x2:padding=4" SHELFDEMO=1 STORE=le
 # Each card's clip (`Clip`), twice round its loop.
 clip=crop=1100:1180:110:610  # the card's clip and First Stir's time under it
 # A Debug build bakes Lens's halftone some 20 s the first time a size is asked for; one launch caches it for the films.
-if [[ -z "$pattern" || clip-lens == *$pattern* || clip-complete == *$pattern* ]]; then
+if wants clip-lens || wants clip-complete; then
   SIMCTL_CHILD_UNSTIR_CARD=lens xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   sleep 25
 fi
@@ -196,7 +202,7 @@ film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" P
 film escapement-tap 15 "$tank,fps=3,scale=200:-1,tile=9x5:padding=4" PACK=escapement OWNED=escapement LEVEL=7 FINGER=1 REST=1 \
   MOVES=0:2,0:1,1:2,2:-3
 # Lens: a launch first bakes the halftone into Caches, which takes 20 s or more in Debug; the films then read it.
-if [[ -z "$pattern" || lens == *$pattern* || "$pattern" == lens* ]]; then
+if wants lens || [[ "$pattern" == lens* ]]; then
   xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
   SIMCTL_CHILD_UNSTIR_PACK=lens xcrun simctl launch "$udid" "$bundle" >/dev/null
   sleep 35
@@ -240,7 +246,7 @@ film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNE
   MOVES=-1:+1,2:+8,3:-7,0:+4
 # Lens from a warm start (R-reel = B): its halftone bakes for half a minute on a fresh install and the opening waits
 # on it, so a launch first bakes it into Caches, which the take then reads.
-if [[ -z "$pattern" || editors-lens-03 == *$pattern* ]]; then
+if wants editors-lens-03; then
   SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL=3 \
     xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"

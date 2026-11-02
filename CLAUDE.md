@@ -129,7 +129,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   entry count. It builds `build/plughole-levels/measure` like `build/solve`.
 - Screenshots: `scripts/shots.sh [pattern]` builds for a Pro Max simulator, launches each harness case and writes
   `shots/<name>.png`, with a description of each in `shots/index.txt`.
-- Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg).
+- Films: `scripts/film.sh [pattern]` records animations to `shots/film/*.mp4` with a frame strip each (needs ffmpeg);
+  a pattern ending in `$` films only the case of that name, as `rim-swirl` alone would also film `rim-swirl-push`.
   Both take the first simulator named "Pro Max", or the one whose id `UNSTIR_SIM` gives. A film over 9.5 MB is shrunk
   to 660 px wide for a PR comment unless `FILM_FULL=1`; `FILM_SOUND=1` plays the take's sound and records it from
   BlackHole into the film, with the Mac's output already switched there (`store-media.sh sound`).
