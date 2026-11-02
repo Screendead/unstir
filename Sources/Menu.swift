@@ -3,8 +3,8 @@
 import SwiftUI
 
 extension Level {
-    /// Where leaving goes: a pack's level back to its card.
-    var back: String { "\u{2039} " + (pack?.name ?? "levels") }
+    /// Where leaving goes: a pack's level back to its card, a past daily to the archive.
+    var back: String { "\u{2039} " + (pack?.name ?? (archived ? "archive" : "levels")) }
 
     /// A pack's level takes the pack's glow. Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
     /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
@@ -83,8 +83,10 @@ extension Tier {
 
 extension Level {
     /// The row the menu, or a pack's card, centres on once this level is left: after a solve the one after it, which
-    /// "next ›" opens, or itself as its list's last. Nil for the daily, endless and the sandbox, which sit at the top.
+    /// "next ›" opens, or itself as its list's last; a past daily itself, in the archive. Nil for today's daily, endless
+    /// and the sandbox, which sit at the top.
     func focus(solved: Bool) -> Level? {
+        if archived { return self }
         let list = pack?.levels ?? tier.levels
         guard let i = list.firstIndex(where: { $0.id == id }) else { return nil }
         return list[solved ? min(i + 1, list.count - 1) : i]
@@ -127,6 +129,8 @@ struct MenuView: View {
     let onPick: (Level) -> Void
     /// The pack card over the menu, opened from the dock or by a level that needs it.
     @Binding var card: Offer?
+    /// The archive's calendar over the menu.
+    @Binding var archive: Bool
     /// Where the tapped cover sits, for the card to grow from.
     @State private var cardFrom = UnitPoint.center
     /// UNSTIR_CLOCK: the dock's and the card's clips held that many seconds in.
@@ -141,6 +145,8 @@ struct MenuView: View {
     let focus: Level?
     /// UNSTIR_LOCKTAP: a locked row held tapped.
     let held: String?
+    /// Drawn under a level a back swipe is sliding off.
+    let peeking: Bool
     /// The focused row's id until its flash has started, so a later rebuild of its tier's list doesn't flash it again.
     @State private var flashing: String?
     /// `focus` for the card up as the menu opens, gone once a card is opened or closed, so a dock tap opens at the top.
@@ -164,6 +170,8 @@ struct MenuView: View {
     @GestureState private var dragging = false
     /// The scroll view's height and its bottom safe area: the list draws on under the home indicator.
     @State private var viewport: CGFloat = 0
+    /// The window's whole height, bars and all, which sizes the settings sheet.
+    @State private var window: CGFloat = 800
     /// The pack dock's height: the scroll view counts it in its bottom safe area, but the list ends at it.
     @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
@@ -179,6 +187,8 @@ struct MenuView: View {
     @Namespace private var strip
     /// The gear's sheet.
     @Binding var settings: Bool
+    /// The settings' supporter mark switch, mirrored here as the sheet moves it.
+    @State private var supporter = Settings.supporter
     /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
     @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -188,8 +198,17 @@ struct MenuView: View {
     /// Today's daily and its run, worked out once a day rather than on every frame of a swipe. The menu is built anew
     /// each time it comes up, so a solve's run shows on return.
     @State private var daily: (level: Level, run: Int)
+    /// The archive's days dealt, and how many are at par, with the daily: dealing thirty tanks is too slow for every
+    /// frame of a swipe.
+    @State private var past: (days: [(date: Date, level: Level)], atPar: Int)
     /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
     @State private var leading: Lead
+    /// Endless's saved run, which its row continues (Jack's call C2, round 13).
+    @State private var saved: Resume?
+    /// When a first tap armed the endless row's "new run", which then says "new run? tap again" for `ResetArm.window`.
+    @State private var newRunArmed: Date?
+    @AccessibilityFocusState private var newRunFocused: Bool
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
 
     /// How far the outgoing list turns at its centre before the incoming one takes its place.
     private var turn: Double { reduceMotion ? 0 : 1.6 * .pi }
@@ -198,21 +217,24 @@ struct MenuView: View {
 
     /// `start`: the harness's tier, shown even when locked. `frozen`: UNSTIR_TIERSPIN, the list held mid-twist.
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
-         card: Binding<Offer?>, clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
-         cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil,
-         onPick: @escaping (Level) -> Void) {
+         card: Binding<Offer?>, archive: Binding<Bool> = .constant(false), clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
+         cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil, run: Resume? = nil,
+         peeking: Bool = false, onPick: @escaping (Level) -> Void) {
         self.demo = demo
         _settings = settings
         self.onPick = onPick
         _card = card
+        _archive = archive
         self.clock = clock
         self.placeholders = placeholders
         self.shelfDemo = shelfDemo
         self.cardScroll = cardScroll
         self.focus = focus
         self.held = held
+        self.peeking = peeking
         self.arrived = arrived
         _flashing = State(initialValue: focus?.id)
+        _saved = State(initialValue: run)
         _cardFocus = State(initialValue: focus)
         // A tier's own level left lands on its tier, which "up a notch" may have opened since the menu was last up.
         let tier = start ?? focus.flatMap { f in f.tier.levels.contains { $0.id == f.id } ? f.tier : nil } ?? Tier.stored()
@@ -222,6 +244,7 @@ struct MenuView: View {
         let now = Date.now
         _today = State(initialValue: now)
         _daily = State(initialValue: Self.daily(now))
+        _past = State(initialValue: Self.past(now))
         _leading = State(initialValue: Self.lead(tier: tier))
         if let frozen {
             _spin = State(initialValue: frozen.spin)
@@ -240,6 +263,11 @@ struct MenuView: View {
     }
 
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
+
+    private static func past(_ day: Date) -> (days: [(date: Date, level: Level)], atPar: Int) {
+        let days = Archive.days(today: day).map { ($0, Level.daily($0, archived: true)) }
+        return (days, days.filter { Best.load($0.1.id)?.over == 0 }.count)
+    }
 
     var body: some View {
         let analytics = Analytics.shared
@@ -273,25 +301,32 @@ struct MenuView: View {
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !Offer.shelf().isEmpty && PackDock.shown() {
-                    // Held still under a card or the settings, when the phone saves power, or once nobody touches it.
+                    // Held still under a card, the settings or a level sliding off, when the phone saves power, or
+                    // once nobody touches it.
                     PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || settings || Power.shared.saving || Power.shared.idle,
-                             covered: card != nil || settings)
+                             paused: card != nil || archive || settings || peeking || Power.shared.saving || Power.shared.idle,
+                             covered: card != nil || archive || settings)
                         .equatable()
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
         }
         .foregroundStyle(Color.text)
-        .accessibilityHidden(card != nil || asking)
+        .accessibilityHidden(card != nil || archive || asking)
+        .overlay { archiveView }
         .overlay { cardView }
         .overlay {
             if asking { ConsentCard(tier: shown).transition(.opacity) }
         }
         .animation(.easeOut(duration: 0.25), value: asking)
-        .sheet(isPresented: $settings) { SettingsSheet() }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: {
+            window = $0
+        }
+        .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
-        .onChange(of: card == nil && !settings) { Power.shared.touched() }
+        .onChange(of: card == nil && !archive && !settings) { Power.shared.touched() }
+        // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
+        .onChange(of: settings) { if !settings { leading = Self.lead(tier: shown) } }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
             Color.black.frame(width: 2, height: 2).drawingGroup()
@@ -307,7 +342,10 @@ struct MenuView: View {
             }
         }
         .onChange(of: phase) { if phase == .active { today = .now } }
-        .onChange(of: today) { daily = Self.daily(today) }
+        .onChange(of: today) {
+            daily = Self.daily(today)
+            past = Self.past(today)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
             today = .now
         }
@@ -329,10 +367,21 @@ struct MenuView: View {
                     LevelRow(level: day, detail: run < 2 ? nil
                                  : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
                              enabled: true, new: new, pick: pick, refuse: refuse)
-                    LevelRow(level: .endless(Run(seed: .random(in: .min ... .max))),
-                             detail: "deeper every tank \u{00B7} eight wrong stirs and it spills",
-                             best: Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true, new: new, pick: pick,
-                             refuse: refuse)
+                    // Unsaid until the store has read what the player owns, so an owner never meets the lock.
+                    ArchiveRow(open: Store.shared.ready ? Archive.open : nil, days: past.days.count, atPar: past.atPar,
+                               pick: openArchive, refuse: refuse)
+                    let kept = saved?.run
+                    LevelRow(level: .endless(kept ?? Run(seed: .random(in: .min ... .max))),
+                             detail: kept.map {
+                                 "continue \u{00B7} tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)"
+                                     + (Best.tanks > 0 ? " \u{00B7} best \(Best.tanks)" : "")
+                             } ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
+                             best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true,
+                             new: new && kept == nil, continues: kept != nil, pick: pick, refuse: refuse)
+                        // On the title's line, where every row's mark sits and "Endless" leaves room.
+                        .overlay(alignment: Alignment(horizontal: .trailing, vertical: .firstTextBaseline)) {
+                            if kept != nil { newRun }
+                        }
                 }
                 if lead.sandboxFirst { sandbox }
             }
@@ -394,6 +443,24 @@ struct MenuView: View {
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
+    }
+
+    /// The calendar, over the menu as a card is, from its row.
+    @ViewBuilder private var archiveView: some View {
+        if archive {
+            ArchiveView(days: past.days, today: today, focus: focus?.archived == true ? focus?.id : nil,
+                        onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
+                        onPlay: { onPick($0) })
+                .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+                .zIndex(1)
+        }
+    }
+
+    private func openArchive() {
+        guard !twisting else { return }
+        Sound.shared.play(.tap)
+        Log.write("archive shown")
+        withAnimation(.snappy(duration: 0.42)) { archive = true }
     }
 
     private func show(_ offer: Offer?, from: UnitPoint = .center) {
@@ -464,9 +531,14 @@ struct MenuView: View {
 
     /// Cuts to the new tier's sweep at the swap: a gradient doesn't interpolate, and a cross-fade runs through grey.
     private var title: some View {
-        Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
-            .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)
-            .accessibilityLabel("Unstir").accessibilityAddTraits(.isHeader)
+        let supporter = Store.shared.bought && self.supporter
+        return HStack(alignment: .top, spacing: 2) {
+            Text("UNSTIR").font(.system(size: 34, weight: .black).width(.expanded)).tracking(8)
+                .foregroundStyle(shown.sweep).shadow(color: shown.glow.opacity(0.6), radius: 12)
+            if supporter { SupporterMark(sweep: shown.sweep, glow: shown.glow).padding(.top, 3) }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(supporter ? "Unstir, supporter" : "Unstir").accessibilityAddTraits(.isHeader)
     }
 
     /// Every tier by name. A strip wider than the screen moves only to keep the picked name in view, so a sideways drag
@@ -485,7 +557,9 @@ struct MenuView: View {
                             .id(t)
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.leading, 20)
+                // Past the trailing fade, so the last name reads whole once scrolled to.
+                .padding(.trailing, 40)
             }
             .scrollIndicators(.hidden)
             // Names run out into the black at the edges, so a strip wider than the screen reads as running on past them.
@@ -493,6 +567,7 @@ struct MenuView: View {
                                          .init(color: .black, location: 0.9), .init(color: .clear, location: 1)],
                                  startPoint: .leading, endPoint: .trailing))
             .onChange(of: picked) { withAnimation { proxy.scrollTo(picked, anchor: .center) } }
+            .onAppear { proxy.scrollTo(picked, anchor: .center) }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Tier")
@@ -674,6 +749,36 @@ struct MenuView: View {
         select(.plughole)
     }
 
+    /// Over the endless row's trailing edge while a run is saved: a second tap within the window drops the run and
+    /// starts another, so a slip never loses one; under VoiceOver it stays armed until focus leaves, as reset does.
+    /// Plain, as the rows are: a touch that ends a stir neither arms it nor taps.
+    private var newRun: some View {
+        Button {
+            guard !twisting else { return }
+            let tap = ResetArm.tap(now: .now, armedAt: newRunArmed, played: true, held: voiceOver)
+            newRunArmed = tap.armedAt
+            guard tap.reset else {
+                AccessibilityNotification.Announcement("Tap again for a new run").post()
+                return Sound.shared.play(.tap)
+            }
+            Resume.remove("endless")
+            saved = nil
+            pick(.endless(Run(seed: .random(in: .min ... .max))))
+        } label: {
+            Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.mono(11)).lineLimit(1).opacity(0.55).hit()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(newRunArmed == nil ? "New run" : "New run, tap again to confirm")
+        .accessibilityHint("Drops the saved run and starts another.")
+        .accessibilityFocused($newRunFocused)
+        .onChange(of: newRunFocused) { if !newRunFocused && voiceOver { newRunArmed = nil } }
+        .task(id: newRunArmed) {
+            // VoiceOver's announcement and its double tap take longer than the window.
+            guard newRunArmed != nil, !voiceOver, (try? await Task.sleep(for: .seconds(ResetArm.window))) != nil else { return }
+            newRunArmed = nil
+        }
+    }
+
     /// A touch that ends a stir must not open the row it lifted over, nor tap.
     private func pick(_ level: Level) {
         guard !twisting else { return }
@@ -701,8 +806,10 @@ private struct TierList: View, Equatable {
     var held: String?
     /// Given the landing row's frame in the list's own space, once laid out.
     var report: ((CGRect) -> Void)?
+    /// Read as the menu redraws, so the editors' switch opens the rows as its sheet closes.
+    var unlocked = Best.unlocked
 
-    nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier }
+    nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier && a.unlocked == b.unlocked }
 
     private static let space = "tierList"
     /// The header's id: the same on every tier, so mid-switch the outgoing list's header stands where the incoming one's
@@ -716,7 +823,7 @@ private struct TierList: View, Equatable {
             if !open, let below = tier.below { gate(below) }
             let levels = tier.levels, frontier = tier.frontier(), landing = report == nil ? nil : tier.landing()
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
-                let reached = Best.unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
+                let reached = unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
                 let opens = !open ? tier.below.map { "par every \($0.rawValue) level to open" }
                     : reached ? nil : "solve \(levels[i - 1].label) to open"
                 LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,
@@ -817,6 +924,8 @@ private struct LevelRow: View {
     var gate: Tier?
     /// The daily and endless, until either is first opened.
     var new = false
+    /// Endless's row while a run is saved.
+    var continues = false
     let pick: (Level) -> Void
     /// A tap on a locked row: false while a stir is under the finger.
     let refuse: () -> Bool
@@ -882,7 +991,7 @@ private struct LevelRow: View {
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
         .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs,
-                                    gate: gate, started: tried, new: new)))
+                                    gate: gate, started: tried || continues, new: new)))
         .rowHairline(level.colour, max(lit, frontier ? 0.75 : 0))
         .onAppear {
             guard flash, !reduceMotion else { return }
@@ -945,5 +1054,31 @@ private struct Flow: SwiftUI.Layout {
             }
         }
         return lines
+    }
+}
+
+/// The thank-you for a purchase (Jack's call M6, round 14): a four-pointed glint in hairline after the title, in the
+/// tier's sweep, the glyph the daily's share line carries. It never moves or asks for anything.
+struct SupporterMark: View {
+    let sweep: LinearGradient
+    let glow: Color
+
+    var body: some View {
+        Sparkle().stroke(sweep, lineWidth: 1).frame(width: 13, height: 13)
+            .shadow(color: glow.opacity(0.7), radius: 3)
+    }
+}
+
+/// Four points joined by curves bowed in to the centre.
+private struct Sparkle: Shape {
+    func path(in rect: CGRect) -> Path {
+        let c = CGPoint(x: rect.midX, y: rect.midY), r = min(rect.width, rect.height) / 2
+        let tips = [CGPoint(x: c.x, y: c.y - r), CGPoint(x: c.x + r, y: c.y), CGPoint(x: c.x, y: c.y + r),
+                    CGPoint(x: c.x - r, y: c.y)]
+        var p = Path()
+        p.move(to: tips[0])
+        for k in 1...4 { p.addQuadCurve(to: tips[k % 4], control: c) }
+        p.closeSubpath()
+        return p
     }
 }

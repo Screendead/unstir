@@ -16,4 +16,9 @@ ANALYTICS_PLAYTEST =
 // policy opens on github.com.
 SUPPORT_ADDRESS =
 POLICY_URL =
+// YES makes the editors' build, for App Store editors on its own TestFlight group: settings shows a labelled switch,
+// "open every tier", that opens every tier, level and pack. NO, the App Store build's, compiles the switch out.
+EDITORS = NO
+EDITORS_CONDITION_YES = EDITORS
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(EDITORS_CONDITION_$(EDITORS))
 #include? "Local.xcconfig"

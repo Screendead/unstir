@@ -7,15 +7,23 @@ menu-vortex-open.png  Menu on vortex, opened by every whirlpool level at par: it
 menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit.
 menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
-first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it.
+first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings.
+first-launch-pointer.png  The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both.
 menu-after-01.png  Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list.
 menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox.
 menu-daily-run.png  The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more.
+menu-archive-locked.png  The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack.
+menu-archive-open.png  The same with Lens owned: the archive's row open, 30 past dailies and how many are at par.
+archive.png  The archive's calendar, Lens owned: the 30 days before today a month to a block, the three days before today solved on their day at par, others from the archive clean, par, +2, +1 or tried, today's number marked today.
+archive-large.png  The same at accessibility type (accessibility3): a list of days in place of the week grid.
+archive-day.png  The daily from five days ago, opened from the archive: its own tank, and its way out reads archive.
 menu-tried.png  Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row.
 menu-no-dock.png  Plughole 01 to 08 solved: no pack dock yet.
 menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best.
 menu-locktap.png  Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit.
 menu-back-left.png  Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12.
+back-swipe.png  Plughole 05 held 40% into an edge swipe back: the level sliding right over the menu, centred on 05, 01 to 04 solved.
+menu-back-swiped.png  Back from plughole 12 by the edge swipe: the list centred on 12.
 menu-back-solved.png  Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens.
 menu-mid-switch-scrolled.png  The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin.
 menu-switch-landing.png  Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir.
@@ -73,9 +81,12 @@ endless-spill-drip.png  The same, 2 s in: the runs have slowed just past three a
 endless-spilled.png  The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best.
 undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
 reset-armed.png  Level 12 with two moves played, reset tapped once: it reads reset? tap again.
+level-resumed.png  Level 12 reopened mid-try, its saved line replayed (rod 2 healed, a wasted stir on rod 0 undone, rod 1 healed): four entries left, moves 2 / par 6, the undo already spent from the bank, and no opening.
+menu-endless-continue.png  The menu with an endless run saved on tank 6, brim 3, best 9 tanks: the endless row reads continue · tank 6 · brim 3 · best 9, with new run on its title's line in place of the best.
 sandbox.png  The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here.
 sandbox-full.png  The sandbox with a full stack of 36, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset.
 sandbox-chainmail.png  The sandbox on chainmail and pent: the header's controls in full where they fit.
+knob-lesson.png  Level 01 left untouched 4 s (no opening: a still launch): the ghost finger halfway out knob 0's disc, held mid-rock.
 result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
 level-at-par.png  Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber.
 level-over-par.png  The same a push later: moves 6 / par 5 in magenta.
@@ -85,12 +96,15 @@ result-again-best.png  Level 05 result card over par against a stored best of +6
 result-fullest.png  Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows.
 result-pack-complete.png  Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels in Lens's magenta, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's).
 result-every-tier.png  Maelstrom 27 solved, every other free level at par: every tier unstirred in maelstrom's red, and a quiet try Lens (First Stir owned, as Release doesn't sell it).
+result-ladder-end.png  Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it).
 tier-up.png  Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing.
 tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate.
 tier-up-midway.png  Plughole 05 solved at par, the last plughole level to reach it: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
 tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over).
-daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00).
+daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00).
+daily-practice.png  Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h.
 daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap).
+daily-share-supporter.png  The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦.
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
 wave-0.8.png  Level 13 solved through the real commit path, solve wave held at radius 0.8 from the last-turned rod.
 wave-1.2.png  Level 13 solved through the real commit path, solve wave held at radius 1.2 from the last-turned rod.
@@ -248,6 +262,8 @@ lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cu
 lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
 lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger.
+lens-lesson.png  Lens 01 as the tank becomes the player's: a ghost finger on the lens's knob halfway through its ride down, a lens step's travel, beside the track's rail, faint, on the right.
+lens-lesson-copied.png  Lens 01 held mid-drag where its lesson rides: landed on the knob's left edge and dragged two steps down, the count's -2 dashes on the lesson's rail.
 lens-glitter-big-1.png  Lens on tri rod 0 at +1, still.
 lens-glitter-big-1-drag.png  Lens on tri rod 0 held at +0.5, mid-drag up.
 lens-glitter-big-1-twist.png  Lens on tri rod 0 at +1, rod 1 held 1.5 steps into a twist over it.
@@ -356,6 +372,12 @@ lens-order-small-under-3.png  Lens on eye rod 2, 2:+2,0:+3: the twist newest.
 icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
 icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
 icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.
+promo-lens.png  Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black.
+promo-escapement.png  Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black.
+promo-prism.png  Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black.
+promo-complete.png  Complete's promoted-purchase image: a wedge of each of Release's three packs' covers, inside the bezel on black.
+promoted-menu.png  A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned.
+promoted-level.png  The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned.
 firststir-01.png  First Stir 1 as dealt: every core turned, the time under the tank.
 firststir-01-held.png  First Stir 1 drawn unstirred, held back. Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney.
 firststir-01-played.png  First Stir 1 drawn unstirred, every vignette played: a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke.
@@ -438,6 +460,8 @@ firststir-ending-05.png  The night forwards 7 s in: scene 25 at its end, the tea
 firststir-ending-60.png  The night forwards 83 s in: the Flood's upstairs window, 1:39 am, the water rising.
 firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
 shelf-menu.png  Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Complete, nothing bought.
+shelf-menu-stirred.png  The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Complete (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's grid clean, Prism's fern just stirring in.
+shelf-menu-clean.png  The dock at the top of its loop: First Stir and Complete clean, Lens stirring in, Escapement and Prism unstirring.
 shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass.
 shelf-new.png  Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir.
 shelf-taste-count.png  Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens.
@@ -491,7 +515,7 @@ card-lens-offline.png  Lens's card after a purchase failed offline: no connectio
 card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Complete, try free kept.
 card-lens-restored.png  Lens's card, owned, after a restore found it: restored Lens.
 card-lens-restored-none.png  Lens's card after a restore found nothing: nothing to restore on this Apple ID.
-card-lens-levels.png  Lens's card listing six placeholder levels (UNSTIR_CARDLEVELS), unowned: 4 to 6 locked.
+card-lens-levels.png  Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked.
 card-lens-levels-owned.png  The same, owned: every level open.
 card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note.
 card-gate-ax.png  The same at accessibility3: the Complete line under buy wraps only before · save.
@@ -509,6 +533,11 @@ consent-settings-off.png  The gear's sheet: music, sounds, haptics and colour le
 settings.png  Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version.
 settings-quiet.png  Settings with music and haptics off.
 settings-restored.png  The gear's sheet after a restore found nothing: nothing to restore on this Apple ID.
+settings-supporter.png  The gear's sheet with a pack owned: a supporter mark switch, on, under colour letters.
+menu-supporter.png  Menu with a pack owned: the supporter mark, a hairline four-pointed glint in plughole's sweep, after the title.
+menu-supporter-off.png  The same with the settings' supporter mark switched off: the title alone, as before any purchase.
+menu-no-supporter.png  The same with nothing owned: no mark.
+settings-editors.png  The editors' build's settings: open every tier, every level and pack too, without buying, under colour letters, off.
 escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
 escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
 escapement-book-03.png  Escapement 3 as dealt: quad, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
@@ -544,6 +573,7 @@ escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken t
 escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
 escapement-dead-tick.png  Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again.
 escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
+escapement-2-lost-resumed.png  Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out.
 escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
 escapement-budget-16-dealt.png  Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6.
 escapement-budget-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left.
@@ -607,3 +637,24 @@ prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
 prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
 prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.
+clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
+clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
+clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
+clean-prism-01.png  Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption.
+calm-glass.png  Reduce Motion: the sandbox on glass, stirred twice, held on its still frame (Picture.rest).
+calm-chainmail.png  Reduce Motion: the sandbox on chainmail, stirred twice, held on its still frame (Picture.rest).
+calm-coral.png  Reduce Motion: the sandbox on coral, stirred twice, held on its still frame (Picture.rest).
+calm-neurons.png  Reduce Motion: the sandbox on neurons, stirred twice, held on its still frame (Picture.rest).
+calm-marbling.png  Reduce Motion: the sandbox on marbling, stirred twice, held on its still frame (Picture.rest).
+calm-glassTwin.png  Reduce Motion: the sandbox on glassTwin, stirred twice, held on its still frame (Picture.rest).
+calm-chainmailTwin.png  Reduce Motion: the sandbox on chainmailTwin, stirred twice, held on its still frame (Picture.rest).
+calm-coralTwin.png  Reduce Motion: the sandbox on coralTwin, stirred twice, held on its still frame (Picture.rest).
+calm-neuronsTwin.png  Reduce Motion: the sandbox on neuronsTwin, stirred twice, held on its still frame (Picture.rest).
+calm-marblingTwin.png  Reduce Motion: the sandbox on marblingTwin, stirred twice, held on its still frame (Picture.rest).
+calm-isobars.png  Reduce Motion: the sandbox on isobars, stirred twice, held on its still frame (Picture.rest).
+calm-ephemeris.png  Reduce Motion: the sandbox on ephemeris, stirred twice, held on its still frame (Picture.rest).
+calm-cords.png  Reduce Motion: the sandbox on cords, stirred twice, held on its still frame (Picture.rest).
+calm-chainmailTwin-later.png  Reduce Motion: the same, 9 s in: the same frame, the heartbeat at rest between beats.
+calm-endless-brim-7.png  Reduce Motion: endless opened at 7 notches, one from spilling: the rim still, no bob or tremble, the pin's pulse held lit.
+calm-endless-notch.png  Reduce Motion: endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 in place at once, settled, no slosh or surge.
+calm-endless-spilled.png  Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card.

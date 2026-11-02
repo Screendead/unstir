@@ -62,6 +62,8 @@ if [[ -z "$pattern" || calm-open-L12 == *$pattern* || calm-autoplay-L09 == *$pat
   calm false
   trap - EXIT
 fi
+# The edge swipe back (UNSTIR_BACKSWIPE=run): a second in, a drawn fingertip slides plughole 05 off over the menu.
+film back-swipe 3 "fps=8,scale=180:-1,tile=8x3:padding=4" LEVEL=5 BACKSWIPE=run
 film tour 8 "fps=4,scale=200:-1,tile=9x4:padding=4" TOUR=1 OPEN=1
 # The tier strip: plughole swiped to whirlpool (open), swiped to vortex (locked, 17 ticks lit), then plughole tapped.
 par27=$(printf '0%.0s' {1..27})
@@ -202,3 +204,23 @@ film lens-12-solve 21 "$tank,fps=1.5,scale=220:-1,tile=8x4:padding=4" PACK=lens 
 film card-lens-lands 7 "fps=4,scale=200:-1,tile=7x4:padding=4" CARD=lens STORE=lens:unowned BESTS=lens:000 LANDS=4 CLOCK=5.4
 film card-lens-lands-list 7 "fps=4,scale=200:-1,tile=7x4:padding=4" CARD=lens STORE=lens:unowned BESTS=lens:000 LANDS=4 \
   CLOCK=5.4 CARDSCROLL=1
+# App Store art with no interface (UNSTIR_CLEAN), the Today card's video: each look wound in, then unstirred at par by a
+# drawn fingertip that isn't drawn, the glass and its picture the only thing on the screen. Plughole 05 on the sunset,
+# whirlpool 01 on the live glass, Lens 03 on the halftone and Prism 01 on the fern.
+whole="fps=2,scale=150:-1,tile=8x4:padding=4"  # the whole screen, so anything left over the level would show
+film clean-plughole-05 15 "$whole" LEVEL=5 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:+6,2:-4,1:+2
+film clean-whirlpool-01 12 "$whole" TIER=whirlpool LEVEL=1 CLEAN=1 OPEN=1 FINGER=1 MOVES=1:-3,0:+5
+# The halftone bakes for half a minute on a Debug install that hasn't drawn it, and the opening waits for it, so its strip
+# starts 12 s in, a frame a second.
+film clean-lens-03 46 "trim=start=12,setpts=PTS-STARTPTS,fps=1,scale=150:-1,tile=8x4:padding=4" PACK=lens LEVEL=3 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:-3,2:-4,1:+2
+film clean-prism-01 15 "$whole" PACK=prism LEVEL=1 CLEAN=1 OPEN=1 FINGER=1 MOVES=0:-4,1:+3,2:-3
+# The editors' reel (scripts/editors-film.sh joins them): the later tiers and two packs, each opened and unstirred at par
+# by a drawn fingertip. Whirlpool 03 on chainmail and vortex 02 on the ephemeris drawn clean; maelstrom 01 on coral's
+# twin, Escapement 02 and Prism 01 with their knobs, whose kinds are the point. Lens is left out: its halftone bakes for
+# half a minute on a fresh install, which the opening waits on.
+film editors-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 CLEAN=1 OPEN=1 FINGER=1 REST=1 MOVES=1:-4,0:+4,2:-3,1:+6
+film editors-vortex-02 24 "$whole" TIER=vortex LEVEL=2 CLEAN=1 OPEN=1 FINGER=1 REST=1 MOVES=3:+8,4:+7,0:-4
+film editors-maelstrom-01 24 "$whole" TIER=maelstrom LEVEL=1 SWIRLED=1 TANKTURNED=1 OPEN=1 FINGER=1 REST=1 \
+  MOVES=-1:+1,2:+8,3:-7,0:+4
+film editors-escapement-02 24 "$whole" PACK=escapement LEVEL=2 OPEN=1 FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
+film editors-prism-01 24 "$whole" PACK=prism LEVEL=1 OPEN=1 FINGER=1 REST=1 MOVES=0:-4,1:+3,2:-3

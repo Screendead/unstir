@@ -3,7 +3,8 @@
 # Usage: scripts/build-ios.sh [Debug|Release] [device|sim]   ANALYTICS=YES builds analytics in, and APTABASE_KEY, if
 # set, turns its sending on.
 # ANALYTICS_PLAYTEST=YES files a Release build's analytics as Debug. SUPPORT_ADDRESS and POLICY_URL set the address
-# "report a problem" mails and the privacy policy's page.
+# "report a problem" mails and the privacy policy's page. EDITORS=YES makes the editors' build, its settings' switch
+# opening every tier.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 config="${1:-Debug}"
@@ -17,4 +18,5 @@ xcodebuild -project Unstir.xcodeproj -scheme Unstir -configuration "$config" \
   -destination "$destination" -derivedDataPath build \
   -allowProvisioningUpdates -allowProvisioningDeviceRegistration ${signing[@]+"${signing[@]}"} \
   ${ANALYTICS:+ANALYTICS="$ANALYTICS"} ${APTABASE_KEY:+APTABASE_KEY="$APTABASE_KEY"} ${ANALYTICS_PLAYTEST:+ANALYTICS_PLAYTEST="$ANALYTICS_PLAYTEST"} \
-  ${SUPPORT_ADDRESS:+SUPPORT_ADDRESS="$SUPPORT_ADDRESS"} ${POLICY_URL:+POLICY_URL="$POLICY_URL"} build | grep -E 'error:|warning:|BUILD '
+  ${SUPPORT_ADDRESS:+SUPPORT_ADDRESS="$SUPPORT_ADDRESS"} ${POLICY_URL:+POLICY_URL="$POLICY_URL"} \
+  ${EDITORS:+EDITORS="$EDITORS"} build | grep -E 'error:|warning:|BUILD '

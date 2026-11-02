@@ -46,7 +46,7 @@ final class PackTests: XCTestCase {
                     "tank.turned", "swirled", "endless.tanks", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)",
                     "shelf.fit.\(Pack.lens.rawValue)", "shelf.levels.\(Pack.lens.rawValue)",
                     "letters", "music.off", "sounds.off", "haptics.off",
-                    "welcomed", "modes.seen", "review.asked"]
+                    "welcomed", "modes.seen", "review.asked", "resume.\(id)"]
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -94,6 +94,9 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(d.bool(forKey: "sounds.off"))
         Settings.haptics = false
         XCTAssertTrue(d.bool(forKey: "haptics.off"))
+        Resume.save(Resume(id: id, print: "", firstTry: true, actions: [.undo]))
+        XCTAssertEqual(Resume.load(id)?.actions, [.undo])
+        XCTAssertNotNil(d.data(forKey: "resume.pin-test"))
     }
 
     /// Music, sounds and haptics start on, with nothing stored. Jack's call C17, round 13.
@@ -114,7 +117,7 @@ final class PackTests: XCTestCase {
 
     /// A harnessed launch holds the switches in memory: a tap lasts only that launch, and a stored choice never shows.
     func testHeldSettingsAreNeverStored() {
-        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off", "letters"]
+        let d = UserDefaults.standard, keys = ["music.off", "sounds.off", "haptics.off", "supporter.off", "letters"]
         let saved = keys.map { d.object(forKey: $0) }
         defer {
             Settings.held.withLock { $0 = nil }
@@ -128,12 +131,14 @@ final class PackTests: XCTestCase {
         XCTAssertFalse(Settings.haptics)
         XCTAssertNil(Letters.choice)
         Settings.sounds = false
+        Settings.supporter = false
         Letters.choice = false
         XCTAssertFalse(Settings.sounds)
+        XCTAssertNil(d.object(forKey: "supporter.off"))
         XCTAssertEqual(Letters.choice, false)
         XCTAssertNil(d.object(forKey: "sounds.off"))
         XCTAssertEqual(d.object(forKey: "letters") as? Bool, true)
-        XCTAssertEqual(Settings.summary, "music on, sounds off, haptics off, letters off")
+        XCTAssertEqual(Settings.summary, "music on, sounds off, haptics off, supporter off, letters off")
         Settings.held.withLock { $0 = nil }
         XCTAssertFalse(Settings.music)
         XCTAssertEqual(Letters.choice, true)
@@ -159,6 +164,22 @@ final class PackTests: XCTestCase {
         }
     }
 
+    /// The editors' switch (Jack's call F11) is in the editors' build alone: the tracked config builds without it, this
+    /// build has none, and only the editors' build lets the unlock open a pack in Release.
+    @MainActor func testADefaultBuildHasNoEditorsSwitch() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let config = try String(contentsOf: root.appending(path: "Config/Unstir.xcconfig"), encoding: .utf8)
+        XCTAssertEqual(config.split(separator: "\n").filter { $0.hasPrefix("EDITORS =") }, ["EDITORS = NO"])
+        XCTAssertFalse(Build.editors)
+        XCTAssertFalse(Build.editorsSwitch)
+        XCTAssertFalse(SettingsSheet.version.hasSuffix(" editors"))
+        XCTAssertEqual(Pack.lens.access(4, owned: [], unlocked: true, release: true, playtest: false), .needsCard)
+        XCTAssertEqual(Pack.lens.access(4, owned: [], unlocked: true, release: true, playtest: false, editors: true), .owned)
+        XCTAssertEqual(Pack.lens.access(4, owned: [], unlocked: false, release: true, playtest: false, editors: true),
+                       .needsCard)
+        XCTAssertEqual(Pack.firstStir.access(4, owned: [], unlocked: true, release: true, editors: true), .withheld)
+    }
+
     /// A pack's level whose id doesn't parse needs the card, even unlocked: it never plays as a level in no pack.
     @MainActor func testAMistypedPackIdFailsClosed() {
         for id in ["lens_7", "Lens-7", "lens-", "escapement-7"] {
@@ -166,6 +187,45 @@ final class PackTests: XCTestCase {
             XCTAssertEqual(Store().access(level), .needsCard, id)
         }
         XCTAssertNil(Store().access(Level(id: "L7", label: "", title: "", layout: .tri, scramble: [])))
+    }
+
+    /// A purchase started on the App Store's product page names the offer whose card it opens, for each pack the build
+    /// sells and Complete, and none for a product it doesn't sell; under the harness's states the card's buy lands.
+    @MainActor func testAPromotedPurchaseNamesTheOfferItBuys() async {
+        for offer in Offer.all where offer.sold {
+            let store = Store()
+            store.promote(offer.productID)
+            XCTAssertEqual(store.promoted, offer)
+        }
+        let store = Store()
+        store.promote("not.a.product")
+        XCTAssertNil(store.promoted)
+        XCTAssertNil(Offer.promoted(Pack.firstStir.productID, release: true), "Release doesn't sell First Stir")
+        XCTAssertEqual(Offer.promoted(Pack.lens.productID, release: true), .pack(.lens))
+        XCTAssertEqual(Offer.promoted(Pack.completeID, release: true), .complete)
+        store.pretend(Ledger())
+        await store.purchase(Pack.prism.productID)
+        XCTAssertEqual(store.state(.prism), .owned)
+    }
+
+    /// The supporter mark and the daily archive open on any pack owned, Complete or a family's share included, and on
+    /// nothing pending, revoked or failed.
+    @MainActor func testAnyPackOwnedHasBought() {
+        let store = Store()
+        XCTAssertFalse(store.bought)
+        var ledger = Ledger()
+        ledger.record(Pack.lens.productID, .pending)
+        ledger.record(Pack.prism.productID, .revoked, shared: true)
+        ledger.record(Pack.escapement.productID, .failed)
+        store.pretend(ledger)
+        XCTAssertFalse(store.bought)
+        ledger.record(Pack.completeID, .owned)
+        store.pretend(ledger)
+        XCTAssertTrue(store.bought)
+        var one = Ledger()
+        one.record(Pack.escapement.productID, .owned)
+        store.pretend(one)
+        XCTAssertTrue(store.bought)
     }
 
     /// Opening a level past the taste of a pack the player doesn't own shows the pack's card in its place, from the menu
