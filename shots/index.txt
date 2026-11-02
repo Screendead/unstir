@@ -680,9 +680,9 @@ duo-tabletop-ladder-end-ax5.png  Duo tabletop at the largest accessibility text 
 duo-open-menu.png  Duo open: the menu with plughole 01 to 09 at par, the list and its dock at a phone's width in the leading half, the trailing half empty until a card opens.
 duo-open-card.png  Duo open: Prism's card from the dock, in the trailing half beside the list, which stays live, the dock's covers still turning.
 duo-open-card-gate.png  Duo open: Lens 04 opened past the taste, its card beside the list, scrolled to buying under you've played the free three.
-duo-open-card-over-archive.png  Duo open: the archive beside the list, Lens's card opened from the dock 4.5 s in and closed again (UNSTIR_SHELFDEMO): the trailing half empty, as the card closed the archive rather than lying over it.
 duo-open-card-owned.png  Duo open: Lens owned, its card home beside the list: done 3/25 at par, play 04, the levels.
 duo-open-archive.png  Duo open: the archive's calendar beside the list, Lens owned.
+duo-open-card-over-archive.png  Duo open: the archive beside the list, Lens's card opened from the dock 4.5 s in and closed again (UNSTIR_SHELFDEMO): the trailing half empty, as the card closed the archive rather than lying over it.
 duo-open-mid-switch.png  Duo open: the menu mid-switch, whirlpool's list unstirring into place inside the leading half (UNSTIR_TIERSPIN).
 duo-folded-book-menu.png  Duo half open like a book: the list in the leading half and Escapement's card in the trailing half, each clear of the fold's band.
 duo-open-upright-menu.png  Duo open and turned upright (669 x 951 pt): today's menu, Prism's card over it.
