@@ -1555,10 +1555,8 @@ struct LevelView: View {
             withAnimation(.easeIn(duration: 0.3)) { showResult = true }
         }
         .task {
-            guard shareSheet, let text = game.shareText, (try? await Task.sleep(for: .seconds(1))) != nil,
-                  let root = UIApplication.shared.connectedScenes.compactMap({ ($0 as? UIWindowScene)?.keyWindow }).first?
-                      .rootViewController else { return }
-            root.present(UIActivityViewController(activityItems: [text], applicationActivities: nil), animated: false)
+            guard shareSheet, let text = game.shareText, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
+            ShareSheet.present([text], animated: false)
         }
         .task {
             // Past the picture's first render, so the bake does not land in the numbers.
@@ -3860,8 +3858,7 @@ struct ResultCard: View {
                         .accessibilityLabel("Again")
                 }
                 if let share = game.shareText {
-                    ShareLink(item: share) { Text("share \u{2197}").hit() }
-                        .shareTap()
+                    ShareButton(items: { [share] }) { Text("share \u{2197}").hit() }
                         .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
                         .accessibilityLabel("Share result")
                 }
