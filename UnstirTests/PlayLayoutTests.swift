@@ -1,16 +1,17 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import SwiftUI
 import XCTest
 @testable import Unstir
 
 final class PlayLayoutTests: XCTestCase {
-    /// Content inside the side margins, as the play screen's GeometryReader measures it, beside the whole window.
+    /// As the play screen's GeometryReader measures the window: the safe area's size and the insets round it.
     private func layout(window: CGSize, insets: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat),
                         scale: CGFloat = 3) -> PlayLayout {
-        let content = CGSize(width: window.width - insets.leading - insets.trailing - 2 * PlayLayout.margin,
-                             height: window.height - insets.top - insets.bottom)
-        return PlayLayout.of(content: content, window: window, middle: window.width / 2 - insets.leading - PlayLayout.margin,
-                             scale: scale)
+        PlayLayout.of(size: CGSize(width: window.width - insets.leading - insets.trailing,
+                                   height: window.height - insets.top - insets.bottom),
+                      insets: EdgeInsets(top: insets.top, leading: insets.leading, bottom: insets.bottom, trailing: insets.trailing),
+                      scale: scale)
     }
 
     func testEveryIPhoneKeepsTodaysColumn() {
@@ -68,5 +69,15 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(a.kind, .split)
         XCTAssertEqual(84 + PlayLayout.margin + a.tankPane.maxX, 951 / 2 - PlayLayout.margin, accuracy: 0.001)
         XCTAssertEqual(84 + PlayLayout.margin + a.chromePane.minX, 951 / 2 + PlayLayout.margin, accuracy: 0.001)
+        XCTAssertEqual(a.side, 359.5 / PlayLayout.rim, accuracy: 0.001, "the leading half is the narrower now")
+    }
+
+    func testTheProxysOwnMeasureSplitsAtTheFold() {
+        // What the play screen's GeometryReader reported under UNSTIR_FRAME=951x669 with the trailing column.
+        let l = PlayLayout.of(size: CGSize(width: 867, height: 624), insets: EdgeInsets(top: 24, leading: 0, bottom: 21, trailing: 84),
+                              scale: 3)
+        XCTAssertEqual(l.kind, .split)
+        XCTAssertEqual(l.tankPane.width, 951 / 2 - 2 * PlayLayout.margin, accuracy: 0.001)
+        XCTAssertEqual(l.side, 443.5 / PlayLayout.rim, accuracy: 0.001)
     }
 }

@@ -1,6 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
-import CoreGraphics
+import SwiftUI
 
 /// Where the play screen puts the tank. A window taller than wide, every iPhone's, keeps the column: header, tank,
 /// caption and controls stacked. One wider than tall, as the iPhone Duo's inner display gives when opened like a book
@@ -32,6 +32,14 @@ struct PlayLayout: Equatable {
     /// Narrower than this, a half can't hold the chrome (the result card's buttons, Escapement's ticks), so the window
     /// keeps the column.
     static let minPane: CGFloat = 300
+
+    /// From what the play screen's GeometryReader measures, outside the side margins: its size and the window's safe-area
+    /// insets round it. One proxy in one pass, so no offset or earlier layout moves the middle.
+    static func of(size: CGSize, insets i: EdgeInsets, scale: CGFloat) -> PlayLayout {
+        let window = CGSize(width: size.width + i.leading + i.trailing, height: size.height + i.top + i.bottom)
+        return of(content: CGSize(width: max(size.width - 2 * margin, 0), height: size.height), window: window,
+                  middle: window.width / 2 - i.leading - margin, scale: scale)
+    }
 
     /// `content` is the size inside the side margins; `middle` the window's middle line in the content's x, where the
     /// fold runs (the content's own middle if unknown); `window` the whole window's size, safe areas and all; `scale`

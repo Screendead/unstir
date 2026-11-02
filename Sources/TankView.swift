@@ -1450,13 +1450,9 @@ struct LevelView: View {
         .modifier(Unseen(clean))
     }
 
-    /// The play layout for the safe area `geo` measures, split where the window is wide at the window's middle. Read
-    /// from the one proxy in the one pass, so the back swipe's offset and a first layout never move the middle.
+    /// The play layout for the safe area `geo` measures, split where the window is wide at the window's middle.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        let m = PlayLayout.margin, i = geo.safeAreaInsets
-        let window = CGSize(width: geo.size.width + i.leading + i.trailing, height: geo.size.height + i.top + i.bottom)
-        return PlayLayout.of(content: CGSize(width: max(geo.size.width - 2 * m, 0), height: geo.size.height),
-                             window: window, middle: window.width / 2 - i.leading - m, scale: scale)
+        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, scale: scale)
     }
 
     private var screen: some View {
