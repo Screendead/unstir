@@ -498,8 +498,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`), and a `PurchaseIntent.intents` listener: a purchase started on the App
   Store's product page (a promoted purchase) sets `Store.promoted` to the offer this build sells (`Offer.promoted`),
-  keeping its product, `RootView` opens that card over the menu (leaving a level, whose try its save keeps, and the
-  settings sheet), and the card takes it and buys as its own buy does once `Store.settled`, unless owned or payments
+  keeping its product, `RootView` opens that card over the menu, closing the settings sheet (an open level leaves
+  through its own way out, `LevelView.leave`, its try saved and its quit sent as the back's are), and the card takes it and buys as its own buy does once `Store.settled`, unless owned or payments
   are off, landing as any purchase lands (Jack's call M6, round 14). `Store.bought`, any pack owned (Complete or a
   family's share too), is the one check of whether the player has bought anything: the supporter mark reads it, as
   the daily archive does. Under the harness's states a purchase lands in them, never StoreKit. Only a verified transaction grants; Complete (`Pack.completeID`) grants

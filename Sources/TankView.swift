@@ -1581,6 +1581,8 @@ struct LevelView: View {
             if phase == .background { Analytics.shared.suspended(game); game.pauseClock(); Resume.save(game) }
             if phase == .active { Analytics.shared.resumed(); game.resumeClock(); if knocks { Knock.warm(hold: false) } }
         }
+        // A promoted purchase's card opens over the menu: the level leaves as its back does, so its quit and save go too.
+        .onChange(of: Store.shared.promoted) { if Store.shared.promoted != nil { leave() } }
         .onDisappear {
             endPath(); endTwist()
             if knocks { Knock.rest() }

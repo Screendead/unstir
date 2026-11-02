@@ -566,11 +566,10 @@ struct RootView: View {
             Store.shared.forgetFailures()
             if card != arrived.map(Offer.pack) { arrived = nil }
         }
-        // A promoted purchase opens its offer's card over the menu, from a level too, which keeps its try.
+        // A promoted purchase opens its offer's card over the menu; an open level leaves for it on its own way out.
         .onChange(of: Store.shared.promoted, initial: true) {
             guard let offer = Store.shared.promoted else { return }
             settings = false
-            if level != nil { show(nil) }
             card = offer
         }
         .onChange(of: phase) {
