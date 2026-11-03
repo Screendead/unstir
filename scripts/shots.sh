@@ -796,21 +796,22 @@ hold=5 shot store-10-escapement "Store 10: Escapement 02 after rod 2 +4: its tic
   PACK=escapement LEVEL=2 PLAYED=2:4
 # The iPhone Duo opened like a book: a 951 x 669 pt window whatever the portrait lock, its status column on the trailing
 # edge (84 pt assumed from the closed display). UNSTIR_FRAME draws that window shrunk to fit this simulator, without the
-# system's bars or the fold. The tank takes the leading half, everything else the trailing half, over the menu (stage 5).
+# system's bars or the fold. The tank takes the leading half with its chrome round it, the menu the trailing half
+# (stage 5, s5-chrome = B).
 # Launched straight into a level beside the menu, the Debug build draws the tank's first picture later than
 # without the menu, so these wait longer.
 duo=(FRAME=951x669 INSETS=24,0,21,84)
-hold=10 shot duo-open-level "Duo open: plughole 11 five moves in, the tank wholly in the leading half, header, note and controls in the trailing half over the menu." \
+hold=10 shot duo-open-level "Duo open: plughole 11 five moves in, the tank wholly in the leading half, its header and title above it and its note and controls below, the menu in the trailing half." \
   "${duo[@]}" LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
-hold=10 shot duo-open-result "Duo open: plughole 06 solved clean, the card in the trailing half beside the tank where it was played, the menu under it." \
+hold=10 shot duo-open-result "Duo open: plughole 06 solved clean, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played." \
   "${duo[@]}" SCREEN=clean LEVEL=6
-hold=10 shot duo-open-fullest "Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole in the trailing half, the menu under it." \
+hold=10 shot duo-open-fullest "Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole over the menu in the trailing half." \
   "${duo[@]}" SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
-hold=10 shot duo-open-escapement "Duo open: Escapement 02 a move in, the ticks' counter over the trailing half, the menu's black under the chrome on the paper." \
+hold=10 shot duo-open-escapement "Duo open: Escapement 02 a move in, the ticks' counter over the tank, the leading half on paper and the trailing half the menu's black from the fold, the glass 9 pt smaller for the counter and the serif note." \
   "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=2:4
-hold=10 shot duo-open-prism "Duo open: Prism 01 with the colour letters, the swatches under the note in the trailing half, over the menu." \
+hold=10 shot duo-open-prism "Duo open: Prism 01 with the colour letters, the swatches between the note and the controls under the tank, the glass 30 pt smaller for them." \
   "${duo[@]}" PACK=prism OWNED=prism LEVEL=1 LETTERS=1
-hold=10 shot duo-open-endless "Duo open: endless at three notches, the brim round the tank in the leading half, the menu taking the hidden controls' room." \
+hold=10 shot duo-open-endless "Duo open: endless at three notches, the brim round the tank between the title and the note, the menu beside it." \
   "${duo[@]}" MODE=endless BRIM=3
 hold=10 shot duo-open-daily-result "Duo open: today's daily solved two over par, the card's again, share and next daily beside the tank, over the menu." \
   "${duo[@]}" SCREEN=result MODE=daily NOW=17:00
@@ -821,7 +822,7 @@ shot duo-open-upright "Duo open and turned upright (669 x 951 pt): today's colum
 played=(LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2)
 table=(FRAME=669x951 INSETS=59,0,34,0 FOLD=0,466,669,19)
 closed=(FRAME=466x678 INSETS=0,0,34,84)
-hold=10 shot duo-folded-book "Duo half open like a book: the split clear of the fold's band either side, the tank wholly in the leading half, the chrome and the menu in the trailing half." \
+hold=10 shot duo-folded-book "Duo half open like a book: the split clear of the fold's band either side, the tank and its chrome wholly in the leading half, the menu in the trailing half." \
   "${duo[@]}" FOLD=466,0,19,669 "${played[@]}"
 shot duo-tabletop "Duo upright and folded on a table: header, note and controls in the upright half, the tank filling the half lying flat." \
   "${table[@]}" "${played[@]}"
@@ -892,36 +893,45 @@ hold=4 shot duo-opened-mid-drag "Duo closed with rod 1 held two steps round, ope
   "${closed[@]}" THEN=1.5 THENFRAME=951x669 THENINSETS=24,0,21,84 LEVEL=11 LIVE=1:+2 TOUCH=0.3,0.2
 hold=5 shot duo-folded-to-tabletop "Duo upright, folded a second in: the tank glided down into the lower half." \
   FRAME=669x951 INSETS=59,0,34,0 THEN=1 THENFOLD=0,466,669,19 "${played[@]}"
-# Stage 5: the menu beside play (Jack's calls D-layout = 3 and DUOMENU = B, round 16). Where play splits, the tank keeps
-# the leading half and the trailing half holds the level's chrome over the menu; the list glides between halves.
-hold=8 shot duo-beside-level "Duo open: plughole 11 five moves in beside the menu: header, note and controls over the tier strip, the list centred on 11, its hairline at full and playing in place of its rods and par, 10's frontier hairline above it, and the dock held still." \
+# Stage 5: the menu beside play (Jack's calls D-layout = 3, DUOMENU = B and s5-chrome = B, round 16). Where play splits,
+# the tank and its chrome round it keep the leading half and the menu takes the trailing half; the list glides between
+# halves, and a result or lost card goes over the menu.
+hold=8 shot duo-beside-level "Duo open: plughole 11 five moves in beside the menu: header and title over the tank, note and controls under it at stage 1's glass, the menu alone in the trailing half, the list centred on 11, its hairline at full and playing in place of its rods and par, 10's frontier hairline above it, and the dock held still." \
   "${duo[@]}" "${played[@]}" BESTS=plughole:$nine OWNED= CLOCK=1
-hold=8 shot duo-beside-opened-from-menu "Duo open: the menu, plughole 05 picked 1.5 s in (UNSTIR_PICK): the list glided to the trailing half under 05's chrome, the tank in the leading half." \
+hold=8 shot duo-beside-opened-from-menu "Duo open: the menu, plughole 05 picked 1.5 s in (UNSTIR_PICK): the list glided to the trailing half, 05's tank and chrome in the leading half." \
   "${duo[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CLOCK=1 PICK=L5
 hold=8 shot duo-beside-pick "Duo open: plughole 11 beside the menu, row 07 tapped 1.5 s in (UNSTIR_PICK): 11 left through its own way out, 07 in the tank, the list following it." \
   "${duo[@]}" LEVEL=11 BESTS=plughole:$nine OWNED= CLOCK=1 PICK=L7
 hold=8 shot duo-beside-back "Duo open: plughole 11 beside the menu, left by its back a second in: the list back in the leading half under its title and gear, the trailing half empty." \
   "${duo[@]}" LEVEL=11 BESTS=plughole:$nine OWNED= CLOCK=1 EXIT=left
-hold=8 shot duo-beside-result "Duo open: plughole 06 solved clean beside the menu, the result card under the note and the list under the card, its row's par shown." \
+hold=8 shot duo-beside-result "Duo open: plughole 06 solved clean beside the menu: the result card headed by unstirred. over the menu in the trailing half, centred on the tank, the list gone under it." \
   "${duo[@]}" SCREEN=clean LEVEL=6 BESTS=plughole:$nine OWNED= CLOCK=1
-hold=8 shot duo-beside-card "Duo open: plughole 11 beside the menu, Lens's card opened from the dock 4.5 s in (UNSTIR_SHELFDEMO) over the whole trailing half, the level's header and controls with it, no sliver of them at its leading edge, its way out ‹ menu, the tank playing on." \
+hold=8 shot duo-beside-card "Duo open: plughole 11 beside the menu, Lens's card opened from the dock 4.5 s in (UNSTIR_SHELFDEMO) over the whole trailing half, its way out ‹ menu, the tank and its chrome playing on." \
   "${duo[@]}" "${played[@]}" BESTS=plughole:$nine OWNED= SHELFDEMO=1 CLOCK=1
 hold=35 shot duo-beside-gate "Duo open: Lens 03 solved, Lens 04 picked past the taste: the gate's card over the trailing half on buying, Lens 03 still in the tank." \
   "${duo[@]}" PACK=lens LEVEL=3 SCREEN=clean BESTS=plughole:$nine,lens:00 OWNED= CLOCK=1 PICK=lens-4
 hold=10 shot duo-beside-archive "Duo open: whirlpool 11 beside the menu, the archive opened 1.5 s in as its row opens it (UNSTIR_PICK=archive), over the trailing half, Lens owned." \
   "${duo[@]}" TIER=whirlpool LEVEL=11 BESTS=plughole:$par27 DAILIES=4 OWNED=lens PICK=archive CLOCK=1
 # Solved live, not through SCREEN=clean, which solves before the first layout: the slot shrinks under the card.
-hold=12 shot duo-beside-live-solve "Duo open: plughole 19 solved live at par (UNSTIR_MOVES), whirlpool's up a notch on the card: the list shrunk under it and still centred on 19." \
+hold=12 shot duo-beside-live-solve "Duo open: plughole 19 solved live at par (UNSTIR_MOVES), whirlpool's up a notch on the card over the menu." \
   "${duo[@]}" LEVEL=19 MOVES=4:-7,1:+7,0:+4,3:+5,2:-4 BESTS=plughole:000000000000000000600000000 OWNED= CLOCK=1
-hold=8 shot duo-beside-ax3 "Duo open at accessibility3: plughole 27's fullest card beside the menu, the list down to its playing row, the dock under it." \
+hold=8 shot duo-beside-ax3 "Duo open at accessibility3: plughole 27's fullest card over the menu at that size, the chrome round the tank fixed in size." \
   "${duo[@]}" SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 OWNED= CLOCK=0 TYPESIZE=accessibility3
-hold=6 shot duo-beside-opened "Duo closed with plughole 11 five moves in, opened a second in: the tank glided into the leading half and the menu faded in under the chrome." \
+hold=8 shot duo-beside-ax5 "Duo open at the largest accessibility size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole over the menu, the chrome round the tank as at every size." \
+  "${duo[@]}" SCREEN=result TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0 TYPESIZE=accessibility5
+hold=10 shot duo-beside-pack-complete "Duo open: Lens 25 solved, Lens complete and its pointer on the card over the menu." \
+  "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
+hold=10 shot duo-beside-lost "Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass." \
+  "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=0:1,0:1,0:1 CLOCK=1
+hold=8 shot duo-beside-lesson "Duo open: maelstrom 01, the tank never turned: the rim lesson's arc between the title and the glass, 5 pt smaller for it." \
+  "${duo[@]}" TIER=maelstrom LEVEL=1 CLOCK=3
+hold=6 shot duo-beside-opened "Duo closed with plughole 11 five moves in, opened a second in: the tank and its chrome glided into the leading half and the menu faded in beside them." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 "${played[@]}" BESTS=plughole:$nine OWNED= CLOCK=1
-hold=8 shot duo-beside-opened-card "Duo closed with Lens's card left under Lens 01 as its try free left it, opened a second in: the card put away, the level's header, note and controls in sight beside the menu; it comes back as the level leaves." \
+hold=8 shot duo-beside-opened-card "Duo closed with Lens's card left under Lens 01 as its try free left it, opened a second in: the card put away, the list in sight beside the level; it comes back as the level leaves." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 PACK=lens LEVEL=1 CARD=lens BESTS=plughole:$nine OWNED= CLOCK=1
 hold=6 shot duo-beside-closed "Duo open with plughole 11 beside the menu, closed a second in: today's column, the menu gone with the window's split." \
   "${duo[@]}" THEN=1 THENFRAME=466x678 THENINSETS=0,0,34,84 "${played[@]}" BESTS=plughole:$nine OWNED= CLOCK=1
-hold=6 shot duo-beside-folding "Duo open with plughole 11 beside the menu, half folded a second in: the chrome and the list drew back clear of the fold's band." \
+hold=6 shot duo-beside-folding "Duo open with plughole 11 beside the menu, half folded a second in: the tank, its chrome and the list drew back clear of the fold's band." \
   "${duo[@]}" THEN=1 THENFOLD=466,0,19,669 "${played[@]}" BESTS=plughole:$nine OWNED= CLOCK=1
 hold=10 shot duo-tabletop-menu-card "Duo tabletop: Prism's card in the half lying flat over the dock, ✕ close, the list above the fold." \
   "${table[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1

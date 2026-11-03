@@ -657,15 +657,15 @@ store-07-endless.png  Store 7: endless's first tank with 5 of the brim's 8 notch
 store-08-prism.png  Store 8: Prism 01, the red stir healed and the cyan held halfway back, its ghosts closing on the white line.
 store-09-lens.png  Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 steps of the 3 it heals at.
 store-10-escapement.png  Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left.
-duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, header, note and controls in the trailing half over the menu.
-duo-open-result.png  Duo open: plughole 06 solved clean, the card in the trailing half beside the tank where it was played, the menu under it.
-duo-open-fullest.png  Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole in the trailing half, the menu under it.
-duo-open-escapement.png  Duo open: Escapement 02 a move in, the ticks' counter over the trailing half, the menu's black under the chrome on the paper.
-duo-open-prism.png  Duo open: Prism 01 with the colour letters, the swatches under the note in the trailing half, over the menu.
-duo-open-endless.png  Duo open: endless at three notches, the brim round the tank in the leading half, the menu taking the hidden controls' room.
+duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, its header and title above it and its note and controls below, the menu in the trailing half.
+duo-open-result.png  Duo open: plughole 06 solved clean, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played.
+duo-open-fullest.png  Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole over the menu in the trailing half.
+duo-open-escapement.png  Duo open: Escapement 02 a move in, the ticks' counter over the tank, the leading half on paper and the trailing half the menu's black from the fold, the glass 9 pt smaller for the counter and the serif note.
+duo-open-prism.png  Duo open: Prism 01 with the colour letters, the swatches between the note and the controls under the tank, the glass 30 pt smaller for them.
+duo-open-endless.png  Duo open: endless at three notches, the brim round the tank between the title and the note, the menu beside it.
 duo-open-daily-result.png  Duo open: today's daily solved two over par, the card's again, share and next daily beside the tank, over the menu.
 duo-open-upright.png  Duo open and turned upright (669 x 951 pt): today's column, its glass stopped at 1300 px (433 pt).
-duo-folded-book.png  Duo half open like a book: the split clear of the fold's band either side, the tank wholly in the leading half, the chrome and the menu in the trailing half.
+duo-folded-book.png  Duo half open like a book: the split clear of the fold's band either side, the tank and its chrome wholly in the leading half, the menu in the trailing half.
 duo-tabletop.png  Duo upright and folded on a table: header, note and controls in the upright half, the tank filling the half lying flat.
 duo-tabletop-result.png  Duo tabletop: plughole 06 solved clean, the card and unstirred. in the upright half, above the fold.
 duo-tabletop-daily-result.png  Duo tabletop: today's daily two over par, its card's again, share and next daily all above the fold.
@@ -698,20 +698,24 @@ duo-closed-card-scrolled.png  Duo open with Prism's card beside the list scrolle
 duo-opened.png  Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept, the menu faded in beside it.
 duo-opened-mid-drag.png  Duo closed with rod 1 held two steps round, opened 1.5 s in: the turn let go as a lift would (moves 1), nothing held, the menu beside.
 duo-folded-to-tabletop.png  Duo upright, folded a second in: the tank glided down into the lower half.
-duo-beside-level.png  Duo open: plughole 11 five moves in beside the menu: header, note and controls over the tier strip, the list centred on 11, its hairline at full and playing in place of its rods and par, 10's frontier hairline above it, and the dock held still.
-duo-beside-opened-from-menu.png  Duo open: the menu, plughole 05 picked 1.5 s in (UNSTIR_PICK): the list glided to the trailing half under 05's chrome, the tank in the leading half.
+duo-beside-level.png  Duo open: plughole 11 five moves in beside the menu: header and title over the tank, note and controls under it at stage 1's glass, the menu alone in the trailing half, the list centred on 11, its hairline at full and playing in place of its rods and par, 10's frontier hairline above it, and the dock held still.
+duo-beside-opened-from-menu.png  Duo open: the menu, plughole 05 picked 1.5 s in (UNSTIR_PICK): the list glided to the trailing half, 05's tank and chrome in the leading half.
 duo-beside-pick.png  Duo open: plughole 11 beside the menu, row 07 tapped 1.5 s in (UNSTIR_PICK): 11 left through its own way out, 07 in the tank, the list following it.
 duo-beside-back.png  Duo open: plughole 11 beside the menu, left by its back a second in: the list back in the leading half under its title and gear, the trailing half empty.
-duo-beside-result.png  Duo open: plughole 06 solved clean beside the menu, the result card under the note and the list under the card, its row's par shown.
-duo-beside-card.png  Duo open: plughole 11 beside the menu, Lens's card opened from the dock 4.5 s in (UNSTIR_SHELFDEMO) over the whole trailing half, the level's header and controls with it, no sliver of them at its leading edge, its way out ‹ menu, the tank playing on.
+duo-beside-result.png  Duo open: plughole 06 solved clean beside the menu: the result card headed by unstirred. over the menu in the trailing half, centred on the tank, the list gone under it.
+duo-beside-card.png  Duo open: plughole 11 beside the menu, Lens's card opened from the dock 4.5 s in (UNSTIR_SHELFDEMO) over the whole trailing half, its way out ‹ menu, the tank and its chrome playing on.
 duo-beside-gate.png  Duo open: Lens 03 solved, Lens 04 picked past the taste: the gate's card over the trailing half on buying, Lens 03 still in the tank.
 duo-beside-archive.png  Duo open: whirlpool 11 beside the menu, the archive opened 1.5 s in as its row opens it (UNSTIR_PICK=archive), over the trailing half, Lens owned.
-duo-beside-live-solve.png  Duo open: plughole 19 solved live at par (UNSTIR_MOVES), whirlpool's up a notch on the card: the list shrunk under it and still centred on 19.
-duo-beside-ax3.png  Duo open at accessibility3: plughole 27's fullest card beside the menu, the list down to its playing row, the dock under it.
-duo-beside-opened.png  Duo closed with plughole 11 five moves in, opened a second in: the tank glided into the leading half and the menu faded in under the chrome.
-duo-beside-opened-card.png  Duo closed with Lens's card left under Lens 01 as its try free left it, opened a second in: the card put away, the level's header, note and controls in sight beside the menu; it comes back as the level leaves.
+duo-beside-live-solve.png  Duo open: plughole 19 solved live at par (UNSTIR_MOVES), whirlpool's up a notch on the card over the menu.
+duo-beside-ax3.png  Duo open at accessibility3: plughole 27's fullest card over the menu at that size, the chrome round the tank fixed in size.
+duo-beside-ax5.png  Duo open at the largest accessibility size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole over the menu, the chrome round the tank as at every size.
+duo-beside-pack-complete.png  Duo open: Lens 25 solved, Lens complete and its pointer on the card over the menu.
+duo-beside-lost.png  Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass.
+duo-beside-lesson.png  Duo open: maelstrom 01, the tank never turned: the rim lesson's arc between the title and the glass, 5 pt smaller for it.
+duo-beside-opened.png  Duo closed with plughole 11 five moves in, opened a second in: the tank and its chrome glided into the leading half and the menu faded in beside them.
+duo-beside-opened-card.png  Duo closed with Lens's card left under Lens 01 as its try free left it, opened a second in: the card put away, the list in sight beside the level; it comes back as the level leaves.
 duo-beside-closed.png  Duo open with plughole 11 beside the menu, closed a second in: today's column, the menu gone with the window's split.
-duo-beside-folding.png  Duo open with plughole 11 beside the menu, half folded a second in: the chrome and the list drew back clear of the fold's band.
+duo-beside-folding.png  Duo open with plughole 11 beside the menu, half folded a second in: the tank, its chrome and the list drew back clear of the fold's band.
 duo-tabletop-menu-card.png  Duo tabletop: Prism's card in the half lying flat over the dock, ✕ close, the list above the fold.
 calm-glass.png  Reduce Motion: the sandbox on glass, stirred twice, held on its still frame (Picture.rest).
 calm-chainmail.png  Reduce Motion: the sandbox on chainmail, stirred twice, held on its still frame (Picture.rest).
