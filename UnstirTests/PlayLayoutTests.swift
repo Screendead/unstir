@@ -101,6 +101,46 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(Unstirred.taps(side: 490.333, scale: 3, fill: 0), 17)
     }
 
+    /// The shaders draw four taps where `cost ?? n` is at most the budget less the fill plus what rides in flight,
+    /// exactly where the work is at most the budget; and with no budget given, every glass draws as it did.
+    func testTheShadersGateIsTheCommittedWorkAgainstTheBudget() {
+        var rng = SplitMix64(state: 7)
+        let palette: [Channels] = [.white, .red, .green, .blue, .cyan, .magenta, .yellow]
+        for trial in 0..<4000 {
+            let count = rng.below(40), flight = rng.below(3), fill = rng.below(7)
+            let budget = rng.below(48), prism = trial % 2 == 0
+            let masks: [Int: Channels] = prism ? Dictionary(uniqueKeysWithValues: (0..<4).map { ($0, palette[rng.below(7)]) }) : [:]
+            let stack = (0..<count).map { _ in Twist(rod: rng.below(4), steps: 1) }
+            let flown = (0..<flight).map { _ in rng.below(4) }
+            let channels = (stack.map(\.rod) + flown).map { Float((masks[$0] ?? .white).rawValue) }
+            // As `Unstirred.body` hands the shaders the frame.
+            let weight = Unstirred.weigh(channels, inFlight: flight)
+            let four = Float(weight.cost ?? channels.count) <= Float(budget - fill + weight.rides)
+            let work = Unstirred.work(channels, inFlight: flight, fill: fill)
+            XCTAssertEqual(four, Unstirred.drawsFourTaps(work: work, budget: budget), "trial \(trial)")
+            // As the body did before the budget: one entry over for anything in flight, Prism's own cost.
+            let old = Unstirred.channelCost(channels).map { cost in
+                Float(cost) <= Float(budget - fill + (flown.map { Int((masks[$0] ?? .white).rawValue).nonzeroBitCount }.max() ?? 0))
+            } ?? (Float(channels.count) <= Float(budget - fill) + (flight > 0 ? 1 : 0))
+            XCTAssertEqual(four, old, "trial \(trial)")
+            if flight <= 1 {
+                XCTAssertEqual(Unstirred.committedWork(stack: stack, masks: masks, fill: fill, held: flown.first), work, "trial \(trial)")
+            }
+        }
+        // A stack of 30 on a still picture keeps four taps at 30 with the drag, not 31.
+        let thirty = (0..<30).map { Twist(rod: $0 % 2, steps: 1) }
+        XCTAssertTrue(Unstirred.drawsFourTaps(work: Unstirred.committedWork(stack: thirty, masks: [:], fill: 0, held: 0), budget: 30))
+        XCTAssertFalse(Unstirred.drawsFourTaps(work: Unstirred.committedWork(stack: thirty + [Twist(rod: 0, steps: 1)], masks: [:], fill: 0, held: 1),
+                                               budget: 30))
+        // Prism: a white entry costs three, and two for a tap's samples.
+        let level = Level.prism[0]
+        XCTAssertEqual(Unstirred.committedWork(stack: level.scramble, masks: level.masks, fill: 0),
+                       Unstirred.channelCost(level.scramble.map { Float((level.masks[$0.rod] ?? .white).rawValue) }))
+        for pixels in [656.5, Tank.tunedPixels, 1471] {
+            XCTAssertEqual(Unstirred.taps(side: pixels / 3, scale: 3, fill: 4), Tank.fourTaps(pixels: pixels) - 4)
+        }
+    }
+
     func testTheCapBindsTheSplitToo() {
         let l = PlayLayout.of(content: CGSize(width: 1300, height: 1000), window: CGSize(width: 1332, height: 1000), scale: 3)
         XCTAssertEqual(l.kind, .split)

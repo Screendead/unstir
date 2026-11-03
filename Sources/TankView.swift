@@ -3368,6 +3368,9 @@ struct Unstirred: ViewModifier, Animatable {
     /// Differentiate Without Colour (`whiteIsolate`).
     var isolate: Channels?
     var whiteIsolate = false
+    /// The committed work drawn with four taps, nil for the glass's static limit (`Tank.fourTaps(pixels:)`). Never
+    /// animated: only `Taps` moves it, at a still moment.
+    var budget: Int?
     @Environment(\.displayScale) private var scale
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>> {
@@ -3395,28 +3398,26 @@ struct Unstirred: ViewModifier, Animatable {
         let n = floats.count / 4
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
-        // A live picture keeps four taps only to the glass's limit (`Tank.fourTaps(pixels:)`) less its fill: the same
-        // budget as without it. Counted in committed entries, so a touch never changes the taps; the drag, the breath or
-        // a tick in flight rides one over, within the 31 the shader's comment measured (fewer on a larger glass). Two at
-        // once, for the `Breath.fade` a touch takes to cut a slosh or a grab within a tick's flight, drop to two taps at
-        // the budget's edge rather than run 32.
-        let taps = Self.taps(side: side, scale: scale, fill: fillEntries)
-        let fourTaps = Float(taps) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
-        if let cost = Self.channelCost(channels) {
-            // The in-flight entry rides over by its own cost, as above, so a touch never changes the taps.
+        // A live picture keeps four taps only to the budget less its fill: the same budget as without it. Counted in
+        // committed work, so a touch never changes the taps: the drag, the breath or a tick in flight rides one entry
+        // over, or Prism's its own cost (`weigh`), within the 31 the shader's comment measured on the 13 Pro Max's glass.
+        // Two in flight at once, for the `Breath.fade` a touch takes to cut a slosh or a grab within a tick's flight,
+        // drop to two taps at the budget's edge rather than run one more.
+        let taps = budget.map { $0 - fillEntries } ?? Self.taps(side: side, scale: scale, fill: fillEntries)
+        let weight = Self.weigh(channels, inFlight: n - stack.count)
+        let limit = Float(taps + weight.rides)
+        if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
-            let flight = [liveRod, breathes ? breath?.rod : nil, tick?.rod].compactMap { $0 }
-                .map { (masks[$0] ?? .white).rawValue.nonzeroBitCount }.max() ?? 0
             return content.layerEffect(
                 ShaderLibrary.unstirChannels(.float2(r, r), .float(r), .floatArray(floats), .floatArray(channels), .float(Float(n)),
-                                             .float(Float(cost)), .float(Float(taps + flight)), .float(Float(Tank.plateau)),
+                                             .float(Float(cost)), .float(limit), .float(Float(Tank.plateau)),
                                              .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)),
                                              .float3(wave.x, wave.y, wave.z), .float(Float(turn)),
                                              .float(Float(isolate?.rawValue ?? 0)), .float3(tint.x, tint.y, tint.z)),
                 maxSampleOffset: CGSize(width: side, height: side))
         }
         return content.layerEffect(
-            ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
+            ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(limit), .float(Float(Tank.plateau)),
                                  .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
             maxSampleOffset: CGSize(width: side, height: side))
     }
@@ -3504,10 +3505,33 @@ extension Unstirred {
         Tank.fourTaps(pixels: Double(side * scale)) - fill
     }
 
+    /// What the shaders weigh for a frame of `channels` (each entry's mask, raw), the last `inFlight` of them in
+    /// flight: Prism's channel cost, nil where every entry is white and the plain shader counts entries, and how far
+    /// over the budget the entries in flight ride: one entry, or Prism's own cost. Both shaders draw four taps where
+    /// `cost ?? channels.count` is at most the budget less the fill, plus `rides`.
+    nonisolated static func weigh(_ channels: [Float], inFlight: Int) -> (cost: Int?, rides: Int) {
+        guard let cost = channelCost(channels) else { return (nil, min(inFlight, 1)) }
+        return (cost, channels.suffix(inFlight).map { Int($0).nonzeroBitCount }.max() ?? 0)
+    }
+
+    /// The work `weigh` holds against the budget: four taps where it is at most the budget.
+    nonisolated static func work(_ channels: [Float], inFlight: Int, fill: Int) -> Int {
+        let w = weigh(channels, inFlight: inFlight)
+        return (w.cost ?? channels.count) - w.rides + fill
+    }
+
+    /// The work of `stack` on a level with `masks` and a live picture's `fill`, with slot `held` in flight.
+    nonisolated static func committedWork(stack: [Twist], masks: [Int: Channels], fill: Int, held: Int? = nil) -> Int {
+        let rods = stack.map(\.rod) + (held.map { [$0] } ?? [])
+        return work(rods.map { Float((masks[$0] ?? .white).rawValue) }, inFlight: held == nil ? 0 : 1, fill: fill)
+    }
+
+    nonisolated static func drawsFourTaps(work: Int, budget: Int) -> Bool { work <= budget }
+
     /// The per-channel shader's work in entries for these masks (raw values, an entry each), or nil when every one is
     /// white and the plain shader draws them. An entry costs a map per channel it holds and a tap's two extra samples
     /// two entries: assumed, not measured on the phone.
-    static func channelCost(_ masks: [Float]) -> Int? {
+    nonisolated static func channelCost(_ masks: [Float]) -> Int? {
         let white = Float(Channels.white.rawValue)
         guard masks.contains(where: { $0 != white }) else { return nil }
         return masks.reduce(2) { $0 + Int($1).nonzeroBitCount }
