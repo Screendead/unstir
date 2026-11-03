@@ -978,6 +978,9 @@ struct LevelView: View {
     /// Escapement: the tank dips to black between the demonstration and the problem, so the problem's clean opening
     /// frame never reads as the demonstration solved.
     @State private var demoDip = 0.0
+    /// Escapement: the move whose ticks sound, by `game.tickEvents`; none as the view appears, so a resumed try's last
+    /// ticks, long landed, stay silent.
+    @State private var sounding: Int?
     @State private var detent = Detent(step: Tank.step)
     @State private var ticks = 0
     @State private var tankTicks = 0
@@ -2448,6 +2451,8 @@ struct LevelView: View {
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
         .haptic(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
         .haptic(.error, trigger: game.tickPushes)
+        .onChange(of: game.tickEvents) { sounding = game.tickEvents }
+        .task(id: sounding) { if sounding != nil { await game.soundTicks() } }
         .haptic(.success, trigger: game.solved) { _, solved in solved }
         // One sound for the end, as its card shows it.
         .onChange(of: game.finished) { if game.finished { Sound.shared.play(game.solved ? .solve : .spilled) } }
