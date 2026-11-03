@@ -132,7 +132,9 @@ struct Harness {
     let lockTap: String?
     /// UNSTIR_PICK=L12: a second and a half in, that level (a tier's or a pack's, by id) picked as its row in the menu
     /// picks it; beside play, the playing level leaves for it. The harness's other flags carry over to it.
+    /// UNSTIR_PICK=archive opens the archive then, as its row does.
     let pick: Level?
+    let pickArchive: Bool
     /// UNSTIR_FRESH=1: the launch takes a plain launch's first screen as a fresh install would, into plughole 01, and
     /// stores nothing of it.
     let fresh: Bool
@@ -288,6 +290,7 @@ struct Harness {
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
         lockTap = env["UNSTIR_LOCKTAP"]
+        pickArchive = env["UNSTIR_PICK"] == "archive"
         pick = env["UNSTIR_PICK"].flatMap { id in (Tier.allCases.flatMap(\.levels) + Pack.allCases.flatMap(\.levels)).first { $0.id == id } }
         exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up", "swipe"].contains($0) ? $0 : nil }
         backSwipe = env["UNSTIR_BACKSWIPE"].flatMap(Double.init).map { min(max($0, 0), 1) }
@@ -823,8 +826,9 @@ struct RootView: View {
             show(nil)
         }
         .task {
-            guard let next = harness?.pick, (try? await Task.sleep(for: .seconds(1.5))) != nil else { return }
-            show(next, keep: true)
+            guard harness?.pick != nil || harness?.pickArchive == true,
+                  (try? await Task.sleep(for: .seconds(1.5))) != nil else { return }
+            if let next = harness?.pick { show(next, keep: true) } else { withAnimation(.snappy(duration: 0.42)) { archive = true } }
         }
         .task {
             // The swipe's leaves through the level's own commit.
