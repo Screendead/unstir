@@ -39,9 +39,9 @@ struct PlayLayout: Equatable {
     /// letters or Differentiate Without Colour turned on or off mid-level resizes Prism's glass by 30 pt, letting go a
     /// drag as a change of pose does. The play screen's text is fixed in size, so no type size changes it; a result or
     /// lost card goes over the menu.
-    /// As measured on the simulator: above, the header's 24 pt (Escapement's split-flap ticks 34) and the title's 36;
-    /// below, the caption's 48 (two lines of the paper's serif 50), the swatches' 34 where they show, the column's 12
-    /// and the controls' 46.
+    /// As the parts measure (`testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure`): above, the header's 24 pt
+    /// (Escapement's split-flap ticks 34) and the title's 36; below, the caption's 48 (two lines of the paper's serif
+    /// 50), the swatches' 34 where they show, the column's 12 and the controls' 46.
     struct Chrome: Equatable {
         var above: CGFloat = 60
         var below: CGFloat = 106
@@ -247,6 +247,8 @@ enum PlayPart: LayoutValueKey {
 /// state and animations, as the window changes between them.
 struct PlayStack: SwiftUI.Layout {
     let layout: PlayLayout
+    /// Handed what the split's chrome measures round the stage, which `PlayLayout.Chrome` must hold.
+    var measured: (@Sendable (PlayLayout.Chrome) -> Void)? = nil
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: LayoutSubviews, cache: inout ()) -> CGSize {
         proposal.replacingUnspecifiedDimensions()
@@ -296,9 +298,10 @@ struct PlayStack: SwiftUI.Layout {
         func put(_ i: Int, _ y: CGFloat, _ h: CGFloat) {
             subviews[i].place(at: CGPoint(x: pane.midX, y: y), anchor: .top, proposal: ProposedViewSize(width: pane.width, height: h))
         }
-        var y = pane.minY
+        var y = pane.minY, above: CGFloat = 0, below = Self.gap
         for i in parts.indices[..<s] {
             let h = parts[i] == .spacer ? max(0, stage.minY - y) : subviews[i].sizeThatFits(across).height
+            if parts[i] == .chrome { above += h }
             put(i, y, h)
             y += h
         }
@@ -306,15 +309,18 @@ struct PlayStack: SwiftUI.Layout {
         y = stage.maxY + layout.halo.ring * layout.side / 2
         for i in parts.indices[(s + 1)..<foot] where parts[i] == .chrome {
             let h = subviews[i].sizeThatFits(across).height
+            below += h
             put(i, y, h)
             y += h
         }
         var bottom = pane.maxY
         for i in parts.indices[foot...].reversed() where parts[i] == .chrome {
             let h = subviews[i].sizeThatFits(across).height
+            below += h
             bottom -= h
             put(i, bottom, h)
         }
+        measured?(PlayLayout.Chrome(above: above, below: below))
         if foot < parts.endIndex { put(foot, y, max(0, bottom - y)) }
         if let menu = layout.menuPane?.offsetBy(dx: bounds.minX, dy: bounds.minY) {
             for i in parts.indices where parts[i] == .menu {
@@ -371,4 +377,9 @@ extension PlayLayout.Halo {
         ring = level.run == nil ? 0 : CGFloat((Brim.rOut + Brim.reach) / Brim.unit) - PlayLayout.rim
         above = level.motion == .none ? 0 : RimLesson.overRim
     }
+}
+
+extension EnvironmentValues {
+    /// Handed to the split's `PlayStack` as `measured`.
+    @Entry var chromeMeasured: (@Sendable (PlayLayout.Chrome) -> Void)? = nil
 }

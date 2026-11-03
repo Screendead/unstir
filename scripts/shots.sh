@@ -934,6 +934,8 @@ hold=12 shot duo-beside-lens-long "Duo open: Lens 01's top lens held turned nine
   "${duo[@]}" PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42 OWNED=lens
 hold=12 shot duo-beside-lens-wrong "Duo open: Lens 08's top lens held fourteen steps up, the wrong way, beside the menu: its track and count stop under the title, clear of moves / par." \
   "${duo[@]}" PACK=lens LEVEL=8 LIVE=0:+14 TOUCH=0.25,-0.354 OWNED=lens
+hold=10 shot duo-beside-prism-letters "Duo open: Prism 01 read by its colour letters beside the menu: the R G B swatches under the note, the glass 30 pt smaller for them." \
+  "${duo[@]}" PACK=prism LEVEL=1 OWNED=prism LETTERS=1 CLOCK=1
 hold=6 shot duo-beside-opened "Duo closed with plughole 11 five moves in, opened a second in: the tank and its chrome glided into the leading half and the menu faded in beside them." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 "${played[@]}" BESTS=plughole:$nine OWNED= CLOCK=1
 hold=8 shot duo-beside-opened-card "Duo closed with Lens's card left under Lens 01 as its try free left it, opened a second in: the card put away, the list in sight beside the level; it comes back as the level leaves." \

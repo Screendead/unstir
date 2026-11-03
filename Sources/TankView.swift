@@ -1016,6 +1016,7 @@ struct LevelView: View {
     @State private var pose: PlayLayout?
     /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
     @Environment(\.harnessFold) private var harnessFold
+    @Environment(\.chromeMeasured) private var chromeMeasured
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
     /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
@@ -1547,7 +1548,7 @@ struct LevelView: View {
     private var screen: some View {
         GeometryReader { geo in
             let layout = playLayout(geo)
-            let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout))
+            let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout, measured: chromeMeasured))
             stack {
                 header.modifier(PlayPart.chrome(read: 5))
                 titleRow.modifier(PlayPart.chrome(read: 4))

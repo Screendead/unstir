@@ -752,8 +752,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Where play splits, a level opens beside the menu (stage 5; Jack's calls D-layout = 3, DUOMENU = B and s5-chrome = B,
   round 16): the tank in the leading half with its chrome round it, the header and title above it and the caption,
   swatches and controls below (`PlayStack.placeRound`), and the menu alone in the trailing half. The glass is as large
-  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape and whether Prism's swatches show, its heights
-  measured on the simulator; the play screen's text is fixed in size, so no type size changes it), the spare room half
+  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape and whether Prism's swatches show, fixed
+  heights that `testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure` holds against the parts as `PlayStack` lays a
+  level out and hands them to `chromeMeasured`; the play screen's text is fixed in size, so no type size changes
+  it), the spare room half
   over the tank and half over the controls: stage 1's 424 pt for every level of plughole, whirlpool and vortex, the
   daily, Lens, and Prism read by colour; 5 pt less for maelstrom's rim lesson under the title, 9 less for
   Escapement's split-flap ticks and two lines of serif, 30 less for Prism's swatches under its colour letters, and

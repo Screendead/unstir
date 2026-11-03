@@ -217,8 +217,53 @@ final class PlayLayoutTests: XCTestCase {
             XCTAssertLessThanOrEqual(lines(level.note, level.page.paper ? serif : mono), 2, level.id)
         }
         for text in [LevelView.refills, "Practice: this day's best was set on its day.", "Practice: only the first try counts.",
-                     "watch the stir \u{00B7} tap to skip"] {
+                     "watch the stir \u{00B7} tap to skip", "the tank is full: undo or reset"] {
             XCTAssertLessThanOrEqual(lines(text, mono), 2, text)
+        }
+        for bank in [0, 1] {
+            let words = Game(level: Level.escapement[1], bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
+            XCTAssertLessThanOrEqual(lines(words, serif), 2, words)
+        }
+    }
+
+    /// Lays `harness`'s level out in the open Duo's window beside the menu, as `UNSTIR_FRAME` does, and returns what its
+    /// chrome measures round the tank.
+    @MainActor private func measuredChrome(_ harness: Harness) -> PlayLayout.Chrome? {
+        // Written by the layout pass, on the main thread, and read here after it.
+        final class Box: @unchecked Sendable { var chrome: PlayLayout.Chrome? }
+        let box = Box()
+        let pose = HarnessWindow.Pose(size: open.window, insets: EdgeInsets(top: open.insets.top, leading: open.insets.leading,
+                                                                             bottom: open.insets.bottom, trailing: open.insets.trailing),
+                                      fold: nil)
+        let level = LevelView(level: harness.level, harness: harness, onExit: { _ in }, onNext: { _ in }, onLook: { _ in },
+                              onOffer: { _ in }, besideMenu: true)
+            .environment(\.chromeMeasured) { box.chrome = $0 }
+        let host = UIHostingController(rootView: HarnessWindow(HarnessWindow.Spec(poses: [pose], then: nil), content: level))
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+        window.frame = CGRect(origin: .zero, size: open.window)
+        window.rootViewController = host
+        window.isHidden = false
+        host.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.5))
+        window.isHidden = true
+        return box.chrome
+    }
+
+    @MainActor func testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure() {
+        // PlayLayout.Chrome sizes the glass from fixed heights; the views round the tank must take what it allows, or
+        // the title runs into the rim or the caption into the controls with every arithmetic test still green.
+        for (env, swatches) in [(["UNSTIR_LEVEL": "11", "UNSTIR_CLOCK": "1"], false),
+                                (["UNSTIR_PACK": "escapement", "UNSTIR_LEVEL": "2", "UNSTIR_OWNED": "escapement", "UNSTIR_CLOCK": "1"], false),
+                                (["UNSTIR_PACK": "prism", "UNSTIR_LEVEL": "1", "UNSTIR_OWNED": "prism", "UNSTIR_LETTERS": "1",
+                                  "UNSTIR_CLOCK": "1"], true)] {
+            let harness = Harness(env)
+            let budget = PlayLayout.Chrome(harness.level, swatches: swatches)
+            let got = try! XCTUnwrap(measuredChrome(harness), "\(harness.level.id): laid out beside the menu")
+            XCTAssertEqual(got.above, budget.above, accuracy: 1, harness.level.id)
+            // Escapement's note may show one line of its two, or "tap to skip" over the demonstration.
+            XCTAssertLessThanOrEqual(got.below, budget.below + 0.5, harness.level.id)
+            XCTAssertGreaterThanOrEqual(got.below, budget.below - 2.5, harness.level.id)
         }
     }
 
