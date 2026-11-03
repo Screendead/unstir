@@ -200,8 +200,8 @@ final class Game {
     /// Escapement: the newest move's ticks in the order they landed, each clock's with the stack it changed and whether
     /// it pushed, for the view to play them in turn.
     private(set) var tick: [(stack: [Twist], rod: Int, dir: Int, pushed: Bool)] = []
-    /// Escapement: every move's ticks, the clock whose tick pushed (the ratchet's red flash), and each clock's stops, as
-    /// its rod emptied.
+    /// Escapement: every move's ticks, the newest clock whose tick pushed (where the out-of-ticks stamp goes), and each
+    /// clock's stops, as its rod emptied.
     private(set) var tickEvents = 0
     private(set) var tickPushes = 0
     var pushedClock: Int? { escapement.pushed }
