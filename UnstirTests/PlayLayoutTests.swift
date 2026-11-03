@@ -251,6 +251,30 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(LevelView.lensCapped(-3 * Tank.step, joined: 4, room: room), -3 * Tank.step)
     }
 
+    @MainActor func testALensDragStopsAtItsTrackAndTurnsBackAtOnce() {
+        // As the twist gesture plays a finger on a lens: each change adds its travel, then caps, and the lift commits
+        // the nearest step of what is held.
+        let room = -6...2
+        var angle = 0.0, y = 0.0
+        func move(to next: Double) {
+            angle = LevelView.lensCapped(angle + LevelView.lensTurn(from: y, to: next), joined: 0, room: room)
+            y = next
+        }
+        for i in 1...27 { move(to: -Double(i) * LevelView.lensPitch / 3) }
+        XCTAssertEqual(angle, 2 * Tank.step, accuracy: 1e-9, "nine steps up hold at the track's top")
+        XCTAssertEqual(Detent.steps(angle, of: Tank.step), 2)
+        move(to: y + LevelView.lensPitch)
+        XCTAssertEqual(Detent.steps(angle, of: Tank.step), 1, "a step back down turns the lens back a step at once")
+        // The column caps nothing.
+        angle = 0; y = 0
+        for i in 1...27 {
+            let next = -Double(i) * LevelView.lensPitch / 3
+            angle = LevelView.lensCapped(angle + LevelView.lensTurn(from: y, to: next), joined: 0, room: nil)
+            y = next
+        }
+        XCTAssertEqual(Detent.steps(angle, of: Tank.step), 9)
+    }
+
     @MainActor func testEveryLensLevelsUnzoomFitsItsTrackInEveryPose() {
         // Jack's "why" for the cap (d3-lenscap = B, round 16): no level needs a zoom longer than the pane.
         let upright = (window: CGSize(width: 669, height: 951), insets: (top: CGFloat(59), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0)))
