@@ -747,7 +747,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   unlock where it opens packs (`Archive.opens`). `ArchiveRow` sits under today's daily on the menu: until then a quiet
   lock, "comes with any pack", which a tap shakes and answers as a closed row does, saying "unlocked by purchasing any
   pack" for 2 s (Jack's words, R-arch-lock, round 15), never opening the shelf.
-  `ArchiveView` lies over the menu as a card does (beside the list in a wide window, `MenuLayout`), a month to a block on the player's week, each day's number over its
+  `ArchiveView` lies over the menu as a card does (beside the list in a wide window, `MenuLayout`, its way out reading "✕ close" there as the card's does, Jack's call archive-close = A, round 16), a month to a block on the player's week, each day's number over its
   result in the menu's words (`Archive.Mark`: clean, par, +n, tried), a list of days at accessibility sizes. A day
   opens `Level.daily(_:archived:)`, the day's own tank under its own id, whose back reads "‹ archive" and returns there
   (`RootView.archive`, `Level.focus(solved:)`), the day ringed once. It plays as any level: its best saves marked
