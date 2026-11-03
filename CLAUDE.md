@@ -1115,7 +1115,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tier's first level, as "up a notch" does, then leaves that; `=swipe` leaves through the back swipe's commit).
   `UNSTIR_BACKSWIPE=0.4` holds the level that share of the way into a back swipe, the menu under it, and `=run` plays
   the swipe a second in by a drawn fingertip. `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
-  leaves it, saying what opens it. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
+  leaves it, saying what opens it. `UNSTIR_PICK=L12` picks that level (a tier's or a pack's, by id) a second and a half
+  in, as its row would, the harness's flags carried over (beside play, the playing level leaves for it). `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
   today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only.
   `UNSTIR_ARCHIVE=1` opens the archive over the menu, `UNSTIR_ARCHIVED=1:c,3:0,6:2,9:t` gives the daily that many days
   back a best from the archive (clean, that many over par) or a try, and `UNSTIR_MODE=archive UNSTIR_DAY=n` opens the

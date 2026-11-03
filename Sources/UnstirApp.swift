@@ -130,6 +130,9 @@ struct Harness {
     let backSwipeRun: Bool
     /// UNSTIR_LOCKTAP=L8: on the menu, that locked row held as a tap leaves it, saying what opens it.
     let lockTap: String?
+    /// UNSTIR_PICK=L12: a second and a half in, that level (a tier's or a pack's, by id) picked as its row in the menu
+    /// picks it; beside play, the playing level leaves for it. The harness's other flags carry over to it.
+    let pick: Level?
     /// UNSTIR_FRESH=1: the launch takes a plain launch's first screen as a fresh install would, into plughole 01, and
     /// stores nothing of it.
     let fresh: Bool
@@ -285,6 +288,7 @@ struct Harness {
         clock = env["UNSTIR_CLOCK"].flatMap(Double.init)
         tour = env["UNSTIR_TOUR"] == "1"
         lockTap = env["UNSTIR_LOCKTAP"]
+        pick = env["UNSTIR_PICK"].flatMap { id in (Tier.allCases.flatMap(\.levels) + Pack.allCases.flatMap(\.levels)).first { $0.id == id } }
         exit = env["UNSTIR_EXIT"].flatMap { ["left", "solved", "up", "swipe"].contains($0) ? $0 : nil }
         backSwipe = env["UNSTIR_BACKSWIPE"].flatMap(Double.init).map { min(max($0, 0), 1) }
         backSwipeRun = env["UNSTIR_BACKSWIPE"] == "run"
@@ -797,6 +801,10 @@ struct RootView: View {
             show(Level.plughole[0], keep: true)
             try? await Task.sleep(for: .seconds(4))
             show(nil)
+        }
+        .task {
+            guard let next = harness?.pick, (try? await Task.sleep(for: .seconds(1.5))) != nil else { return }
+            show(next, keep: true)
         }
         .task {
             // The swipe's leaves through the level's own commit.
