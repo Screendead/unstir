@@ -350,9 +350,9 @@ final class Game {
             pushes += 1
             if level.run != nil { brim += 1 }
         }
-        // A run's heal ring marks only what settles the brim, and a story's only a commit that plays a vignette:
-        // cancelling the player's own push flashes white, as a merge.
-        let heals = level.story != nil ? !played.isSubset(of: playedWas) : level.run == nil ? result == .cancelled : healed > 0
+        // The heal ring marks only a commit that pops one of the scramble's entries, and a story's only one that plays
+        // a vignette: cancelling the player's own push flashes white, as a merge (Jack's call SND2 = A, round 16).
+        let heals = level.story != nil ? !played.isSubset(of: playedWas) : healed > 0
         if heals { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
@@ -459,7 +459,8 @@ final class Game {
         lastCommit = (knob, result)
         turns += 1
         if result == .pushed { pushes += 1 }
-        if result == .cancelled { cancels += 1; cancelledRod = knob }
+        // The move's own heal: a tick's pop is the clock's, not the knob's.
+        if healed > 0 { cancels += 1; cancelledRod = knob }
         healed += landTicks()
         log("commit \(Twist(rod: knob, steps: steps)) \(result) moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
         record(.turn(knob: knob, steps: steps))
@@ -1556,10 +1557,8 @@ struct LevelView: View {
             withAnimation(.easeIn(duration: 0.3)) { showResult = true }
         }
         .task {
-            guard shareSheet, let text = game.shareText, (try? await Task.sleep(for: .seconds(1))) != nil,
-                  let root = UIApplication.shared.connectedScenes.compactMap({ ($0 as? UIWindowScene)?.keyWindow }).first?
-                      .rootViewController else { return }
-            root.present(UIActivityViewController(activityItems: [text], applicationActivities: nil), animated: false)
+            guard shareSheet, let text = game.shareText, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
+            ShareSheet.present([text], animated: false)
         }
         .task {
             // Past the picture's first render, so the bake does not land in the numbers.
@@ -2420,7 +2419,6 @@ struct LevelView: View {
         .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .haptic(.selection, trigger: ticks)
         .haptic(.selection, trigger: misses)
-        .onChange(of: ticks) { Sound.shared.play(.tick) }
         .onChange(of: tankTicks) { Knock.clunk.play(); Sound.shared.play(.tank) }
         .haptic(.impact(weight: .heavy), trigger: game.cancels)
         // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
@@ -3102,8 +3100,8 @@ struct Breath: Equatable {
     }
 }
 
-/// A turn's clicks: one each time what letting go would commit changes, at every half step, either way. So a rod's tick
-/// and the tank's clunk land with the drag's count, and every step a turn commits has had one.
+/// A turn's clicks: one each time what letting go would commit changes, at every half step, either way. So a rod's
+/// haptic and the tank's clunk land with the drag's count, and every step a turn commits has had one.
 struct Detent {
     let step: Double
     /// What letting go now would commit.
@@ -3863,8 +3861,7 @@ struct ResultCard: View {
                         .accessibilityLabel("Again")
                 }
                 if let share = game.shareText {
-                    ShareLink(item: share) { Text("share \u{2197}").hit() }
-                        .shareTap()
+                    ShareButton(items: { [share] }) { Text("share \u{2197}").hit() }
                         .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
                         .accessibilityLabel("Share result")
                 }

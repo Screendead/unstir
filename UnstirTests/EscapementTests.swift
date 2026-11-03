@@ -60,6 +60,8 @@ import XCTest
         XCTAssertEqual(g.budget, 3)
         g.commit(rod: 2, steps: 4)
         XCTAssertEqual(g.lastCommit?.result, .cancelled)
+        XCTAssertEqual(g.cancels, 1)
+        XCTAssertEqual(g.cancelledRod, 2)
         // Its tick takes the clock's upper seam from -2 to -1.
         XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1"))
         XCTAssertEqual(g.budget, 2)
@@ -77,6 +79,19 @@ import XCTest
         XCTAssertEqual(g.escapement.ticks, [0: 3])
         XCTAssertEqual(g.budget, 0)
         XCTAssertFalse(g.lost)
+    }
+
+    /// Jack's call SND2 = A (round 16): the heal ring is the move's own commit's. A knob's turn that pops nothing rings
+    /// no knob, though its tick pops one of the scramble's entries. The masks keep the clock's seam reachable on tri.
+    func testATicksPopRingsNoKnob() {
+        var level = level("1:+3,0:-1")
+        level.masks = [0: .red, 1: .cyan]
+        let g = Game(level: level, tankTurned: true, bank: (3, nil))
+        g.commit(rod: 1, steps: 2)
+        XCTAssertEqual(g.lastCommit?.result, .reduced)
+        XCTAssertEqual(g.stack, tri("1:+5"))
+        XCTAssertEqual(g.cancels, 0)
+        XCTAssertEqual(g.cancelledRod, 0)
     }
 
     /// Jack's call EL1 (round 11): a tick that pushes still buries a +1 that nothing can ever pop, but the tank plays on,

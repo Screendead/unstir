@@ -102,8 +102,7 @@ struct Harness {
     let brimDemo: Bool
     /// UNSTIR_RESETARMED=1: the reset control held armed by a first tap, "reset? tap again", for stills.
     let resetArmed: Bool
-    /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card. ShareLink can't be opened without a tap,
-    /// so this presents the UIKit sheet it wraps, with the same text.
+    /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card, as its share button opens it.
     let shareSheet: Bool
     /// UNSTIR_REVIEW=log: the rating request is logged instead of made, as an unharnessed launch would make it.
     let reviewLog: Bool

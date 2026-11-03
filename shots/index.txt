@@ -103,7 +103,7 @@ tier-up-midway.png  Plughole 05 solved at par, the last plughole level to reach 
 tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over).
 daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and a share button beside levels, and next daily in 7 h under them (UNSTIR_NOW=17:00).
 daily-practice.png  Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h.
-daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap).
+daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet its share button opens, opened without a tap).
 daily-share-supporter.png  The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦.
 wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
 wave-0.8.png  Level 13 solved through the real commit path, solve wave held at radius 0.8 from the last-turned rod.
@@ -506,7 +506,7 @@ card-complete-owned.png  Triptych's card, owned: BUNDLE, no taste or restore, ea
 card-lens-complete-pending.png  Lens's card while Triptych waits on Ask to Buy: Triptych is waiting, buy Lens alone, Triptych's line disabled.
 card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
 card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
-card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74).
+card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row, ‹ menu pinned over the scroll.
 shelf-menu-owned.png  The dock with every pack owned, the three through Triptych and First Stir (outside it) on its own: PACKS alone, no taste line, Triptych's cover gone.
 card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Triptych line until the prices say what it saves.
 card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Triptych line.
@@ -516,10 +516,12 @@ card-lens-offline.png  Lens's card after a purchase failed offline: no connectio
 card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Triptych, try free kept.
 card-lens-restored.png  Lens's card, owned, after a restore found it: restored Lens.
 card-lens-restored-none.png  Lens's card after a restore found nothing: nothing to restore on this Apple ID.
-card-lens-levels.png  Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked.
+card-lens-levels.png  Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked, ‹ menu still pinned at the top.
 card-lens-levels-owned.png  The same, owned: every level open.
-card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note.
+card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note, ‹ menu pinned over the scroll.
 card-gate-ax.png  The same at accessibility3: the Triptych line under buy wraps only before · save.
+card-gate-fewer.png  Lens's level 5, unowned, opened with only 03 solved (01 and 02 skipped): scrolled to buying under The first three are free. 22 more in Lens.
+card-gate-refunded.png  Lens's level 5 opened by a refunded owner, the free three at par: no free-three line, the revocation's own grey line in its place, buy again.
 card-lens-taste-end.png  Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta.
 card-lens-taste-end-owned.png  The same, owned: next again, still in Lens's magenta.
 card-lens-replay.png  Lens's card, unowned, the taste played: replay 01-03 in try free's place.
