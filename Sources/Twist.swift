@@ -52,10 +52,26 @@ enum Tank {
     /// The swirl has no rigid core: its turn fades smoothly from the full angle at the centre to 0 at the glass's edge,
     /// so it shears through every knob's core rather than carrying them round as a block.
     static let swirlPlateau = 0.0
-    /// Pushes past this are refused: every pixel runs each shader tap through every entry, plus the live twist.
+    /// Pushes past this are refused: every pixel runs each shader tap through every entry, plus the live twist. The same
+    /// on every glass, so every level plays as on an iPhone (Jack's call duocap2 = D), however far a larger glass then
+    /// runs over the frame budget measured at `tunedPixels`.
     static let maxStack = 36
-    /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two.
+    /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two. What a level is
+    /// dealt to fit, on every device; the shader takes `fourTaps(pixels:)`.
     static let fourTaps = 30
+    /// The glass's side in pixels where `fourTaps` was measured: the iPhone 13 Pro Max's, 396 / 1.045 pt at 3x, whose
+    /// 31 entries with four taps held 120 Hz and 32 didn't (Unstir.metal).
+    static let tunedPixels = 3 * 396 / 1.045
+    /// Up to this side in pixels a glass keeps `fourTaps`, so no glass drawn before the open Duo's upright one grew
+    /// past it changes, the largest phone's (about 1171) among them, though each past `tunedPixels` costs more than
+    /// was measured.
+    static let fourTapsKept = 1300.0
+
+    /// `fourTaps` on a glass `pixels` across: past `fourTapsKept` the 31 entries measured shrink with the glass's area,
+    /// less the one a drag, breath or tick in flight rides over, so 1471 px keeps 17.
+    static func fourTaps(pixels: Double) -> Int {
+        pixels <= fourTapsKept ? fourTaps : Int((31 * (tunedPixels / pixels) * (tunedPixels / pixels)).rounded(.down)) - 1
+    }
 
     /// Rotation fraction at s = |p - c| / radius. The Metal shader carries the same function.
     static func profile(_ s: Double, plateau: Double = plateau) -> Double {

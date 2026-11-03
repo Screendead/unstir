@@ -264,7 +264,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`Tank.profile`/`Tank.twist`/`Tank.lens`) and only the shader's `lensFlow`, compiled on its own
   (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
   The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (30) limits are tuned against 120 Hz on an
-  iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
+  iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`), before the turn was added; its cost per tap is
+  unmeasured. The shader takes the four-tap limit for its glass's size (`Tank.fourTaps(pixels:)`, less the fill, `Unstirred.taps`): 30 on every glass
+  up to 1300 px, so every iPhone and every pose drawn before the upright Duo's is unchanged, and past that the 31
+  entries measured scaled down by the area, less one for the entry in flight, so the open Duo upright's 1471 px gets
+  17; `Tank.maxStack` stays 36 at every size and every level is dealt to the phone's 30, so every level plays as on an
+  iPhone (Jack's call duocap2 = D). The accepted risk: a deep stack on a live picture there may run up to 32% over the
+  frame budget measured (a paper estimate; the Duo's GPU is unmeasured until stage 6's bench). The GPU bench keeps
+  the constant, so its 24 entries time four taps. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone. Prism's stacks
   go to a second stitchable, `unstirChannels`, only when some entry's mask isn't white (`Unstirred.masks`), so every
   other level draws through `unstir` as measured: it carries red, green and blue each through the inverses of the
@@ -704,8 +711,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the window's middle. A tall window folded across (the Duo upright on a table) is the
   tabletop: the rest in the upright half, the tank filling the half lying flat, and "unstirred." at the upright half's
   foot (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
-  shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1300 px), the size the stack's limits
-  were tuned at, so the Duo upright keeps a 433 pt glass. The column is a `VStackLayout` and the split and tabletop
+  shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1471 px, Jack's call duocap2 = D), which
+  only the Duo upright reaches, at 490 pt; the stack's limits were tuned at about 1137 px, and past 1300 the four-tap
+  limit shrinks with the glass (see Unstir.metal above). The column is a `VStackLayout` and the split and tabletop
   `PlayStack`, through one `AnyLayout`, so a change of pose keeps every part's identity, the tank's picture, opening,
   demonstration and keyframes with it: the parts glide to their new places, and the tank, drawn at its new size at once,
   glides there by `Glide`'s scale, its old bake stretched until the new one lands (none under Reduce Motion, nor from a
