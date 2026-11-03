@@ -224,7 +224,7 @@ the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share
 | 3.35–13.95 | `store-whirlpool-03`: whirlpool 03 unstirred at par by a drawn fingertip to its solve | A hand turning the rods back in order, the seams healing, the wave | Turn the rods back in order |
 | 13.95–17.8 | `rim-swirl` | Vortex's swirl held from the rim | Vortex: the swirl |
 | 17.8–21.65 | `rim-seized` | Maelstrom's tank turned past a seized knob | Maelstrom: the tank turns |
-| 21.65–25 | `endless-brim-run` (its spill) | The brim filling and spilling | Endless, and a daily |
+| 21.65–25 | `endless-brim-run` (its spill) | The brim filling and spilling, ending on its card | Endless, and a daily |
 
 `store-whirlpool-03` also serves plan step 3's social clips, beside three drawn clean (`clean-plughole-05`,
 `clean-whirlpool-01`, `editors-vortex-02`).
