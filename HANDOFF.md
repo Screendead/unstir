@@ -55,7 +55,7 @@ kept in the tools folder: the architecture pass's ranked list (`architecture/ran
 Merged: #126 (APPSIZE = B, the CI size guard, and pipefail in both Test steps), #127 (ICLOUD = A, bests through iCloud
 key-value storage, off behind `ICLOUD = NO`), #128 (store media: the Calm segment's jump fixed, screenshot 4 on vortex
 14 Monsoon, the preview cut to 25 s, the endless segment ending 1 s into the spilled card), #129 (SND1 = B, SND2 = A,
-SND3 = B, C1A = B, C1B = A) and #130 (ESC-PAPER = B, Escapement on bone paper). Still open: #124 (Duo stage 4).
+SND3 = B, C1A = B, C1B = A) and #130 (ESC-PAPER = B, Escapement on bone paper). #124 (Duo stage 4) followed on 2026-11-03.
 
 Not built: DUOCAP = C. The stack limits were tuned on the 13 Pro Max's glass, about 1137 px, not 1300 px as the round
 16 pitch said, so C needs a room threshold first. That is the follow-up call duocap2 (below). The "1300 px, the size
@@ -85,8 +85,19 @@ amber or magenta hints are drawn in ink; the clock-stop ring is the plate's verm
 picture stay 0.5 pt, in ink (the 2 px floor is the picture's); sheared areas go pale, so the stirred plate reads pale
 at dock-cover size, the risk the pitch named. The before and after shots aren't attached to the PR (needs Chrome).
 
-Round 16's follow-up calls: Jack picked them on the round 16 page (2026-11-03). Being built: #124 (the d-calls), the
-iCloud picks and the play picks, each on its own PR.
+Round 16's follow-up calls: Jack picked them on the round 16 page (2026-11-03). Built and merged the same day, each
+after an adversarial review and fixes: #124 (Duo stage 4 with d3-lenscap, d4-menuback and d4-pose = B), #132 (the
+iCloud picks: endless's best and the tried flags sync; the editors' build and the unlock never sync) and #133 (the
+tank's drag silent, its sound removed; the sandbox withheld from Release, as First Stir is, kept in Debug and the
+harness).
+
+New calls from those builds, on the round 16 page with duocap2 and soundsk2 ("Open now"), none decided:
+
+| Call | Recommendation (not decided) |
+|---|---|
+| lenscap2. What d3-lenscap's cap counts | **A:** the whole open stir, as built: lifted at the cap, the same lens zooms no further until another rod or the tank turns, or an undo. No Lens level reaches the cap |
+| archive-close. The archive beside the list | **A:** read "✕ close" as the card does (today "‹ menu") |
+| store-sandbox. `docs/store-page.md` still sells the sandbox | **A:** drop its bullet and its mention (guideline 2.3) |
 
 | Call | Jack's pick |
 |---|---|
@@ -155,18 +166,17 @@ that leaves `master` shippable: the wide layout only reaches windows wider than 
 6. **Device and store**: the GPU bench at each pose's pixel size, Duo App Store screenshots (1398 × 2034, 2853 × 2007,
    2007 × 2853) from the harness, Split View's sizes; hairlines and the crease on a real Duo (needs a device or tester).
 
-Where it stands (2026-11-02): stages 2 (#120) and 3 (#122) are merged, each after an adversarial review and fixes.
-Stage 4 is PR #124, taking Jack's d4 calls (2026-11-03). Round 16 decided stage 5's placement (DUOMENU = B: the
+Where it stands (2026-11-03): stages 2 (#120), 3 (#122) and 4 (#124, with Jack's d-calls) are merged, each after an
+adversarial review and fixes. Stage 5 (menu beside play) is being built on `duo-stage5`. Round 16 decided stage 5's placement (DUOMENU = B: the
 tank left, the menu right) and the upright cap (DUOCAP = C: a higher cap, shallower stacks at that size). DUOCAP
-isn't built: the limits were tuned at about 1137 px, not 1300, so it waits on duocap2 (Round 16's build, above). #124
-conflicts with #129's `PackCard` change in Shelf.swift and needs a careful merge.
+isn't built: the limits were tuned at about 1137 px, not 1300, so it waits on duocap2 (Round 16's build, above).
 
 Stage 2's loose ends: its fix for a touch held across a pose change (`touchStart`, `holding`) is checked by reading the
 code only, as no harness path drives an edge touch; a card taller than the tabletop's upright half (large Dynamic Type)
 can still reach "unstirred." and the fold. The before and after card shots, by pose, and every review shot are in the
 tools folder's `duo/` (stage2, stage3-review, stage4), not attached to the PRs, since Chrome was not connected.
 
-**The critical path (Claude's reading, Jack's to overrule):** stage 4 (on the d4 calls) → stage 5 → ARCH's TankView split →
+**The critical path (Claude's reading, Jack's to overrule):** stage 5 → ARCH's TankView split →
 the design pass. ARCH says "after the Duo stages", read as including stage 5, as it rebuilds the same files; ORDER
 scoped the Duo as 2 to 4. The split waits, as starting it would rebase stages 4 and 5 onto renamed files.
 
