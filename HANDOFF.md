@@ -167,7 +167,14 @@ that leaves `master` shippable: the wide layout only reaches windows wider than 
    2007 × 2853) from the harness, Split View's sizes; hairlines and the crease on a real Duo (needs a device or tester).
 
 Where it stands (2026-11-03): stages 2 (#120), 3 (#122) and 4 (#124, with Jack's d-calls) are merged, each after an
-adversarial review and fixes. Stage 5 (menu beside play) is being built on `duo-stage5`. Round 16 decided stage 5's placement (DUOMENU = B: the
+adversarial review and fixes. Stage 5 (the menu beside play, and the tabletop's menu that d4-table left to it) is PR
+#135, its PR test set passing locally (395 tests, 10 skipped), waiting on its eight calls, each recommended as built:
+where the level's header and controls sit beside the menu (the recorded DUOMENU text and the pitch's picture differ),
+the title and gear beside play, a card or the archive while a level plays, Escapement's paper beside the menu, the
+back swipe there, the tabletop's dock and cards, the playing row's mark, and a card's clip beside a playing tank.
+`FreshDefaults` clears started flags and saved tries but not bests, so a second local test run on one install fails
+three tests (`testResetZeroesMovesButCostsClean`, `testALookIsFree`, `testMarksFollowThePlay`); CI's fresh simulator
+never sees it. Round 16 decided stage 5's placement (DUOMENU = B: the
 tank left, the menu right) and the upright cap (DUOCAP = C: a higher cap, shallower stacks at that size). DUOCAP
 isn't built: the limits were tuned at about 1137 px, not 1300, so it waits on duocap2 (Round 16's build, above).
 
