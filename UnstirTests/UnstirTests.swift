@@ -1643,9 +1643,11 @@ final class UnstirTests: XCTestCase {
         XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
         XCTAssertFalse(Store.shared.opens(.sandbox, release: true))
         XCTAssertTrue(Store.shared.opens(.sandbox, release: false))
-        for level in [Level.plughole[0], Level.daily(), .endless(Run(seed: 7))] {
+        for level in [Level.plughole[0], Level.daily(), .endless(Run(seed: 7)), Level.lens[0]] {
             XCTAssertTrue(Store.shared.opens(level, release: true))
         }
+        XCTAssertFalse(Store.shared.opens(Level.firstStir[0], release: true), "release reaches the pack's gate too")
+        XCTAssertTrue(Store.shared.opens(Level.firstStir[0], release: false))
     }
 
     /// Only a fresh install's first launch opens on plughole 01, and never the harness's.

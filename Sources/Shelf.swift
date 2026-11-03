@@ -194,7 +194,7 @@ extension Store {
 
     /// A level this build may open: any outside a pack but a sandbox it withholds, and a pack's that the build sells.
     func opens(_ level: Level, release: Bool = Build.release) -> Bool {
-        (!level.sandbox || Level.playsSandbox(release: release)) && access(level) != .withheld
+        (!level.sandbox || Level.playsSandbox(release: release)) && access(level, release: release) != .withheld
     }
 }
 
