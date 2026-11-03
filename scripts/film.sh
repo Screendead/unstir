@@ -124,7 +124,7 @@ film heartbeat-maelstrom18-neurons 3.5 "trim=start=2.2,setpts=PTS-STARTPTS,$tank
 # Endless's brim, the approved film's run through the real commit path (UNSTIR_BRIMDEMO): from 5 notches two heals settle it
 # to 3, then five pushes fill it notch by notch until the last spills over the lip at twelve and the picture stirs together.
 # Cropped taller than the tank, for the brim pin and the pour above it.
-film endless-brim-run 11.5 "crop=1320:1460:0:700,fps=3,scale=200:-1,tile=8x4:padding=4" MODE=endless BRIM=5 BRIMDEMO=1
+film endless-brim-run 14 "crop=1320:1460:0:700,fps=3,scale=200:-1,tile=8x4:padding=4" MODE=endless BRIM=5 BRIMDEMO=1
 # The rim, played by a drawn fingertip (UNSTIR_FINGER) after two seconds at rest, its lessons learnt: vortex 01 swirled
 # from the rim, healing the swirl's seam then the knob's; maelstrom 01's glass turned from the bezel, then its three
 # knobs; vortex 02 with knob 3 seized, the glass turned from the bezel, a knob, the swirl from the glass's edge and a

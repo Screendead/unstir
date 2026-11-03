@@ -53,13 +53,14 @@ fi
 # to a shorter preview (head, tail, or - for none), caption. A strike is the bezel lighting, about a second before the
 # picture; a keep that ends on a solve runs a second or more past its wave, as the time from strike to solve varies from
 # take to take, so whirlpool 03 keeps its whole solve. The others give up the same share each: open-L12 its rest after
-# the wind-in, the rim's two their rest before the finger lands, endless its pushes before the spill.
+# the wind-in, the rim's two their rest before the finger lands, endless its pushes before the spill. Endless ends
+# about a second into the spill's card, which is up some 8.8 s after the strike.
 preview=(
   "store-open-L12|0.3|4|tail|A picture, stirred"
   "store-whirlpool-03|2.8|10.6|-|Turn the rods back in order"
   "rim-swirl|1|4.5|head|Vortex: the swirl"
   "rim-seized|1.8|4.5|head|Maelstrom: the tank turns"
-  "endless-brim-run|4.5|4|head|Endless, and a daily"
+  "endless-brim-run|5.8|4|head|Endless, and a daily"
 )
 if [[ "$what" == preview || "$what" == all ]]; then
   target=${STORE_PREVIEW:-25} whole=0 giving=0 least="" names=()
