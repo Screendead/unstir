@@ -85,7 +85,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Info.plist's `SupportAddress` and `PolicyURL`; in an xcconfig a URL is written `https:/$()/...`, as `//` starts a
   comment. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
   build's events as Debug. `ICLOUD=YES` syncs progress through iCloud (`Sync.swift`), signing with its entitlement, so a
-  device build needs the App ID's iCloud capability; a simulator build without signing builds either way. `EDITORS=YES` (or `EDITORS = YES` in `Config/Local.xcconfig` for an Xcode archive) makes the
+  device build needs the App ID's iCloud capability; a simulator build without signing builds either way.
+  `ADAPTIVE_TAPS=YES` lets a plain launch learn and keep each glass's four-tap budget (`Taps`). `EDITORS=YES` (or `EDITORS = YES` in `Config/Local.xcconfig` for an Xcode archive) makes the
   editors' build, for App Store editors on its own TestFlight group (Jack's call F11): it sets the `EDITORS` compilation
   condition (`Build.editors`), and settings shows a labelled switch, "open every tier", that sets `Best.unlocked`, every
   tier, level and pack open, and the version line ends "editors". Any other Release build compiles the switch out
@@ -295,7 +296,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   is at most B, and two otherwise, as the shader can't split one chain. `Taps` learns B per glass (`TapKey`: the
   screen's top rate and the glass's side to 16 px) and drives only the level's glass, `LevelView.tank()`'s
   `Unstirred`; the dock's covers, the cards' clips, the icon, the menu's stir and the GPU bench keep their static
-  limits. `FrameWatch`, a display link alive only while a finger (or `UNSTIR_TAPDRAG`) turns a rod or the rim
+  limits. It runs only where the build's `ADAPTIVE_TAPS` (`Config/Unstir.xcconfig`, NO until the phone gate below
+  passes and Jack decides TAPS-FLOOR and TAPS-CEIL) sets Info.plist's `AdaptiveTaps`, read as `Taps.built`, or under
+  `UNSTIR_TAPS`; otherwise every glass draws its static limit. `FrameWatch`, a display link alive only while a finger (or `UNSTIR_TAPDRAG`) turns a rod or the rim
   (`LevelView.tapWindow`: no opening, settle, card, slide or breath's fade), times each interval against the period
   the system grants and reads the main thread's CPU time in it (`TapLaw.classify`): late past 1.5 periods, the GPU's
   (`gpuMiss`) where the main thread was idle for at least half of it, the main thread's own where it was busy for all but
@@ -321,8 +324,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   written only when it changes), so a launch killed before the next still moment keeps a step with its cap, dropped
   by a new build (its number and its executable's timestamp, as the halftone's cache) or OS, and starts a new glass
   from the nearest learnt, scaled by area, else `Tank.fourTaps(pixels:)`. Each decision goes to the flight recorder
-  (`taps prior`, `taps drag` for a drag with a late frame, `taps down`, `up`, `applied`, `reverted`, `held`, `hot`,
-  `cool`), never from the link's callback. The harness, the test host and the simulator draw the static limit and
+  (`taps prior`; `taps drag` for every drag under `watch` or `adapt` without keeping, else one with a late or frozen
+  frame or a decision; `taps down`, `up`, `probe`, `cap … erased`, `applied`, `reverted`, `held`, `two-tap misses`,
+  `hot`, `cool`; and an `UNSTIR_TAPS` it can't read, which draws the static limit), never from the link's callback. The harness, the test host and the simulator draw the static limit and
   measure nothing, so no shot or test depends on timing, unless `UNSTIR_TAPS` (below). That a late frame's CPU time
   tells the GPU from the main thread is an inference, unchecked on the phone (`scripts/taps-check.sh`).
 - **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw whirlpool's live
@@ -1152,7 +1156,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone.
   `UNSTIR_TAPS=n` pins the level's four-tap budget at n, `=watch:n` pins it and logs every drag's frames, and `=adapt`
-  runs `Taps`' law from the glass's prior keeping nothing (`=adapt:n`, from n); it too leaves the launch a plain one
+  runs `Taps`' law from the glass's prior keeping nothing (`=adapt:n`, from n), in any build; a value it can't read
+  draws the static limit. It too leaves the launch a plain one
   and `scripts/run-ios.sh` passes it. For it on the phone, `UNSTIR_TAPDRAG=n` drags the first working knob n times,
   4 s each, through the real let-go, each landing a step, alternately each way; `UNSTIR_TAPSTALL=ms` busies the main
   thread that long every half second of a drag; and `UNSTIR_DEEP=n` cuts or repeats the level's stack to n entries,

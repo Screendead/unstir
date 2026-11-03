@@ -31,16 +31,23 @@ final class TapsTests: XCTestCase {
     }
 
     func testShotsAndTheTestHostDrawTheStaticLimitUnlessPinned() {
-        XCTAssertEqual(Taps.mode(env: [:], harnessed: false, simulator: false), .adapt(from: nil, stores: true), "a plain launch")
-        XCTAssertEqual(Taps.mode(env: [:], harnessed: true, simulator: false), .off)
-        XCTAssertEqual(Taps.mode(env: [:], harnessed: false, simulator: true), .off)
-        XCTAssertEqual(Taps.mode(env: ["XCTestConfigurationFilePath": "x"], harnessed: false, simulator: false), .off)
-        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "24"], harnessed: true, simulator: true), .pinned(24))
-        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "watch:42"], harnessed: true, simulator: false), .watch(42))
-        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "watch"], harnessed: true, simulator: false), .off)
-        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "adapt"], harnessed: false, simulator: false), .adapt(from: nil, stores: false))
-        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "adapt:42"], harnessed: true, simulator: true), .adapt(from: 42, stores: false))
-        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "lots"], harnessed: true, simulator: false), .off)
+        XCTAssertEqual(Taps.mode(env: [:], harnessed: false, simulator: false, built: true), .adapt(from: nil, stores: true),
+                       "a plain launch of a build with ADAPTIVE_TAPS")
+        XCTAssertEqual(Taps.mode(env: [:], harnessed: false, simulator: false, built: false), .off, "v1's")
+        XCTAssertFalse(Taps.built, "off until the phone gate passes")
+        XCTAssertEqual(Taps.mode(env: [:], harnessed: true, simulator: false, built: true), .off)
+        XCTAssertEqual(Taps.mode(env: [:], harnessed: false, simulator: true, built: true), .off)
+        XCTAssertEqual(Taps.mode(env: ["XCTestConfigurationFilePath": "x"], harnessed: false, simulator: false, built: true), .off)
+        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "24"], harnessed: true, simulator: true, built: false), .pinned(24))
+        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "watch:42"], harnessed: true, simulator: false, built: false), .watch(42))
+        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "adapt"], harnessed: false, simulator: false, built: false),
+                       .adapt(from: nil, stores: false))
+        XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": "adapt:42"], harnessed: true, simulator: true, built: false),
+                       .adapt(from: 42, stores: false))
+        // A value it can't read never falls through to the law that keeps what it learns.
+        for bad in ["watch", "watch:x", "adapt:", "adapt:x", "lots", "", "24:1", "pinned:24"] {
+            XCTAssertEqual(Taps.mode(env: ["UNSTIR_TAPS": bad], harnessed: false, simulator: false, built: true), .off, bad)
+        }
         // UNSTIR_TAPS leaves a phone's launch a plain one, as UNSTIR_ANALYTICS does.
         XCTAssertFalse(Harness(["UNSTIR_TAPS": "adapt"]).harnessed)
         XCTAssertTrue(Harness(["UNSTIR_TAPS": "30", "UNSTIR_LEVEL": "3"]).harnessed)

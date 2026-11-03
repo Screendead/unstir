@@ -34,4 +34,9 @@ GAME_CENTER = NO
 ICLOUD = NO
 ICLOUD_ENTITLEMENTS_YES = Config/iCloud.entitlements
 CODE_SIGN_ENTITLEMENTS = $(ICLOUD_ENTITLEMENTS_$(ICLOUD))
+// YES lets a plain launch on a phone learn each glass's four-tap budget from the frames its drags miss and keep it
+// (Sources/Taps.swift). NO, until the phone shows a late frame's main-thread time tells the GPU's misses from the main
+// thread's (scripts/taps-check.sh) and the floor and ceiling are decided, draws the static limit; UNSTIR_TAPS still
+// runs the law for a launch.
+ADAPTIVE_TAPS = NO
 #include? "Local.xcconfig"

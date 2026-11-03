@@ -40,19 +40,26 @@ final class Taps {
     /// The law's numbers: `TapCuts.unattributed` should the phone show the main thread's CPU time can't tell the
     /// GPU's misses from its own.
     static let cuts = TapCuts.attributed
+    /// Info.plist's `AdaptiveTaps`, which the build's ADAPTIVE_TAPS sets.
+    nonisolated static let built = Bundle.main.object(forInfoDictionaryKey: "AdaptiveTaps") as? String == "YES"
 
     /// UNSTIR_TAPS: n pins the budget, watch:n pins it and logs every drag, adapt runs the law storing nothing (adapt:n
-    /// from n). Unset, a plain launch on a phone runs the law and keeps what it learns; the harness, the test host and
-    /// the simulator, whose frames say nothing of a phone's GPU, draw the static limit, so no shot depends on timing.
-    nonisolated static func mode(env: [String: String], harnessed: Bool, simulator: Bool) -> Mode {
-        let f = env["UNSTIR_TAPS"]?.split(separator: ":").map(String.init) ?? []
-        let n = f.count > 1 ? Int(f[1]) : nil
-        switch f.first {
-        case "adapt"?: return .adapt(from: n, stores: false)
-        case "watch"? where n != nil: return .watch(n!)
-        case let s? where f.count == 1 && Int(s) != nil: return .pinned(Int(s)!)
-        default:
-            return harnessed || simulator || env["XCTestConfigurationFilePath"] != nil ? .off : .adapt(from: nil, stores: true)
+    /// from n); a value it can't read is the static limit. Unset, a plain launch on a phone of a build with
+    /// ADAPTIVE_TAPS runs the law and keeps what it learns; the harness, the test host and the simulator, whose frames
+    /// say nothing of a phone's GPU, draw the static limit, so no shot depends on timing.
+    nonisolated static func mode(env: [String: String], harnessed: Bool, simulator: Bool, built: Bool) -> Mode {
+        if let v = env["UNSTIR_TAPS"] { return parse(v) ?? .off }
+        return !built || harnessed || simulator || env["XCTestConfigurationFilePath"] != nil ? .off : .adapt(from: nil, stores: true)
+    }
+
+    nonisolated static func parse(_ v: String) -> Mode? {
+        let f = v.split(separator: ":", omittingEmptySubsequences: false).map(String.init)
+        switch (f.first, f.count) {
+        case ("adapt"?, 1): return .adapt(from: nil, stores: false)
+        case ("adapt"?, 2): return Int(f[1]).map { .adapt(from: $0, stores: false) }
+        case ("watch"?, 2): return Int(f[1]).map(Mode.watch)
+        case (let s?, 1): return Int(s).map(Mode.pinned)
+        default: return nil
         }
     }
 
@@ -153,7 +160,8 @@ final class Taps {
         #else
         let simulator = false
         #endif
-        use(Self.mode(env: env, harnessed: harnessed, simulator: simulator))
+        if let v = env["UNSTIR_TAPS"], Self.parse(v) == nil { Log.write("taps: UNSTIR_TAPS=\(v) unread, the static limit") }
+        use(Self.mode(env: env, harnessed: harnessed, simulator: simulator, built: Self.built))
         stall = (env["UNSTIR_TAPSTALL"].flatMap(Double.init) ?? 0) / 1000
     }
 
