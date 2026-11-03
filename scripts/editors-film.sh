@@ -25,7 +25,7 @@ for i in "${!segments[@]}"; do
   start=$(scripts/strike.sh "$mp4")
   # A launch that stalls past the take leaves no strike: film that segment again (scripts/film.sh <name>).
   [[ -n "$start" ]] || { echo "$name: no picture struck in its take" >&2; exit 1; }
-  inputs+=(-i "$mp4")
+  inputs+=(-fflags +igndts -i "$mp4")  # dts ignored, as scripts/film.sh says
   # recordVideo writes a frame only when the screen changes, so fps= first; film.sh may have shrunk a large segment,
   # so every one is scaled to the same size.
   chains+="[$i:v]trim=start=$start:duration=$keep,setpts=PTS-STARTPTS,fps=30,scale=1080:2346,setsar=1[v$i];"

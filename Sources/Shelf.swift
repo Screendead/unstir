@@ -464,110 +464,116 @@ struct PackCard: View {
 
     var body: some View {
         let state = store.state(offer)
-        GeometryReader { g in
-            ScrollViewReader { reader in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Button(action: onBack) { Text("\u{2039} \(backTo)").font(.mono(.subheadline, .medium)).hit() }
-                            .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
-                            .accessibilityLabel("Back")
-                        Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
-                            .font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
-                            .padding(.top, 26)
-                        Text(offer.name).font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
-                            .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
-                            .accessibilityAddTraits(.isHeader)
-                        Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
-                        // Bounded by the height too, so buy is still on the first screen of the smallest phone.
-                        PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48,
-                                                         g.size.height * 0.36), held: clock)
-                            .frame(maxWidth: .infinity).padding(.top, 28)
-                        // An owner's card is home, not a shop: no taste to offer, and the pack's progress for what it holds.
-                        VStack(alignment: .leading, spacing: 9) {
-                            fact("for", Text(offer.assumes))
-                            if state != .owned { fact("free", Text(offer.free)) }
-                            if state == .owned, offer.pack != nil, !levels.isEmpty {
-                                fact("done", Text("\(levels.filter { Best.load($0.id)?.over == 0 }.count)/\(levels.count) \(noPar ? "solved" : "at par")"))
-                            } else {
-                                fact("holds", holds)
-                                    .accessibilityActions {
-                                        // The names' links, which a combined element may not offer VoiceOver.
-                                        if offer.pack == nil {
-                                            ForEach(Pack.bundled, id: \.self) { pack in
-                                                Button("Open \(pack.name)") { onOffer(.pack(pack)) }
+        // Back is pinned over the scroll, so the card's way out shows at every scroll position, the gate's landing on
+        // buying too (Jack's call C1B = A, round 16).
+        VStack(alignment: .leading, spacing: 0) {
+            // Padded below by all of hit()'s reach, as the scroll, laid over it, would take the rest of its target.
+            Button(action: onBack) { Text("\u{2039} \(backTo)").font(.mono(.subheadline, .medium)).hit() }
+                .buttonStyle(Sounding()).padding(.top, 18).padding(.bottom, 14).opacity(0.8)
+                .padding(.horizontal, 24)
+                .accessibilityLabel("Back")
+            GeometryReader { g in
+                ScrollViewReader { reader in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
+                                .font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
+                                .padding(.top, 12)
+                            Text(offer.name).font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
+                                .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
+                                .accessibilityAddTraits(.isHeader)
+                            Text(offer.pitch).font(.mono(.footnote)).opacity(0.62).padding(.top, 4)
+                            // Bounded by the height too, so buy is still on the first screen of the smallest phone.
+                            PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48,
+                                                             g.size.height * 0.36), held: clock)
+                                .frame(maxWidth: .infinity).padding(.top, 28)
+                            // An owner's card is home, not a shop: no taste to offer, and the pack's progress for what it holds.
+                            VStack(alignment: .leading, spacing: 9) {
+                                fact("for", Text(offer.assumes))
+                                if state != .owned { fact("free", Text(offer.free)) }
+                                if state == .owned, offer.pack != nil, !levels.isEmpty {
+                                    fact("done", Text("\(levels.filter { Best.load($0.id)?.over == 0 }.count)/\(levels.count) \(noPar ? "solved" : "at par")"))
+                                } else {
+                                    fact("holds", holds)
+                                        .accessibilityActions {
+                                            // The names' links, which a combined element may not offer VoiceOver.
+                                            if offer.pack == nil {
+                                                ForEach(Pack.bundled, id: \.self) { pack in
+                                                    Button("Open \(pack.name)") { onOffer(.pack(pack)) }
+                                                }
                                             }
                                         }
-                                    }
+                                }
+                                if offer.pack == nil, state != .owned, let saving = store.saving {
+                                    fact("save", Text("\(saving) on the packs you don't have"))
+                                }
                             }
-                            if offer.pack == nil, state != .owned, let saving = store.saving {
-                                fact("save", Text("\(saving) on the packs you don't have"))
-                            }
-                        }
-                        .padding(.top, 32)
-                        if let note = offer.note { detail(note).padding(.top, 12) }
-                        if offer.arriving {
-                            Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        // Buying comes before the list, so it is on the first screen whatever the pack holds.
-                        if levels.isEmpty { Spacer(minLength: 24) }
-                        VStack(alignment: .leading, spacing: 0) {
-                            if arrived, let note = Self.arrival(offer, levels, state: state) {
-                                Text(note).font(.mono(.footnote)).opacity(0.85).padding(.bottom, 14)
+                            .padding(.top, 32)
+                            if let note = offer.note { detail(note).padding(.top, 12) }
+                            if offer.arriving {
+                                Text("More levels arrive in an update.").font(.mono(.caption)).opacity(0.62).padding(.top, 12)
                                     .fixedSize(horizontal: false, vertical: true)
-                                    .accessibilityFocused($spoken, equals: .note)
                             }
-                            status(state).id(state)
-                                .transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
-                            action(state).padding(.top, 14)
+                            // Buying comes before the list, so it is on the first screen whatever the pack holds.
+                            if levels.isEmpty { Spacer(minLength: 24) }
+                            VStack(alignment: .leading, spacing: 0) {
+                                if arrived, let note = Self.arrival(offer, levels, state: state) {
+                                    Text(note).font(.mono(.footnote)).opacity(0.85).padding(.bottom, 14)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .accessibilityFocused($spoken, equals: .note)
+                                }
+                                status(state).id(state)
+                                    .transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
+                                action(state).padding(.top, 14)
+                            }
+                            // Half inside the anchor, so a scroll to it leaves a margin above the note.
+                            .padding(.top, levels.isEmpty ? 0 : 16)
+                            .id("buy")
+                            .padding(.top, levels.isEmpty ? 0 : 16)
+                            if offer.pack != nil, state != .owned, store.canPay, let saving = store.saving,
+                               Offer.shelf().contains(.complete) {
+                                completeLine(saving).padding(.top, 14)
+                            }
+                            if Pack.sold().contains(where: { store.state($0) != .owned }) {
+                                restore.padding(.top, 18).padding(.bottom, 10)
+                            }
+                            if !levels.isEmpty { list(reader).padding(.top, 26).padding(.bottom, 10).id("list") }
                         }
-                        // Half inside the anchor, so a scroll to it leaves a margin above the note.
-                        .padding(.top, levels.isEmpty ? 0 : 16)
-                        .id("buy")
-                        .padding(.top, levels.isEmpty ? 0 : 16)
-                        if offer.pack != nil, state != .owned, store.canPay, let saving = store.saving,
-                           Offer.shelf().contains(.complete) {
-                            completeLine(saving).padding(.top, 14)
-                        }
-                        if Pack.sold().contains(where: { store.state($0) != .owned }) {
-                            restore.padding(.top, 18).padding(.bottom, 10)
-                        }
-                        if !levels.isEmpty { list(reader).padding(.top, 26).padding(.bottom, 10).id("list") }
+                        .padding(.horizontal, 24)
+                        .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
+                        .animation(reduceMotion ? nil : .snappy(duration: 0.45), value: state)
                     }
-                    .padding(.horizontal, 24)
-                    .frame(maxWidth: .infinity, minHeight: g.size.height, alignment: .topLeading)
-                    .animation(reduceMotion ? nil : .snappy(duration: 0.45), value: state)
-                }
-                .scrollBounceBehavior(.basedOnSize)
-                // Scrolled words would run on under the status bar's clock: they fade out at the safe area's top
-                // instead, over less than the 18 pt above "‹ menu", and run on under the home indicator.
-                .mask {
-                    VStack(spacing: 0) {
-                        LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom).frame(height: 12)
-                        Color.black
+                    .scrollBounceBehavior(.basedOnSize)
+                    // Scrolled words fade out under the pinned back instead of meeting it at a hard edge, and run on
+                    // under the home indicator.
+                    .mask {
+                        VStack(spacing: 0) {
+                            LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom).frame(height: 12)
+                            Color.black
+                        }
+                        .padding(.bottom, -g.safeAreaInsets.bottom - 40)
                     }
-                    .padding(.bottom, -g.safeAreaInsets.bottom - 40)
-                }
-                .onAppear {
-                    // The gate's arrival opens on buying, else UNSTIR_CARDSCROLL on the list, else on the row left.
-                    if arrived {
-                        reader.scrollTo("buy", anchor: .top)
-                    } else if scrolled {
-                        reader.scrollTo("list", anchor: .top)
-                    } else if let focus, levels.contains(where: { $0.id == focus.id }) {
-                        DispatchQueue.main.async { reader.scrollTo(focus.id, anchor: .center) }
-                        if !reduceMotion {
-                            lit = 1
-                            withAnimation(.easeOut(duration: 1.4).delay(0.35)) { lit = 0 }
+                    .onAppear {
+                        // The gate's arrival opens on buying, else UNSTIR_CARDSCROLL on the list, else on the row left.
+                        if arrived {
+                            reader.scrollTo("buy", anchor: .top)
+                        } else if scrolled {
+                            reader.scrollTo("list", anchor: .top)
+                        } else if let focus, levels.contains(where: { $0.id == focus.id }) {
+                            DispatchQueue.main.async { reader.scrollTo(focus.id, anchor: .center) }
+                            if !reduceMotion {
+                                lit = 1
+                                withAnimation(.easeOut(duration: 1.4).delay(0.35)) { lit = 0 }
+                            }
                         }
                     }
-                }
-                .task {
-                    // VoiceOver lands on a new screen's first element, back, after it appears, which would scroll the
-                    // card to its top again; the wait lets that land first.
-                    guard arrived else { return }
-                    try? await Task.sleep(for: .milliseconds(600))
-                    spoken = Self.arrival(offer, levels, state: store.state(offer)) == nil ? .buy : .note
+                    .task {
+                        // VoiceOver lands on a new screen's first element, back, after it appears; the wait lets that land
+                        // first.
+                        guard arrived else { return }
+                        try? await Task.sleep(for: .milliseconds(600))
+                        spoken = Self.arrival(offer, levels, state: store.state(offer)) == nil ? .buy : .note
+                    }
                 }
             }
         }
@@ -849,13 +855,15 @@ struct PackCard: View {
         return free.first.map { ($0, true) }
     }
 
-    /// Over buying, when a level past the taste opened the card: only while it is true, every free level with a best
-    /// and the pack never owned. A row opens any free level, so the gate can come before all of them are played.
+    /// Over buying, when a level past the taste opened the card of a pack never owned: that the free levels are
+    /// played, once every one has a best, else, for a player who skipped ahead (a row opens any free level), that they
+    /// are free (Jack's call C1A = B, round 16). A refunded owner has the revocation's line instead.
     static func arrival(_ offer: Offer, _ levels: [Level], state: Purchase,
                         best: (String) -> Best? = Best.load) -> String? {
-        guard let pack = offer.pack, levels.count > pack.taste, state != .owned, state != .revoked,
-              taste(levels, best: best)?.replay == true else { return nil }
-        return "You've played the free \(Offer.countWord(pack.taste)). \(levels.count - pack.taste) more in \(pack.name)."
+        guard let pack = offer.pack, levels.count > pack.taste, state != .owned, state != .revoked else { return nil }
+        let free = Offer.countWord(pack.taste), more = "\(levels.count - pack.taste) more in \(pack.name)."
+        return taste(levels, best: best)?.replay == true ? "You've played the free \(free). \(more)"
+            : "The first \(free) are free. \(more)"
     }
 
     /// Play, until a level past the taste has been solved: then the owner continues.

@@ -209,13 +209,17 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.cancels, 0)
     }
 
-    /// Outside a run, cancelling the player's own push flashes the heal's ring as any cancel does.
-    @MainActor func testOwnPushCancelOutsideARunFlashesTheHealRing() {
+    /// Outside a run too, cancelling the player's own push flashes white, as in a run: the heal's ring and heavy tap
+    /// mean one of the scramble's entries came off (Jack's call SND2 = A, round 16).
+    @MainActor func testOwnPushCancelOutsideARunFlashesWhite() {
         let game = Game(level: Level(id: "test", label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)]))
         game.commit(rod: 1, steps: 1)
         game.commit(rod: 1, steps: -1)
         XCTAssertEqual(game.lastCommit?.result, .cancelled)
+        XCTAssertEqual(game.cancels, 0)
+        game.commit(rod: 0, steps: -4)
         XCTAssertEqual(game.cancels, 1)
+        XCTAssertEqual(game.cancelledRod, 0)
     }
 
     /// A heal of one of the scramble's entries settles a notch, the last heal too; an empty brim stays empty.
@@ -646,6 +650,8 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, 10), par: true), "best \u{00B7} par")
         XCTAssertEqual(ResultCard.bestLine(was: best(0, clean: true), now: best(3), par: true), "best \u{00B7} clean")
         XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: false), "new best \u{00B7} was solved")
+        // A daily's first solve on its day over the archive's best, which another time zone or iCloud brought: a first.
+        XCTAssertNil(ResultCard.bestLine(was: Best(over: 0, seconds: 9, clean: true, archived: true), now: best(3), par: true))
     }
 
     /// A faster solve at the same mark keeps the older best, seconds and all; a cleaner one replaces it however slow.
@@ -792,21 +798,21 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.history, [Twist(rod: 0, steps: 2), Twist(rod: 0, steps: -2)])
     }
 
-    /// A heal climbs the scale: a wrong stir turned straight back cancels but is no heal, and the heal that solves sounds
-    /// as the solve instead.
+    /// A heal climbs the scale: a wrong stir turned straight back cancels but is no heal, nor rings, and the heal that
+    /// solves sounds as the solve instead.
     @MainActor func testHealsCountTheScrambleTakenOff() {
         let scramble = [Twist(rod: 0, steps: 4), Twist(rod: 1, steps: 3)]
         let game = Game(level: Level(id: "test-heals", label: "", title: "", layout: .tri, scramble: scramble))
         game.commit(rod: 0, steps: 2)
         XCTAssertEqual(game.pushes, 1)
         game.commit(rod: 0, steps: -2)
-        XCTAssertEqual(game.cancels, 1)
+        XCTAssertEqual(game.cancels, 0)
         XCTAssertEqual(game.heals, 0)
         game.commit(rod: 1, steps: -3)
         XCTAssertEqual(game.heals, 1)
         game.commit(rod: 0, steps: -4)
         XCTAssertTrue(game.solved)
-        XCTAssertEqual(game.cancels, 3)
+        XCTAssertEqual(game.cancels, 2)
         XCTAssertEqual(game.heals, 1)
     }
 
@@ -820,7 +826,7 @@ final class UnstirTests: XCTestCase {
         game.commit(rod: 0, steps: -4)
         XCTAssertEqual(game.heals, 1)
         game.commit(rod: 2, steps: -2)
-        XCTAssertEqual(game.cancels, 2)
+        XCTAssertEqual(game.cancels, 1)
         XCTAssertTrue(game.solved)
         XCTAssertEqual(game.heals, 1)
     }

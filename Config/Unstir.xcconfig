@@ -25,4 +25,13 @@ SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(EDITORS_CONDITION_$(EDITORS
 // sign-in overlay test passes, makes no GameKit call. A build with it YES needs the Game Center capability on its App
 // ID and the com.apple.developer.game-center entitlement.
 GAME_CENTER = NO
+// YES syncs bests through the player's iCloud key-value store (Sources/Sync.swift) and signs with
+// Config/iCloud.entitlements. NO, until the App ID has the iCloud capability with key-value storage, makes no call to
+// the store and signs with no entitlements, as a device build with that entitlement fails to provision without it. A
+// later entitlement (Game Center's) goes in that file too, or both switches pick between files. Before it turns YES for
+// a release: the App ID's iCloud capability, a two-device test on one Apple ID, and docs/privacy-policy.md and
+// docs/store-page.md, which say the bests stay on the phone and that iCloud sync isn't built.
+ICLOUD = NO
+ICLOUD_ENTITLEMENTS_YES = Config/iCloud.entitlements
+CODE_SIGN_ENTITLEMENTS = $(ICLOUD_ENTITLEMENTS_$(ICLOUD))
 #include? "Local.xcconfig"

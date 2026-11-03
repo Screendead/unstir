@@ -336,6 +336,12 @@ struct MenuView: View {
             daily = Self.daily(today)
             past = Self.past(today)
         }
+        // Bests iCloud brought: the rows read them afresh, but these are kept.
+        .onChange(of: Sync.revision.count) {
+            daily = Self.daily(today)
+            past = Self.past(today)
+            leading = Self.lead(tier: shown)
+        }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
             today = .now
         }

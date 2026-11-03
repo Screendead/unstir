@@ -60,6 +60,8 @@ import XCTest
         XCTAssertEqual(g.budget, 3)
         g.commit(rod: 2, steps: 4)
         XCTAssertEqual(g.lastCommit?.result, .cancelled)
+        XCTAssertEqual(g.cancels, 1)
+        XCTAssertEqual(g.cancelledRod, 2)
         // Its tick takes the clock's upper seam from -2 to -1.
         XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1"))
         XCTAssertEqual(g.budget, 2)
@@ -77,6 +79,19 @@ import XCTest
         XCTAssertEqual(g.escapement.ticks, [0: 3])
         XCTAssertEqual(g.budget, 0)
         XCTAssertFalse(g.lost)
+    }
+
+    /// Jack's call SND2 = A (round 16): the heal ring is the move's own commit's. A knob's turn that pops nothing rings
+    /// no knob, though its tick pops one of the scramble's entries. The masks keep the clock's seam reachable on tri.
+    func testATicksPopRingsNoKnob() {
+        var level = level("1:+3,0:-1")
+        level.masks = [0: .red, 1: .cyan]
+        let g = Game(level: level, tankTurned: true, bank: (3, nil))
+        g.commit(rod: 1, steps: 2)
+        XCTAssertEqual(g.lastCommit?.result, .reduced)
+        XCTAssertEqual(g.stack, tri("1:+5"))
+        XCTAssertEqual(g.cancels, 0)
+        XCTAssertEqual(g.cancelledRod, 0)
     }
 
     /// Jack's call EL1 (round 11): a tick that pushes still buries a +1 that nothing can ever pop, but the tank plays on,
@@ -774,4 +789,79 @@ import XCTest
         XCTAssertEqual(g.owed(0), 0)
         XCTAssertEqual(g.owed(2), 1)
     }
+
+    /// Jack's call ESC-PAPER = B (round 16): every problem plays on the bone-paper page on its engraved plate, and no other
+    /// level does.
+    func testOnlyEscapementPlaysOnPaper() {
+        for level in Level.escapement {
+            XCTAssertEqual(level.page, .book, level.id)
+            XCTAssertEqual(level.picture, .engineTurned, level.id)
+        }
+        let others = Tier.allCases.flatMap(\.levels) + Pack.allCases.filter { $0 != .escapement }.flatMap(\.levels)
+            + [Level.daily(), Level.endless(Run(seed: 7)), Level.sandbox]
+        for level in others {
+            XCTAssertEqual(level.page, .night, level.id)
+            XCTAssertFalse(level.picture.paper, level.id)
+        }
+        XCTAssertFalse(Picture.engineTurned.isLive)
+        XCTAssertFalse(sequence(first: Picture.grid, next: \.next).prefix(Picture.allCases.count).contains(.engineTurned))
+    }
+
+    /// The plate is ink on bone, and reads up in every core: a 30-degree step of any core of every layout moves most of
+    /// its ink, so a turned core never looks as plausible as the clean one.
+    func testThePlateIsInkOnBoneAndShowsAStepInEveryCore() async throws {
+        let rendered = await Picture.engineTurned.render(side: 512, scale: 1)
+        let image = try XCTUnwrap(rendered?.cgImage)
+        let w = image.width
+        var px = [UInt8](repeating: 0, count: 4 * w * w)
+        let ctx = try XCTUnwrap(CGContext(data: &px, width: w, height: w, bitsPerComponent: 8, bytesPerRow: 4 * w,
+                                          space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                          bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: w))
+        let r = Double(w) / 2
+        func inked(_ x: Double, _ y: Double) -> Bool {
+            let i = Int(r + x * r), j = Int(r + y * r)
+            return i >= 0 && j >= 0 && i < w && j < w && px[4 * (j * w + i)] < 0x87
+        }
+        // Every pixel is bone, ink or a mix of the two, and some are ink: a grey or vermilion stroke fails.
+        XCTAssertFalse(Self.boneToInk(0xD8, 0x40, 0x2A))
+        XCTAssertFalse(Self.boneToInk(0x80, 0x80, 0x80))
+        var darkest = 0xFF
+        for i in stride(from: 0, to: px.count, by: 4 * 97) {
+            let (red, green, blue) = (Int(px[i]), Int(px[i + 1]), Int(px[i + 2]))
+            XCTAssert(Self.boneToInk(red, green, blue), "\(red) \(green) \(blue)")
+            darkest = min(darkest, red)
+        }
+        XCTAssertLessThan(darkest, 0x30)
+        for layout in Layout.allCases {
+            for (k, rod) in layout.rods.enumerated() {
+                let core = rod.z * Tank.plateau, step = 2 / Double(w)
+                var inside = 0, on = 0, moved = 0
+                for y in stride(from: -core, through: core, by: step) {
+                    for x in stride(from: -core, through: core, by: step) where x * x + y * y <= core * core {
+                        inside += 1
+                        guard inked(rod.x + x, rod.y + y) else { continue }
+                        on += 1
+                        let c = cos(Tank.step), s = sin(Tank.step)
+                        if !inked(rod.x + c * x - s * y, rod.y + s * x + c * y) { moved += 1 }
+                    }
+                }
+                let at = "\(layout.rawValue) rod \(k)"
+                XCTAssertGreaterThan(Double(on) / Double(inside), 0.1, at)
+                XCTAssertGreaterThan(Double(moved) / Double(max(on, 1)), 0.5, at)
+            }
+        }
+    }
+
+    /// How far a pixel lies from the line between bone and ink, in levels of 255: its mix is read off red, the widest
+    /// span, and green and blue measured against that mix.
+    static func offBoneToInk(_ red: Int, _ green: Int, _ blue: Int) -> Double {
+        let bone = [0xF3, 0xEA, 0xD8].map(Double.init), ink = [0x1A, 0x1A, 0x1A].map(Double.init)
+        let t = min(max((bone[0] - Double(red)) / (bone[0] - ink[0]), 0), 1)
+        let off = zip([red, green, blue].map(Double.init), zip(bone, ink)).map { abs($0 - ($1.0 + t * ($1.1 - $1.0))) }
+        return off.max() ?? 0
+    }
+
+    /// The bake's antialiasing lies within 3.1 of the line at 512 px; a neutral grey lies 12.7 off it.
+    static func boneToInk(_ red: Int, _ green: Int, _ blue: Int) -> Bool { offBoneToInk(red, green, blue) <= 6 }
 }

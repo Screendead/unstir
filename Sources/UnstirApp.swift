@@ -102,8 +102,7 @@ struct Harness {
     let brimDemo: Bool
     /// UNSTIR_RESETARMED=1: the reset control held armed by a first tap, "reset? tap again", for stills.
     let resetArmed: Bool
-    /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card. ShareLink can't be opened without a tap,
-    /// so this presents the UIKit sheet it wraps, with the same text.
+    /// UNSTIR_SHARESHEET=1: the daily's share sheet open over its result card, as its share button opens it.
     let shareSheet: Bool
     /// UNSTIR_REVIEW=log: the rating request is logged instead of made, as an unharnessed launch would make it.
     let reviewLog: Bool
@@ -113,7 +112,7 @@ struct Harness {
     /// the settings' colour letters chosen off or on, for this launch only (`switches`).
     let swatch: Channels?
     let letters: Bool
-    /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
+    /// UNSTIR_WAVE=r: solve, or play UNSTIR_PLAYED, then hold the solve wave at radius r (tank units).
     let wave: Double?
     /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change. It also stills
     /// the swirl's breath, so a shot on a layout with a swirl that sets none of this, UNSTIR_BREATH and UNSTIR_SWIRLED=1
@@ -601,6 +600,7 @@ struct RootView: View {
         Review.harnessed = h.harnessed && !h.reviewLog || env["XCTestConfigurationFilePath"] != nil
         Review.logs = h.reviewLog
         GameCenter.shared.plays = GameCenter.built && !h.harnessed && env["XCTestConfigurationFilePath"] == nil
+        Sync.shared.plays = Sync.plays(built: Sync.built, harnessed: h.harnessed, env: env)
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
                                  restored: h.restored, approved: h.approved)
@@ -725,6 +725,7 @@ struct RootView: View {
             // count the tests.
             let env = ProcessInfo.processInfo.environment
             guard env["XCTestConfigurationFilePath"] == nil else { return }
+            Sync.shared.start()
             await Store.shared.start()
             // After the store, so a snapshot sees the packs owned.
             Analytics.shared.start(env: env, harnessed: harnessed)

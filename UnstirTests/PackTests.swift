@@ -647,8 +647,13 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(PackCard.arrival(.pack(.escapement), Pack.escapement.levels, state: .pending, best: { _ in
             Best(over: 0, seconds: 60) }), "You've played the free three. 27 more in Escapement.")
         XCTAssertNil(PackCard.arrival(.complete, [], state: .unowned, best: best))
-        // Only while it is true: not before every free level has a best, nor to an owner or a refunded one.
-        XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { _ in nil }))
+        // Only while it is true: before every free level has a best, that they are free (Jack's call C1A = B, round
+        // 16); nothing to an owner or a refunded one, whose revocation line says it.
+        XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { _ in nil }),
+                       "The first three are free. 22 more in Lens.")
+        XCTAssertEqual(PackCard.arrival(.pack(.lens), levels, state: .unowned, best: { $0 == levels[2].id ? Best(over: 0, seconds: 60) : nil }),
+                       "The first three are free. 22 more in Lens.")
+        XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .revoked, best: { _ in nil }))
         XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .revoked, best: best))
         XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .owned, best: best))
     }

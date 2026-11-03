@@ -216,7 +216,7 @@ shot daily-result "Today's daily, result card after a harness solve: two wasted 
   SCREEN=result MODE=daily NOW=17:00
 shot daily-practice "Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h." \
   SCREEN=clean MODE=daily NOW=17:00 TRIED=daily-$(date +%Y%m%d)
-hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
+hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet its share button opens, opened without a tap)." \
   SCREEN=result MODE=daily SHARESHEET=1
 hold=8 shot daily-share-supporter "The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦." \
   SCREEN=result MODE=daily SHARESHEET=1 OWNED=lens
@@ -448,7 +448,7 @@ shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
 # Each sold offer's promoted-purchase image, a 1024-pixel square centred on the screen; scripts/promo.sh crops them.
 hold=30 shot promo-lens "Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black." PROMO=lens
-shot promo-escapement "Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black." PROMO=escapement
+shot promo-escapement "Escapement's promoted-purchase image: its dock cover, problem 2 on its engraved plate as dealt, inside the bezel on black." PROMO=escapement
 shot promo-prism "Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black." PROMO=prism
 hold=12 shot promo-complete "Triptych's promoted-purchase image: a wedge of each of its three packs' covers, inside the bezel on black." PROMO=complete
 hold=4 shot promoted-menu "A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned." \
@@ -543,7 +543,7 @@ fi
 nine=000000000
 shot shelf-menu "Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Triptych, nothing bought." \
   STORE=lens:unowned CLOCK=5.4 BESTS=plughole:$nine
-shot shelf-menu-stirred "The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Triptych (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's grid clean, Prism's fern just stirring in." \
+shot shelf-menu-stirred "The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Triptych (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's engraved plate clean on bone, Prism's fern just stirring in." \
   STORE=lens:unowned CLOCK=2.8 BESTS=plughole:$nine
 shot shelf-menu-clean "The dock at the top of its loop: First Stir and Triptych clean, Lens stirring in, Escapement and Prism unstirring." \
   STORE=lens:unowned CLOCK=0 BESTS=plughole:$nine
@@ -604,7 +604,7 @@ shot card-lens-asked-offline "Lens's card after asking again offline: still wait
   CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
 shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
   CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
-shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74)." \
+shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row, ‹ menu pinned over the scroll." \
   CARD=lens OWNED=lens BESTS=lens:0 TRIED=lens-2 CARDSCROLL=1 CLOCK=5.4
 shot shelf-menu-owned "The dock with every pack owned, the three through Triptych and First Stir (outside it) on its own: PACKS alone, no taste line, Triptych's cover gone." \
   OWNED=complete,first-stir CLOCK=5.4
@@ -622,13 +622,17 @@ shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone
 shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
 shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
   CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
-shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked." \
+shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked, ‹ menu still pinned at the top." \
   CARD=lens STORE=lens:unowned CARDSCROLL=1 CLOCK=5.4
 shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDSCROLL=1 CLOCK=5.4
-shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
+shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note, ‹ menu pinned over the scroll." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-gate-ax "The same at accessibility3: the Triptych line under buy wraps only before · save." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4 TYPESIZE=accessibility3
+shot card-gate-fewer "Lens's level 5, unowned, opened with only 03 solved (01 and 02 skipped): scrolled to buying under The first three are free. 22 more in Lens." \
+  PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:--0 CARDLEVELS=6 CLOCK=5.4
+shot card-gate-refunded "Lens's level 5 opened by a refunded owner, the free three at par: no free-three line, the revocation's own grey line in its place, buy again." \
+  PACK=lens LEVEL=5 STORE=lens:revoked BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
   PACK=lens LEVEL=3 SCREEN=clean STORE=lens:unowned CLOCK=5.4
 shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's magenta." \
@@ -683,6 +687,14 @@ shot escapement-2-out "Escapement 2, then rod 1 -3 and a wait: the last tick spe
 shot escapement-2-lost-resumed "Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out." \
   PACK=escapement LEVEL=2 RESUME=2:4,1:-3,0:1
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
+# The bone-paper page (Jack's call ESC-PAPER = B, round 16): the turn's hairlines, dashes and count in ink, and the solve
+# wave an ink ring, as the shader's band would run the paper white.
+shot escapement-2-drag "Escapement 2 mid-drag on paper: rod 2 turned +2.6, its disc's hairline, dashes and +3 count in ink." \
+  PACK=escapement LEVEL=2 LIVE=2:+2.6
+shot escapement-2-wave "Escapement 2 solved in 3, its solve wave an ink ring held at radius 0.6 from the last-turned rod." \
+  PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3 WAVE=0.6
+shot escapement-2-back-swipe "Escapement 2 held 40% into an edge swipe back: the paper page sliding right over the menu on black, the status bar's glyphs dark across the whole width, the menu's side too." \
+  PACK=escapement LEVEL=2 BACKSWIPE=0.4
 # The tick budget on 16 (clocks 1, owing 3, and 4, owing 6, so 9; line 3:-2, 5:-2, a wait, 6:-4, 5:+3, 2:-5): as dealt,
 # after the wait that stops clock 1, and one move from the end.
 shot escapement-budget-16-dealt "Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6." PACK=escapement OWNED=escapement LEVEL=16
@@ -770,8 +782,8 @@ hold=8 shot store-01-marbling "Store 1: whirlpool 25 (hex, marbling) with its fu
 shot store-02-count "Store 2: plughole 12, rod 1 carried -2 steps round, its dashes and count off the finger." \
   LEVEL=12 LIVE=1:-2 TOUCH=0.354,0.7
 shot store-03-wave "Store 3: plughole 13 solved, the solve wave at radius 0.8." LEVEL=13 WAVE=0.8
-hold=8 shot store-04-vortex "Store 4: vortex 13 on the ephemeris with its full scramble, its lesson learnt." \
-  TIER=vortex LEVEL=13 CLOCK=3 SWIRLED=1
+hold=8 shot store-04-vortex "Store 4: vortex 14, Monsoon (pent, isobars), with its full scramble, its lesson learnt." \
+  TIER=vortex LEVEL=14 CLOCK=3 SWIRLED=1
 hold=8 shot store-05-maelstrom "Store 5: maelstrom 23 (hex), knobs 2 and 5 seized, the tank held half a step round from the rim." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=30 CLOCK=3
 shot store-06-daily "Store 6: today's daily, its result card, share and next daily in 7 h." SCREEN=result MODE=daily NOW=17:00
