@@ -264,7 +264,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`Tank.profile`/`Tank.twist`/`Tank.lens`) and only the shader's `lensFlow`, compiled on its own
   (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
   The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (30) limits are tuned against 120 Hz on an
-  iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
+  iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`), before the turn was added; its cost per tap is
+  unmeasured. The shader takes the four-tap limit for its glass's size (`Tank.fourTaps(pixels:)`): 30 on every glass
+  up to 1300 px, so every iPhone and every pose drawn before the upright Duo's is unchanged, and past that the 31
+  entries measured scaled down by the area, less one for the entry in flight, so the open Duo upright's 1471 px gets
+  17; `Tank.maxStack` stays 36 at every size and every level is dealt to the phone's 30, so every level plays as on an
+  iPhone (Jack's call duocap2 = D). The accepted risk: a deep stack on a live picture there may run up to 32% over the
+  frame budget measured (a paper estimate; the Duo's GPU is unmeasured until stage 6's bench). The GPU bench keeps
+  the constant, so its 24 entries time four taps. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone. Prism's stacks
   go to a second stitchable, `unstirChannels`, only when some entry's mask isn't white (`Unstirred.masks`), so every
   other level draws through `unstir` as measured: it carries red, green and blue each through the inverses of the

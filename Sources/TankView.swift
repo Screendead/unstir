@@ -3390,11 +3390,13 @@ struct Unstirred: ViewModifier, Animatable {
         let n = floats.count / 4
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
-        // A live picture keeps four taps only to `Tank.fourTaps` entries less its fill: the same budget as without it.
-        // Counted in committed entries, so a touch never changes the taps; the drag, the breath or a tick in flight rides
-        // one over, within the 31 the shader's comment measured. Two at once, for the `Breath.fade` a touch takes to cut a
-        // slosh or a grab within a tick's flight, drop to two taps at the budget's edge rather than run 32.
-        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
+        // A live picture keeps four taps only to the glass's limit (`Tank.fourTaps(pixels:)`) less its fill: the same
+        // budget as without it. Counted in committed entries, so a touch never changes the taps; the drag, the breath or
+        // a tick in flight rides one over, within the 31 the shader's comment measured (fewer on a larger glass). Two at
+        // once, for the `Breath.fade` a touch takes to cut a slosh or a grab within a tick's flight, drop to two taps at
+        // the budget's edge rather than run 32.
+        let taps = Tank.fourTaps(pixels: Double(side * scale)) - fillEntries
+        let fourTaps = Float(taps) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
         if let cost = Self.channelCost(channels) {
             // The in-flight entry rides over by its own cost, as above, so a touch never changes the taps.
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
@@ -3402,7 +3404,7 @@ struct Unstirred: ViewModifier, Animatable {
                 .map { (masks[$0] ?? .white).rawValue.nonzeroBitCount }.max() ?? 0
             return content.layerEffect(
                 ShaderLibrary.unstirChannels(.float2(r, r), .float(r), .floatArray(floats), .floatArray(channels), .float(Float(n)),
-                                             .float(Float(cost)), .float(Float(Tank.fourTaps - fillEntries + flight)), .float(Float(Tank.plateau)),
+                                             .float(Float(cost)), .float(Float(taps + flight)), .float(Float(Tank.plateau)),
                                              .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)),
                                              .float3(wave.x, wave.y, wave.z), .float(Float(turn)),
                                              .float(Float(isolate?.rawValue ?? 0)), .float3(tint.x, tint.y, tint.z)),
