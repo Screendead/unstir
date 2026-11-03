@@ -526,7 +526,7 @@ struct MenuView: View {
     private func follow(_ level: Level?) {
         guard layout.wide, let level, level.tier.levels.contains(where: { $0.id == level.id }) else { return }
         if level.tier != picked {
-            select(level.tier)
+            select(level.tier, quiet: true)
         } else {
             DispatchQueue.main.async { withAnimation(.snappy(duration: 0.4)) { scroller?.scrollTo(level.id, anchor: .center) } }
         }
@@ -798,7 +798,8 @@ struct MenuView: View {
         .contentShape(Rectangle())
     }
 
-    private func select(_ t: Tier) {
+    /// `quiet`: the list follows a level rather than a finger on the strip, so no switch sounds.
+    private func select(_ t: Tier, quiet: Bool = false) {
         // A sideways drag that lifts over a name is the swipe's, which has already sprung back or switched.
         guard !twisting else { return }
         if t == shown, !busy {
@@ -806,14 +807,14 @@ struct MenuView: View {
             return
         }
         guard let from = Tier.allCases.firstIndex(of: shown), let to = Tier.allCases.firstIndex(of: t) else { return }
-        go(to: t, turning: to > from ? 1 : -1)
+        go(to: t, turning: to > from ? 1 : -1, quiet: quiet)
     }
 
     /// The outgoing list stirs away, then the incoming one unstirs, turning on the same way. Beside a playing tank the
     /// list cuts to the new tier instead, so no stir takes the GPU from the tank.
-    private func go(to t: Tier, turning dir: Double) {
+    private func go(to t: Tier, turning dir: Double, quiet: Bool = false) {
         guard t != shown, !busy else { return }
-        Sound.shared.play(.tier)
+        if !quiet { Sound.shared.play(.tier) }
         Tier.store(t)
         guard playing == nil else {
             withAnimation(.snappy(duration: 0.35)) { picked = t }
