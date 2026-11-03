@@ -448,7 +448,7 @@ shot icon-2 "App icon candidate 2: maelstrom's marbling twin mid-heartbeat under
 shot icon-3 "App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre." ICON=3
 # Each sold offer's promoted-purchase image, a 1024-pixel square centred on the screen; scripts/promo.sh crops them.
 hold=30 shot promo-lens "Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, inside the bezel on black." PROMO=lens
-shot promo-escapement "Escapement's promoted-purchase image: its dock cover, problem 2 on its grid as dealt, inside the bezel on black." PROMO=escapement
+shot promo-escapement "Escapement's promoted-purchase image: its dock cover, problem 2 on its engraved plate as dealt, inside the bezel on black." PROMO=escapement
 shot promo-prism "Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, inside the bezel on black." PROMO=prism
 hold=12 shot promo-complete "Triptych's promoted-purchase image: a wedge of each of its three packs' covers, inside the bezel on black." PROMO=complete
 hold=4 shot promoted-menu "A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned." \
@@ -683,6 +683,14 @@ shot escapement-2-out "Escapement 2, then rod 1 -3 and a wait: the last tick spe
 shot escapement-2-lost-resumed "Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out." \
   PACK=escapement LEVEL=2 RESUME=2:4,1:-3,0:1
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
+# The bone-paper page (Jack's call ESC-PAPER = B, round 16): the turn's hairlines, dashes and count in ink, and the solve
+# wave an ink ring, as the shader's band would run the paper white.
+shot escapement-2-drag "Escapement 2 mid-drag on paper: rod 2 turned +2.6, its disc's hairline, dashes and +3 count in ink." \
+  PACK=escapement LEVEL=2 LIVE=2:+2.6
+shot escapement-2-wave "Escapement 2 solved in 3, its solve wave an ink ring held at radius 0.6 from the last-turned rod." \
+  PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3 WAVE=0.6
+shot escapement-2-back-swipe "Escapement 2 held 40% into an edge swipe back: the paper page sliding right over the menu on black, the status bar's dark glyphs following the page." \
+  PACK=escapement LEVEL=2 BACKSWIPE=0.4
 # The tick budget on 16 (clocks 1, owing 3, and 4, owing 6, so 9; line 3:-2, 5:-2, a wait, 6:-4, 5:+3, 2:-5): as dealt,
 # after the wait that stops clock 1, and one move from the end.
 shot escapement-budget-16-dealt "Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6." PACK=escapement OWNED=escapement LEVEL=16

@@ -113,7 +113,7 @@ struct Harness {
     /// the settings' colour letters chosen off or on, for this launch only (`switches`).
     let swatch: Channels?
     let letters: Bool
-    /// UNSTIR_WAVE=r: solve, then hold the solve wave at radius r (tank units).
+    /// UNSTIR_WAVE=r: solve, or play UNSTIR_PLAYED, then hold the solve wave at radius r (tank units).
     let wave: Double?
     /// UNSTIR_CLOCK=s: hold a live picture s seconds in, or endless's brim s seconds after its last change. It also stills
     /// the swirl's breath, so a shot on a layout with a swirl that sets none of this, UNSTIR_BREATH and UNSTIR_SWIRLED=1
