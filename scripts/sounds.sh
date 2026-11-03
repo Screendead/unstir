@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright © 2026 Jack Lusher. All rights reserved.
-# Usage: scripts/sounds.sh [listen <dir>]   Renders the glass set from sound-src into Sounds/glass with
+# Usage: scripts/sounds.sh [listen <dir> | layers <dir>]   Renders the glass set from sound-src into Sounds/glass with
 # Csound, then prints each file's loudness, peaks, onset, phone-speaker loss and size, and each bed's seam;
 # spectrograms go to build/sounds/spec. Needs Homebrew's csound and ffmpeg. Everything is seeded, so a rerun renders
 # the same samples; the AAC encoder isn't byte-deterministic, so a bed's .m4a may still come out with new bytes.
@@ -159,6 +159,73 @@ sketch-escapement-b-tick-e escBtickE 20 2102 = sketch-escapement-b
         prism-a prism-b; do over "sketch-$f-over-plughole" 22 "sketch-$f"; done
     # The ticks in play, with a heal on the second move's tick and the fifth's, as a tick that pops an entry heals.
     for f in ticks-a ticks-b ticks-c ticks-d ticks-e; do over "sketch-$f-over-plughole" 16 "sketch-$f" "heal-1@4.35 heal-2@9.95"; done
+    ls "$D"
+    exit 0
+fi
+# layers <dir>: each kept pack layer (Jack's call SOUNDSK: Lens B, Escapement B, Prism A) under its line in
+# sound-src/layers-in-play.tsv, a real level played for three to four minutes: the menu's bed crossfading to plughole's
+# as the level opens, the layer's loop entering with it and giving way to its resolution on the beat after the solve,
+# and the game's effects at their own levels, as <pack>.mp3 at 160 kb/s; <pack>-bed-only.mp3 is the same without the
+# layer, and layers-in-play.txt lists each line and each render's loudness. A layer plays at the gain its 20 s sketch
+# takes in listen, so it sits where Jack heard it. The motif's whole cycles fill an 8-bar loop (Lens B's bowed glass
+# takes 8), which runs free of the 48 s bed.
+if [ "${1:-}" = layers ]; then
+    D=${2:?usage: scripts/sounds.sh layers <dir>}
+    L=build/sounds/layers
+    T=sound-src/layers-in-play.tsv
+    LOOP=25.6
+    N=$(awk -v l=$LOOP 'BEGIN { printf "%d", l * 48000 }')
+    mkdir -p "$D" "$L"
+    for f in Sounds/glass/*.caf; do afconvert -f WAVE -d LEF32 "$f" "$L/$(basename "$f" .caf).wav"; done
+    for bed in menu loop; do afconvert -f WAVE -d LEF32 "Sounds/glass/$bed.m4a" "$L/bed-$bed.wav"; done
+    sketch() {  # sketch seed out [macros...]
+        local sk=$1 seed=$2 out=$3
+        shift 3
+        (cd sound-src && csound --omacro:SKETCH="$sk" --omacro:SEED="$seed" "$@" --omacro:OUT="$ROOT/$out" sketches.csd \
+            >"$ROOT/$out.log" 2>&1)
+        grep -q "0 errors in performance" "$out.log" || { echo "csound failed: $out.log"; tail -20 "$out.log"; exit 1; }
+    }
+    LIST=$D/layers-in-play.txt
+    {
+        echo "The packs' kept layers in play (SOUNDSK: Lens B, Escapement B, Prism A), rendered by scripts/sounds.sh layers"
+        echo "from sound-src/layers-in-play.tsv on branch sound-packs. Each line is real play of the level, checked on a"
+        echo "real Game (SoundTests' testTheLayerLinesSoundAsTheGamePlaysThem): bursts at a practised player's pace, from"
+        echo "a playtest's flight recorder (1.2 to 3.9 s commit to commit), between authored studies of 20 to 45 s; at that"
+        echo "pace alone such a level takes about 30 s. Times are from the row's tap to when the game sounds each action (a"
+        echo "knob's commit, 0.25 s after the lift, 0.3 on Escapement). The layer's loop is 8 bars (25.6 s) of the motif"
+        echo "at 75 bpm, entering with the bed's crossfade; on the beat after the solve it fades over 0.5 s as its"
+        echo "resolution plays, and the bed carries on under the card. Loudness is ffmpeg's EBU R128 meter on each mp3: I"
+        echo "integrated, M the loudest 400 ms, TP true peak."
+        echo
+    } >"$LIST"
+    for row in "lens lensB 2002" "escapement escB 2102" "prism prismA 2201"; do
+        read -r pack sk seed <<<"$row"
+        # The sketch's own gain, as listen sets it: -30 LUFS integrated over its 20 s, under the true-peak ceiling.
+        sketch "$sk" "$seed" "$L/$pack-sketch.wav" --omacro:DUR=20
+        read -r _ i p < <(loud "$L/$pack-sketch.wav")
+        g=$(gain "$i" -30 "$p")
+        eval "$(python3 scripts/layers.py plan "$T" "$pack")"
+        sketch "${sk}Loop" "$seed" "$L/$pack-loops.wav" --omacro:LOOP=$LOOP
+        ffmpeg -hide_banner -nostdin -v error -y -i "$L/$pack-loops.wav" \
+            -af "atrim=start_sample=$((2 * N)):end_sample=$((3 * N))" -c:a pcm_f32le "$L/$pack-loop.wav"
+        macros=(--omacro:DUR="$LENGTH" --omacro:SOLVED="$SOLVED" --omacro:END="$END")
+        [ "$pack" = escapement ] && macros+=(--omacro:REEDS="$REEDS" --omacro:NOTES="$NOTES" --omacro:LAST="$LAST")
+        sketch "${sk}End" "$seed" "$L/$pack-end.wav" "${macros[@]}"
+        read -r _ li _ < <(loud "$L/$pack-loop.wav" 0 "volume=${g}dB")
+        {
+            printf "%s: %s, solved at %.2f s; the layer at its sketch's gain, %.1f dB, its loop alone I %s LUFS\n" \
+                "$pack" "$LEVEL" "$SOLVED" "$g" "$li"
+            python3 scripts/layers.py line "$T" "$pack"
+        } >>"$LIST"
+        for with in 1 0; do
+            name=$([ $with = 1 ] && echo "$pack" || echo "$pack-bed-only")
+            python3 scripts/layers.py mix "$T" "$pack" "$L" "$g" $with "$L/$name.wav"
+            ffmpeg -hide_banner -nostdin -v error -y -i "$L/$name.wav" -c:a libmp3lame -b:a 160k "$D/$name.mp3"
+            read -r m i p < <(loud "$D/$name.mp3")
+            echo "  $name.mp3: I $i LUFS, M $m LUFS, TP $p dBTP" | tee -a "$LIST"
+        done
+        echo >>"$LIST"
+    done
     ls "$D"
     exit 0
 fi

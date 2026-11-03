@@ -1,8 +1,8 @@
 ; Copyright © 2026 Jack Lusher. All rights reserved.
 ; Rough sketches of the packs' sound for Jack's ear, never in the app: each sold pack's layer over plughole's bed
-; (Lens, Escapement, Prism), two takes of each, and Escapement's ratchet tick, five takes. scripts/sounds.sh listen
-; passes the sketch (SKETCH), the seed (SEED), the length (DUR) and the output (OUT). Stereo, 48 kHz, 32-bit float;
-; the script sets the level.
+; (Lens, Escapement, Prism), two takes of each, Escapement's ratchet tick, five takes, and the kept layers looped as in
+; play. scripts/sounds.sh listen passes the sketch (SKETCH), the seed (SEED), the length (DUR) and the output (OUT), and
+; scripts/sounds.sh layers the macros below. Stereo, 48 kHz, 32-bit float; the script sets the level.
 ;
 ; Every layer plays one motif, the piece's (giMN, giMD), at 75 bpm, a bar 3.2 s. Bars 1 to 5 are play; bar 6, at
 ; 16 s, is the solve, the only place any layer lands on D.
@@ -21,6 +21,31 @@ seed $SEED
 
 giBeat = 0.8
 giSolve = 16
+
+; scripts/sounds.sh layers: LOOP, a layer's loop in seconds, renders three periods of a loop instrument for loopmaster;
+; SOLVED, the commit that solves the level, and END, the beat after it, where the loop stops and the layer resolves;
+; REEDS and NOTES, Escapement B's reed notes (times, and each one's place in the motif), and LAST, the solve's last tick.
+#ifdef LOOP
+giLoop = $LOOP
+#else
+giLoop = 0
+#end
+#ifdef END
+giSolved = $SOLVED
+giEnd = $END
+#else
+giSolved = 0
+giEnd = 0
+#end
+#ifdef REEDS
+giReeds[] fillarray $REEDS
+giNotes[] fillarray $NOTES
+giLast = $LAST
+#else
+giReeds[] fillarray 0
+giNotes[] fillarray 0
+giLast = 0
+#end
 
 ; The motif: A4 B4 A4 E4 G4 A4 G4 E4 in beats, two bars, ending on E so it never comes to rest.
 giMN[] fillarray 69, 71, 69, 64, 67, 69, 67, 64
@@ -356,17 +381,20 @@ endin
 
 ; Escapement B, the pawl: the foot drum on 1 and the and of 2, scuffs on 2 and 4 with faint ghosts; a muted reed,
 ; its notes on the next eighth after the lift; ticks of take itake (rtick's p4), round 15's the brass pawl's.
+opcode EscBBar, 0, i
+  is xin
+  schedule "kick", is, 0.5, 0.6
+  schedule "kick", is + 1.2, 0.5, 0.35
+  schedule "scuff", is + 0.8, 0.4, 0.26, -0.1
+  schedule "scuff", is + 2.4, 0.4, 0.26, 0.1
+  schedule "scuff", is + 2.0, 0.4, 0.07, -0.3
+  schedule "scuff", is + 3.0, 0.4, 0.06, 0.3
+endop
 opcode EscB, 0, i
   itake xin
   ib = 0
   while ib < 5 do
-    is = ib * 3.2
-    schedule "kick", is, 0.5, 0.6
-    schedule "kick", is + 1.2, 0.5, 0.35
-    schedule "scuff", is + 0.8, 0.4, 0.26, -0.1
-    schedule "scuff", is + 2.4, 0.4, 0.26, 0.1
-    schedule "scuff", is + 2.0, 0.4, 0.07, -0.3
-    schedule "scuff", is + 3.0, 0.4, 0.06, 0.3
+    EscBBar ib * 3.2
     ib += 1
   od
   schedule "kick", giSolve, 0.5, 0.4
@@ -488,6 +516,70 @@ instr ticksE
   turnoff
 endin
 
+; ------------------------------------------------------------------ the kept layers in play
+; Each kept layer (Jack's call SOUNDSK: Lens B, Escapement B, Prism A) as the game would loop it: whole cycles of the
+; motif over giLoop, three periods for loopmaster, and what it plays as the level is solved. Escapement B's reed is
+; the line's, played as one-shots over its loop of drums.
+instr lensBLoop
+  ibeats = 3 * giLoop / giBeat
+  Motif "dot", 1, 12, ibeats, 0.32, -0.5, 0, 0, 0.35, 0
+  Motif "dot", 2, 0, ibeats, 0.45, 0.45, 0, 0, 0.3, 0
+  Motif "bowed", 4, -12, ibeats, 0.4, 0, 0, 0, 0.2, 0
+  turnoff
+endin
+instr lensBEnd
+  schedule "dot", giEnd, 1.6, Hz(74), 0.32, -0.5, 0.35
+  schedule "dot", giEnd, 1.6, Hz(62), 0.45, 0.45, 0.3
+  schedule "bowed", giEnd, 3.6, Hz(50), 0.45, 0, 0.2
+  turnoff
+endin
+
+instr escBLoop
+  ib = 0
+  while ib < 3 * giLoop / (4 * giBeat) do
+    EscBBar ib * 4 * giBeat
+    ib += 1
+  od
+  turnoff
+endin
+instr escBEnd
+  ik = 0
+  while ik < lenarray(giReeds) do
+    schedule "reed", giReeds[ik], 0.45, Hz(giMN[giNotes[ik] % 8]), 0.55, 0, 0.04, 0
+    ik += 1
+  od
+  schedule "reed", giLast, 1.8, Hz(62), 0.55, 0, 0.08, 0
+  schedule "kick", giEnd, 0.5, 0.4
+  turnoff
+endin
+
+; The bell chord is held past the third period, so no period holds its release.
+instr prismALoop
+  ibeats = 3 * giLoop / giBeat
+  Motif "ocarina", 1, 0, ibeats, 0.26, -0.7, -14, 0, 0.3, 0.5
+  Motif "ocarina", 1, 0, ibeats, 0.26, 0, 0, 0, 0.3, 0.5
+  Motif "ocarina", 1, 0, ibeats, 0.26, 0.7, 14, 0, 0.3, 0.5
+  ipad[] fillarray 62, -0.4, 69, 0.4, 76, 0
+  ii = 0
+  while ii < 6 do
+    schedule "bell", 0, 3 * giLoop + 3, Hz(ipad[ii]), 0.1, ipad[ii + 1], 0.4
+    ii += 2
+  od
+  turnoff
+endin
+; The bells' swell starts 0.4 s before the beat, as the sketch's did, but never before the solve.
+instr prismAEnd
+  ii = 0
+  while ii < 3 do
+    schedule "ocarina", giEnd, 2.6, Hz(62), 0.26, (ii - 1) * 0.7, 0.35, 0.5
+    ii += 1
+  od
+  ib = max(giEnd - 0.4, giSolved)
+  schedule "bell", ib, 3.8, Hz(62), 0.12, 0, 0.4
+  schedule "bell", ib, 3.8, Hz(69), 0.1, 0, 0.4
+  turnoff
+endin
+
 ; Defined last, so it reads every voice's output on the same cycle.
 instr master
   event_i "e", 0, p3
@@ -498,8 +590,26 @@ instr master
   clear gaL, gaR, gaSL, gaSR
 endin
 
+; A loop's three periods, unfaded: its last 3 s cross into the second period's, which leads into the third's start,
+; so the third period loops without a seam, whatever the reverb did.
+instr loopmaster
+  event_i "e", 0, p3
+  awL, awR reverbsc gaSL, gaSR, 0.85, 7000, sr, 0.5
+  aL = gaL + 1.65 * awL
+  aR = gaR + 1.65 * awR
+  aEL delay aL, giLoop
+  aER delay aR, giLoop
+  aw linseg 0, p3 - 3, 0, 3, 1
+  fout "$OUT", 16, aL * (1 - aw) + aEL * aw, aR * (1 - aw) + aER * aw
+  clear gaL, gaR, gaSL, gaSR
+endin
+
 schedule "$SKETCH", 0, 0.01
+#ifdef LOOP
+schedule "loopmaster", 0, 3 * giLoop
+#else
 schedule "master", 0, $DUR
+#end
 </CsInstruments>
 <CsScore>
 </CsScore>

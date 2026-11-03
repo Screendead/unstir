@@ -192,6 +192,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   off the phone, then renders the packs' sketches (`sound-src/sketches.csd`: two takes each of Lens's, Escapement's
   and Prism's layers on one motif at 75 bpm, and five of the ratchet's tick, the last three also in Escapement B's
   layer, for Jack's ear and never played by the app) alone and over plughole's bed, as `sketch-*.m4a`.
+  `scripts/sounds.sh layers <dir>` plays each kept layer (Lens B, Escapement B, Prism A) under a real level's line in
+  `sound-src/layers-in-play.tsv`, three to four minutes of moves, undos and the solve with the sounds the game plays for
+  each (`testTheLayerLinesSoundAsTheGamePlaysThem` checks them on a real `Game`): an 8-bar loop of the layer over the
+  menu's bed crossfading to plughole's, its resolution on the beat after the solve, Escapement B's reed a note a move
+  on the next eighth, and the game's effects at their own levels (`scripts/layers.py` times and mixes them), as
+  `<pack>.mp3` and `<pack>-bed-only.mp3` with `layers-in-play.txt` listing each line and its loudness.
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
