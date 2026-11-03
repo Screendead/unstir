@@ -611,7 +611,7 @@ struct RootView: View {
             : Self.opening(harnessed: h.harnessed && !h.fresh || env["XCTestConfigurationFilePath"] != nil,
                            welcomed: !h.fresh && Best.welcomed)
         welcoming = welcome != nil && !h.harnessed
-        let menu = h.screen == "menu" || gate != nil
+        let menu = h.screen == "menu" || gate != nil || !Store.shared.opens(h.level)
         _level = State(initialValue: welcome ?? (menu ? nil : h.level))
         // Yesterday's daily and a level an update took out leave no save behind; a harnessed launch's are its own.
         if !h.harnessed { Resume.prune(known: Resume.known) }
@@ -829,7 +829,7 @@ struct RootView: View {
         if gate != nil { card = gate.map(Offer.pack) }
         // A gate's card opens on buying (`arrived`), not on a row.
         if let level { focus = gate == nil ? level.focus(solved: solved) : nil }
-        let opens = next.map(Store.shared.opens) ?? true
+        let opens = next.map { Store.shared.opens($0) } ?? true
         if Self.seesModes(next, opens: opens), !Best.modesSeen { Best.seeModes(store: !harnessed) }
         // So a launch after the app dies in a level comes back on its tier too.
         if let next, gate == nil, opens, next.tier.levels.contains(where: { $0.id == next.id }) { Tier.store(next.tier) }

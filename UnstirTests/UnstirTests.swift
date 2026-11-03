@@ -1603,11 +1603,13 @@ final class UnstirTests: XCTestCase {
         }
         let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
         XCTAssertFalse(fresh.modes)
-        XCTAssertFalse(fresh.sandboxFirst)
+        XCTAssertFalse(fresh.played)
+        XCTAssertEqual(fresh.sandbox, .under)
         XCTAssertNil(fresh.next)
         let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
         XCTAssertFalse(one.modes)
-        XCTAssertTrue(one.sandboxFirst)
+        XCTAssertTrue(one.played)
+        XCTAssertEqual(one.sandbox, .over)
         XCTAssertEqual(one.next?.id, Level.plughole[1].id)
         XCTAssertNil(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(1)).next, "a locked tier has no way on")
         XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
@@ -1619,7 +1621,31 @@ final class UnstirTests: XCTestCase {
                        Level.whirlpool[4].id)
         let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
         XCTAssertTrue(unlocked.modes)
-        XCTAssertFalse(unlocked.sandboxFirst)
+        XCTAssertEqual(unlocked.sandbox, .under)
+    }
+
+    /// The sandbox is out of v1 (Jack's call snd2-sandbox, round 16): a Release build neither lists it nor opens it,
+    /// from the menu or the harness, and the rest of the menu's lead is as before; Debug keeps it.
+    @MainActor func testTheSandboxIsOutOfV1() {
+        XCTAssertFalse(Level.playsSandbox(release: true))
+        XCTAssertTrue(Level.playsSandbox(release: false))
+        let one: (String) -> Best? = { $0 == Level.plughole[0].id ? Best(over: 0, seconds: 9) : nil }
+        let bests: [(String) -> Best?] = [{ _ in nil }, one]
+        for best in bests {
+            let shipped = MenuView.lead(tier: .plughole, unlocked: false, release: true, best: best)
+            let debug = MenuView.lead(tier: .plughole, unlocked: false, release: false, best: best)
+            XCTAssertNil(shipped.sandbox)
+            XCTAssertNotNil(debug.sandbox)
+            XCTAssertEqual(shipped.modes, debug.modes)
+            XCTAssertEqual(shipped.played, debug.played)
+            XCTAssertEqual(shipped.next?.id, debug.next?.id)
+        }
+        XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
+        XCTAssertFalse(Store.shared.opens(.sandbox, release: true))
+        XCTAssertTrue(Store.shared.opens(.sandbox, release: false))
+        for level in [Level.plughole[0], Level.daily(), .endless(Run(seed: 7))] {
+            XCTAssertTrue(Store.shared.opens(level, release: true))
+        }
     }
 
     /// Only a fresh install's first launch opens on plughole 01, and never the harness's.

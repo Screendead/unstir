@@ -253,13 +253,20 @@ struct MenuView: View {
         }
     }
 
+    /// Where the sandbox's row sits against the tier's list.
+    enum Place { case over, under }
+
     /// What the menu leads with (Jack's call C4, round 13). `modes`: the daily and endless, which draw on every layout, so
-    /// they open, and show, after the first hex level. `sandboxFirst`: plughole 01 has a best, so the sandbox is over the
-    /// list, not under it, and in the tagline's place `next` opens the tier's frontier, if it has one.
-    typealias Lead = (modes: Bool, sandboxFirst: Bool, next: Level?)
-    static func lead(tier: Tier, unlocked: Bool = Best.unlocked, best: (String) -> Best? = Best.load) -> Lead {
+    /// they open, and show, after the first hex level. `played`: plughole 01 has a best, so in the tagline's place `next`
+    /// opens the tier's frontier, if it has one, and the sandbox moves from under the list to over it; a build that
+    /// withholds the sandbox has none (`Level.playsSandbox`).
+    typealias Lead = (modes: Bool, played: Bool, sandbox: Place?, next: Level?)
+    static func lead(tier: Tier, unlocked: Bool = Best.unlocked, release: Bool = Build.release,
+                     best: (String) -> Best? = Best.load) -> Lead {
         let played = best(Level.plughole[0].id) != nil
-        return (unlocked || best(Level.plughole[22].id) != nil, played, played ? tier.frontier(unlocked: unlocked, best) : nil)
+        return (unlocked || best(Level.plughole[22].id) != nil, played,
+                Level.playsSandbox(release: release) ? played ? .over : .under : nil,
+                played ? tier.frontier(unlocked: unlocked, best) : nil)
     }
 
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
@@ -359,8 +366,8 @@ struct MenuView: View {
         .task { if shelfDemo { await shelfTour() } }
     }
 
-    /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox over them once
-    /// plughole 01 has a best.
+    /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox, where the build has
+    /// it, over them once plughole 01 has a best.
     private func rows(_ lead: Lead) -> some View {
         let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                                pick: pick, refuse: refuse)
@@ -389,9 +396,9 @@ struct MenuView: View {
                             if kept != nil { newRun }
                         }
                 }
-                if lead.sandboxFirst { sandbox }
+                if lead.sandbox == .over { sandbox }
             }
-            .padding(.top, lead.modes || lead.sandboxFirst ? 22 : 8)
+            .padding(.top, lead.modes || lead.sandbox == .over ? 22 : 8)
             TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held).equatable()
                 .overlay(alignment: .topLeading) {
                     Color.clear.frame(width: 1, height: mark?.height ?? 1).id(Self.mark)
@@ -407,7 +414,7 @@ struct MenuView: View {
                     list = $0
                     arrive()
                 }
-            if !lead.sandboxFirst { sandbox.padding(.top, 14) }
+            if lead.sandbox == .under { sandbox.padding(.top, 14) }
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 28)
@@ -427,7 +434,7 @@ struct MenuView: View {
             // Plain: `pick` taps, as a row does.
             .buttonStyle(.plain)
             .accessibilityLabel(Spoken.next(next))
-        } else if !lead.sandboxFirst {
+        } else if !lead.played {
             Text("Every stir in this tank has an exact inverse.").font(.mono(13)).opacity(0.55)
         } else {
             // A line's height still, so a tier swap to or from one with a frontier moves nothing below it.
