@@ -377,7 +377,8 @@ final class Game {
     /// A level counts as tried on its first committed move; a look, a touch or a turn let go where it began, is free
     /// (Jack's call C3, round 13).
     private func started() {
-        if !level.sandbox && level.keepsProgress && !demoing { Best.start(level.id, store: storesProgress) }
+        guard !level.sandbox && level.keepsProgress && !demoing else { return }
+        if Best.start(level.id, store: storesProgress) && storesProgress { Sync.shared.saved() }
     }
 
     private func refuse(_ knob: Int) {

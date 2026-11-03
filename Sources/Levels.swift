@@ -478,13 +478,21 @@ struct Best: Codable {
 
     /// Set by the first committed move: a look, a touch or a turn let go where it began, is free (Jack's call C3, round
     /// 13). Unstored, the harness's, it lasts only this launch.
-    static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
-    static func start(_ id: String, store: Bool = true) {
-        guard !started(id) else { return }
-        if store { UserDefaults.standard.set(true, forKey: "started.\(id)") } else {
-            UserDefaults.standard.register(defaults: ["started.\(id)": true])
-        }
+    static func started(_ id: String) -> Bool {
+        // Read so a row that shows tried draws again when iCloud brings the flag (`Sync.revision`).
+        if Sync.built { _ = Sync.revision.count }
+        return UserDefaults.standard.bool(forKey: startedPrefix + id)
     }
+    /// Whether this call set the flag.
+    @discardableResult
+    static func start(_ id: String, store: Bool = true) -> Bool {
+        guard !started(id) else { return false }
+        if store { UserDefaults.standard.set(true, forKey: startedPrefix + id) } else {
+            UserDefaults.standard.register(defaults: [startedPrefix + id: true])
+        }
+        return true
+    }
+    static let startedPrefix = "started."
 
     /// Banked undos, shared by every level and mode: 10 to start, and `refill` adds 2 a day played, up to 10. Stored as
     /// the number spent, so a fresh install reads 10.

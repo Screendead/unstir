@@ -84,7 +84,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `SUPPORT_ADDRESS` and `POLICY_URL` (Jack's, never in a tracked file; `testNoTrackedConfigHoldsAPrivateValue`) set
   Info.plist's `SupportAddress` and `PolicyURL`; in an xcconfig a URL is written `https:/$()/...`, as `//` starts a
   comment. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
-  build's events as Debug. `ICLOUD=YES` syncs bests through iCloud (`Sync.swift`), signing with its entitlement, so a
+  build's events as Debug. `ICLOUD=YES` syncs progress through iCloud (`Sync.swift`), signing with its entitlement, so a
   device build needs the App ID's iCloud capability; a simulator build without signing builds either way. `EDITORS=YES` (or `EDITORS = YES` in `Config/Local.xcconfig` for an Xcode archive) makes the
   editors' build, for App Store editors on its own TestFlight group (Jack's call F11): it sets the `EDITORS` compilation
   condition (`Build.editors`), and settings shows a labelled switch, "open every tier", that sets `Best.unlocked`, every
@@ -469,8 +469,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
   (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
-  demonstration's commits (Jack's call C3, round 13). A level with a best counts as started for `Game.firstTry`, as
-  iCloud (`Sync`) brings bests to a phone where their levels never started, so a try there is never a first. A level's note shows at full strength for its first 4 s of play, then at
+  demonstration's commits (Jack's call C3, round 13). A level with a best counts as started for `Game.firstTry`, so a
+  best iCloud (`Sync`) brings without its level's started flag still makes a try there no first. A level's note shows at full strength for its first 4 s of play, then at
   0.55, as every caption rests. Plughole 01's first open hangs one line under it, at 0.55, pointing at the settings
   ("sound, haptics, colour letters: ⚙ on the menu", `LevelView.pointer`, Jack's call F3, round 14; it fits the SE's
   width with little to spare), and announces it to VoiceOver as the opening ends, when `Best.pointedAtSettings` is
@@ -832,21 +832,23 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   finish and the first turn of the tank or the swirl. It needs the Game Center capability and entitlement, which
   aren't set up.
 - **Sync.swift** keeps the bests in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16):
-  bests and endless's best (`Best.tanks`, Jack's call icloud-endless = A, round 16), never the undo bank, its anchor or
-  any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO
+  bests, endless's best (`Best.tanks`) and the started flags (`Best.started`) (Jack's calls icloud-endless and
+  icloud-started = A, round 16), never the undo bank, its anchor or any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO
   until the App ID has iCloud's key-value storage, as a device build signing with the entitlement fails to provision
   without it) sets Info.plist's `iCloudSync`, read as `Sync.built`, and picks `CODE_SIGN_ENTITLEMENTS`
   (`Config/iCloud.entitlements` on YES, none on NO); off, no call reaches the store. On, a plain launch
   (`Sync.plays`: never the harness, the test host or the editors' build) reconciles as it starts, on every change iCloud sends (an
   account's change merges the phone's bests into the new account's store, dropping none) and after every best
-  `Game` saves, and every endless tank cleared. The store holds `bests` (`Sync.key`, pinned: the store takes 1024 keys,
+  `Game` saves, every endless tank cleared and every level's first start. The store holds `bests` (`Sync.key`, pinned: the store takes 1024 keys,
   and the dailies add a best a day), a dictionary of level id to the bytes `best.<id>` holds on the phone, and
-  `endless` (`Sync.tanksKey`, pinned), the most tanks cleared, which the higher of phone and store sets on both. `Sync.reconcile` reads only the
+  `endless` (`Sync.tanksKey`, pinned), the most tanks cleared, which the higher of phone and store sets on both, and
+  `tried` (`Sync.triedKey`, pinned), the ids of every level started on any phone, a union that sync never takes a flag
+  out of, so a level tried anywhere reads tried, and its next try is no first try, everywhere. `Sync.reconcile` reads only the
   stored domain, never the harness's registered bests, merges both ways by `Sync.beats` (`Best.standing`, the rank
   `Best.save` keeps: a daily kept on its day before one the archive saved, so a synced archive solve never moves
-  `Daily.run`, then clean, then over par; a tie keeps the side's own), stores what the phone takes as the store's own bytes and never writes over a store entry it can't
-  read. A best that lands makes no card, sound or report: `Best.load` and `Best.tanks` read `Sync.revision` where the
-  build syncs, so every view that shows a best draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
+  `Daily.run`, then clean, then over par; a tie keeps the side's own), stores what the phone takes as the store's own bytes and never writes over a store entry or value it
+  can't read. A best that lands makes no card, sound or report: `Best.load`, `Best.tanks` and `Best.started` read
+  `Sync.revision` where the build syncs, so every view that shows a best or tried draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
   `ICLOUD` turns YES for a release, as its comment lists: the App ID's capability, a two-device test, and the privacy
   policy and store page, which say the bests stay on the phone and that sync isn't built. The editors' build never
   syncs, nor does any phone while the developer unlock (`Best.unlocked`) is on: `Sync.reconcile` reads the unlock from
