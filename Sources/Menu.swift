@@ -709,7 +709,9 @@ struct MenuView: View {
     /// The list's visible part, in its own space.
     private var band: ClosedRange<CGFloat> {
         let top = max(-list.minY, 0)
-        return top ... max(min(viewport - dock - list.minY, list.height), top + 1)
+        // The dock's last height under the list, which the tabletop's lies apart from.
+        let under = layout.dock == nil ? dock : 0
+        return top ... max(min(viewport - under - list.minY, list.height), top + 1)
     }
 
     /// The middle of the list's visible part, in the scroll view's space.
