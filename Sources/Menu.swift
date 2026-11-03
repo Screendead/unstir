@@ -306,7 +306,7 @@ struct MenuView: View {
     var body: some View {
         laidOut
         .modifier(Refreshed(revision: revision, playing: playing?.id, focus: focus?.id, start: start, refresh: refresh,
-                            follow: { follow(playing) }, refocus: refocus, look: look))
+                            follow: followPlaying, refocus: refocus, look: look))
         // Wide, the trailing half holds one at a time, as both stay live there: the one opened last, from the list,
         // the dock or the root (a gate, a promoted purchase), closes the other, which would lie unseen and still read
         // to VoiceOver under it. Unfolding with a card over the archive keeps the card, the one in sight.
@@ -397,6 +397,12 @@ struct MenuView: View {
         past = Self.past(today)
         leading = Self.lead(tier: shown)
         saved = run
+    }
+
+    /// The playing level's row, and no row lit, so the row left next time lights however often it is left.
+    private func followPlaying() {
+        if playing != nil { flashing = nil }
+        follow(playing)
     }
 
     /// The row left once a level beside the list closes, lit once, as a new menu lights it.
