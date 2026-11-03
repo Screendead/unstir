@@ -312,11 +312,32 @@ final class PlayLayoutTests: XCTestCase {
             let m = menu(window: window, insets: insets)
             XCTAssertEqual(m, .column, "\(window)")
             XCTAssertFalse(m.wide)
+            XCTAssertFalse(m.splits, "\(window): a level opened there covers the menu, as on every iPhone")
         }
     }
 
-    func testTheTabletopKeepsTodaysMenu() {
-        XCTAssertEqual(menu(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table), .column)
+    func testTheTabletopsMenuKeepsEveryPartOffTheFold() {
+        // The Duo upright and folded on a table (d4-table, deferred to stage 5): the title, strip and list in the
+        // upright half, the dock, or a card or the archive over it, in the half lying flat.
+        let insets = (top: CGFloat(59), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0))
+        let m = menu(window: CGSize(width: 669, height: 951), insets: insets, fold: table)
+        let list = try! XCTUnwrap(m.list), side = try! XCTUnwrap(m.side), dock = try! XCTUnwrap(m.dock)
+        // In the menu's space: the fold less the top inset.
+        let fold = table.offsetBy(dx: 0, dy: -insets.top)
+        XCTAssertEqual(list.minY, 0)
+        XCTAssertEqual(list.maxY, fold.minY - PlayLayout.margin, accuracy: 0.001, "the list ends 16 pt above the fold")
+        XCTAssertEqual(side.minY, fold.maxY + PlayLayout.margin, accuracy: 0.001, "a card starts 16 pt below it")
+        XCTAssertEqual(side.maxY, 951 - insets.top - insets.bottom, accuracy: 0.001)
+        XCTAssertEqual(dock, side, "the dock lies in the half a card covers")
+        for r in [list, side] {
+            XCTAssertEqual(r.minX, 0)
+            XCTAssertEqual(r.width, 669, "each runs the window's width")
+            XCTAssertGreaterThanOrEqual(r.height, PlayLayout.minPane)
+        }
+        XCTAssertTrue(m.wide, "a card opens beside the list, not over it")
+        XCTAssertFalse(m.splits, "a level opened in the tabletop covers the menu, its tank below the fold")
+        // Lying flat, the Duo upright keeps today's menu.
+        XCTAssertEqual(menu(window: CGSize(width: 669, height: 951), insets: insets), .column)
     }
 
     func testTheOpenDuosMenuPutsTheListAndTheCardEitherSideOfTheFold() {
@@ -344,8 +365,9 @@ final class PlayLayoutTests: XCTestCase {
                                        (CGSize(width: 600, height: 400), (0, 0, 0, 0), nil),
                                        (CGSize(width: 1000, height: 500), (0, 30, 0, 20), nil)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
             let m = menu(window: window, insets: insets, fold: fold), play = layout(window: window, insets: insets, fold: fold)
-            XCTAssertEqual(m.wide, play.kind == .split, "\(window)")
-            guard let list = m.list, let side = m.side else { continue }
+            XCTAssertEqual(m.splits, play.kind == .split, "\(window)")
+            XCTAssertEqual(m.wide, play.kind != .column, "\(window)")
+            guard m.splits, let list = m.list, let side = m.side else { continue }
             // Play's panes are inside its 16 pt side margins, the menu's in the whole safe area.
             let tank = play.tankPane.offsetBy(dx: PlayLayout.margin, dy: 0)
             let chrome = play.chromePane.offsetBy(dx: PlayLayout.margin, dy: 0)

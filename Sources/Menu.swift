@@ -281,39 +281,7 @@ struct MenuView: View {
     }
 
     var body: some View {
-        let analytics = Analytics.shared
-        // The menu waits for the question's answer, for VoiceOver too.
-        let asking = analytics.asks && analytics.consent == .undecided
-        let wide = layout.wide, fold = harnessFold
-        column
-        .frame(width: layout.list?.width)
-        // Wide, a card or the archive opens beside the list, which stays live.
-        .accessibilityHidden(asking || !wide && (card != nil || archive))
-        .frame(maxWidth: wide ? .infinity : nil, alignment: .leading)
-        // Over the menu or beside the list, in one place in the tree, so a card or the archive up as the phone folds or
-        // unfolds keeps its identity and its scroll (Jack's call d4-pose = B, round 16).
-        .overlay(alignment: .topLeading) {
-            let side = layout.side
-            ZStack {
-                archiveView(beside: wide)
-                cardView(beside: wide)
-            }
-            .frame(width: side?.width, height: side?.height)
-            .frame(maxWidth: wide ? nil : .infinity, maxHeight: wide ? nil : .infinity)
-            .padding(.leading, side?.minX ?? 0)
-            .accessibilityHidden(asking)
-        }
-        .onGeometryChange(for: MenuLayout.self) {
-            MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: fold))
-        } action: { layout = $0 }
-        .overlay {
-            if asking { ConsentCard(tier: shown).transition(.opacity) }
-        }
-        .animation(.easeOut(duration: 0.25), value: asking)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: {
-            window = $0
-        }
-        .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
+        laidOut
         // Wide, the trailing half holds one at a time, as both stay live there: the one opened last, from the list,
         // the dock or the root (a gate, a promoted purchase), closes the other, which would lie unseen and still read
         // to VoiceOver under it. Unfolding with a card over the archive keeps the card, the one in sight.
@@ -356,6 +324,70 @@ struct MenuView: View {
         .task { if shelfDemo { await shelfTour() } }
     }
 
+    /// The column, the dock where it lies apart and a card or the archive, where the window puts them.
+    private var laidOut: some View {
+        let analytics = Analytics.shared
+        // The menu waits for the question's answer, for VoiceOver too.
+        let asking = analytics.asks && analytics.consent == .undecided
+        let fold = harnessFold
+        return placedColumn(asking: asking)
+        // The tabletop's dock lies below the fold, under a card or the archive.
+        .overlay(alignment: .topLeading) { tabletopDock(asking: asking) }
+        // Over the menu or beside the list, in one place in the tree, so a card or the archive up as the phone folds or
+        // unfolds keeps its identity and its scroll (Jack's call d4-pose = B, round 16).
+        .overlay(alignment: .topLeading) { sheets(asking: asking) }
+        .onGeometryChange(for: MenuLayout.self) {
+            MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: fold))
+        } action: { layout = $0 }
+        .overlay {
+            if asking { ConsentCard(tier: shown).transition(.opacity) }
+        }
+        .animation(.easeOut(duration: 0.25), value: asking)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: {
+            window = $0
+        }
+        .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
+    }
+
+    /// The column where the window puts it: a phone's whole screen, the split's leading half, the tabletop's upright
+    /// half.
+    private func placedColumn(asking: Bool) -> some View {
+        let wide = layout.wide
+        // In the tabletop the list has a height of its own.
+        let sized = layout.dock != nil
+        return column
+            .frame(width: layout.list?.width, height: sized ? layout.list?.height : nil)
+            // Wide, a card or the archive opens beside the list, which stays live.
+            .accessibilityHidden(asking || !wide && (card != nil || archive))
+            .frame(maxWidth: wide ? .infinity : nil, maxHeight: sized ? .infinity : nil, alignment: .topLeading)
+    }
+
+    @ViewBuilder private func tabletopDock(asking: Bool) -> some View {
+        if let d = layout.dock {
+            dock(over: covering)
+                .frame(width: d.width).frame(height: d.height, alignment: .bottom)
+                .offset(x: d.minX, y: d.minY)
+                .accessibilityHidden(asking || card != nil || archive)
+        }
+    }
+
+    /// A pack's card or the archive: over the menu on a phone, beside the list wide.
+    private func sheets(asking: Bool) -> some View {
+        let wide = layout.wide, side = layout.side
+        return ZStack {
+            archiveView(beside: wide)
+            cardView(beside: wide)
+        }
+        .frame(width: side?.width, height: side?.height)
+        .frame(maxWidth: wide ? nil : .infinity, maxHeight: wide ? nil : .infinity)
+        .padding(.leading, side?.minX ?? 0)
+        .padding(.top, layout.dock == nil ? 0 : side?.minY ?? 0)
+        .accessibilityHidden(asking)
+    }
+
+    /// A card or the archive lies over the dock: on a phone and in the tabletop, not beside the split's list.
+    private var covering: Bool { (card != nil || archive) && !layout.splits }
+
     /// The title, the tier strip and the tier's list over the dock: the whole menu on a phone, its leading half wide.
     private var column: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -385,19 +417,23 @@ struct MenuView: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !Offer.shelf().isEmpty && PackDock.shown() {
-                    // Held still under a card, the settings or a level sliding off, when the phone saves power, or
-                    // once nobody touches it. A card or the archive beside the list leaves it in sight and live.
-                    let over = !layout.wide && (card != nil || archive)
-                    PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: over || settings || peeking || Power.shared.saving || Power.shared.idle,
-                             covered: over || settings)
-                        .equatable()
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
+                if layout.dock == nil {
+                    dock(over: covering).onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
         }
         .foregroundStyle(Color.text)
+    }
+
+    /// Held still under a card, the settings or a level sliding off, when the phone saves power, or once nobody touches
+    /// it. A card or the archive beside the list leaves it in sight and live.
+    @ViewBuilder private func dock(over: Bool) -> some View {
+        if !Offer.shelf().isEmpty && PackDock.shown() {
+            PackDock(open: { show($0, from: $1) }, held: clock,
+                     paused: over || settings || peeking || Power.shared.saving || Power.shared.idle,
+                     covered: over || settings)
+                .equatable()
+        }
     }
 
     /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox, where the build has

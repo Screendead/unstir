@@ -730,14 +730,17 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tank, caption, swatches, controls in every pose (not yet heard; the tabletop's places alone would end with the
   tank). The play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest
   cards fit each pane. The fold is read in one place (`PlayLayout.fold`, the harness's or the system's), for the menu
-  too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule, so the tabletop keeps today's menu: the
+  too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule: the
   list, its dock under it as on a phone, in the leading half (about 460 pt on the open Duo, a phone's width), and a
   pack's card or the archive in the trailing half beside it rather than over it, coming in from the trailing edge,
   neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4), and the
   card's way out reads "✕ close" (VoiceOver "Close"), as the menu is in sight, unless it goes back to the bundle's
   card (`PackCard.back`; Jack's call d4-menuback = B, round 16). It holds
   one at a time: whichever opens last, from the list, the dock or `RootView`, closes the other, and unfolding with a
-  card over the archive keeps the card. With neither open the trailing half is empty. The column measures the layout with `onGeometryChange` on today's tree, so
+  card over the archive keeps the card. With neither open the trailing half is empty. The tabletop's menu is the split
+  turned on its side (stage 5, where d4-table left it): the title, strip and list in the upright half, and the dock at
+  the foot of the half lying flat, where a card or the archive opens over it, each 16 pt clear of the fold
+  (`MenuLayout.dock`); a level opened in the tabletop covers the menu as on a phone. The column measures the layout with `onGeometryChange` on today's tree, so
   every iPhone's menu is unchanged, and a change of pose keeps the list's place, and a card's or the archive's: either
   is drawn in one place in the tree in every pose, over the menu or beside the list, so it is moved, not opened again
   (Jack's call d4-pose = B, round 16).
