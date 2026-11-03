@@ -778,7 +778,10 @@ final class Game {
         log("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
             + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
-            if solved && storesProgress { Best.tanks = max(Best.tanks, run.tank + 1) }
+            if solved && storesProgress {
+                Best.tanks = max(Best.tanks, run.tank + 1)
+                Sync.shared.saved()
+            }
             if spilled && storesProgress { Best.spilled = true }
         } else if solved && counts && level.keepsProgress {
             let up = level.pack == nil ? level.tier.step(1) : nil, shut = up.map { !$0.isOpen() } ?? false

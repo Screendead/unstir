@@ -832,19 +832,21 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   finish and the first turn of the tank or the swirl. It needs the Game Center capability and entitlement, which
   aren't set up.
 - **Sync.swift** keeps the bests in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16):
-  bests alone, never the undo bank, its anchor or any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO
+  bests and endless's best (`Best.tanks`, Jack's call icloud-endless = A, round 16), never the undo bank, its anchor or
+  any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO
   until the App ID has iCloud's key-value storage, as a device build signing with the entitlement fails to provision
   without it) sets Info.plist's `iCloudSync`, read as `Sync.built`, and picks `CODE_SIGN_ENTITLEMENTS`
   (`Config/iCloud.entitlements` on YES, none on NO); off, no call reaches the store. On, a plain launch
   (`Sync.plays`: never the harness, the test host or the editors' build) reconciles as it starts, on every change iCloud sends (an
   account's change merges the phone's bests into the new account's store, dropping none) and after every best
-  `Game` saves. The store holds one key, `bests` (`Sync.key`, pinned: the store takes 1024 keys, and the dailies add
-  a best a day), a dictionary of level id to the bytes `best.<id>` holds on the phone. `Sync.reconcile` reads only the
+  `Game` saves, and every endless tank cleared. The store holds `bests` (`Sync.key`, pinned: the store takes 1024 keys,
+  and the dailies add a best a day), a dictionary of level id to the bytes `best.<id>` holds on the phone, and
+  `endless` (`Sync.tanksKey`, pinned), the most tanks cleared, which the higher of phone and store sets on both. `Sync.reconcile` reads only the
   stored domain, never the harness's registered bests, merges both ways by `Sync.beats` (`Best.standing`, the rank
   `Best.save` keeps: a daily kept on its day before one the archive saved, so a synced archive solve never moves
   `Daily.run`, then clean, then over par; a tie keeps the side's own), stores what the phone takes as the store's own bytes and never writes over a store entry it can't
-  read. A best that lands makes no card, sound or report: `Best.load` reads `Sync.revision` where the build syncs, so
-  every view that shows a best draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
+  read. A best that lands makes no card, sound or report: `Best.load` and `Best.tanks` read `Sync.revision` where the
+  build syncs, so every view that shows a best draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
   `ICLOUD` turns YES for a release, as its comment lists: the App ID's capability, a two-device test, and the privacy
   policy and store page, which say the bests stay on the phone and that sync isn't built. The editors' build never
   syncs, nor does any phone while the developer unlock (`Best.unlocked`) is on: `Sync.reconcile` reads the unlock from

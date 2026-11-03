@@ -11,6 +11,10 @@ private final class FakeCloud: Cloud {
         reads += 1
         return values[key] as? [String: Any]
     }
+    func object(forKey key: String) -> Any? {
+        reads += 1
+        return values[key]
+    }
     func set(_ value: Any?, forKey key: String) {
         values[key] = value
         writes += 1
@@ -41,8 +45,33 @@ final class SyncTests: XCTestCase {
     }
 
     /// Pinned: a renamed key strands every best already in a player's iCloud.
-    func testTheStoresKeyNeverChanges() {
+    func testTheStoresKeysNeverChange() {
         XCTAssertEqual(Sync.key, "bests")
+        XCTAssertEqual(Sync.tanksKey, "endless")
+        XCTAssertEqual(Best.tanksKey, "endless.tanks")
+    }
+
+    /// Endless's best syncs both ways, the higher winning (Jack's call icloud-endless = A, round 16), and a tie or a
+    /// value this build can't read moves nothing.
+    func testEndlessBestTheHigherWins() {
+        let cloud = FakeCloud()
+        defaults.set(4, forKey: Best.tanksKey)
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).sent, 1)
+        XCTAssertEqual(cloud.values[Sync.tanksKey] as? Int, 4)
+
+        cloud.values[Sync.tanksKey] = 9
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).took, 1)
+        XCTAssertEqual(defaults.integer(forKey: Best.tanksKey), 9)
+
+        let writes = cloud.writes
+        let again = Sync.reconcile(cloud, defaults, domain: suite)
+        XCTAssertEqual(again.took + again.sent, 0)
+        XCTAssertEqual(cloud.writes, writes)
+
+        cloud.values[Sync.tanksKey] = "later"
+        defaults.set(12, forKey: Best.tanksKey)
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).sent, 0)
+        XCTAssertEqual(cloud.values[Sync.tanksKey] as? String, "later")
     }
 
     /// Clean, then fewer over par, never time; a tie keeps what the side already holds (Jack's call C10, round 13).
@@ -107,15 +136,18 @@ final class SyncTests: XCTestCase {
         XCTAssertEqual(cloud.writes, writes)
     }
 
-    /// Bests alone go up: never the undo bank, its day or its anchor, nor any other flag the game keeps.
+    /// Bests and endless's best alone go up: never the undo bank, its day or its anchor, nor any other flag the game
+    /// keeps.
     func testOnlyBestsReachTheStore() {
         let cloud = FakeCloud()
         defaults.set(data(Best(over: 0, seconds: 9)), forKey: "best.L1")
-        for key in ["undos.spent", "undos.day", "undos.anchor", "started.L2", "tank.turned", "endless.tanks", "resume.L3"] {
+        defaults.set(3, forKey: Best.tanksKey)
+        for key in ["undos.spent", "undos.day", "undos.anchor", "undos.unseen", "undos.shown", "started.L2", "tank.turned",
+                    "swirled", "endless.spilled", "resume.L3", "review.asked", "tier"] {
             defaults.set(1, forKey: key)
         }
         Sync.reconcile(cloud, defaults, domain: suite)
-        XCTAssertEqual(Array(cloud.values.keys), [Sync.key])
+        XCTAssertEqual(Set(cloud.values.keys), [Sync.key, Sync.tanksKey])
         XCTAssertEqual(Array((cloud.dictionary(forKey: Sync.key) ?? [:]).keys), ["L1"])
     }
 

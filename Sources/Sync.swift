@@ -7,7 +7,8 @@ import os
 /// The bests on the phone kept in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16),
 /// behind the build's ICLOUD: NO, until the App ID has iCloud's key-value storage, makes no call to the store. With it
 /// YES, a plain launch reconciles the two as it starts, again whenever iCloud brings a change and after every best it
-/// saves. Bests only: the undo bank and its anchor never sync, nor does anything else the game stores. The harness, the
+/// saves, and with them endless's best (Jack's call icloud-endless = A, round 16). Nothing else: the undo bank and its
+/// anchor never sync, nor does anything else the game stores. The harness, the
 /// test host and the editors' build never sync, nor does a phone while the developer unlock is on (Jack's call
 /// icloud-editors = A, round 16), so progress made with every level open stays on that phone.
 @MainActor
@@ -19,6 +20,8 @@ final class Sync {
     /// The store's one key, holding every best as level id to the JSON `best.<id>` holds on the phone: the store takes
     /// at most 1024 keys, and the dailies alone add a best a day. Never rename it.
     nonisolated static let key = "bests"
+    /// Endless's best, the most tanks cleared in one run (`Best.tanks`): the higher wins. Never rename it.
+    nonisolated static let tanksKey = "endless"
     /// Bumped whenever a reconcile writes a best to the phone, so every view that read one draws again.
     nonisolated static let revision = Revision()
 
@@ -85,8 +88,8 @@ final class Sync {
          local.filter { id, l in cloud[id].map { beats(l, $0) } ?? true })
     }
 
-    /// Merges the phone's bests (`best.<id>` in `defaults`' `domain`) with the store's both ways and returns how many
-    /// each took. Only the domain's stored values, never registered ones, which are the harness's for one launch. A
+    /// Merges the phone's bests (`best.<id>` in `defaults`' `domain`) and endless's best with the store's both ways and
+    /// returns how many each took. Only the domain's stored values, never registered ones, which are the harness's for one launch. A
     /// best the phone takes is stored as the store's own bytes, and a store entry this build can't read is never
     /// written over, so a later version's fields survive an older one's reconcile. While the domain holds the developer
     /// unlock (`Best.unlocked`), nothing is read from the store or written to either side: bests made with it on are
@@ -110,7 +113,24 @@ final class Sync {
             for (id, best) in send { next[id] = try? JSONEncoder().encode(best) }
             cloud.set(next, forKey: key)
         }
-        return (take.count, send.count)
+        let tanks = tanks(cloud, defaults, phone: phone)
+        return (take.count + tanks.took, send.count + tanks.sent)
+    }
+
+    /// Endless's best, the higher of the two. A store value this build can't read is never written over.
+    nonisolated private static func tanks(_ cloud: Cloud, _ defaults: UserDefaults, phone: [String: Any]) -> (took: Int, sent: Int) {
+        let mine = phone[Best.tanksKey] as? Int ?? 0, stored = cloud.object(forKey: tanksKey)
+        guard stored == nil || stored is Int else { return (0, 0) }
+        let theirs = stored as? Int ?? 0
+        if theirs > mine {
+            defaults.set(theirs, forKey: Best.tanksKey)
+            return (1, 0)
+        }
+        if mine > theirs {
+            cloud.set(mine, forKey: tanksKey)
+            return (0, 1)
+        }
+        return (0, 0)
     }
 
     /// A counter views observe through `Best.load`, which any thread may call: the store's changes land on the
@@ -133,6 +153,7 @@ final class Sync {
 /// The key-value store's calls `Sync.reconcile` makes, so the tests reconcile against a dictionary.
 protocol Cloud: AnyObject {
     func dictionary(forKey key: String) -> [String: Any]?
+    func object(forKey key: String) -> Any?
     func set(_ value: Any?, forKey key: String)
 }
 

@@ -636,9 +636,14 @@ struct Best: Codable {
 
     /// Endless: most tanks cleared in one run.
     static var tanks: Int {
-        get { UserDefaults.standard.integer(forKey: "endless.tanks") }
-        set { UserDefaults.standard.set(newValue, forKey: "endless.tanks") }
+        get {
+            // Read so the endless row draws again when iCloud brings a higher one (`Sync.revision`).
+            if Sync.built { _ = Sync.revision.count }
+            return UserDefaults.standard.integer(forKey: tanksKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: tanksKey) }
     }
+    static let tanksKey = "endless.tanks"
 
     /// Set once an endless run spills: Over the Lip's, which nothing else records.
     static var spilled: Bool {
