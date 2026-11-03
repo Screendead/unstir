@@ -135,9 +135,11 @@ extension PlayLayout {
 
 /// Where the menu puts its list and a pack card or the archive. Wherever play splits, the list takes the leading half
 /// and a card or the archive opens in the trailing half beside it, not over it, so the fold never runs through either;
-/// the list's own 20 pt margins sit inside its half, and its dock under it, as on a phone. The tabletop is the split
-/// turned on its side: the title, strip and list in the upright half, and the dock, or a card or the archive over it,
-/// in the half lying flat. Anywhere else, every iPhone among them, the menu is today's: the card over the whole of it.
+/// the list's own 20 pt margins sit inside its half, and its dock under it, as on a phone. A level opened there plays
+/// in the leading half and the list moves to the trailing half, under the level's header and controls (Jack's call
+/// DUOMENU = B, round 16). The tabletop is the split turned on its side: the title, strip and list in the upright
+/// half, and the dock, or a card or the archive over it, in the half lying flat. Anywhere else, every iPhone among
+/// them, the menu is today's: the card over the whole of it.
 struct MenuLayout: Equatable {
     /// In the menu's safe area. Nil in the column.
     let list: CGRect?
@@ -147,7 +149,7 @@ struct MenuLayout: Equatable {
 
     /// A card or the archive opens beside the list, not over it.
     var wide: Bool { list != nil }
-    /// Play splits here: the split's, not the tabletop's.
+    /// A level opened here plays beside the menu.
     var splits: Bool { list != nil && dock == nil }
 
     static let column = MenuLayout(list: nil, side: nil)
@@ -170,11 +172,18 @@ struct MenuLayout: Equatable {
                               side: CGRect(x: leading, y: 0, width: size.width - leading, height: size.height))
         }
     }
+
+    /// Beside a playing level, in the menu's space: the list in `slot`, what the level's chrome leaves of the trailing
+    /// half, and a card or the archive over the whole trailing half, the level's header and controls with it.
+    func beside(_ slot: CGRect) -> MenuLayout {
+        MenuLayout(list: slot, side: side)
+    }
 }
 
-/// What each part of the play screen is to `PlayStack`; a spacer is untagged.
+/// What each part of the play screen is to `PlayStack`; a spacer is untagged. `menu` is the room left for the menu
+/// beside play, under the chrome.
 enum PlayPart: LayoutValueKey {
-    case spacer, stage, chrome
+    case spacer, stage, chrome, menu
     static let defaultValue = PlayPart.spacer
 
     /// A part tagged for `PlayStack`, read by VoiceOver as one group at `read`: the higher, the sooner.
@@ -193,7 +202,8 @@ enum PlayPart: LayoutValueKey {
 }
 
 /// The split's and the tabletop's arrangement of the play screen's parts: the stage alone in the tank's pane, the rest
-/// stacked in the chrome's pane as the column stacks them, its spacers sharing what is left. The column is a plain
+/// stacked in the chrome's pane as the column stacks them, its spacers sharing what is left. Beside the menu the
+/// spacers keep the column's 12 pt and the menu's part takes the rest, under the chrome. The column is a plain
 /// `VStackLayout`, and both go through one `AnyLayout`, so every part keeps its identity, and so its state and
 /// animations, as the window changes between them.
 struct PlayStack: SwiftUI.Layout {
@@ -206,17 +216,16 @@ struct PlayStack: SwiftUI.Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: LayoutSubviews, cache: inout ()) {
         let pane = layout.chromePane.offsetBy(dx: bounds.minX, dy: bounds.minY)
         let across = ProposedViewSize(width: pane.width, height: nil)
-        var used: CGFloat = 0, spacers = 0
+        var used: CGFloat = 0, spacers = 0, menus = 0
         for s in subviews {
             switch s[PlayPart.self] {
             case .chrome: used += s.sizeThatFits(across).height
             case .spacer: spacers += 1
+            case .menu: menus += 1
             case .stage: break
             }
         }
-        // The column's 12 pt where there is room for it; where there isn't (a tall card, large type), the spacers give
-        // way before the chrome runs past its pane.
-        let gap = max(0, (pane.height - used) / CGFloat(max(spacers, 1)))
+        let (gap, menu) = Self.share(pane.height, used: used, spacers: spacers, menus: menus)
         var y = pane.minY
         for s in subviews {
             switch s[PlayPart.self] {
@@ -226,12 +235,29 @@ struct PlayStack: SwiftUI.Layout {
             case .spacer:
                 s.place(at: CGPoint(x: pane.midX, y: y), anchor: .top, proposal: ProposedViewSize(width: pane.width, height: gap))
                 y += gap
+            case .menu:
+                s.place(at: CGPoint(x: pane.midX, y: y), anchor: .top, proposal: ProposedViewSize(width: pane.width, height: menu))
+                y += menu
             case .chrome:
                 let h = s.sizeThatFits(across).height
                 s.place(at: CGPoint(x: pane.midX, y: y), anchor: .top, proposal: ProposedViewSize(width: pane.width, height: h))
                 y += h
             }
         }
+    }
+
+    /// The column's 12 pt between parts.
+    nonisolated static let gap: CGFloat = 12
+
+    /// What each spacer and the menu's part take of a pane `height` tall whose chrome needs `used`. Without the menu
+    /// the spacers share the rest, so the chrome is centred round it; where there is no rest (a tall card, large type),
+    /// they give way before the chrome runs past its pane. Beside the menu they keep `gap`, giving way the same, and
+    /// the menu takes the rest.
+    nonisolated static func share(_ height: CGFloat, used: CGFloat, spacers: Int, menus: Int) -> (gap: CGFloat, menu: CGFloat) {
+        let left = max(0, height - used), n = CGFloat(max(spacers, 1))
+        guard menus > 0 else { return (left / n, 0) }
+        let gap = min(gap, left / n)
+        return (gap, max(0, left - gap * CGFloat(spacers)) / CGFloat(menus))
     }
 }
 

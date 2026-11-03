@@ -740,10 +740,36 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   card over the archive keeps the card. With neither open the trailing half is empty. The tabletop's menu is the split
   turned on its side (stage 5, where d4-table left it): the title, strip and list in the upright half, and the dock at
   the foot of the half lying flat, where a card or the archive opens over it, each 16 pt clear of the fold
-  (`MenuLayout.dock`); a level opened in the tabletop covers the menu as on a phone. The column measures the layout with `onGeometryChange` on today's tree, so
+  (`MenuLayout.dock`); a level opened in the tabletop covers the menu as on a phone, as only the split plays beside it
+  (`MenuLayout.splits`). The column measures the layout with `onGeometryChange` on today's tree, so
   every iPhone's menu is unchanged, and a change of pose keeps the list's place, and a card's or the archive's: either
   is drawn in one place in the tree in every pose, over the menu or beside the list, so it is moved, not opened again
   (Jack's call d4-pose = B, round 16).
+  Where play splits, a level opens beside the menu (stage 5; Jack's calls D-layout = 3 and DUOMENU = B, round 16): the
+  tank stays where the split puts it, in the leading half at the same glass, and the trailing half holds the level's
+  chrome at its natural height with the menu under it. `LevelView` adds a `PlayPart.menu` part after the controls,
+  which `PlayStack` gives what the chrome leaves (`PlayStack.share`: the spacers keep the column's 12 pt and give way
+  first; controls that are hidden, under a card, a spill or endless, give their room too), and reports its frame in
+  `RootView.space`; `RootView` passes it to `MenuView` as `slot`, and the list glides there from its own half, and back
+  as the level closes, in one 0.45 s move (none under Reduce Motion; a menu built beside play, on a launch into a level
+  or the phone opening, waits unseen for the slot and appears there). Beside play the menu is the tier strip, list and
+  dock (the title and gear wait for the level to close, as the settings do on a phone), drawn over the level
+  (`zIndex`) with only its own column black, so the level's ground, Escapement's paper too, shows round it; the dock
+  holds still (`PackDock.paused`) and a tier switch cuts to the new list without the stir (`MenuView.go`), so nothing
+  of the menu takes GPU time from the tank. Back closes the level and the list returns to its half. A row, the
+  tagline's next, an archive day or a card's level picked beside play, and a result card's next, leave the playing
+  level through its own way out (`LevelView.switching`: a finger let go, its quit sent and its try saved, as `leave`
+  does), then open in the tank; the playing level's own row opens nothing (`MenuView.opens`, so endless's row never
+  deals a run over the one playing; its new run does). The list follows the playing level (`MenuView.playing`: its
+  tier, its row centred, its hairline at full), and the menu, no longer built anew on each return, reads its rows, run
+  and dailies afresh on `RootView.revision`, bumped by every level opened, left or finished. A pack's card or the
+  archive opens over the whole trailing half, the level's header and controls with it, as a phone's covers the menu
+  (its way out "‹ menu", modal to VoiceOver), the level playing on under it: from the dock, a result card's pointer, a
+  gate (a pack level past the taste leaves the playing level in the tank) or a promoted purchase. A level opened from a
+  card or the archive puts it away while it plays (`RootView.parked`) and brings it back as that level leaves, if its
+  way out names it (`RootView.returns`), as on a phone it waits under the level. A back swipe beside the menu slides
+  nothing, as the menu is in sight: past the threshold the level leaves through the dip, as under Reduce Motion.
+  VoiceOver hears the level before the menu (`accessibilitySortPriority`; not yet heard on a device).
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
@@ -968,7 +994,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   hairline lit. A hidden stir in
   the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
   the list, and the card (`RootView`'s, bound in) lies over the whole menu, or beside the list in a wide window
-  (`MenuLayout`), as the archive does. The list opens centred, unanimated under
+  (`MenuLayout`), or over the trailing half beside a playing level, as the archive does. The list opens centred, unanimated under
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
   `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
   the first short of par, else the top). The daily, endless and the sandbox leave it at the top. That row's hairline,

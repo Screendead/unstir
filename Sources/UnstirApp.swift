@@ -573,6 +573,22 @@ struct RootView: View {
     @State private var resumed: Game?
     /// The menu is drawn under the level while a back swipe slides it off (Jack's call C19, round 13).
     @State private var peeking = false
+    /// The window splits, as the open Duo held like a book does: a level plays beside the menu, the tank in the leading
+    /// half and the menu in the trailing half under the level's header and controls (Jack's calls D-layout = 3 and
+    /// DUOMENU = B, round 16).
+    @State private var wide = false
+    /// The room the playing level's chrome leaves the menu beside it, in `Self.space`.
+    @State private var slot: CGRect?
+    /// A level picked beside play, which the playing level leaves for through its own way out, saving its try, and
+    /// whether the harness carries over to it.
+    @State private var switching: Level?
+    @State private var keeping = false
+    /// Bumped by every level opened, left or finished, so a menu that stays up beside play reads afresh.
+    @State private var revision = 0
+    /// The card or the archive a level beside play was opened from, which would cover its header and controls: put
+    /// away while it plays, and back as it leaves, as on a phone they wait under the level.
+    @State private var parked: (card: Offer?, archive: Bool)?
+    @Environment(\.harnessFold) private var harnessFold
     /// Kept apart from `harness`, which a first move to another screen drops.
     private let harnessed: Bool
     /// The harness's one save, so a plain launch's left on the simulator never reaches a shot.
@@ -632,6 +648,12 @@ struct RootView: View {
         _typeSize = State(initialValue: h.typeSize)
     }
 
+    /// Where the menu and a level beside it measure from.
+    static let space = "root"
+
+    /// A level plays beside the menu.
+    private var beside: Bool { wide && level != nil }
+
     /// The menu is up with nothing over it: a card, the consent question, the settings sheet.
     private var calm: Bool {
         level == nil && card == nil && !archive && !settings && !(Analytics.shared.asks && Analytics.shared.consent == .undecided)
@@ -648,18 +670,21 @@ struct RootView: View {
                 PromoArt(offer: offer)
             } else {
                 // First, so the menu a back swipe uncovers is the one that stays up once the level has gone. Under the
-                // level it opens as leaving would open it, not on the harness's tier.
-                if level == nil || peeking {
+                // level it opens as leaving would open it, not on the harness's tier. Beside play it stays up, over the
+                // level, whose ground it leaves uncovered.
+                if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
                              frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock,
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
                              cardScroll: harness?.cardScroll ?? false, focus: focus, held: harness?.lockTap, arrived: arrived,
-                             run: Self.save("endless", harnessed: harnessed, harnessSave), peeking: level != nil) {
+                             run: Self.save("endless", harnessed: harnessed, harnessSave), peeking: level != nil && !beside,
+                             playing: beside ? level : nil, slot: slot, revision: revision) {
                         show($0)
                     }
-                    .allowsHitTesting(level == nil)
-                    .accessibilityHidden(level != nil)
-                    .transition(level == nil ? dip : .identity)
+                    .allowsHitTesting(level == nil || beside)
+                    .accessibilityHidden(level != nil && !beside)
+                    .transition(level == nil ? dip : wide ? .opacity : .identity)
+                    .zIndex(beside ? 1 : 0)
                 }
                 if let level {
                     LevelView(level: level, harness: harness, resumed: resumed, storesResume: !harnessed,
@@ -668,17 +693,31 @@ struct RootView: View {
                               onLook: { show(nil, look: $0) },
                               onOffer: { pack in
                                   card = .pack(pack)
-                                  show(nil, solved: true)
+                                  // Beside the menu the card opens over the trailing half, the level under it.
+                                  if !beside { show(nil, solved: true) }
                               },
                               onPeek: { solved in
                                   if let solved { focus = level.focus(solved: solved) }
                                   peeking = solved != nil
-                              })
+                              },
+                              besideMenu: wide, switching: switching,
+                              onSwitch: { next in
+                                  switching = nil
+                                  proceed(next, keep: keeping)
+                              },
+                              onMenu: { slot = $0 },
+                              onFinish: { revision += 1 })
                         .id(level)
                         .transition(dip)
+                        // Heard before the menu beside it.
+                        .accessibilitySortPriority(beside ? 1 : 0)
                 }
             }
         }
+        .coordinateSpace(.named(Self.space))
+        .onGeometryChange(for: Bool.self) {
+            MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: harnessFold)).splits
+        } action: { wide = $0 }
         .background(Color.black)
         .buttonStyle(Sounding())
         .modifier(TypeSize(size: typeSize))
@@ -798,6 +837,14 @@ struct RootView: View {
         return harnessed || welcomed || best(first.id) != nil || started(first.id) ? nil : first
     }
 
+    /// A card or the archive put away while a level beside the menu played comes back as `level` leaves only if it
+    /// opened that level, whose way out names it ("‹ Lens", "‹ archive"), as on a phone.
+    static func returns(to parked: (card: Offer?, archive: Bool), from level: Level) -> Bool {
+        if parked.archive { return level.archived }
+        guard let pack = level.pack, let card = parked.card else { return false }
+        return card == .pack(pack) || card == .complete && Pack.bundled.contains(pack)
+    }
+
     /// The daily's and endless's rows are marked new until either first opens.
     static func seesModes(_ next: Level?, opens: Bool) -> Bool {
         guard let next, opens else { return false }
@@ -807,6 +854,24 @@ struct RootView: View {
     /// A level past its pack's taste that the player doesn't own shows the pack's card over the menu instead.
     /// `look`: the tier the menu opens on in place of the stored one, locked or not. `solved`: the level left is.
     private func show(_ next: Level?, keep: Bool = false, look: Tier? = nil, solved: Bool = false) {
+        // Beside play, another level leaves the playing one through its own way out, which saves its try and lets go of
+        // a finger, and then opens; the playing level itself opens nothing.
+        if beside, let next, let level {
+            if next != level, switching == nil {
+                keeping = keep
+                switching = next
+            } else if next == level, card != nil || archive {
+                // Its own card's play: the card goes, to come back as the level leaves.
+                parked = (card, archive)
+                card = nil
+                archive = false
+            }
+            return
+        }
+        proceed(next, keep: keep, look: look, solved: solved)
+    }
+
+    private func proceed(_ next: Level?, keep: Bool = false, look: Tier? = nil, solved: Bool = false) {
         // Just after launch the store may not yet have read what the player owns, so a gate waits for it.
         if let next, !Store.shared.ready, Store.shared.card(for: next) != nil {
             Task {
@@ -821,15 +886,32 @@ struct RootView: View {
     private func open(_ next: Level?, keep: Bool, look: Tier?, solved: Bool) {
         if !keep { harness = nil }
         self.look = look
+        revision += 1
         let gate = next.flatMap { Store.shared.card(for: $0) }
+        let opens = next.map { Store.shared.opens($0) } ?? true
+        // Beside play a level that doesn't open leaves the playing one where it is: a gate's card opens over the
+        // trailing half, over the playing level's header and controls.
+        let stays = beside && next != nil && (gate != nil || !opens)
         // The gate's note shows on the showing it opens, never again on a return to the card.
         arrived = gate
         // A failure shown before a level isn't still there after it, though the card it was on comes back.
         if next != nil { Store.shared.forgetFailures() }
+        if wide, next != nil, !stays, gate == nil, opens {
+            if card != nil || archive { parked = (card, archive) }
+            card = nil
+            archive = false
+        }
         if gate != nil { card = gate.map(Offer.pack) }
+        if next == nil, let p = parked, let level {
+            if Self.returns(to: p, from: level) {
+                card = p.card
+                archive = p.archive
+            }
+            parked = nil
+        }
         // A gate's card opens on buying (`arrived`), not on a row.
-        if let level { focus = gate == nil ? level.focus(solved: solved) : nil }
-        let opens = next.map { Store.shared.opens($0) } ?? true
+        if let level, !stays { focus = gate == nil ? level.focus(solved: solved) : nil }
+        if stays { return }
         if Self.seesModes(next, opens: opens), !Best.modesSeen { Best.seeModes(store: !harnessed) }
         // So a launch after the app dies in a level comes back on its tier too.
         if let next, gate == nil, opens, next.tier.levels.contains(where: { $0.id == next.id }) { Tier.store(next.tier) }

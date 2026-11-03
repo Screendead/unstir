@@ -1096,6 +1096,15 @@ struct LevelView: View {
     /// The menu drawn under a back swipe, focused as leaving with whether the level is solved would; nil once the swipe
     /// has sprung back.
     let onPeek: (Bool?) -> Void
+    /// The window would put the menu beside a split play screen (Jack's call DUOMENU = B, round 16).
+    let besideMenu: Bool
+    /// A level picked in the menu beside play: this one leaves for it through `onSwitch`, its try saved as leaving saves it.
+    let switching: Level?
+    let onSwitch: (Level) -> Void
+    /// Where the menu goes beside play, under the chrome, in `RootView.space`.
+    let onMenu: (CGRect) -> Void
+    /// The level finished, its best saved: the menu beside it reads its rows afresh.
+    let onFinish: () -> Void
     /// The back swipe's touch, by its global start, and what it decided.
     @State private var swipeTouch: (start: CGPoint, call: BackSwipe)?
     /// The same decision as the tank's gesture saw it: once made it holds, though a swipe's later course may no longer
@@ -1121,7 +1130,14 @@ struct LevelView: View {
     /// level it already shows. `storesResume`: the game built here saves its try, as on any launch but the harness's.
     init(level: Level, harness: Harness?, resumed: Game? = nil, storesResume: Bool = false,
          onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void, onLook: @escaping (Tier) -> Void,
-         onOffer: @escaping (Pack) -> Void, onPeek: @escaping (Bool?) -> Void = { _ in }) {
+         onOffer: @escaping (Pack) -> Void, onPeek: @escaping (Bool?) -> Void = { _ in }, besideMenu: Bool = false,
+         switching: Level? = nil, onSwitch: @escaping (Level) -> Void = { _ in }, onMenu: @escaping (CGRect) -> Void = { _ in },
+         onFinish: @escaping () -> Void = {}) {
+        self.besideMenu = besideMenu
+        self.switching = switching
+        self.onSwitch = onSwitch
+        self.onMenu = onMenu
+        self.onFinish = onFinish
         let game = resumed ?? Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
                                    storesProgress: harness?.harnessed != true, storesResume: storesResume)
         // A save with no line yet, a run's next tank, opens as any tank does.
@@ -1246,10 +1262,14 @@ struct LevelView: View {
                 Task { if swipeTouch?.call == .swipe, !swipedAway { swipeTouch = nil; springBack() } }
             }
             .task {
-                if let heldSwipe { peek(); swiped = heldSwipe }
+                if let heldSwipe {
+                    // After the first layout, which says whether the menu is beside the level, where nothing slides.
+                    try? await Task.sleep(for: .milliseconds(200))
+                    if !beside { peek(); swiped = heldSwipe }
+                }
                 guard playsSwipe || exitsBySwipe, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
-                peek()
-                if playsSwipe, !reduceMotion {
+                if !beside { peek() }
+                if playsSwipe, !reduceMotion, !beside {
                     swipeFinger = true
                     withAnimation(.easeInOut(duration: 0.5)) { swiped = 0.45 }
                     guard (try? await Task.sleep(for: .seconds(0.5))) != nil else { return }
@@ -1273,9 +1293,9 @@ struct LevelView: View {
                     swipeTouch = (v.startLocation, call == .swipe && drag == nil && !spun ? .swipe : .pass)
                     guard swipeTouch?.call == .swipe else { return }
                     Log.write("back swipe")
-                    if !reduceMotion { peek() }
+                    if slides { peek() }
                 }
-                guard swipeTouch?.call == .swipe, !reduceMotion, width > 0 else { return }
+                guard swipeTouch?.call == .swipe, slides, width > 0 else { return }
                 swiped = max(0, v.translation.width) / width
             }
             .onEnded { v in
@@ -1289,6 +1309,13 @@ struct LevelView: View {
             }
     }
 
+    /// The level slides off over the menu under a back swipe; not under Reduce Motion, nor beside the menu, which is in
+    /// sight already, so past the threshold the level leaves through the dip.
+    private var slides: Bool { !reduceMotion && !beside }
+
+    /// The menu is up beside this level: the window splits, as the open Duo held like a book does.
+    private var beside: Bool { besideMenu && pose?.kind == .split }
+
     /// The menu under the level reads the endless run's save as it is built, so the save is written first, as leaving
     /// writes it.
     private func peek() {
@@ -1299,7 +1326,7 @@ struct LevelView: View {
     private func swipeAway() {
         swipedAway = true
         Log.write("back swipe leaves")
-        guard !reduceMotion else { leave(); return }
+        guard slides else { leave(); return }
         withAnimation(.easeOut(duration: 0.2)) { swiped = 1 } completion: { leave() }
     }
 
@@ -1500,7 +1527,16 @@ struct LevelView: View {
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
-                controls.modifier(PlayPart.chrome(read: 0))
+                controls
+                    // Beside the menu, controls that are hidden give their room to the list rather than to a gap.
+                    .frame(height: besideMenu && layout.kind == .split && (showResult || ending || game.level.run != nil) ? 0 : nil,
+                           alignment: .top)
+                    .modifier(PlayPart.chrome(read: 0))
+                if besideMenu && layout.kind == .split {
+                    Color.clear.accessibilityHidden(true)
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(RootView.space)) } action: { onMenu($0) }
+                        .layoutValue(key: PlayPart.self, value: .menu)
+                }
             }
             // VoiceOver reads the parts in the column's order, header to controls, whatever the pose puts where: by
             // place alone the tabletop's tank, below the fold, would come last.
@@ -1652,6 +1688,7 @@ struct LevelView: View {
         .onChange(of: game.finished) {
             // An undo or reset from the lost card.
             guard game.finished else { showResult = false; return }
+            onFinish()
             // The fine pass can call the win ~0.1 s after the commit: a finger down in that gap would hold its turn frozen
             // over the win, then have the commit refused on lift.
             endPath(); endTwist()
@@ -1702,7 +1739,16 @@ struct LevelView: View {
             if shown == nil { badge = game.badge }
         }
         // A promoted purchase's card opens over the menu: the level leaves as its back does, so its quit and save go too.
-        .onChange(of: Store.shared.promoted) { if Store.shared.promoted != nil { leave() } }
+        // Beside the menu the card opens over the trailing half, and the level plays on under it.
+        .onChange(of: Store.shared.promoted) { if Store.shared.promoted != nil, !beside { leave() } }
+        // A level picked in the menu beside this one: leave for it as leaving for the menu leaves, a finger let go.
+        .onChange(of: switching) {
+            guard let next = switching else { return }
+            letGoOnResize()
+            Analytics.shared.left(game)
+            Resume.save(game)
+            onSwitch(next)
+        }
         .onDisappear {
             endPath(); endTwist()
             if knocks { Knock.rest() }
@@ -1811,9 +1857,12 @@ struct LevelView: View {
         onLook(tier)
     }
 
+    /// Beside the menu, the card opens over the trailing half and the level stays.
     private func offer(_ pack: Pack) {
-        Analytics.shared.left(game)
-        Resume.save(game)
+        if !beside {
+            Analytics.shared.left(game)
+            Resume.save(game)
+        }
         onOffer(pack)
     }
 

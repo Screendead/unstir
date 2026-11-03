@@ -340,6 +340,62 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(menu(window: CGSize(width: 669, height: 951), insets: insets), .column)
     }
 
+    func testBesidePlayTheListTakesTheSlotAndACardTheWholeTrailingHalf() {
+        for fold in [nil, book] as [CGRect?] {
+            let m = menu(window: open.window, insets: open.insets, fold: fold)
+            XCTAssertTrue(m.splits, "a level opened on the open Duo plays beside the menu")
+            let side = try! XCTUnwrap(m.side)
+            // What PlayStack leaves the menu under the chrome, in the menu's space.
+            let slot = CGRect(x: side.minX, y: 180, width: side.width - PlayLayout.margin, height: 444)
+            let beside = m.beside(slot)
+            XCTAssertEqual(beside.list, slot)
+            XCTAssertEqual(beside.side, side, "a card or the archive covers the level's header and controls too")
+            XCTAssertNil(beside.dock, "the dock stays under the list")
+            XCTAssertTrue(beside.splits)
+        }
+    }
+
+    func testBesidePlayTheSpacersKeepTheColumnsGapAndTheMenuTakesTheRest() {
+        // Without the menu, today's: the spacers share what the chrome leaves, so it centres round the tank.
+        XCTAssertEqual(PlayStack.share(624, used: 200, spacers: 2, menus: 0).gap, 212)
+        XCTAssertEqual(PlayStack.share(624, used: 200, spacers: 2, menus: 0).menu, 0)
+        XCTAssertEqual(PlayStack.share(100, used: 200, spacers: 2, menus: 0).gap, 0, "a tall card: the spacers give way")
+        // The open Duo's chrome pane, 624 pt, with a level's header, title, note and controls (about 180 pt).
+        let plain = PlayStack.share(624, used: 180, spacers: 2, menus: 1)
+        XCTAssertEqual(plain.gap, PlayStack.gap)
+        XCTAssertEqual(plain.menu, 624 - 180 - 2 * PlayStack.gap)
+        XCTAssertGreaterThanOrEqual(plain.menu, PlayLayout.minPane, "the strip, a few rows and the dock")
+        // A card's room comes out of the menu's; past the pane, the spacers give way, and the menu takes nothing.
+        XCTAssertEqual(PlayStack.share(624, used: 450, spacers: 2, menus: 1).menu, 624 - 450 - 2 * PlayStack.gap)
+        let full = PlayStack.share(624, used: 610, spacers: 2, menus: 1)
+        XCTAssertEqual(full.gap, 7)
+        XCTAssertEqual(full.menu, 0)
+        XCTAssertEqual(PlayStack.share(624, used: 700, spacers: 2, menus: 1).menu, 0)
+    }
+
+    @MainActor func testBesidePlayTheRowOfThePlayingLevelOpensNothing() {
+        let l11 = Level.plughole[10], l12 = Level.plughole[11]
+        XCTAssertTrue(MenuView.opens(l12, playing: nil))
+        XCTAssertTrue(MenuView.opens(l12, playing: l11))
+        XCTAssertFalse(MenuView.opens(l11, playing: l11), "the playing level is open already")
+        // Endless's row would deal a new run over the one playing; its new run does.
+        let run = Level.endless(Run(seed: 7)), other = Level.endless(Run(seed: 8))
+        XCTAssertFalse(MenuView.opens(other, playing: run))
+        XCTAssertTrue(MenuView.opens(other, playing: run, anew: true))
+        XCTAssertTrue(MenuView.opens(run, playing: l11))
+    }
+
+    @MainActor func testACardPutAwayBesidePlayReturnsOnlyWithTheLevelItOpened() {
+        let lens = Pack.lens.levels[3], prism = Pack.prism.levels[0], tier = Level.plughole[4]
+        XCTAssertTrue(RootView.returns(to: (.pack(.lens), false), from: lens))
+        XCTAssertFalse(RootView.returns(to: (.pack(.lens), false), from: prism))
+        XCTAssertFalse(RootView.returns(to: (.pack(.lens), false), from: tier), "a tier's level picked meanwhile")
+        XCTAssertTrue(RootView.returns(to: (.complete, false), from: prism), "the bundle's card opens each of its packs")
+        let day = Level.daily(Calendar(identifier: .gregorian).date(byAdding: .day, value: -3, to: .now)!, archived: true)
+        XCTAssertTrue(RootView.returns(to: (nil, true), from: day))
+        XCTAssertFalse(RootView.returns(to: (nil, true), from: tier))
+    }
+
     func testTheOpenDuosMenuPutsTheListAndTheCardEitherSideOfTheFold() {
         for fold in [nil, book] as [CGRect?] {
             let m = menu(window: open.window, insets: open.insets, fold: fold)
