@@ -84,19 +84,31 @@ final class Taps {
     }
 
     private(set) var mode = Mode.off
-    /// Each glass's budget once `still` has drawn a new one: observed, so the glass draws it then and only then.
-    private var drawn: [TapKey: Int] = [:]
+    /// What each glass, by its side to 16 px, draws: the law and budget its last still moment chose. Observed, so the
+    /// glass draws a new budget then and only then, whatever the screen's rate reads meanwhile.
+    private var drawn: [Int: Drawn] = [:]
+    private struct Drawn: Equatable {
+        let key: TapKey
+        let budget: Int
+    }
+
     @ObservationIgnored private var laws: [TapKey: TapLaw] = [:]
     /// The cool budgets learnt this launch or kept from earlier ones, which a new glass's prior scales from.
     @ObservationIgnored private var learnt: [TapKey: Int] = [:]
-    /// The drag being measured, at the budget it draws, and why its frames say nothing, if they don't.
-    private struct Open {
+    /// What each glass's law last kept, so a drag that changes nothing writes nothing.
+    @ObservationIgnored private var saved: [TapKey: TapLaw.Stored] = [:]
+    /// The drag being measured, at the budget it draws. A class, so each frame's tally grows in place.
+    private final class Open {
         let key: TapKey
         let window: TapWindow
         let budget: Int
         let four: Bool
         var tally = Tally()
-        let frozen: String?
+        weak var scene: UIWindowScene?
+
+        init(key: TapKey, window: TapWindow, budget: Int, four: Bool, scene: UIWindowScene?) {
+            (self.key, self.window, self.budget, self.four, self.scene) = (key, window, budget, four, scene)
+        }
     }
 
     @ObservationIgnored private var open: Open?
@@ -116,11 +128,23 @@ final class Taps {
         return "\(v.majorVersion).\(v.minorVersion)"
     }()
 
-    private init() {
+    /// The screen's top rate as it reads now.
+    @ObservationIgnored private let rate: @MainActor () -> Int
+    /// The highest top rate read this launch, read again only as a drag opens and at a still moment: a rate the system
+    /// caps for a while (Low Power Mode) never stands for the screen's, and no key changes under a drawn glass.
+    @ObservationIgnored private var hz = 0
+
+    init(rate: @escaping @MainActor () -> Int = Taps.screenRate) {
+        self.rate = rate
         watch.report = { [weak self] in self?.frame($0) }
-        NotificationCenter.default.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { _ in
-            MainActor.assumeIsolated { Taps.shared.heat(ProcessInfo.processInfo.thermalState) }
+        NotificationCenter.default.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.heat(ProcessInfo.processInfo.thermalState) }
         }
+    }
+
+    static func screenRate() -> Int {
+        let screen = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.screen }.first
+        return screen.map(\.maximumFramesPerSecond).flatMap { $0 > 0 ? $0 : nil } ?? 60
     }
 
     func configure(env: [String: String], harnessed: Bool) {
@@ -129,8 +153,12 @@ final class Taps {
         #else
         let simulator = false
         #endif
-        mode = Self.mode(env: env, harnessed: harnessed, simulator: simulator)
+        use(Self.mode(env: env, harnessed: harnessed, simulator: simulator))
         stall = (env["UNSTIR_TAPSTALL"].flatMap(Double.init) ?? 0) / 1000
+    }
+
+    func use(_ mode: Mode) {
+        self.mode = mode
         if stores { learnt = Self.learnt(in: .standard, build: build, os: os) }
     }
 
@@ -140,12 +168,12 @@ final class Taps {
     /// Every drag's line, not only those that missed.
     private var verbose: Bool { if case .adapt(_, true) = mode { false } else { mode != .off } }
 
-    /// The budget the glass `pixels` across draws, nil for its static limit.
+    /// The budget the glass `pixels` across draws, nil for its static limit: until its first still moment, the law's.
     func budget(pixels: Double) -> Int? {
         switch mode {
         case .off: nil
         case .pinned(let n), .watch(let n): n
-        case .adapt: pixels > 0 ? drawn[key(pixels)] ?? law(key(pixels), pixels: pixels).applied : nil
+        case .adapt: drawn[TapKey.side(pixels)]?.budget
         }
     }
 
@@ -156,13 +184,10 @@ final class Taps {
             .map { "\($0.name) \(learnt[$0]!)" }.joined(separator: " ")
     }
 
-    /// Read afresh, so a rate the system caps for a while can't stand for the screen's for the launch.
-    private var hz: Int {
-        let screen = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.screen }.first
-        return screen.map(\.maximumFramesPerSecond).flatMap { $0 > 0 ? $0 : nil } ?? 60
+    private func key(_ pixels: Double) -> TapKey {
+        hz = max(hz, rate())
+        return TapKey(hz: hz, pixels: pixels)
     }
-
-    private func key(_ pixels: Double) -> TapKey { TapKey(hz: hz, pixels: pixels) }
 
     private func law(_ key: TapKey, pixels: Double) -> TapLaw {
         if let l = laws[key] { return l }
@@ -170,6 +195,7 @@ final class Taps {
         if case .adapt(let n?, _) = mode {
             (l, from) = (TapLaw(start: n, cuts: Self.cuts), "UNSTIR_TAPS")
         } else if stores, let s = Self.load(key, from: .standard, build: build, os: os) {
+            saved[key] = s
             (l, from) = (TapLaw(stored: s, cuts: Self.cuts), "stored" + (s.cap.map { ", cap \($0) strikes \(s.strikes)" } ?? ""))
         } else {
             let p = TapLaw.prior(key, pixels: pixels, learnt: learnt)
@@ -188,17 +214,16 @@ final class Taps {
         if open?.window == w { return }
         close()
         guard let w, w.pixels > 0 else { return }
-        let key = key(w.pixels)
+        // The glass's own law, so the drag is judged at the budget it draws.
+        let key = drawn[TapKey.side(w.pixels)]?.key ?? key(w.pixels)
         if adapts {
             _ = law(key, pixels: w.pixels)
             laws[key]?.open(work: w.work)
         }
-        let b = budget(pixels: w.pixels) ?? 0
+        let b = budget(pixels: w.pixels) ?? Tank.fourTaps(pixels: w.pixels)
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
-        let frozen = ProcessInfo.processInfo.isLowPowerModeEnabled ? "lowpower"
-            : scene?.traitCollection.sceneCaptureState == .active ? "captured" : nil
-        open = Open(key: key, window: w, budget: b, four: Unstirred.drawsFourTaps(work: w.work, budget: b), frozen: frozen)
-        watch.start(hz: hz, stall: stall)
+        open = Open(key: key, window: w, budget: b, four: Unstirred.drawsFourTaps(work: w.work, budget: b), scene: scene)
+        watch.start(hz: key.hz, stall: stall)
     }
 
     func moved() { watch.move() }
@@ -206,13 +231,16 @@ final class Taps {
     /// The window's glass changed size: its frames for the next second say nothing.
     func posed() { posedAt = CACurrentMediaTime() }
 
-    /// Nothing is moving: a budget decided is drawn.
+    /// Nothing is moving: a budget decided is drawn, and the glass takes the law of the screen's rate as it now reads.
     func still(pixels: Double, _ moment: String) {
-        guard adapts, pixels > 0 else { return }
+        guard adapts, pixels > 0, open == nil else { return }
         let key = key(pixels)
         _ = law(key, pixels: pixels)
-        guard let e = laws[key]?.still(), let l = laws[key] else { return }
-        drawn[key] = l.applied
+        let e = laws[key]?.still()
+        guard let l = laws[key] else { return }
+        let now = Drawn(key: key, budget: l.applied), side = TapKey.side(pixels)
+        if drawn[side] != now { drawn[side] = now }
+        guard let e else { return }
         Log.write(describe(e, key) + " at \(moment)")
         if l.hot == nil { learnt[key] = l.cool }
         keep(key)
@@ -226,11 +254,12 @@ final class Taps {
         }
     }
 
-    private func frame(_ f: FrameWatch.Frame) {
-        guard var o = open else { return }
-        defer { open = o }
+    func frame(_ f: FrameWatch.Frame) {
+        guard let o = open else { return }
         if o.tally.periods.count < 4096 { o.tally.periods.append(f.period) }
-        let reason = o.frozen ?? Self.frozen(period: f.period, hz: hz, sincePose: CACurrentMediaTime() - posedAt)
+        let reason = ProcessInfo.processInfo.isLowPowerModeEnabled ? "lowpower"
+            : o.scene?.traitCollection.sceneCaptureState == .active ? "captured"
+            : Self.frozen(period: f.period, hz: o.key.hz, sincePose: CACurrentMediaTime() - posedAt)
         if let reason { o.tally.frozen[reason, default: 0] += 1; return }
         guard f.age >= Self.cuts.skip else { o.tally.skipped += 1; return }
         let c = TapLaw.classify(interval: f.interval, period: f.period, cpu: f.cpu, produced: f.produced, cuts: Self.cuts)
@@ -266,8 +295,9 @@ final class Taps {
     }
 
     private func keep(_ key: TapKey) {
-        guard stores, let l = laws[key] else { return }
-        Self.save(l.stored(build: build, os: os), key, to: .standard)
+        guard stores, let s = laws[key]?.stored(build: build, os: os), saved[key] != s else { return }
+        saved[key] = s
+        Self.save(s, key, to: .standard)
     }
 
     private func describe(_ e: TapLaw.Event, _ key: TapKey, _ o: Open? = nil) -> String {

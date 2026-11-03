@@ -45,4 +45,39 @@ final class TapsTests: XCTestCase {
         XCTAssertFalse(Harness(["UNSTIR_TAPS": "adapt"]).harnessed)
         XCTAssertTrue(Harness(["UNSTIR_TAPS": "30", "UNSTIR_LEVEL": "3"]).harnessed)
     }
+
+    /// The glass draws what its last still moment chose: neither a step decided mid-drag nor a change of the screen's
+    /// rate reaches it before the next.
+    @MainActor
+    func testTheGlassDrawsWhatItsLastStillMomentChose() {
+        var hz = 120
+        let taps = Taps(rate: { hz })
+        taps.use(.adapt(from: 30, stores: false))
+        let px = Tank.tunedPixels, period = 1.0 / 120
+        let miss = FrameWatch.Frame(interval: 2 * period, period: period, cpu: 0, age: 1, produced: true)
+        XCTAssertNil(taps.budget(pixels: px), "the static limit until the level appears")
+        taps.still(pixels: px, "open")
+        XCTAssertEqual(taps.budget(pixels: px), 30)
+        taps.window(TapWindow(pixels: px, work: 29, held: "rod 0", picture: "grid"))
+        for _ in 0..<3 { taps.frame(miss) }
+        hz = 144
+        XCTAssertEqual(taps.budget(pixels: px), 30, "decided, not drawn")
+        taps.still(pixels: px, "move")
+        XCTAssertEqual(taps.budget(pixels: px), 30, "not while the drag is open")
+        taps.window(nil)
+        XCTAssertEqual(taps.budget(pixels: px), 30)
+        hz = 120
+        taps.still(pixels: px, "move")
+        XCTAssertEqual(taps.budget(pixels: px), 28)
+        // A new top rate keys the glass afresh, at a still moment only; a lower one, as Low Power Mode caps it, never.
+        hz = 144
+        taps.window(TapWindow(pixels: px, work: 20, held: "rod 0", picture: "grid"))
+        taps.window(nil)
+        XCTAssertEqual(taps.budget(pixels: px), 28, "a drag on the glass is judged by its own law")
+        taps.still(pixels: px, "move")
+        XCTAssertEqual(taps.budget(pixels: px), 30, "the 144 Hz glass's own start")
+        hz = 60
+        taps.still(pixels: px, "move")
+        XCTAssertEqual(taps.budget(pixels: px), 30)
+    }
 }

@@ -313,9 +313,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (critical, the floor), as `Power` still halves a live picture's rate. The numbers are `TapCuts`', guesses to tune on the phone, and
   `TapCuts.unattributed` the fallback should the phone show that CPU time doesn't tell the two apart. A new B is drawn
   only at a still moment (`TapLaw.still`, from `TapHooks`: a move landing, the level appearing, a change of pose),
-  never during a measured drag, and `Unstirred.budget` is a plain field outside `animatableData`. Frames say nothing
+  never during a measured drag, and `Unstirred.budget` is a plain field outside `animatableData`: the glass draws what
+  its last still moment chose, keyed by its side alone, and the screen's rate (the highest read this launch, so Low
+  Power Mode's cap never keys a glass) is read again only as a drag opens and at a still moment. Frames say nothing
   under Low Power Mode or screen capture, at a granted rate below the screen's top one, or for a second after a change
-  of pose. A plain launch on a phone keeps each glass's B in `UserDefaults` (`taps.<hz>.<px>`, never synced), dropped
+  of pose. A plain launch on a phone keeps each glass's cool decision in `UserDefaults` (`taps.<hz>.<px>`, never synced,
+  written only when it changes), so a launch killed before the next still moment keeps a step with its cap, dropped
   by a new build (its number and its executable's timestamp, as the halftone's cache) or OS, and starts a new glass
   from the nearest learnt, scaled by area, else `Tank.fourTaps(pixels:)`. Each decision goes to the flight recorder
   (`taps prior`, `taps drag` for a drag with a late frame, `taps down`, `up`, `applied`, `reverted`, `held`, `hot`,
