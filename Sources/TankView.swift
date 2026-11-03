@@ -1264,7 +1264,7 @@ struct LevelView: View {
             .task {
                 if let heldSwipe {
                     // After the first layout, which says whether the menu is beside the level, where nothing slides.
-                    try? await Task.sleep(for: .milliseconds(200))
+                    if besideMenu { try? await Task.sleep(for: .milliseconds(200)) }
                     if !beside { peek(); swiped = heldSwipe }
                 }
                 guard playsSwipe || exitsBySwipe, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
