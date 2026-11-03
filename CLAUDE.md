@@ -136,10 +136,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   BlackHole into the film, with the Mac's output already switched there (`store-media.sh sound`), placed on the
   video's clock by when each recorder started. recordVideo writes a frame only when the screen changes, so a take
   ending on a still screen ends early: each take's comment tag says how long it really ran (`take 19.520 s`). It also
-  gives two frames the same time now and then, after which ffmpeg times the rest of the take by its dts, about 1.5 s
-  behind, and `fps=` drops that much: every command that decodes a take reads it with `-fflags +igndts` (`movie=`'s
-  `format_opts`), which a `-c copy` must not take. `scripts/strike.sh <film>` prints the seconds into a take just
-  before its picture strikes, past the home screen and the launch's black.
+  gives two frames the same time now and then, after which ffmpeg times the rest of the take by its dts, which step
+  back about a second there (0.99 s in two takes), and `fps=` drops that much: every command that decodes a take
+  reads it with `-fflags +igndts` (`movie=`'s `format_opts`), which a `-c copy` must not take. `scripts/strike.sh
+  <film>` prints the seconds into a take just before its picture strikes, past the home screen and the launch's black.
 - Editors' reel: `scripts/editors-film.sh [--join]` films `scripts/film.sh editors-` (whirlpool 03 and vortex 02 drawn
   clean, maelstrom 01, Lens 03, Escapement 02 and Prism 01, each solved at par by a drawn fingertip; Lens from a warm
   start, a launch first baking its halftone into Caches, R-reel, round 15) and joins them, each from just before its

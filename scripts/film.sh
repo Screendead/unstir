@@ -25,8 +25,9 @@ wants() {  # case
 
 tank=crop=1200:1200:60:820  # the tank on a 1320 x 2868 Pro Max screen
 # recordVideo sometimes gives two frames the same pts. ffmpeg's decoder then guesses the rest of the take's times from
-# its dts, which run about 1.5 s behind, and fps= drops that much as having gone back: the take jumps ahead. So every
-# command that decodes a take reads it with dts ignored (-fflags +igndts, or movie='s format_opts); a -c copy needs them.
+# its dts, which step back about a second there (0.99 s in two takes), and fps= drops that much as having gone back:
+# the take jumps ahead. So every command that decodes a take reads it with dts ignored (-fflags +igndts, or movie='s
+# format_opts); a -c copy needs them.
 film() {  # name seconds strip-filter KEY=VALUE...
   local name=$1 secs=$2 strip=$3 vars=() mp4="shots/film/$1.mp4"
   shift 3
