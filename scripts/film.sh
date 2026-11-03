@@ -24,6 +24,10 @@ wants() {  # case
 }
 
 tank=crop=1200:1200:60:820  # the tank on a 1320 x 2868 Pro Max screen
+# recordVideo sometimes gives two frames the same pts. ffmpeg's decoder then guesses the rest of the take's times from
+# its dts, which step back about a second there (0.99 s in two takes), and fps= drops that much as having gone back:
+# the take jumps ahead. So every command that decodes a take reads it with dts ignored (-fflags +igndts, or movie='s
+# format_opts); a -c copy needs them.
 film() {  # name seconds strip-filter KEY=VALUE...
   local name=$1 secs=$2 strip=$3 vars=() mp4="shots/film/$1.mp4"
   shift 3
@@ -78,14 +82,14 @@ for line in sys.stdin:
   fi
   # The strip starts at the first dark frame: the home screen is bright and the app is black.
   local start
-  start=$(ffprobe -v error -f lavfi -i "movie=$mp4,signalstats" -show_entries frame=pts_time:frame_tags=lavfi.signalstats.YAVG \
+  start=$(ffprobe -v error -f lavfi -i "movie=$mp4:format_opts=fflags=+igndts,signalstats" -show_entries frame=pts_time:frame_tags=lavfi.signalstats.YAVG \
     -of csv=p=0 | awk -F, '$2 < 40 && s == "" { s = $1 } END { print s }')
   # recordVideo writes a frame only when the screen changes; fps= resamples to even time steps.
-  ffmpeg -loglevel error -y -i "$mp4" -vf "trim=start=${start:-0},setpts=PTS-STARTPTS,$strip" -frames:v 1 "shots/film/$name-strip.png"
+  ffmpeg -loglevel error -y -fflags +igndts -i "$mp4" -vf "trim=start=${start:-0},setpts=PTS-STARTPTS,$strip" -frames:v 1 "shots/film/$name-strip.png"
   # GitHub takes videos under 10 MB; a live picture changes every frame, so a long film can pass that.
   # FILM_FULL=1 keeps the recorded size, for the store's preview and clips; the shrink would drop a take's sound.
   if [[ -z "${FILM_FULL:-}" && -z "$snd" ]] && (( $(stat -f %z "$mp4") > 9500000 )); then
-    ffmpeg -loglevel error -y -i "$mp4" -vf scale=660:-2 -c:v libx264 -crf 24 -pix_fmt yuv420p -an "${mp4%.mp4}-small.mp4"
+    ffmpeg -loglevel error -y -fflags +igndts -i "$mp4" -vf scale=660:-2 -c:v libx264 -crf 24 -pix_fmt yuv420p -an "${mp4%.mp4}-small.mp4"
     mv "${mp4%.mp4}-small.mp4" "$mp4"
   fi
   echo "filmed $name"
@@ -120,7 +124,7 @@ film heartbeat-maelstrom18-neurons 3.5 "trim=start=2.2,setpts=PTS-STARTPTS,$tank
 # Endless's brim, the approved film's run through the real commit path (UNSTIR_BRIMDEMO): from 5 notches two heals settle it
 # to 3, then five pushes fill it notch by notch until the last spills over the lip at twelve and the picture stirs together.
 # Cropped taller than the tank, for the brim pin and the pour above it.
-film endless-brim-run 11.5 "crop=1320:1460:0:700,fps=3,scale=200:-1,tile=8x4:padding=4" MODE=endless BRIM=5 BRIMDEMO=1
+film endless-brim-run 14 "crop=1320:1460:0:700,fps=3,scale=200:-1,tile=8x4:padding=4" MODE=endless BRIM=5 BRIMDEMO=1
 # The rim, played by a drawn fingertip (UNSTIR_FINGER) after two seconds at rest, its lessons learnt: vortex 01 swirled
 # from the rim, healing the swirl's seam then the knob's; maelstrom 01's glass turned from the bezel, then its three
 # knobs; vortex 02 with knob 3 seized, the glass turned from the bezel, a knob, the swirl from the glass's edge and a
