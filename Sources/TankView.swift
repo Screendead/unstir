@@ -1517,6 +1517,9 @@ struct LevelView: View {
                 }
                 pose = now
             }
+            .modifier(TapHooks(moment: .init(window: tapWindow(side: layout.side), history: game.history,
+                                             pixels: Double(layout.side * scale)),
+                               motion: [liveAngle, liveTurn ?? 0, lastSpin]))
             .padding(.horizontal, PlayLayout.margin)
         }
         .foregroundStyle(page.ink)
@@ -2150,7 +2153,7 @@ struct LevelView: View {
         let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? Self.haze(over: game.over) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries, isolate: isolated,
-                                  whiteIsolate: differentiate)
+                                  whiteIsolate: differentiate, budget: Taps.shared.budget(pixels: Double(side * scale)))
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
         let source = game.history.last.map { $0.rod == Game.tank ? .zero : centre(game.knob(over: $0.rod)) } ?? centre(0)
         let frozenWave = frozenWave
@@ -3059,6 +3062,18 @@ struct LevelView: View {
         // Not only a drag: an edge touch the back swipe hasn't decided, or one waiting on a settle, is taken up later
         // from where it landed, in the old frame.
         if holding, let t = touchStart { deadTouch = t }
+    }
+
+    /// The drag `Taps` measures on a glass `side` points across: a finger's or a drawn one's turn of a rod or the rim,
+    /// once nothing else moves the glass: no opening, settle, card, slide or breath's fade.
+    private func tapWindow(side: CGFloat) -> TapWindow? {
+        guard phase == .active, struck, shown == nil, !demoing, !game.finished, !settling, swiped == 0, !breathing,
+              liveRod != nil || liveTurn != nil, side > 0 else { return nil }
+        let held = liveRod.map(game.slot(of:))
+        return TapWindow(pixels: Double(side * scale),
+                         work: Unstirred.committedWork(stack: bare ? [] : game.stack, masks: game.level.masks,
+                                                       fill: game.level.picture.fillEntries, held: held),
+                         held: held.map { "rod \($0)" } ?? "rim", picture: game.level.picture.rawValue)
     }
 
     /// `now` lands the let-go without the settle, whose completion waits on a frame.

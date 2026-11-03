@@ -65,6 +65,8 @@
 		CB8FCA0E33DA80181C177486 /* Archive.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9DE31F264F1D40389BD4802 /* Archive.swift */; };
 		CCD56B4404CDF1979D62B556 /* VortexPictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C424A58661F8E2D8F67C740 /* VortexPictures.swift */; };
 		CF32D986479C27075E2862EF /* SyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E173CE4887FF0DF1142C19 /* SyncTests.swift */; };
+		D0654BDBD70012A601A0F74C /* Taps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42AC3DE97359E1AB3D8F6FAF /* Taps.swift */; };
+		D19E907E79657C7B9EBEFD28 /* TapsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE8CF37570EED1B144E5201 /* TapsTests.swift */; };
 		D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C0CD5709FED7976550A2E52 /* TankView.swift */; };
 		D743967665795B21B03B6D88 /* AchievementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAAABE968196C7403939ADC9 /* AchievementTests.swift */; };
 		D7B47E903167691787C1EB50 /* Marbling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0D958FCA92212546745A433D /* Marbling.metal */; };
@@ -117,6 +119,7 @@
 		36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirRescue.swift; sourceTree = "<group>"; };
 		39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3CB4A9DE240F63330597A189 /* LensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensTests.swift; sourceTree = "<group>"; };
+		42AC3DE97359E1AB3D8F6FAF /* Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Taps.swift; sourceTree = "<group>"; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
 		4CE724B24586C771A00348BD /* Spoken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spoken.swift; sourceTree = "<group>"; };
 		517BAC88FDF90B3147BC41A1 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
@@ -175,6 +178,7 @@
 		EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirDuskBefore.swift; sourceTree = "<group>"; };
 		EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirFlood.swift; sourceTree = "<group>"; };
 		F935F37F140F0E82EFAD71CA /* PlayLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayLayout.swift; sourceTree = "<group>"; };
+		FCE8CF37570EED1B144E5201 /* TapsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsTests.swift; sourceTree = "<group>"; };
 		FED6B7A35E47B3475841C4DC /* ClipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipTests.swift; sourceTree = "<group>"; };
 		FF1EEDF6B8944D3E5F2455F7 /* StoryScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryScene.swift; sourceTree = "<group>"; };
 		FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsTests.swift; sourceTree = "<group>"; };
@@ -221,6 +225,7 @@
 				CBBF51F07B822677549432BB /* StoreTests.swift */,
 				63E173CE4887FF0DF1142C19 /* SyncTests.swift */,
 				8235408DE6DD3E0A6017F00E /* TapLawTests.swift */,
+				FCE8CF37570EED1B144E5201 /* TapsTests.swift */,
 				29729248161A1B61CE6D4E36 /* UnstirTests.swift */,
 			);
 			path = UnstirTests;
@@ -300,6 +305,7 @@
 				112F826A2BEC3C22065DD94A /* Sync.swift */,
 				4C0CD5709FED7976550A2E52 /* TankView.swift */,
 				5A3E166CF7D5345846B794E8 /* TapLaw.swift */,
+				42AC3DE97359E1AB3D8F6FAF /* Taps.swift */,
 				965EC2AB5B15FD9B3CA462DE /* Twist.swift */,
 				63330CD5793ABE158F314B89 /* Unstir.metal */,
 				BD9BF77535C50E24D360E2ED /* UnstirApp.swift */,
@@ -461,6 +467,7 @@
 				C6759CD4F33AD9A639A6742C /* Sync.swift in Sources */,
 				D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */,
 				DDC10BD09FEBD9AE2335CDA4 /* TapLaw.swift in Sources */,
+				D0654BDBD70012A601A0F74C /* Taps.swift in Sources */,
 				3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */,
 				9F25E1385928C5125BE5CD40 /* Unstir.metal in Sources */,
 				402763F337DF9C5673C03A9A /* UnstirApp.swift in Sources */,
@@ -492,6 +499,7 @@
 				880003D42E6629AE7D665B1C /* StoreTests.swift in Sources */,
 				CF32D986479C27075E2862EF /* SyncTests.swift in Sources */,
 				DE428BEF42CED2D968A33849 /* TapLawTests.swift in Sources */,
+				D19E907E79657C7B9EBEFD28 /* TapsTests.swift in Sources */,
 				8BFF4453C3E95A10C25C1E85 /* UnstirTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

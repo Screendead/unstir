@@ -22,7 +22,7 @@ struct UnstirApp: App {
         return "device: app \(info["CFBundleShortVersionString"] ?? "?") (\(info["CFBundleVersion"] ?? "?")), iOS \(os.majorVersion).\(os.minorVersion).\(os.patchVersion), "
             + "\(model), \(Locale.current.identifier), type \(type), reduce motion \(UIAccessibility.isReduceMotionEnabled), "
             + "voiceover \(UIAccessibility.isVoiceOverRunning), low power \(ProcessInfo.processInfo.isLowPowerModeEnabled), "
-            + Settings.summary
+            + Settings.summary + ", taps \(Taps.shared.summary)"
     }
 
     var body: some Scene {
@@ -224,8 +224,8 @@ struct Harness {
         let tier = env["UNSTIR_TIER"].flatMap(Tier.init(rawValue:)) ?? .plughole
         // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
-        // one unlocked. UNSTIR_ANALYTICS is for the phone too, and leaves the launch a plain one.
-        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS"].contains($0) }
+        // one unlocked. UNSTIR_ANALYTICS and UNSTIR_TAPS are for the phone too, and leave the launch a plain one.
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"].contains($0) }
         self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
         menuTier = harnessed ? tier : nil
@@ -596,6 +596,7 @@ struct RootView: View {
         // Here, not in Harness, which the tests build too.
         Settings.held.withLock { $0 = h.switches }
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
+        Taps.shared.configure(env: env, harnessed: h.harnessed)
         // The launch's, not the level's harness, which a level opened from the card's next no longer has.
         Review.harnessed = h.harnessed && !h.reviewLog || env["XCTestConfigurationFilePath"] != nil
         Review.logs = h.reviewLog
