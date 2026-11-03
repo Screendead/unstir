@@ -1166,7 +1166,7 @@ private struct LevelRow: View {
     var new = false
     /// Endless's row while a run is saved.
     var continues = false
-    /// Playing beside the menu: its hairline stays lit at full.
+    /// Playing beside the menu: its hairline stays lit at full, and it says so under its title.
     var playing = false
     let pick: (Level) -> Void
     /// A tap on a locked row: false while a stir is under the finger.
@@ -1193,6 +1193,10 @@ private struct LevelRow: View {
                     Text(level.title).font(.mono(14)).multilineTextAlignment(.leading).opacity(enabled ? 1 : 0.38)
                     if saying, let opens {
                         Text(opens).font(.mono(11)).foregroundStyle(level.colour).transition(.opacity)
+                    } else if playing {
+                        // In place of its rods and par, which the level's header shows: the frontier's hairline is
+                        // lit too, so the hairline alone can't say which row is in the tank.
+                        Text("playing").font(.mono(11)).foregroundStyle(level.colour)
                     } else {
                         Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.mono(11))
                             // A locked row's own detail is its reason, as on the daily, so it stays readable.
