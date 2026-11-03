@@ -711,8 +711,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the window's middle. A tall window folded across (the Duo upright on a table) is the
   tabletop: the rest in the upright half, the tank filling the half lying flat, and "unstirred." at the upright half's
   foot (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
-  shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1300 px), the size the stack's limits
-  were tuned at, so the Duo upright keeps a 433 pt glass. The column is a `VStackLayout` and the split and tabletop
+  shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1471 px, Jack's call duocap2 = D), which
+  only the Duo upright reaches, at 490 pt; the stack's limits were tuned at about 1137 px, and past 1300 the four-tap
+  limit shrinks with the glass (see Unstir.metal above). The column is a `VStackLayout` and the split and tabletop
   `PlayStack`, through one `AnyLayout`, so a change of pose keeps every part's identity, the tank's picture, opening,
   demonstration and keyframes with it: the parts glide to their new places, and the tank, drawn at its new size at once,
   glides there by `Glide`'s scale, its old bake stretched until the new one lands (none under Reduce Motion, nor from a

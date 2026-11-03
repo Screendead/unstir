@@ -54,6 +54,12 @@ final class PlayLayoutTests: XCTestCase {
         let l = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0))
         XCTAssertEqual(l.kind, .column)
         XCTAssertEqual(l.side, PlayLayout.maxPixels / 3, accuracy: 0.001, "about 1630 px uncapped")
+        XCTAssertEqual(l.side, 490.333, accuracy: 0.001, "1471 px (Jack's call duocap2 = D)")
+        XCTAssertEqual(Tank.fourTaps(pixels: l.side * 3), 17)
+        // Endless keeps the column there, its brim drawn out to the screen's edges as on a phone, at the same size.
+        let endless = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), halo: .init(ring: 0.229))
+        XCTAssertEqual(endless.kind, .column)
+        XCTAssertEqual(endless.side, l.side)
     }
 
     /// The limit the shader runs four taps to, by the glass's side in pixels: every glass up to 1300 px, today's cap
