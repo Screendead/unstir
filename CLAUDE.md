@@ -508,7 +508,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   one mirrored), its hub a one-digit `FlipCounter` card of the clock's own count (unmirrored), flipping with the header
   as each of its ticks starts, so the header always reads as the hubs' sum; a clock at 0 greys its wheel, sub-dial,
   card and `ClockHint` as its last tick lands, the pawl and hub ring amber, with the stop ring in the plate's vermilion; its pawl riding out with each tick, the move's ticks a beat after the lift each turning its clock's
-  core a step on screen in turn, `tickTurn` apart after `tickBeat` (`Game.tick` holds each with the stack it changed; `Unstirred.tick`,
+  core a step on screen in turn, `tickTurn` apart after `tickBeat` (`Game.tick` holds each with the stack it changed and whether it pushed; `Unstirred.tick`,
   one entry over in the four-tap budget, like the drag) and the wheel a tooth; `ClockHint` dashes the clock's disc at all
   times (Jack's call, 2026-10-25); a pushed tick flashes the ratchet red and stands as a vermilion +N, and the
   caption says at once that the line can't come back ("That tick can't come back. Undo, or again.", or "... Reset." with the undo bank empty, `Game.deadTickWords`,
@@ -1008,10 +1008,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and the heal that solves sounds as the solve. An undo's negation that brings back one of the scramble's entries marks
   it the scramble's again. The `seized` sound plays with `Knock.thud` whenever a finger lands on a knob that can't be
   turned. Escapement's clocks tick in steel, a pawl snapping onto its ratchet wheel (Jack's call soundsk2 = D, round
-  16; `ratchet-1` to `-4`, taken in turn as the taps are): each of a move's ticks, pushed or not, sounds as its clock's
-  core starts to turn, `tickBeat` after the lift and `tickTurn` apart (`Game.ratchetTimes`), the demonstration's too,
-  from a task that leaving the level cancels; an undo or a reset silences the ticks still to come, and a resumed try's
-  last ticks, landed before the view appeared, stay silent. Beds loop under the menu and each tier (`Level.bed`;
+  16; `ratchet-1` to `-4`, taken in turn as the taps are): each of a move's ticks sounds, with its rigid haptic, as its
+  clock's core starts to turn, `tickBeat` after the lift and `tickTurn` apart (`Game.tickCues`), the demonstration's
+  too, and a tick that pushed sounds the push in its place, with the error haptic, at its own time, as a rod's push
+  sounds nothing but the push (Jack's calls soundsk-pushtick and soundsk-haptic = B, round 16). One task that leaving
+  the level cancels plays them; an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
+  landed before the view appeared, stay silent and still. Beds loop under the menu and each tier (`Level.bed`;
   daily, endless, the sandbox and the packs take plughole's), and a new one crossfades in over the old at equal power
   across two decks. Only a bed that is playing stays decoded, and none in the background.
   `Sounding`, set on `RootView`, is the app's button style: a button taps as
@@ -1026,7 +1028,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
   target to 44 pt round it without moving anything. Nothing sounds during a drag, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
   out over the crossfade and back (`Sound.music`), its sounds switch every effect and button (`Sound.sounds`), and its
-  haptics switch `Knock` and every system haptic, which all go through `haptic(_:trigger:when:)`; none of the three is
+  haptics switch `Knock` and every system haptic, which all go through `haptic(_:trigger:when:)` (or `haptic(trigger:_:)`, which picks the feedback); none of the three is
   read anywhere else. The session is ambient, and while
   another app plays music the bed steps aside and the effects still sound. A harness launch or the test host is silent
   unless `UNSTIR_SOUND=1`. An undo steps the heal notes back, so the next heal plays the undone one's note again

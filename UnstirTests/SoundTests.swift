@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import SwiftUI
 import XCTest
 @testable import Unstir
 
@@ -21,26 +22,58 @@ import XCTest
         XCTAssertEqual(Set((0..<4).map { Sound.file(.ratchet, $0) }).count, 4)
     }
 
-    /// Jack's call soundsk2 = D (round 16): each clock's tick sounds as its core starts to turn, a beat after the lift
-    /// and then a turn apart, in the order the clocks tick; an undo takes them back with the move.
+    /// Jack's calls soundsk2 = D and soundsk-haptic = B (round 16): each clock's tick sounds and lands its haptic as its
+    /// core starts to turn, a beat after the lift and then a turn apart, in the order the clocks tick; an undo takes them
+    /// back with the move.
     func testEachClocksTickSoundsAsItsCoreStartsToTurn() {
         var level = Level.escapement[12]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
-        XCTAssertEqual(g.ratchetTimes, [])
+        XCTAssertEqual(g.tickCues, [])
         g.commit(rod: 3, steps: -2)
         XCTAssertEqual(g.tick.map(\.rod), [0, 2])
-        XCTAssertEqual(g.ratchetTimes.count, 2)
-        for (t, want) in zip(g.ratchetTimes, [0.15, 0.45]) { XCTAssertEqual(t, want, accuracy: 1e-9) }
+        XCTAssertEqual(g.tickCues.map(\.sound), [.ratchet, .ratchet])
+        XCTAssertEqual(g.tickCues.map(\.haptic), [Self.plain, Self.plain])
+        for (t, want) in zip(g.tickCues.map(\.at), [0.15, 0.45]) { XCTAssertEqual(t, want, accuracy: 1e-9) }
         g.undo()
-        XCTAssertEqual(g.ratchetTimes, [])
+        XCTAssertEqual(g.tickCues, [])
         g.commit(rod: 3, steps: -2)
         g.commit(rod: 1, steps: -3)
         g.wait(on: 0)
         XCTAssertEqual(g.tick.map(\.rod), [2])
-        XCTAssertEqual(g.ratchetTimes.count, 1)
-        XCTAssertEqual(g.ratchetTimes[0], 0.15, accuracy: 1e-9)
+        XCTAssertEqual(g.tickCues.count, 1)
+        XCTAssertEqual(g.tickCues[0].at, 0.15, accuracy: 1e-9)
+        XCTAssertEqual(g.tickCues[0].sound, .ratchet)
     }
+
+    /// Jack's calls soundsk-pushtick and soundsk-haptic = B (round 16): a tick that pushes sounds the push in place of
+    /// its ratchet, with the error haptic, at its own time in the move's turn, and the move's other ticks stay steel.
+    func testAPushedTickSoundsThePushAtItsOwnTime() throws {
+        let found = Pack.escapement.levels.lazy.compactMap { level -> (Level, Twist)? in
+            let working = level.layout.rods.indices.filter { level.kind(of: $0) == .working }
+            let moves = working.flatMap { k in (1...11).flatMap { [$0, -$0] }.map { Twist(rod: k, steps: $0) } }
+            return moves.first { t in
+                let g = Game(level: level, tankTurned: true, bank: (3, nil))
+                g.commit(rod: t.rod, steps: t.steps)
+                return g.tick.count > 1 && g.tick.contains { $0.pushed } && g.tick.contains { !$0.pushed }
+            }.map { (level, $0) }
+        }.first
+        let (level, move) = try XCTUnwrap(found, "a move whose ticks mix a push with a plain tick")
+        let g = Game(level: level, tankTurned: true, bank: (3, nil))
+        g.commit(rod: move.rod, steps: move.steps)
+        let cues = g.tickCues
+        XCTAssertEqual(cues.count, g.tick.count)
+        XCTAssertEqual(cues.filter { $0.sound == .push }.count, g.tickPushes)
+        for (i, (cue, t)) in zip(cues, g.tick).enumerated() {
+            XCTAssertEqual(cue.at, LevelView.tickBeat + LevelView.tickTurn * Double(i), accuracy: 1e-9)
+            XCTAssertEqual(cue.sound, t.pushed ? .push : .ratchet, "tick \(i)")
+            XCTAssertEqual(cue.haptic, t.pushed ? .error : Self.plain, "tick \(i)")
+        }
+        g.undo()
+        XCTAssertEqual(g.tickCues, [])
+    }
+
+    private static let plain = SensoryFeedback.impact(flexibility: .rigid, intensity: 0.9)
 
     /// The tick is Escapement's alone: only its levels have clocks, every one of them does, and a move anywhere else
     /// sounds none.
@@ -52,8 +85,8 @@ import XCTest
         level.id = "test-plughole"
         let g = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
         g.commit(rod: 1, steps: 2)
-        XCTAssertEqual(g.ratchetTimes, [])
+        XCTAssertEqual(g.tickCues, [])
         g.commit(rod: 0, steps: -4)
-        XCTAssertEqual(g.ratchetTimes, [])
+        XCTAssertEqual(g.tickCues, [])
     }
 }

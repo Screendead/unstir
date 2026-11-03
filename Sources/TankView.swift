@@ -197,9 +197,9 @@ final class Game {
         var stopped: Int?
     }
     private(set) var escapement = Clock()
-    /// Escapement: the newest move's ticks in the order they landed, each clock's with the stack it changed, for the view
-    /// to play them in turn.
-    private(set) var tick: [(stack: [Twist], rod: Int, dir: Int)] = []
+    /// Escapement: the newest move's ticks in the order they landed, each clock's with the stack it changed and whether
+    /// it pushed, for the view to play them in turn.
+    private(set) var tick: [(stack: [Twist], rod: Int, dir: Int, pushed: Bool)] = []
     /// Escapement: every move's ticks, the clock whose tick pushed (the ratchet's red flash), and each clock's stops, as
     /// its rod emptied.
     private(set) var tickEvents = 0
@@ -501,7 +501,7 @@ final class Game {
             guard let result = Self.tick(&entries, on: c, in: level, popped: { if !$0.pushed { healed += 1 } }),
                   result != .refused else { continue }
             escapement.ticks[c.rod, default: 0] += 1
-            tick.append((from, c.rod, c.dir))
+            tick.append((from, c.rod, c.dir, result == .pushed))
             if result == .pushed {
                 tickPushes += 1
                 escapement.pushed = c.rod
@@ -981,6 +981,9 @@ struct LevelView: View {
     /// Escapement: the move whose ticks sound, by `game.tickEvents`; none as the view appears, so a resumed try's last
     /// ticks, long landed, stay silent.
     @State private var sounding: Int?
+    /// Escapement: the newest tick landed, numbered so two alike in a row each change it, for its haptic.
+    @State private var felt: Felt?
+    private struct Felt: Equatable { var n: Int, haptic: SensoryFeedback }
     @State private var detent = Detent(step: Tank.step)
     @State private var ticks = 0
     @State private var tankTicks = 0
@@ -2449,10 +2452,11 @@ struct LevelView: View {
         .haptic(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
-        .haptic(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
-        .haptic(.error, trigger: game.tickPushes)
+        .haptic(trigger: felt) { _, now in now?.haptic }
         .onChange(of: game.tickEvents) { sounding = game.tickEvents }
-        .task(id: sounding) { if sounding != nil { await game.soundTicks() } }
+        .task(id: sounding) {
+            if sounding != nil { await game.soundTicks { felt = Felt(n: (felt?.n ?? 0) + 1, haptic: $0.haptic) } }
+        }
         .haptic(.success, trigger: game.solved) { _, solved in solved }
         // One sound for the end, as its card shows it.
         .onChange(of: game.finished) { if game.finished { Sound.shared.play(game.solved ? .solve : .spilled) } }

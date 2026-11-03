@@ -105,6 +105,11 @@ extension View {
     func haptic<T: Equatable>(_ feedback: SensoryFeedback, trigger: T, when: ((T, T) -> Bool)? = nil) -> some View {
         sensoryFeedback(feedback, trigger: trigger) { old, new in Settings.haptics && (when?(old, new) ?? true) }
     }
+
+    /// The feedback `pick` names for each change of `trigger`, none where it names none.
+    func haptic<T: Equatable>(trigger: T, _ pick: @escaping (T, T) -> SensoryFeedback?) -> some View {
+        sensoryFeedback(trigger: trigger) { old, new in Settings.haptics ? pick(old, new) : nil }
+    }
 }
 
 /// Effects on a pool of players, so quick ones overlap, and one looping bed under the menu or a level. Only `queue`
@@ -471,19 +476,34 @@ final class Sound: @unchecked Sendable {
     }
 }
 
-extension Game {
-    /// Escapement: when each of the newest move's ticks sounds after its lift, as its clock's core starts to turn and
-    /// its flap falls; none on a level without clocks.
-    var ratchetTimes: [Double] { tick.indices.map { LevelView.tickBeat + LevelView.tickTurn * Double($0) } }
+/// Escapement: one of a move's ticks as it lands after the lift.
+struct TickCue: Equatable {
+    var at: Double
+    var sound: Sound.Effect
+    var haptic: SensoryFeedback
+}
 
-    /// Plays the newest move's ticks at their times while they stand: an undo or a reset takes the rest back with the
-    /// move, and leaving the level cancels the wait.
-    func soundTicks() async {
+extension Game {
+    /// Escapement: each of the newest move's ticks, landing as its clock's core starts to turn and its flap falls: a beat
+    /// after the lift, then a turn apart. A plain tick is the ratchet's steel; one that pushed is the push, sound and
+    /// haptic, as a rod's push sounds nothing but the push (Jack's calls soundsk-pushtick and soundsk-haptic = B, round
+    /// 16). None on a level without clocks.
+    var tickCues: [TickCue] {
+        tick.enumerated().map { i, t in
+            TickCue(at: LevelView.tickBeat + LevelView.tickTurn * Double(i), sound: t.pushed ? .push : .ratchet,
+                    haptic: t.pushed ? .error : .impact(flexibility: .rigid, intensity: 0.9))
+        }
+    }
+
+    /// Plays the newest move's ticks at their times while they stand, handing each to `felt` for its haptic: an undo or
+    /// a reset takes the rest back with the move, and leaving the level cancels the wait.
+    func soundTicks(_ felt: (TickCue) -> Void) async {
         let lift = ContinuousClock.now
-        for (i, t) in ratchetTimes.enumerated() {
-            guard (try? await Task.sleep(until: lift + .seconds(t), tolerance: .milliseconds(2))) != nil, i < tick.count
+        for (i, cue) in tickCues.enumerated() {
+            guard (try? await Task.sleep(until: lift + .seconds(cue.at), tolerance: .milliseconds(2))) != nil, i < tick.count
             else { return }
-            Sound.shared.play(.ratchet)
+            Sound.shared.play(cue.sound)
+            felt(cue)
         }
     }
 }
