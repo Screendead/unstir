@@ -55,7 +55,7 @@ kept in the tools folder: the architecture pass's ranked list (`architecture/ran
 Merged: #126 (APPSIZE = B, the CI size guard, and pipefail in both Test steps), #127 (ICLOUD = A, bests through iCloud
 key-value storage, off behind `ICLOUD = NO`), #128 (store media: the Calm segment's jump fixed, screenshot 4 on vortex
 14 Monsoon, the preview cut to 25 s, the endless segment ending 1 s into the spilled card), #129 (SND1 = B, SND2 = A,
-SND3 = B, C1A = B, C1B = A) and #130 (ESC-PAPER = B, Escapement on bone paper). Still open: #124 (Duo stage 4).
+SND3 = B, C1A = B, C1B = A) and #130 (ESC-PAPER = B, Escapement on bone paper). #124 (Duo stage 4) followed on 2026-11-03.
 
 Not built: DUOCAP = C. The stack limits were tuned on the 13 Pro Max's glass, about 1137 px, not 1300 px as the round
 16 pitch said, so C needs a room threshold first. That is the follow-up call duocap2 (below). The "1300 px, the size
@@ -85,24 +85,47 @@ amber or magenta hints are drawn in ink; the clock-stop ring is the plate's verm
 picture stay 0.5 pt, in ink (the 2 px floor is the picture's); sheared areas go pale, so the stirred plate reads pale
 at dock-cover size, the risk the pitch named. The before and after shots aren't attached to the PR (needs Chrome).
 
-Round 16's follow-up calls, on Jack's round 16 page, each with Claude's recommendation. None is decided.
+Round 16's follow-up calls: Jack picked them on the round 16 page (2026-11-03). Built and merged the same day, each
+after an adversarial review and fixes: #124 (Duo stage 4 with d3-lenscap, d4-menuback and d4-pose = B), #132 (the
+iCloud picks: endless's best and the tried flags sync; the editors' build and the unlock never sync) and #133 (the
+tank's drag silent, its sound removed; the sandbox withheld from Release, as First Stir is, kept in Debug and the
+harness).
+
+New calls from those builds, on the round 16 page with duocap2 and soundsk2 ("Open now"), none decided:
 
 | Call | Recommendation (not decided) |
 |---|---|
-| appsize2. The guard's form and limit | **A:** keep the CI step at 100 MB. Built as a workflow step in the PR job and the nightly, not an XCTest; 100 MB was the pitch's example figure. CI's Debug-simulator host reads 27.6 MB against Release's 21.9 MB, so the guard trips with Release near 94 MB if growth is resources |
+| lenscap2. What d3-lenscap's cap counts | **A:** the whole open stir, as built: lifted at the cap, the same lens zooms no further until another rod or the tank turns, or an undo. No Lens level reaches the cap |
+| archive-close. The archive beside the list | **A:** read "✕ close" as the card does (today "‹ menu") |
+| store-sandbox. `docs/store-page.md` still sells the sandbox | **A:** drop its bullet and its mention (guideline 2.3) |
+
+| Call | Jack's pick |
+|---|---|
+| appsize2. The guard's form and limit | **A:** keep the CI step at 100 MB, as merged |
+| icloud-defaults. The four rules built | **A:** accept all four |
+| icloud-editors. The editors' build and the unlock | **A:** no sync in the editors' build or under the unlock; their progress stays on that phone |
 | icloud-endless. Endless's best | **A:** sync it too |
-| icloud-started. Started flags | **A:** sync them (OR-merged). Today a level tried and left unsolved on one phone opens as a first try on another; a best already counts as started |
-| icloud-editors. The editors' build and the unlock | **A:** no sync there. As built, their bests reach the same Apple ID's App Store install: a tier they par opens, and an unowned pack's card reads them |
-| icloud-defaults. The four rules built | **A:** accept them. One is the single rank: a daily solved on its day over an archive best replaces it, even when worse, and the card shows no best line |
-| snd1-clunk. The rim drag's tank clunk | **B:** silence it too (one line). Built as kept, since SND1 named only the rod's tick |
-| snd2-sandbox. The sandbox's cancel ring | **A:** as built: the sandbox has no scramble, so it never rings; a cancel flashes white |
-| d4-menuback. The menu's back in stage 4 | **A:** keep "‹ menu" |
-| duocap2. DUOCAP's room on the upright open Duo | **B:** cap 1334 px (445 pt, 12 pt over today's 433), keeping endless's 8 stirs of room on every level. A: 1471 px, no room past the dealt stack (whirlpool 27 refuses its first extra stir). C: no cap over 1300, so A as built. D: 1471 px with stacks unchanged and the four-tap limit scaled to 17 (deep stacks on live pictures up to 32% over the measured budget). Jack's 1630 px can't be dealt for whirlpool 26 and 27, maelstrom 23 to 27, or endless's brim. All figures are paper estimates for the A15 at 120 Hz |
-| soundsk2. The ratchet's tick | **D:** the steel pawl on a steel wheel |
-| store-endless-tail. The endless segment's end | **A:** as built, 1 s into the spilled card, at the cost of 1.3 s of pushes at its start |
-| paper-defaults. The paper build's five defaults | **A:** accept them |
-| paper-rm. A solve on paper under Reduce Motion | **A:** nothing on the picture; the card and the chime carry the solve |
-| paper-vermilion. Two vermilions | **A:** keep both: #FF5A36 for the sub-dial, its index and the 00 flaps (3.6:1 on the ratchet's backing, against 2.5:1), the plate's #D8402A elsewhere |
+| icloud-started. Started flags | **A:** sync them: once tried anywhere, a level is tried everywhere |
+| snd1-clunk. The rim drag's tank clunk | **B:** silence it too; every drag is silent, only the haptic marks the tank's steps |
+| snd2-sandbox. The sandbox | No pick. Jack's note: the sandbox needs work and isn't in v1 (a player who unlocks packs should have their mechanics there too, which needs thought). Defer it and remove it from the build, as First Stir is withheld |
+| store-endless-tail. The endless segment's end | **A:** as built, 1 s into the spilled card |
+| paper-defaults. The paper build's five defaults | **A:** accept all five |
+| paper-rm. A solve on paper under Reduce Motion | **A:** nothing on the picture; the card and the chime carry it |
+| paper-vermilion. Two vermilions | **A:** keep both, as built |
+| paper-accents. Magenta heal ring and cyan pointers on bone | **A:** keep both |
+| paper-statusbar. The dark status bar during a back swipe | **A:** leave it |
+| d2-cardpos. The card in the split and tabletop | **A:** caption and card centred together, as merged |
+| d3-lenscap. A long lens drag on the Duo | **B:** cap the drag at what the pane can show |
+| d4-one. A card and the archive beside the list | **A:** one at a time, as built |
+| d4-empty. The right half with nothing open | **A:** empty, as built |
+| d4-dock. The dock beside an open card | **A:** keep turning, as built |
+| d4-table. The tabletop menu | **A:** leave it for stage 5 |
+| d4-pose. A card open through a fold or unfold | **B:** keep the card's scroll position |
+| d4-menuback. The card's back beside the menu | **B:** "✕ close" in the wide pose |
+| order. The three big UI jobs | **A:** confirmed again, as ORDER stands (below) |
+
+Still open, recommendations only: duocap2 (**B:** cap 1334 px, keeping endless's 8 stirs of room) and soundsk2
+(**D:** the steel pawl on a steel wheel).
 | paper-accents. Accents on bone | **A:** keep the magenta heal ring (SND2's game-wide signal) and the cyan pointers (ink wouldn't show on the steel caps) |
 | paper-statusbar. The status bar in a back swipe off paper | **A:** leave it: its dark glyphs can't be read over the black menu until the swipe commits or springs back |
 
@@ -143,25 +166,22 @@ that leaves `master` shippable: the wide layout only reaches windows wider than 
 6. **Device and store**: the GPU bench at each pose's pixel size, Duo App Store screenshots (1398 × 2034, 2853 × 2007,
    2007 × 2853) from the harness, Split View's sizes; hairlines and the crease on a real Duo (needs a device or tester).
 
-Where it stands (2026-11-02): stages 2 (#120) and 3 (#122) are merged, each after an adversarial review and fixes.
-Stage 4 is PR #124, green, and waits on Jack's five d4 calls. Round 16 decided stage 5's placement (DUOMENU = B: the
+Where it stands (2026-11-03): stages 2 (#120), 3 (#122) and 4 (#124, with Jack's d-calls) are merged, each after an
+adversarial review and fixes. Stage 5 (menu beside play) is being built on `duo-stage5`. Round 16 decided stage 5's placement (DUOMENU = B: the
 tank left, the menu right) and the upright cap (DUOCAP = C: a higher cap, shallower stacks at that size). DUOCAP
-isn't built: the limits were tuned at about 1137 px, not 1300, so it waits on duocap2 (Round 16's build, above). #124
-conflicts with #129's `PackCard` change in Shelf.swift and needs a careful merge.
+isn't built: the limits were tuned at about 1137 px, not 1300, so it waits on duocap2 (Round 16's build, above).
 
 Stage 2's loose ends: its fix for a touch held across a pose change (`touchStart`, `holding`) is checked by reading the
 code only, as no harness path drives an edge touch; a card taller than the tabletop's upright half (large Dynamic Type)
 can still reach "unstirred." and the fold. The before and after card shots, by pose, and every review shot are in the
 tools folder's `duo/` (stage2, stage3-review, stage4), not attached to the PRs, since Chrome was not connected.
 
-**The critical path (Claude's reading, Jack's to overrule):** stage 4 (on the d4 calls) → stage 5 → ARCH's TankView split →
+**The critical path (Claude's reading, Jack's to overrule):** stage 5 → ARCH's TankView split →
 the design pass. ARCH says "after the Duo stages", read as including stage 5, as it rebuilds the same files; ORDER
 scoped the Duo as 2 to 4. The split waits, as starting it would rebase stages 4 and 5 onto renamed files.
 
-Open for Jack (on the round 16 page, pending): d2-cardpos (a card and its caption centred together in the split and
-tabletop, as merged), d3-lenscap (a long lens drag on the Duo: clamp the drawing, as merged, or cap the drag;
-recommended: cap), and stage 4's d4-one, d4-empty, d4-dock, d4-table and d4-pose (each recommended as built), and d4-menuback
-(recommended: keep "‹ menu").
+Jack's d-calls (2026-11-03): d2-cardpos A, d3-lenscap B, d4-one A, d4-empty A, d4-dock A, d4-table A, d4-pose B,
+d4-menuback B.
 
 ### Recommended model (Jack ruled it out, 2026-09-28: he won't put tiers behind a purchase)
 
