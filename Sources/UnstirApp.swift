@@ -693,7 +693,8 @@ struct RootView: View {
                 if let level {
                     LevelView(level: level, harness: harness, resumed: resumed, storesResume: !harnessed,
                               onExit: { show(nil, solved: $0) },
-                              onNext: { show($0) },
+                              // Never through a switch beside the menu: the level is finished, so it sends no quit.
+                              onNext: { proceed($0) },
                               onLook: { show(nil, look: $0) },
                               onOffer: { pack in
                                   card = .pack(pack)
