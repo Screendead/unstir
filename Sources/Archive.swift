@@ -176,9 +176,10 @@ struct ArchiveView: View {
         ScrollViewReader { reader in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Button(action: onBack) { Text("\u{2039} menu").font(.mono(.subheadline, .medium)).hit() }
+                    let back = PackCard.back(to: PackCard.menu, beside: beside)
+                    Button(action: onBack) { Text(back.text).font(.mono(.subheadline, .medium)).hit() }
                         .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
-                        .accessibilityLabel("Back")
+                        .accessibilityLabel(back.spoken)
                     Text("PAST DAILIES").font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42).padding(.top, 26)
                     Text("Archive").font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
                         .foregroundStyle(Tier.plughole.sweep).shadow(color: Color.amber.opacity(0.55), radius: 10)
