@@ -276,8 +276,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   draw, and every glass under the harness, the test host or the simulator, takes the four-tap limit for its glass's size (`Tank.fourTaps(pixels:)`, less the fill, `Unstirred.taps`): 30 on every glass
   up to 1300 px, so every iPhone and every pose drawn before the upright Duo's is unchanged, and past that the 31
   entries measured scaled down by the area, less one for the entry in flight, so the open Duo upright's 1471 px gets
-  17; `Tank.maxStack` stays 36 at every size and every level is dealt to the phone's 30, so every level plays as on an
-  iPhone (Jack's call duocap2 = D). The accepted risk: a deep stack on a live picture there may run up to 32% over the
+  17; `Tank.maxStack` stays 36 at every size and every level but whirlpool 27 is dealt to the phone's 30 (its 28 stirs
+  and the glass's fill of 4 make 32, two taps on every phone today), so every level plays as on an iPhone (Jack's
+  call duocap2 = D). The accepted risk: a deep stack on a live picture there may run up to 32% over the
   frame budget measured (a paper estimate; the Duo's GPU is unmeasured until stage 6's bench). The GPU bench keeps
   the constant, so its 24 entries time four taps. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone. Prism's stacks
@@ -1160,8 +1161,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   draws the static limit. It too leaves the launch a plain one
   and `scripts/run-ios.sh` passes it. For it on the phone, `UNSTIR_TAPDRAG=n` drags the first working knob n times,
   4 s each, through the real let-go, each landing a step, alternately each way; `UNSTIR_TAPSTALL=ms` busies the main
-  thread that long every half second of a drag; and `UNSTIR_DEEP=n` cuts or repeats the level's stack to n entries,
-  a full stack at most. Under
+  thread that long every half second of a drag; and `UNSTIR_DEEP=n` cuts the level's stack, or repeats it as it
+  stands, to n entries, a full stack at most, without merging where the copies meet. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
   opens the card's list); `UNSTIR_CONSENT=yes`
   or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up (in Debug `UNSTIR_EDITORS=1` shows the editors' switch in it) (`UNSTIR_MUSIC=0`, `UNSTIR_SOUNDS=0` and `UNSTIR_HAPTICS=0` set its switches off for the launch). `UNSTIR_UNLOCK` alone

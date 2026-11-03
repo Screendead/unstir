@@ -361,7 +361,8 @@ struct Harness {
         if let s = env["UNSTIR_STACK"] {
             level.scramble = .parse(s, in: level.layout, lenses: level.lenses, masks: level.masks)
         }
-        // UNSTIR_DEEP=n: the level's stack repeated to n entries, at most a full stack, as pushes could make it.
+        // UNSTIR_DEEP=n: the level's stack cut, or repeated as it stands, to n entries, at most a full stack: no commit
+        // merges where the copies meet, so it may be a stack no play reaches.
         if let n = env["UNSTIR_DEEP"].flatMap(Int.init), !level.scramble.isEmpty {
             var deep = level.scramble
             while deep.count < min(n, Tank.maxStack) { deep += level.scramble }

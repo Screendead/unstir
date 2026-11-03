@@ -818,13 +818,13 @@ shot duo-open-upright "Duo open and turned upright (669 x 951 pt): today's colum
 # deepest stacks draw with two, as a phone's past 30; the harness shrinks the window, so these show the tap switch, not
 # the Duo's frame time.
 upright=(FRAME=669x951 INSETS=59,0,34,0)
-hold=8 shot duo-open-upright-whirlpool-27 "Duo upright at 1471 px: whirlpool 27, Estuary, its 28 stirs as dealt on the glass, two taps here where a phone runs four." \
+hold=8 shot duo-open-upright-whirlpool-27 "Duo upright at 1471 px: whirlpool 27, Estuary, its 28 stirs as dealt on the glass, two taps, as on a phone: with the glass's fill the work is 32." \
   "${upright[@]}" TIER=whirlpool LEVEL=27 CLOCK=3
 hold=8 shot duo-open-upright-maelstrom-27 "Duo upright at 1471 px: maelstrom 27, its 26 stirs as dealt on the marbling's twin, two taps here." \
   "${upright[@]}" TIER=maelstrom LEVEL=27 CLOCK=3
 hold=8 shot duo-open-upright-endless "Duo upright at 1471 px: endless's tank 20, 28 stirs deep, with 5 of the brim's 8 notches: the column keeps the brim to the screen's edges, the glass at the cap." \
   "${upright[@]}" MODE=endless RESUME= RESUMETANK=19 BRIM=5
-hold=8 shot duo-phone-whirlpool-27 "A phone, for comparison: whirlpool 27 as dealt in the Pro Max's 1171 px column, four taps." \
+hold=8 shot duo-phone-whirlpool-27 "A phone, for comparison: whirlpool 27 as dealt in the Pro Max's 1171 px column, two taps: 28 stirs and the glass's fill of 4 run past 30." \
   TIER=whirlpool LEVEL=27 CLOCK=3
 # Folded, the fold as UNSTIR_FOLD draws it: a 19 pt band (assumed), where the system's division region would be.
 # UNSTIR_THEN changes pose that many seconds in, as opening or folding the phone would.
