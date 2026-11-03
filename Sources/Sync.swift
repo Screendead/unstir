@@ -7,8 +7,11 @@ import os
 /// The bests on the phone kept in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16),
 /// behind the build's ICLOUD: NO, until the App ID has iCloud's key-value storage, makes no call to the store. With it
 /// YES, a plain launch reconciles the two as it starts, again whenever iCloud brings a change and after every best it
-/// saves. Bests only: the undo bank and its anchor never sync, nor does anything else the game stores. The harness and
-/// the test host never sync.
+/// saves, and with them endless's best and the levels tried (Jack's calls icloud-endless and icloud-started = A, round
+/// 16). Nothing else: the undo bank and its
+/// anchor never sync, nor does anything else the game stores. The harness, the
+/// test host and the editors' build never sync, nor does a phone while the developer unlock is on (Jack's call
+/// icloud-editors = A, round 16), so progress made with every level open stays on that phone.
 @MainActor
 final class Sync {
     static let shared = Sync()
@@ -18,6 +21,11 @@ final class Sync {
     /// The store's one key, holding every best as level id to the JSON `best.<id>` holds on the phone: the store takes
     /// at most 1024 keys, and the dailies alone add a best a day. Never rename it.
     nonisolated static let key = "bests"
+    /// Endless's best, the most tanks cleared in one run (`Best.tanks`): the higher wins. Never rename it.
+    nonisolated static let tanksKey = "endless"
+    /// Every level id started anywhere (`Best.started`), the union of every phone's: sync never clears a flag. Never
+    /// rename it.
+    nonisolated static let triedKey = "tried"
     /// Bumped whenever a reconcile writes a best to the phone, so every view that read one draws again.
     nonisolated static let revision = Revision()
 
@@ -25,9 +33,9 @@ final class Sync {
     var plays = false
     private var started = false
 
-    /// Whether a launch syncs: only a build with sync, and never the harness or the test host.
-    nonisolated static func plays(built: Bool, harnessed: Bool, env: [String: String]) -> Bool {
-        built && !harnessed && env["XCTestConfigurationFilePath"] == nil
+    /// Whether a launch syncs: only a build with sync, and never the editors' build, the harness or the test host.
+    nonisolated static func plays(built: Bool, editors: Bool = Build.editors, harnessed: Bool, env: [String: String]) -> Bool {
+        built && !editors && !harnessed && env["XCTestConfigurationFilePath"] == nil
     }
 
     func start() {
@@ -84,17 +92,21 @@ final class Sync {
          local.filter { id, l in cloud[id].map { beats(l, $0) } ?? true })
     }
 
-    /// Merges the phone's bests (`best.<id>` in `defaults`' `domain`) with the store's both ways and returns how many
-    /// each took. Only the domain's stored values, never registered ones, which are the harness's for one launch. A
+    /// Merges the phone's bests (`best.<id>` in `defaults`' `domain`), endless's best and started flags with the
+    /// store's both ways and returns how many each took. Only the domain's stored values, never registered ones, which are the harness's for one launch. A
     /// best the phone takes is stored as the store's own bytes, and a store entry this build can't read is never
-    /// written over, so a later version's fields survive an older one's reconcile.
+    /// written over, so a later version's fields survive an older one's reconcile. While the domain holds the developer
+    /// unlock (`Best.unlocked`), nothing is read from the store or written to either side: bests made with it on are
+    /// sent with the rest by the first reconcile after it is cleared.
     @discardableResult
     nonisolated static func reconcile(_ cloud: Cloud, _ defaults: UserDefaults,
                                       domain: String = Bundle.main.bundleIdentifier ?? "") -> (took: Int, sent: Int) {
+        let phone = defaults.persistentDomain(forName: domain) ?? [:]
+        guard phone[Best.unlockKey] as? Bool != true else { return (0, 0) }
         let stored = cloud.dictionary(forKey: key) ?? [:]
         let remote = stored.compactMapValues { ($0 as? Data).flatMap(Best.decode) }
         var local = [String: Best]()
-        for (k, v) in defaults.persistentDomain(forName: domain) ?? [:] where k.hasPrefix("best.") {
+        for (k, v) in phone where k.hasPrefix("best.") {
             if let best = (v as? Data).flatMap(Best.decode) { local[String(k.dropFirst("best.".count))] = best }
         }
         let (take, all) = merge(local: local, cloud: remote)
@@ -105,7 +117,37 @@ final class Sync {
             for (id, best) in send { next[id] = try? JSONEncoder().encode(best) }
             cloud.set(next, forKey: key)
         }
+        let tanks = tanks(cloud, defaults, phone: phone), tried = tried(cloud, defaults, phone: phone)
+        return (take.count + tanks.took + tried.took, send.count + tanks.sent + tried.sent)
+    }
+
+    /// The started flags, as the union of both sides. A store value this build can't read is never written over.
+    nonisolated private static func tried(_ cloud: Cloud, _ defaults: UserDefaults, phone: [String: Any]) -> (took: Int, sent: Int) {
+        let prefix = Best.startedPrefix
+        let mine = Set(phone.compactMap { k, v in k.hasPrefix(prefix) && v as? Bool == true ? String(k.dropFirst(prefix.count)) : nil })
+        let stored = cloud.object(forKey: triedKey)
+        guard stored == nil || stored is [String] else { return (0, 0) }
+        let theirs = Set(stored as? [String] ?? [])
+        let take = theirs.subtracting(mine), send = mine.subtracting(theirs)
+        for id in take { defaults.set(true, forKey: prefix + id) }
+        if !send.isEmpty { cloud.set(theirs.union(mine).sorted(), forKey: triedKey) }
         return (take.count, send.count)
+    }
+
+    /// Endless's best, the higher of the two. A store value this build can't read is never written over.
+    nonisolated private static func tanks(_ cloud: Cloud, _ defaults: UserDefaults, phone: [String: Any]) -> (took: Int, sent: Int) {
+        let mine = phone[Best.tanksKey] as? Int ?? 0, stored = cloud.object(forKey: tanksKey)
+        guard stored == nil || stored is Int else { return (0, 0) }
+        let theirs = stored as? Int ?? 0
+        if theirs > mine {
+            defaults.set(theirs, forKey: Best.tanksKey)
+            return (1, 0)
+        }
+        if mine > theirs {
+            cloud.set(mine, forKey: tanksKey)
+            return (0, 1)
+        }
+        return (0, 0)
     }
 
     /// A counter views observe through `Best.load`, which any thread may call: the store's changes land on the
@@ -128,6 +170,7 @@ final class Sync {
 /// The key-value store's calls `Sync.reconcile` makes, so the tests reconcile against a dictionary.
 protocol Cloud: AnyObject {
     func dictionary(forKey key: String) -> [String: Any]?
+    func object(forKey key: String) -> Any?
     func set(_ value: Any?, forKey key: String)
 }
 

@@ -192,8 +192,10 @@ extension Store {
     /// The pack whose card a level shows instead of playing: one past its taste that the player doesn't own.
     func card(for level: Level) -> Pack? { access(level) == .needsCard ? level.pack : nil }
 
-    /// A level this build may open: any outside a pack, and a pack's that the build sells.
-    func opens(_ level: Level) -> Bool { access(level) != .withheld }
+    /// A level this build may open: any outside a pack but a sandbox it withholds, and a pack's that the build sells.
+    func opens(_ level: Level, release: Bool = Build.release) -> Bool {
+        (!level.sandbox || Level.playsSandbox(release: release)) && access(level, release: release) != .withheld
+    }
 }
 
 extension Store {
