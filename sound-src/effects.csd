@@ -375,6 +375,54 @@ instr reset_out
   Out ay, p3
 endin
 
+; ------------------------------------------------------------------ ratchet
+; Escapement's clock ticking a tooth: a steel pawl snapping onto a steel ratchet wheel, dry, a bright tink near 2.4 kHz
+; with one bounce of the pawl, not tuned to the key (Jack's call soundsk2 = D, round 16). The seed sets each variant a
+; few percent off the others in pitch and bounce: 2306 is the take Jack heard alone.
+
+; Decays by 60 dB in 6.91 tau.
+opcode Decay, a, i
+  itau xin
+  aenv expon 1, 6.91 * itau, 0.001
+  xout aenv
+endop
+
+; One mode of a small steel part, struck by ain: ifq Hz, decaying as Decay's itau, its impulse response iamp high. A
+; two-pole resonator, unscaled, rings 1 / sin(w) high; Mode would put the upper modes sharp.
+opcode Ring, a, aiii
+  ain, ifq, itau, iamp xin
+  xout iamp * sin(2 * $M_PI * ifq / sr) * reson(ain, ifq, 1 / ($M_PI * itau), 0)
+endop
+
+; Six modes at ifq times each ratio, each with its decay and level. Written out, as an opcode called in a loop is one
+; instance, and the filters would share their state.
+opcode Steel, a, aii[]i[]i[]
+  ain, ifq, ir[], itau[], iamp[] xin
+  a0 Ring ain, ifq * ir[0], itau[0], iamp[0]
+  a1 Ring ain, ifq * ir[1], itau[1], iamp[1]
+  a2 Ring ain, ifq * ir[2], itau[2], iamp[2]
+  a3 Ring ain, ifq * ir[3], itau[3], iamp[3]
+  a4 Ring ain, ifq * ir[4], itau[4], iamp[4]
+  a5 Ring ain, ifq * ir[5], itau[5], iamp[5]
+  xout a0 + a1 + a2 + a3 + a4 + a5
+endop
+
+instr ratchet
+  ij random -0.03, 0.03
+  anz Noise
+  aimp mpulse 1, 0
+  ahit butterhp anz * Decay(0.0003), 3000
+  ahit = aimp + 0.12 * ahit
+  ahit += 0.3 * delay(ahit, 0.0018 * (1 + 3 * ij))
+  ir[] fillarray 1, 1.47, 2.31, 3.62, 3.67, 1.013
+  itau[] fillarray 0.008, 0.0065, 0.005, 0.0035, 0.003, 0.0075
+  iamp[] fillarray 0.4, 0.4, 0.6, 0.65, 0.5, 0.25
+  ay Steel ahit, 2400 * (1 + ij / 2), ir, itau, iamp
+  ay += 0.1 * ahit
+  aatk cosseg 0, 0.0002, 1
+  Out ay * aatk, p3
+endin
+
 schedule "$FX", 0, $DUR, $N
 </CsInstruments>
 <CsScore>

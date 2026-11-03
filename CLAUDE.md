@@ -789,7 +789,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   unlock where it opens packs (`Archive.opens`). `ArchiveRow` sits under today's daily on the menu: until then a quiet
   lock, "comes with any pack", which a tap shakes and answers as a closed row does, saying "unlocked by purchasing any
   pack" for 2 s (Jack's words, R-arch-lock, round 15), never opening the shelf.
-  `ArchiveView` lies over the menu as a card does (beside the list in a wide window, `MenuLayout`), a month to a block on the player's week, each day's number over its
+  `ArchiveView` lies over the menu as a card does (beside the list in a wide window, `MenuLayout`, its way out reading "✕ close" there as the card's does, Jack's call archive-close = A, round 16), a month to a block on the player's week, each day's number over its
   result in the menu's words (`Archive.Mark`: clean, par, +n, tried), a list of days at accessibility sizes. A day
   opens `Level.daily(_:archived:)`, the day's own tank under its own id, whose back reads "‹ archive" and returns there
   (`RootView.archive`, `Level.focus(solved:)`), the day ringed once. It plays as any level: its best saves marked
@@ -1049,9 +1049,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,
   and the heal that solves sounds as the solve. An undo's negation that brings back one of the scramble's entries marks
   it the scramble's again. The `seized` sound plays with `Knock.thud` whenever a finger lands on a knob that can't be
-  turned. Beds loop under the menu and each tier (`Level.bed`; daily, endless, the sandbox and the packs take
-  plughole's), and a new one crossfades in over the old at equal power across two decks. Only a bed that is playing
-  stays decoded, and none in the background. `Sounding`, set on `RootView`, is the app's button style: a button taps as
+  turned. Escapement's clocks tick in steel, a pawl snapping onto its ratchet wheel (Jack's call soundsk2 = D, round
+  16; `ratchet-1` to `-4`, taken in turn as the taps are): each of a move's ticks, pushed or not, sounds as its clock's
+  core starts to turn, `tickBeat` after the lift and `tickTurn` apart (`Game.ratchetTimes`), the demonstration's too,
+  from a task that leaving the level cancels; an undo or a reset silences the ticks still to come, and a resumed try's
+  last ticks, landed before the view appeared, stay silent. Beds loop under the menu and each tier (`Level.bed`;
+  daily, endless, the sandbox and the packs take plughole's), and a new one crossfades in over the old at equal power
+  across two decks. Only a bed that is playing stays decoded, and none in the background.
+  `Sounding`, set on `RootView`, is the app's button style: a button taps as
   it acts, and undo and reset have sounds of their own; the undo's body peaks about 0.2 s after the press (Jack,
   SN1). A button that sets its own `.plain` style has none, so every
   such button that acts takes `Sounding` instead: the gear, the consent card's answers and its link, the settings
