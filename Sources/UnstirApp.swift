@@ -865,18 +865,54 @@ struct RootView: View {
         // Beside play, another level leaves the playing one through its own way out, which saves its try and lets go of
         // a finger, and then opens; the playing level itself opens nothing.
         if beside, let next, let level {
-            if next != level, switching == nil {
-                keeping = keep
-                switching = next
-            } else if next == level, card != nil || archive {
+            switch Self.besidePick(next, playing: level, gated: Store.shared.card(for: next) != nil,
+                                   opens: Store.shared.opens(next)) {
+            case .same:
                 // Its own card's play: the card goes, to come back as the level leaves.
-                parked = (card, archive)
-                card = nil
-                archive = false
+                if card != nil || archive { park() }
+            case .stays:
+                // Just after launch the store may not yet have read what the player owns: decided again once it has.
+                if Store.shared.ready {
+                    open(next, keep: keep, look: nil, solved: false)
+                } else {
+                    Task {
+                        await Store.shared.settled()
+                        show(next, keep: keep)
+                    }
+                }
+            case .switches:
+                if switching == nil {
+                    keeping = keep
+                    switching = next
+                }
             }
             return
         }
         proceed(next, keep: keep, look: look, solved: solved)
+    }
+
+    /// What a level picked beside play does there, decided before the playing level leaves, so one that won't open
+    /// leaves it untouched.
+    enum BesidePick: Equatable {
+        /// The playing level's own: it opens nothing.
+        case same
+        /// A gate's card opens over the trailing half, or nothing does, and the playing level stays in the tank.
+        case stays
+        /// The playing level leaves through its own way out, its try saved and a finger let go, and this one opens.
+        case switches
+    }
+
+    nonisolated static func besidePick(_ next: Level, playing: Level, gated: Bool, opens: Bool) -> BesidePick {
+        if next == playing { return .same }
+        return gated || !opens ? .stays : .switches
+    }
+
+    /// The card or the archive goes while a level beside the menu plays, as it would cover the level's header and
+    /// controls, to come back as that level leaves.
+    private func park() {
+        parked = (card, archive)
+        card = nil
+        archive = false
     }
 
     private func proceed(_ next: Level?, keep: Bool = false, look: Tier? = nil, solved: Bool = false) {
@@ -905,9 +941,7 @@ struct RootView: View {
         // A failure shown before a level isn't still there after it, though the card it was on comes back.
         if next != nil { Store.shared.forgetFailures() }
         if wide, next != nil, !stays, gate == nil, opens {
-            if card != nil || archive { parked = (card, archive) }
-            card = nil
-            archive = false
+            if card != nil || archive { park() }
         }
         if gate != nil { card = gate.map(Offer.pack) }
         if next == nil, let p = parked, let level {

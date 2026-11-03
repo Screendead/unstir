@@ -396,6 +396,15 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertFalse(RootView.returns(to: (nil, true), from: tier))
     }
 
+    func testAPickBesidePlayIsDecidedBeforeThePlayingLevelLeaves() {
+        let l11 = Level.plughole[10], l12 = Level.plughole[11], lens4 = Pack.lens.levels[3]
+        XCTAssertEqual(RootView.besidePick(l11, playing: l11, gated: false, opens: true), .same)
+        XCTAssertEqual(RootView.besidePick(l12, playing: l11, gated: false, opens: true), .switches)
+        // Neither leaves the playing level: no quit sent, no finger let go, its try where it is.
+        XCTAssertEqual(RootView.besidePick(lens4, playing: l11, gated: true, opens: true), .stays, "a gate opens its card")
+        XCTAssertEqual(RootView.besidePick(l12, playing: l11, gated: false, opens: false), .stays, "a withheld level")
+    }
+
     func testTheOpenDuosMenuPutsTheListAndTheCardEitherSideOfTheFold() {
         for fold in [nil, book] as [CGRect?] {
             let m = menu(window: open.window, insets: open.insets, fold: fold)
