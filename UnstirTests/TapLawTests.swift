@@ -55,6 +55,29 @@ final class TapLawTests: XCTestCase {
         XCTAssertEqual(law.stored(build: "b", os: "o"), .init(applied: 28, cap: 29, strikes: 1, build: "b", os: "o"))
     }
 
+    func testALaunchEndedBeforeTheStillMomentKeepsTheStep() {
+        var law = TapLaw(start: 30)
+        law.open(work: 29)
+        feed(&law, .gpuMiss, 3)
+        XCTAssertNil(law.close())
+        XCTAssertEqual(law.applied, 30, "killed here, before the next move")
+        let kept = law.stored(build: "b", os: "o")
+        XCTAssertEqual(kept, .init(applied: 28, cap: 29, strikes: 1, build: "b", os: "o"))
+        var next = TapLaw(stored: kept)
+        XCTAssertEqual([next.applied, next.cap], [28, 29])
+        XCTAssertEqual(drag(&next, at: 28, .onTime, 1200), [.probe(to: 29), .applied(from: 28, to: 29)], "and can climb again")
+    }
+
+    func testACapTheStartMeetsIsDroppedBarAProbes() {
+        XCTAssertNil(TapLaw(start: 12, cap: 8, strikes: 1).cap, "under the floor, no budget acts on it")
+        XCTAssertNil(TapLaw(stored: .init(applied: 30, cap: 29, strikes: 1, build: "", os: "")).cap)
+        XCTAssertNil(TapLaw(start: 29, cap: 29, strikes: 2).cap)
+        XCTAssertEqual(TapLaw(start: 29, cap: 29, strikes: 1).cap, 29, "a probe at it")
+        XCTAssertEqual(TapLaw(start: 28, cap: 29, strikes: 2).cap, 29)
+        var probing = TapLaw(start: 29, cap: 29, strikes: 1)
+        XCTAssertEqual(drag(&probing, at: 29, .onTime, 600), [.erased(cap: 29)])
+    }
+
     func testTwoMissesMainThreadMissesAndTwoTapMissesStepNothing() {
         var law = TapLaw(start: 30)
         law.open(work: 29)
@@ -71,17 +94,24 @@ final class TapLawTests: XCTestCase {
         XCTAssertEqual(law.applied, 30)
     }
 
-    func testMissesFarBelowTheBudgetNeedSix() {
+    func testMissesFarBelowTheBudgetStepOnlyWhileHotAndNeedSix() {
         var law = TapLaw(start: 30)
         law.open(work: 26)
         XCTAssertEqual(feed(&law, .gpuMiss, 3).count, 1, "within four of the budget")
         law = TapLaw(start: 30)
-        law.open(work: 25)
+        XCTAssertEqual(drag(&law, at: 25, .gpuMiss, 300), [], "cool, a passing miss")
+        XCTAssertEqual([law.applied, law.cap], [30, nil])
+        _ = law.heat(.serious)
+        _ = law.still()
+        XCTAssertEqual(law.applied, 22)
+        law.open(work: 17)
         XCTAssertEqual(feed(&law, .gpuMiss, 5), [])
-        XCTAssertEqual(feed(&law, .gpuMiss, 1), [.down(from: 30, to: 24, work: 25, misses: 6, of: 6, strike: 1)])
+        XCTAssertEqual(feed(&law, .gpuMiss, 1), [.down(from: 22, to: 16, work: 17, misses: 6, of: 6, strike: nil)])
         // Six among the last thirty, not since the drag began.
         law = TapLaw(start: 30)
-        law.open(work: 25)
+        _ = law.heat(.serious)
+        _ = law.still()
+        law.open(work: 17)
         for _ in 0..<5 {
             feed(&law, .gpuMiss, 1)
             feed(&law, .onTime, 6)
@@ -95,6 +125,17 @@ final class TapLawTests: XCTestCase {
                                                        .applied(from: 13, to: 12)])
         XCTAssertEqual(drag(&law, at: 12, .gpuMiss, 30), [], "the floor holds")
         XCTAssertEqual(law.applied, TapLaw.floor)
+        // A miss at the floor or under it draws four taps whatever the budget: no step changes it.
+        var shallow = TapLaw(start: 14)
+        XCTAssertEqual(drag(&shallow, at: 12, .gpuMiss, 300), [])
+        XCTAssertEqual(drag(&shallow, at: 11, .gpuMiss, 300), [])
+        XCTAssertEqual([shallow.applied, shallow.cap], [14, nil])
+        _ = shallow.heat(.critical)
+        _ = shallow.still()
+        XCTAssertEqual(drag(&shallow, at: 8, .gpuMiss, 300), [], "nor while hot")
+        _ = shallow.heat(.nominal)
+        XCTAssertEqual(shallow.still(), .applied(from: 12, to: 14))
+        XCTAssertNil(shallow.cap)
         XCTAssertEqual(TapLaw(start: 3).applied, TapLaw.floor)
         XCTAssertEqual(TapLaw(start: 99).applied, TapLaw.ceiling)
         XCTAssertEqual(TapLaw.ceiling, Tank.maxStack + 6, "every stack on every picture, the twin neurons' fill the largest")
@@ -177,17 +218,101 @@ final class TapLawTests: XCTestCase {
         XCTAssertEqual(law.strikes, 0)
         XCTAssertTrue(law.paused)
         XCTAssertEqual(drag(&law, at: 30, .gpuMiss, 60), [], "no more steps down this launch")
-        // One that helped is held.
+        // One that helped is held, on two-tap frames at its work or a few over.
         var held = TapLaw(start: 30)
         drag(&held, at: 30, .gpuMiss, 3)
-        XCTAssertEqual(drag(&held, at: 30, .onTime, 30), [.held(work: 30)])
-        XCTAssertNil(held.check)
+        XCTAssertEqual(drag(&held, at: 31, .onTime, 60), [])
+        XCTAssertEqual(held.checks.count, 1, "too few to tell: the next drag adds to them")
+        XCTAssertEqual(drag(&held, at: 34, .onTime, 60), [.held(work: 34)])
+        XCTAssertTrue(held.checks.isEmpty)
         XCTAssertEqual(drag(&held, at: 30, .gpuMiss, 3), [.twoTap(work: 30, misses: 3, of: 3)], "checked once")
-        // Too short a drag to tell leaves the check for the next.
-        var short = TapLaw(start: 30)
-        drag(&short, at: 30, .gpuMiss, 3)
-        XCTAssertEqual(drag(&short, at: 30, .onTime, 29), [])
-        XCTAssertNotNil(short.check)
+        // Frames well over it cost more than those that missed: they say nothing of it.
+        var over = TapLaw(start: 30)
+        drag(&over, at: 30, .gpuMiss, 3)
+        XCTAssertEqual(drag(&over, at: 35, .gpuMiss, 30), [.twoTap(work: 35, misses: 30, of: 30)])
+        XCTAssertEqual(over.applied, 29)
+        // The commit that lands a step usually changes the work: a later drag a push over it still checks it.
+        var pushed = TapLaw(start: 30)
+        drag(&pushed, at: 26, .gpuMiss, 3)
+        drag(&pushed, at: 25, .onTime, 10)
+        XCTAssertEqual(pushed.applied, 25)
+        XCTAssertEqual(drag(&pushed, at: 27, .gpuMiss, 3), [.reverted(from: 25, to: 30, work: 27, misses: 3, of: 3),
+                                                           .applied(from: 25, to: 30)])
+    }
+
+    func testTwoStepsAtDifferentWorkAreTakenBackTogether() {
+        var law = TapLaw(start: 30)
+        XCTAssertEqual(drag(&law, at: 29, .gpuMiss, 3).first, .down(from: 30, to: 28, work: 29, misses: 3, of: 3, strike: 1))
+        XCTAssertEqual(drag(&law, at: 27, .gpuMiss, 3).first, .down(from: 28, to: 26, work: 27, misses: 3, of: 3, strike: 1))
+        XCTAssertEqual(law.checks.map(\.work), [29, 27])
+        // Two-tap frames at 28, which both steps drew at two taps, miss as the four-tap ones did: neither helped.
+        XCTAssertEqual(drag(&law, at: 28, .gpuMiss, 30), [.reverted(from: 26, to: 30, work: 28, misses: 3, of: 3),
+                                                         .applied(from: 26, to: 30)])
+        XCTAssertEqual([law.applied, law.cap], [30, nil])
+        XCTAssertTrue(law.checks.isEmpty)
+        XCTAssertTrue(law.paused)
+    }
+
+    func testAPassingMissNearTheEdgeCostsAFewEntriesAndIsClimbedBack() {
+        var law = TapLaw(start: 30)
+        drag(&law, at: 26, .gpuMiss, 3)
+        XCTAssertEqual([law.applied, law.cap], [25, 26], "at most the edge and one")
+        XCTAssertEqual(drag(&law, at: 27, .onTime, 120), [.held(work: 27)])
+        var frames = 0
+        while law.applied < 30, frames < 10_000 {
+            drag(&law, at: law.applied, .onTime, 100)
+            frames += 100
+        }
+        XCTAssertEqual(law.applied, 30)
+        XCTAssertNil(law.cap)
+        XCTAssertLessThanOrEqual(frames, 4200, "a probe, an erase and four climbs: about 35 s of drags at the edge")
+    }
+
+    /// Random drags, heat, launches ended before their still moment and relaunches: the budget moves only at a still
+    /// moment, each step draws the missed work with two taps, a cap never bars every way up, and clean play at the
+    /// edge always climbs back to the ceiling or under a confirmed cap.
+    func testNoStreamOfFramesLocksTheBudget() {
+        let classes: [FrameClass] = [.onTime, .onTime, .onTime, .gpuMiss, .cpuMiss, .ignored]
+        let states: [ProcessInfo.ThermalState] = [.nominal, .fair, .serious, .critical]
+        func sound(_ law: TapLaw) -> Bool {
+            (TapLaw.floor...TapLaw.ceiling).contains(law.applied) && law.cap.map { $0 > law.want || $0 == law.want && law.strikes == 1 } ?? true
+        }
+        // The climb's evidence cut tenfold, so the climb back runs in moments: the law's shape is the same.
+        var cuts = TapCuts.attributed
+        (cuts.climb, cuts.probe, cuts.hold) = (60, 120, 12)
+        seeds: for seed in 0..<100 {
+            var rng = SplitMix64(state: UInt64(seed))
+            var law = TapLaw(start: TapLaw.floor + rng.below(TapLaw.ceiling - TapLaw.floor + 1), cuts: cuts)
+            for _ in 0..<80 {
+                let before = law.applied
+                if rng.below(8) == 0 { _ = law.heat(states[rng.below(4)]) }
+                let work = rng.below(2) == 0 ? max(1, law.applied - 6 + rng.below(12)) : 1 + rng.below(TapLaw.ceiling + 4)
+                law.open(work: work)
+                let burst = rng.below(3)
+                for _ in 0..<rng.below(240) {
+                    let c = burst == 0 && rng.below(3) == 0 ? .gpuMiss : classes[rng.below(classes.count)]
+                    let e = law.count(c)
+                    if case let .down(_, to, w, _, _, _) = e, to >= w { XCTFail("seed \(seed): \(String(describing: e))"); continue seeds }
+                    if e != nil, !sound(law) { XCTFail("seed \(seed): \(String(describing: e))"); continue seeds }
+                }
+                _ = law.close()
+                XCTAssertEqual(law.applied, before, "only a still moment draws a change, seed \(seed)")
+                if rng.below(5) > 0 { _ = law.still() }
+                if rng.below(15) == 0 { law = TapLaw(stored: law.stored(build: "", os: ""), cuts: cuts) }
+                guard sound(law) else { XCTFail("seed \(seed)"); continue seeds }
+            }
+            _ = law.heat(.nominal)
+            _ = law.still()
+            // A probe spent in this launch comes back in the next.
+            for _ in 0..<2 {
+                for _ in 0..<40 {
+                    if drag(&law, at: law.applied, .onTime, 120).isEmpty { break }
+                }
+                law = TapLaw(stored: law.stored(build: "", os: ""), cuts: cuts)
+            }
+            XCTAssertTrue(law.applied == TapLaw.ceiling || law.cap == law.applied + 1 && law.strikes == 2,
+                          "seed \(seed): \(law.applied), cap \(String(describing: law.cap)) strikes \(law.strikes)")
+        }
     }
 
     func testHeatTakesAQuarterOffUntilItCoolsAndIsNeverKept() {
@@ -204,7 +329,7 @@ final class TapLawTests: XCTestCase {
         XCTAssertEqual(law.heat(.critical), .hot(from: 21, to: TapLaw.floor))
         XCTAssertEqual(law.heat(.nominal), .cool(from: TapLaw.floor, to: 30))
         XCTAssertEqual(law.still(), .applied(from: 21, to: 30))
-        XCTAssertNil(law.check, "a hot step's check goes with the heat")
+        XCTAssertTrue(law.checks.isEmpty, "a hot step's check goes with the heat")
     }
 
     func testNoApplyLandsWhileADragIsOpen() {

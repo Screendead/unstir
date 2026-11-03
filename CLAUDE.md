@@ -298,16 +298,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   limits. `FrameWatch`, a display link alive only while a finger (or `UNSTIR_TAPDRAG`) turns a rod or the rim
   (`LevelView.tapWindow`: no opening, settle, card, slide or breath's fade), times each interval against the period
   the system grants and reads the main thread's CPU time in it (`TapLaw.classify`): late past 1.5 periods, the GPU's
-  (`gpuMiss`) where the main thread was idle for over half of it, the main thread's own where it was busy for all but
+  (`gpuMiss`) where the main thread was idle for at least half of it, the main thread's own where it was busy for all but
   half a period, and neither past 6 periods (a stall no frame of the shader's makes) or where the finger moved
   nothing. A live picture at rest isn't measured: whether a 60 Hz link moves a ProMotion panel is unchecked. `TapLaw`
   steps B down to the missed work less one after 3 GPU misses among a drag's last 30 counted four-tap frames within 4
-  of B, 6 further below, once a drag and never under `floor` (12, call TAPS-FLOOR); up one after 600 clean four-tap
-  frames at its edge, never past `ceiling` (`Tank.maxStack` plus the largest fill, 42, call TAPS-CEIL) nor to a cap.
-  A first miss caps provisionally, probed once a launch after 1200 clean, confirmed by a second miss there or erased
-  by 600 clean at it; a step whose two-tap frames still miss at that work is taken back and pauses the steps down for
-  the launch (the effect check); a thermal state of serious takes a quarter off for the session (critical, the floor),
-  as `Power` still halves a live picture's rate. The numbers are `TapCuts`', guesses to tune on the phone, and
+  of B, once a drag, and only where that draws the missed work with two taps, so never from work at or under `floor`
+  (12, call TAPS-FLOOR); cool, misses further below step nothing, taken for passing ones, while hot 6 of them do. It
+  climbs one after 600 clean four-tap frames at its edge, never past `ceiling` (`Tank.maxStack` plus the largest fill,
+  42, call TAPS-CEIL) nor to a cap. A first miss caps provisionally, probed once a launch after 1200 clean, confirmed
+  by a second miss there or erased by 600 clean at it; a cap is always over the cool budget bar a probe's, and a
+  stored one that isn't is dropped. Each step waits on its effect check: two-tap frames at its work or under it, or up
+  to 4 over, that still miss 3 in 30 take back the oldest step they cover and every step since, and pause the steps
+  down for the launch; 120 on time there confirm it. A thermal state of serious takes a quarter off for the session
+  (critical, the floor), as `Power` still halves a live picture's rate. The numbers are `TapCuts`', guesses to tune on the phone, and
   `TapCuts.unattributed` the fallback should the phone show that CPU time doesn't tell the two apart. A new B is drawn
   only at a still moment (`TapLaw.still`, from `TapHooks`: a move landing, the level appearing, a change of pose),
   never during a measured drag, and `Unstirred.budget` is a plain field outside `animatableData`. Frames say nothing

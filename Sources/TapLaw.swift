@@ -10,8 +10,10 @@ struct TapKey: Hashable {
 
     init(hz: Int, pixels: Double) {
         self.hz = hz
-        px = Int((pixels / 16).rounded()) * 16
+        px = Self.side(pixels)
     }
+
+    static func side(_ pixels: Double) -> Int { Int((pixels / 16).rounded()) * 16 }
 
     var name: String { "\(px)px@\(hz)" }
     /// Its UserDefaults key, never synced.
@@ -38,10 +40,13 @@ struct TapCuts: Equatable {
     /// Whether the main thread's CPU time tells the GPU's misses from its own. Off, every late frame counts.
     var attributes = true
     /// GPU misses among the window's last `ring` counted frames that step the budget down, at work within `edge` of the
-    /// budget and further below it.
+    /// budget, and further below it only while the phone is hot. Cool, a miss far below is taken for a passing one: a
+    /// step from there would draw every depth above it at two taps, and only play at the new edge climbs back.
     var near = 3, far = 6, ring = 30, edge = 4
     /// Clean frames at the budget's edge that step it up one, and that probe a provisional cap.
     var climb = 600, probe = 1200
+    /// On-time two-tap frames at or under a step's work, or up to `edge` over it, that confirm the step.
+    var hold = 120
     /// The window's first seconds, uncounted while the GPU's clock ramps up from idle.
     var skip = 0.05
 
@@ -71,17 +76,20 @@ struct TapLaw: Equatable {
         let cap: Int?
         let strikes: Int
         let hot: Bool
+        /// On-time two-tap frames seen at work it covers.
+        var held = 0
     }
 
     /// The frames of one drag, at one committed work and one budget.
     struct Window: Equatable {
         let work: Int
         let four: Bool
-        /// A step down at this work has been drawn: these two-tap frames say whether it helped.
+        /// Two-tap frames where a step down is waiting on its check: they say whether it helped.
         let checks: Bool
         var ring: [FrameClass] = []
         var counted = 0
         var misses = 0
+        var onTime = 0
         var stepped = false
         var reverted = false
     }
@@ -104,17 +112,20 @@ struct TapLaw: Equatable {
     static let floor = 12
     /// The most: every stack the game allows on every picture (TAPS-CEIL).
     static let ceiling = Tank.maxStack + (Picture.allCases.map(\.fillEntries).max() ?? 0)
+    /// Steps down still waiting on their checks, oldest first.
+    static let checksKept = 8
 
     var cuts: TapCuts
     /// The budget the glass draws.
     private(set) var applied: Int
-    /// The cool budget last drawn, which a phone keeps.
+    /// The cool budget last drawn.
     private(set) var cool: Int
-    /// The cool budget decided, drawn at the next still moment unless the phone is hot.
+    /// The cool budget decided, drawn at the next still moment unless the phone is hot, and what a phone keeps.
     private(set) var want: Int
     /// The hot budget decided while the thermal state is serious or worse, never kept.
     private(set) var hot: Int?
-    /// The lowest work that missed while cool, provisional at one strike and held at two.
+    /// The lowest work that missed while cool, provisional at one strike and held at two. Always over `want`, bar a
+    /// probe's provisional cap, which `want` meets, so the climb, the probe or the erase always has a way on.
     private(set) var cap: Int?
     private(set) var strikes = 0
     /// On-time four-tap frames at the budget's edge since the last miss.
@@ -123,11 +134,14 @@ struct TapLaw: Equatable {
     private(set) var probed = false
     /// An effect check failed: misses at this glass aren't the shader's, so it steps down no more this launch.
     private(set) var paused = false
-    private(set) var check: Check?
+    private(set) var checks: [Check] = []
     private(set) var window: Window?
 
+    /// A cap the start meets or passes is dropped, bar a probe's single strike at it: it can't be reached from a step,
+    /// and kept it would bar every way up.
     init(start: Int, cap: Int? = nil, strikes: Int = 0, cuts: TapCuts = .attributed) {
         let b = Self.clamp(start)
+        let cap = cap.flatMap { $0 > b || $0 == b && strikes <= 1 ? $0 : nil }
         (applied, cool, want, self.cap, self.strikes, self.cuts) = (b, b, b, cap, cap == nil ? 0 : min(max(strikes, 1), 2), cuts)
     }
 
@@ -140,10 +154,11 @@ struct TapLaw: Equatable {
     /// What `still` will draw, if it differs from what is drawn.
     var pending: Int? { (hot ?? want) == applied ? nil : hot ?? want }
 
-    func stored(build: String, os: String) -> Stored { Stored(applied: cool, cap: cap, strikes: strikes, build: build, os: os) }
+    /// The cool decision, drawn or not, so a launch ended before the next still moment keeps the step with its cap.
+    func stored(build: String, os: String) -> Stored { Stored(applied: want, cap: cap, strikes: strikes, build: build, os: os) }
 
     /// The interval of `d` seconds against a granted period of `t`, in which the main thread ran for `c` seconds.
-    /// Busy for all but half a period, the main thread missed it; idle for more than half, it waited on the frames
+    /// Busy for all but half a period, the main thread missed it; idle for at least half, it waited on the frames
     /// ahead, which on a frame of steady work is the GPU's.
     static func classify(interval d: Double, period t: Double, cpu c: Double, produced: Bool,
                          cuts: TapCuts = .attributed) -> FrameClass {
@@ -165,9 +180,14 @@ struct TapLaw: Equatable {
         return (clamp(Int((Double(b + 1) * ratio * ratio).rounded()) - 1), near)
     }
 
+    /// Two-tap frames at `work` cost no more than the four-tap ones that missed at `c`'s work, give or take the edge's
+    /// few entries, so if they miss as often the misses weren't the shader's.
+    private func covers(_ c: Check, _ work: Int) -> Bool { work <= c.work + cuts.edge }
+
     /// A drag begins at committed work `work`.
     mutating func open(work: Int) {
-        window = Window(work: work, four: work <= applied, checks: check.map { $0.work == work && applied < work } ?? false)
+        let four = work <= applied
+        window = Window(work: work, four: four, checks: !four && checks.contains { covers($0, work) })
     }
 
     /// One frame of the open window.
@@ -178,12 +198,12 @@ struct TapLaw: Equatable {
         w.ring.append(c)
         if w.ring.count > cuts.ring { w.ring.removeFirst() }
         if c == .gpuMiss { w.misses += 1 }
+        if c == .onTime { w.onTime += 1 }
         let missing = w.ring.filter { $0 == .gpuMiss }.count
-        let due = missing >= (w.work >= applied - cuts.edge ? cuts.near : cuts.far)
         if w.checks {
-            guard due, !w.reverted, let check else { return nil }
+            guard missing >= cuts.near, !w.reverted, let i = checks.firstIndex(where: { covers($0, w.work) }) else { return nil }
             w.reverted = true
-            return revert(check, misses: missing, of: w.ring.count)
+            return revert(i, work: w.work, misses: missing, of: w.ring.count)
         }
         guard w.four else { return nil }
         switch c {
@@ -193,11 +213,14 @@ struct TapLaw: Equatable {
             return climb()
         case .gpuMiss:
             clean = 0
-            guard due, !w.stepped, !paused else { return nil }
+            let due = w.work >= applied - cuts.edge ? cuts.near : hot != nil ? cuts.far : Int.max
+            guard missing >= due, !w.stepped, !paused else { return nil }
             let b = hot ?? want, to = max(Self.floor, min(b, w.work - 1))
-            guard to < b else { return nil }
+            // Only a step that draws the missed work with two taps changes the frames that missed.
+            guard to < b, to < w.work else { return nil }
             w.stepped = true
-            check = Check(work: w.work, from: b, cap: cap, strikes: strikes, hot: hot != nil)
+            checks.append(Check(work: w.work, from: b, cap: cap, strikes: strikes, hot: hot != nil))
+            if checks.count > Self.checksKept { checks.removeFirst() }
             if hot != nil {
                 hot = to
                 return .down(from: b, to: to, work: w.work, misses: missing, of: w.ring.count, strike: nil)
@@ -232,22 +255,27 @@ struct TapLaw: Equatable {
         return nil
     }
 
-    private mutating func revert(_ c: Check, misses: Int, of n: Int) -> Event {
-        let from = hot ?? want
+    /// Takes back the oldest step the window's frames cover, and every step since, which it decided from.
+    private mutating func revert(_ i: Int, work: Int, misses: Int, of n: Int) -> Event {
+        let c = checks[i], from = c.hot ? hot ?? want : want
         if c.hot { hot = c.from } else { (want, cap, strikes) = (c.from, c.cap, c.strikes) }
-        (check, paused) = (nil, true)
-        return .reverted(from: from, to: c.from, work: c.work, misses: misses, of: n)
+        checks.removeSubrange(i...)
+        paused = true
+        return .reverted(from: from, to: c.from, work: work, misses: misses, of: n)
     }
 
     /// The drag ends.
     mutating func close() -> Event? {
         guard let w = window else { return nil }
         window = nil
-        if w.checks, !w.reverted, w.counted >= cuts.ring {
-            check = nil
-            return .held(work: w.work)
+        if w.checks {
+            guard !w.reverted else { return nil }
+            for i in checks.indices where covers(checks[i], w.work) { checks[i].held += w.onTime }
+            let n = checks.count
+            checks.removeAll { $0.held >= cuts.hold }
+            return checks.count < n ? .held(work: w.work) : nil
         }
-        return !w.four && !w.checks && w.misses > 0 ? .twoTap(work: w.work, misses: w.misses, of: w.counted) : nil
+        return !w.four && w.misses > 0 ? .twoTap(work: w.work, misses: w.misses, of: w.counted) : nil
     }
 
     /// Nothing is moving: what is pending is drawn. Never while a window is open, so no drag changes its taps.
@@ -273,7 +301,7 @@ struct TapLaw: Equatable {
         default:
             guard let h = hot else { return nil }
             hot = nil
-            if check?.hot == true { check = nil }
+            checks.removeAll(where: \.hot)
             return .cool(from: h, to: want)
         }
     }
