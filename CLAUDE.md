@@ -265,7 +265,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
   The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (30) limits are tuned against 120 Hz on an
   iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`), before the turn was added; its cost per tap is
-  unmeasured. The shader takes the four-tap limit for its glass's size (`Tank.fourTaps(pixels:)`): 30 on every glass
+  unmeasured. The shader takes the four-tap limit for its glass's size (`Tank.fourTaps(pixels:)`, less the fill, `Unstirred.taps`): 30 on every glass
   up to 1300 px, so every iPhone and every pose drawn before the upright Duo's is unchanged, and past that the 31
   entries measured scaled down by the area, less one for the entry in flight, so the open Duo upright's 1471 px gets
   17; `Tank.maxStack` stays 36 at every size and every level is dealt to the phone's 30, so every level plays as on an

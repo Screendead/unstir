@@ -87,6 +87,20 @@ final class PlayLayoutTests: XCTestCase {
         }
     }
 
+    /// What `Unstirred` hands both shaders: the glass's own limit less the picture's fill.
+    func testTheShadersTapBudgetFollowsTheGlass() {
+        for picture in Picture.allCases {
+            let fill = picture.fillEntries
+            XCTAssertEqual(Unstirred.taps(side: 408 / PlayLayout.rim, scale: 3, fill: fill), Tank.fourTaps - fill,
+                           "\(picture): the 17 Pro Max's glass as it was")
+            XCTAssertEqual(Unstirred.taps(side: PlayLayout.maxPixels / 3, scale: 3, fill: fill), 17 - fill,
+                           "\(picture): the upright Duo's glass")
+            XCTAssertEqual(Unstirred.taps(side: 120, scale: 3, fill: fill), Tank.fourTaps - fill, "\(picture): a dock cover")
+            XCTAssertEqual(Unstirred.taps(side: 320, scale: 3, fill: fill), Tank.fourTaps - fill, "\(picture): a card's clip at its largest")
+        }
+        XCTAssertEqual(Unstirred.taps(side: 490.333, scale: 3, fill: 0), 17)
+    }
+
     func testTheCapBindsTheSplitToo() {
         let l = PlayLayout.of(content: CGSize(width: 1300, height: 1000), window: CGSize(width: 1332, height: 1000), scale: 3)
         XCTAssertEqual(l.kind, .split)

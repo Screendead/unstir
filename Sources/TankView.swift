@@ -3395,7 +3395,7 @@ struct Unstirred: ViewModifier, Animatable {
         // a tick in flight rides one over, within the 31 the shader's comment measured (fewer on a larger glass). Two at
         // once, for the `Breath.fade` a touch takes to cut a slosh or a grab within a tick's flight, drop to two taps at
         // the budget's edge rather than run 32.
-        let taps = Tank.fourTaps(pixels: Double(side * scale)) - fillEntries
+        let taps = Self.taps(side: side, scale: scale, fill: fillEntries)
         let fourTaps = Float(taps) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
         if let cost = Self.channelCost(channels) {
             // The in-flight entry rides over by its own cost, as above, so a touch never changes the taps.
@@ -3494,6 +3494,11 @@ struct ChannelSwatches: View {
 }
 
 extension Unstirred {
+    /// The committed entries a glass `side` points across at `scale` draws with four taps, less a live picture's fill.
+    nonisolated static func taps(side: CGFloat, scale: CGFloat, fill: Int) -> Int {
+        Tank.fourTaps(pixels: Double(side * scale)) - fill
+    }
+
     /// The per-channel shader's work in entries for these masks (raw values, an entry each), or nil when every one is
     /// white and the plain shader draws them. An entry costs a map per channel it holds and a tap's two extra samples
     /// two entries: assumed, not measured on the phone.
