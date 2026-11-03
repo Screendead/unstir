@@ -617,9 +617,10 @@ struct Best: Codable {
     /// The developer unlock, set by a launch with UNSTIR_UNLOCK=1 and cleared by one with UNSTIR_UNLOCK=0: every tier
     /// and every level open.
     static var unlocked: Bool {
-        get { UserDefaults.standard.bool(forKey: "unlock") }
-        set { UserDefaults.standard.set(newValue, forKey: "unlock") }
+        get { UserDefaults.standard.bool(forKey: unlockKey) }
+        set { UserDefaults.standard.set(newValue, forKey: unlockKey) }
     }
+    static let unlockKey = "unlock"
 
     /// Set once a turn of the tank commits, on any level: the rim then stops showing how.
     static var tankTurned: Bool {

@@ -836,7 +836,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   until the App ID has iCloud's key-value storage, as a device build signing with the entitlement fails to provision
   without it) sets Info.plist's `iCloudSync`, read as `Sync.built`, and picks `CODE_SIGN_ENTITLEMENTS`
   (`Config/iCloud.entitlements` on YES, none on NO); off, no call reaches the store. On, a plain launch
-  (`Sync.plays`: never the harness or the test host) reconciles as it starts, on every change iCloud sends (an
+  (`Sync.plays`: never the harness, the test host or the editors' build) reconciles as it starts, on every change iCloud sends (an
   account's change merges the phone's bests into the new account's store, dropping none) and after every best
   `Game` saves. The store holds one key, `bests` (`Sync.key`, pinned: the store takes 1024 keys, and the dailies add
   a best a day), a dictionary of level id to the bytes `best.<id>` holds on the phone. `Sync.reconcile` reads only the
@@ -846,11 +846,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   read. A best that lands makes no card, sound or report: `Best.load` reads `Sync.revision` where the build syncs, so
   every view that shows a best draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
   `ICLOUD` turns YES for a release, as its comment lists: the App ID's capability, a two-device test, and the privacy
-  policy and store page, which say the bests stay on the phone and that sync isn't built. Every build with `ICLOUD`
-  on syncs, the editors' build and `run-ios.sh`'s playtests too, so bests made there with the levels opened
-  (`Best.unlocked`) reach the same Apple ID's App Store install: a tier they par opens there, and an unowned pack's
-  card and cover read its bests (its rows' results, `Pack.tastePlayed`), its rows past the taste staying locked, as
-  `Pack.access` reads ownership.
+  policy and store page, which say the bests stay on the phone and that sync isn't built. The editors' build never
+  syncs, nor does any phone while the developer unlock (`Best.unlocked`) is on: `Sync.reconcile` reads the unlock from
+  the stored domain and then neither reads nor writes the store (Jack's call icloud-editors = A, round 16), so
+  progress made with every level open stays on that phone while it is. Clearing the unlock (`UNSTIR_UNLOCK=0`) syncs
+  again, and the first reconcile then sends what was made under it with the rest. `run-ios.sh`'s playtests without the
+  unlock sync as any build with `ICLOUD` on does.
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`). v1 ships without them: the build's `ANALYTICS`
   (`Config/Unstir.xcconfig`, NO) sets Info.plist's `Analytics`, read as `Analytics.built`, and while it is off a plain

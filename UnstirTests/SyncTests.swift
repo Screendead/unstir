@@ -6,8 +6,11 @@ import XCTest
 /// The key-value store as a dictionary.
 private final class FakeCloud: Cloud {
     var values: [String: Any] = [:]
-    var writes = 0
-    func dictionary(forKey key: String) -> [String: Any]? { values[key] as? [String: Any] }
+    var writes = 0, reads = 0
+    func dictionary(forKey key: String) -> [String: Any]? {
+        reads += 1
+        return values[key] as? [String: Any]
+    }
     func set(_ value: Any?, forKey key: String) {
         values[key] = value
         writes += 1
@@ -139,7 +142,27 @@ final class SyncTests: XCTestCase {
         XCTAssertFalse(Sync.plays(built: true, harnessed: false, env: host), "the test host")
         XCTAssertFalse(Sync.plays(built: true, harnessed: true, env: [:]), "the harness")
         XCTAssertFalse(Sync.plays(built: false, harnessed: false, env: [:]), "a build without sync")
+        XCTAssertFalse(Sync.plays(built: true, editors: true, harnessed: false, env: [:]), "the editors' build")
         XCTAssertFalse(Sync.shared.plays)
+    }
+
+    /// While the developer unlock is on the store is neither read nor written, and the phone takes nothing from it:
+    /// progress made with every level open stays on that phone (Jack's call icloud-editors = A, round 16). Cleared, the
+    /// next reconcile syncs as ever.
+    func testNothingSyncsWhileTheUnlockIsOn() {
+        let cloud = FakeCloud()
+        cloud.values[Sync.key] = ["L2": data(Best(over: 0, seconds: 9))]
+        defaults.set(data(Best(over: 0, seconds: 9)), forKey: "best.L1")
+        defaults.set(true, forKey: Best.unlockKey)
+        let (took, sent) = Sync.reconcile(cloud, defaults, domain: suite)
+        XCTAssertEqual(took + sent, 0)
+        XCTAssertEqual(cloud.reads, 0)
+        XCTAssertEqual(cloud.writes, 0)
+        XCTAssertNil(defaults.data(forKey: "best.L2"))
+
+        defaults.set(false, forKey: Best.unlockKey)
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).took, 1)
+        XCTAssertEqual(Set(cloudBests(cloud).keys), ["L1", "L2"])
     }
 
     /// A best iCloud brought counts as the level started: a later try there is no first try, so it can't be clean, and

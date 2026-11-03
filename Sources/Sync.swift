@@ -7,8 +7,9 @@ import os
 /// The bests on the phone kept in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16),
 /// behind the build's ICLOUD: NO, until the App ID has iCloud's key-value storage, makes no call to the store. With it
 /// YES, a plain launch reconciles the two as it starts, again whenever iCloud brings a change and after every best it
-/// saves. Bests only: the undo bank and its anchor never sync, nor does anything else the game stores. The harness and
-/// the test host never sync.
+/// saves. Bests only: the undo bank and its anchor never sync, nor does anything else the game stores. The harness, the
+/// test host and the editors' build never sync, nor does a phone while the developer unlock is on (Jack's call
+/// icloud-editors = A, round 16), so progress made with every level open stays on that phone.
 @MainActor
 final class Sync {
     static let shared = Sync()
@@ -25,9 +26,9 @@ final class Sync {
     var plays = false
     private var started = false
 
-    /// Whether a launch syncs: only a build with sync, and never the harness or the test host.
-    nonisolated static func plays(built: Bool, harnessed: Bool, env: [String: String]) -> Bool {
-        built && !harnessed && env["XCTestConfigurationFilePath"] == nil
+    /// Whether a launch syncs: only a build with sync, and never the editors' build, the harness or the test host.
+    nonisolated static func plays(built: Bool, editors: Bool = Build.editors, harnessed: Bool, env: [String: String]) -> Bool {
+        built && !editors && !harnessed && env["XCTestConfigurationFilePath"] == nil
     }
 
     func start() {
@@ -87,14 +88,18 @@ final class Sync {
     /// Merges the phone's bests (`best.<id>` in `defaults`' `domain`) with the store's both ways and returns how many
     /// each took. Only the domain's stored values, never registered ones, which are the harness's for one launch. A
     /// best the phone takes is stored as the store's own bytes, and a store entry this build can't read is never
-    /// written over, so a later version's fields survive an older one's reconcile.
+    /// written over, so a later version's fields survive an older one's reconcile. While the domain holds the developer
+    /// unlock (`Best.unlocked`), nothing is read from the store or written to either side: bests made with it on are
+    /// sent with the rest by the first reconcile after it is cleared.
     @discardableResult
     nonisolated static func reconcile(_ cloud: Cloud, _ defaults: UserDefaults,
                                       domain: String = Bundle.main.bundleIdentifier ?? "") -> (took: Int, sent: Int) {
+        let phone = defaults.persistentDomain(forName: domain) ?? [:]
+        guard phone[Best.unlockKey] as? Bool != true else { return (0, 0) }
         let stored = cloud.dictionary(forKey: key) ?? [:]
         let remote = stored.compactMapValues { ($0 as? Data).flatMap(Best.decode) }
         var local = [String: Best]()
-        for (k, v) in defaults.persistentDomain(forName: domain) ?? [:] where k.hasPrefix("best.") {
+        for (k, v) in phone where k.hasPrefix("best.") {
             if let best = (v as? Data).flatMap(Best.decode) { local[String(k.dropFirst("best.".count))] = best }
         }
         let (take, all) = merge(local: local, cloud: remote)
