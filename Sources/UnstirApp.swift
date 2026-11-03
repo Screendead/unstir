@@ -600,6 +600,7 @@ struct RootView: View {
         Review.harnessed = h.harnessed && !h.reviewLog || env["XCTestConfigurationFilePath"] != nil
         Review.logs = h.reviewLog
         GameCenter.shared.plays = GameCenter.built && !h.harnessed && env["XCTestConfigurationFilePath"] == nil
+        Sync.shared.plays = Sync.plays(built: Sync.built, harnessed: h.harnessed, env: env)
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
                                  restored: h.restored, approved: h.approved)
@@ -724,6 +725,7 @@ struct RootView: View {
             // count the tests.
             let env = ProcessInfo.processInfo.environment
             guard env["XCTestConfigurationFilePath"] == nil else { return }
+            Sync.shared.start()
             await Store.shared.start()
             // After the store, so a snapshot sees the packs owned.
             Analytics.shared.start(env: env, harnessed: harnessed)

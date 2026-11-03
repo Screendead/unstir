@@ -774,8 +774,8 @@ hold=8 shot store-01-marbling "Store 1: whirlpool 25 (hex, marbling) with its fu
 shot store-02-count "Store 2: plughole 12, rod 1 carried -2 steps round, its dashes and count off the finger." \
   LEVEL=12 LIVE=1:-2 TOUCH=0.354,0.7
 shot store-03-wave "Store 3: plughole 13 solved, the solve wave at radius 0.8." LEVEL=13 WAVE=0.8
-hold=8 shot store-04-vortex "Store 4: vortex 13 on the ephemeris with its full scramble, its lesson learnt." \
-  TIER=vortex LEVEL=13 CLOCK=3 SWIRLED=1
+hold=8 shot store-04-vortex "Store 4: vortex 14, Monsoon (pent, isobars), with its full scramble, its lesson learnt." \
+  TIER=vortex LEVEL=14 CLOCK=3 SWIRLED=1
 hold=8 shot store-05-maelstrom "Store 5: maelstrom 23 (hex), knobs 2 and 5 seized, the tank held half a step round from the rim." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=30 CLOCK=3
 shot store-06-daily "Store 6: today's daily, its result card, share and next daily in 7 h." SCREEN=result MODE=daily NOW=17:00

@@ -29,7 +29,8 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   its vignette render takes two minutes), which `.github/workflows/nightly.yml` runs with every other test, bar the
   `UNSTIR_SLOW_TESTS` ones (they ran past 25 minutes on the runner), on `master` at 03:17 UTC and on `workflow_dispatch`: a break in them shows a night late. Both jobs print each
   suite's and the slowest tests' times (`scripts/ci-times.sh`) in the log. Add a suite to the skip list only here and in
-  `test.yml`, so the nightly keeps running it.
+  `test.yml`, so the nightly keeps running it. Both Test steps pipe the tests through `grep`, so they set `shell: bash`
+  for pipefail: under the default shell the step's status is grep's, which passes once any test has run.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
@@ -38,7 +39,12 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
   build system to ignore inode changes; the restored build then stays incremental. A hit saves compile work but not
   time: `xcodebuild test` boots the simulator while it compiles, so the job's time is the boot, about 110 s, and the
-  tests, about 45 s.
+  tests, about 45 s. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
+  call APPSIZE = B) less the test bundle and Xcode's testing frameworks the test host carries, and fail past 100 MB.
+  That build is Debug for the simulator, one architecture: its debug dylib (16.6 MB on 2026-11-02) outweighs the
+  Release binary (11.2 MB), and the resources are the same bytes in both, so it reads about 6 MB over a Release bundle
+  (27.6 against 21.9). Grown by resources, the guard trips with Release near 94 MB, under the cellular download prompt
+  (assumed 200 MB).
   `.github/workflows/codeql.yml` scans the workflows on every PR to
   `master`, `*.md`-only ones too, in case the `master` ruleset requires code scanning. It scans Swift, which takes
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
@@ -78,7 +84,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `SUPPORT_ADDRESS` and `POLICY_URL` (Jack's, never in a tracked file; `testNoTrackedConfigHoldsAPrivateValue`) set
   Info.plist's `SupportAddress` and `PolicyURL`; in an xcconfig a URL is written `https:/$()/...`, as `//` starts a
   comment. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
-  build's events as Debug. `EDITORS=YES` (or `EDITORS = YES` in `Config/Local.xcconfig` for an Xcode archive) makes the
+  build's events as Debug. `ICLOUD=YES` syncs bests through iCloud (`Sync.swift`), signing with its entitlement, so a
+  device build needs the App ID's iCloud capability; a simulator build without signing builds either way. `EDITORS=YES` (or `EDITORS = YES` in `Config/Local.xcconfig` for an Xcode archive) makes the
   editors' build, for App Store editors on its own TestFlight group (Jack's call F11): it sets the `EDITORS` compilation
   condition (`Build.editors`), and settings shows a labelled switch, "open every tier", that sets `Best.unlocked`, every
   tier, level and pack open, and the version line ends "editors". Any other Release build compiles the switch out
@@ -135,9 +142,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   to 660 px wide for a PR comment unless `FILM_FULL=1`; `FILM_SOUND=1` plays the take's sound and records it from
   BlackHole into the film, with the Mac's output already switched there (`store-media.sh sound`), placed on the
   video's clock by when each recorder started. recordVideo writes a frame only when the screen changes, so a take
-  ending on a still screen ends early: each take's comment tag says how long it really ran (`take 19.520 s`).
-  `scripts/strike.sh <film>` prints the seconds into a take just before its picture strikes, past the home screen and
-  the launch's black.
+  ending on a still screen ends early: each take's comment tag says how long it really ran (`take 19.520 s`). It also
+  gives two frames the same time now and then, after which ffmpeg times the rest of the take by its dts, which step
+  back about a second there (0.99 s in two takes), and `fps=` drops that much: every command that decodes a take
+  reads it with `-fflags +igndts` (`movie=`'s `format_opts`), which a `-c copy` must not take. `scripts/strike.sh
+  <film>` prints the seconds into a take just before its picture strikes, past the home screen and the launch's black.
 - Editors' reel: `scripts/editors-film.sh [--join]` films `scripts/film.sh editors-` (whirlpool 03 and vortex 02 drawn
   clean, maelstrom 01, Lens 03, Escapement 02 and Prism 01, each solved at par by a drawn fingertip; Lens from a warm
   start, a launch first baking its halftone into Caches, R-reel, round 15) and joins them, each from just before its
@@ -148,9 +157,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Store media: `scripts/store-media.sh [screens|preview|social|sound|all] [--cut]` makes the App Store's set (Jack's calls
   ST4 and ST5 = A, `docs/store-page.md`) into `$STORE_OUT` (`shots/store` unless set): the ten `shots.sh store-`
   screenshots, at 1320 x 2868 without alpha and again captioned (`scripts/store-captions.py`, Pillow and the Mac's SF
-  Mono, as this ffmpeg has no drawtext; its look is a draft), the 27.6 s free-game preview at 886 x 1920 and 30 fps with a
-  silent stereo track, its five segments (`store-open-L12`, `store-whirlpool-03`, `rim-swirl`, `rim-seized`,
-  `endless-brim-run`) cut from their strikes and captioned, and plan step 3's social clips, 1080 x 1920 and silent,
+  Mono, as this ffmpeg has no drawtext; its look is a draft), the 25 s free-game preview (Jack's call STOREMEDIA = B,
+  round 16; `STORE_PREVIEW` sets 15.6 to 27.6) at 886 x 1920 and 30 fps with a silent stereo track, its five segments
+  (`store-open-L12`, `store-whirlpool-03`, `rim-swirl`, `rim-seized`, `endless-brim-run`) cut from their strikes and
+  captioned, whirlpool 03 keeping its whole solve and the other four each giving up the same share of the 27.6 s that
+  all five hold, from the end their line names, and plan step 3's social clips, 1080 x 1920 and silent,
   three drawn clean and one with the hand. `sound` films those clips again with the game's sound, switching the
   Mac's output to BlackHole for the takes and back (needs Homebrew's `blackhole-2ch` and `switchaudio-osx`), into
   `<name>-sound.mp4`, aimed at -16 LUFS (one-pass loudnorm lands them near -15). It films with `FILM_FULL=1`; `--cut` reuses what is taken. Apple's limits
@@ -350,7 +361,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   magenta ring and heavy tap, which in every mode mark only a commit that pops one of the scramble's entries (Jack's call SND2 = A, round 16; Escapement's the move's own commit, not its ticks, and the sandbox, with no scramble, never rings); a win the fine pass calls also settles one, as the tank's
   last heal, while one of the scramble's entries is left and unless its move healed one. `Game.nextTank` carries it to
   the next tank. `Game.turnTank` is a move that pushes no entry: turns in a row join, and one netting a whole turn
-  drops. The result card of a tier's last level, and of the solve that opens the next tier wherever it stands (`Game.opened`, read either side of the best's save), goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or, while that tier is closed, as bright behind a lock with how many levels are short of par, opening the menu on that tier's gate. Any solve that isn't clean, but endless's (`Game.offersAgain`), offers "again ↺" on the card, a reset (the glass no longer eased home); on the daily, which counts only its first try's solve, it plays as practice, as a later visit does (`Game.firstTry` goes false, so `counts` saves no best and no streak day, and the caption, card and share line say practice; Jack's call P1 = B, round 13), and every solve that saves a best over an earlier one says how it stands: "new best · was +2" when what the card names improves (`Best.standing`), else "best · par". A best ranks by clean, then over par, never by time, a tie keeping the older (Jack's call C10, round 13); the card shows no time, which only the log keeps. A run carries the best as it began (`Run.best`), so its spill card says "new best" in lime when it beat it. The solve that gives the last of a pack's levels a best, or of maelstrom's, says so under the best line in the card's colour, once (`Game.completed`, read either side of the save: "Lens complete · 25 panels", `Pack.noun`, or "every tier unstirred"; never a pack short of `Pack.planned`), and under it a quiet "try Escapement ›" opens the card of the first pack on the shelf the player doesn't own but the one completed (`Offer.pointer`, `LevelView.onOffer`), none once all are owned (Jack's call C8, round 13). Maelstrom 27's card, the end of the free ladder, says "more puzzles in the packs ›" once (`Best.packsPointed`, set as the card shows it, never by the harness) where no completion's pointer already does, opening the first pack on the shelf the player doesn't own, none once all are (`Offer.ladderEnd`; Jack's call M6, round 14). The solve that opens whirlpool asks for a rating once, 2 s after its card shows (`Review`, `requestReview`; Jack's call C20, round 13), and stores that it has (`Best.reviewAsked`): `RootView` makes the request (`Review.pending`), so a tap off the card within the wait doesn't lose it, and only while the app is in front, waiting again on its return; never in a harnessed launch or the test host, nor in one where a purchase landed on a card (`Store.landed`), which, as that solve comes once, never asks. The daily's card, practice too, says under its buttons when the next daily comes, at the local midnight that ends the card's own daily, read off its id (`Daily.untilNext`: "next daily in 7 h", minutes under an hour, and "next daily is out" once that midnight has passed; VoiceOver hears hours and minutes). `Game.history` holds rod stirs by slot and
+  drops. The result card of a tier's last level, and of the solve that opens the next tier wherever it stands (`Game.opened`, read either side of the best's save), goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or, while that tier is closed, as bright behind a lock with how many levels are short of par, opening the menu on that tier's gate. Any solve that isn't clean, but endless's (`Game.offersAgain`), offers "again ↺" on the card, a reset (the glass no longer eased home); on the daily, which counts only its first try's solve, it plays as practice, as a later visit does (`Game.firstTry` goes false, so `counts` saves no best and no streak day, and the caption, card and share line say practice; Jack's call P1 = B, round 13), and every solve that saves a best over an earlier one says how it stands: "new best · was +2" when what the card names improves (`Best.standing`), else "best · par". A best ranks by clean, then over par, never by time, a tie keeping the older (Jack's call C10, round 13), after a daily's best kept on its day first, over one the archive saved, whatever either's result, so `Daily.run` counts a day played on its day that another time zone or iCloud had already given an archive best (`Best.standing`, the one rank `save`, `Sync.beats` and the card read; the card says nothing of such an archive best, as on a first solve); the card shows no time, which only the log keeps. A run carries the best as it began (`Run.best`), so its spill card says "new best" in lime when it beat it. The solve that gives the last of a pack's levels a best, or of maelstrom's, says so under the best line in the card's colour, once (`Game.completed`, read either side of the save: "Lens complete · 25 panels", `Pack.noun`, or "every tier unstirred"; never a pack short of `Pack.planned`), and under it a quiet "try Escapement ›" opens the card of the first pack on the shelf the player doesn't own but the one completed (`Offer.pointer`, `LevelView.onOffer`), none once all are owned (Jack's call C8, round 13). Maelstrom 27's card, the end of the free ladder, says "more puzzles in the packs ›" once (`Best.packsPointed`, set as the card shows it, never by the harness) where no completion's pointer already does, opening the first pack on the shelf the player doesn't own, none once all are (`Offer.ladderEnd`; Jack's call M6, round 14). The solve that opens whirlpool asks for a rating once, 2 s after its card shows (`Review`, `requestReview`; Jack's call C20, round 13), and stores that it has (`Best.reviewAsked`): `RootView` makes the request (`Review.pending`), so a tap off the card within the wait doesn't lose it, and only while the app is in front, waiting again on its return; never in a harnessed launch or the test host, nor in one where a purchase landed on a card (`Store.landed`), which, as that solve comes once, never asks. The daily's card, practice too, says under its buttons when the next daily comes, at the local midnight that ends the card's own daily, read off its id (`Daily.untilNext`: "next daily in 7 h", minutes under an hour, and "next daily is out" once that midnight has passed; VoiceOver hears hours and minutes). `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It also holds `LevelView` (drag on a knob →
   live twist → `Game.commit` on lift; where the level's motion is the tank, a drag on the rim or a two-finger twist → live tank turn →
   `Game.turnTank`), the `Unstirred` shader modifier and the result card. `LevelView.grab`, a pure function, decides what
@@ -457,7 +468,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
   (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
-  demonstration's commits (Jack's call C3, round 13). A level's note shows at full strength for its first 4 s of play, then at
+  demonstration's commits (Jack's call C3, round 13). A level with a best counts as started for `Game.firstTry`, as
+  iCloud (`Sync`) brings bests to a phone where their levels never started, so a try there is never a first. A level's note shows at full strength for its first 4 s of play, then at
   0.55, as every caption rests. Plughole 01's first open hangs one line under it, at 0.55, pointing at the settings
   ("sound, haptics, colour letters: ⚙ on the menu", `LevelView.pointer`, Jack's call F3, round 14; it fits the SE's
   width with little to spare), and announces it to VoiceOver as the opening ends, when `Best.pointedAtSettings` is
@@ -808,6 +820,26 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   hands over until the menu is calm again, hides the access point, loads what Game Center has, and reports after every
   finish and the first turn of the tank or the swirl. It needs the Game Center capability and entitlement, which
   aren't set up.
+- **Sync.swift** keeps the bests in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16):
+  bests alone, never the undo bank, its anchor or any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO
+  until the App ID has iCloud's key-value storage, as a device build signing with the entitlement fails to provision
+  without it) sets Info.plist's `iCloudSync`, read as `Sync.built`, and picks `CODE_SIGN_ENTITLEMENTS`
+  (`Config/iCloud.entitlements` on YES, none on NO); off, no call reaches the store. On, a plain launch
+  (`Sync.plays`: never the harness or the test host) reconciles as it starts, on every change iCloud sends (an
+  account's change merges the phone's bests into the new account's store, dropping none) and after every best
+  `Game` saves. The store holds one key, `bests` (`Sync.key`, pinned: the store takes 1024 keys, and the dailies add
+  a best a day), a dictionary of level id to the bytes `best.<id>` holds on the phone. `Sync.reconcile` reads only the
+  stored domain, never the harness's registered bests, merges both ways by `Sync.beats` (`Best.standing`, the rank
+  `Best.save` keeps: a daily kept on its day before one the archive saved, so a synced archive solve never moves
+  `Daily.run`, then clean, then over par; a tie keeps the side's own), stores what the phone takes as the store's own bytes and never writes over a store entry it can't
+  read. A best that lands makes no card, sound or report: `Best.load` reads `Sync.revision` where the build syncs, so
+  every view that shows a best draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
+  `ICLOUD` turns YES for a release, as its comment lists: the App ID's capability, a two-device test, and the privacy
+  policy and store page, which say the bests stay on the phone and that sync isn't built. Every build with `ICLOUD`
+  on syncs, the editors' build and `run-ios.sh`'s playtests too, so bests made there with the levels opened
+  (`Best.unlocked`) reach the same Apple ID's App Store install: a tier they par opens there, and an unowned pack's
+  card and cover read its bests (its rows' results, `Pack.tastePlayed`), its rows past the taste staying locked, as
+  `Pack.access` reads ownership.
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`). v1 ships without them: the build's `ANALYTICS`
   (`Config/Unstir.xcconfig`, NO) sets Info.plist's `Analytics`, read as `Analytics.built`, and while it is off a plain
