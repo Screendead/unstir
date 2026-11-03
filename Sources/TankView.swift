@@ -2422,10 +2422,11 @@ struct LevelView: View {
         // A level that turns, or swirls, reaches a finger on the bezel or just beyond it.
         .contentShape(Circle().inset(by: game.level.motion == .none && game.level.layout.swirl == nil ? 0 : -25))
         .gesture(twistGesture(r) { k in room(k).map { (steps: $0, joined: joined(game.slot(of: k))) } })
-        // UNSTIR_LIVE's held turn is held to the track as a finger's is. Not a drag's: a change of pane comes with a
-        // change of pose, which lets the drag go (`letGoOnResize`), and its let-go commits what the track showed.
+        // UNSTIR_LIVE's held turn is held to the track as a finger's is. Not a real finger's (its `path`, which the
+        // harness's seeded touch lacks): a change of pane comes with a change of pose, which lets it go
+        // (`letGoOnResize`), and its let-go commits what the track showed.
         .onChange(of: heldRoom, initial: true) {
-            guard let k = liveRod, let heldRoom, !settling, drag == nil else { return }
+            guard let k = liveRod, let heldRoom, !settling, path == nil else { return }
             liveAngle = Self.lensCapped(liveAngle, joined: joined(game.slot(of: k)), room: heldRoom)
         }
         .onChange(of: holding) { _, now in if !now, let g = drag { cut(g) } }
