@@ -751,11 +751,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Where play splits, a level opens beside the menu (stage 5; Jack's calls D-layout = 3, DUOMENU = B and s5-chrome = B,
   round 16): the tank in the leading half with its chrome round it, the header and title above it and the caption,
   swatches and controls below (`PlayStack.placeRound`), and the menu alone in the trailing half. The glass is as large
-  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape alone, its heights measured on the simulator;
-  the play screen's text is fixed in size, so no type size changes it), the spare room half over the tank and half
-  over the controls: stage 1's 424 pt for every tier's level, Lens's and Prism's read by colour; 9 pt less for
-  Escapement's split-flap ticks and two lines of serif, 5 less for maelstrom's rim lesson under the title, 30 less for
-  Prism's swatches under its colour letters, and endless's 348 as before, so every level of one list takes one glass
+  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape and whether Prism's swatches show, its heights
+  measured on the simulator; the play screen's text is fixed in size, so no type size changes it), the spare room half
+  over the tank and half over the controls: stage 1's 424 pt for every level of plughole, whirlpool and vortex, the
+  daily, Lens, and Prism read by colour; 5 pt less for maelstrom's rim lesson under the title, 9 less for
+  Escapement's split-flap ticks and two lines of serif, 30 less for Prism's swatches under its colour letters, and
+  endless's 348 as before, so every level of one list takes one glass, but Prism's follows its swatches: colour
+  letters or Differentiate Without Colour turned on or off mid-level resizes it by 30 pt and lets go a drag, as a
+  change of pose does
   (`testTheGlassShrinksBesideTheMenuOnlyWhereTheChromeNeedsIt`; every caption fits its two lines there,
   `testEveryCaptionFitsTheChromesTwoLinesBesideTheMenu`). A result or lost card goes over the menu in the trailing
   half, centred on the tank and headed by "unstirred." (`PlayLayout.words` is nil there): still hung from the caption

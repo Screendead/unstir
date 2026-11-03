@@ -35,8 +35,10 @@ struct PlayLayout: Equatable {
         var above: CGFloat = 0
     }
 
-    /// The split's chrome round the tank, in points, from the level's shape alone, so no state resizes the glass. The
-    /// play screen's text is fixed in size, so no type size changes it either; a result or lost card goes over the menu.
+    /// The split's chrome round the tank, in points, from the level's shape and whether Prism's swatches show: colour
+    /// letters or Differentiate Without Colour turned on or off mid-level resizes Prism's glass by 30 pt, letting go a
+    /// drag as a change of pose does. The play screen's text is fixed in size, so no type size changes it; a result or
+    /// lost card goes over the menu.
     /// As measured on the simulator: above, the header's 24 pt (Escapement's split-flap ticks 34) and the title's 36;
     /// below, the caption's 48 (two lines of the paper's serif 50), the swatches' 34 where they show, the column's 12
     /// and the controls' 46.
