@@ -166,6 +166,11 @@ final class PlayLayoutTests: XCTestCase {
         }
     }
 
+    func testTheTabletopsSpacersShareWhatTheChromeLeaves() {
+        XCTAssertEqual(PlayStack.share(624, used: 200, spacers: 2), 212, "centred round the chrome")
+        XCTAssertEqual(PlayStack.share(100, used: 200, spacers: 2), 0, "a tall card: the spacers give way")
+    }
+
     func testTheGlassShrinksBesideTheMenuOnlyWhereTheChromeNeedsIt() {
         func side(_ level: Level, swatches: Bool = false) -> CGFloat {
             layout(window: open.window, insets: open.insets, halo: PlayLayout.Halo(level),

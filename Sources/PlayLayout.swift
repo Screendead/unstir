@@ -257,9 +257,7 @@ struct PlayStack: SwiftUI.Layout {
             case .stage, .menu: break
             }
         }
-        // The column's 12 pt where there is room for it; where there isn't (a tall card, large type), the spacers give
-        // way before the chrome runs past its pane.
-        let gap = max(0, (pane.height - used) / CGFloat(max(spacers, 1)))
+        let gap = Self.share(pane.height, used: used, spacers: spacers)
         var y = pane.minY
         for s in subviews {
             switch s[PlayPart.self] {
@@ -320,6 +318,13 @@ struct PlayStack: SwiftUI.Layout {
 
     /// The column's 12 pt between parts.
     nonisolated static let gap: CGFloat = 12
+
+    /// What each of the tabletop's spacers takes of a pane `height` tall whose chrome needs `used`: the rest shared, so
+    /// the chrome is centred round it; where there is no rest (a tall card, large type), they give way before the
+    /// chrome runs past its pane.
+    nonisolated static func share(_ height: CGFloat, used: CGFloat, spacers: Int) -> CGFloat {
+        max(0, height - used) / CGFloat(max(spacers, 1))
+    }
 }
 
 /// The tank, laid out at its new side at once (its picture, rings and knobs all drawn for it), scaled from the side it
