@@ -487,23 +487,30 @@ extension Game {
     /// Escapement: each of the newest move's ticks, landing as its clock's core starts to turn and its flap falls: a beat
     /// after the lift, then a turn apart. A plain tick is the ratchet's steel; one that pushed is the push, sound and
     /// haptic, as a rod's push sounds nothing but the push (Jack's calls soundsk-pushtick and soundsk-haptic = B, round
-    /// 16). None on a level without clocks.
+    /// 16). None on a level without clocks, nor on a move that finishes the tank, which sounds only as its finish at
+    /// the lift, as the heal that solves sounds as the solve.
     var tickCues: [TickCue] {
-        tick.enumerated().map { i, t in
+        guard !finished else { return [] }
+        return tick.enumerated().map { i, t in
             TickCue(at: LevelView.tickBeat + LevelView.tickTurn * Double(i), sound: t.pushed ? .push : .ratchet,
                     haptic: t.pushed ? .error : .impact(flexibility: .rigid, intensity: 0.9))
         }
     }
 
     /// Plays the newest move's ticks at their times while they stand, handing each to `felt` for its haptic: an undo or
-    /// a reset takes the rest back with the move, and leaving the level cancels the wait.
+    /// a reset takes the rest back with the move, a win the fine pass calls after the lift silences them, and leaving
+    /// the level cancels the wait.
     func soundTicks(_ felt: (TickCue) -> Void) async {
         let lift = ContinuousClock.now
-        for (i, cue) in tickCues.enumerated() {
-            guard (try? await Task.sleep(until: lift + .seconds(cue.at), tolerance: .milliseconds(2))) != nil, i < tick.count
+        var i = 0
+        while i < tickCues.count {
+            guard (try? await Task.sleep(until: lift + .seconds(tickCues[i].at), tolerance: .milliseconds(2))) != nil,
+                  i < tickCues.count
             else { return }
+            let cue = tickCues[i]
             Sound.shared.play(cue.sound)
             felt(cue)
+            i += 1
         }
     }
 }

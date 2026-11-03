@@ -1011,7 +1011,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   16; `ratchet-1` to `-4`, taken in turn as the taps are): each of a move's ticks sounds, with its rigid haptic, as its
   clock's core starts to turn, `tickBeat` after the lift and `tickTurn` apart (`Game.tickCues`), the demonstration's
   too, and a tick that pushed sounds the push in its place, with the error haptic, at its own time, as a rod's push
-  sounds nothing but the push (Jack's calls soundsk-pushtick and soundsk-haptic = B, round 16). One task that leaving
+  sounds nothing but the push (Jack's calls soundsk-pushtick and soundsk-haptic = B, round 16). A move that finishes
+  the tank, solved or out of ticks, sounds only as its finish at the lift, its ticks without sound or haptic, as the heal that
+  solves sounds as the solve. One task that leaving
   the level cancels plays them; an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
   landed before the view appeared, stay silent and still. Beds loop under the menu and each tier (`Level.bed`;
   daily, endless, the sandbox and the packs take plughole's), and a new one crossfades in over the old at equal power
