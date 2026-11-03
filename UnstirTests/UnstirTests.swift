@@ -646,6 +646,8 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, 10), par: true), "best \u{00B7} par")
         XCTAssertEqual(ResultCard.bestLine(was: best(0, clean: true), now: best(3), par: true), "best \u{00B7} clean")
         XCTAssertEqual(ResultCard.bestLine(was: best(0), now: best(0, clean: true), par: false), "new best \u{00B7} was solved")
+        // A daily's first solve on its day over the archive's best, which another time zone or iCloud brought: a first.
+        XCTAssertNil(ResultCard.bestLine(was: Best(over: 0, seconds: 9, clean: true, archived: true), now: best(3), par: true))
     }
 
     /// A faster solve at the same mark keeps the older best, seconds and all; a cleaner one replaces it however slow.
