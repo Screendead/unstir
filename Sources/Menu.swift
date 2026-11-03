@@ -466,6 +466,13 @@ struct MenuView: View {
         .accessibilityHidden(asking)
     }
 
+    /// Beside play a card or the archive starts at the chrome's pane, where the undo capsule's stroke and the title's
+    /// glow lie: its ground runs on over them to the fold, 16 pt from the pane, as far again from the tank's, and a
+    /// point under the card, so the two edges' antialiasing leaves no seam on a fractional pixel.
+    @ViewBuilder private var bleed: some View {
+        if playing != nil { Color.black.frame(width: PlayLayout.margin + 1).offset(x: -PlayLayout.margin) }
+    }
+
     /// A card or the archive lies over the dock: on a phone, beside play and in the tabletop, not beside the split's list.
     private var covering: Bool { (card != nil || archive) && (!layout.splits || playing != nil) }
 
@@ -624,6 +631,7 @@ struct MenuView: View {
                          show(next)
                          cameFrom = (card, next)
                      }, beside: beside)
+                .background(alignment: .leading) { bleed }
                 .id(card)
                 .transition(reduceMotion ? .opacity
                             : beside ? .move(edge: .trailing).combined(with: .opacity)
@@ -638,6 +646,7 @@ struct MenuView: View {
             ArchiveView(days: past.days, today: today, focus: focus?.archived == true ? focus?.id : nil, beside: beside,
                         onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
                         onPlay: { onPick($0) })
+                .background(alignment: .leading) { bleed }
                 .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
                 .zIndex(1)
         }
