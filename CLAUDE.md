@@ -740,8 +740,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   card over the archive keeps the card. With neither open the trailing half is empty. The tabletop's menu is the split
   turned on its side (stage 5, where d4-table left it): the title, strip and list in the upright half, and the dock at
   the foot of the half lying flat, where a card or the archive opens over it, each 16 pt clear of the fold
-  (`MenuLayout.dock`); a level opened in the tabletop covers the menu as on a phone, as only the split plays beside it
-  (`MenuLayout.splits`). The column measures the layout with `onGeometryChange` on today's tree, so
+  (`MenuLayout.dock`); the settings sheet rises no higher than the dock's top, scrolling past it
+  (`SettingsSheet.detents`; not shot, as the harness presents sheets at the simulator's size, and the policy's Safari
+  view and the mail sheet over it are the system's, full height); a level opened in the tabletop covers the menu as on
+  a phone, as only the split plays beside it (`MenuLayout.splits`). The column measures the layout with `onGeometryChange` on today's tree, so
   every iPhone's menu is unchanged, and a change of pose keeps the list's place, and a card's or the archive's: either
   is drawn in one place in the tree in every pose, over the menu or beside the list, so it is moved, not opened again
   (Jack's call d4-pose = B, round 16).
@@ -756,18 +758,29 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   dock (the title and gear wait for the level to close, as the settings do on a phone), drawn over the level
   (`zIndex`) with only its own column black, so the level's ground, Escapement's paper too, shows round it; the dock
   holds still (`PackDock.paused`) and a tier switch cuts to the new list without the stir (`MenuView.go`), so nothing
-  of the menu takes GPU time from the tank. Back closes the level and the list returns to its half. A row, the
-  tagline's next, an archive day or a card's level picked beside play, and a result card's next, leave the playing
-  level through its own way out (`LevelView.switching`: a finger let go, its quit sent and its try saved, as `leave`
-  does), then open in the tank; the playing level's own row opens nothing (`MenuView.opens`, so endless's row never
-  deals a run over the one playing; its new run does). The list follows the playing level (`MenuView.playing`: its
-  tier, its row centred, its hairline at full), and the menu, no longer built anew on each return, reads its rows, run
-  and dailies afresh on `RootView.revision`, bumped by every level opened, left or finished. A pack's card or the
-  archive opens over the whole trailing half, the level's header and controls with it, as a phone's covers the menu
-  (its way out "‹ menu", modal to VoiceOver), the level playing on under it: from the dock, a result card's pointer, a
-  gate (a pack level past the taste leaves the playing level in the tank) or a promoted purchase. A level opened from a
-  card or the archive puts it away while it plays (`RootView.parked`) and brings it back as that level leaves, if its
-  way out names it (`RootView.returns`), as on a phone it waits under the level. A back swipe beside the menu slides
+  of the menu takes GPU time from the tank. Back closes the level and the list returns to its half, the row left lit
+  once however often it is left (`MenuView.followPlaying`, on the level leaving, not on a change of focus). A row, the
+  tagline's next, an archive day or a card's level picked beside play is decided before anything leaves
+  (`RootView.besidePick`): one that opens leaves the playing level through its own way out (`LevelView.switching`: a
+  finger let go, its quit sent and its try saved, as `leave` does), then opens in the tank; a gate's or a withheld
+  level leaves the playing level untouched, sending nothing, the gate's card over the trailing half (before the store
+  has read what the player owns, decided again once it has); the playing level's own row opens nothing and doesn't tap
+  (`MenuView.opens`, so endless's row never deals a run over the one playing; its new run does). A result card's next
+  and up a notch open in place without the switch (`RootView.proceed`), as on a phone, so a cleared tank sends no run's
+  quit. The list follows the playing level (`MenuView.playing`: its tier, switched to without the switch's sound; its
+  row centred, again once the list has glided to a new slot, as a result card shrinks it; its hairline at full and
+  "playing" in place of its rods and par, as the frontier's hairline is lit too), and the menu, no longer built anew
+  on each return, reads its rows, run and dailies afresh on `RootView.revision`, bumped by every level opened, left or
+  finished. A pack's card or the archive opens over the whole trailing half, the level's header and controls with it,
+  its ground running on to the fold over their edges' glow, as a phone's covers the menu (its way out "‹ menu", modal
+  to VoiceOver), the level playing on under it: from the dock, a result card's pointer, a gate or a promoted purchase.
+  A level opened from a card or the archive puts it away while it plays (`RootView.parked`) and brings it back as that
+  level leaves, if its way out names it (`RootView.returns`), as on a phone it waits under the level; one left under a
+  level in another pose is put away as the window becomes a split (the phone opened mid-level), before the menu is
+  drawn there, and waits under the level again if the phone closes. `RootView.slot` goes with the menu beside play, so
+  a later one waits for its level's own. Plughole 01's settings pointer, whose gear is hidden beside play, waits for
+  an opening in another pose or the phone closing (`LevelView.pointAtSettings`), and the consent question for the
+  level to close. A back swipe beside the menu slides
   nothing, as the menu is in sight: past the threshold the level leaves through the dip, as under Reduce Motion.
   VoiceOver hears the level before the menu (`accessibilitySortPriority`; not yet heard on a device).
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
@@ -927,7 +940,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)) in Safari's view
   (`SafariSheet`): Info.plist's `PolicyURL`, Jack's own domain, or the github.com page of `docs/privacy-policy.md` where
   the build has none, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
-  its content outgrows the screen. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
+  its content outgrows the screen, or in the tabletop the half lying flat. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
   bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
@@ -1046,7 +1059,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   settings' log without Mail) are `ShareButton`s, which tap and present the system share sheet themselves over
   whatever is in front (`ShareSheet`), as a ShareLink's tap went unheard on a device (Jack's call SND3 = B, round 16).
   The menu's tier names and rows
-  stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
+  stay plain: `go` plays `switch` once as a switch starts, by tap or drag (never as the list follows a level beside it), and a row taps only when it opens, never as
   a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
   target to 44 pt round it without moving anything. Nothing sounds during a drag, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
   out over the crossfade and back (`Sound.music`), its sounds switch every effect and button (`Sound.sounds`), and its
@@ -1116,7 +1129,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_BACKSWIPE=0.4` holds the level that share of the way into a back swipe, the menu under it, and `=run` plays
   the swipe a second in by a drawn fingertip. `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
   leaves it, saying what opens it. `UNSTIR_PICK=L12` picks that level (a tier's or a pack's, by id) a second and a half
-  in, as its row would, the harness's flags carried over (beside play, the playing level leaves for it). `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
+  in, as its row would, the harness's flags carried over (beside play, the playing level leaves for it), and
+  `UNSTIR_PICK=archive` opens the archive then, as its row does. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
   today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only.
   `UNSTIR_ARCHIVE=1` opens the archive over the menu, `UNSTIR_ARCHIVED=1:c,3:0,6:2,9:t` gives the daily that many days
   back a best from the archive (clean, that many over par) or a try, and `UNSTIR_MODE=archive UNSTIR_DAY=n` opens the

@@ -168,10 +168,12 @@ that leaves `master` shippable: the wide layout only reaches windows wider than 
 
 Where it stands (2026-11-03): stages 2 (#120), 3 (#122) and 4 (#124, with Jack's d-calls) are merged, each after an
 adversarial review and fixes. Stage 5 (the menu beside play, and the tabletop's menu that d4-table left to it) is PR
-#135, its PR test set passing locally (395 tests, 10 skipped), waiting on its eight calls, each recommended as built:
-where the level's header and controls sit beside the menu (the recorded DUOMENU text and the pitch's picture differ),
-the title and gear beside play, a card or the archive while a level plays, Escapement's paper beside the menu, the
-back swipe there, the tabletop's dock and cards, the playing row's mark, and a card's clip beside a playing tank.
+#135, its review's findings fixed, its PR test set passing locally (397 tests, 10 skipped), waiting on its calls,
+each recommended as built: where the level's header and controls sit beside the menu (the recorded DUOMENU text and
+the pitch's picture differ), the title and gear beside play (and plughole 01's settings pointer, held for another
+pose), a card or the archive while a level plays, Escapement's paper beside the menu, the back swipe there, the
+tabletop's dock, cards and settings sheet, the playing row's mark (now "playing" under its title as well as the
+hairline, which the frontier's lit hairline made ambiguous alone), and a card's clip beside a playing tank.
 `FreshDefaults` clears started flags and saved tries but not bests, so a second local test run on one install fails
 three tests (`testResetZeroesMovesButCostsClean`, `testALookIsFree`, `testMarksFollowThePlay`); CI's fresh simulator
 never sees it. Round 16 decided stage 5's placement (DUOMENU = B: the
