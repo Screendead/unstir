@@ -695,6 +695,8 @@ duo-open-upright-menu.png  Duo open and turned upright (669 x 951 pt): today's m
 duo-tabletop-menu.png  Duo tabletop: today's menu, its list running through the fold (unchanged in this stage).
 duo-folding-menu.png  Duo open with Prism's card beside the list, half folded a second in: the list and the card each drew back clear of the fold's band.
 duo-opened-menu.png  Duo closed with Prism's card over the menu, opened a second in: the card moved beside the list, the list where it was.
+duo-opened-card-scrolled.png  Duo closed with Prism's card over the menu scrolled to its specimens, opened a second in: the card beside the list, still on its specimens.
+duo-closed-card-scrolled.png  Duo open with Prism's card beside the list scrolled to its specimens, closed a second in: the card over the menu, still on its specimens.
 duo-opened.png  Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept.
 duo-opened-mid-drag.png  Duo closed with rod 1 held two steps round, opened 1.5 s in: the turn let go as a lift would (moves 1), nothing held.
 duo-folded-to-tabletop.png  Duo upright, folded a second in: the tank glided down into the lower half.

@@ -735,7 +735,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   card (`PackCard.back`; Jack's call d4-menuback = B, round 16). It holds
   one at a time: whichever opens last, from the list, the dock or `RootView`, closes the other, and unfolding with a
   card over the archive keeps the card. With neither open the trailing half is empty. The column measures the layout with `onGeometryChange` on today's tree, so
-  every iPhone's menu is unchanged, and a change of pose keeps the list's place.
+  every iPhone's menu is unchanged, and a change of pose keeps the list's place, and a card's or the archive's: either
+  is drawn in one place in the tree in every pose, over the menu or beside the list, so it is moved, not opened again
+  (Jack's call d4-pose = B, round 16).
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer

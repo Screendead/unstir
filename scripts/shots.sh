@@ -879,6 +879,11 @@ hold=10 shot duo-folding-menu "Duo open with Prism's card beside the list, half 
   "${duo[@]}" THEN=1 THENFOLD=466,0,19,669 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
 hold=5 shot duo-opened-menu "Duo closed with Prism's card over the menu, opened a second in: the card moved beside the list, the list where it was." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
+# A card keeps its scroll through a change of pose (d4-pose = B): the same card, moved, not opened again.
+hold=5 shot duo-opened-card-scrolled "Duo closed with Prism's card over the menu scrolled to its specimens, opened a second in: the card beside the list, still on its specimens." \
+  "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 SCREEN=menu BESTS=plughole:$nine OWNED=prism CARD=prism CARDSCROLL=1 CLOCK=1
+hold=5 shot duo-closed-card-scrolled "Duo open with Prism's card beside the list scrolled to its specimens, closed a second in: the card over the menu, still on its specimens." \
+  "${duo[@]}" THEN=1 THENFRAME=466x678 THENINSETS=0,0,34,84 SCREEN=menu BESTS=plughole:$nine OWNED=prism CARD=prism CARDSCROLL=1 CLOCK=1
 hold=5 shot duo-opened "Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 "${played[@]}"
 hold=4 shot duo-opened-mid-drag "Duo closed with rod 1 held two steps round, opened 1.5 s in: the turn let go as a lift would (moves 1), nothing held." \

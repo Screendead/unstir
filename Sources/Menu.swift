@@ -282,19 +282,19 @@ struct MenuView: View {
         .frame(width: layout.list?.width)
         // Wide, a card or the archive opens beside the list, which stays live.
         .accessibilityHidden(asking || !wide && (card != nil || archive))
-        .overlay { if !wide { archiveView(beside: false) } }
-        .overlay { if !wide { cardView(beside: false) } }
         .frame(maxWidth: wide ? .infinity : nil, alignment: .leading)
+        // Over the menu or beside the list, in one place in the tree, so a card or the archive up as the phone folds or
+        // unfolds keeps its identity and its scroll (Jack's call d4-pose = B, round 16).
         .overlay(alignment: .topLeading) {
-            if let side = layout.side {
-                ZStack {
-                    archiveView(beside: true)
-                    cardView(beside: true)
-                }
-                .frame(width: side.width, height: side.height)
-                .padding(.leading, side.minX)
-                .accessibilityHidden(asking)
+            let side = layout.side
+            ZStack {
+                archiveView(beside: wide)
+                cardView(beside: wide)
             }
+            .frame(width: side?.width, height: side?.height)
+            .frame(maxWidth: wide ? nil : .infinity, maxHeight: wide ? nil : .infinity)
+            .padding(.leading, side?.minX ?? 0)
+            .accessibilityHidden(asking)
         }
         .onGeometryChange(for: MenuLayout.self) {
             MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: fold))
