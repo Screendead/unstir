@@ -1214,6 +1214,8 @@ struct LevelView: View {
     var body: some View {
         screen
             .statusBarHidden(clean)
+            // The Info.plist's dark style draws the status bar white, which paper would swallow.
+            .preferredColorScheme(page.paper ? .light : nil)
             .persistentSystemOverlays(clean ? .hidden : .automatic)
             // The level's edge, over the menu it slides off across: a hairline, as every line over the glass is.
             .overlay(alignment: .leading) {
@@ -1225,8 +1227,7 @@ struct LevelView: View {
             .background { if swiped > 0 { Color.black.opacity(0.4 * (1 - swiped)).ignoresSafeArea() } }
             .overlay(alignment: .leading) {
                 if swipeFinger {
-                    Circle().fill(Color.white.opacity(0.28)).overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 1))
-                        .frame(width: 40, height: 40).offset(x: swiped * width - 12).allowsHitTesting(false)
+                    page.finger(diameter: 40).offset(x: swiped * width - 12).allowsHitTesting(false)
                 }
             }
             .simultaneousGesture(backSwipe)
@@ -1336,7 +1337,7 @@ struct LevelView: View {
 
     private var titleRow: some View {
         HStack(alignment: .firstTextBaseline, spacing: 14) {
-            Text(game.level.label).foregroundStyle(game.level.colour).shadow(color: game.level.colour, radius: 4)
+            Text(game.level.label).foregroundStyle(game.level.colour).shadow(color: page.glow(game.level.colour), radius: 4)
             // Endless's tank beside its name, where it can't read as the brim's count.
             Text(game.level.title + (game.level.run.map { ", tank \($0.tank + 1)" } ?? ""))
         }
@@ -1381,7 +1382,7 @@ struct LevelView: View {
                 // A spill says so over the tank itself.
                 if showResult && game.solved && !clean {
                     Text("unstirred.").font(.mono(22, .semibold))
-                        .shadow(color: .white.opacity(0.5), radius: 6)
+                        .shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
                         .offset(y: -words)
                         .transition(reveal)
                 }
@@ -1394,7 +1395,7 @@ struct LevelView: View {
         Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
              : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
              : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
-            .font(.mono(12)).opacity(captionOpacity)
+            .font(page.caption).opacity(captionOpacity)
             // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does.
             .overlay(alignment: .bottom) {
                 if pointing {
@@ -1518,9 +1519,10 @@ struct LevelView: View {
             }
             .padding(.horizontal, PlayLayout.margin)
         }
-        .foregroundStyle(Color.text)
-        .tint(Color.text)
-        .background(Color.black)
+        .foregroundStyle(page.ink)
+        .tint(page.ink)
+        .background(page.ground)
+        .environment(\.page, page)
         .accessibilityAction(.escape) { leave() }
         .task(id: replays) {
             let opens = replays > 0 || !resumed
@@ -1758,6 +1760,7 @@ struct LevelView: View {
 
     /// An empty bank says when it refills instead.
     private var spent: Bool { !game.level.sandbox && game.bank == 0 }
+    private var page: Page { game.level.page }
 
     private func undo() {
         guard !spent else { return say(Self.refills) }
@@ -1874,7 +1877,7 @@ struct LevelView: View {
         // lets it go on, after 30 s.
         if !struck {
             for _ in 0..<600 where !struck { guard await pause(0.05) else { return } }
-            guard await pause(PictureLayer.strikeLength(calm: reduceMotion || dimFlashing)) else { return }
+            guard await pause(PictureLayer.strikeLength(calm: reduceMotion || dimFlashing || game.level.picture.paper)) else { return }
         }
         if demoDip > 0 { withAnimation(.easeInOut(duration: 1.4)) { demoDip = 0 } }
         if game.level.replay {
@@ -2059,7 +2062,7 @@ struct LevelView: View {
     /// see `badge` change.
     private var refillBadge: some View {
         KeyframeAnimator(initialValue: Self.refillTime, trigger: badge) { s in
-            Text(game.firstRefill ? "+\(badge) undos" : "+\(badge)").font(.mono(13)).foregroundStyle(Color.lime)
+            Text(game.firstRefill ? "+\(badge) undos" : "+\(badge)").font(.mono(13)).foregroundStyle(page.signal(.lime))
                 .opacity(badge > 0 ? Self.refillShown(frozenClock ?? s) : 0)
         } keyframes: { _ in
             MoveKeyframe(0.0)
@@ -2107,8 +2110,8 @@ struct LevelView: View {
     private func control(_ label: String, inset: CGFloat = 22, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label).font(.mono(15)).padding(.horizontal, inset).padding(.vertical, 10)
-                .background(Capsule().fill(Color.white.opacity(0.05)))
-                .overlay(Capsule().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                .background(Capsule().fill((page.paper ? Color.ink : .white).opacity(0.05)))
+                .overlay(Capsule().stroke(page.paper ? Color.ink.opacity(0.3) : .white.opacity(0.18), lineWidth: 1))
                 .hit(3, 0)
         }
     }
@@ -2195,7 +2198,7 @@ struct LevelView: View {
         // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
         // breathes. Under Reduce Motion a live picture and a spill hold still.
         let moving = !reduceMotion && (game.level.picture.isLive || spillAt != nil && brimMoving) || breathing
-        let tickNow = game.tick, clocks = game.level.clocks, playable = shown == nil
+        let tickNow = game.tick, clocks = game.level.clocks, playable = shown == nil, page = page
         return ZStack {
             TimelineView(.animation(minimumInterval: 1.0 / (Power.shared.saving ? 30 : 60), paused: !moving || frozenClock != nil)) { timeline in
                 let murk = spillAt.flatMap { at -> [Float]? in
@@ -2218,7 +2221,7 @@ struct LevelView: View {
                             var u = unstirred
                             // Under Reduce Motion the light swells where it stands instead of running out as a wave.
                             let calm = reduceMotion && frozenWave == nil
-                            u.wave = SIMD3(Float(source.x), Float(source.y), calm ? -1 : Float(frozenWave ?? w))
+                            u.wave = SIMD3(Float(source.x), Float(source.y), calm || page.paper ? -1 : Float(frozenWave ?? w))
                             u.breath = swirlBreath
                             // Escapement: the move's ticks in turn, the one in flight turned part way on the stack it changed.
                             if p < Double(tickNow.count), playable {
@@ -2239,6 +2242,16 @@ struct LevelView: View {
             }
             .clipShape(Circle())
             .opacity((1 - demoDip) * (1 - curtain))
+            if page.paper && !(reduceMotion && frozenWave == nil) {
+                Color.clear.keyframeAnimator(initialValue: -1.0, trigger: game.solved) { v, w in
+                    v.overlay { page.wave(frozenWave ?? w, at: CGPoint(x: r + source.x * r, y: r + source.y * r), r: r) }
+                } keyframes: { _ in
+                    MoveKeyframe(0.0)
+                    LinearKeyframe(1.9, duration: 0.9, timingCurve: .easeOut)
+                }
+                .clipShape(Circle())
+                .allowsHitTesting(false)
+            }
             // The bezel stays: it is the tank's steel, which no touch or state changes, so not interface.
             if clean {
                 Bezel(r: r)
@@ -2252,7 +2265,7 @@ struct LevelView: View {
                     }
                 }
                 if let k = liveRod, shown != nil {
-                    glowRing(.magenta, 2.5, 6, under: .black.opacity(0.7))
+                    glowRing(.magenta, 2.5, 6, under: page.ground.opacity(0.7))
                         .frame(width: 2 * disc(k), height: 2 * disc(k))
                         .position(at(k))
                 }
@@ -2278,7 +2291,7 @@ struct LevelView: View {
                 // Always present, so the first commit on a rod animates rather than inserting a view that never sees its trigger change.
                 // The dial's hairline brightening as the finger lifts. An undo, which has no dial, flashes it too.
                 let fk = flash?.rod ?? 0
-                Circle().stroke(Color.live, lineWidth: Self.hairline)
+                Circle().stroke(page.live, lineWidth: Self.hairline)
                     .frame(width: 2 * disc(fk), height: 2 * disc(fk))
                     .keyframeAnimator(initialValue: 1.0, trigger: game.turns) { ring, t in
                         ring.opacity(t >= 1 ? 0 : 0.9 * (1 - t))
@@ -2395,8 +2408,7 @@ struct LevelView: View {
                     // Turned with the stir it holds, about its pivot, so it rides the same animation round the arc; on a
                     // lens, carried up and down as a finger drives one.
                     let a = ghost.rim ? held ?? 0 : liveAngle
-                    Circle().fill(Color.white.opacity(0.28)).overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 1))
-                        .frame(width: 40, height: 40)
+                    page.finger(diameter: 40)
                         .position(x: r + ghost.at.x * r, y: r + ghost.at.y * r)
                         .frame(width: side, height: side)
                         .rotationEffect(.radians(ghost.lens ? 0 : a), anchor: UnitPoint(x: (ghost.pivot.x + 1) / 2, y: (ghost.pivot.y + 1) / 2))
@@ -2465,8 +2477,8 @@ struct LevelView: View {
     private var tickBudget: some View {
         HStack(alignment: .center, spacing: 8) {
             Text("ticks")
-                .keyframeAnimator(initialValue: 0.0, trigger: game.tickPushes) { text, t in
-                    text.foregroundStyle(t > 0.5 ? Color.alarm : Color.text)
+                .keyframeAnimator(initialValue: 0.0, trigger: game.tickPushes) { [ink = page.ink] text, t in
+                    text.foregroundStyle(t > 0.5 ? Color.alarm : ink)
                 } keyframes: { _ in
                     MoveKeyframe(0.0)
                     LinearKeyframe(0.0, duration: Self.tickBeat)
@@ -2523,12 +2535,12 @@ struct LevelView: View {
                 }
                 .position(c)
             if overdue > 0 && showing {
-                Circle().stroke(Color.vermilion, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
+                Circle().stroke(page.accent, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
                 badge(dir > 0 ? "+\(overdue)" : "\u{2212}\(overdue)").position(Self.badgeSpot(c, size: size, r: r))
                     .transition(.opacity)
             }
             // The clock's disc lights as it ticks, so the eye goes where the tick acts.
-            Circle().stroke(Color.vermilion, lineWidth: Self.hairline)
+            Circle().stroke(page.accent, lineWidth: Self.hairline)
                 .frame(width: 2 * disc, height: 2 * disc)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.tickEvents) { v, t in
                     v.opacity(t >= 1 || !ticked ? 0 : 0.9 * sin(.pi * t))
@@ -2541,7 +2553,7 @@ struct LevelView: View {
                 .position(c)
             // A tap off the plate: a ring through the finger closes on the plate's edge, which flares.
             let plate = Self.ratchetReach * r, from = missed?.k == k ? (missed?.by ?? 0) * r : plate
-            Circle().stroke(Color.live, lineWidth: 1.5)
+            Circle().stroke(page.live, lineWidth: 1.5)
                 .keyframeAnimator(initialValue: 2.0, trigger: misses) { v, t in
                     v.frame(width: 2 * (from + (plate - from) * min(t, 1)), height: 2 * (from + (plate - from) * min(t, 1)))
                         .opacity(missed?.k != k || t >= 2 ? 0 : t < 1 ? 0.5 + 0.4 * t : 0.9 * (2 - t))
@@ -2551,7 +2563,7 @@ struct LevelView: View {
                     LinearKeyframe(2.0, duration: 0.5, timingCurve: .easeOut)
                 }
                 .position(c)
-            Circle().stroke(Color.amber, lineWidth: 2)
+            Circle().stroke(page.stop, lineWidth: 2)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.stops[k] ?? 0) { v, t in
                     // Unseen until the tick that stops it lands, so it goes out with the hub's last flip and its grey.
                     v.frame(width: size + (core - size) * t, height: size + (core - size) * t).opacity(t <= 0 || t >= 1 ? 0 : 0.9 * (1 - t * t))
@@ -2573,10 +2585,10 @@ struct LevelView: View {
 
     private func badge(_ text: String) -> some View {
         Text(text).font(.system(size: 20, weight: .bold, design: .serif))
-            .foregroundStyle(Color.vermilion)
+            .foregroundStyle(page.accent)
             .padding(.horizontal, 7).padding(.vertical, 1)
-            .background(Capsule().fill(Color.black.opacity(0.7)))
-            .overlay(Capsule().stroke(Color.vermilion, lineWidth: 1.5))
+            .background(Capsule().fill(page.paper ? Color.bone.opacity(0.9) : .black.opacity(0.7)))
+            .overlay(Capsule().stroke(page.accent, lineWidth: 1.5))
     }
 
     /// Escapement: "out of ticks." stamped by clock `k`, the one whose tick spent the last of the budget. A tank whose
@@ -2589,12 +2601,12 @@ struct LevelView: View {
         ZStack {
             if stopped && stopLook == .left {
                 let left = game.stack.count
-                Circle().stroke(Color.vermilion, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
+                Circle().stroke(page.accent, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
                 badge("\(left) left").position(x: spot.x + 14 * out, y: spot.y - 14)
             }
             if stopped && stopLook == .rings {
                 ForEach(twisted.indices, id: \.self) { i in
-                    Circle().stroke(Color.vermilion, lineWidth: 2).frame(width: 2 * twisted[i].disc, height: 2 * twisted[i].disc)
+                    Circle().stroke(page.accent, lineWidth: 2).frame(width: 2 * twisted[i].disc, height: 2 * twisted[i].disc)
                         .position(twisted[i].at)
                 }
             }
@@ -2629,11 +2641,11 @@ struct LevelView: View {
         }
         return ZStack {
             Path(ellipseIn: CGRect(x: c.x - radius, y: c.y - radius, width: 2 * radius, height: 2 * radius))
-                .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
+                .stroke(page.live.opacity(0.6), lineWidth: Self.hairline)
             Path { $0.move(to: point(origin, radius)); $0.addLine(to: point(origin, radius - 10)) }
-                .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
-            Path { arc(&$0, origin, now) }.stroke(Color.live.opacity(Self.traceTone), lineWidth: Self.trace)
-            dashes.stroke(Color.live.opacity(Self.dashTone), lineWidth: Self.dash)
+                .stroke(page.live.opacity(0.6), lineWidth: Self.hairline)
+            Path { arc(&$0, origin, now) }.stroke(page.live.opacity(Self.traceTone), lineWidth: Self.trace)
+            dashes.stroke(page.live.opacity(Self.dashTone), lineWidth: Self.dash)
         }
     }
 
@@ -2667,21 +2679,21 @@ struct LevelView: View {
         }
         return ZStack {
             Path(ellipseIn: CGRect(x: c.x - radius, y: c.y - radius, width: 2 * radius, height: 2 * radius))
-                .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
+                .stroke(page.live.opacity(0.6), lineWidth: Self.hairline)
             Path { $0.move(to: CGPoint(x: x, y: y(-reach))); $0.addLine(to: CGPoint(x: x, y: y(reach))) }
-                .stroke(Color.live.opacity(Self.traceTone), lineWidth: Self.hairline)
+                .stroke(page.live.opacity(Self.traceTone), lineWidth: Self.hairline)
             Path { $0.move(to: CGPoint(x: x - 6, y: y(0))); $0.addLine(to: CGPoint(x: x + 6, y: y(0))) }
-                .stroke(Color.live.opacity(0.6), lineWidth: Self.hairline)
+                .stroke(page.live.opacity(0.6), lineWidth: Self.hairline)
             Path { $0.move(to: CGPoint(x: x - 3, y: y(now))); $0.addLine(to: CGPoint(x: x + 3, y: y(now))) }
-                .stroke(Color.live.opacity(Self.dashTone), lineWidth: Self.hairline)
-            dashes.stroke(Color.live.opacity(Self.dashTone), lineWidth: Self.dash)
+                .stroke(page.live.opacity(Self.dashTone), lineWidth: Self.hairline)
+            dashes.stroke(page.live.opacity(Self.dashTone), lineWidth: Self.dash)
         }
     }
 
     private func countLabel(_ steps: Int) -> some View {
-        Text(steps > 0 ? "+\(steps)" : "\u{2212}\(-steps)").font(.mono(13, .semibold)).foregroundStyle(Color.live)
+        Text(steps > 0 ? "+\(steps)" : "\u{2212}\(-steps)").font(.mono(13, .semibold)).foregroundStyle(page.live)
             .padding(.horizontal, 6).padding(.vertical, 2)
-            .background(Capsule().fill(Color.black.opacity(0.6)))
+            .background(Capsule().fill(page.paper ? Color.bone.opacity(0.85) : .black.opacity(0.6)))
     }
 
     /// Room for a count round its centre: half its width at two digits.
@@ -3508,15 +3520,17 @@ struct PictureLayer: View {
                 // The size it had, until a change of pose's bake at the new size lands.
                 Image(uiImage: image).resizable()
             } else {
-                Color.black
+                picture.ground
             }
         }
         .frame(width: side, height: side)
         // Flickers on like a neon tube when the texture lands. Over black, opacity is a colour multiply the shader samples for free.
         // Transparent until then, which over black matches the placeholder and keeps a live picture from showing before the strike.
+        // Ink on paper is printed, not lit: it fades in over the paper, which lies under it inside the layer the shader samples.
         .keyframeAnimator(initialValue: 0.0, trigger: image != nil) { picture, o in picture.opacity(o) } keyframes: { _ in
-            Self.strike(calm: reduceMotion || dimFlashing)
+            Self.strike(calm: reduceMotion || dimFlashing || picture.paper)
         }
+        .background { if picture.paper { Color.bone } }
         .onChange(of: image != nil) { if image != nil { onStrike() } }
         // A live picture bakes nothing: the empty image only strikes the tube, once its data is ready.
         .task(id: [picture.rawValue, "\(seed)", "\(side)", "\(scale)"]) {
@@ -3777,6 +3791,7 @@ struct ResultCard: View {
     let onOffer: (Pack) -> Void
     /// The pack "more puzzles in the packs ›" opens, read as the card appears, which spends its one showing.
     @State private var packs: Pack?
+    @Environment(\.page) private var page
 
     /// What the card says of the level's best: whether this solve beat the one before, by what the card names (clean,
     /// then over par), and nothing on a first solve. Escapement has no par, so its marks are clean and solved.
@@ -3812,27 +3827,27 @@ struct ResultCard: View {
                         // 11), so the ticks say nothing.
                         Text("solved in \(game.moves) moves")
                         if game.clean {
-                            Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
+                            Text("clean").fontWeight(.semibold).foregroundStyle(page.signal(.lime)).shadow(color: page.glow(.lime), radius: 3)
                         } else {
                             Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-                                .foregroundStyle(Color.amber)
+                                .foregroundStyle(page.signal(.amber))
                         }
                     } else {
                         Text("moves \(game.moves) \u{00B7} par \(game.par)")
                         if game.clean {
-                            Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
+                            Text("clean").fontWeight(.semibold).foregroundStyle(page.signal(.lime)).shadow(color: page.glow(.lime), radius: 3)
                         } else if game.over > 0 {
-                            Text("+\(game.over) over par").foregroundStyle(Color.magenta)
+                            Text("+\(game.over) over par").foregroundStyle(page.signal(.magenta))
                         } else {
                             Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-                                .foregroundStyle(Color.amber)
+                                .foregroundStyle(page.signal(.amber))
                         }
                     }
                     if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
                         Text(line).opacity(0.6)
                     }
                     if let done = game.completed {
-                        Text(done.line).fontWeight(.semibold).foregroundStyle(accent).shadow(color: accent, radius: 3)
+                        Text(done.line).fontWeight(.semibold).foregroundStyle(accent).shadow(color: page.glow(accent), radius: 3)
                             .padding(.top, 4)
                     }
                 }
@@ -3862,7 +3877,7 @@ struct ResultCard: View {
                 if let share = game.shareText {
                     ShareLink(item: share) { Text("share \u{2197}").hit() }
                         .shareTap()
-                        .foregroundStyle(Color.amber).shadow(color: .amber, radius: 4)
+                        .foregroundStyle(page.signal(.amber)).shadow(color: page.glow(.amber), radius: 4)
                         .accessibilityLabel("Share result")
                 }
                 if let next {
@@ -3870,7 +3885,7 @@ struct ResultCard: View {
                     let gate = Store.shared.card(for: next)
                     let label = game.spilled ? "new run \u{203A}" : gate.map { "more in \($0.name) \u{203A}" } ?? "next \u{203A}"
                     Button { onNext(next) } label: { Text(label).hit() }
-                        .foregroundStyle(accent).shadow(color: accent, radius: 4)
+                        .foregroundStyle(accent).shadow(color: page.glow(accent), radius: 4)
                         .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
                 }
             }
@@ -3959,12 +3974,13 @@ struct ClockHint: View {
     /// A clock run out: the dashes grey and the wash gone, as its ratchet greys, `lands` seconds after the change.
     var spent = false
     var lands = 0.0
+    @Environment(\.page) private var page
 
     var body: some View {
         ZStack {
-            Circle().fill(RadialGradient(colors: [.clear, Color.vermilion.opacity(spent ? 0 : 0.2)], center: .center,
+            Circle().fill(RadialGradient(colors: [.clear, page.accent.opacity(spent ? 0 : 0.2)], center: .center,
                                          startRadius: 0.55 * radius, endRadius: radius))
-            Circle().stroke(spent ? Color(0x6E7686).opacity(0.5) : Color.vermilion.opacity(0.9),
+            Circle().stroke(spent ? Color(0x6E7686).opacity(0.5) : page.accent.opacity(0.9),
                             style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
         }
         .frame(width: 2 * radius, height: 2 * radius)
@@ -4161,12 +4177,13 @@ enum StopLook: String, Sendable { case stamp, left, rings }
 struct LostStamp: View {
     var size: CGFloat = 76
     @State private var landed = false
+    @Environment(\.page) private var page
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Text("out of ticks.").font(.system(size: size, weight: .bold, design: .serif)).italic().fixedSize()
-            .foregroundStyle(Color.vermilion)
-            .shadow(color: .black.opacity(0.9), radius: 8)
+            .foregroundStyle(page.accent)
+            .shadow(color: page.ground.opacity(0.9), radius: 8)
             .rotationEffect(.degrees(-6))
             .scaleEffect(landed || reduceMotion ? 1 : 1.3)
             .opacity(landed ? 1 : 0)
@@ -4184,6 +4201,7 @@ struct LostCard: View {
     let undo: () -> Void
     let again: () -> Void
     @AccessibilityFocusState private var focused: Bool
+    @Environment(\.page) private var page
 
     var body: some View {
         VStack(spacing: 26) {
@@ -4197,7 +4215,7 @@ struct LostCard: View {
                     .opacity(game.bank == 0 ? 0.35 : 1)
                     .accessibilityLabel("Undo, \(game.bank) left")
                 Button(action: again) { Text("again \u{203A}").hit() }.buttonStyle(Sounding(effect: .reset))
-                    .foregroundStyle(Color.vermilion).shadow(color: .vermilion, radius: 4)
+                    .foregroundStyle(page.accent).shadow(color: page.glow(page.accent), radius: 4)
                     .accessibilityLabel("Try again")
             }
             .font(.mono(15, .medium))

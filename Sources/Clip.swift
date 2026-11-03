@@ -352,23 +352,27 @@ struct ClipTank: View {
         let level = reel.level, layout = level.layout, rods = layout.rods, r = side / 2
         func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
         func disc(_ k: Int) -> CGFloat { min(rods[k].z * r, r - 4) }
-        let core = 2 * Tank.coreRadius * r, hairline: CGFloat = 0.5
+        let core = 2 * Tank.coreRadius * r, hairline: CGFloat = 0.5, page = level.page
         var unstirred = Unstirred(stack: f.stack, layout: layout, lenses: level.lenses, masks: level.masks, liveRod: f.live?.rod,
                                   liveAngle: f.live?.angle ?? 0, side: side, fillEntries: level.picture.fillEntries)
         unstirred.tick = f.tick
-        if let w = f.solved {
-            unstirred.wave = SIMD3(Float(rods[w.rod].x), Float(rods[w.rod].y), Float(1.9 * (1 - pow(1 - min(w.s / 0.9, 1), 2))))
+        let wave = f.solved.map { w in (at: at(w.rod), radius: 1.9 * (1 - pow(1 - min(w.s / 0.9, 1), 2))) }
+        if let w = f.solved, let wave, !page.paper {
+            unstirred.wave = SIMD3(Float(rods[w.rod].x), Float(rods[w.rod].y), Float(wave.radius))
         }
         let ratchet = LevelView.ratchetSize(core)
         return ZStack {
             LevelPicture(level: level, played: f.played, wound: f.wound, side: side, clock: t)
                 .modifier(unstirred)
                 .clipShape(Circle())
+            if let wave, page.paper {
+                Color.clear.overlay { page.wave(wave.radius, at: wave.at, r: r) }.clipShape(Circle())
+            }
             if let e = level.clocks.first?.rod, !f.finished {
                 ClockHint(radius: disc(e)).position(at(e))
             }
             if let fl = f.flash, fl.s < 0.3 {
-                Circle().stroke(Color.live, lineWidth: hairline).frame(width: 2 * disc(fl.rod), height: 2 * disc(fl.rod))
+                Circle().stroke(page.live, lineWidth: hairline).frame(width: 2 * disc(fl.rod), height: 2 * disc(fl.rod))
                     .opacity(0.9 * pow(1 - fl.s / 0.3, 2)).position(at(fl.rod))
             }
             Bezel(r: r)
@@ -398,23 +402,23 @@ struct ClipTank: View {
             if let e = level.clocks.first?.rod {
                 if let s = f.tickLit {
                     let v = s < 0.15 ? 0.25 * s / 0.15 : min(0.25 + 0.75 * (s - 0.15) / 0.6, 1)
-                    Circle().stroke(Color.vermilion, lineWidth: hairline).frame(width: 2 * disc(e), height: 2 * disc(e))
+                    Circle().stroke(page.accent, lineWidth: hairline).frame(width: 2 * disc(e), height: 2 * disc(e))
                         .opacity(v >= 1 ? 0 : 0.9 * sin(.pi * v)).position(at(e))
                 }
                 if let s = f.stop, s > 0.3, s < 1 {
                     let u = 1 - pow(1 - (s - 0.3) / 0.7, 2), coreSize = 2 * Tank.plateau * disc(e), w = ratchet + (coreSize - ratchet) * u
-                    Circle().stroke(Color.amber, lineWidth: 2).frame(width: w, height: w).opacity(0.9 * (1 - u * u)).position(at(e))
+                    Circle().stroke(page.stop, lineWidth: 2).frame(width: w, height: w).opacity(0.9 * (1 - u * u)).position(at(e))
                 }
             }
             if let finger = f.finger {
                 let d = 40 * min(1, side / 360)
-                Circle().fill(Color.white.opacity(0.28)).overlay(Circle().stroke(Color.white.opacity(0.7), lineWidth: 1))
-                    .frame(width: d, height: d)
+                page.finger(diameter: d)
                     .opacity(finger.shown)
                     .position(x: r + finger.at.x * r, y: r + finger.at.y * r)
             }
         }
         .frame(width: side, height: side)
+        .environment(\.page, page)
         .scaleEffect(f.solved.map { 1 + 0.02 * sin(min($0.s / 0.9, 1) * .pi) } ?? 1)
     }
 }

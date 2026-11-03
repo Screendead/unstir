@@ -17,8 +17,10 @@ enum Picture: String, CaseIterable {
     case halftone
     /// Prism's engravings (`Engraving`), a plate a tray, white lines on black, baked.
     case fern, seeds, medusae, radiolaria, nautilus
+    /// Escapement's engine-turned plate, ink on paper, baked.
+    case engineTurned
 
-    var isLive: Bool { ![.grid, .sunset, .city, .halftone].contains(self) && plate == nil }
+    var isLive: Bool { ![.grid, .sunset, .city, .halftone, .engineTurned].contains(self) && plate == nil }
 
     /// Prism's plate, where this is one.
     var plate: Engraving.Plate? { Engraving.Plate(rawValue: rawValue) }
@@ -63,7 +65,7 @@ enum Picture: String, CaseIterable {
     /// microbench); the others are the glass's scaled by their Mac GPU cost against it, not yet confirmed on the phone.
     var fillEntries: Int {
         switch self {
-        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus: 0
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: 0
         case .marbling: 3
         case .glass, .chainmail, .coral, .marblingTwin: 4
         case .neurons, .glassTwin, .chainmailTwin, .coralTwin: 5
@@ -76,7 +78,7 @@ enum Picture: String, CaseIterable {
 
     /// The sandbox's: plughole's pictures, whirlpool's and vortex's, not the twins or the packs'.
     var next: Picture {
-        let all = Self.allCases.filter { $0.sibling == $0 && $0 != .halftone && $0.plate == nil }
+        let all = Self.allCases.filter { $0.sibling == $0 && $0 != .halftone && $0.plate == nil && !$0.paper }
         return all[((all.firstIndex(of: sibling) ?? -1) + 1) % all.count]
     }
 
@@ -110,7 +112,7 @@ enum Picture: String, CaseIterable {
             let n = Int((side * scale).rounded())
             return await Task.detached(priority: .userInitiated) { Self.halftone(n, scale: scale) }.value
         }
-        let r = ImageRenderer(content: Canvas { ctx, size in draw(ctx, r: size.width / 2) }
+        let r = ImageRenderer(content: Canvas { ctx, size in draw(ctx, r: size.width / 2, scale: scale) }
             .frame(width: side, height: side))
         r.scale = scale
         r.isOpaque = true
@@ -196,7 +198,7 @@ enum Picture: String, CaseIterable {
         return c <= 0.0031308 ? 12.92 * c : 1.055 * pow(c, 1 / 2.4) - 0.055
     }
 
-    private func draw(_ ctx: GraphicsContext, r: CGFloat) {
+    private func draw(_ ctx: GraphicsContext, r: CGFloat, scale: CGFloat) {
         func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r + x * r, y: r + y * r) }
         func rect(_ x0: Double, _ y0: Double, _ x1: Double, _ y1: Double) -> Path {
             Path(CGRect(x: r + x0 * r, y: r + y0 * r, width: (x1 - x0) * r, height: (y1 - y0) * r))
@@ -355,6 +357,9 @@ enum Picture: String, CaseIterable {
             neon(ctx, r: r, glows: [(0.006, 0.35)]) { g in
                 for (width, path) in strokes { g.stroke(path, with: .color(.white), style: StrokeStyle(lineWidth: width * r, lineCap: .round, lineJoin: .round)) }
             }
+
+        case .engineTurned:
+            Self.engineTurning(ctx, r: r, scale: scale)
 
         default:
             break

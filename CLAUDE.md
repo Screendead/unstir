@@ -508,6 +508,16 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tank still), and after a reset of a tank with nothing played, which replays the opening: a drawn fingertip
   heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
+  Escapement plays on paper (Jack's call ESC-PAPER = B, round 16; **Page.swift**): `Level.page` is `.book` for its
+  levels alone and `.night`, the play screen's own colours, for every other (`testOnlyEscapementPlaysOnPaper`).
+  `LevelView` puts it in the environment (`page`) and draws from it: the ground, bone (#F3EAD8); ink (#1A1A1A) for the
+  text, the turn's hairlines, dashes and counts, the lift's flash and the drawn fingertip; the plate's vermilion
+  (#D8402A) for the clock's marks, `ClockHint`, `LostStamp`, the +N and the stop ring; no glows; and ink for the cards'
+  lime, amber and magenta words, which don't read on bone. The status bar goes dark (`preferredColorScheme(.light)`),
+  and the caption, the stipulation, is set in a serif (`Page.caption`). The shader is untouched: its solve wave only
+  brightens what is lit, which on bone runs white, so the band is off and an ink ring runs out over it (`Page.wave`).
+  The ratchet's dark plate, steel wheel and split-flap cards stay as they are. The clip and the bundle's cut draw on
+  the same page.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
   25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
@@ -717,7 +727,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and the bundle only once every pack it grants is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
-  draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's grid, the fern; the bundle a wedge of
+  draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's engraved plate, the fern; the bundle a wedge of
   each of its packs', cut from the centre, `testEveryCoverStirsItsClipsLevel`), stirred and unstirred by `Unstirred` on
   the level's dealt stack, an entry at a time (`Unstirred.shares`), on a 7 s loop, each out of step, held as dealt under
   Reduce Motion, at 30 Hz, paused where it stands under a card, the settings sheet or a level a back swipe slides off, while `Power` saves
@@ -923,6 +933,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lines only, so a channel out of register shows as its colour and an aligned line is white
   (`testEveryPlateIsWhiteLinesOnBlack`). Each fills the glass and breaks every rotation a core could fall on, so a step
   moves most of the light in every core of every layout (`testEveryPlateShowsAStepInEveryCore`); the sandbox skips them.
+  Escapement's plate (`Picture.engineTurned`, drawn by `Picture.engineTurning` in Page.swift) is the packs mock-up's
+  engine-turning in ink on bone: ninety straight rays fanned from a point off the glass's lower left, whose cone just
+  holds the glass, over barleycorn, upward chevrons on a 0.08 lattice, with no glow and no concentric figure. Its lines
+  are at least 2.2 px wide, as the shader's four taps average in squared light, which thins dark lines on a light
+  ground. It fades in over paper rather than striking (`Picture.paper`), and the sandbox skips it
+  (`testThePlateIsInkOnBoneAndShowsAStepInEveryCore`).
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
   reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,
