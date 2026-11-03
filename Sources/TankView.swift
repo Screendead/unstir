@@ -377,7 +377,8 @@ final class Game {
     /// A level counts as tried on its first committed move; a look, a touch or a turn let go where it began, is free
     /// (Jack's call C3, round 13).
     private func started() {
-        if !level.sandbox && level.keepsProgress && !demoing { Best.start(level.id, store: storesProgress) }
+        guard !level.sandbox && level.keepsProgress && !demoing else { return }
+        if Best.start(level.id, store: storesProgress) && storesProgress { Sync.shared.saved() }
     }
 
     private func refuse(_ knob: Int) {
@@ -778,7 +779,10 @@ final class Game {
         log("\(solved ? "solved" : lost ? "lost" : "spilled") \(level.id) moves=\(moves) "
             + "\(level.run == nil ? "par=\(par)" : "brim=\(brim)") seconds=\(seconds) counts=\(counts)")
         if let run = level.run {
-            if solved && storesProgress { Best.tanks = max(Best.tanks, run.tank + 1) }
+            if solved && storesProgress {
+                Best.tanks = max(Best.tanks, run.tank + 1)
+                Sync.shared.saved()
+            }
             if spilled && storesProgress { Best.spilled = true }
         } else if solved && counts && level.keepsProgress {
             let up = level.pack == nil ? level.tier.step(1) : nil, shut = up.map { !$0.isOpen() } ?? false

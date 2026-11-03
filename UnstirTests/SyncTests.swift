@@ -6,8 +6,15 @@ import XCTest
 /// The key-value store as a dictionary.
 private final class FakeCloud: Cloud {
     var values: [String: Any] = [:]
-    var writes = 0
-    func dictionary(forKey key: String) -> [String: Any]? { values[key] as? [String: Any] }
+    var writes = 0, reads = 0
+    func dictionary(forKey key: String) -> [String: Any]? {
+        reads += 1
+        return values[key] as? [String: Any]
+    }
+    func object(forKey key: String) -> Any? {
+        reads += 1
+        return values[key]
+    }
     func set(_ value: Any?, forKey key: String) {
         values[key] = value
         writes += 1
@@ -38,8 +45,76 @@ final class SyncTests: XCTestCase {
     }
 
     /// Pinned: a renamed key strands every best already in a player's iCloud.
-    func testTheStoresKeyNeverChanges() {
+    func testTheStoresKeysNeverChange() {
         XCTAssertEqual(Sync.key, "bests")
+        XCTAssertEqual(Sync.tanksKey, "endless")
+        XCTAssertEqual(Best.tanksKey, "endless.tanks")
+        XCTAssertEqual(Sync.triedKey, "tried")
+        XCTAssertEqual(Best.startedPrefix, "started.")
+    }
+
+    /// A level tried anywhere is tried everywhere: the flags merge as a union, and sync never clears one (Jack's call
+    /// icloud-started = A, round 16). A store value this build can't read is left as it was.
+    func testTriedFlagsMergeAsAUnion() {
+        let cloud = FakeCloud()
+        let other = UserDefaults(suiteName: suite + ".other")!
+        defer { UserDefaults().removePersistentDomain(forName: suite + ".other") }
+        defaults.set(true, forKey: "started.L1")
+        defaults.set(true, forKey: "started.lens-2")
+        defaults.set(false, forKey: "started.L9")
+        other.set(true, forKey: "started.L1")
+        other.set(true, forKey: "started.V3")
+
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).sent, 2)
+        XCTAssertEqual(cloud.values[Sync.triedKey] as? [String], ["L1", "lens-2"])
+        let second = Sync.reconcile(cloud, other, domain: suite + ".other")
+        XCTAssertEqual(second.took, 1)
+        XCTAssertEqual(second.sent, 1)
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).took, 1)
+        XCTAssertEqual(cloud.values[Sync.triedKey] as? [String], ["L1", "V3", "lens-2"])
+        for (p, domain) in [(defaults!, suite), (other, suite + ".other")] {
+            for id in ["L1", "V3", "lens-2"] { XCTAssertTrue(p.bool(forKey: "started.\(id)"), "\(domain) \(id)") }
+        }
+        XCTAssertFalse(defaults.bool(forKey: "started.L9"))
+
+        // A store that lost a flag never clears it on the phone, and the next reconcile puts it back.
+        cloud.values[Sync.triedKey] = ["L1"]
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).sent, 2)
+        XCTAssertTrue(defaults.bool(forKey: "started.lens-2"))
+        XCTAssertEqual(cloud.values[Sync.triedKey] as? [String], ["L1", "V3", "lens-2"])
+
+        let writes = cloud.writes
+        let again = Sync.reconcile(cloud, defaults, domain: suite)
+        XCTAssertEqual(again.took + again.sent, 0)
+        XCTAssertEqual(cloud.writes, writes)
+
+        cloud.values[Sync.triedKey] = ["later": true]
+        defaults.set(true, forKey: "started.L4")
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).sent, 0)
+        XCTAssertEqual(cloud.values[Sync.triedKey] as? [String: Bool], ["later": true])
+    }
+
+    /// Endless's best syncs both ways, the higher winning (Jack's call icloud-endless = A, round 16), and a tie or a
+    /// value this build can't read moves nothing.
+    func testEndlessBestTheHigherWins() {
+        let cloud = FakeCloud()
+        defaults.set(4, forKey: Best.tanksKey)
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).sent, 1)
+        XCTAssertEqual(cloud.values[Sync.tanksKey] as? Int, 4)
+
+        cloud.values[Sync.tanksKey] = 9
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).took, 1)
+        XCTAssertEqual(defaults.integer(forKey: Best.tanksKey), 9)
+
+        let writes = cloud.writes
+        let again = Sync.reconcile(cloud, defaults, domain: suite)
+        XCTAssertEqual(again.took + again.sent, 0)
+        XCTAssertEqual(cloud.writes, writes)
+
+        cloud.values[Sync.tanksKey] = "later"
+        defaults.set(12, forKey: Best.tanksKey)
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).sent, 0)
+        XCTAssertEqual(cloud.values[Sync.tanksKey] as? String, "later")
     }
 
     /// Clean, then fewer over par, never time; a tie keeps what the side already holds (Jack's call C10, round 13).
@@ -104,15 +179,20 @@ final class SyncTests: XCTestCase {
         XCTAssertEqual(cloud.writes, writes)
     }
 
-    /// Bests alone go up: never the undo bank, its day or its anchor, nor any other flag the game keeps.
+    /// Bests, endless's best and the tried flags alone go up: never the undo bank, its day or its anchor, nor any other
+    /// flag the game keeps.
     func testOnlyBestsReachTheStore() {
         let cloud = FakeCloud()
         defaults.set(data(Best(over: 0, seconds: 9)), forKey: "best.L1")
-        for key in ["undos.spent", "undos.day", "undos.anchor", "started.L2", "tank.turned", "endless.tanks", "resume.L3"] {
+        defaults.set(3, forKey: Best.tanksKey)
+        for key in ["undos.spent", "undos.day", "undos.anchor", "undos.unseen", "undos.shown", "tank.turned",
+                    "swirled", "endless.spilled", "resume.L3", "review.asked", "tier"] {
             defaults.set(1, forKey: key)
         }
+        defaults.set(true, forKey: "started.L2")
         Sync.reconcile(cloud, defaults, domain: suite)
-        XCTAssertEqual(Array(cloud.values.keys), [Sync.key])
+        XCTAssertEqual(Set(cloud.values.keys), [Sync.key, Sync.tanksKey, Sync.triedKey])
+        XCTAssertEqual(cloud.values[Sync.triedKey] as? [String], ["L2"])
         XCTAssertEqual(Array((cloud.dictionary(forKey: Sync.key) ?? [:]).keys), ["L1"])
     }
 
@@ -139,7 +219,27 @@ final class SyncTests: XCTestCase {
         XCTAssertFalse(Sync.plays(built: true, harnessed: false, env: host), "the test host")
         XCTAssertFalse(Sync.plays(built: true, harnessed: true, env: [:]), "the harness")
         XCTAssertFalse(Sync.plays(built: false, harnessed: false, env: [:]), "a build without sync")
+        XCTAssertFalse(Sync.plays(built: true, editors: true, harnessed: false, env: [:]), "the editors' build")
         XCTAssertFalse(Sync.shared.plays)
+    }
+
+    /// While the developer unlock is on the store is neither read nor written, and the phone takes nothing from it:
+    /// progress made with every level open stays on that phone (Jack's call icloud-editors = A, round 16). Cleared, the
+    /// next reconcile syncs as ever.
+    func testNothingSyncsWhileTheUnlockIsOn() {
+        let cloud = FakeCloud()
+        cloud.values[Sync.key] = ["L2": data(Best(over: 0, seconds: 9))]
+        defaults.set(data(Best(over: 0, seconds: 9)), forKey: "best.L1")
+        defaults.set(true, forKey: Best.unlockKey)
+        let (took, sent) = Sync.reconcile(cloud, defaults, domain: suite)
+        XCTAssertEqual(took + sent, 0)
+        XCTAssertEqual(cloud.reads, 0)
+        XCTAssertEqual(cloud.writes, 0)
+        XCTAssertNil(defaults.data(forKey: "best.L2"))
+
+        defaults.set(false, forKey: Best.unlockKey)
+        XCTAssertEqual(Sync.reconcile(cloud, defaults, domain: suite).took, 1)
+        XCTAssertEqual(Set(cloudBests(cloud).keys), ["L1", "L2"])
     }
 
     /// A best iCloud brought counts as the level started: a later try there is no first try, so it can't be clean, and
