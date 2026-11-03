@@ -233,6 +233,43 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertNil(layout(window: open.window, insets: open.insets).filmFoot)
     }
 
+    func testALensTurnsOnlyAsFarAsItsTrackShowsInThePane() {
+        // The column caps nothing, so a phone's lens drag is as it was.
+        XCTAssertNil(LevelView.trackRoom(knob: 120, bounds: nil))
+        XCTAssertEqual(LevelView.lensCapped(9 * Tank.step, joined: 2, room: nil), 9 * Tank.step)
+        // In a pane, each step's place on the track inside it: 40 pt above the knob holds 2, 100 below holds 6.
+        let room = try! XCTUnwrap(LevelView.trackRoom(knob: 40, bounds: CGRect(x: -20, y: 0, width: 400, height: 140)))
+        XCTAssertEqual(room, -6...2)
+        XCTAssertEqual(LevelView.trackRoom(knob: -10, bounds: CGRect(x: 0, y: 0, width: 400, height: 140)), -9...0)
+        XCTAssertEqual(LevelView.lensCapped(9 * Tank.step, joined: 0, room: room), 2 * Tank.step)
+        XCTAssertEqual(LevelView.lensCapped(-1.3 * Tank.step, joined: 0, room: room), -1.3 * Tank.step)
+        // The track counts the open stir the turn joins as well.
+        XCTAssertEqual(LevelView.lensCapped(9 * Tank.step, joined: 1, room: room), Tank.step)
+        XCTAssertEqual(LevelView.lensCapped(-9 * Tank.step, joined: -4, room: room), -2 * Tank.step)
+        // A stir already past the track, from a wider pose, turns back but no further out.
+        XCTAssertEqual(LevelView.lensCapped(Tank.step, joined: 4, room: room), 0)
+        XCTAssertEqual(LevelView.lensCapped(-3 * Tank.step, joined: 4, room: room), -3 * Tank.step)
+    }
+
+    @MainActor func testEveryLensLevelsUnzoomFitsItsTrackInEveryPose() {
+        // Jack's "why" for the cap (d3-lenscap = B, round 16): no level needs a zoom longer than the pane.
+        let upright = (window: CGSize(width: 669, height: 951), insets: (top: CGFloat(59), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0)))
+        for level in Pack.lens.levels {
+            for (window, insets, fold) in [(open.window, open.insets, nil), (open.window, open.insets, book),
+                                           (upright.window, upright.insets, table)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
+                let l = layout(window: window, insets: insets, fold: fold, halo: PlayLayout.Halo(level))
+                XCTAssertNotEqual(l.kind, .column)
+                let r = l.side / 2
+                for slot in level.lenses {
+                    let net = level.scramble.filter { $0.rod == slot }.reduce(0) { $0 + $1.steps }
+                    let room = try! XCTUnwrap(LevelView.trackRoom(knob: r + level.layout.rods[slot].y * r, bounds: l.bounds))
+                    XCTAssertTrue(room.contains(-net), "\(level.id) lens \(slot) needs \(-net), the pane shows \(room) in \(window)")
+                    XCTAssertTrue(room.contains(-3) && room.contains(3), "\(level.id) lens \(slot): \(room) in \(window)")
+                }
+            }
+        }
+    }
+
     // MARK: The menu (stage 4)
 
     /// As the menu measures the window: its safe area's size, the insets round it and the fold in its own space.

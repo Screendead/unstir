@@ -716,7 +716,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   radius past the rim) and the tank's rim lesson over twelve (`above`, `RimLesson.overRim`), and the glass shrinks to
   hold it: endless's to about 348 pt in the open split and 326 in the tabletop, whose glass sits on its half's foot
   with the room left above it. Counts and a lens's track keep inside the pane too (`PlayLayout.bounds`, the pane in the
-  glass's frame, which `countSpot` and `track` clamp to), and the tabletop's night forwards end their lines at the
+  glass's frame, which `countSpot` and `track` clamp to), and a lens turns only as far as its track shows there
+  (`LevelView.trackRoom`, each step's place on the track inside the pane, counting the open stir the turn joins;
+  `lensCapped`), so what lands is what the track counts: travel past the end is dropped, the finger turning back
+  turns the lens back at once, and every Lens level's unzoom fits in every pose (Jack's call d3-lenscap = B, round
+  16; the column caps nothing). The tabletop's night forwards end their lines at the
   upright half's foot (`filmFoot`); its scenes bake again at a new side, drawn stretched meanwhile, as `SceneLayer`'s
   are. Knurl, clock hints and the out-of-ticks marks lie on the glass and rim already. `PlayStack`'s spacers give way
   before the chrome runs past its pane. `PlayPart.Tagged`'s sort priorities set VoiceOver's order to header, title,
