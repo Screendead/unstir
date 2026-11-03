@@ -49,7 +49,9 @@ import XCTest
     /// Jack's calls soundsk-pushtick and soundsk-haptic = B (round 16): a tick that pushes sounds the push in place of
     /// its ratchet, with the error haptic, at its own time in the move's turn, and the move's other ticks stay steel.
     func testAPushedTickSoundsThePushAtItsOwnTime() throws {
-        let found = Pack.escapement.levels.lazy.compactMap { level -> (Level, Twist)? in
+        let found = Pack.escapement.levels.lazy.compactMap { book -> (Level, Twist)? in
+            var level = book
+            level.id = "test-escapement"
             let working = level.layout.rods.indices.filter { level.kind(of: $0) == .working }
             let moves = working.flatMap { k in (1...11).flatMap { [$0, -$0] }.map { Twist(rod: k, steps: $0) } }
             return moves.first { t in
