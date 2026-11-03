@@ -697,13 +697,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
   `min(width, height - 290) / 1.045`, as on every iPhone; a wider one (the iPhone Duo opened like a book, whatever the
-  portrait lock) splits at the fold, 16 pt clear of it either side: the tank alone, centred, in the leading half, and
-  `LevelView`'s header, title, caption (and the cards hung from it, which the caption stretches to hold there, as
-  `PlayStack` measures no overlay), swatches and controls in the trailing half. The fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
+  portrait lock) splits at the fold, 16 pt clear of it either side: the tank in the leading half with `LevelView`'s
+  header and title above it and its caption, swatches and controls below, and the menu in the trailing half (stage 5,
+  below). The fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
   the phone is folded; compiled in only from an SDK whose SwiftUI is 8.1 or later, as CI's older Xcode lacks it), else
   the window's middle. A tall window folded across (the Duo upright on a table) is the
-  tabletop: the rest in the upright half, the tank filling the half lying flat, and "unstirred." at the upright half's
-  foot (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
+  tabletop: the rest in the upright half (the cards hung from the caption, which stretches to hold them there, as
+  `PlayStack` measures no overlay), the tank filling the half lying flat, and "unstirred." at the upright half's foot
+  (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
   shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1300 px), the size the stack's limits
   were tuned at, so the Duo upright keeps a 433 pt glass. The column is a `VStackLayout` and the split and tabletop
   `PlayStack`, through one `AnyLayout`, so a change of pose keeps every part's identity, the tank's picture, opening,
@@ -747,16 +748,28 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   every iPhone's menu is unchanged, and a change of pose keeps the list's place, and a card's or the archive's: either
   is drawn in one place in the tree in every pose, over the menu or beside the list, so it is moved, not opened again
   (Jack's call d4-pose = B, round 16).
-  Where play splits, a level opens beside the menu (stage 5; Jack's calls D-layout = 3 and DUOMENU = B, round 16): the
-  tank stays where the split puts it, in the leading half at the same glass, and the trailing half holds the level's
-  chrome at its natural height with the menu under it. `LevelView` adds a `PlayPart.menu` part after the controls,
-  which `PlayStack` gives what the chrome leaves (`PlayStack.share`: the spacers keep the column's 12 pt and give way
-  first; controls that are hidden, under a card, a spill or endless, give their room too), and reports its frame in
-  `RootView.space`; `RootView` passes it to `MenuView` as `slot`, and the list glides there from its own half, and back
+  Where play splits, a level opens beside the menu (stage 5; Jack's calls D-layout = 3, DUOMENU = B and s5-chrome = B,
+  round 16): the tank in the leading half with its chrome round it, the header and title above it and the caption,
+  swatches and controls below (`PlayStack.placeRound`), and the menu alone in the trailing half. The glass is as large
+  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape alone, its heights measured on the simulator;
+  the play screen's text is fixed in size, so no type size changes it), the spare room half over the tank and half
+  over the controls: stage 1's 424 pt for every tier's level, Lens's and Prism's read by colour; 9 pt less for
+  Escapement's split-flap ticks and two lines of serif, 5 less for maelstrom's rim lesson under the title, 30 less for
+  Prism's swatches under its colour letters, and endless's 348 as before, so every level of one list takes one glass
+  (`testTheGlassShrinksBesideTheMenuOnlyWhereTheChromeNeedsIt`; every caption fits its two lines there,
+  `testEveryCaptionFitsTheChromesTwoLinesBesideTheMenu`). A result or lost card goes over the menu in the trailing
+  half, centred on the tank and headed by "unstirred." (`PlayLayout.words` is nil there): still hung from the caption
+  and moved there (`LevelView.card`), so a change of pose moves it rather than showing it again. The list fades out
+  under it with the card's reveal, out of touch and VoiceOver (`MenuView.covered`, from `LevelView.onCover` through
+  `RootView.covering`, keyed by the level), and a pack's card that one of its pointers opens lies over it. On
+  Escapement's paper the leading half is bone and the trailing half black from the fold (`LevelView.menuGround`) until
+  a card takes it over on the level's paper. `LevelView` adds a `PlayPart.menu` part, which `PlayStack` places over
+  the trailing half (`PlayLayout.menuPane`) and which reports its frame in `RootView.space`; `RootView` passes it to
+  `MenuView` as `slot`, and the list glides there from its own half, and back
   as the level closes, in one 0.45 s move (none under Reduce Motion; a menu built beside play, on a launch into a level
   or the phone opening, waits unseen for the slot and appears there). Beside play the menu is the tier strip, list and
   dock (the title and gear wait for the level to close, as the settings do on a phone), drawn over the level
-  (`zIndex`) with only its own column black, so the level's ground, Escapement's paper too, shows round it; the dock
+  (`zIndex`) with only its own column black; the dock
   holds still (`PackDock.paused`) and a tier switch cuts to the new list without the stir (`MenuView.go`), so nothing
   of the menu takes GPU time from the tank. Back closes the level and the list returns to its half, the row left lit
   once however often it is left (`MenuView.followPlaying`, on the level leaving, not on a change of focus). A row, the
@@ -768,11 +781,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`MenuView.opens`, so endless's row never deals a run over the one playing; its new run does). A result card's next
   and up a notch open in place without the switch (`RootView.proceed`), as on a phone, so a cleared tank sends no run's
   quit. The list follows the playing level (`MenuView.playing`: its tier, switched to without the switch's sound; its
-  row centred, again once the list has glided to a new slot, as a result card shrinks it; its hairline at full and
+  row centred, again once the list has glided to a new slot, as the phone folds; its hairline at full and
   "playing" in place of its rods and par, as the frontier's hairline is lit too), and the menu, no longer built anew
   on each return, reads its rows, run and dailies afresh on `RootView.revision`, bumped by every level opened, left or
-  finished. A pack's card or the archive opens over the whole trailing half, the level's header and controls with it,
-  its ground running on to the fold over their edges' glow, as a phone's covers the menu (its way out "‹ menu", modal
+  finished. A pack's card or the archive opens over the whole trailing half, its ground running on to the fold, as a
+  phone's covers the menu (its way out "‹ menu", modal
   to VoiceOver), the level playing on under it: from the dock, a result card's pointer, a gate or a promoted purchase.
   A level opened from a card or the archive puts it away while it plays (`RootView.parked`) and brings it back as that
   level leaves, if its way out names it (`RootView.returns`), as on a phone it waits under the level; one left under a

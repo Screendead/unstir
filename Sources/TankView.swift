@@ -1104,10 +1104,12 @@ struct LevelView: View {
     /// A level picked in the menu beside play: this one leaves for it through `onSwitch`, its try saved as leaving saves it.
     let switching: Level?
     let onSwitch: (Level) -> Void
-    /// Where the menu goes beside play, under the chrome, in `RootView.space`.
+    /// Where the menu goes beside play, the trailing half, in `RootView.space`.
     let onMenu: (CGRect) -> Void
     /// The level finished, its best saved: the menu beside it reads its rows afresh.
     let onFinish: () -> Void
+    /// Beside the menu, whether a result or lost card covers it, as the half round the tank has no room for one.
+    let onCover: (Bool) -> Void
     /// The back swipe's touch, by its global start, and what it decided.
     @State private var swipeTouch: (start: CGPoint, call: BackSwipe)?
     /// The same decision as the tank's gesture saw it: once made it holds, though a swipe's later course may no longer
@@ -1135,12 +1137,13 @@ struct LevelView: View {
          onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void, onLook: @escaping (Tier) -> Void,
          onOffer: @escaping (Pack) -> Void, onPeek: @escaping (Bool?) -> Void = { _ in }, besideMenu: Bool = false,
          switching: Level? = nil, onSwitch: @escaping (Level) -> Void = { _ in }, onMenu: @escaping (CGRect) -> Void = { _ in },
-         onFinish: @escaping () -> Void = {}) {
+         onFinish: @escaping () -> Void = {}, onCover: @escaping (Bool) -> Void = { _ in }) {
         self.besideMenu = besideMenu
         self.switching = switching
         self.onSwitch = onSwitch
         self.onMenu = onMenu
         self.onFinish = onFinish
+        self.onCover = onCover
         let game = resumed ?? Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
                                    storesProgress: harness?.harnessed != true, storesResume: storesResume)
         // A save with no line yet, a run's next tank, opens as any tank does.
@@ -1398,7 +1401,7 @@ struct LevelView: View {
 
     /// The tank with what stands over it: the night forwards and "unstirred.". `bounds` is the tank's pane in the glass's
     /// frame, nil in the column; `filmFoot` where the night forwards' lines end, nil under the glass.
-    private func stage(_ side: CGFloat, words: CGFloat, bounds: CGRect?, filmFoot: CGFloat?) -> some View {
+    private func stage(_ side: CGFloat, words: CGFloat?, bounds: CGRect?, filmFoot: CGFloat?) -> some View {
         tank(side, bounds: bounds)
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
@@ -1418,18 +1421,19 @@ struct LevelView: View {
             }
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
-                if showResult && game.solved && !clean {
-                    Text("unstirred.").font(.mono(22, .semibold))
-                        .shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
-                        .offset(y: -words)
-                        .transition(reveal)
+                if showResult && game.solved && !clean, let words {
+                    unstirred.offset(y: -words).transition(reveal)
                 }
             }
     }
 
+    private var unstirred: some View {
+        Text("unstirred.").font(.mono(22, .semibold)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
+    }
+
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
     /// is an overlay, so the solved tank stays exactly where it was played.
-    private var caption: some View {
+    private func caption(_ layout: PlayLayout) -> some View {
         Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
              : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
              : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
@@ -1451,26 +1455,43 @@ struct LevelView: View {
             .padding(.top, 14)
             .accessibilityHidden(showResult || ending)
             .modifier(SkipButton(on: demoing || shown != nil) { skip() })
-            .overlay(alignment: .top) {
-                if showResult && game.lost {
-                    LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
-                        .padding(.top, 14)
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
-                        .transition(reveal)
-                } else if showResult {
-                    ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 14)
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
-                        .transition(reveal)
-                }
-            }
+            .overlay(alignment: .top) { if showResult { card(layout) } }
             .modifier(Unseen(clean))
     }
 
+    /// The result or lost card under the caption; in the split, over the menu in the trailing half, centred on the tank
+    /// and headed by "unstirred.", as the half round the tank has no room for either. One place in the tree in every
+    /// pose, so a change of pose moves the card rather than showing it again.
+    private func card(_ layout: PlayLayout) -> some View {
+        let over = layout.kind == .split ? layout.menuPane : nil
+        return VStack(spacing: 0) {
+            if over != nil && game.solved && !clean { unstirred.padding(.bottom, 26) }
+            if game.lost {
+                LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
+            } else {
+                ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.top, over == nil ? 14 : 0)
+        .frame(width: over?.width)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
+        .offset(over.map { pane in
+            // From the caption's place, under the stage and its ring; a card taller than the pane starts at its top.
+            let top = max(pane.minY, min(layout.stage.midY - cardReach / 2, pane.maxY - cardReach))
+            return CGSize(width: pane.midX - layout.tankPane.midX,
+                          height: top - layout.stage.maxY - layout.halo.ring * layout.side / 2)
+        } ?? .zero)
+        .transition(reveal)
+    }
+
+    /// Only where colour can't carry the read, so for everyone else the read stays by colour.
+    private var swatched: Bool {
+        !game.level.masks.isEmpty && (letters || Letters.shown(system: differentiate) || isolated != nil)
+    }
+
     @ViewBuilder private var swatches: some View {
-        // Only where colour can't carry the read, so for everyone else the read stays by colour.
-        if !game.level.masks.isEmpty, letters || Letters.shown(system: differentiate) || isolated != nil {
+        if swatched {
             ChannelSwatches(isolated: $isolated)
                 .opacity(showResult || ending || shown != nil ? 0 : 1)
                 .allowsHitTesting(!showResult && shown == nil)
@@ -1506,7 +1527,19 @@ struct LevelView: View {
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
     /// window's middle where the window is wide.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold), halo: PlayLayout.Halo(game.level), scale: scale)
+        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold),
+                      halo: PlayLayout.Halo(game.level), chrome: PlayLayout.Chrome(game.level, swatches: swatched), scale: scale)
+    }
+
+    /// Beside the menu the trailing half is the menu's, black from the fold to the window's edge on Escapement's paper
+    /// too, until a result or lost card takes it over on the level's own ground.
+    @ViewBuilder private func menuGround(_ layout: PlayLayout, _ geo: GeometryProxy) -> some View {
+        if besideMenu, page.paper, let menu = layout.menuPane {
+            Color.black.padding(.leading, geo.safeAreaInsets.leading + PlayLayout.margin + (layout.tankPane.maxX + menu.minX) / 2)
+                .opacity(showResult ? 0 : 1)
+                .animation(.easeOut(duration: 0.4).delay(0.3), value: showResult)
+                .ignoresSafeArea()
+        }
     }
 
 
@@ -1523,18 +1556,14 @@ struct LevelView: View {
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
                     .modifier(PlayPart.stage(read: 3))
-                caption
-                    // The card hangs from the caption unmeasured, over the controls it hides. In the split and the
-                    // tabletop the stack must make room for it, or in the tabletop it runs into "unstirred.".
-                    .frame(minHeight: layout.kind == .column || !showResult ? nil : cardReach, alignment: .top)
+                caption(layout)
+                    // The card hangs from the caption unmeasured, over the controls it hides. In the tabletop the stack
+                    // must make room for it, or it runs into "unstirred."; the split's goes over the menu.
+                    .frame(minHeight: layout.kind == .tabletop && showResult ? cardReach : nil, alignment: .top)
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
-                controls
-                    // Beside the menu, controls that are hidden give their room to the list rather than to a gap.
-                    .frame(height: besideMenu && layout.kind == .split && (showResult || ending || game.level.run != nil) ? 0 : nil,
-                           alignment: .top)
-                    .modifier(PlayPart.chrome(read: 0))
+                controls.modifier(PlayPart.chrome(read: 0))
                 if besideMenu && layout.kind == .split {
                     Color.clear.accessibilityHidden(true)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(RootView.space)) } action: { onMenu($0) }
@@ -1554,6 +1583,7 @@ struct LevelView: View {
                 pose = now
             }
             .padding(.horizontal, PlayLayout.margin)
+            .background(alignment: .topLeading) { menuGround(layout, geo) }
         }
         .foregroundStyle(page.ink)
         .tint(page.ink)
@@ -1615,6 +1645,7 @@ struct LevelView: View {
         }
         // The phone closed mid-level: the pointer shows now, as on a phone.
         .onChange(of: besideMenu) { if shown == nil { pointAtSettings() } }
+        .onChange(of: beside && showResult, initial: true) { onCover($1) }
         .task(id: noteLit) {
             guard noteLit, (try? await Task.sleep(for: .seconds(4))) != nil else { return }
             withAnimation(.easeOut(duration: 0.6)) { noteLit = false }

@@ -151,8 +151,10 @@ struct MenuView: View {
     let peeking: Bool
     /// The level playing beside the menu on the open Duo, whose row the list follows; nil anywhere else.
     let playing: Level?
-    /// The room the playing level's chrome leaves for the list, in the menu's space, once the level has laid out.
+    /// The trailing half as the playing level lays it out, the list's beside it, in the menu's space, once it has.
     let slot: CGRect?
+    /// The playing level's result or lost card covers the list beside it: the list goes, the level's card in its place.
+    let covered: Bool
     /// Bumped by every level opened, left or finished: a menu that stays up beside play reads its rows, its run and
     /// its dailies afresh then, as a menu built anew on each return does.
     let revision: Int
@@ -241,10 +243,12 @@ struct MenuView: View {
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
          card: Binding<Offer?>, archive: Binding<Bool> = .constant(false), clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil, run: Resume? = nil,
-         peeking: Bool = false, playing: Level? = nil, slot: CGRect? = nil, revision: Int = 0, onPick: @escaping (Level) -> Void) {
+         peeking: Bool = false, playing: Level? = nil, slot: CGRect? = nil, revision: Int = 0, covered: Bool = false,
+         onPick: @escaping (Level) -> Void) {
         self.start = start
         self.playing = playing
         self.slot = slot
+        self.covered = covered
         self.revision = revision
         self.run = run
         _unplaced = State(initialValue: playing != nil)
@@ -375,8 +379,8 @@ struct MenuView: View {
         // built beside play, it waits for the level's first layout and appears there.
         .onChange(of: playing == nil ? nil : slot, initial: true) { _, slot in
             let glide = !unplaced && !reduceMotion
-            // The slot shrinks as a result card shows, and grows back: the playing row stays in sight. Once the list has
-            // its new size, as a scroll view mid-glide centres on the size it is passing through.
+            // The slot changes as the phone folds or opens further: the playing row stays in sight. Once the list has its
+            // new size, as a scroll view mid-glide centres on the size it is passing through.
             withAnimation(glide ? .smooth(duration: 0.45) : nil) { at = slot } completion: {
                 guard at != nil, let p = playing, listed.levels.contains(where: { $0.id == p.id }) else { return }
                 withAnimation(reduceMotion ? nil : .snappy(duration: 0.4)) { scroller?.scrollTo(p.id, anchor: .center) }
@@ -431,8 +435,8 @@ struct MenuView: View {
         if layout.wide, let start, start != picked { select(start) }
     }
 
-    /// The column where `placed` puts it: a phone's whole screen, the split's leading half, beside play the slot under
-    /// the level's chrome, the tabletop's upright half.
+    /// The column where `placed` puts it: a phone's whole screen, the split's leading half, beside play the trailing
+    /// half, the tabletop's upright half.
     private func placedColumn(asking: Bool) -> some View {
         let wide = layout.wide, placed = self.placed
         // Beside play, or in the tabletop, the list has a height of its own.
@@ -442,9 +446,12 @@ struct MenuView: View {
             // The level's ground lies under the menu beside play.
             .background { if playing != nil { Color.black } }
             .offset(x: placed.list?.minX ?? 0, y: placed.list?.minY ?? 0)
-            .opacity(unplaced ? 0 : 1)
+            // With the level's card, which fades in as it does.
+            .opacity(unplaced || covered ? 0 : 1)
+            .animation(.easeOut(duration: 0.4).delay(0.3), value: covered)
+            .allowsHitTesting(!covered)
             // Wide, a card or the archive opens beside the list, which stays live; beside play it opens over the list.
-            .accessibilityHidden(asking || (!wide || playing != nil) && (card != nil || archive))
+            .accessibilityHidden(asking || covered || (!wide || playing != nil) && (card != nil || archive))
             .frame(maxWidth: wide ? .infinity : nil, maxHeight: sized ? .infinity : nil, alignment: .topLeading)
     }
 
@@ -458,7 +465,7 @@ struct MenuView: View {
     }
 
     /// A pack's card or the archive: over the menu on a phone, beside the list wide, and beside play over the whole
-    /// trailing half, the level's header and controls with it, as a phone's covers the menu.
+    /// trailing half, as a phone's covers the menu.
     private func sheets(asking: Bool) -> some View {
         let wide = layout.wide, side = placed.side
         return ZStack {
@@ -472,9 +479,9 @@ struct MenuView: View {
         .accessibilityHidden(asking)
     }
 
-    /// Beside play a card or the archive starts at the chrome's pane, where the undo capsule's stroke and the title's
-    /// glow lie: its ground runs on over them to the fold, 16 pt from the pane, as far again from the tank's, and a
-    /// point under the card, so the two edges' antialiasing leaves no seam on a fractional pixel.
+    /// Beside play a card or the archive starts 16 pt past the fold, where the level's own ground shows under its
+    /// result card, Escapement's paper too: its ground runs on to the fold, and a point under the card, so the two
+    /// edges' antialiasing leaves no seam on a fractional pixel.
     @ViewBuilder private var bleed: some View {
         if playing != nil { Color.black.frame(width: PlayLayout.margin + 1).offset(x: -PlayLayout.margin) }
     }
@@ -483,7 +490,7 @@ struct MenuView: View {
     private var covering: Bool { (card != nil || archive) && (!layout.splits || playing != nil) }
 
     /// The title, the tier strip and the tier's list over the dock: the whole menu on a phone, its leading half wide.
-    /// Beside play the level's header takes the title's place, and the settings wait for the level to close.
+    /// Beside play the title and gear wait for the level to close, as the settings do on a phone.
     private var column: some View {
         VStack(alignment: .leading, spacing: 0) {
             if playing == nil {

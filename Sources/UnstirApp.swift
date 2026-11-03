@@ -580,19 +580,21 @@ struct RootView: View {
     @State private var resumed: Game?
     /// The menu is drawn under the level while a back swipe slides it off (Jack's call C19, round 13).
     @State private var peeking = false
-    /// The window splits, as the open Duo held like a book does: a level plays beside the menu, the tank in the leading
-    /// half and the menu in the trailing half under the level's header and controls (Jack's calls D-layout = 3 and
-    /// DUOMENU = B, round 16).
+    /// The window splits, as the open Duo held like a book does: a level plays beside the menu, the tank and the level's
+    /// chrome in the leading half and the menu in the trailing half (Jack's calls D-layout = 3, DUOMENU = B and
+    /// s5-chrome = B, round 16).
     @State private var wide = false
-    /// The room the playing level's chrome leaves the menu beside it, in `Self.space`.
+    /// The trailing half as the playing level lays it out, the menu's beside it, in `Self.space`.
     @State private var slot: CGRect?
+    /// The level whose result or lost card covers the menu beside it.
+    @State private var covering: String?
     /// A level picked beside play, which the playing level leaves for through its own way out, saving its try, and
     /// whether the harness carries over to it.
     @State private var switching: Level?
     @State private var keeping = false
     /// Bumped by every level opened, left or finished, so a menu that stays up beside play reads afresh.
     @State private var revision = 0
-    /// The card or the archive a level beside play was opened from, which would cover its header and controls: put
+    /// The card or the archive a level beside play was opened from, which would cover the list following the level: put
     /// away while it plays, and back as it leaves, as on a phone they wait under the level.
     @State private var parked: (card: Offer?, archive: Bool)?
     @Environment(\.harnessFold) private var harnessFold
@@ -685,7 +687,8 @@ struct RootView: View {
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
                              cardScroll: harness?.cardScroll ?? false, focus: focus, held: harness?.lockTap, arrived: arrived,
                              run: Self.save("endless", harnessed: harnessed, harnessSave), peeking: level != nil && !beside,
-                             playing: beside ? level : nil, slot: slot, revision: revision) {
+                             playing: beside ? level : nil, slot: slot, revision: revision,
+                             covered: beside && covering == level?.id) {
                         show($0)
                     }
                     .allowsHitTesting(level == nil || beside)
@@ -714,7 +717,11 @@ struct RootView: View {
                                   proceed(next, keep: keeping)
                               },
                               onMenu: { slot = $0 },
-                              onFinish: { revision += 1 })
+                              onFinish: { revision += 1 },
+                              // Keyed by the level, so a level leaving after the next has shown its card never uncovers it.
+                              onCover: { covers in
+                                  if covers { covering = level.id } else if covering == level.id { covering = nil }
+                              })
                         .id(level)
                         .transition(dip)
                         // Heard before the menu beside it.
@@ -726,8 +733,8 @@ struct RootView: View {
         .onGeometryChange(for: Bool.self) {
             MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: harnessFold)).splits
         } action: { new in
-            // The phone opened mid-level: a card or the archive left under the level would cover its header and
-            // controls beside the menu, so it goes, before the menu is drawn there, until the level leaves.
+            // The phone opened mid-level: a card or the archive left under the level would cover the list beside it, so
+            // it goes, before the menu is drawn there, until the level leaves, as on a phone it waits under the level.
             if new, level != nil, card != nil || archive { park() }
             wide = new
         }
@@ -931,8 +938,8 @@ struct RootView: View {
         return gated || !opens ? .stays : .switches
     }
 
-    /// The card or the archive goes while a level beside the menu plays, as it would cover the level's header and
-    /// controls, to come back as that level leaves.
+    /// The card or the archive goes while a level beside the menu plays, as it would cover the list following the level,
+    /// to come back as that level leaves.
     private func park() {
         parked = (card, archive)
         card = nil
@@ -957,8 +964,8 @@ struct RootView: View {
         revision += 1
         let gate = next.flatMap { Store.shared.card(for: $0) }
         let opens = next.map { Store.shared.opens($0) } ?? true
-        // Beside play a level that doesn't open leaves the playing one where it is: a gate's card opens over the
-        // trailing half, over the playing level's header and controls.
+        // Beside play a level that doesn't open leaves the playing one where it is: a gate's card opens over the menu
+        // in the trailing half.
         let stays = beside && next != nil && (gate != nil || !opens)
         // The gate's note shows on the showing it opens, never again on a return to the card.
         arrived = gate
@@ -986,6 +993,7 @@ struct RootView: View {
             gate == nil && opens ? Self.resume($0, from: Self.save($0.id, harnessed: harnessed, harnessSave), harness: harness,
                                                stores: !harnessed) : nil
         }
+        covering = nil
         // Together, so a menu a back swipe uncovered stays up as the level goes.
         withAnimation(.easeInOut(duration: 0.25)) {
             level = gate == nil && opens ? next : nil
