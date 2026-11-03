@@ -932,7 +932,7 @@ hold=20 shot duo-beside-over-result-closed "Duo open: the same, the card closed 
   "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=plughole:$nine,lens:000000000000000000000000- SHELFDEMO=1 CLOCK=0
 hold=12 shot duo-beside-lens-long "Duo open: Lens 01's top lens held turned nine steps up beside the menu: all nine fit its track, which ends between the title and the rim, clear of both." \
   "${duo[@]}" PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42 OWNED=lens
-hold=12 shot duo-beside-lens-wrong "Duo open: Lens 08's top lens held fourteen steps up, the wrong way, beside the menu: its track and count stop under the title, clear of moves / par." \
+hold=12 shot duo-beside-lens-wrong "Duo open: Lens 08's top lens held fourteen steps up, the wrong way, beside the menu: capped at +9, where its track meets the title, clear of moves / par." \
   "${duo[@]}" PACK=lens LEVEL=8 LIVE=0:+14 TOUCH=0.25,-0.354 OWNED=lens
 hold=10 shot duo-beside-prism-letters "Duo open: Prism 01 read by its colour letters beside the menu: the R G B swatches under the note, the glass 30 pt smaller for them." \
   "${duo[@]}" PACK=prism LEVEL=1 OWNED=prism LETTERS=1 CLOCK=1
