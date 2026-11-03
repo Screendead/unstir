@@ -87,7 +87,6 @@ heal-3 heal 3 4.2 303 -20 yes
 heal-4 heal 4 4.2 304 -20 yes
 heal-5 heal 5 4.2 305 -20 yes
 heal-6 heal 6 4.2 306 -20 yes
-tank tank 0 0.9 400 -21 yes
 seized seized 0 0.2 500 -26 yes
 solve solve 0 3.3 600 -19 no
 spilled spilled 0 4.6 700 -22 no
