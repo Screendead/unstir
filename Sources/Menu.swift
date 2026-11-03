@@ -373,7 +373,12 @@ struct MenuView: View {
         // built beside play, it waits for the level's first layout and appears there.
         .onChange(of: playing == nil ? nil : slot, initial: true) { _, slot in
             let glide = !unplaced && !reduceMotion
-            withAnimation(glide ? .smooth(duration: 0.45) : nil) { at = slot }
+            // The slot shrinks as a result card shows, and grows back: the playing row stays in sight. Once the list has
+            // its new size, as a scroll view mid-glide centres on the size it is passing through.
+            withAnimation(glide ? .smooth(duration: 0.45) : nil) { at = slot } completion: {
+                guard at != nil, let p = playing, listed.levels.contains(where: { $0.id == p.id }) else { return }
+                withAnimation(reduceMotion ? nil : .snappy(duration: 0.4)) { scroller?.scrollTo(p.id, anchor: .center) }
+            }
             if slot != nil { unplaced = false }
         }
         .overlay {
