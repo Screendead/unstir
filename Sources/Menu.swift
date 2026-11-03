@@ -305,8 +305,8 @@ struct MenuView: View {
 
     var body: some View {
         laidOut
-        .modifier(Refreshed(revision: revision, playing: playing?.id, focus: focus?.id, start: start, refresh: refresh,
-                            follow: followPlaying, refocus: refocus, look: look))
+        .modifier(Refreshed(revision: revision, playing: playing?.id, start: start, refresh: refresh, follow: followPlaying,
+                            look: look))
         // Wide, the trailing half holds one at a time, as both stay live there: the one opened last, from the list,
         // the dock or the root (a gate, a promoted purchase), closes the other, which would lie unseen and still read
         // to VoiceOver under it. Unfolding with a card over the archive keeps the card, the one in sight.
@@ -399,9 +399,11 @@ struct MenuView: View {
         saved = run
     }
 
-    /// The playing level's row, and no row lit, so the row left next time lights however often it is left.
+    /// The playing level's row, and no row lit; once it leaves, the row left, lit however often it is left, as a
+    /// focus that stays the same changes nothing.
     private func followPlaying() {
-        if playing != nil { flashing = nil }
+        guard playing != nil else { return refocus() }
+        flashing = nil
         follow(playing)
     }
 
@@ -1002,22 +1004,19 @@ struct MenuView: View {
 }
 
 /// What a menu that stays up between levels follows: `refresh` on each level opened, left or finished, `follow` the
-/// level playing beside it, `refocus` the row left, and `look` a tier a result card points at.
+/// level playing beside it and the row left as it leaves, and `look` a tier a result card points at.
 private struct Refreshed: ViewModifier {
     let revision: Int
     let playing: String?
-    let focus: String?
     let start: Tier?
     let refresh: () -> Void
     let follow: () -> Void
-    let refocus: () -> Void
     let look: () -> Void
 
     func body(content: Content) -> some View {
         content
             .onChange(of: revision) { refresh() }
             .onChange(of: playing) { follow() }
-            .onChange(of: focus) { refocus() }
             .onChange(of: start) { look() }
     }
 }
