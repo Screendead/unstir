@@ -103,7 +103,6 @@ final class Taps {
     @ObservationIgnored private var queued: [String] = []
     @ObservationIgnored private let watch = FrameWatch()
     @ObservationIgnored private var posedAt = -Double.infinity
-    @ObservationIgnored private var hzRead: Int?
     /// UNSTIR_TAPSTALL=ms: a busy main thread for that long every half second of a drag, to show it isn't the GPU's.
     @ObservationIgnored private var stall = 0.0
     /// What a kept budget belongs to: the build, by its number and its executable's timestamp, and the OS.
@@ -157,12 +156,10 @@ final class Taps {
             .map { "\($0.name) \(learnt[$0]!)" }.joined(separator: " ")
     }
 
+    /// Read afresh, so a rate the system caps for a while can't stand for the screen's for the launch.
     private var hz: Int {
-        if let hzRead { return hzRead }
         let screen = UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.screen }.first
-        guard let n = screen?.maximumFramesPerSecond, n > 0 else { return 60 }
-        hzRead = n
-        return n
+        return screen.map(\.maximumFramesPerSecond).flatMap { $0 > 0 ? $0 : nil } ?? 60
     }
 
     private func key(_ pixels: Double) -> TapKey { TapKey(hz: hz, pixels: pixels) }
