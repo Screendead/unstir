@@ -84,7 +84,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `SUPPORT_ADDRESS` and `POLICY_URL` (Jack's, never in a tracked file; `testNoTrackedConfigHoldsAPrivateValue`) set
   Info.plist's `SupportAddress` and `PolicyURL`; in an xcconfig a URL is written `https:/$()/...`, as `//` starts a
   comment. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
-  build's events as Debug. `ICLOUD=YES` syncs bests through iCloud (`Sync.swift`), signing with its entitlement, so a
+  build's events as Debug. `ICLOUD=YES` syncs progress through iCloud (`Sync.swift`), signing with its entitlement, so a
   device build needs the App ID's iCloud capability; a simulator build without signing builds either way. `EDITORS=YES` (or `EDITORS = YES` in `Config/Local.xcconfig` for an Xcode archive) makes the
   editors' build, for App Store editors on its own TestFlight group (Jack's call F11): it sets the `EDITORS` compilation
   condition (`Build.editors`), and settings shows a labelled switch, "open every tier", that sets `Best.unlocked`, every
@@ -431,7 +431,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
   (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: a rod's a selection
   haptic and no sound (Jack's call SND1 = B, round 16: the haptic and the dashes carry the steps), the tank's its clunk,
-  haptic and sound. While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
+  a haptic and no sound either, a two-finger spin's and the lift's last step too (Jack's call snd1-clunk = B, round
+  16). While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
   main actor and the fine pass off it. Under Reduce Motion the opening fades through black (`curtain`, 0.2 s each way)
   in place of the wind-in, a replay level keeping its rod turns, which are the information; the solve swells the
@@ -469,8 +470,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
   (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
-  demonstration's commits (Jack's call C3, round 13). A level with a best counts as started for `Game.firstTry`, as
-  iCloud (`Sync`) brings bests to a phone where their levels never started, so a try there is never a first. A level's note shows at full strength for its first 4 s of play, then at
+  demonstration's commits (Jack's call C3, round 13). A level with a best counts as started for `Game.firstTry`, so a
+  best iCloud (`Sync`) brings without its level's started flag still makes a try there no first. A level's note shows at full strength for its first 4 s of play, then at
   0.55, as every caption rests. Plughole 01's first open hangs one line under it, at 0.55, pointing at the settings
   ("sound, haptics, colour letters: ⚙ on the menu", `LevelView.pointer`, Jack's call F3, round 14; it fits the SE's
   width with little to spare), and announces it to VoiceOver as the opening ends, when `Best.pointedAtSettings` is
@@ -539,7 +540,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   prover, its one key pinned,
   `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
-  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu", or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
+  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
@@ -716,20 +717,37 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   radius past the rim) and the tank's rim lesson over twelve (`above`, `RimLesson.overRim`), and the glass shrinks to
   hold it: endless's to about 348 pt in the open split and 326 in the tabletop, whose glass sits on its half's foot
   with the room left above it. Counts and a lens's track keep inside the pane too (`PlayLayout.bounds`, the pane in the
-  glass's frame, which `countSpot` and `track` clamp to), and the tabletop's night forwards end their lines at the
+  glass's frame, which `countSpot` and `track` clamp to), and a lens turns only as far as its track shows there
+  (`LevelView.trackRoom`, each step's place on the track inside the pane, counting the open stir the turn joins;
+  `lensCapped`), so what lands is what the track counts: travel past the end is dropped, the finger turning back
+  turns the lens back at once, and every Lens level's unzoom fits in every pose (Jack's call d3-lenscap = B, round
+  16; the column caps nothing). As the open stir counts, a lens lifted at its cap zooms further only once a move on
+  another rod or the tank, or an undo, closes that stir; a drag that a change of pose lets go commits what its track
+  showed, uncapped by the new pane. The tabletop's night forwards end their lines at the
   upright half's foot (`filmFoot`); its scenes bake again at a new side, drawn stretched meanwhile, as `SceneLayer`'s
   are. Knurl, clock hints and the out-of-ticks marks lie on the glass and rim already. `PlayStack`'s spacers give way
   before the chrome runs past its pane. `PlayPart.Tagged`'s sort priorities set VoiceOver's order to header, title,
   tank, caption, swatches, controls in every pose (not yet heard; the tabletop's places alone would end with the
   tank). The play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest
-  cards fit each pane.
+  cards fit each pane. The fold is read in one place (`PlayLayout.fold`, the harness's or the system's), for the menu
+  too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule, so the tabletop keeps today's menu: the
+  list, its dock under it as on a phone, in the leading half (about 460 pt on the open Duo, a phone's width), and a
+  pack's card or the archive in the trailing half beside it rather than over it, coming in from the trailing edge,
+  neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4), and the
+  card's way out reads "✕ close" (VoiceOver "Close"), as the menu is in sight, unless it goes back to the bundle's
+  card (`PackCard.back`; Jack's call d4-menuback = B, round 16). It holds
+  one at a time: whichever opens last, from the list, the dock or `RootView`, closes the other, and unfolding with a
+  card over the archive keeps the card. With neither open the trailing half is empty. The column measures the layout with `onGeometryChange` on today's tree, so
+  every iPhone's menu is unchanged, and a change of pose keeps the list's place, and a card's or the archive's: either
+  is drawn in one place in the tree in every pose, over the menu or beside the list, so it is moved, not opened again
+  (Jack's call d4-pose = B, round 16).
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
   unlock where it opens packs (`Archive.opens`). `ArchiveRow` sits under today's daily on the menu: until then a quiet
   lock, "comes with any pack", which a tap shakes and answers as a closed row does, saying "unlocked by purchasing any
   pack" for 2 s (Jack's words, R-arch-lock, round 15), never opening the shelf.
-  `ArchiveView` lies over the menu as a card does, a month to a block on the player's week, each day's number over its
+  `ArchiveView` lies over the menu as a card does (beside the list in a wide window, `MenuLayout`), a month to a block on the player's week, each day's number over its
   result in the menu's words (`Archive.Mark`: clean, par, +n, tried), a list of days at accessibility sizes. A day
   opens `Level.daily(_:archived:)`, the day's own tank under its own id, whose back reads "‹ archive" and returns there
   (`RootView.archive`, `Level.focus(solved:)`), the day ringed once. It plays as any level: its best saves marked
@@ -796,7 +814,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
   and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
   of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
-  reads each cover's state or price and each button's price, hides the menu under a card, and announces a change of
+  reads each cover's state or price and each button's price, hides the menu under a card (beside the list in a wide window it leaves the menu readable), and announces a change of
   state. Reduce Motion holds the covers and clip still, stills the pending dot and fades the card in.
   **Clip.swift** draws each card's clip live, never a committed video (to-do 50): a `Clip` is one or more `Reel`s,
   each a real level played by a drawn fingertip at `UNSTIR_FINGER`'s pace, every move through `Array.commit` and, on a
@@ -832,25 +850,30 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   finish and the first turn of the tank or the swirl. It needs the Game Center capability and entitlement, which
   aren't set up.
 - **Sync.swift** keeps the bests in step with the player's iCloud key-value store (Jack's call ICLOUD = A, round 16):
-  bests alone, never the undo bank, its anchor or any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO
+  bests, endless's best (`Best.tanks`) and the started flags (`Best.started`) (Jack's calls icloud-endless and
+  icloud-started = A, round 16), never the undo bank, its anchor or any other key. The build's `ICLOUD` (`Config/Unstir.xcconfig`, NO
   until the App ID has iCloud's key-value storage, as a device build signing with the entitlement fails to provision
   without it) sets Info.plist's `iCloudSync`, read as `Sync.built`, and picks `CODE_SIGN_ENTITLEMENTS`
   (`Config/iCloud.entitlements` on YES, none on NO); off, no call reaches the store. On, a plain launch
-  (`Sync.plays`: never the harness or the test host) reconciles as it starts, on every change iCloud sends (an
+  (`Sync.plays`: never the harness, the test host or the editors' build) reconciles as it starts, on every change iCloud sends (an
   account's change merges the phone's bests into the new account's store, dropping none) and after every best
-  `Game` saves. The store holds one key, `bests` (`Sync.key`, pinned: the store takes 1024 keys, and the dailies add
-  a best a day), a dictionary of level id to the bytes `best.<id>` holds on the phone. `Sync.reconcile` reads only the
+  `Game` saves, every endless tank cleared and every level's first start. The store holds `bests` (`Sync.key`, pinned: the store takes 1024 keys,
+  and the dailies add a best a day), a dictionary of level id to the bytes `best.<id>` holds on the phone, and
+  `endless` (`Sync.tanksKey`, pinned), the most tanks cleared, which the higher of phone and store sets on both, and
+  `tried` (`Sync.triedKey`, pinned), the ids of every level started on any phone, a union that sync never takes a flag
+  out of, so a level tried anywhere reads tried, and its next try is no first try, everywhere. `Sync.reconcile` reads only the
   stored domain, never the harness's registered bests, merges both ways by `Sync.beats` (`Best.standing`, the rank
   `Best.save` keeps: a daily kept on its day before one the archive saved, so a synced archive solve never moves
-  `Daily.run`, then clean, then over par; a tie keeps the side's own), stores what the phone takes as the store's own bytes and never writes over a store entry it can't
-  read. A best that lands makes no card, sound or report: `Best.load` reads `Sync.revision` where the build syncs, so
-  every view that shows a best draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
+  `Daily.run`, then clean, then over par; a tie keeps the side's own), stores what the phone takes as the store's own bytes and never writes over a store entry or value it
+  can't read. A best that lands makes no card, sound or report: `Best.load`, `Best.tanks` and `Best.started` read
+  `Sync.revision` where the build syncs, so every view that shows a best or tried draws again, and the menu re-derives what it keeps (`daily`, `past`, `leading`). Before
   `ICLOUD` turns YES for a release, as its comment lists: the App ID's capability, a two-device test, and the privacy
-  policy and store page, which say the bests stay on the phone and that sync isn't built. Every build with `ICLOUD`
-  on syncs, the editors' build and `run-ios.sh`'s playtests too, so bests made there with the levels opened
-  (`Best.unlocked`) reach the same Apple ID's App Store install: a tier they par opens there, and an unowned pack's
-  card and cover read its bests (its rows' results, `Pack.tastePlayed`), its rows past the taste staying locked, as
-  `Pack.access` reads ownership.
+  policy and store page, which say the bests stay on the phone and that sync isn't built. The editors' build never
+  syncs, nor does any phone while the developer unlock (`Best.unlocked`) is on: `Sync.reconcile` reads the unlock from
+  the stored domain and then neither reads nor writes the store (Jack's call icloud-editors = A, round 16), so
+  progress made with every level open stays on that phone while it is. Clearing the unlock (`UNSTIR_UNLOCK=0`) syncs
+  again, and the first reconcile then sends what was made under it with the rest. `run-ios.sh`'s playtests without the
+  unlock sync as any build with `ICLOUD` on does.
 - **Analytics.swift** holds anonymous counts for Aptabase (the app key names its region, EU or US), behind `Consent`
   (undecided, yes, no; stored as `analytics.consent`). v1 ships without them: the build's `ANALYTICS`
   (`Config/Unstir.xcconfig`, NO) sets Info.plist's `Analytics`, read as `Analytics.built`, and while it is off a plain
@@ -911,7 +934,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
   round 13): until 01 has a best, the tank's rule as a tagline over the tier's list, with the sandbox under the list;
   then "next: 07 · Sprinkle ›" in the tagline's place, a button opening the shown tier's frontier (none once it has
-  none), and the sandbox over the list. The daily and endless rows show only once open, each marked new, in plain
+  none), and the sandbox over the list. The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
+  rethinking, so that a pack's mechanics join it once the pack is owned), as First Stir is: `Level.playsSandbox` is false
+  in Release, so there the lead has no sandbox (`Lead.sandbox` nil), the menu no row, `Store.opens` refuses it and a
+  harnessed `UNSTIR_MODE=sandbox` opens the menu, while Debug and the harness outside Release keep it, its code, tests and
+  shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
   (`Best.started`) and has no best reads tried, faint, as a pack card's list does (Jack's call C3, round 13; endless
   and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. With a run saved, endless's row
@@ -937,7 +964,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`NSCalendarDayChanged`), so a menu left up overnight opens the new day's. The first level without a best (`Tier.frontier`) keeps its
   hairline lit. A hidden stir in
   the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
-  the list, and the card (`RootView`'s, bound in) lies over the whole menu. The list opens centred, unanimated under
+  the list, and the card (`RootView`'s, bound in) lies over the whole menu, or beside the list in a wide window
+  (`MenuLayout`), as the archive does. The list opens centred, unanimated under
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
   `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
   the first short of par, else the top). The daily, endless and the sandbox leave it at the top. That row's hairline,
@@ -991,8 +1019,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   The menu's tier names and rows
   stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
   a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
-  target to 44 pt round it without moving anything. Nothing sounds during a drag but the
-  tank's clunk, a step at a time, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
+  target to 44 pt round it without moving anything. Nothing sounds during a drag, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
   out over the crossfade and back (`Sound.music`), its sounds switch every effect and button (`Sound.sounds`), and its
   haptics switch `Knock` and every system haptic, which all go through `haptic(_:trigger:when:)`; none of the three is
   read anywhere else. The session is ambient, and while

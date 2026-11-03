@@ -114,7 +114,7 @@ final class Sound: @unchecked Sendable {
     static let shared = Sound()
 
     enum Effect: Equatable, Sendable {
-        case push, tank, seized, solve, spilled, tap, undo, reset, tier
+        case push, seized, solve, spilled, tap, undo, reset, tier
         /// The nth heal since the level opened or was reset.
         case heal(Int)
     }
@@ -283,7 +283,6 @@ final class Sound: @unchecked Sendable {
         let name = switch effect {
         case .tap: "tap-\(taps % 4 + 1)"
         case .push: "push"
-        case .tank: "tank"
         case .seized: "seized"
         case .solve: "solve"
         case .spilled: "spilled"
@@ -307,7 +306,7 @@ final class Sound: @unchecked Sendable {
             let session = AVAudioSession.sharedInstance()
             // Mixes with the player's own music and falls silent with the ring switch.
             try session.setCategory(.ambient)
-            // Short IO buffers, so the tank's clunk lands with its haptic.
+            // Short IO buffers, so an effect lands with its haptic.
             try? session.setPreferredIOBufferDuration(0.005)
             try session.setActive(true)
             try (engine ?? build()).start()

@@ -94,56 +94,6 @@ instr heal
   Out ay, p3
 endin
 
-; ------------------------------------------------------------------ tank
-; One step of the whole tank: a knock, seven damped stone-and-steel modes from 188 to 1905 Hz, a 420 Hz band of rumble
-; on the haptic's own curve (1, 0.5 at 30 ms, 0 at 95 ms), a 92 Hz sub for headphones, saturation, a short room.
-; Three passes, as the sketch scales the rumble, the knock and then the whole body by their peaks.
-gitRum Tab 0.5
-gitKnock Tab 0.5
-gitBody Tab 0.5
-
-instr tank
-  schedule "tank_parts", 0, 0.5
-  schedule "tank_body", 0.5, 0.5
-  schedule "tank_out", 1, p3
-  turnoff
-endin
-
-instr tank_parts
-  acurve linseg 1, 0.03, 0.5, 0.065, 0
-  aph phasor 55
-  agrit = 1 + 0.6 * tablei:a(aph + 2 * poscil:a(1, 13, gisine) / (2 * $M_PI), gisine, 1, 0, 1)
-  anz Noise
-  arum RBJ anz, 2, 420, 0.9
-  Record arum * acurve * agrit, gitRum
-  aknv expon 1, 20 * 0.0015, exp(-20)
-  anz2 Noise
-  aknock RBJ anz2 * aknv, 1, 1200
-  Record aknock, gitKnock
-endin
-
-instr tank_body
-  ay Mode 188, 0.050, 1.0, random:i(0, 2 * $M_PI)
-  ay += Mode(262, 0.040, 0.9, random:i(0, 2 * $M_PI))
-  ay += Mode(347, 0.032, 0.75, random:i(0, 2 * $M_PI))
-  ay += Mode(463, 0.024, 0.6, random:i(0, 2 * $M_PI))
-  ay += Mode(611, 0.018, 0.45, random:i(0, 2 * $M_PI))
-  ay += Mode(789, 0.013, 0.35, random:i(0, 2 * $M_PI))
-  ay += Mode(1905, 0.006, 0.25, random:i(0, 2 * $M_PI))
-  ay += 0.5 * Mode(92, 0.06, 1.0)
-  ay += 1.4 * Play(gitRum) / TabPeak(gitRum)
-  ay += 0.9 * Play(gitKnock) / TabPeak(gitKnock)
-  aenv linseg 1, 0.09, 0.8, 0.05, 0
-  Record ay * aenv, gitBody
-endin
-
-instr tank_out
-  ay = tanh(1.5 * Play(gitBody) / TabPeak(gitBody))
-  aramp cosseg 0, 0.0003, 1
-  ay Room ay * aramp, 0.6, 0.45, 0.25, 0.12
-  Out ay, p3
-endin
-
 ; ------------------------------------------------------------------ seized
 ; A touch on a dead knob: an 11 ms noise burst band-limited to 180-1100 Hz and seven close modes damped in 8 ms.
 gitSeized Tab 0.2

@@ -845,12 +845,45 @@ shot duo-tabletop-lesson "Duo tabletop: maelstrom 01, the tank never turned: the
   "${table[@]}" TIER=maelstrom LEVEL=1 CLOCK=3
 shot duo-tabletop-lesson-count "Duo tabletop: whirlpool 25 with knobs 2 and 5 seized, rod 1 at the top turned +1: its count beside the lesson's arc, both below the fold." \
   "${table[@]}" TIER=whirlpool LEVEL=25 SEIZED=2,5 LIVE=1:+1 TOUCH=0,-0.3 CLOCK=3
-shot duo-tabletop-lens-long "Duo tabletop: Lens 01's top lens dragged up nine steps, past the pane's top: the track's rail, dashes and now mark stop at the pane, clear of the fold." \
+shot duo-tabletop-lens-long "Duo tabletop: Lens 01's top lens held turned nine steps up (UNSTIR_LIVE, a held turn, not a drag), past the pane's top: the lens stops at +7, the last step its track shows inside the pane (d3-lenscap = B), its count and dashes clear of the fold." \
   "${table[@]}" PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42
+hold=25 shot duo-phone-lens-long "A phone, for comparison: the same held turn of nine steps up in the column, which caps nothing, so the lens zooms all nine." \
+  PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42
 shot duo-tabletop-ending "Duo tabletop: the night forwards 1 s in, its lines (the beat, the time, tap to skip) at the foot of the upright half, where unstirred. stands, as the glass fills the lower half." \
   "${table[@]}" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=1.1
 shot duo-tabletop-ladder-end-ax5 "Duo tabletop at the largest accessibility text size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold." \
   "${table[@]}" SCREEN=result TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0 TYPESIZE=accessibility5
+# Stage 4: the menu wide. The list keeps the leading half, its dock under it as on a phone; a pack's card or the archive
+# opens in the trailing half beside it, not over it. A tall window, folded or not, keeps today's menu.
+hold=10 shot duo-open-menu "Duo open: the menu with plughole 01 to 09 at par, the list and its dock at a phone's width in the leading half, the trailing half empty until a card opens." \
+  "${duo[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CLOCK=1
+hold=10 shot duo-open-card "Duo open: Prism's card from the dock, in the trailing half beside the list, which stays live, the dock's covers still turning; its way out reads ✕ close, as the menu is in sight (d4-menuback = B)." \
+  "${duo[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
+hold=10 shot duo-open-card-gate "Duo open: Lens 04 opened past the taste, its card beside the list, scrolled to buying under you've played the free three." \
+  "${duo[@]}" PACK=lens LEVEL=4 BESTS=plughole:$nine,lens:000 OWNED= CLOCK=1
+hold=10 shot duo-open-card-owned "Duo open: Lens owned, its card home beside the list: done 3/25 at par, play 04, the levels." \
+  "${duo[@]}" SCREEN=menu BESTS=plughole:$nine,lens:000 OWNED=lens CARD=lens CLOCK=1
+hold=10 shot duo-open-archive "Duo open: the archive's calendar beside the list, Lens owned." \
+  "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens ARCHIVE=1 ARCHIVED=5:c,6:0,8:2,11:t
+hold=16 shot duo-open-card-over-archive "Duo open: the archive beside the list, Lens's card opened from the dock 4.5 s in and closed again (UNSTIR_SHELFDEMO): the trailing half empty, as the card closed the archive rather than lying over it." \
+  "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens ARCHIVE=1 SHELFDEMO=1
+shot duo-open-mid-switch "Duo open: the menu mid-switch, whirlpool's list unstirring into place inside the leading half (UNSTIR_TIERSPIN)." \
+  "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33 OWNED= CLOCK=1
+hold=10 shot duo-folded-book-menu "Duo half open like a book: the list in the leading half and Escapement's card in the trailing half, each clear of the fold's band." \
+  "${duo[@]}" FOLD=466,0,19,669 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=escapement CLOCK=1
+hold=10 shot duo-open-upright-menu "Duo open and turned upright (669 x 951 pt): today's menu, Prism's card over it, its way out ‹ menu as on a phone." \
+  FRAME=669x951 INSETS=59,0,34,0 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
+hold=10 shot duo-tabletop-menu "Duo tabletop: today's menu, its list running through the fold (unchanged in this stage)." \
+  "${table[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CLOCK=1
+hold=10 shot duo-folding-menu "Duo open with Prism's card beside the list, half folded a second in: the list and the card each drew back clear of the fold's band." \
+  "${duo[@]}" THEN=1 THENFOLD=466,0,19,669 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
+hold=5 shot duo-opened-menu "Duo closed with Prism's card over the menu, opened a second in: the card moved beside the list, the list where it was." \
+  "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
+# A card keeps its scroll through a change of pose (d4-pose = B): the same card, moved, not opened again.
+hold=5 shot duo-opened-card-scrolled "Duo closed with Prism's card over the menu scrolled to its specimens, opened a second in: the card beside the list, still on its specimens." \
+  "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 SCREEN=menu BESTS=plughole:$nine OWNED=prism CARD=prism CARDSCROLL=1 CLOCK=1
+hold=5 shot duo-closed-card-scrolled "Duo open with Prism's card beside the list scrolled to its specimens, closed a second in: the card over the menu, still on its specimens." \
+  "${duo[@]}" THEN=1 THENFRAME=466x678 THENINSETS=0,0,34,84 SCREEN=menu BESTS=plughole:$nine OWNED=prism CARD=prism CARDSCROLL=1 CLOCK=1
 hold=5 shot duo-opened "Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 "${played[@]}"
 hold=4 shot duo-opened-mid-drag "Duo closed with rod 1 held two steps round, opened 1.5 s in: the turn let go as a lift would (moves 1), nothing held." \

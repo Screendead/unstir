@@ -77,8 +77,8 @@ PHONE="highpass=f=250:width_type=q:width=0.50980,highpass=f=250:width_type=q:wid
 PHONE="$PHONE,highpass=f=250:width_type=q:width=0.89998,highpass=f=250:width_type=q:width=2.56292"
 
 # Effects: file, instrument, argument, seconds rendered, seed, loudest momentary loudness (LUFS), tail trimmed. The
-# order of loudness is the first sketch's (solve, heal, tank, spilled, push, seized), 4 LU down; the new ones sit
-# among them, the tap under the heal.
+# order of loudness is the first sketch's (solve, heal, spilled, push, seized), 4 LU down; the new ones sit among
+# them, the tap under the heal.
 EFFECTS="
 push push 0 0.9 200 -23 yes
 heal-1 heal 1 4.2 301 -20 yes
@@ -87,7 +87,6 @@ heal-3 heal 3 4.2 303 -20 yes
 heal-4 heal 4 4.2 304 -20 yes
 heal-5 heal 5 4.2 305 -20 yes
 heal-6 heal 6 4.2 306 -20 yes
-tank tank 0 0.9 400 -21 yes
 seized seized 0 0.2 500 -26 yes
 solve solve 0 3.3 600 -19 no
 spilled spilled 0 4.6 700 -22 no

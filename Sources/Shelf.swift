@@ -192,8 +192,10 @@ extension Store {
     /// The pack whose card a level shows instead of playing: one past its taste that the player doesn't own.
     func card(for level: Level) -> Pack? { access(level) == .needsCard ? level.pack : nil }
 
-    /// A level this build may open: any outside a pack, and a pack's that the build sells.
-    func opens(_ level: Level) -> Bool { access(level) != .withheld }
+    /// A level this build may open: any outside a pack but a sandbox it withholds, and a pack's that the build sells.
+    func opens(_ level: Level, release: Bool = Build.release) -> Bool {
+        (!level.sandbox || Level.playsSandbox(release: release)) && access(level, release: release) != .withheld
+    }
 }
 
 extension Store {
@@ -441,11 +443,13 @@ struct PackCard: View {
     /// Opened by a level past the taste: it opens on buying, under a line that says the free levels are played.
     var arrived = false
     /// Where back goes: the menu, or Complete's card when this card was opened from it.
-    var backTo = "menu"
+    var backTo = PackCard.menu
     let onBack: () -> Void
     let onPlay: (Level) -> Void
     /// Complete's card opens a pack's card from its name.
     var onOffer: (Offer) -> Void = { _ in }
+    /// Beside the menu's list in a wide window, not over it, so VoiceOver reaches both.
+    var beside = false
     var store = Store.shared
     @State private var buying = false
     /// The focused row's hairline, lit once as the card opens on it.
@@ -466,10 +470,11 @@ struct PackCard: View {
         // buying too (Jack's call C1B = A, round 16).
         VStack(alignment: .leading, spacing: 0) {
             // Padded below by all of hit()'s reach, as the scroll, laid over it, would take the rest of its target.
-            Button(action: onBack) { Text("\u{2039} \(backTo)").font(.mono(.subheadline, .medium)).hit() }
+            let back = Self.back(to: backTo, beside: beside)
+            Button(action: onBack) { Text(back.text).font(.mono(.subheadline, .medium)).hit() }
                 .buttonStyle(Sounding()).padding(.top, 18).padding(.bottom, 14).opacity(0.8)
                 .padding(.horizontal, 24)
-                .accessibilityLabel("Back")
+                .accessibilityLabel(back.spoken)
             GeometryReader { g in
                 ScrollViewReader { reader in
                     ScrollView {
@@ -577,7 +582,7 @@ struct PackCard: View {
         }
         .foregroundStyle(Color.text)
         .background(Color.black.ignoresSafeArea())
-        .accessibilityAddTraits(.isModal)
+        .accessibilityAddTraits(beside ? [] : .isModal)
         .accessibilityAction(.escape, onBack)
         .task { await store.fetchPrices() }
         // A promoted purchase buys as the card's buy does, once the launch knows what the player owns.
@@ -612,6 +617,14 @@ struct PackCard: View {
             }
         }
         .haptic(.success, trigger: landings)
+    }
+
+    static let menu = "menu"
+
+    /// The way out's words and VoiceOver's. Beside the list the menu is already in sight, so going back to it closes
+    /// the card (Jack's call d4-menuback = B, round 16); back to Complete's card reads as ever.
+    static func back(to: String, beside: Bool) -> (text: String, spoken: String) {
+        beside && to == menu ? ("\u{2715} close", "Close") : ("\u{2039} \(to)", "Back")
     }
 
     private struct Reading: Equatable {

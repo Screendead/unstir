@@ -144,10 +144,10 @@ final class Store {
     var bought: Bool { (harness ?? ledger).bought }
 
     /// Nil for a level in no pack. A pack's level whose id names no number of that pack needs the card.
-    func access(_ level: Level) -> Pack.Access? {
+    func access(_ level: Level, release: Bool = Build.release) -> Pack.Access? {
         guard let pack = level.pack else { return nil }
         guard let number = pack.number(of: level.id) else { return .needsCard }
-        return pack.access(number, owned: ledger.owned, harness: harness?.owned ?? [])
+        return pack.access(number, owned: ledger.owned, harness: harness?.owned ?? [], release: release)
     }
 
     func price(_ id: String) -> String? { prices[id] }

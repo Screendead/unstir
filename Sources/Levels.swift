@@ -349,6 +349,10 @@ struct Level: Hashable, Sendable {
     static let sandbox = Level(id: "sandbox", label: "box", title: "Sandbox", note: "Stir anything. Undo is free here.",
                                layout: .tri, scramble: [])
 
+    /// Out of v1 until it offers what the packs a player owns add (Jack's call snd2-sandbox, round 16): a Release build
+    /// neither lists nor opens it, while Debug and the harness outside Release keep it.
+    static func playsSandbox(release: Bool = Build.release) -> Bool { !release }
+
     /// The triangle is hand-written: every rod overlaps, so the generator's ordered sizes overshoot there.
     private static let generated: [Layout] = [.quad, .eye, .pent, .hex]
 
@@ -478,13 +482,21 @@ struct Best: Codable {
 
     /// Set by the first committed move: a look, a touch or a turn let go where it began, is free (Jack's call C3, round
     /// 13). Unstored, the harness's, it lasts only this launch.
-    static func started(_ id: String) -> Bool { UserDefaults.standard.bool(forKey: "started.\(id)") }
-    static func start(_ id: String, store: Bool = true) {
-        guard !started(id) else { return }
-        if store { UserDefaults.standard.set(true, forKey: "started.\(id)") } else {
-            UserDefaults.standard.register(defaults: ["started.\(id)": true])
-        }
+    static func started(_ id: String) -> Bool {
+        // Read so a row that shows tried draws again when iCloud brings the flag (`Sync.revision`).
+        if Sync.built { _ = Sync.revision.count }
+        return UserDefaults.standard.bool(forKey: startedPrefix + id)
     }
+    /// Whether this call set the flag.
+    @discardableResult
+    static func start(_ id: String, store: Bool = true) -> Bool {
+        guard !started(id) else { return false }
+        if store { UserDefaults.standard.set(true, forKey: startedPrefix + id) } else {
+            UserDefaults.standard.register(defaults: [startedPrefix + id: true])
+        }
+        return true
+    }
+    static let startedPrefix = "started."
 
     /// Banked undos, shared by every level and mode: 10 to start, and `refill` adds 2 a day played, up to 10. Stored as
     /// the number spent, so a fresh install reads 10.
@@ -617,9 +629,10 @@ struct Best: Codable {
     /// The developer unlock, set by a launch with UNSTIR_UNLOCK=1 and cleared by one with UNSTIR_UNLOCK=0: every tier
     /// and every level open.
     static var unlocked: Bool {
-        get { UserDefaults.standard.bool(forKey: "unlock") }
-        set { UserDefaults.standard.set(newValue, forKey: "unlock") }
+        get { UserDefaults.standard.bool(forKey: unlockKey) }
+        set { UserDefaults.standard.set(newValue, forKey: unlockKey) }
     }
+    static let unlockKey = "unlock"
 
     /// Set once a turn of the tank commits, on any level: the rim then stops showing how.
     static var tankTurned: Bool {
@@ -635,9 +648,14 @@ struct Best: Codable {
 
     /// Endless: most tanks cleared in one run.
     static var tanks: Int {
-        get { UserDefaults.standard.integer(forKey: "endless.tanks") }
-        set { UserDefaults.standard.set(newValue, forKey: "endless.tanks") }
+        get {
+            // Read so the endless row draws again when iCloud brings a higher one (`Sync.revision`).
+            if Sync.built { _ = Sync.revision.count }
+            return UserDefaults.standard.integer(forKey: tanksKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: tanksKey) }
     }
+    static let tanksKey = "endless.tanks"
 
     /// Set once an endless run spills: Over the Lip's, which nothing else records.
     static var spilled: Bool {

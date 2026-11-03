@@ -193,6 +193,10 @@ struct MenuView: View {
     @State private var cameFrom: (back: Offer, card: Offer)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
+    /// UNSTIR_FOLD's fold, in the harness window's points.
+    @Environment(\.harnessFold) private var harnessFold
+    /// Where the list goes, and a card or the archive, from the window as last measured.
+    @State private var layout = MenuLayout.column
     /// When the daily row was dealt: a menu left up past midnight, or coming back to the front, deals the new day's.
     @State private var today: Date
     /// Today's daily and its run, worked out once a day rather than on every frame of a swipe. The menu is built anew
@@ -253,13 +257,20 @@ struct MenuView: View {
         }
     }
 
+    /// Where the sandbox's row sits against the tier's list.
+    enum Place { case over, under }
+
     /// What the menu leads with (Jack's call C4, round 13). `modes`: the daily and endless, which draw on every layout, so
-    /// they open, and show, after the first hex level. `sandboxFirst`: plughole 01 has a best, so the sandbox is over the
-    /// list, not under it, and in the tagline's place `next` opens the tier's frontier, if it has one.
-    typealias Lead = (modes: Bool, sandboxFirst: Bool, next: Level?)
-    static func lead(tier: Tier, unlocked: Bool = Best.unlocked, best: (String) -> Best? = Best.load) -> Lead {
+    /// they open, and show, after the first hex level. `played`: plughole 01 has a best, so in the tagline's place `next`
+    /// opens the tier's frontier, if it has one, and the sandbox moves from under the list to over it; a build that
+    /// withholds the sandbox has none (`Level.playsSandbox`).
+    typealias Lead = (modes: Bool, played: Bool, sandbox: Place?, next: Level?)
+    static func lead(tier: Tier, unlocked: Bool = Best.unlocked, release: Bool = Build.release,
+                     best: (String) -> Best? = Best.load) -> Lead {
         let played = best(Level.plughole[0].id) != nil
-        return (unlocked || best(Level.plughole[22].id) != nil, played, played ? tier.frontier(unlocked: unlocked, best) : nil)
+        return (unlocked || best(Level.plughole[22].id) != nil, played,
+                Level.playsSandbox(release: release) ? played ? .over : .under : nil,
+                played ? tier.frontier(unlocked: unlocked, best) : nil)
     }
 
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
@@ -273,48 +284,28 @@ struct MenuView: View {
         let analytics = Analytics.shared
         // The menu waits for the question's answer, for VoiceOver too.
         let asking = analytics.asks && analytics.consent == .undecided
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .center) {
-                title.simultaneousGesture(swipe)
-                Spacer(minLength: 8)
-                Button { settings = true } label: {
-                    Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
-                }
-                .buttonStyle(Sounding()).opacity(0.5)
-                .accessibilityLabel("Settings")
+        let wide = layout.wide, fold = harnessFold
+        column
+        .frame(width: layout.list?.width)
+        // Wide, a card or the archive opens beside the list, which stays live.
+        .accessibilityHidden(asking || !wide && (card != nil || archive))
+        .frame(maxWidth: wide ? .infinity : nil, alignment: .leading)
+        // Over the menu or beside the list, in one place in the tree, so a card or the archive up as the phone folds or
+        // unfolds keeps its identity and its scroll (Jack's call d4-pose = B, round 16).
+        .overlay(alignment: .topLeading) {
+            let side = layout.side
+            ZStack {
+                archiveView(beside: wide)
+                cardView(beside: wide)
             }
-            .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
-            // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
-            tiers.padding(.top, 6).scrollDisabled(true).simultaneousGesture(swipe)
-            ScrollViewReader { proxy in
-                ScrollView { rows(leading) }
-                .onAppear {
-                    scroller = proxy
-                    arrive()
-                }
-            }
-            // Once a drag is taken as sideways, the list stops scrolling under the stir.
-            .scrollDisabled(sideways == true)
-            .overlay(alignment: .topLeading) { twisted }
-            .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
-            .simultaneousGesture(swipe)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !Offer.shelf().isEmpty && PackDock.shown() {
-                    // Held still under a card, the settings or a level sliding off, when the phone saves power, or
-                    // once nobody touches it.
-                    PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: card != nil || archive || settings || peeking || Power.shared.saving || Power.shared.idle,
-                             covered: card != nil || archive || settings)
-                        .equatable()
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
-                }
-            }
+            .frame(width: side?.width, height: side?.height)
+            .frame(maxWidth: wide ? nil : .infinity, maxHeight: wide ? nil : .infinity)
+            .padding(.leading, side?.minX ?? 0)
+            .accessibilityHidden(asking)
         }
-        .foregroundStyle(Color.text)
-        .accessibilityHidden(card != nil || archive || asking)
-        .overlay { archiveView }
-        .overlay { cardView }
+        .onGeometryChange(for: MenuLayout.self) {
+            MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: fold))
+        } action: { layout = $0 }
         .overlay {
             if asking { ConsentCard(tier: shown).transition(.opacity) }
         }
@@ -323,6 +314,12 @@ struct MenuView: View {
             window = $0
         }
         .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
+        // Wide, the trailing half holds one at a time, as both stay live there: the one opened last, from the list,
+        // the dock or the root (a gate, a promoted purchase), closes the other, which would lie unseen and still read
+        // to VoiceOver under it. Unfolding with a card over the archive keeps the card, the one in sight.
+        .onChange(of: card) { if layout.wide, card != nil, archive { withAnimation(.snappy(duration: 0.42)) { archive = false } } }
+        .onChange(of: archive) { if layout.wide, archive, card != nil { show(nil) } }
+        .onChange(of: layout.wide) { if layout.wide, card != nil, archive { archive = false } }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
         .onChange(of: card == nil && !archive && !settings) { Power.shared.touched() }
         // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
@@ -359,8 +356,52 @@ struct MenuView: View {
         .task { if shelfDemo { await shelfTour() } }
     }
 
-    /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox over them once
-    /// plughole 01 has a best.
+    /// The title, the tier strip and the tier's list over the dock: the whole menu on a phone, its leading half wide.
+    private var column: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center) {
+                title.simultaneousGesture(swipe)
+                Spacer(minLength: 8)
+                Button { settings = true } label: {
+                    Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(Sounding()).opacity(0.5)
+                .accessibilityLabel("Settings")
+            }
+            .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
+            // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
+            tiers.padding(.top, 6).scrollDisabled(true).simultaneousGesture(swipe)
+            ScrollViewReader { proxy in
+                ScrollView { rows(leading) }
+                .onAppear {
+                    scroller = proxy
+                    arrive()
+                }
+            }
+            // Once a drag is taken as sideways, the list stops scrolling under the stir.
+            .scrollDisabled(sideways == true)
+            .overlay(alignment: .topLeading) { twisted }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
+            .simultaneousGesture(swipe)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !Offer.shelf().isEmpty && PackDock.shown() {
+                    // Held still under a card, the settings or a level sliding off, when the phone saves power, or
+                    // once nobody touches it. A card or the archive beside the list leaves it in sight and live.
+                    let over = !layout.wide && (card != nil || archive)
+                    PackDock(open: { show($0, from: $1) }, held: clock,
+                             paused: over || settings || peeking || Power.shared.saving || Power.shared.idle,
+                             covered: over || settings)
+                        .equatable()
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
+                }
+            }
+        }
+        .foregroundStyle(Color.text)
+    }
+
+    /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox, where the build has
+    /// it, over them once plughole 01 has a best.
     private func rows(_ lead: Lead) -> some View {
         let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                                pick: pick, refuse: refuse)
@@ -389,9 +430,9 @@ struct MenuView: View {
                             if kept != nil { newRun }
                         }
                 }
-                if lead.sandboxFirst { sandbox }
+                if lead.sandbox == .over { sandbox }
             }
-            .padding(.top, lead.modes || lead.sandboxFirst ? 22 : 8)
+            .padding(.top, lead.modes || lead.sandbox == .over ? 22 : 8)
             TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held).equatable()
                 .overlay(alignment: .topLeading) {
                     Color.clear.frame(width: 1, height: mark?.height ?? 1).id(Self.mark)
@@ -407,7 +448,7 @@ struct MenuView: View {
                     list = $0
                     arrive()
                 }
-            if !lead.sandboxFirst { sandbox.padding(.top, 14) }
+            if lead.sandbox == .under { sandbox.padding(.top, 14) }
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 28)
@@ -427,7 +468,7 @@ struct MenuView: View {
             // Plain: `pick` taps, as a row does.
             .buttonStyle(.plain)
             .accessibilityLabel(Spoken.next(next))
-        } else if !lead.sandboxFirst {
+        } else if !lead.played {
             Text("Every stir in this tank has an exact inverse.").font(.mono(13)).opacity(0.55)
         } else {
             // A line's height still, so a tier swap to or from one with a frontier moves nothing below it.
@@ -435,26 +476,29 @@ struct MenuView: View {
         }
     }
 
-    /// The card grows out of its cover, or fades in under Reduce Motion.
-    @ViewBuilder private var cardView: some View {
+    /// The card grows out of its cover, or fades in under Reduce Motion; `beside` the list, it comes in from the
+    /// trailing edge, as the archive does.
+    @ViewBuilder private func cardView(beside: Bool) -> some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
                      focus: cardFocus, arrived: card.pack != nil && card.pack == arrived,
-                     backTo: returns?.name ?? "menu",
+                     backTo: returns?.name ?? PackCard.menu,
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)
-                     })
+                     }, beside: beside)
                 .id(card)
-                .transition(reduceMotion ? .opacity : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
+                .transition(reduceMotion ? .opacity
+                            : beside ? .move(edge: .trailing).combined(with: .opacity)
+                            : .scale(scale: 0.15, anchor: cardFrom).combined(with: .opacity))
                 .zIndex(1)
         }
     }
 
-    /// The calendar, over the menu as a card is, from its row.
-    @ViewBuilder private var archiveView: some View {
+    /// The calendar, over the menu as a card is, or beside the list as a card is, from its row.
+    @ViewBuilder private func archiveView(beside: Bool) -> some View {
         if archive {
-            ArchiveView(days: past.days, today: today, focus: focus?.archived == true ? focus?.id : nil,
+            ArchiveView(days: past.days, today: today, focus: focus?.archived == true ? focus?.id : nil, beside: beside,
                         onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
                         onPlay: { onPick($0) })
                 .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))

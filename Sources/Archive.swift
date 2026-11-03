@@ -146,6 +146,8 @@ struct ArchiveView: View {
     var focus: String?
     let onBack: () -> Void
     let onPlay: (Level) -> Void
+    /// Beside the menu's list in a wide window, not over it, so VoiceOver reaches both.
+    let beside: Bool
     /// The archive's days dealt, oldest first.
     let days: [(date: Date, level: Level)]
     private let calendar: Calendar
@@ -154,8 +156,10 @@ struct ArchiveView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    init(days: [(date: Date, level: Level)], today: Date = .now, focus: String? = nil, onBack: @escaping () -> Void, onPlay: @escaping (Level) -> Void) {
+    init(days: [(date: Date, level: Level)], today: Date = .now, focus: String? = nil, beside: Bool = false,
+         onBack: @escaping () -> Void, onPlay: @escaping (Level) -> Void) {
         self.focus = focus
+        self.beside = beside
         self.onBack = onBack
         self.onPlay = onPlay
         self.days = days
@@ -213,7 +217,7 @@ struct ArchiveView: View {
         }
         .foregroundStyle(Color.text)
         .background(Color.black.ignoresSafeArea())
-        .accessibilityAddTraits(.isModal)
+        .accessibilityAddTraits(beside ? [] : .isModal)
         .accessibilityAction(.escape, onBack)
     }
 
