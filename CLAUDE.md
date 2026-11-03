@@ -423,7 +423,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
   main actor and the fine pass off it. Under Reduce Motion the opening fades through black (`curtain`, 0.2 s each way)
   in place of the wind-in, a replay level keeping its rod turns, which are the information; the solve swells the
-  picture's contrast where it stands, with no wave, pulse or glass easing home; the lessons' ghost fingers rest
+  picture's contrast where it stands (not on Escapement's paper, where it would turn the bone white, so there the
+  solve draws nothing on the picture), with no wave, pulse or glass easing home; the lessons' ghost fingers rest
   mid-sweep; the lost stamp lands without its scale. Under it or Dim Flashing Lights the picture fades on rather than
   flickering (`PictureLayer.strike(calm:)`). A live picture holds one frame (`Picture.rest`, between the twins' beats,
   `Picture.clock(_:still:)`), and endless's rim cuts to where each change comes to rest, a spill to its end, murk and

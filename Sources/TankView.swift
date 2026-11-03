@@ -2220,8 +2220,9 @@ struct LevelView: View {
                     }
                         .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
                             var u = unstirred
-                            // Under Reduce Motion the light swells where it stands instead of running out as a wave.
-                            let calm = reduceMotion && frozenWave == nil
+                            // Under Reduce Motion the light swells where it stands instead of running out as a wave, but not on
+                            // paper: contrast pivots on mid-grey, so bone would swell to white.
+                            let calm = reduceMotion && frozenWave == nil, swells = calm && !page.paper
                             u.wave = SIMD3(Float(source.x), Float(source.y), calm || page.paper ? -1 : Float(frozenWave ?? w))
                             u.breath = swirlBreath
                             // Escapement: the move's ticks in turn, the one in flight turned part way on the stack it changed.
@@ -2232,7 +2233,7 @@ struct LevelView: View {
                             }
                             let drawn = picture.modifier(u).modifier(Murk(stirs: murk, side: side))
                             // Only Reduce Motion pays for the contrast filter, over the hottest draw in the app.
-                            return Group { if calm { drawn.contrast(1 + 0.5 * max(sin(.pi * w / 1.9), 0)) } else { drawn } }
+                            return Group { if swells { drawn.contrast(1 + 0.5 * max(sin(.pi * w / 1.9), 0)) } else { drawn } }
                         } keyframes: { _ in
                             // A light wave from the last-turned rod, over the clean picture. The animator holds its last value, so
                             // the band runs out past the farthest rim of any layout (1.56 from a ring rod) rather than parking on it.
