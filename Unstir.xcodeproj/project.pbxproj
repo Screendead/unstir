@@ -17,6 +17,7 @@
 		2D70099B35E5AC7E8ED3C714 /* FirstStirEnding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 680D4F9DC78E6890CAD80AE7 /* FirstStirEnding.swift */; };
 		2E38B1B5B55BE8B14D6D3B09 /* FirstStirDawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */; };
 		2F4A4627C3976608D2D99D66 /* ClipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED6B7A35E47B3475841C4DC /* ClipTests.swift */; };
+		346EECEE0574652612E6DB3B /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799D669DC17401F34FBEB5D2 /* Page.swift */; };
 		3A65E8F7E58F1DA384BE5ABC /* Clip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F14A8BD3536DD66979D13A /* Clip.swift */; };
 		3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965EC2AB5B15FD9B3CA462DE /* Twist.swift */; };
 		3F40391B2B57058C26788864 /* Loom.metal in Sources */ = {isa = PBXBuildFile; fileRef = 536CF149EF97D4429DC2751F /* Loom.metal */; };
@@ -129,6 +130,7 @@
 		7147B0B195AAB46DE31D870D /* Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pictures.swift; sourceTree = "<group>"; };
 		7460F8510A57CE405402E04F /* PlayLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayLayoutTests.swift; sourceTree = "<group>"; };
 		7898E0AEAFE90492DC3EB64C /* Neurons.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Neurons.metal; sourceTree = "<group>"; };
+		799D669DC17401F34FBEB5D2 /* Page.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Page.swift; sourceTree = "<group>"; };
 		7DE72E9F1CCE362B73E2FA79 /* Solver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Solver.swift; sourceTree = "<group>"; };
 		7FD78B993A35245B095AA159 /* EscapementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementTests.swift; sourceTree = "<group>"; };
 		882752BC69C1C5819416967C /* GPUBench.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPUBench.swift; sourceTree = "<group>"; };
@@ -273,6 +275,7 @@
 				12E8193F7A9FB37B678695D2 /* Menu.swift */,
 				7898E0AEAFE90492DC3EB64C /* Neurons.metal */,
 				283B1A56B07119D483F58617 /* Pack.swift */,
+				799D669DC17401F34FBEB5D2 /* Page.swift */,
 				7147B0B195AAB46DE31D870D /* Pictures.swift */,
 				F935F37F140F0E82EFAD71CA /* PlayLayout.swift */,
 				97D4F0C0BBFEBFFFB3BA8313 /* Power.swift */,
@@ -433,6 +436,7 @@
 				52972B0C126203096364F0AF /* Menu.swift in Sources */,
 				0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */,
 				ECD41BE8E76732F15D47B81E /* Pack.swift in Sources */,
+				346EECEE0574652612E6DB3B /* Page.swift in Sources */,
 				F40291CB604E0F77378217A9 /* Pictures.swift in Sources */,
 				F143AF69AD4B8E639FFD959B /* PlayLayout.swift in Sources */,
 				A4810ECE2020837953FD00AF /* Power.swift in Sources */,

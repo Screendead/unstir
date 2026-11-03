@@ -24,7 +24,7 @@ tested.
 
 **Before the first stir.** Problem 1 opens on the lab's demonstration, on its own stack (`0:-3,1:+2` on tri): a ghost
 finger turns knob 1 two steps back, the clock's core steps once; the ghost taps the ratchet, the core steps again. The
-page dips to black and the problem winds in. Nothing of the problem's scramble shows during it (round 2: the first
+picture fades to the bone paper and the problem winds in. Nothing of the problem's scramble shows during it (round 2: the first
 level shows the clock working before the first stir).
 
 **The page.** A bone-paper tank with one clock, or two or three. A clock is a rod with a ratchet wheel for a knob, a

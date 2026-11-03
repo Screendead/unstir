@@ -233,7 +233,7 @@ extension Level {
     private static func problem(_ n: Int, _ title: String, _ layout: Layout, _ scramble: String, clocks: [Int],
                                 back: [Int] = [], par: Int) -> Level {
         var level = Level(id: Pack.escapement.id(n), pack: .escapement, label: String(format: "%02d", n), title: title,
-                          layout: layout, scramble: .parse(scramble, in: layout), ratchets: Set(clocks), woundBack: Set(back),
+                          picture: .engineTurned, layout: layout, scramble: .parse(scramble, in: layout), ratchets: Set(clocks), woundBack: Set(back),
                           chapter: escapementChapters[(n - 1) / 6],
                           // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
                           demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)

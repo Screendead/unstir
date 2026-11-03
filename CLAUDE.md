@@ -435,7 +435,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
   main actor and the fine pass off it. Under Reduce Motion the opening fades through black (`curtain`, 0.2 s each way)
   in place of the wind-in, a replay level keeping its rod turns, which are the information; the solve swells the
-  picture's contrast where it stands, with no wave, pulse or glass easing home; the lessons' ghost fingers rest
+  picture's contrast where it stands (not on Escapement's paper, where it would turn the bone white, so there the
+  solve draws nothing on the picture), with no wave, pulse or glass easing home; the lessons' ghost fingers rest
   mid-sweep; the lost stamp lands without its scale. Under it or Dim Flashing Lights the picture fades on rather than
   flickering (`PictureLayer.strike(calm:)`). A live picture holds one frame (`Picture.rest`, between the twins' beats,
   `Picture.clock(_:still:)`), and endless's rim cuts to where each change comes to rest, a spill to its end, murk and
@@ -505,7 +506,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   each clock's knob as a 12-tooth `RatchetView` read against a vermilion sub-dial fixed to the glass (a wound-back
   one mirrored), its hub a one-digit `FlipCounter` card of the clock's own count (unmirrored), flipping with the header
   as each of its ticks starts, so the header always reads as the hubs' sum; a clock at 0 greys its wheel, sub-dial,
-  card and `ClockHint` as its last tick lands, the pawl and hub ring amber, with the amber stop ring; its pawl riding out with each tick, the move's ticks a beat after the lift each turning its clock's
+  card and `ClockHint` as its last tick lands, the pawl and hub ring amber, with the stop ring in the plate's vermilion; its pawl riding out with each tick, the move's ticks a beat after the lift each turning its clock's
   core a step on screen in turn, `tickTurn` apart after `tickBeat` (`Game.tick` holds each with the stack it changed; `Unstirred.tick`,
   one entry over in the four-tap budget, like the drag) and the wheel a tooth; `ClockHint` dashes the clock's disc at all
   times (Jack's call, 2026-10-25); a pushed tick flashes the ratchet red and stands as a vermilion +N, and the
@@ -516,11 +517,21 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (a −N for a wound-back clock), and with no push the look `UNSTIR_STOPLOOK` picks (`StopLook`: stamp, as built; left,
   the twists left as a count; rings, a ring on each knob still twisted), and `LostCard`'s "out of ticks on move N",
   undo and again, whose
-  exit goes through `leave` as the result card's does. A clock stopping sends an amber ring out as its last tick lands. A level with a
+  exit goes through `leave` as the result card's does. A clock stopping sends a ring out in the plate's vermilion as its last tick lands. A level with a
   `demo` plays it before the problem opens until the problem has been solved (always in the harness, unless it holds the
   tank still), and after a reset of a tank with nothing played, which replays the opening: a drawn fingertip
-  heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black
+  heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the picture fades to the bone paper
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
+  Escapement plays on paper (Jack's call ESC-PAPER = B, round 16; **Page.swift**): `Level.page` is `.book` for its
+  levels alone and `.night`, the play screen's own colours, for every other (`testOnlyEscapementPlaysOnPaper`).
+  `LevelView` puts it in the environment (`page`) and draws from it: the ground, bone (#F3EAD8); ink (#1A1A1A) for the
+  text, the turn's hairlines, dashes and counts, the lift's flash and the drawn fingertip; the plate's vermilion
+  (#D8402A) for the clock's marks, `ClockHint`, `LostStamp`, the +N and the stop ring; no glows; and ink for the cards'
+  lime, amber and magenta words, which don't read on bone. The status bar goes dark (`preferredColorScheme(.light)`),
+  and the caption, the stipulation, is set in a serif (`Page.caption`). The shader is untouched: its solve wave only
+  brightens what is lit, which on bone runs white, so the band is off and an ink ring runs out over it (`Page.wave`).
+  The ratchet's dark plate, steel wheel and split-flap cards stay as they are. The clip and the bundle's cut draw on
+  the same page.
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
   25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
@@ -730,7 +741,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and the bundle only once every pack it grants is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
-  draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's grid, the fern; the bundle a wedge of
+  draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's engraved plate, the fern; the bundle a wedge of
   each of its packs', cut from the centre, `testEveryCoverStirsItsClipsLevel`), stirred and unstirred by `Unstirred` on
   the level's dealt stack, an entry at a time (`Unstirred.shares`), on a 7 s loop, each out of step, held as dealt under
   Reduce Motion, at 30 Hz, paused where it stands under a card, the settings sheet or a level a back swipe slides off, while `Power` saves
@@ -957,6 +968,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lines only, so a channel out of register shows as its colour and an aligned line is white
   (`testEveryPlateIsWhiteLinesOnBlack`). Each fills the glass and breaks every rotation a core could fall on, so a step
   moves most of the light in every core of every layout (`testEveryPlateShowsAStepInEveryCore`); the sandbox skips them.
+  Escapement's plate (`Picture.engineTurned`, drawn by `Picture.engineTurning` in Page.swift) is the packs mock-up's
+  engine-turning in ink on bone: ninety straight rays fanned from a point off the glass's lower left, whose cone just
+  holds the glass, over barleycorn, upward chevrons on a 0.08 lattice, with no glow and no concentric figure. Its lines
+  are at least 2.2 px wide, as the shader's four taps average in squared light, which thins dark lines on a light
+  ground. It fades in over paper rather than striking (`Picture.paper`), and the sandbox skips it
+  (`testThePlateIsInkOnBoneAndShowsAStepInEveryCore`).
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
   reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,
@@ -1002,7 +1019,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   mid-drag turn of a rod (`UNSTIR_LIVE`) or the tank (`UNSTIR_TANKLIVE`), a finger just down (`UNSTIR_TOUCH=x,y` in tank
   units, run through `LevelView.grab`; with a held turn, where that finger went down), a turn just let go and still open
   (`UNSTIR_TURNED=rod:steps`), endless's brim (`UNSTIR_BRIM=n`, never stored), a touch on a seized knob held that
-  many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave, autoplay or a frame-time bench
+  many seconds into its shake (`UNSTIR_SHAKE`, with `UNSTIR_TOUCH`), the solve wave (`UNSTIR_WAVE`, solved by the reachable seams, or by `UNSTIR_PLAYED`'s line where one is given, as Escapement's clocks need), autoplay or a frame-time bench
   (`UNSTIR_BENCH`). `UNSTIR_PACE=s` sets autoplay's and `UNSTIR_MOVES`' wait before each move (0.3 s unset), and
   `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. `UNSTIR_CLEAN=1` draws a level as its glass and picture in the bezel alone, for App Store art that may show no interface (the Today card's video): the header, title, caption and notes, controls, swatches and cards are kept in the layout but not drawn, so the tank stays where `film.sh` crops it, and nothing else over the glass is drawn (knobs, dials, dashes, counts, rings, lessons, the knurl, the brim, the stamps and the drawn fingertip), nor the status bar or home indicator; the picture still turns, winds and waves as played. `UNSTIR_ENDING=s` with `UNSTIR_SCREEN=clean` opens First Stir's last scene solved with the night forwards held s seconds in (-1 runs it). In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
   best or started flag (`Level.keepsProgress`); Prism's is tri on the fern, rod 0 red and rod 1 cyan, dealt
