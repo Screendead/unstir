@@ -4,9 +4,9 @@
 and times what the game sounds for it as Sound.swift and LevelView play it.
 
   layers.py plan <tsv> <pack>   prints the macros sketches.csd takes for the layer's resolution, as shell assignments
-  layers.py mix <tsv> <pack> <dir> <gain dB> <with layer: 0|1> <out.wav>
+  layers.py mix <tsv> <pack> <dir> <gain dB> <with layer: 0|1|only> <out.wav>
                                 mixes the level as heard: the menu's bed crossfading to plughole's, the layer's loop and
-                                its resolution at the gain, and every effect at its own level
+                                its resolution at the gain, and every effect at its own level; only, the layer alone
   layers.py line <tsv> <pack>   prints the line with each action's time and sounds, for the listing
 
 <dir> holds the effects and beds decoded to WAV (as listen decodes them, bed-menu.wav and bed-loop.wav) and the
@@ -115,17 +115,19 @@ def ramp(n, start, seconds, rising):
 def mix(tsv, pack, d, gain, layer, out):
     rows = line(tsv, pack)
     n = int(length(rows) * RATE)
-    bed = tile(read(f"{d}/bed-loop.wav"), n) * ramp(n, 0, CROSSFADE, True)
-    menu = read(f"{d}/bed-menu.wav")[: int(CROSSFADE * RATE)]
-    bed[: len(menu)] += menu * ramp(len(menu), 0, CROSSFADE, False)
-    total = bed
-    if layer:
+    if layer == "only":
+        total = np.zeros((n, 2))
+    else:
+        total = tile(read(f"{d}/bed-loop.wav"), n) * ramp(n, 0, CROSSFADE, True)
+        menu = read(f"{d}/bed-menu.wav")[: int(CROSSFADE * RATE)]
+        total[: len(menu)] += menu * ramp(len(menu), 0, CROSSFADE, False)
+    if layer != "0":
         g = 10 ** (gain / 20)
         loop = tile(read(f"{d}/{pack}-loop.wav"), n) * ramp(n, 0, CROSSFADE, True) * ramp(n, end(rows), LOOP_OUT, False)
         resolution = read(f"{d}/{pack}-end.wav")[:n]
         total = total + g * loop
         total[: len(resolution)] += g * resolution
-    for at, name in events(rows):
+    for at, name in events(rows) if layer != "only" else []:
         fx = read(f"{d}/{name}.wav", mono=True)
         i = int(round(at * RATE))
         k = min(len(fx), n - i)
@@ -168,6 +170,6 @@ if __name__ == "__main__":
     if cmd == "plan":
         plan(sys.argv[2], sys.argv[3])
     elif cmd == "mix":
-        mix(sys.argv[2], sys.argv[3], sys.argv[4], float(sys.argv[5]), sys.argv[6] == "1", sys.argv[7])
+        mix(sys.argv[2], sys.argv[3], sys.argv[4], float(sys.argv[5]), sys.argv[6], sys.argv[7])
     elif cmd == "line":
         listing(sys.argv[2], sys.argv[3])

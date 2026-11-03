@@ -306,13 +306,15 @@ instr rtick
 endin
 
 ; Ticks after a lift at ilift, one per running clock, as the game times them (Level's tickBeat 0.15 s, tickTurn
-; 0.3 s); returns when the last lands.
+; 0.3 s); returns when the last lands. A negative take sounds none.
 opcode Ticks, i, iii
   ilift, iclocks, itake xin
   ipans[] fillarray -0.3, 0.3, 0
   ij = 0
   while ij < iclocks do
-    schedule "rtick", ilift + 0.15 + 0.3 * ij, 0.25, itake, 0.6, ipans[ij]
+    if itake >= 0 then
+      schedule "rtick", ilift + 0.15 + 0.3 * ij, 0.25, itake, 0.6, ipans[ij]
+    endif
     ij += 1
   od
   xout ilift + 0.15 + 0.3 * (iclocks - 1)
@@ -390,14 +392,17 @@ opcode EscBBar, 0, i
   schedule "scuff", is + 2.0, 0.4, 0.07, -0.3
   schedule "scuff", is + 3.0, 0.4, 0.06, 0.3
 endop
-opcode EscB, 0, i
-  itake xin
+opcode EscBDrums, 0, 0
   ib = 0
   while ib < 5 do
     EscBBar ib * 3.2
     ib += 1
   od
   schedule "kick", giSolve, 0.5, 0.4
+endop
+opcode EscB, 0, i
+  itake xin
+  EscBDrums
   Escape "reed", 0.45, 0.55, itake, 1
 endop
 instr escB
@@ -415,6 +420,16 @@ instr escBtickD
 endin
 instr escBtickE
   EscB 4
+  turnoff
+endin
+; Escapement B as Jack heard it, without its ticks, and its drums alone: what scripts/sounds.sh layers measures the
+; layer in play against, as the game's own tick replaces the sketch's.
+instr escBDry
+  EscB -1
+  turnoff
+endin
+instr escBDrums
+  EscBDrums
   turnoff
 endin
 

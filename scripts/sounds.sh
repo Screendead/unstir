@@ -212,9 +212,24 @@ if [ "${1:-}" = layers ]; then
         [ "$pack" = escapement ] && macros+=(--omacro:REEDS="$REEDS" --omacro:NOTES="$NOTES" --omacro:LAST="$LAST")
         sketch "${sk}End" "$seed" "$L/$pack-end.wav" "${macros[@]}"
         read -r _ li _ < <(loud "$L/$pack-loop.wav" 0 "volume=${g}dB")
+        python3 scripts/layers.py mix "$T" "$pack" "$L" "$g" only "$L/$pack-layer.wav"
+        read -r _ lp _ < <(loud "$L/$pack-layer.wav")
         {
             printf "%s: %s, solved at %.2f s; the layer at its sketch's gain, %.1f dB, its loop alone I %s LUFS\n" \
                 "$pack" "$LEVEL" "$SOLVED" "$g" "$li"
+            echo "  the layer alone over the line, its loop and resolution with no bed or effects: I $lp LUFS"
+            if [ "$pack" = escapement ]; then
+                # The sketch's ticks are round 15's brass pawl, which the game's own tick replaces in play, so the
+                # layer in play is measured against the sketch without them.
+                for part in escBDry escBDrums; do
+                    sketch "$part" "$seed" "$L/$pack-$part.wav" --omacro:DUR=20
+                done
+                read -r _ st _ < <(loud "$L/$pack-sketch.wav" 0 "volume=${g}dB")
+                read -r _ sd _ < <(loud "$L/$pack-escBDry.wav" 0 "volume=${g}dB")
+                read -r _ sr _ < <(loud "$L/$pack-escBDrums.wav" 0 "volume=${g}dB")
+                echo "  the 20 s sketch at that gain: I $st LUFS with its ticks (round 15's brass pawl), $sd without"
+                echo "  them, $sr its drums alone; in play the loop is those drums, and the reed sounds once a move"
+            fi
             python3 scripts/layers.py line "$T" "$pack"
         } >>"$LIST"
         for with in 1 0; do
