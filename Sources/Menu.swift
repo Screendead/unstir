@@ -188,6 +188,8 @@ struct MenuView: View {
     @State private var viewport: CGFloat = 0
     /// The window's whole height, bars and all, which sizes the settings sheet.
     @State private var window: CGFloat = 800
+    /// The window's bottom safe area, under which a sheet runs on.
+    @State private var bottom: CGFloat = 0
     /// The pack dock's height: the scroll view counts it in its bottom safe area, but the list ends at it.
     @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
@@ -388,7 +390,11 @@ struct MenuView: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: {
             window = $0
         }
-        .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
+        .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { bottom = $0 }
+        // The tabletop's settings keep to the half lying flat, as the dock and a card do.
+        .sheet(isPresented: $settings) {
+            SettingsSheet(window: window, room: layout.dock.map { $0.height + bottom }, supporter: $supporter)
+        }
     }
 
     /// Where the list goes now: beside play, the slot the level leaves it, once there.

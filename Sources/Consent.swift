@@ -151,6 +151,9 @@ struct NeonToggle: ToggleStyle {
 struct SettingsSheet: View {
     /// The presenting window's height, which in Split View or on a folding phone's displays is not the screen's.
     let window: CGFloat
+    /// The most the sheet may rise from the window's foot, where something must stay clear above it: the tabletop's
+    /// fold. Nil anywhere else.
+    var room: CGFloat? = nil
     /// Apple's guideline 5.1.1(i) wants it reachable in the app. Info.plist's `PolicyURL`, set outside the repo, or
     /// the plain github.com page where the build has none.
     static var policy: URL {
@@ -256,11 +259,16 @@ struct SettingsSheet: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .frame(maxHeight: .infinity, alignment: .top)
-        .presentationDetents(height > window * 0.9 ? [.height(window * 0.6), .large]
-                             : [.height(height)])
+        .presentationDetents(Self.detents(content: height, window: window, room: room))
         .presentationDragIndicator(.visible)
         .presentationBackground(Color(0x0B0C10))
         .presentationCornerRadius(24)
+    }
+
+    /// Sized to what it holds, scrolling where that outgrows the window, with a large detent, or `room`, at its height.
+    static func detents(content: CGFloat, window: CGFloat, room: CGFloat?) -> Set<PresentationDetent> {
+        if let room { return [.height(min(content, room))] }
+        return content > window * 0.9 ? [.height(window * 0.6), .large] : [.height(content)]
     }
 
     /// "Unstir 1.0 (1)": the version and build, "Unstir 1.0 (1) editors" in the editors' build.

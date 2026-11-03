@@ -405,6 +405,19 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(RootView.besidePick(l12, playing: l11, gated: false, opens: false), .stays, "a withheld level")
     }
 
+    @MainActor func testTheTabletopsSettingsSheetKeepsToTheHalfLyingFlat() {
+        // On a phone, sized to what it holds, or past 0.9 of the window scrolling with a large detent: as before.
+        XCTAssertEqual(SettingsSheet.detents(content: 528, window: 951, room: nil), [.height(528)])
+        XCTAssertEqual(SettingsSheet.detents(content: 900, window: 951, room: nil), [.height(951 * 0.6), .large])
+        // The tabletop: no taller than from the window's foot to the dock's top, 16 pt under the fold; it scrolls.
+        let insets = (top: CGFloat(59), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0))
+        let dock = try! XCTUnwrap(menu(window: CGSize(width: 669, height: 951), insets: insets, fold: table).dock)
+        let room = dock.height + insets.bottom
+        XCTAssertGreaterThanOrEqual(951 - room, table.maxY + PlayLayout.margin - 0.001, "its top stays clear of the fold")
+        XCTAssertEqual(SettingsSheet.detents(content: 528, window: 951, room: room), [.height(room)])
+        XCTAssertEqual(SettingsSheet.detents(content: 300, window: 951, room: room), [.height(300)])
+    }
+
     func testTheOpenDuosMenuPutsTheListAndTheCardEitherSideOfTheFold() {
         for fold in [nil, book] as [CGRect?] {
             let m = menu(window: open.window, insets: open.insets, fold: fold)
