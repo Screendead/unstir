@@ -808,11 +808,16 @@ import XCTest
             let i = Int(r + x * r), j = Int(r + y * r)
             return i >= 0 && j >= 0 && i < w && j < w && px[4 * (j * w + i)] < 0x87
         }
-        // Every pixel is bone, ink or between them.
+        // Every pixel is bone, ink or a mix of the two, and some are ink: a grey or vermilion stroke fails.
+        XCTAssertFalse(Self.boneToInk(0xD8, 0x40, 0x2A))
+        XCTAssertFalse(Self.boneToInk(0x80, 0x80, 0x80))
+        var darkest = 0xFF
         for i in stride(from: 0, to: px.count, by: 4 * 97) {
             let (red, green, blue) = (Int(px[i]), Int(px[i + 1]), Int(px[i + 2]))
-            XCTAssert(red >= 0x18 && red <= 0xF5 && green <= 0xEC && blue <= 0xDA && red >= blue, "\(red) \(green) \(blue)")
+            XCTAssert(Self.boneToInk(red, green, blue), "\(red) \(green) \(blue)")
+            darkest = min(darkest, red)
         }
+        XCTAssertLessThan(darkest, 0x30)
         for layout in Layout.allCases {
             for (k, rod) in layout.rods.enumerated() {
                 let core = rod.z * Tank.plateau, step = 2 / Double(w)
@@ -832,4 +837,16 @@ import XCTest
             }
         }
     }
+
+    /// How far a pixel lies from the line between bone and ink, in levels of 255: its mix is read off red, the widest
+    /// span, and green and blue measured against that mix.
+    static func offBoneToInk(_ red: Int, _ green: Int, _ blue: Int) -> Double {
+        let bone = [0xF3, 0xEA, 0xD8].map(Double.init), ink = [0x1A, 0x1A, 0x1A].map(Double.init)
+        let t = min(max((bone[0] - Double(red)) / (bone[0] - ink[0]), 0), 1)
+        let off = zip([red, green, blue].map(Double.init), zip(bone, ink)).map { abs($0 - ($1.0 + t * ($1.1 - $1.0))) }
+        return off.max() ?? 0
+    }
+
+    /// The bake's antialiasing lies within 3.1 of the line at 512 px; a neutral grey lies 12.7 off it.
+    static func boneToInk(_ red: Int, _ green: Int, _ blue: Int) -> Bool { offBoneToInk(red, green, blue) <= 6 }
 }
