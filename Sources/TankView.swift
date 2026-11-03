@@ -2540,7 +2540,7 @@ struct LevelView: View {
         let core = 2 * Tank.plateau * disc
         // Each clock's marks wait for its own tick in the move's turn.
         let delay = Self.tickBeat + Self.tickTurn * Double(game.tick.firstIndex { $0.rod == k } ?? 0)
-        let ticked = game.tick.contains { $0.rod == k }, pushed = game.pushedClock == k
+        let ticked = game.tick.contains { $0.rod == k }, pushed = game.tick.contains { $0.rod == k && $0.pushed }
         return ZStack {
             Circle().stroke(Color.alarm, lineWidth: 2).frame(width: size + 10, height: size + 10)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.tickPushes) { ring, t in
