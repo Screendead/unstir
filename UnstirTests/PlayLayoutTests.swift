@@ -69,7 +69,8 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(Tank.tunedPixels, Double(3 * (428 - 2 * PlayLayout.margin) / PlayLayout.rim), accuracy: 0.001,
                        "the 13 Pro Max's column")
         XCTAssertEqual(Tank.tunedPixels, 1136.842, accuracy: 0.001)
-        // SE, the Duo closed, the Pro Max, the tabletop, the open split, the largest iPhone's in the round 16 pitch.
+        // The SE, the Duo closed, the 13 Pro Max (as measured), the 17 Pro Max (the largest iPhone), the tabletop, the
+        // open split, the round 16 pitch's option A, and the cap before the upright Duo's.
         for pixels in [656.5, 1004.8, Tank.tunedPixels, 1171.3, 1194.3, 1272.0, 1279.0, 1300.0] {
             XCTAssertEqual(Tank.fourTaps(pixels: pixels), Tank.fourTaps, "\(pixels) px")
         }
