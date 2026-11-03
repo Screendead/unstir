@@ -29,7 +29,8 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   its vignette render takes two minutes), which `.github/workflows/nightly.yml` runs with every other test, bar the
   `UNSTIR_SLOW_TESTS` ones (they ran past 25 minutes on the runner), on `master` at 03:17 UTC and on `workflow_dispatch`: a break in them shows a night late. Both jobs print each
   suite's and the slowest tests' times (`scripts/ci-times.sh`) in the log. Add a suite to the skip list only here and in
-  `test.yml`, so the nightly keeps running it.
+  `test.yml`, so the nightly keeps running it. Both Test steps pipe the tests through `grep`, so they set `shell: bash`
+  for pipefail: under the default shell the step's status is grep's, which passes once any test has run.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
@@ -38,7 +39,12 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
   build system to ignore inode changes; the restored build then stays incremental. A hit saves compile work but not
   time: `xcodebuild test` boots the simulator while it compiles, so the job's time is the boot, about 110 s, and the
-  tests, about 45 s.
+  tests, about 45 s. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
+  call APPSIZE = B) less the test bundle and Xcode's testing frameworks the test host carries, and fail past 100 MB.
+  That build is Debug for the simulator, one architecture: its debug dylib (16.6 MB on 2026-11-02) outweighs the
+  Release binary (11.2 MB), and the resources are the same bytes in both, so it reads about 6 MB over a Release bundle
+  (27.6 against 21.9). Grown by resources, the guard trips with Release near 94 MB, under the cellular download prompt
+  (assumed 200 MB).
   `.github/workflows/codeql.yml` scans the workflows on every PR to
   `master`, `*.md`-only ones too, in case the `master` ruleset requires code scanning. It scans Swift, which takes
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
