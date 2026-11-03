@@ -1476,20 +1476,9 @@ struct LevelView: View {
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
     /// window's middle where the window is wide.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: fold(geo), halo: PlayLayout.Halo(game.level), scale: scale)
+        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold), halo: PlayLayout.Halo(game.level), scale: scale)
     }
 
-    /// The fold while the phone is folded, in the reader's space: the harness's, else the system's division region.
-    private func fold(_ geo: GeometryProxy) -> CGRect? {
-        if let f = harnessFold { return f.offsetBy(dx: -geo.safeAreaInsets.leading, dy: -geo.safeAreaInsets.top) }
-        // The iOS 27.1 SDK's SwiftUI (8.1) brought the regions; CI's Xcode has an older one.
-        #if canImport(SwiftUI, _version: 8.1)
-        guard #available(iOS 27.1, *) else { return nil }
-        return geo.reservedRegions(kind: .division).first { $0.isActive }?.frame
-        #else
-        return nil
-        #endif
-    }
 
     private var screen: some View {
         GeometryReader { geo in
@@ -2180,6 +2169,12 @@ struct LevelView: View {
         } else {
             nil
         }
+        // In the split and the tabletop a lens turns only as far as its track shows inside the pane (Jack's call
+        // d3-lenscap = B, round 16).
+        func room(_ k: Int) -> ClosedRange<Int>? {
+            game.level.lenses.contains(game.slot(of: k)) ? Self.trackRoom(knob: at(k).y, bounds: bounds) : nil
+        }
+        let heldRoom = liveRod.flatMap(room)
         // A lens's count runs up and down a track beside its knob, on the side away from the finger.
         let lensTrack: CGFloat? = rodCount.flatMap { c in
             guard game.level.lenses.contains(game.slot(of: c.k)) else { return nil }
@@ -2430,7 +2425,14 @@ struct LevelView: View {
         } keyframes: { _ in CubicKeyframe(1.0, duration: 0.9) }
         // A level that turns, or swirls, reaches a finger on the bezel or just beyond it.
         .contentShape(Circle().inset(by: game.level.motion == .none && game.level.layout.swirl == nil ? 0 : -25))
-        .gesture(twistGesture(r))
+        .gesture(twistGesture(r) { k in room(k).map { (steps: $0, joined: joined(game.slot(of: k))) } })
+        // UNSTIR_LIVE's held turn is held to the track as a finger's is. Not a real finger's (its `path`, which the
+        // harness's seeded touch lacks): a change of pane comes with a change of pose, which lets it go
+        // (`letGoOnResize`), and its let-go commits what the track showed.
+        .onChange(of: heldRoom, initial: true) {
+            guard let k = liveRod, let heldRoom, !settling, path == nil else { return }
+            liveAngle = Self.lensCapped(liveAngle, joined: joined(game.slot(of: k)), room: heldRoom)
+        }
         .onChange(of: holding) { _, now in if !now, let g = drag { cut(g) } }
         // Not .none: that also switches off the gesture above.
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
@@ -2662,6 +2664,23 @@ struct LevelView: View {
     /// knob's centre or left of it. Any one unit, points or the tank's.
     nonisolated static func trackSide(landing x: Double, knob: Double) -> CGFloat { x > knob ? -1 : 1 }
 
+    /// The steps a lens's track draws inside `bounds`, the tank's pane in the glass's frame, from a knob at height `y`:
+    /// down to the lower bound (out) and up to the upper (in), each step's place on the track inside. Nil without
+    /// bounds, in the column, where nothing caps a lens.
+    nonisolated static func trackRoom(knob y: CGFloat, bounds: CGRect?) -> ClosedRange<Int>? {
+        guard let b = bounds else { return nil }
+        let down = Int(((b.maxY - y) / trackPitch).rounded(.down)), up = Int(((y - b.minY) / trackPitch).rounded(.down))
+        return -max(0, down)...max(0, up)
+    }
+
+    /// A lens's turn in hand, `angle`, held so that it and the open stir it joins, `joined` steps, stay in `room`, as
+    /// the track counts both. A stir already past it can still turn back.
+    nonisolated static func lensCapped(_ angle: Double, joined: Int, room: ClosedRange<Int>?) -> Double {
+        guard let room else { return angle }
+        let low = Double(min(0, room.lowerBound - joined)), high = Double(max(0, room.upperBound - joined))
+        return min(max(angle, low * Tank.step), high * Tank.step)
+    }
+
     /// The track's x, `side` of a knob at `knob`, in points.
     nonisolated static func trackX(knob: CGFloat, core: CGFloat, side: CGFloat) -> CGFloat { knob + side * (core / 2 + trackGap) }
 
@@ -2740,7 +2759,8 @@ struct LevelView: View {
         return spots.first { room($0) >= 0 } ?? spots.max { room($0) < room($1) }!
     }
 
-    private func twistGesture(_ r: CGFloat) -> some Gesture {
+    /// `room`: for a lens's knob in a pane, the steps its track shows and those of the open stir its turn joins.
+    private func twistGesture(_ r: CGFloat, room: @escaping (Int) -> (steps: ClosedRange<Int>, joined: Int)?) -> some Gesture {
         func norm(_ p: CGPoint) -> SIMD2<Double> { SIMD2(Double(p.x / r - 1), Double(p.y / r - 1)) }
         return DragGesture(minimumDistance: 0)
             .updating($holding) { _, holding, _ in holding = true }
@@ -2793,6 +2813,10 @@ struct LevelView: View {
                     : simd_length(d) > 0.1 ? atan2(sin(a - g.last), cos(a - g.last)) : 0
                 if g.grab != .rim {
                     liveAngle += da
+                    // Travel past the track's end is dropped, so the finger turning back turns the lens back at once.
+                    if lens, case .rod(let k) = g.grab, let fit = room(k) {
+                        liveAngle = Self.lensCapped(liveAngle, joined: fit.joined, room: fit.steps)
+                    }
                     ticks += detent.turn(to: liveAngle)
                 } else if let turn = liveTurn {
                     liveTurn = turn + da

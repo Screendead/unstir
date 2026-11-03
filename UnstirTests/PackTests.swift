@@ -658,6 +658,19 @@ final class PackTests: XCTestCase {
         XCTAssertNil(PackCard.arrival(.pack(.lens), levels, state: .owned, best: best))
     }
 
+    /// Over the menu a card goes back to it; beside the list, with the menu in sight, it closes (d4-menuback = B, round 16).
+    /// Back to Triptych I's card reads the same in every pose.
+    @MainActor func testACardBesideTheMenuClosesRatherThanGoingBack() {
+        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: false).text, "\u{2039} menu")
+        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: false).spoken, "Back")
+        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: true).text, "\u{2715} close")
+        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: true).spoken, "Close")
+        for beside in [false, true] {
+            XCTAssertEqual(PackCard.back(to: Offer.bundleName, beside: beside).text, "\u{2039} Triptych I")
+            XCTAssertEqual(PackCard.back(to: Offer.bundleName, beside: beside).spoken, "Back")
+        }
+    }
+
     /// Only a change after the launch's first read lands: before it, an owner's card reads unowned until the read does.
     @MainActor func testTheLaunchsFirstReadIsNoLanding() {
         XCTAssertFalse(PackCard.lands(.unowned, .owned, ready: false))

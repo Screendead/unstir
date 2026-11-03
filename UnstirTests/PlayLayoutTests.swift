@@ -232,4 +232,127 @@ final class PlayLayoutTests: XCTestCase {
         // The split has room under the glass, as the column has.
         XCTAssertNil(layout(window: open.window, insets: open.insets).filmFoot)
     }
+
+    func testALensTurnsOnlyAsFarAsItsTrackShowsInThePane() {
+        // The column caps nothing, so a phone's lens drag is as it was.
+        XCTAssertNil(LevelView.trackRoom(knob: 120, bounds: nil))
+        XCTAssertEqual(LevelView.lensCapped(9 * Tank.step, joined: 2, room: nil), 9 * Tank.step)
+        // In a pane, each step's place on the track inside it: 40 pt above the knob holds 2, 100 below holds 6.
+        let room = try! XCTUnwrap(LevelView.trackRoom(knob: 40, bounds: CGRect(x: -20, y: 0, width: 400, height: 140)))
+        XCTAssertEqual(room, -6...2)
+        XCTAssertEqual(LevelView.trackRoom(knob: -10, bounds: CGRect(x: 0, y: 0, width: 400, height: 140)), -9...0)
+        XCTAssertEqual(LevelView.lensCapped(9 * Tank.step, joined: 0, room: room), 2 * Tank.step)
+        XCTAssertEqual(LevelView.lensCapped(-1.3 * Tank.step, joined: 0, room: room), -1.3 * Tank.step)
+        // The track counts the open stir the turn joins as well.
+        XCTAssertEqual(LevelView.lensCapped(9 * Tank.step, joined: 1, room: room), Tank.step)
+        XCTAssertEqual(LevelView.lensCapped(-9 * Tank.step, joined: -4, room: room), -2 * Tank.step)
+        // A stir already past the track, from a wider pose, turns back but no further out.
+        XCTAssertEqual(LevelView.lensCapped(Tank.step, joined: 4, room: room), 0)
+        XCTAssertEqual(LevelView.lensCapped(-3 * Tank.step, joined: 4, room: room), -3 * Tank.step)
+    }
+
+    @MainActor func testALensDragStopsAtItsTrackAndTurnsBackAtOnce() {
+        // As the twist gesture plays a finger on a lens: each change adds its travel, then caps, and the lift commits
+        // the nearest step of what is held.
+        let room = -6...2
+        var angle = 0.0, y = 0.0
+        func move(to next: Double) {
+            angle = LevelView.lensCapped(angle + LevelView.lensTurn(from: y, to: next), joined: 0, room: room)
+            y = next
+        }
+        for i in 1...27 { move(to: -Double(i) * LevelView.lensPitch / 3) }
+        XCTAssertEqual(angle, 2 * Tank.step, accuracy: 1e-9, "nine steps up hold at the track's top")
+        XCTAssertEqual(Detent.steps(angle, of: Tank.step), 2)
+        move(to: y + LevelView.lensPitch)
+        XCTAssertEqual(Detent.steps(angle, of: Tank.step), 1, "a step back down turns the lens back a step at once")
+        // The column caps nothing.
+        angle = 0; y = 0
+        for i in 1...27 {
+            let next = -Double(i) * LevelView.lensPitch / 3
+            angle = LevelView.lensCapped(angle + LevelView.lensTurn(from: y, to: next), joined: 0, room: nil)
+            y = next
+        }
+        XCTAssertEqual(Detent.steps(angle, of: Tank.step), 9)
+    }
+
+    @MainActor func testEveryLensLevelsUnzoomFitsItsTrackInEveryPose() {
+        // Jack's "why" for the cap (d3-lenscap = B, round 16): no level needs a zoom longer than the pane.
+        let upright = (window: CGSize(width: 669, height: 951), insets: (top: CGFloat(59), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0)))
+        for level in Pack.lens.levels {
+            for (window, insets, fold) in [(open.window, open.insets, nil), (open.window, open.insets, book),
+                                           (upright.window, upright.insets, table)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
+                let l = layout(window: window, insets: insets, fold: fold, halo: PlayLayout.Halo(level))
+                XCTAssertNotEqual(l.kind, .column)
+                let r = l.side / 2
+                for slot in level.lenses {
+                    let net = level.scramble.filter { $0.rod == slot }.reduce(0) { $0 + $1.steps }
+                    let room = try! XCTUnwrap(LevelView.trackRoom(knob: r + level.layout.rods[slot].y * r, bounds: l.bounds))
+                    XCTAssertTrue(room.contains(-net), "\(level.id) lens \(slot) needs \(-net), the pane shows \(room) in \(window)")
+                    XCTAssertTrue(room.contains(-3) && room.contains(3), "\(level.id) lens \(slot): \(room) in \(window)")
+                }
+            }
+        }
+    }
+
+    // MARK: The menu (stage 4)
+
+    /// As the menu measures the window: its safe area's size, the insets round it and the fold in its own space.
+    private func menu(window: CGSize, insets i: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat),
+                      fold: CGRect? = nil) -> MenuLayout {
+        MenuLayout.of(size: CGSize(width: window.width - i.leading - i.trailing, height: window.height - i.top - i.bottom),
+                      insets: EdgeInsets(top: i.top, leading: i.leading, bottom: i.bottom, trailing: i.trailing),
+                      fold: fold.map { $0.offsetBy(dx: -i.leading, dy: -i.top) })
+    }
+
+    func testEveryIPhoneKeepsTodaysMenu() {
+        // The SE, the Pro Max, the Duo closed, the Duo open upright and flat, and a tall half of Split View.
+        for (window, insets) in [(CGSize(width: 375, height: 667), (20.0, 0.0, 0.0, 0.0)), (CGSize(width: 440, height: 956), (62, 0, 34, 0)),
+                                 (CGSize(width: 466, height: 678), (0, 0, 34, 84)), (CGSize(width: 669, height: 951), (59, 0, 34, 0)),
+                                 (CGSize(width: 475, height: 669), (24, 0, 21, 0))] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat))] {
+            let m = menu(window: window, insets: insets)
+            XCTAssertEqual(m, .column, "\(window)")
+            XCTAssertFalse(m.wide)
+        }
+    }
+
+    func testTheTabletopKeepsTodaysMenu() {
+        XCTAssertEqual(menu(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table), .column)
+    }
+
+    func testTheOpenDuosMenuPutsTheListAndTheCardEitherSideOfTheFold() {
+        for fold in [nil, book] as [CGRect?] {
+            let m = menu(window: open.window, insets: open.insets, fold: fold)
+            let list = try! XCTUnwrap(m.list), side = try! XCTUnwrap(m.side)
+            // In window points (the leading inset is 0): each half 16 pt clear of the fold, or of the middle.
+            let f = fold ?? CGRect(x: open.window.width / 2, y: 0, width: 0, height: open.window.height)
+            XCTAssertEqual(list.minX, 0, "the list keeps its own 20 pt margin from the screen's edge")
+            XCTAssertEqual(list.maxX, f.minX - PlayLayout.margin, accuracy: 0.001)
+            XCTAssertEqual(side.minX, f.maxX + PlayLayout.margin, accuracy: 0.001)
+            XCTAssertEqual(side.maxX, open.window.width - open.insets.trailing, accuracy: 0.001, "the card stops at the status column")
+            XCTAssertGreaterThanOrEqual(min(list.width, side.width), PlayLayout.minPane)
+            XCTAssertEqual(list.height, open.window.height - open.insets.top - open.insets.bottom)
+            XCTAssertEqual(side.height, list.height)
+            // A readable width, near a phone's: the Pro Max's list is 440 pt across.
+            XCTAssertEqual(list.width, 459.5, accuracy: fold == nil ? 0.001 : 10)
+        }
+    }
+
+    func testTheMenuSplitsWherePlaySplits() {
+        // The same rule, so the list and the tank share the leading half wherever either splits.
+        for (window, insets, fold) in [(open.window, open.insets, nil), (open.window, open.insets, book),
+                                       (CGSize(width: 669, height: 951), (59, 0, 34, 0), table),
+                                       (CGSize(width: 600, height: 400), (0, 0, 0, 0), nil),
+                                       (CGSize(width: 1000, height: 500), (0, 30, 0, 20), nil)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
+            let m = menu(window: window, insets: insets, fold: fold), play = layout(window: window, insets: insets, fold: fold)
+            XCTAssertEqual(m.wide, play.kind == .split, "\(window)")
+            guard let list = m.list, let side = m.side else { continue }
+            // Play's panes are inside its 16 pt side margins, the menu's in the whole safe area.
+            let tank = play.tankPane.offsetBy(dx: PlayLayout.margin, dy: 0)
+            let chrome = play.chromePane.offsetBy(dx: PlayLayout.margin, dy: 0)
+            XCTAssertLessThanOrEqual(list.minX, tank.minX, "\(window)")
+            XCTAssertEqual(list.maxX, tank.maxX, accuracy: 0.001, "the list's half ends where the tank's pane does, \(window)")
+            XCTAssertEqual(side.minX, chrome.minX, accuracy: 0.001, "the card's starts where play's chrome does, \(window)")
+            XCTAssertGreaterThan(side.minX - list.maxX, 2 * PlayLayout.margin - 0.001, "\(window)")
+        }
+    }
 }
