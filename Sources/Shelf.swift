@@ -465,8 +465,9 @@ struct PackCard: View {
         // Back is pinned over the scroll, so the card's way out shows at every scroll position, the gate's landing on
         // buying too (Jack's call C1B = A, round 16).
         VStack(alignment: .leading, spacing: 0) {
+            // Padded below by all of hit()'s reach, as the scroll, laid over it, would take the rest of its target.
             Button(action: onBack) { Text("\u{2039} \(backTo)").font(.mono(.subheadline, .medium)).hit() }
-                .buttonStyle(Sounding()).padding(.top, 18).padding(.bottom, 6).opacity(0.8)
+                .buttonStyle(Sounding()).padding(.top, 18).padding(.bottom, 14).opacity(0.8)
                 .padding(.horizontal, 24)
                 .accessibilityLabel("Back")
             GeometryReader { g in
@@ -475,7 +476,7 @@ struct PackCard: View {
                         VStack(alignment: .leading, spacing: 0) {
                             Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
                                 .font(.mono(.caption2, .semibold)).tracking(2).opacity(0.42)
-                                .padding(.top, 20)
+                                .padding(.top, 12)
                             Text(offer.name).font(.system(.largeTitle, weight: .black).width(.expanded)).tracking(2)
                                 .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
                                 .accessibilityAddTraits(.isHeader)
