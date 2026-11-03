@@ -543,7 +543,7 @@ fi
 nine=000000000
 shot shelf-menu "Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Triptych, nothing bought." \
   STORE=lens:unowned CLOCK=5.4 BESTS=plughole:$nine
-shot shelf-menu-stirred "The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Triptych (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's grid clean, Prism's fern just stirring in." \
+shot shelf-menu-stirred "The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Triptych (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's engraved plate clean on bone, Prism's fern just stirring in." \
   STORE=lens:unowned CLOCK=2.8 BESTS=plughole:$nine
 shot shelf-menu-clean "The dock at the top of its loop: First Stir and Triptych clean, Lens stirring in, Escapement and Prism unstirring." \
   STORE=lens:unowned CLOCK=0 BESTS=plughole:$nine
@@ -689,7 +689,7 @@ shot escapement-2-drag "Escapement 2 mid-drag on paper: rod 2 turned +2.6, its d
   PACK=escapement LEVEL=2 LIVE=2:+2.6
 shot escapement-2-wave "Escapement 2 solved in 3, its solve wave an ink ring held at radius 0.6 from the last-turned rod." \
   PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3 WAVE=0.6
-shot escapement-2-back-swipe "Escapement 2 held 40% into an edge swipe back: the paper page sliding right over the menu on black, the status bar's dark glyphs following the page." \
+shot escapement-2-back-swipe "Escapement 2 held 40% into an edge swipe back: the paper page sliding right over the menu on black, the status bar's glyphs dark across the whole width, the menu's side too." \
   PACK=escapement LEVEL=2 BACKSWIPE=0.4
 # The tick budget on 16 (clocks 1, owing 3, and 4, owing 6, so 9; line 3:-2, 5:-2, a wait, 6:-4, 5:+3, 2:-5): as dealt,
 # after the wait that stops clock 1, and one move from the end.
