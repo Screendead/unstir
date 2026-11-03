@@ -2433,7 +2433,7 @@ struct LevelView: View {
         .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .haptic(.selection, trigger: ticks)
         .haptic(.selection, trigger: misses)
-        .onChange(of: tankTicks) { Knock.clunk.play(); Sound.shared.play(.tank) }
+        .onChange(of: tankTicks) { Knock.clunk.play() }
         .haptic(.impact(weight: .heavy), trigger: game.cancels)
         // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
         .onChange(of: game.heals) { was, now in if now > was { Sound.shared.play(.heal(now)) } }

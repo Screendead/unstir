@@ -349,6 +349,10 @@ struct Level: Hashable, Sendable {
     static let sandbox = Level(id: "sandbox", label: "box", title: "Sandbox", note: "Stir anything. Undo is free here.",
                                layout: .tri, scramble: [])
 
+    /// Out of v1 until it offers what the packs a player owns add (Jack's call snd2-sandbox, round 16): a Release build
+    /// neither lists nor opens it, while Debug and the harness outside Release keep it.
+    static func playsSandbox(release: Bool = Build.release) -> Bool { !release }
+
     /// The triangle is hand-written: every rod overlaps, so the generator's ordered sizes overshoot there.
     private static let generated: [Layout] = [.quad, .eye, .pent, .hex]
 

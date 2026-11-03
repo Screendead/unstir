@@ -431,7 +431,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
   (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: a rod's a selection
   haptic and no sound (Jack's call SND1 = B, round 16: the haptic and the dashes carry the steps), the tank's its clunk,
-  haptic and sound. While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
+  a haptic and no sound either, a two-finger spin's and the lift's last step too (Jack's call snd1-clunk = B, round
+  16). While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
   main actor and the fine pass off it. Under Reduce Motion the opening fades through black (`curtain`, 0.2 s each way)
   in place of the wind-in, a replay level keeping its rod turns, which are the information; the solve swells the
@@ -911,7 +912,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
   round 13): until 01 has a best, the tank's rule as a tagline over the tier's list, with the sandbox under the list;
   then "next: 07 · Sprinkle ›" in the tagline's place, a button opening the shown tier's frontier (none once it has
-  none), and the sandbox over the list. The daily and endless rows show only once open, each marked new, in plain
+  none), and the sandbox over the list. The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
+  rethinking, so that a pack's mechanics join it once the pack is owned), as First Stir is: `Level.playsSandbox` is false
+  in Release, so there the lead has no sandbox (`Lead.sandbox` nil), the menu no row, `Store.opens` refuses it and a
+  harnessed `UNSTIR_MODE=sandbox` opens the menu, while Debug and the harness outside Release keep it, its code, tests and
+  shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
   (`Best.started`) and has no best reads tried, faint, as a pack card's list does (Jack's call C3, round 13; endless
   and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. With a run saved, endless's row
@@ -991,8 +996,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   The menu's tier names and rows
   stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
   a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
-  target to 44 pt round it without moving anything. Nothing sounds during a drag but the
-  tank's clunk, a step at a time, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
+  target to 44 pt round it without moving anything. Nothing sounds during a drag, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
   out over the crossfade and back (`Sound.music`), its sounds switch every effect and button (`Sound.sounds`), and its
   haptics switch `Knock` and every system haptic, which all go through `haptic(_:trigger:when:)`; none of the three is
   read anywhere else. The session is ambient, and while
