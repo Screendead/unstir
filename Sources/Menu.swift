@@ -357,8 +357,8 @@ struct MenuView: View {
     /// The column, the dock where it lies apart and a card or the archive, where the window puts them.
     private var laidOut: some View {
         let analytics = Analytics.shared
-        // The menu waits for the question's answer, for VoiceOver too.
-        let asking = analytics.asks && analytics.consent == .undecided
+        // The menu waits for the question's answer, for VoiceOver too; beside play, until the level leaves.
+        let asking = analytics.asks && analytics.consent == .undecided && playing == nil
         let fold = harnessFold
         return placedColumn(asking: asking)
         // The tabletop's dock lies below the fold, under a card or the archive.

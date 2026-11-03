@@ -1433,7 +1433,7 @@ struct LevelView: View {
             .font(page.caption).opacity(captionOpacity)
             // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does.
             .overlay(alignment: .bottom) {
-                if pointing {
+                if pointing && !besideMenu {
                     Self.pointer.font(.mono(12)).fixedSize()
                         .opacity(showResult || ending || shown != nil ? 0 : 0.55)
                         .animation(.easeOut(duration: 0.4), value: shown == nil)
@@ -1605,15 +1605,13 @@ struct LevelView: View {
                 game.startClock()
                 badge = game.badge
                 noteLit = frozenClock == nil && game.counts && !game.level.note.isEmpty && game.level.story == nil
-                if pointing && !pointed {
-                    pointed = true
-                    if storesPointing { Best.pointedAtSettings = true }
-                    AccessibilityNotification.Announcement(Self.pointerSpoken).post()
-                }
+                pointAtSettings()
             } else {
                 lifted = false
             }
         }
+        // The phone closed mid-level: the pointer shows now, as on a phone.
+        .onChange(of: besideMenu) { if shown == nil { pointAtSettings() } }
         .task(id: noteLit) {
             guard noteLit, (try? await Task.sleep(for: .seconds(4))) != nil else { return }
             withAnimation(.easeOut(duration: 0.6)) { noteLit = false }
@@ -1809,6 +1807,15 @@ struct LevelView: View {
     }
 
     nonisolated static let refills = "undos refill +2 each day you play"
+
+    /// Plughole 01's pointer is up: it is stored as seen, and VoiceOver hears it. Beside the menu, whose gear waits for
+    /// the level to close, it would point at nothing in sight, so it waits for a later opening, or the phone closing.
+    private func pointAtSettings() {
+        guard pointing, !pointed, !besideMenu else { return }
+        pointed = true
+        if storesPointing { Best.pointedAtSettings = true }
+        AccessibilityNotification.Announcement(Self.pointerSpoken).post()
+    }
 
     /// Plughole 01's pointer to the settings sheet, drawn with the menu's own gear.
     static var pointer: Text { Text("sound, haptics, colour letters: \(Image(systemName: "gearshape")) on the menu") }
