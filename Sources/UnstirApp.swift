@@ -722,7 +722,12 @@ struct RootView: View {
         .coordinateSpace(.named(Self.space))
         .onGeometryChange(for: Bool.self) {
             MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: harnessFold)).splits
-        } action: { wide = $0 }
+        } action: { new in
+            // The phone opened mid-level: a card or the archive left under the level would cover its header and
+            // controls beside the menu, so it goes, before the menu is drawn there, until the level leaves.
+            if new, level != nil, card != nil || archive { park() }
+            wide = new
+        }
         .background(Color.black)
         .buttonStyle(Sounding())
         .modifier(TypeSize(size: typeSize))
@@ -759,6 +764,20 @@ struct RootView: View {
         }
         // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
         .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
+        // Closed again mid-level, a card or the archive parked as the phone opened waits under the level, as on a phone,
+        // if it opened that level. The slot goes with the menu beside play, so a later one waits for the level's own.
+        .onChange(of: beside) {
+            if !beside {
+                slot = nil
+                if let p = parked, let level {
+                    if Self.returns(to: p, from: level) {
+                        card = p.card
+                        archive = p.archive
+                    }
+                    parked = nil
+                }
+            }
+        }
         .task {
             Log.write(UnstirApp.device)
             Power.shared.watch()
