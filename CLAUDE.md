@@ -493,7 +493,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   each clock's knob as a 12-tooth `RatchetView` read against a vermilion sub-dial fixed to the glass (a wound-back
   one mirrored), its hub a one-digit `FlipCounter` card of the clock's own count (unmirrored), flipping with the header
   as each of its ticks starts, so the header always reads as the hubs' sum; a clock at 0 greys its wheel, sub-dial,
-  card and `ClockHint` as its last tick lands, the pawl and hub ring amber, with the amber stop ring; its pawl riding out with each tick, the move's ticks a beat after the lift each turning its clock's
+  card and `ClockHint` as its last tick lands, the pawl and hub ring amber, with the stop ring in the plate's vermilion; its pawl riding out with each tick, the move's ticks a beat after the lift each turning its clock's
   core a step on screen in turn, `tickTurn` apart after `tickBeat` (`Game.tick` holds each with the stack it changed; `Unstirred.tick`,
   one entry over in the four-tap budget, like the drag) and the wheel a tooth; `ClockHint` dashes the clock's disc at all
   times (Jack's call, 2026-10-25); a pushed tick flashes the ratchet red and stands as a vermilion +N, and the
@@ -504,10 +504,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (a −N for a wound-back clock), and with no push the look `UNSTIR_STOPLOOK` picks (`StopLook`: stamp, as built; left,
   the twists left as a count; rings, a ring on each knob still twisted), and `LostCard`'s "out of ticks on move N",
   undo and again, whose
-  exit goes through `leave` as the result card's does. A clock stopping sends an amber ring out as its last tick lands. A level with a
+  exit goes through `leave` as the result card's does. A clock stopping sends a ring out in the plate's vermilion as its last tick lands. A level with a
   `demo` plays it before the problem opens until the problem has been solved (always in the harness, unless it holds the
   tank still), and after a reset of a tank with nothing played, which replays the opening: a drawn fingertip
-  heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the tank dips to black
+  heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the picture fades to the bone paper
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
   Escapement plays on paper (Jack's call ESC-PAPER = B, round 16; **Page.swift**): `Level.page` is `.book` for its
   levels alone and `.night`, the play screen's own colours, for every other (`testOnlyEscapementPlaysOnPaper`).
