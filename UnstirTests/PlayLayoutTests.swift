@@ -366,17 +366,43 @@ final class PlayLayoutTests: XCTestCase {
         for level in Pack.lens.levels {
             for (window, insets, fold) in [(open.window, open.insets, nil), (open.window, open.insets, book),
                                            (upright.window, upright.insets, table)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
-                let l = layout(window: window, insets: insets, fold: fold, halo: PlayLayout.Halo(level))
+                let l = layout(window: window, insets: insets, fold: fold, halo: PlayLayout.Halo(level),
+                               chrome: PlayLayout.Chrome(level, swatches: false))
                 XCTAssertNotEqual(l.kind, .column)
                 let r = l.side / 2
                 for slot in level.lenses {
                     let net = level.scramble.filter { $0.rod == slot }.reduce(0) { $0 + $1.steps }
-                    let room = try! XCTUnwrap(LevelView.trackRoom(knob: r + level.layout.rods[slot].y * r, bounds: l.bounds))
+                    let room = try! XCTUnwrap(LevelView.trackRoom(knob: r + level.layout.rods[slot].y * r, bounds: l.trackBounds))
                     XCTAssertTrue(room.contains(-net), "\(level.id) lens \(slot) needs \(-net), the pane shows \(room) in \(window)")
                     XCTAssertTrue(room.contains(-3) && room.contains(3), "\(level.id) lens \(slot): \(room) in \(window)")
                 }
             }
         }
+    }
+
+    @MainActor func testBesideTheMenuALensTrackStopsUnderTheTitle() {
+        // A zoom the wrong way never draws through the header's count (Lens 08's top lens held +14 once ran into it).
+        for level in Pack.lens.levels {
+            for fold in [nil, book] as [CGRect?] {
+                let l = layout(window: open.window, insets: open.insets, fold: fold, halo: PlayLayout.Halo(level),
+                               chrome: PlayLayout.Chrome(level, swatches: false))
+                XCTAssertEqual(l.kind, .split)
+                let b = try! XCTUnwrap(l.trackBounds), glass = l.stage.minY + (l.stage.height - l.side) / 2
+                XCTAssertEqual(b.minY + glass, l.tankPane.minY + l.chrome.above, accuracy: 0.001, "under the title")
+                XCTAssertEqual(b.maxY, try! XCTUnwrap(l.bounds).maxY, "down to the pane's foot, as before")
+                let r = l.side / 2
+                for slot in level.lenses {
+                    let knob = r + level.layout.rods[slot].y * r
+                    let room = try! XCTUnwrap(LevelView.trackRoom(knob: knob, bounds: l.trackBounds))
+                    XCTAssertGreaterThanOrEqual(knob - CGFloat(room.upperBound) * LevelView.trackPitch, b.minY - 0.001, level.id)
+                }
+            }
+        }
+        // No chrome lies in the tabletop's tank pane, so its track keeps the whole pane.
+        let t = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table)
+        XCTAssertEqual(t.kind, .tabletop)
+        XCTAssertEqual(t.trackBounds, t.bounds)
+        XCTAssertNil(layout(window: CGSize(width: 440, height: 956), insets: (62, 0, 34, 0)).trackBounds, "the column caps nothing")
     }
 
     // MARK: The menu (stage 4)

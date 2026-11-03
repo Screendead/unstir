@@ -129,6 +129,13 @@ struct PlayLayout: Equatable {
         return tankPane.offsetBy(dx: -(stage.minX + inset), dy: -(stage.minY + inset))
     }
 
+    /// Where a lens's track runs, in the glass's frame: `bounds`, less the split's header and title, so a zoom the wrong
+    /// way never draws through the count.
+    var trackBounds: CGRect? {
+        guard let b = bounds, kind == .split else { return bounds }
+        return CGRect(x: b.minX, y: b.minY + chrome.above, width: b.width, height: b.height - chrome.above)
+    }
+
     /// Where the night forwards' lines end, down from the glass's top: nil under the glass, where the column and the
     /// split have room; in the tabletop, whose glass fills its half, at the foot of the upright half, as "unstirred.".
     var filmFoot: CGFloat? {

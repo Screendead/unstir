@@ -1400,9 +1400,10 @@ struct LevelView: View {
     private var reveal: AnyTransition { .opacity.animation(.easeOut(duration: 0.4).delay(0.3)) }
 
     /// The tank with what stands over it: the night forwards and "unstirred.". `bounds` is the tank's pane in the glass's
-    /// frame, nil in the column; `filmFoot` where the night forwards' lines end, nil under the glass.
-    private func stage(_ side: CGFloat, words: CGFloat?, bounds: CGRect?, filmFoot: CGFloat?) -> some View {
-        tank(side, bounds: bounds)
+    /// frame and `trackBounds` where a lens's track runs, both nil in the column; `filmFoot` where the night forwards'
+    /// lines end, nil under the glass.
+    private func stage(_ side: CGFloat, words: CGFloat?, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
+        tank(side, bounds: bounds, trackBounds: trackBounds)
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
@@ -1551,7 +1552,8 @@ struct LevelView: View {
                 header.modifier(PlayPart.chrome(read: 5))
                 titleRow.modifier(PlayPart.chrome(read: 4))
                 Spacer(minLength: 12)
-                stage(layout.side, words: layout.words, bounds: layout.bounds, filmFoot: layout.filmFoot)
+                stage(layout.side, words: layout.words, bounds: layout.bounds, trackBounds: layout.trackBounds,
+                      filmFoot: layout.filmFoot)
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
@@ -2214,8 +2216,9 @@ struct LevelView: View {
         return Double(steps) * Tank.step
     }
 
-    /// `bounds`: the tank's pane in the glass's frame, which counts and a lens's track keep inside; nil in the column.
-    private func tank(_ side: CGFloat, bounds: CGRect?) -> some View {
+    /// `bounds`: the tank's pane in the glass's frame, which counts keep inside, and `trackBounds` a lens's track; nil in
+    /// the column.
+    private func tank(_ side: CGFloat, bounds: CGRect?, trackBounds: CGRect?) -> some View {
         let r = side / 2
         func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
         // A disc's lines, a swirl's too, kept clear of the bezel's own hairline at the glass's edge, as the tank's dial is.
@@ -2262,7 +2265,7 @@ struct LevelView: View {
         // In the split and the tabletop a lens turns only as far as its track shows inside the pane (Jack's call
         // d3-lenscap = B, round 16).
         func room(_ k: Int) -> ClosedRange<Int>? {
-            game.level.lenses.contains(game.slot(of: k)) ? Self.trackRoom(knob: at(k).y, bounds: bounds) : nil
+            game.level.lenses.contains(game.slot(of: k)) ? Self.trackRoom(knob: at(k).y, bounds: trackBounds) : nil
         }
         let heldRoom = liveRod.flatMap(room)
         // A lens's count runs up and down a track beside its knob, on the side away from the finger.
@@ -2364,7 +2367,7 @@ struct LevelView: View {
                 if let c = rodCount, c.live || c.steps != 0 {
                     Group {
                         if let x = lensTrack {
-                            track(at(c.k), disc(c.k), x: x, pitch: Self.trackPitch, steps: c.steps, bounds: bounds,
+                            track(at(c.k), disc(c.k), x: x, pitch: Self.trackPitch, steps: c.steps, bounds: trackBounds,
                                   now: Double(c.steps) + (c.live ? liveAngle / Tank.step - Double(Detent.steps(liveAngle, of: Tank.step)) : 0))
                         } else {
                             dial(at(c.k), disc(c.k), inner: dashes(c.k, r), from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
@@ -2756,9 +2759,9 @@ struct LevelView: View {
     /// knob's centre or left of it. Any one unit, points or the tank's.
     nonisolated static func trackSide(landing x: Double, knob: Double) -> CGFloat { x > knob ? -1 : 1 }
 
-    /// The steps a lens's track draws inside `bounds`, the tank's pane in the glass's frame, from a knob at height `y`:
-    /// down to the lower bound (out) and up to the upper (in), each step's place on the track inside. Nil without
-    /// bounds, in the column, where nothing caps a lens.
+    /// The steps a lens's track draws inside `bounds` (`PlayLayout.trackBounds`, in the glass's frame), from a knob at
+    /// height `y`: down to the lower bound (out) and up to the upper (in), each step's place on the track inside. Nil
+    /// without bounds, in the column, where nothing caps a lens.
     nonisolated static func trackRoom(knob y: CGFloat, bounds: CGRect?) -> ClosedRange<Int>? {
         guard let b = bounds else { return nil }
         let down = Int(((b.maxY - y) / trackPitch).rounded(.down)), up = Int(((y - b.minY) / trackPitch).rounded(.down))
@@ -2780,7 +2783,8 @@ struct LevelView: View {
     /// disc of `radius` about `c`, the disc's own hairline round it, a long mark level with the knob where the stir
     /// began, a dash per step up for in and down for out, `pitch` apart, over a rail with a mark at `now`
     /// steps, where the drag stands.
-    /// The rail, its dashes and its marks stop at `bounds`' top and foot, the tank's pane, where the drag runs long.
+    /// The rail, its dashes and its marks stop at `bounds`' top and foot (`PlayLayout.trackBounds`), where the drag
+    /// runs long.
     private func track(_ c: CGPoint, _ radius: CGFloat, x: CGFloat, pitch: CGFloat, steps: Int, bounds: CGRect?, now: Double)
         -> some View {
         func held(_ y: CGFloat) -> CGFloat { bounds.map { min(max(y, $0.minY), $0.maxY) } ?? y }

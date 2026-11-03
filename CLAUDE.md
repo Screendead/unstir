@@ -718,8 +718,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   radius past the rim) and the tank's rim lesson over twelve (`above`, `RimLesson.overRim`), and the glass shrinks to
   hold it: endless's to about 348 pt in the open split and 326 in the tabletop, whose glass sits on its half's foot
   with the room left above it. Counts and a lens's track keep inside the pane too (`PlayLayout.bounds`, the pane in the
-  glass's frame, which `countSpot` and `track` clamp to), and a lens turns only as far as its track shows there
-  (`LevelView.trackRoom`, each step's place on the track inside the pane, counting the open stir the turn joins;
+  glass's frame, which `countSpot` clamps to; `trackBounds`, the same less the split's header and title, so a zoom the
+  wrong way never draws through the count, which `track` clamps to), and a lens turns only as far as its track shows
+  there (`LevelView.trackRoom`, each step's place on the track inside it, counting the open stir the turn joins;
   `lensCapped`), so what lands is what the track counts: travel past the end is dropped, the finger turning back
   turns the lens back at once, and every Lens level's unzoom fits in every pose (Jack's call d3-lenscap = B, round
   16; the column caps nothing). As the open stir counts, a lens lifted at its cap zooms further only once a move on
