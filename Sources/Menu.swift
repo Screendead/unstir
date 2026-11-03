@@ -989,9 +989,8 @@ struct MenuView: View {
     private func pick(_ level: Level) { pick(level, anew: false) }
 
     private func pick(_ level: Level, anew: Bool) {
-        guard !twisting else { return }
+        guard !twisting, Self.opens(level, playing: playing, anew: anew) else { return }
         Sound.shared.play(.tap)
-        guard Self.opens(level, playing: playing, anew: anew) else { return }
         onPick(level)
     }
 
