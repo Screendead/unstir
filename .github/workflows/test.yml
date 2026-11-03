@@ -42,10 +42,15 @@ jobs:
           restore-keys: store-${{ steps.xcode.outputs.build }}-
       # The StoreKit tests and First Stir's suite (out of v1; its vignette render alone takes two minutes) run nightly
       # on master (nightly.yml). Signed ad hoc by the script, as the nightly needs.
+      # `shell: bash` adds pipefail; without it the step's status is grep's, which passes once any test has run.
       - name: Test
+        shell: bash
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
           UNSTIR_SIM=$udid scripts/test-store.sh -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+      # Measures the app the test step built, so it costs no build of its own.
+      - name: App size
+        run: scripts/app-size.sh build/store/Build/Products/Debug-iphonesimulator/Unstir.app
       - name: Slowest tests
         if: always()
         run: scripts/ci-times.sh "$RUNNER_TEMP/test.log"

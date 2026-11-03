@@ -189,8 +189,8 @@ Notes:
   picture if the grid reads too plain beside 1.
 - 3 is plughole level 13 solved; a solve wave on a live picture would need a new case (`UNSTIR_TIER=whirlpool` with the
   same harness solve).
-- 4 is vortex 13 on the ephemeris. Of the three vortex pictures shot, it reads darkest at thumbnail size and cords
-  (vortex 16) best, so cords is the recommendation, awaiting Jack's call; isobars (vortex 14) is the third.
+- 4 is vortex 14, Monsoon, on the isobars (Jack's call VORTEXSHOT, round 16). Of the three vortex pictures shot, the
+  ephemeris (vortex 13, the first pick) read darkest at thumbnail size and cords (vortex 16) was the recommendation.
 - 6 and 7 are harnessed states a player reaches (a solved daily, a brim at 5 of 8), so they show nothing a player can't
   see. The menu shots with `UNSTIR_UNLOCK` (`menu-unlocked`, `menu-maelstrom`) would show every tier open, which no new
   player sees; `menu-vortex-open` is the honest menu if B wants one.
@@ -215,15 +215,16 @@ A: the first seconds autoplay muted in search results, and one strong loop of a 
 (plan step 3's clips test the same moment). B triples the cutting work for slots most visitors never open. C is the
 fallback if the packs need video to sell.
 
-The cut, in order:
+The cut, in order, at 25 s (Jack's call STOREMEDIA = B, round 16; `STORE_PREVIEW` sets another length, up to
+the segments' whole 27.6 s, the four round whirlpool 03 giving up the same share each):
 
 | Seconds | Source | What it shows | Caption (muted playback) |
 |---|---|---|---|
-| 0–4 | `store-open-L12` (`open-L12`, taken long enough to wind in whole) | The clean picture, then every stir growing over it | A picture, stirred |
-| 4–14.6 | `store-whirlpool-03`: whirlpool 03 unstirred at par by a drawn fingertip to its solve | A hand turning the rods back in order, the seams healing, the wave | Turn the rods back in order |
-| 14.6–19.1 | `rim-swirl` | Vortex's swirl held from the rim | Vortex: the swirl |
-| 19.1–23.6 | `rim-seized` | Maelstrom's tank turned past a seized knob | Maelstrom: the tank turns |
-| 23.6–27.6 | `endless-brim-run` (its spill) | The brim filling and spilling | Endless, and a daily |
+| 0–3.35 | `store-open-L12` (`open-L12`, taken long enough to wind in whole) | The clean picture, then every stir growing over it | A picture, stirred |
+| 3.35–13.95 | `store-whirlpool-03`: whirlpool 03 unstirred at par by a drawn fingertip to its solve | A hand turning the rods back in order, the seams healing, the wave | Turn the rods back in order |
+| 13.95–17.8 | `rim-swirl` | Vortex's swirl held from the rim | Vortex: the swirl |
+| 17.8–21.65 | `rim-seized` | Maelstrom's tank turned past a seized knob | Maelstrom: the tank turns |
+| 21.65–25 | `endless-brim-run` (its spill) | The brim filling and spilling, ending on its card | Endless, and a daily |
 
 `store-whirlpool-03` also serves plan step 3's social clips, beside three drawn clean (`clean-plughole-05`,
 `clean-whirlpool-01`, `editors-vortex-02`).

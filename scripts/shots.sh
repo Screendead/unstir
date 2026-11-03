@@ -216,7 +216,7 @@ shot daily-result "Today's daily, result card after a harness solve: two wasted 
   SCREEN=result MODE=daily NOW=17:00
 shot daily-practice "Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h." \
   SCREEN=clean MODE=daily NOW=17:00 TRIED=daily-$(date +%Y%m%d)
-hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet ShareLink wraps, opened without a tap)." \
+hold=8 shot daily-share-sheet "The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet its share button opens, opened without a tap)." \
   SCREEN=result MODE=daily SHARESHEET=1
 hold=8 shot daily-share-supporter "The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦." \
   SCREEN=result MODE=daily SHARESHEET=1 OWNED=lens
@@ -604,7 +604,7 @@ shot card-lens-asked-offline "Lens's card after asking again offline: still wait
   CARD=lens STORE=lens:pending FAILED=offline CLOCK=5.4
 shot card-lens-progress "Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore." \
   CARD=lens OWNED=complete BESTS=lens:00010 CLOCK=5.4
-shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row. Scrolled, the card draws its pill under the status bar (to-do 74)." \
+shot card-lens-tried "Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row, ‹ menu pinned over the scroll." \
   CARD=lens OWNED=lens BESTS=lens:0 TRIED=lens-2 CARDSCROLL=1 CLOCK=5.4
 shot shelf-menu-owned "The dock with every pack owned, the three through Triptych and First Stir (outside it) on its own: PACKS alone, no taste line, Triptych's cover gone." \
   OWNED=complete,first-stir CLOCK=5.4
@@ -622,13 +622,17 @@ shot card-lens-nopay "Lens's card with in-app purchases turned off on the iPhone
 shot card-lens-restored "Lens's card, owned, after a restore found it: restored Lens." CARD=lens OWNED=lens RESTORED=lens CLOCK=5.4
 shot card-lens-restored-none "Lens's card after a restore found nothing: nothing to restore on this Apple ID." \
   CARD=lens STORE=lens:unowned RESTORED=none CLOCK=5.4
-shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked." \
+shot card-lens-levels "Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked, ‹ menu still pinned at the top." \
   CARD=lens STORE=lens:unowned CARDSCROLL=1 CLOCK=5.4
 shot card-lens-levels-owned "The same, owned: every level open." CARD=lens OWNED=lens CARDSCROLL=1 CLOCK=5.4
-shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note." \
+shot card-gate "Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note, ‹ menu pinned over the scroll." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-gate-ax "The same at accessibility3: the Triptych line under buy wraps only before · save." \
   PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4 TYPESIZE=accessibility3
+shot card-gate-fewer "Lens's level 5, unowned, opened with only 03 solved (01 and 02 skipped): scrolled to buying under The first three are free. 22 more in Lens." \
+  PACK=lens LEVEL=5 STORE=lens:unowned BESTS=lens:--0 CARDLEVELS=6 CLOCK=5.4
+shot card-gate-refunded "Lens's level 5 opened by a refunded owner, the free three at par: no free-three line, the revocation's own grey line in its place, buy again." \
+  PACK=lens LEVEL=5 STORE=lens:revoked BESTS=lens:000 CARDLEVELS=6 CLOCK=5.4
 shot card-lens-taste-end "Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta." \
   PACK=lens LEVEL=3 SCREEN=clean STORE=lens:unowned CLOCK=5.4
 shot card-lens-taste-end-owned "The same, owned: next again, still in Lens's magenta." \
@@ -778,8 +782,8 @@ hold=8 shot store-01-marbling "Store 1: whirlpool 25 (hex, marbling) with its fu
 shot store-02-count "Store 2: plughole 12, rod 1 carried -2 steps round, its dashes and count off the finger." \
   LEVEL=12 LIVE=1:-2 TOUCH=0.354,0.7
 shot store-03-wave "Store 3: plughole 13 solved, the solve wave at radius 0.8." LEVEL=13 WAVE=0.8
-hold=8 shot store-04-vortex "Store 4: vortex 13 on the ephemeris with its full scramble, its lesson learnt." \
-  TIER=vortex LEVEL=13 CLOCK=3 SWIRLED=1
+hold=8 shot store-04-vortex "Store 4: vortex 14, Monsoon (pent, isobars), with its full scramble, its lesson learnt." \
+  TIER=vortex LEVEL=14 CLOCK=3 SWIRLED=1
 hold=8 shot store-05-maelstrom "Store 5: maelstrom 23 (hex), knobs 2 and 5 seized, the tank held half a step round from the rim." \
   TIER=maelstrom LEVEL=23 SEIZED=2,5 TANKLIVE=30 CLOCK=3
 shot store-06-daily "Store 6: today's daily, its result card, share and next daily in 7 h." SCREEN=result MODE=daily NOW=17:00

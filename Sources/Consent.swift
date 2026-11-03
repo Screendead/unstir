@@ -235,14 +235,11 @@ struct SettingsSheet: View {
                     } else if let to = SettingsSheet.support {
                         // No account in Apple's Mail, as for most who use another mail app: the address, subject and
                         // device line ride in the share sheet into whichever app takes it.
-                        ShareLink(item: Log.url, subject: Text(MailSheet.subject),
-                                  message: Text("To: \(to)\n\n\(MailSheet.body)")) {
+                        ShareButton(items: { ["To: \(to)\n\n\(MailSheet.body)", SubjectItem(Log.url, subject: MailSheet.subject)] }) {
                             outward(ConsentWords.report, ConsentWords.reportDetail)
                         }
-                        .shareTap()
                     } else {
-                        ShareLink(item: Log.url) { outward(ConsentWords.report, ConsentWords.reportDetail) }
-                            .shareTap()
+                        ShareButton(items: { [Log.url] }) { outward(ConsentWords.report, ConsentWords.reportDetail) }
                     }
                     rule
                     Button { reading = true } label: { outward(ConsentWords.policy, ConsentWords.policyDetail) }
