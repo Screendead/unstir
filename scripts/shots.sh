@@ -925,6 +925,13 @@ hold=10 shot duo-beside-lost "Duo open: Escapement 02 out of ticks beside the me
   "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=0:1,0:1,0:1 CLOCK=1
 hold=8 shot duo-beside-lesson "Duo open: maelstrom 01, the tank never turned: the rim lesson's arc between the title and the glass, 5 pt smaller for it." \
   "${duo[@]}" TIER=maelstrom LEVEL=1 CLOCK=3
+# A pack card over a result card, opened as the card's pointer opens one; the shelf tour closes it 7.2 s later.
+hold=12 shot duo-beside-over-result "Duo open: Lens 25 solved beside the menu, Lens's card opened 4.5 s in (UNSTIR_SHELFDEMO) over the result card, which covers the menu." \
+  "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=plughole:$nine,lens:000000000000000000000000- SHELFDEMO=1 CLOCK=0
+hold=20 shot duo-beside-over-result-closed "Duo open: the same, the card closed again 7.2 s later: the result card back over the menu." \
+  "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=plughole:$nine,lens:000000000000000000000000- SHELFDEMO=1 CLOCK=0
+hold=12 shot duo-beside-lens-long "Duo open: Lens 01's top lens held turned nine steps up beside the menu: all nine fit its track, which ends between the title and the rim, clear of both." \
+  "${duo[@]}" PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42 OWNED=lens
 hold=6 shot duo-beside-opened "Duo closed with plughole 11 five moves in, opened a second in: the tank and its chrome glided into the leading half and the menu faded in beside them." \
   "${closed[@]}" THEN=1 THENFRAME=951x669 THENINSETS=24,0,21,84 "${played[@]}" BESTS=plughole:$nine OWNED= CLOCK=1
 hold=8 shot duo-beside-opened-card "Duo closed with Lens's card left under Lens 01 as its try free left it, opened a second in: the card put away, the list in sight beside the level; it comes back as the level leaves." \

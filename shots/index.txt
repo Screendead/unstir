@@ -712,6 +712,9 @@ duo-beside-ax5.png  Duo open at the largest accessibility size: maelstrom 27 ove
 duo-beside-pack-complete.png  Duo open: Lens 25 solved, Lens complete and its pointer on the card over the menu.
 duo-beside-lost.png  Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass.
 duo-beside-lesson.png  Duo open: maelstrom 01, the tank never turned: the rim lesson's arc between the title and the glass, 5 pt smaller for it.
+duo-beside-over-result.png  Duo open: Lens 25 solved beside the menu, Lens's card opened 4.5 s in (UNSTIR_SHELFDEMO) over the result card, which covers the menu.
+duo-beside-over-result-closed.png  Duo open: the same, the card closed again 7.2 s later: the result card back over the menu.
+duo-beside-lens-long.png  Duo open: Lens 01's top lens held turned nine steps up beside the menu: all nine fit its track, which ends between the title and the rim, clear of both.
 duo-beside-opened.png  Duo closed with plughole 11 five moves in, opened a second in: the tank and its chrome glided into the leading half and the menu faded in beside them.
 duo-beside-opened-card.png  Duo closed with Lens's card left under Lens 01 as its try free left it, opened a second in: the card put away, the list in sight beside the level; it comes back as the level leaves.
 duo-beside-closed.png  Duo open with plughole 11 beside the menu, closed a second in: today's column, the menu gone with the window's split.
