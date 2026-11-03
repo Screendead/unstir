@@ -9,8 +9,8 @@ cd "$(dirname "$0")/.."
 ROOT=$PWD
 
 # listen <dir>: every effect and bed in Sounds/glass as m4a in <dir>, and a few effects played in turn over a bed: the
-# undo after a push, and a heal undone and healed again. An effect plays on both channels at its full level, as the app
-# plays it, and the plays sit on plughole's bed at its own level.
+# undo after a push, a heal undone and healed again, and Escapement's ticks through a few moves. An effect plays on
+# both channels at its full level, as the app plays it, and the plays sit on plughole's bed at its own level.
 if [ "${1:-}" = listen ]; then
     D=${2:?usage: scripts/sounds.sh listen <dir>}
     L=build/sounds/listen
@@ -59,6 +59,13 @@ if [ "${1:-}" = listen ]; then
     # The vortex bed under play: heals, a push and the solve.
     play vortex-with-play 14 "heal-1@2 push@4 heal-2@6 heal-3@8 solve@10.5" vortex
     aac "$L/vortex-with-play.wav" "$D/vortex-with-play.m4a"
+    # Escapement's ticks in play, timed as the game times them: the first clock's 0.15 s after the lift (LevelView's
+    # tickBeat), each next 0.3 s on (tickTurn), over moves of one, two and three clocks; the second and fifth moves
+    # heal on the lift, and the last solves.
+    play ratchet-in-play 16 "ratchet-1@1.15 heal-1@3.2 ratchet-2@3.35 ratchet-3@4.75 ratchet-4@5.05 ratchet-1@7.15
+        heal-2@8.8 ratchet-2@8.95 ratchet-3@9.25 ratchet-4@10.65 ratchet-1@10.95 ratchet-2@11.25 solve@12.4
+        ratchet-3@12.55 ratchet-4@12.85"
+    aac "$L/ratchet-in-play.wav" "$D/ratchet-in-play.m4a"
     ls "$D"
     exit 0
 fi
@@ -78,7 +85,8 @@ PHONE="$PHONE,highpass=f=250:width_type=q:width=0.89998,highpass=f=250:width_typ
 
 # Effects: file, instrument, argument, seconds rendered, seed, loudest momentary loudness (LUFS), tail trimmed. The
 # order of loudness is the first sketch's (solve, heal, spilled, push, seized), 4 LU down; the new ones sit among
-# them, the tap under the heal.
+# them, the tap under the heal. The ratchet sits where its ticks sat in the run Jack heard (-27 to -32), under the tap,
+# as a move can land three.
 EFFECTS="
 push push 0 0.9 200 -23 yes
 heal-1 heal 1 4.2 301 -20 yes
@@ -97,6 +105,10 @@ tap-4 tap 3 0.7 1004 -28 yes
 switch switch 0 1.8 1100 -25 yes
 undo undo 0 1.0 1201 -24 yes
 reset reset 0 2.4 1300 -22 yes
+ratchet-1 ratchet 0 0.25 2306 -30 yes
+ratchet-2 ratchet 0 0.25 14306 -30 yes
+ratchet-3 ratchet 0 0.25 8306 -30 yes
+ratchet-4 ratchet 0 0.25 18306 -30 yes
 "
 # Frames of each bed's own ends encoded round it, tried in turn (each shifts the AAC frame grid by a quarter frame).
 PADS="6144 6400 6656 6912 7168 7424 7680 7936"

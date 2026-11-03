@@ -41,6 +41,7 @@
 		87529D1AE6435E7B409D5D4E /* Sound.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89654A86FE88E89D5339382 /* Sound.swift */; };
 		880003D42E6629AE7D665B1C /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBF51F07B822677549432BB /* StoreTests.swift */; };
 		89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */; };
+		8978D3305E0CF909458894CF /* SoundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09BBC7A2B31B982E25F0D60C /* SoundTests.swift */; };
 		8BFF4453C3E95A10C25C1E85 /* UnstirTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29729248161A1B61CE6D4E36 /* UnstirTests.swift */; };
 		8FA114073682AA90E96A457F /* Unstir.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 2DF7981B1F96D77FDEB85C68 /* Unstir.storekit */; };
 		90101FC5060304F2B0AA3F01 /* Shelf.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7B4A291F2734F1B961F3FE /* Shelf.swift */; };
@@ -96,6 +97,7 @@
 /* Begin PBXFileReference section */
 		02DCBCEAE9EA5C16D6101548 /* Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Share.swift; sourceTree = "<group>"; };
 		059E21DBCF779B91F994E8E5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		09BBC7A2B31B982E25F0D60C /* SoundTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundTests.swift; sourceTree = "<group>"; };
 		0B80E0606D266BF05C66786E /* FirstStir.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStir.swift; sourceTree = "<group>"; };
 		0D958FCA92212546745A433D /* Marbling.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Marbling.metal; sourceTree = "<group>"; };
 		112F826A2BEC3C22065DD94A /* Sync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sync.swift; sourceTree = "<group>"; };
@@ -211,6 +213,7 @@
 				2A6CCA53A1161021BB7A82C3 /* ShareTests.swift */,
 				7DE72E9F1CCE362B73E2FA79 /* Solver.swift */,
 				6EE69789D7FB741D6D04AA1A /* SolverTests.swift */,
+				09BBC7A2B31B982E25F0D60C /* SoundTests.swift */,
 				CBBF51F07B822677549432BB /* StoreTests.swift */,
 				63E173CE4887FF0DF1142C19 /* SyncTests.swift */,
 				29729248161A1B61CE6D4E36 /* UnstirTests.swift */,
@@ -478,6 +481,7 @@
 				89213FBB921BA38C225D83A2 /* ShareTests.swift in Sources */,
 				A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */,
 				1A5F105A934D627FC90E16AE /* SolverTests.swift in Sources */,
+				8978D3305E0CF909458894CF /* SoundTests.swift in Sources */,
 				880003D42E6629AE7D665B1C /* StoreTests.swift in Sources */,
 				CF32D986479C27075E2862EF /* SyncTests.swift in Sources */,
 				8BFF4453C3E95A10C25C1E85 /* UnstirTests.swift in Sources */,

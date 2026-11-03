@@ -10,11 +10,11 @@ the token `{{CONTACT_ADDRESS}}`; the address itself is kept outside the repo, in
 Store Connect and the hosted pages, never into a tracked file. The same goes for the developer's name in the policy:
 `{{DEVELOPER_NAME}}`.
 
-What it is true to: `master` with `v1-no-analytics` (four tiers of 27 levels, the daily, endless, the sandbox, StoreKit
+What it is true to: `master` with `v1-no-analytics` (four tiers of 27 levels, the daily, endless, StoreKit
 for the packs and the bundle) and the packs' levels as built: Lens's 25 and Escapement's 30. Prism, the third pack
 (PK1 = A, replacing First Stir, which is out of v1), is being built; its lines below describe its design and are to be
 checked against it once it ships. Not built, so left out of the copy: the daily archive, the supporter mark, iCloud
-sync and charybdis.
+sync and charybdis. Out of v1, so left out too: the sandbox (Jack's call store-sandbox = A, round 16).
 
 ## Name (30 characters at most)
 
@@ -73,7 +73,6 @@ EVERY DAY
 
 - The daily: one new tank a day, the same tank for everyone on the same date. Share your result as a line of coloured squares, one per move.
 - Endless: tank after tank, with no undo, reset or par. Every stir you waste fills the brim on the rim. Healing the scramble's own stirs lets it settle. Eight notches and it spills.
-- The sandbox: any picture, any rods. Nothing counts.
 
 The daily and endless open once you have cleared plughole's 23rd level.
 
