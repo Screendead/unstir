@@ -104,6 +104,8 @@ final class Taps {
     @ObservationIgnored private let watch = FrameWatch()
     @ObservationIgnored private var posedAt = -Double.infinity
     @ObservationIgnored private var hzRead: Int?
+    /// UNSTIR_TAPSTALL=ms: a busy main thread for that long every half second of a drag, to show it isn't the GPU's.
+    @ObservationIgnored private var stall = 0.0
     /// What a kept budget belongs to: the build, by its number and its executable's timestamp, and the OS.
     @ObservationIgnored private let build: String = {
         let built = Bundle.main.executableURL.flatMap { try? $0.resourceValues(forKeys: [.contentModificationDateKey]) }?
@@ -129,6 +131,7 @@ final class Taps {
         let simulator = false
         #endif
         mode = Self.mode(env: env, harnessed: harnessed, simulator: simulator)
+        stall = (env["UNSTIR_TAPSTALL"].flatMap(Double.init) ?? 0) / 1000
         if stores { learnt = Self.learnt(in: .standard, build: build, os: os) }
     }
 
@@ -198,7 +201,7 @@ final class Taps {
         let frozen = ProcessInfo.processInfo.isLowPowerModeEnabled ? "lowpower"
             : scene?.traitCollection.sceneCaptureState == .active ? "captured" : nil
         open = Open(key: key, window: w, budget: b, four: Unstirred.drawsFourTaps(work: w.work, budget: b), frozen: frozen)
-        watch.start(hz: hz)
+        watch.start(hz: hz, stall: stall)
     }
 
     func moved() { watch.move() }
@@ -345,10 +348,11 @@ final class FrameWatch: NSObject {
     private var last: (time: Double, cpu: UInt64)?
     private var began = 0.0
     private var moved = false, movedBefore = false
+    private var stall = 0.0, stalled = 0.0
 
-    func start(hz: Int) {
+    func start(hz: Int, stall: Double) {
         stop()
-        (began, last, moved, movedBefore) = (CACurrentMediaTime(), nil, false, false)
+        (began, last, moved, movedBefore, self.stall) = (CACurrentMediaTime(), nil, false, false, stall)
         let link = CADisplayLink(target: self, selector: #selector(tick))
         // The rate a drag already runs at, so the link never raises the display's.
         link.preferredFrameRateRange = CAFrameRateRange(minimum: Float(hz) / 2, maximum: Float(hz), preferred: Float(hz))
@@ -370,6 +374,41 @@ final class FrameWatch: NSObject {
                          cpu: Double(cpu - last.cpu) / 1e9, age: link.timestamp - began, produced: moved || movedBefore))
         }
         (last, movedBefore, moved) = ((link.timestamp, cpu), moved, false)
+        guard stall > 0, link.timestamp - stalled >= 0.5 else { return }
+        stalled = link.timestamp
+        let end = CACurrentMediaTime() + stall
+        while CACurrentMediaTime() < end {}
+    }
+}
+
+/// UNSTIR_TAPDRAG's finger: `step` with the seconds since its first frame, every frame for `seconds`.
+@MainActor
+final class TapDrive: NSObject {
+    private let seconds: Double
+    private let step: (Double) -> Void
+    private let done: () -> Void
+    private var first: Double?
+
+    private init(seconds: Double, step: @escaping (Double) -> Void, done: @escaping () -> Void) {
+        (self.seconds, self.step, self.done) = (seconds, step, done)
+    }
+
+    static func run(seconds: Double, _ step: @escaping (Double) -> Void) async {
+        await withCheckedContinuation { (finished: CheckedContinuation<Void, Never>) in
+            let drive = TapDrive(seconds: seconds, step: step) { finished.resume() }
+            CADisplayLink(target: drive, selector: #selector(TapDrive.tick(_:))).add(to: .main, forMode: .common)
+        }
+    }
+
+    @objc private func tick(_ link: CADisplayLink) {
+        let t = link.timestamp - (first ?? link.timestamp)
+        if first == nil { first = link.timestamp }
+        guard t < seconds else {
+            link.invalidate()
+            done()
+            return
+        }
+        step(t)
     }
 }
 

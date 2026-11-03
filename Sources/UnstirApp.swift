@@ -107,6 +107,9 @@ struct Harness {
     /// UNSTIR_REVIEW=log: the rating request is logged instead of made, as an unharnessed launch would make it.
     let reviewLog: Bool
     let bench: Bool
+    /// UNSTIR_TAPDRAG=n: once the tank is the player's, n drags of a knob drawn through the real let-go, each landing a
+    /// move, for `Taps` on the phone.
+    let tapDrags: Int?
     /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism with the colour letters,
     /// its knobs spelling out their channels over the swatches, whatever the settings say. UNSTIR_LETTERSCHOICE=0 or 1:
     /// the settings' colour letters chosen off or on, for this launch only (`switches`).
@@ -269,6 +272,7 @@ struct Harness {
             }
         }
         bench = env["UNSTIR_BENCH"] == "1"
+        tapDrags = env["UNSTIR_TAPDRAG"].flatMap(Int.init)
         swatch = env["UNSTIR_SWATCH"].flatMap { $0.count == 1 ? Channels(letter: $0.first!) : nil }
             .flatMap { Channels.each.contains($0) ? $0 : nil }
         letters = env["UNSTIR_LETTERS"] == "1"
@@ -356,6 +360,12 @@ struct Harness {
         }
         if let s = env["UNSTIR_STACK"] {
             level.scramble = .parse(s, in: level.layout, lenses: level.lenses, masks: level.masks)
+        }
+        // UNSTIR_DEEP=n: the level's stack repeated to n entries, at most a full stack, as pushes could make it.
+        if let n = env["UNSTIR_DEEP"].flatMap(Int.init), !level.scramble.isEmpty {
+            var deep = level.scramble
+            while deep.count < min(n, Tank.maxStack) { deep += level.scramble }
+            level.scramble = Array(deep.prefix(min(n, Tank.maxStack)))
         }
         // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
         if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }

@@ -1043,6 +1043,8 @@ struct LevelView: View {
     private let moves: [Twist]?
     private let fingered: Bool
     private let bench: Bool
+    /// UNSTIR_TAPDRAG: that many drags drawn through the real let-go.
+    private let tapDrags: Int?
     /// UNSTIR_WAVE: the solve wave held at this radius.
     private let frozenWave: Double?
     /// UNSTIR_CLOCK: a live background, and the rim and knob lessons' ghost fingers, held at this many seconds.
@@ -1195,6 +1197,7 @@ struct LevelView: View {
         shareSheet = harness?.shareSheet ?? false
         now = harness?.now
         bench = harness?.bench ?? false
+        tapDrags = harness?.tapDrags
         _isolated = State(initialValue: harness?.swatch)
         letters = harness?.letters ?? false
         frozenWave = harness?.wave
@@ -1561,6 +1564,9 @@ struct LevelView: View {
         .task {
             guard shareSheet, let text = game.shareText, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
             ShareSheet.present([text], animated: false)
+        }
+        .task {
+            if let tapDrags { await tapDrag(tapDrags) }
         }
         .task {
             // Past the picture's first render, so the bake does not land in the numbers.
@@ -3074,6 +3080,27 @@ struct LevelView: View {
                          work: Unstirred.committedWork(stack: bare ? [] : game.stack, masks: game.level.masks,
                                                        fill: game.level.picture.fillEntries, held: held),
                          held: held.map { "rod \($0)" } ?? "rim", picture: game.level.picture.rawValue)
+    }
+
+    /// UNSTIR_TAPDRAG=n: once the tank is the player's, n drags of the first working knob through the finger's own
+    /// state, each let go a step from where it began, alternately each way, through the real release, so each lands a
+    /// move.
+    private func tapDrag(_ drags: Int) async {
+        while shown != nil || !struck {
+            guard (try? await Task.sleep(for: .seconds(0.2))) != nil else { return }
+        }
+        guard let k = knobs.first(where: { game.level.kind(of: $0) == .working }) else { return }
+        for i in 0..<drags {
+            guard (try? await Task.sleep(for: .seconds(1.5))) != nil, !game.finished else { return }
+            let end = (i % 2 == 0 ? 1.0 : -1.0) * Tank.step
+            liveRod = k
+            counted = k
+            await TapDrive.run(seconds: 4) { t in liveAngle = end * t / 4 + 0.6 * Tank.step * sin(2 * .pi * t) }
+            liveAngle = end
+            release(k)
+        }
+        try? await Task.sleep(for: .seconds(1.5))
+        Log.write("tapdrag done")
     }
 
     /// `now` lands the let-go without the settle, whose completion waits on a frame.

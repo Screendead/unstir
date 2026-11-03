@@ -209,6 +209,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   frame, then quits. The simulator has no GPU clock, so there it times the wall clock round each command buffer.
   `scripts/gpu-bench.sh phone` is Jack's: it installs Release through `run-ios.sh` with the bench on, waits, and pulls
   the lines from the log.
+- The four-tap budget on the phone: `scripts/taps-check.sh [--sim udid] [runs...]` plays whirlpool 27 on the phone
+  `UNSTIR_DEVICE` names (the build `scripts/run-ios.sh Release` installed), its stack cut or repeated (`UNSTIR_DEEP`),
+  a knob dragged through the real let-go (`UNSTIR_TAPDRAG`), and prints each run's `taps` lines: `gpu`, `calm` and
+  `stall` (`watch:n`, `UNSTIR_TAPSTALL`) check that a late frame's main-thread CPU time tells the GPU's misses from
+  the main thread's; `adapt`, `prior` and `edge` run the law. `--sim` is a dry run of the plumbing: the simulator's
+  frames say nothing of a phone's GPU.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
   the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs
@@ -289,7 +295,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   is at most B, and two otherwise, as the shader can't split one chain. `Taps` learns B per glass (`TapKey`: the
   screen's top rate and the glass's side to 16 px) and drives only the level's glass, `LevelView.tank()`'s
   `Unstirred`; the dock's covers, the cards' clips, the icon, the menu's stir and the GPU bench keep their static
-  limits. `FrameWatch`, a display link alive only while a finger turns a rod or the rim
+  limits. `FrameWatch`, a display link alive only while a finger (or `UNSTIR_TAPDRAG`) turns a rod or the rim
   (`LevelView.tapWindow`: no opening, settle, card, slide or breath's fade), times each interval against the period
   the system grants and reads the main thread's CPU time in it (`TapLaw.classify`): late past 1.5 periods, the GPU's
   (`gpuMiss`) where the main thread was idle for over half of it, the main thread's own where it was busy for all but
@@ -312,7 +318,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`taps prior`, `taps drag` for a drag with a late frame, `taps down`, `up`, `applied`, `reverted`, `held`, `hot`,
   `cool`), never from the link's callback. The harness, the test host and the simulator draw the static limit and
   measure nothing, so no shot or test depends on timing, unless `UNSTIR_TAPS` (below). That a late frame's CPU time
-  tells the GPU from the main thread is an inference, unchecked on the phone.
+  tells the GPU from the main thread is an inference, unchecked on the phone (`scripts/taps-check.sh`).
 - **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw whirlpool's live
   pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassTwin`, ...), maelstrom's
   twin being the same body with `twin` set. Each file stands alone. The twins' heartbeat lives in their own lines: each
@@ -1141,7 +1147,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone.
   `UNSTIR_TAPS=n` pins the level's four-tap budget at n, `=watch:n` pins it and logs every drag's frames, and `=adapt`
   runs `Taps`' law from the glass's prior keeping nothing (`=adapt:n`, from n); it too leaves the launch a plain one
-  and `scripts/run-ios.sh` passes it. Under
+  and `scripts/run-ios.sh` passes it. For it on the phone, `UNSTIR_TAPDRAG=n` drags the first working knob n times,
+  4 s each, through the real let-go, each landing a step, alternately each way; `UNSTIR_TAPSTALL=ms` busies the main
+  thread that long every half second of a drag; and `UNSTIR_DEEP=n` cuts or repeats the level's stack to n entries,
+  a full stack at most. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
   opens the card's list); `UNSTIR_CONSENT=yes`
   or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up (in Debug `UNSTIR_EDITORS=1` shows the editors' switch in it) (`UNSTIR_MUSIC=0`, `UNSTIR_SOUNDS=0` and `UNSTIR_HAPTICS=0` set its switches off for the launch). `UNSTIR_UNLOCK` alone
