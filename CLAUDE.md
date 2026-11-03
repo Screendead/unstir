@@ -151,7 +151,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   ST4 and ST5 = A, `docs/store-page.md`) into `$STORE_OUT` (`shots/store` unless set): the ten `shots.sh store-`
   screenshots, at 1320 x 2868 without alpha and again captioned (`scripts/store-captions.py`, Pillow and the Mac's SF
   Mono, as this ffmpeg has no drawtext; its look is a draft), the 25 s free-game preview (Jack's call STOREMEDIA = B,
-  round 16; `STORE_PREVIEW` sets 15 to 27.6) at 886 x 1920 and 30 fps with a silent stereo track, its five segments
+  round 16; `STORE_PREVIEW` sets 15.6 to 27.6) at 886 x 1920 and 30 fps with a silent stereo track, its five segments
   (`store-open-L12`, `store-whirlpool-03`, `rim-swirl`, `rim-seized`, `endless-brim-run`) cut from their strikes and
   captioned, whirlpool 03 keeping its whole solve and the other four each giving up the same share of the 27.6 s that
   all five hold, from the end their line names, and plan step 3's social clips, 1080 x 1920 and silent,

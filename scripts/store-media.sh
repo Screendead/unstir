@@ -5,7 +5,7 @@
 # harness, into $STORE_OUT (shots/store unless set):
 #   screens/   the ten screenshots (shots.sh store-) at 1320 x 2868, RGB without alpha, each also captioned
 #   preview/   the free-game preview, captioned for muted playback: 25 s (Jack's call STOREMEDIA = B), or
-#              $STORE_PREVIEW s, from 15 to the segments' whole 27.6
+#              $STORE_PREVIEW s, from 15.6 (each segment keeping a second) to the segments' whole 27.6
 #   social/    short vertical clips of a picture snapping back, 1080 x 1920, silent; with sound, each again as
 #              <name>-sound.mp4 (sound, which all leaves out, as it takes the Mac's audio output while it films)
 # --cut reuses the shots and films already taken. Takes the simulator shots.sh and film.sh take (UNSTIR_SIM); needs
@@ -62,15 +62,19 @@ preview=(
   "endless-brim-run|4.5|4|head|Endless, and a daily"
 )
 if [[ "$what" == preview || "$what" == all ]]; then
-  target=${STORE_PREVIEW:-25} whole=0 giving=0 names=()
+  target=${STORE_PREVIEW:-25} whole=0 giving=0 least="" names=()
   for seg in "${preview[@]}"; do
     IFS='|' read -r name from keep gives words <<< "$seg"
     names+=("$name")
     whole=$(awk -v a="$whole" -v k="$keep" 'BEGIN { print a + k }')
-    [[ "$gives" == - ]] || giving=$((giving + 1))
+    [[ "$gives" == - ]] && continue
+    giving=$((giving + 1))
+    least=$(awk -v a="${least:-$keep}" -v k="$keep" 'BEGIN { print (k < a ? k : a) }')
   done
-  awk -v l="$target" -v w="$whole" 'BEGIN { exit !(l >= 15 && l <= 30 && l <= w) }' ||
-    { echo "preview: STORE_PREVIEW is $target; Apple takes 15 to 30 s, and the segments hold $whole s" >&2; exit 1; }
+  # Checked before filming: every segment that gives keeps at least a second.
+  floor=$(awk -v w="$whole" -v g="$giving" -v k="$least" 'BEGIN { f = w - g * (k - 1); print (f > 15 ? f : 15) }')
+  awk -v l="$target" -v f="$floor" -v w="$whole" 'BEGIN { exit !(l >= f && l <= 30 && l <= w) }' ||
+    { echo "preview: STORE_PREVIEW is $target; it takes $floor to $whole s (Apple's 15 to 30, a second a segment)" >&2; exit 1; }
   share=$(awk -v l="$target" -v w="$whole" -v g="$giving" 'BEGIN { print (w - l) / g }')
   take "${names[@]}"
   mkdir -p "$out/preview"
@@ -78,8 +82,6 @@ if [[ "$what" == preview || "$what" == all ]]; then
   for i in "${!preview[@]}"; do
     IFS='|' read -r name from keep gives words <<< "${preview[i]}"
     if [[ "$gives" != - ]]; then
-      awk -v k="$keep" -v s="$share" 'BEGIN { exit !(k - s >= 1) }' ||
-        { echo "preview: $name would keep under a second at $target s" >&2; exit 1; }
       [[ "$gives" == head ]] && from=$(awk -v f="$from" -v s="$share" 'BEGIN { print f + s }')
       keep=$(awk -v k="$keep" -v s="$share" 'BEGIN { print k - s }')
     fi
