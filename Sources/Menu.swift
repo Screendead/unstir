@@ -475,7 +475,7 @@ struct MenuView: View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
                      focus: cardFocus, arrived: card.pack != nil && card.pack == arrived,
-                     backTo: returns?.name ?? "menu",
+                     backTo: returns?.name ?? PackCard.menu,
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)

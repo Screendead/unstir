@@ -857,7 +857,7 @@ shot duo-tabletop-ladder-end-ax5 "Duo tabletop at the largest accessibility text
 # opens in the trailing half beside it, not over it. A tall window, folded or not, keeps today's menu.
 hold=10 shot duo-open-menu "Duo open: the menu with plughole 01 to 09 at par, the list and its dock at a phone's width in the leading half, the trailing half empty until a card opens." \
   "${duo[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CLOCK=1
-hold=10 shot duo-open-card "Duo open: Prism's card from the dock, in the trailing half beside the list, which stays live, the dock's covers still turning." \
+hold=10 shot duo-open-card "Duo open: Prism's card from the dock, in the trailing half beside the list, which stays live, the dock's covers still turning; its way out reads ✕ close, as the menu is in sight (d4-menuback = B)." \
   "${duo[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
 hold=10 shot duo-open-card-gate "Duo open: Lens 04 opened past the taste, its card beside the list, scrolled to buying under you've played the free three." \
   "${duo[@]}" PACK=lens LEVEL=4 BESTS=plughole:$nine,lens:000 OWNED= CLOCK=1
@@ -871,7 +871,7 @@ shot duo-open-mid-switch "Duo open: the menu mid-switch, whirlpool's list unstir
   "${duo[@]}" SCREEN=menu TIER=whirlpool BESTS=plughole:$par27 TIERSPIN=-2.5:0.33 OWNED= CLOCK=1
 hold=10 shot duo-folded-book-menu "Duo half open like a book: the list in the leading half and Escapement's card in the trailing half, each clear of the fold's band." \
   "${duo[@]}" FOLD=466,0,19,669 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=escapement CLOCK=1
-hold=10 shot duo-open-upright-menu "Duo open and turned upright (669 x 951 pt): today's menu, Prism's card over it." \
+hold=10 shot duo-open-upright-menu "Duo open and turned upright (669 x 951 pt): today's menu, Prism's card over it, its way out ‹ menu as on a phone." \
   FRAME=669x951 INSETS=59,0,34,0 SCREEN=menu BESTS=plughole:$nine OWNED= CARD=prism CLOCK=1
 hold=10 shot duo-tabletop-menu "Duo tabletop: today's menu, its list running through the fold (unchanged in this stage)." \
   "${table[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CLOCK=1
