@@ -115,8 +115,26 @@ final class Sound: @unchecked Sendable {
 
     enum Effect: Equatable, Sendable {
         case push, seized, solve, spilled, tap, undo, reset, tier
+        /// Escapement's clock ticking a tooth, the steel pawl on its ratchet wheel (Jack's call soundsk2 = D, round 16).
+        case ratchet
         /// The nth heal since the level opened or was reset.
         case heal(Int)
+    }
+
+    /// The file an effect plays: the `n`th of a tap's or a tick's four, in turn, so quick ones don't ring alike.
+    static func file(_ effect: Effect, _ n: Int) -> String {
+        switch effect {
+        case .tap: "tap-\(n % 4 + 1)"
+        case .ratchet: "ratchet-\(n % 4 + 1)"
+        case .push: "push"
+        case .seized: "seized"
+        case .solve: "solve"
+        case .spilled: "spilled"
+        case .undo: "undo"
+        case .reset: "reset"
+        case .tier: "switch"
+        case .heal(let n): "heal-\(((n - 1) % 6 + 6) % 6 + 1)"
+        }
     }
 
     /// Named by file.
@@ -149,6 +167,7 @@ final class Sound: @unchecked Sendable {
     private var bedFiles: [String: URL] = [:]
     private var beds: [String: AVAudioPCMBuffer] = [:]
     private var taps = 0
+    private var ratchets = 0
     private var bed: Bed?
     private var fader: DispatchSourceTimer?
     /// In the background, where the engine cannot start.
@@ -280,18 +299,9 @@ final class Sound: @unchecked Sendable {
 
     private func start(_ effect: Effect) {
         guard soundsOn else { return }
-        let name = switch effect {
-        case .tap: "tap-\(taps % 4 + 1)"
-        case .push: "push"
-        case .seized: "seized"
-        case .solve: "solve"
-        case .spilled: "spilled"
-        case .undo: "undo"
-        case .reset: "reset"
-        case .tier: "switch"
-        case .heal(let n): "heal-\(((n - 1) % 6 + 6) % 6 + 1)"
-        }
+        let name = Self.file(effect, effect == .ratchet ? ratchets : taps)
         if effect == .tap { taps += 1 }
+        if effect == .ratchet { ratchets += 1 }
         guard !suspended, let buffer = buffers[name], run(),
               let i = ends.indices.min(by: { ends[$0] < ends[$1] }) else { return }
         ends[i] = DispatchTime.now().uptimeNanoseconds + UInt64(Double(buffer.frameLength) / format.sampleRate * 1e9)
@@ -458,5 +468,22 @@ final class Sound: @unchecked Sendable {
 
     private func note(_ line: String) {
         Task { @MainActor in Log.write(line) }
+    }
+}
+
+extension Game {
+    /// Escapement: when each of the newest move's ticks sounds after its lift, as its clock's core starts to turn and
+    /// its flap falls; none on a level without clocks.
+    var ratchetTimes: [Double] { tick.indices.map { LevelView.tickBeat + LevelView.tickTurn * Double($0) } }
+
+    /// Plays the newest move's ticks at their times while they stand: an undo or a reset takes the rest back with the
+    /// move, and leaving the level cancels the wait.
+    func soundTicks() async {
+        let lift = ContinuousClock.now
+        for (i, t) in ratchetTimes.enumerated() {
+            guard (try? await Task.sleep(until: lift + .seconds(t), tolerance: .milliseconds(2))) != nil, i < tick.count
+            else { return }
+            Sound.shared.play(.ratchet)
+        }
     }
 }
