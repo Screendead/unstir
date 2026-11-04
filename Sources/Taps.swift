@@ -37,9 +37,9 @@ final class Taps {
     }
 
     static let shared = Taps()
-    /// The law's numbers: `TapCuts.unattributed` should the phone show the main thread's CPU time can't tell the
-    /// GPU's misses from its own.
-    static let cuts = TapCuts.attributed
+    /// The law's numbers. On the 13 Pro Max a main-thread stall's late frames read gpu nearly as often as cpu (7 of 15),
+    /// as the frame after a stall misses with the main thread idle, so every late frame counts.
+    static let cuts = TapCuts.unattributed
     /// Info.plist's `AdaptiveTaps`, which the build's ADAPTIVE_TAPS sets.
     nonisolated static let built = Bundle.main.object(forInfoDictionaryKey: "AdaptiveTaps") as? String == "YES"
 
