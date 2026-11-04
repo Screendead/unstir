@@ -248,7 +248,9 @@ struct Reel: Sendable {
                     if s > LevelView.tickBeat { f.flip = min((s - LevelView.tickBeat) / LevelView.tickTurn, 1) }
                 }
             }
-            if b.after.isEmpty { f.solved = (b.gesture.knob, s) }
+            // A solve that ticks waves with its tick, as `LevelView`'s does (Jack's call tk-finish = B, round 16).
+            let wave = b.ticked ? s - LevelView.tickBeat : s
+            if b.after.isEmpty && wave >= 0 { f.solved = (b.gesture.knob, wave) }
         }
         f.stack = entries.map(\.twist)
         f.clockRuns = entries.contains { $0.twist.rod == level.clocks.first?.rod }

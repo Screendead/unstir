@@ -481,6 +481,8 @@ struct TickCue: Equatable {
     var at: Double
     var sounds: [Sound.Effect]
     var haptic: SensoryFeedback
+    /// The tick that solves the tank: the solve's chime, haptic and wave land with it.
+    var solves = false
 }
 
 extension Game {
@@ -488,24 +490,29 @@ extension Game {
     /// after the lift, then a turn apart. Every tick is the ratchet's steel with its rigid haptic (Jack's calls soundsk2
     /// = D and soundsk-haptic = B, round 16). One that pushed has the error haptic, and the move's first push sounds the
     /// push over its ratchet: a pushed tick's own, unless the move's stir pushed first (Jack's calls tk-push = B and
-    /// tk-multi = C, round 16). None on a level without clocks, nor on a move that finishes the tank, which sounds only
-    /// as its finish at the lift, as the heal that solves sounds as the solve.
+    /// tk-multi = C, round 16). The move that solves the tank sounds its last tick with the solve's chime and success
+    /// haptic, which the wave waits for (tk-finish = B). None on a level without clocks, nor on a move that runs the tank
+    /// out of ticks, which sounds only as its finish at the lift.
     var tickCues: [TickCue] {
-        guard !finished else { return [] }
+        guard !lost else { return [] }
         var push = !stirPushed
         return tick.enumerated().map { i, t in
             var cue = TickCue(at: LevelView.tickBeat + LevelView.tickTurn * Double(i), sounds: [.ratchet],
                               haptic: t.pushed ? .error : .impact(flexibility: .rigid, intensity: 0.9))
             if t.pushed && push { cue.sounds.append(.push); push = false }
+            if solved && i == tick.count - 1 { cue.sounds.append(.solve); cue.haptic = .success; cue.solves = true }
             return cue
         }
     }
 
-    /// Plays the newest move's ticks at their times while they stand, handing each to `felt` for its haptic: an undo or
-    /// a reset takes the rest back with the move, a win the fine pass calls after the lift silences them, and leaving
-    /// the level cancels the wait.
+    /// Escapement: when the newest move's solve lands after its lift, nil where none waits for a tick.
+    var solveAt: Double? { tickCues.last(where: \.solves)?.at }
+
+    /// Plays the newest move's ticks at their times while they stand, handing each to `felt` for its haptic and, on the
+    /// solving tick, the wave: an undo or a reset takes the rest back with the move, and leaving the level cancels the
+    /// wait. Each cue is read as it lands, so a win the fine pass calls after the lift still lands on its last tick.
     func soundTicks(_ felt: (TickCue) -> Void) async {
-        let lift = ContinuousClock.now
+        let lift = landed
         var i = 0
         while i < tickCues.count {
             guard (try? await Task.sleep(until: lift + .seconds(tickCues[i].at), tolerance: .milliseconds(2))) != nil,

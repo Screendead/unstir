@@ -35,6 +35,7 @@ import XCTest
         XCTAssertEqual(g.tickCues.map(\.sounds), [[.ratchet], [.ratchet]])
         XCTAssertEqual(g.tickCues.map(\.haptic), [Self.plain, Self.plain])
         for (t, want) in zip(g.tickCues.map(\.at), [0.15, 0.45]) { XCTAssertEqual(t, want, accuracy: 1e-9) }
+        XCTAssertNil(g.solveAt)
         g.undo()
         XCTAssertEqual(g.tickCues, [])
     }
@@ -105,33 +106,47 @@ import XCTest
         for (cue, t) in zip(g.tickCues, g.tick) { XCTAssertEqual(cue.haptic, t.pushed ? .error : Self.plain) }
     }
 
-    /// A move that finishes the tank sounds only as its finish, at the lift, as the heal that solves sounds as the solve:
-    /// none of its ticks sounds or lands a haptic after the solve's or the loss's.
-    func testAMoveThatFinishesTheTankSoundsOnlyAsTheFinish() {
+    /// Jack's call tk-finish = B (round 16): the move that solves sounds its ticks, and the solve's chime and success
+    /// haptic land with its last tick, the wave with them; a solve with no tick after its lift lands at the lift. A move
+    /// that runs the tank out of ticks sounds only as its finish, at the lift: none of its ticks sounds or lands a haptic.
+    func testTheSolveLandsWithTheSolvingTick() {
         var level = Level.escapement[12]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         g.commit(rod: 3, steps: -2)
         g.commit(rod: 1, steps: -3)
-        XCTAssertFalse(g.tickCues.isEmpty)
+        XCTAssertFalse(g.tickCues.contains { $0.solves })
         g.wait(on: 0)
         XCTAssertTrue(g.solved)
         XCTAssertEqual(g.tick.map(\.rod), [2])
-        XCTAssertEqual(g.tickCues, [])
+        XCTAssertEqual(g.tickCues.map(\.sounds), [[.ratchet, .solve]])
+        XCTAssertEqual(g.tickCues.map(\.haptic), [.success])
+        XCTAssertEqual(g.tickCues.map(\.solves), [true])
+        XCTAssertEqual(g.solveAt ?? -1, LevelView.tickBeat, accuracy: 1e-9)
+
         var two = Level.escapement[1]
         two.id = "test-escapement"
+        two.scramble = .parse("1:+3", in: .tri)
+        let quick = Game(level: two, tankTurned: true, bank: (3, nil))
+        quick.commit(rod: 1, steps: -3)
+        XCTAssertTrue(quick.solved)
+        XCTAssertEqual(quick.tick.count, 0)
+        XCTAssertNil(quick.solveAt)
+
         two.scramble = .parse("1:+3,0:-1", in: .tri)
         let h = Game(level: two, tankTurned: true, bank: (3, nil))
         h.wait(on: 0)
         XCTAssertTrue(h.lost)
         XCTAssertFalse(h.tick.isEmpty)
         XCTAssertEqual(h.tickCues, [])
+        XCTAssertNil(h.solveAt)
         h.undo()
         XCTAssertFalse(h.finished)
         XCTAssertEqual(h.tickCues, [])
     }
 
-    /// The task the view runs hands every cue to its haptic in turn, at its time, and an undo between two stops the rest.
+    /// The task the view runs plays every cue in turn, at its time from the ticks' landing, and an undo between two stops
+    /// the rest.
     func testSoundTicksLandsEachCueInTurnUntilAnUndo() async {
         var level = Level.escapement[12]
         level.id = "test-escapement"
@@ -140,10 +155,9 @@ import XCTest
         let want = g.tickCues
         XCTAssertEqual(want.count, 2)
         var felt: [TickCue] = []
-        let lift = ContinuousClock.now
         await g.soundTicks { felt.append($0) }
         XCTAssertEqual(felt, want)
-        XCTAssertGreaterThanOrEqual(ContinuousClock.now - lift, .seconds(want[1].at))
+        XCTAssertGreaterThanOrEqual(ContinuousClock.now - g.landed, .seconds(want[1].at))
         felt = []
         await g.soundTicks { cue in
             felt.append(cue)

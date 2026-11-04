@@ -498,7 +498,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   line (`testTheBudgetIsWhatTheClocksOweAlongEveryProblemsLine`, `testEachHubCountsItsOwnClockAndTheHeaderIsTheirSum`,
   which also checks the counts through a wrong move and its undo before every move of every line). No clock in the
   book owes more than 9, so a hub shows one digit (`testEveryHubCountFitsOneDigit`). A solve spends the budget to the
-  last tick, so `over` is always 0 and its best stores as solved. One clock stopping while another runs loses nothing.
+  last tick, so `over` is always 0 and its best stores as solved; its wave, the tank's swell, the glass easing home and
+  the chime wait for that tick, `tickBeat` and more after the lift, and the result card follows the wave by its usual
+  1.4 s (`LevelView.landSolve`, `solveDelay`; Jack's call tk-finish = B, round 16). One clock stopping while another runs loses nothing.
   A full stack refuses a move whose tick it would refuse. Undo is the pack's, the stack and the clocks as the move found
   them, and works on a tank out of ticks; reset deals the counts afresh. The result card says "solved in N moves", as a solve always spends the budget. The header shows the budget, not moves against
   par: "ticks" and a split-flap numeral (`FlipCounter`), driven by the ticks' own keyframes, whose old digit's top half
@@ -1013,10 +1015,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the demonstration's too (Jack's call soundsk-haptic = B, round 16). A tick that pushed lands the error haptic instead,
   and the move's first push sounds the push over its ratchet at the same instant: the first pushed tick's, unless the
   move's own stir pushed at the lift, so later pushed ticks sound only their ratchet (`Game.stirPushed`; Jack's calls
-  tk-push = B and tk-multi = C, round 16). A move that finishes
-  the tank, solved or out of ticks, sounds only as its finish at the lift, its ticks without sound or haptic, as the heal that
-  solves sounds as the solve. One task that leaving
-  the level cancels plays them; an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
+  tk-push = B and tk-multi = C, round 16). The move that solves sounds its ticks, and the solve's chime and success
+  haptic land with its last tick, the wave with them (`Game.solveAt`, tk-finish = B); a solve with no tick after its lift,
+  or one the fine pass calls past its last tick, lands at once. A move that runs the tank out of ticks sounds only as
+  its finish at the lift, its ticks without sound or haptic. One task that leaving
+  the level cancels plays them, timed from the ticks' landing (`Game.landed`); an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
   landed before the view appeared, stay silent and still. Beds loop under the menu and each tier (`Level.bed`;
   daily, endless, the sandbox and the packs take plughole's), and a new one crossfades in over the old at equal power
   across two decks. Only a bed that is playing stays decoded, and none in the background.
