@@ -18,13 +18,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      # The simulator boots in the background through the steps that follow; the test step waits for what is left.
-      - name: Boot the simulator
-        id: sim
-        run: |
-          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
-          echo "udid=$udid" >> "$GITHUB_OUTPUT"
-          (SECONDS=0; xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null; echo "$SECONDS" > "$RUNNER_TEMP/boot.s") > /dev/null 2>&1 &
       - name: Install XcodeGen
         run: |
           curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
@@ -47,6 +40,14 @@ jobs:
             !build/store/Logs
           key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', 'Config/**', '.github/workflows/test.yml', '.github/workflows/nightly.yml', 'scripts/test-store.sh') }}
           restore-keys: store-${{ steps.xcode.outputs.build }}-
+      # The simulator boots in the background while the build runs, and the test step waits for what is left. It starts
+      # after the cache is restored, since the boot's disk traffic slowed the restore's untar from about 3 s to 124 s.
+      - name: Boot the simulator
+        id: sim
+        run: |
+          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          (SECONDS=0; xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null; echo "$SECONDS" > "$RUNNER_TEMP/boot.s") > /dev/null 2>&1 &
       # Signed ad hoc by the script, as the nightly needs. The timing summary says where the build's time went.
       # `shell: bash` adds pipefail; without it the step's status is grep's, which passes once any test has run.
       - name: Build for testing
