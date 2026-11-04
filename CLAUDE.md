@@ -544,7 +544,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   prover, its one key pinned,
   `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
-  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
+  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
@@ -701,13 +701,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
   `min(width, height - 290) / 1.045`, as on every iPhone; a wider one (the iPhone Duo opened like a book, whatever the
-  portrait lock) splits at the fold, 16 pt clear of it either side: the tank alone, centred, in the leading half, and
-  `LevelView`'s header, title, caption (and the cards hung from it, which the caption stretches to hold there, as
-  `PlayStack` measures no overlay), swatches and controls in the trailing half. The fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
+  portrait lock) splits at the fold, 16 pt clear of it either side: the tank in the leading half with `LevelView`'s
+  header and title above it and its caption, swatches and controls below, and the menu in the trailing half (stage 5,
+  below). The fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
   the phone is folded; compiled in only from an SDK whose SwiftUI is 8.1 or later, as CI's older Xcode lacks it), else
   the window's middle. A tall window folded across (the Duo upright on a table) is the
-  tabletop: the rest in the upright half, the tank filling the half lying flat, and "unstirred." at the upright half's
-  foot (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
+  tabletop: the rest in the upright half (the cards hung from the caption, which stretches to hold them there, as
+  `PlayStack` measures no overlay), the tank filling the half lying flat, and "unstirred." at the upright half's foot
+  (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
   shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1300 px), the size the stack's limits
   were tuned at, so the Duo upright keeps a 433 pt glass. The column is a `VStackLayout` and the split and tabletop
   `PlayStack`, through one `AnyLayout`, so a change of pose keeps every part's identity, the tank's picture, opening,
@@ -721,8 +722,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   radius past the rim) and the tank's rim lesson over twelve (`above`, `RimLesson.overRim`), and the glass shrinks to
   hold it: endless's to about 348 pt in the open split and 326 in the tabletop, whose glass sits on its half's foot
   with the room left above it. Counts and a lens's track keep inside the pane too (`PlayLayout.bounds`, the pane in the
-  glass's frame, which `countSpot` and `track` clamp to), and a lens turns only as far as its track shows there
-  (`LevelView.trackRoom`, each step's place on the track inside the pane, counting the open stir the turn joins;
+  glass's frame, which `countSpot` clamps to; `trackBounds`, the same less the split's header and title, so a zoom the
+  wrong way never draws through the count, which `track` clamps to), and a lens turns only as far as its track shows
+  there (`LevelView.trackRoom`, each step's place on the track inside it, counting the open stir the turn joins;
   `lensCapped`), so what lands is what the track counts: travel past the end is dropped, the finger turning back
   turns the lens back at once, and every Lens level's unzoom fits in every pose (Jack's call d3-lenscap = B, round
   16; the column caps nothing). As the open stir counts, a lens lifted at its cap zooms further only once a move on
@@ -734,17 +736,76 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tank, caption, swatches, controls in every pose (not yet heard; the tabletop's places alone would end with the
   tank). The play screen's text is fixed in size bar the cards' pack pointers, and at the largest type the fullest
   cards fit each pane. The fold is read in one place (`PlayLayout.fold`, the harness's or the system's), for the menu
-  too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule, so the tabletop keeps today's menu: the
+  too. `MenuLayout.of` splits the menu wherever play splits, by play's own rule: the
   list, its dock under it as on a phone, in the leading half (about 460 pt on the open Duo, a phone's width), and a
   pack's card or the archive in the trailing half beside it rather than over it, coming in from the trailing edge,
   neither modal to VoiceOver there, the list and dock staying live and the dock's covers turning (stage 4), and the
   card's way out reads "✕ close" (VoiceOver "Close"), as the menu is in sight, unless it goes back to the bundle's
   card (`PackCard.back`; Jack's call d4-menuback = B, round 16). It holds
   one at a time: whichever opens last, from the list, the dock or `RootView`, closes the other, and unfolding with a
-  card over the archive keeps the card. With neither open the trailing half is empty. The column measures the layout with `onGeometryChange` on today's tree, so
+  card over the archive keeps the card. With neither open the trailing half is empty. The tabletop's menu is the split
+  turned on its side (stage 5, where d4-table left it): the title, strip and list in the upright half, and the dock at
+  the foot of the half lying flat, where a card or the archive opens over it, each 16 pt clear of the fold
+  (`MenuLayout.dock`); the settings sheet rises no higher than the dock's top, scrolling past it
+  (`SettingsSheet.detents`; not shot, as the harness presents sheets at the simulator's size, and the policy's Safari
+  view and the mail sheet over it are the system's, full height); a level opened in the tabletop covers the menu as on
+  a phone, as only the split plays beside it (`MenuLayout.splits`). The column measures the layout with `onGeometryChange` on today's tree, so
   every iPhone's menu is unchanged, and a change of pose keeps the list's place, and a card's or the archive's: either
   is drawn in one place in the tree in every pose, over the menu or beside the list, so it is moved, not opened again
   (Jack's call d4-pose = B, round 16).
+  Where play splits, a level opens beside the menu (stage 5; Jack's calls D-layout = 3, DUOMENU = B and s5-chrome = B,
+  round 16): the tank in the leading half with its chrome round it, the header and title above it and the caption,
+  swatches and controls below (`PlayStack.placeRound`), and the menu alone in the trailing half. The glass is as large
+  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape and whether Prism's swatches show, fixed
+  heights that `testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure` holds against the parts as `PlayStack` lays a
+  level out and hands them to `chromeMeasured`; the play screen's text is fixed in size, so no type size changes
+  it), the spare room half
+  over the tank and half over the controls: stage 1's 424 pt for every level of plughole, whirlpool and vortex, the
+  daily, Lens, and Prism read by colour; 5 pt less for maelstrom's rim lesson under the title, 9 less for
+  Escapement's split-flap ticks and two lines of serif, 30 less for Prism's swatches under its colour letters, and
+  endless's 348 as before, so every level of one list takes one glass, but Prism's follows its swatches: colour
+  letters or Differentiate Without Colour turned on or off mid-level resizes it by 30 pt and lets go a drag, as a
+  change of pose does
+  (`testTheGlassShrinksBesideTheMenuOnlyWhereTheChromeNeedsIt`; every caption fits its two lines there,
+  `testEveryCaptionFitsTheChromesTwoLinesBesideTheMenu`). A result or lost card goes over the menu in the trailing
+  half, centred on the tank and headed by "unstirred." (`PlayLayout.words` is nil there): still hung from the caption
+  and moved there (`LevelView.card`), so a change of pose moves it rather than showing it again. The list fades out
+  under it with the card's reveal, out of touch and VoiceOver (`MenuView.covered`, from `LevelView.onCover` through
+  `RootView.covering`, keyed by the level), and a pack's card that one of its pointers opens lies over it. On
+  Escapement's paper the leading half is bone and the trailing half black from the fold (`LevelView.menuGround`) until
+  a card takes it over on the level's paper. `LevelView` adds a `PlayPart.menu` part, which `PlayStack` places over
+  the trailing half (`PlayLayout.menuPane`) and which reports its frame in `RootView.space`; `RootView` passes it to
+  `MenuView` as `slot`, and the list glides there from its own half, and back
+  as the level closes, in one 0.45 s move (none under Reduce Motion; a menu built beside play, on a launch into a level
+  or the phone opening, waits unseen for the slot and appears there). Beside play the menu is the menu as it stands
+  with no level open, title, gear, tier strip, list and dock, the title gliding with the list (Jack's call s5b-title =
+  B), drawn over the level
+  (`zIndex`) with only its own column black; the dock
+  holds still (`PackDock.paused`) and a tier switch cuts to the new list without the stir (`MenuView.go`), so nothing
+  of the menu takes GPU time from the tank. Back closes the level and the list returns to its half, the row left lit
+  once however often it is left (`MenuView.followPlaying`, on the level leaving, not on a change of focus). A row, the
+  tagline's next, an archive day or a card's level picked beside play is decided before anything leaves
+  (`RootView.besidePick`): one that opens leaves the playing level through its own way out (`LevelView.switching`: a
+  finger let go, its quit sent and its try saved, as `leave` does), then opens in the tank; a gate's or a withheld
+  level leaves the playing level untouched, sending nothing, the gate's card over the trailing half (before the store
+  has read what the player owns, decided again once it has); the playing level's own row opens nothing and doesn't tap
+  (`MenuView.opens`, so endless's row never deals a run over the one playing; its new run does). A result card's next
+  and up a notch open in place without the switch (`RootView.proceed`), as on a phone, so a cleared tank sends no run's
+  quit. The list follows the playing level (`MenuView.playing`: its tier, switched to without the switch's sound; its
+  row centred, again once the list has glided to a new slot, as the phone folds; its hairline at full and
+  "playing" in place of its rods and par, as the frontier's hairline is lit too), and the menu, no longer built anew
+  on each return, reads its rows, run and dailies afresh on `RootView.revision`, bumped by every level opened, left or
+  finished. A pack's card or the archive opens over the whole trailing half, its ground running on to the fold, as a
+  phone's covers the menu (its way out "‹ menu", modal
+  to VoiceOver; "✕ close" over the playing level's result card, which covers the menu, `MenuView.closes`, Jack's call
+  s5b-back = B), the level playing on under it: from the dock, a result card's pointer, a gate or a promoted purchase.
+  A level opened from a card or the archive puts it away while it plays (`RootView.parked`) and brings it back as that
+  level leaves, if its way out names it (`RootView.returns`), as on a phone it waits under the level; one left under a
+  level in another pose is put away as the window becomes a split (the phone opened mid-level), before the menu is
+  drawn there, and waits under the level again if the phone closes. `RootView.slot` goes with the menu beside play, so
+  a later one waits for its level's own. The consent question waits for the level to close, as it would dim the tank. A back swipe beside the menu slides
+  nothing, as the menu is in sight: past the threshold the level leaves through the dip, as under Reduce Motion.
+  VoiceOver hears the level before the menu (`accessibilitySortPriority`; not yet heard on a device).
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)
   before daily #1 (`Share.firstDay`, or today while it is unset) to yesterday, local Gregorian days as the ids are, so
   today's daily stays on the menu. Any purchase opens it (`Store.bought`, a pack or the bundle owned), and the developer
@@ -902,7 +963,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   "privacy policy", which opens `SettingsSheet.policy` (Apple's guideline 5.1.1(i)) in Safari's view
   (`SafariSheet`): Info.plist's `PolicyURL`, Jack's own domain, or the github.com page of `docs/privacy-policy.md` where
   the build has none, then the version and build ("Unstir 1.0 (1)"); it scrolls, with a large detent, only where
-  its content outgrows the screen. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
+  its content outgrows the screen, or in the tabletop the half lying flat. No ID leaves the phone. `Tally` (stored as `analytics`) keeps the install's local day, the days opened, what has gone out
   once and an undo count; undecided records, a no records nothing and `decide(false)` forgets all of it but the
   install's day (`Tally.forgotten`), so day numbers stay right and a later yes starts clean (re-sending `installed`);
   bests and started flags are the game's own and stay (Jack, 2026-10-26, N). Its `opened` gives `installed` once,
@@ -969,7 +1030,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   hairline lit. A hidden stir in
   the background builds the shader's pipeline before the first switch. The pack dock (`PackDock`) is a bottom inset of
   the list, and the card (`RootView`'s, bound in) lies over the whole menu, or beside the list in a wide window
-  (`MenuLayout`), as the archive does. The list opens centred, unanimated under
+  (`MenuLayout`), or over the trailing half beside a playing level, as the archive does. The list opens centred, unanimated under
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
   `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
   the first short of par, else the top). The daily, endless and the sandbox leave it at the top. That row's hairline,
@@ -1026,7 +1087,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   settings' log without Mail) are `ShareButton`s, which tap and present the system share sheet themselves over
   whatever is in front (`ShareSheet`), as a ShareLink's tap went unheard on a device (Jack's call SND3 = B, round 16).
   The menu's tier names and rows
-  stay plain: `go` plays `switch` once as a switch starts, by tap or drag, and a row taps only when it opens, never as
+  stay plain: `go` plays `switch` once as a switch starts, by tap or drag (never as the list follows a level beside it), and a row taps only when it opens, never as
   a tier swipe lifts over it. A bare text button's label, and the play screen's capsules, take `hit()`, which grows the
   target to 44 pt round it without moving anything. Nothing sounds during a drag, and a sound never tells the player anything the picture doesn't. Settings' music switch takes the bed
   out over the crossfade and back (`Sound.music`), its sounds switch every effect and button (`Sound.sounds`), and its
@@ -1095,7 +1156,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   tier's first level, as "up a notch" does, then leaves that; `=swipe` leaves through the back swipe's commit).
   `UNSTIR_BACKSWIPE=0.4` holds the level that share of the way into a back swipe, the menu under it, and `=run` plays
   the swipe a second in by a drawn fingertip. `UNSTIR_LOCKTAP=L8` holds that closed row as a tap
-  leaves it, saying what opens it. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
+  leaves it, saying what opens it. `UNSTIR_PICK=L12` picks that level (a tier's or a pack's, by id) a second and a half
+  in, as its row would, the harness's flags carried over (beside play, the playing level leaves for it), and
+  `UNSTIR_PICK=archive` opens the archive then, as its row does. `UNSTIR_TRIED=L14,lens-2` reads those levels as started, and `UNSTIR_DAILIES=n`
   today's daily and the n-1 days before it as solved at par (so the modes' rows as seen), for that launch only.
   `UNSTIR_ARCHIVE=1` opens the archive over the menu, `UNSTIR_ARCHIVED=1:c,3:0,6:2,9:t` gives the daily that many days
   back a best from the archive (clean, that many over par) or a try, and `UNSTIR_MODE=archive UNSTIR_DAY=n` opens the
