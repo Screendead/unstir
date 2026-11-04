@@ -1017,7 +1017,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   move's own stir pushed at the lift, so later pushed ticks sound only their ratchet (`Game.stirPushed`; Jack's calls
   tk-push = B and tk-multi = C, round 16). The move that solves sounds its ticks, and the solve's chime and success
   haptic land with its last tick, the wave with them (`Game.solveAt`, tk-finish = B); a solve with no tick after its lift,
-  or one the fine pass calls past its last tick, lands at once. A move that runs the tank out of ticks plays its ticks
+  or one the fine pass calls past its last tick, lands at once. Either way the chime plays only from
+  `LevelView.landSolve`, once, never from the tick's own cue. A move that runs the tank out of ticks plays its ticks
   as any other move does, after the out-of-ticks sound at the lift. One task that leaving
   the level cancels plays them, timed from the ticks' landing (`Game.landed`); an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
   landed before the view appeared, stay silent and still. Beds loop under the menu and each tier (`Level.bed`;

@@ -118,7 +118,7 @@ import XCTest
         g.wait(on: 0)
         XCTAssertTrue(g.solved)
         XCTAssertEqual(g.tick.map(\.rod), [2])
-        XCTAssertEqual(g.tickCues.map(\.sounds), [[.ratchet, .solve]])
+        XCTAssertEqual(g.tickCues.map(\.sounds), [[.ratchet]])
         XCTAssertEqual(g.tickCues.map(\.haptic), [.success])
         XCTAssertEqual(g.tickCues.map(\.solves), [true])
         XCTAssertEqual(g.solveAt ?? -1, LevelView.tickBeat, accuracy: 1e-9)
@@ -151,10 +151,25 @@ import XCTest
         for (i, cue) in cues.enumerated() {
             XCTAssertEqual(cue.at, LevelView.tickBeat + LevelView.tickTurn * Double(i), accuracy: 1e-9)
             XCTAssertEqual(cue.solves, i == last, "tick \(i)")
-            XCTAssertEqual(cue.sounds, i == last ? [.ratchet, .solve] : [.ratchet], "tick \(i)")
+            XCTAssertEqual(cue.sounds, [.ratchet], "tick \(i)")
             XCTAssertEqual(cue.haptic, i == last ? .success : Self.plain, "tick \(i)")
         }
         XCTAssertEqual(g.solveAt ?? -1, 0.75, accuracy: 1e-9)
+    }
+
+    /// The task hands the solving tick to the view, which lands the chime, haptic and wave once: the cue itself sounds only
+    /// its ratchet, so a win whose own change also lands them can't play the chime twice.
+    func testSoundTicksHandsTheSolvingTickToTheView() async {
+        var level = Level.escapement.max { $0.clocks.count < $1.clocks.count }!
+        level.id = "test-escapement"
+        level.scramble = level.clocks.reversed().map { Twist(rod: $0.rod, steps: -$0.dir) }
+        let g = Game(level: level, tankTurned: true, bank: (3, nil))
+        g.wait(on: level.clocks[0].rod)
+        XCTAssertTrue(g.solved)
+        var felt: [TickCue] = []
+        await g.soundTicks { felt.append($0) }
+        XCTAssertEqual(felt.map(\.solves), [false, false, true])
+        XCTAssertFalse(felt.contains { $0.sounds.contains(.solve) })
     }
 
     /// A move that runs the tank out of ticks plays its ticks as any other move does, after the out-of-ticks sound at the
@@ -168,7 +183,7 @@ import XCTest
         XCTAssertTrue(h.lost)
         XCTAssertFalse(h.tick.isEmpty)
         XCTAssertEqual(h.tickCues.count, h.tick.count)
-        XCTAssertFalse(h.tickCues.contains { $0.solves || $0.sounds.contains(.solve) })
+        XCTAssertFalse(h.tickCues.contains(where: \.solves))
         XCTAssertNil(h.solveAt)
         for (cue, t) in zip(h.tickCues, h.tick) {
             XCTAssertEqual(cue.sounds.first, .ratchet)

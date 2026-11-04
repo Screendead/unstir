@@ -2483,8 +2483,8 @@ struct LevelView: View {
         .task(id: sounding) {
             guard sounding != nil else { return }
             await game.soundTicks { cue in
-                // The solving tick's success haptic is the wave's.
-                if cue.solves { landSolve(chime: false) } else { felt = Felt(n: (felt?.n ?? 0) + 1, haptic: cue.haptic) }
+                // The solving tick's chime and success haptic are the wave's, which lands once however the win came.
+                if cue.solves { landSolve(chime: true) } else { felt = Felt(n: (felt?.n ?? 0) + 1, haptic: cue.haptic) }
             }
         }
         .haptic(.success, trigger: waved) { _, waved in waved }
@@ -2517,6 +2517,8 @@ struct LevelView: View {
 
     /// Escapement: the beat between a lift and its first tick, and each tick's turn.
     nonisolated static let tickBeat = 0.15, tickTurn = 0.3
+    /// When a move's `i`th tick lands after its lift.
+    nonisolated static func tickAt(_ i: Int) -> Double { tickBeat + tickTurn * Double(i) }
 
     /// Escapement: the ticks left, a split-flap numeral whose every tick flips it down one as that clock's tick starts
     /// to turn, so a move of three running clocks flips it three times in their order. Escapement has no par (Jack's

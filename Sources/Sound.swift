@@ -481,7 +481,8 @@ struct TickCue: Equatable {
     var at: Double
     var sounds: [Sound.Effect]
     var haptic: SensoryFeedback
-    /// The tick that solves the tank: the solve's chime, haptic and wave land with it.
+    /// The tick that solves the tank: the solve's chime, haptic and wave land with it, through the view, which plays
+    /// them once whether the tick or the win's own change comes first.
     var solves = false
 }
 
@@ -490,16 +491,16 @@ extension Game {
     /// after the lift, then a turn apart. Every tick is the ratchet's steel with its rigid haptic (Jack's calls soundsk2
     /// = D and soundsk-haptic = B, round 16). One that pushed has the error haptic, and the move's first push sounds the
     /// push over its ratchet: a pushed tick's own, unless the move's stir pushed first (Jack's calls tk-push = B and
-    /// tk-multi = C, round 16). The move that solves the tank sounds its last tick with the solve's chime and success
-    /// haptic, which the wave waits for (tk-finish = B). A move that runs the tank out of ticks plays its ticks as any
+    /// tk-multi = C, round 16). The move that solves the tank lands the solve's chime and success haptic with its last
+    /// tick, and the wave with them (tk-finish = B). A move that runs the tank out of ticks plays its ticks as any
     /// other move does. None on a level without clocks.
     var tickCues: [TickCue] {
         var push = !stirPushed
         return tick.enumerated().map { i, t in
-            var cue = TickCue(at: LevelView.tickBeat + LevelView.tickTurn * Double(i), sounds: [.ratchet],
+            var cue = TickCue(at: LevelView.tickAt(i), sounds: [.ratchet],
                               haptic: t.pushed ? .error : .impact(flexibility: .rigid, intensity: 0.9))
             if t.pushed && push { cue.sounds.append(.push); push = false }
-            if solved && i == tick.count - 1 { cue.sounds.append(.solve); cue.haptic = .success; cue.solves = true }
+            if solved && i == tick.count - 1 { cue.haptic = .success; cue.solves = true }
             return cue
         }
     }
