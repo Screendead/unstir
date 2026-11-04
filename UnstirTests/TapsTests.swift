@@ -22,7 +22,7 @@ final class TapsTests: XCTestCase {
         Taps.save(.init(applied: 20, cap: nil, strikes: 0, build: "1-4", os: "27.2"), duo, to: d)
         d.set(true, forKey: "taps.unrelated")
         XCTAssertEqual(Taps.load(phone, from: d, build: "1-5", os: "27.2")?.applied, 28)
-        XCTAssertEqual(Taps.learnt(in: d, build: "1-5", os: "27.2"), [phone: .init(budget: 28, limit: 40)], "the older build's is gone")
+        XCTAssertEqual(Taps.kept(in: d, build: "1-5", os: "27.2"), [phone: 28], "the older build's is gone")
         XCTAssertNil(d.object(forKey: duo.stored))
         XCTAssertNil(Taps.load(phone, from: d, build: "1-5", os: "27.3"))
         XCTAssertNil(d.object(forKey: phone.stored), "a new OS drops it")
@@ -90,105 +90,63 @@ final class TapsTests: XCTestCase {
         XCTAssertEqual(taps.budget(pixels: px), 30)
     }
 
-    /// A glass keeps only what its own drags decided: a start lowered by a neighbour's step is never stored as learnt,
-    /// so once the neighbour climbs back the glass starts from its own static limit again.
+    /// Every new glass starts at its own static limit, whatever other glasses have kept (Jack's call taps-keep = C).
     @MainActor
-    func testAnInheritedStartIsNeverKept() throws {
-        let d = try XCTUnwrap(UserDefaults(suiteName: "TapsKeep"))
-        d.removePersistentDomain(forName: "TapsKeep")
-        defer { d.removePersistentDomain(forName: "TapsKeep") }
-        let ids = Taps(rate: { 120 }, defaults: d)
-        let phone = TapKey(hz: 120, pixels: Tank.tunedPixels), duo = TapKey(hz: 120, pixels: 1471), period = 1.0 / 120
-        func stored(_ applied: Int) -> TapLaw.Stored {
-            .init(applied: applied, cap: nil, strikes: 0, build: ids.build, os: ids.os, limit: 40)
-        }
-        func drag(_ taps: Taps, work: Int, _ f: FrameWatch.Frame, _ n: Int) {
-            taps.window(TapWindow(pixels: 1471, work: work, held: "rod 0", picture: "grid"))
-            for _ in 0..<n { taps.frame(f) }
-            taps.window(nil)
-            taps.still(pixels: 1471, "move")
-        }
-        let onTime = FrameWatch.Frame(interval: period, period: period, cpu: 0, age: 1, produced: true)
-        Taps.save(stored(30), phone, to: d)
-        let first = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
-        first.use(.adapt(from: nil, stores: true))
-        first.still(pixels: 1471, "open")
-        XCTAssertEqual(first.budget(pixels: 1471), 12, "17 lowered as the phone stepped 40 to 30")
-        drag(first, work: 10, onTime, 60)
-        XCTAssertNil(d.object(forKey: duo.stored), "a drag that decided nothing keeps nothing")
-        Taps.save(stored(40), phone, to: d)
-        let later = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
-        later.use(.adapt(from: nil, stores: true))
-        later.still(pixels: 1471, "open")
-        XCTAssertEqual(later.budget(pixels: 1471), 17, "the phone climbed back, so the Duo starts from its own limit")
-        // A decision keeps, with the glass's own static limit.
-        drag(later, work: 17, FrameWatch.Frame(interval: 2 * period, period: period, cpu: 0, age: 1, produced: true), Taps.cuts.near)
-        let kept = try XCTUnwrap(Taps.load(duo, from: d, build: ids.build, os: ids.os))
-        XCTAssertEqual([kept.applied, kept.limit], [16, 17])
-    }
-
-    /// Heat draws its own budget over an inherited start and gives it back, and neither is kept nor learnt.
-    @MainActor
-    func testHeatNeverKeepsAnInheritedStart() throws {
-        let d = try XCTUnwrap(UserDefaults(suiteName: "TapsHeat"))
-        d.removePersistentDomain(forName: "TapsHeat")
-        defer { d.removePersistentDomain(forName: "TapsHeat") }
-        var state = ProcessInfo.ThermalState.serious
-        let taps = Taps(rate: { 120 }, defaults: d, thermal: { state })
-        let phone = TapKey(hz: 120, pixels: Tank.tunedPixels), duo = TapKey(hz: 120, pixels: 1471), period = 1.0 / 120
-        Taps.save(.init(applied: 35, cap: nil, strikes: 0, build: taps.build, os: taps.os, limit: 40), phone, to: d)
-        taps.use(.adapt(from: nil, stores: true))
-        taps.still(pixels: 1471, "open")
-        XCTAssertEqual(taps.budget(pixels: 1471), 12, "17 lowered to 14 as the phone stepped, then a quarter off, at the floor")
-        XCTAssertNil(d.object(forKey: duo.stored), "a hot start drawn at the level's opening keeps nothing")
-        // A miss while hot, at the floor, steps nothing.
-        taps.window(TapWindow(pixels: 1471, work: 12, held: "rod 0", picture: "grid"))
-        for _ in 0..<Taps.cuts.near { taps.frame(FrameWatch.Frame(interval: 2 * period, period: period, cpu: 0, age: 1, produced: true)) }
-        taps.window(nil)
-        taps.still(pixels: 1471, "move")
-        XCTAssertNil(d.object(forKey: duo.stored))
-        state = .nominal
-        taps.heat(state)
-        taps.still(pixels: 1471, "move")
-        XCTAssertEqual(taps.budget(pixels: 1471), 14, "the cool start back")
-        XCTAssertNil(d.object(forKey: duo.stored), "nor once it cools")
-        XCTAssertFalse(taps.summary.contains(duo.name), "nor learnt for this launch: \(taps.summary)")
-    }
-
-    /// A step taken back to an inherited start unlearns the glass: the start is never kept as its own.
-    @MainActor
-    func testARevertToAnInheritedStartUnlearnsTheGlass() throws {
-        let d = try XCTUnwrap(UserDefaults(suiteName: "TapsRevert"))
-        d.removePersistentDomain(forName: "TapsRevert")
-        defer { d.removePersistentDomain(forName: "TapsRevert") }
+    func testAFreshGlassStartsAtItsStaticLimitWhateverOthersKept() throws {
+        let d = try XCTUnwrap(UserDefaults(suiteName: "TapsFresh"))
+        d.removePersistentDomain(forName: "TapsFresh")
+        defer { d.removePersistentDomain(forName: "TapsFresh") }
         let taps = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
-        let phone = TapKey(hz: 120, pixels: Tank.tunedPixels), duo = TapKey(hz: 120, pixels: 1471), period = 1.0 / 120
-        let miss = FrameWatch.Frame(interval: 2 * period, period: period, cpu: 0, age: 1, produced: true)
-        func stored(_ applied: Int) -> TapLaw.Stored {
-            .init(applied: applied, cap: nil, strikes: 0, build: taps.build, os: taps.os, limit: 40)
+        for (px, b) in [(Tank.tunedPixels, 12), (984.0, 12), (1302.0, 12), (1200.0, 42)] {
+            Taps.save(.init(applied: b, cap: nil, strikes: 0, build: taps.build, os: taps.os), TapKey(hz: 120, pixels: px), to: d)
         }
-        func drag(_ t: Taps, work: Int, _ n: Int) {
+        taps.use(.adapt(from: nil, stores: true))
+        for (px, b) in [(1471.0, 17), (1171.3, 40), (1334.0, 21), (656.5, 40)] {
+            taps.still(pixels: px, "open")
+            XCTAssertEqual(taps.budget(pixels: px), b, "\(px) px")
+        }
+        taps.still(pixels: Tank.tunedPixels, "open")
+        XCTAssertEqual(taps.budget(pixels: Tank.tunedPixels), 12, "a glass's own kept budget is its own")
+    }
+
+    /// A glass keeps what its own drags decide, and only that: a drag that decides nothing writes nothing, a step is
+    /// kept and reloaded, and heat over it is drawn but never kept.
+    @MainActor
+    func testAGlassKeepsAndReloadsItsOwnDecisions() throws {
+        let d = try XCTUnwrap(UserDefaults(suiteName: "TapsOwn"))
+        d.removePersistentDomain(forName: "TapsOwn")
+        defer { d.removePersistentDomain(forName: "TapsOwn") }
+        var state = ProcessInfo.ThermalState.nominal
+        let duo = TapKey(hz: 120, pixels: 1471), period = 1.0 / 120
+        let onTime = FrameWatch.Frame(interval: period, period: period, cpu: 0, age: 1, produced: true)
+        let miss = FrameWatch.Frame(interval: 2 * period, period: period, cpu: 0, age: 1, produced: true)
+        func drag(_ t: Taps, work: Int, _ f: FrameWatch.Frame, _ n: Int) {
             t.window(TapWindow(pixels: 1471, work: work, held: "rod 0", picture: "grid"))
-            for _ in 0..<n { t.frame(miss) }
+            for _ in 0..<n { t.frame(f) }
             t.window(nil)
             t.still(pixels: 1471, "move")
         }
-        Taps.save(stored(35), phone, to: d)
-        taps.use(.adapt(from: nil, stores: true))
-        taps.still(pixels: 1471, "open")
-        XCTAssertEqual(taps.budget(pixels: 1471), 14, "17 lowered as the phone stepped 40 to 35")
-        drag(taps, work: 14, Taps.cuts.near)
-        XCTAssertEqual(taps.budget(pixels: 1471), 13)
-        XCTAssertEqual(Taps.load(duo, from: d, build: taps.build, os: taps.os)?.applied, 13, "a step is the Duo's own")
-        drag(taps, work: 14, Taps.cuts.near)
-        XCTAssertEqual(taps.budget(pixels: 1471), 14, "two taps missed as often: the step taken back")
-        XCTAssertNil(d.object(forKey: duo.stored), "back at the inherited start, nothing of the Duo's is kept")
-        XCTAssertFalse(taps.summary.contains(duo.name), "nor learnt: \(taps.summary)")
-        Taps.save(stored(40), phone, to: d)
-        let later = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
+        let first = Taps(rate: { 120 }, defaults: d, thermal: { state })
+        first.use(.adapt(from: nil, stores: true))
+        first.still(pixels: 1471, "open")
+        XCTAssertEqual(first.budget(pixels: 1471), 17)
+        drag(first, work: 10, onTime, 60)
+        XCTAssertNil(d.object(forKey: duo.stored), "a drag that decided nothing keeps nothing")
+        drag(first, work: 17, miss, Taps.cuts.near)
+        XCTAssertEqual(first.budget(pixels: 1471), 16)
+        XCTAssertEqual(Taps.load(duo, from: d, build: first.build, os: first.os)?.applied, 16, "its own step")
+        XCTAssertTrue(first.summary.contains("\(duo.name) 16"), first.summary)
+        state = .serious
+        let later = Taps(rate: { 120 }, defaults: d, thermal: { state })
         later.use(.adapt(from: nil, stores: true))
         later.still(pixels: 1471, "open")
-        XCTAssertEqual(later.budget(pixels: 1471), 17)
+        XCTAssertEqual(later.budget(pixels: 1471), 12, "reloaded at 16, a quarter off while hot, at the floor")
+        XCTAssertEqual(Taps.load(duo, from: d, build: later.build, os: later.os)?.applied, 16, "heat is never kept")
+        state = .nominal
+        later.heat(state)
+        later.still(pixels: 1471, "move")
+        XCTAssertEqual(later.budget(pixels: 1471), 16)
+        XCTAssertEqual(Taps.load(duo, from: d, build: later.build, os: later.os)?.applied, 16)
     }
 
     /// A glass first met mid-drag, by a change of pose, draws its law's budget once the drag ends, a let-go that lands
@@ -200,7 +158,7 @@ final class TapsTests: XCTestCase {
         defer { d.removePersistentDomain(forName: "TapsPose") }
         let taps = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
         let duo = TapKey(hz: 120, pixels: 1471)
-        Taps.save(.init(applied: 20, cap: nil, strikes: 0, build: taps.build, os: taps.os, limit: 17), duo, to: d)
+        Taps.save(.init(applied: 20, cap: nil, strikes: 0, build: taps.build, os: taps.os), duo, to: d)
         taps.use(.adapt(from: nil, stores: true))
         taps.still(pixels: Tank.tunedPixels, "open")
         taps.window(TapWindow(pixels: Tank.tunedPixels, work: 20, held: "rod 0", picture: "grid"))

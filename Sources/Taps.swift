@@ -23,7 +23,7 @@ final class Taps {
         case pinned(Int)
         /// Pinned, every drag's frames logged, never stepped.
         case watch(Int)
-        /// The law, from `from` where given, else the glass's stored budget or its prior.
+        /// The law, from `from` where given, else the glass's stored budget or its static limit.
         case adapt(from: Int?, stores: Bool)
 
         var description: String {
@@ -100,16 +100,11 @@ final class Taps {
     }
 
     @ObservationIgnored private var laws: [TapKey: TapLaw] = [:]
-    /// The cool budgets learnt this launch or kept from earlier ones, which may lower a new glass's prior.
-    @ObservationIgnored private var learnt: [TapKey: TapLaw.Learnt] = [:]
-    /// Each glass's own static limit, from the pixels its law was made for.
-    @ObservationIgnored private var limits: [TapKey: Int] = [:]
-    /// What each glass's law last kept, or the start it was made with, so nothing is written, nor taken as learnt, until
-    /// its cool decision, cap or strikes move: a start lowered by a neighbour's step, drawn hot or cool, never is.
+    /// Each glass's cool budget kept, for the device line.
+    @ObservationIgnored private var kept: [TapKey: Int] = [:]
+    /// What each glass's law last kept, or the start it was made with, so nothing is written until its cool decision,
+    /// cap or strikes move.
     @ObservationIgnored private var saved: [TapKey: TapLaw.Stored] = [:]
-    /// The start of each law made from a prior or `UNSTIR_TAPS`, not from what the glass kept: a revert or an erase that
-    /// brings it back there unlearns the glass rather than keeping the start as its own.
-    @ObservationIgnored private var starts: [TapKey: TapLaw.Stored] = [:]
     /// The drag being measured, at the budget it draws. A class, so each frame's tally grows in place.
     private final class Open {
         let key: TapKey
@@ -179,7 +174,7 @@ final class Taps {
 
     func use(_ mode: Mode) {
         self.mode = mode
-        if stores { learnt = Self.learnt(in: defaults, build: build, os: os) }
+        if stores { kept = Self.kept(in: defaults, build: build, os: os) }
     }
 
     private var stores: Bool { if case .adapt(_, true) = mode { true } else { false } }
@@ -200,8 +195,8 @@ final class Taps {
     /// The device line's: each glass's budget kept.
     var summary: String {
         guard stores else { return "\(mode)" }
-        return learnt.isEmpty ? "none learnt" : learnt.keys.sorted { ($0.hz, $0.px) < ($1.hz, $1.px) }
-            .map { "\($0.name) \(learnt[$0]!.budget)" }.joined(separator: " ")
+        return kept.isEmpty ? "none learnt" : kept.keys.sorted { ($0.hz, $0.px) < ($1.hz, $1.px) }
+            .map { "\($0.name) \(kept[$0]!)" }.joined(separator: " ")
     }
 
     private func key(_ pixels: Double) -> TapKey {
@@ -211,21 +206,18 @@ final class Taps {
 
     private func law(_ key: TapKey, pixels: Double) -> TapLaw {
         if let l = laws[key] { return l }
-        var l: TapLaw, from: String, kept = false
+        var l: TapLaw, from: String
         if case .adapt(let n?, _) = mode {
             (l, from) = (TapLaw(start: n, cuts: Self.cuts), "UNSTIR_TAPS")
         } else if stores, let s = Self.load(key, from: defaults, build: build, os: os) {
-            kept = true
             (l, from) = (TapLaw(stored: s, cuts: Self.cuts), "stored" + (s.cap.map { ", cap \($0) strikes \(s.strikes)" } ?? ""))
         } else {
-            let p = TapLaw.prior(key, pixels: pixels, learnt: learnt)
-            (l, from) = (TapLaw(start: p.budget, cuts: Self.cuts), p.from.map { "static, lowered as \($0.name) stepped" } ?? "static")
+            // Its own static limit, whatever other glasses have kept (Jack's call taps-keep = C).
+            (l, from) = (TapLaw(start: Tank.fourTaps(pixels: pixels), cuts: Self.cuts), "static")
         }
-        saved[key] = l.stored(build: build, os: os, limit: Tank.fourTaps(pixels: pixels))
-        if !kept { starts[key] = saved[key] }
+        saved[key] = l.stored(build: build, os: os)
         let heat = l.heat(thermal())
         laws[key] = l
-        limits[key] = Tank.fourTaps(pixels: pixels)
         Log.write("taps prior \(key.name) \(l.applied) (\(from)), \(mode)")
         if let heat { Log.write(describe(heat, key)) }
         return l
@@ -320,18 +312,12 @@ final class Taps {
         if adapts, drawn[TapKey.side(o.window.pixels)] == nil { still(pixels: o.window.pixels, "drag's end") }
     }
 
-    /// The glass's cool decision, cap or strikes moved: it is learnt for this launch's priors, and kept where the
-    /// launch stores, unless it moved back to a start it never learnt, which unlearns it.
+    /// The glass's cool decision, cap or strikes moved: kept where the launch stores.
     private func keep(_ key: TapKey) {
-        guard let s = laws[key]?.stored(build: build, os: os, limit: limits[key]), saved[key] != s else { return }
+        guard stores, let s = laws[key]?.stored(build: build, os: os), saved[key] != s else { return }
         saved[key] = s
-        if s == starts[key] {
-            learnt[key] = nil
-            if stores { defaults.removeObject(forKey: key.stored) }
-            return
-        }
-        learnt[key] = TapLaw.Learnt(budget: s.applied, limit: limits[key] ?? s.applied)
-        if stores { Self.save(s, key, to: defaults) }
+        kept[key] = s.applied
+        Self.save(s, key, to: defaults)
     }
 
     private func describe(_ e: TapLaw.Event, _ key: TapKey, _ o: Open? = nil) -> String {
@@ -378,15 +364,13 @@ final class Taps {
     }
 
     /// Every glass kept for this build and OS, by its cool budget.
-    nonisolated static func learnt(in d: UserDefaults, build: String, os: String) -> [TapKey: TapLaw.Learnt] {
-        var all: [TapKey: TapLaw.Learnt] = [:]
+    nonisolated static func kept(in d: UserDefaults, build: String, os: String) -> [TapKey: Int] {
+        var all: [TapKey: Int] = [:]
         for name in d.dictionaryRepresentation().keys where name.hasPrefix("taps.") {
             let f = name.split(separator: ".").compactMap { Int($0) }
             guard f.count == 2 else { continue }
             let key = TapKey(hz: f[0], pixels: Double(f[1]))
-            if let s = load(key, from: d, build: build, os: os) {
-                all[key] = TapLaw.Learnt(budget: s.applied, limit: s.limit ?? Tank.fourTaps(pixels: Double(key.px)))
-            }
+            if let s = load(key, from: d, build: build, os: os) { all[key] = s.applied }
         }
         return all
     }
