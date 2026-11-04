@@ -310,16 +310,17 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`gpuMiss`) where the main thread was idle for at least half of it, the main thread's own where it was busy for all but
   half a period, and neither past 6 periods (a stall no frame of the shader's makes) or where the finger moved
   nothing. A live picture at rest isn't measured: whether a 60 Hz link moves a ProMotion panel is unchecked. `TapLaw`
-  steps B down to the missed work less one after 3 GPU misses among a drag's last 30 counted four-tap frames within 4
-  of B, once a drag, and only where that draws the missed work with two taps, so never from work at or under `floor`
-  (12 on every device, Jack's call TAPS-FLOOR = A); cool, misses further below step nothing, taken for passing ones, while hot 6 of them do. It
+  steps B down to the missed work less one after 4 late frames among a drag's last 30 counted four-tap frames within 4
+  of B (`TapCuts.unattributed`'s `near`), once a drag, and only where that draws the missed work with two taps, so
+  never from work at or under `floor` (12 on every device, Jack's call TAPS-FLOOR = A); misses further below step
+  nothing, hot or cool (its `far` is unbounded; the attributed cuts would let 6 of them step while hot). It
   climbs one after 600 clean four-tap frames at its edge, never past `ceiling` (`Tank.maxStack` plus the largest fill,
   42, Jack's call TAPS-CEIL = A) nor to a cap. A first miss caps provisionally, probed once a launch after 1200 clean, confirmed
   by a second miss there or erased by 600 clean at it; a cap is always over the cool budget bar a probe's, and a
   stored one that isn't is dropped. Each step waits on its effect check: two-tap frames at its work or under it, or up
-  to 4 over, that still miss 3 in 30 take back the oldest step they cover and every step since, and pause the steps
-  down for the launch; 120 on time there confirm it. A thermal state of serious takes a quarter off for the session
-  (40 to 30; critical, the floor), as `Power` still halves a live picture's rate. The numbers are `TapCuts`', and `Taps.cuts` is `TapCuts.unattributed`: on the 13
+  to 4 over, that still miss 4 in 30 take back the oldest step they cover and every step since, and pause the steps
+  down for the launch; 120 on time there confirm it. A thermal state of serious draws a quarter off the cool budget
+  while it lasts (40 to 30; critical, the floor), never kept, and gives it back once the state drops below serious, as `Power` still halves a live picture's rate. The numbers are `TapCuts`', and `Taps.cuts` is `TapCuts.unattributed`: on the 13
   Pro Max a main-thread stall's late frames read gpu nearly as often as cpu (7 of 15), so every late frame counts,
   near the edge only, with the effect check behind it; the display link does see the render server's misses (a
   presentation probe, 2026-11-04). On that phone no load the game reaches misses, so the step down has never run
