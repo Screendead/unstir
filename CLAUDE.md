@@ -279,7 +279,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   entries measured before (`Tank.scaledFrom`: 31 held there and 32 didn't) scaled down by the area, less one for the
   entry in flight, so the open Duo upright's 1471 px keeps 17 (Jack's call duocap2 = D; whether it rescales from the
   phones' 40, to 23, is open); `Tank.maxStack` stays 36 at every size, so every level plays as on an iPhone, its stacks as deep, while the
-  four-tap limit shrinks to 17 on the Duo upright, where the deepest (whirlpool 27, maelstrom 27) draw two taps (Jack's
+  four-tap limit shrinks to 17 on the Duo upright, where every stack whose work is past 17 draws two taps (Jack's
   call duocap2 = D). On a phone every level is dealt within 40 (whirlpool 27, the deepest on a live picture, has 28
   stirs on the glass's fill of 4, 32), so every stack dealt draws four taps there (Jack's calls taps-keep = C and
   wp27-table = B). The accepted risk: a deep stack on a live picture there may run up to 32% over the
