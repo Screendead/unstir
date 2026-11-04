@@ -200,6 +200,8 @@ final class Game {
     /// Escapement: the newest move's ticks in the order they landed, each clock's with the stack it changed and whether
     /// it pushed, for the view to play them in turn.
     private(set) var tick: [(stack: [Twist], rod: Int, dir: Int, pushed: Bool)] = []
+    /// Escapement: whether the newest move's own stir pushed, which then takes the move's one push sound.
+    private(set) var stirPushed = false
     /// Escapement: every move's ticks, the newest clock whose tick pushed (where the out-of-ticks stamp goes), and each
     /// clock's stops, as its rod emptied.
     private(set) var tickEvents = 0
@@ -460,6 +462,7 @@ final class Game {
         lastCommit = (knob, result)
         turns += 1
         if result == .pushed { pushes += 1 }
+        stirPushed = result == .pushed
         // The move's own heal: a tick's pop is the clock's, not the knob's.
         if healed > 0 { cancels += 1; cancelledRod = knob }
         healed += landTicks()
@@ -481,6 +484,7 @@ final class Game {
         open = false
         lastCommit = (ratchet, .reduced)
         turns += 1
+        stirPushed = false
         let healed = landTicks()
         log("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
         record(.wait(ratchet: ratchet))

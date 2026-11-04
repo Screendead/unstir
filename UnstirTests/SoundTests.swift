@@ -32,16 +32,17 @@ import XCTest
         XCTAssertEqual(g.tickCues, [])
         g.commit(rod: 3, steps: -2)
         XCTAssertEqual(g.tick.map(\.rod), [0, 2])
-        XCTAssertEqual(g.tickCues.map(\.sound), [.ratchet, .ratchet])
+        XCTAssertEqual(g.tickCues.map(\.sounds), [[.ratchet], [.ratchet]])
         XCTAssertEqual(g.tickCues.map(\.haptic), [Self.plain, Self.plain])
         for (t, want) in zip(g.tickCues.map(\.at), [0.15, 0.45]) { XCTAssertEqual(t, want, accuracy: 1e-9) }
         g.undo()
         XCTAssertEqual(g.tickCues, [])
     }
 
-    /// Jack's calls soundsk-pushtick and soundsk-haptic = B (round 16): a tick that pushes sounds the push in place of
-    /// its ratchet, with the error haptic, at its own time in the move's turn, and the move's other ticks stay steel.
-    func testAPushedTickSoundsThePushAtItsOwnTime() throws {
+    /// Jack's calls tk-push = B and tk-multi = C (round 16): every tick sounds its ratchet at its own time, a pushed one
+    /// with the error haptic, and the move's first push sounds the push over its ratchet: the first pushed tick's, unless
+    /// the move's own stir pushed, which then had it at the lift.
+    func testAPushedTickSoundsThePushOverItsRatchetAtItsOwnTime() throws {
         let found = Pack.escapement.levels.lazy.compactMap { book -> (Level, Twist)? in
             var level = book
             level.id = "test-escapement"
@@ -50,38 +51,58 @@ import XCTest
             return moves.first { t in
                 let g = Game(level: level, tankTurned: true, bank: (3, nil))
                 g.commit(rod: t.rod, steps: t.steps)
-                return g.tick.count > 1 && g.tick.contains { $0.pushed } && g.tick.contains { !$0.pushed }
+                return !g.stirPushed && g.tick.count > 1 && g.tick.contains { $0.pushed } && g.tick.contains { !$0.pushed }
             }.map { (level, $0) }
         }.first
-        let (level, move) = try XCTUnwrap(found, "a move whose ticks mix a push with a plain tick")
+        let (level, move) = try XCTUnwrap(found, "a move that doesn't push whose ticks mix a push with a plain tick")
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         g.commit(rod: move.rod, steps: move.steps)
         let cues = g.tickCues
         XCTAssertEqual(cues.count, g.tick.count)
-        XCTAssertEqual(cues.filter { $0.sound == .push }.count, g.tickPushes)
         Self.assertEachPushFlagIsItsTicks(g)
+        Self.assertTheMovesFirstPushAloneSounds(g)
         for (i, (cue, t)) in zip(cues, g.tick).enumerated() {
             XCTAssertEqual(cue.at, LevelView.tickBeat + LevelView.tickTurn * Double(i), accuracy: 1e-9)
-            XCTAssertEqual(cue.sound, t.pushed ? .push : .ratchet, "tick \(i)")
+            XCTAssertEqual(cue.sounds.first, .ratchet, "tick \(i)")
             XCTAssertEqual(cue.haptic, t.pushed ? .error : Self.plain, "tick \(i)")
         }
+        XCTAssertEqual(cues.filter { $0.sounds.contains(.push) }.count, 1)
         g.undo()
         XCTAssertEqual(g.tickCues, [])
     }
 
-    /// 13: a wait whose ticks both push, as knob 3's seam lies over both clocks, sounds the push twice, each clock's
-    /// with its own flag, and its ratchets both flash red, not only the last clock's.
-    func testTwoClocksPushingInOneMoveEachSoundThePush() {
+    /// 13: a wait whose ticks both push, as knob 3's seam lies over both clocks: the first sounds the push over its
+    /// ratchet, the second only its ratchet, both with the error haptic, and its ratchets both flash red, not only the
+    /// last clock's.
+    func testTwoClocksPushingInOneMoveSoundThePushOnce() {
         var level = Level.escapement[12]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (1, nil))
         g.wait(on: 2)
+        XCTAssertFalse(g.stirPushed)
         XCTAssertEqual(g.tick.map(\.rod), [0, 2])
         XCTAssertEqual(g.tick.map(\.pushed), [true, true])
         Self.assertEachPushFlagIsItsTicks(g)
         XCTAssertEqual(g.pushedClock, 2)
-        XCTAssertEqual(g.tickCues.map(\.sound), [.push, .push])
+        XCTAssertEqual(g.tickCues.map(\.sounds), [[.ratchet, .push], [.ratchet]])
         XCTAssertEqual(g.tickCues.map(\.haptic), [.error, .error])
+    }
+
+    /// 02's 1:-3 buries its clock's seam, so the stir pushes at the lift and the clock's tick pushes after it: the tick
+    /// sounds only its ratchet, with the error haptic, as the stir had the move's push.
+    func testAStirThatPushedKeepsTheMovesPushFromItsTicks() {
+        var level = Level.escapement[1]
+        level.id = "test-escapement"
+        let g = Game(level: level, tankTurned: true, bank: (3, nil))
+        let pushes = g.pushes
+        g.commit(rod: 1, steps: -3)
+        XCTAssertEqual(g.pushes, pushes + 1)
+        XCTAssertTrue(g.stirPushed)
+        XCTAssertTrue(g.tick.contains { $0.pushed })
+        Self.assertEachPushFlagIsItsTicks(g)
+        Self.assertTheMovesFirstPushAloneSounds(g)
+        XCTAssertFalse(g.tickCues.contains { $0.sounds.contains(.push) })
+        for (cue, t) in zip(g.tickCues, g.tick) { XCTAssertEqual(cue.haptic, t.pushed ? .error : Self.plain) }
     }
 
     /// A move that finishes the tank sounds only as its finish, at the lift, as the heal that solves sounds as the solve:
@@ -136,6 +157,14 @@ import XCTest
         for (i, t) in g.tick.enumerated() {
             let after = i + 1 < g.tick.count ? g.tick[i + 1].stack : g.stack
             XCTAssertEqual(t.pushed, after.count > t.stack.count, "tick \(i)", file: file, line: line)
+        }
+    }
+
+    /// Only the move's first push sounds the push: the stir's, at the lift, or else its first pushed tick's.
+    private static func assertTheMovesFirstPushAloneSounds(_ g: Game, file: StaticString = #filePath, line: UInt = #line) {
+        let first = g.stirPushed ? nil : g.tick.firstIndex { $0.pushed }
+        for (i, cue) in g.tickCues.enumerated() {
+            XCTAssertEqual(cue.sounds.contains(.push), i == first, "tick \(i)", file: file, line: line)
         }
     }
 

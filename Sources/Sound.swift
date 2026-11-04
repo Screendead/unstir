@@ -476,24 +476,28 @@ final class Sound: @unchecked Sendable {
     }
 }
 
-/// Escapement: one of a move's ticks as it lands after the lift.
+/// Escapement: one of a move's ticks as it lands after the lift, with what sounds and what is felt as it does.
 struct TickCue: Equatable {
     var at: Double
-    var sound: Sound.Effect
+    var sounds: [Sound.Effect]
     var haptic: SensoryFeedback
 }
 
 extension Game {
     /// Escapement: each of the newest move's ticks, landing as its clock's core starts to turn and its flap falls: a beat
-    /// after the lift, then a turn apart. A plain tick is the ratchet's steel; one that pushed is the push, sound and
-    /// haptic, as a rod's push sounds nothing but the push (Jack's calls soundsk-pushtick and soundsk-haptic = B, round
-    /// 16). None on a level without clocks, nor on a move that finishes the tank, which sounds only as its finish at
-    /// the lift, as the heal that solves sounds as the solve.
+    /// after the lift, then a turn apart. Every tick is the ratchet's steel with its rigid haptic (Jack's calls soundsk2
+    /// = D and soundsk-haptic = B, round 16). One that pushed has the error haptic, and the move's first push sounds the
+    /// push over its ratchet: a pushed tick's own, unless the move's stir pushed first (Jack's calls tk-push = B and
+    /// tk-multi = C, round 16). None on a level without clocks, nor on a move that finishes the tank, which sounds only
+    /// as its finish at the lift, as the heal that solves sounds as the solve.
     var tickCues: [TickCue] {
         guard !finished else { return [] }
+        var push = !stirPushed
         return tick.enumerated().map { i, t in
-            TickCue(at: LevelView.tickBeat + LevelView.tickTurn * Double(i), sound: t.pushed ? .push : .ratchet,
-                    haptic: t.pushed ? .error : .impact(flexibility: .rigid, intensity: 0.9))
+            var cue = TickCue(at: LevelView.tickBeat + LevelView.tickTurn * Double(i), sounds: [.ratchet],
+                              haptic: t.pushed ? .error : .impact(flexibility: .rigid, intensity: 0.9))
+            if t.pushed && push { cue.sounds.append(.push); push = false }
+            return cue
         }
     }
 
@@ -508,7 +512,7 @@ extension Game {
                   i < tickCues.count
             else { return }
             let cue = tickCues[i]
-            Sound.shared.play(cue.sound)
+            for sound in cue.sounds { Sound.shared.play(sound) }
             felt(cue)
             i += 1
         }

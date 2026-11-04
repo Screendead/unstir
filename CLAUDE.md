@@ -1008,10 +1008,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   and the heal that solves sounds as the solve. An undo's negation that brings back one of the scramble's entries marks
   it the scramble's again. The `seized` sound plays with `Knock.thud` whenever a finger lands on a knob that can't be
   turned. Escapement's clocks tick in steel, a pawl snapping onto its ratchet wheel (Jack's call soundsk2 = D, round
-  16; `ratchet-1` to `-4`, taken in turn as the taps are): each of a move's ticks sounds, with its rigid haptic, as its
-  clock's core starts to turn, `tickBeat` after the lift and `tickTurn` apart (`Game.tickCues`), the demonstration's
-  too, and a tick that pushed sounds the push in its place, with the error haptic, at its own time, as a rod's push
-  sounds nothing but the push (Jack's calls soundsk-pushtick and soundsk-haptic = B, round 16). A move that finishes
+  16; `ratchet-1` to `-4`, taken in turn as the taps are): each of a move's ticks, pushed or not, sounds, with its
+  rigid haptic, as its clock's core starts to turn, `tickBeat` after the lift and `tickTurn` apart (`Game.tickCues`),
+  the demonstration's too (Jack's call soundsk-haptic = B, round 16). A tick that pushed lands the error haptic instead,
+  and the move's first push sounds the push over its ratchet at the same instant: the first pushed tick's, unless the
+  move's own stir pushed at the lift, so later pushed ticks sound only their ratchet (`Game.stirPushed`; Jack's calls
+  tk-push = B and tk-multi = C, round 16). A move that finishes
   the tank, solved or out of ticks, sounds only as its finish at the lift, its ticks without sound or haptic, as the heal that
   solves sounds as the solve. One task that leaving
   the level cancels plays them; an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
