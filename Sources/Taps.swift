@@ -104,10 +104,8 @@ final class Taps {
     @ObservationIgnored private var learnt: [TapKey: TapLaw.Learnt] = [:]
     /// Each glass's own static limit, from the pixels its law was made for.
     @ObservationIgnored private var limits: [TapKey: Int] = [:]
-    /// Glasses whose open drag decided something: only those keep, so a start taken from a neighbour is never stored
-    /// as learnt.
-    @ObservationIgnored private var decided: Set<TapKey> = []
-    /// What each glass's law last kept, so a drag that changes nothing writes nothing.
+    /// What each glass's law last kept, or the start it was made with, so nothing is written, nor taken as learnt, until
+    /// its cool decision, cap or strikes move: a start lowered by a neighbour's step, drawn hot or cool, never is.
     @ObservationIgnored private var saved: [TapKey: TapLaw.Stored] = [:]
     /// The drag being measured, at the budget it draws. A class, so each frame's tally grows in place.
     private final class Open {
@@ -148,12 +146,15 @@ final class Taps {
 
     /// Where a plain launch keeps each glass's law.
     @ObservationIgnored private let defaults: UserDefaults
+    /// The phone's thermal state as it reads now.
+    @ObservationIgnored private let thermal: @MainActor () -> ProcessInfo.ThermalState
 
-    init(rate: @escaping @MainActor () -> Int = Taps.screenRate, defaults: UserDefaults = .standard) {
-        (self.rate, self.defaults) = (rate, defaults)
+    init(rate: @escaping @MainActor () -> Int = Taps.screenRate, defaults: UserDefaults = .standard,
+         thermal: @escaping @MainActor () -> ProcessInfo.ThermalState = { ProcessInfo.processInfo.thermalState }) {
+        (self.rate, self.defaults, self.thermal) = (rate, defaults, thermal)
         watch.report = { [weak self] in self?.frame($0) }
         NotificationCenter.default.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.heat(ProcessInfo.processInfo.thermalState) }
+            MainActor.assumeIsolated { if let self { self.heat(self.thermal()) } }
         }
     }
 
@@ -211,13 +212,13 @@ final class Taps {
         if case .adapt(let n?, _) = mode {
             (l, from) = (TapLaw(start: n, cuts: Self.cuts), "UNSTIR_TAPS")
         } else if stores, let s = Self.load(key, from: defaults, build: build, os: os) {
-            saved[key] = s
             (l, from) = (TapLaw(stored: s, cuts: Self.cuts), "stored" + (s.cap.map { ", cap \($0) strikes \(s.strikes)" } ?? ""))
         } else {
             let p = TapLaw.prior(key, pixels: pixels, learnt: learnt)
             (l, from) = (TapLaw(start: p.budget, cuts: Self.cuts), p.from.map { "static, lowered as \($0.name) stepped" } ?? "static")
         }
-        let heat = l.heat(ProcessInfo.processInfo.thermalState)
+        saved[key] = l.stored(build: build, os: os, limit: Tank.fourTaps(pixels: pixels))
+        let heat = l.heat(thermal())
         laws[key] = l
         limits[key] = Tank.fourTaps(pixels: pixels)
         Log.write("taps prior \(key.name) \(l.applied) (\(from)), \(mode)")
@@ -259,15 +260,13 @@ final class Taps {
         if drawn[side] != now { drawn[side] = now }
         guard let e else { return }
         Log.write(describe(e, key) + " at \(moment)")
-        if l.hot == nil { learnt[key] = TapLaw.Learnt(budget: l.cool, limit: limits[key] ?? l.cool) }
         keep(key)
     }
 
-    private func heat(_ state: ProcessInfo.ThermalState) {
+    func heat(_ state: ProcessInfo.ThermalState) {
         guard adapts else { return }
         for key in laws.keys {
             guard let e = laws[key]?.heat(state) else { continue }
-            if e.decides { decided.insert(key) }
             if open == nil { Log.write(describe(e, key)) } else { queued.append(describe(e, key)) }
         }
     }
@@ -283,7 +282,6 @@ final class Taps {
         let c = TapLaw.classify(interval: f.interval, period: f.period, cpu: f.cpu, produced: f.produced, cuts: Self.cuts)
         o.tally.add(c, f, late: f.produced && f.interval > Self.cuts.late * f.period)
         guard adapts, let e = laws[o.key]?.count(c) else { return }
-        if e.decides { decided.insert(o.key) }
         queued.append(describe(e, o.key, o))
     }
 
@@ -299,7 +297,6 @@ final class Taps {
         open = nil
         watch.stop()
         let last = adapts ? laws[o.key]?.close() : nil
-        if last?.decides == true { decided.insert(o.key) }
         let lines = queued + (last.map { [describe($0, o.key, o)] } ?? [])
         queued = []
         let t = o.tally
@@ -312,13 +309,16 @@ final class Taps {
                       + "longest \(String(format: "%.1f", 1000 * t.longest)) ms, picture \(o.window.picture), \(Self.thermal)")
         }
         lines.forEach(Log.write)
-        if decided.remove(o.key) != nil { keep(o.key) }
+        keep(o.key)
     }
 
+    /// The glass's cool decision, cap or strikes moved: it is learnt for this launch's priors, and kept where the
+    /// launch stores.
     private func keep(_ key: TapKey) {
-        guard stores, let s = laws[key]?.stored(build: build, os: os, limit: limits[key]), saved[key] != s else { return }
+        guard let s = laws[key]?.stored(build: build, os: os, limit: limits[key]), saved[key] != s else { return }
         saved[key] = s
-        Self.save(s, key, to: defaults)
+        learnt[key] = TapLaw.Learnt(budget: s.applied, limit: limits[key] ?? s.applied)
+        if stores { Self.save(s, key, to: defaults) }
     }
 
     private func describe(_ e: TapLaw.Event, _ key: TapKey, _ o: Open? = nil) -> String {

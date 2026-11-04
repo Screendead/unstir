@@ -107,13 +107,6 @@ struct TapLaw: Equatable {
     }
 
     enum Event: Equatable {
-        /// A change of what the glass would keep, as opposed to a report.
-        var decides: Bool {
-            switch self {
-            case .down, .up, .probe, .erased, .reverted, .hot, .cool: true
-            case .held, .twoTap, .applied: false
-            }
-        }
 
         /// `strike` nil while hot.
         case down(from: Int, to: Int, work: Int, misses: Int, of: Int, strike: Int?)

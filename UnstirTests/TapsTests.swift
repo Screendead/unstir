@@ -110,14 +110,14 @@ final class TapsTests: XCTestCase {
         }
         let onTime = FrameWatch.Frame(interval: period, period: period, cpu: 0, age: 1, produced: true)
         Taps.save(stored(30), phone, to: d)
-        let first = Taps(rate: { 120 }, defaults: d)
+        let first = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
         first.use(.adapt(from: nil, stores: true))
         first.still(pixels: 1471, "open")
         XCTAssertEqual(first.budget(pixels: 1471), 12, "17 lowered as the phone stepped 40 to 30")
         drag(first, work: 10, onTime, 60)
         XCTAssertNil(d.object(forKey: duo.stored), "a drag that decided nothing keeps nothing")
         Taps.save(stored(40), phone, to: d)
-        let later = Taps(rate: { 120 }, defaults: d)
+        let later = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
         later.use(.adapt(from: nil, stores: true))
         later.still(pixels: 1471, "open")
         XCTAssertEqual(later.budget(pixels: 1471), 17, "the phone climbed back, so the Duo starts from its own limit")
@@ -125,5 +125,33 @@ final class TapsTests: XCTestCase {
         drag(later, work: 17, FrameWatch.Frame(interval: 2 * period, period: period, cpu: 0, age: 1, produced: true), Taps.cuts.near)
         let kept = try XCTUnwrap(Taps.load(duo, from: d, build: ids.build, os: ids.os))
         XCTAssertEqual([kept.applied, kept.limit], [16, 17])
+    }
+
+    /// Heat draws its own budget over an inherited start and gives it back, and neither is kept nor learnt.
+    @MainActor
+    func testHeatNeverKeepsAnInheritedStart() throws {
+        let d = try XCTUnwrap(UserDefaults(suiteName: "TapsHeat"))
+        d.removePersistentDomain(forName: "TapsHeat")
+        defer { d.removePersistentDomain(forName: "TapsHeat") }
+        var state = ProcessInfo.ThermalState.serious
+        let taps = Taps(rate: { 120 }, defaults: d, thermal: { state })
+        let phone = TapKey(hz: 120, pixels: Tank.tunedPixels), duo = TapKey(hz: 120, pixels: 1471), period = 1.0 / 120
+        Taps.save(.init(applied: 35, cap: nil, strikes: 0, build: taps.build, os: taps.os, limit: 40), phone, to: d)
+        taps.use(.adapt(from: nil, stores: true))
+        taps.still(pixels: 1471, "open")
+        XCTAssertEqual(taps.budget(pixels: 1471), 12, "17 lowered to 14 as the phone stepped, then a quarter off, at the floor")
+        XCTAssertNil(d.object(forKey: duo.stored), "a hot start drawn at the level's opening keeps nothing")
+        // A miss while hot, at the floor, steps nothing.
+        taps.window(TapWindow(pixels: 1471, work: 12, held: "rod 0", picture: "grid"))
+        for _ in 0..<Taps.cuts.near { taps.frame(FrameWatch.Frame(interval: 2 * period, period: period, cpu: 0, age: 1, produced: true)) }
+        taps.window(nil)
+        taps.still(pixels: 1471, "move")
+        XCTAssertNil(d.object(forKey: duo.stored))
+        state = .nominal
+        taps.heat(state)
+        taps.still(pixels: 1471, "move")
+        XCTAssertEqual(taps.budget(pixels: 1471), 14, "the cool start back")
+        XCTAssertNil(d.object(forKey: duo.stored), "nor once it cools")
+        XCTAssertFalse(taps.summary.contains(duo.name), "nor learnt for this launch: \(taps.summary)")
     }
 }
