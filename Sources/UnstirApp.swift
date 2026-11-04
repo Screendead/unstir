@@ -340,7 +340,7 @@ struct Harness {
         if bench {
             // UNSTIR_DEPTH overrides. A live picture's heaviest frame is the most entries that keep four taps, and the drag.
             let p = picture ?? tier.levels[0].picture
-            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? Tank.fourTaps - p.fillEntries : 24)
+            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? min(Tank.fourTaps - p.fillEntries, Tank.maxStack) : 24)
             var rng = SplitMix64(state: 24)
             level = Level(id: "bench", tier: tier, label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: p,
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))
