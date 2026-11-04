@@ -489,23 +489,21 @@ struct MenuView: View {
     /// A card or the archive lies over the dock: on a phone, beside play and in the tabletop, not beside the split's list.
     private var covering: Bool { (card != nil || archive) && (!layout.splits || playing != nil) }
 
-    /// The title, the tier strip and the tier's list over the dock: the whole menu on a phone, its leading half wide.
-    /// Beside play the title and gear wait for the level to close, as the settings do on a phone.
+    /// The title, the tier strip and the tier's list over the dock: the whole menu on a phone, its leading half wide,
+    /// and beside play the trailing half, title and gear too (Jack's call s5b-title = B).
     private var column: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if playing == nil {
-                HStack(alignment: .center) {
-                    title.simultaneousGesture(swipe)
-                    Spacer(minLength: 8)
-                    Button { settings = true } label: {
-                        Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
-                            .frame(width: 44, height: 44).contentShape(Rectangle())
-                    }
-                    .buttonStyle(Sounding()).opacity(0.5)
-                    .accessibilityLabel("Settings")
+            HStack(alignment: .center) {
+                title.simultaneousGesture(swipe)
+                Spacer(minLength: 8)
+                Button { settings = true } label: {
+                    Image(systemName: "gearshape").font(.system(size: 17, weight: .light))
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
                 }
-                .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
+                .buttonStyle(Sounding()).opacity(0.5)
+                .accessibilityLabel("Settings")
             }
+            .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
             // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
             tiers.padding(.top, 6).scrollDisabled(true).simultaneousGesture(swipe)
             ScrollViewReader { proxy in

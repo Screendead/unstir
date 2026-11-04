@@ -773,8 +773,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the trailing half (`PlayLayout.menuPane`) and which reports its frame in `RootView.space`; `RootView` passes it to
   `MenuView` as `slot`, and the list glides there from its own half, and back
   as the level closes, in one 0.45 s move (none under Reduce Motion; a menu built beside play, on a launch into a level
-  or the phone opening, waits unseen for the slot and appears there). Beside play the menu is the tier strip, list and
-  dock (the title and gear wait for the level to close, as the settings do on a phone), drawn over the level
+  or the phone opening, waits unseen for the slot and appears there). Beside play the menu is the menu as it stands
+  with no level open, title, gear, tier strip, list and dock, the title gliding with the list (Jack's call s5b-title =
+  B), drawn over the level
   (`zIndex`) with only its own column black; the dock
   holds still (`PackDock.paused`) and a tier switch cuts to the new list without the stir (`MenuView.go`), so nothing
   of the menu takes GPU time from the tank. Back closes the level and the list returns to its half, the row left lit
@@ -797,9 +798,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   level leaves, if its way out names it (`RootView.returns`), as on a phone it waits under the level; one left under a
   level in another pose is put away as the window becomes a split (the phone opened mid-level), before the menu is
   drawn there, and waits under the level again if the phone closes. `RootView.slot` goes with the menu beside play, so
-  a later one waits for its level's own. Plughole 01's settings pointer, whose gear is hidden beside play, waits for
-  an opening in another pose or the phone closing (`LevelView.pointAtSettings`), and the consent question for the
-  level to close. A back swipe beside the menu slides
+  a later one waits for its level's own. The consent question waits for the level to close, as it would dim the tank. A back swipe beside the menu slides
   nothing, as the menu is in sight: past the threshold the level leaves through the dip, as under Reduce Motion.
   VoiceOver hears the level before the menu (`accessibilitySortPriority`; not yet heard on a device).
 - **Archive.swift** holds the daily archive (to-do 47): `Archive.days`, the past dailies from 30 days (`backFill`)

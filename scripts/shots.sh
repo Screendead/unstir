@@ -893,12 +893,12 @@ hold=4 shot duo-opened-mid-drag "Duo closed with rod 1 held two steps round, ope
   "${closed[@]}" THEN=1.5 THENFRAME=951x669 THENINSETS=24,0,21,84 LEVEL=11 LIVE=1:+2 TOUCH=0.3,0.2
 hold=5 shot duo-folded-to-tabletop "Duo upright, folded a second in: the tank glided down into the lower half." \
   FRAME=669x951 INSETS=59,0,34,0 THEN=1 THENFOLD=0,466,669,19 "${played[@]}"
-# Stage 5: the menu beside play (Jack's calls D-layout = 3, DUOMENU = B and s5-chrome = B, round 16). Where play splits,
-# the tank and its chrome round it keep the leading half and the menu takes the trailing half; the list glides between
-# halves, and a result or lost card goes over the menu.
-hold=8 shot duo-beside-level "Duo open: plughole 11 five moves in beside the menu: header and title over the tank, note and controls under it at stage 1's glass, the menu alone in the trailing half, the list centred on 11, its hairline at full and playing in place of its rods and par, 10's frontier hairline above it, and the dock held still." \
+# Stage 5: the menu beside play (Jack's calls D-layout = 3, DUOMENU = B and s5-chrome = B, round 16, and s5b-title = B).
+# Where play splits, the tank and its chrome round it keep the leading half and the menu, title and gear too, takes the
+# trailing half; the list glides between halves, and a result or lost card goes over the menu.
+hold=8 shot duo-beside-level "Duo open: plughole 11 five moves in beside the menu: header and title over the tank, note and controls under it at stage 1's glass, the menu in the trailing half under its title and gear, the list centred on 11, its hairline at full and playing in place of its rods and par, 10's frontier hairline above it, and the dock held still." \
   "${duo[@]}" "${played[@]}" BESTS=plughole:$nine OWNED= CLOCK=1
-hold=8 shot duo-beside-opened-from-menu "Duo open: the menu, plughole 05 picked 1.5 s in (UNSTIR_PICK): the list glided to the trailing half, 05's tank and chrome in the leading half." \
+hold=8 shot duo-beside-opened-from-menu "Duo open: the menu, plughole 05 picked 1.5 s in (UNSTIR_PICK): the list glided to the trailing half with its title and gear, 05's tank and chrome in the leading half." \
   "${duo[@]}" SCREEN=menu BESTS=plughole:$nine OWNED= CLOCK=1 PICK=L5
 hold=8 shot duo-beside-pick "Duo open: plughole 11 beside the menu, row 07 tapped 1.5 s in (UNSTIR_PICK): 11 left through its own way out, 07 in the tank, the list following it." \
   "${duo[@]}" LEVEL=11 BESTS=plughole:$nine OWNED= CLOCK=1 PICK=L7
@@ -923,6 +923,9 @@ hold=10 shot duo-beside-pack-complete "Duo open: Lens 25 solved, Lens complete a
   "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 hold=10 shot duo-beside-lost "Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass." \
   "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=0:1,0:1,0:1 CLOCK=1
+# A fresh install opened like a book (s5b-title = B): plughole 01's settings line shows beside the menu, its gear in sight.
+hold=9 shot duo-beside-pointer "Duo open: a fresh install's first screen, plughole 01 beside the menu, its note at rest: the settings line under it, its foot touching the tops of undo and reset, the gear beside the menu's title." \
+  "${duo[@]}" FRESH=1 OPEN=1
 hold=8 shot duo-beside-lesson "Duo open: maelstrom 01, the tank never turned: the rim lesson's arc between the title and the glass, 5 pt smaller for it." \
   "${duo[@]}" TIER=maelstrom LEVEL=1 CLOCK=3
 # A pack card over a result card, opened as the card's pointer opens one; the shelf tour closes it 7.2 s later.
