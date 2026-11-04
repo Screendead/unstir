@@ -315,6 +315,9 @@ final class Taps {
         }
         lines.forEach(Log.write)
         keep(o.key)
+        // A glass first met mid-drag, by a change of pose, has had no still moment if the let-go landed no move: it gets
+        // one now, so it never draws the static limit while its law judges frames at its own budget.
+        if adapts, drawn[TapKey.side(o.window.pixels)] == nil { still(pixels: o.window.pixels, "drag's end") }
     }
 
     /// The glass's cool decision, cap or strikes moved: it is learnt for this launch's priors, and kept where the

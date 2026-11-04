@@ -190,4 +190,26 @@ final class TapsTests: XCTestCase {
         later.still(pixels: 1471, "open")
         XCTAssertEqual(later.budget(pixels: 1471), 17)
     }
+
+    /// A glass first met mid-drag, by a change of pose, draws its law's budget once the drag ends, a let-go that lands
+    /// no move included.
+    @MainActor
+    func testAGlassMetMidDragDrawsItsLawOnceTheDragEnds() throws {
+        let d = try XCTUnwrap(UserDefaults(suiteName: "TapsPose"))
+        d.removePersistentDomain(forName: "TapsPose")
+        defer { d.removePersistentDomain(forName: "TapsPose") }
+        let taps = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
+        let duo = TapKey(hz: 120, pixels: 1471)
+        Taps.save(.init(applied: 20, cap: nil, strikes: 0, build: taps.build, os: taps.os, limit: 17), duo, to: d)
+        taps.use(.adapt(from: nil, stores: true))
+        taps.still(pixels: Tank.tunedPixels, "open")
+        taps.window(TapWindow(pixels: Tank.tunedPixels, work: 20, held: "rod 0", picture: "grid"))
+        // The pose changes under the finger: the hooks hand over the new glass's window, and its still moment returns
+        // early, as a drag is open.
+        taps.window(TapWindow(pixels: 1471, work: 20, held: "rod 0", picture: "grid"))
+        taps.still(pixels: 1471, "pose")
+        XCTAssertNil(taps.budget(pixels: 1471), "nothing lands mid-drag")
+        taps.window(nil)
+        XCTAssertEqual(taps.budget(pixels: 1471), 20, "its kept budget, not the static 17, once the drag is over")
+    }
 }
