@@ -66,7 +66,7 @@ final class TapsTests: XCTestCase {
         taps.still(pixels: px, "open")
         XCTAssertEqual(taps.budget(pixels: px), 30)
         taps.window(TapWindow(pixels: px, work: 29, held: "rod 0", picture: "grid"))
-        for _ in 0..<3 { taps.frame(miss) }
+        for _ in 0..<Taps.cuts.near { taps.frame(miss) }
         hz = 144
         XCTAssertEqual(taps.budget(pixels: px), 30, "decided, not drawn")
         taps.still(pixels: px, "move")
