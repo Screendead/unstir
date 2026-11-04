@@ -170,14 +170,18 @@ struct TapLaw: Equatable {
         return c <= d / 2 ? .gpuMiss : .ignored
     }
 
-    /// The budget a glass starts from with nothing learnt for it: the nearest glass learnt at the same rate, scaled by
-    /// area with the entry in flight, or the static limit.
+    /// The budget a glass starts from with nothing learnt for it: its own static limit, lowered by the share the
+    /// nearest glass learnt at the same rate stepped below that glass's static limit. A neighbour never raises it nor
+    /// replaces it, as the static limits keep Jack's calls (taps-keep = C on phones, duocap2 = D past 1300 px), which no
+    /// rescale between sizes reproduces.
     static func prior(_ key: TapKey, pixels: Double, learnt: [TapKey: Int]) -> (budget: Int, from: TapKey?) {
+        let own = clamp(Tank.fourTaps(pixels: pixels))
         let near = learnt.keys.filter { $0.hz == key.hz && $0 != key }
             .min { (abs($0.px - key.px), $0.px) < (abs($1.px - key.px), $1.px) }
-        guard let near, let b = learnt[near] else { return (clamp(Tank.fourTaps(pixels: pixels)), nil) }
-        let ratio = Double(near.px) / Double(key.px)
-        return (clamp(Int((Double(b + 1) * ratio * ratio).rounded()) - 1), near)
+        guard let near, let b = learnt[near] else { return (own, nil) }
+        let theirs = clamp(Tank.fourTaps(pixels: Double(near.px)))
+        guard b < theirs else { return (own, nil) }
+        return (clamp(Int((Double(own) * Double(b) / Double(theirs)).rounded(.down))), near)
     }
 
     /// Two-tap frames at `work` cost no more than the four-tap ones that missed at `c`'s work, give or take the edge's

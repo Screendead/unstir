@@ -207,7 +207,7 @@ final class Taps {
             (l, from) = (TapLaw(stored: s, cuts: Self.cuts), "stored" + (s.cap.map { ", cap \($0) strikes \(s.strikes)" } ?? ""))
         } else {
             let p = TapLaw.prior(key, pixels: pixels, learnt: learnt)
-            (l, from) = (TapLaw(start: p.budget, cuts: Self.cuts), p.from.map { "scaled from \($0.name)" } ?? "static")
+            (l, from) = (TapLaw(start: p.budget, cuts: Self.cuts), p.from.map { "static, lowered as \($0.name) stepped" } ?? "static")
         }
         let heat = l.heat(ProcessInfo.processInfo.thermalState)
         laws[key] = l

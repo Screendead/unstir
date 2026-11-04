@@ -330,7 +330,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   of pose. A plain launch on a phone keeps each glass's cool decision in `UserDefaults` (`taps.<hz>.<px>`, never synced,
   written only when it changes), so a launch killed before the next still moment keeps a step with its cap, dropped
   by a new build (its number and its executable's timestamp, as the halftone's cache) or OS, and starts a new glass
-  from the nearest learnt, scaled by area, else `Tank.fourTaps(pixels:)`. Each decision goes to the flight recorder
+  from its own `Tank.fourTaps(pixels:)`, lowered by the share the nearest glass learnt stepped below its own static
+  limit, never raised (`TapLaw.prior`), so the static limits keep their calls on every glass. Each decision goes to the flight recorder
   (`taps prior`; `taps drag` for every drag under `watch` or `adapt` without keeping, else one with a late or frozen
   frame or a decision; `taps down`, `up`, `probe`, `cap … erased`, `applied`, `reverted`, `held`, `two-tap misses`,
   `hot`, `cool`; and an `UNSTIR_TAPS` it can't read, which draws the static limit), never from the link's callback. The harness, the test host and the simulator draw the static limit and

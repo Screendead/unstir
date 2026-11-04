@@ -368,8 +368,22 @@ final class TapLawTests: XCTestCase {
         let zoomed = TapKey(hz: 120, pixels: 1171.3)
         let scaled = TapLaw.prior(zoomed, pixels: 1171.3, learnt: [phone: 28, TapKey(hz: 120, pixels: 656.5): 40])
         XCTAssertEqual(scaled.from, phone, "the nearest")
-        XCTAssertEqual(scaled.budget, Int((29 * pow(1136.0 / 1168, 2)).rounded()) - 1)
-        XCTAssertEqual(scaled.budget, 26)
+        XCTAssertEqual(scaled.budget, 28, "lowered by the share it stepped below its own 40")
+        // A neighbour kept at its own static limit changes nothing: the Duo played as a book (about 1200 px) still opens
+        // upright at duocap2 = D's 17, from any phone-sized glass, and a phone first played under Display Zoom still
+        // opens at standard at taps-keep = C's 40.
+        let upright = TapKey(hz: 120, pixels: 1471)
+        for (px, b) in [(1200.0, 40), (1136.8, 40), (1296.0, 40)] {
+            XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: [TapKey(hz: 120, pixels: px): b]).budget, 17, "\(px) px")
+            XCTAssertNil(TapLaw.prior(upright, pixels: 1471, learnt: [TapKey(hz: 120, pixels: px): b]).from)
+        }
+        XCTAssertEqual(TapLaw.prior(phone, pixels: Tank.tunedPixels, learnt: [TapKey(hz: 120, pixels: 984): 40]).budget, 40)
+        // A neighbour that climbed past its static limit never raises the start.
+        XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: [phone: 42]).budget, 17)
+        XCTAssertEqual(TapLaw.prior(phone, pixels: Tank.tunedPixels, learnt: [upright: 20]).budget, 40)
+        // One that stepped down lowers it by the same share: a phone at 30 of 40 takes the Duo from 17 to 12.
+        XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: [phone: 30]).budget, 12)
+        XCTAssertEqual(TapLaw.prior(phone, pixels: Tank.tunedPixels, learnt: [upright: 15]).budget, 35)
         XCTAssertNil(TapLaw.prior(zoomed, pixels: 1171.3, learnt: [TapKey(hz: 60, pixels: 1171.3): 20]).from, "another rate's")
         XCTAssertEqual(TapLaw.prior(TapKey(hz: 120, pixels: 1471), pixels: 1471, learnt: [phone: 12]).budget, TapLaw.floor)
     }
