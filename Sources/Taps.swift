@@ -460,7 +460,8 @@ final class TapDrive: NSObject {
 }
 
 /// LevelView's ties to `Taps`: the drag measured, each frame a finger moved the glass, and the still moments a new
-/// budget lands at: a move, the level appearing, a change of pose. One handler for the drag and the moments, so a
+/// budget lands at: a move, the level appearing, a change of pose, and the end of a drag on a glass that had none yet
+/// (`Taps.close`). One handler for the drag and the moments, so a
 /// let-go that lands a move closes the drag before the move is taken as still.
 struct TapHooks: ViewModifier {
     struct Moment: Equatable {

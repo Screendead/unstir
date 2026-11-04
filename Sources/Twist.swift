@@ -58,7 +58,7 @@ enum Tank {
     static let maxStack = 36
     /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two. What a level is
     /// dealt to fit, on every device; the shader takes `fourTaps(pixels:)`, or the budget `Taps` learns. 40 held 120 Hz
-    /// on the iPhone 13 Pro Max's 1136 px glass (2026-11-04): every stack the game deals, 36 entries on a fill of 4,
+    /// on the iPhone 13 Pro Max's 1136 px glass (2026-11-04): the most the game allows, a full stack of 36 on a fill of 4,
     /// with the drag riding one over, and no load the game reaches missed there.
     static let fourTaps = 40
     /// The glass's side in pixels where `fourTaps` was measured: the iPhone 13 Pro Max's, 396 / 1.045 pt at 3x.

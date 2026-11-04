@@ -6,11 +6,14 @@
 # (UNSTIR_TAPDRAG), and prints each run's taps lines from the flight recorder. Lets the phone cool past serious.
 #   gpu    36 entries in flight at four taps (watch:42): late frames should read gpu, with the main thread idle.
 #   calm   the same at two taps (watch:12): few late frames.
-#   stall  calm with 20 ms of main-thread work every 0.5 s: late frames should read cpu.
-#   adapt  the law from 42: a step down to 38 at the first commit after three misses, then held at two taps.
-#   prior  the law from the glass's prior (40) with the same stack: four taps, climbing at the edge.
-#   edge   the law from its prior at the budget's edge, Wc 40 (36 entries on the glass): climbs to 42 or finds the edge.
-#   edgestall  edge with stall's main-thread work: a step down that the effect check reverts, as two taps don't help.
+#   stall  calm with 20 ms of main-thread work every 0.5 s: the shipped cuts don't attribute, so every late frame
+#          counts; the main thread's CPU time shows the stalls.
+#   adapt  the law from 42: a step down only on 4 late frames in 30 within 4 of the budget (none on the 13 Pro Max).
+#   prior  the law from the glass's static limit (40) with the same stack: four taps, climbing at the edge.
+#   edge   the law from its static 40 at the budget's edge, Wc 40 (36 entries on the glass): climbs to 42, one a 600
+#          clean frames, or finds the edge.
+#   edgestall  edge with stall's main-thread work: about 2 late frames in any 30, under the 4 that step, so it holds
+#          or climbs.
 # Every run unset.
 set -euo pipefail
 cd "$(dirname "$0")/.."

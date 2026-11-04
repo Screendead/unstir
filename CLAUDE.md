@@ -271,7 +271,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`Tank.profile`/`Tank.twist`/`Tank.lens`) and only the shader's `lensFlow`, compiled on its own
   (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
   The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (40) limits are tuned against 120 Hz on an
-  iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`): on 2026-11-04 every stack the game deals, 36 entries
+  iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`): on 2026-11-04 the most the game allows, a full stack of 36
   on a fill of 4 with the drag riding over, held 120 Hz there at four taps, checked from the screen's side, and no
   load the game reaches missed, so 40 is a held point, not the edge (Jack's call taps-keep = C). The level's glass draws the budget `Taps` learns on the phone (`Unstirred.budget`, below); every other
   draw, and every glass under the harness, the test host or the simulator, takes the four-tap limit for its glass's size (`Tank.fourTaps(pixels:)`, less the fill, `Unstirred.taps`): 40 on every glass
@@ -325,7 +325,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   near the edge only, with the effect check behind it; the display link does see the render server's misses (a
   presentation probe, 2026-11-04). On that phone no load the game reaches misses, so the step down has never run
   there, and heat past fair is unchecked. A new B is drawn
-  only at a still moment (`TapLaw.still`, from `TapHooks`: a move landing, the level appearing, a change of pose),
+  only at a still moment (`TapLaw.still`, from `TapHooks`: a move landing, the level appearing, a change of pose,
+  and the end of a drag on a glass that had none yet, as one a change of pose brings mid-drag),
   never during a measured drag, and `Unstirred.budget` is a plain field outside `animatableData`: the glass draws what
   its last still moment chose, keyed by its side alone, and the screen's rate (the highest read this launch, so Low
   Power Mode's cap never keys a glass) is read again only as a drag opens and at a still moment. Frames say nothing
