@@ -154,4 +154,40 @@ final class TapsTests: XCTestCase {
         XCTAssertNil(d.object(forKey: duo.stored), "nor once it cools")
         XCTAssertFalse(taps.summary.contains(duo.name), "nor learnt for this launch: \(taps.summary)")
     }
+
+    /// A step taken back to an inherited start unlearns the glass: the start is never kept as its own.
+    @MainActor
+    func testARevertToAnInheritedStartUnlearnsTheGlass() throws {
+        let d = try XCTUnwrap(UserDefaults(suiteName: "TapsRevert"))
+        d.removePersistentDomain(forName: "TapsRevert")
+        defer { d.removePersistentDomain(forName: "TapsRevert") }
+        let taps = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
+        let phone = TapKey(hz: 120, pixels: Tank.tunedPixels), duo = TapKey(hz: 120, pixels: 1471), period = 1.0 / 120
+        let miss = FrameWatch.Frame(interval: 2 * period, period: period, cpu: 0, age: 1, produced: true)
+        func stored(_ applied: Int) -> TapLaw.Stored {
+            .init(applied: applied, cap: nil, strikes: 0, build: taps.build, os: taps.os, limit: 40)
+        }
+        func drag(_ t: Taps, work: Int, _ n: Int) {
+            t.window(TapWindow(pixels: 1471, work: work, held: "rod 0", picture: "grid"))
+            for _ in 0..<n { t.frame(miss) }
+            t.window(nil)
+            t.still(pixels: 1471, "move")
+        }
+        Taps.save(stored(35), phone, to: d)
+        taps.use(.adapt(from: nil, stores: true))
+        taps.still(pixels: 1471, "open")
+        XCTAssertEqual(taps.budget(pixels: 1471), 14, "17 lowered as the phone stepped 40 to 35")
+        drag(taps, work: 14, Taps.cuts.near)
+        XCTAssertEqual(taps.budget(pixels: 1471), 13)
+        XCTAssertEqual(Taps.load(duo, from: d, build: taps.build, os: taps.os)?.applied, 13, "a step is the Duo's own")
+        drag(taps, work: 14, Taps.cuts.near)
+        XCTAssertEqual(taps.budget(pixels: 1471), 14, "two taps missed as often: the step taken back")
+        XCTAssertNil(d.object(forKey: duo.stored), "back at the inherited start, nothing of the Duo's is kept")
+        XCTAssertFalse(taps.summary.contains(duo.name), "nor learnt: \(taps.summary)")
+        Taps.save(stored(40), phone, to: d)
+        let later = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
+        later.use(.adapt(from: nil, stores: true))
+        later.still(pixels: 1471, "open")
+        XCTAssertEqual(later.budget(pixels: 1471), 17)
+    }
 }

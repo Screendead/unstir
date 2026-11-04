@@ -107,6 +107,9 @@ final class Taps {
     /// What each glass's law last kept, or the start it was made with, so nothing is written, nor taken as learnt, until
     /// its cool decision, cap or strikes move: a start lowered by a neighbour's step, drawn hot or cool, never is.
     @ObservationIgnored private var saved: [TapKey: TapLaw.Stored] = [:]
+    /// The start of each law made from a prior or `UNSTIR_TAPS`, not from what the glass kept: a revert or an erase that
+    /// brings it back there unlearns the glass rather than keeping the start as its own.
+    @ObservationIgnored private var starts: [TapKey: TapLaw.Stored] = [:]
     /// The drag being measured, at the budget it draws. A class, so each frame's tally grows in place.
     private final class Open {
         let key: TapKey
@@ -208,16 +211,18 @@ final class Taps {
 
     private func law(_ key: TapKey, pixels: Double) -> TapLaw {
         if let l = laws[key] { return l }
-        var l: TapLaw, from: String
+        var l: TapLaw, from: String, kept = false
         if case .adapt(let n?, _) = mode {
             (l, from) = (TapLaw(start: n, cuts: Self.cuts), "UNSTIR_TAPS")
         } else if stores, let s = Self.load(key, from: defaults, build: build, os: os) {
+            kept = true
             (l, from) = (TapLaw(stored: s, cuts: Self.cuts), "stored" + (s.cap.map { ", cap \($0) strikes \(s.strikes)" } ?? ""))
         } else {
             let p = TapLaw.prior(key, pixels: pixels, learnt: learnt)
             (l, from) = (TapLaw(start: p.budget, cuts: Self.cuts), p.from.map { "static, lowered as \($0.name) stepped" } ?? "static")
         }
         saved[key] = l.stored(build: build, os: os, limit: Tank.fourTaps(pixels: pixels))
+        if !kept { starts[key] = saved[key] }
         let heat = l.heat(thermal())
         laws[key] = l
         limits[key] = Tank.fourTaps(pixels: pixels)
@@ -313,10 +318,15 @@ final class Taps {
     }
 
     /// The glass's cool decision, cap or strikes moved: it is learnt for this launch's priors, and kept where the
-    /// launch stores.
+    /// launch stores, unless it moved back to a start it never learnt, which unlearns it.
     private func keep(_ key: TapKey) {
         guard let s = laws[key]?.stored(build: build, os: os, limit: limits[key]), saved[key] != s else { return }
         saved[key] = s
+        if s == starts[key] {
+            learnt[key] = nil
+            if stores { defaults.removeObject(forKey: key.stored) }
+            return
+        }
         learnt[key] = TapLaw.Learnt(budget: s.applied, limit: limits[key] ?? s.applied)
         if stores { Self.save(s, key, to: defaults) }
     }
