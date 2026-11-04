@@ -133,6 +133,30 @@ import XCTest
         XCTAssertNil(quick.solveAt)
     }
 
+    /// A solving move that ticks more than one clock: only its last tick solves, with the chime and the success haptic,
+    /// and every tick before it is the ratchet with its rigid haptic. The book's lines stop their clocks one at a time,
+    /// so the tank is dealt one step on each clock of the problem with the most, the first to tick on top: a wait pops
+    /// them all in turn.
+    func testOnlyTheLastOfASolvingMovesTicksSolves() {
+        var level = Level.escapement.max { $0.clocks.count < $1.clocks.count }!
+        level.id = "test-escapement"
+        level.scramble = level.clocks.reversed().map { Twist(rod: $0.rod, steps: -$0.dir) }
+        XCTAssertEqual(level.clocks.count, 3)
+        let g = Game(level: level, tankTurned: true, bank: (3, nil))
+        g.wait(on: level.clocks[0].rod)
+        XCTAssertTrue(g.solved)
+        XCTAssertEqual(g.tick.map(\.rod), level.clocks.map(\.rod))
+        let cues = g.tickCues, last = cues.count - 1
+        XCTAssertEqual(cues.count, 3)
+        for (i, cue) in cues.enumerated() {
+            XCTAssertEqual(cue.at, LevelView.tickBeat + LevelView.tickTurn * Double(i), accuracy: 1e-9)
+            XCTAssertEqual(cue.solves, i == last, "tick \(i)")
+            XCTAssertEqual(cue.sounds, i == last ? [.ratchet, .solve] : [.ratchet], "tick \(i)")
+            XCTAssertEqual(cue.haptic, i == last ? .success : Self.plain, "tick \(i)")
+        }
+        XCTAssertEqual(g.solveAt ?? -1, 0.75, accuracy: 1e-9)
+    }
+
     /// A move that runs the tank out of ticks plays its ticks as any other move does, after the out-of-ticks sound at the
     /// lift, as before the solve's chime moved: the ratchet and its haptic on each, and the move's first push over it.
     func testAMoveThatRunsOutOfTicksPlaysItsTicks() {
