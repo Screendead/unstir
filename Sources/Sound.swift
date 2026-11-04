@@ -491,10 +491,9 @@ extension Game {
     /// = D and soundsk-haptic = B, round 16). One that pushed has the error haptic, and the move's first push sounds the
     /// push over its ratchet: a pushed tick's own, unless the move's stir pushed first (Jack's calls tk-push = B and
     /// tk-multi = C, round 16). The move that solves the tank sounds its last tick with the solve's chime and success
-    /// haptic, which the wave waits for (tk-finish = B). None on a level without clocks, nor on a move that runs the tank
-    /// out of ticks, which sounds only as its finish at the lift.
+    /// haptic, which the wave waits for (tk-finish = B). A move that runs the tank out of ticks plays its ticks as any
+    /// other move does. None on a level without clocks.
     var tickCues: [TickCue] {
-        guard !lost else { return [] }
         var push = !stirPushed
         return tick.enumerated().map { i, t in
             var cue = TickCue(at: LevelView.tickBeat + LevelView.tickTurn * Double(i), sounds: [.ratchet],
