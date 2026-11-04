@@ -19,6 +19,13 @@ struct TapKey: Hashable {
         return pixels <= Tank.fourTapsKept ? min(r, kept * 16) : max(r, (kept + 1) * 16)
     }
 
+    /// The lowest static limit of any glass the key holds, from 8 px under its side to just under 8 px over, short of
+    /// `Tank.fourTapsKept`, so no glass that shares it starts above its own static limit.
+    var limit: Int {
+        let top = (Double(px) + 8).nextDown
+        return Tank.fourTaps(pixels: Double(px) <= Tank.fourTapsKept ? min(top, Tank.fourTapsKept) : top)
+    }
+
     var name: String { "\(px)px@\(hz)" }
     /// Its UserDefaults key, never synced.
     var stored: String { "taps.\(hz).\(px)" }

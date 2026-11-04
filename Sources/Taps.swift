@@ -213,7 +213,7 @@ final class Taps {
             (l, from) = (TapLaw(stored: s, cuts: Self.cuts), "stored" + (s.cap.map { ", cap \($0) strikes \(s.strikes)" } ?? ""))
         } else {
             // Its own static limit, whatever other glasses have kept (Jack's call taps-keep = C).
-            (l, from) = (TapLaw(start: Tank.fourTaps(pixels: pixels), cuts: Self.cuts), "static")
+            (l, from) = (TapLaw(start: key.limit, cuts: Self.cuts), "static")
         }
         saved[key] = l.stored(build: build, os: os)
         let heat = l.heat(thermal())

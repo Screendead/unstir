@@ -107,6 +107,18 @@ final class TapsTests: XCTestCase {
         }
         taps.still(pixels: Tank.tunedPixels, "open")
         XCTAssertEqual(taps.budget(pixels: Tank.tunedPixels), 12, "a glass's own kept budget is its own")
+        // Glasses sharing a key start at the lowest static limit among them, whichever comes first: 1450 px alone
+        // would have 18, 1460 px 17.
+        XCTAssertEqual([Tank.fourTaps(pixels: 1450), Tank.fourTaps(pixels: 1460)], [18, 17])
+        XCTAssertEqual(TapKey(hz: 120, pixels: 1450), TapKey(hz: 120, pixels: 1460))
+        for order in [[1450.0, 1460], [1460, 1450]] {
+            let t = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
+            t.use(.adapt(from: nil, stores: false))
+            for px in order {
+                t.still(pixels: px, "open")
+                XCTAssertEqual(t.budget(pixels: px), 17, "\(order): \(px) px")
+            }
+        }
     }
 
     /// A glass keeps what its own drags decide, and only that: a drag that decides nothing writes nothing, a step is

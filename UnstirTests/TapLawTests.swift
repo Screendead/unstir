@@ -3,7 +3,7 @@
 import XCTest
 @testable import Unstir
 
-/// The adaptive four-tap budget's law on synthetic frames, and the priors a glass starts from. Nothing here is timed.
+/// The adaptive four-tap budget's law on synthetic frames, and the glass keys it is learnt by. Nothing here is timed.
 final class TapLawTests: XCTestCase {
     private let period = 1.0 / 120
 
@@ -356,6 +356,15 @@ final class TapLawTests: XCTestCase {
         XCTAssertEqual(drag(&fresh, at: 41, .onTime, 600), [.up(from: 41, to: 42), .applied(from: 41, to: 42)])
         XCTAssertEqual(drag(&fresh, at: 42, .onTime, 1200), [])
         XCTAssertEqual(fresh.applied, TapLaw.ceiling)
+    }
+
+    func testAKeysLimitIsTheLowestOfTheGlassesItHolds() {
+        for px in stride(from: 600.0, through: 1600, by: 0.25) {
+            XCTAssertLessThanOrEqual(TapKey(hz: 120, pixels: px).limit, Tank.fourTaps(pixels: px), "\(px) px")
+        }
+        XCTAssertEqual(TapKey(hz: 120, pixels: Tank.tunedPixels).limit, 40)
+        XCTAssertEqual(TapKey(hz: 120, pixels: 1298).limit, 40, "the key under the kept size holds phones alone")
+        XCTAssertEqual(TapKey(hz: 120, pixels: 1471).limit, 17)
     }
 
     func testNoKeyHoldsGlassesEitherSideOfTheKeptSize() {

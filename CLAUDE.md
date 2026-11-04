@@ -335,8 +335,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   written only once its cool decision, cap or strikes move from what it was made with, so heat, drawn while it lasts,
   is never kept; no key holds glasses either side of `Tank.fourTapsKept`), so a launch killed before the next still
   moment keeps a step with its cap, dropped by a new build (its number and its executable's timestamp, as the
-  halftone's cache) or OS. A glass with nothing kept starts at its own `Tank.fourTaps(pixels:)`, whatever any other
-  glass has kept (Jack's call taps-keep = C: the fixed limit is the start), so no glass's start reads another's. Each decision goes to the flight recorder
+  halftone's cache) or OS. A glass with nothing kept starts at its key's static limit (`TapKey.limit`, the lowest
+  `Tank.fourTaps(pixels:)` of the glasses a key holds, so none starts above its own), whatever any other glass has kept (Jack's call taps-keep = C: the fixed limit is the start), so no glass's start reads another's. Each decision goes to the flight recorder
   (`taps prior`; `taps drag` for every drag under `watch` or `adapt` without keeping, else one with a late or frozen
   frame or a decision; `taps down`, `up`, `probe`, `cap … erased`, `applied`, `reverted`, `held`, `two-tap misses`,
   `hot`, `cool`; and an `UNSTIR_TAPS` it can't read, which draws the static limit), never from the link's callback. The harness, the test host and the simulator draw the static limit and
