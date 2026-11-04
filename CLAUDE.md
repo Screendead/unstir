@@ -38,10 +38,12 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
   inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
   build system to ignore inode changes; the restored build then stays incremental. The job builds for testing
-  (`scripts/test-store.sh build-for-testing`, printing the build's timing summary) while the simulator boots in the
-  background, then waits for the boot and runs `test-without-building`, each its own step, so its log shows where the
-  time went. On 2026-11-03, as one `xcodebuild test`, the time before the first test ran 190 to 440 s and the tests 45
-  to 95 s, both with the runner's speed (a primary-key hit was the slowest). After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
+  (`scripts/test-store.sh build-for-testing`, for a generic simulator so it never waits on one booting, printing the
+  build's timing summary) while the simulator boots in the background from just after the cache's restore (booting
+  during it slowed the untar from about 3 s to 124 s), then waits for the boot and runs `test-without-building`. On
+  2026-11-04 the boot took about 90 s, the build step 130 to 190 s with a few seconds of Swift compiling (the asset
+  catalog takes 36 s every run), and the test step about 110 s, half of it the tests; every step's time moves with the
+  runner's speed. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
   call APPSIZE = B) less the test bundle and Xcode's testing frameworks the test host carries, and fail past 100 MB.
   That build is Debug for the simulator, one architecture: its debug dylib (16.6 MB on 2026-11-02) outweighs the
   Release binary (11.2 MB), and the resources are the same bytes in both, so it reads about 6 MB over a Release bundle
