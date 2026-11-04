@@ -641,7 +641,7 @@ struct MenuView: View {
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
                          cameFrom = (card, next)
-                     }, beside: beside)
+                     }, beside: beside, closes: Self.closes(playing: playing != nil, covered: covered))
                 .background(alignment: .leading) { bleed }
                 .id(card)
                 .transition(reduceMotion ? .opacity
@@ -650,6 +650,10 @@ struct MenuView: View {
                 .zIndex(1)
         }
     }
+
+    /// A card over a playing level's result card, which covers the menu beside it, closes onto that card rather than
+    /// going to the menu (Jack's call s5b-back = B); over the menu beside play it goes to the menu.
+    nonisolated static func closes(playing: Bool, covered: Bool) -> Bool { playing && covered }
 
     /// The calendar, over the menu as a card is, or beside the list as a card is, from its row.
     @ViewBuilder private func archiveView(beside: Bool) -> some View {

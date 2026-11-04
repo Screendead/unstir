@@ -704,7 +704,7 @@ duo-beside-pick.png  Duo open: plughole 11 beside the menu, row 07 tapped 1.5 s 
 duo-beside-back.png  Duo open: plughole 11 beside the menu, left by its back a second in: the list back in the leading half under its title and gear, the trailing half empty.
 duo-beside-result.png  Duo open: plughole 06 solved clean beside the menu: the result card headed by unstirred. over the menu in the trailing half, centred on the tank, the list gone under it.
 duo-beside-card.png  Duo open: plughole 11 beside the menu, Lens's card opened from the dock 4.5 s in (UNSTIR_SHELFDEMO) over the whole trailing half, its way out ‹ menu, the tank and its chrome playing on.
-duo-beside-gate.png  Duo open: Lens 03 solved, Lens 04 picked past the taste: the gate's card over the trailing half on buying, Lens 03 still in the tank.
+duo-beside-gate.png  Duo open: Lens 03 solved, Lens 04 picked past the taste: the gate's card over 03's result card in the trailing half on buying, its way out ✕ close (s5b-back = B), Lens 03 still in the tank.
 duo-beside-archive.png  Duo open: whirlpool 11 beside the menu, the archive opened 1.5 s in as its row opens it (UNSTIR_PICK=archive), over the trailing half, Lens owned.
 duo-beside-live-solve.png  Duo open: plughole 19 solved live at par (UNSTIR_MOVES), whirlpool's up a notch on the card over the menu.
 duo-beside-ax3.png  Duo open at accessibility3: plughole 27's fullest card over the menu at that size, the chrome round the tank fixed in size.
@@ -713,8 +713,8 @@ duo-beside-pack-complete.png  Duo open: Lens 25 solved, Lens complete and its po
 duo-beside-lost.png  Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass.
 duo-beside-pointer.png  Duo open: a fresh install's first screen, plughole 01 beside the menu, its note at rest: the settings line under it, its foot touching the tops of undo and reset, the gear beside the menu's title.
 duo-beside-lesson.png  Duo open: maelstrom 01, the tank never turned: the rim lesson's arc between the title and the glass, 5 pt smaller for it.
-duo-beside-over-result.png  Duo open: Lens 25 solved beside the menu, Lens's card opened 4.5 s in (UNSTIR_SHELFDEMO) over the result card, which covers the menu.
-duo-beside-over-result-closed.png  Duo open: the same, the card closed again 7.2 s later: the result card back over the menu.
+duo-beside-over-result.png  Duo open: Lens 25 solved beside the menu, Lens's card opened 4.5 s in (UNSTIR_SHELFDEMO) over the result card, which covers the menu: its way out ✕ close (s5b-back = B).
+duo-beside-over-result-closed.png  Duo open: the same, the card closed again 7.2 s later by ✕ close: the result card back over the menu.
 duo-beside-lens-long.png  Duo open: Lens 01's top lens held turned nine steps up beside the menu: all nine fit its track, which ends between the title and the rim, clear of both.
 duo-beside-lens-wrong.png  Duo open: Lens 08's top lens held fourteen steps up, the wrong way, beside the menu: capped at +9, where its track meets the title, clear of moves / par.
 duo-beside-prism-letters.png  Duo open: Prism 01 read by its colour letters beside the menu: the R G B swatches under the note, the glass 30 pt smaller for them.

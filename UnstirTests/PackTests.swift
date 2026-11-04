@@ -671,6 +671,14 @@ final class PackTests: XCTestCase {
         }
     }
 
+    /// Beside a playing level, a card over its result card closes onto that card, which covers the menu (s5b-back = B);
+    /// over the menu beside play, from the dock or a gate before a finish, it goes back to the menu, as on a phone.
+    func testACardOverAResultBesideTheMenuCloses() {
+        XCTAssertTrue(MenuView.closes(playing: true, covered: true))
+        XCTAssertFalse(MenuView.closes(playing: true, covered: false))
+        XCTAssertFalse(MenuView.closes(playing: false, covered: false))
+    }
+
     /// Only a change after the launch's first read lands: before it, an owner's card reads unowned until the read does.
     @MainActor func testTheLaunchsFirstReadIsNoLanding() {
         XCTAssertFalse(PackCard.lands(.unowned, .owned, ready: false))

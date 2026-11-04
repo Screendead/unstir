@@ -908,7 +908,7 @@ hold=8 shot duo-beside-result "Duo open: plughole 06 solved clean beside the men
   "${duo[@]}" SCREEN=clean LEVEL=6 BESTS=plughole:$nine OWNED= CLOCK=1
 hold=8 shot duo-beside-card "Duo open: plughole 11 beside the menu, Lens's card opened from the dock 4.5 s in (UNSTIR_SHELFDEMO) over the whole trailing half, its way out ‹ menu, the tank and its chrome playing on." \
   "${duo[@]}" "${played[@]}" BESTS=plughole:$nine OWNED= SHELFDEMO=1 CLOCK=1
-hold=35 shot duo-beside-gate "Duo open: Lens 03 solved, Lens 04 picked past the taste: the gate's card over the trailing half on buying, Lens 03 still in the tank." \
+hold=35 shot duo-beside-gate "Duo open: Lens 03 solved, Lens 04 picked past the taste: the gate's card over 03's result card in the trailing half on buying, its way out ✕ close (s5b-back = B), Lens 03 still in the tank." \
   "${duo[@]}" PACK=lens LEVEL=3 SCREEN=clean BESTS=plughole:$nine,lens:00 OWNED= CLOCK=1 PICK=lens-4
 hold=10 shot duo-beside-archive "Duo open: whirlpool 11 beside the menu, the archive opened 1.5 s in as its row opens it (UNSTIR_PICK=archive), over the trailing half, Lens owned." \
   "${duo[@]}" TIER=whirlpool LEVEL=11 BESTS=plughole:$par27 DAILIES=4 OWNED=lens PICK=archive CLOCK=1
@@ -929,9 +929,9 @@ hold=9 shot duo-beside-pointer "Duo open: a fresh install's first screen, plugho
 hold=8 shot duo-beside-lesson "Duo open: maelstrom 01, the tank never turned: the rim lesson's arc between the title and the glass, 5 pt smaller for it." \
   "${duo[@]}" TIER=maelstrom LEVEL=1 CLOCK=3
 # A pack card over a result card, opened as the card's pointer opens one; the shelf tour closes it 7.2 s later.
-hold=12 shot duo-beside-over-result "Duo open: Lens 25 solved beside the menu, Lens's card opened 4.5 s in (UNSTIR_SHELFDEMO) over the result card, which covers the menu." \
+hold=12 shot duo-beside-over-result "Duo open: Lens 25 solved beside the menu, Lens's card opened 4.5 s in (UNSTIR_SHELFDEMO) over the result card, which covers the menu: its way out ✕ close (s5b-back = B)." \
   "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=plughole:$nine,lens:000000000000000000000000- SHELFDEMO=1 CLOCK=0
-hold=20 shot duo-beside-over-result-closed "Duo open: the same, the card closed again 7.2 s later: the result card back over the menu." \
+hold=20 shot duo-beside-over-result-closed "Duo open: the same, the card closed again 7.2 s later by ✕ close: the result card back over the menu." \
   "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=plughole:$nine,lens:000000000000000000000000- SHELFDEMO=1 CLOCK=0
 hold=12 shot duo-beside-lens-long "Duo open: Lens 01's top lens held turned nine steps up beside the menu: all nine fit its track, which ends between the title and the rim, clear of both." \
   "${duo[@]}" PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42 OWNED=lens
