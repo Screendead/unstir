@@ -3442,7 +3442,7 @@ struct Unstirred: ViewModifier, Animatable {
         let r = side / 2
         // A live picture keeps four taps only to the budget less its fill: the same budget as without it. Counted in
         // committed work, so a touch never changes the taps: the drag, the breath or a tick in flight rides one entry
-        // over, or Prism's its own cost (`weigh`), within the 31 the shader's comment measured on the 13 Pro Max's glass.
+        // over, or Prism's its own cost (`weigh`), within the 41 the shader's comment measured on the 13 Pro Max's glass.
         // Two in flight at once, for the `Breath.fade` a touch takes to cut a slosh or a grab within a tick's flight,
         // drop to two taps at the budget's edge rather than run one more.
         let taps = budget.map { $0 - fillEntries } ?? Self.taps(side: side, scale: scale, fill: fillEntries)

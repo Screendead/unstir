@@ -64,8 +64,8 @@ static half4 unstirBody(float2 pos, L layer, float2 centre, float radius, device
                         float3 wave, float turn) {
     // Four taps a quarter device pixel off centre, each through the whole inverse chain: the stretching is in the
     // map, so a filament thinner than a pixel keeps its light as coverage. Past fourTaps entries only the diagonal pair
-    // runs: on an iPhone 13 Pro Max's glass, about 1137 px, hex's hub and a neighbour alternating hold 120 Hz at 31
-    // entries with four taps, not 32.
+    // runs: on an iPhone 13 Pro Max's glass, about 1137 px, a full stack of 36 and the drag over a live picture's fill
+    // of 4, 41 entries' work in all, held 120 Hz with four taps (2026-11-04).
     int stride = n > fourTaps ? 3 : 1;
     float ct = cos(turn), st = sin(turn);
     float3 acc = 0;

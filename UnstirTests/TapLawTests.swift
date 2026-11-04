@@ -355,7 +355,14 @@ final class TapLawTests: XCTestCase {
             let key = TapKey(hz: 120, pixels: pixels)
             XCTAssertEqual(TapLaw.prior(key, pixels: pixels, learnt: [:]).budget, Tank.fourTaps(pixels: pixels), "\(pixels) px")
         }
-        XCTAssertEqual(TapLaw.prior(TapKey(hz: 120, pixels: 1471), pixels: 1471, learnt: [:]).budget, 17)
+        XCTAssertEqual(TapLaw.prior(TapKey(hz: 120, pixels: 1471), pixels: 1471, learnt: [:]).budget, 23)
+        // A phone starts at the static 40 and climbs clean to the ceiling, then no further.
+        var fresh = TapLaw(start: TapLaw.prior(TapKey(hz: 120, pixels: 1171.3), pixels: 1171.3, learnt: [:]).budget)
+        XCTAssertEqual(fresh.applied, 40)
+        XCTAssertEqual(drag(&fresh, at: 40, .onTime, 600), [.up(from: 40, to: 41), .applied(from: 40, to: 41)])
+        XCTAssertEqual(drag(&fresh, at: 41, .onTime, 600), [.up(from: 41, to: 42), .applied(from: 41, to: 42)])
+        XCTAssertEqual(drag(&fresh, at: 42, .onTime, 1200), [])
+        XCTAssertEqual(fresh.applied, TapLaw.ceiling)
         let phone = TapKey(hz: 120, pixels: Tank.tunedPixels)
         XCTAssertEqual(phone.px, 1136)
         let zoomed = TapKey(hz: 120, pixels: 1171.3)

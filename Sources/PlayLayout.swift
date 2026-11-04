@@ -42,7 +42,7 @@ struct PlayLayout: Equatable {
     static let margin: CGFloat = 16
     /// The glass's side, in pixels, past which it stops growing, which only the open Duo upright reaches (Jack's call
     /// duocap2 = D). The stack's limits were tuned at about 1137 px (`Tank.tunedPixels`): here the four-tap limit is
-    /// 17 (`Tank.fourTaps(pixels:)`), the stack as deep as on a phone, and a deep one on a live picture may run up to
+    /// 23 (`Tank.fourTaps(pixels:)`), the stack as deep as on a phone, and a deep one on a live picture may run up to
     /// 32% over the frame budget measured, the Duo's GPU unmeasured.
     static let maxPixels: CGFloat = 1471
     /// Narrower or shorter than this, a half can't hold the chrome (the result card's buttons, Escapement's ticks), so

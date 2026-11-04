@@ -667,10 +667,10 @@ duo-open-prism.png  Duo open: Prism 01 with the colour letters, the swatches und
 duo-open-endless.png  Duo open: endless at three notches, the brim round the tank in the leading half.
 duo-open-daily-result.png  Duo open: today's daily solved two over par, the card's again, share and next daily beside the tank.
 duo-open-upright.png  Duo open and turned upright (669 x 951 pt): today's column, its glass stopped at 1471 px (490 pt; duocap2 = D).
-duo-open-upright-whirlpool-27.png  Duo upright at 1471 px: whirlpool 27, Estuary, its 28 stirs as dealt on the glass, two taps, as on a phone: with the glass's fill the work is 32.
+duo-open-upright-whirlpool-27.png  Duo upright at 1471 px: whirlpool 27, Estuary, its 28 stirs as dealt on the glass, two taps here where a phone runs four: with the glass's fill the work is 32.
 duo-open-upright-maelstrom-27.png  Duo upright at 1471 px: maelstrom 27, its 26 stirs as dealt on the marbling's twin, two taps here.
 duo-open-upright-endless.png  Duo upright at 1471 px: endless's tank 20, 28 stirs deep, with 5 of the brim's 8 notches: the column keeps the brim to the screen's edges, the glass at the cap.
-duo-phone-whirlpool-27.png  A phone, for comparison: whirlpool 27 as dealt in the Pro Max's 1171 px column, two taps: 28 stirs and the glass's fill of 4 run past 30.
+duo-phone-whirlpool-27.png  A phone, for comparison: whirlpool 27 as dealt in the Pro Max's 1171 px column, four taps: 28 stirs and the glass's fill of 4 make 32, within 40.
 duo-folded-book.png  Duo half open like a book: the split clear of the fold's band either side, the tank wholly in the leading half.
 duo-tabletop.png  Duo upright and folded on a table: header, note and controls in the upright half, the tank filling the half lying flat.
 duo-tabletop-result.png  Duo tabletop: plughole 06 solved clean, the card and unstirred. in the upright half, above the fold.

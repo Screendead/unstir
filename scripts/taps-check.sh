@@ -8,8 +8,8 @@
 #   calm   the same at two taps (watch:12): few late frames.
 #   stall  calm with 20 ms of main-thread work every 0.5 s: late frames should read cpu.
 #   adapt  the law from 42: a step down to 38 at the first commit after three misses, then held at two taps.
-#   prior  the law from the glass's prior (30) with the same stack: two taps, nothing to step.
-#   edge   the law from its prior at the budget's edge, Wc 30 (26 entries on the glass): holds or finds the phone's edge.
+#   prior  the law from the glass's prior (40) with the same stack: four taps, climbing at the edge.
+#   edge   the law from its prior at the budget's edge, Wc 40 (36 entries on the glass): climbs to 42 or finds the edge.
 #   edgestall  edge with stall's main-thread work: a step down that the effect check reverts, as two taps don't help.
 # Every run unset.
 set -euo pipefail
@@ -25,8 +25,8 @@ vars() {
     stall) echo '"UNSTIR_TAPS":"watch:12","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4","UNSTIR_TAPSTALL":"20"' ;;
     adapt) echo '"UNSTIR_TAPS":"adapt:42","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"8"' ;;
     prior) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4"' ;;
-    edge) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"26","UNSTIR_TAPDRAG":"12"' ;;
-    edgestall) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"26","UNSTIR_TAPDRAG":"12","UNSTIR_TAPSTALL":"20"' ;;
+    edge) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"36","UNSTIR_TAPDRAG":"12"' ;;
+    edgestall) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"36","UNSTIR_TAPDRAG":"12","UNSTIR_TAPSTALL":"20"' ;;
     *) echo "unknown run $1" >&2; exit 1 ;;
   esac
 }

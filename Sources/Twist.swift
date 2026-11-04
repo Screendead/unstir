@@ -57,20 +57,22 @@ enum Tank {
     /// runs over the frame budget measured at `tunedPixels`.
     static let maxStack = 36
     /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two. What a level is
-    /// dealt to fit, on every device; the shader takes `fourTaps(pixels:)`.
-    static let fourTaps = 30
-    /// The glass's side in pixels where `fourTaps` was measured: the iPhone 13 Pro Max's, 396 / 1.045 pt at 3x, whose
-    /// 31 entries with four taps held 120 Hz and 32 didn't (Unstir.metal).
+    /// dealt to fit, on every device; the shader takes `fourTaps(pixels:)`, or the budget `Taps` learns. 40 held 120 Hz
+    /// on the iPhone 13 Pro Max's 1136 px glass (2026-11-04): every stack the game deals, 36 entries on a fill of 4,
+    /// with the drag riding one over, and no load the game reaches missed there.
+    static let fourTaps = 40
+    /// The glass's side in pixels where `fourTaps` was measured: the iPhone 13 Pro Max's, 396 / 1.045 pt at 3x.
     static let tunedPixels = 3 * 396 / 1.045
     /// Up to this side in pixels a glass keeps `fourTaps`, so no glass drawn before the open Duo's upright one grew
     /// past it changes, the largest phone's (about 1171) among them, though each past `tunedPixels` costs more than
     /// was measured.
     static let fourTapsKept = 1300.0
 
-    /// `fourTaps` on a glass `pixels` across: past `fourTapsKept` the 31 entries measured shrink with the glass's area,
-    /// less the one a drag, breath or tick in flight rides over, so 1471 px keeps 17.
+    /// `fourTaps` on a glass `pixels` across: past `fourTapsKept` the entries measured, the one in flight with them,
+    /// shrink with the glass's area, less the one in flight, so 1471 px keeps 23.
     static func fourTaps(pixels: Double) -> Int {
-        pixels <= fourTapsKept ? fourTaps : Int((31 * (tunedPixels / pixels) * (tunedPixels / pixels)).rounded(.down)) - 1
+        let ratio = tunedPixels / pixels
+        return pixels <= fourTapsKept ? fourTaps : Int((Double(fourTaps + 1) * ratio * ratio).rounded(.down)) - 1
     }
 
     /// Rotation fraction at s = |p - c| / radius. The Metal shader carries the same function.
