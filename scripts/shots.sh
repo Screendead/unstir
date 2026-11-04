@@ -814,7 +814,7 @@ shot duo-open-daily-result "Duo open: today's daily solved two over par, the car
   "${duo[@]}" SCREEN=result MODE=daily NOW=17:00
 shot duo-open-upright "Duo open and turned upright (669 x 951 pt): today's column, its glass stopped at 1471 px (490 pt; duocap2 = D)." \
   FRAME=669x951 INSETS=59,0,34,0 LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
-# At 1471 px the shader runs four taps only to 23 entries less a live picture's fill (Tank.fourTaps(pixels:)), so the
+# At 1471 px the shader runs four taps only to 17 entries less a live picture's fill (Tank.fourTaps(pixels:)), so the
 # deepest stacks draw with two, where a phone's 40 draws every stack dealt with four; the harness shrinks the window, so these show the tap switch, not
 # the Duo's frame time.
 upright=(FRAME=669x951 INSETS=59,0,34,0)

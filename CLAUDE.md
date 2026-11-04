@@ -275,9 +275,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   on a fill of 4 with the drag riding over, held 120 Hz there at four taps, checked from the screen's side, and no
   load the game reaches missed, so 40 is a held point, not the edge (Jack's call taps-keep = C). The level's glass draws the budget `Taps` learns on the phone (`Unstirred.budget`, below); every other
   draw, and every glass under the harness, the test host or the simulator, takes the four-tap limit for its glass's size (`Tank.fourTaps(pixels:)`, less the fill, `Unstirred.taps`): 40 on every glass
-  up to 1300 px, so every iPhone and every pose drawn before the upright Duo's keeps one limit, and past that the 41
-  entries measured scaled down by the area, less one for the entry in flight, so the open Duo upright's 1471 px gets
-  23; `Tank.maxStack` stays 36 at every size and every level is dealt within the phone's 40 (whirlpool 27, the
+  up to 1300 px, so every iPhone and every pose drawn before the upright Duo's keeps one limit, and past that the 31
+  entries measured before (`Tank.scaledFrom`: 31 held there and 32 didn't) scaled down by the area, less one for the
+  entry in flight, so the open Duo upright's 1471 px keeps 17 (Jack's call duocap2 = D; whether it rescales from the
+  phones' 40, to 23, is open); `Tank.maxStack` stays 36 at every size and every level is dealt within the phone's 40 (whirlpool 27, the
   deepest on a live picture, has 28 stirs on the glass's fill of 4, 32; Jack's call wp27-table = B), so every level
   plays as on an iPhone, and every stack dealt draws four taps there (Jack's call duocap2 = D). The accepted risk: a deep stack on a live picture there may run up to 32% over the
   frame budget measured (a paper estimate; the Duo's GPU is unmeasured until stage 6's bench). The GPU bench keeps
