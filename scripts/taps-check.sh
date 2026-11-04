@@ -10,6 +10,7 @@
 #   adapt  the law from 42: a step down to 38 at the first commit after three misses, then held at two taps.
 #   prior  the law from the glass's prior (30) with the same stack: two taps, nothing to step.
 #   edge   the law from its prior at the budget's edge, Wc 30 (26 entries on the glass): holds or finds the phone's edge.
+#   edgestall  edge with stall's main-thread work: a step down that the effect check reverts, as two taps don't help.
 # Every run unset.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -25,6 +26,7 @@ vars() {
     adapt) echo '"UNSTIR_TAPS":"adapt:42","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"8"' ;;
     prior) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"35","UNSTIR_TAPDRAG":"4"' ;;
     edge) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"26","UNSTIR_TAPDRAG":"12"' ;;
+    edgestall) echo '"UNSTIR_TAPS":"adapt","UNSTIR_DEEP":"26","UNSTIR_TAPDRAG":"12","UNSTIR_TAPSTALL":"20"' ;;
     *) echo "unknown run $1" >&2; exit 1 ;;
   esac
 }
