@@ -213,8 +213,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - The four-tap budget on the phone: `scripts/taps-check.sh [--sim udid] [runs...]` plays whirlpool 27 on the phone
   `UNSTIR_DEVICE` names (the build `scripts/run-ios.sh Release` installed), its stack cut or repeated (`UNSTIR_DEEP`),
   a knob dragged through the real let-go (`UNSTIR_TAPDRAG`), and prints each run's `taps` lines: `gpu`, `calm` and
-  `stall` (`watch:n`, `UNSTIR_TAPSTALL`) check that a late frame's main-thread CPU time tells the GPU's misses from
-  the main thread's; `adapt`, `prior` and `edge` run the law. `--sim` is a dry run of the plumbing: the simulator's
+  `stall` (`watch:n`, `UNSTIR_TAPSTALL`) showed on the 13 Pro Max that a late frame's main-thread CPU time can't tell
+  the GPU's misses from the main thread's, hence `TapCuts.unattributed`; `adapt`, `prior`, `edge` and `edgestall` run
+  the law. `--sim` is a dry run of the plumbing: the simulator's
   frames say nothing of a phone's GPU.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
@@ -1169,7 +1170,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
   `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone.
   `UNSTIR_TAPS=n` pins the level's four-tap budget at n, `=watch:n` pins it and logs every drag's frames, and `=adapt`
-  runs `Taps`' law from the glass's prior keeping nothing (`=adapt:n`, from n), in any build; a value it can't read
+  runs `Taps`' law from the glass's static limit keeping nothing (`=adapt:n`, from n), in any build; a value it can't read
   draws the static limit. It too leaves the launch a plain one
   and `scripts/run-ios.sh` passes it. For it on the phone, `UNSTIR_TAPDRAG=n` drags the first working knob n times,
   4 s each, through the real let-go, each landing a step, alternately each way; `UNSTIR_TAPSTALL=ms` busies the main
