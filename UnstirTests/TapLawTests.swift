@@ -349,7 +349,14 @@ final class TapLawTests: XCTestCase {
     }
 
 
-    func testAGlassStartsFromTheStaticLimitOrTheNearestOneLearnt() {
+    /// Glasses learnt at 120 Hz, each at `pixels` with its own static limit there.
+    private func learnt(_ glasses: [(pixels: Double, budget: Int)]) -> [TapKey: TapLaw.Learnt] {
+        Dictionary(uniqueKeysWithValues: glasses.map {
+            (TapKey(hz: 120, pixels: $0.pixels), TapLaw.Learnt(budget: $0.budget, limit: Tank.fourTaps(pixels: $0.pixels)))
+        })
+    }
+
+    func testAGlassStartsFromItsStaticLimitLoweredOnlyByANeighboursStep() {
         // Every phone's glass, the open split, the tabletop and the upright Duo's.
         for pixels in [656.5, 1004.8, Tank.tunedPixels, 1171.3, 1194.3, 1272.0, 1471] {
             let key = TapKey(hz: 120, pixels: pixels)
@@ -363,28 +370,46 @@ final class TapLawTests: XCTestCase {
         XCTAssertEqual(drag(&fresh, at: 41, .onTime, 600), [.up(from: 41, to: 42), .applied(from: 41, to: 42)])
         XCTAssertEqual(drag(&fresh, at: 42, .onTime, 1200), [])
         XCTAssertEqual(fresh.applied, TapLaw.ceiling)
-        let phone = TapKey(hz: 120, pixels: Tank.tunedPixels)
+        let phone = TapKey(hz: 120, pixels: Tank.tunedPixels), tuned = Tank.tunedPixels
         XCTAssertEqual(phone.px, 1136)
         let zoomed = TapKey(hz: 120, pixels: 1171.3)
-        let scaled = TapLaw.prior(zoomed, pixels: 1171.3, learnt: [phone: 28, TapKey(hz: 120, pixels: 656.5): 40])
+        let scaled = TapLaw.prior(zoomed, pixels: 1171.3, learnt: learnt([(tuned, 28), (656.5, 40)]))
         XCTAssertEqual(scaled.from, phone, "the nearest")
         XCTAssertEqual(scaled.budget, 28, "lowered by the share it stepped below its own 40")
         // A neighbour kept at its own static limit changes nothing: the Duo played as a book (about 1200 px) still opens
         // upright at duocap2 = D's 17, from any phone-sized glass, and a phone first played under Display Zoom still
         // opens at standard at taps-keep = C's 40.
         let upright = TapKey(hz: 120, pixels: 1471)
-        for (px, b) in [(1200.0, 40), (1136.8, 40), (1296.0, 40)] {
-            XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: [TapKey(hz: 120, pixels: px): b]).budget, 17, "\(px) px")
-            XCTAssertNil(TapLaw.prior(upright, pixels: 1471, learnt: [TapKey(hz: 120, pixels: px): b]).from)
+        for px in [1200.0, tuned, 1298] {
+            XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: learnt([(px, 40)])).budget, 17, "\(px) px")
+            XCTAssertNil(TapLaw.prior(upright, pixels: 1471, learnt: learnt([(px, 40)])).from)
         }
-        XCTAssertEqual(TapLaw.prior(phone, pixels: Tank.tunedPixels, learnt: [TapKey(hz: 120, pixels: 984): 40]).budget, 40)
+        XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(984, 40)])).budget, 40)
+        // A neighbour just past the kept size reads against its own 22, though its key's side is near a phone's.
+        XCTAssertEqual(Tank.fourTaps(pixels: 1302), 22)
+        XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(1302, 22)])).budget, 40)
+        XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: learnt([(1302, 22)])).budget, 17)
+        XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(1302, 11)])).budget, 20, "half its own limit")
         // A neighbour that climbed past its static limit never raises the start.
-        XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: [phone: 42]).budget, 17)
-        XCTAssertEqual(TapLaw.prior(phone, pixels: Tank.tunedPixels, learnt: [upright: 20]).budget, 40)
+        XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: learnt([(tuned, 42)])).budget, 17)
+        XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(1471, 20)])).budget, 40)
         // One that stepped down lowers it by the same share: a phone at 30 of 40 takes the Duo from 17 to 12.
-        XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: [phone: 30]).budget, 12)
-        XCTAssertEqual(TapLaw.prior(phone, pixels: Tank.tunedPixels, learnt: [upright: 15]).budget, 35)
-        XCTAssertNil(TapLaw.prior(zoomed, pixels: 1171.3, learnt: [TapKey(hz: 60, pixels: 1171.3): 20]).from, "another rate's")
-        XCTAssertEqual(TapLaw.prior(TapKey(hz: 120, pixels: 1471), pixels: 1471, learnt: [phone: 12]).budget, TapLaw.floor)
+        XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: learnt([(tuned, 30)])).budget, 12)
+        XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(1471, 15)])).budget, 35)
+        XCTAssertNil(TapLaw.prior(zoomed, pixels: 1171.3, learnt: [TapKey(hz: 60, pixels: 1171.3): .init(budget: 20, limit: 40)]).from,
+                     "another rate's")
+        XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: learnt([(tuned, 12)])).budget, TapLaw.floor)
+    }
+
+    func testNoKeyHoldsGlassesEitherSideOfTheKeptSize() {
+        XCTAssertEqual(TapKey(hz: 120, pixels: 1298).px, 1296)
+        XCTAssertEqual(TapKey(hz: 120, pixels: 1300).px, 1296)
+        XCTAssertEqual(TapKey(hz: 120, pixels: 1300.5).px, 1312)
+        XCTAssertEqual(TapKey(hz: 120, pixels: 1302).px, 1312)
+        for px in stride(from: 1200.0, through: 1500, by: 0.25) {
+            let side = Double(TapKey(hz: 120, pixels: px).px)
+            XCTAssertEqual(side <= Tank.fourTapsKept, px <= Tank.fourTapsKept, "\(px) px")
+            XCTAssertEqual(TapKey(hz: 120, pixels: side).px, Int(side), "\(px) px: a stored key reads back as itself")
+        }
     }
 }

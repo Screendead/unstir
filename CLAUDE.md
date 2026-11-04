@@ -330,10 +330,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Power Mode's cap never keys a glass) is read again only as a drag opens and at a still moment. Frames say nothing
   under Low Power Mode or screen capture, at a granted rate below the screen's top one, or for a second after a change
   of pose. A plain launch on a phone keeps each glass's cool decision in `UserDefaults` (`taps.<hz>.<px>`, never synced,
-  written only when it changes), so a launch killed before the next still moment keeps a step with its cap, dropped
+  written only after a drag or a still moment that decided something, and only when it changes, so a start taken from a
+  neighbour is never kept as learnt; no key holds glasses either side of `Tank.fourTapsKept`), so a launch killed before the next still moment keeps a step with its cap, dropped
   by a new build (its number and its executable's timestamp, as the halftone's cache) or OS, and starts a new glass
   from its own `Tank.fourTaps(pixels:)`, lowered by the share the nearest glass learnt stepped below its own static
-  limit, never raised (`TapLaw.prior`), so the static limits keep their calls on every glass. Each decision goes to the flight recorder
+  limit (kept with it, not read off its key), never raised (`TapLaw.prior`), so the static limits keep their calls on every glass. Each decision goes to the flight recorder
   (`taps prior`; `taps drag` for every drag under `watch` or `adapt` without keeping, else one with a late or frozen
   frame or a decision; `taps down`, `up`, `probe`, `cap … erased`, `applied`, `reverted`, `held`, `two-tap misses`,
   `hot`, `cool`; and an `UNSTIR_TAPS` it can't read, which draws the static limit), never from the link's callback. The harness, the test host and the simulator draw the static limit and

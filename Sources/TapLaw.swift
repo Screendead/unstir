@@ -3,7 +3,8 @@
 import Foundation
 
 /// A glass the four-tap budget is learnt for: the screen's top rate and the glass's side in pixels, to 16 px, so a
-/// phone has one, or one per Display Zoom, and the Duo one per pose.
+/// phone has one, or one per Display Zoom, and the Duo one per pose. No key holds glasses either side of
+/// `Tank.fourTapsKept`, whose static limits differ by 18.
 struct TapKey: Hashable {
     let hz: Int
     let px: Int
@@ -13,7 +14,10 @@ struct TapKey: Hashable {
         px = Self.side(pixels)
     }
 
-    static func side(_ pixels: Double) -> Int { Int((pixels / 16).rounded()) * 16 }
+    static func side(_ pixels: Double) -> Int {
+        let r = Int((pixels / 16).rounded()) * 16, kept = Int(Tank.fourTapsKept / 16)
+        return pixels <= Tank.fourTapsKept ? min(r, kept * 16) : max(r, (kept + 1) * 16)
+    }
 
     var name: String { "\(px)px@\(hz)" }
     /// Its UserDefaults key, never synced.
@@ -67,6 +71,14 @@ struct TapLaw: Equatable {
         var strikes: Int
         var build: String
         var os: String
+        /// The glass's own static limit, so a neighbour's prior reads how far it stepped against that, not the key's.
+        var limit: Int?
+    }
+
+    /// A glass learnt: its cool budget and its own static limit.
+    struct Learnt: Equatable {
+        let budget: Int
+        let limit: Int
     }
 
     /// A step down waiting to be shown to have helped, and what it replaced.
@@ -95,6 +107,14 @@ struct TapLaw: Equatable {
     }
 
     enum Event: Equatable {
+        /// A change of what the glass would keep, as opposed to a report.
+        var decides: Bool {
+            switch self {
+            case .down, .up, .probe, .erased, .reverted, .hot, .cool: true
+            case .held, .twoTap, .applied: false
+            }
+        }
+
         /// `strike` nil while hot.
         case down(from: Int, to: Int, work: Int, misses: Int, of: Int, strike: Int?)
         case up(from: Int, to: Int)
@@ -155,7 +175,9 @@ struct TapLaw: Equatable {
     var pending: Int? { (hot ?? want) == applied ? nil : hot ?? want }
 
     /// The cool decision, drawn or not, so a launch ended before the next still moment keeps the step with its cap.
-    func stored(build: String, os: String) -> Stored { Stored(applied: want, cap: cap, strikes: strikes, build: build, os: os) }
+    func stored(build: String, os: String, limit: Int? = nil) -> Stored {
+        Stored(applied: want, cap: cap, strikes: strikes, build: build, os: os, limit: limit)
+    }
 
     /// The interval of `d` seconds against a granted period of `t`, in which the main thread ran for `c` seconds.
     /// Busy for all but half a period, the main thread missed it; idle for at least half, it waited on the frames
@@ -174,14 +196,14 @@ struct TapLaw: Equatable {
     /// nearest glass learnt at the same rate stepped below that glass's static limit. A neighbour never raises it nor
     /// replaces it, as the static limits keep Jack's calls (taps-keep = C on phones, duocap2 = D past 1300 px), which no
     /// rescale between sizes reproduces.
-    static func prior(_ key: TapKey, pixels: Double, learnt: [TapKey: Int]) -> (budget: Int, from: TapKey?) {
+    static func prior(_ key: TapKey, pixels: Double, learnt: [TapKey: Learnt]) -> (budget: Int, from: TapKey?) {
         let own = clamp(Tank.fourTaps(pixels: pixels))
         let near = learnt.keys.filter { $0.hz == key.hz && $0 != key }
             .min { (abs($0.px - key.px), $0.px) < (abs($1.px - key.px), $1.px) }
-        guard let near, let b = learnt[near] else { return (own, nil) }
-        let theirs = clamp(Tank.fourTaps(pixels: Double(near.px)))
-        guard b < theirs else { return (own, nil) }
-        return (clamp(Int((Double(own) * Double(b) / Double(theirs)).rounded(.down))), near)
+        guard let near, let l = learnt[near] else { return (own, nil) }
+        let theirs = clamp(l.limit)
+        guard l.budget < theirs else { return (own, nil) }
+        return (clamp(Int((Double(own) * Double(l.budget) / Double(theirs)).rounded(.down))), near)
     }
 
     /// Two-tap frames at `work` cost no more than the four-tap ones that missed at `c`'s work, give or take the edge's
