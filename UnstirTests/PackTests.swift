@@ -679,6 +679,33 @@ final class PackTests: XCTestCase {
         XCTAssertFalse(MenuView.closes(playing: false, covered: false))
     }
 
+    /// Where a pack's card came from lasts only while that card is up. Beside play the menu outlives the root's own
+    /// changes of card: Triptych I's Lens link, then try free parking the card under Lens 03, then that level's "more in
+    /// Lens" over its result card, must read "✕ close", not "‹ Triptych I"; and the parked card back reads "‹ menu".
+    func testWhereACardCameFromGoesWithAnyChangeOfCard() {
+        func label(_ trail: CameFrom?, _ card: Offer?, closes: Bool) -> String {
+            let back = trail?.returns(card: card, offersComplete: true)?.name ?? PackCard.menu
+            return PackCard.back(to: back, beside: closes).text
+        }
+        // The bundle's card, its Lens link: back returns to the bundle.
+        var card: Offer? = .complete
+        var trail: CameFrom? = CameFrom(back: .complete, card: .pack(.lens))
+        card = .pack(.lens)
+        trail = trail?.kept(as: card)
+        XCTAssertEqual(label(trail, card, closes: false), "\u{2039} \(Offer.bundleName)")
+        // Try free parks it under the level, then the result card's pointer opens Lens's card over the result.
+        card = nil
+        trail = trail?.kept(as: card)
+        card = .pack(.lens)
+        trail = trail?.kept(as: card)
+        XCTAssertNil(trail)
+        XCTAssertEqual(label(trail, card, closes: MenuView.closes(playing: true, covered: true)), "\u{2715} close")
+        // Or the parked card brought back as the level leaves: the menu, as on a phone.
+        XCTAssertEqual(label(trail, card, closes: false), "\u{2039} menu")
+        // Complete stops saving once a pack is bought: back goes to the menu.
+        XCTAssertNil(CameFrom(back: .complete, card: .pack(.lens)).returns(card: .pack(.lens), offersComplete: false))
+    }
+
     /// Only a change after the launch's first read lands: before it, an owner's card reads unowned until the read does.
     @MainActor func testTheLaunchsFirstReadIsNoLanding() {
         XCTAssertFalse(PackCard.lands(.unowned, .owned, ready: false))

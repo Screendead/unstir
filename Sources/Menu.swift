@@ -210,7 +210,7 @@ struct MenuView: View {
     /// The settings' supporter mark switch, mirrored here as the sheet moves it.
     @State private var supporter = Settings.supporter
     /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
-    @State private var cameFrom: (back: Offer, card: Offer)?
+    @State private var cameFrom: CameFrom?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
     /// UNSTIR_FOLD's fold, in the harness window's points.
@@ -319,6 +319,9 @@ struct MenuView: View {
         .onChange(of: card) { if layout.wide, card != nil, archive { withAnimation(.snappy(duration: 0.42)) { archive = false } } }
         .onChange(of: archive) { if layout.wide, archive, card != nil { show(nil) } }
         .onChange(of: layout.wide) { if layout.wide, card != nil, archive { archive = false } }
+        // The root changes the card too (a level parking it, a gate, a result card's pointer): beside play this menu
+        // outlives those changes, so where a card came from lasts only while that card stays up.
+        .onChange(of: card) { cameFrom = cameFrom?.kept(as: card) }
         // A drag, or a card or the settings closing, wakes the dock as a touch on the window does, as does a level beside
         // it leaving.
         .onChange(of: card == nil && !archive && !settings && playing == nil) { Power.shared.touched() }
@@ -640,7 +643,7 @@ struct MenuView: View {
                      backTo: returns?.name ?? PackCard.menu,
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
-                         cameFrom = (card, next)
+                         cameFrom = CameFrom(back: card, card: next)
                      }, beside: beside, closes: Self.closes(playing: playing != nil, covered: covered))
                 .background(alignment: .leading) { bleed }
                 .id(card)
@@ -683,10 +686,7 @@ struct MenuView: View {
     }
 
     /// The card a pack's card was opened from, while it is still on offer: Complete stops saving once a pack is bought.
-    private var returns: Offer? {
-        guard let cameFrom, cameFrom.card == card, cameFrom.back != .complete || Store.shared.offersComplete else { return nil }
-        return cameFrom.back
-    }
+    private var returns: Offer? { cameFrom?.returns(card: card, offersComplete: Store.shared.offersComplete) }
 
     /// That card, or the menu.
     private func back() {
@@ -1360,5 +1360,21 @@ private struct Sparkle: Shape {
         for k in 1...4 { p.addQuadCurve(to: tips[k % 4], control: c) }
         p.closeSubpath()
         return p
+    }
+}
+
+/// A pack's card opened from another card's link, Complete's: back returns there while that pack's card is still the
+/// one up, never once the card has changed, closed or been put away under a level, then opened again.
+struct CameFrom: Equatable {
+    let back: Offer
+    let card: Offer
+
+    /// Kept across a change of card only while the card is still the one it opened.
+    func kept(as now: Offer?) -> CameFrom? { now == card ? self : nil }
+
+    /// Where back goes, while Complete still saves anything.
+    func returns(card now: Offer?, offersComplete: Bool) -> Offer? {
+        guard now == card, back != .complete || offersComplete else { return nil }
+        return back
     }
 }
