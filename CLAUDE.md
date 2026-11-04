@@ -278,9 +278,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   up to 1300 px, so every iPhone and every pose drawn before the upright Duo's keeps one limit, and past that the 31
   entries measured before (`Tank.scaledFrom`: 31 held there and 32 didn't) scaled down by the area, less one for the
   entry in flight, so the open Duo upright's 1471 px keeps 17 (Jack's call duocap2 = D; whether it rescales from the
-  phones' 40, to 23, is open); `Tank.maxStack` stays 36 at every size and every level is dealt within the phone's 40 (whirlpool 27, the
-  deepest on a live picture, has 28 stirs on the glass's fill of 4, 32; Jack's call wp27-table = B), so every level
-  plays as on an iPhone, and every stack dealt draws four taps there (Jack's call duocap2 = D). The accepted risk: a deep stack on a live picture there may run up to 32% over the
+  phones' 40, to 23, is open); `Tank.maxStack` stays 36 at every size, so every level plays as on an iPhone, its stacks as deep, while the
+  four-tap limit shrinks to 17 on the Duo upright, where the deepest (whirlpool 27, maelstrom 27) draw two taps (Jack's
+  call duocap2 = D). On a phone every level is dealt within 40 (whirlpool 27, the deepest on a live picture, has 28
+  stirs on the glass's fill of 4, 32), so every stack dealt draws four taps there (Jack's calls taps-keep = C and
+  wp27-table = B). The accepted risk: a deep stack on a live picture there may run up to 32% over the
   frame budget measured (a paper estimate; the Duo's GPU is unmeasured until stage 6's bench). The GPU bench keeps
   the constant, so its 24 entries time four taps. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone. Prism's stacks
