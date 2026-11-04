@@ -89,7 +89,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Info.plist's `SupportAddress` and `PolicyURL`; in an xcconfig a URL is written `https:/$()/...`, as `//` starts a
   comment. `ANALYTICS_PLAYTEST=YES` sets Info.plist's `AnalyticsPlaytest`, which files a Release
   build's events as Debug. `ICLOUD=YES` syncs progress through iCloud (`Sync.swift`), signing with its entitlement, so a
-  device build needs the App ID's iCloud capability; a simulator build without signing builds either way. `EDITORS=YES` (or `EDITORS = YES` in `Config/Local.xcconfig` for an Xcode archive) makes the
+  device build needs the App ID's iCloud capability; a simulator build without signing builds either way.
+  `ADAPTIVE_TAPS` (YES, the default; Jack's call taps-keep = C) lets a plain launch learn and keep each glass's four-tap budget (`Taps`); NO draws the static limit. `EDITORS=YES` (or `EDITORS = YES` in `Config/Local.xcconfig` for an Xcode archive) makes the
   editors' build, for App Store editors on its own TestFlight group (Jack's call F11): it sets the `EDITORS` compilation
   condition (`Build.editors`), and settings shows a labelled switch, "open every tier", that sets `Best.unlocked`, every
   tier, level and pack open, and the version line ends "editors". Any other Release build compiles the switch out
@@ -97,7 +98,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Install and launch on the reference phone: `scripts/run-ios.sh [Debug|Release]` (needs `UNSTIR_DEVICE`, the phone's
   UDID, set in the shell). Every build it installs is a playtest, so Jack's own play never lands in real players'
   numbers (Jack, 2026-10-27). `UNSTIR_UNLOCK=1 scripts/run-ios.sh Release` also opens every tier and level, packs' too, on the phone
-  until a run with `UNSTIR_UNLOCK=0`.
+  until a run with `UNSTIR_UNLOCK=0`. It passes `UNSTIR_TAPS` (`Taps`) on as it does `UNSTIR_ANALYTICS`.
 - Tests (XCTest, on a simulator):
   ```
   xcodegen generate --quiet && xcodebuild test -project Unstir.xcodeproj -scheme Unstir \
@@ -213,6 +214,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   frame, then quits. The simulator has no GPU clock, so there it times the wall clock round each command buffer.
   `scripts/gpu-bench.sh phone` is Jack's: it installs Release through `run-ios.sh` with the bench on, waits, and pulls
   the lines from the log.
+- The four-tap budget on the phone: `scripts/taps-check.sh [--sim udid] [runs...]` plays whirlpool 27 on the phone
+  `UNSTIR_DEVICE` names (the build `scripts/run-ios.sh Release` installed), its stack cut or repeated (`UNSTIR_DEEP`),
+  a knob dragged through the real let-go (`UNSTIR_TAPDRAG`), and prints each run's `taps` lines: `gpu`, `calm` and
+  `stall` (`watch:n`, `UNSTIR_TAPSTALL`) showed on the 13 Pro Max that a late frame's main-thread CPU time can't tell
+  the GPU's misses from the main thread's, hence `TapCuts.unattributed`; `adapt`, `prior`, `edge` and `edgestall` run
+  the law. `--sim` is a dry run of the plumbing: the simulator's
+  frames say nothing of a phone's GPU.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
   the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs
@@ -220,7 +228,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   512 KB from a whole line once the first screen is up (`Log.trim`): read and cut off the main actor, then replaced
   atomically on it with the lines written meanwhile, so a launch before the first frame only opens it. Once the first screen is up
   it logs a `device:` line (app version and build, iOS, model, locale, type size, Reduce Motion, VoiceOver, Low Power,
-  and the settings' switches, `Settings.summary`), never the phone's name; each switch tapped logs a `settings:` line.
+  the settings' switches, `Settings.summary`, and each glass's four-tap budget kept, `Taps.summary`), never the phone's name; each switch tapped logs a `settings:` line.
   `UILaunchScreen`'s colour (`LaunchBackground`, black) keeps a cold launch black in light appearance too.
 
 ## Architecture
@@ -267,8 +275,21 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`steps * Tank.lensRate`) for the angle, and the rim's sharpness comes in as a uniform. The tests reach the Swift copy
   (`Tank.profile`/`Tank.twist`/`Tank.lens`) and only the shader's `lensFlow`, compiled on its own
   (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
-  The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (30) limits are tuned against 120 Hz on an
-  iPhone 13 Pro Max, before the turn was added; its cost per tap is unmeasured. A live picture's own cost comes off the
+  The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (40) limits are tuned against 120 Hz on an
+  iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`): on 2026-11-04 the most the game allows, a full stack of 36
+  on a fill of 4 with the drag riding over, held 120 Hz there at four taps, checked from the screen's side, and no
+  load the game reaches missed, so 40 is a held point, not the edge (Jack's call taps-keep = C). The level's glass draws the budget `Taps` learns on the phone (`Unstirred.budget`, below); every other
+  draw, and every glass under the harness, the test host or the simulator, takes the four-tap limit for its glass's size (`Tank.fourTaps(pixels:)`, less the fill, `Unstirred.taps`): 40 on every glass
+  up to 1300 px, so every iPhone and every pose drawn before the upright Duo's keeps one limit, and past that the 31
+  entries measured before (`Tank.scaledFrom`: 31 held there and 32 didn't) scaled down by the area, less one for the
+  entry in flight, so the open Duo upright's 1471 px keeps 17 (Jack's call duocap2 = D; whether it rescales from the
+  phones' 40, to 23, is open); `Tank.maxStack` stays 36 at every size, so every level plays as on an iPhone, its stacks as deep, while the
+  four-tap limit shrinks to 17 on the Duo upright, where every stack whose work is past 17 draws two taps (Jack's
+  call duocap2 = D). On a phone every level is dealt within 40 (whirlpool 27, the deepest on a live picture, has 28
+  stirs on the glass's fill of 4, 32), so every stack dealt draws four taps there (Jack's calls taps-keep = C and
+  wp27-table = B). The accepted risk: a deep stack on a live picture there may run up to 32% over the
+  frame budget measured (a paper estimate; the Duo's GPU is unmeasured until stage 6's bench). The GPU bench keeps
+  the constant, so its 24 entries time four taps. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone. Prism's stacks
   go to a second stitchable, `unstirChannels`, only when some entry's mask isn't white (`Unstirred.masks`), so every
   other level draws through `unstir` as measured: it carries red, green and blue each through the inverses of the
@@ -277,6 +298,55 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (`chains`) and checks it against the model's cut words on hex's swirl. Its cost against the four-tap limit
   (`Unstirred.channelCost`) is a map per channel each entry holds, plus two for a tap's extra samples: assumed, not
   benched on the phone, so a 12-entry stack of mixed masks may already run two taps.
+- **TapLaw.swift** and **Taps.swift** hold the adaptive four-tap budget (Jack, round 16: step the graphics down where
+  performance degrades, to keep 120 Hz). Only the look adapts: `Tank.maxStack`, what a level deals and "the tank is
+  full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
+  committed work, `Tank.fourTaps`' unit: a frame draws four taps where its work (`Unstirred.committedWork`: Prism's
+  channel cost or the entry count, plus the fill, what is in flight riding over as it always has, `Unstirred.weigh`)
+  is at most B, and two otherwise, as the shader can't split one chain. `Taps` learns B per glass (`TapKey`: the
+  screen's top rate and the glass's side to 16 px) and drives only the level's glass, `LevelView.tank()`'s
+  `Unstirred`; the dock's covers, the cards' clips, the icon, the menu's stir and the GPU bench keep their static
+  limits. It runs where the build's `ADAPTIVE_TAPS` (`Config/Unstir.xcconfig`, YES: Jack's call taps-keep = C, the
+  static 40 as the start and the law for heat and the Duo) sets Info.plist's `AdaptiveTaps`, read as `Taps.built`,
+  or under `UNSTIR_TAPS`; otherwise every glass draws its static limit. So a phone draws full quality from launch,
+  and the law steps down only where a phone really drops frames. `FrameWatch`, a display link alive only while a finger (or `UNSTIR_TAPDRAG`) turns a rod or the rim
+  (`LevelView.tapWindow`: no opening, settle, card, slide or breath's fade), times each interval against the period
+  the system grants and reads the main thread's CPU time in it (`TapLaw.classify`): late past 1.5 periods, the GPU's
+  (`gpuMiss`) where the main thread was idle for at least half of it, the main thread's own where it was busy for all but
+  half a period, and neither past 6 periods (a stall no frame of the shader's makes) or where the finger moved
+  nothing. A live picture at rest isn't measured: whether a 60 Hz link moves a ProMotion panel is unchecked. `TapLaw`
+  steps B down to the missed work less one after 4 late frames among a drag's last 30 counted four-tap frames within 4
+  of B (`TapCuts.unattributed`'s `near`), once a drag, and only where that draws the missed work with two taps, so
+  never from work at or under `floor` (12 on every device, Jack's call TAPS-FLOOR = A); misses further below step
+  nothing, hot or cool (its `far` is unbounded; the attributed cuts would let 6 of them step while hot). It
+  climbs one after 600 clean four-tap frames at its edge, never past `ceiling` (`Tank.maxStack` plus the largest fill,
+  42, Jack's call TAPS-CEIL = A) nor to a cap. A first miss caps provisionally, probed once a launch after 1200 clean, confirmed
+  by a second miss there or erased by 600 clean at it; a cap is always over the cool budget bar a probe's, and a
+  stored one that isn't is dropped. Each step waits on its effect check: two-tap frames at its work or under it, or up
+  to 4 over, that still miss 4 in 30 take back the oldest step they cover and every step since, and pause the steps
+  down for the launch; 120 on time there confirm it. A thermal state of serious draws a quarter off the cool budget
+  while it lasts (40 to 30; critical, the floor), never kept, and gives it back once the state drops below serious, as `Power` still halves a live picture's rate. The numbers are `TapCuts`', and `Taps.cuts` is `TapCuts.unattributed`: on the 13
+  Pro Max a main-thread stall's late frames read gpu nearly as often as cpu (7 of 15), so every late frame counts,
+  near the edge only, with the effect check behind it; the display link does see the render server's misses (a
+  presentation probe, 2026-11-04). On that phone no load the game reaches misses, so the step down has never run
+  there, and heat past fair is unchecked. A new B is drawn
+  only at a still moment (`TapLaw.still`, from `TapHooks`: a move landing, the level appearing, a change of pose,
+  and the end of a drag on a glass that had none yet, as one a change of pose brings mid-drag),
+  never during a measured drag, and `Unstirred.budget` is a plain field outside `animatableData`: the glass draws what
+  its last still moment chose, keyed by its side alone, and the screen's rate (the highest read this launch, so Low
+  Power Mode's cap never keys a glass) is read again only as a drag opens and at a still moment. Frames say nothing
+  under Low Power Mode or screen capture, at a granted rate below the screen's top one, or for a second after a change
+  of pose. A plain launch on a phone keeps each glass's cool decision in `UserDefaults` (`taps.<hz>.<px>`, never synced,
+  written only once its cool decision, cap or strikes move from what it was made with, so heat, drawn while it lasts,
+  is never kept; no key holds glasses either side of `Tank.fourTapsKept`), so a launch killed before the next still
+  moment keeps a step with its cap, dropped by a new build (its number and its executable's timestamp, as the
+  halftone's cache) or OS. A glass with nothing kept starts at its key's static limit (`TapKey.limit`, the lowest
+  `Tank.fourTaps(pixels:)` of the glasses a key holds, so none starts above its own), whatever any other glass has kept (Jack's call taps-keep = C: the fixed limit is the start), so no glass's start reads another's. Each decision goes to the flight recorder
+  (`taps prior`; `taps drag` for every drag under `watch` or `adapt` without keeping, else one with a late or frozen
+  frame or a decision; `taps down`, `up`, `probe`, `cap … erased`, `applied`, `reverted`, `held`, `two-tap misses`,
+  `hot`, `cool`; and an `UNSTIR_TAPS` it can't read, which draws the static limit), never from the link's callback. The harness, the test host and the simulator draw the static limit and
+  measure nothing, so no shot or test depends on timing, unless `UNSTIR_TAPS` (below; `scripts/taps-check.sh` runs
+  the phone's checks).
 - **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw whirlpool's live
   pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassTwin`, ...), maelstrom's
   twin being the same body with `twin` set. Each file stands alone. The twins' heartbeat lives in their own lines: each
@@ -708,8 +778,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the window's middle. A tall window folded across (the Duo upright on a table) is the
   tabletop: the rest in the upright half, the tank filling the half lying flat, and "unstirred." at the upright half's
   foot (`PlayLayout.words`), never on the fold; a tall window lying flat keeps the column. Neither half narrower or
-  shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1300 px), the size the stack's limits
-  were tuned at, so the Duo upright keeps a 433 pt glass. The column is a `VStackLayout` and the split and tabletop
+  shorter than `minPane` (300 pt) splits. The glass never passes `maxPixels` (1471 px, Jack's call duocap2 = D), which
+  only the Duo upright reaches, at 490 pt; the stack's limits were tuned at about 1137 px, and past 1300 the four-tap
+  limit shrinks with the glass (see Unstir.metal above). The column is a `VStackLayout` and the split and tabletop
   `PlayStack`, through one `AnyLayout`, so a change of pose keeps every part's identity, the tank's picture, opening,
   demonstration and keyframes with it: the parts glide to their new places, and the tank, drawn at its new size at once,
   glides there by `Glide`'s scale, its old bake stretched until the new one lands (none under Reduce Motion, nor from a
@@ -1101,7 +1172,14 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   back a best from the archive (clean, that many over par) or a try, and `UNSTIR_MODE=archive UNSTIR_DAY=n` opens the
   daily n days back from the archive. `UNSTIR_ICON=n` shows app-icon candidate n alone. `UNSTIR_FRAME=951x669` lays the app out in a window of that size, shrunk to fit the simulator, with `UNSTIR_INSETS=top,leading,bottom,trailing` as its safe area: the iPhone Duo's inner display, which no simulator can be driven to headlessly (`HarnessWindow`; the system's bars are not drawn; `duo-*` shots). `UNSTIR_FOLD=x,y,w,h` (window points) folds it there, standing in for the system's division region, and draws the fold as a grey band. `UNSTIR_THEN=s` changes pose s seconds in, to `UNSTIR_THENFRAME`, `UNSTIR_THENINSETS` and `UNSTIR_THENFOLD` (each the first pose's unless given; `none` lies it flat), as opening, closing or folding the phone would; every pose is drawn at one scale. In a build with
   analytics, `UNSTIR_ANALYTICS=log` writes each analytics event to the flight recorder instead of sending it, as if the player had said yes, and stores no consent or tally; like
-  `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone. Under
+  `UNSTIR_UNLOCK` it leaves the launch otherwise a plain one, and `scripts/run-ios.sh` passes it to the phone.
+  `UNSTIR_TAPS=n` pins the level's four-tap budget at n, `=watch:n` pins it and logs every drag's frames, and `=adapt`
+  runs `Taps`' law from the glass's static limit keeping nothing (`=adapt:n`, from n), in any build; a value it can't read
+  draws the static limit. It too leaves the launch a plain one
+  and `scripts/run-ios.sh` passes it. For it on the phone, `UNSTIR_TAPDRAG=n` drags the first working knob n times,
+  4 s each, through the real let-go, each landing a step, alternately each way; `UNSTIR_TAPSTALL=ms` busies the main
+  thread that long every half second of a drag; and `UNSTIR_DEEP=n` cuts the level's stack, or repeats it as it
+  stands, to n entries, a full stack at most, without merging where the copies meet. Under
   any other harness flag analytics is off and the menu never asks, unless `UNSTIR_CONSENT=ask` (or `=sends`, which
   opens the card's list); `UNSTIR_CONSENT=yes`
   or `=no` answers for the launch, never stored; in any build, `UNSTIR_CONSENT` alone draws the card and the switch, and `UNSTIR_SETTINGS=1` opens the menu with the gear's sheet up (in Debug `UNSTIR_EDITORS=1` shows the editors' switch in it) (`UNSTIR_MUSIC=0`, `UNSTIR_SOUNDS=0` and `UNSTIR_HAPTICS=0` set its switches off for the launch). `UNSTIR_UNLOCK` alone

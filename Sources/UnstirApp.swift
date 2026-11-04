@@ -22,7 +22,7 @@ struct UnstirApp: App {
         return "device: app \(info["CFBundleShortVersionString"] ?? "?") (\(info["CFBundleVersion"] ?? "?")), iOS \(os.majorVersion).\(os.minorVersion).\(os.patchVersion), "
             + "\(model), \(Locale.current.identifier), type \(type), reduce motion \(UIAccessibility.isReduceMotionEnabled), "
             + "voiceover \(UIAccessibility.isVoiceOverRunning), low power \(ProcessInfo.processInfo.isLowPowerModeEnabled), "
-            + Settings.summary
+            + Settings.summary + ", taps \(Taps.shared.summary)"
     }
 
     var body: some Scene {
@@ -107,6 +107,9 @@ struct Harness {
     /// UNSTIR_REVIEW=log: the rating request is logged instead of made, as an unharnessed launch would make it.
     let reviewLog: Bool
     let bench: Bool
+    /// UNSTIR_TAPDRAG=n: once the tank is the player's, n drags of a knob drawn through the real let-go, each landing a
+    /// move, for `Taps` on the phone.
+    let tapDrags: Int?
     /// UNSTIR_SWATCH=r, g or b: Prism's swatch for that channel held. UNSTIR_LETTERS=1: Prism with the colour letters,
     /// its knobs spelling out their channels over the swatches, whatever the settings say. UNSTIR_LETTERSCHOICE=0 or 1:
     /// the settings' colour letters chosen off or on, for this launch only (`switches`).
@@ -224,8 +227,8 @@ struct Harness {
         let tier = env["UNSTIR_TIER"].flatMap(Tier.init(rawValue:)) ?? .plughole
         // UNSTIR_UNLOCK on its own is for the phone: =1 stores the developer unlock, =0 clears it, and the launch is
         // otherwise a plain one. Alongside any other UNSTIR_ variable, unset clears it too, so no shot leaves the next
-        // one unlocked. UNSTIR_ANALYTICS is for the phone too, and leaves the launch a plain one.
-        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS"].contains($0) }
+        // one unlocked. UNSTIR_ANALYTICS and UNSTIR_TAPS are for the phone too, and leave the launch a plain one.
+        let harnessed = env.keys.contains { $0.hasPrefix("UNSTIR_") && !["UNSTIR_UNLOCK", "UNSTIR_ANALYTICS", "UNSTIR_TAPS"].contains($0) }
         self.harnessed = harnessed
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
         menuTier = harnessed ? tier : nil
@@ -269,6 +272,7 @@ struct Harness {
             }
         }
         bench = env["UNSTIR_BENCH"] == "1"
+        tapDrags = env["UNSTIR_TAPDRAG"].flatMap(Int.init)
         swatch = env["UNSTIR_SWATCH"].flatMap { $0.count == 1 ? Channels(letter: $0.first!) : nil }
             .flatMap { Channels.each.contains($0) ? $0 : nil }
         letters = env["UNSTIR_LETTERS"] == "1"
@@ -336,7 +340,7 @@ struct Harness {
         if bench {
             // UNSTIR_DEPTH overrides. A live picture's heaviest frame is the most entries that keep four taps, and the drag.
             let p = picture ?? tier.levels[0].picture
-            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? Tank.fourTaps - p.fillEntries : 24)
+            let depth = env["UNSTIR_DEPTH"].flatMap(Int.init) ?? (p.isLive ? min(Tank.fourTaps - p.fillEntries, Tank.maxStack) : 24)
             var rng = SplitMix64(state: 24)
             level = Level(id: "bench", tier: tier, label: "bn", title: "Bench: mixed sizes, depth \(depth)", picture: p,
                           layout: .eye, scramble: Layout.eye.scramble(depth: depth, inversions: 6, rng: &rng))
@@ -356,6 +360,13 @@ struct Harness {
         }
         if let s = env["UNSTIR_STACK"] {
             level.scramble = .parse(s, in: level.layout, lenses: level.lenses, masks: level.masks)
+        }
+        // UNSTIR_DEEP=n: the level's stack cut, or repeated as it stands, to n entries, at most a full stack: no commit
+        // merges where the copies meet, so it may be a stack no play reaches.
+        if let n = env["UNSTIR_DEEP"].flatMap(Int.init), !level.scramble.isEmpty {
+            var deep = level.scramble
+            while deep.count < min(n, Tank.maxStack) { deep += level.scramble }
+            level.scramble = Array(deep.prefix(min(n, Tank.maxStack)))
         }
         // UNSTIR_PAR=n: a stack's own par, where turning the tank costs moves its entry count misses.
         if let n = env["UNSTIR_PAR"].flatMap(Int.init) { level.fixedPar = n }
@@ -596,6 +607,7 @@ struct RootView: View {
         // Here, not in Harness, which the tests build too.
         Settings.held.withLock { $0 = h.switches }
         Analytics.shared.configure(env: env, harnessed: h.harnessed)
+        Taps.shared.configure(env: env, harnessed: h.harnessed)
         // The launch's, not the level's harness, which a level opened from the card's next no longer has.
         Review.harnessed = h.harnessed && !h.reviewLog || env["XCTestConfigurationFilePath"] != nil
         Review.logs = h.reviewLog
