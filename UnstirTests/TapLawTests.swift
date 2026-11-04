@@ -385,11 +385,22 @@ final class TapLawTests: XCTestCase {
             XCTAssertNil(TapLaw.prior(upright, pixels: 1471, learnt: learnt([(px, 40)])).from)
         }
         XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(984, 40)])).budget, 40)
-        // A neighbour just past the kept size reads against its own 22, though its key's side is near a phone's.
+        // A neighbour just past the kept size reads against its own 22, as its key's side (1312) does too.
         XCTAssertEqual(Tank.fourTaps(pixels: 1302), 22)
         XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(1302, 22)])).budget, 40)
         XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: learnt([(1302, 22)])).budget, 17)
         XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(1302, 11)])).budget, 20, "half its own limit")
+        // One whose own limit differs from its key's: 1319.9 px has 21 where its key, 1312, would read 22. At 20 it takes
+        // a phone to 40 × 20 / 21, 38, not the 36 its key's limit would give.
+        XCTAssertEqual([Tank.fourTaps(pixels: 1319.9), Tank.fourTaps(pixels: Double(TapKey(hz: 120, pixels: 1319.9).px))], [21, 22])
+        XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(1319.9, 20)])).budget, 38)
+        // And so read back from what a phone keeps.
+        if let d = UserDefaults(suiteName: "TapLawPrior") {
+            d.removePersistentDomain(forName: "TapLawPrior")
+            defer { d.removePersistentDomain(forName: "TapLawPrior") }
+            Taps.save(.init(applied: 20, cap: nil, strikes: 0, build: "b", os: "o", limit: 21), TapKey(hz: 120, pixels: 1319.9), to: d)
+            XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: Taps.learnt(in: d, build: "b", os: "o")).budget, 38)
+        } else { XCTFail("no suite") }
         // A neighbour that climbed past its static limit never raises the start.
         XCTAssertEqual(TapLaw.prior(upright, pixels: 1471, learnt: learnt([(tuned, 42)])).budget, 17)
         XCTAssertEqual(TapLaw.prior(phone, pixels: tuned, learnt: learnt([(1471, 20)])).budget, 40)
