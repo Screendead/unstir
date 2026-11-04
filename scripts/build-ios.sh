@@ -5,8 +5,8 @@
 # ANALYTICS_PLAYTEST=YES files a Release build's analytics as Debug. SUPPORT_ADDRESS and POLICY_URL set the address
 # "report a problem" mails and the privacy policy's page. EDITORS=YES makes the editors' build, its settings' switch
 # opening every tier. GAME_CENTER=YES builds Game Center's sign-in and achievements in. ICLOUD=YES syncs bests through
-# iCloud, which needs the App ID's iCloud capability to sign for a device. ADAPTIVE_TAPS=YES learns and keeps each glass's
-# four-tap budget on a plain launch.
+# iCloud, which needs the App ID's iCloud capability to sign for a device. ADAPTIVE_TAPS (YES unless set) learns and keeps each
+# glass's four-tap budget on a plain launch; NO draws the static limit.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 config="${1:-Debug}"

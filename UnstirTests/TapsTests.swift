@@ -34,7 +34,9 @@ final class TapsTests: XCTestCase {
         XCTAssertEqual(Taps.mode(env: [:], harnessed: false, simulator: false, built: true), .adapt(from: nil, stores: true),
                        "a plain launch of a build with ADAPTIVE_TAPS")
         XCTAssertEqual(Taps.mode(env: [:], harnessed: false, simulator: false, built: false), .off, "v1's")
-        XCTAssertFalse(Taps.built, "off until the phone gate passes")
+        XCTAssertTrue(Taps.built, "on by default (taps-keep = C)")
+        XCTAssertEqual(Taps.mode(env: ProcessInfo.processInfo.environment, harnessed: false, simulator: false, built: Taps.built), .off,
+                       "the test host draws the static limit in a build with it on")
         XCTAssertEqual(Taps.mode(env: [:], harnessed: true, simulator: false, built: true), .off)
         XCTAssertEqual(Taps.mode(env: [:], harnessed: false, simulator: true, built: true), .off)
         XCTAssertEqual(Taps.mode(env: ["XCTestConfigurationFilePath": "x"], harnessed: false, simulator: false, built: true), .off)
