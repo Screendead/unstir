@@ -41,7 +41,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   (`scripts/test-store.sh build-for-testing`, for a generic simulator so it never waits on one booting, printing the
   build's timing summary) while the simulator boots in the background from just after the cache's restore (booting
   during it slowed the untar from about 3 s to 124 s), then waits for the boot and runs `test-without-building`. On
-  2026-11-04 the boot took about 90 s, the build step 130 to 190 s with 16 to 40 s of Swift's tasks (SwiftEmitModule and SwiftDriver; SwiftCompile itself 1 to 4 s) (the asset
+  2026-11-04 the boot took about 90 s, the build step 130 to 190 s with 16 to 40 s of Swift's tasks (SwiftEmitModule and SwiftDriver; SwiftCompile itself 1 to 4 s; the asset
   catalog takes 36 s every run), and the test step about 110 s, half of it the tests; every step's time moves with the
   runner's speed. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
   call APPSIZE = B) less the test bundle and Xcode's testing frameworks the test host carries, and fail past 100 MB.
