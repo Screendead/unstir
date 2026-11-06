@@ -68,7 +68,8 @@ is gitignored and exists only on this Mac. Machine-specific values come from env
 check the staged diff for personal details.
 
 Every `.swift`, `.metal` and `.sh` file opens with `Copyright © 2026 Jack Lusher. All rights reserved.` as a comment,
-after a script's shebang. The code is all rights reserved: never add an open-source licence.
+after a script's shebang, and so does every `.py`, `.csd` and `.udo` file. The code is all rights reserved under
+`LICENSE.md`, the proprietary licence: never add an open-source licence.
 
 ## Pushing back
 
