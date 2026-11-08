@@ -63,17 +63,17 @@ enum Tank {
     static let fourTaps = 40
     /// The glass's side in pixels where `fourTaps` was measured: the iPhone 13 Pro Max's, 396 / 1.045 pt at 3x.
     static let tunedPixels = 3 * 396 / 1.045
-    /// The entries, the one in flight among them, that past `fourTapsKept` shrink with the glass's area: the 31 that
-    /// held 120 Hz there when 32 didn't (before 2026-11-04), so the Duo upright's 1471 px keeps 17 (Jack's call
-    /// duocap2 = D), apart from the phones' 40.
-    static let scaledFrom = 31.0
+    /// The entries, the one in flight among them, that past `fourTapsKept` shrink with the glass's area: `fourTaps` and
+    /// the drag riding over it, so the Duo upright's 1471 px starts at 23 (Jack's call r16c-duoprior = B, round 16,
+    /// which rescaled duocap2 = D's 17 from the 31 measured before 2026-11-04).
+    static let scaledFrom = Double(fourTaps + 1)
     /// Up to this side in pixels a glass keeps `fourTaps`, so no glass drawn before the open Duo's upright one grew
     /// past it changes, the largest phone's (about 1171) among them, though each past `tunedPixels` costs more than
     /// was measured.
     static let fourTapsKept = 1300.0
 
     /// `fourTaps` on a glass `pixels` across: past `fourTapsKept`, `scaledFrom` shrunk with the glass's area, less the
-    /// one in flight, so 1471 px keeps 17.
+    /// one in flight, so 1471 px starts at 23.
     static func fourTaps(pixels: Double) -> Int {
         let ratio = tunedPixels / pixels
         return pixels <= fourTapsKept ? fourTaps : Int((scaledFrom * ratio * ratio).rounded(.down)) - 1

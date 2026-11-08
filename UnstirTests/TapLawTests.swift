@@ -364,7 +364,7 @@ final class TapLawTests: XCTestCase {
         }
         XCTAssertEqual(TapKey(hz: 120, pixels: Tank.tunedPixels).limit, 40)
         XCTAssertEqual(TapKey(hz: 120, pixels: 1298).limit, 40, "the key under the kept size holds phones alone")
-        XCTAssertEqual(TapKey(hz: 120, pixels: 1471).limit, 17)
+        XCTAssertEqual(TapKey(hz: 120, pixels: 1471).limit, 23)
     }
 
     func testNoKeyHoldsGlassesEitherSideOfTheKeptSize() {

@@ -101,22 +101,22 @@ final class TapsTests: XCTestCase {
             Taps.save(.init(applied: b, cap: nil, strikes: 0, build: taps.build, os: taps.os), TapKey(hz: 120, pixels: px), to: d)
         }
         taps.use(.adapt(from: nil, stores: true))
-        for (px, b) in [(1471.0, 17), (1171.3, 40), (1334.0, 21), (656.5, 40)] {
+        for (px, b) in [(1471.0, 23), (1171.3, 40), (1334.0, 28), (656.5, 40)] {
             taps.still(pixels: px, "open")
             XCTAssertEqual(taps.budget(pixels: px), b, "\(px) px")
         }
         taps.still(pixels: Tank.tunedPixels, "open")
         XCTAssertEqual(taps.budget(pixels: Tank.tunedPixels), 12, "a glass's own kept budget is its own")
         // Glasses sharing a key start at the lowest static limit among them, whichever comes first: 1450 px alone
-        // would have 18, 1460 px 17.
-        XCTAssertEqual([Tank.fourTaps(pixels: 1450), Tank.fourTaps(pixels: 1460)], [18, 17])
+        // would have 24, 1460 px 23.
+        XCTAssertEqual([Tank.fourTaps(pixels: 1450), Tank.fourTaps(pixels: 1460)], [24, 23])
         XCTAssertEqual(TapKey(hz: 120, pixels: 1450), TapKey(hz: 120, pixels: 1460))
         for order in [[1450.0, 1460], [1460, 1450]] {
             let t = Taps(rate: { 120 }, defaults: d, thermal: { .nominal })
             t.use(.adapt(from: nil, stores: false))
             for px in order {
                 t.still(pixels: px, "open")
-                XCTAssertEqual(t.budget(pixels: px), 17, "\(order): \(px) px")
+                XCTAssertEqual(t.budget(pixels: px), 23, "\(order): \(px) px")
             }
         }
     }
@@ -141,24 +141,24 @@ final class TapsTests: XCTestCase {
         let first = Taps(rate: { 120 }, defaults: d, thermal: { state })
         first.use(.adapt(from: nil, stores: true))
         first.still(pixels: 1471, "open")
-        XCTAssertEqual(first.budget(pixels: 1471), 17)
+        XCTAssertEqual(first.budget(pixels: 1471), 23)
         drag(first, work: 10, onTime, 60)
         XCTAssertNil(d.object(forKey: duo.stored), "a drag that decided nothing keeps nothing")
-        drag(first, work: 17, miss, Taps.cuts.near)
-        XCTAssertEqual(first.budget(pixels: 1471), 16)
-        XCTAssertEqual(Taps.load(duo, from: d, build: first.build, os: first.os)?.applied, 16, "its own step")
-        XCTAssertTrue(first.summary.contains("\(duo.name) 16"), first.summary)
+        drag(first, work: 23, miss, Taps.cuts.near)
+        XCTAssertEqual(first.budget(pixels: 1471), 22)
+        XCTAssertEqual(Taps.load(duo, from: d, build: first.build, os: first.os)?.applied, 22, "its own step")
+        XCTAssertTrue(first.summary.contains("\(duo.name) 22"), first.summary)
         state = .serious
         let later = Taps(rate: { 120 }, defaults: d, thermal: { state })
         later.use(.adapt(from: nil, stores: true))
         later.still(pixels: 1471, "open")
-        XCTAssertEqual(later.budget(pixels: 1471), 12, "reloaded at 16, a quarter off while hot, at the floor")
-        XCTAssertEqual(Taps.load(duo, from: d, build: later.build, os: later.os)?.applied, 16, "heat is never kept")
+        XCTAssertEqual(later.budget(pixels: 1471), 16, "reloaded at 22, a quarter off while hot")
+        XCTAssertEqual(Taps.load(duo, from: d, build: later.build, os: later.os)?.applied, 22, "heat is never kept")
         state = .nominal
         later.heat(state)
         later.still(pixels: 1471, "move")
-        XCTAssertEqual(later.budget(pixels: 1471), 16)
-        XCTAssertEqual(Taps.load(duo, from: d, build: later.build, os: later.os)?.applied, 16)
+        XCTAssertEqual(later.budget(pixels: 1471), 22)
+        XCTAssertEqual(Taps.load(duo, from: d, build: later.build, os: later.os)?.applied, 22)
     }
 
     /// A glass first met mid-drag, by a change of pose, draws its law's budget once the drag ends, a let-go that lands
@@ -180,6 +180,6 @@ final class TapsTests: XCTestCase {
         taps.still(pixels: 1471, "pose")
         XCTAssertNil(taps.budget(pixels: 1471), "nothing lands mid-drag")
         taps.window(nil)
-        XCTAssertEqual(taps.budget(pixels: 1471), 20, "its kept budget, not the static 17, once the drag is over")
+        XCTAssertEqual(taps.budget(pixels: 1471), 20, "its kept budget, not the static 23, once the drag is over")
     }
 }
