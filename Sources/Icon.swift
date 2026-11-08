@@ -83,7 +83,7 @@ struct PromoArt: View {
         let s = 1024 / scale
         ZStack {
             Color.black
-            PackTank(offer: offer, side: s * 0.84, knobs: false)
+            PackTank(offer: offer, side: s * 0.84)
         }
         .frame(width: s, height: s)
         .clipped()

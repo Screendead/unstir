@@ -906,7 +906,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   the level's dealt stack, an entry at a time (`Unstirred.shares`), its knobs drawn over it as the game draws them,
   each turned by its rod's share of the stack and a clock's ratchet counting what it owes, so a cover shows how its pack
   plays (Jack, round 16; the bundle's wedges each turned to hold its key knob, `PackTank.turn`; the promoted-purchase
-  image draws without them), on a 7 s loop, each out of step, held as dealt under
+  images draw them too, Jack's call promo-knobs, round 16), on a 7 s loop, each out of step, held as dealt under
   Reduce Motion, at 30 Hz, paused where it stands under a card, the settings sheet or a level a back swipe slides off, while `Power` saves
   (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
   gesture recognizer on the window that fails at once, and from a drag on the list), each carrying on from the frame
