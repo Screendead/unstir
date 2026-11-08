@@ -1055,6 +1055,8 @@ struct LevelView: View {
     private let moves: [Twist]?
     private let fingered: Bool
     private let bench: Bool
+    /// UNSTIR_TAPDRAG: that many drags drawn through the real let-go.
+    private let tapDrags: Int?
     /// UNSTIR_WAVE: the solve wave held at this radius.
     private let frozenWave: Double?
     /// UNSTIR_CLOCK: a live background, and the rim and knob lessons' ghost fingers, held at this many seconds.
@@ -1208,6 +1210,7 @@ struct LevelView: View {
         shareSheet = harness?.shareSheet ?? false
         now = harness?.now
         bench = harness?.bench ?? false
+        tapDrags = harness?.tapDrags
         _isolated = State(initialValue: harness?.swatch)
         letters = harness?.letters ?? false
         frozenWave = harness?.wave
@@ -1530,6 +1533,9 @@ struct LevelView: View {
                 }
                 pose = now
             }
+            .modifier(TapHooks(moment: .init(window: tapWindow(side: layout.side), history: game.history,
+                                             pixels: Double(layout.side * scale)),
+                               motion: [liveAngle, liveTurn ?? 0, lastSpin]))
             .padding(.horizontal, PlayLayout.margin)
         }
         .foregroundStyle(page.ink)
@@ -1571,6 +1577,9 @@ struct LevelView: View {
         .task {
             guard shareSheet, let text = game.shareText, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
             ShareSheet.present([text], animated: false)
+        }
+        .task {
+            if let tapDrags { await tapDrag(tapDrags) }
         }
         .task {
             // Past the picture's first render, so the bake does not land in the numbers.
@@ -2179,7 +2188,7 @@ struct LevelView: View {
         let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? Self.haze(over: game.over) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries, isolate: isolated,
-                                  whiteIsolate: differentiate)
+                                  whiteIsolate: differentiate, budget: Taps.shared.budget(pixels: Double(side * scale)))
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
         let source = game.history.last.map { $0.rod == Game.tank ? .zero : centre(game.knob(over: $0.rod)) } ?? centre(0)
         let frozenWave = frozenWave
@@ -3097,6 +3106,39 @@ struct LevelView: View {
         if holding, let t = touchStart { deadTouch = t }
     }
 
+    /// The drag `Taps` measures on a glass `side` points across: a finger's or a drawn one's turn of a rod or the rim,
+    /// once nothing else moves the glass: no opening, settle, card, slide or breath's fade.
+    private func tapWindow(side: CGFloat) -> TapWindow? {
+        guard phase == .active, struck, shown == nil, !demoing, !game.finished, !settling, swiped == 0, !breathing,
+              liveRod != nil || liveTurn != nil, side > 0 else { return nil }
+        let held = liveRod.map(game.slot(of:))
+        return TapWindow(pixels: Double(side * scale),
+                         work: Unstirred.committedWork(stack: bare ? [] : game.stack, masks: game.level.masks,
+                                                       fill: game.level.picture.fillEntries, held: held),
+                         held: held.map { "rod \($0)" } ?? "rim", picture: game.level.picture.rawValue)
+    }
+
+    /// UNSTIR_TAPDRAG=n: once the tank is the player's, n drags of the first working knob through the finger's own
+    /// state, each let go a step from where it began, alternately each way, through the real release, so each lands a
+    /// move.
+    private func tapDrag(_ drags: Int) async {
+        while shown != nil || !struck {
+            guard (try? await Task.sleep(for: .seconds(0.2))) != nil else { return }
+        }
+        guard let k = knobs.first(where: { game.level.kind(of: $0) == .working }) else { return }
+        for i in 0..<drags {
+            guard (try? await Task.sleep(for: .seconds(1.5))) != nil, !game.finished else { return }
+            let end = (i % 2 == 0 ? 1.0 : -1.0) * Tank.step
+            liveRod = k
+            counted = k
+            await TapDrive.run(seconds: 4) { t in liveAngle = end * t / 4 + 0.6 * Tank.step * sin(2 * .pi * t) }
+            liveAngle = end
+            release(k)
+        }
+        try? await Task.sleep(for: .seconds(1.5))
+        Log.write("tapdrag done")
+    }
+
     /// `now` lands the let-go without the settle, whose completion waits on a frame.
     private func release(_ k: Int, now: Bool = false) {
         let steps = Detent.steps(liveAngle, of: Tank.step)
@@ -3404,6 +3446,9 @@ struct Unstirred: ViewModifier, Animatable {
     /// Differentiate Without Colour (`whiteIsolate`).
     var isolate: Channels?
     var whiteIsolate = false
+    /// The committed work drawn with four taps, nil for the glass's static limit (`Tank.fourTaps(pixels:)`). Never
+    /// animated: only `Taps` moves it, at a still moment.
+    var budget: Int?
     @Environment(\.displayScale) private var scale
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>> {
@@ -3431,26 +3476,26 @@ struct Unstirred: ViewModifier, Animatable {
         let n = floats.count / 4
         if floats.isEmpty { floats = [0, 0, 0, 0] }
         let r = side / 2
-        // A live picture keeps four taps only to `Tank.fourTaps` entries less its fill: the same budget as without it.
-        // Counted in committed entries, so a touch never changes the taps; the drag, the breath or a tick in flight rides
-        // one over, within the 31 the shader's comment measured. Two at once, for the `Breath.fade` a touch takes to cut a
-        // slosh or a grab within a tick's flight, drop to two taps at the budget's edge rather than run 32.
-        let fourTaps = Float(Tank.fourTaps - fillEntries) + (liveRod != nil || breathes || tick != nil ? 1 : 0)
-        if let cost = Self.channelCost(channels) {
-            // The in-flight entry rides over by its own cost, as above, so a touch never changes the taps.
+        // A live picture keeps four taps only to the budget less its fill: the same budget as without it. Counted in
+        // committed work, so a touch never changes the taps: the drag, the breath or a tick in flight rides one entry
+        // over, or Prism's its own cost (`weigh`), within the 41 the shader's comment measured on the 13 Pro Max's glass.
+        // Two in flight at once, for the `Breath.fade` a touch takes to cut a slosh or a grab within a tick's flight,
+        // drop to two taps at the budget's edge rather than run one more.
+        let taps = budget.map { $0 - fillEntries } ?? Self.taps(side: side, scale: scale, fill: fillEntries)
+        let weight = Self.weigh(channels, inFlight: n - stack.count)
+        let limit = Float(taps + weight.rides)
+        if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
-            let flight = [liveRod, breathes ? breath?.rod : nil, tick?.rod].compactMap { $0 }
-                .map { (masks[$0] ?? .white).rawValue.nonzeroBitCount }.max() ?? 0
             return content.layerEffect(
                 ShaderLibrary.unstirChannels(.float2(r, r), .float(r), .floatArray(floats), .floatArray(channels), .float(Float(n)),
-                                             .float(Float(cost)), .float(Float(Tank.fourTaps - fillEntries + flight)), .float(Float(Tank.plateau)),
+                                             .float(Float(cost)), .float(limit), .float(Float(Tank.plateau)),
                                              .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)),
                                              .float3(wave.x, wave.y, wave.z), .float(Float(turn)),
                                              .float(Float(isolate?.rawValue ?? 0)), .float3(tint.x, tint.y, tint.z)),
                 maxSampleOffset: CGSize(width: side, height: side))
         }
         return content.layerEffect(
-            ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(fourTaps), .float(Float(Tank.plateau)),
+            ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(limit), .float(Float(Tank.plateau)),
                                  .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
             maxSampleOffset: CGSize(width: side, height: side))
     }
@@ -3533,10 +3578,38 @@ struct ChannelSwatches: View {
 }
 
 extension Unstirred {
+    /// The committed entries a glass `side` points across at `scale` draws with four taps, less a live picture's fill.
+    nonisolated static func taps(side: CGFloat, scale: CGFloat, fill: Int) -> Int {
+        Tank.fourTaps(pixels: Double(side * scale)) - fill
+    }
+
+    /// What the shaders weigh for a frame of `channels` (each entry's mask, raw), the last `inFlight` of them in
+    /// flight: Prism's channel cost, nil where every entry is white and the plain shader counts entries, and how far
+    /// over the budget the entries in flight ride: one entry, or Prism's own cost. Both shaders draw four taps where
+    /// `cost ?? channels.count` is at most the budget less the fill, plus `rides`.
+    nonisolated static func weigh(_ channels: [Float], inFlight: Int) -> (cost: Int?, rides: Int) {
+        guard let cost = channelCost(channels) else { return (nil, min(inFlight, 1)) }
+        return (cost, channels.suffix(inFlight).map { Int($0).nonzeroBitCount }.max() ?? 0)
+    }
+
+    /// The work `weigh` holds against the budget: four taps where it is at most the budget.
+    nonisolated static func work(_ channels: [Float], inFlight: Int, fill: Int) -> Int {
+        let w = weigh(channels, inFlight: inFlight)
+        return (w.cost ?? channels.count) - w.rides + fill
+    }
+
+    /// The work of `stack` on a level with `masks` and a live picture's `fill`, with slot `held` in flight.
+    nonisolated static func committedWork(stack: [Twist], masks: [Int: Channels], fill: Int, held: Int? = nil) -> Int {
+        let rods = stack.map(\.rod) + (held.map { [$0] } ?? [])
+        return work(rods.map { Float((masks[$0] ?? .white).rawValue) }, inFlight: held == nil ? 0 : 1, fill: fill)
+    }
+
+    nonisolated static func drawsFourTaps(work: Int, budget: Int) -> Bool { work <= budget }
+
     /// The per-channel shader's work in entries for these masks (raw values, an entry each), or nil when every one is
     /// white and the plain shader draws them. An entry costs a map per channel it holds and a tap's two extra samples
     /// two entries: assumed, not measured on the phone.
-    static func channelCost(_ masks: [Float]) -> Int? {
+    nonisolated static func channelCost(_ masks: [Float]) -> Int? {
         let white = Float(Channels.white.rawValue)
         guard masks.contains(where: { $0 != white }) else { return nil }
         return masks.reduce(2) { $0 + Int($1).nonzeroBitCount }

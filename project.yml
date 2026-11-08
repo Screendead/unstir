@@ -43,6 +43,7 @@ targets:
         AnalyticsPlaytest: $(ANALYTICS_PLAYTEST)
         GameCenter: $(GAME_CENTER)
         iCloudSync: $(ICLOUD)
+        AdaptiveTaps: $(ADAPTIVE_TAPS)
         SupportAddress: $(SUPPORT_ADDRESS)
         PolicyURL: $(POLICY_URL)
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
