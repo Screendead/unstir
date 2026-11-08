@@ -1,3 +1,4 @@
+// Copyright © 2026 Jack Lusher. All rights reserved.
 // YES builds analytics in: the consent question, the settings switch and, with APTABASE_KEY, Aptabase. NO, v1's,
 // leaves all of it out, so the game asks, records and sends nothing, whatever key is set. A build with it YES must
 // declare in Sources/PrivacyInfo.xcprivacy what analytics collects (product interaction, coarse location and purchase
