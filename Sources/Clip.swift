@@ -108,6 +108,8 @@ struct Reel: Sendable {
         let result: Commit?
         let heals: Bool
         let ticked: Bool
+        /// A reel ticks its level's first clock only.
+        var ticks: Int { ticked ? 1 : 0 }
         /// The tick emptied the clock's rod.
         let stops: Bool
     }
@@ -248,7 +250,9 @@ struct Reel: Sendable {
                     if s > LevelView.tickBeat { f.flip = min((s - LevelView.tickBeat) / LevelView.tickTurn, 1) }
                 }
             }
-            if b.after.isEmpty { f.solved = (b.gesture.knob, s) }
+            // A solve that ticks waves with its tick, as `LevelView`'s does (Jack's call tk-finish = B, round 16).
+            let wave = b.ticks > 0 ? s - LevelView.tickAt(b.ticks - 1) : s
+            if b.after.isEmpty && wave >= 0 { f.solved = (b.gesture.knob, wave) }
         }
         f.stack = entries.map(\.twist)
         f.clockRuns = entries.contains { $0.twist.rod == level.clocks.first?.rod }

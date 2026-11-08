@@ -197,11 +197,15 @@ final class Game {
         var stopped: Int?
     }
     private(set) var escapement = Clock()
-    /// Escapement: the newest move's ticks in the order they landed, each clock's with the stack it changed, for the view
-    /// to play them in turn.
-    private(set) var tick: [(stack: [Twist], rod: Int, dir: Int)] = []
-    /// Escapement: every move's ticks, the clock whose tick pushed (the ratchet's red flash), and each clock's stops, as
-    /// its rod emptied.
+    /// Escapement: the newest move's ticks in the order they landed, each clock's with the stack it changed and whether
+    /// it pushed, for the view to play them in turn.
+    private(set) var tick: [(stack: [Twist], rod: Int, dir: Int, pushed: Bool)] = []
+    /// Escapement: whether the newest move's own stir pushed, which then takes the move's one push sound, and when its
+    /// ticks landed, the lift they and the solve are timed from.
+    private(set) var stirPushed = false
+    @ObservationIgnored private(set) var landed = ContinuousClock.now
+    /// Escapement: every move's ticks, the newest clock whose tick pushed (where the out-of-ticks stamp goes), and each
+    /// clock's stops, as its rod emptied.
     private(set) var tickEvents = 0
     private(set) var tickPushes = 0
     var pushedClock: Int? { escapement.pushed }
@@ -460,6 +464,7 @@ final class Game {
         lastCommit = (knob, result)
         turns += 1
         if result == .pushed { pushes += 1 }
+        stirPushed = result == .pushed
         // The move's own heal: a tick's pop is the clock's, not the knob's.
         if healed > 0 { cancels += 1; cancelledRod = knob }
         healed += landTicks()
@@ -481,6 +486,7 @@ final class Game {
         open = false
         lastCommit = (ratchet, .reduced)
         turns += 1
+        stirPushed = false
         let healed = landTicks()
         log("wait moves=\(moves) stack=\(stack)\(lost ? " lost" : "")")
         record(.wait(ratchet: ratchet))
@@ -501,7 +507,7 @@ final class Game {
             guard let result = Self.tick(&entries, on: c, in: level, popped: { if !$0.pushed { healed += 1 } }),
                   result != .refused else { continue }
             escapement.ticks[c.rod, default: 0] += 1
-            tick.append((from, c.rod, c.dir))
+            tick.append((from, c.rod, c.dir, result == .pushed))
             if result == .pushed {
                 tickPushes += 1
                 escapement.pushed = c.rod
@@ -513,6 +519,7 @@ final class Game {
             }
         }
         guard !tick.isEmpty else { return healed }
+        landed = .now
         tickEvents += 1
         // Without a pushed tick each clock's count is spent exactly as its rod empties. A stack the fine pass is about to
         // call solved is not out of ticks.
@@ -939,6 +946,8 @@ struct LevelView: View {
     @State private var spinBase = (start: CGPoint.zero, rotation: 0.0)
     /// Solved, the glass eases to the nearest home: the level ends wherever the tank stands.
     @State private var eased: Bool
+    /// The solve's wave, swell and success haptic have landed: at the win, or on Escapement at its solving tick.
+    @State private var waved: Bool
     /// Scales every committed angle; the open winds it 0 to 1, all rods at once, so it shows nothing about order.
     @State private var wind = 1.0
     /// The touch it belongs to, what it holds, and the finger's last angle about that.
@@ -981,6 +990,9 @@ struct LevelView: View {
     /// Escapement: the move whose ticks sound, by `game.tickEvents`; none as the view appears, so a resumed try's last
     /// ticks, long landed, stay silent.
     @State private var sounding: Int?
+    /// Escapement: the newest tick landed, numbered so two alike in a row each change it, for its haptic.
+    @State private var felt: Felt?
+    private struct Felt: Equatable { var n: Int, haptic: SensoryFeedback }
     @State private var detent = Detent(step: Tank.step)
     @State private var ticks = 0
     @State private var tankTicks = 0
@@ -1183,6 +1195,7 @@ struct LevelView: View {
         _showResult = State(initialValue: game.finished && harness?.wave == nil && !ending
                             && (!game.spilled || (harness?.clock ?? 0) >= Brim.card(still: harness?.clock == nil && UIAccessibility.isReduceMotionEnabled)))
         _eased = State(initialValue: game.solved)
+        _waved = State(initialValue: game.solved)
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
         pace = harness?.pace ?? 0.3
@@ -1654,16 +1667,14 @@ struct LevelView: View {
         }
         .onChange(of: game.finished) {
             // An undo or reset from the lost card.
-            guard game.finished else { showResult = false; return }
+            guard game.finished else { showResult = false; waved = false; return }
             // The fine pass can call the win ~0.1 s after the commit: a finger down in that gap would hold its turn frozen
             // over the win, then have the commit refused on lift.
             endPath(); endTwist()
             drag = nil; liveRod = nil; liveAngle = 0; liveTurn = nil; spun = false
-            // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
-            // centre among them.
-            if game.solved { withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true } }
-            // A spill's card waits for the pour and the word; a lost clock's for its stamp.
-            let wait = game.spilled ? Brim.card(still: reduceMotion) : game.lost ? 0.7 : 1.4
+            // A spill's card waits for the pour and the word; a lost clock's for its stamp; a solve's for its wave.
+            let wait = game.spilled ? Brim.card(still: reduceMotion) : game.lost ? 0.7 : 1.4 + solveDelay
+            if game.solved && solveDelay == 0 { landSolve(chime: true) }
             Task {
                 try? await Task.sleep(for: .seconds(wait))
                 guard game.finished else { return }
@@ -1740,6 +1751,24 @@ struct LevelView: View {
         let tap = ResetArm.tap(now: .now, armedAt: armedAt, played: !game.history.isEmpty, held: voiceOver)
         armedAt = tap.armedAt
         if tap.reset { reset() } else { AccessibilityNotification.Announcement("Tap again to reset").post() }
+    }
+
+    /// Seconds until the newest move's solve lands, at its last tick on Escapement (Jack's call tk-finish = B, round 16):
+    /// 0 where no tick is still to come, as after a solve without one or a win the fine pass called past its last tick.
+    private var solveDelay: Double {
+        guard let at = game.solveAt else { return 0 }
+        let d = game.landed + .seconds(at) - ContinuousClock.now
+        return max(Double(d.components.seconds) + Double(d.components.attoseconds) * 1e-18, 0)
+    }
+
+    /// The solve's wave, swell, success haptic and, with `chime`, its sound, and the glass easing home, once.
+    private func landSolve(chime: Bool) {
+        guard game.solved, !waved else { return }
+        waved = true
+        if chime { Sound.shared.play(.solve) }
+        // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
+        // centre among them.
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true }
     }
 
     private func reset() {
@@ -2221,7 +2250,7 @@ struct LevelView: View {
                                          onStrike: { struck = true })
                         }
                     }
-                        .keyframeAnimator(initialValue: -1.0, trigger: game.solved) { picture, w in
+                        .keyframeAnimator(initialValue: -1.0, trigger: waved) { picture, w in
                             var u = unstirred
                             // Under Reduce Motion the light swells where it stands instead of running out as a wave, but not on
                             // paper: contrast pivots on mid-grey, so bone would swell to white.
@@ -2248,7 +2277,7 @@ struct LevelView: View {
             .clipShape(Circle())
             .opacity((1 - demoDip) * (1 - curtain))
             if page.paper && !(reduceMotion && frozenWave == nil) {
-                Color.clear.keyframeAnimator(initialValue: -1.0, trigger: game.solved) { v, w in
+                Color.clear.keyframeAnimator(initialValue: -1.0, trigger: waved) { v, w in
                     v.overlay { page.wave(frozenWave ?? w, at: CGPoint(x: r + source.x * r, y: r + source.y * r), r: r) }
                 } keyframes: { _ in
                     MoveKeyframe(0.0)
@@ -2423,7 +2452,7 @@ struct LevelView: View {
             }
         }
         .frame(width: side, height: side)
-        .keyframeAnimator(initialValue: 0.0, trigger: game.solved) { tank, t in
+        .keyframeAnimator(initialValue: 0.0, trigger: waved) { tank, t in
             tank.scaleEffect(1 + (reduceMotion ? 0 : 0.02) * sin(t * .pi))
         } keyframes: { _ in CubicKeyframe(1.0, duration: 0.9) }
         // A level that turns, or swirls, reaches a finger on the bezel or just beyond it.
@@ -2449,13 +2478,18 @@ struct LevelView: View {
         .haptic(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
-        .haptic(.impact(flexibility: .rigid, intensity: 0.9), trigger: game.tickEvents)
-        .haptic(.error, trigger: game.tickPushes)
+        .haptic(trigger: felt) { _, now in now?.haptic }
         .onChange(of: game.tickEvents) { sounding = game.tickEvents }
-        .task(id: sounding) { if sounding != nil { await game.soundTicks() } }
-        .haptic(.success, trigger: game.solved) { _, solved in solved }
-        // One sound for the end, as its card shows it.
-        .onChange(of: game.finished) { if game.finished { Sound.shared.play(game.solved ? .solve : .spilled) } }
+        .task(id: sounding) {
+            guard sounding != nil else { return }
+            await game.soundTicks { cue in
+                // The solving tick's chime and success haptic are the wave's, which lands once however the win came.
+                if cue.solves { landSolve(chime: true) } else { felt = Felt(n: (felt?.n ?? 0) + 1, haptic: cue.haptic) }
+            }
+        }
+        .haptic(.success, trigger: waved) { _, waved in waved }
+        // One sound for the end, as its card shows it: a solve's lands with the wave.
+        .onChange(of: game.finished) { if game.finished && !game.solved { Sound.shared.play(.spilled) } }
         // Keeps texture pixels on device pixels, so the untwisted picture is not blurred by half a pixel.
         .offset(snap)
         .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { o in
@@ -2483,6 +2517,8 @@ struct LevelView: View {
 
     /// Escapement: the beat between a lift and its first tick, and each tick's turn.
     nonisolated static let tickBeat = 0.15, tickTurn = 0.3
+    /// When a move's `i`th tick lands after its lift.
+    nonisolated static func tickAt(_ i: Int) -> Double { tickBeat + tickTurn * Double(i) }
 
     /// Escapement: the ticks left, a split-flap numeral whose every tick flips it down one as that clock's tick starts
     /// to turn, so a move of three running clocks flips it three times in their order. Escapement has no par (Jack's
@@ -2536,7 +2572,7 @@ struct LevelView: View {
         let core = 2 * Tank.plateau * disc
         // Each clock's marks wait for its own tick in the move's turn.
         let delay = Self.tickBeat + Self.tickTurn * Double(game.tick.firstIndex { $0.rod == k } ?? 0)
-        let ticked = game.tick.contains { $0.rod == k }, pushed = game.pushedClock == k
+        let ticked = game.tick.contains { $0.rod == k }, pushed = game.tick.contains { $0.rod == k && $0.pushed }
         return ZStack {
             Circle().stroke(Color.alarm, lineWidth: 2).frame(width: size + 10, height: size + 10)
                 .keyframeAnimator(initialValue: 1.0, trigger: game.tickPushes) { ring, t in
