@@ -1440,9 +1440,10 @@ struct LevelView: View {
              : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
              : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
             .font(page.caption).opacity(captionOpacity)
-            // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does.
+            // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does. Beside the
+            // menu the gear is in sight, so there is nothing to point at (Jack's call r16c-pointer = C).
             .overlay(alignment: .bottom) {
-                if pointing {
+                if pointing && !beside {
                     Self.pointer.font(.mono(12)).fixedSize()
                         .opacity(showResult || ending || shown != nil ? 0 : 0.55)
                         .animation(.easeOut(duration: 0.4), value: shown == nil)
@@ -1644,7 +1645,7 @@ struct LevelView: View {
                 if pointing && !pointed {
                     pointed = true
                     if storesPointing { Best.pointedAtSettings = true }
-                    AccessibilityNotification.Announcement(Self.pointerSpoken).post()
+                    if !beside { AccessibilityNotification.Announcement(Self.pointerSpoken).post() }
                 }
             } else {
                 lifted = false

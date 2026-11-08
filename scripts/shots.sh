@@ -923,8 +923,8 @@ hold=10 shot duo-beside-pack-complete "Duo open: Lens 25 solved, Lens complete a
   "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 hold=10 shot duo-beside-lost "Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass." \
   "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=0:1,0:1,0:1 CLOCK=1
-# A fresh install opened like a book (s5b-title = B): plughole 01's settings line shows beside the menu, its gear in sight.
-hold=9 shot duo-beside-pointer "Duo open: a fresh install's first screen, plughole 01 beside the menu, its note at rest: the settings line under it, its foot touching the tops of undo and reset, the gear beside the menu's title." \
+# A fresh install opened like a book (s5b-title = B): no settings line beside the menu, its gear in sight (r16c-pointer = C).
+hold=9 shot duo-beside-pointer "Duo open: a fresh install's first screen, plughole 01 beside the menu, its note at rest and no settings line under it: the gear is beside the menu's title." \
   "${duo[@]}" FRESH=1 OPEN=1
 hold=8 shot duo-beside-lesson "Duo open: maelstrom 01, the tank never turned: the rim lesson's arc between the title and the glass, 5 pt smaller for it." \
   "${duo[@]}" TIER=maelstrom LEVEL=1 CLOCK=3

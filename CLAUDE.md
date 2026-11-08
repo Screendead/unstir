@@ -479,7 +479,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   0.55, as every caption rests. Plughole 01's first open hangs one line under it, at 0.55, pointing at the settings
   ("sound, haptics, colour letters: ⚙ on the menu", `LevelView.pointer`, Jack's call F3, round 14; it fits the SE's
   width with little to spare), and announces it to VoiceOver as the opening ends, when `Best.pointedAtSettings` is
-  stored; the line stays the visit out. While a level is open and unfinished the screen stays awake (`Awake`) until two
+  stored; the line stays the visit out. Beside the menu, where the gear is in sight, it neither shows nor announces,
+  and is still stored as shown (Jack's call r16c-pointer = C, round 16). While a level is open and unfinished the screen stays awake (`Awake`) until two
   minutes after the last touch.
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
