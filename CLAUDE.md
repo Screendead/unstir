@@ -1005,7 +1005,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   engine-turning in ink on bone: ninety straight rays fanned from a point off the glass's lower left, whose cone just
   holds the glass, over barleycorn, upward chevrons on a 0.08 lattice, with no glow and no concentric figure. Its lines
   are at least 2.2 px wide, as the shader's four taps average in squared light, which thins dark lines on a light
-  ground. It fades in over paper rather than striking (`Picture.paper`), and the sandbox skips it
+  ground, so below a 230 px radius (the dock's 66 pt cover) its lattice and rays' spacing grow with the lines, or the
+  ink fills the bone. It fades in over paper rather than striking (`Picture.paper`), and the sandbox skips it
   (`testThePlateIsInkOnBoneAndShowsAStepInEveryCore`).
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
