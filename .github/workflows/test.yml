@@ -42,18 +42,6 @@ jobs:
             !build/store/Logs
           key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', 'Config/**', '.github/workflows/test.yml', '.github/workflows/nightly.yml', 'scripts/test-store.sh') }}
           restore-keys: store-${{ steps.xcode.outputs.build }}-
-      # The simulator boots in the background while the build runs, and the test step waits for what is left. It starts
-      # after the cache is restored, since the boot's disk traffic slowed the restore's untar from about 3 s to 124 s.
-      # Reading the device list took 5 to 70 s, so the lookup runs in the background too and hands the id on in a file,
-      # empty if none is found, so the test step fails rather than waiting.
-      - name: Boot the simulator
-        run: |
-          (
-            SECONDS=0
-            udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
-            echo "$udid" > "$RUNNER_TEMP/udid.part" && mv "$RUNNER_TEMP/udid.part" "$RUNNER_TEMP/udid"
-            xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null; echo "$SECONDS" > "$RUNNER_TEMP/boot.s"
-          ) > /dev/null 2>&1 &
       # Signed ad hoc by the script, as the nightly needs. The timing summary says where the build's tasks spent their
       # time; xcodebuild's phase and task lines pass too, so the log's timestamps show when each began. grep holds
       # piped lines back in blocks, which stamps a few minutes' lines with one time, unless it flushes each.
@@ -62,6 +50,14 @@ jobs:
         shell: bash
         run: |
           scripts/test-store.sh build-for-testing -showBuildTimingSummary COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/build.log" | grep --line-buffered -E "^([A-Za-z*]|.*(error|warning):)"
+      # The simulator boots once the build is done, as a boot running beside it slowed the build. Reading the device
+      # list took 5 to 70 s; the id goes to the test step in a file, empty if none is found, so that step fails.
+      - name: Boot the simulator
+        run: |
+          SECONDS=0
+          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
+          echo "$udid" > "$RUNNER_TEMP/udid"
+          xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null; echo "$SECONDS" > "$RUNNER_TEMP/boot.s"
       # The StoreKit tests and First Stir's suite (out of v1; its vignette render alone takes two minutes) run nightly
       # on master (nightly.yml).
       - name: Test
