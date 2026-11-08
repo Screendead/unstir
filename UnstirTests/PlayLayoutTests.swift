@@ -25,6 +25,7 @@ final class PlayLayoutTests: XCTestCase {
                 XCTAssertEqual(l.kind, .column, "\(window)")
                 XCTAssertEqual(l.side, min(content.width, content.height - 290) / 1.045, "\(window): today's formula, whatever is drawn round the glass")
                 XCTAssertLessThan(l.side * scale, PlayLayout.maxPixels, "\(window): no phone reaches the cap")
+                XCTAssertEqual(Tank.fourTaps(pixels: l.side * scale), Tank.fourTaps, "\(window): a phone's taps as they were")
                 XCTAssertNil(l.bounds, "the column's limits are the screen's")
                 XCTAssertNil(l.filmFoot)
             }
@@ -42,17 +43,104 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertLessThanOrEqual(PlayLayout.margin + l.tankPane.maxX, fold - PlayLayout.margin)
         XCTAssertGreaterThanOrEqual(PlayLayout.margin + menu.minX, fold + PlayLayout.margin)
         XCTAssertGreaterThanOrEqual(menu.width, PlayLayout.minPane)
-        // The glass and its rim fit the pane with the chrome round it, near the size the shader's limits were tuned at.
+        // The glass and its rim fit the pane, short of the size past which the four-tap limit shrinks.
         XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
         XCTAssertLessThanOrEqual(l.chrome.above + PlayStack.gap + l.side * PlayLayout.rim + l.chrome.below, l.tankPane.height)
         XCTAssertEqual(l.side, 424, accuracy: 1)
-        XCTAssertLessThanOrEqual(l.side * 3, PlayLayout.maxPixels)
+        XCTAssertLessThanOrEqual(l.side * 3, Tank.fourTapsKept)
+        XCTAssertEqual(Tank.fourTaps(pixels: l.side * 3), Tank.fourTaps)
     }
 
     func testTheOpenDuoUprightKeepsTheColumnAtTheCap() {
         let l = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0))
         XCTAssertEqual(l.kind, .column)
         XCTAssertEqual(l.side, PlayLayout.maxPixels / 3, accuracy: 0.001, "about 1630 px uncapped")
+        XCTAssertEqual(l.side, 490.333, accuracy: 0.001, "1471 px (Jack's call duocap2 = D)")
+        XCTAssertEqual(Tank.fourTaps(pixels: l.side * 3), 23)
+        // Endless keeps the column there, its brim drawn out to the screen's edges as on a phone, at the same size.
+        let endless = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), halo: .init(ring: 0.229))
+        XCTAssertEqual(endless.kind, .column)
+        XCTAssertEqual(endless.side, l.side)
+    }
+
+    /// The limit the shader runs four taps to, by the glass's side in pixels: every glass up to 1300 px, today's cap
+    /// before the upright Duo's grew, keeps the phone's 40; past it the 40 held on the 13 Pro Max's glass plus the one in flight
+    /// (`Tank.scaledFrom`) shrink with the area, one kept for the entry in flight, so the Duo keeps 23.
+    func testTheFourTapLimitShrinksOnlyPastTheGlassesOfToday() {
+        XCTAssertEqual(Tank.tunedPixels, Double(3 * (428 - 2 * PlayLayout.margin) / PlayLayout.rim), accuracy: 0.001,
+                       "the 13 Pro Max's column")
+        XCTAssertEqual(Tank.tunedPixels, 1136.842, accuracy: 0.001)
+        // The SE, the Duo closed, the 13 Pro Max (as measured), the 17 Pro Max (the largest iPhone), the tabletop, the
+        // open split, the round 16 pitch's option A, and the cap before the upright Duo's.
+        for pixels in [656.5, 1004.8, Tank.tunedPixels, 1171.3, 1194.3, 1272.0, 1279.0, 1300.0] {
+            XCTAssertEqual(Tank.fourTaps(pixels: pixels), Tank.fourTaps, "\(pixels) px")
+        }
+        XCTAssertEqual(Tank.fourTaps(pixels: 1300.5), 30)
+        XCTAssertEqual(Tank.fourTaps(pixels: 1334), 28)
+        XCTAssertEqual(Tank.fourTaps(pixels: 1471), 23)
+        var last = Tank.fourTaps
+        let measured = Tank.scaledFrom
+        for pixels in stride(from: 1300.5, through: 1471, by: 0.5) {
+            let limit = Tank.fourTaps(pixels: pixels), area = (pixels / Tank.tunedPixels) * (pixels / Tank.tunedPixels)
+            XCTAssertLessThanOrEqual(limit, last, "\(pixels) px")
+            XCTAssertLessThanOrEqual(Double(limit + 1) * area, measured, "\(pixels) px: four taps through the limit and one in flight")
+            XCTAssertGreaterThan(Double(limit + 2) * area, measured, "\(pixels) px: the largest limit that fits")
+            last = limit
+        }
+    }
+
+    /// What `Unstirred` hands both shaders: the glass's own limit less the picture's fill.
+    func testTheShadersTapBudgetFollowsTheGlass() {
+        for picture in Picture.allCases {
+            let fill = picture.fillEntries
+            XCTAssertEqual(Unstirred.taps(side: 408 / PlayLayout.rim, scale: 3, fill: fill), Tank.fourTaps - fill,
+                           "\(picture): the 17 Pro Max's glass as it was")
+            XCTAssertEqual(Unstirred.taps(side: PlayLayout.maxPixels / 3, scale: 3, fill: fill), 23 - fill,
+                           "\(picture): the upright Duo's glass")
+            XCTAssertEqual(Unstirred.taps(side: 120, scale: 3, fill: fill), Tank.fourTaps - fill, "\(picture): a dock cover")
+            XCTAssertEqual(Unstirred.taps(side: 320, scale: 3, fill: fill), Tank.fourTaps - fill, "\(picture): a card's clip at its largest")
+        }
+        XCTAssertEqual(Unstirred.taps(side: 490.333, scale: 3, fill: 0), 23)
+    }
+
+    /// The shaders draw four taps where `cost ?? n` is at most the budget less the fill plus what rides in flight,
+    /// exactly where the work is at most the budget; and with no budget given, every glass draws as it did.
+    func testTheShadersGateIsTheCommittedWorkAgainstTheBudget() {
+        var rng = SplitMix64(state: 7)
+        let palette: [Channels] = [.white, .red, .green, .blue, .cyan, .magenta, .yellow]
+        for trial in 0..<4000 {
+            let count = rng.below(40), flight = rng.below(3), fill = rng.below(7)
+            let budget = rng.below(48), prism = trial % 2 == 0
+            let masks: [Int: Channels] = prism ? Dictionary(uniqueKeysWithValues: (0..<4).map { ($0, palette[rng.below(7)]) }) : [:]
+            let stack = (0..<count).map { _ in Twist(rod: rng.below(4), steps: 1) }
+            let flown = (0..<flight).map { _ in rng.below(4) }
+            let channels = (stack.map(\.rod) + flown).map { Float((masks[$0] ?? .white).rawValue) }
+            // As `Unstirred.body` hands the shaders the frame.
+            let weight = Unstirred.weigh(channels, inFlight: flight)
+            let four = Float(weight.cost ?? channels.count) <= Float(budget - fill + weight.rides)
+            let work = Unstirred.work(channels, inFlight: flight, fill: fill)
+            XCTAssertEqual(four, Unstirred.drawsFourTaps(work: work, budget: budget), "trial \(trial)")
+            // As the body did before the budget: one entry over for anything in flight, Prism's own cost.
+            let old = Unstirred.channelCost(channels).map { cost in
+                Float(cost) <= Float(budget - fill + (flown.map { Int((masks[$0] ?? .white).rawValue).nonzeroBitCount }.max() ?? 0))
+            } ?? (Float(channels.count) <= Float(budget - fill) + (flight > 0 ? 1 : 0))
+            XCTAssertEqual(four, old, "trial \(trial)")
+            if flight <= 1 {
+                XCTAssertEqual(Unstirred.committedWork(stack: stack, masks: masks, fill: fill, held: flown.first), work, "trial \(trial)")
+            }
+        }
+        // A stack of 30 on a still picture keeps four taps at 30 with the drag, not 31.
+        let thirty = (0..<30).map { Twist(rod: $0 % 2, steps: 1) }
+        XCTAssertTrue(Unstirred.drawsFourTaps(work: Unstirred.committedWork(stack: thirty, masks: [:], fill: 0, held: 0), budget: 30))
+        XCTAssertFalse(Unstirred.drawsFourTaps(work: Unstirred.committedWork(stack: thirty + [Twist(rod: 0, steps: 1)], masks: [:], fill: 0, held: 1),
+                                               budget: 30))
+        // Prism: a white entry costs three, and two for a tap's samples.
+        let level = Level.prism[0]
+        XCTAssertEqual(Unstirred.committedWork(stack: level.scramble, masks: level.masks, fill: 0),
+                       Unstirred.channelCost(level.scramble.map { Float((level.masks[$0.rod] ?? .white).rawValue) }))
+        for pixels in [656.5, Tank.tunedPixels, 1471] {
+            XCTAssertEqual(Unstirred.taps(side: pixels / 3, scale: 3, fill: 4), Tank.fourTaps(pixels: pixels) - 4)
+        }
     }
 
     func testTheCapBindsTheSplitToo() {
@@ -115,6 +203,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
         // The tank fills the half lying flat: about 398 pt, near the Pro Max's 408.
         XCTAssertEqual(l.side, (858 - (fold.maxY - top) - PlayLayout.margin) / PlayLayout.rim, accuracy: 0.001)
+        XCTAssertEqual(Tank.fourTaps(pixels: l.side * 3), Tank.fourTaps)
         // "unstirred." stands in the upright half, clear of the fold.
         let wordsTop = top + l.stage.minY - (try! XCTUnwrap(l.words))
         XCTAssertGreaterThanOrEqual(wordsTop, top + l.chromePane.minY)

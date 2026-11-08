@@ -815,8 +815,20 @@ hold=10 shot duo-open-endless "Duo open: endless at three notches, the brim roun
   "${duo[@]}" MODE=endless BRIM=3
 hold=10 shot duo-open-daily-result "Duo open: today's daily solved two over par, the card's again, share and next daily beside the tank, over the menu." \
   "${duo[@]}" SCREEN=result MODE=daily NOW=17:00
-shot duo-open-upright "Duo open and turned upright (669 x 951 pt): today's column, its glass stopped at 1300 px (433 pt)." \
+shot duo-open-upright "Duo open and turned upright (669 x 951 pt): today's column, its glass stopped at 1471 px (490 pt; duocap2 = D)." \
   FRAME=669x951 INSETS=59,0,34,0 LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2
+# At 1471 px the shader runs four taps only to 17 entries less a live picture's fill (Tank.fourTaps(pixels:)), so the
+# deepest stacks draw with two, where a phone's 40 draws every stack dealt with four; the harness shrinks the window, so these show the tap switch, not
+# the Duo's frame time.
+upright=(FRAME=669x951 INSETS=59,0,34,0)
+hold=8 shot duo-open-upright-whirlpool-27 "Duo upright at 1471 px: whirlpool 27, Estuary, its 28 stirs as dealt on the glass, two taps here where a phone runs four: with the glass's fill the work is 32." \
+  "${upright[@]}" TIER=whirlpool LEVEL=27 CLOCK=3
+hold=8 shot duo-open-upright-maelstrom-27 "Duo upright at 1471 px: maelstrom 27, its 26 stirs as dealt on the marbling's twin, two taps here." \
+  "${upright[@]}" TIER=maelstrom LEVEL=27 CLOCK=3
+hold=8 shot duo-open-upright-endless "Duo upright at 1471 px: endless's tank 20, 28 stirs deep, with 5 of the brim's 8 notches: the column keeps the brim to the screen's edges, the glass at the cap." \
+  "${upright[@]}" MODE=endless RESUME= RESUMETANK=19 BRIM=5
+hold=8 shot duo-phone-whirlpool-27 "A phone, for comparison: whirlpool 27 as dealt in the Pro Max's 1171 px column, four taps: 28 stirs and the glass's fill of 4 make 32, within 40." \
+  TIER=whirlpool LEVEL=27 CLOCK=3
 # Folded, the fold as UNSTIR_FOLD draws it: a 19 pt band (assumed), where the system's division region would be.
 # UNSTIR_THEN changes pose that many seconds in, as opening or folding the phone would.
 played=(LEVEL=11 PLAYED=2:-6,1:+4,3:+5,0:+1,1:+2)

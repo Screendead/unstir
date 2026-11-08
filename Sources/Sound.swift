@@ -105,6 +105,11 @@ extension View {
     func haptic<T: Equatable>(_ feedback: SensoryFeedback, trigger: T, when: ((T, T) -> Bool)? = nil) -> some View {
         sensoryFeedback(feedback, trigger: trigger) { old, new in Settings.haptics && (when?(old, new) ?? true) }
     }
+
+    /// The feedback `pick` names for each change of `trigger`, none where it names none.
+    func haptic<T: Equatable>(trigger: T, _ pick: @escaping (T, T) -> SensoryFeedback?) -> some View {
+        sensoryFeedback(trigger: trigger) { old, new in Settings.haptics ? pick(old, new) : nil }
+    }
 }
 
 /// Effects on a pool of players, so quick ones overlap, and one looping bed under the menu or a level. Only `queue`
@@ -471,19 +476,52 @@ final class Sound: @unchecked Sendable {
     }
 }
 
-extension Game {
-    /// Escapement: when each of the newest move's ticks sounds after its lift, as its clock's core starts to turn and
-    /// its flap falls; none on a level without clocks.
-    var ratchetTimes: [Double] { tick.indices.map { LevelView.tickBeat + LevelView.tickTurn * Double($0) } }
+/// Escapement: one of a move's ticks as it lands after the lift, with what sounds and what is felt as it does.
+struct TickCue: Equatable {
+    var at: Double
+    var sounds: [Sound.Effect]
+    var haptic: SensoryFeedback
+    /// The tick that solves the tank: the solve's chime, haptic and wave land with it, through the view, which plays
+    /// them once whether the tick or the win's own change comes first.
+    var solves = false
+}
 
-    /// Plays the newest move's ticks at their times while they stand: an undo or a reset takes the rest back with the
-    /// move, and leaving the level cancels the wait.
-    func soundTicks() async {
-        let lift = ContinuousClock.now
-        for (i, t) in ratchetTimes.enumerated() {
-            guard (try? await Task.sleep(until: lift + .seconds(t), tolerance: .milliseconds(2))) != nil, i < tick.count
+extension Game {
+    /// Escapement: each of the newest move's ticks, landing as its clock's core starts to turn and its flap falls: a beat
+    /// after the lift, then a turn apart. Every tick is the ratchet's steel with its rigid haptic (Jack's calls soundsk2
+    /// = D and soundsk-haptic = B, round 16). One that pushed has the error haptic, and the move's first push sounds the
+    /// push over its ratchet: a pushed tick's own, unless the move's stir pushed first (Jack's calls tk-push = B and
+    /// tk-multi = C, round 16). The move that solves the tank lands the solve's chime and success haptic with its last
+    /// tick, and the wave with them (tk-finish = B). A move that runs the tank out of ticks plays its ticks as any
+    /// other move does. None on a level without clocks.
+    var tickCues: [TickCue] {
+        var push = !stirPushed
+        return tick.enumerated().map { i, t in
+            var cue = TickCue(at: LevelView.tickAt(i), sounds: [.ratchet],
+                              haptic: t.pushed ? .error : .impact(flexibility: .rigid, intensity: 0.9))
+            if t.pushed && push { cue.sounds.append(.push); push = false }
+            if solved && i == tick.count - 1 { cue.haptic = .success; cue.solves = true }
+            return cue
+        }
+    }
+
+    /// Escapement: when the newest move's solve lands after its lift, nil where none waits for a tick.
+    var solveAt: Double? { tickCues.last(where: \.solves)?.at }
+
+    /// Plays the newest move's ticks at their times while they stand, handing each to `felt` for its haptic and, on the
+    /// solving tick, the wave: an undo or a reset takes the rest back with the move, and leaving the level cancels the
+    /// wait. Each cue is read as it lands, so a win the fine pass calls after the lift still lands on its last tick.
+    func soundTicks(_ felt: (TickCue) -> Void) async {
+        let lift = landed
+        var i = 0
+        while i < tickCues.count {
+            guard (try? await Task.sleep(until: lift + .seconds(tickCues[i].at), tolerance: .milliseconds(2))) != nil,
+                  i < tickCues.count
             else { return }
-            Sound.shared.play(.ratchet)
+            let cue = tickCues[i]
+            for sound in cue.sounds { Sound.shared.play(sound) }
+            felt(cue)
+            i += 1
         }
     }
 }

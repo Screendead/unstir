@@ -52,10 +52,32 @@ enum Tank {
     /// The swirl has no rigid core: its turn fades smoothly from the full angle at the centre to 0 at the glass's edge,
     /// so it shears through every knob's core rather than carrying them round as a block.
     static let swirlPlateau = 0.0
-    /// Pushes past this are refused: every pixel runs each shader tap through every entry, plus the live twist.
+    /// Pushes past this are refused: every pixel runs each shader tap through every entry, plus the live twist. The same
+    /// on every glass, so every level plays as on an iPhone (Jack's call duocap2 = D), however far a larger glass then
+    /// runs over the frame budget measured at `tunedPixels`.
     static let maxStack = 36
-    /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two.
-    static let fourTaps = 30
+    /// Committed entries the shader runs four taps through, less a live picture's fill; past it, two. What a level is
+    /// dealt to fit, on every device; the shader takes `fourTaps(pixels:)`, or the budget `Taps` learns. 40 held 120 Hz
+    /// on the iPhone 13 Pro Max's 1136 px glass (2026-11-04): the most the game allows, a full stack of 36 on a fill of 4,
+    /// with the drag riding one over, and no load the game reaches missed there.
+    static let fourTaps = 40
+    /// The glass's side in pixels where `fourTaps` was measured: the iPhone 13 Pro Max's, 396 / 1.045 pt at 3x.
+    static let tunedPixels = 3 * 396 / 1.045
+    /// The entries, the one in flight among them, that past `fourTapsKept` shrink with the glass's area: `fourTaps` and
+    /// the drag riding over it, so the Duo upright's 1471 px starts at 23 (Jack's call r16c-duoprior = B, round 16,
+    /// which rescaled duocap2 = D's 17 from the 31 measured before 2026-11-04).
+    static let scaledFrom = Double(fourTaps + 1)
+    /// Up to this side in pixels a glass keeps `fourTaps`, so no glass drawn before the open Duo's upright one grew
+    /// past it changes, the largest phone's (about 1171) among them, though each past `tunedPixels` costs more than
+    /// was measured.
+    static let fourTapsKept = 1300.0
+
+    /// `fourTaps` on a glass `pixels` across: past `fourTapsKept`, `scaledFrom` shrunk with the glass's area, less the
+    /// one in flight, so 1471 px starts at 23.
+    static func fourTaps(pixels: Double) -> Int {
+        let ratio = tunedPixels / pixels
+        return pixels <= fourTapsKept ? fourTaps : Int((scaledFrom * ratio * ratio).rounded(.down)) - 1
+    }
 
     /// Rotation fraction at s = |p - c| / radius. The Metal shader carries the same function.
     static func profile(_ s: Double, plateau: Double = plateau) -> Double {
