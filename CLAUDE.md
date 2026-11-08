@@ -36,15 +36,20 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 15 minutes (Jack's call r16c-ci-limit = B, round 16).
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
   runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, `Config/`, the workflow and
-  `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
-  inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
-  build system to ignore inode changes; the restored build then stays incremental. The job builds for testing
-  (`scripts/test-store.sh build-for-testing`, for a generic simulator so it never waits on one booting, printing the
-  build's timing summary) while the simulator boots in the background from just after the cache's restore (booting
-  during it slowed the untar from about 3 s to 124 s), then waits for the boot and runs `test-without-building`. On
-  2026-11-04 the boot took about 90 s, the build step 130 to 190 s with 16 to 40 s of Swift's tasks (SwiftEmitModule and SwiftDriver; SwiftCompile itself 1 to 4 s; the asset
-  catalog takes 36 s every run), and the test step about 110 s, half of it the tests; every step's time moves with the
-  runner's speed. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
+  `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file and folder a new
+  inode and the current time, so the job stamps each tracked file with a time drawn from its blob's hash and each
+  tracked folder from its tree's, and tells the build system to ignore inode changes; the restored build then stays
+  incremental, asset catalog and all. The job builds for testing (`scripts/test-store.sh build-for-testing`, for a
+  generic simulator, so it reads no device list, passing every phase and task line, flushed so GitHub stamps each, and
+  the timing summary), then boots the simulator and runs `test-without-building`. Booting beside the build, as the job
+  did until 2026-11-08, can stall it: one build description took 164 s against 3 to 5 s without the boot, for at most
+  the 20 s of a cache hit's build hidden. Each run's environment (`GITHUB_RUN_ID` and the like) still makes a new build
+  description, as the build system hashes the whole environment into its signature and no setting or flag leaves it
+  out (`-UseSanitizedBuildSystemEnvironment=YES` doesn't), but alone that costs 3 to 5 s. On 2026-11-08, on an exact
+  cache hit, the build step took 12 to 33 s (Metal recompiles every run, about 6 s), the boot 72 to 113 s and the test
+  step 150 to 380 s, of which the tests are 45 to 95 s: the rest is `test-without-building` starting on the freshly
+  booted simulator, not yet explained, and the next place to look. A push that changes `Sources/` adds the recompile.
+  Every step's time moves with the runner's speed. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
   call APPSIZE = B) less the test bundle and Xcode's testing frameworks the test host carries, and fail past 100 MB.
   That build is Debug for the simulator, one architecture: its debug dylib (16.6 MB on 2026-11-02) outweighs the
   Release binary (11.2 MB), and the resources are the same bytes in both, so it reads about 6 MB over a Release bundle
