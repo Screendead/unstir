@@ -55,12 +55,13 @@ jobs:
             xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null; echo "$SECONDS" > "$RUNNER_TEMP/boot.s"
           ) > /dev/null 2>&1 &
       # Signed ad hoc by the script, as the nightly needs. The timing summary says where the build's tasks spent their
-      # time; xcodebuild's phase and task lines pass too, so the log's timestamps show when each began.
+      # time; xcodebuild's phase and task lines pass too, so the log's timestamps show when each began. grep holds
+      # piped lines back in blocks, which stamps a few minutes' lines with one time, unless it flushes each.
       # `shell: bash` adds pipefail; without it the step's status is grep's, which passes once any test has run.
       - name: Build for testing
         shell: bash
         run: |
-          scripts/test-store.sh build-for-testing -showBuildTimingSummary COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/build.log" | grep -E "^([A-Za-z*]|.*(error|warning):)"
+          scripts/test-store.sh build-for-testing -showBuildTimingSummary COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/build.log" | grep --line-buffered -E "^([A-Za-z*]|.*(error|warning):)"
       # The StoreKit tests and First Stir's suite (out of v1; its vignette render alone takes two minutes) run nightly
       # on master (nightly.yml).
       - name: Test
