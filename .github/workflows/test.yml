@@ -44,28 +44,30 @@ jobs:
           restore-keys: store-${{ steps.xcode.outputs.build }}-
       # The simulator boots in the background while the build runs, and the test step waits for what is left. It starts
       # after the cache is restored, since the boot's disk traffic slowed the restore's untar from about 3 s to 124 s.
+      # Reading the device list took 5 to 70 s, so the lookup runs in the background too and hands the id on in a file,
+      # empty if none is found, so the test step fails rather than waiting.
       - name: Boot the simulator
-        id: sim
         run: |
-          udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
-          echo "udid=$udid" >> "$GITHUB_OUTPUT"
-          (SECONDS=0; xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null; echo "$SECONDS" > "$RUNNER_TEMP/boot.s") > /dev/null 2>&1 &
+          (
+            SECONDS=0
+            udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
+            echo "$udid" > "$RUNNER_TEMP/udid.part" && mv "$RUNNER_TEMP/udid.part" "$RUNNER_TEMP/udid"
+            xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null; echo "$SECONDS" > "$RUNNER_TEMP/boot.s"
+          ) > /dev/null 2>&1 &
       # Signed ad hoc by the script, as the nightly needs. The timing summary says where the build's time went.
       # `shell: bash` adds pipefail; without it the step's status is grep's, which passes once any test has run.
       - name: Build for testing
         shell: bash
-        env:
-          udid: ${{ steps.sim.outputs.udid }}
         run: |
-          UNSTIR_SIM=$udid scripts/test-store.sh build-for-testing -showBuildTimingSummary COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/build.log" | grep -E "^(error:|\*\* TEST BUILD|[A-Za-z]+ \([0-9]+ tasks?\) \| )"
+          scripts/test-store.sh build-for-testing -showBuildTimingSummary COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/build.log" | grep -E "^(error:|\*\* TEST BUILD|[A-Za-z]+ \([0-9]+ tasks?\) \| )"
       # The StoreKit tests and First Stir's suite (out of v1; its vignette render alone takes two minutes) run nightly
       # on master (nightly.yml).
       - name: Test
         shell: bash
-        env:
-          udid: ${{ steps.sim.outputs.udid }}
         run: |
           SECONDS=0
+          until [[ -s "$RUNNER_TEMP/udid" ]]; do sleep 1; done
+          udid=$(cat "$RUNNER_TEMP/udid")
           xcrun simctl bootstatus "$udid" -b > /dev/null
           echo "waited ${SECONDS} s for the simulator, which took $(cat "$RUNNER_TEMP/boot.s" 2> /dev/null || echo "?") s to boot"
           UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"

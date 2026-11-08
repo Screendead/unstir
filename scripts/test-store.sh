@@ -8,14 +8,17 @@
 # so the unsigned builds in build/ aren't redone.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)}
-[[ -n "$udid" ]] || { echo "no Pro Max simulator: set UNSTIR_SIM" >&2; exit 2; }
 action=test
 case "${1:-}" in test | build-for-testing | test-without-building) action=$1; shift ;; esac
-# A build for testing names no device, so it never waits on a simulator that is booting; one architecture, as a
-# device's build is.
-destination=(-destination "id=$udid")
-[[ $action == build-for-testing ]] && destination=(-destination "generic/platform=iOS Simulator" ARCHS=arm64)
+# A build for testing names no device, so it never waits on a simulator that is booting, nor on the device list; one
+# architecture, as a device's build is.
+if [[ $action == build-for-testing ]]; then
+  destination=(-destination "generic/platform=iOS Simulator" ARCHS=arm64)
+else
+  udid=${UNSTIR_SIM:-$(xcrun simctl list devices available | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)}
+  [[ -n "$udid" ]] || { echo "no Pro Max simulator: set UNSTIR_SIM" >&2; exit 2; }
+  destination=(-destination "id=$udid")
+fi
 xcodegen generate --quiet
 TEST_RUNNER_UNSTIR_STORE_TESTS=1 xcodebuild "$action" -project Unstir.xcodeproj -scheme Unstir "${destination[@]}" \
   -derivedDataPath build/store CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= \
