@@ -32,7 +32,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   `test.yml`, so the nightly keeps running it. Both Test steps pipe the tests through `grep`, so they set `shell: bash`
   for pipefail: under the default shell the step's status is grep's, which passes once any test has run.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
-  is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
+  is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 15 minutes (Jack's call r16c-ci-limit = B, round 16).
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
   runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, `Config/`, the workflow and
   `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
@@ -54,7 +54,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
   other branch: it builds every push, PR or not. Keep
   commits local until the next build is worth paying for. If a build takes more than
-  10 minutes (Jack, 2026-11-01; the job's own timeout), raise it with Jack: the approach to builds needs rethinking.
+  10 minutes (Jack, 2026-11-01), raise it with Jack: the approach to builds needs rethinking.
 - **Watch CI spend.** Before each push that builds, run `scripts/ci-usage.sh`, which prints this month's GitHub Actions
   allowance left. Tell Jack when 50% is left, and warn him urgently at 25%. Public repos, this one included, don't
   use the allowance. macOS minutes in private repos count 10×.
