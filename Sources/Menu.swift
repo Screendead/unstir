@@ -126,6 +126,8 @@ struct Stirred: ViewModifier, Animatable {
 struct MenuView: View {
     /// UNSTIR_TIERDEMO: switches tiers on a timer through the same calls a finger makes.
     let demo: Bool
+    /// The harness's tier, or a closed tier's gate a result card looked at.
+    let start: Tier?
     let onPick: (Level) -> Void
     /// The pack card over the menu, opened from the dock or by a level that needs it.
     @Binding var card: Offer?
@@ -147,6 +149,22 @@ struct MenuView: View {
     let held: String?
     /// Drawn under a level a back swipe is sliding off.
     let peeking: Bool
+    /// The level playing beside the menu on the open Duo, whose row the list follows; nil anywhere else.
+    let playing: Level?
+    /// The trailing half as the playing level lays it out, the list's beside it, in the menu's space, once it has.
+    let slot: CGRect?
+    /// The playing level's result or lost card covers the list beside it: the list goes, the level's card in its place.
+    let covered: Bool
+    /// Bumped by every level opened, left or finished: a menu that stays up beside play reads its rows, its run and
+    /// its dailies afresh then, as a menu built anew on each return does.
+    let revision: Int
+    /// Endless's saved run, as the root last read it.
+    let run: Resume?
+    /// The slot the list is drawn in beside play: it glides there from its own half, and back.
+    @State private var at: CGRect?
+    /// Built beside a playing level, the list waits unseen for the level's first layout rather than gliding from the
+    /// half the tank has.
+    @State private var unplaced: Bool
     /// The focused row's id until its flash has started, so a later rebuild of its tier's list doesn't flash it again.
     @State private var flashing: String?
     /// `focus` for the card up as the menu opens, gone once a card is opened or closed, so a dock tap opens at the top.
@@ -172,6 +190,8 @@ struct MenuView: View {
     @State private var viewport: CGFloat = 0
     /// The window's whole height, bars and all, which sizes the settings sheet.
     @State private var window: CGFloat = 800
+    /// The window's bottom safe area, under which a sheet runs on.
+    @State private var bottom: CGFloat = 0
     /// The pack dock's height: the scroll view counts it in its bottom safe area, but the list ends at it.
     @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
@@ -190,7 +210,7 @@ struct MenuView: View {
     /// The settings' supporter mark switch, mirrored here as the sheet moves it.
     @State private var supporter = Settings.supporter
     /// A pack's card opened from Complete's, so its back returns there while it is still the card up.
-    @State private var cameFrom: (back: Offer, card: Offer)?
+    @State private var cameFrom: CameFrom?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var phase
     /// UNSTIR_FOLD's fold, in the harness window's points.
@@ -223,7 +243,15 @@ struct MenuView: View {
     init(start: Tier? = nil, demo: Bool = false, frozen: (spin: Double, fade: Double)? = nil, settings: Binding<Bool>,
          card: Binding<Offer?>, archive: Binding<Bool> = .constant(false), clock: Double? = nil, placeholders: Int = 0, shelfDemo: Bool = false,
          cardScroll: Bool = false, focus: Level? = nil, held: String? = nil, arrived: Pack? = nil, run: Resume? = nil,
-         peeking: Bool = false, onPick: @escaping (Level) -> Void) {
+         peeking: Bool = false, playing: Level? = nil, slot: CGRect? = nil, revision: Int = 0, covered: Bool = false,
+         onPick: @escaping (Level) -> Void) {
+        self.start = start
+        self.playing = playing
+        self.slot = slot
+        self.covered = covered
+        self.revision = revision
+        self.run = run
+        _unplaced = State(initialValue: playing != nil)
         self.demo = demo
         _settings = settings
         self.onPick = onPick
@@ -240,8 +268,9 @@ struct MenuView: View {
         _flashing = State(initialValue: focus?.id)
         _saved = State(initialValue: run)
         _cardFocus = State(initialValue: focus)
-        // A tier's own level left lands on its tier, which "up a notch" may have opened since the menu was last up.
-        let tier = start ?? focus.flatMap { f in f.tier.levels.contains { $0.id == f.id } ? f.tier : nil } ?? Tier.stored()
+        // A tier's own level left lands on its tier, which "up a notch" may have opened since the menu was last up; beside
+        // play, the playing level's tier.
+        let tier = start ?? (playing ?? focus).flatMap { f in f.tier.levels.contains { $0.id == f.id } ? f.tier : nil } ?? Tier.stored()
         _picked = State(initialValue: tier)
         _shown = State(initialValue: tier)
         _listed = State(initialValue: tier)
@@ -281,55 +310,33 @@ struct MenuView: View {
     }
 
     var body: some View {
-        let analytics = Analytics.shared
-        // The menu waits for the question's answer, for VoiceOver too.
-        let asking = analytics.asks && analytics.consent == .undecided
-        let wide = layout.wide, fold = harnessFold
-        column
-        .frame(width: layout.list?.width)
-        // Wide, a card or the archive opens beside the list, which stays live.
-        .accessibilityHidden(asking || !wide && (card != nil || archive))
-        .frame(maxWidth: wide ? .infinity : nil, alignment: .leading)
-        // Over the menu or beside the list, in one place in the tree, so a card or the archive up as the phone folds or
-        // unfolds keeps its identity and its scroll (Jack's call d4-pose = B, round 16).
-        .overlay(alignment: .topLeading) {
-            let side = layout.side
-            ZStack {
-                archiveView(beside: wide)
-                cardView(beside: wide)
-            }
-            .frame(width: side?.width, height: side?.height)
-            .frame(maxWidth: wide ? nil : .infinity, maxHeight: wide ? nil : .infinity)
-            .padding(.leading, side?.minX ?? 0)
-            .accessibilityHidden(asking)
-        }
-        .onGeometryChange(for: MenuLayout.self) {
-            MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: fold))
-        } action: { layout = $0 }
-        .overlay {
-            if asking { ConsentCard(tier: shown).transition(.opacity) }
-        }
-        .animation(.easeOut(duration: 0.25), value: asking)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: {
-            window = $0
-        }
-        .sheet(isPresented: $settings) { SettingsSheet(window: window, supporter: $supporter) }
+        laidOut
+        .modifier(Refreshed(revision: revision, playing: playing?.id, start: start, refresh: refresh, follow: followPlaying,
+                            look: look))
         // Wide, the trailing half holds one at a time, as both stay live there: the one opened last, from the list,
         // the dock or the root (a gate, a promoted purchase), closes the other, which would lie unseen and still read
         // to VoiceOver under it. Unfolding with a card over the archive keeps the card, the one in sight.
         .onChange(of: card) { if layout.wide, card != nil, archive { withAnimation(.snappy(duration: 0.42)) { archive = false } } }
         .onChange(of: archive) { if layout.wide, archive, card != nil { show(nil) } }
         .onChange(of: layout.wide) { if layout.wide, card != nil, archive { archive = false } }
-        // A drag, or a card or the settings closing, wakes the dock as a touch on the window does.
-        .onChange(of: card == nil && !archive && !settings) { Power.shared.touched() }
+        // The root changes the card too (a level parking it, a gate, a result card's pointer): beside play this menu
+        // outlives those changes, so where a card came from lasts only while that card stays up.
+        .onChange(of: card) { cameFrom = cameFrom?.kept(as: card) }
+        // A drag, or a card or the settings closing, wakes the dock as a touch on the window does, as does a level beside
+        // it leaving.
+        .onChange(of: card == nil && !archive && !settings && playing == nil) { Power.shared.touched() }
         // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
         .onChange(of: settings) { if !settings { leading = Self.lead(tier: shown) } }
         .background {
-            // Builds the effect's pipeline before the first switch, which would otherwise stall on it.
-            Color.black.frame(width: 2, height: 2).drawingGroup()
-                .modifier(Stirred(angle: 0.1, fade: 0, centre: .zero, radius: 1))
+            // Builds the effect's pipeline before the first switch, which would otherwise stall on it. Beside play there
+            // is no stir, and the square would show on Escapement's paper.
+            if playing == nil {
+                Color.black.frame(width: 2, height: 2).drawingGroup()
+                    .modifier(Stirred(angle: 0.1, fade: 0, centre: .zero, radius: 1))
+            }
         }
-        .background(Color.black)
+        // Not beside play, where the level lies under the menu and keeps its touches.
+        .background { if playing == nil { Color.black } }
         .onChange(of: dragging) {
             if dragging { Power.shared.touched() }
             // Cancelled, so `onEnded` never ran.
@@ -356,7 +363,137 @@ struct MenuView: View {
         .task { if shelfDemo { await shelfTour() } }
     }
 
-    /// The title, the tier strip and the tier's list over the dock: the whole menu on a phone, its leading half wide.
+    /// The column, the dock where it lies apart and a card or the archive, where the window puts them.
+    private var laidOut: some View {
+        let analytics = Analytics.shared
+        // The menu waits for the question's answer, for VoiceOver too; beside play, until the level leaves.
+        let asking = analytics.asks && analytics.consent == .undecided && playing == nil
+        let fold = harnessFold
+        return placedColumn(asking: asking)
+        // The tabletop's dock lies below the fold, under a card or the archive.
+        .overlay(alignment: .topLeading) { tabletopDock(asking: asking) }
+        // Over the menu or beside the list, in one place in the tree, so a card or the archive up as the phone folds or
+        // unfolds keeps its identity and its scroll (Jack's call d4-pose = B, round 16).
+        .overlay(alignment: .topLeading) { sheets(asking: asking) }
+        .onGeometryChange(for: MenuLayout.self) {
+            MenuLayout.of(size: $0.size, insets: $0.safeAreaInsets, fold: PlayLayout.fold($0, harness: fold))
+        } action: { layout = $0 }
+        // The list moves halves as a level opens beside it or leaves, in one glide (Jack's call DUOMENU = B, round 16);
+        // built beside play, it waits for the level's first layout and appears there.
+        .onChange(of: playing == nil ? nil : slot, initial: true) { _, slot in
+            let glide = !unplaced && !reduceMotion
+            // The slot changes as the phone folds or opens further: the playing row stays in sight. Once the list has its
+            // new size, as a scroll view mid-glide centres on the size it is passing through.
+            withAnimation(glide ? .smooth(duration: 0.45) : nil) { at = slot } completion: {
+                guard at != nil, let p = playing, listed.levels.contains(where: { $0.id == p.id }) else { return }
+                withAnimation(reduceMotion ? nil : .snappy(duration: 0.4)) { scroller?.scrollTo(p.id, anchor: .center) }
+            }
+            if slot != nil { unplaced = false }
+        }
+        .overlay {
+            if asking { ConsentCard(tier: shown).transition(.opacity) }
+        }
+        .animation(.easeOut(duration: 0.25), value: asking)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.top + $0.safeAreaInsets.bottom } action: {
+            window = $0
+        }
+        .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { bottom = $0 }
+        // The tabletop's settings keep to the half lying flat, as the dock and a card do.
+        .sheet(isPresented: $settings) {
+            SettingsSheet(window: window, room: layout.dock.map { $0.height + bottom }, supporter: $supporter)
+        }
+    }
+
+    /// Where the list goes now: beside play, the slot the level leaves it, once there.
+    private var placed: MenuLayout { at.map(layout.beside) ?? layout }
+
+    /// A menu that stays up beside play, or wide between levels, isn't built anew on each return, so it reads afresh
+    /// what a new one would.
+    private func refresh() {
+        guard layout.wide else { return }
+        daily = Self.daily(today)
+        past = Self.past(today)
+        leading = Self.lead(tier: shown)
+        saved = run
+    }
+
+    /// The playing level's row, and no row lit; once it leaves, the row left, lit however often it is left, as a
+    /// focus that stays the same changes nothing.
+    private func followPlaying() {
+        guard playing != nil else { return refocus() }
+        flashing = nil
+        follow(playing)
+    }
+
+    /// The row left once a level beside the list closes, lit once, as a new menu lights it.
+    private func refocus() {
+        guard layout.wide, playing == nil, let focus else { return }
+        cardFocus = focus
+        flashing = reduceMotion ? nil : focus.id
+        follow(focus)
+    }
+
+    /// A closed tier's gate, looked at from a result card, on a menu that stayed up.
+    private func look() {
+        if layout.wide, let start, start != picked { select(start) }
+    }
+
+    /// The column where `placed` puts it: a phone's whole screen, the split's leading half, beside play the trailing
+    /// half, the tabletop's upright half.
+    private func placedColumn(asking: Bool) -> some View {
+        let wide = layout.wide, placed = self.placed
+        // Beside play, or in the tabletop, the list has a height of its own.
+        let sized = placed.dock != nil || at != nil
+        return column
+            .frame(width: placed.list?.width, height: sized ? placed.list?.height : nil)
+            // The level's ground lies under the menu beside play.
+            .background { if playing != nil { Color.black } }
+            .offset(x: placed.list?.minX ?? 0, y: placed.list?.minY ?? 0)
+            // With the level's card, which fades in as it does.
+            .opacity(unplaced || covered ? 0 : 1)
+            .animation(.easeOut(duration: 0.4).delay(0.3), value: covered)
+            .allowsHitTesting(!covered)
+            // Wide, a card or the archive opens beside the list, which stays live; beside play it opens over the list.
+            .accessibilityHidden(asking || covered || (!wide || playing != nil) && (card != nil || archive))
+            .frame(maxWidth: wide ? .infinity : nil, maxHeight: sized ? .infinity : nil, alignment: .topLeading)
+    }
+
+    @ViewBuilder private func tabletopDock(asking: Bool) -> some View {
+        if let d = placed.dock {
+            dock(over: covering)
+                .frame(width: d.width).frame(height: d.height, alignment: .bottom)
+                .offset(x: d.minX, y: d.minY)
+                .accessibilityHidden(asking || card != nil || archive)
+        }
+    }
+
+    /// A pack's card or the archive: over the menu on a phone, beside the list wide, and beside play over the whole
+    /// trailing half, as a phone's covers the menu.
+    private func sheets(asking: Bool) -> some View {
+        let wide = layout.wide, side = placed.side
+        return ZStack {
+            archiveView(beside: wide && playing == nil)
+            cardView(beside: wide && playing == nil)
+        }
+        .frame(width: side?.width, height: side?.height)
+        .frame(maxWidth: wide ? nil : .infinity, maxHeight: wide ? nil : .infinity)
+        .padding(.leading, side?.minX ?? 0)
+        .padding(.top, placed.dock == nil ? 0 : side?.minY ?? 0)
+        .accessibilityHidden(asking)
+    }
+
+    /// Beside play a card or the archive starts 16 pt past the fold, where the level's own ground shows under its
+    /// result card, Escapement's paper too: its ground runs on to the fold, and a point under the card, so the two
+    /// edges' antialiasing leaves no seam on a fractional pixel.
+    @ViewBuilder private var bleed: some View {
+        if playing != nil { Color.black.frame(width: PlayLayout.margin + 1).offset(x: -PlayLayout.margin) }
+    }
+
+    /// A card or the archive lies over the dock: on a phone, beside play and in the tabletop, not beside the split's list.
+    private var covering: Bool { (card != nil || archive) && (!layout.splits || playing != nil) }
+
+    /// The title, the tier strip and the tier's list over the dock: the whole menu on a phone, its leading half wide,
+    /// and beside play the trailing half, title and gear too (Jack's call s5b-title = B).
     private var column: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center) {
@@ -385,19 +522,35 @@ struct MenuView: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height + $0.safeAreaInsets.bottom } action: { viewport = $0 }
             .simultaneousGesture(swipe)
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !Offer.shelf().isEmpty && PackDock.shown() {
-                    // Held still under a card, the settings or a level sliding off, when the phone saves power, or
-                    // once nobody touches it. A card or the archive beside the list leaves it in sight and live.
-                    let over = !layout.wide && (card != nil || archive)
-                    PackDock(open: { show($0, from: $1) }, held: clock,
-                             paused: over || settings || peeking || Power.shared.saving || Power.shared.idle,
-                             covered: over || settings)
-                        .equatable()
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
+                if layout.dock == nil {
+                    dock(over: covering).onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dock = $0 }
                 }
             }
         }
         .foregroundStyle(Color.text)
+    }
+
+    /// Held still under a card, the settings or a level sliding off, beside a playing level, whose tank the GPU is
+    /// for, when the phone saves power, or once nobody touches it. A card or the archive beside the list leaves it in
+    /// sight and live.
+    @ViewBuilder private func dock(over: Bool) -> some View {
+        if !Offer.shelf().isEmpty && PackDock.shown() {
+            PackDock(open: { show($0, from: $1) }, held: clock,
+                     paused: over || settings || peeking || playing != nil || Power.shared.saving || Power.shared.idle,
+                     covered: over || settings)
+                .equatable()
+        }
+    }
+
+    /// Centres `level`'s row, switching to its tier if the list shows another. A pack's level, the daily and endless
+    /// have no row in a tier's list.
+    private func follow(_ level: Level?) {
+        guard layout.wide, let level, level.tier.levels.contains(where: { $0.id == level.id }) else { return }
+        if level.tier != picked {
+            select(level.tier, quiet: true)
+        } else {
+            DispatchQueue.main.async { withAnimation(.snappy(duration: 0.4)) { scroller?.scrollTo(level.id, anchor: .center) } }
+        }
     }
 
     /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox, where the build has
@@ -413,7 +566,7 @@ struct MenuView: View {
                     let new = !Best.modesSeen, (day, run) = daily
                     LevelRow(level: day, detail: run < 2 ? nil
                                  : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
-                             enabled: true, new: new, pick: pick, refuse: refuse)
+                             enabled: true, new: new, playing: playing?.id == day.id, pick: pick, refuse: refuse)
                     // Unsaid until the store has read what the player owns, so an owner never meets the lock.
                     ArchiveRow(open: Store.shared.ready ? Archive.open : nil, days: past.days.count, atPar: past.atPar,
                                pick: openArchive, refuse: refuse)
@@ -424,7 +577,8 @@ struct MenuView: View {
                                      + (Best.tanks > 0 ? " \u{00B7} best \(Best.tanks)" : "")
                              } ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
                              best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true,
-                             new: new && kept == nil, continues: kept != nil, pick: pick, refuse: refuse)
+                             new: new && kept == nil, continues: kept != nil, playing: playing?.run != nil, pick: pick,
+                             refuse: refuse)
                         // On the title's line, where every row's mark sits and "Endless" leaves room.
                         .overlay(alignment: Alignment(horizontal: .trailing, vertical: .firstTextBaseline)) {
                             if kept != nil { newRun }
@@ -433,7 +587,8 @@ struct MenuView: View {
                 if lead.sandbox == .over { sandbox }
             }
             .padding(.top, lead.modes || lead.sandbox == .over ? 22 : 8)
-            TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held).equatable()
+            TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held, playing: playing?.id,
+                     revision: revision).equatable()
                 .overlay(alignment: .topLeading) {
                     Color.clear.frame(width: 1, height: mark?.height ?? 1).id(Self.mark)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { _ in
@@ -443,7 +598,7 @@ struct MenuView: View {
                         }
                         .padding(.top, mark?.minY ?? 0)
                 }
-                .opacity(twisting ? 0 : 1)
+                .opacity(stirring ? 0 : 1)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: {
                     list = $0
                     arrive()
@@ -481,12 +636,16 @@ struct MenuView: View {
     @ViewBuilder private func cardView(beside: Bool) -> some View {
         if let card {
             PackCard(offer: card, clock: clock, levels: card.levels(placeholders: placeholders), scrolled: cardScroll,
-                     focus: cardFocus, arrived: card.pack != nil && card.pack == arrived,
+                     // A menu that stays up wide brings back the card a level beside it was opened from, centred on that
+                     // level's row as a menu built anew centres it.
+                     focus: cardFocus ?? (layout.wide && focus?.pack != nil && focus?.pack == card.pack ? focus : nil),
+                     arrived: card.pack != nil && card.pack == arrived,
                      backTo: returns?.name ?? PackCard.menu,
                      onBack: { back() }, onPlay: { onPick($0) }, onOffer: { next in
                          show(next)
-                         cameFrom = (card, next)
-                     }, beside: beside)
+                         cameFrom = CameFrom(back: card, card: next)
+                     }, beside: beside, closes: Self.closes(playing: playing != nil, covered: covered))
+                .background(alignment: .leading) { bleed }
                 .id(card)
                 .transition(reduceMotion ? .opacity
                             : beside ? .move(edge: .trailing).combined(with: .opacity)
@@ -495,12 +654,17 @@ struct MenuView: View {
         }
     }
 
+    /// A card over a playing level's result card, which covers the menu beside it, closes onto that card rather than
+    /// going to the menu (Jack's call s5b-back = B); over the menu beside play it goes to the menu.
+    nonisolated static func closes(playing: Bool, covered: Bool) -> Bool { playing && covered }
+
     /// The calendar, over the menu as a card is, or beside the list as a card is, from its row.
     @ViewBuilder private func archiveView(beside: Bool) -> some View {
         if archive {
             ArchiveView(days: past.days, today: today, focus: focus?.archived == true ? focus?.id : nil, beside: beside,
                         onBack: { withAnimation(.snappy(duration: 0.42)) { archive = false } },
                         onPlay: { onPick($0) })
+                .background(alignment: .leading) { bleed }
                 .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
                 .zIndex(1)
         }
@@ -522,10 +686,7 @@ struct MenuView: View {
     }
 
     /// The card a pack's card was opened from, while it is still on offer: Complete stops saving once a pack is bought.
-    private var returns: Offer? {
-        guard let cameFrom, cameFrom.card == card, cameFrom.back != .complete || Store.shared.offersComplete else { return nil }
-        return cameFrom.back
-    }
+    private var returns: Offer? { cameFrom?.returns(card: card, offersComplete: Store.shared.offersComplete) }
 
     /// That card, or the menu.
     private func back() {
@@ -548,8 +709,8 @@ struct MenuView: View {
     private var twisted: some View {
         let w = list.width, m = list.minX, top = band.lowerBound, h = band.upperBound - top
         return ZStack(alignment: .top) {
-            if twisting {
-                TierList(tier: shown, pick: pick, refuse: refuse, report: reach).equatable()
+            if stirring {
+                TierList(tier: shown, pick: pick, refuse: refuse, report: reach, revision: revision).equatable()
                     .fixedSize(horizontal: false, vertical: true).frame(width: w)
                     // An alignment guide on a lone child moves nothing, so the copy drew the list from its top.
                     .offset(y: -top)
@@ -566,11 +727,15 @@ struct MenuView: View {
     }
 
     private var twisting: Bool { busy || settling || sideways == true }
+    /// The stirred copy is up: never beside play.
+    private var stirring: Bool { twisting && playing == nil }
 
     /// The list's visible part, in its own space.
     private var band: ClosedRange<CGFloat> {
         let top = max(-list.minY, 0)
-        return top ... max(min(viewport - dock - list.minY, list.height), top + 1)
+        // The dock's last height under the list, which the tabletop's lies apart from.
+        let under = layout.dock == nil ? dock : 0
+        return top ... max(min(viewport - under - list.minY, list.height), top + 1)
     }
 
     /// The middle of the list's visible part, in the scroll view's space.
@@ -659,7 +824,8 @@ struct MenuView: View {
         .contentShape(Rectangle())
     }
 
-    private func select(_ t: Tier) {
+    /// `quiet`: the list follows a level rather than a finger on the strip, so no switch sounds.
+    private func select(_ t: Tier, quiet: Bool = false) {
         // A sideways drag that lifts over a name is the swipe's, which has already sprung back or switched.
         guard !twisting else { return }
         if t == shown, !busy {
@@ -667,15 +833,24 @@ struct MenuView: View {
             return
         }
         guard let from = Tier.allCases.firstIndex(of: shown), let to = Tier.allCases.firstIndex(of: t) else { return }
-        go(to: t, turning: to > from ? 1 : -1)
+        go(to: t, turning: to > from ? 1 : -1, quiet: quiet)
     }
 
-    /// The outgoing list stirs away, then the incoming one unstirs, turning on the same way.
-    private func go(to t: Tier, turning dir: Double) {
+    /// The outgoing list stirs away, then the incoming one unstirs, turning on the same way. Beside a playing tank the
+    /// list cuts to the new tier instead, so no stir takes the GPU from the tank.
+    private func go(to t: Tier, turning dir: Double, quiet: Bool = false) {
         guard t != shown, !busy else { return }
-        busy = true
-        Sound.shared.play(.tier)
+        if !quiet { Sound.shared.play(.tier) }
         Tier.store(t)
+        guard playing == nil else {
+            withAnimation(.snappy(duration: 0.35)) { picked = t }
+            shown = t
+            listed = t
+            leading = Self.lead(tier: t)
+            DispatchQueue.main.async { land(on: t) }
+            return
+        }
+        busy = true
         withAnimation(.snappy(duration: 0.35)) { picked = t }
         withAnimation(.easeIn(duration: 0.32)) {
             spin = dir * turn
@@ -709,14 +884,19 @@ struct MenuView: View {
         guard !centred, let scroller, list.height > 0 else { return }
         centred = true
         DispatchQueue.main.async {
-            if let focus, listed.levels.contains(where: { $0.id == focus.id }) { scroller.scrollTo(focus.id, anchor: .center) }
+            if let focus = playing ?? focus, listed.levels.contains(where: { $0.id == focus.id }) {
+                scroller.scrollTo(focus.id, anchor: .center)
+            }
             flashing = nil
         }
     }
 
-    /// The tier's landing row centred; a locked tier's header, over its gate, at the top; else the top.
+    /// The tier's landing row centred, or beside play the playing level's; a locked tier's header, over its gate, at the
+    /// top; else the top.
     private func land(on t: Tier) {
-        if let row = t.landing() {
+        if let p = playing, t.levels.contains(where: { $0.id == p.id }) {
+            scroller?.scrollTo(p.id, anchor: .center)
+        } else if let row = t.landing() {
             scroller?.scrollTo(row.id, anchor: .center)
         } else {
             scroller?.scrollTo(t.isOpen() ? Self.top : TierList.heading, anchor: .top)
@@ -744,7 +924,8 @@ struct MenuView: View {
 
     private func moved(_ move: CGSize, from y: CGFloat) {
         if sideways == nil { sideways = Self.isSideways(move) }
-        if sideways == true { dragged(move.width, at: y) }
+        // Beside play the drag stirs nothing; let go far enough, it still switches.
+        if sideways == true, playing == nil { dragged(move.width, at: y) }
     }
 
     private func lifted(_ dx: CGFloat, predicted: CGFloat) {
@@ -813,7 +994,7 @@ struct MenuView: View {
             }
             Resume.remove("endless")
             saved = nil
-            pick(.endless(Run(seed: .random(in: .min ... .max))))
+            pick(.endless(Run(seed: .random(in: .min ... .max))), anew: true)
         } label: {
             Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.mono(11)).lineLimit(1).opacity(0.55).hit()
         }
@@ -829,11 +1010,20 @@ struct MenuView: View {
         }
     }
 
-    /// A touch that ends a stir must not open the row it lifted over, nor tap.
-    private func pick(_ level: Level) {
-        guard !twisting else { return }
+    /// A touch that ends a stir must not open the row it lifted over, nor tap. The row of the level playing beside the
+    /// menu opens nothing, as it is open: endless's row would deal a new run over the one playing. `anew`: a new run.
+    private func pick(_ level: Level) { pick(level, anew: false) }
+
+    private func pick(_ level: Level, anew: Bool) {
+        guard !twisting, Self.opens(level, playing: playing, anew: anew) else { return }
         Sound.shared.play(.tap)
         onPick(level)
+    }
+
+    /// Whether a row opens its level: always, but beside play the playing level's own row, as endless's row would deal
+    /// a new run over the one playing; `anew` is endless's new run.
+    nonisolated static func opens(_ level: Level, playing: Level?, anew: Bool = false) -> Bool {
+        anew || playing?.id != level.id
     }
 
     /// A locked row tapped sounds as a seized knob does, unless the touch ends a stir.
@@ -844,8 +1034,26 @@ struct MenuView: View {
     }
 }
 
-/// A tier's rule and rows, and a locked tier's gate. Compared by tier alone, so a frame of a drag or a stir doesn't
-/// rebuild it: nothing else it reads changes while the menu is up.
+/// What a menu that stays up between levels follows: `refresh` on each level opened, left or finished, `follow` the
+/// level playing beside it and the row left as it leaves, and `look` a tier a result card points at.
+private struct Refreshed: ViewModifier {
+    let revision: Int
+    let playing: String?
+    let start: Tier?
+    let refresh: () -> Void
+    let follow: () -> Void
+    let look: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: revision) { refresh() }
+            .onChange(of: playing) { follow() }
+            .onChange(of: start) { look() }
+    }
+}
+
+/// A tier's rule and rows, and a locked tier's gate. Compared by what changes its rows (the tier, the unlock, the row
+/// playing beside it, the menu's revision and the row lit), never by a frame of a drag or a stir, so neither rebuilds it.
 private struct TierList: View, Equatable {
     let tier: Tier
     let pick: (Level) -> Void
@@ -856,10 +1064,16 @@ private struct TierList: View, Equatable {
     var held: String?
     /// Given the landing row's frame in the list's own space, once laid out.
     var report: ((CGRect) -> Void)?
+    /// The level playing beside the menu: its hairline stays lit.
+    var playing: String?
+    /// The menu's, so a menu that stays up beside play redraws the rows' results as levels finish.
+    var revision = 0
     /// Read as the menu redraws, so the editors' switch opens the rows as its sheet closes.
     var unlocked = Best.unlocked
 
-    nonisolated static func == (a: Self, b: Self) -> Bool { a.tier == b.tier && a.unlocked == b.unlocked }
+    nonisolated static func == (a: Self, b: Self) -> Bool {
+        a.tier == b.tier && a.unlocked == b.unlocked && a.playing == b.playing && a.revision == b.revision && a.flash == b.flash
+    }
 
     private static let space = "tierList"
     /// The header's id: the same on every tier, so mid-switch the outgoing list's header stands where the incoming one's
@@ -878,7 +1092,7 @@ private struct TierList: View, Equatable {
                     : reached ? nil : "solve \(levels[i - 1].label) to open"
                 LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,
                          flash: level.id == flash, held: level.id == held, needs: open && !reached ? levels[i - 1] : nil,
-                         gate: open ? nil : tier.below, pick: pick, refuse: refuse)
+                         gate: open ? nil : tier.below, playing: level.id == playing, pick: pick, refuse: refuse)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
                         if level.id == landing?.id { report?(frame) }
                     }
@@ -976,6 +1190,8 @@ private struct LevelRow: View {
     var new = false
     /// Endless's row while a run is saved.
     var continues = false
+    /// Playing beside the menu: its hairline stays lit at full, and it says so under its title.
+    var playing = false
     let pick: (Level) -> Void
     /// A tap on a locked row: false while a stir is under the finger.
     let refuse: () -> Bool
@@ -1001,6 +1217,10 @@ private struct LevelRow: View {
                     Text(level.title).font(.mono(14)).multilineTextAlignment(.leading).opacity(enabled ? 1 : 0.38)
                     if saying, let opens {
                         Text(opens).font(.mono(11)).foregroundStyle(level.colour).transition(.opacity)
+                    } else if playing {
+                        // In place of its rods and par, which the level's header shows: the frontier's hairline is
+                        // lit too, so the hairline alone can't say which row is in the tank.
+                        Text("playing").font(.mono(11)).foregroundStyle(level.colour)
                     } else {
                         Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.mono(11))
                             // A locked row's own detail is its reason, as on the daily, so it stays readable.
@@ -1040,14 +1260,24 @@ private struct LevelRow: View {
         }
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
-        .modifier(Speech(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled, needs: needs,
-                                    gate: gate, started: tried || continues, new: new)))
-        .rowHairline(level.colour, max(lit, frontier ? 0.75 : 0))
-        .onAppear {
-            guard flash, !reduceMotion else { return }
-            lit = 1
-            withAnimation(.easeOut(duration: 1.4).delay(0.35)) { lit = 0 }
-        }
+        .modifier(Speech(Self.spoken(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled,
+                                                needs: needs, gate: gate, started: tried || continues, new: new),
+                                    playing: playing)))
+        .rowHairline(level.colour, max(lit, playing ? 1 : frontier ? 0.75 : 0))
+        .onAppear { if flash { light() } }
+        // A menu that stays up wide flashes the row left without appearing anew.
+        .onChange(of: flash) { if flash { light() } }
+    }
+
+    /// The playing level's row says so first, as its lit hairline shows it.
+    static func spoken(_ s: (label: String, value: String, hint: String), playing: Bool) -> (label: String, value: String, hint: String) {
+        playing ? (s.label, ["playing", s.value].filter { !$0.isEmpty }.joined(separator: ", "), s.hint) : s
+    }
+
+    private func light() {
+        guard !reduceMotion else { return }
+        lit = 1
+        withAnimation(.easeOut(duration: 1.4).delay(0.35)) { lit = 0 }
     }
 
     /// A light shake, and what opens the row for two seconds.
@@ -1130,5 +1360,21 @@ private struct Sparkle: Shape {
         for k in 1...4 { p.addQuadCurve(to: tips[k % 4], control: c) }
         p.closeSubpath()
         return p
+    }
+}
+
+/// A pack's card opened from another card's link, Complete's: back returns there while that pack's card is still the
+/// one up, never once the card has changed, closed or been put away under a level, then opened again.
+struct CameFrom: Equatable {
+    let back: Offer
+    let card: Offer
+
+    /// Kept across a change of card only while the card is still the one it opened.
+    func kept(as now: Offer?) -> CameFrom? { now == card ? self : nil }
+
+    /// Where back goes, while Complete still saves anything.
+    func returns(card now: Offer?, offersComplete: Bool) -> Offer? {
+        guard now == card, back != .complete || offersComplete else { return nil }
+        return back
     }
 }

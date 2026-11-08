@@ -1028,6 +1028,7 @@ struct LevelView: View {
     @State private var pose: PlayLayout?
     /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
     @Environment(\.harnessFold) private var harnessFold
+    @Environment(\.chromeMeasured) private var chromeMeasured
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
     /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
@@ -1113,6 +1114,17 @@ struct LevelView: View {
     /// The menu drawn under a back swipe, focused as leaving with whether the level is solved would; nil once the swipe
     /// has sprung back.
     let onPeek: (Bool?) -> Void
+    /// The window would put the menu beside a split play screen (Jack's call DUOMENU = B, round 16).
+    let besideMenu: Bool
+    /// A level picked in the menu beside play: this one leaves for it through `onSwitch`, its try saved as leaving saves it.
+    let switching: Level?
+    let onSwitch: (Level) -> Void
+    /// Where the menu goes beside play, the trailing half, in `RootView.space`.
+    let onMenu: (CGRect) -> Void
+    /// The level finished, its best saved: the menu beside it reads its rows afresh.
+    let onFinish: () -> Void
+    /// Beside the menu, whether a result or lost card covers it, as the half round the tank has no room for one.
+    let onCover: (Bool) -> Void
     /// The back swipe's touch, by its global start, and what it decided.
     @State private var swipeTouch: (start: CGPoint, call: BackSwipe)?
     /// The same decision as the tank's gesture saw it: once made it holds, though a swipe's later course may no longer
@@ -1138,7 +1150,15 @@ struct LevelView: View {
     /// level it already shows. `storesResume`: the game built here saves its try, as on any launch but the harness's.
     init(level: Level, harness: Harness?, resumed: Game? = nil, storesResume: Bool = false,
          onExit: @escaping (Bool) -> Void, onNext: @escaping (Level) -> Void, onLook: @escaping (Tier) -> Void,
-         onOffer: @escaping (Pack) -> Void, onPeek: @escaping (Bool?) -> Void = { _ in }) {
+         onOffer: @escaping (Pack) -> Void, onPeek: @escaping (Bool?) -> Void = { _ in }, besideMenu: Bool = false,
+         switching: Level? = nil, onSwitch: @escaping (Level) -> Void = { _ in }, onMenu: @escaping (CGRect) -> Void = { _ in },
+         onFinish: @escaping () -> Void = {}, onCover: @escaping (Bool) -> Void = { _ in }) {
+        self.besideMenu = besideMenu
+        self.switching = switching
+        self.onSwitch = onSwitch
+        self.onMenu = onMenu
+        self.onFinish = onFinish
+        self.onCover = onCover
         let game = resumed ?? Game(level: level, tankTurned: harness?.tankTurned, swirled: harness?.swirled, bank: harness?.bank,
                                    storesProgress: harness?.harnessed != true, storesResume: storesResume)
         // A save with no line yet, a run's next tank, opens as any tank does.
@@ -1265,10 +1285,14 @@ struct LevelView: View {
                 Task { if swipeTouch?.call == .swipe, !swipedAway { swipeTouch = nil; springBack() } }
             }
             .task {
-                if let heldSwipe { peek(); swiped = heldSwipe }
+                if let heldSwipe {
+                    // After the first layout, which says whether the menu is beside the level, where nothing slides.
+                    if besideMenu { try? await Task.sleep(for: .milliseconds(200)) }
+                    if !beside { peek(); swiped = heldSwipe }
+                }
                 guard playsSwipe || exitsBySwipe, (try? await Task.sleep(for: .seconds(1))) != nil else { return }
-                peek()
-                if playsSwipe, !reduceMotion {
+                if !beside { peek() }
+                if playsSwipe, !reduceMotion, !beside {
                     swipeFinger = true
                     withAnimation(.easeInOut(duration: 0.5)) { swiped = 0.45 }
                     guard (try? await Task.sleep(for: .seconds(0.5))) != nil else { return }
@@ -1292,9 +1316,9 @@ struct LevelView: View {
                     swipeTouch = (v.startLocation, call == .swipe && drag == nil && !spun ? .swipe : .pass)
                     guard swipeTouch?.call == .swipe else { return }
                     Log.write("back swipe")
-                    if !reduceMotion { peek() }
+                    if slides { peek() }
                 }
-                guard swipeTouch?.call == .swipe, !reduceMotion, width > 0 else { return }
+                guard swipeTouch?.call == .swipe, slides, width > 0 else { return }
                 swiped = max(0, v.translation.width) / width
             }
             .onEnded { v in
@@ -1308,6 +1332,13 @@ struct LevelView: View {
             }
     }
 
+    /// The level slides off over the menu under a back swipe; not under Reduce Motion, nor beside the menu, which is in
+    /// sight already, so past the threshold the level leaves through the dip.
+    private var slides: Bool { !reduceMotion && !beside }
+
+    /// The menu is up beside this level: the window splits, as the open Duo held like a book does.
+    private var beside: Bool { besideMenu && pose?.kind == .split }
+
     /// The menu under the level reads the endless run's save as it is built, so the save is written first, as leaving
     /// writes it.
     private func peek() {
@@ -1318,7 +1349,7 @@ struct LevelView: View {
     private func swipeAway() {
         swipedAway = true
         Log.write("back swipe leaves")
-        guard !reduceMotion else { leave(); return }
+        guard slides else { leave(); return }
         withAnimation(.easeOut(duration: 0.2)) { swiped = 1 } completion: { leave() }
     }
 
@@ -1386,9 +1417,10 @@ struct LevelView: View {
     private var reveal: AnyTransition { .opacity.animation(.easeOut(duration: 0.4).delay(0.3)) }
 
     /// The tank with what stands over it: the night forwards and "unstirred.". `bounds` is the tank's pane in the glass's
-    /// frame, nil in the column; `filmFoot` where the night forwards' lines end, nil under the glass.
-    private func stage(_ side: CGFloat, words: CGFloat, bounds: CGRect?, filmFoot: CGFloat?) -> some View {
-        tank(side, bounds: bounds)
+    /// frame and `trackBounds` where a lens's track runs, both nil in the column; `filmFoot` where the night forwards'
+    /// lines end, nil under the glass.
+    private func stage(_ side: CGFloat, words: CGFloat?, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
+        tank(side, bounds: bounds, trackBounds: trackBounds)
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
@@ -1407,25 +1439,27 @@ struct LevelView: View {
             }
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
-                if showResult && game.solved && !clean {
-                    Text("unstirred.").font(.mono(22, .semibold))
-                        .shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
-                        .offset(y: -words)
-                        .transition(reveal)
+                if showResult && game.solved && !clean, let words {
+                    unstirred.offset(y: -words).transition(reveal)
                 }
             }
     }
 
+    private var unstirred: some View {
+        Text("unstirred.").font(.mono(22, .semibold)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
+    }
+
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
     /// is an overlay, so the solved tank stays exactly where it was played.
-    private var caption: some View {
+    private func caption(_ layout: PlayLayout) -> some View {
         Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
              : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
              : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
             .font(page.caption).opacity(captionOpacity)
-            // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does.
+            // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does. Beside the
+            // menu the gear is in sight, so there is nothing to point at (Jack's call r16c-pointer = C).
             .overlay(alignment: .bottom) {
-                if pointing {
+                if pointing && !beside {
                     Self.pointer.font(.mono(12)).fixedSize()
                         .opacity(showResult || ending || shown != nil ? 0 : 0.55)
                         .animation(.easeOut(duration: 0.4), value: shown == nil)
@@ -1440,26 +1474,43 @@ struct LevelView: View {
             .padding(.top, 14)
             .accessibilityHidden(showResult || ending)
             .modifier(SkipButton(on: demoing || shown != nil) { skip() })
-            .overlay(alignment: .top) {
-                if showResult && game.lost {
-                    LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
-                        .padding(.top, 14)
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
-                        .transition(reveal)
-                } else if showResult {
-                    ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 14)
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
-                        .transition(reveal)
-                }
-            }
+            .overlay(alignment: .top) { if showResult { card(layout) } }
             .modifier(Unseen(clean))
     }
 
+    /// The result or lost card under the caption; in the split, over the menu in the trailing half, centred on the tank
+    /// and headed by "unstirred.", as the half round the tank has no room for either. One place in the tree in every
+    /// pose, so a change of pose moves the card rather than showing it again.
+    private func card(_ layout: PlayLayout) -> some View {
+        let over = layout.kind == .split ? layout.menuPane : nil
+        return VStack(spacing: 0) {
+            if over != nil && game.solved && !clean { unstirred.padding(.bottom, 26) }
+            if game.lost {
+                LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
+            } else {
+                ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.top, over == nil ? 14 : 0)
+        .frame(width: over?.width)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
+        .offset(over.map { pane in
+            // From the caption's place, under the stage and its ring; a card taller than the pane starts at its top.
+            let top = max(pane.minY, min(layout.stage.midY - cardReach / 2, pane.maxY - cardReach))
+            return CGSize(width: pane.midX - layout.tankPane.midX,
+                          height: top - layout.stage.maxY - layout.halo.ring * layout.side / 2)
+        } ?? .zero)
+        .transition(reveal)
+    }
+
+    /// Only where colour can't carry the read, so for everyone else the read stays by colour.
+    private var swatched: Bool {
+        !game.level.masks.isEmpty && (letters || Letters.shown(system: differentiate) || isolated != nil)
+    }
+
     @ViewBuilder private var swatches: some View {
-        // Only where colour can't carry the read, so for everyone else the read stays by colour.
-        if !game.level.masks.isEmpty, letters || Letters.shown(system: differentiate) || isolated != nil {
+        if swatched {
             ChannelSwatches(isolated: $isolated)
                 .opacity(showResult || ending || shown != nil ? 0 : 1)
                 .allowsHitTesting(!showResult && shown == nil)
@@ -1495,31 +1546,49 @@ struct LevelView: View {
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
     /// window's middle where the window is wide.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold), halo: PlayLayout.Halo(game.level), scale: scale)
+        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold),
+                      halo: PlayLayout.Halo(game.level), chrome: PlayLayout.Chrome(game.level, swatches: swatched), scale: scale)
+    }
+
+    /// Beside the menu the trailing half is the menu's, black from the fold to the window's edge on Escapement's paper
+    /// too, until a result or lost card takes it over on the level's own ground.
+    @ViewBuilder private func menuGround(_ layout: PlayLayout, _ geo: GeometryProxy) -> some View {
+        if besideMenu, page.paper, let menu = layout.menuPane {
+            Color.black.padding(.leading, geo.safeAreaInsets.leading + PlayLayout.margin + (layout.tankPane.maxX + menu.minX) / 2)
+                .opacity(showResult ? 0 : 1)
+                .animation(.easeOut(duration: 0.4).delay(0.3), value: showResult)
+                .ignoresSafeArea()
+        }
     }
 
 
     private var screen: some View {
         GeometryReader { geo in
             let layout = playLayout(geo)
-            let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout))
+            let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout, measured: chromeMeasured))
             stack {
                 header.modifier(PlayPart.chrome(read: 5))
                 titleRow.modifier(PlayPart.chrome(read: 4))
                 Spacer(minLength: 12)
-                stage(layout.side, words: layout.words, bounds: layout.bounds, filmFoot: layout.filmFoot)
+                stage(layout.side, words: layout.words, bounds: layout.bounds, trackBounds: layout.trackBounds,
+                      filmFoot: layout.filmFoot)
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
                     .modifier(PlayPart.stage(read: 3))
-                caption
-                    // The card hangs from the caption unmeasured, over the controls it hides. In the split and the
-                    // tabletop the stack must make room for it, or in the tabletop it runs into "unstirred.".
-                    .frame(minHeight: layout.kind == .column || !showResult ? nil : cardReach, alignment: .top)
+                caption(layout)
+                    // The card hangs from the caption unmeasured, over the controls it hides. In the tabletop the stack
+                    // must make room for it, or it runs into "unstirred."; the split's goes over the menu.
+                    .frame(minHeight: layout.kind == .tabletop && showResult ? cardReach : nil, alignment: .top)
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
                 controls.modifier(PlayPart.chrome(read: 0))
+                if besideMenu && layout.kind == .split {
+                    Color.clear.accessibilityHidden(true)
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(RootView.space)) } action: { onMenu($0) }
+                        .layoutValue(key: PlayPart.self, value: .menu)
+                }
             }
             // VoiceOver reads the parts in the column's order, header to controls, whatever the pose puts where: by
             // place alone the tabletop's tank, below the fold, would come last.
@@ -1537,6 +1606,7 @@ struct LevelView: View {
                                              pixels: Double(layout.side * scale)),
                                motion: [liveAngle, liveTurn ?? 0, lastSpin]))
             .padding(.horizontal, PlayLayout.margin)
+            .background(alignment: .topLeading) { menuGround(layout, geo) }
         }
         .foregroundStyle(page.ink)
         .tint(page.ink)
@@ -1597,12 +1667,13 @@ struct LevelView: View {
                 if pointing && !pointed {
                     pointed = true
                     if storesPointing { Best.pointedAtSettings = true }
-                    AccessibilityNotification.Announcement(Self.pointerSpoken).post()
+                    if !beside { AccessibilityNotification.Announcement(Self.pointerSpoken).post() }
                 }
             } else {
                 lifted = false
             }
         }
+        .onChange(of: beside && showResult, initial: true) { onCover($1) }
         .task(id: noteLit) {
             guard noteLit, (try? await Task.sleep(for: .seconds(4))) != nil else { return }
             withAnimation(.easeOut(duration: 0.6)) { noteLit = false }
@@ -1677,6 +1748,7 @@ struct LevelView: View {
         .onChange(of: game.finished) {
             // An undo or reset from the lost card.
             guard game.finished else { showResult = false; waved = false; return }
+            onFinish()
             // The fine pass can call the win ~0.1 s after the commit: a finger down in that gap would hold its turn frozen
             // over the win, then have the commit refused on lift.
             endPath(); endTwist()
@@ -1725,7 +1797,16 @@ struct LevelView: View {
             if shown == nil { badge = game.badge }
         }
         // A promoted purchase's card opens over the menu: the level leaves as its back does, so its quit and save go too.
-        .onChange(of: Store.shared.promoted) { if Store.shared.promoted != nil { leave() } }
+        // Beside the menu the card opens over the trailing half, and the level plays on under it.
+        .onChange(of: Store.shared.promoted) { if Store.shared.promoted != nil, !beside { leave() } }
+        // A level picked in the menu beside this one: leave for it as leaving for the menu leaves, a finger let go.
+        .onChange(of: switching) {
+            guard let next = switching else { return }
+            letGoOnResize()
+            Analytics.shared.left(game)
+            Resume.save(game)
+            onSwitch(next)
+        }
         .onDisappear {
             endPath(); endTwist()
             if knocks { Knock.rest() }
@@ -1852,9 +1933,12 @@ struct LevelView: View {
         onLook(tier)
     }
 
+    /// Beside the menu, the card opens over the trailing half and the level stays.
     private func offer(_ pack: Pack) {
-        Analytics.shared.left(game)
-        Resume.save(game)
+        if !beside {
+            Analytics.shared.left(game)
+            Resume.save(game)
+        }
         onOffer(pack)
     }
 
@@ -2165,8 +2249,9 @@ struct LevelView: View {
         return Double(steps) * Tank.step
     }
 
-    /// `bounds`: the tank's pane in the glass's frame, which counts and a lens's track keep inside; nil in the column.
-    private func tank(_ side: CGFloat, bounds: CGRect?) -> some View {
+    /// `bounds`: the tank's pane in the glass's frame, which counts keep inside, and `trackBounds` a lens's track; nil in
+    /// the column.
+    private func tank(_ side: CGFloat, bounds: CGRect?, trackBounds: CGRect?) -> some View {
         let r = side / 2
         func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
         // A disc's lines, a swirl's too, kept clear of the bezel's own hairline at the glass's edge, as the tank's dial is.
@@ -2213,7 +2298,7 @@ struct LevelView: View {
         // In the split and the tabletop a lens turns only as far as its track shows inside the pane (Jack's call
         // d3-lenscap = B, round 16).
         func room(_ k: Int) -> ClosedRange<Int>? {
-            game.level.lenses.contains(game.slot(of: k)) ? Self.trackRoom(knob: at(k).y, bounds: bounds) : nil
+            game.level.lenses.contains(game.slot(of: k)) ? Self.trackRoom(knob: at(k).y, bounds: trackBounds) : nil
         }
         let heldRoom = liveRod.flatMap(room)
         // A lens's count runs up and down a track beside its knob, on the side away from the finger.
@@ -2315,7 +2400,7 @@ struct LevelView: View {
                 if let c = rodCount, c.live || c.steps != 0 {
                     Group {
                         if let x = lensTrack {
-                            track(at(c.k), disc(c.k), x: x, pitch: Self.trackPitch, steps: c.steps, bounds: bounds,
+                            track(at(c.k), disc(c.k), x: x, pitch: Self.trackPitch, steps: c.steps, bounds: trackBounds,
                                   now: Double(c.steps) + (c.live ? liveAngle / Tank.step - Double(Detent.steps(liveAngle, of: Tank.step)) : 0))
                         } else {
                             dial(at(c.k), disc(c.k), inner: dashes(c.k, r), from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
@@ -2714,9 +2799,9 @@ struct LevelView: View {
     /// knob's centre or left of it. Any one unit, points or the tank's.
     nonisolated static func trackSide(landing x: Double, knob: Double) -> CGFloat { x > knob ? -1 : 1 }
 
-    /// The steps a lens's track draws inside `bounds`, the tank's pane in the glass's frame, from a knob at height `y`:
-    /// down to the lower bound (out) and up to the upper (in), each step's place on the track inside. Nil without
-    /// bounds, in the column, where nothing caps a lens.
+    /// The steps a lens's track draws inside `bounds` (`PlayLayout.trackBounds`, in the glass's frame), from a knob at
+    /// height `y`: down to the lower bound (out) and up to the upper (in), each step's place on the track inside. Nil
+    /// without bounds, in the column, where nothing caps a lens.
     nonisolated static func trackRoom(knob y: CGFloat, bounds: CGRect?) -> ClosedRange<Int>? {
         guard let b = bounds else { return nil }
         let down = Int(((b.maxY - y) / trackPitch).rounded(.down)), up = Int(((y - b.minY) / trackPitch).rounded(.down))
@@ -2738,7 +2823,8 @@ struct LevelView: View {
     /// disc of `radius` about `c`, the disc's own hairline round it, a long mark level with the knob where the stir
     /// began, a dash per step up for in and down for out, `pitch` apart, over a rail with a mark at `now`
     /// steps, where the drag stands.
-    /// The rail, its dashes and its marks stop at `bounds`' top and foot, the tank's pane, where the drag runs long.
+    /// The rail, its dashes and its marks stop at `bounds`' top and foot (`PlayLayout.trackBounds`), where the drag
+    /// runs long.
     private func track(_ c: CGPoint, _ radius: CGFloat, x: CGFloat, pitch: CGFloat, steps: Int, bounds: CGRect?, now: Double)
         -> some View {
         func held(_ y: CGFloat) -> CGFloat { bounds.map { min(max(y, $0.minY), $0.maxY) } ?? y }

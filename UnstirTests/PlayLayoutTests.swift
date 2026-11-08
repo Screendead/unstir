@@ -7,11 +7,12 @@ import XCTest
 final class PlayLayoutTests: XCTestCase {
     /// As the play screen's GeometryReader measures the window: the safe area's size and the insets round it.
     private func layout(window: CGSize, insets: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat),
-                        fold: CGRect? = nil, halo: PlayLayout.Halo = PlayLayout.Halo(), scale: CGFloat = 3) -> PlayLayout {
+                        fold: CGRect? = nil, halo: PlayLayout.Halo = PlayLayout.Halo(),
+                        chrome: PlayLayout.Chrome = PlayLayout.Chrome(), scale: CGFloat = 3) -> PlayLayout {
         PlayLayout.of(size: CGSize(width: window.width - insets.leading - insets.trailing,
                                    height: window.height - insets.top - insets.bottom),
                       insets: EdgeInsets(top: insets.top, leading: insets.leading, bottom: insets.bottom, trailing: insets.trailing),
-                      fold: fold.map { $0.offsetBy(dx: -insets.leading, dy: -insets.top) }, halo: halo, scale: scale)
+                      fold: fold.map { $0.offsetBy(dx: -insets.leading, dy: -insets.top) }, halo: halo, chrome: chrome, scale: scale)
     }
 
     func testEveryIPhoneKeepsTodaysColumn() {
@@ -37,14 +38,14 @@ final class PlayLayoutTests: XCTestCase {
         let window = CGSize(width: 951, height: 669)
         let l = layout(window: window, insets: (24, 0, 21, 84))
         XCTAssertEqual(l.kind, .split)
-        // In window points: the tank's pane ends short of the fold, the chrome's starts past it.
-        let fold = window.width / 2
+        // In window points: the tank's pane ends short of the fold, the menu's starts past it.
+        let fold = window.width / 2, menu = try! XCTUnwrap(l.menuPane)
         XCTAssertLessThanOrEqual(PlayLayout.margin + l.tankPane.maxX, fold - PlayLayout.margin)
-        XCTAssertGreaterThanOrEqual(PlayLayout.margin + l.chromePane.minX, fold + PlayLayout.margin)
-        XCTAssertGreaterThanOrEqual(l.chromePane.width, PlayLayout.minPane)
+        XCTAssertGreaterThanOrEqual(PlayLayout.margin + menu.minX, fold + PlayLayout.margin)
+        XCTAssertGreaterThanOrEqual(menu.width, PlayLayout.minPane)
         // The glass and its rim fit the pane, short of the size past which the four-tap limit shrinks.
         XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
-        XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.height - PlayLayout.splitReserve)
+        XCTAssertLessThanOrEqual(l.chrome.above + PlayStack.gap + l.side * PlayLayout.rim + l.chrome.below, l.tankPane.height)
         XCTAssertEqual(l.side, 424, accuracy: 1)
         XCTAssertLessThanOrEqual(l.side * 3, Tank.fourTapsKept)
         XCTAssertEqual(Tank.fourTaps(pixels: l.side * 3), Tank.fourTaps)
@@ -160,7 +161,7 @@ final class PlayLayoutTests: XCTestCase {
         let a = layout(window: CGSize(width: 951, height: 669), insets: (24, 84, 21, 0))
         XCTAssertEqual(a.kind, .split)
         XCTAssertEqual(84 + PlayLayout.margin + a.tankPane.maxX, 951 / 2 - PlayLayout.margin, accuracy: 0.001)
-        XCTAssertEqual(84 + PlayLayout.margin + a.chromePane.minX, 951 / 2 + PlayLayout.margin, accuracy: 0.001)
+        XCTAssertEqual(84 + PlayLayout.margin + a.menuPane!.minX, 951 / 2 + PlayLayout.margin, accuracy: 0.001)
         XCTAssertEqual(a.side, 359.5 / PlayLayout.rim, accuracy: 0.001, "the leading half is the narrower now")
     }
 
@@ -181,7 +182,7 @@ final class PlayLayoutTests: XCTestCase {
         let l = layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84), fold: fold)
         XCTAssertEqual(l.kind, .split)
         XCTAssertEqual(PlayLayout.margin + l.tankPane.maxX, fold.minX - PlayLayout.margin, accuracy: 0.001)
-        XCTAssertEqual(PlayLayout.margin + l.chromePane.minX, fold.maxX + PlayLayout.margin, accuracy: 0.001)
+        XCTAssertEqual(PlayLayout.margin + l.menuPane!.minX, fold.maxX + PlayLayout.margin, accuracy: 0.001)
         XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
         XCTAssertLessThanOrEqual(PlayLayout.margin + l.stage.maxX, fold.minX - PlayLayout.margin)
         // Flat, the same window splits at its middle, so folding the phone moves the tank by a quarter of the band.
@@ -204,7 +205,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(l.side, (858 - (fold.maxY - top) - PlayLayout.margin) / PlayLayout.rim, accuracy: 0.001)
         XCTAssertEqual(Tank.fourTaps(pixels: l.side * 3), Tank.fourTaps)
         // "unstirred." stands in the upright half, clear of the fold.
-        let wordsTop = top + l.stage.minY - l.words
+        let wordsTop = top + l.stage.minY - (try! XCTUnwrap(l.words))
         XCTAssertGreaterThanOrEqual(wordsTop, top + l.chromePane.minY)
         XCTAssertLessThanOrEqual(wordsTop + PlayLayout.wordsHeight, fold.minY - PlayLayout.margin + 0.001)
     }
@@ -224,9 +225,135 @@ final class PlayLayoutTests: XCTestCase {
                               fold: CGRect(x: 250, y: 0, width: 19, height: 669)).kind, .column)
     }
 
-    func testTheColumnAndSplitKeepTheirWordsWhereTheyWere() {
+    func testTheColumnKeepsItsWordsAndTheSplitsHeadTheCard() {
         XCTAssertEqual(layout(window: CGSize(width: 440, height: 956), insets: (62, 0, 34, 0)).words, 62)
-        XCTAssertEqual(layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84)).words, 62)
+        XCTAssertNil(layout(window: CGSize(width: 951, height: 669), insets: (24, 0, 21, 84)).words,
+                     "the title stands over the split's tank, so unstirred. heads the card over the menu")
+    }
+
+    // Stage 5: the chrome round the tank beside the menu (Jack's call s5-chrome = B, round 16).
+
+    func testBesideTheMenuTheChromeGoesRoundTheTankInItsHalf() {
+        for fold in [nil, book] as [CGRect?] {
+            for chrome in [PlayLayout.Chrome(), PlayLayout.Chrome(Level.escapement[0], swatches: false),
+                           PlayLayout.Chrome(Level.prism[0], swatches: true)] {
+                let l = layout(window: open.window, insets: open.insets, fold: fold, chrome: chrome)
+                let what = "\(fold == nil ? "open" : "book") \(chrome)"
+                XCTAssertEqual(l.kind, .split, what)
+                XCTAssertEqual(l.chromePane, l.tankPane, "\(what): the header, title, caption and controls share the tank's half")
+                let menu = try! XCTUnwrap(l.menuPane)
+                XCTAssertGreaterThan(menu.minX, l.tankPane.maxX + 2 * PlayLayout.margin - 0.001, what)
+                XCTAssertEqual(menu.maxX, open.window.width - open.insets.trailing - 2 * PlayLayout.margin, accuracy: 0.001, what)
+                // The header and title above the stage, the column's 12 pt clear of it; the caption, swatches and
+                // controls under it, the controls ending at the pane's foot.
+                let over = l.stage.minY - l.tankPane.minY - chrome.above, under = l.tankPane.maxY - l.stage.maxY - chrome.below
+                XCTAssertGreaterThanOrEqual(over, PlayStack.gap - 0.001, what)
+                XCTAssertGreaterThanOrEqual(under, -0.001, what)
+                // The spare room goes half over the stage, half over the controls.
+                XCTAssertEqual(over - PlayStack.gap, under, accuracy: 0.001, what)
+            }
+        }
+    }
+
+    func testTheTabletopsSpacersShareWhatTheChromeLeaves() {
+        XCTAssertEqual(PlayStack.share(624, used: 200, spacers: 2), 212, "centred round the chrome")
+        XCTAssertEqual(PlayStack.share(100, used: 200, spacers: 2), 0, "a tall card: the spacers give way")
+    }
+
+    func testTheGlassShrinksBesideTheMenuOnlyWhereTheChromeNeedsIt() {
+        func side(_ level: Level, swatches: Bool = false) -> CGFloat {
+            layout(window: open.window, insets: open.insets, halo: PlayLayout.Halo(level),
+                   chrome: PlayLayout.Chrome(level, swatches: swatches)).side
+        }
+        // Stage 1's glass, the width of the leading half: every tier's level, Lens's, and Prism's read by colour.
+        let stage1 = layout(window: open.window, insets: open.insets).side
+        XCTAssertEqual(stage1, 443.5 / PlayLayout.rim, accuracy: 0.001)
+        for level in [Level.plughole[10], Level.whirlpool[0], Level.vortex[0], Level.lens[0], Level.prism[0],
+                      Level.daily(.now), Level.plughole[0]] {
+            XCTAssertEqual(side(level), stage1, accuracy: 0.001, level.id)
+        }
+        // Escapement's taller header and two lines of serif: 9 pt less.
+        XCTAssertEqual(side(Level.escapement[0]), (624 - 70 - 108 - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
+        XCTAssertEqual(stage1 - side(Level.escapement[0]), 9, accuracy: 1)
+        // Maelstrom's rim lesson over twelve, under the title: 5 pt less.
+        XCTAssertEqual(side(Level.maelstrom[0]), (624 - 60 - 106 - RimLesson.overRim) / PlayLayout.rim, accuracy: 0.001)
+        XCTAssertEqual(stage1 - side(Level.maelstrom[0]), 5, accuracy: 1)
+        // Prism read by its letters, the swatches under the caption: 30 pt less.
+        XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - 60 - 140 - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
+        XCTAssertEqual(stage1 - side(Level.prism[0], swatches: true), 30, accuracy: 1)
+        // Endless keeps stage 3's, held by the brim's width.
+        XCTAssertEqual(side(Level.endless(Run(seed: 7))), 348, accuracy: 1)
+        // Every level of a tier or a pack takes one glass, so the tank keeps its size as the list beside it is played on.
+        for list in Tier.allCases.map(\.levels) + Pack.allCases.map(\.levels) {
+            for swatches in [false, true] {
+                XCTAssertEqual(Set(list.map { side($0, swatches: swatches && !$0.masks.isEmpty) }).count, 1, list.first?.id ?? "")
+            }
+        }
+    }
+
+    @MainActor func testEveryCaptionFitsTheChromesTwoLinesBesideTheMenu() {
+        // The caption's room under the tank holds two lines at the open Duo's half: the note, or what stands in for it.
+        let width = layout(window: open.window, insets: open.insets).tankPane.width
+        let mono = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        let serif = UIFont.systemFont(ofSize: 15).fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: 15) }!
+        func lines(_ text: String, _ font: UIFont) -> Int {
+            let h = (text as NSString).boundingRect(with: CGSize(width: width, height: .greatestFiniteMagnitude),
+                                                    options: [.usesLineFragmentOrigin], attributes: [.font: font], context: nil).height
+            return Int((h / font.lineHeight).rounded())
+        }
+        let levels = Tier.allCases.flatMap(\.levels) + Pack.allCases.flatMap(\.levels) + [Level.daily(.now), Level.endless(Run(seed: 7))]
+        for level in levels {
+            XCTAssertLessThanOrEqual(lines(level.note, level.page.paper ? serif : mono), 2, level.id)
+        }
+        for text in [LevelView.refills, "Practice: this day's best was set on its day.", "Practice: only the first try counts.",
+                     "watch the stir \u{00B7} tap to skip", "the tank is full: undo or reset"] {
+            XCTAssertLessThanOrEqual(lines(text, mono), 2, text)
+        }
+        for bank in [0, 1] {
+            let words = Game(level: Level.escapement[1], bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
+            XCTAssertLessThanOrEqual(lines(words, serif), 2, words)
+        }
+    }
+
+    /// Lays `harness`'s level out in the open Duo's window beside the menu, as `UNSTIR_FRAME` does, and returns what its
+    /// chrome measures round the tank.
+    @MainActor private func measuredChrome(_ harness: Harness) -> PlayLayout.Chrome? {
+        // Written by the layout pass, on the main thread, and read here after it.
+        final class Box: @unchecked Sendable { var chrome: PlayLayout.Chrome? }
+        let box = Box()
+        let pose = HarnessWindow.Pose(size: open.window, insets: EdgeInsets(top: open.insets.top, leading: open.insets.leading,
+                                                                             bottom: open.insets.bottom, trailing: open.insets.trailing),
+                                      fold: nil)
+        let level = LevelView(level: harness.level, harness: harness, onExit: { _ in }, onNext: { _ in }, onLook: { _ in },
+                              onOffer: { _ in }, besideMenu: true)
+            .environment(\.chromeMeasured) { box.chrome = $0 }
+        let host = UIHostingController(rootView: HarnessWindow(HarnessWindow.Spec(poses: [pose], then: nil), content: level))
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+        window.frame = CGRect(origin: .zero, size: open.window)
+        window.rootViewController = host
+        window.isHidden = false
+        host.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.5))
+        window.isHidden = true
+        return box.chrome
+    }
+
+    @MainActor func testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure() {
+        // PlayLayout.Chrome sizes the glass from fixed heights; the views round the tank must take what it allows, or
+        // the title runs into the rim or the caption into the controls with every arithmetic test still green.
+        for (env, swatches) in [(["UNSTIR_LEVEL": "11", "UNSTIR_CLOCK": "1"], false),
+                                (["UNSTIR_PACK": "escapement", "UNSTIR_LEVEL": "2", "UNSTIR_OWNED": "escapement", "UNSTIR_CLOCK": "1"], false),
+                                (["UNSTIR_PACK": "prism", "UNSTIR_LEVEL": "1", "UNSTIR_OWNED": "prism", "UNSTIR_LETTERS": "1",
+                                  "UNSTIR_CLOCK": "1"], true)] {
+            let harness = Harness(env)
+            let budget = PlayLayout.Chrome(harness.level, swatches: swatches)
+            let got = try! XCTUnwrap(measuredChrome(harness), "\(harness.level.id): laid out beside the menu")
+            XCTAssertEqual(got.above, budget.above, accuracy: 1, harness.level.id)
+            // Escapement's note may show one line of its two, or "tap to skip" over the demonstration.
+            XCTAssertLessThanOrEqual(got.below, budget.below + 0.5, harness.level.id)
+            XCTAssertGreaterThanOrEqual(got.below, budget.below - 2.5, harness.level.id)
+        }
     }
 
     // Stage 3: what each level draws round its glass, kept inside the tank's pane.
@@ -285,10 +412,13 @@ final class PlayLayoutTests: XCTestCase {
         inside(reach(l), l.tankPane, "tabletop")
         XCTAssertEqual(l.stage.maxY, l.tankPane.maxY, accuracy: 0.001, "sat on the pane's foot")
         XCTAssertEqual(l.stage.minY - l.tankPane.minY, halo.above, accuracy: 0.001, "the lesson's room above, no more")
-        // The split's room for "unstirred." holds the lesson already, so the glass keeps its size there.
+        // The split's lesson lies between the title and the glass, held by the folded half's width there.
         let split = layout(window: open.window, insets: open.insets, fold: book, halo: halo)
         XCTAssertEqual(split.side, layout(window: open.window, insets: open.insets, fold: book).side)
         inside(reach(split), split.tankPane, "book")
+        for l in [split, layout(window: open.window, insets: open.insets, halo: halo)] {
+            XCTAssertGreaterThanOrEqual(l.stage.minY - halo.above, l.tankPane.minY + l.chrome.above - 0.001, "clear of the title")
+        }
     }
 
     func testAHaloLeavesNoRoomItDoesntNeed() {
@@ -370,17 +500,43 @@ final class PlayLayoutTests: XCTestCase {
         for level in Pack.lens.levels {
             for (window, insets, fold) in [(open.window, open.insets, nil), (open.window, open.insets, book),
                                            (upright.window, upright.insets, table)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
-                let l = layout(window: window, insets: insets, fold: fold, halo: PlayLayout.Halo(level))
+                let l = layout(window: window, insets: insets, fold: fold, halo: PlayLayout.Halo(level),
+                               chrome: PlayLayout.Chrome(level, swatches: false))
                 XCTAssertNotEqual(l.kind, .column)
                 let r = l.side / 2
                 for slot in level.lenses {
                     let net = level.scramble.filter { $0.rod == slot }.reduce(0) { $0 + $1.steps }
-                    let room = try! XCTUnwrap(LevelView.trackRoom(knob: r + level.layout.rods[slot].y * r, bounds: l.bounds))
+                    let room = try! XCTUnwrap(LevelView.trackRoom(knob: r + level.layout.rods[slot].y * r, bounds: l.trackBounds))
                     XCTAssertTrue(room.contains(-net), "\(level.id) lens \(slot) needs \(-net), the pane shows \(room) in \(window)")
                     XCTAssertTrue(room.contains(-3) && room.contains(3), "\(level.id) lens \(slot): \(room) in \(window)")
                 }
             }
         }
+    }
+
+    @MainActor func testBesideTheMenuALensTrackStopsUnderTheTitle() {
+        // A zoom the wrong way never draws through the header's count (Lens 08's top lens held +14 once ran into it).
+        for level in Pack.lens.levels {
+            for fold in [nil, book] as [CGRect?] {
+                let l = layout(window: open.window, insets: open.insets, fold: fold, halo: PlayLayout.Halo(level),
+                               chrome: PlayLayout.Chrome(level, swatches: false))
+                XCTAssertEqual(l.kind, .split)
+                let b = try! XCTUnwrap(l.trackBounds), glass = l.stage.minY + (l.stage.height - l.side) / 2
+                XCTAssertEqual(b.minY + glass, l.tankPane.minY + l.chrome.above, accuracy: 0.001, "under the title")
+                XCTAssertEqual(b.maxY, try! XCTUnwrap(l.bounds).maxY, "down to the pane's foot, as before")
+                let r = l.side / 2
+                for slot in level.lenses {
+                    let knob = r + level.layout.rods[slot].y * r
+                    let room = try! XCTUnwrap(LevelView.trackRoom(knob: knob, bounds: l.trackBounds))
+                    XCTAssertGreaterThanOrEqual(knob - CGFloat(room.upperBound) * LevelView.trackPitch, b.minY - 0.001, level.id)
+                }
+            }
+        }
+        // No chrome lies in the tabletop's tank pane, so its track keeps the whole pane.
+        let t = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table)
+        XCTAssertEqual(t.kind, .tabletop)
+        XCTAssertEqual(t.trackBounds, t.bounds)
+        XCTAssertNil(layout(window: CGSize(width: 440, height: 956), insets: (62, 0, 34, 0)).trackBounds, "the column caps nothing")
     }
 
     // MARK: The menu (stage 4)
@@ -401,11 +557,96 @@ final class PlayLayoutTests: XCTestCase {
             let m = menu(window: window, insets: insets)
             XCTAssertEqual(m, .column, "\(window)")
             XCTAssertFalse(m.wide)
+            XCTAssertFalse(m.splits, "\(window): a level opened there covers the menu, as on every iPhone")
         }
     }
 
-    func testTheTabletopKeepsTodaysMenu() {
-        XCTAssertEqual(menu(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table), .column)
+    func testTheTabletopsMenuKeepsEveryPartOffTheFold() {
+        // The Duo upright and folded on a table (d4-table, deferred to stage 5): the title, strip and list in the
+        // upright half, the dock, or a card or the archive over it, in the half lying flat.
+        let insets = (top: CGFloat(59), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0))
+        let m = menu(window: CGSize(width: 669, height: 951), insets: insets, fold: table)
+        let list = try! XCTUnwrap(m.list), side = try! XCTUnwrap(m.side), dock = try! XCTUnwrap(m.dock)
+        // In the menu's space: the fold less the top inset.
+        let fold = table.offsetBy(dx: 0, dy: -insets.top)
+        XCTAssertEqual(list.minY, 0)
+        XCTAssertEqual(list.maxY, fold.minY - PlayLayout.margin, accuracy: 0.001, "the list ends 16 pt above the fold")
+        XCTAssertEqual(side.minY, fold.maxY + PlayLayout.margin, accuracy: 0.001, "a card starts 16 pt below it")
+        XCTAssertEqual(side.maxY, 951 - insets.top - insets.bottom, accuracy: 0.001)
+        XCTAssertEqual(dock, side, "the dock lies in the half a card covers")
+        for r in [list, side] {
+            XCTAssertEqual(r.minX, 0)
+            XCTAssertEqual(r.width, 669, "each runs the window's width")
+            XCTAssertGreaterThanOrEqual(r.height, PlayLayout.minPane)
+        }
+        XCTAssertTrue(m.wide, "a card opens beside the list, not over it")
+        XCTAssertFalse(m.splits, "a level opened in the tabletop covers the menu, its tank below the fold")
+        // Lying flat, the Duo upright keeps today's menu.
+        XCTAssertEqual(menu(window: CGSize(width: 669, height: 951), insets: insets), .column)
+    }
+
+    func testBesidePlayTheListTakesTheTrailingHalfAndACardTheSame() {
+        for fold in [nil, book] as [CGRect?] {
+            let m = menu(window: open.window, insets: open.insets, fold: fold)
+            XCTAssertTrue(m.splits, "a level opened on the open Duo plays beside the menu")
+            let side = try! XCTUnwrap(m.side)
+            // What PlayStack gives the menu's part: the play screen's trailing half, in the menu's space.
+            let play = layout(window: open.window, insets: open.insets, fold: fold)
+            let slot = try! XCTUnwrap(play.menuPane).offsetBy(dx: PlayLayout.margin, dy: 0)
+            XCTAssertEqual(slot.minX, side.minX, accuracy: 0.001, "the list starts where a card does")
+            XCTAssertEqual(slot.maxX, side.maxX - PlayLayout.margin, accuracy: 0.001, "inside the play screen's margin")
+            XCTAssertEqual(slot.height, side.height, "the whole height: the level's chrome is round its tank")
+            let beside = m.beside(slot)
+            XCTAssertEqual(beside.list, slot)
+            XCTAssertEqual(beside.side, side, "a card or the archive covers the whole trailing half")
+            XCTAssertNil(beside.dock, "the dock stays under the list")
+            XCTAssertTrue(beside.splits)
+        }
+    }
+
+    @MainActor func testBesidePlayTheRowOfThePlayingLevelOpensNothing() {
+        let l11 = Level.plughole[10], l12 = Level.plughole[11]
+        XCTAssertTrue(MenuView.opens(l12, playing: nil))
+        XCTAssertTrue(MenuView.opens(l12, playing: l11))
+        XCTAssertFalse(MenuView.opens(l11, playing: l11), "the playing level is open already")
+        // Endless's row would deal a new run over the one playing; its new run does.
+        let run = Level.endless(Run(seed: 7)), other = Level.endless(Run(seed: 8))
+        XCTAssertFalse(MenuView.opens(other, playing: run))
+        XCTAssertTrue(MenuView.opens(other, playing: run, anew: true))
+        XCTAssertTrue(MenuView.opens(run, playing: l11))
+    }
+
+    @MainActor func testACardPutAwayBesidePlayReturnsOnlyWithTheLevelItOpened() {
+        let lens = Pack.lens.levels[3], prism = Pack.prism.levels[0], tier = Level.plughole[4]
+        XCTAssertTrue(RootView.returns(to: (.pack(.lens), false), from: lens))
+        XCTAssertFalse(RootView.returns(to: (.pack(.lens), false), from: prism))
+        XCTAssertFalse(RootView.returns(to: (.pack(.lens), false), from: tier), "a tier's level picked meanwhile")
+        XCTAssertTrue(RootView.returns(to: (.complete, false), from: prism), "the bundle's card opens each of its packs")
+        let day = Level.daily(Calendar(identifier: .gregorian).date(byAdding: .day, value: -3, to: .now)!, archived: true)
+        XCTAssertTrue(RootView.returns(to: (nil, true), from: day))
+        XCTAssertFalse(RootView.returns(to: (nil, true), from: tier))
+    }
+
+    func testAPickBesidePlayIsDecidedBeforeThePlayingLevelLeaves() {
+        let l11 = Level.plughole[10], l12 = Level.plughole[11], lens4 = Pack.lens.levels[3]
+        XCTAssertEqual(RootView.besidePick(l11, playing: l11, gated: false, opens: true), .same)
+        XCTAssertEqual(RootView.besidePick(l12, playing: l11, gated: false, opens: true), .switches)
+        // Neither leaves the playing level: no quit sent, no finger let go, its try where it is.
+        XCTAssertEqual(RootView.besidePick(lens4, playing: l11, gated: true, opens: true), .stays, "a gate opens its card")
+        XCTAssertEqual(RootView.besidePick(l12, playing: l11, gated: false, opens: false), .stays, "a withheld level")
+    }
+
+    @MainActor func testTheTabletopsSettingsSheetKeepsToTheHalfLyingFlat() {
+        // On a phone, sized to what it holds, or past 0.9 of the window scrolling with a large detent: as before.
+        XCTAssertEqual(SettingsSheet.detents(content: 528, window: 951, room: nil), [.height(528)])
+        XCTAssertEqual(SettingsSheet.detents(content: 900, window: 951, room: nil), [.height(951 * 0.6), .large])
+        // The tabletop: no taller than from the window's foot to the dock's top, 16 pt under the fold; it scrolls.
+        let insets = (top: CGFloat(59), leading: CGFloat(0), bottom: CGFloat(34), trailing: CGFloat(0))
+        let dock = try! XCTUnwrap(menu(window: CGSize(width: 669, height: 951), insets: insets, fold: table).dock)
+        let room = dock.height + insets.bottom
+        XCTAssertGreaterThanOrEqual(951 - room, table.maxY + PlayLayout.margin - 0.001, "its top stays clear of the fold")
+        XCTAssertEqual(SettingsSheet.detents(content: 528, window: 951, room: room), [.height(room)])
+        XCTAssertEqual(SettingsSheet.detents(content: 300, window: 951, room: room), [.height(300)])
     }
 
     func testTheOpenDuosMenuPutsTheListAndTheCardEitherSideOfTheFold() {
@@ -433,14 +674,15 @@ final class PlayLayoutTests: XCTestCase {
                                        (CGSize(width: 600, height: 400), (0, 0, 0, 0), nil),
                                        (CGSize(width: 1000, height: 500), (0, 30, 0, 20), nil)] as [(CGSize, (CGFloat, CGFloat, CGFloat, CGFloat), CGRect?)] {
             let m = menu(window: window, insets: insets, fold: fold), play = layout(window: window, insets: insets, fold: fold)
-            XCTAssertEqual(m.wide, play.kind == .split, "\(window)")
-            guard let list = m.list, let side = m.side else { continue }
+            XCTAssertEqual(m.splits, play.kind == .split, "\(window)")
+            XCTAssertEqual(m.wide, play.kind != .column, "\(window)")
+            guard m.splits, let list = m.list, let side = m.side else { continue }
             // Play's panes are inside its 16 pt side margins, the menu's in the whole safe area.
             let tank = play.tankPane.offsetBy(dx: PlayLayout.margin, dy: 0)
-            let chrome = play.chromePane.offsetBy(dx: PlayLayout.margin, dy: 0)
+            let trailing = try! XCTUnwrap(play.menuPane).offsetBy(dx: PlayLayout.margin, dy: 0)
             XCTAssertLessThanOrEqual(list.minX, tank.minX, "\(window)")
             XCTAssertEqual(list.maxX, tank.maxX, accuracy: 0.001, "the list's half ends where the tank's pane does, \(window)")
-            XCTAssertEqual(side.minX, chrome.minX, accuracy: 0.001, "the card's starts where play's chrome does, \(window)")
+            XCTAssertEqual(side.minX, trailing.minX, accuracy: 0.001, "the card's starts where play's trailing half does, \(window)")
             XCTAssertGreaterThan(side.minX - list.maxX, 2 * PlayLayout.margin - 0.001, "\(window)")
         }
     }

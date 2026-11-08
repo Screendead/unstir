@@ -489,6 +489,9 @@ struct PackCard: View {
     var onOffer: (Offer) -> Void = { _ in }
     /// Beside the menu's list in a wide window, not over it, so VoiceOver reaches both.
     var beside = false
+    /// Its way out closes it rather than going to the menu, which isn't under it: over a playing level's result card
+    /// beside the menu (Jack's call s5b-back = B).
+    var closes = false
     var store = Store.shared
     @State private var buying = false
     /// The focused row's hairline, lit once as the card opens on it.
@@ -509,7 +512,7 @@ struct PackCard: View {
         // buying too (Jack's call C1B = A, round 16).
         VStack(alignment: .leading, spacing: 0) {
             // Padded below by all of hit()'s reach, as the scroll, laid over it, would take the rest of its target.
-            let back = Self.back(to: backTo, beside: beside)
+            let back = Self.back(to: backTo, beside: beside || closes)
             Button(action: onBack) { Text(back.text).font(.mono(.subheadline, .medium)).hit() }
                 .buttonStyle(Sounding()).padding(.top, 18).padding(.bottom, 14).opacity(0.8)
                 .padding(.horizontal, 24)
