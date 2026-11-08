@@ -1,3 +1,4 @@
+# Copyright © 2026 Jack Lusher. All rights reserved.
 name: CodeQL
 
 # Swift takes about 18 minutes under CodeQL, so it is scanned on merges to master and weekly; pull requests get the

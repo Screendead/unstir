@@ -26,13 +26,14 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   messages and PR text finds nothing personal, and Claude is satisfied with the diff's quality; a PR that rests on a
   call Jack hasn't made still waits for him.
 - **PR and nightly tests.** A PR skips `StoreTests` and `FirstStirTests` (`-skip-testing`; First Stir is out of v1 and
-  its vignette render takes two minutes), which `.github/workflows/nightly.yml` runs with every other test, bar the
+  its vignette render takes two minutes), and First Stir's two tests in other suites, `testFirstStirParIsTheOptimum` and
+  `testFirstStirPlaysInOrderFromTheShelf` (Jack's call r16c-ci-firststir = A, round 16), which `.github/workflows/nightly.yml` runs with every other test, bar the
   `UNSTIR_SLOW_TESTS` ones (they ran past 25 minutes on the runner), on `master` at 03:17 UTC and on `workflow_dispatch`: a break in them shows a night late. Both jobs print each
   suite's and the slowest tests' times (`scripts/ci-times.sh`) in the log. Add a suite to the skip list only here and in
   `test.yml`, so the nightly keeps running it. Both Test steps pipe the tests through `grep`, so they set `shell: bash`
   for pipefail: under the default shell the step's status is grep's, which passes once any test has run.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
-  is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
+  is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 15 minutes (Jack's call r16c-ci-limit = B, round 16).
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
   runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, `Config/`, the workflow and
   `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
@@ -54,7 +55,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
   other branch: it builds every push, PR or not. Keep
   commits local until the next build is worth paying for. If a build takes more than
-  10 minutes (Jack, 2026-11-01; the job's own timeout), raise it with Jack: the approach to builds needs rethinking.
+  10 minutes (Jack, 2026-11-01), raise it with Jack: the approach to builds needs rethinking.
 - **Watch CI spend.** Before each push that builds, run `scripts/ci-usage.sh`, which prints this month's GitHub Actions
   allowance left. Tell Jack when 50% is left, and warn him urgently at 25%. Public repos, this one included, don't
   use the allowance. macOS minutes in private repos count 10×.
@@ -68,7 +69,8 @@ is gitignored and exists only on this Mac. Machine-specific values come from env
 check the staged diff for personal details.
 
 Every `.swift`, `.metal` and `.sh` file opens with `Copyright © 2026 Jack Lusher. All rights reserved.` as a comment,
-after a script's shebang, and so does every `.py`, `.csd` and `.udo` file. The code is all rights reserved under
+after a script's shebang, and so does every `.py`, `.csd` and `.udo` file, every workflow, `project.yml` and
+`Config/Unstir.xcconfig`. The code is all rights reserved under
 `LICENSE.md`, the proprietary licence: never add an open-source licence.
 
 ## Pushing back
