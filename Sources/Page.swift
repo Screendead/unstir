@@ -73,12 +73,14 @@ extension Picture {
     /// point off the glass's lower left, whose cone just holds the glass, over barleycorn, upward chevrons on a lattice
     /// whose odd rows are shifted half a cell. Rays and chevrons both read up in every core, and nothing is concentric.
     /// Lines are at least 2.2 px wide: the shader's four taps average in squared light, which thins dark lines on a light
-    /// ground. No glow.
+    /// ground. No glow. Below a 230 px radius (a dock cover's is 99) the lines would fill a chevron's half-width, so the
+    /// lattice and the rays' spacing grow until it holds 1.7 lines: the plate in miniature, not ink.
     static func engineTurning(_ ctx: GraphicsContext, r: CGFloat, scale: CGFloat) {
         func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r + x * r, y: r + y * r) }
         ctx.fill(Path(CGRect(x: 0, y: 0, width: 2 * r, height: 2 * r)), with: .color(.bone))
         let width = max(0.005 * r, 2.2 / scale)
-        let from = SIMD2(-1.6, 1.4), rays = 90
+        let coarse = max(1, 1.7 * width / (0.015 * r))
+        let from = SIMD2(-1.6, 1.4), rays = Int((90 / coarse).rounded())
         let first = -69.2 * Double.pi / 180, last = -13.1 * Double.pi / 180
         var lines = Path()
         for i in 0..<rays {
@@ -86,15 +88,16 @@ extension Picture {
             lines.move(to: p(from.x, from.y))
             lines.addLine(to: p(from.x + 4 * cos(a), from.y + 4 * sin(a)))
         }
-        let lattice = 0.08, cells = Int(1 / lattice) + 1
+        let lattice = 0.08 * coarse, cells = Int(1 / lattice) + 1
         for j in -cells...cells {
             let off = j & 1 == 1 ? lattice / 2 : 0
             for i in -cells...cells {
                 let x = Double(i) * lattice + off, y = Double(j) * lattice
                 guard x * x + y * y < 1.1 else { continue }
-                lines.move(to: p(x - 0.015, y + 0.0075))
-                lines.addLine(to: p(x, y - 0.0075))
-                lines.addLine(to: p(x + 0.015, y + 0.0075))
+                let w = 0.015 * coarse, h = 0.0075 * coarse
+                lines.move(to: p(x - w, y + h))
+                lines.addLine(to: p(x, y - h))
+                lines.addLine(to: p(x + w, y + h))
             }
         }
         ctx.stroke(lines, with: .color(.ink), style: StrokeStyle(lineWidth: width, lineCap: .butt, lineJoin: .miter))

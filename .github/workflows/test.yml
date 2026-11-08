@@ -1,3 +1,4 @@
+# Copyright © 2026 Jack Lusher. All rights reserved.
 name: Test
 
 on:
@@ -15,7 +16,7 @@ permissions:
 jobs:
   test:
     runs-on: macos-26
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - name: Install XcodeGen
@@ -40,15 +41,34 @@ jobs:
             !build/store/Logs
           key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', 'Config/**', '.github/workflows/test.yml', '.github/workflows/nightly.yml', 'scripts/test-store.sh') }}
           restore-keys: store-${{ steps.xcode.outputs.build }}-
-      # The StoreKit tests and First Stir's suite (out of v1; its vignette render alone takes two minutes) run nightly
-      # on master (nightly.yml). Signed ad hoc by the script, as the nightly needs.
-      # `shell: bash` adds pipefail; without it the step's status is grep's, which passes once any test has run.
-      - name: Test
-        shell: bash
+      # The simulator boots in the background while the build runs, and the test step waits for what is left. It starts
+      # after the cache is restored, since the boot's disk traffic slowed the restore's untar from about 3 s to 124 s.
+      - name: Boot the simulator
+        id: sim
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
-          UNSTIR_SIM=$udid scripts/test-store.sh -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
-      # Measures the app the test step built, so it costs no build of its own.
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          (SECONDS=0; xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null; echo "$SECONDS" > "$RUNNER_TEMP/boot.s") > /dev/null 2>&1 &
+      # Signed ad hoc by the script, as the nightly needs. The timing summary says where the build's time went.
+      # `shell: bash` adds pipefail; without it the step's status is grep's, which passes once any test has run.
+      - name: Build for testing
+        shell: bash
+        env:
+          udid: ${{ steps.sim.outputs.udid }}
+        run: |
+          UNSTIR_SIM=$udid scripts/test-store.sh build-for-testing -showBuildTimingSummary COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/build.log" | grep -E "^(error:|\*\* TEST BUILD|[A-Za-z]+ \([0-9]+ tasks?\) \| )"
+      # The StoreKit tests and First Stir's suite (out of v1; its vignette render alone takes two minutes) run nightly
+      # on master (nightly.yml).
+      - name: Test
+        shell: bash
+        env:
+          udid: ${{ steps.sim.outputs.udid }}
+        run: |
+          SECONDS=0
+          xcrun simctl bootstatus "$udid" -b > /dev/null
+          echo "waited ${SECONDS} s for the simulator, which took $(cat "$RUNNER_TEMP/boot.s" 2> /dev/null || echo "?") s to boot"
+          UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+      # Measures the app the build step made, so it costs no build of its own.
       - name: App size
         run: scripts/app-size.sh build/store/Build/Products/Debug-iphonesimulator/Unstir.app
       - name: Slowest tests

@@ -26,20 +26,25 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   messages and PR text finds nothing personal, and Claude is satisfied with the diff's quality; a PR that rests on a
   call Jack hasn't made still waits for him.
 - **PR and nightly tests.** A PR skips `StoreTests` and `FirstStirTests` (`-skip-testing`; First Stir is out of v1 and
-  its vignette render takes two minutes), which `.github/workflows/nightly.yml` runs with every other test, bar the
+  its vignette render takes two minutes), and First Stir's two tests in other suites, `testFirstStirParIsTheOptimum` and
+  `testFirstStirPlaysInOrderFromTheShelf` (Jack's call r16c-ci-firststir = A, round 16), which `.github/workflows/nightly.yml` runs with every other test, bar the
   `UNSTIR_SLOW_TESTS` ones (they ran past 25 minutes on the runner), on `master` at 03:17 UTC and on `workflow_dispatch`: a break in them shows a night late. Both jobs print each
   suite's and the slowest tests' times (`scripts/ci-times.sh`) in the log. Add a suite to the skip list only here and in
   `test.yml`, so the nightly keeps running it. Both Test steps pipe the tests through `grep`, so they set `shell: bash`
   for pipefail: under the default shell the step's status is grep's, which passes once any test has run.
 - **Push only when a build is needed.** `.github/workflows/test.yml` runs only on `pull_request` events: when a PR
-  is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 10 minutes.
+  is opened, reopened or pushed to. It skips pushes that change only `*.md` files, and it stops any run at 15 minutes (Jack's call r16c-ci-limit = B, round 16).
   Pushing to a branch with no open PR builds nothing. `test.yml` caches the StoreKit test build (`build/store`) between
   runs, keyed on the Xcode build and a hash of `project.yml`, `Sources/`, `UnstirTests/`, `StoreKit/`, `Config/`, the workflow and
   `scripts/test-store.sh`, so a file that sets the build's flags goes in that list. Checkout gives every file a new
   inode and the current time, so the job stamps each tracked file with a time drawn from its content and tells the
-  build system to ignore inode changes; the restored build then stays incremental. A hit saves compile work but not
-  time: `xcodebuild test` boots the simulator while it compiles, so the job's time is the boot, about 110 s, and the
-  tests, about 45 s. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
+  build system to ignore inode changes; the restored build then stays incremental. The job builds for testing
+  (`scripts/test-store.sh build-for-testing`, for a generic simulator so it never waits on one booting, printing the
+  build's timing summary) while the simulator boots in the background from just after the cache's restore (booting
+  during it slowed the untar from about 3 s to 124 s), then waits for the boot and runs `test-without-building`. On
+  2026-11-04 the boot took about 90 s, the build step 130 to 190 s with 16 to 40 s of Swift's tasks (SwiftEmitModule and SwiftDriver; SwiftCompile itself 1 to 4 s; the asset
+  catalog takes 36 s every run), and the test step about 110 s, half of it the tests; every step's time moves with the
+  runner's speed. After the tests it, and the nightly, measure the app they built (`scripts/app-size.sh`, Jack's
   call APPSIZE = B) less the test bundle and Xcode's testing frameworks the test host carries, and fail past 100 MB.
   That build is Debug for the simulator, one architecture: its debug dylib (16.6 MB on 2026-11-02) outweighs the
   Release binary (11.2 MB), and the resources are the same bytes in both, so it reads about 6 MB over a Release bundle
@@ -50,7 +55,7 @@ state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack
   about 18 minutes, only on pushes to `master` (only merges make them) and weekly. Never add a `push:` trigger for any
   other branch: it builds every push, PR or not. Keep
   commits local until the next build is worth paying for. If a build takes more than
-  10 minutes (Jack, 2026-11-01; the job's own timeout), raise it with Jack: the approach to builds needs rethinking.
+  10 minutes (Jack, 2026-11-01), raise it with Jack: the approach to builds needs rethinking.
 - **Watch CI spend.** Before each push that builds, run `scripts/ci-usage.sh`, which prints this month's GitHub Actions
   allowance left. Tell Jack when 50% is left, and warn him urgently at 25%. Public repos, this one included, don't
   use the allowance. macOS minutes in private repos count 10×.
@@ -64,7 +69,9 @@ is gitignored and exists only on this Mac. Machine-specific values come from env
 check the staged diff for personal details.
 
 Every `.swift`, `.metal` and `.sh` file opens with `Copyright © 2026 Jack Lusher. All rights reserved.` as a comment,
-after a script's shebang. The code is all rights reserved: never add an open-source licence.
+after a script's shebang, and so does every `.py`, `.csd` and `.udo` file, every workflow, `project.yml` and
+`Config/Unstir.xcconfig`. The code is all rights reserved under
+`LICENSE.md`, the proprietary licence: never add an open-source licence.
 
 ## Pushing back
 
@@ -105,7 +112,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   before each test and after the run. The solver's tests that take seconds, and the
   halftone's contrast test, skip unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
   `xcodebuild` to run them too (about a minute and a half more).
-- StoreKit tests: `scripts/test-store.sh [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
+- StoreKit tests: `scripts/test-store.sh [test|build-for-testing|test-without-building] [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
 - Solver: `scripts/solve.sh <layout> <scramble> [seized knobs, comma-separated] [lenses=slots] [masks=slot:channel]`
@@ -832,7 +839,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
   draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's engraved plate, the fern; the bundle a wedge of
   each of its packs', cut from the centre, `testEveryCoverStirsItsClipsLevel`), stirred and unstirred by `Unstirred` on
-  the level's dealt stack, an entry at a time (`Unstirred.shares`), on a 7 s loop, each out of step, held as dealt under
+  the level's dealt stack, an entry at a time (`Unstirred.shares`), its knobs drawn over it as the game draws them,
+  each turned by its rod's share of the stack and a clock's ratchet counting what it owes, so a cover shows how its pack
+  plays (Jack, round 16; the bundle's wedges each turned to hold its key knob, `PackTank.turn`; the promoted-purchase
+  image draws without them), on a 7 s loop, each out of step, held as dealt under
   Reduce Motion, at 30 Hz, paused where it stands under a card, the settings sheet or a level a back swipe slides off, while `Power` saves
   (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
   gesture recognizer on the window that fails at once, and from a drag on the list), each carrying on from the frame
@@ -1071,7 +1081,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   engine-turning in ink on bone: ninety straight rays fanned from a point off the glass's lower left, whose cone just
   holds the glass, over barleycorn, upward chevrons on a 0.08 lattice, with no glow and no concentric figure. Its lines
   are at least 2.2 px wide, as the shader's four taps average in squared light, which thins dark lines on a light
-  ground. It fades in over paper rather than striking (`Picture.paper`), and the sandbox skips it
+  ground, so below a 230 px radius (the dock's 66 pt cover) its lattice and rays' spacing grow with the lines, or the
+  ink fills the bone. It fades in over paper rather than striking (`Picture.paper`), and the sandbox skips it
   (`testThePlateIsInkOnBoneAndShowsAStepInEveryCore`).
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
