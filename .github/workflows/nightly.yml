@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
-          UNSTIR_SIM=$udid scripts/test-store.sh COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+          UNSTIR_SIM=$udid scripts/test-store.sh COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
       - name: App size
         run: scripts/app-size.sh build/store/Build/Products/Debug-iphonesimulator/Unstir.app
       - name: Slowest tests

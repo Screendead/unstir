@@ -68,7 +68,7 @@ jobs:
           udid=$(cat "$RUNNER_TEMP/udid")
           xcrun simctl bootstatus "$udid" -b > /dev/null
           echo "waited ${SECONDS} s for the simulator, which took $(cat "$RUNNER_TEMP/boot.s" 2> /dev/null || echo "?") s to boot"
-          UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf | tee "$RUNNER_TEMP/test.log" | grep -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+          UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
       # Measures the app the build step made, so it costs no build of its own.
       - name: App size
         run: scripts/app-size.sh build/store/Build/Products/Debug-iphonesimulator/Unstir.app
