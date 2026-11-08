@@ -31,4 +31,4 @@ scripts generate `Unstir.xcodeproj` from it.
 ## Licence
 
 Copyright © 2026 Jack Lusher. All rights reserved. The code is public to read; it is not licensed for reuse or
-redistribution.
+redistribution. See [LICENSE.md](LICENSE.md).

@@ -310,11 +310,15 @@ extension Offer {
 /// An offer's cover in a tank: its clip's level on its own picture, as the game draws it, stirred by the level's own
 /// dealt stack. `clock` nil holds it as dealt; otherwise the loop at that time: clean, stirred in bottom first, then
 /// unstirred top first a move at a time. Complete's shows a wedge of each pack's, cut from the centre, the first
-/// centred at the top, each on its own loop.
+/// centred at the top, each on its own loop. Its knobs are drawn as the game draws them, each turned by its rod's share
+/// of the stack, and a clock's ratchet counts what it owes, so a cover shows how its pack plays (Jack, round 16); a
+/// wedge whose key knob (a clock, else a lens, else a masked rod) falls outside it is turned to bring it in. The
+/// promoted-purchase image draws without knobs.
 struct PackTank: View {
     let offer: Offer
     let side: CGFloat
     var clock: Double?
+    var knobs = true
 
     static let period = 7.0
 
@@ -322,7 +326,9 @@ struct PackTank: View {
         let levels = offer.covers, span = 360 / Double(levels.count), start = -90 - span / 2, r = side / 2
         ZStack {
             ForEach(levels.indices, id: \.self) { k in
-                tank(levels[k]).clipShape(Wedge(from: start + span * Double(k), to: start + span * Double(k + 1)))
+                let from = start + span * Double(k)
+                tank(levels[k]).rotationEffect(.degrees(levels.count > 1 ? Self.turn(levels[k], into: from + span / 2, span: span) : 0))
+                    .clipShape(Wedge(from: from, to: from + span))
             }
             if levels.count > 1 {
                 Path { p in
@@ -351,6 +357,39 @@ struct PackTank: View {
         stir.shares = on.map(\.1)
         return LevelPicture(level: level, played: Reel.played(level, on.map(\.0)), wound: dealt.count - on.count, side: side)
             .modifier(stir)
+            .overlay { if knobs { controls(level, on: on.map { ($0.0.twist, $0.1) }) } }
+    }
+
+    private func controls(_ level: Level, on: [(Twist, Double)]) -> some View {
+        let layout = level.layout, rods = layout.rods, r = side / 2, core = 2 * Tank.coreRadius * r
+        func at(_ k: Int) -> CGPoint { CGPoint(x: r + rods[k].x * r, y: r + rods[k].y * r) }
+        func angle(_ k: Int) -> Double { on.filter { $0.0.rod == k }.reduce(0) { $0 + Double($1.0.steps) * $1.1 } * Tank.step }
+        return ZStack {
+            ForEach(rods.indices.filter { $0 != layout.swirl }, id: \.self) { k in
+                if k == level.clocks.first?.rod {
+                    ClockHint(radius: min(rods[k].z * r, r - 4)).position(at(k))
+                    RatchetView(angle: angle(k), size: LevelView.ratchetSize(core), plate: LevelView.ratchetReach * r, pawl: 0,
+                                lit: false, stopped: false, owed: level.owed(k, on: on.map(\.0)), still: true)
+                        .position(at(k))
+                } else {
+                    RodView(angle: angle(k), size: core, seized: level.kind(of: k) != .working, grabbed: false,
+                            lens: level.lenses.contains(k), tint: level.tint(of: k))
+                        .position(at(k))
+                }
+            }
+        }
+        .frame(width: side, height: side)
+        .environment(\.page, level.page)
+    }
+
+    /// Degrees to turn a wedge's level so its key knob sits inside the wedge centred at `mid`, or 0 where it already does.
+    static func turn(_ level: Level, into mid: Double, span: Double) -> Double {
+        let rods = level.layout.rods
+        guard let key = level.clocks.first?.rod ?? level.lenses.min() ?? level.masks.filter { $0.value != .white }.keys.min()
+                ?? rods.indices.first, rods[key].x != 0 || rods[key].y != 0 else { return 0 }
+        let at = atan2(rods[key].y, rods[key].x) * 180 / .pi
+        let off = (at - mid).truncatingRemainder(dividingBy: 360), wrapped = off > 180 ? off - 360 : off < -180 ? off + 360 : off
+        return abs(wrapped) < span / 2 - 15 ? 0 : -wrapped
     }
 
     /// Each entry's share of its turn, 0 clean to 1 stirred, `t` seconds into the clip.
