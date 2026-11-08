@@ -312,13 +312,11 @@ extension Offer {
 /// unstirred top first a move at a time. Complete's shows a wedge of each pack's, cut from the centre, the first
 /// centred at the top, each on its own loop. Its knobs are drawn as the game draws them, each turned by its rod's share
 /// of the stack, and a clock's ratchet counts what it owes, so a cover shows how its pack plays (Jack, round 16); a
-/// wedge whose key knob (a clock, else a lens, else a masked rod) falls outside it is turned to bring it in. The
-/// promoted-purchase image draws without knobs.
+/// wedge whose key knob (a clock, else a lens, else a masked rod) falls outside it is turned to bring it in.
 struct PackTank: View {
     let offer: Offer
     let side: CGFloat
     var clock: Double?
-    var knobs = true
 
     static let period = 7.0
 
@@ -357,7 +355,7 @@ struct PackTank: View {
         stir.shares = on.map(\.1)
         return LevelPicture(level: level, played: Reel.played(level, on.map(\.0)), wound: dealt.count - on.count, side: side)
             .modifier(stir)
-            .overlay { if knobs { controls(level, on: on.map { ($0.0.twist, $0.1) }) } }
+            .overlay { controls(level, on: on.map { ($0.0.twist, $0.1) }) }
     }
 
     private func controls(_ level: Level, on: [(Twist, Double)]) -> some View {
