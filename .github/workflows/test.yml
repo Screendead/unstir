@@ -50,24 +50,21 @@ jobs:
         shell: bash
         run: |
           scripts/test-store.sh build-for-testing -showBuildTimingSummary COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/build.log" | grep --line-buffered -E "^([A-Za-z*]|.*(error|warning):)"
-      # The simulator boots once the build is done, as a boot running beside it slowed the build. Reading the device
-      # list took 5 to 70 s; the id goes to the test step in a file, empty if none is found, so that step fails.
+      # The simulator boots once the build is done. Booting beside it can stall the build (one build description took
+      # 164 s, against 3 to 5 s without it) for far more than the 20 s of a cache hit's build it could hide. The id goes
+      # to the test step in a file, empty if none is found, so that step fails.
       - name: Boot the simulator
         run: |
-          SECONDS=0
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
           echo "$udid" > "$RUNNER_TEMP/udid"
-          xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null; echo "$SECONDS" > "$RUNNER_TEMP/boot.s"
+          xcrun simctl boot "$udid"; xcrun simctl bootstatus "$udid" -b > /dev/null
       # The StoreKit tests and First Stir's suite (out of v1; its vignette render alone takes two minutes) run nightly
       # on master (nightly.yml).
       - name: Test
         shell: bash
         run: |
-          SECONDS=0
-          until [[ -s "$RUNNER_TEMP/udid" ]]; do sleep 1; done
           udid=$(cat "$RUNNER_TEMP/udid")
-          xcrun simctl bootstatus "$udid" -b > /dev/null
-          echo "waited ${SECONDS} s for the simulator, which took $(cat "$RUNNER_TEMP/boot.s" 2> /dev/null || echo "?") s to boot"
+          [[ -n "$udid" ]] || { echo "no Pro Max simulator" >&2; exit 1; }
           UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
       # Measures the app the build step made, so it costs no build of its own.
       - name: App size
