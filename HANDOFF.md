@@ -191,7 +191,8 @@ Also on 2026-11-08: Jack's call (in chat) that every dock cover draws its knobs,
 Open: whether the promoted-purchase images draw the knobs too (recommendation: yes; they would need re-uploading).
 #140's last run took 10m22s and #135's 9m47s, both after merging master, under the new 15-minute limit.
 
-The CI build investigation (r16c-ci-build, 2026-11-08), ranked by time on the critical path. Open: which fixes to make.
+The CI build investigation (r16c-ci-build, 2026-11-08), ranked by time on the critical path. Jack's calls: make 2 and 3,
+let the phase lines through, measure the boot both ways, research 4 without `env -i`. Built in #150 (below the list).
 1. The simulator's boot overlaps the build. Every build alongside it took 130 to 378 s; one that ran after the boot
    took about 75 s (inferred from 14 runs). Booting after the build may save 60 to 150 s of build against a boot no
    longer hidden: net uncertain.
@@ -205,6 +206,19 @@ The CI build investigation (r16c-ci-build, 2026-11-08), ranked by time on the cr
 6. Unexplained Swift work on exact cache hits, perhaps the asset symbols (fix 2 may cure it).
 The step's grep hides xcodebuild's own phases, so about 90 s of planning has no breakdown: letting the phase lines
 through the grep, at no risk, comes first.
+#150 (2026-11-08): fixes 2 and 3 made, every phase and task line through the build step's grep (flushed per line, as
+grep held them back in blocks). On an exact cache hit the build step now takes 12 to 33 s (CompileMetalFile about 6 s).
+The boot, measured on exact hits: beside the build, jobs of 376 and 508 s (run 42527325401 attempts 2 and 3; in the
+second a build description took 164 s against 3 to 5 s otherwise); after it, 310, 395 and 383 s (42529264269 attempts
+2 to 4), and 302 and 383 s with the test step's second wait dropped (42531815833 attempts 2 and 3). Within the runner's
+noise, but beside the build the boot can hide at most the build's 20 s and can stall it for minutes, so the boot now
+runs after the build. Inferred, one sample each, not measured: a push that changes `Sources/` recompiles, and there the
+boot beside the build could hide more; the earlier probe's 75 s build after the boot against 130 to 378 s beside it
+leans the same way. Open for Jack: an A/B on source-changing pushes. Finding 4: no standard fix (swift-build hashes the
+whole environment into the signature; its denylist of session variables has no CI ones and, tested on Xcode 27.2, doesn't reach
+xcodebuild; `-UseSanitizedBuildSystemEnvironment=YES` still changes the signature), and a new
+description costs 3 to 5 s on the runner uncontended, so nothing was applied. The test step is now the long pole: 150
+to 380 s, the tests themselves 45 to 95 s, the rest `test-without-building` starting on the fresh simulator, unexplained.
 
 Duo headroom (measured 2026-11-03 on the 13 Pro Max, `duo-feel`): one four-tap entry costs 0.2714 ms at 1137 px,
 0.3426 ms at 1284 and 0.4466 ms at 1471, so 29.4 entries fit a 120 Hz frame at 1137 px and 16.9 at 1471. The Duo's GPU
