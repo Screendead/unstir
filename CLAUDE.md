@@ -200,7 +200,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   on the next eighth, and the game's effects at their own levels (`scripts/layers.py` times and mixes them), as
   `<pack>.mp3` and `<pack>-bed-only.mp3` with `layers-in-play.txt` listing each line and its loudness: each render's,
   the layer's alone over the line and, for Escapement, its sketch's with and without the sketch's ticks and its drums
-  alone (`escBDry`, `escBDrums`), as the game's own tick replaces the sketch's in play.
+  alone (`escBDry`, `escBDrums`), as the game's own tick replaces the sketch's in play. `scripts/layers-film.sh`
+  films those three levels in the app with sound (`film.sh layer-`, BlackHole switched in and back).
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
