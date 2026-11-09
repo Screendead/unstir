@@ -905,7 +905,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   strokes of their own widths, keyed in Caches by its name); the test panel is `Halftone.test`, the one every level
   draws. **LensArt.swift** holds the prototype panels for Jack's call on Lens's art (The Switch's panel 2, Keyhole, and
   one Close-up panel for the chapter), which only a Debug build's harness shows (`UNSTIR_PANEL`, `Halftone.shown`;
-  `shots.sh lensart-`). Prism's plates
+  `shots.sh lensart-`); `scripts/lens-panels.sh` draws, times and checks them on the Mac. Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white
