@@ -33,7 +33,7 @@ shot() {  # name description KEY=VALUE...
   env ${vars[@]+"${vars[@]}"} xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   local wait=${hold:-$settle}
   # Lens's halftone bakes for 20 s or more the first time a Debug install draws it; the shots after read it from Caches.
-  if [[ " $* " == *" PACK=lens "* && -z "${baked:-}" ]]; then wait=30; baked=1; fi
+  if [[ " $* " == *" PACK=lens "* && -z "${baked:-}" ]]; then wait=$(( wait > 30 ? wait : 30 )); baked=1; fi
   sleep "$wait"
   settle=3
   xcrun simctl io "$udid" screenshot "shots/$name.png" >/dev/null 2>&1
@@ -401,6 +401,23 @@ for n in $(seq -w 1 25); do
   hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens \
     $([[ $n == 01 ]] && echo BESTS=lens:0)
 done
+# Lens's art, for Jack's call on what Lens ships with: each prototype panel (LensArt.swift, UNSTIR_PANEL) on the level
+# it was drawn for, as dealt, and drawn clean with only its lens magnified, the clue read; the test panel the same way.
+# A panel's first launch bakes it, unoptimised in Debug, for up to a minute; its later shots read it from Caches.
+lensbaked=" "
+lensart() {  # panel level stack what
+  local first=5
+  [[ "$lensbaked" == *" $1 "* ]] || { first=90; [[ -n "$pattern" && "lensart-$1-$2" != *$pattern* ]] || lensbaked+="$1 "; }
+  hold=$first shot "lensart-$1-$2" "Lens $2 as dealt on the $1 panel ($4), the pack owned." PACK=lens LEVEL=$2 OWNED=lens BESTS=lens:0 PANEL=$1
+  hold=5 shot "lensart-$1-$2-clue" "Lens $2's layout on the $1 panel, only its lens magnified ($3), drawn clean: the clue as the deal shows it." \
+    PACK=lens LEVEL=$2 OWNED=lens BESTS=lens:0 PANEL=$1 STACK=$3 CLEAN=1
+}
+lensart switch02 02 0:+1 "option A, The Switch's panel 2: the star on the diamond's facet"
+lensart keyhole 01 0:+2 "option B, the level's name drawn: an eye looks back through the keyhole"
+lensart closeup 01 0:+2 "option C, Close-up's one panel: the stamp"
+lensart closeup 04 1:+1 "option C, Close-up's one panel: the pocket watch"
+lensart closeup 06 0:+3 "option C, Close-up's one panel: the fingerprint"
+lensart test 02 0:+1 "option D, the test panel shipped"
 hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 BESTS=lens:0 STACK=1:+2,0:+2
 hold=5 shot lens-result "Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens." \
   PACK=lens LEVEL=2 SCREEN=result CLOCK=0

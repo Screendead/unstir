@@ -903,8 +903,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
   the flicker; only one that never lands lets it go on, after 30 s. A panel is a `Halftone.Panel` (tones and white
   strokes of their own widths, keyed in Caches by its name); the test panel is `Halftone.test`, the one every level
-  draws. A Debug build's harness can name another (`UNSTIR_PANEL`,
-  `Halftone.shown`). Prism's plates
+  draws. **LensArt.swift** holds the prototype panels for Jack's call on Lens's art (The Switch's panel 2, Keyhole, and
+  one Close-up panel for the chapter), which only a Debug build's harness shows (`UNSTIR_PANEL`, `Halftone.shown`;
+  `shots.sh lensart-`). Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white

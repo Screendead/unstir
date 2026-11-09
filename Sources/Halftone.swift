@@ -146,7 +146,7 @@ enum Halftone {
     static let test = Panel(name: "test", tones: { tones($0) }, strokes: lines.map { Stroke(points: $0, width: lineWidth) })
 
     /// Every panel, the test panel first.
-    static let panels: [Panel] = [test]
+    static let panels: [Panel] = [test] + LensArt.panels
 
     /// The panel `Picture.halftone` draws: the test panel, or in a Debug build the one the harness names
     /// (`UNSTIR_PANEL`).
