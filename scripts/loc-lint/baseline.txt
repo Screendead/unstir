@@ -53,7 +53,6 @@ ResultCard.swift: Text(game.firstTry ? "solved \u{00B7} clean needs no reset or 
 ResultCard.swift: Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
 ResultCard.swift: Text(line).opacity(0.6)
 ResultCard.swift: Text(done.line).fontWeight(.semibold).foregroundStyle(accent).shadow(color: page.glow(accent), radius: 3)
-ResultCard.swift: Button(action: onExit) { Text(game.level.back).hit() }
 ResultCard.swift: Button { onNext(next) } label: { Text(label).hit() }
 ResultCard.swift: .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
 ResultCard.swift: Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.mono(12)).opacity(0.55)
@@ -64,7 +63,6 @@ ResultCard.swift: Text(to.name.uppercased()).font(.system(size: 26, weight: .bla
 ResultCard.swift: Text("\u{203A}").font(.system(size: 26, weight: .black))
 ResultCard.swift: .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. \(shortLine), and par on every one opens it")
 ResultCard.swift: .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
-ResultCard.swift: Button(action: onExit) { Text(game.level.back).hit() }
 ResultCard.swift: if let notice { Text(notice).font(.mono(12)).opacity(0.7).transition(.opacity) }
 Rods.swift: Text(channels.letters).font(.mono(9, .semibold)).foregroundStyle(.white)
 Shelf.swift: if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
