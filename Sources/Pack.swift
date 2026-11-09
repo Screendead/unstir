@@ -354,19 +354,22 @@ extension Level {
         String(localized: "chapter.escapement.5", defaultValue: "Grand Complication",
                comment: "Escapement chapter: a watchmaking word for a watch of many functions"),
     ]
-    /// Each chapter's opener adds its rule to the stipulation, as its old title taught it (Jack's call N1, round 13).
-    static let escapementRules = [
-        String(localized: "rule.escapement.1", defaultValue: "A clock ticks after every move. Each let-go is a move.",
-               comment: "Escapement's first rule, under the tank after the tick budget"),
-        String(localized: "rule.escapement.2", defaultValue: "Sometimes the first move is to wait.",
-               comment: "Escapement's rule for its second chapter, under the tank after the tick budget"),
-        String(localized: "rule.escapement.3", defaultValue: "Two clocks tick in turn.",
-               comment: "Escapement's rule for its third chapter, under the tank after the tick budget"),
-        String(localized: "rule.escapement.4", defaultValue: "A wound-back clock ticks the other way.",
-               comment: "Escapement's rule for its fourth chapter, under the tank after the tick budget"),
-        String(localized: "rule.escapement.5", defaultValue: "Three clocks.",
-               comment: "Escapement's rule for its fifth chapter, under the tank after the tick budget"),
-    ]
+    /// Each chapter's opener adds its rule to the stipulation, as its old title taught it (Jack's call N1, round 13),
+    /// one whole key each so a translator sees both sentences together.
+    private static func escapementOpener(_ chapter: Int, budget: Int) -> String {
+        switch chapter {
+        case 0: String(localized: "rule.escapement.1", defaultValue: "Unstir in \(budget) ticks. A clock ticks after every move. Each let-go is a move.",
+                       comment: "Escapement's note under the tank opening its first chapter: the tick budget, then the chapter's rule")
+        case 1: String(localized: "rule.escapement.2", defaultValue: "Unstir in \(budget) ticks. Sometimes the first move is to wait.",
+                       comment: "Escapement's note under the tank opening its second chapter: the tick budget, then the chapter's rule")
+        case 2: String(localized: "rule.escapement.3", defaultValue: "Unstir in \(budget) ticks. Two clocks tick in turn.",
+                       comment: "Escapement's note under the tank opening its third chapter: the tick budget, then the chapter's rule")
+        case 3: String(localized: "rule.escapement.4", defaultValue: "Unstir in \(budget) ticks. A wound-back clock ticks the other way.",
+                       comment: "Escapement's note under the tank opening its fourth chapter: the tick budget, then the chapter's rule")
+        default: String(localized: "rule.escapement.5", defaultValue: "Unstir in \(budget) ticks. Three clocks.",
+                       comment: "Escapement's note under the tank opening its fifth chapter: the tick budget, then the chapter's rule")
+        }
+    }
 
     private static func problem(_ n: Int, _ title: String, _ layout: Layout, _ scramble: String, clocks: [Int],
                                 back: [Int] = [], par: Int) -> Level {
@@ -375,12 +378,10 @@ extension Level {
                           chapter: escapementChapters[(n - 1) / 6],
                           // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
                           demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)
-        let budget = String(localized: "Unstir in \(level.budget) ticks.",
-                            comment: "Escapement's stipulation under the tank: the tick budget")
         level.note = (n - 1) % 6 == 0
-            ? String(localized: "\(budget) \(escapementRules[(n - 1) / 6])",
-                     comment: "Two sentences, the second after the first")
-            : budget
+            ? escapementOpener((n - 1) / 6, budget: level.budget)
+            : String(localized: "Unstir in \(level.budget) ticks.",
+                     comment: "Escapement's stipulation under the tank: the tick budget")
         return level
     }
 
