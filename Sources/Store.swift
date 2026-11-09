@@ -98,7 +98,7 @@ enum Asked {
     static var all: Set<String> { Set(Pack.productIDs.filter { UserDefaults.standard.bool(forKey: key($0)) }) }
     static func waiting(at now: Date = .now) -> Set<String> {
         all.filter { id in
-            (UserDefaults.standard.object(forKey: dateKey(id)) as? Date).map { now.timeIntervalSince($0) < open } ?? false
+            (UserDefaults.standard.object(forKey: dateKey(id)) as? Date).map { (0..<open).contains(now.timeIntervalSince($0)) } ?? false
         }
     }
     static func add(_ id: String, at date: Date = .now) {

@@ -448,6 +448,10 @@ final class PackTests: XCTestCase {
         // Asked before the date was kept.
         d.set(true, forKey: Asked.key(bundle))
         XCTAssertEqual(Asked.waiting(at: now), [lens, escapement])
+        // Asked at a time still to come: the clock was set back since, so how long it has waited is unknown.
+        Asked.add(bundle, at: now.addingTimeInterval(3600))
+        XCTAssertEqual(Asked.waiting(at: now), [lens, escapement])
+        d.removeObject(forKey: Asked.dateKey(bundle))
 
         var ledger = Ledger()
         ledger.record(escapement, .owned)
