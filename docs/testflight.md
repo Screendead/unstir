@@ -33,7 +33,8 @@ sessions. If a total ever falls, the report says so.
 
 ## Running it
 
-It needs `python3` and `openssl`, nothing else (read: macOS's LibreSSL signs with the key as App Store Connect gives it).
+It needs `python3` and `openssl`, nothing else. Read: `tools/tf-poll-test.py` passes under the launch agent's
+environment below, macOS's own Python 3.9 and LibreSSL 3.3 with `PATH=/usr/bin:/bin:/usr/sbin:/sbin`.
 
 One-time setup:
 
@@ -121,6 +122,7 @@ Before any stranger is invited, prove the pipeline on Jack's phone. It answers e
 | Day 1 | Install the TestFlight build; play one session in the evening. Note the time. | |
 | Day 2, 09:00 poll | Check the report. | Jack shows day 1, +1. If +0, the metric lags: wait for day 3's poll. |
 | Day 2 | Play twice in the evening, an hour apart, the app closed between. | |
+| Day 2 | Tap the gear, then "report a problem". | A mail (or the share sheet) already addressed to the support address, the log attached: the build carries `SUPPORT_ADDRESS`. |
 | Day 3, 09:00 poll | Check the report and the CSV. | Jack "returned". The diff says whether two openings an hour apart are one session or two, and `window_start` and `window_end` whether each data point spans the window or a day. |
 
 If the sessions show a day late, every reading shifts by that day: note the lag here and read day 2 from the poll
@@ -133,7 +135,8 @@ On day 3 each tester is asked to send their log: the gear beside the menu's titl
 account in Apple's Mail it opens a mail to the support address with the log attached; otherwise the share sheet
 carries the address, the subject and the log to whichever app takes it (read: `SettingsSheet` in `Consent.swift`).
 The log holds touches, moves, purchases and errors, and no name (`Log.swift`; the privacy policy keeps support mail
-and logs 12 months).
+and logs 12 months). Without `SUPPORT_ADDRESS` in the build, the share sheet carries the log alone, with no address,
+so the TestFlight archive is built with it set (`Config/Local.xcconfig` for an Xcode archive).
 
 The ask, a draft for Jack: "Day 3: please send us your log. Tap the gear by the title, then 'report a problem', and
 send. It holds your moves and touches, never who you are."
