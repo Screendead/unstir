@@ -688,9 +688,9 @@ struct LevelView: View {
         return VStack(spacing: 0) {
             if over != nil && game.solved && !clean { unstirred.padding(.bottom, 26) }
             if game.lost {
-                LostCard(game: game, notice: notice, onExit: leave, undo: undo, again: reset)
+                LostCard(game: game, notice: notice, undo: undo, again: reset)
             } else {
-                ResultCard(game: game, onExit: leave, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
+                ResultCard(game: game, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

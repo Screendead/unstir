@@ -377,8 +377,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   tank out of ticks shows "out of ticks." (`LostStamp`) by the clock whose tick spent the last, with or without a +N
   (a −N for a wound-back clock), and with no push the look `UNSTIR_STOPLOOK` picks (`StopLook`: stamp, as built; left,
   the twists left as a count; rings, a ring on each knob still twisted), and `LostCard`'s "out of ticks on move N",
-  undo and again, whose
-  exit goes through `leave` as the result card's does. A clock stopping sends a ring out in the plate's vermilion as its last tick lands. A level with a
+  undo and again. Neither it nor the result card has a way back of its own (Jack's call D4 = A, round 13): the
+  header's "‹ levels" stays on screen above either, and the edge swipe leaves too, both through `leave`. A clock stopping sends a ring out in the plate's vermilion as its last tick lands. A level with a
   `demo` plays it before the problem opens until the problem has been solved (always in the harness, unless it holds the
   tank still), and after a reset of a tank with nothing played, which replays the opening: a drawn fingertip
   heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the picture fades to the bone paper
@@ -643,7 +643,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   holds still (`PackDock.paused`) and a tier switch cuts to the new list without the stir (`MenuView.go`), so nothing
   of the menu takes GPU time from the tank. Back closes the level and the list returns to its half, the row left lit
   once however often it is left (`MenuView.followPlaying`, on the level leaving, not on a change of focus). A row, the
-  tagline's next, an archive day or a card's level picked beside play is decided before anything leaves
+  menu's "next:" line, an archive day or a card's level picked beside play is decided before anything leaves
   (`RootView.besidePick`): one that opens leaves the playing level through its own way out (`LevelView.switching`: a
   finger let go, its quit sent and its try saved, as `leave` does), then opens in the tank; a gate's or a withheld
   level leaves the playing level untouched, sending nothing, the gate's card over the trailing half (before the store
@@ -859,11 +859,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs.
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
-  round 13): until 01 has a best, the tank's rule as a tagline over the tier's list, with the sandbox under the list;
-  then "next: 07 · Sprinkle ›" in the tagline's place, a button opening the shown tier's frontier (none once it has
-  none), and the sandbox over the list. The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
+  round 13): until 01 has a best, an empty line over the tier's list (the tank's rule, "Every stir in this tank has
+  an exact inverse.", left the menu for the App Store page: Jack's call D1 = A, round 13); then "next: 07 · Sprinkle ›"
+  on that line, a button opening the shown tier's frontier (none once it has none). The sandbox's row sits at the
+  list's end under its own header, "anything goes", so the list leads with 01 (Jack's call D2 = A, round 13). The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
   rethinking, so that a pack's mechanics join it once the pack is owned), as First Stir is: `Level.playsSandbox` is false
-  in Release, so there the lead has no sandbox (`Lead.sandbox` nil), the menu no row, `Store.opens` refuses it and a
+  in Release, so there the lead has no sandbox (`Lead.sandbox` false), the menu no row or header, `Store.opens` refuses it and a
   harnessed `UNSTIR_MODE=sandbox` opens the menu, while Debug and the harness outside Release keep it, its code, tests and
   shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
@@ -895,7 +896,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`MenuLayout`), or over the trailing half beside a playing level, as the archive does. The list opens centred, unanimated under
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
   `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
-  the first short of par, else the top). The daily, endless and the sandbox leave it at the top. That row's hairline,
+  the first short of par, else the top). The daily, endless and the sandbox leave it at the top, though the sandbox's row is at the end. That row's hairline,
   in the list's left margin, lights once and fades (not under Reduce Motion). The menu opens on the tier of a level
   of a tier left, and a tier's level opening stores its tier (`Tier.store`, so only an open one), so "up a notch" then
   back lands on the new tier, and so does a launch after the app dies in it. Back from a pack's level, the card over

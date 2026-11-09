@@ -1595,7 +1595,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
-    /// The menu's top follows plughole 01 and 23: the tagline, then the way on; the daily and endless only once open.
+    /// The menu's top follows plughole 01 and 23: nothing, then the way on; the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
         func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {
             let ids = Set(Tier.plughole.levels.prefix(tier == .plughole ? n : 27).map(\.id) + tier.levels.prefix(n).map(\.id))
@@ -1603,13 +1603,11 @@ final class UnstirTests: XCTestCase {
         }
         let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
         XCTAssertFalse(fresh.modes)
-        XCTAssertFalse(fresh.played)
-        XCTAssertEqual(fresh.sandbox, .under)
+        XCTAssertTrue(fresh.sandbox)
         XCTAssertNil(fresh.next)
         let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
         XCTAssertFalse(one.modes)
-        XCTAssertTrue(one.played)
-        XCTAssertEqual(one.sandbox, .over)
+        XCTAssertTrue(one.sandbox, "at the list's end whether or not 01 has a best")
         XCTAssertEqual(one.next?.id, Level.plughole[1].id)
         XCTAssertNil(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(1)).next, "a locked tier has no way on")
         XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
@@ -1621,7 +1619,7 @@ final class UnstirTests: XCTestCase {
                        Level.whirlpool[4].id)
         let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
         XCTAssertTrue(unlocked.modes)
-        XCTAssertEqual(unlocked.sandbox, .under)
+        XCTAssertTrue(unlocked.sandbox)
     }
 
     /// The sandbox is out of v1 (Jack's call snd2-sandbox, round 16): a Release build neither lists it nor opens it,
@@ -1634,13 +1632,12 @@ final class UnstirTests: XCTestCase {
         for best in bests {
             let shipped = MenuView.lead(tier: .plughole, unlocked: false, release: true, best: best)
             let debug = MenuView.lead(tier: .plughole, unlocked: false, release: false, best: best)
-            XCTAssertNil(shipped.sandbox)
-            XCTAssertNotNil(debug.sandbox)
+            XCTAssertFalse(shipped.sandbox)
+            XCTAssertTrue(debug.sandbox)
             XCTAssertEqual(shipped.modes, debug.modes)
-            XCTAssertEqual(shipped.played, debug.played)
             XCTAssertEqual(shipped.next?.id, debug.next?.id)
         }
-        XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
+        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
         XCTAssertFalse(Store.shared.opens(.sandbox, release: true))
         XCTAssertTrue(Store.shared.opens(.sandbox, release: false))
         for level in [Level.plughole[0], Level.daily(), .endless(Run(seed: 7)), Level.lens[0]] {

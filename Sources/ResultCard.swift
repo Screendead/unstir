@@ -24,9 +24,10 @@ enum Completion: Equatable {
     }
 }
 
+/// No way back of its own (Jack's call D4 = A, round 13): the header's back control stays on screen above it and the edge
+/// swipe leaves too.
 struct ResultCard: View {
     let game: Game
-    let onExit: () -> Void
     let onNext: (Level) -> Void
     let onLook: (Tier) -> Void
     @AccessibilityFocusState private var focused: Bool
@@ -114,28 +115,29 @@ struct ResultCard: View {
                         .accessibilityLabel("More puzzles in the packs")
                 }
             }
-            HStack(spacing: 32) {
-                Button(action: onExit) { Text(game.level.back).hit() }
-                    .accessibilityLabel(Spoken.back(game.level))
-                if game.offersAgain {
-                    Button(action: again) { Text("again \u{21BA}").hit() }.buttonStyle(Sounding(effect: .reset))
-                        .accessibilityLabel("Again")
+            // Wrapped, so a card with none, a clean solve of a list's last level, keeps no gap for the row.
+            if game.offersAgain || game.shareText != nil || next != nil {
+                HStack(spacing: 32) {
+                    if game.offersAgain {
+                        Button(action: again) { Text("again \u{21BA}").hit() }.buttonStyle(Sounding(effect: .reset))
+                            .accessibilityLabel("Again")
+                    }
+                    if let share = game.shareText {
+                        ShareButton(items: { [share] }) { Text("share \u{2197}").hit() }
+                            .foregroundStyle(page.signal(.amber)).shadow(color: page.glow(.amber), radius: 4)
+                            .accessibilityLabel("Share result")
+                    }
+                    if let next {
+                        // Past a pack's free taste, unowned, next opens its card: the button says so.
+                        let gate = Store.shared.card(for: next)
+                        let label = game.spilled ? "new run \u{203A}" : gate.map { "more in \($0.name) \u{203A}" } ?? "next \u{203A}"
+                        Button { onNext(next) } label: { Text(label).hit() }
+                            .foregroundStyle(accent).shadow(color: page.glow(accent), radius: 4)
+                            .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
+                    }
                 }
-                if let share = game.shareText {
-                    ShareButton(items: { [share] }) { Text("share \u{2197}").hit() }
-                        .foregroundStyle(page.signal(.amber)).shadow(color: page.glow(.amber), radius: 4)
-                        .accessibilityLabel("Share result")
-                }
-                if let next {
-                    // Past a pack's free taste, unowned, next opens its card: the button says so.
-                    let gate = Store.shared.card(for: next)
-                    let label = game.spilled ? "new run \u{203A}" : gate.map { "more in \($0.name) \u{203A}" } ?? "next \u{203A}"
-                    Button { onNext(next) } label: { Text(label).hit() }
-                        .foregroundStyle(accent).shadow(color: page.glow(accent), radius: 4)
-                        .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
-                }
+                .font(.mono(15, .medium))
             }
-            .font(.mono(15, .medium))
             if let day = Share.day(of: game.level.id), !game.level.archived {
                 TimelineView(.everyMinute) { t in
                     Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.mono(12)).opacity(0.55)
@@ -214,11 +216,10 @@ private struct TierUp: View {
 }
 
 /// Escapement's tank out of ticks: the move that spent them, undo (an empty bank says when it refills), and again, a
-/// reset.
+/// reset. As the result card, no way back of its own.
 struct LostCard: View {
     let game: Game
     let notice: String?
-    let onExit: () -> Void
     let undo: () -> Void
     let again: () -> Void
     @AccessibilityFocusState private var focused: Bool
@@ -229,8 +230,6 @@ struct LostCard: View {
             Text("out of ticks on move \(game.moves)").font(.mono(13))
                 .accessibilityLabel(game.finishSpoken).accessibilityFocused($focused)
             HStack(spacing: 32) {
-                Button(action: onExit) { Text(game.level.back).hit() }
-                    .accessibilityLabel(Spoken.back(game.level))
                 Button(action: undo) { Text("undo \u{00B7} \(game.bank)").hit() }
                     .buttonStyle(Sounding(effect: game.bank == 0 ? .tap : .undo))
                     .opacity(game.bank == 0 ? 0.35 : 1)
