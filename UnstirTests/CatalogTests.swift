@@ -68,4 +68,10 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(Level.prism[0].chapter, "Two Colours")
         XCTAssertEqual(Level.prism[0].note, "Each rod stirs only its knob's colours.")
     }
+
+    /// A picture's and a layout's display name reads as its raw value did on the sandbox's controls.
+    func testDisplayNamesReadAsTheirRawValues() {
+        for picture in Picture.allCases { XCTAssertEqual(String(localized: picture.display), picture.rawValue) }
+        for layout in Layout.allCases + Layout.swirls { XCTAssertEqual(String(localized: layout.display), layout.rawValue) }
+    }
 }

@@ -367,6 +367,55 @@ enum Picture: String, CaseIterable {
     }
 }
 
+/// The names shown for a picture and a layout, the sandbox's controls (R3: a raw value is stored, never shown). Each
+/// reads as its raw value did.
+extension Picture {
+    var display: LocalizedStringResource {
+        switch self {
+        case .grid: LocalizedStringResource("picture.grid", defaultValue: "grid", comment: "A picture's name on the sandbox's control")
+        case .sunset: LocalizedStringResource("picture.sunset", defaultValue: "sunset", comment: "A picture's name on the sandbox's control")
+        case .city: LocalizedStringResource("picture.city", defaultValue: "city", comment: "A picture's name on the sandbox's control")
+        case .glass: LocalizedStringResource("picture.glass", defaultValue: "glass", comment: "A picture's name on the sandbox's control")
+        case .chainmail: LocalizedStringResource("picture.chainmail", defaultValue: "chainmail", comment: "A picture's name on the sandbox's control")
+        case .coral: LocalizedStringResource("picture.coral", defaultValue: "coral", comment: "A picture's name on the sandbox's control")
+        case .neurons: LocalizedStringResource("picture.neurons", defaultValue: "neurons", comment: "A picture's name on the sandbox's control")
+        case .marbling: LocalizedStringResource("picture.marbling", defaultValue: "marbling", comment: "A picture's name on the sandbox's control")
+        case .glassTwin: LocalizedStringResource("picture.glassTwin", defaultValue: "glassTwin", comment: "A picture's name on the sandbox's control")
+        case .chainmailTwin: LocalizedStringResource("picture.chainmailTwin", defaultValue: "chainmailTwin", comment: "A picture's name on the sandbox's control")
+        case .coralTwin: LocalizedStringResource("picture.coralTwin", defaultValue: "coralTwin", comment: "A picture's name on the sandbox's control")
+        case .neuronsTwin: LocalizedStringResource("picture.neuronsTwin", defaultValue: "neuronsTwin", comment: "A picture's name on the sandbox's control")
+        case .marblingTwin: LocalizedStringResource("picture.marblingTwin", defaultValue: "marblingTwin", comment: "A picture's name on the sandbox's control")
+        case .isobars: LocalizedStringResource("picture.isobars", defaultValue: "isobars", comment: "A picture's name on the sandbox's control")
+        case .ephemeris: LocalizedStringResource("picture.ephemeris", defaultValue: "ephemeris", comment: "A picture's name on the sandbox's control")
+        case .cords: LocalizedStringResource("picture.cords", defaultValue: "cords", comment: "A picture's name on the sandbox's control")
+        case .halftone: LocalizedStringResource("picture.halftone", defaultValue: "halftone", comment: "A picture's name on the sandbox's control")
+        case .fern: LocalizedStringResource("picture.fern", defaultValue: "fern", comment: "A picture's name on the sandbox's control")
+        case .seeds: LocalizedStringResource("picture.seeds", defaultValue: "seeds", comment: "A picture's name on the sandbox's control")
+        case .medusae: LocalizedStringResource("picture.medusae", defaultValue: "medusae", comment: "A picture's name on the sandbox's control")
+        case .radiolaria: LocalizedStringResource("picture.radiolaria", defaultValue: "radiolaria", comment: "A picture's name on the sandbox's control")
+        case .nautilus: LocalizedStringResource("picture.nautilus", defaultValue: "nautilus", comment: "A picture's name on the sandbox's control")
+        case .engineTurned: LocalizedStringResource("picture.engineTurned", defaultValue: "engineTurned", comment: "A picture's name on the sandbox's control")
+        }
+    }
+}
+
+extension Layout {
+    var display: LocalizedStringResource {
+        switch self {
+        case .tri: LocalizedStringResource("layout.tri", defaultValue: "tri", comment: "A layout's name on the sandbox's control")
+        case .quad: LocalizedStringResource("layout.quad", defaultValue: "quad", comment: "A layout's name on the sandbox's control")
+        case .eye: LocalizedStringResource("layout.eye", defaultValue: "eye", comment: "A layout's name on the sandbox's control")
+        case .pent: LocalizedStringResource("layout.pent", defaultValue: "pent", comment: "A layout's name on the sandbox's control")
+        case .hex: LocalizedStringResource("layout.hex", defaultValue: "hex", comment: "A layout's name on the sandbox's control")
+        case .triSwirl: LocalizedStringResource("layout.triSwirl", defaultValue: "triSwirl", comment: "A layout's name on the sandbox's control")
+        case .quadSwirl: LocalizedStringResource("layout.quadSwirl", defaultValue: "quadSwirl", comment: "A layout's name on the sandbox's control")
+        case .eyeSwirl: LocalizedStringResource("layout.eyeSwirl", defaultValue: "eyeSwirl", comment: "A layout's name on the sandbox's control")
+        case .pentSwirl: LocalizedStringResource("layout.pentSwirl", defaultValue: "pentSwirl", comment: "A layout's name on the sandbox's control")
+        case .hexSwirl: LocalizedStringResource("layout.hexSwirl", defaultValue: "hexSwirl", comment: "A layout's name on the sandbox's control")
+        }
+    }
+}
+
 /// Crisp strokes, then bloom and halo added over them, baked once so twisting shears the glow with the lines.
 func neon(_ ctx: GraphicsContext, r: CGFloat, glows: [(blur: Double, opacity: Double)] = [(0.03, 0.4), (0.008, 1.0)],
           _ draw: (inout GraphicsContext) -> Void) {
