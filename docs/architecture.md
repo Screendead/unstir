@@ -1003,7 +1003,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   starts a promoted purchase of it a second in, `UNSTIR_PROMO=lens` shows that offer's promoted-purchase image alone,
   `UNSTIR_SUPPORTER=0` switches the supporter mark off for the launch, and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
+  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait), `u` an undo through the control
+  with its sound and `p<s>` a rest of s seconds more before the next (`Harness.Step`); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
   round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim,
