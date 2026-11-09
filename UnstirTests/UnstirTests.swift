@@ -918,6 +918,49 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.moves, 1)
     }
 
+    /// Each undo puts back exactly what its stir began from, the stack, the clock, the heals and the stir left open,
+    /// through every way a stir is made, joined, dropped as nothing and taken back: a pack's knobs and tank, and
+    /// Escapement's moves and waits.
+    @MainActor func testEachUndoPutsBackWhatItsStirBeganFrom() {
+        struct State: Equatable {
+            var entries: [Game.Entry], ticks: [Int: Int], lost: Bool, pushed: Int?, stopped: Int?
+            var heals: Int, open: Twist?, history: [Twist], position: Int
+        }
+        func state(_ g: Game) -> State {
+            State(entries: g.entries, ticks: g.escapement.ticks, lost: g.lost, pushed: g.pushedClock,
+                  stopped: g.lastStopped, heals: g.heals, open: g.openStir, history: g.history, position: g.position)
+        }
+        func check(_ game: Game, _ line: [(Game) -> Void], _ name: String) {
+            var began: [State] = []
+            for move in line {
+                let was = state(game), moves = game.moves
+                move(game)
+                if game.moves > moves { began.append(was) } else if game.moves < moves { began.removeLast() }
+            }
+            XCTAssertEqual(game.moves, began.count, name)
+            XCTAssertGreaterThanOrEqual(began.count, 3, name)
+            while let was = began.popLast() {
+                game.undo()
+                XCTAssertEqual(state(game), was, "\(name) undo to \(began.count) moves")
+            }
+        }
+
+        let pack = Level(id: Pack.lens.id(2), pack: .lens, label: "", title: "", layout: .quad,
+                         scramble: .parse("0:+3,1:+2", in: .quad), seized: [3], motion: .tank, fixedPar: 2)
+        check(Game(level: pack, tankTurned: true, swirled: true, bank: (20, nil)), [
+            { $0.commit(rod: 1, steps: -2) }, { $0.commit(rod: 2, steps: 1) },
+            { $0.commit(rod: 0, steps: -1) }, { $0.commit(rod: 0, steps: -1) }, { $0.commit(rod: 0, steps: 2) },
+            { $0.turnTank(1) }, { $0.turnTank(1) }, { $0.turnTank(2) },
+            { $0.turnTank(-1) }, { $0.commit(rod: 1, steps: 1) }, { $0.commit(rod: 1, steps: 1) }, { $0.turnTank(1) },
+        ], "pack")
+
+        var clocks = Level.escapement[1]
+        clocks.id = "test-undo-clocks"
+        check(Game(level: clocks, tankTurned: true, bank: (20, nil)), [
+            { $0.commit(rod: 2, steps: 4) }, { $0.commit(rod: 2, steps: -4) }, { $0.wait(on: 0) },
+        ], "escapement")
+    }
+
     /// An undone stir is as if never made: the stir it covered is open again if it was open then, so a further turn of
     /// its rod, or of the tank, joins it; one that was shut stays shut.
     @MainActor func testUndoLeavesTheUncoveredStirOpen() {
