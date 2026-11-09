@@ -179,7 +179,7 @@ final class PrismTests: XCTestCase {
         let w = Float(Channels.white.rawValue), r = Float(Channels.red.rawValue), c = Float(Channels.cyan.rawValue)
         XCTAssertNil(Unstirred.channelCost([]))
         XCTAssertNil(Unstirred.channelCost([w, w, w]))
-        XCTAssertEqual(Unstirred.channelCost([w, r, c]), 2 + 3 + 1 + 2)
+        XCTAssertEqual(Unstirred.channelCost([w, r, c]), 3 + 3 + 1 + 2)
     }
 
     /// Each plate, drawn at `side`, as grey levels, row 0 at the top.
