@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's chapter 5, Dusk Before: scenes 21 to 25 of the outline, from 9:30 back to 7:40 pm, in dusk rose ending in
@@ -879,3 +880,4 @@ extension Dusk {
         }
     }
 }
+#endif

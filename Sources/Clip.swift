@@ -26,7 +26,11 @@ struct Clip: Sendable {
     /// Each offer's clip. Complete cuts between the packs it grants.
     static func of(_ offer: Offer) -> Clip {
         switch offer {
+        #if FIRST_STIR
         case .pack(.firstStir): firstStir
+        #else
+        case .pack(.firstStir): fatalError("a pack this build withholds has no clip")
+        #endif
         case .pack(.lens): lens
         case .pack(.escapement): escapement
         case .pack(.prism): prism
@@ -34,8 +38,10 @@ struct Clip: Sendable {
         }
     }
 
+    #if FIRST_STIR
     /// Level 1 healed top first, its clock stepping back with each heal and a vignette playing with every one but the first.
     static let firstStir = Clip(reels: [.firstStir()], still: Reel.firstStir().beats[1].lift + 0.25)
+    #endif
 
     /// Level 3 as dealt, the lens newest, so its rim runs whole through both twists beside it: the order read. The finger
     /// drags it down to clean and back up, so it zooms out and in again, crisp at its rim, and lets go where it took it.
@@ -56,7 +62,11 @@ struct Clip: Sendable {
     static func cut(of packs: [Pack]) -> Clip {
         let cuts = packs.map { pack -> (reel: Reel, still: Double) in
             switch pack {
+            #if FIRST_STIR
             case .firstStir: return (cutStory, cutStory.beats[1].lift + 0.5)
+            #else
+            case .firstStir: fatalError("a pack this build withholds has no clip")
+            #endif
             case .lens:
                 let r = Reel.lens(dips: true, rest: 0.3, down: 0.6, hold: 0.1, up: 0.6, tail: 0.25)
                 return (r, r.beats[0].lift + 0.15)
@@ -70,11 +80,13 @@ struct Clip: Sendable {
         }
         return Clip(reels: cuts.map(\.reel), still: cuts[0].still - cuts[0].reel.from)
     }
+    #if FIRST_STIR
     /// The sunrise's first heal plays nothing, so the cut opens just after it, on the second, which plays the lantern.
     private static let cutStory: Reel = {
         let r = Reel.firstStir(moves: 2, rest: 0.45, gap: 0.5, tail: 0.6)
         return r.starting(at: r.beats[0].lift + 0.15)
     }()
+    #endif
 }
 
 /// One level's part of a clip, timed in its own seconds from 0 to `length`.
@@ -152,7 +164,7 @@ struct Reel: Sendable {
                 ticked = true
                 stops = !after.contains { $0.twist.rod == c.rod }
             }
-            let heals = level.story != nil ? !Self.played(level, after).isSubset(of: playedWas) : popped
+            let heals = level.isStory ? !Self.played(level, after).isSubset(of: playedWas) : popped
             beats.append(Beat(gesture: g, land: land, start: start, lift: lift, before: entries, moved: moved, after: after,
                               result: result, heals: heals, ticked: ticked, stops: stops))
             entries = after
@@ -166,8 +178,12 @@ struct Reel: Sendable {
 
     /// The story's vignettes played on `entries`; a solved tank has played them all.
     static func played(_ level: Level, _ entries: [Game.Entry]) -> Set<Int> {
+        #if FIRST_STIR
         guard let story = level.story else { return [] }
         return entries.isEmpty ? story.vignettes : story.vignettes.subtracting(entries.flatMap(\.tags))
+        #else
+        []
+        #endif
     }
 
     /// Top first, each newest entry a working knob can take off: what the harness's autoplay plays.
@@ -180,11 +196,13 @@ struct Reel: Sendable {
         return out
     }
 
+    #if FIRST_STIR
     /// Level 1, the sunrise, on its own window of the night (6:40 back to 6:15 am).
     static func firstStir(moves: Int = .max, rest: Double = 0.5, gap: Double = 0.35, tail: Double = 1.0) -> Reel {
         let level = Level.firstStir[0]
         return Reel(level: level, gestures: solve(level, moves: moves), rest: rest, gap: gap, tail: tail)
     }
+    #endif
 
     /// The same reel shown from `t`, dipping in from black there.
     func starting(at t: Double) -> Reel {
@@ -257,11 +275,13 @@ struct Reel: Sendable {
         f.stack = entries.map(\.twist)
         f.clockRuns = entries.contains { $0.twist.rod == level.clocks.first?.rod }
         f.finished = entries.isEmpty
+        #if FIRST_STIR
         if let scene = level.story?.scene {
             let count = level.scramble.count
             f.wound = entries.isEmpty ? count : max(count - entries.filter { !$0.pushed }.count, 0)
             f.caption = type(of: scene).clock(scene.minutes(wound: f.wound, of: count))
         }
+        #endif
         // The fingertip, from its landing until just after it lifts.
         if let b = beats.first(where: { $0.land <= t && t < $0.lift + 0.12 }) {
             let k = b.gesture.knob, rod = level.layout.rods[k], c = SIMD2(rod.x, rod.y)
@@ -344,7 +364,7 @@ struct ClipTank: View {
         let f = reel.frame(at: t)
         VStack(spacing: 20) {
             tank(f)
-            if reel.level.story != nil {
+            if reel.level.isStory {
                 Text(f.caption ?? "").font(.ui(.label, .medium)).monospacedDigit().opacity(0.8)
                     .contentTransition(.identity)
             }
@@ -438,11 +458,15 @@ struct LevelPicture: View {
     var clock = 0.0
 
     var body: some View {
+        #if FIRST_STIR
         if let scene = level.story?.scene {
             SceneLayer(scene: scene, played: played, wound: wound, count: level.scramble.count, side: side)
         } else {
             PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock)
         }
+        #else
+        PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock)
+        #endif
     }
 }
 

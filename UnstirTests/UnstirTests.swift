@@ -918,6 +918,49 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.moves, 1)
     }
 
+    /// Each undo puts back exactly what its stir began from, the stack, the clock, the heals and the stir left open,
+    /// through every way a stir is made, joined, dropped as nothing and taken back: a pack's knobs and tank, and
+    /// Escapement's moves and waits.
+    @MainActor func testEachUndoPutsBackWhatItsStirBeganFrom() {
+        struct State: Equatable {
+            var entries: [Game.Entry], ticks: [Int: Int], lost: Bool, pushed: Int?, stopped: Int?
+            var heals: Int, open: Twist?, history: [Twist], position: Int
+        }
+        func state(_ g: Game) -> State {
+            State(entries: g.entries, ticks: g.escapement.ticks, lost: g.lost, pushed: g.pushedClock,
+                  stopped: g.lastStopped, heals: g.heals, open: g.openStir, history: g.history, position: g.position)
+        }
+        func check(_ game: Game, _ line: [(Game) -> Void], _ name: String) {
+            var began: [State] = []
+            for move in line {
+                let was = state(game), moves = game.moves
+                move(game)
+                if game.moves > moves { began.append(was) } else if game.moves < moves { began.removeLast() }
+            }
+            XCTAssertEqual(game.moves, began.count, name)
+            XCTAssertGreaterThanOrEqual(began.count, 3, name)
+            while let was = began.popLast() {
+                game.undo()
+                XCTAssertEqual(state(game), was, "\(name) undo to \(began.count) moves")
+            }
+        }
+
+        let pack = Level(id: Pack.lens.id(2), pack: .lens, label: "", title: "", layout: .quad,
+                         scramble: .parse("0:+3,1:+2", in: .quad), seized: [3], motion: .tank, fixedPar: 2)
+        check(Game(level: pack, tankTurned: true, swirled: true, bank: (20, nil)), [
+            { $0.commit(rod: 1, steps: -2) }, { $0.commit(rod: 2, steps: 1) },
+            { $0.commit(rod: 0, steps: -1) }, { $0.commit(rod: 0, steps: -1) }, { $0.commit(rod: 0, steps: 2) },
+            { $0.turnTank(1) }, { $0.turnTank(1) }, { $0.turnTank(2) },
+            { $0.turnTank(-1) }, { $0.commit(rod: 1, steps: 1) }, { $0.commit(rod: 1, steps: 1) }, { $0.turnTank(1) },
+        ], "pack")
+
+        var clocks = Level.escapement[1]
+        clocks.id = "test-undo-clocks"
+        check(Game(level: clocks, tankTurned: true, bank: (20, nil)), [
+            { $0.commit(rod: 2, steps: 4) }, { $0.commit(rod: 2, steps: -4) }, { $0.wait(on: 0) },
+        ], "escapement")
+    }
+
     /// An undone stir is as if never made: the stir it covered is open again if it was open then, so a further turn of
     /// its rod, or of the tank, joins it; one that was shut stays shut.
     @MainActor func testUndoLeavesTheUncoveredStirOpen() {
@@ -2357,13 +2400,7 @@ final class UnstirTests: XCTestCase {
     /// 5 x 5 window, on each seed that shows the web (the sandbox's and its levels'), for the web and its twin, whose
     /// lines are checked inflamed and at the heartbeat's peak.
     func testNeuronsStayInTheirRegions() throws {
-        guard let device = MTLCreateSystemDefaultDevice() else { throw XCTSkip("no Metal device") }
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Sources/Neurons.metal")
-        let source = try String(contentsOf: url, encoding: .utf8)
-            .replacingOccurrences(of: "#include <SwiftUI/SwiftUI_Metal.h>", with: "")
-            .replacingOccurrences(of: "[[ stitchable ]]", with: "") + """
-
+        let kit = try ShaderKit("Neurons.metal", helpersOnly: false, kernels: """
             // x the line, y the glow, z the soma's reach at p: as the shader draws them, or over every node near p.
             static float3 probe(float2 p, float ipx, device const packed_float3 *cells, bool brute, bool twin) {
                 const float wide = 0.1, high = 0.0866025, left = -1.2, top = -1.1258;
@@ -2417,10 +2454,8 @@ final class UnstirTests: XCTestCase {
                 if (abs(s.y - b.y) > 0.01) atomic_fetch_add_explicit(&bad[1], 1u, memory_order_relaxed);
                 if (abs(s.z - b.z) > 0.01) atomic_fetch_add_explicit(&bad[2], 1u, memory_order_relaxed);
             }
-            """
-        let library = try device.makeLibrary(source: source, options: nil)
-        let scan = try device.makeComputePipelineState(function: try XCTUnwrap(library.makeFunction(name: "scan")))
-        let queue = try XCTUnwrap(device.makeCommandQueue())
+            """)
+        let scan = try kit.pipeline("scan")
         var side = Float(2400)
         let seeds = [0, 4, 7, 11, 17, 20], webs = OSAllocatedUnfairLock(initialState: [Int: [Float]]())
         // A debug build takes most of a second over each web, so they build side by side.
@@ -2430,26 +2465,26 @@ final class UnstirTests: XCTestCase {
         }
         for seed in seeds {
             let data = webs.withLock { $0[seed]! }
-            let cells = try XCTUnwrap(device.makeBuffer(bytes: data, length: 4 * data.count))
+            let cells = try kit.buffer(data)
             for var twin: UInt32 in [0, 1] {
-                let bad = try XCTUnwrap(device.makeBuffer(length: 12))
-                memset(bad.contents(), 0, 12)
-                let cb = try XCTUnwrap(queue.makeCommandBuffer()), enc = try XCTUnwrap(cb.makeComputeCommandEncoder())
-                enc.setComputePipelineState(scan)
-                enc.setBuffer(cells, offset: 0, index: 0)
-                enc.setBuffer(bad, offset: 0, index: 1)
-                enc.setBytes(&side, length: 4, index: 2)
-                enc.setBytes(&twin, length: 4, index: 3)
-                enc.dispatchThreads(MTLSize(width: Int(side), height: Int(side), depth: 1),
-                                    threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1))
-                enc.endEncoding()
-                cb.commit()
-                cb.waitUntilCompleted()
-                XCTAssertNil(cb.error)
-                let n = bad.contents().bindMemory(to: UInt32.self, capacity: 3)
-                XCTAssertEqual([n[0], n[1], n[2]], [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(twin == 1 ? " twin" : "")")
+                let bad = try kit.buffer(UInt32.self, count: 3)
+                try kit.run(scan, grid: MTLSize(width: Int(side), height: Int(side), depth: 1),
+                            group: MTLSize(width: 16, height: 16, depth: 1)) { enc in
+                    enc.setBuffer(cells, offset: 0, index: 0)
+                    enc.setBuffer(bad, offset: 0, index: 1)
+                    enc.setBytes(&side, length: 4, index: 2)
+                    enc.setBytes(&twin, length: 4, index: 3)
+                }
+                XCTAssertEqual(kit.read(bad, as: UInt32.self), [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(twin == 1 ? " twin" : "")")
             }
         }
+    }
+
+    /// `PictureLayer` looks a live picture's shader up in the app's library by the case's name, which no compiler checks.
+    func testEveryLivePictureHasItsShader() throws {
+        guard let device = MTLCreateSystemDefaultDevice() else { throw XCTSkip("no Metal device") }
+        let library = try device.makeDefaultLibrary(bundle: .main)
+        for picture in Picture.allCases where picture.isLive { XCTAssertNotNil(library.makeFunction(name: "\(picture)"), "\(picture)") }
     }
 
     /// The glass turned by `angle` clockwise about the centre, as the shader turns it.

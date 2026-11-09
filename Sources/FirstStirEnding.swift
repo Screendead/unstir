@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's ending, the night forwards (the outline's open point 8, A; Jack's round 9, D1): after the pack's last
@@ -269,3 +270,4 @@ struct NightForwardsFilm: View {
         if start == nil { start = .now }
     }
 }
+#endif

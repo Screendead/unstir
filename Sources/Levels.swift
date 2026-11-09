@@ -117,8 +117,14 @@ struct Level: Hashable, Sendable {
     var motion = Motion.none
     /// Nil is one move per entry. A level whose tank turns also counts its turns.
     var fixedPar: Int?
+    #if FIRST_STIR
     /// First Stir's scene, drawn in place of `picture`; each of its vignettes plays once no entry holds it back.
     var story: Story?
+    var isStory: Bool { story != nil }
+    #else
+    var isStory: Bool { false }
+    var endsFirstStir: Bool { false }
+    #endif
     /// A past daily, opened from the archive: its best is its own, and never counts toward `Daily.run`.
     var archived = false
     var par: Int { fixedPar ?? scramble.count }

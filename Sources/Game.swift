@@ -21,20 +21,27 @@ final class Game {
     /// Stirs since the last reset, newest last: turns of one rod in a row are one stir, and undo commits a stir's negation.
     /// A rod stir names the rod the stack names (the slot under the knob turned). A turn of the tank is rod `Game.tank`,
     /// in steps of the layout's symmetry.
-    private(set) var history: [Twist] = []
-    /// The stack and the clock as each stir of `history` began: a pack's undo puts them back whole.
-    private var before: [(entries: [Entry], clock: Clock)] = []
+    var history: [Twist] { stirs.map(\.twist) }
+    /// A stir of `history` and what its undo puts back, as the stir began.
+    private struct Stir {
+        var twist: Twist
+        /// The stack and the clock: a pack's undo puts them back whole.
+        let entries: [Entry]
+        let clock: Clock
+        let heals: Int
+        /// Whether the stir before it was open.
+        let wasOpen: Bool
+    }
+    private var stirs: [Stir] = []
     nonisolated static let tank = -1
     /// Whether the next turn of the newest stir's rod joins it. A stir turned back to nothing is gone, and the one before
     /// it stays shut; an undone one is as if never made, so the one before it is open again if it was then.
     private var open = false
-    /// For each stir in `history`, whether the one before it was open when it began.
-    private var openBefore: [Bool] = []
     /// The newest stir while the next turn of its rod, or of the tank, would join it.
-    var openStir: Twist? { open ? history.last : nil }
-    var moves: Int { history.count }
+    var openStir: Twist? { open ? stirs.last?.twist : nil }
+    var moves: Int { stirs.count }
     /// The tank's steps clockwise of home, unwrapped, so an undo swings the glass by exactly the stir it takes off.
-    var position: Int { history.reduce(0) { $1.rod == Game.tank ? $0 + $1.steps : $0 } }
+    var position: Int { stirs.reduce(0) { $1.twist.rod == Game.tank ? $0 + $1.twist.steps : $0 } }
     /// Every commit and undo, for the commit flash: a joined turn leaves `moves` alone.
     private(set) var turns = 0
     /// A reset gives the moves back but costs the clean, and so does an undo.
@@ -63,8 +70,6 @@ final class Game {
     /// Heals since the level opened or was reset, for the heal's rising note: moves that popped one of the scramble's
     /// entries. The heal that solves sounds as the solve, so a heal counts only once the win check has had its say.
     private(set) var heals = 0
-    /// `heals` as each stir of `history` began.
-    private var healsBefore: [Int] = []
     /// The rod and outcome of the newest commit or undo, for the commit flash.
     private(set) var lastCommit: (rod: Int, result: Commit)?
     /// Turns a full stack refused (`Tank.maxStack`), and the knob of the last, which shakes.
@@ -155,6 +160,14 @@ final class Game {
     var deadTick: Bool { !finished && level.clocks.contains { overdue($0.rod) > 0 } }
     /// With the bank empty undo can't take the tick back, so the words point only at reset (Jack's call, round 13).
     var deadTickWords: String { bank == 0 ? "That tick can't come back. Reset." : "That tick can't come back. Undo, or again." }
+    /// The line under the tank: Escapement's word on a pushed tick, a scene's time, else the level's note.
+    var caption: String {
+        if deadTick { return deadTickWords }
+        #if FIRST_STIR
+        if let sceneClock { return sceneClock }
+        #endif
+        return level.note
+    }
     /// Escapement: the ticks clock `clock` has left, its hub's count (Jack's call ES2, round 12). Only its own ticks
     /// change its rod's steps, each by one whether it merges or pushes, so this is what it owed as dealt less its ticks:
     /// nothing needs storing, and undo and reset bring it back with the stack.
@@ -197,13 +210,21 @@ final class Game {
 
     /// The scramble's entries. In a story each holds back the vignette in its own rod's core, if that core has one.
     nonisolated static func dealt(_ level: Level) -> [Entry] {
+        #if FIRST_STIR
         level.scramble.map { Entry(twist: $0, pushed: false, tags: level.story?.vignettes.intersection([$0.rod]) ?? []) }
+        #else
+        level.scramble.map { Entry(twist: $0, pushed: false) }
+        #endif
     }
 
     /// The story's vignettes played: each once no entry holds it back. A function of the stack alone, so undo and reset
     /// unplay them, and a win the fine pass calls on a stack that only looks solved plays the rest.
     var played: Set<Int> {
+        #if FIRST_STIR
         level.story.map { $0.vignettes.subtracting(entries.flatMap(\.tags)) } ?? []
+        #else
+        []
+        #endif
     }
 
     /// Practice saves nothing. A past daily from the archive plays as any level, unless its day kept a best: that best
@@ -227,9 +248,9 @@ final class Game {
     /// What each move did to the stack, oldest first: read once the level has settled, since the fine pass may empty the
     /// stack after the last move.
     var marks: [Share.Mark] {
-        history.indices.map { i in
-            let size = before[i].entries.count, after = i + 1 < before.count ? before[i + 1].entries.count : entries.count
-            return history[i].rod == Game.tank ? .tank : after < size ? .healed : after > size ? .pushed : .merged
+        stirs.indices.map { i in
+            let size = stirs[i].entries.count, after = i + 1 < stirs.count ? stirs[i + 1].entries.count : entries.count
+            return stirs[i].twist.rod == Game.tank ? .tank : after < size ? .healed : after > size ? .pushed : .merged
         }
     }
 
@@ -267,16 +288,12 @@ final class Game {
         }
         let brimWas = brim
         // Joins by slot: a turn of the tank between two turns of one knob is a stir of its own.
-        if open, history.last?.rod == slot {
-            history[history.count - 1].steps += steps
-            if history.last!.steps == 0 {
-                history.removeLast(); openBefore.removeLast(); before.removeLast(); healsBefore.removeLast(); open = false
-            }
+        if open, stirs.last?.twist.rod == slot {
+            stirs[stirs.count - 1].twist.steps += steps
+            if stirs.last!.twist.steps == 0 { stirs.removeLast(); open = false }
         } else {
-            history.append(Twist(rod: slot, steps: steps))
-            openBefore.append(open)
-            before.append((was, escapement))
-            healsBefore.append(heals)
+            stirs.append(Stir(twist: Twist(rod: slot, steps: steps), entries: was, clock: escapement, heals: heals,
+                              wasOpen: open))
             open = true
         }
         lastCommit = (rod, result)
@@ -287,7 +304,7 @@ final class Game {
         }
         // The heal ring marks only a commit that pops one of the scramble's entries, and a story's only one that plays
         // a vignette: cancelling the player's own push flashes white, as a merge (Jack's call SND2 = A, round 16).
-        let heals = level.story != nil ? !played.isSubset(of: playedWas) : healed > 0
+        let heals = level.isStory ? !played.isSubset(of: playedWas) : healed > 0
         if heals { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
@@ -351,18 +368,14 @@ final class Game {
             tankTurned = true
             if storesTankTurned { Best.tankTurned = true; GameCenter.shared.report() }
         }
-        let joins = open && history.last?.rod == Game.tank
+        let joins = open && stirs.last?.twist.rod == Game.tank
         let net = tankStir(after: steps)
-        let wasOpen = joins ? openBefore.removeLast() : open
-        let was = joins ? before.removeLast() : (entries, escapement)
-        let healsWere = joins ? healsBefore.removeLast() : heals
-        if joins { history.removeLast() }
+        var stir = joins ? stirs.removeLast()
+            : Stir(twist: Twist(rod: Game.tank, steps: 0), entries: entries, clock: escapement, heals: heals, wasOpen: open)
         open = net != 0
         if open {
-            history.append(Twist(rod: Game.tank, steps: net))
-            openBefore.append(wasOpen)
-            before.append(was)
-            healsBefore.append(healsWere)
+            stir.twist.steps = net
+            stirs.append(stir)
         }
         log("tank \(steps) position=\(position) moves=\(moves)")
         record(.tank(steps))
@@ -385,10 +398,8 @@ final class Game {
             return
         }
         started()
-        before.append((entries, escapement))
-        healsBefore.append(heals)
-        openBefore.append(open)
-        history.append(Twist(rod: slot, steps: steps))
+        stirs.append(Stir(twist: Twist(rod: slot, steps: steps), entries: entries, clock: escapement, heals: heals,
+                          wasOpen: open))
         entries = next
         // Final, so no later turn joins it.
         open = false
@@ -410,10 +421,8 @@ final class Game {
         guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return false }
         guard !ticksRefused(entries) else { log("wait refused"); refuse(ratchet); return false }
         started()
-        before.append((entries, escapement))
-        healsBefore.append(heals)
-        openBefore.append(open)
-        history.append(Twist(rod: slot(of: ratchet), steps: 1))
+        stirs.append(Stir(twist: Twist(rod: slot(of: ratchet), steps: 1), entries: entries, clock: escapement, heals: heals,
+                          wasOpen: open))
         open = false
         lastCommit = (ratchet, .reduced)
         turns += 1
@@ -498,10 +507,7 @@ final class Game {
     }
 
     private func restart() {
-        history = []
-        openBefore = []
-        before = []
-        healsBefore = []
+        stirs = []
         heals = 0
         open = false
         escapement = Clock()
@@ -514,9 +520,9 @@ final class Game {
         // The sandbox counts nothing, so its undos are free, and a replayed one was paid for when it was made. A lost
         // tank can be undone.
         guard !solved, !spilled, !checking, level.run == nil, level.sandbox || bank > 0 || replaying,
-              let last = history.popLast() else { return }
-        let was = before.removeLast()
-        heals = healsBefore.removeLast()
+              let was = stirs.popLast() else { return }
+        let last = was.twist
+        heals = was.heals
         if level.pack != nil || !level.ratchets.isEmpty {
             entries = was.entries
             escapement = was.clock
@@ -533,7 +539,7 @@ final class Game {
             lastCommit = (knob(over: last.rod), .reduced)
             turns += 1
         }
-        open = openBefore.removeLast()
+        open = was.wasOpen
         if !level.sandbox { undos += 1 }
         if !level.sandbox && !replaying {
             bank -= 1
@@ -549,7 +555,7 @@ final class Game {
     /// has already settled on. With nothing played it only replays the opening, so it costs no clean.
     @discardableResult func reset() -> Bool {
         guard !checking, level.run == nil else { return false }
-        let played = !history.isEmpty
+        let played = !stirs.isEmpty
         if played { resets += 1 }
         // The daily counts only its first try's solve, so "again" from its card is practice.
         if solved && Share.day(of: level.id) != nil && !level.archived {
