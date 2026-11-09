@@ -413,7 +413,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   made here, from `purchase`'s pending result until its approval is said or it is revoked, so the approval is said
   once: `Asked`, `Ledger.answers`, read after the launch's entitlements and each update; with it `asked.at.<product>`,
   when it was asked, so a relaunch within 24 hours, the time Apple gives a parent to answer, finds the request
-  waiting for approval again, as it was, unless StoreKit has said more of it since: `Ledger.wait`, `Asked.waiting`): entitlements from `Transaction.currentEntitlements` at
+  waiting for approval again, as it was, unless StoreKit has said more of it since: `Ledger.wait`, `Asked.waiting`; `StoreTests` forgets every request before and after each test, as its Ask to Buy purchases save them): entitlements from `Transaction.currentEntitlements` at
   launch (`Store.ready` once that first read has finished: until then `RootView.show` waits on it, `Store.settled`,
   before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`), and a `PurchaseIntent.intents` listener: a purchase started on the App

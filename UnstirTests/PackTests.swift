@@ -407,7 +407,7 @@ final class PackTests: XCTestCase {
     /// owned without asking says nothing; a revocation forgets the request unsaid (Jack's call C21, round 13).
     func testAnApprovalIsSaidOnce() {
         let lens = Pack.lens.productID, prism = Pack.prism.productID
-        let d = UserDefaults.standard, keys = [Asked.key(lens), Asked.key(prism)]
+        let d = UserDefaults.standard, keys = [lens, prism].flatMap { [Asked.key($0), Asked.dateKey($0)] }
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
