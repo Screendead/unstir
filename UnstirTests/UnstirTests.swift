@@ -918,6 +918,49 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.moves, 1)
     }
 
+    /// Each undo puts back exactly what its stir began from, the stack, the clock, the heals and the stir left open,
+    /// through every way a stir is made, joined, dropped as nothing and taken back: a pack's knobs and tank, and
+    /// Escapement's moves and waits.
+    @MainActor func testEachUndoPutsBackWhatItsStirBeganFrom() {
+        struct State: Equatable {
+            var entries: [Game.Entry], ticks: [Int: Int], lost: Bool, pushed: Int?, stopped: Int?
+            var heals: Int, open: Twist?, history: [Twist], position: Int
+        }
+        func state(_ g: Game) -> State {
+            State(entries: g.entries, ticks: g.escapement.ticks, lost: g.lost, pushed: g.pushedClock,
+                  stopped: g.lastStopped, heals: g.heals, open: g.openStir, history: g.history, position: g.position)
+        }
+        func check(_ game: Game, _ line: [(Game) -> Void], _ name: String) {
+            var began: [State] = []
+            for move in line {
+                let was = state(game), moves = game.moves
+                move(game)
+                if game.moves > moves { began.append(was) } else if game.moves < moves { began.removeLast() }
+            }
+            XCTAssertEqual(game.moves, began.count, name)
+            XCTAssertGreaterThanOrEqual(began.count, 3, name)
+            while let was = began.popLast() {
+                game.undo()
+                XCTAssertEqual(state(game), was, "\(name) undo to \(began.count) moves")
+            }
+        }
+
+        let pack = Level(id: Pack.lens.id(2), pack: .lens, label: "", title: "", layout: .quad,
+                         scramble: .parse("0:+3,1:+2", in: .quad), seized: [3], motion: .tank, fixedPar: 2)
+        check(Game(level: pack, tankTurned: true, swirled: true, bank: (20, nil)), [
+            { $0.commit(rod: 1, steps: -2) }, { $0.commit(rod: 2, steps: 1) },
+            { $0.commit(rod: 0, steps: -1) }, { $0.commit(rod: 0, steps: -1) }, { $0.commit(rod: 0, steps: 2) },
+            { $0.turnTank(1) }, { $0.turnTank(1) }, { $0.turnTank(2) },
+            { $0.turnTank(-1) }, { $0.commit(rod: 1, steps: 1) }, { $0.commit(rod: 1, steps: 1) }, { $0.turnTank(1) },
+        ], "pack")
+
+        var clocks = Level.escapement[1]
+        clocks.id = "test-undo-clocks"
+        check(Game(level: clocks, tankTurned: true, bank: (20, nil)), [
+            { $0.commit(rod: 2, steps: 4) }, { $0.commit(rod: 2, steps: -4) }, { $0.wait(on: 0) },
+        ], "escapement")
+    }
+
     /// An undone stir is as if never made: the stir it covered is open again if it was open then, so a further turn of
     /// its rod, or of the tank, joins it; one that was shut stays shut.
     @MainActor func testUndoLeavesTheUncoveredStirOpen() {
@@ -1595,7 +1638,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
-    /// The menu's top follows plughole 01 and 23: the tagline, then the way on; the daily and endless only once open.
+    /// The menu's top follows plughole 01 and 23: nothing, then the way on; the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
         func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {
             let ids = Set(Tier.plughole.levels.prefix(tier == .plughole ? n : 27).map(\.id) + tier.levels.prefix(n).map(\.id))
@@ -1603,13 +1646,11 @@ final class UnstirTests: XCTestCase {
         }
         let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
         XCTAssertFalse(fresh.modes)
-        XCTAssertFalse(fresh.played)
-        XCTAssertEqual(fresh.sandbox, .under)
+        XCTAssertTrue(fresh.sandbox)
         XCTAssertNil(fresh.next)
         let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
         XCTAssertFalse(one.modes)
-        XCTAssertTrue(one.played)
-        XCTAssertEqual(one.sandbox, .over)
+        XCTAssertTrue(one.sandbox, "at the list's end whether or not 01 has a best")
         XCTAssertEqual(one.next?.id, Level.plughole[1].id)
         XCTAssertNil(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(1)).next, "a locked tier has no way on")
         XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
@@ -1621,7 +1662,7 @@ final class UnstirTests: XCTestCase {
                        Level.whirlpool[4].id)
         let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
         XCTAssertTrue(unlocked.modes)
-        XCTAssertEqual(unlocked.sandbox, .under)
+        XCTAssertTrue(unlocked.sandbox)
     }
 
     /// The sandbox is out of v1 (Jack's call snd2-sandbox, round 16): a Release build neither lists it nor opens it,
@@ -1634,13 +1675,12 @@ final class UnstirTests: XCTestCase {
         for best in bests {
             let shipped = MenuView.lead(tier: .plughole, unlocked: false, release: true, best: best)
             let debug = MenuView.lead(tier: .plughole, unlocked: false, release: false, best: best)
-            XCTAssertNil(shipped.sandbox)
-            XCTAssertNotNil(debug.sandbox)
+            XCTAssertFalse(shipped.sandbox)
+            XCTAssertTrue(debug.sandbox)
             XCTAssertEqual(shipped.modes, debug.modes)
-            XCTAssertEqual(shipped.played, debug.played)
             XCTAssertEqual(shipped.next?.id, debug.next?.id)
         }
-        XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
+        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
         XCTAssertFalse(Store.shared.opens(.sandbox, release: true))
         XCTAssertTrue(Store.shared.opens(.sandbox, release: false))
         for level in [Level.plughole[0], Level.daily(), .endless(Run(seed: 7)), Level.lens[0]] {

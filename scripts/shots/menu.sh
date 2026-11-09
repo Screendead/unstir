@@ -1,6 +1,6 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # The menu: tiers, gates, the daily archive and where the list lands. Sourced in order by scripts/shots.sh.
-shot menu "Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock." CONSENT=yes
+shot menu "Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list with no line over it, only level 01 unlocked, no daily or endless row, no pack dock." CONSENT=yes
 shot menu-unlocked "Menu with every row unlocked (UNSTIR_UNLOCK)." UNLOCK=1 CONSENT=yes
 # The tier strip and its gates. UNSTIR_BESTS registers bests for the one launch: a digit per level, that many over par.
 par27=$(printf '0%.0s' {1..27})
@@ -22,8 +22,8 @@ upto13=0000000000000
 # What the menu leads with (C4, C5, C18, C3's tried mark).
 shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings." FRESH=1 OPEN=1
 hold=9 shot first-launch-pointer "The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both." FRESH=1 OPEN=1
-shot menu-after-01 "Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list." BESTS=plughole:0
-shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox." \
+shot menu-after-01 "Menu with 01 solved: next: 02 · Drip over the list." BESTS=plughole:0
+shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01." \
   TIER=whirlpool BESTS=plughole:$par27
 shot menu-daily-run "The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more." \
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
@@ -43,6 +43,8 @@ shot menu-tried "Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's ro
 shot menu-no-dock "Plughole 01 to 08 solved: no pack dock yet." BESTS=plughole:00000000
 shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
   BESTS=plughole:$upto13
+shot menu-list-end "A cold launch with plughole 01 to 26 solved: the list centred on 27, its last, and under it the sandbox's row under anything goes (Debug; Release has neither)." \
+  BESTS=plughole:${par27:1}
 shot menu-locktap "Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit." \
   BESTS=plughole:$upto13 LOCKTAP=L15
 shot menu-back-left "Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12." \
