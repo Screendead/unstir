@@ -138,8 +138,8 @@ final class PrismTests: XCTestCase {
         var masks: [Int: Channels] = [:]
         for k in rods.indices where k != layout.swirl { masks[k] = all[rng.below(all.count)] }
         let stack = (0..<12).map { _ in Twist(rod: rng.below(rods.count), steps: [-5, -3, -1, 2, 4][rng.below(5)]) }
-        let twists = stack.flatMap { [Float(rods[$0.rod].x), Float(rods[$0.rod].y), Float(rods[$0.rod].z), Float(Double($0.steps) * Tank.step)] }
-        let channels = stack.map { Float((masks[$0.rod] ?? .white).rawValue) }
+        let (twists, channels) = Unstirred.entries(stack.map { ($0.rod, Double($0.steps) * Tank.step) }, layout: layout,
+                                                   lenses: [], masks: masks)
         let points = Array(Tank.grid(41)).filter { simd_length($0) < 1 }
         let input = points.map { SIMD2<Float>(Float($0.x), Float($0.y)) }
         var n = Int32(stack.count)
@@ -172,6 +172,26 @@ final class PrismTests: XCTestCase {
             }
         }
         XCTAssertGreaterThan(moved, points.count, "the stack moves enough of the tank to test")
+    }
+
+    /// `TankShader` passes each of the tank's stitchables its arguments in the signature's order, SwiftUI giving the
+    /// position and layer and each array's count after it.
+    func testTheTankShaderPassesTheSignaturesOrder() throws {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Sources/Unstir.metal")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        var shader = TankShader(centre: .zero, radius: 1, twists: [0, 0, 0.5, 1], fourTaps: 40, scale: 3)
+        for prism in [nil, TankShader.Prism(masks: [1], cost: 3, isolate: .red, tint: SIMD3(1, 0, 0))] {
+            shader.prism = prism
+            let head = try XCTUnwrap(source.range(of: "[[ stitchable ]] half4 \(shader.name)("), shader.name)
+            let declared = source[head.upperBound...].prefix { $0 != ")" }.split(separator: ",")
+                .map { $0.split(whereSeparator: \.isWhitespace) }
+            var names: [String] = []
+            for (i, words) in declared.enumerated().dropFirst(2) where !(declared[i - 1].first == "device") {
+                names.append(String(try XCTUnwrap(words.last).drop { $0 == "*" }))
+            }
+            XCTAssertEqual(shader.parameters.map(\.name), names, shader.name)
+        }
     }
 
     /// The per-channel shader draws only a stack with a mask that isn't white, and its cost counts each channel's map.

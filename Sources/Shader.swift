@@ -43,24 +43,12 @@ struct Unstirred: ViewModifier, Animatable {
     }
 
     func body(content: Content) -> some View {
-        let rods = layout.rods
-        var floats: [Float] = [], channels: [Float] = []
-        floats.reserveCapacity(4 * (stack.count + 1))
-        func add(_ rod: Int, _ angle: Double) {
-            channels.append(Float((masks[rod] ?? .white).rawValue))
-            floats.append(Float(rods[rod].x)); floats.append(Float(rods[rod].y))
-            // A lens's entry is marked by a negative radius, and takes its flow's time for the angle.
-            let lens = lenses.contains(rod)
-            floats.append(Float(lens ? -rods[rod].z : rods[rod].z))
-            floats.append(Float(lens ? angle / Tank.step * Tank.lensRate : angle))
-        }
-        for (i, t) in stack.enumerated() { add(t.rod, Double(t.steps) * Tank.step * min(shares?[i] ?? wind, 1)) }
-        if let tick { add(tick.rod, tick.angle) }
-        if let liveRod { add(liveRod, liveAngle) }
-        let breathes = breath.map { $0.angle != 0 } ?? false
-        if breathes, let breath { add(breath.rod, breath.angle) }
-        let n = floats.count / 4
-        if floats.isEmpty { floats = [0, 0, 0, 0] }
+        var turns = stack.enumerated().map { i, t in (rod: t.rod, angle: Double(t.steps) * Tank.step * min(shares?[i] ?? wind, 1)) }
+        if let tick { turns.append(tick) }
+        if let liveRod { turns.append((liveRod, liveAngle)) }
+        if let breath, breath.angle != 0 { turns.append(breath) }
+        let (twists, channels) = Self.entries(turns, layout: layout, lenses: lenses, masks: masks)
+        let n = turns.count
         let r = side / 2
         // A live picture keeps four taps only to the budget less its fill: the same budget as without it. Counted in
         // committed work, so a touch never changes the taps: the drag, the breath or a tick in flight rides one entry
@@ -69,25 +57,84 @@ struct Unstirred: ViewModifier, Animatable {
         // drop to two taps at the budget's edge rather than run one more.
         let taps = budget.map { $0 - fillEntries } ?? Self.taps(side: side, scale: scale, fill: fillEntries)
         let weight = Self.weigh(channels, inFlight: n - stack.count)
-        let limit = Float(taps + weight.rides)
+        var shader = TankShader(centre: CGPoint(x: r, y: r), radius: r, twists: twists, fourTaps: Float(taps + weight.rides),
+                                scale: scale, haze: haze, wave: wave, turn: turn)
         if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
-            return content.layerEffect(
-                ShaderLibrary.unstirChannels(.float2(r, r), .float(r), .floatArray(floats), .floatArray(channels), .float(Float(n)),
-                                             .float(Float(cost)), .float(limit), .float(Float(Tank.plateau)),
-                                             .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)),
-                                             .float3(wave.x, wave.y, wave.z), .float(Float(turn)),
-                                             .float(Float(isolate?.rawValue ?? 0)), .float3(tint.x, tint.y, tint.z)),
-                maxSampleOffset: CGSize(width: side, height: side))
+            shader.prism = TankShader.Prism(masks: channels, cost: cost, isolate: isolate, tint: tint)
         }
-        return content.layerEffect(
-            ShaderLibrary.unstir(.float2(r, r), .float(r), .floatArray(floats), .float(Float(n)), .float(limit), .float(Float(Tank.plateau)),
-                                 .float(Float(Tank.swirlPlateau)), .float(Float(Tank.lensEdge)), .float(Float(scale)), .float(Float(haze)), .float3(wave.x, wave.y, wave.z), .float(Float(turn))),
-            maxSampleOffset: CGSize(width: side, height: side))
+        return content.layerEffect(shader.shader, maxSampleOffset: CGSize(width: side, height: side))
     }
 }
 
+/// Unstir.metal's `unstir`, or `unstirChannels` where `prism` is set, its arguments by name. `parameters` lists them
+/// in the signature's order, each array's count passed with it (`testTheTankShaderPassesTheSignaturesOrder`).
+struct TankShader {
+    var centre: CGPoint
+    var radius: CGFloat
+    /// Four floats an entry, bottom of the stack first (`Unstirred.entries`).
+    var twists: [Float]
+    /// Past this many entries' work only two taps run.
+    var fourTaps: Float
+    var plateau = Tank.plateau
+    var swirlPlateau = Tank.swirlPlateau
+    var lensEdge = Tank.lensEdge
+    var scale: CGFloat
+    var haze = 0.0
+    var wave = SIMD3<Float>(0, 0, -1)
+    var turn = 0.0
+    var prism: Prism?
+
+    /// `unstirChannels`' own: each entry's mask (a `Channels` raw value), the work in entries held against `fourTaps`,
+    /// and the channel drawn alone in `tint`.
+    struct Prism {
+        var masks: [Float]
+        var cost: Int
+        var isolate: Channels?
+        var tint: SIMD3<Float>
+    }
+
+    var name: String { prism == nil ? "unstir" : "unstirChannels" }
+
+    var parameters: [(name: String, argument: Shader.Argument)] {
+        // The shader reads min(n, count / 4) entries, so an empty stack's pad reads none.
+        var list: [(name: String, argument: Shader.Argument)] = [
+            ("centre", .float2(centre)), ("radius", .float(radius)), ("twists", .floatArray(twists.isEmpty ? [0, 0, 0, 0] : twists)),
+        ]
+        if let prism { list.append(("masks", .floatArray(prism.masks))) }
+        list.append(("n", .float(Float(twists.count / 4))))
+        if let prism { list.append(("cost", .float(Float(prism.cost)))) }
+        list += [("fourTaps", .float(fourTaps)), ("plateau", .float(plateau)), ("swirlPlateau", .float(swirlPlateau)),
+                 ("lensEdge", .float(lensEdge)), ("scale", .float(scale)), ("haze", .float(haze)),
+                 ("wave", .float3(wave.x, wave.y, wave.z)), ("turn", .float(turn))]
+        if let prism {
+            list += [("isolate", .float(Float(prism.isolate?.rawValue ?? 0))),
+                     ("tint", .float3(prism.tint.x, prism.tint.y, prism.tint.z))]
+        }
+        return list
+    }
+
+    var shader: Shader { Shader(function: ShaderFunction(library: .default, name: name), arguments: parameters.map(\.argument)) }
+}
+
 extension Unstirred {
+    /// The entries both shaders read, bottom of the stack first: four floats each (the rod's x and y, its disc's radius,
+    /// the angle), a lens's with a negative radius and its flow's time for the angle, and each one's mask, a `Channels`
+    /// raw value, a missing slot white.
+    nonisolated static func entries(_ turns: [(rod: Int, angle: Double)], layout: Layout, lenses: Set<Int>,
+                                    masks: [Int: Channels]) -> (twists: [Float], masks: [Float]) {
+        let rods = layout.rods
+        var twists: [Float] = [], channels: [Float] = []
+        twists.reserveCapacity(4 * turns.count)
+        for (rod, angle) in turns {
+            channels.append(Float((masks[rod] ?? .white).rawValue))
+            let lens = lenses.contains(rod)
+            twists += [Float(rods[rod].x), Float(rods[rod].y), Float(lens ? -rods[rod].z : rods[rod].z),
+                       Float(lens ? angle / Tank.step * Tank.lensRate : angle)]
+        }
+        return (twists, channels)
+    }
+
     /// The committed entries a glass `side` points across at `scale` draws with four taps, less a live picture's fill.
     nonisolated static func taps(side: CGFloat, scale: CGFloat, fill: Int) -> Int {
         Tank.fourTaps(pixels: Double(side * scale)) - fill
