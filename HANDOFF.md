@@ -51,9 +51,10 @@ encoder; the duo-feel bench into the repo; the private-repo CI cost and the test
 the owed films and shots retaken on master and attached; handoff housekeeping. **Decided, later in ORDER**: the
 String Catalog after the design pass, then the store media retaken. **Decided, waiting on a launch fact**: the Lens
 and Prism shader weights (Jack's phone bench), the iCloud flip (the capability), `Share.firstDay` and `Share.url`.
-**Undecided** (to Jack's pitch): the design pass's five-change system; Lens's art for v1 (every level draws the
-lab's test panel); the pack sound layers under real play; Escapement J3 and J7 as built; the architecture list past
-its top three; closing the performance pass; how TestFlight play is read with no analytics. **Jack's to-dos**: the
+**Answered 2026-11-09** (round 17, `docs/decisions.md`): DESIGN5 = A, CATORDER = D, ESCBOOK = A,
+ARCHREST = A, PERF = A, TFREAD = D; their work joins the decided list. **Undecided** (on the page, building):
+Lens's art for v1 (every level draws the lab's test panel); the pack sound layers under real play. Pitch page:
+https://claude.ai/artifact/TcJvFtVMBXWgbh589TGYbp, design canvas https://claude.ai/artifact/W99rKP56Wv8Pz1FLvhAqtE. **Jack's to-dos**: the
 Escapement book and round 13 and 16 checks on the phone, the phone GPU bench, the developer account and App Store
 Connect, the ICO registration, Eyes Shut's hosting and outreach, posting the clips.
 
