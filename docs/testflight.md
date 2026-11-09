@@ -24,8 +24,11 @@ and the `AppsBetaTesterUsagesV1MetricResponse` schema):
 
 Unchecked: how long each data point spans (one for the whole window or one per day), how late a session shows up,
 what Apple counts as a session, and whether internal testers and public-link testers are listed. The script copes with
-either span: it sums a tester's data points and keeps the earliest start and latest end in the CSV, so the two-day
-check shows which it is.
+either span: it sums a tester's data points. The CSV's window columns can't tell the two apart (a year of daily points
+and one year-long point have the same earliest start and latest end), so its `data_points` column counts each
+tester's points, and each poll's raw response is kept as `raw/<poll date>.json` beside the CSV. One point per tester
+means one for the whole window; about one per day played means daily points, and then day 2 can be read again from
+Apple's own per-day points in the raw responses, which beats the 09:00 diff.
 
 The window is rolling, so a daily diff of `P7D` totals would also subtract the day that left the window. The script
 asks for `P365D`, whose total only grows during a test shorter than a year, so each day's diff is that day's new
@@ -51,7 +54,7 @@ One-time setup:
    | `ASC_ISSUER_ID` | the issuer id, at the top of the same tab |
    | `ASC_KEY_PATH` | the `.p8`'s path |
    | `ASC_APP_ID` | the app's App Store Connect id (step 4) |
-   | `TF_POLL_CSV` | optional; the CSV, default `~/.unstir-testflight/usage.csv` |
+   | `TF_POLL_CSV` | optional; the CSV, default `~/.unstir-testflight/usage.csv`; raw responses go in `raw/` beside it |
    | `TF_POLL_PERIOD` | optional; the window, default `P365D` |
 
 4. `tools/tf-poll.py --app-id com.screendead.Unstir` prints the app's id (the bundle id is `project.yml`'s prefix and
@@ -59,15 +62,20 @@ One-time setup:
 
 Then:
 
-- `tools/tf-poll.py` polls once, stores today's row per tester (a second poll the same day replaces the first) and
-  prints the report.
+- `tools/tf-poll.py` polls once, stores today's row per tester and the raw response, and prints the report. A date
+  keeps its first poll: run again the same day, it only prints the report, since a later poll would move that day's
+  boundary and can turn a return into a miss (a 20:00 poll on day 1 takes in that morning's play, so the next 09:00
+  poll shows nothing new). `--force` replaces the day's poll; it is for a poll that failed or ran too early, never
+  for a fresher number.
 - `tools/tf-poll.py --report` prints the report from the CSV alone.
 - `tools/tf-poll.py --dry-run` needs no key: it replays the three saved responses in `tools/tf-poll-samples/`
   (written from Apple's schema, fake ids), each named for its poll date, into a throwaway CSV. It should end
   `day-2 return: 1 of 3 (33%), 1 waiting`. `--dry-run a.json b.json` replays chosen ones, e.g. two days apart, to see
   a missed poll reported as unknown.
-- `python3 tools/tf-poll-test.py` checks the token against a throwaway key, a poll against a local stand-in for the
-  API (two pages through `links.next`) and the dry run's number.
+- `python3 tools/tf-poll-test.py` checks the token against a throwaway key; a poll against a local stand-in for the
+  API (two pages through `links.next`), with its raw response and `data_points`; that a second poll the same day
+  keeps the first, an empty first poll included, and what `--force` does; and the report's readings: the dry run's
+  number, both missed-poll gaps, and the note when a total falls.
 
 ### Polling daily
 
@@ -107,9 +115,10 @@ A "day" is the 24 hours before a poll. A tester's day 1 is the first poll that s
 day 2 if the poll one calendar day later shows new sessions too. Day-2 return is returned over returned plus not
 returned. A tester whose next poll hasn't happened is "waiting", and one whose day 1 or day 2 falls in a missed poll is
 "unknown", never guessed. Play just before and just after 09:00 lands in two days, and an evening plus the next
-early morning in one.
+early morning in one. A date's first poll sets its boundary, so a poll by hand before 09:00 moves that day's to when it
+ran; read with `--report` instead.
 
-The CSV holds only Apple's opaque tester ids, never names or emails (App Store Connect maps an id to a tester). It
+The CSV and the raw responses hold only Apple's opaque tester ids, never names or emails (App Store Connect maps an id to a tester). It
 stays outside the repo.
 
 ## The two-day check on Jack's own install
@@ -118,12 +127,12 @@ Before any stranger is invited, prove the pipeline on Jack's phone. It answers e
 
 | When | Do | Expect |
 |---|---|---|
-| Day 0 | Set up the key and the launch agent; run `tools/tf-poll.py` once. | It runs; Jack is listed with 0 sessions, or not at all (then note whether internal testers are listed). |
+| Day 0 | Set up the key and the launch agent; run `tools/tf-poll.py` once, after 09:00 (before it, the launch agent's poll that morning only prints the report). | It runs; Jack is listed with 0 sessions, or not at all (then note whether internal testers are listed). |
 | Day 1 | Install the TestFlight build; play one session in the evening. Note the time. | |
 | Day 2, 09:00 poll | Check the report. | Jack shows day 1, +1. If +0, the metric lags: wait for day 3's poll. |
 | Day 2 | Play twice in the evening, an hour apart, the app closed between. | |
 | Day 2 | Tap the gear, then "report a problem". | A mail (or the share sheet) already addressed to the support address, the log attached: the build carries `SUPPORT_ADDRESS`. |
-| Day 3, 09:00 poll | Check the report and the CSV. | Jack "returned". The diff says whether two openings an hour apart are one session or two, and `window_start` and `window_end` whether each data point spans the window or a day. |
+| Day 3, 09:00 poll | Check the report and the CSV. | Jack "returned". The diff says whether two openings an hour apart are one session or two, and the `data_points` column (and the raw response's `start` and `end`) whether each data point spans the window or a day. |
 
 If the sessions show a day late, every reading shifts by that day: note the lag here and read day 2 from the poll
 after. If Jack is never listed, the metric doesn't cover internal testers: add him to an external group, as the
