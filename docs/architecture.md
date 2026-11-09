@@ -57,8 +57,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   call r16c-duoprior = B). On a phone every level is dealt within 40 (whirlpool 27, the deepest on a live picture, has 28
   stirs on the glass's fill of 4, 32), so every stack dealt draws four taps there (Jack's calls taps-keep = C and
   wp27-table = B). The accepted risk: a deep stack on a live picture there may run up to 32% over the
-  frame budget measured (a paper estimate; the Duo's GPU is unmeasured until stage 6's bench). The GPU bench keeps
-  the constant, so its 24 entries time four taps. A live picture's own cost comes off the
+  frame budget measured (a paper estimate; the Duo's GPU is unmeasured until stage 6's bench). The GPU bench
+  (GPUBench.swift, `UNSTIR_GPUBENCH`, `scripts/gpu-bench.sh`) times a plain entry with four taps and with two at 1137,
+  1284 and 1471 px, as the slope from 18 to 36 entries with each tap count forced (`fourTaps` 99 or -1), and
+  whirlpool 27's whole frame at 1137 and 1471: the glass's fill (`benchGlass` in Glass.metal, `glass`'s body as a
+  kernel, since a kernel can't call a stitchable) into the texture its stack then samples, at 28 and 36 entries. Its
+  Prism sweep, at 1284, keeps the constant, so its 24 entries time four taps. A live picture's own cost comes off the
   four-tap limit as `Picture.fillEntries`, scaled from Mac GPU costs and unconfirmed on the phone. Prism's stacks
   go to a second stitchable, `unstirChannels`, only when some entry's mask isn't white (`Unstirred.masks`), so every
   other level draws through `unstir` as measured: it carries red, green and blue each through the inverses of the
@@ -118,7 +122,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the phone's checks).
 - **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw whirlpool's live
   pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassTwin`, ...), maelstrom's
-  twin being the same body with `twin` set. Each file stands alone. The twins' heartbeat lives in their own lines: each
+  twin being the same body with `twin` set. Each file stands alone. Glass.metal also holds `benchGlass`, `glass`'s
+  body as a kernel for the GPU bench (Unstir.metal, above). The twins' heartbeat lives in their own lines: each
   file's `heartbeat` reads the delay grid `Picture.delays` appended to the twin's data, and the lines swell and brighten
   as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's limits (neurons'
   regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and checks its search

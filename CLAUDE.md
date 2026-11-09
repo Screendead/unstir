@@ -222,9 +222,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - GPU bench: `scripts/gpu-bench.sh [sim]` launches the app with `UNSTIR_GPUBENCH=1` (`GPUBench.swift`), which runs
   Unstir.metal's own shader bodies (`benchUnstir`, over `unstirBody` and `unstirChannelsBody`, the templates the
-  stitchables call) off screen at the largest phone's 1284 px and prints a plain stack entry's cost, then each Prism
-  specimen's per-channel cost in entries against `Unstirred.channelCost`'s assumption, and the slowest against a 120 Hz
-  frame, then quits. The simulator has no GPU clock, so there it times the wall clock round each command buffer.
+  stitchables call) off screen and prints a plain stack entry's cost with four taps and with two at 1137, 1284 and
+  1471 px, the glass's fill (`benchGlass` in Glass.metal) and whirlpool 27's whole frame, fill and stack, at 28 and 36
+  entries at 1137 and 1471, then at 1284 each Prism specimen's per-channel cost in entries against
+  `Unstirred.channelCost`'s assumption, and the slowest against a 120 Hz frame, then quits. The simulator has no GPU clock, so there it times the wall clock round each command buffer.
   `scripts/gpu-bench.sh phone` is Jack's: it installs Release through `run-ios.sh` with the bench on, waits, and pulls
   the lines from the log.
 - The four-tap budget on the phone: `scripts/taps-check.sh [--sim udid] [runs...]` plays whirlpool 27 on the phone
