@@ -30,7 +30,7 @@ struct Page: Equatable, Sendable {
     /// Neon glows; paper has none.
     func glow(_ colour: Color) -> Color { paper ? .clear : colour }
     /// The text of the line under the tank: the stipulation, set in a serif on paper.
-    var caption: Font { paper ? .system(size: 15, design: .serif) : .mono(12) }
+    var caption: Font { paper ? .system(.subheadline, design: .serif) : .ui(.label) }
     /// A finger the harness draws: white on black, ink on paper.
     func finger(diameter d: CGFloat) -> some View {
         Circle().fill(paper ? Color.ink.opacity(0.12) : Color.white.opacity(0.28))

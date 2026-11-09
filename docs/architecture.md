@@ -208,8 +208,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **TankView.swift**, **Game.swift**, **Shader.swift**, **Lessons.swift**, **Rods.swift**, **ResultCard.swift** and
   **EscapementViews.swift** hold the play screen, split by type (Jack's call ARCH = A), and this one entry covers all
   seven. TankView.swift keeps `LevelView` whole, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
-  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints, and the app's colours and
-  `Font.mono`; Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
+  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints, and the app's colours (its type
+  is Type.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
   `LensLesson`, `RimLesson` and `GhostFinger`; Rods.swift `RodView`; ResultCard.swift `ResultCard`, `TierUp`,
   `Completion`, `Review` and Escapement's `LostCard`; EscapementViews.swift `ClockHint`, `RatchetView`, `FlipCounter`,
   `LostStamp` and `StopLook`. `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
@@ -571,9 +571,27 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   changes), the test past 8 at 512 px; the test is the judge. On the simulator one long cloud bank's flat base row came
   out a level different whichever vignettes had played, which the Mac never showed: keep a cloud bank inside the
   tank's width.
+- **Type.swift** holds the type scale (Jack's call DESIGN5 = A, the design pass's first change): every piece of text
+  round the game is set in a `TypeRole` through `Font.ui`, each a Dynamic Type text style in SF Mono (the two display
+  roles in SF Pro Black Expanded): `display` 34 (the wordmark, a pack's and the archive's name), `displaySmall` 22
+  (TierUp), `title` 20 (the settings sheet's and the consent card's), `headline` 17 (the level's title line, a status
+  line), `body` 17 (a row's title), `button` 17 medium, `chip` 15 medium (the tier strip), `label` 15 (the header's
+  count, the note, a card's facts, a row's number), `detail` 13 (a row's detail, keys, section headers, small print)
+  and `eyebrow` 12, so nothing that carries meaning is under 13 and every screen follows Settings › Text Size. The play
+  screen caps at `PlayLayout.typeCap` (xxxLarge), as the dock does, since the tank needs its room; the menu, cards,
+  archive, settings and consent scale to the accessibility sizes, where a menu row's result goes under its title. The
+  gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
+  default size, as the title's 18 pt gap holds no more and the way out names the pack; and the menu hands its type size
+  to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
+  `TypeRole.line` gives a role's line height as `Text` lays it out (a text style's font, whose leading grows faster than
+  its size), which `PlayLayout.Chrome` and the caption's two lines use. The game's own text stays fixed (`Font.game`):
+  a knob's letters, a turn's count, "unstirred.", "spilled.", First Stir's film lines, with Escapement's flip counters
+  and serif stamp and badge.
 - **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
-  `min(width, height - 290) / 1.045`, as on every iPhone; a wider one (the iPhone Duo opened like a book, whatever the
+  `min(width, height - reserve) / 1.045`, as on every iPhone, `reserve` 290 pt at the default type size and as much
+  more as a plain level's chrome grows at the play screen's (`PlayLayout.reserve`), so on an SE at xxxLarge the glass
+  gives way to the chrome; a wider one (the iPhone Duo opened like a book, whatever the
   portrait lock) splits at the fold, 16 pt clear of it either side: the tank in the leading half with `LevelView`'s
   header and title above it and its caption, swatches and controls below, and the menu in the trailing half (stage 5,
   below). The fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
@@ -630,14 +648,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   Where play splits, a level opens beside the menu (stage 5; Jack's calls D-layout = 3, DUOMENU = B and s5-chrome = B,
   round 16): the tank in the leading half with its chrome round it, the header and title above it and the caption,
   swatches and controls below (`PlayStack.placeRound`), and the menu alone in the trailing half. The glass is as large
-  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape and whether Prism's swatches show, fixed
-  heights that `testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure` holds against the parts as `PlayStack` lays a
-  level out and hands them to `chromeMeasured`; the play screen's text is fixed in size, so no type size changes
-  it), the spare room half
-  over the tank and half over the controls: stage 1's 424 pt for every level of plughole, whirlpool and vortex, the
-  daily, Lens, and Prism read by colour; 5 pt less for maelstrom's rim lesson under the title, 9 less for
-  Escapement's split-flap ticks and two lines of serif, 30 less for Prism's swatches under its colour letters, and
-  endless's 348 as before, so every level of one list takes one glass, but Prism's follows its swatches: colour
+  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape, whether Prism's swatches show and the
+  type size: fixed paddings round each part's line height (`TypeRole.line`), which
+  `testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure` holds against the parts as `PlayStack` lays a
+  level out and hands them to `chromeMeasured`, at the default type size, xxxLarge and past the cap; its text
+  follows Dynamic Type to `PlayLayout.typeCap`, so a change of Text Size resizes the glass as a change of pose does),
+  the spare room half
+  over the tank and half over the controls: at the default size 417 pt for every level of plughole, whirlpool and
+  vortex, the daily, Lens, and Prism read by colour (424 before the type scale's 17 pt body, when the glass was the
+  half's width); 8 pt less for maelstrom's rim lesson under the title, 5 less for Escapement's split-flap ticks and
+  two lines of serif, 33 less for Prism's swatches under its colour letters, and endless's 342, so every level of one list takes one glass, but Prism's follows its swatches: colour
   letters or Differentiate Without Colour turned on or off mid-level resizes it by 30 pt and lets go a drag, as a
   change of pose does
   (`testTheGlassShrinksBesideTheMenuOnlyWhereTheChromeNeedsIt`; every caption fits its two lines there,
@@ -753,7 +773,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   else, for a player who skipped ahead, "The first three are free. 22 more in Lens." (Jack's call C1A = B, round 16); a
   refunded owner has only the revocation's line. "try 3 free ›" opens the taste's first level without a best, and is "replay 01–03 ›" once all have
   one (`PackCard.taste`); a locked row scrolls to buying and pulses the pill. VoiceOver follows: a locked row moves
-  its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
+  its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (Type.swift's roles; the card scrolls and stacks its facts
   and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
   of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
   reads each cover's state or price and each button's price, hides the menu under a card (beside the list in a wide window it leaves the menu readable), and announces a change of

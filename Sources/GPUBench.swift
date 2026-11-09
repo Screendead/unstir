@@ -222,7 +222,7 @@ enum GPUBench {
 /// What a GPU bench launch shows while it runs: nothing to touch.
 struct GPUBenchView: View {
     var body: some View {
-        Text("timing the shader…").font(.mono(13)).foregroundStyle(.white)
+        Text("timing the shader…").font(.ui(.detail)).foregroundStyle(.white)
             .frame(maxWidth: .infinity, maxHeight: .infinity).background(.black)
             .task {
                 // Past the launch's own work, so it lands in no number.

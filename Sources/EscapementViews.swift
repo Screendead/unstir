@@ -121,8 +121,9 @@ struct FlipCounter: View {
     var out = false
     /// A hub's whose clock has run out: grey ink on grey-edged cards.
     var spent = false
-    /// The header's cards are 26 pt tall; a hub's fit inside it.
-    var height: CGFloat = 26
+    /// The header's cards are `standard` tall; a hub's fit inside it.
+    var height: CGFloat = FlipCounter.standard
+    static let standard: CGFloat = 26
     private var width: CGFloat { height * 19 / 26 }
 
     var body: some View {
