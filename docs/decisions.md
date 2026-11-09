@@ -1,6 +1,6 @@
 # Decisions
 
-Jack's decisions, one row each. Other files cite a call by its id; this file holds what it decided. Add a row when Jack
+Jack's decisions, one row each. Other files cite a call by its id; this file says in short what each decided. Add a row when Jack
 makes a call. "HANDOFF" in the Where column includes the closed sections now in `docs/history.md`.
 
 Each row is a one-line summary for finding a call, not the call itself: where a row and the file it names differ,
