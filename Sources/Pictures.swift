@@ -13,7 +13,7 @@ enum Picture: String, CaseIterable {
     case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
     /// Vortex's own, drawn live the same way.
     case isobars, ephemeris, cords
-    /// Lens's halftone test panel (`Halftone`), baked a pixel at a time.
+    /// Lens's halftone test panel (`Halftone.shown`), baked a pixel at a time.
     case halftone
     /// Prism's engravings (`Engraving`), a plate a tray, white lines on black, baked.
     case fern, seeds, medusae, radiolaria, nautilus
@@ -132,7 +132,7 @@ enum Picture: String, CaseIterable {
     }
 
     /// The panel's pixels, kept in Caches so only the first open of each size pays for the bake: some 20 s
-    /// unoptimised, 0.9 s optimised on an M2 Max, longer on an older phone. Keyed on the build's number and its
+    /// unoptimised, 0.9 s optimised on an M2 Max, longer on an older phone. Keyed on the panel, the build's number and its
     /// executable's timestamp, which a rebuild changes, so an edit to the panel never shows a stale bake; an older key
     /// is removed.
     nonisolated private static func halftonePixels(_ n: Int) -> Data {
@@ -140,12 +140,13 @@ enum Picture: String, CaseIterable {
             .contentModificationDate?.timeIntervalSince1970 ?? 0
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        let key = "-\(build)-\(Int(built)).rgba", file = caches.appendingPathComponent("halftone-\(n)\(key)")
+        let panel = Halftone.shown, key = "-\(build)-\(Int(built)).rgba"
+        let file = caches.appendingPathComponent("halftone-\(panel.name)-\(n)\(key)")
         if let data = try? Data(contentsOf: file), data.count == 4 * n * n { return data }
         let start = Date.now
-        let data = Data(Halftone.pixels(n))
+        let data = Data(panel.pixels(n))
         let ms = Int(Date.now.timeIntervalSince(start) * 1000)
-        Task { @MainActor in Log.write("halftone \(n) px baked in \(ms) ms") }
+        Task { @MainActor in Log.write("halftone \(panel.name) \(n) px baked in \(ms) ms") }
         for old in (try? FileManager.default.contentsOfDirectory(atPath: caches.path)) ?? []
             where old.hasPrefix("halftone-") && !old.hasSuffix(key) {
             try? FileManager.default.removeItem(at: caches.appendingPathComponent(old))

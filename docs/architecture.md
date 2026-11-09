@@ -899,9 +899,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
   It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max (unmeasured on a phone), so every build keeps it in
-  Caches, per size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
+  Caches, per panel and size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
   time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
-  the flicker; only one that never lands lets it go on, after 30 s. Prism's plates
+  the flicker; only one that never lands lets it go on, after 30 s. A panel is a `Halftone.Panel` (tones and white
+  strokes of their own widths, keyed in Caches by its name); the test panel is `Halftone.test`, the one every level
+  draws. A Debug build's harness can name another (`UNSTIR_PANEL`,
+  `Halftone.shown`). Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white

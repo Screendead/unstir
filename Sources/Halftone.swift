@@ -82,25 +82,85 @@ enum Halftone {
 
     static let lineWidth = 0.008
 
-    private static let boxes: [(lo: SIMD2<Double>, hi: SIMD2<Double>)] = lines.map { line in
-        let pad = SIMD2(repeating: lineWidth)
-        return (line.reduce(line[0], simd_min) - pad, line.reduce(line[0], simd_max) + pad)
+    /// A white ink stroke: a polyline and its width, in tank units.
+    struct Stroke: Sendable {
+        var points: [SIMD2<Double>]
+        var width: Double
     }
 
-    /// The panel's light at p (tank units, y down) in linear sRGB, edges faded over `aa` (a pixel, in tank units).
-    static func light(_ p: SIMD2<Double>, aa: Double) -> SIMD3<Double> {
-        var c = SIMD3<Double>(repeating: 0)
-        for k in inks.indices { c += inks[k].colour * screen(p, inks[k].degrees, aa: aa) { tones($0)[k] } }
-        c = simd_min(c, SIMD3(repeating: 1))
-        var d = Double.infinity
-        for (i, line) in lines.enumerated() {
-            let b = boxes[i]
-            guard p.x >= b.lo.x - aa, p.y >= b.lo.y - aa, p.x <= b.hi.x + aa, p.y <= b.hi.y + aa else { continue }
-            for j in 1..<line.count { d = min(d, segmentDistance(p, line[j - 1], line[j])) }
+    /// A panel: each ink's tone at a point of the clean panel, in the order of `inks`, under white strokes. Its name keys
+    /// its bake in Caches.
+    struct Panel: Sendable {
+        let name: String
+        let tones: @Sendable (SIMD2<Double>) -> SIMD3<Double>
+        let strokes: [Stroke]
+        private let boxes: [(lo: SIMD2<Double>, hi: SIMD2<Double>)]
+
+        init(name: String, tones: @escaping @Sendable (SIMD2<Double>) -> SIMD3<Double>, strokes: [Stroke]) {
+            self.name = name
+            self.tones = tones
+            self.strokes = strokes
+            boxes = strokes.map { s in
+                let pad = SIMD2(repeating: s.width)
+                return (s.points.reduce(s.points[0], simd_min) - pad, s.points.reduce(s.points[0], simd_max) + pad)
+            }
         }
-        let ink = min(max((lineWidth / 2 - d) / aa + 0.5, 0), 1)
-        return c * (1 - ink) + SIMD3(repeating: ink)
+
+        /// The panel's light at p (tank units, y down) in linear sRGB, edges faded over `aa` (a pixel, in tank units).
+        func light(_ p: SIMD2<Double>, aa: Double) -> SIMD3<Double> {
+            var c = SIMD3<Double>(repeating: 0)
+            for k in inks.indices { c += inks[k].colour * screen(p, inks[k].degrees, aa: aa) { tones($0)[k] } }
+            c = simd_min(c, SIMD3(repeating: 1))
+            var ink = 0.0
+            for (i, s) in strokes.enumerated() {
+                let b = boxes[i]
+                guard p.x >= b.lo.x - aa, p.y >= b.lo.y - aa, p.x <= b.hi.x + aa, p.y <= b.hi.y + aa else { continue }
+                var d = Double.infinity
+                for j in 1..<s.points.count { d = min(d, segmentDistance(p, s.points[j - 1], s.points[j])) }
+                ink = max(ink, min(max((s.width / 2 - d) / aa + 0.5, 0), 1))
+            }
+            return c * (1 - ink) + SIMD3(repeating: ink)
+        }
+
+        /// The clean panel as gamma-encoded RGBA8, `n` pixels a side over the tank's square, rows top first.
+        func pixels(_ n: Int) -> [UInt8] {
+            var out = [UInt8](repeating: 255, count: 4 * n * n)
+            let px = 2 / Double(n)
+            out.withUnsafeMutableBufferPointer { buf in
+                nonisolated(unsafe) let base = buf.baseAddress!
+                DispatchQueue.concurrentPerform(iterations: n) { j in
+                    for i in 0..<n {
+                        let c = light(SIMD2((Double(i) + 0.5) * px - 1, (Double(j) + 0.5) * px - 1), aa: px)
+                        let k = 4 * (j * n + i)
+                        base[k] = UInt8(gamma(c.x) * 255 + 0.5)
+                        base[k + 1] = UInt8(gamma(c.y) * 255 + 0.5)
+                        base[k + 2] = UInt8(gamma(c.z) * 255 + 0.5)
+                    }
+                }
+            }
+            return out
+        }
     }
+
+    /// The test panel: the dial, the gem and the linework above.
+    static let test = Panel(name: "test", tones: { tones($0) }, strokes: lines.map { Stroke(points: $0, width: lineWidth) })
+
+    /// Every panel, the test panel first.
+    static let panels: [Panel] = [test]
+
+    /// The panel `Picture.halftone` draws: the test panel, or in a Debug build the one the harness names
+    /// (`UNSTIR_PANEL`).
+    static let shown: Panel = {
+        #if DEBUG
+        if let name = ProcessInfo.processInfo.environment["UNSTIR_PANEL"], let p = panels.first(where: { $0.name == name }) {
+            return p
+        }
+        #endif
+        return test
+    }()
+
+    /// The test panel's light at p, which the tests read.
+    static func light(_ p: SIMD2<Double>, aa: Double) -> SIMD3<Double> { test.light(p, aa: aa) }
 
     /// Coverage at p of a screen at `degrees`: the nearest cell's dot, sized by the tone at its own centre, so dots are
     /// whole and a shape's edge is dotted, as in print.
@@ -120,7 +180,7 @@ enum Halftone {
         return simd_distance(p, a + h * ab)
     }
 
-    private static func inside(_ p: SIMD2<Double>, _ polygon: [SIMD2<Double>]) -> Bool {
+    static func inside(_ p: SIMD2<Double>, _ polygon: [SIMD2<Double>]) -> Bool {
         var odd = false
         for i in polygon.indices {
             let a = polygon[i], b = polygon[(i + 1) % polygon.count]
@@ -140,24 +200,5 @@ enum Halftone {
     static func gamma(_ c: Double) -> Double {
         let c = min(max(c, 0), 1)
         return c <= 0.0031308 ? 12.92 * c : 1.055 * pow(c, 1 / 2.4) - 0.055
-    }
-
-    /// The clean panel as gamma-encoded RGBA8, `n` pixels a side over the tank's square, rows top first.
-    static func pixels(_ n: Int) -> [UInt8] {
-        var out = [UInt8](repeating: 255, count: 4 * n * n)
-        let px = 2 / Double(n)
-        out.withUnsafeMutableBufferPointer { buf in
-            nonisolated(unsafe) let base = buf.baseAddress!
-            DispatchQueue.concurrentPerform(iterations: n) { j in
-                for i in 0..<n {
-                    let c = light(SIMD2((Double(i) + 0.5) * px - 1, (Double(j) + 0.5) * px - 1), aa: px)
-                    let k = 4 * (j * n + i)
-                    base[k] = UInt8(gamma(c.x) * 255 + 0.5)
-                    base[k + 1] = UInt8(gamma(c.y) * 255 + 0.5)
-                    base[k + 2] = UInt8(gamma(c.z) * 255 + 0.5)
-                }
-            }
-        }
-        return out
     }
 }
