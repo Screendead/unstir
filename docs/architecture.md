@@ -411,7 +411,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Build.playtest`, what `scripts/run-ios.sh` installs) or in the editors' build (`Build.editors`), and the harness outside Release only.
   First Stir is out of v1, to be reworked (Jack's call FS17), and Prism takes its place (PK1): `Pack.ships` is
   false for First Stir alone, and `Pack.sold()`, the packs a build sells (Lens, Escapement and Prism in Release), leaves it out in Release only, so its code, levels,
-  ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`) still reach them. In Release its every level, taste and all, is `.withheld`, which opens
+  ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`) still reach them. Its code is compiled in only
+  under `FIRST_STIR`, which `project.yml` sets for Debug alone, so a Release build holds none of its scenes, levels or
+  story plumbing (guideline 2.5.19 bars hidden features): the `firstStir` case, its name, ids and shelf copy stay for
+  their stored values, its `levels` are empty, and `Clip.of` and `Clip.cut` stop on it, as no Release shelf shows it.
+  In Release its every level, taste and all, is `.withheld`, which opens
   neither the level (`Store.opens`, checked by `RootView.show`) nor its card (nor `UNSTIR_CARD`), and `Pack.sold()`
   sets what StoreKit is asked for (`Pack.productIDs`) and analytics' snapshot (`testFirstStirIsOutOfV1`). The bundle
   (`Offer.complete`, sold as `Pack.completeID`, its old name Complete kept in its ids) is self-limiting (Jack's call
@@ -480,7 +484,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   deeper than 8 (Jack's call PK1: deeper reads too busy), par the depth (`testPrismLevels`, which pins the table and
   checks each stack keeps four taps under `channelCost`), the solver's optimum (`testPrismParIsTheOptimum`, slow,
   about 4 minutes).
-- **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
+- **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. It, the other `FirstStir*.swift`,
+  `StoryScene.swift` and `FirstStirTests.swift` compile only under `FIRST_STIR` (Debug), as does `Level.story`; the
+  shared code reads `Level.isStory` (false without it) and keeps its story branches behind the same condition. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
   (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
   its `tags`, and `Game.played` is the story's vignettes less every tag on the stack, so the picture is a function of
@@ -513,7 +519,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   same there (`testTheCutInCoresLeaveNoSeam`). Its time is a function of the stack: `Game.wound` counts
   the scramble's entries gone (the player's own pushes move no time; a solve has wound them all), and the scene stands
   that share of the way from `late` to `early`, winding there over `Harbour.rewind`. `Game.caption`, the line under
-  the tank, is that time as a clock on a scene's level ("6:40 am", Jack's F3) and the note elsewhere. `Dawn` is
+  the tank, is that time as a clock on a scene's level (`Game.sceneClock`, "6:40 am", Jack's F3) and the note elsewhere. `Dawn` is
   chapter 1, Dawn After: five scenes, 6:40 back to 4:45 am, in dawn pewter, each scene's `early` the next one's `late`
   (`testTheTable`). `Rescue` is chapter 2, The Rescue: five scenes, 4:45 back to 2:30 am, in rescue amber, its ink the
   rain's B7CEFF at full strength. Its sky (low cloud lit from below, `Rescue.skyTones`) and sea open on Dawn After's

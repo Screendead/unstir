@@ -630,6 +630,7 @@ struct LevelView: View {
             .accessibilityHint("Played by sight: drag a knob to turn its rod.")
             .accessibilityAddTraits(.allowsDirectInteraction)
             .overlay {
+                #if FIRST_STIR
                 if ending {
                     NightForwardsFilm(side: side, foot: filmFoot, frozen: frozenEnding) {
                         withAnimation(.easeOut(duration: 0.5)) { ending = false }
@@ -638,6 +639,7 @@ struct LevelView: View {
                     }
                     .transition(.opacity)
                 }
+                #endif
             }
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
@@ -865,7 +867,7 @@ struct LevelView: View {
             if shown == nil {
                 game.startClock()
                 badge = game.badge
-                noteLit = frozenClock == nil && game.counts && !game.level.note.isEmpty && game.level.story == nil
+                noteLit = frozenClock == nil && game.counts && !game.level.note.isEmpty && !game.level.isStory
                 if pointing && !pointed {
                     pointed = true
                     if storesPointing { Best.pointedAtSettings = true }
@@ -1537,6 +1539,7 @@ struct LevelView: View {
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
                 KeyframeAnimator(initialValue: Self.ticksDone, trigger: game.tickEvents) { p in
                     Group {
+                        #if FIRST_STIR
                         if let scene = game.level.story?.scene {
                             SceneLayer(scene: scene, played: game.played, wound: game.wound, count: game.level.scramble.count, side: side,
                                        onStrike: { struck = true })
@@ -1545,6 +1548,11 @@ struct LevelView: View {
                                          clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
                                          onStrike: { struck = true })
                         }
+                        #else
+                        PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
+                                     clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
+                                     onStrike: { struck = true })
+                        #endif
                     }
                         .keyframeAnimator(initialValue: -1.0, trigger: waved) { picture, w in
                             var u = unstirred

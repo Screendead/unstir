@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's chapter 3, The Flood: scenes 11 to 15 of the outline, from 2:30 back to 12:30 am, in flood teal. The
@@ -973,3 +974,4 @@ enum OverTheQuay {
         pen.lit(Rescue.tight) { $0.stroke(wash, Flood.sea, 0.9) }
     }
 }
+#endif

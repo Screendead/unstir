@@ -38,7 +38,8 @@ enum Pack: String, CaseIterable, Sendable {
     static var productIDs: [String] { sold().map(\.productID) + [completeID] }
 
     /// Whether a Release build sells it. First Stir is out of v1, to be reworked (Jack, FS17), and Prism takes its place
-    /// (PK1); a build outside Release keeps First Stir, so its levels, tests and films still run.
+    /// (PK1); a build outside Release keeps First Stir, so its levels, tests and films still run. Release also compiles
+    /// its levels out (`FIRST_STIR`), leaving the case for its stored values.
     var ships: Bool { self != .firstStir }
 
     /// The packs a build sells.
@@ -92,7 +93,11 @@ enum Pack: String, CaseIterable, Sendable {
     /// Numbered from 1 by place, each the pack's own `id`; empty until the pack's content lands.
     var levels: [Level] {
         switch self {
+        #if FIRST_STIR
         case .firstStir: Level.firstStir
+        #else
+        case .firstStir: []
+        #endif
         case .lens: Level.lens
         case .escapement: Level.escapement
         case .prism: Level.prism
