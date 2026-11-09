@@ -1,0 +1,19 @@
+# Copyright © 2026 Jack Lusher. All rights reserved.
+name: Docs
+
+# Keeps the files every session reads inside their limits (scripts/doc-size.sh). Runs on Linux, a few seconds, on
+# every PR, *.md-only ones too, which test.yml skips.
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  size:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - run: scripts/doc-size.sh
