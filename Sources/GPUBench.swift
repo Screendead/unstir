@@ -128,12 +128,8 @@ enum GPUBench {
         var wallClock = false
         /// GPU seconds per frame of `c`: the median over 15 command buffers of 10 dispatches each, after a warm-up.
         func time(_ c: Case) -> Double {
-            let rods = c.layout.rods
-            var floats = c.stack.flatMap { t -> [Float] in
-                let r = rods[t.rod]
-                return [Float(r.x), Float(r.y), Float(r.z), Float(Double(t.steps) * Tank.step)]
-            }
-            var masks = c.stack.map { Float((c.masks[$0.rod] ?? .white).rawValue) }
+            var (floats, masks) = Unstirred.entries(c.stack.map { ($0.rod, Double($0.steps) * Tank.step) }, layout: c.layout,
+                                                    lenses: [], masks: c.masks)
             let n = floats.count / 4
             if floats.isEmpty { floats = [0, 0, 0, 0]; masks = [7] }
             let cost = Unstirred.channelCost(masks) ?? n
