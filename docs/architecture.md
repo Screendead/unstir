@@ -69,8 +69,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   entries whose mask (a float per entry, the `Channels` raw value) holds it, and samples each channel at its own point.
   Both share the per-entry map (`unmap`); `testTheShadersChannelChainsMatchTheModel` compiles the per-channel loop
   (`chains`) and checks it against the model's cut words on hex's swirl. Its cost against the four-tap limit
-  (`Unstirred.channelCost`) is a map per channel each entry holds, plus two for a tap's extra samples: assumed, not
-  benched on the phone, so a 12-entry stack of mixed masks may already run two taps.
+  (`Unstirred.channelCost`) is a map per channel each entry holds, plus three for the stack. The phone bench
+  (`scripts/gpu-bench.sh phone`, 2026-11-09, thermal fair) put each specimen at a median 0.95 of the old constant of
+  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none.
 - **TapLaw.swift** and **Taps.swift** hold the adaptive four-tap budget (Jack, round 16: step the graphics down where
   performance degrades, to keep 120 Hz). Only the look adapts: `Tank.maxStack`, what a level deals and "the tank is
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
@@ -1071,7 +1072,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
   `UNSTIR_SOUND=1`. This is how screenshots and films
-  are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
+  are taken without touch; see `scripts/shots/` for examples. To show a visual change, add a `shot` line to its
+  area's file there (`scripts/shots/<area>.sh`). `scripts/shots.sh` sources the areas in a written-out list, in the
+  index's order, and a later area reads values an earlier one set, so a new area joins that list where its shots
+  belong in the index.
 - **UnstirTests/FreshDefaults.swift** is the test bundle's principal class: before each test and once the run ends it
   forgets every level's started flag, saved try and best (`started.`, `resume.` and `best.` keys), since the test host
   shares its defaults with the harness's launches and every earlier run on the same simulator, and a best or flag left

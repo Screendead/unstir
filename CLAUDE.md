@@ -240,6 +240,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   frames say nothing of a phone's GPU. `scripts/duo-feel.sh [--sim udid] [drags] [budgets...]` does the same for the
   deepest levels, each dealt and at 36, at each budget pinned (42 and the Duo upright's 23 unset), on the device's own
   glass; its header says what the display link can't see. Both launch through `scripts/harness.sh`.
+- TestFlight play: `tools/tf-poll.py [--report|--dry-run|--force|--app-id <bundle id>]` polls App Store Connect's
+  sessions per tester into a CSV outside the repo, the raw responses beside it, and prints day-2 return (Jack's call
+  TFREAD = D); a date keeps its first poll unless `--force`. Setup, the two-day check and the survey draft are in
+  `docs/testflight.md`. `python3 tools/tf-poll-test.py` checks it without a key.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
   the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs

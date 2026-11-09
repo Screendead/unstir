@@ -7,7 +7,7 @@ import simd
 //   free: the entries that can come off at the start (`Layout.removable`) under the masks, then read white.
 //   blocked: the knobs whose newest entry can't come off at the start: turning one back pushes.
 //   right/step, forced: as plughole's, over the untwist under the masks, every right move at each step equally likely.
-//   cost: the per-channel shader's work in entries (`Unstirred.channelCost`: 2, plus a map per channel each entry holds).
+//   cost: the per-channel shader's work in entries (`Unstirred.channelCost`: 3, plus a map per channel each entry holds).
 //   ghost, triple: the share of the glass where the three channels' words send a point apart by more than two pixels,
 //     and where all three part from each other: how much of the picture shows coloured ghosts, and how much of it is
 //     the three-way split that reads as mush.
@@ -69,7 +69,7 @@ func row(_ name: String, _ layout: Layout, _ masks: [Int: Channels], _ stack: [T
     let white = layout.removable(stack).count
     let tops = Set(stack.map(\.rod)).map { rod in stack.lastIndex { $0.rod == rod }! }
     let blocked = tops.filter { !free.contains($0) }.count
-    let cost = stack.reduce(2) { $0 + Int((masks[$1.rod] ?? .white).rawValue).nonzeroBitCount }
+    let cost = stack.reduce(3) { $0 + Int((masks[$1.rod] ?? .white).rawValue).nonzeroBitCount }
     let (ghost, triple) = split(stack, layout, masks)
     let fair = (!solve || optimum == stack.count) && untwisting == stack.count
         && [Twist].parse(string(stack), in: layout, masks: masks) == stack
@@ -140,7 +140,7 @@ case "search" where args.count == 6:
         var rng = SplitMix64(state: seed)
         guard let (masks, stack) = deal(layout, depth: depth, palette: palette, fixed: fixed, rng: &rng) else { continue }
         // The cheap measures first; the solver only for a deal that keeps four taps.
-        guard stack.reduce(2, { $0 + Int((masks[$1.rod] ?? .white).rawValue).nonzeroBitCount }) <= 30 else { continue }
+        guard stack.reduce(3, { $0 + Int((masks[$1.rod] ?? .white).rawValue).nonzeroBitCount }) <= 30 else { continue }
         let r = row("\(seed)", layout, masks, stack)
         if r.fair { print(r.line) }
         fflush(stdout)
