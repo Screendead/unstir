@@ -27,8 +27,8 @@ what Apple counts as a session, and whether internal testers and public-link tes
 either span: it sums a tester's data points. The CSV's window columns can't tell the two apart (a year of daily points
 and one year-long point have the same earliest start and latest end), so its `data_points` column counts each
 tester's points, and each poll's raw response is kept as `raw/<poll date>.json` beside the CSV. One point per tester
-means one for the whole window; about one per day played means daily points, and then day 2 can be read again from
-Apple's own per-day points in the raw responses, which beats the 09:00 diff.
+means one for the whole window; about one per day played means daily points, and then day 2 could be read again from
+Apple's own per-day points in the raw responses, which would beat the 09:00 diff (no script does this yet).
 
 The window is rolling, so a daily diff of `P7D` totals would also subtract the day that left the window. The script
 asks for `P365D`, whose total only grows during a test shorter than a year, so each day's diff is that day's new
