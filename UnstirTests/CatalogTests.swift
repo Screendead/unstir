@@ -56,4 +56,17 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(Spoken.archiveRow(open: true, days: 1, atPar: 0).hint, "1 past daily")
     }
 
+    /// A table's id-keyed string reads its English default, which the catalog may not hold.
+    func testTablesReadTheirEnglish() {
+        XCTAssertEqual(Level.plughole[0].title, "Drop")
+        XCTAssertEqual(Level.plughole[0].note, "Turn a rod to look. Let go where you started and nothing happens.")
+        XCTAssertEqual(Level.maelstrom[26].title, "Abyss")
+        XCTAssertEqual(Tier.whirlpool.name, "Whirlpool")
+        XCTAssertEqual(Level.lens[0].title, "Keyhole")
+        XCTAssertEqual(Level.lens[0].chapter, "Close-up")
+        XCTAssertEqual(Level.escapement[0].note, "Unstir in \(Level.escapement[0].budget) ticks. A clock ticks after every move. Each let-go is a move.")
+        XCTAssertEqual(Level.escapement[1].note, "Unstir in \(Level.escapement[1].budget) ticks.")
+        XCTAssertEqual(Level.prism[0].chapter, "Two Colours")
+        XCTAssertEqual(Level.prism[0].note, "Each rod stirs only its knob's colours.")
+    }
 }
