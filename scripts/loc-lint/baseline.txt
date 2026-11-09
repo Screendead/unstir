@@ -116,7 +116,6 @@ Shelf.swift: .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.
 Shelf.swift: .accessibilityHint(offer.pitch)
 Shelf.swift: Text(offer.name)
 Spoken.swift: static func count(_ n: Int, _ noun: String) -> String { "\(n) \(noun)\(n == 1 ? "" : "s")" }
-Spoken.swift: content.accessibilityLabel(label).accessibilityValue(value).accessibilityHint(hint)
 TankView.swift: Button(action: leave) { Text(game.level.back).hit() }
 TankView.swift: Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
 TankView.swift: Text(game.level.label).foregroundStyle(game.level.colour).shadow(color: page.glow(game.level.colour), radius: 4)

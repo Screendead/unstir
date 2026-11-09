@@ -856,7 +856,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
   VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
-  buttons read as words, not glyphs.
+  buttons read as words, not glyphs. Each phrase is one catalog key, a count's varying by plural ("1 move"), and a
+  phrase inside another is passed in whole ("%@, par %lld"). The row's hint, given the menu's detail line, still turns
+  its " · " into ", ", until the menu's half of the migration passes the data instead.
 - **Localizable.xcstrings** is the String Catalog (Jack's call F4 = C: English at launch, languages a later update;
   CAT1 to CAT8 = A), development language `en`, the source British English. The build emits every localizable literal
   (`SWIFT_EMIT_LOC_STRINGS`), but only an Xcode IDE build writes new keys back into the catalog, so a key missing from

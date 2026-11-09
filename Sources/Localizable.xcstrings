@@ -1,7 +1,167 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-
+    "%lld moves" : {
+      "comment" : "Moves played",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld move"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld moves"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld past dailies" : {
+      "comment" : "VoiceOver: the archive row's hint",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld past daily"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld past dailies"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld rods" : {
+      "comment" : "VoiceOver: a layout's rods",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld rod"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld rods"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld rods and a swirl" : {
+      "comment" : "VoiceOver: a swirl layout's knobs, then its swirl",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld rod and a swirl"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld rods and a swirl"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Spilled. %lld tanks cleared." : {
+      "comment" : "VoiceOver: endless's card, the run spilled",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spilled. %lld tank cleared."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Spilled. %lld tanks cleared."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "best %lld tanks" : {
+      "comment" : "VoiceOver: the endless row. The most tanks a run cleared",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "best %lld tank"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "best %lld tanks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "run in progress, best %lld tanks" : {
+      "comment" : "VoiceOver: the endless row, a run saved. Its best",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "run in progress, best %lld tank"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "run in progress, best %lld tanks"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "version" : "1.0"
 }

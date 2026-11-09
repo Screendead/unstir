@@ -47,4 +47,13 @@ final class CatalogTests: XCTestCase {
         XCTAssertGreaterThan(files.count, 40)
     }
 
+    /// A plural key reads its `one` form at 1, which only its catalog entry gives.
+    func testACountOfOneIsSingular() {
+        let endless = Level.endless(Run(seed: 7))
+        XCTAssertEqual(Spoken.row(endless, result: nil, tanks: 1, detail: nil, enabled: true, needs: nil).value, "best 1 tank")
+        XCTAssertEqual(Spoken.row(endless, result: nil, tanks: 1, detail: nil, enabled: true, needs: nil, started: true).value,
+                       "run in progress, best 1 tank")
+        XCTAssertEqual(Spoken.archiveRow(open: true, days: 1, atPar: 0).hint, "1 past daily")
+    }
+
 }
