@@ -18,11 +18,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [control, spotlight, spotlight-noboot, spotlight-xctestrun]
+        variant: [control, spotlight-noboot]
+        rep: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
       - name: Spotlight off
-        if: matrix.variant != 'control'
+        if: matrix.variant == 'never'
         run: sudo mdutil -a -i off || true
       - name: Install XcodeGen
         run: |
