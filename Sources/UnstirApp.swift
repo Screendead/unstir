@@ -784,8 +784,12 @@ struct RootView: View {
             GameCenter.shared.calm = true
             GameCenter.shared.signIn()
         }
-        // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
-        .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
+        // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier,
+        // a pack's with the pack's layer over it.
+        .onChange(of: level?.id, initial: true) {
+            Sound.shared.bed(level?.bed ?? .menu)
+            Sound.shared.layer(level?.layer)
+        }
         // Closed again mid-level, a card or the archive parked as the phone opened waits under the level, as on a phone,
         // if it opened that level. The slot goes with the menu beside play, so a later one waits for the level's own.
         .onChange(of: beside) {

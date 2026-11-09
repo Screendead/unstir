@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import AVFoundation
 import SwiftUI
 import XCTest
 @testable import Unstir
@@ -20,6 +21,27 @@ import XCTest
             }
         }
         XCTAssertEqual(Set((0..<4).map { Sound.file(.ratchet, $0) }).count, 4)
+    }
+
+    /// Jack's call SOUNDSK: each sold pack's level plays its layer (Lens B, Escapement B, Prism A) and nothing else
+    /// does; every layer's loop and one-shots are in the bundle, its loop the 8 bars `Sound.beat` counts, and none
+    /// is an effect's or a bed's name, which `Sound.use` would load with the effects or as a bed.
+    func testEachSoldPackPlaysItsLayerFromBundledFiles() throws {
+        XCTAssertEqual(Pack.lens.levels.first?.layer, .lens)
+        XCTAssertEqual(Pack.escapement.levels.first?.layer, .escapement)
+        XCTAssertEqual(Pack.prism.levels.first?.layer, .prism)
+        XCTAssertNil(Pack.firstStir.levels.first?.layer)
+        XCTAssertNil(Tier.plughole.levels[0].layer)
+        let parts: [Sound.Layer: [String]] = [.lens: ["end"], .escapement: ["end", "d4"] + Sound.reeds, .prism: ["end", "swell"]]
+        for (layer, names) in parts {
+            let loop = try XCTUnwrap(Bundle.main.url(forResource: layer.loop, withExtension: "m4a", subdirectory: "Sounds/glass"))
+            let file = try AVAudioFile(forReading: loop)
+            XCTAssertEqual(Double(file.length) / file.processingFormat.sampleRate, 32 * Sound.beat, accuracy: 1e-6, layer.loop)
+            for name in names.map(layer.part) {
+                XCTAssertNotNil(Bundle.main.url(forResource: name, withExtension: "caf", subdirectory: "Sounds/glass"), name)
+            }
+        }
+        XCTAssertEqual(Sound.reeds.count, 8)
     }
 
     /// Jack's calls soundsk2 = D and soundsk-haptic = B (round 16): each clock's tick sounds and lands its haptic as its

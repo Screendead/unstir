@@ -1855,7 +1855,10 @@ struct LevelView: View {
     private func landSolve(chime: Bool) {
         guard game.solved, !waved else { return }
         waved = true
-        if chime { Sound.shared.play(.solve) }
+        if chime {
+            Sound.shared.play(.solve)
+            Sound.shared.resolve()
+        }
         // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
         // centre among them.
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true }
@@ -2569,6 +2572,12 @@ struct LevelView: View {
         .haptic(.impact(weight: .heavy), trigger: game.cancels)
         // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
         .onChange(of: game.heals) { was, now in if now > was { Sound.shared.play(.heal(now)) } }
+        // Escapement B's reed, a note a move, its place in the motif the moves before it; the solve's is the layer's D.
+        .onChange(of: game.moves) { was, now in
+            if now > was, game.level.layer == .escapement, !game.solved, !game.demoing { Sound.shared.reed(was) }
+        }
+        // Another try after a solve brings the layer back.
+        .onChange(of: game.solved) { if !game.solved { Sound.shared.layer(game.level.layer) } }
         .haptic(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }

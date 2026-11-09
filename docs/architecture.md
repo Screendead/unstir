@@ -933,7 +933,19 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the level cancels plays them, timed from the ticks' landing (`Game.landed`); an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
   landed before the view appeared, stay silent and still. Beds loop under the menu and each tier (`Level.bed`;
   daily, endless, the sandbox and the packs take plughole's), and a new one crossfades in over the old at equal power
-  across two decks. Only a bed that is playing stays decoded, and none in the background.
+  across two decks. Only a bed that is playing stays decoded, and none in the background. A sold pack's level plays
+  its layer over plughole's bed (`Level.layer`, `Sound.Layer`; Jack's call SOUNDSK: Lens B, Escapement B, Prism A),
+  rendered from `sound-src/sketches.csd` at the gain its sketch was heard at: an 8-bar loop at 75 bpm
+  (`layer-<pack>.m4a`, turned to start a quarter beat before its first beat so its wrap falls between onsets) on a deck
+  of its own, coming in with the bed's crossfade from its first beat, from which the layer's beats and eighths count
+  (`firstBeat`). The solve (`LevelView.landSolve`, with the chime) holds the loop to the next beat, then fades it over
+  0.5 s as the resolution (`-end`) plays on that beat; Prism's swell (`-swell`) starts 0.4 s before it, never before the
+  solve. Escapement B's reed plays the motif a note a move on the next eighth, the note the moves before it (an undo
+  takes one back, the demonstration plays none), and lands on D with the solve's chime. The layer follows the music
+  switch and steps aside for another app's music with the bed; another try after a solve, or the next level, brings it
+  back, and leaving for the menu or a tier's level takes it out over the crossfade. Its files decode only while it is
+  wanted. `scripts/sounds.sh layers` renders the same layers under real play off the phone, and
+  `scripts/layers-film.sh` films them in the app.
   `Sounding`, set on `RootView`, is the app's button style: a button taps as
   it acts, and undo and reset have sounds of their own; the undo's body peaks about 0.2 s after the press (Jack,
   SN1). A button that sets its own `.plain` style has none, so every

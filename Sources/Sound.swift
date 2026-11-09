@@ -14,6 +14,9 @@ extension Level {
         case .maelstrom: .maelstrom
         }
     }
+
+    /// A sold pack's layer over plughole's bed (Jack's call SOUNDSK: Lens B, Escapement B, Prism A); none elsewhere.
+    var layer: Sound.Layer? { pack.flatMap { Sound.Layer(rawValue: $0.rawValue) } }
 }
 
 /// Every button sounds as it acts. RootView sets this for the whole app, and undo and reset set their own sound. The
@@ -145,6 +148,24 @@ final class Sound: @unchecked Sendable {
     /// Named by file.
     enum Bed: String, Sendable { case menu, plughole = "loop", whirlpool, vortex, maelstrom }
 
+    /// A pack's layer over the bed: `layer-<name>.m4a` its loop, and `layer-<name>-<part>.caf` the one-shots played over
+    /// it, each decoded only while the layer is wanted.
+    enum Layer: String, Sendable {
+        case lens, escapement, prism
+        var loop: String { "layer-\(rawValue)" }
+        func part(_ name: String) -> String { "\(loop)-\(name)" }
+    }
+
+    /// The layers' tempo, 75 bpm. The loop's first beat sits `lead` into its file, as scripts/sounds.sh turns it.
+    static let beat = 0.8
+    private static let lead = 0.2
+    /// The loop gives way to its resolution over this, from the beat after the solve.
+    private static let resolveFade: Float = 0.5
+    /// Prism's swell starts this long before the resolution's beat, but never before the solve.
+    private static let swell = 0.4
+    /// Escapement B's reed: the motif's notes, a move each, and the solve's D.
+    static let reeds = ["a4", "b4", "a4", "e4", "g4", "a4", "g4", "e4"]
+
     /// A bed's player. There are two, so the old bed fades out while the new one fades in.
     private struct Deck {
         let player = AVAudioPlayerNode()
@@ -174,6 +195,17 @@ final class Sound: @unchecked Sendable {
     private var taps = 0
     private var ratchets = 0
     private var bed: Bed?
+    /// The wanted layer, kept through its resolution so its one-shots stay decoded.
+    private var layer: Layer?
+    /// The level was solved: the loop has given way to its resolution until the layer is wanted afresh.
+    private var resolved = false
+    private var layerFiles: [String: URL] = [:]
+    private var layerBuffers: [String: AVAudioPCMBuffer] = [:]
+    private var layerDeck = Deck()
+    /// The host time of the playing loop's first beat, from which its beats and eighths count.
+    private var firstBeat: UInt64?
+    /// The resolution's beat: the loop holds until then, and fades over `resolveFade` from it.
+    private var resolving: UInt64?
     private var fader: DispatchSourceTimer?
     /// In the background, where the engine cannot start.
     private var suspended = false
@@ -221,6 +253,9 @@ final class Sound: @unchecked Sendable {
                 self.voices = []
                 self.ends = []
                 self.decks = []
+                self.layerDeck = Deck()
+                self.firstBeat = nil
+                self.resolving = nil
                 self.resume()
             }
         }
@@ -235,14 +270,23 @@ final class Sound: @unchecked Sendable {
             self.buffers = [:]
             self.bedFiles = [:]
             self.beds = [:]
-            // Effects are CAF, beds AAC in .m4a or ALAC in CAF.
+            self.layerFiles = [:]
+            self.layerBuffers = [:]
+            // Effects are CAF, beds AAC in .m4a or ALAC in CAF, and a layer's files wait until it is wanted.
             for ext in on ? ["caf", "m4a"] : [] {
                 for url in Bundle.main.urls(forResourcesWithExtension: ext, subdirectory: "Sounds/glass") ?? [] {
                     let name = url.deletingPathExtension().lastPathComponent
-                    if Bed(rawValue: name) == nil { self.buffers[name] = self.load(url) } else { self.bedFiles[name] = url }
+                    if name.hasPrefix("layer-") {
+                        self.layerFiles[name] = url
+                    } else if Bed(rawValue: name) == nil {
+                        self.buffers[name] = self.load(url)
+                    } else {
+                        self.bedFiles[name] = url
+                    }
                 }
             }
-            self.note("sound \(on ? "on" : "off"): \(self.buffers.count) effects, \(self.bedFiles.count) beds")
+            self.note("sound \(on ? "on" : "off"): \(self.buffers.count) effects, \(self.bedFiles.count) beds, "
+                      + "\(self.layerFiles.count) layer files")
             self.fade()
         }
     }
@@ -271,6 +315,46 @@ final class Sound: @unchecked Sendable {
         queue.async {
             self.bed = bed
             self.listen()
+            self.fade()
+        }
+    }
+
+    /// A pack's layer over the bed, or none: it comes in with the bed's crossfade and loops from its first beat until the
+    /// level is solved. Wanted again, as by the next level or another try, it comes back.
+    func layer(_ layer: Layer?) {
+        queue.async {
+            self.layer = layer
+            self.resolved = false
+            self.resolving = nil
+            self.fade()
+        }
+    }
+
+    /// Escapement B's reed: the motif's `n`th note, a move's, on the loop's next eighth. Silent while no loop plays.
+    func reed(_ n: Int) {
+        queue.async {
+            guard self.layer == .escapement, !self.resolved, self.layerDeck.buffer != nil,
+                  let at = self.next(Self.beat / 2, after: mach_absolute_time())
+            else { return }
+            self.shoot(Layer.escapement.part(Self.reeds[(n % 8 + 8) % 8]), at: at)
+        }
+    }
+
+    /// The solve: the loop holds to the next beat and gives way to its resolution there, over `resolveFade`. Escapement's
+    /// reed lands on D at once, with the chime. Nothing while no loop plays.
+    func resolve() {
+        queue.async {
+            guard let layer = self.layer, !self.resolved else { return }
+            self.resolved = true
+            let now = mach_absolute_time()
+            guard self.layerDeck.buffer != nil, let beat = self.next(Self.beat, after: now) else { return }
+            if layer == .escapement { self.shoot(layer.part("d4"), at: nil) }
+            self.resolving = beat
+            self.shoot(layer.part("end"), at: beat)
+            if layer == .prism {
+                let early = AVAudioTime.hostTime(forSeconds: Self.swell)
+                self.shoot(layer.part("swell"), at: beat > now + early ? beat - early : nil)
+            }
             self.fade()
         }
     }
@@ -314,6 +398,26 @@ final class Sound: @unchecked Sendable {
         if !voices[i].isPlaying { voices[i].play() }
     }
 
+    /// The host time of the first beat, or `step` of the loop's beats, at or after `time`; nil while no loop plays.
+    private func next(_ step: Double, after time: UInt64) -> UInt64? {
+        guard let first = firstBeat else { return nil }
+        let since = time > first ? AVAudioTime.seconds(forHostTime: time - first) : 0
+        return first + AVAudioTime.hostTime(forSeconds: (since / step - 1e-9).rounded(.up) * step)
+    }
+
+    /// A layer's one-shot on a voice of its own, at the host time given or now.
+    private func shoot(_ name: String, at time: UInt64?) {
+        guard !suspended, let buffer = layerBuffers[name], run(),
+              let i = ends.indices.min(by: { ends[$0] < ends[$1] }) else { return }
+        let now = mach_absolute_time()
+        let wait = time.map { $0 > now ? AVAudioTime.seconds(forHostTime: $0 - now) : 0 } ?? 0
+        ends[i] = DispatchTime.now().uptimeNanoseconds
+            + UInt64((wait + Double(buffer.frameLength) / format.sampleRate) * 1e9)
+        voices[i].stop()
+        voices[i].scheduleBuffer(buffer, at: nil)
+        voices[i].play(at: time.flatMap { $0 > now ? AVAudioTime(hostTime: $0) : nil })
+    }
+
     /// Starts the engine if it is not running, building it first if need be; false if it cannot start.
     private func run() -> Bool {
         if let engine, engine.isRunning { return true }
@@ -342,7 +446,8 @@ final class Sound: @unchecked Sendable {
         voices = (0..<12).map { _ in AVAudioPlayerNode() }
         ends = Array(repeating: 0, count: voices.count)
         decks = [Deck(), Deck()]
-        for node in voices + decks.map(\.player) {
+        layerDeck = Deck()
+        for node in voices + decks.map(\.player) + [layerDeck.player] {
             engine.attach(node)
             engine.connect(node, to: engine.mainMixerNode, format: format)
         }
@@ -362,7 +467,13 @@ final class Sound: @unchecked Sendable {
             decks[i].buffer = nil
             decks[i].level = 0
         }
+        layerDeck.player.stop()
+        layerDeck.buffer = nil
+        layerDeck.level = 0
+        firstBeat = nil
+        resolving = nil
         beds = [:]
+        layerBuffers = [:]
         engine?.pause()
     }
 
@@ -399,13 +510,30 @@ final class Sound: @unchecked Sendable {
         }
         let name = wantedName
         beds = beds.filter { bed in bed.key == name || decks.contains { $0.buffer === bed.value } }
+        // A layer's files, all of them, while it is wanted with music on: the one-shots outlast its loop.
+        let prefix = layer.flatMap { !hushed && musicOn ? $0.loop : nil }
+        if let prefix, layerBuffers[prefix] == nil {
+            for (file, url) in layerFiles where file.hasPrefix(prefix) { layerBuffers[file] = load(url) }
+            note("sound layer \(prefix): \(layerBuffers.count) files")
+        }
+        layerBuffers = layerBuffers.filter { file in
+            prefix.map { file.key.hasPrefix($0) } ?? false || layerDeck.buffer === file.value
+        }
+    }
+
+    /// The wanted layer's loop, once `stock` has decoded it: none once the level is solved, while another app's music
+    /// plays or with music off.
+    private var wantedLoop: AVAudioPCMBuffer? {
+        guard let layer, !resolved, !hushed, musicOn else { return nil }
+        return layerBuffers[layer.loop]
     }
 
     /// Only the wanted bed plays, at full level, or nothing does when there is none.
     private var settled: Bool {
-        let wanted = wanted?.buffer
+        let wanted = wanted?.buffer, loop = wantedLoop
         return decks.allSatisfy { $0.buffer == nil || $0.buffer === wanted && $0.level == 1 }
             && (wanted == nil || decks.contains { $0.buffer === wanted })
+            && (loop == nil ? layerDeck.buffer == nil : layerDeck.buffer === loop && layerDeck.level == 1)
     }
 
     /// Runs the fader until the bed is settled.
@@ -450,9 +578,44 @@ final class Sound: @unchecked Sendable {
                 note("sound bed \(decks[i].name) out")
             }
         }
+        stepLayer()
         guard settled else { return }
         stopFading()
-        if wanted == nil { rest() }
+        if wanted == nil && layerDeck.buffer == nil { rest() }
+    }
+
+    /// The layer's share of a fader step: its loop in from its first beat over the crossfade, or out, over the crossfade
+    /// or, from the resolution's beat, over `resolveFade`.
+    private func stepLayer() {
+        let loop = wantedLoop
+        if let loop, layerDeck.buffer !== loop {
+            guard run() else { return }
+            if layerDeck.buffer != nil { note("sound layer \(layerDeck.name) cut") }
+            // A moment ahead, so the first beat's host time is the one played.
+            let start = mach_absolute_time() + AVAudioTime.hostTime(forSeconds: 0.05)
+            layerDeck.player.stop()
+            layerDeck.player.volume = 0
+            layerDeck.player.scheduleBuffer(loop, at: nil, options: .loops)
+            layerDeck.player.play(at: AVAudioTime(hostTime: start))
+            layerDeck.name = layer?.loop ?? ""
+            layerDeck.buffer = loop
+            layerDeck.level = 0
+            firstBeat = start + AVAudioTime.hostTime(forSeconds: Self.lead)
+            resolving = nil
+            note("sound layer \(layerDeck.name)")
+        }
+        guard layerDeck.buffer != nil else { return }
+        let up = layerDeck.buffer === loop
+        if !up, let r = resolving, mach_absolute_time() < r { return }
+        let rate = 0.02 / (!up && resolving != nil ? Self.resolveFade : Self.crossfade)
+        layerDeck.level = up ? min(layerDeck.level + rate, 1) : max(layerDeck.level - rate, 0)
+        layerDeck.player.volume = sin(layerDeck.level * .pi / 2)
+        guard layerDeck.level == 0 else { return }
+        layerDeck.player.stop()
+        layerDeck.buffer = nil
+        firstBeat = nil
+        resolving = nil
+        note("sound layer \(layerDeck.name) out")
     }
 
     private func stopFading() {
@@ -467,7 +630,8 @@ final class Sound: @unchecked Sendable {
             queue.asyncAfter(deadline: .now() + .nanoseconds(Int(busy - now)) + .milliseconds(500)) { self.rest() }
             return
         }
-        guard decks.allSatisfy({ $0.buffer == nil }), fader == nil, let engine, engine.isRunning else { return }
+        guard decks.allSatisfy({ $0.buffer == nil }), layerDeck.buffer == nil, fader == nil, let engine, engine.isRunning
+        else { return }
         engine.pause()
     }
 
