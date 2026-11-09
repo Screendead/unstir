@@ -160,6 +160,14 @@ final class Game {
     var deadTick: Bool { !finished && level.clocks.contains { overdue($0.rod) > 0 } }
     /// With the bank empty undo can't take the tick back, so the words point only at reset (Jack's call, round 13).
     var deadTickWords: String { bank == 0 ? "That tick can't come back. Reset." : "That tick can't come back. Undo, or again." }
+    /// The line under the tank: Escapement's word on a pushed tick, a scene's time, else the level's note.
+    var caption: String {
+        if deadTick { return deadTickWords }
+        #if FIRST_STIR
+        if let sceneClock { return sceneClock }
+        #endif
+        return level.note
+    }
     /// Escapement: the ticks clock `clock` has left, its hub's count (Jack's call ES2, round 12). Only its own ticks
     /// change its rod's steps, each by one whether it merges or pushes, so this is what it owed as dealt less its ticks:
     /// nothing needs storing, and undo and reset bring it back with the stack.
@@ -202,13 +210,21 @@ final class Game {
 
     /// The scramble's entries. In a story each holds back the vignette in its own rod's core, if that core has one.
     nonisolated static func dealt(_ level: Level) -> [Entry] {
+        #if FIRST_STIR
         level.scramble.map { Entry(twist: $0, pushed: false, tags: level.story?.vignettes.intersection([$0.rod]) ?? []) }
+        #else
+        level.scramble.map { Entry(twist: $0, pushed: false) }
+        #endif
     }
 
     /// The story's vignettes played: each once no entry holds it back. A function of the stack alone, so undo and reset
     /// unplay them, and a win the fine pass calls on a stack that only looks solved plays the rest.
     var played: Set<Int> {
+        #if FIRST_STIR
         level.story.map { $0.vignettes.subtracting(entries.flatMap(\.tags)) } ?? []
+        #else
+        []
+        #endif
     }
 
     /// Practice saves nothing. A past daily from the archive plays as any level, unless its day kept a best: that best
@@ -288,7 +304,7 @@ final class Game {
         }
         // The heal ring marks only a commit that pops one of the scramble's entries, and a story's only one that plays
         // a vignette: cancelling the player's own push flashes white, as a merge (Jack's call SND2 = A, round 16).
-        let heals = level.story != nil ? !played.isSubset(of: playedWas) : healed > 0
+        let heals = level.isStory ? !played.isSubset(of: playedWas) : healed > 0
         if heals { cancels += 1; cancelledRod = rod }
         settleBrim(healed)
         noteBrim(from: brimWas)
