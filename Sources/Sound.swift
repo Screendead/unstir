@@ -416,6 +416,7 @@ final class Sound: @unchecked Sendable {
         voices[i].stop()
         voices[i].scheduleBuffer(buffer, at: nil)
         voices[i].play(at: time.flatMap { $0 > now ? AVAudioTime(hostTime: $0) : nil })
+        note(String(format: "sound %@ in %.3f s", name, wait))
     }
 
     /// Starts the engine if it is not running, building it first if need be; false if it cannot start.
