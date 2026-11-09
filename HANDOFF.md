@@ -52,8 +52,12 @@ the owed films and shots retaken on master and attached; handoff housekeeping. *
 String Catalog after the design pass, then the store media retaken. **Decided, waiting on a launch fact**: the Lens
 and Prism shader weights (Jack's phone bench), the iCloud flip (the capability), `Share.firstDay` and `Share.url`.
 **Answered 2026-11-09** (round 17, `docs/decisions.md`): DESIGN5 = A, CATORDER = D, ESCBOOK = A,
-ARCHREST = A, PERF = A, TFREAD = D; their work joins the decided list. **Undecided** (on the page, building):
-Lens's art for v1 (every level draws the lab's test panel); the pack sound layers under real play. Pitch page:
+ARCHREST = A, PERF = A, TFREAD = D; their work joins the decided list. **Undecided** (on the page, with what was built):
+Lens's art for v1 (draft #157, one panel per option); the pack sound layers (draft #158, filmed in play); the
+Ask to Buy date kept and its 24 h wait (#154 as built); F14's checking line; the Duo-speed probe; CI and CodeQL once
+the repo goes private (measured: hosted about $496 a month at this pace against $12 included). **Blocked**: the
+owed shots for merged #81, #83, #84 are taken (`~/development/unstir-tools/r17-shots-out`) but Chrome was not
+connected to attach them; a dock-waking film needs a new harness hook. Pitch page:
 https://claude.ai/artifact/TcJvFtVMBXWgbh589TGYbp, design canvas https://claude.ai/artifact/W99rKP56Wv8Pz1FLvhAqtE. **Jack's to-dos**: the
 Escapement book and round 13 and 16 checks on the phone, the phone GPU bench, the developer account and App Store
 Connect, the ICO registration, Eyes Shut's hosting and outreach, posting the clips.
