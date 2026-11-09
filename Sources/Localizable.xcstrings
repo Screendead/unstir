@@ -47,6 +47,29 @@
         }
       }
     },
+    "%lld resets" : {
+      "comment" : "Share line: resets taken",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld reset"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld resets"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld rods" : {
       "comment" : "VoiceOver: a layout's rods",
       "localizations" : {
@@ -86,6 +109,29 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld rods and a swirl"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld undos" : {
+      "comment" : "Share line: undos taken",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld undo"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld undos"
                 }
               }
             }

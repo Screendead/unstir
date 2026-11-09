@@ -70,9 +70,6 @@ ResultCard.swift: .accessibilityHint(open ? "" : "Shows which \(from.name) level
 ResultCard.swift: Button(action: onExit) { Text(game.level.back).hit() }
 ResultCard.swift: if let notice { Text(notice).font(.mono(12)).opacity(0.7).transition(.opacity) }
 Rods.swift: Text(channels.letters).font(.mono(9, .semibold)).foregroundStyle(.white)
-Share.swift: head.append("\(moves) \(moves == 1 ? "move" : "moves") (par \(par))")
-Share.swift: if undos > 0 { head.append("\(undos) \(undos == 1 ? "undo" : "undos")") }
-Share.swift: if resets > 0 { head.append("\(resets) \(resets == 1 ? "reset" : "resets")") }
 Shelf.swift: if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
 Shelf.swift: Button(action: onBack) { Text(back.text).font(.mono(.subheadline, .medium)).hit() }
 Shelf.swift: .accessibilityLabel(back.spoken)
