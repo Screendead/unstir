@@ -1,0 +1,101 @@
+{
+  "data": [
+    {
+      "dataPoints": [
+        {
+          "start": "2025-11-10T00:00:00Z",
+          "end": "2026-11-10T00:00:00Z",
+          "values": {
+            "sessionCount": 1,
+            "crashCount": 0,
+            "feedbackCount": 0
+          }
+        }
+      ],
+      "dimensions": {
+        "betaTesters": {
+          "links": {
+            "groupBy": "https://api.appstoreconnect.apple.com/v1/apps/0000000000/metrics/betaTesterUsages?groupBy=betaTesters&filter[betaTesters]=00000000-0000-4000-8000-00000000000a",
+            "related": "https://api.appstoreconnect.apple.com/v1/betaTesters/00000000-0000-4000-8000-00000000000a"
+          },
+          "data": "00000000-0000-4000-8000-00000000000a"
+        }
+      }
+    },
+    {
+      "dataPoints": [
+        {
+          "start": "2025-11-10T00:00:00Z",
+          "end": "2026-11-10T00:00:00Z",
+          "values": {
+            "sessionCount": 2,
+            "crashCount": 0,
+            "feedbackCount": 0
+          }
+        }
+      ],
+      "dimensions": {
+        "betaTesters": {
+          "links": {
+            "groupBy": "https://api.appstoreconnect.apple.com/v1/apps/0000000000/metrics/betaTesterUsages?groupBy=betaTesters&filter[betaTesters]=00000000-0000-4000-8000-00000000000b",
+            "related": "https://api.appstoreconnect.apple.com/v1/betaTesters/00000000-0000-4000-8000-00000000000b"
+          },
+          "data": "00000000-0000-4000-8000-00000000000b"
+        }
+      }
+    },
+    {
+      "dataPoints": [
+        {
+          "start": "2025-11-10T00:00:00Z",
+          "end": "2026-11-10T00:00:00Z",
+          "values": {
+            "sessionCount": 0,
+            "crashCount": 0,
+            "feedbackCount": 0
+          }
+        }
+      ],
+      "dimensions": {
+        "betaTesters": {
+          "links": {
+            "groupBy": "https://api.appstoreconnect.apple.com/v1/apps/0000000000/metrics/betaTesterUsages?groupBy=betaTesters&filter[betaTesters]=00000000-0000-4000-8000-00000000000c",
+            "related": "https://api.appstoreconnect.apple.com/v1/betaTesters/00000000-0000-4000-8000-00000000000c"
+          },
+          "data": "00000000-0000-4000-8000-00000000000c"
+        }
+      }
+    },
+    {
+      "dataPoints": [
+        {
+          "start": "2025-11-10T00:00:00Z",
+          "end": "2026-11-10T00:00:00Z",
+          "values": {
+            "sessionCount": 0,
+            "crashCount": 0,
+            "feedbackCount": 0
+          }
+        }
+      ],
+      "dimensions": {
+        "betaTesters": {
+          "links": {
+            "groupBy": "https://api.appstoreconnect.apple.com/v1/apps/0000000000/metrics/betaTesterUsages?groupBy=betaTesters&filter[betaTesters]=00000000-0000-4000-8000-00000000000e",
+            "related": "https://api.appstoreconnect.apple.com/v1/betaTesters/00000000-0000-4000-8000-00000000000e"
+          },
+          "data": "00000000-0000-4000-8000-00000000000e"
+        }
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/apps/0000000000/metrics/betaTesterUsages?groupBy=betaTesters&period=P365D&limit=200"
+  },
+  "meta": {
+    "paging": {
+      "total": 4,
+      "limit": 200
+    }
+  }
+}
