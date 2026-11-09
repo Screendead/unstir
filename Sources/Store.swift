@@ -48,6 +48,11 @@ struct Ledger: Equatable, Sendable {
     /// The product itself waits on Ask to Buy, not only Complete that would grant it.
     func asked(_ id: String) -> Bool { products[id] == .pending }
 
+    /// Requests made on an earlier launch, still open, wait again, unless StoreKit has said more of the product since.
+    mutating func wait(on asked: Set<String>) {
+        for id in asked where products[id] == nil || products[id] == .unowned { products[id] = .pending }
+    }
+
     /// Revoked because the family stopped sharing it, through its own product or Complete.
     func unshared(_ pack: Pack) -> Bool {
         guard state(pack) == .revoked else { return false }
@@ -82,18 +87,33 @@ extension Ledger {
     }
 }
 
-/// The Ask to Buy requests made on this device, remembered only to say each approval once (Jack's call C21, round 13):
-/// an approval arrives as any purchase made elsewhere does, so only this says it was asked for here.
+/// The Ask to Buy requests made on this device, remembered to say each approval once (Jack's call C21, round 13): an
+/// approval arrives as any purchase made elsewhere does, so only this says it was asked for here. When each was asked
+/// keeps it waiting for approval across a relaunch while the parent can still answer; never a grant.
 enum Asked {
     static func key(_ id: String) -> String { "asked.\(id)" }
+    static func dateKey(_ id: String) -> String { "asked.at.\(id)" }
+    /// A request its parent hasn't approved within 24 hours is gone, and the child asks again (support.apple.com/105055).
+    static let open: TimeInterval = 24 * 60 * 60
     static var all: Set<String> { Set(Pack.productIDs.filter { UserDefaults.standard.bool(forKey: key($0)) }) }
-    static func add(_ id: String) { UserDefaults.standard.set(true, forKey: key(id)) }
-    static func remove(_ id: String) { UserDefaults.standard.removeObject(forKey: key(id)) }
+    static func waiting(at now: Date = .now) -> Set<String> {
+        all.filter { id in
+            (UserDefaults.standard.object(forKey: dateKey(id)) as? Date).map { (0..<open).contains(now.timeIntervalSince($0)) } ?? false
+        }
+    }
+    static func add(_ id: String, at date: Date = .now) {
+        UserDefaults.standard.set(true, forKey: key(id))
+        UserDefaults.standard.set(date, forKey: dateKey(id))
+    }
+    static func remove(_ id: String) {
+        UserDefaults.standard.removeObject(forKey: key(id))
+        UserDefaults.standard.removeObject(forKey: dateKey(id))
+    }
 }
 
 /// The App Store's side of the packs. Nothing that grants is stored: StoreKit keeps every purchase, and `start` reads
-/// them back on each launch, on any device, family members' included; `Asked` only remembers a request to say its
-/// approval.
+/// them back on each launch, on any device, family members' included; `Asked` only remembers a request, to say its
+/// approval and to wait on it after a relaunch.
 @MainActor @Observable
 final class Store {
     static let shared = Store()
@@ -265,6 +285,7 @@ final class Store {
         for await result in Transaction.currentEntitlements {
             if case .verified(let t) = result, t.revocationDate == nil { ledger.record(t.productID, .owned) }
         }
+        ledger.wait(on: Asked.waiting())
         answer()
     }
 

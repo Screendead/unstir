@@ -746,14 +746,19 @@ for c in r g b; do
   hold=5 shot "prism-swatch-$c" "Prism specimen 8 with the $c swatch held: that channel's lines alone, in its own colour, the others hidden." \
     PACK=prism LEVEL=8 OWNED=prism SWATCH=$c
 done
-if [[ -z "$pattern" || prism-swatch-white-r == *$pattern* || prism-swatch-white-b == *$pattern* ]]; then
-  plain() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility DifferentiateWithoutColor -bool "$1"; }
+# The setting is flipped only when a white swatch is taken, but `shot` runs either way, as it writes the index line.
+plain() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility DifferentiateWithoutColor -bool "$1"; }
+white=
+[[ -z "$pattern" || prism-swatch-white-r == *$pattern* || prism-swatch-white-b == *$pattern* ]] && white=1
+if [[ -n "$white" ]]; then
   trap 'plain false' EXIT
   plain true
-  for c in r b; do
-    hold=5 shot "prism-swatch-white-$c" "Prism specimen 8 with the $c swatch held under Differentiate Without Colour: that channel's lines alone in white, the knobs lettered." \
-      PACK=prism LEVEL=8 OWNED=prism SWATCH=$c
-  done
+fi
+for c in r b; do
+  hold=5 shot "prism-swatch-white-$c" "Prism specimen 8 with the $c swatch held under Differentiate Without Colour: that channel's lines alone in white, the knobs lettered." \
+    PACK=prism LEVEL=8 OWNED=prism SWATCH=$c
+done
+if [[ -n "$white" ]]; then
   plain false
   trap - EXIT
 fi

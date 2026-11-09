@@ -418,7 +418,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (runner-up Folio), and the `.storekit` file's display name with it.
   `Store` is StoreKit 2 with no server and nothing that grants stored (`asked.<product>` only remembers an Ask to Buy
   made here, from `purchase`'s pending result until its approval is said or it is revoked, so the approval is said
-  once: `Asked`, `Ledger.answers`, read after the launch's entitlements and each update): entitlements from `Transaction.currentEntitlements` at
+  once: `Asked`, `Ledger.answers`, read after the launch's entitlements and each update; with it `asked.at.<product>`,
+  when it was asked, so a relaunch within 24 hours, the time Apple gives a parent to answer, finds the request
+  waiting for approval again, as it was, unless StoreKit has said more of it since, and a date still to come, the clock set back, waits no longer: `Ledger.wait`, `Asked.waiting`; `StoreTests` forgets every request before and after each test, as its Ask to Buy purchases save them): entitlements from `Transaction.currentEntitlements` at
   launch (`Store.ready` once that first read has finished: until then `RootView.show` waits on it, `Store.settled`,
   before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`), and a `PurchaseIntent.intents` listener: a purchase started on the App
@@ -1047,6 +1049,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
   `UNSTIR_SOUND=1`. This is how screenshots and films
   are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
+- **UnstirTests/FreshDefaults.swift** is the test bundle's principal class: before each test and once the run ends it
+  forgets every level's started flag, saved try and best (`started.`, `resume.` and `best.` keys), since the test host
+  shares its defaults with the harness's launches and every earlier run on the same simulator, and a best or flag left
+  there makes a test's first try a second.
 - **UnstirTests/Solver.swift** plays turning-tank levels for the tests and `scripts/solve.sh`; it never ships in the
   app. It has three players, whose moves count as `Game.history` counts them (`Play.count`). The optimum is the fewest
   moves that empty the stack: a breadth-first search over (stack, tank position) that untwists whole seams and turns
