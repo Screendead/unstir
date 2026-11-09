@@ -15,8 +15,15 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 30
     if: github.ref == 'refs/heads/r17-ci-probe'
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [control, spotlight, spotlight-noboot, spotlight-xctestrun]
     steps:
       - uses: actions/checkout@v7
+      - name: Spotlight off
+        if: matrix.variant != 'control'
+        run: sudo mdutil -a -i off || true
       - name: Install XcodeGen
         run: |
           curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
@@ -27,7 +34,6 @@ jobs:
           defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
           git ls-files -s | perl -ne '/^\S+ (\S+) \S+\t(.*)$/ and utime 1e9 + hex(substr($1, 0, 7)), 1e9 + hex(substr($1, 0, 7)), $2'
           git ls-tree -r -d HEAD | perl -ne '/^\S+ \S+ (\S+)\t(.*)$/ and utime 1e9 + hex(substr($1, 0, 7)), 1e9 + hex(substr($1, 0, 7)), $2'
-          sysctl -n hw.ncpu hw.memsize machdep.cpu.brand_string
       - uses: actions/cache/restore@v6
         with:
           path: |
@@ -40,29 +46,24 @@ jobs:
         run: scripts/test-store.sh build-for-testing COMPILER_INDEX_STORE_ENABLE=NO -quiet
       - name: Start the sampler
         run: |
-          nohup bash -c 'while :; do echo "== $(date +%T) $(sysctl -n vm.loadavg) $(sysctl -n vm.swapusage)"; vm_stat | grep -E "free|Pageins|Pageouts|Swapouts"; top -l 2 -s 1 -n 6 -o cpu -stats pid,command,cpu,rsize | tail -7; sleep 3; done' > "$RUNNER_TEMP/sample.txt" 2>&1 &
-      - name: Boot
+          nohup bash -c 'while :; do echo "== $(date +%T) $(sysctl -n vm.loadavg)"; top -l 2 -s 1 -n 5 -o cpu -stats pid,command,cpu | tail -6; sleep 3; done' > "$RUNNER_TEMP/sample.txt" 2>&1 &
+      - name: Boot the simulator
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
           echo "$udid" > "$RUNNER_TEMP/udid"
-          date +%T; xcrun simctl boot "$udid"; date +%T; xcrun simctl bootstatus "$udid" -b; date +%T
-      - name: First test-without-building, one small suite
+          xcrun simctl boot "$udid"
+          [[ ${{ matrix.variant }} == spotlight-noboot ]] || xcrun simctl bootstatus "$udid" -b > /dev/null
+      - name: Test
         shell: bash
         run: |
           udid=$(cat "$RUNNER_TEMP/udid")
-          date +%T; time xcrun simctl list devices booted; date +%T
-          NSUnbufferedIO=YES UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -only-testing:UnstirTests/ClipTests 2>&1 | grep -v '^\s*$'
-      - name: Second test-without-building, one small suite
-        shell: bash
-        run: |
-          udid=$(cat "$RUNNER_TEMP/udid")
-          NSUnbufferedIO=YES UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -only-testing:UnstirTests/ClipTests 2>&1 | grep -v '^\s*$'
-      - name: Third, by xctestrun
-        shell: bash
-        run: |
-          udid=$(cat "$RUNNER_TEMP/udid")
-          run=$(ls build/store/Build/Products/*.xctestrun | head -1); echo "$run"
-          NSUnbufferedIO=YES TEST_RUNNER_UNSTIR_STORE_TESTS=1 xcodebuild test-without-building -xctestrun "$run" -destination "id=$udid" -only-testing:UnstirTests/ClipTests 2>&1 | grep -v '^\s*$'
+          skip=(-skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf)
+          if [[ ${{ matrix.variant }} == spotlight-xctestrun ]]; then
+            run=$(find build/store/Build/Products -name '*.xctestrun' | head -1)
+            TEST_RUNNER_UNSTIR_STORE_TESTS=1 NSUnbufferedIO=YES xcodebuild test-without-building -xctestrun "$run" -destination "id=$udid" "${skip[@]}" 2>&1 | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:|Testing started|Command line)|elapsed"
+          else
+            NSUnbufferedIO=YES UNSTIR_SIM=$udid scripts/test-store.sh test-without-building "${skip[@]}" 2>&1 | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:|Testing started|Command line)|elapsed"
+          fi
       - name: Samples
         if: always()
         run: cat "$RUNNER_TEMP/sample.txt"
