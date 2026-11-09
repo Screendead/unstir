@@ -484,7 +484,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   about 4 minutes).
 - **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
-  (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
+  (later in the night) and played (earlier). Its titles and the ending's beats are catalog keys marked do-not-translate
+  (`scripts/catalog.py fixed`) while the pack is out of v1; the scene's clock stays a hand-built "6:40 am" (Jack, F3),
+  as `Date.FormatStyle` reads "6:40 AM" in en-US. `Game` deals each of the scramble's entries on such a rod with that rod in
   its `tags`, and `Game.played` is the story's vignettes less every tag on the stack, so the picture is a function of
   the stack alone: a pop plays what it carried, a vignette waits for every entry on its rod, a win the fine pass calls
   plays the rest, and the pack's undo and a reset bring tags back with their entries. On a story, the heal ring

@@ -22,7 +22,13 @@ enum Dusk: Int, CaseIterable, Sendable, StoryScene {
     static let tea = Color(0xD98B4A)
 
     var title: String {
-        ["Lighting the lamp", "The path to the light", "Doubling the lines", "The float", "First stir"][rawValue - 21]
+        [
+            String(localized: "Lighting the lamp", comment: "First Stir scene title"),
+            String(localized: "The path to the light", comment: "First Stir scene title"),
+            String(localized: "Doubling the lines", comment: "First Stir scene title"),
+            String(localized: "The float", comment: "First Stir scene title"),
+            String(localized: "First stir", comment: "First Stir scene title"),
+        ][rawValue - 21]
     }
 
     var layout: Layout { [.quad, .eye, .pent, .quad, .tri][rawValue - 21] }
