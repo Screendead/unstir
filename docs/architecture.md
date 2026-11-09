@@ -42,8 +42,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `unstirChannelsBody`), so the GPU bench's kernel runs the same code on a texture. It turns the sample point back by the glass's `turn`, then applies
   the stack's inverses to sample the picture. A lens's entry carries a negative radius and its flow's time
   (`steps * Tank.lensRate`) for the angle, and the rim's sharpness comes in as a uniform. The tests reach the Swift copy
-  (`Tank.profile`/`Tank.twist`/`Tank.lens`) and only the shader's `lensFlow`, compiled on its own
-  (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
+  (`Tank.profile`/`Tank.twist`/`Tank.lens`) and, of the shader, only `lensFlow` and the channel chains, compiled
+  on their own through `ShaderKit` (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
   Every draw through `unstir` or `unstirChannels` (the level's glass, the dock's covers, the cards' clips, the icon,
   the menu's stir) passes its arguments by name through `TankShader` (Shader.swift, Jack's call ARCH = A), which lists
   them in the signature's order: `testTheTankShaderPassesTheSignaturesOrder` reads both signatures out of Unstir.metal
@@ -134,8 +134,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   body as a kernel for the GPU bench (Unstir.metal, above). The twins' heartbeat lives in their own lines: each
   file's `heartbeat` reads the delay grid `Picture.delays` appended to the twin's data, and the lines swell and brighten
   as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's limits (neurons'
-  regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and checks its search
-  against a brute force, the twin at the beat's peak; nothing else tests the shaders.
+  regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself (`ShaderKit`) and checks its
+  search against a brute force, the twin at the beat's peak; no other picture's shader has a test of its own.
 - **Brim.swift** and **Brim.metal** draw endless's brim as a measuring jug on the tank's own bezel, ported from the
   mockup Jack approved (2026-09-28) with its constants in its own units (`Brim.unit` to the glass's radius): ticks
   engraved on the steel, a brim pin at twelve, and a liquid in the picture's own colours climbing both sides from six
@@ -914,8 +914,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
-  twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's cells take the
-  raw clock; the neural web is static per seed, built once off the main actor. The tank redraws a live picture at 60 Hz, 30 while `Power` saves. Vortex's own family (isobars, ephemeris,
+  twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. Every switch over
+  `Picture` names each case, with no `default:`, so a new picture fails to compile until it says whether it is live,
+  its period, data, twin and how it is baked, where it would otherwise draw black. `PictureLayer` finds a live
+  picture's stitchable by the case's name, which `testEveryLivePictureHasItsShader` checks in the app's library. The
+  glass's cells take the raw clock; the neural web is static per seed, built once off the main actor. The tank redraws a live picture at 60 Hz, 30 while `Power` saves. Vortex's own family (isobars, ephemeris,
   cords; **VortexPictures.swift**, **Flow.metal**, **Sky.metal**, **Loom.metal**) is drawn live the same way, with no
   twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. The sandbox's cycle
   (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's
@@ -1067,6 +1070,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   forgets every level's started flag, saved try and best (`started.`, `resume.` and `best.` keys), since the test host
   shares its defaults with the harness's launches and every earlier run on the same simulator, and a best or flag left
   there makes a test's first try a second.
+- **UnstirTests/ShaderKit.swift** compiles one of Sources' `.metal` files with a test's own kernels after it, and
+  runs them: without SwiftUI's header, cut before the first stitchable (`helpersOnly`, for a file whose stitchables
+  take a layer) or with every stitchable kept as a plain function. A test then dispatches over its buffers and reads
+  them back, so a shader's helper is checked against its Swift copy in a few lines.
 - **UnstirTests/Solver.swift** plays turning-tank levels for the tests and `scripts/solve.sh`; it never ships in the
   app. It has three players, whose moves count as `Game.history` counts them (`Play.count`). The optimum is the fewest
   moves that empty the stack: a breadth-first search over (stack, tank position) that untwists whole seams and turns
