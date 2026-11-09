@@ -1,8 +1,10 @@
 ; Copyright © 2026 Jack Lusher. All rights reserved.
-; Rough sketches of the packs' sound for Jack's ear, never in the app: each sold pack's layer over plughole's bed
-; (Lens, Escapement, Prism), two takes of each, Escapement's ratchet tick, five takes, and the kept layers looped as in
-; play. scripts/sounds.sh listen passes the sketch (SKETCH), the seed (SEED), the length (DUR) and the output (OUT), and
-; scripts/sounds.sh layers the macros below. Stereo, 48 kHz, 32-bit float; the script sets the level.
+; Sketches of the packs' sound for Jack's ear: each sold pack's layer over plughole's bed (Lens, Escapement, Prism),
+; two takes of each, Escapement's ratchet tick, five takes, and the kept layers looped as in play. The kept layers'
+; loops, their resolutions and Escapement B's reed notes are also what the app plays (scripts/sounds.sh renders them
+; into Sounds/glass as layer-*). scripts/sounds.sh listen passes the sketch (SKETCH), the seed (SEED), the length (DUR)
+; and the output (OUT), and scripts/sounds.sh layers and the app's render the macros below. Stereo, 48 kHz, 32-bit
+; float; the script sets the level.
 ;
 ; Every layer plays one motif, the piece's (giMN, giMD), at 75 bpm, a bar 3.2 s. Bars 1 to 5 are play; bar 6, at
 ; 16 s, is the solve, the only place any layer lands on D.
@@ -36,6 +38,16 @@ giEnd = $END
 #else
 giSolved = 0
 giEnd = 0
+#end
+; The app's one reed note: NOTE, a MIDI note, held LEN seconds with SEND of it to the reverb.
+#ifdef NOTE
+giNote = $NOTE
+giNoteLen = $LEN
+giNoteSend = $SEND
+#else
+giNote = 0
+giNoteLen = 0
+giNoteSend = 0
 #end
 #ifdef REEDS
 giReeds[] fillarray $REEDS
@@ -568,6 +580,16 @@ instr escBEnd
   turnoff
 endin
 
+; The app's one-shots from Escapement B, each from 0: a move's reed note, and the solve's kick on the beat after it.
+instr escBNote
+  schedule "reed", 0, giNoteLen, Hz(giNote), 0.55, 0, giNoteSend, 0
+  turnoff
+endin
+instr escBKick
+  schedule "kick", 0, 0.5, 0.4
+  turnoff
+endin
+
 ; The bell chord is held past the third period, so no period holds its release.
 instr prismALoop
   ibeats = 3 * giLoop / giBeat
@@ -592,6 +614,21 @@ instr prismAEnd
   ib = max(giEnd - 0.4, giSolved)
   schedule "bell", ib, 3.8, Hz(62), 0.12, 0, 0.4
   schedule "bell", ib, 3.8, Hz(69), 0.1, 0, 0.4
+  turnoff
+endin
+; The app plays prismAEnd's two parts as two files, each from 0, so the swell can start as late as the solve while
+; the ocarinas keep the beat.
+instr prismAEndVoices
+  ii = 0
+  while ii < 3 do
+    schedule "ocarina", 0, 2.6, Hz(62), 0.26, (ii - 1) * 0.7, 0.35, 0.5
+    ii += 1
+  od
+  turnoff
+endin
+instr prismAEndSwell
+  schedule "bell", 0, 3.8, Hz(62), 0.12, 0, 0.4
+  schedule "bell", 0, 3.8, Hz(69), 0.1, 0, 0.4
   turnoff
 endin
 

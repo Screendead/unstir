@@ -348,6 +348,74 @@ while read -r name bed seed target; do
     fi
 done <<<"$BEDS"
 
+# Layers: each pack's kept layer (Jack's call SOUNDSK: Lens B, Escapement B, Prism A) from sound-src/sketches.csd, at
+# its 20 s sketch's gain (-30 LUFS integrated, under the ceiling, as listen sets it), so the app plays it as Jack heard
+# it: the motif's whole cycles over 8 bars at 75 bpm (25.6 s) as layer-<pack>.m4a, encoded as a bed is, and the
+# one-shots the game plays over it as layer-<pack>-<name>.caf: the resolution on the beat after the solve (Prism's
+# swell from as early as the solve), and Escapement B's reed, a note a move and D on the solve. Each one-shot is
+# name:instrument:seconds[:macro=value+...]. The loop is the third of three periods, which loopmaster makes seamless,
+# turned to start a quarter beat (0.2 s, LEAD) before its first beat, where no layer has an onset: a wrap on the
+# downbeat's attack reads to clean as a click. Sound.swift counts the beats from LEAD into the file.
+LOOP=25.6
+LOOPN=1228800
+LEAD=9600
+LAYERS="
+lens lensB 2002 end:lensBEnd:8
+escapement escB 2102 end:escBKick:4 a4:escBNote:4:NOTE=69+LEN=0.45+SEND=0.04 b4:escBNote:4:NOTE=71+LEN=0.45+SEND=0.04 e4:escBNote:4:NOTE=64+LEN=0.45+SEND=0.04 g4:escBNote:4:NOTE=67+LEN=0.45+SEND=0.04 d4:escBNote:6:NOTE=62+LEN=1.8+SEND=0.08
+prism prismA 2201 end:prismAEndVoices:7 swell:prismAEndSwell:7
+"
+L=$B/layers
+mkdir -p "$L"
+layer() {  # sketch seed out [macros...]
+    local sk=$1 seed=$2 out=$3
+    shift 3
+    (cd "$SRC" && csound --omacro:SKETCH="$sk" --omacro:SEED="$seed" "$@" --omacro:OUT="$ROOT/$out" sketches.csd \
+        >"$ROOT/$out.log" 2>&1)
+    grep -q "0 errors in performance" "$out.log" || { echo "csound failed: $out.log"; tail -20 "$out.log"; exit 1; }
+}
+echo "layers"
+pids=()
+while read -r pack sk seed shots; do
+    [ -z "$pack" ] && continue
+    layer "$sk" "$seed" "$L/$pack-sketch.wav" --omacro:DUR=20 &
+    pids+=($!)
+    layer "${sk}Loop" "$seed" "$L/$pack-loops.wav" --omacro:LOOP=$LOOP &
+    pids+=($!)
+    for shot in $shots; do
+        IFS=: read -r part ins secs macros <<<"$shot"
+        args=(--omacro:DUR="$secs")
+        for m in ${macros//+/ }; do args+=(--omacro:"$m"); done
+        layer "$ins" "$seed" "$L/$pack-$part.wav" "${args[@]}" &
+        pids+=($!)
+    done
+done <<<"$LAYERS"
+for pid in "${pids[@]}"; do wait "$pid"; done
+while read -r pack sk seed shots; do
+    [ -z "$pack" ] && continue
+    read -r _ i p < <(loud "$L/$pack-sketch.wav")
+    g=$(gain "$i" -30 "$p")
+    echo "$g" >"$L/$pack.gain"
+    ffmpeg -hide_banner -nostdin -v error -y -i "$L/$pack-loops.wav" \
+        -filter_complex "[0]atrim=start_sample=$((3 * LOOPN - LEAD)):end_sample=$((3 * LOOPN)),asetpts=N/SR/TB[a];
+            [0]atrim=start_sample=$((2 * LOOPN)):end_sample=$((3 * LOOPN - LEAD)),asetpts=N/SR/TB[b];
+            [a][b]concat=v=0:a=1" -c:a pcm_f32le "$L/$pack-loop-raw.wav"
+    "$TOOL" finish "$L/$pack-loop-raw.wav" "$B/wav/layer-$pack.wav" "$g"
+    for rate in 128000 160000; do
+        for pad in $PADS; do
+            "$TOOL" wrap "$B/wav/layer-$pack.wav" "$B/wav/layer-$pack-wrapped.wav" "$pad"
+            afconvert -f m4af -d aac -b $rate -q 127 "$B/wav/layer-$pack-wrapped.wav" "$OUT/layer-$pack.m4a"
+            "$TOOL" gapless "$OUT/layer-$pack.m4a" "$pad" $LOOPN
+            if "$TOOL" clean "$OUT/layer-$pack.m4a" $LOOPN; then echo "layer-$pack: AAC at $rate b/s, pre-roll $pad, gain $g dB"; break 2; fi
+            rm "$OUT/layer-$pack.m4a"
+        done
+    done
+    [ -f "$OUT/layer-$pack.m4a" ] || { echo "layer-$pack: no AAC loops cleanly"; exit 1; }
+    for shot in $shots; do
+        part=${shot%%:*}
+        "$TOOL" finish "$L/$pack-$part.wav" "$OUT/layer-$pack-$part.caf" "$g" trim
+    done
+done <<<"$LAYERS"
+
 echo
 printf "%-11s %6s %7s %7s %7s %7s %9s %9s %8s\n" file seconds "M" "I" "TP" "onset" "phone ΔM" "phone ΔI" bytes
 total=0
@@ -378,6 +446,7 @@ row() {  # file, mono
 while read -r name _; do [ -n "$name" ] && row "$OUT/$name.caf" 1; done <<<"$EFFECTS"
 bed() { ls "$OUT/$1".m4a "$OUT/$1".caf 2>/dev/null; }
 while read -r name _; do [ -n "$name" ] && row "$(bed "$name")" 0; done <<<"$BEDS"
+for f in "$OUT"/layer-*.m4a "$OUT"/layer-*.caf; do row "$f" 0; done
 echo "total $total bytes"
 
 echo
@@ -400,3 +469,8 @@ while read -r name _; do
     echo "$name:"
     "$TOOL" seam "$(bed "$name")" "$B/wav/$name.wav" | sed 's/^/  /'
 done <<<"$BEDS"
+while read -r pack _; do
+    [ -z "$pack" ] && continue
+    echo "layer-$pack:"
+    "$TOOL" seam "$OUT/layer-$pack.m4a" "$B/wav/layer-$pack.wav" | sed 's/^/  /'
+done <<<"$LAYERS"

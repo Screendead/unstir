@@ -191,7 +191,8 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   <dir>` writes every effect and bed as m4a to `<dir>`, with a few effects played in turn over a bed, for listening
   off the phone, then renders the packs' sketches (`sound-src/sketches.csd`: two takes each of Lens's, Escapement's
   and Prism's layers on one motif at 75 bpm, and five of the ratchet's tick, the last three also in Escapement B's
-  layer, for Jack's ear and never played by the app) alone and over plughole's bed, as `sketch-*.m4a`.
+  layer, for Jack's ear) alone and over plughole's bed, as `sketch-*.m4a`. The main render also renders the kept
+  layers the app plays from it (`layer-*`, `Sound.Layer`).
   `scripts/sounds.sh layers <dir>` plays each kept layer (Lens B, Escapement B, Prism A) under a real level's line in
   `sound-src/layers-in-play.tsv`, three to four minutes of moves, undos and the solve with the sounds the game plays for
   each (`testTheLayerLinesSoundAsTheGamePlaysThem` checks them on a real `Game`): an 8-bar loop of the layer over the
