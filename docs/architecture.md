@@ -859,11 +859,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   buttons read as words, not glyphs.
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
   round 13): until 01 has a best, an empty line over the tier's list (the tank's rule, "Every stir in this tank has
-  an exact inverse.", left the menu for the App Store page: Jack's call D1 = A, round 13), with the sandbox under the
-  list; then "next: 07 · Sprinkle ›" on that line, a button opening the shown tier's frontier (none once it has
-  none), and the sandbox over the list. The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
+  an exact inverse.", left the menu for the App Store page: Jack's call D1 = A, round 13); then "next: 07 · Sprinkle ›"
+  on that line, a button opening the shown tier's frontier (none once it has none). The sandbox's row sits at the
+  list's end under its own header, "anything goes", so the list leads with 01 (Jack's call D2 = A, round 13). The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
   rethinking, so that a pack's mechanics join it once the pack is owned), as First Stir is: `Level.playsSandbox` is false
-  in Release, so there the lead has no sandbox (`Lead.sandbox` nil), the menu no row, `Store.opens` refuses it and a
+  in Release, so there the lead has no sandbox (`Lead.sandbox` false), the menu no row or header, `Store.opens` refuses it and a
   harnessed `UNSTIR_MODE=sandbox` opens the menu, while Debug and the harness outside Release keep it, its code, tests and
   shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
@@ -895,7 +895,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`MenuLayout`), or over the trailing half beside a playing level, as the archive does. The list opens centred, unanimated under
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
   `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
-  the first short of par, else the top). The daily, endless and the sandbox leave it at the top. That row's hairline,
+  the first short of par, else the top). The daily, endless and the sandbox leave it at the top, though the sandbox's row is at the end. That row's hairline,
   in the list's left margin, lights once and fades (not under Reduce Motion). The menu opens on the tier of a level
   of a tier left, and a tier's level opening stores its tier (`Tier.store`, so only an open one), so "up a notch" then
   back lands on the new tier, and so does a launch after the app dies in it. Back from a pack's level, the card over

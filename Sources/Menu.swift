@@ -84,7 +84,7 @@ extension Tier {
 extension Level {
     /// The row the menu, or a pack's card, centres on once this level is left: after a solve the one after it, which
     /// "next ›" opens, or itself as its list's last; a past daily itself, in the archive. Nil for today's daily, endless
-    /// and the sandbox, which sit at the top.
+    /// and the sandbox, which sit outside the tier's rows.
     func focus(solved: Bool) -> Level? {
         if archived { return self }
         let list = pack?.levels ?? tier.levels
@@ -286,20 +286,14 @@ struct MenuView: View {
         }
     }
 
-    /// Where the sandbox's row sits against the tier's list.
-    enum Place { case over, under }
-
     /// What the menu leads with (Jack's call C4, round 13). `modes`: the daily and endless, which draw on every layout, so
-    /// they open, and show, after the first hex level. `played`: plughole 01 has a best, so `next` opens the tier's
-    /// frontier, if it has one, and the sandbox moves from under the list to over it; a build that
-    /// withholds the sandbox has none (`Level.playsSandbox`).
-    typealias Lead = (modes: Bool, played: Bool, sandbox: Place?, next: Level?)
+    /// they open, and show, after the first hex level. `sandbox`: the build has it (`Level.playsSandbox`), its row at the
+    /// list's end. `next`: once plughole 01 has a best, the tier's frontier, if it has one.
+    typealias Lead = (modes: Bool, sandbox: Bool, next: Level?)
     static func lead(tier: Tier, unlocked: Bool = Best.unlocked, release: Bool = Build.release,
                      best: (String) -> Best? = Best.load) -> Lead {
-        let played = best(Level.plughole[0].id) != nil
-        return (unlocked || best(Level.plughole[22].id) != nil, played,
-                Level.playsSandbox(release: release) ? played ? .over : .under : nil,
-                played ? tier.frontier(unlocked: unlocked, best) : nil)
+        (unlocked || best(Level.plughole[22].id) != nil, Level.playsSandbox(release: release),
+         best(Level.plughole[0].id) != nil ? tier.frontier(unlocked: unlocked, best) : nil)
     }
 
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
@@ -553,8 +547,8 @@ struct MenuView: View {
         }
     }
 
-    /// The way on; the modes once open; then the tier's rule and rows, the sandbox, where the build has
-    /// it, over them once plughole 01 has a best.
+    /// The way on; the modes once open; then the tier's rule and rows, and where the build has the sandbox, its row at
+    /// the end under "anything goes" (Jack's call D2 = A, round 13), so the list leads with 01.
     private func rows(_ lead: Lead) -> some View {
         let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                                pick: pick, refuse: refuse)
@@ -584,9 +578,8 @@ struct MenuView: View {
                             if kept != nil { newRun }
                         }
                 }
-                if lead.sandbox == .over { sandbox }
             }
-            .padding(.top, lead.modes || lead.sandbox == .over ? 22 : 8)
+            .padding(.top, lead.modes ? 22 : 8)
             TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held, playing: playing?.id,
                      revision: revision).equatable()
                 .overlay(alignment: .topLeading) {
@@ -603,7 +596,14 @@ struct MenuView: View {
                     list = $0
                     arrive()
                 }
-            if lead.sandbox == .under { sandbox.padding(.top, 14) }
+            if lead.sandbox {
+                HStack(spacing: 10) {
+                    Text("anything goes").font(.mono(11, .semibold)).opacity(0.55)
+                    Rectangle().frame(height: 1).opacity(0.2)
+                }
+                .padding(.top, 22).padding(.bottom, 8)
+                sandbox
+            }
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 28)
