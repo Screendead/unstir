@@ -878,7 +878,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   English; a plural key is the exception, as without its `one` and `other` forms it reads "1 moves", so each one is
   written into the catalog by hand (`scripts/catalog.py`) with the code that uses it. The archive row's hint, "%lld
   past dailies", has no `one` form, as its English said "1 past dailies" before the catalog, and the menu's own line,
-  still hand-built in Archive.swift, says so too.
+  still hand-built in Archive.swift, says so too. A count in a key is formatted for the locale: from 1000 it reads
+  "1,234" in English, where the strings it replaced read "1234". Xcode's own build or archive is documented to sync
+  every extracted key into the catalog, which would leave this tracked file changed in the checkout; until a check
+  for that drift exists, keep such a sync out of an unrelated commit.
   `scripts/loc-lint.sh`, and `CatalogTests.testNoPlayerStringEscapesTheCatalog` with the same patterns
   (`scripts/loc-lint/patterns.txt`), flag each line that would put player text past the catalog: a `Text`,
   accessibility label, value or hint or announcement whose argument is not a literal, `verbatim:` or already
