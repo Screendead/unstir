@@ -1048,7 +1048,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   is the developer unlock above; alongside any other `UNSTIR_` variable, leaving it unset clears it, so no shot leaves
   the next unlocked. Any other `UNSTIR_` variable also silences the launch, as the test host is silenced, unless
   `UNSTIR_SOUND=1`. This is how screenshots and films
-  are taken without touch; see `scripts/shots.sh` for examples. To show a visual change, add a `shot` line there.
+  are taken without touch; see `scripts/shots/` for examples. To show a visual change, add a `shot` line to its
+  area's file there (`scripts/shots/<area>.sh`). `scripts/shots.sh` sources the areas in a written-out list, in the
+  index's order, and a later area reads values an earlier one set, so a new area joins that list where its shots
+  belong in the index.
 - **UnstirTests/FreshDefaults.swift** is the test bundle's principal class: before each test and once the run ends it
   forgets every level's started flag, saved try and best (`started.`, `resume.` and `best.` keys), since the test host
   shares its defaults with the harness's launches and every earlier run on the same simulator, and a best or flag left
