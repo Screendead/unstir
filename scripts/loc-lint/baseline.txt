@@ -28,7 +28,6 @@ Consent.swift: Text(SettingsSheet.version).font(.mono(11)).opacity(0.3).padding(
 Consent.swift: Text("\u{2197}").font(.mono(15, .medium)).foregroundStyle(Color.amber)
 Consent.swift: Text(name).font(.mono(14))
 Consent.swift: Text(detail).font(.mono(11)).opacity(0.4)
-EscapementViews.swift: Text(String(d)).font(.system(size: h * 0.74, weight: .bold, design: .monospaced))
 Menu.swift: Text(next.label).fontWeight(.semibold).foregroundStyle(next.colour).shadow(color: next.colour, radius: 4)
 Menu.swift: Text(" \u{00B7} \(next.title) \u{203A}").opacity(0.8)
 Menu.swift: Text(" ").font(.mono(13)).hidden()
@@ -64,7 +63,6 @@ ResultCard.swift: Text("\u{203A}").font(.system(size: 26, weight: .black))
 ResultCard.swift: .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. \(shortLine), and par on every one opens it")
 ResultCard.swift: .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
 ResultCard.swift: if let notice { Text(notice).font(.mono(12)).opacity(0.7).transition(.opacity) }
-Rods.swift: Text(channels.letters).font(.mono(9, .semibold)).foregroundStyle(.white)
 Shelf.swift: if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
 Shelf.swift: Button(action: onBack) { Text(back.text).font(.mono(.subheadline, .medium)).hit() }
 Shelf.swift: .accessibilityLabel(back.spoken)

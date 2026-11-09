@@ -147,7 +147,7 @@ struct FlipCounter: View {
                                    bottomTrailingRadius: top ? 0 : 3 * k, topTrailingRadius: top ? 3 * k : 0)
                 .fill(LinearGradient(colors: top ? [Color(0x23262E), Color(0x181A20)] : [Color(0x15171C), Color(0x0D0E11)],
                                      startPoint: .top, endPoint: .bottom))
-            Text(String(d)).font(.system(size: h * 0.74, weight: .bold, design: .monospaced))
+            Text(verbatim: String(d)).font(.system(size: h * 0.74, weight: .bold, design: .monospaced))
                 .foregroundStyle(ink).shadow(color: ink.opacity(spent ? 0 : 0.55), radius: 3 * k)
                 .frame(width: w, height: h)
                 .frame(width: w, height: h / 2, alignment: top ? .top : .bottom)
