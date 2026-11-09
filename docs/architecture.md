@@ -857,6 +857,19 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs.
+- **Localizable.xcstrings** is the String Catalog (Jack's call F4 = C: English at launch, languages a later update;
+  CAT1 to CAT8 = A), development language `en`, the source British English. The build emits every localizable literal
+  (`SWIFT_EMIT_LOC_STRINGS`), but only an Xcode IDE build writes new keys back into the catalog, so a key missing from
+  it shows its literal or `defaultValue`, the same English; a plural key is the exception, as without its `one` and
+  `other` forms it reads "1 moves", so each one is written into the catalog by hand with the code that uses it.
+  `scripts/loc-lint.sh`, and `CatalogTests.testNoPlayerStringEscapesTheCatalog` with the same patterns
+  (`scripts/loc-lint/patterns.txt`), flag each line that would put player text past the catalog: a `Text`,
+  accessibility label, value or hint or announcement whose argument is not a literal, `verbatim:` or already
+  localized, a case change, a hand-made plural, a glyph or a bare number as a key. A line that means it carries
+  `// loc: verbatim <why>`. `scripts/loc-lint/baseline.txt` lists the escapes still owed, file and line text; each
+  fix takes its line out, and the test fails on an escape or a fixed line left in. CATORDER = D splits the migration:
+  the tables (Levels, Pack, First Stir) and the leaf files first, the chrome (Menu, the play screen and its card,
+  Shelf, Consent, Archive) after the design pass.
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
   round 13): until 01 has a best, the tank's rule as a tagline over the tier's list, with the sandbox under the list;
   then "next: 07 · Sprinkle ›" in the tagline's place, a button opening the shown tier's frontier (none once it has

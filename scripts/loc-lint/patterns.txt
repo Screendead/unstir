@@ -1,0 +1,23 @@
+# Copyright © 2026 Jack Lusher. All rights reserved.
+# What scripts/loc-lint.sh and CatalogTests flag in Sources/*.swift: player text that would reach the screen or
+# VoiceOver without passing through the String Catalog, or a glyph or number that would become a junk key. A line
+# holding `// loc: verbatim <why>`, or a comment line, is never flagged. Both read these lines as ICU/Perl regexes.
+#
+# call <regex>   a call whose first argument is player text unless it starts with an `allow`
+# allow <regex>  an argument start that is a literal, verbatim, already localized, or never player text
+# any <regex>    flagged wherever it appears
+call \bText\(
+call \.accessibility(?:Label|Value|Hint)\(
+call \bAnnouncement\(
+allow "
+allow Text\("
+allow verbatim:
+allow String\(localized:
+allow LocalizedStringResource\(
+allow Image\(
+allow [\w.]+, (?:format|style):
+allow Spoken\.
+allow (?:game\.)?(?:moves|tank|finish)Spoken\)
+any \.(?:uppercased\(\)|lowercased\(\)|capitalized\b)
+any == 1 \? "
+any \bText\("(?:[^A-Za-z"\\]|\\u\{\w+\}|\\\([^)]*\))*"\)
