@@ -642,7 +642,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   holds still (`PackDock.paused`) and a tier switch cuts to the new list without the stir (`MenuView.go`), so nothing
   of the menu takes GPU time from the tank. Back closes the level and the list returns to its half, the row left lit
   once however often it is left (`MenuView.followPlaying`, on the level leaving, not on a change of focus). A row, the
-  tagline's next, an archive day or a card's level picked beside play is decided before anything leaves
+  menu's "next:" line, an archive day or a card's level picked beside play is decided before anything leaves
   (`RootView.besidePick`): one that opens leaves the playing level through its own way out (`LevelView.switching`: a
   finger let go, its quit sent and its try saved, as `leave` does), then opens in the tank; a gate's or a withheld
   level leaves the playing level untouched, sending nothing, the gate's card over the trailing half (before the store
@@ -858,8 +858,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs.
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
-  round 13): until 01 has a best, the tank's rule as a tagline over the tier's list, with the sandbox under the list;
-  then "next: 07 · Sprinkle ›" in the tagline's place, a button opening the shown tier's frontier (none once it has
+  round 13): until 01 has a best, an empty line over the tier's list (the tank's rule, "Every stir in this tank has
+  an exact inverse.", left the menu for the App Store page: Jack's call D1 = A, round 13), with the sandbox under the
+  list; then "next: 07 · Sprinkle ›" on that line, a button opening the shown tier's frontier (none once it has
   none), and the sandbox over the list. The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
   rethinking, so that a pack's mechanics join it once the pack is owned), as First Stir is: `Level.playsSandbox` is false
   in Release, so there the lead has no sandbox (`Lead.sandbox` nil), the menu no row, `Store.opens` refuses it and a

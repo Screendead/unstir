@@ -290,8 +290,8 @@ struct MenuView: View {
     enum Place { case over, under }
 
     /// What the menu leads with (Jack's call C4, round 13). `modes`: the daily and endless, which draw on every layout, so
-    /// they open, and show, after the first hex level. `played`: plughole 01 has a best, so in the tagline's place `next`
-    /// opens the tier's frontier, if it has one, and the sandbox moves from under the list to over it; a build that
+    /// they open, and show, after the first hex level. `played`: plughole 01 has a best, so `next` opens the tier's
+    /// frontier, if it has one, and the sandbox moves from under the list to over it; a build that
     /// withholds the sandbox has none (`Level.playsSandbox`).
     typealias Lead = (modes: Bool, played: Bool, sandbox: Place?, next: Level?)
     static func lead(tier: Tier, unlocked: Bool = Best.unlocked, release: Bool = Build.release,
@@ -553,13 +553,13 @@ struct MenuView: View {
         }
     }
 
-    /// The tagline, or the way on; the modes once open; then the tier's rule and rows, the sandbox, where the build has
+    /// The way on; the modes once open; then the tier's rule and rows, the sandbox, where the build has
     /// it, over them once plughole 01 has a best.
     private func rows(_ lead: Lead) -> some View {
         let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                                pick: pick, refuse: refuse)
         return VStack(alignment: .leading, spacing: 0) {
-            tagline(lead).padding(.top, 10).id(Self.top)
+            wayOn(lead).padding(.top, 10).id(Self.top)
             VStack(alignment: .leading, spacing: 0) {
                 if lead.modes {
                     // Marked until either is first opened.
@@ -609,8 +609,9 @@ struct MenuView: View {
         .padding(.bottom, 28)
     }
 
-    /// The tank's rule until plughole 01 has a best, then the shown tier's frontier, a tap away.
-    @ViewBuilder private func tagline(_ lead: Lead) -> some View {
+    /// The shown tier's frontier, a tap away, once plughole 01 has a best; until then an empty line (Jack's call D1 = A,
+    /// round 13: the tank's rule left the menu for the App Store page).
+    @ViewBuilder private func wayOn(_ lead: Lead) -> some View {
         if let next = lead.next {
             Button { pick(next) } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
@@ -623,10 +624,8 @@ struct MenuView: View {
             // Plain: `pick` taps, as a row does.
             .buttonStyle(.plain)
             .accessibilityLabel(Spoken.next(next))
-        } else if !lead.played {
-            Text("Every stir in this tank has an exact inverse.").font(.mono(13)).opacity(0.55)
         } else {
-            // A line's height still, so a tier swap to or from one with a frontier moves nothing below it.
+            // A line's height still, so a tier swap, or 01's first best, moves nothing below it.
             Text(" ").font(.mono(13)).hidden()
         }
     }

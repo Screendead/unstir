@@ -1,4 +1,4 @@
-menu.png  Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list under the tagline, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock.
+menu.png  Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list with no line over it, only level 01 unlocked, no daily or endless row, the sandbox under the tier list, no pack dock.
 menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
 menu-whirlpool-locked.png  Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
 menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked.
@@ -9,7 +9,7 @@ menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
 menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
 first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings.
 first-launch-pointer.png  The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both.
-menu-after-01.png  Menu with 01 solved: next: 02 · Drip in the tagline's place, the sandbox back above the list.
+menu-after-01.png  Menu with 01 solved: next: 02 · Drip over the list, the sandbox back above it.
 menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01 and over the sandbox.
 menu-daily-run.png  The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more.
 menu-archive-locked.png  The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack.

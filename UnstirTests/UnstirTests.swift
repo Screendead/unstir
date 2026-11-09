@@ -1595,7 +1595,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
-    /// The menu's top follows plughole 01 and 23: the tagline, then the way on; the daily and endless only once open.
+    /// The menu's top follows plughole 01 and 23: nothing, then the way on; the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
         func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {
             let ids = Set(Tier.plughole.levels.prefix(tier == .plughole ? n : 27).map(\.id) + tier.levels.prefix(n).map(\.id))
