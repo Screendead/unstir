@@ -3,6 +3,9 @@
 Jack's decisions, one row each. Other files cite a call by its id; this file holds what it decided. Add a row when Jack
 makes a call. "HANDOFF" in the Where column includes the closed sections now in `docs/history.md`.
 
+Each row is a one-line summary for finding a call, not the call itself: where a row and the file it names differ,
+the file wins. Read the full text there before acting on a call.
+
 ## Round 1
 
 The pitch page's first answers, 2026-10-24 (HANDOFF numbers only the later rounds).

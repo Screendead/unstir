@@ -9,7 +9,7 @@ it; the player unwinds the scramble by turning rods back in the right order.
 
 This file holds the rules and commands every session needs, and pointers to the rest; it loads whole into every
 session and subagent, so it stays under 30,000 characters (`scripts/doc-size.sh`, checked on every PR). How the code
-works goes in `docs/architecture.md`, Jack's calls in `docs/decisions.md`, and closed sections of the handoff in
+works goes in `docs/architecture.md`, an index of Jack's calls in `docs/decisions.md` (the full text it points to wins), and closed sections of the handoff in
 `docs/history.md`. `HANDOFF.md` holds the current task: the plan, where it stands, open thoughts,
 and the options set aside with their reasons. Read it and `HANDOFF.private.md` at the start of a session. Update it when a step closes or Jack
 makes a call, and keep its "Set aside" entries (note when one is picked back up). If the two files disagree about
