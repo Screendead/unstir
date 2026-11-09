@@ -53,7 +53,6 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(Spoken.row(endless, result: nil, tanks: 1, detail: nil, enabled: true, needs: nil).value, "best 1 tank")
         XCTAssertEqual(Spoken.row(endless, result: nil, tanks: 1, detail: nil, enabled: true, needs: nil, started: true).value,
                        "run in progress, best 1 tank")
-        XCTAssertEqual(Spoken.archiveRow(open: true, days: 1, atPar: 0).hint, "1 past daily")
     }
 
     /// A table's id-keyed string reads its English default, which the catalog may not hold.

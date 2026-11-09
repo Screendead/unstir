@@ -876,7 +876,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`SWIFT_EMIT_LOC_STRINGS`), but a command-line build writes no keys back into the catalog (checked 2026-11-09;
   Xcode's own build is documented to), so a key missing from it shows its literal or `defaultValue`, the same
   English; a plural key is the exception, as without its `one` and `other` forms it reads "1 moves", so each one is
-  written into the catalog by hand (`scripts/catalog.py`) with the code that uses it.
+  written into the catalog by hand (`scripts/catalog.py`) with the code that uses it. The archive row's hint, "%lld
+  past dailies", has no `one` form, as its English said "1 past dailies" before the catalog, and the menu's own line,
+  still hand-built in Archive.swift, says so too.
   `scripts/loc-lint.sh`, and `CatalogTests.testNoPlayerStringEscapesTheCatalog` with the same patterns
   (`scripts/loc-lint/patterns.txt`), flag each line that would put player text past the catalog: a `Text`,
   accessibility label, value or hint or announcement whose argument is not a literal, `verbatim:` or already

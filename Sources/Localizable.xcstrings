@@ -24,29 +24,6 @@
         }
       }
     },
-    "%lld past dailies" : {
-      "comment" : "VoiceOver: the archive row's hint",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld past daily"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld past dailies"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%lld resets" : {
       "comment" : "Share line: resets taken",
       "localizations" : {
