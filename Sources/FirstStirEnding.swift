@@ -199,9 +199,9 @@ struct NightForwardsFilm: View {
             .overlay(alignment: .bottom) {
                 VStack(spacing: 6) {
                     let beat = NightForwards.beat(NightForwards.levels[now.index], seconds: now.seconds)
-                    Text(beat?.text ?? " ").font(.mono(12)).lineLimit(1).opacity(0.8 * (beat?.opacity ?? 0))
-                    Text(clock(now)).font(.mono(12)).opacity(0.55)
-                    Text("tap to skip").font(.mono(12)).opacity(0.35)
+                    Text(beat?.text ?? " ").font(.game(12)).lineLimit(1).opacity(0.8 * (beat?.opacity ?? 0))
+                    Text(clock(now)).font(.game(12)).opacity(0.55)
+                    Text("tap to skip").font(.game(12)).opacity(0.35)
                 }
                 .offset(y: Self.linesOffset(foot: foot, side: side))
             }

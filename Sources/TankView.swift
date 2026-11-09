@@ -24,12 +24,6 @@ extension Color {
     static let live = Color(0xF2F4FA)
 }
 
-extension Font {
-    static func mono(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .monospaced)
-    }
-}
-
 extension CaseIterable where Self: Equatable, AllCases == [Self] {
     /// The first case follows the last.
     var next: Self {
@@ -231,6 +225,8 @@ struct LevelView: View {
     /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
     @Environment(\.harnessFold) private var harnessFold
     @Environment(\.chromeMeasured) private var chromeMeasured
+    /// The type size round the level, which its own text sees capped at `PlayLayout.typeCap`.
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// The level's note at full strength for its first seconds of play.
     @State private var noteLit = false
     /// Plughole 01's first open points at the settings under its note, once (Jack's call F3, round 14). State, as
@@ -462,6 +458,7 @@ struct LevelView: View {
 
     var body: some View {
         screen
+            .dynamicTypeSize(...PlayLayout.typeCap)
             .statusBarHidden(clean)
             // The Info.plist's dark style draws the status bar white, which paper would swallow.
             .preferredColorScheme(page.paper ? .light : nil)
@@ -564,7 +561,7 @@ struct LevelView: View {
     /// The play screen's way out and its count: moves against par, Escapement's ticks or the sandbox's controls.
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
-            Button(action: leave) { Text(game.level.back).hit() }
+            Button(action: leave) { Text(game.level.back).font(.ui(.button)).hit() }
                 .accessibilityLabel(Spoken.back(game.level))
             Spacer()
             if game.level.sandbox {
@@ -590,25 +587,27 @@ struct LevelView: View {
                     .accessibilityLabel(game.movesSpoken)
             }
         }
-        .font(.mono(13))
+        .font(.ui(.label))
         .padding(.top, 8)
         .modifier(Unseen(clean))
     }
 
     private var titleRow: some View {
         HStack(alignment: .firstTextBaseline, spacing: 14) {
-            Text(game.level.label).foregroundStyle(game.level.colour).shadow(color: page.glow(game.level.colour), radius: 4)
+            Text(game.level.label).fontWeight(.semibold).foregroundStyle(game.level.colour)
+                .shadow(color: page.glow(game.level.colour), radius: 4)
             // Endless's tank beside its name, where it can't read as the brim's count.
             Text(game.level.title + (game.level.run.map { ", tank \($0.tank + 1)" } ?? ""))
         }
-        .font(.mono(15, .medium))
+        .font(.ui(.headline, .medium))
         .frame(maxWidth: .infinity, alignment: .leading)
         .overlay(alignment: .topLeading) {
             // In the gap above the title, so a pack level's tank sits where every other level's does.
             if let pack = game.level.pack {
-                Text(pack.name.uppercased()).font(.mono(10, .semibold)).tracking(2)
-                    .foregroundStyle(game.level.colour).opacity(0.75).offset(y: -15)
-                    // The way out already names the pack.
+                // The way out already names the pack, so this stays the size the title's 18 pt gap holds.
+                Text(pack.name.uppercased()).font(.ui(.eyebrow)).tracking(2).dynamicTypeSize(.large)
+                    .foregroundStyle(game.level.colour).opacity(0.75)
+                    .offset(y: -TypeRole.eyebrow.line(at: .large).height - 2)
                     .accessibilityHidden(true)
             }
         }
@@ -648,7 +647,7 @@ struct LevelView: View {
     }
 
     private var unstirred: some View {
-        Text("unstirred.").font(.mono(22, .semibold)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
+        Text("unstirred.").font(.game(22, .semibold)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
     }
 
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
@@ -662,17 +661,17 @@ struct LevelView: View {
             // menu the gear is in sight, so there is nothing to point at (Jack's call r16c-pointer = C).
             .overlay(alignment: .bottom) {
                 if pointing && !beside {
-                    Self.pointer.font(.mono(12)).fixedSize()
+                    Self.pointer.font(.ui(.detail)).fixedSize()
                         .opacity(showResult || ending || shown != nil ? 0 : 0.55)
                         .animation(.easeOut(duration: 0.4), value: shown == nil)
                         .accessibilityLabel(Self.pointerSpoken)
                         .accessibilityHidden(showResult || ending || shown != nil)
-                        // A line of 12 pt mono and a gap below the note's last line.
-                        .offset(y: 21)
+                        // A gap below the note's last line.
+                        .offset(y: TypeRole.detail.line(at: playType).height + 7)
                 }
             }
             .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
+            .frame(maxWidth: .infinity, minHeight: Self.captionLines(paper: page.paper, type: playType), alignment: .top)
             .padding(.top, 14)
             .accessibilityHidden(showResult || ending)
             .modifier(SkipButton(on: demoing || shown != nil) { skip() })
@@ -704,6 +703,13 @@ struct LevelView: View {
                           height: top - layout.stage.maxY - layout.halo.ring * layout.side / 2)
         } ?? .zero)
         .transition(reveal)
+    }
+
+    private var playType: DynamicTypeSize { min(typeSize, PlayLayout.typeCap) }
+
+    /// The caption's room: two lines of the note at `type`, in the paper's serif or the label role.
+    nonisolated static func captionLines(paper: Bool, type: DynamicTypeSize) -> CGFloat {
+        2 * TypeRole.label.line(at: type, design: paper ? .serif : .monospaced).height
     }
 
     /// Only where colour can't carry the read, so for everyone else the read stays by colour.
@@ -749,7 +755,8 @@ struct LevelView: View {
     /// window's middle where the window is wide.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
         PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold),
-                      halo: PlayLayout.Halo(game.level), chrome: PlayLayout.Chrome(game.level, swatches: swatched), scale: scale)
+                      halo: PlayLayout.Halo(game.level), chrome: PlayLayout.Chrome(game.level, swatches: swatched, type: playType),
+                      type: playType, scale: scale)
     }
 
     /// Beside the menu the trailing half is the menu's, black from the fold to the window's edge on Escapement's paper
@@ -1384,14 +1391,14 @@ struct LevelView: View {
     /// see `badge` change.
     private var refillBadge: some View {
         KeyframeAnimator(initialValue: Self.refillTime, trigger: badge) { s in
-            Text(game.firstRefill ? "+\(badge) undos" : "+\(badge)").font(.mono(13)).foregroundStyle(page.signal(.lime))
+            Text(game.firstRefill ? "+\(badge) undos" : "+\(badge)").font(.ui(.detail)).foregroundStyle(page.signal(.lime))
                 .opacity(badge > 0 ? Self.refillShown(frozenClock ?? s) : 0)
         } keyframes: { _ in
             MoveKeyframe(0.0)
             LinearKeyframe(Self.refillTime, duration: Self.refillTime)
         }
         // Its trailing edge on the count's, just above the capsule.
-        .offset(x: -22, y: -24)
+        .offset(x: -22, y: -TypeRole.detail.line(at: playType).height - 8)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -1431,7 +1438,7 @@ struct LevelView: View {
 
     private func control(_ label: String, inset: CGFloat = 22, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(label).font(.mono(15)).padding(.horizontal, inset).padding(.vertical, 10)
+            Text(label).font(.ui(.button)).padding(.horizontal, inset).padding(.vertical, 10)
                 .background(Capsule().fill((page.paper ? Color.ink : .white).opacity(0.05)))
                 .overlay(Capsule().stroke(page.paper ? Color.ink.opacity(0.3) : .white.opacity(0.18), lineWidth: 1))
                 .hit(3, 0)
@@ -2054,7 +2061,7 @@ struct LevelView: View {
     }
 
     private func countLabel(_ steps: Int) -> some View {
-        Text(steps > 0 ? "+\(steps)" : "\u{2212}\(-steps)").font(.mono(13, .semibold)).foregroundStyle(page.live)
+        Text(steps > 0 ? "+\(steps)" : "\u{2212}\(-steps)").font(.game(13, .semibold)).foregroundStyle(page.live)
             .padding(.horizontal, 6).padding(.vertical, 2)
             .background(Capsule().fill(page.paper ? Color.bone.opacity(0.85) : .black.opacity(0.6)))
     }
@@ -2665,7 +2672,7 @@ struct ChannelSwatches: View {
         HStack(spacing: 18) {
             ForEach(Channels.each, id: \.rawValue) { c in
                 let held = isolated == c
-                Text(c.letters).font(.mono(13, .semibold)).foregroundStyle(held ? .black : .white)
+                Text(c.letters).font(.ui(.detail, .semibold)).foregroundStyle(held ? .black : .white)
                     .frame(width: 38, height: 30)
                     .background(Capsule().fill(held ? c.colour : Color.white.opacity(0.06)))
                     .overlay(Capsule().strokeBorder(c.colour, lineWidth: 1.5))
