@@ -117,12 +117,13 @@ extension Unstirred {
     nonisolated static func drawsFourTaps(work: Int, budget: Int) -> Bool { work <= budget }
 
     /// The per-channel shader's work in entries for these masks (raw values, an entry each), or nil when every one is
-    /// white and the plain shader draws them. An entry costs a map per channel it holds and a tap's two extra samples
-    /// two entries: assumed, not measured on the phone.
+    /// white and the plain shader draws them. An entry costs a map per channel it holds, and the stack three entries
+    /// more: the phone bench (2026-11-09) measured every specimen at or under this, rounded up, where a constant of two
+    /// left five of them up to 7% over.
     nonisolated static func channelCost(_ masks: [Float]) -> Int? {
         let white = Float(Channels.white.rawValue)
         guard masks.contains(where: { $0 != white }) else { return nil }
-        return masks.reduce(2) { $0 + Int($1).nonzeroBitCount }
+        return masks.reduce(3) { $0 + Int($1).nonzeroBitCount }
     }
 }
 

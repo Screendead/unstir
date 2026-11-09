@@ -134,7 +134,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertTrue(Unstirred.drawsFourTaps(work: Unstirred.committedWork(stack: thirty, masks: [:], fill: 0, held: 0), budget: 30))
         XCTAssertFalse(Unstirred.drawsFourTaps(work: Unstirred.committedWork(stack: thirty + [Twist(rod: 0, steps: 1)], masks: [:], fill: 0, held: 1),
                                                budget: 30))
-        // Prism: a white entry costs three, and two for a tap's samples.
+        // Prism: a white entry costs three, and three over the stack.
         let level = Level.prism[0]
         XCTAssertEqual(Unstirred.committedWork(stack: level.scramble, masks: level.masks, fill: 0),
                        Unstirred.channelCost(level.scramble.map { Float((level.masks[$0.rod] ?? .white).rawValue) }))
