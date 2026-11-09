@@ -106,6 +106,9 @@ A launch agent polls each morning; launchd runs a calendar job missed while the 
 </plist>
 ```
 
+The plist holds the key id and issuer id in an untracked file under `~/Library/LaunchAgents`. Neither is secret
+without the `.p8`, which stays only at `ASC_KEY_PATH`.
+
 Start polling the day the invites go out, before anyone installs: a tester already playing at the first poll has their
 earlier play folded into day 1, and the report says so.
 
@@ -147,8 +150,9 @@ The log holds touches, moves, purchases and errors, and no name (`Log.swift`; th
 and logs 12 months). Without `SUPPORT_ADDRESS` in the build, the share sheet carries the log alone, with no address,
 so the TestFlight archive is built with it set (`Config/Local.xcconfig` for an Xcode archive).
 
-The ask, a draft for Jack: "Day 3: please send us your log. Tap the gear by the title, then 'report a problem', and
-send. It holds your moves and touches, never who you are."
+The ask, a draft for Jack, describing the log as the app's own row does (`ConsentWords.reportDetail`), and not as
+anonymous, since the mail carries the sender's address: "Day 3: please send us your log. Tap the gear by the title,
+then 'report a problem', and send. The log holds your touches, moves, purchases and errors."
 
 ## The What to Test text (a draft for Jack)
 
@@ -161,7 +165,7 @@ poll shows who answered.
 ```
 Thanks for testing Unstir. Play as you would any game, with no help from us: that is the test.
 
-On day 3, please tap the gear by the title, then "report a problem", and send the log. It holds your moves and touches, never who you are.
+On day 3, please tap the gear by the title, then "report a problem", and send the log. It holds your touches, moves, purchases and errors.
 
 Then answer these in TestFlight's feedback (take a screenshot, or open TestFlight and tap Send Beta Feedback):
 1. Did you come back the day after you first played? What brought you back, or what didn't?
