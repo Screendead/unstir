@@ -234,7 +234,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `stall` (`watch:n`, `UNSTIR_TAPSTALL`) showed on the 13 Pro Max that a late frame's main-thread CPU time can't tell
   the GPU's misses from the main thread's, hence `TapCuts.unattributed`; `adapt`, `prior`, `edge` and `edgestall` run
   the law. `--sim` is a dry run of the plumbing: the simulator's
-  frames say nothing of a phone's GPU.
+  frames say nothing of a phone's GPU. `scripts/duo-feel.sh [--sim udid] [drags] [budgets...]` does the same for the
+  deepest levels, each dealt and at 36, at each budget pinned (42 and the Duo upright's 23 unset), on the device's own
+  glass; its header says what the display link can't see. Both launch through `scripts/harness.sh`.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
   the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs

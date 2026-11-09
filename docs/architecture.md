@@ -119,7 +119,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   frame or a decision; `taps down`, `up`, `probe`, `cap … erased`, `applied`, `reverted`, `held`, `two-tap misses`,
   `hot`, `cool`; and an `UNSTIR_TAPS` it can't read, which draws the static limit), never from the link's callback. The harness, the test host and the simulator draw the static limit and
   measure nothing, so no shot or test depends on timing, unless `UNSTIR_TAPS` (below; `scripts/taps-check.sh` runs
-  the phone's checks).
+  the phone's checks, and `scripts/duo-feel.sh` the deepest levels at pinned budgets, both launching and reading the
+  recorder through `scripts/harness.sh`).
 - **Glass.metal**, **Chainmail.metal**, **Coral.metal**, **Neurons.metal** and **Marbling.metal** draw whirlpool's live
   pictures, one family per file: a stitchable named after each `Picture` case (`glass`, `glassTwin`, ...), maelstrom's
   twin being the same body with `twin` set. Each file stands alone. Glass.metal also holds `benchGlass`, `glass`'s
