@@ -7,10 +7,15 @@ it; the player unwinds the scramble by turning rods back in the right order.
 
 ## State and the current task
 
-This file holds how the code works. `HANDOFF.md` holds the current task: the plan, where it stands, open thoughts,
+This file holds the rules and commands every session needs, and pointers to the rest; it loads whole into every
+session and subagent, so it stays under 30,000 characters (`scripts/doc-size.sh`, checked on every PR). How the code
+works goes in `docs/architecture.md`, Jack's calls in `docs/decisions.md`, and closed sections of the handoff in
+`docs/history.md`. `HANDOFF.md` holds the current task: the plan, where it stands, open thoughts,
 and the options set aside with their reasons. Read it and `HANDOFF.private.md` at the start of a session. Update it when a step closes or Jack
 makes a call, and keep its "Set aside" entries (note when one is picked back up). If the two files disagree about
-state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack decides it.
+state, `HANDOFF.md` wins. Record a recommendation as a recommendation until Jack decides it; when he decides, add the
+call's row to `docs/decisions.md`. A section of `HANDOFF.md` that has closed moves to `docs/history.md` word for word,
+leaving its heading and a pointer.
 
 ## Git, pull requests and CI
 
