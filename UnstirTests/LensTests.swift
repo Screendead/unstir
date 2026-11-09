@@ -152,21 +152,12 @@ final class LensTests: XCTestCase {
     /// Unstir.metal's copy of the lens's flow agrees with `Tank.lensFlow` at the rim sharpness Swift passes it, far past
     /// the deal's three steps either way. Only the helpers above the stitchable compile here, since it takes a layer.
     func testLensShaderMatchesSwift() throws {
-        guard let device = MTLCreateSystemDefaultDevice() else { throw XCTSkip("no Metal device") }
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Sources/Unstir.metal")
-        let whole = try String(contentsOf: url, encoding: .utf8)
-        let helpers = try XCTUnwrap(whole.components(separatedBy: "[[ stitchable ]]").first)
-            .replacingOccurrences(of: "#include <SwiftUI/SwiftUI_Metal.h>", with: "")
-        let source = helpers + """
-
+        let kit = try ShaderKit("Unstir.metal", helpersOnly: true, kernels: """
             kernel void flow(device const float4 *in [[buffer(0)]], device float *out [[buffer(1)]],
                              uint i [[thread_position_in_grid]]) {
                 out[i] = lensFlow(in[i].x, in[i].y, in[i].z, in[i].w);
             }
-            """
-        let library = try device.makeLibrary(source: source, options: nil)
-        let pipeline = try device.makeComputePipelineState(function: try XCTUnwrap(library.makeFunction(name: "flow")))
+            """)
         var cases: [SIMD4<Float>] = []
         for k in -48...48 {
             for j in 1..<60 {
@@ -174,20 +165,12 @@ final class LensTests: XCTestCase {
                                    Float(Tank.lensEdge)))
             }
         }
-        let input = try XCTUnwrap(device.makeBuffer(bytes: cases, length: 16 * cases.count))
-        let output = try XCTUnwrap(device.makeBuffer(length: 4 * cases.count))
-        let queue = try XCTUnwrap(device.makeCommandQueue())
-        let cb = try XCTUnwrap(queue.makeCommandBuffer()), enc = try XCTUnwrap(cb.makeComputeCommandEncoder())
-        enc.setComputePipelineState(pipeline)
-        enc.setBuffer(input, offset: 0, index: 0)
-        enc.setBuffer(output, offset: 0, index: 1)
-        enc.dispatchThreads(MTLSize(width: cases.count, height: 1, depth: 1),
-                            threadsPerThreadgroup: MTLSize(width: 64, height: 1, depth: 1))
-        enc.endEncoding()
-        cb.commit()
-        cb.waitUntilCompleted()
-        XCTAssertNil(cb.error)
-        let got = output.contents().bindMemory(to: Float.self, capacity: cases.count)
+        let input = try kit.buffer(cases), output = try kit.buffer(Float.self, count: cases.count)
+        try kit.run("flow", count: cases.count) { enc in
+            enc.setBuffer(input, offset: 0, index: 0)
+            enc.setBuffer(output, offset: 0, index: 1)
+        }
+        let got = kit.read(output, as: Float.self)
         for (i, c) in cases.enumerated() {
             let want = Tank.lensFlow(Double(c.x), Double(c.y))
             // A pixel at Pro Max size is about 1/568 of the tank's radius; this is a few hundredths of one.
