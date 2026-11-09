@@ -4,8 +4,9 @@
 #                                     first "Pro Max"
 #        scripts/gpu-bench.sh phone   builds Release, installs and launches it on UNSTIR_DEVICE through run-ios.sh with
 #                                     UNSTIR_GPUBENCH=1, waits for the bench to quit, and pulls its lines from the log
-# The app (GPUBench.swift) runs Unstir.metal's own shader bodies off screen at 1284 px and prints a stack entry's cost,
-# each Prism specimen's per-channel cost against what Unstirred.channelCost assumes, and the slowest against the
+# The app (GPUBench.swift) runs Unstir.metal's own shader bodies off screen and prints a stack entry's cost with four
+# taps and two at 1137, 1284 and 1471 px, the glass's fill and whirlpool 27's whole frame at 1137 and 1471, then at
+# 1284 each Prism specimen's per-channel cost against what Unstirred.channelCost assumes, and the slowest against the
 # 8.333 ms of a 120 Hz frame. Let the phone cool between runs: heat skews it, and the last line names the thermal state.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -28,7 +29,7 @@ case "${1:-sim}" in
       sleep 10
       scripts/pull-log.sh "$log" >/dev/null 2>&1 || continue
       started=$(grep -n 'GPUBENCH start' "$log" | tail -1 | cut -d: -f1)
-      [[ -n "$started" ]] && tail -n +"$started" "$log" | grep -q 'measured / assumed' && break
+      [[ -n "$started" ]] && tail -n +"$started" "$log" | grep -qE 'measured / assumed|GPUBENCH no' && break
     done
     started=$(grep -n 'GPUBENCH start' "$log" | tail -1 | cut -d: -f1)
     [[ -n "$started" ]] || { echo "no bench in the phone's log"; exit 1; }

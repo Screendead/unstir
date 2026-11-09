@@ -114,3 +114,18 @@ static float3 cracks(float2 p, float px, device const packed_float4 *cells, floa
     float2 pulse = throb(heartbeat(p, t, cells + count - 33 * 33));
     return half4(half3(sqrt(cracks<true>(p, px, (device const packed_float4 *)cells, t, pulse))), 1.0h);
 }
+
+// The GPU bench (UNSTIR_GPUBENCH, GPUBench.swift): the glass's fill, one thread a device pixel, into the texture
+// benchUnstir then samples, as SwiftUI fills the layer the tank's shader reads: `glass`'s body, as a kernel can't
+// call a stitchable.
+struct BenchGlassArgs {
+    float radius, px, scale, t;
+};
+
+kernel void benchGlass(texture2d<half, access::write> out [[texture(0)]], device const float *cells [[buffer(0)]],
+                       constant BenchGlassArgs &a [[buffer(1)]], uint2 gid [[thread_position_in_grid]]) {
+    if (gid.x >= out.get_width() || gid.y >= out.get_height()) return;
+    float2 p = (float2(gid) + 0.5) / a.scale / a.radius - 1.0;
+    out.write(length_squared(p) > 1.01 ? half4(0.0h, 0.0h, 0.0h, 1.0h)
+              : half4(half3(sqrt(cracks<false>(p, a.px, (device const packed_float4 *)cells, a.t, 1.0))), 1.0h), gid);
+}
