@@ -5,8 +5,6 @@ import SwiftUI
 /// What VoiceOver says where the screen shows glyphs, short counts or colour. Each string is localized here, a whole
 /// phrase to a key; a count's key varies by plural in the catalog.
 enum Spoken {
-    static func count(_ n: Int, _ noun: String) -> String { "\(n) \(noun)\(n == 1 ? "" : "s")" }
-
     /// A layout's rods, the swirl named apart, since it has no knob.
     static func rods(_ layout: Layout) -> String {
         if let base = layout.base {

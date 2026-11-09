@@ -185,6 +185,52 @@
         }
       }
     },
+    "next daily in %lld hours" : {
+      "comment" : "VoiceOver: the daily's card. Hours to the next",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "next daily in %lld hour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "next daily in %lld hours"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "next daily in %lld minutes" : {
+      "comment" : "VoiceOver: the daily's card. Minutes to the next",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "next daily in %lld minute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "next daily in %lld minutes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "run in progress, best %lld tanks" : {
       "comment" : "VoiceOver: the endless row, a run saved. Its best",
       "localizations" : {

@@ -47,7 +47,6 @@ Menu.swift: Text(run.count == 1 ? first.label : "\(first.label)\u{2013}\(last.la
 Menu.swift: .accessibilityLabel(run.count == 1 ? "\(below.rawValue) \(first.label), short of par"
 Menu.swift: Text("\u{00B7}").font(.mono(12)).opacity(0.3).frame(minHeight: 36).accessibilityHidden(true)
 Menu.swift: Text(level.label).font(.mono(13, .semibold)).foregroundStyle(level.colour)
-Menu.swift: Text(level.title).font(.mono(14)).multilineTextAlignment(.leading).opacity(enabled ? 1 : 0.38)
 Menu.swift: Text(opens).font(.mono(11)).foregroundStyle(level.colour).transition(.opacity)
 Menu.swift: Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.mono(11))
 Menu.swift: Text("+\(result.over)").foregroundStyle(Color.magenta)
@@ -83,7 +82,6 @@ Shelf.swift: guard offer.pack == nil else { return Text(offer.holds) }
 Shelf.swift: return Text(s)
 Shelf.swift: Text(key).font(.mono(.caption2)).opacity(0.38)
 Shelf.swift: Text(level.label).font(.mono(.footnote, .semibold)).foregroundStyle(offer.glow)
-Shelf.swift: Text(level.title).font(.mono(.subheadline)).multilineTextAlignment(.leading)
 Shelf.swift: Text(best.over == 0 ? atPar : "+\(best.over)").font(.mono(.caption2))
 Shelf.swift: .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" }
 Shelf.swift: .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
@@ -112,7 +110,6 @@ Shelf.swift: Text(line?.words ?? " ").font(.mono(.caption2, new ? .semibold : .r
 Shelf.swift: .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
 Shelf.swift: .accessibilityHint(offer.pitch)
 Shelf.swift: Text(offer.name)
-Spoken.swift: static func count(_ n: Int, _ noun: String) -> String { "\(n) \(noun)\(n == 1 ? "" : "s")" }
 TankView.swift: Button(action: leave) { Text(game.level.back).hit() }
 TankView.swift: Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
 TankView.swift: Text(game.level.label).foregroundStyle(game.level.colour).shadow(color: page.glow(game.level.colour), radius: 4)

@@ -17,6 +17,7 @@ allow LocalizedStringResource\(
 allow Image\(
 allow [\w.]+, (?:format|style):
 allow Spoken\.
+allow (?:game\.)?level\.(?:title|note)\)
 allow (?:game\.)?(?:moves|tank|finish)Spoken\)
 any \.(?:uppercased\(\)|lowercased\(\)|capitalized\b)
 any == 1 \? "

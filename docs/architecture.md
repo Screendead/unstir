@@ -160,7 +160,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
   (`L1`, `N1`, `V1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
   its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
-  loses it unless the stored keys are remapped. Plughole has 27 levels, 1–18
+  loses it unless the stored keys are remapped. Each table row's title and note is a `String(localized:)` keyed by the
+  level's id (`level.L1.title`, `level.L1.note`), so an English edit keeps its translations; `Level.title`, `note` and
+  `chapter` stay `String`, resolved once as the table is built, as the play screen, menu, shelf and card read them as
+  text. `Tier.name` is translated (Jack's call CAT2 = A); the raw value never shows once the menu's pass lands. Plughole has 27 levels, 1–18
   hand-written and 19–27 dealt by the frozen generator and picked for a gentler curve (`scripts/plughole-levels.sh`),
   all scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would; whirlpool
   deeper variants on live pictures that follow a table, vortex 27 provisional swirl levels (quad, tri, eye, pent,
