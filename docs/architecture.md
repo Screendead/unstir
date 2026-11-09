@@ -870,9 +870,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   its " · " into ", ", until the menu's half of the migration passes the data instead.
 - **Localizable.xcstrings** is the String Catalog (Jack's call F4 = C: English at launch, languages a later update;
   CAT1 to CAT8 = A), development language `en`, the source British English. The build emits every localizable literal
-  (`SWIFT_EMIT_LOC_STRINGS`), but only an Xcode IDE build writes new keys back into the catalog, so a key missing from
-  it shows its literal or `defaultValue`, the same English; a plural key is the exception, as without its `one` and
-  `other` forms it reads "1 moves", so each one is written into the catalog by hand with the code that uses it.
+  (`SWIFT_EMIT_LOC_STRINGS`), but a command-line build writes no keys back into the catalog (checked 2026-11-09;
+  Xcode's own build is documented to), so a key missing from it shows its literal or `defaultValue`, the same
+  English; a plural key is the exception, as without its `one` and `other` forms it reads "1 moves", so each one is
+  written into the catalog by hand (`scripts/catalog.py`) with the code that uses it.
   `scripts/loc-lint.sh`, and `CatalogTests.testNoPlayerStringEscapesTheCatalog` with the same patterns
   (`scripts/loc-lint/patterns.txt`), flag each line that would put player text past the catalog: a `Text`,
   accessibility label, value or hint or announcement whose argument is not a literal, `verbatim:` or already
