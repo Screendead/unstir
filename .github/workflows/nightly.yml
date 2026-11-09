@@ -1,6 +1,7 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 name: Nightly
 
+# Probe branch only (never merged): times a freshly booted simulator against xcodebuild test-without-building.
 on:
   schedule:
     - cron: '17 3 * * *'
@@ -12,8 +13,8 @@ permissions:
 jobs:
   test:
     runs-on: macos-26
-    timeout-minutes: 25
-    if: github.ref == 'refs/heads/master'
+    timeout-minutes: 30
+    if: github.ref == 'refs/heads/r17-ci-probe'
     steps:
       - uses: actions/checkout@v7
       - name: Install XcodeGen
@@ -21,33 +22,47 @@ jobs:
           curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
           unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
-      # The build system takes a file or folder whose time or inode has changed as edited, and checkout gives each a new
-      # inode and the current time. Each file and folder gets a time drawn from its content instead (a folder's from its
-      # tree's hash), the same from run to run until something in it changes.
       - name: Prepare the build cache
-        id: xcode
         run: |
           defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
           git ls-files -s | perl -ne '/^\S+ (\S+) \S+\t(.*)$/ and utime 1e9 + hex(substr($1, 0, 7)), 1e9 + hex(substr($1, 0, 7)), $2'
           git ls-tree -r -d HEAD | perl -ne '/^\S+ \S+ (\S+)\t(.*)$/ and utime 1e9 + hex(substr($1, 0, 7)), 1e9 + hex(substr($1, 0, 7)), $2'
-          echo "build=$(xcodebuild -version | awk '/Build version/ { print $3 }')" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v6
+          sysctl -n hw.ncpu hw.memsize machdep.cpu.brand_string
+      - uses: actions/cache/restore@v6
         with:
           path: |
             build/store
             !build/store/Index.noindex
             !build/store/Logs
-          key: store-${{ steps.xcode.outputs.build }}-${{ hashFiles('project.yml', 'Sources/**', 'UnstirTests/**', 'StoreKit/**', 'Config/**', '.github/workflows/test.yml', '.github/workflows/nightly.yml', 'scripts/test-store.sh') }}
-          restore-keys: store-${{ steps.xcode.outputs.build }}-
-      # Every test but the UNSTIR_SLOW_TESTS ones, which ran past 25 minutes here; signed ad hoc by the script so the StoreKit tests run.
-      # `shell: bash` adds pipefail; without it the step's status is grep's, which passes once any test has run.
-      - name: Test
+          key: store-17F113-6673e84db203ede7daa0ec6eb1eb425ca618a07ed97f6fd4337771774e292a78
+      - name: Build for testing
         shell: bash
+        run: scripts/test-store.sh build-for-testing COMPILER_INDEX_STORE_ENABLE=NO -quiet
+      - name: Start the sampler
+        run: |
+          nohup bash -c 'while :; do echo "== $(date +%T) $(sysctl -n vm.loadavg) $(sysctl -n vm.swapusage)"; vm_stat | grep -E "free|Pageins|Pageouts|Swapouts"; top -l 2 -s 1 -n 6 -o cpu -stats pid,command,cpu,rsize | tail -7; sleep 3; done' > "$RUNNER_TEMP/sample.txt" 2>&1 &
+      - name: Boot
         run: |
           udid=$(xcrun simctl list devices available | grep 'iPhone' | grep 'Pro Max (' | head -1 | grep -oE '[0-9A-F-]{36}')
-          UNSTIR_SIM=$udid scripts/test-store.sh COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
-      - name: App size
-        run: scripts/app-size.sh build/store/Build/Products/Debug-iphonesimulator/Unstir.app
-      - name: Slowest tests
+          echo "$udid" > "$RUNNER_TEMP/udid"
+          date +%T; xcrun simctl boot "$udid"; date +%T; xcrun simctl bootstatus "$udid" -b; date +%T
+      - name: First test-without-building, one small suite
+        shell: bash
+        run: |
+          udid=$(cat "$RUNNER_TEMP/udid")
+          date +%T; time xcrun simctl list devices booted; date +%T
+          NSUnbufferedIO=YES UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -only-testing:UnstirTests/ClipTests 2>&1 | grep -v '^\s*$'
+      - name: Second test-without-building, one small suite
+        shell: bash
+        run: |
+          udid=$(cat "$RUNNER_TEMP/udid")
+          NSUnbufferedIO=YES UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -only-testing:UnstirTests/ClipTests 2>&1 | grep -v '^\s*$'
+      - name: Third, by xctestrun
+        shell: bash
+        run: |
+          udid=$(cat "$RUNNER_TEMP/udid")
+          run=$(ls build/store/Build/Products/*.xctestrun | head -1); echo "$run"
+          NSUnbufferedIO=YES TEST_RUNNER_UNSTIR_STORE_TESTS=1 xcodebuild test-without-building -xctestrun "$run" -destination "id=$udid" -only-testing:UnstirTests/ClipTests 2>&1 | grep -v '^\s*$'
+      - name: Samples
         if: always()
-        run: scripts/ci-times.sh "$RUNNER_TEMP/test.log"
+        run: cat "$RUNNER_TEMP/sample.txt"
