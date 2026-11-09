@@ -916,8 +916,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
   twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. Every switch over
   `Picture` names each case, with no `default:`, so a new picture fails to compile until it says whether it is live,
-  its period, data, twin and how it is baked, where it would otherwise draw black. The glass's cells take the
-  raw clock; the neural web is static per seed, built once off the main actor. The tank redraws a live picture at 60 Hz, 30 while `Power` saves. Vortex's own family (isobars, ephemeris,
+  its period, data, twin and how it is baked, where it would otherwise draw black. `PictureLayer` finds a live
+  picture's stitchable by the case's name, which `testEveryLivePictureHasItsShader` checks in the app's library. The
+  glass's cells take the raw clock; the neural web is static per seed, built once off the main actor. The tank redraws a live picture at 60 Hz, 30 while `Power` saves. Vortex's own family (isobars, ephemeris,
   cords; **VortexPictures.swift**, **Flow.metal**, **Sky.metal**, **Loom.metal**) is drawn live the same way, with no
   twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. The sandbox's cycle
   (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's

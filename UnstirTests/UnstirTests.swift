@@ -2480,6 +2480,13 @@ final class UnstirTests: XCTestCase {
         }
     }
 
+    /// `PictureLayer` looks a live picture's shader up in the app's library by the case's name, which no compiler checks.
+    func testEveryLivePictureHasItsShader() throws {
+        guard let device = MTLCreateSystemDefaultDevice() else { throw XCTSkip("no Metal device") }
+        let library = try device.makeDefaultLibrary(bundle: .main)
+        for picture in Picture.allCases where picture.isLive { XCTAssertNotNil(library.makeFunction(name: "\(picture)"), "\(picture)") }
+    }
+
     /// The glass turned by `angle` clockwise about the centre, as the shader turns it.
     private func turned(_ p: SIMD2<Double>, _ angle: Double) -> SIMD2<Double> {
         SIMD2(p.x * cos(angle) - p.y * sin(angle), p.x * sin(angle) + p.y * cos(angle))
