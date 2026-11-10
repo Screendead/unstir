@@ -79,6 +79,23 @@ each already built: lens-art (#157), sound-layers (#158), ask-to-buy-date, ask-t
 ci-private, codeql-private; new from #169: whether "unstirred." scales with the type. Nothing is built on their
 recommendations. **Waiting on a launch fact**: as above; the Lens shader weight is not in the phone bench's output.
 
+**Answered 2026-11-10** (`docs/decisions.md`; the calls page of that day, 13 calls, each written to stand alone as
+CLAUDE.md's "Calls for Jack" now asks). Merged that day: #165 (the catalog's table strings), #171 (five text tones),
+#172 (results as dots), #175 (the calls rule). #171 and #172 merged before Jack saw them, which he objected to: a
+design PR that changes what the player sees now waits for him with before and after pictures. His picks:
+DOTS-KEPT = A, TONES-KEPT = A, BUTTONS = B, STAMP = A, LENSART = B, SOUNDLAYERS = A, ATB-DATE = A, ATB-WAIT = A,
+F14 = B, DUOPROBE = A, CIPRIVATE = A, CODEQL-PRIVATE = A. **Not picked**: whether an over-par row shows its "+n"
+beside the dots (#174, built, CI green, held). Jack asked instead whether par isn't already perfect on every level;
+the answer owed to him is that three dots mean clean (at par on the first try with no undo or reset), two mean at
+par, one means solved over par, and the call goes to him again on the next page. **Next, decided**: #173's two
+fixes (BUTTONS), shown to Jack before it merges; `r17-stamp` and `r17-f14` brought up to master and opened as PRs
+(both change what the player sees, so each waits for him with its picture unless his pick already covers exactly
+what the picture showed); #158 brought up to master and merged; Lens's 24 remaining panels in batches on #157;
+design change 5 (the menu and result card) stacked on #173; then the catalog's chrome half and the store media
+retake; the small-phone check of the taller result card; a checklist page of the phone feel checks owed to Jack;
+the merged lanes' worktrees removed. `r17-ci-private` waits for the day the repo goes private, as does deleting
+`codeql.yml`. Local branches not pushed: `r17-stamp`, `r17-f14`, `r17-ci-private`.
+
 ### Open work (finish-and-pitch, 2026-11-02)
 
 Closed: moved word for word to `docs/history.md`.
