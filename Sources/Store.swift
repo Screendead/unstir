@@ -199,7 +199,7 @@ final class Store {
     /// Set before `start`, which then leaves StoreKit alone for the launch.
     func pretend(_ ledger: Ledger, prices: [String: String] = [:], amounts: [String: Decimal] = [:],
                  pricing: Pricing = .fetching, failure: Failure = .other, canPay: Bool = true, restored: Restored? = nil,
-                 approved: [Offer] = []) {
+                 approved: [Offer] = [], ready: Bool = true) {
         guard !Build.release else { return }
         harness = ledger
         self.approved = approved
@@ -210,7 +210,7 @@ final class Store {
         failures = ledger.products.filter { $0.value == .failed || $0.value == .pending }.mapValues { _ in failure }
         payments = canPay
         self.restored = restored
-        ready = true
+        self.ready = ready
         shelved = true
     }
 

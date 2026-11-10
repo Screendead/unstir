@@ -29,6 +29,8 @@ for state in unowned owned pending failed revoked; do
   [[ $state == owned ]] && saves=""
   shot card-lens-$state "Lens's card, $state$saves." CARD=lens STORE=lens:$state CLOCK=5.4
 done
+shot f14-card "Lens's card before the launch's first read of the entitlements ends, as a promoted purchase at a cold launch opens it: \"checking purchases…\" in place of its status and buy." \
+  CARD=lens STORE=lens:unowned,unread CLOCK=5.4
 shot card-prism-no-complete "Prism's card with Lens and First Stir owned (First Stir is outside the bundle): no Triptych line, since \$5.99 is more than the two packs left." \
   CARD=prism OWNED=lens,first-stir CLOCK=5.4
 shot shelf-menu-lens-owned "The dock with Lens and First Stir owned: no Triptych cover, since it costs more than the two packs left." \
