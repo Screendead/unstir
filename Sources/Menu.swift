@@ -1274,7 +1274,7 @@ private struct LevelRow: View {
                 best.foregroundStyle(Color.text3)
             } else if !enabled {
                 Image(systemName: "lock.fill").imageScale(.small).foregroundStyle(Color.text4)
-            } else if new {
+            } else if new, result == nil {
                 Text("new").foregroundStyle(Color.text2)
             } else if let filled = ResultMarks.filled(Archive.Mark(result, started: tried)) {
                 ResultMarks(filled: filled)
