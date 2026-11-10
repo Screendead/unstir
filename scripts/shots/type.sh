@@ -18,5 +18,11 @@ shot type-lost-xxxl "Escapement 2 out of ticks at xxxLarge: the lost card's line
 shot type-settings-ax3 "Settings at accessibility3: the title, rows and details scaled, the sheet scrolling." SETTINGS=1 TYPESIZE=accessibility3
 shot stamp-default "Level 05 solved at the default type size: \"unstirred.\" over the tank, the result card under it." \
   SCREEN=result LEVEL=5 CLOCK=0
-shot stamp-xxxl "The same at xxxLarge, the play screen's cap: whether \"unstirred.\" grew with the card." \
+shot stamp-xxxl "The same at xxxLarge, the play screen's cap: \"unstirred.\" grown with the card, still clear of the rim." \
   SCREEN=result LEVEL=5 CLOCK=0 TYPESIZE=xxxLarge
+shot stamp-ax5 "The same at accessibility5: the play screen capped at xxxLarge, the same frame as stamp-xxxl." \
+  SCREEN=result LEVEL=5 CLOCK=0 TYPESIZE=accessibility5
+shot stamp-tabletop-xxxl "Duo tabletop at xxxLarge: plughole 06 solved clean, \"unstirred.\" kept at its fixed 22 pt above the fold." \
+  FRAME=669x951 INSETS=59,0,34,0 FOLD=0,466,669,19 SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge
+hold=10 shot stamp-split-xxxl "Duo open at xxxLarge: plughole 06 solved clean, the card over the menu headed by \"unstirred.\" at the larger size." \
+  FRAME=951x669 INSETS=24,0,21,84 SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge
