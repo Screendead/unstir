@@ -335,3 +335,69 @@ extension LensArt {
         return panel("microscope", fills: fills, strokes: s) { _ in c(0.18) }
     }()
 }
+
+// MARK: - 18: Night vision
+
+/// Level 18's name: the wood at night through a night sight, all in its green, and what the dark was hiding over the
+/// top right and lower left cores (quad's two lenses on this level): an owl on its branch, eyes wide, and a hedgehog in
+/// the grass. Level 18 deals each lens +3 in all.
+extension LensArt {
+    static let nightVision: Halftone.Panel = {
+        let a = P(0.3536, -0.3536), b = P(-0.3536, 0.3536)
+        let lit = Tone(0.55, 0, 0.55), bright = Tone(0.85, 0, 0.85)
+        let owl = a + P(0.0, -0.01), hog = b + P(0.004, -0.024), moon = P(-0.42, -0.5)
+        let trunks = [rect(0.62, -1, 0.8, 1), rect(-0.06, 0.0, 0.08, 1), rect(-0.9, -1, -0.76, 1)]
+        var fills = [oval(owl + P(0, 0.03), 0.06, 0.085, .zero), disc(moon + P(0.06, 0), 0.09, Tone(0.28, 0, 0.3)), disc(moon, 0.11, bright),
+                     oval(hog + P(-0.006, 0.004), 0.042, 0.024, .zero)]
+        fills += trunks.map { fill($0, .zero) }
+        fills.append(fill(bar(P(0.62, -0.2), P(0.1, -0.25), 0.035), .zero))
+        fills.append(fill(curve(P(-1, 0.56), P(0, 0.42), P(1, 0.6), 16) + [P(1, 1), P(-1, 1)], lit))
+
+        var s: [Halftone.Stroke] = []
+        // The moon, the trunks and their bark, the owl's branch, the ground and its grass.
+        s.append(stroke(arc(moon, 0.11, 70, 290, 20) + arc(moon + P(0.06, 0), 0.09, 235, 125, 16), mid))
+        for (k, t) in trunks.enumerated() {
+            s.append(stroke([t[0], t[3]], mid))
+            s.append(stroke([t[1], t[2]], mid))
+            for j in 0..<5 { s.append(stroke(curve(P(t[0].x + 0.04, t[0].y + 0.3 + 0.36 * Double(j) + 0.1 * Double(k)), P(t[0].x + 0.09, t[0].y + 0.42 + 0.36 * Double(j)), P(t[0].x + 0.05, t[0].y + 0.54 + 0.36 * Double(j)), 6), hair)) }
+        }
+        s.append(stroke(curve(P(0.62, -0.2), P(0.4, -0.3), P(0.1, -0.24), 12), bold))
+        s.append(stroke(curve(P(0.3, -0.27), P(0.2, -0.38), P(0.12, -0.42), 6), mid))
+        s.append(stroke(curve(P(-1, 0.56), P(0, 0.42), P(1, 0.6), 24), mid))
+        for (k, x) in [-0.7, -0.52, -0.2, 0.26, 0.44, 0.9, -0.3].enumerated() {
+            let foot = P(x, 0.62 + 0.09 * Double(k % 3))
+            for t in [-115.0, -90, -60] { s.append(stroke([foot, polar(foot, 0.07, t)], hair)) }
+        }
+        // The sight: its two fields' edges, the cross between them and a range scale.
+        s.append(stroke(circle(P(0, 0), 0.9, 96), hair))
+        for k in 0..<4 { s.append(stroke([polar(P(0, 0), 0.9, 90 * Double(k)), polar(P(0, 0), 0.8, 90 * Double(k))], mid)) }
+        s.append(stroke([P(-0.08, 0), P(-0.02, 0)], mid))
+        s.append(stroke([P(0.02, 0), P(0.08, 0)], mid))
+        s.append(stroke([P(0, -0.08), P(0, -0.02)], mid))
+        s.append(stroke([P(0, 0.02), P(0, 0.08)], mid))
+        for k in 0..<6 { s.append(stroke([P(0.84, 0.3 + 0.06 * Double(k)), P(k % 2 == 0 ? 0.92 : 0.88, 0.3 + 0.06 * Double(k))], hair)) }
+        // The owl: body, ear tufts, the two eyes wide, beak, wing and feet on the branch.
+        s.append(stroke(ellipse(owl + P(0, 0.03), 0.06, 0.085, 28), 0.004))
+        s.append(stroke([owl + P(-0.05, -0.03), owl + P(-0.056, -0.075), owl + P(-0.022, -0.05)], 0.003))
+        s.append(stroke([owl + P(0.05, -0.03), owl + P(0.056, -0.075), owl + P(0.022, -0.05)], 0.003))
+        for x in [-0.024, 0.024] {
+            s.append(stroke(circle(owl + P(x, -0.012), 0.018, 14), 0.0036))
+            s.append(stroke(circle(owl + P(x, -0.012), 0.004, 6), 0.005))
+        }
+        s.append(stroke([owl + P(-0.007, 0.006), owl + P(0, 0.022), owl + P(0.007, 0.006)], 0.003))
+        s.append(stroke(curve(owl + P(-0.05, 0.03), owl + P(-0.03, 0.08), owl + P(-0.02, 0.1), 6), 0.002))
+        for k in 0..<3 { s.append(stroke(arc(owl + P(-0.012 + 0.024 * Double(k), 0.055), 0.012, 20, 160, 5), 0.0016)) }
+        for x in [-0.02, 0.02] { s.append(stroke([owl + P(x - 0.008, 0.118), owl + P(x, 0.108), owl + P(x + 0.008, 0.118)], 0.0024)) }
+        // The hedgehog: its back of spines, snout, eye and feet.
+        s.append(stroke(arc(hog + P(-0.006, 0.014), 0.04, 180, 360, 14).map { P($0.x, hog.y + 0.014 + ($0.y - hog.y - 0.014) * 0.75) }, 0.0036))
+        s.append(stroke([hog + P(-0.046, 0.014), hog + P(0.034, 0.014), hog + P(0.058, 0.006), hog + P(0.03, -0.004)], 0.003))
+        for k in 0..<8 {
+            let t = 195.0 + 20 * Double(k), root = hog + P(-0.006, 0.014) + P(0.04 * cos(t * .pi / 180), 0.03 * sin(t * .pi / 180))
+            s.append(stroke([root, root + P(0.014 * cos((t - 14) * .pi / 180), 0.014 * sin((t - 14) * .pi / 180))], 0.002))
+        }
+        s.append(stroke(circle(hog + P(0.036, 0.002), 0.0028, 6), 0.004))
+        s.append(stroke(circle(hog + P(0.059, 0.006), 0.003, 6), 0.003))
+        for x in [-0.03, -0.008, 0.016] { s.append(stroke([hog + P(x, 0.014), hog + P(x + 0.004, 0.024)], 0.0024)) }
+        return panel("nightvision", fills: fills, strokes: s) { _ in Tone(0.26, 0, 0.3) }
+    }()
+}

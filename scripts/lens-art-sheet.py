@@ -36,6 +36,14 @@ LEVELS = {
     15: ("telescope", "Telescope", "eye", "2", "2:+2"),
     16: ("eyepiece", "Eyepiece", "tri", "0", "0:+2"),
     17: ("microscope", "Microscope", "hex", "1,3,5", "1:+2,3:+2,5:+2"),
+    18: ("nightvision", "Night vision", "quad", "0,2", "0:+2,2:+2"),
+    19: ("camera", "Camera", "hex", "0", "0:+2"),
+    20: ("shutter", "Shutter", "hex", "0,1,4", "0:+2,1:+2,4:+2"),
+    21: ("viewfinder", "Viewfinder", "eye", "0,3", "0:+2,3:+2"),
+    22: ("wideangle", "Wide angle", "hex", "0,2,5", "0:+2,2:+2,5:+2"),
+    23: ("fisheye", "Fisheye", "hex", "0", "0:+2"),
+    24: ("telephoto", "Telephoto", "eye", "2,3", "2:+2,3:+2"),
+    25: ("kaleidoscope", "Kaleidoscope", "hex", "0,1,3,5", "0:+2,1:+2,3:+2,5:+2"),
 }
 RODS = {
     "tri": [(0, -0.42, 0.58), (0.3637, 0.21, 0.58), (-0.3637, 0.21, 0.58)],

@@ -16,7 +16,9 @@ enum LensArt {
     static let levels: [Int: Halftone.Panel] = [1: keyhole, 2: peephole, 3: magnifier, 4: monocle, 5: goggles, 6: spyglass,
                                                7: binoculars, 8: spectacles, 9: sunglasses,
                                                10: pinhole, 11: bifocals, 12: glasses3d, 13: porthole, 14: periscope,
-                                               15: telescope, 16: eyepiece, 17: microscope]
+                                               15: telescope, 16: eyepiece, 17: microscope, 18: nightVision, 19: camera,
+                                               20: shutter, 21: viewfinder, 22: wideAngle, 23: fisheye, 24: telephoto,
+                                               25: kaleidoscope]
 
     static let bold = 0.008, mid = 0.005, hair = 0.0025
 
