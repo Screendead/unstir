@@ -1602,3 +1602,46 @@ and each Nightmare row gets its own "+" cell. N+k opens when Nightmare k is at p
 opens one says so and offers it. N+ levels are labelled "+01". Today the "+" reads as part of the word "nightmare+",
 turning nightmare off leaves the "+" on out of sight, and once both tiers share a picture nothing on screen tells them
 apart.
+
+## Next: the performance pass (queued 2026-09-28)
+
+Jack's aim: the app looks and feels exactly as it does, and runs as fast as it can be made to, even if that takes very
+clever work under the hood.
+
+**The bar.** Output stays the same: the shots, films and the live pictures' designs match today's to within float
+noise. Every level's heaviest frame (its deepest stack, the drag, a live picture and Nightmare+'s heartbeat) holds
+120 Hz on the reference phone (iPhone 13 Pro Max) with four taps. Less heat and battery for the same frames.
+
+**Measure first.** Jack has ruled out phone benches before this pass: they are slow, and heat skews them. One series
+of twelve runs with 45 s rests between them reached "serious" by the fourth. None of the tools sees the phone's GPU yet:
+- Instruments in Xcode 26.6 lists the phone (iOS 27) as offline. An Xcode that supports iOS 27 is the first fix, and
+  it is Jack's to install.
+- The harness bench (`UNSTIR_BENCH`) times main-thread intervals only, now with the thermal state. Back-to-back runs
+  seem to heat the phone: in one session, even the cheapest picture dropped about a fifth of its frames after nine
+  minutes of runs, and a picture that dropped frames early on held 120 Hz after a cool-down. Cool down between runs.
+- A GPU clock in the app would settle it without Instruments: an offscreen harness that runs the same Metal source in
+  its own command buffers and reads their GPU start and end times.
+- The background sheet tool (a Mac renderer and benchmark) lives only in a session scratchpad, which the OS can
+  clear. It is worth moving into the repo as a dev tool.
+
+**Candidate ideas (Claude's, untested; each must earn a measured gain on the phone):**
+- **Cache the twist chain.** The stack changes only on a commit, yet every frame on a live picture runs each pixel's
+  four taps through every entry just to find the same sample points. Store the committed chain's per-tap source
+  points in a texture when the stack changes, and each frame only sample the picture there. During a drag, the map is
+  exactly the identity outside the live disc, so only that disc's pixels need the full chain. That turns a deep
+  frame's cost from per-entry to near constant, and could retire `fourTaps` and `fillEntries`. It needs a Metal path
+  of its own (SwiftUI's `layerEffect` keeps no textures between frames) and enough precision in the stored points.
+- **Derive taps from one.** Where the map is locally rigid (every core, and outside every disc), the four taps are the
+  centre tap moved by the map's Jacobian. Carry the Jacobian through the chain for one tap, and run all four only
+  where the stretch says a filament needs them.
+- **Per-frame CPU work off the main thread**: the live pictures' data and the heartbeat's delay grid.
+
+**Measured (2026-11-03, the 13 Pro Max, local `duo-feel`).** A four-tap entry costs 0.2714 ms at 1137 px, 0.3426 at
+1284 and 0.4466 at 1471: 29.4 entries a 120 Hz frame at 1137 px, 16.9 at 1471. A transform between the `Unstirred`
+layer effect and its clip runs the shader over its whole `maxSampleOffset` region, about 7 times the cost: keep the
+circle clip directly on the effect. #140 (off, `ADAPTIVE_TAPS = NO`) steps the four-tap budget down and up to hold 120
+Hz, the look only, never the stack's depth; whirlpool 27 sits over today's limit (wp27-table). Details under Round
+16's build.
+
+**Claude's view.** Cleverness costs maintainability, and the architecture pass comes straight after. Keep each trick in
+one place with its reason stated, and drop any that doesn't pay on the phone.
