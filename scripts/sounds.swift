@@ -7,7 +7,8 @@
 //   onset <file>                                     ms to the first sample within 40 dB of the peak
 //   seam <file> [reference]                          the wrap from the last frame to the first, against the file's
 //                                                    own steps; with a reference, the decoded file's error at its ends
-//   clean <file>                                     exits 0 if the file is a whole loop (48 s) whose wrap is ordinary
+//   clean <file> [frames]                            exits 0 if the file is a whole loop (48 s, or frames) whose wrap
+//                                                    is ordinary
 //   wrap <in> <out.wav> <frames>                     the loop with its last frames before it and its first after it,
 //                                                    for the encoder, so neither end of the AAC starts cold
 //   gapless <file.m4a> <frames> <loop frames>        marks those frames as priming and remainder in the file's
@@ -115,7 +116,7 @@ case "onset":
 case "seam", "clean":
     let (x, rate) = read(args[2])
     let n = x[0].count
-    var clean = n == 2304000
+    var clean = n == (args[1] == "clean" && args.count > 3 ? Int(args[3]) ?? 0 : 2304000)
     if args[1] == "seam" { print("frames \(n)") }
     for (c, v) in x.enumerated() {
         let steps: [Double] = (1..<n).map { i in abs(v[i] - v[i - 1]) }
