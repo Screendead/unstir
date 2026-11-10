@@ -231,7 +231,7 @@ struct LevelView: View {
     private let bare: Bool
     /// UNSTIR_CLEAN: the glass and its picture alone.
     private let clean: Bool
-    private let moves: [Twist]?
+    private let moves: [Harness.Step]?
     private let fingered: Bool
     private let bench: Bool
     /// UNSTIR_TAPDRAG: that many drags drawn through the real let-go.
@@ -1046,7 +1046,10 @@ struct LevelView: View {
     private func landSolve(chime: Bool) {
         guard game.solved, !waved else { return }
         waved = true
-        if chime { Sound.shared.play(.solve) }
+        if chime {
+            Sound.shared.play(.solve)
+            Sound.shared.resolve()
+        }
         // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
         // centre among them.
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true }
@@ -1253,10 +1256,14 @@ struct LevelView: View {
     }
 
     /// UNSTIR_MOVES: a given line, at autoplay's pace and through the same releases.
-    private func play(_ moves: [Twist]) async {
+    private func play(_ moves: [Harness.Step]) async {
         if fingered { await hand(moves); return }
-        for m in moves {
+        for step in moves {
             guard (try? await Task.sleep(for: .seconds(pace))) != nil, !game.finished else { return }
+            guard case .twist(let m) = step else {
+                if !(await harnessed(step)) { return }
+                continue
+            }
             if game.level.kind(of: m.rod) == .ratchet {
                 game.wait(on: m.rod)
                 continue
@@ -1275,11 +1282,27 @@ struct LevelView: View {
 
     /// UNSTIR_FINGER: the line at a hand's pace, after a rest to read the tank untouched: each fingertip lands, holds a
     /// beat, turns at about a step a tenth of a second and lifts, and the next waits for the heal or push to show.
-    private func hand(_ moves: [Twist]) async {
+    private func hand(_ moves: [Harness.Step]) async {
         guard (try? await Task.sleep(for: .seconds(rest))) != nil else { return }
-        for m in moves {
+        for step in moves {
+            guard case .twist(let m) = step else {
+                if !(await harnessed(step)) { return }
+                continue
+            }
             guard !game.finished, await fingertip(m, while: { !game.finished }),
                   (try? await Task.sleep(for: .seconds(1.0))) != nil else { return }
+        }
+    }
+
+    /// UNSTIR_MOVES's other steps: an undo through the control, with its sound, or a rest. False once the wait is cut.
+    private func harnessed(_ step: Harness.Step) async -> Bool {
+        switch step {
+        case .twist: return true
+        case .rest(let s): return (try? await Task.sleep(for: .seconds(s))) != nil
+        case .undo:
+            Sound.shared.play(spent ? .tap : .undo)
+            undo()
+            return (try? await Task.sleep(for: .seconds(1.0))) != nil
         }
     }
 
@@ -1765,6 +1788,12 @@ struct LevelView: View {
         .haptic(.impact(weight: .heavy), trigger: game.cancels)
         // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
         .onChange(of: game.heals) { was, now in if now > was { Sound.shared.play(.heal(now)) } }
+        // Escapement B's reed, a note a move, its place in the motif the moves before it; the solve's is the layer's D.
+        .onChange(of: game.moves) { was, now in
+            if now > was, game.level.layer == .escapement, !game.solved, !game.demoing { Sound.shared.reed(was) }
+        }
+        // Another try after a solve brings the layer back.
+        .onChange(of: game.solved) { if !game.solved { Sound.shared.layer(game.level.layer) } }
         .haptic(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.
         .onChange(of: game.pushes) { if !game.spilled { Sound.shared.play(.push) } }
