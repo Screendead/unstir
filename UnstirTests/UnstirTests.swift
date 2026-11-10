@@ -141,8 +141,8 @@ final class UnstirTests: XCTestCase {
 
     /// Jack's call C11 (round 13): the header's count turns amber at par and magenta past it.
     func testTheCountWarnsAtPar() {
-        XCTAssertEqual(LevelView.parTone(moves: 0, par: 5), .text)
-        XCTAssertEqual(LevelView.parTone(moves: 4, par: 5), .text)
+        XCTAssertEqual(LevelView.parTone(moves: 0, par: 5), .text2)
+        XCTAssertEqual(LevelView.parTone(moves: 4, par: 5), .text2)
         XCTAssertEqual(LevelView.parTone(moves: 5, par: 5), .amber)
         XCTAssertEqual(LevelView.parTone(moves: 6, par: 5), .magenta)
         XCTAssertEqual(LevelView.parTone(moves: 20, par: 5), .magenta)

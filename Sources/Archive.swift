@@ -70,7 +70,7 @@ enum Archive {
             case .clean: Text(word).fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
             case .par: Text(word).foregroundStyle(Color.amber)
             case .over: Text(word).foregroundStyle(Color.magenta)
-            case .tried: Text(word).opacity(0.4)
+            case .tried: Text(word).foregroundStyle(Color.text3)
             case .unplayed: Text(" ")
             }
         }
@@ -101,18 +101,18 @@ struct ArchiveRow: View {
                     .shadow(color: open ? .amber : .clear, radius: 4).opacity(open ? 1 : 0.7)
                     .frame(width: typeSize.isAccessibilitySize ? nil : numberWidth, alignment: .leading)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Archive").font(.ui(.body)).opacity(open ? 1 : 0.38)
+                    Text("Archive").font(.ui(.body)).foregroundStyle(open ? Color.text : Color.text3)
                     if said {
                         Text("unlocked by purchasing any pack").font(.ui(.detail)).foregroundStyle(Color.amber).transition(.opacity)
                     } else {
                         Text(!known ? "\(days) past dailies" : open ? "\(days) past dailies \u{00B7} \(atPar) at par"
                              : "\(days) past dailies \u{00B7} comes with any pack")
-                            .font(.ui(.detail)).opacity(0.32).transition(.opacity)
+                            .font(.ui(.detail)).foregroundStyle(Color.text2).transition(.opacity)
                     }
                 }
                 .animation(.easeOut(duration: 0.2), value: said)
                 Spacer(minLength: 8)
-                if known && !open { Image(systemName: "lock").font(.ui(.detail)).opacity(0.3) }
+                if known && !open { Image(systemName: "lock").font(.ui(.detail)).foregroundStyle(Color.text4) }
             }
             .padding(.vertical, 11)
             .contentShape(Rectangle())
@@ -181,17 +181,17 @@ struct ArchiveView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     let back = PackCard.back(to: PackCard.menu, beside: beside)
                     Button(action: onBack) { Text(back.text).font(.ui(.button)).hit() }
-                        .buttonStyle(Sounding()).padding(.top, 18).opacity(0.8)
+                        .buttonStyle(Sounding()).padding(.top, 18)
                         .accessibilityLabel(back.spoken)
-                    Text("PAST DAILIES").font(.ui(.eyebrow)).tracking(2).opacity(0.42).padding(.top, 26)
+                    Text("PAST DAILIES").font(.ui(.eyebrow)).tracking(2).foregroundStyle(Color.text3).padding(.top, 26)
                     Text("Archive").font(.ui(.display)).tracking(2)
                         .foregroundStyle(Tier.plughole.sweep).shadow(color: Color.amber.opacity(0.55), radius: 10)
                         .padding(.top, 6)
                         .accessibilityAddTraits(.isHeader)
                     Text("Every daily as it was dealt. A best here is its own: only a daily solved on its day adds to the days running.")
-                        .font(.ui(.label)).opacity(0.62).padding(.top, 4).fixedSize(horizontal: false, vertical: true)
+                        .font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4).fixedSize(horizontal: false, vertical: true)
                     Text("done \(marks.filter { $0 == .clean || $0 == .par }.count)/\(days.count) at par")
-                        .font(.ui(.detail)).opacity(0.62).padding(.top, 14)
+                        .font(.ui(.detail)).foregroundStyle(Color.text3).padding(.top, 14)
                     ForEach(months, id: \.self) { month in
                         block(month, marks: marks).padding(.top, 30)
                     }
@@ -241,7 +241,7 @@ struct ArchiveView: View {
         VStack(alignment: .leading, spacing: 10) {
             // Named on the Gregorian calendar its days are laid out on, whatever calendar the phone reads dates in.
             Text(month.formatted(Date.FormatStyle(calendar: calendar).month(.wide).year()).uppercased())
-                .font(.ui(.detail, .semibold)).tracking(2).opacity(0.42)
+                .font(.ui(.detail, .semibold)).tracking(2).foregroundStyle(Color.text3)
                 .accessibilityAddTraits(.isHeader)
             if typeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: 0) {
@@ -262,7 +262,7 @@ struct ArchiveView: View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
         return LazyVGrid(columns: columns, spacing: 4) {
             ForEach(0 ..< 7, id: \.self) { k in
-                Text(symbols[(k + calendar.firstWeekday - 1) % 7]).font(.ui(.detail)).opacity(0.3)
+                Text(symbols[(k + calendar.firstWeekday - 1) % 7]).font(.ui(.detail)).foregroundStyle(Color.text3)
                     .accessibilityHidden(true)
             }
             ForEach(0 ..< lead, id: \.self) { _ in Color.clear.frame(height: 1).accessibilityHidden(true) }
@@ -274,7 +274,7 @@ struct ArchiveView: View {
                     // Outside the archive: today, whose daily is on the menu, or a day it doesn't reach.
                     let isToday = calendar.isDate(date, inSameDayAs: today)
                     VStack(spacing: 3) {
-                        Text("\(d)").font(.ui(.label)).opacity(isToday ? 0.5 : 0.14)
+                        Text("\(d)").font(.ui(.label)).foregroundStyle(isToday ? Color.text3 : Color.text4)
                         Text(isToday ? "today" : " ").font(.ui(.detail)).foregroundStyle(Color.amber).opacity(0.5)
                             .lineLimit(1).minimumScaleFactor(0.6)
                     }
