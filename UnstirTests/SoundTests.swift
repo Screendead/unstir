@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import AVFoundation
 import SwiftUI
 import XCTest
 @testable import Unstir
@@ -20,6 +21,27 @@ import XCTest
             }
         }
         XCTAssertEqual(Set((0..<4).map { Sound.file(.ratchet, $0) }).count, 4)
+    }
+
+    /// Jack's call SOUNDSK: each sold pack's level plays its layer (Lens B, Escapement B, Prism A) and nothing else
+    /// does; every layer's loop and one-shots are in the bundle, its loop the 8 bars `Sound.beat` counts, and none
+    /// is an effect's or a bed's name, which `Sound.use` would load with the effects or as a bed.
+    func testEachSoldPackPlaysItsLayerFromBundledFiles() throws {
+        XCTAssertEqual(Pack.lens.levels.first?.layer, .lens)
+        XCTAssertEqual(Pack.escapement.levels.first?.layer, .escapement)
+        XCTAssertEqual(Pack.prism.levels.first?.layer, .prism)
+        XCTAssertNil(Pack.firstStir.levels.first?.layer)
+        XCTAssertNil(Tier.plughole.levels[0].layer)
+        let parts: [Sound.Layer: [String]] = [.lens: ["end"], .escapement: ["end", "d4"] + Sound.reeds, .prism: ["end", "swell"]]
+        for (layer, names) in parts {
+            let loop = try XCTUnwrap(Bundle.main.url(forResource: layer.loop, withExtension: "m4a", subdirectory: "Sounds/glass"))
+            let file = try AVAudioFile(forReading: loop)
+            XCTAssertEqual(Double(file.length) / file.processingFormat.sampleRate, 32 * Sound.beat, accuracy: 1e-6, layer.loop)
+            for name in names.map(layer.part) {
+                XCTAssertNotNil(Bundle.main.url(forResource: name, withExtension: "caf", subdirectory: "Sounds/glass"), name)
+            }
+        }
+        XCTAssertEqual(Sound.reeds.count, 8)
     }
 
     /// Jack's calls soundsk2 = D and soundsk-haptic = B (round 16): each clock's tick sounds and lands its haptic as its
@@ -262,5 +284,56 @@ import XCTest
         XCTAssertEqual(g.tickCues, [])
         g.commit(rod: 0, steps: -4)
         XCTAssertEqual(g.tickCues, [])
+    }
+
+    /// The lines `scripts/sounds.sh layers` renders the packs' layers under (sound-src/layers-in-play.tsv) are real
+    /// play: each solves its level, and each action sounds what the file says, read off a real Game as LevelView's
+    /// changes play them.
+    func testTheLayerLinesSoundAsTheGamePlaysThem() throws {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("sound-src/layers-in-play.tsv")
+        guard let text = try? String(contentsOf: url, encoding: .utf8) else { throw XCTSkip("no tsv at \(url.path)") }
+        let rows = text.split(separator: "\n").filter { !$0.hasPrefix("#") }.map { $0.split(separator: "\t").map(String.init) }
+        let levels = Pack.allCases.flatMap(\.levels)
+        var games: [String: Game] = [:], heard: [String] = [], wrong = false
+        for row in rows {
+            XCTAssertEqual(row.count, 5, row.joined(separator: " "))
+            guard row.count == 5 else { continue }
+            let (id, action, want) = (row[1], row[3], row[4])
+            var got = "tap"
+            if action != "open" {
+                let g: Game
+                if let made = games[id] {
+                    g = made
+                } else {
+                    var level = try XCTUnwrap(levels.first { $0.id == id }, id)
+                    level.id = "test-" + id
+                    g = Game(level: level, tankTurned: true, swirled: true, bank: (10, nil))
+                    games[id] = g
+                }
+                let heals = g.heals, pushes = g.pushes, ticks = g.tickEvents, bank = g.bank
+                var sounds: [String] = []
+                switch action {
+                case "u":
+                    g.undo()
+                    sounds.append(bank > 0 ? "undo" : "tap")
+                case "wait":
+                    XCTAssertTrue(g.wait(on: g.level.clocks[0].rod), "\(id) \(row[2])")
+                default:
+                    let move = action.split(separator: ":").compactMap { Int($0) }
+                    g.commit(rod: move[0], steps: move[1])
+                }
+                if g.heals > heals { sounds.append("heal\(g.heals)") }
+                if g.pushes > pushes && !g.spilled { sounds.append("push") }
+                if g.tickEvents != ticks { sounds.append("tick\(g.tick.count)") }
+                if g.finished { sounds.append(g.solved ? "solve" : "spilled") }
+                got = sounds.isEmpty ? "-" : sounds.joined(separator: ",")
+            }
+            if got != want { wrong = true }
+            heard.append((row.dropLast() + [got]).joined(separator: "\t"))
+        }
+        XCTAssertFalse(wrong, "the game sounds these:\n" + heard.joined(separator: "\n"))
+        XCTAssertEqual(games.count, 3)
+        for (id, g) in games { XCTAssertTrue(g.solved, id) }
     }
 }

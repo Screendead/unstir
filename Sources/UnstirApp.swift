@@ -85,8 +85,10 @@ struct Harness {
     let ending: Double?
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
     /// names it), as solve.sh prints a line. A ratchet's turn is a tap on it, a wait; with UNSTIR_FINGER, any turn of it
-    /// but 1 taps halfway out the clock's disc instead. A turn of the open stir's knob takes it up again.
-    let moves: [Twist]?
+    /// but 1 taps halfway out the clock's disc instead. A turn of the open stir's knob takes it up again. `u` is an undo
+    /// through the control, with its sound, and `p<s>` rests s seconds more before the next step.
+    let moves: [Step]?
+    enum Step: Equatable { case twist(Twist), undo, rest(Double) }
     /// UNSTIR_PLAYED=2:4,0:1: a line in UNSTIR_MOVES's form, committed through the real path as the level opens, so a
     /// still shows the tank part way through it.
     let played: [Twist]
@@ -195,6 +197,8 @@ struct Harness {
     let restored: Restored?
     /// UNSTIR_APPROVED=lens (or complete): with the store's states set, that offer's Ask to Buy approval waits to be said.
     let approved: [Offer]
+    /// UNSTIR_STORE=...,unread: with the store's states set, the launch's first read of the entitlements never ends.
+    let unread: Bool
 
     /// UNSTIR_STOPLOOK=left: what an Escapement tank lost to its last clock stopping shows (`StopLook`), stamp unset.
     let stopLook: StopLook?
@@ -315,6 +319,7 @@ struct Harness {
         case let names?: .found(Set(names.split(separator: ",").compactMap { Pack(rawValue: String($0)) }))
         }
         approved = env["UNSTIR_APPROVED"]?.split(separator: ",").compactMap { Offer(name: String($0)) } ?? []
+        unread = env["UNSTIR_STORE"]?.split(separator: ",").contains("unread") ?? false
         // UNSTIR_SEENLEVELS=lens:20: that pack's card last opened when the pack had 20 levels, for this launch only.
         for part in env["UNSTIR_SEENLEVELS"]?.split(separator: ",") ?? [] {
             let f = part.split(separator: ":")
@@ -424,7 +429,14 @@ struct Harness {
                 return f.count == 2 && f[1] != 0 ? Twist(rod: f[0], steps: f[1]) : nil
             }
         }
-        moves = env["UNSTIR_MOVES"].map(line)
+        moves = env["UNSTIR_MOVES"].map { line in
+            line.split(separator: ",").compactMap { step -> Step? in
+                if step == "u" { return .undo }
+                if step.first == "p" { return Double(step.dropFirst()).map(Step.rest) }
+                let f = step.split(separator: ":").compactMap { Int($0) }
+                return f.count == 2 && f[1] != 0 ? .twist(Twist(rod: f[0], steps: f[1])) : nil
+            }
+        }
         played = env["UNSTIR_PLAYED"].map(line) ?? []
         finger = env["UNSTIR_FINGER"] == "1"
         rest = env["UNSTIR_REST"].flatMap(Double.init) ?? 2
@@ -641,7 +653,7 @@ struct RootView: View {
         Sync.shared.plays = Sync.plays(built: Sync.built, harnessed: h.harnessed, env: env)
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
-                                 restored: h.restored, approved: h.approved)
+                                 restored: h.restored, approved: h.approved, ready: !h.unread)
         }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
         // The test host is a plain launch, but must open on nothing that stores.
@@ -785,8 +797,12 @@ struct RootView: View {
             GameCenter.shared.calm = true
             GameCenter.shared.signIn()
         }
-        // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier.
-        .onChange(of: level?.id, initial: true) { Sound.shared.bed(level?.bed ?? .menu) }
+        // The menu has a bed of its own. A level's crossfades in over it and carries on into the next level of its tier,
+        // a pack's with the pack's layer over it.
+        .onChange(of: level?.id, initial: true) {
+            Sound.shared.bed(level?.bed ?? .menu)
+            Sound.shared.layer(level?.layer)
+        }
         // Closed again mid-level, a card or the archive parked as the phone opened waits under the level, as on a phone,
         // if it opened that level. The slot goes with the menu beside play, so a later one waits for the level's own.
         .onChange(of: beside) {
