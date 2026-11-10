@@ -10,7 +10,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/lens-panels
 mkdir -p "$out"
-sources=(Sources/Twist.swift Sources/Halftone.swift Sources/LensArt.swift scripts/lens-panels/main.swift)
+sources=(Sources/Twist.swift Sources/Halftone.swift Sources/LensArt*.swift scripts/lens-panels/main.swift)
 if [[ ! -x "$out/panels" ]] || [[ -n "$(find "${sources[@]}" -newer "$out/panels")" ]]; then
   awk '/^struct SplitMix64/,/^}/' Sources/Levels.swift > "$out/SplitMix64.swift"
   swiftc -O -o "$out/panels" "${sources[@]}" "$out/SplitMix64.swift"

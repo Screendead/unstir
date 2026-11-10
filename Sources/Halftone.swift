@@ -145,19 +145,20 @@ enum Halftone {
     /// The test panel: the dial, the gem and the linework above.
     static let test = Panel(name: "test", tones: { tones($0) }, strokes: lines.map { Stroke(points: $0, width: lineWidth) })
 
-    /// Every panel, the test panel first.
-    static let panels: [Panel] = [test] + LensArt.panels
+    /// Every panel, the test panel first, then Lens's in level order.
+    static let panels: [Panel] = [test] + LensArt.levels.sorted { $0.key < $1.key }.map(\.value)
 
-    /// The panel `Picture.halftone` draws: the test panel, or in a Debug build the one the harness names
-    /// (`UNSTIR_PANEL`).
-    static let shown: Panel = {
+    /// The panel a Lens level draws, by the level's number: its own once it is drawn (`LensArt.levels`), and the test
+    /// panel until then, as for 0, which is every other use of `Picture.halftone`. In a Debug build the harness can name
+    /// one for every level (`UNSTIR_PANEL`).
+    static func panel(_ level: Int) -> Panel {
         #if DEBUG
         if let name = ProcessInfo.processInfo.environment["UNSTIR_PANEL"], let p = panels.first(where: { $0.name == name }) {
             return p
         }
         #endif
-        return test
-    }()
+        return LensArt.levels[level] ?? test
+    }
 
     /// The test panel's light at p, which the tests read.
     static func light(_ p: SIMD2<Double>, aa: Double) -> SIMD3<Double> { test.light(p, aa: aa) }

@@ -23,6 +23,9 @@ xcrun simctl status_bar "$udid" override --time 9:41 --batteryState charged --ba
 
 mkdir -p shots
 : > shots/index.txt
+caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
+launched=shots/.launched
+lensbaked=""
 settle=6  # the first launch on a fresh install is slow
 shot() {  # name description KEY=VALUE...
   local name=$1 desc=$2 vars=()
@@ -30,10 +33,19 @@ shot() {  # name description KEY=VALUE...
   echo "$name.png  $desc" >> shots/index.txt
   [[ -n "${pattern:-}" && "$name" != *$pattern* ]] && return
   for kv in "$@"; do vars+=("SIMCTL_CHILD_UNSTIR_$kv"); done
+  touch "$launched"
   env ${vars[@]+"${vars[@]}"} xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   local wait=${hold:-$settle}
-  # Lens's halftone bakes for 20 s or more the first time a Debug install draws it; the shots after read it from Caches.
-  if [[ " $* " == *" PACK=lens "* && -z "${baked:-}" ]]; then wait=$(( wait > 30 ? wait : 30 )); baked=1; fi
+  # A Lens level bakes its own halftone panel the first time a Debug install draws it, for half a minute or more; its
+  # later shots read it from Caches. So a level's first shot waits for a bake to land, as long as a bake may take: a
+  # level still on the test panel after another has baked that waits it out.
+  if [[ " $* " == *" PACK=lens "* ]]; then
+    local level; level=$(sed -nE 's/.* LEVEL=0*([0-9]+) .*/\1/p' <<< " $* ")
+    if [[ " $lensbaked " != *" ${level:-1} "* ]]; then
+      lensbaked+=" ${level:-1}"
+      for _ in $(seq 90); do [[ -n "$(find "$caches" -name 'halftone-*' -newer "$launched" 2>/dev/null)" ]] && break; sleep 1; done
+    fi
+  fi
   # A harness solve's card lands its result marks one by one, the last some 1.5 s after the card shows.
   if [[ " $* " == *" SCREEN=result "* || " $* " == *" SCREEN=clean "* ]] && ((wait < 5)); then wait=5; fi
   sleep "$wait"

@@ -273,38 +273,69 @@ final class LensTests: XCTestCase {
         XCTAssertEqual(game.bank, 3)
     }
 
-    /// On the halftone, every step of every rod on every layout changes what shows inside its core, which is what the
+    /// The least share of a rod's core that a step changes on a panel: a twist of 1 to 11 steps, or a lens of 1 to 3
+    /// either way.
+    private func leastChange(_ panel: Halftone.Panel, rod: SIMD3<Double>, lens: Bool) -> (share: Double, steps: Int) {
+        let aa = 1.0 / 568, spacing = 1.0 / 48
+        let c = SIMD2(rod.x, rod.y), reach = Tank.plateau * rod.z
+        var points: [SIMD2<Double>] = []
+        for y in stride(from: -reach, through: reach, by: spacing) {
+            for x in stride(from: -reach, through: reach, by: spacing) where x * x + y * y < reach * reach {
+                points.append(c + SIMD2(x, y))
+            }
+        }
+        let clean = points.map { panel.light($0, aa: aa) }
+        func changed(_ back: (SIMD2<Double>) -> SIMD2<Double>) -> Double {
+            let moved = zip(points, clean).filter { p, light in
+                let d = simd_abs(panel.light(back(p), aa: aa) - light)
+                return max(d.x, d.y, d.z) > 0.25
+            }
+            return Double(moved.count) / Double(points.count)
+        }
+        let shares = lens
+            ? [-3, -2, -1, 1, 2, 3].map { s in (changed { Tank.lens($0, rod: rod, steps: -Double(s)) }, s) }
+            : (1...11).map { s in (changed { Tank.twist($0, rod: rod, angle: -Double(s) * Tank.step) }, s) }
+        return shares.min { $0.0 < $1.0 }!
+    }
+
+    /// On the test panel, every step of every rod on every layout changes what shows inside its core, which is what the
     /// player reads: a twist turns the asymmetric linework, a lens swells the dots. Seconds alone, so slow.
     func testEveryStepMovesContrastingPixelsOnTheHalftone() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
                           "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
-        let aa = 1.0 / 568, spacing = 1.0 / 48
         for layout in Layout.allCases {
             for (k, rod) in layout.rods.enumerated() {
-                let c = SIMD2(rod.x, rod.y), reach = Tank.plateau * rod.z
-                var points: [SIMD2<Double>] = []
-                for y in stride(from: -reach, through: reach, by: spacing) {
-                    for x in stride(from: -reach, through: reach, by: spacing) where x * x + y * y < reach * reach {
-                        points.append(c + SIMD2(x, y))
-                    }
-                }
-                let clean = points.map { Halftone.light($0, aa: aa) }
-                func changed(_ back: (SIMD2<Double>) -> SIMD2<Double>) -> Double {
-                    let moved = zip(points, clean).filter { p, light in
-                        let d = simd_abs(Halftone.light(back(p), aa: aa) - light)
-                        return max(d.x, d.y, d.z) > 0.25
-                    }
-                    return Double(moved.count) / Double(points.count)
-                }
-                for steps in 1...11 {
-                    let share = changed { Tank.twist($0, rod: rod, angle: -Double(steps) * Tank.step) }
-                    XCTAssertGreaterThan(share, 0.15, "\(layout) rod \(k) twist \(steps)")
-                }
-                for steps in [-3, -2, -1, 1, 2, 3] {
-                    let share = changed { Tank.lens($0, rod: rod, steps: -Double(steps)) }
-                    XCTAssertGreaterThan(share, 0.15, "\(layout) rod \(k) lens \(steps)")
+                for lens in [false, true] {
+                    let least = leastChange(Halftone.test, rod: rod, lens: lens)
+                    XCTAssertGreaterThan(least.share, 0.15, "\(layout) rod \(k) \(lens ? "lens" : "twist") \(least.steps)")
                 }
             }
         }
+    }
+
+    /// The same of each level's own panel, on its level: every step of each of its rods, a lens's as a lens and a
+    /// twist's as a twist (`scripts/lens-panels.sh check` measures one panel the same way). Slow, as that is.
+    func testEveryLensPanelShowsEachStepOnItsLevel() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1",
+                          "slow: run with TEST_RUNNER_UNSTIR_SLOW_TESTS=1")
+        for level in Level.lens {
+            guard let panel = LensArt.levels[level.panel] else { continue }
+            for (k, rod) in level.layout.rods.enumerated() {
+                let least = leastChange(panel, rod: rod, lens: level.lenses.contains(k))
+                XCTAssertGreaterThan(least.share, 0.15, "\(level.id) on \(panel.name), rod \(k), \(least.steps) steps")
+            }
+        }
+    }
+
+    /// A Lens level draws the panel of its number, and the test panel until that is drawn, as every other level's
+    /// halftone does. A panel's name keys its bake in Caches, so no two share one.
+    func testEachLensLevelDrawsItsOwnPanel() {
+        XCTAssertEqual(Level.lens.map(\.panel), Array(1...25))
+        XCTAssertTrue((Tier.allCases.flatMap(\.levels) + Level.prism + Level.escapement).allSatisfy { $0.panel == 0 })
+        XCTAssertEqual(Halftone.panel(0).name, "test")
+        XCTAssertEqual(Halftone.panel(1).name, "keyhole")
+        XCTAssertTrue(LensArt.levels.keys.allSatisfy { (1...25).contains($0) })
+        for n in 1...25 where LensArt.levels[n] == nil { XCTAssertEqual(Halftone.panel(n).name, "test") }
+        XCTAssertEqual(Set(Halftone.panels.map(\.name)).count, Halftone.panels.count)
     }
 }

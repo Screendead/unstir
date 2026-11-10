@@ -5,26 +5,15 @@ hold=5 shot lens-plus "Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 
   PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:+3
 hold=5 shot lens-minus "Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim." PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:-2
 for n in $(seq -w 1 25); do
-  hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens \
+  hold=5 shot "lens-$n" "Lens $n as dealt, on its halftone panel (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens \
     $([[ $n == 01 ]] && echo BESTS=lens:0)
 done
-# Lens's art, for Jack's call on what Lens ships with: each prototype panel (LensArt.swift, UNSTIR_PANEL) on the level
-# it was drawn for, as dealt, and drawn clean with only its lens magnified, the clue read; the test panel the same way.
-# A panel's first launch bakes it, unoptimised in Debug, for up to a minute; its later shots read it from Caches.
-lensbaked=" "
-lensart() {  # panel level stack what
-  local first=5
-  [[ "$lensbaked" == *" $1 "* ]] || { first=90; [[ -n "$pattern" && "lensart-$1-$2" != *$pattern* ]] || lensbaked+="$1 "; }
-  hold=$first shot "lensart-$1-$2" "Lens $2 as dealt on the $1 panel ($4), the pack owned." PACK=lens LEVEL=$2 OWNED=lens BESTS=lens:0 PANEL=$1
-  hold=5 shot "lensart-$1-$2-clue" "Lens $2's layout on the $1 panel, only its lens magnified ($3), drawn clean: the clue as the deal shows it." \
-    PACK=lens LEVEL=$2 OWNED=lens BESTS=lens:0 PANEL=$1 STACK=$3 CLEAN=1
-}
-lensart switch02 02 0:+1 "option A, The Switch's panel 2: the star on the diamond's facet"
-lensart keyhole 01 0:+2 "option B, the level's name drawn: an eye looks back through the keyhole"
-lensart closeup 01 0:+2 "option C, Close-up's one panel: the stamp"
-lensart closeup 04 1:+1 "option C, Close-up's one panel: the pocket watch"
-lensart closeup 06 0:+3 "option C, Close-up's one panel: the fingerprint"
-lensart test 02 0:+1 "option D, the test panel shipped"
+# Each drawn panel's clue (LensArt*.swift): the level's layout drawn clean, only its lenses magnified, each as
+# scripts/lens-art-sheet.py's table holds it. That script lays these out beside lens-NN, the level as dealt.
+for clue in $(scripts/lens-art-sheet.py clues); do
+  hold=5 shot "lens-${clue%%=*}-clue" "Lens ${clue%%=*}'s panel drawn clean, only its lenses magnified (${clue#*=}): what is seen through each." \
+    PACK=lens LEVEL=${clue%%=*} OWNED=lens BESTS=lens:0 STACK=${clue#*=} CLEAN=1
+done
 hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 BESTS=lens:0 STACK=1:+2,0:+2
 hold=5 shot lens-result "Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens." \
   PACK=lens LEVEL=2 SCREEN=result CLOCK=0

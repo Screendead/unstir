@@ -13,7 +13,7 @@ enum Picture: String, CaseIterable {
     case glassTwin, chainmailTwin, coralTwin, neuronsTwin, marblingTwin
     /// Vortex's own, drawn live the same way.
     case isobars, ephemeris, cords
-    /// Lens's halftone test panel (`Halftone.shown`), baked a pixel at a time.
+    /// Lens's halftone panels (`Halftone.panel`), a level its own, baked a pixel at a time.
     case halftone
     /// Prism's engravings (`Engraving`), a plate a tray, white lines on black, baked.
     case fern, seeds, medusae, radiolaria, nautilus
@@ -117,11 +117,12 @@ enum Picture: String, CaseIterable {
         if sibling == .neurons { await Self.buildWeb(seed: seed) }
     }
 
+    /// `panel` is the Lens level whose halftone panel to bake (`Level.panel`), 0 for the test panel.
     @MainActor
-    func render(side: CGFloat, scale: CGFloat) async -> UIImage? {
+    func render(side: CGFloat, scale: CGFloat, panel: Int = 0) async -> UIImage? {
         if self == .halftone {
             let n = Int((side * scale).rounded())
-            return await Task.detached(priority: .userInitiated) { Self.halftone(n, scale: scale) }.value
+            return await Task.detached(priority: .userInitiated) { Self.halftone(n, scale: scale, panel: panel) }.value
         }
         let r = ImageRenderer(content: Canvas { ctx, size in draw(ctx, r: size.width / 2, scale: scale) }
             .frame(width: side, height: side))
@@ -132,9 +133,9 @@ enum Picture: String, CaseIterable {
         return r.uiImage
     }
 
-    /// The halftone panel, `n` pixels a side, since its dots are geometry the tests read too.
-    nonisolated private static func halftone(_ n: Int, scale: CGFloat) -> UIImage? {
-        guard let provider = CGDataProvider(data: halftonePixels(n) as CFData),
+    /// A halftone panel, `n` pixels a side, since its dots are geometry the tests read too.
+    nonisolated private static func halftone(_ n: Int, scale: CGFloat, panel: Int) -> UIImage? {
+        guard let provider = CGDataProvider(data: halftonePixels(n, panel: Halftone.panel(panel)) as CFData),
               let image = CGImage(width: n, height: n, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: 4 * n,
                                   space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                   bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
@@ -142,16 +143,16 @@ enum Picture: String, CaseIterable {
         return UIImage(cgImage: image, scale: scale, orientation: .up)
     }
 
-    /// The panel's pixels, kept in Caches so only the first open of each size pays for the bake: some 20 s
+    /// A panel's pixels, kept in Caches so only its first open at each size pays for the bake: some 20 s
     /// unoptimised, 0.9 s optimised on an M2 Max, longer on an older phone. Keyed on the panel, the build's number and its
     /// executable's timestamp, which a rebuild changes, so an edit to the panel never shows a stale bake; an older key
     /// is removed.
-    nonisolated private static func halftonePixels(_ n: Int) -> Data {
+    nonisolated private static func halftonePixels(_ n: Int, panel: Halftone.Panel) -> Data {
         let built = Bundle.main.executableURL.flatMap { try? $0.resourceValues(forKeys: [.contentModificationDateKey]) }?
             .contentModificationDate?.timeIntervalSince1970 ?? 0
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        let panel = Halftone.shown, key = "-\(build)-\(Int(built)).rgba"
+        let key = "-\(build)-\(Int(built)).rgba"
         let file = caches.appendingPathComponent("halftone-\(panel.name)-\(n)\(key)")
         if let data = try? Data(contentsOf: file), data.count == 4 * n * n { return data }
         let start = Date.now

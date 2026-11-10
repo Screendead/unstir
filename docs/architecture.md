@@ -1012,10 +1012,20 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   Caches, per panel and size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
   time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
   the flicker; only one that never lands lets it go on, after 30 s. A panel is a `Halftone.Panel` (tones and white
-  strokes of their own widths, keyed in Caches by its name); the test panel is `Halftone.test`, the one every level
-  draws. **LensArt.swift** holds the prototype panels for Jack's call on Lens's art (The Switch's panel 2, Keyhole, and
-  one Close-up panel for the chapter), which only a Debug build's harness shows (`UNSTIR_PANEL`, `Halftone.shown`;
-  `shots.sh lensart-`); `scripts/lens-panels.sh` draws, times and checks them on the Mac. Prism's plates
+  strokes of their own widths, keyed in Caches by its name). Each Lens level draws its own (Jack's call LENSART = B:
+  25 standalone panels, each its level's name drawn, with what is seen through the thing in a lens's core): the picture
+  stays `.halftone` on all 25, so nothing stored changes, and `Level.panel`, a Lens level's number and 0 anywhere else,
+  goes through `PictureLayer` to `Halftone.panel`, which gives the level's panel from `LensArt.levels` once it is drawn
+  and `Halftone.test`, the test panel, until then, as for 0 (`testEachLensLevelDrawsItsOwnPanel`). So Lens 03's panel
+  is also its dock cover, its card's clip and its promoted-purchase image. Caches keeps every panel a build has baked,
+  5.5 MB each at a Pro Max's tank. **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
+  and ovals, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
+  panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
+  enough to read at x8, where the bake is soft; every rod's core on its level holds tone and linework that each step
+  moves (`testEveryLensPanelShowsEachStepOnItsLevel`, slow; `scripts/lens-art-sheet.py check` runs the same measure
+  on the Mac). A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
+  `scripts/lens-panels.sh` draws, times and checks a panel on the Mac, and `scripts/lens-art-sheet.py` lays the drawn
+  ones out, as baked and as the game shows them (`shots.sh lens-NN`, `lens-NN-clue`). Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white
