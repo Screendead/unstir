@@ -23,7 +23,7 @@ extension LensArt {
         s.append(stroke(closed(body), bold))
         for k in 0..<9 {
             let x = -0.78 + 0.19 * Double(k)
-            s += runs((0...20).map { P(x + 0.1 * Double($0) / 20, 0.5 - 0.72 * Double($0) / 20) }) { simd_distance($0, lens) > 0.33 && $0.y > -0.16 }
+            s += runs(span(P(x, 0.5), P(x + 0.1, -0.22), 20)) { simd_distance($0, lens) > 0.33 && $0.y > -0.16 }
         }
         s.append(stroke([P(-0.8, -0.38), P(0.8, -0.38)], mid))
         s.append(stroke(closed(hump), bold))
@@ -87,8 +87,8 @@ extension LensArt {
         for k in 0..<6 {
             s.append(stroke([corner(k), rim(k)], bold))
             s.append(stroke([corner(k), corner(k + 1)], bold))
-            let n = simd_normalize(P(-(rim(k) - corner(k)).y, (rim(k) - corner(k)).x)) * 0.03
-            s += runs((0...30).map { corner(k) + n + (rim(k) - corner(k)) * (0.12 + 0.88 * Double($0) / 30) }) {
+            let edge = rim(k) - corner(k), n = simd_normalize(P(-edge.y, edge.x)) * 0.03
+            s += runs(span(corner(k) + n + edge * 0.12, rim(k) + n, 30)) {
                 simd_distance($0, P(0, -0.56)) > 0.13 && simd_distance($0, P(0, 0.56)) > 0.13 && simd_length($0) < 0.9
             }
             s.append(stroke(circle(polar(o, 0.82, 60 * Double(k) + 80), 0.022, 10), mid))
@@ -99,18 +99,18 @@ extension LensArt {
         let drop = o + P(0.012, -0.05)
         s.append(stroke(closed([drop + P(0, -0.03)] + arc(drop, 0.014, -30, 210, 12)), 0.0036))
         let crown = o + P(0.012, 0.03)
-        s.append(stroke(arc(crown + P(0, 0.016), 0.05, 200, 340, 12).map { P($0.x, crown.y + 0.016 + ($0.y - crown.y - 0.016) * 0.4) }, 0.003))
-        s.append(stroke(arc(crown + P(0, 0.016), 0.05, 20, 160, 12).map { P($0.x, crown.y + 0.016 + ($0.y - crown.y - 0.016) * 0.4) }, 0.003))
+        s.append(stroke(squash(arc(crown + P(0, 0.016), 0.05, 200, 340, 12), about: crown.y + 0.016, by: 0.4), 0.003))
+        s.append(stroke(squash(arc(crown + P(0, 0.016), 0.05, 20, 160, 12), about: crown.y + 0.016, by: 0.4), 0.003))
         for k in 0..<5 {
             let x = -0.044 + 0.022 * Double(k), lift = 0.03 - 0.012 * abs(Double(k) - 2)
             s.append(stroke([crown + P(x * 0.9, 0.012), crown + P(x * 1.15, 0.012 - lift)], 0.003))
             s.append(stroke(circle(crown + P(x * 1.25, 0.004 - lift), 0.003, 6), 0.0026))
         }
-        for r in [0.075, 0.105] { s.append(stroke(arc(crown + P(0, 0.03), r, 20, 160, 12).map { P($0.x, crown.y + 0.03 + ($0.y - crown.y - 0.03) * 0.35) }, 0.0016)) }
+        for r in [0.075, 0.105] { s.append(stroke(squash(arc(crown + P(0, 0.03), r, 20, 160, 12), about: crown.y + 0.03, by: 0.35), 0.0016)) }
         // On the dial: the bolt, and the snail.
         s.append(stroke(closed([bolt + P(0.006, -0.04), bolt + P(-0.02, 0.004), bolt + P(-0.002, 0.004), bolt + P(-0.01, 0.04), bolt + P(0.02, -0.008),
                                 bolt + P(0.002, -0.008), bolt + P(0.016, -0.04)]), 0.0036))
-        s.append(stroke((0...26).map { polar(snail + P(-0.008, -0.012), 0.003 + 0.0009 * Double($0), 30 * Double($0)) }, 0.003))
+        s.append(stroke(spiral(snail + P(-0.008, -0.012), 0.003, grow: 0.0009, turn: 30, 26), 0.003))
         s.append(stroke(curve(snail + P(-0.04, 0.016), snail + P(0.0, 0.022), snail + P(0.034, 0.012), 8) + [snail + P(0.04, -0.006)], 0.0036))
         for x in [0.036, 0.046] { s.append(stroke([snail + P(0.04, -0.006), snail + P(x + 0.004, -0.024)], 0.002)) }
         return panel("shutter", fills: fills, strokes: s) { _ in .zero }
@@ -167,7 +167,8 @@ extension LensArt {
         // The ducks: one and two behind, each with its wake.
         for (k, x) in [0.0, -0.05, -0.085].enumerated() {
             let z = k == 0 ? 1.0 : 0.55, at = duck + P(x, k == 0 ? 0 : 0.008)
-            s.append(stroke(arc(at, 0.02 * z, 0, 180, 8).map { P($0.x, at.y + ($0.y - at.y) * 0.6) } + [at + P(-0.03 * z, -0.006 * z), at + P(0.02 * z, 0)], k == 0 ? 0.0036 : 0.0026))
+            let body: [P] = squash(arc(at, 0.02 * z, 0, 180, 8), about: at.y, by: 0.6) + [at + P(-0.03 * z, -0.006 * z), at + P(0.02 * z, 0)]
+            s.append(stroke(body, k == 0 ? 0.0036 : 0.0026))
             s.append(stroke(circle(at + P(0.022 * z, -0.016 * z), 0.008 * z, 8), k == 0 ? 0.0036 : 0.0026))
             s.append(stroke([at + P(0.03 * z, -0.016 * z), at + P(0.042 * z, -0.012 * z)], 0.0024))
             s.append(stroke(curve(at + P(-0.03 * z, 0.016 * z), at + P(0, 0.022 * z), at + P(0.034 * z, 0.016 * z), 5), 0.0014))
@@ -237,7 +238,7 @@ extension LensArt {
         s.append(stroke([tram + P(0.02, 0.04), tram + P(0.05, 0.11)], 0.002))
         // The cat in its window: sat up, ears, tail hung over the sill.
         s.append(stroke(closed(rect(cat.x - 0.05, cat.y - 0.07, cat.x + 0.05, cat.y + 0.04)), 0.002))
-        s.append(stroke(arc(cat + P(0, 0.04), 0.03, 180, 360, 8).map { P($0.x, cat.y + 0.04 + ($0.y - cat.y - 0.04) * 1.5) }, 0.004))
+        s.append(stroke(squash(arc(cat + P(0, 0.04), 0.03, 180, 360, 8), about: cat.y + 0.04, by: 1.5), 0.004))
         s.append(stroke(closed([cat + P(-0.014, -0.02), cat + P(-0.016, -0.046), cat + P(-0.004, -0.034), cat + P(0.004, -0.034), cat + P(0.016, -0.046),
                                 cat + P(0.014, -0.02), cat + P(0, -0.008)]), 0.0036))
         for x in [-0.006, 0.006] { s.append(stroke(circle(cat + P(x, -0.024), 0.0016, 6), 0.0024)) }

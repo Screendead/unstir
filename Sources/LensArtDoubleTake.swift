@@ -23,7 +23,7 @@ extension LensArt {
         var s: [Halftone.Stroke] = []
         // The wall: its plates' seams and their rivets, a pipe and its flanges, the lamp in its cage and the switch below.
         for yy in [-0.28, 0.28] {
-            s += runs((0...80).map { P(-1 + 0.025 * Double($0), yy) }, mid) { $0.x < -0.7 || $0.x > -0.58 }
+            s += runs(span(P(-1, yy), P(1, yy), 80), mid) { $0.x < -0.7 || $0.x > -0.58 }
             for k in 0..<17 where k != 3 { s.append(stroke(circle(P(-0.96 + 0.12 * Double(k), yy + 0.045), 0.012, 6), hair)) }
         }
         for x in [-0.7, -0.58] { s.append(stroke([P(x, -1), P(x, 1)], mid)) }
@@ -53,7 +53,7 @@ extension LensArt {
         }
         // Through the upper: the sea's line, the lighthouse on its rock, its lamp lit, and a gull.
         let house = top + P(0.022, -0.012)
-        s += runs((0...30).map { P(top.x - 0.19 + 0.38 * Double($0) / 30, top.y + 0.05) }) { abs($0.x - house.x) > 0.04 }
+        s += runs(span(top + P(-0.19, 0.05), top + P(0.19, 0.05), 30)) { abs($0.x - house.x) > 0.04 }
         s.append(stroke(arc(house + P(0, 0.062), 0.04, 190, 350, 8), 0.003))
         s.append(stroke(closed([house + P(-0.014, 0.05), house + P(-0.009, -0.01), house + P(0.009, -0.01), house + P(0.014, 0.05)]), 0.003))
         s.append(stroke([house + P(-0.012, 0.02), house + P(0.012, 0.02)], 0.002))
@@ -102,7 +102,7 @@ extension LensArt {
         for at in [P(-0.2, -0.42), P(0.06, -0.36)] {
             s.append(stroke(curve(at + P(-0.07, 0), at + P(-0.035, -0.05), at, 6) + curve(at, at + P(0.035, -0.05), at + P(0.07, 0), 6), mid))
         }
-        s += runs((0...80).map { P(-1 + 0.025 * Double($0), horizon) }, mid) { abs($0.x - ship.x) > 0.22 }
+        s += runs(span(P(-1, horizon), P(1, horizon), 80), mid) { abs($0.x - ship.x) > 0.22 }
         // The swell, wider the nearer, a bottle bobbing with a note in it, and a fin.
         for (k, at) in [P(-0.7, -0.08), P(-0.1, -0.1), P(0.76, 0.0), P(0.2, 0.2), P(-0.2, 0.34), P(0.74, 0.5), P(0.1, 0.56), P(-0.84, 0.62), P(0.46, 0.8), P(-0.14, 0.86)].enumerated() {
             let w = 0.05 + 0.012 * Double(k)
@@ -221,7 +221,7 @@ extension LensArt {
         s.append(stroke(circle(watch, 0.86, 96), mid))
         for k in 0..<9 {
             let x = -0.8 + 0.2 * Double(k)
-            s += runs((0...40).map { P(x + 0.2 * Double($0) / 40, 0.5 + 0.5 * Double($0) / 40) }) { simd_distance($0, watch) < 0.86 && simd_distance($0, barrel) > 0.3 }
+            s += runs(span(P(x, 0.5), P(x + 0.2, 1.0), 40)) { simd_distance($0, watch) < 0.86 && simd_distance($0, barrel) > 0.3 }
         }
         // The barrel, toothed, its ratchet and click.
         s.append(stroke(circle(barrel, 0.27, 56), bold))
@@ -234,7 +234,7 @@ extension LensArt {
         s.append(stroke(circle(balance, 0.2, 48), bold))
         s.append(stroke(circle(balance, 0.17, 40), hair))
         for k in 0..<3 { s.append(stroke([balance, polar(balance, 0.17, 120 * Double(k) + 50)], mid)) }
-        s.append(stroke((0...60).map { polar(balance, 0.012 + 0.0022 * Double($0), 24 * Double($0)) }, hair))
+        s.append(stroke(spiral(balance, 0.012, grow: 0.0022, turn: 24, 60), hair))
         s.append(stroke(closed(bridge), bold))
         for (at, t) in [(P(0.0, 0.04), 30.0), (P(0.54, 0.12), 110.0), (P(-0.6, -0.2), 70.0), (P(0.5, 0.62), 160.0), (P(-0.1, 0.7), 15.0)] {
             s.append(stroke(circle(at, 0.035, 14), mid))
@@ -281,7 +281,7 @@ extension LensArt {
 
         var s: [Halftone.Stroke] = []
         // The bench, a dropper bottle and a box of slides on it.
-        s += runs((0...80).map { P(-1 + 0.025 * Double($0), 0.54) }, mid) { abs($0.x) > 0.34 }
+        s += runs(span(P(-1, 0.54), P(1, 0.54), 80), mid) { abs($0.x) > 0.34 }
         s.append(stroke(closed(rect(0.52, 0.66, 0.84, 0.8)), mid))
         for k in 1..<6 { s.append(stroke([P(0.52 + 0.053 * Double(k), 0.66), P(0.52 + 0.053 * Double(k), 0.8)], hair)) }
         s.append(stroke(closed(rect(-0.8, 0.64, -0.64, 0.86)), mid))
@@ -389,7 +389,7 @@ extension LensArt {
         for k in 0..<3 { s.append(stroke(arc(owl + P(-0.012 + 0.024 * Double(k), 0.055), 0.012, 20, 160, 5), 0.0016)) }
         for x in [-0.02, 0.02] { s.append(stroke([owl + P(x - 0.008, 0.118), owl + P(x, 0.108), owl + P(x + 0.008, 0.118)], 0.0024)) }
         // The hedgehog: its back of spines, snout, eye and feet.
-        s.append(stroke(arc(hog + P(-0.006, 0.014), 0.04, 180, 360, 14).map { P($0.x, hog.y + 0.014 + ($0.y - hog.y - 0.014) * 0.75) }, 0.0036))
+        s.append(stroke(squash(arc(hog + P(-0.006, 0.014), 0.04, 180, 360, 14), about: hog.y + 0.014, by: 0.75), 0.0036))
         s.append(stroke([hog + P(-0.046, 0.014), hog + P(0.034, 0.014), hog + P(0.058, 0.006), hog + P(0.03, -0.004)], 0.003))
         for k in 0..<8 {
             let t = 195.0 + 20 * Double(k), root = hog + P(-0.006, 0.014) + P(0.04 * cos(t * .pi / 180), 0.03 * sin(t * .pi / 180))

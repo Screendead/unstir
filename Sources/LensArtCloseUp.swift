@@ -251,8 +251,8 @@ extension LensArt {
         s.append(stroke([P(-0.23, -0.64), P(-0.23, -0.52)], hair))
         s.append(stroke(ellipse(P(0, -0.46), 0.98, 0.1), bold))
         // The face: its sides, the bare eye and both brows, one raised, the nose and the moustache.
-        s.append(stroke(arc(P(0, 0.3), 0.8, 150, 208, 16).map { P($0.x, 0.3 + ($0.y - 0.3) * 1.25) }, mid))
-        s.append(stroke(arc(P(0, 0.3), 0.8, -28, 30, 16).map { P($0.x, 0.3 + ($0.y - 0.3) * 1.25) }, mid))
+        s.append(stroke(squash(arc(P(0, 0.3), 0.8, 150, 208, 16), about: 0.3, by: 1.25), mid))
+        s.append(stroke(squash(arc(P(0, 0.3), 0.8, -28, 30, 16), about: 0.3, by: 1.25), mid))
         s.append(stroke(curve(other + P(-0.13, 0.01), other + P(0, -0.1), other + P(0.13, 0.02), 16), mid))
         s.append(stroke(curve(other + P(-0.13, 0.01), other + P(0, 0.08), other + P(0.13, 0.02), 16), hair))
         s.append(stroke(circle(other + P(0.01, -0.005), 0.045, 20), mid))
@@ -322,7 +322,7 @@ extension LensArt {
             s.append(stroke([P(side * 0.5, -0.46), P(side * 1, -0.46)], mid))
             s.append(stroke(closed(rect(min(side * 0.6, side * 0.68), -0.62, max(side * 0.6, side * 0.68), -0.5)), hair))
         }
-        s.append(stroke(arc(P(0, 0.06), 0.44, 20, 160, 24).map { P($0.x, 0.06 + ($0.y - 0.06) * 1.18) }, mid))
+        s.append(stroke(squash(arc(P(0, 0.06), 0.44, 20, 160, 24), about: 0.06, by: 1.18), mid))
         s.append(stroke(curve(P(-0.03, -0.22), P(-0.07, -0.02), P(-0.06, 0.04), 8) + curve(P(-0.06, 0.04), P(0, 0.1), P(0.06, 0.04), 8), mid))
         s.append(stroke(curve(P(-0.16, 0.22), P(0.02, 0.36), P(0.2, 0.2), 12), mid))
         s.append(stroke([P(0.2, 0.2), P(0.23, 0.17)], hair))

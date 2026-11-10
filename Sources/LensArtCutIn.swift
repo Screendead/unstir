@@ -106,7 +106,7 @@ extension LensArt {
                 if side < 0, yy > -0.68, yy < -0.14 { continue }
                 let short = (row + (side < 0 ? 3 : 0)) % 7 == 6, indent = (row + (side < 0 ? 3 : 0)) % 7 == 0
                 let x0 = side < 0 ? -0.78 : 0.12, x1 = side < 0 ? -0.12 : 0.78
-                let line = (0...44).map { P(x0 + (x1 - x0) * Double($0) / 44, yy) }.filter {
+                let line = span(P(x0, yy), P(x1, yy), 44).filter {
                     (!short || $0.x < x0 + 0.3) && (!indent || $0.x > x0 + 0.06)
                 }
                 s += runs(line) { simd_distance($0, worm) > 0.05 && simd_distance($0, clover) > 0.05 }
@@ -230,7 +230,7 @@ extension LensArt {
         s.append(stroke(circle(sun, 0.13, 32), mid))
         for k in 0..<12 { s.append(stroke([polar(sun, 0.16, 30 * Double(k)), polar(sun, k % 2 == 0 ? 0.23 : 0.19, 30 * Double(k))], hair)) }
         s.append(stroke(curve(P(0.2, -0.7), P(0.26, -0.77), P(0.31, -0.7), 6) + curve(P(0.31, -0.7), P(0.36, -0.77), P(0.42, -0.7), 6), mid))
-        s += runs((0...40).map { P(-1 + 0.05 * Double($0), 0.52) }, mid) { $0.x > 0.02 || $0.x < -0.76 }
+        s += runs(span(P(-1, 0.52), P(1, 0.52), 40), mid) { $0.x > 0.02 || $0.x < -0.76 }
         for (k, x) in [-0.9, 0.1, 0.28, 0.84, -0.05].enumerated() {
             let foot = P(x, 0.62 + 0.07 * Double(k % 3))
             for t in [-110.0, -90, -65] { s.append(stroke([foot, polar(foot, 0.05, t)], hair)) }
@@ -364,7 +364,10 @@ extension LensArt {
 
         var s: [Halftone.Stroke] = []
         // The curtains' folds, and the film across the top: its sprocket holes and frames, a shape in each.
-        for (k, x) in [-0.92, -0.8, -0.7, 0.72, 0.83, 0.94].enumerated() { s.append(stroke(curve(P(x, -1), P(x + 0.03 * Double(k % 2 * 2 - 1), 0), P(x, 1), 12), hair)) }
+        for (k, x) in [-0.92, -0.8, -0.7, 0.72, 0.83, 0.94].enumerated() {
+            let bow = k % 2 == 0 ? -0.03 : 0.03
+            s.append(stroke(curve(P(x, -1), P(x + bow, 0), P(x, 1), 12), hair))
+        }
         s.append(stroke([film[0], film[1]], mid))
         s.append(stroke([film[3], film[2]], mid))
         for k in 0..<14 {

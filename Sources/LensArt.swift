@@ -94,6 +94,17 @@ enum LensArt {
         c + r * P(cos(degrees * .pi / 180), sin(degrees * .pi / 180))
     }
 
+    /// The straight line from a to b as `n` steps, for `runs` to cut.
+    static func span(_ a: P, _ b: P, _ n: Int) -> [P] { (0...n).map { a + (b - a) * (Double($0) / Double(n)) } }
+
+    /// A line flattened or stretched towards the level `y`.
+    static func squash(_ line: [P], about y: Double, by k: Double) -> [P] { line.map { P($0.x, y + ($0.y - y) * k) } }
+
+    /// A spiral out from c in `n` steps, each `turn` degrees round and `grow` further out, from radius `r`.
+    static func spiral(_ c: P, _ r: Double, grow: Double, turn: Double, _ n: Int) -> [P] {
+        (0...n).map { polar(c, r + grow * Double($0), turn * Double($0)) }
+    }
+
     /// A dashed line from a to b in `n` dashes.
     static func dashes(_ a: P, _ b: P, _ n: Int, _ width: Double = hair) -> [Halftone.Stroke] {
         (0..<n).map { k in
