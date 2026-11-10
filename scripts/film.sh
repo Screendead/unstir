@@ -229,12 +229,18 @@ film escapement-three-clocks 28 "$tank,fps=2,scale=160:-1,tile=10x6:padding=4" P
 # then the line.
 film escapement-tap 15 "$tank,fps=3,scale=200:-1,tile=9x5:padding=4" PACK=escapement OWNED=escapement LEVEL=7 FINGER=1 REST=1 \
   MOVES=0:2,0:1,1:2,2:-3
-# Lens: a launch first bakes the halftone into Caches, which takes 20 s or more in Debug; the films then read it.
-if wants lens || [[ "$pattern" == lens* ]]; then
-  xcrun simctl terminate "$udid" "$bundle" 2>/dev/null || true
-  SIMCTL_CHILD_UNSTIR_PACK=lens xcrun simctl launch "$udid" "$bundle" >/dev/null
-  sleep 35
-fi
+# A Lens level bakes its own panel the first time a Debug install draws it, half a minute or more, and the opening
+# waits on it: a launch of the level first bakes it into Caches, which its films then read.
+warm() {  # level
+  local caches stamp=shots/film/.warmed
+  caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
+  touch "$stamp"
+  SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL=$1 \
+    xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
+  for _ in $(seq 120); do [[ -n "$(find "$caches" -name 'halftone-*' -newer "$stamp" 2>/dev/null)" ]] && break; sleep 1; done
+  sleep 2
+}
+if wants lens || [[ "$pattern" == lens* ]]; then warm 1; fi  # the glitter films, on level 1
 # The rim band on each rod size while it moves, for glitter: a drawn fingertip zooms the lens in a step at a time to +3,
 # twists its neighbour two steps over it and back, zooms it out and heals the neighbour.
 for size in "big tri 0 1" "mid quad 0 1" "small eye 2 0"; do
@@ -245,8 +251,10 @@ done
 # Two Lens levels solved by a drawn fingertip at par, the order read off the rims: 08 on quad, its lenses on small rods
 # (radius 0.48), and 12 on eye, both big rods (0.58) lenses. A lens's move rides up and down; dealt lenses come out
 # dragging down.
+if wants lens-08-solve; then warm 8; fi
 film lens-08-solve 19 "$tank,fps=1.5,scale=220:-1,tile=7x4:padding=4" PACK=lens LEVEL=8 OWNED=lens FINGER=1 REST=2.5 \
   MOVES=0:-1,1:+5,2:-3,3:+3,0:-2,1:-4
+if wants lens-12-solve; then warm 12; fi
 film lens-12-solve 21 "$tank,fps=1.5,scale=220:-1,tile=8x4:padding=4" PACK=lens LEVEL=12 OWNED=lens FINGER=1 REST=2.5 \
   MOVES=3:-5,0:-1,2:+2,1:-3,3:+4,0:-2,2:-3
 # A purchase landing on Lens's card 4 s in (UNSTIR_LANDS), the taste played: the owned line slides in and the pill
