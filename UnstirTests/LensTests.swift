@@ -327,15 +327,15 @@ final class LensTests: XCTestCase {
         }
     }
 
-    /// A Lens level draws the panel of its number, and the test panel until that is drawn, as every other level's
-    /// halftone does. A panel's name keys its bake in Caches, so no two share one.
+    /// A Lens level draws the panel of its number, all 25 drawn, and anything else on the halftone the test panel. A
+    /// panel's name keys its bake in Caches, so no two share one.
     func testEachLensLevelDrawsItsOwnPanel() {
         XCTAssertEqual(Level.lens.map(\.panel), Array(1...25))
         XCTAssertTrue((Tier.allCases.flatMap(\.levels) + Level.prism + Level.escapement).allSatisfy { $0.panel == 0 })
         XCTAssertEqual(Halftone.panel(0).name, "test")
         XCTAssertEqual(Halftone.panel(1).name, "keyhole")
-        XCTAssertTrue(LensArt.levels.keys.allSatisfy { (1...25).contains($0) })
-        for n in 1...25 where LensArt.levels[n] == nil { XCTAssertEqual(Halftone.panel(n).name, "test") }
+        XCTAssertEqual(LensArt.levels.keys.sorted(), Array(1...25))
+        XCTAssertEqual(Halftone.panel(26).name, "test")
         XCTAssertEqual(Set(Halftone.panels.map(\.name)).count, Halftone.panels.count)
     }
 }
