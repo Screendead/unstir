@@ -943,7 +943,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   accessibility label, value or hint or announcement whose argument is not a literal, `verbatim:` or already
   localized, a case change, a hand-made plural, a glyph or a bare number as a key. A line that means it carries
   `// loc: verbatim <why>`. `scripts/loc-lint/baseline.txt` lists the escapes still owed, file and line text; each
-  fix takes its line out, and the test fails on an escape or a fixed line left in. CATORDER = D splits the migration:
+  fix takes its line out, and the test fails on an escape or a fixed line left in. First Stir's time ("6:40 am",
+  `StoryScene.clock`, Jack's call F3) is drawn `verbatim:` under the night forwards' glass and a story clip's tank
+  alike, as its form is fixed in English. CATORDER = D splits the migration:
   the tables (Levels, Pack, First Stir) and the leaf files first, the chrome (Menu, the play screen and its card,
   Shelf, Consent, Archive) after the design pass.
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
