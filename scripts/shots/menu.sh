@@ -27,6 +27,8 @@ shot menu-modes-new "Menu on whirlpool with every plughole level at par: the dai
   TIER=whirlpool BESTS=plughole:$par27
 shot menu-daily-run "The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more." \
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
+shot menu-all-done "Menu with every tier's levels solved, plughole's clean and the rest at par, the daily run four days and endless's best 9: all four tiers open, three marks on every plughole row." \
+  BESTS=plughole:ccccccccccccccccccccccccccc,whirlpool:$par27,vortex:$par27,maelstrom:$par27,endless:9 DAILIES=4
 # The daily archive (to-do 47): a row under today's daily, shut until any purchase.
 shot menu-archive-locked "The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack." \
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
