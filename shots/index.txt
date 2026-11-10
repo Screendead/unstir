@@ -285,7 +285,7 @@ lens-23-clue.png  Lens 23's panel drawn clean, only its lenses magnified (0:+2):
 lens-24-clue.png  Lens 24's panel drawn clean, only its lenses magnified (2:+2,3:+2): what is seen through each.
 lens-25-clue.png  Lens 25's panel drawn clean, only its lenses magnified (0:+2,1:+2,3:+2,5:+2): what is seen through each.
 lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
-lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens.
+lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ levels.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
 lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger.
 lens-lesson.png  Lens 01 as the tank becomes the player's: a ghost finger on the lens's knob halfway through its ride down, a lens step's travel, beside the track's rail, faint, on the right.
