@@ -1272,17 +1272,12 @@ private struct LevelRow: View {
         Group {
             if let best {
                 best.foregroundStyle(Color.text3)
-            } else if let result, result.clean == true {
-                Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-            } else if let result, result.over == 0 {
-                Text("par").foregroundStyle(Color.amber)
-            } else if let result {
-                Text("+\(result.over)").foregroundStyle(Color.magenta)
-            } else if new {
-                // Plain white, unlike every result's colour.
+            } else if !enabled {
+                Image(systemName: "lock.fill").imageScale(.small).foregroundStyle(Color.text4)
+            } else if new, result == nil {
                 Text("new").foregroundStyle(Color.text2)
-            } else if tried {
-                Text("tried").foregroundStyle(Color.text3)
+            } else if let filled = ResultMarks.filled(Archive.Mark(result, started: tried)) {
+                ResultMarks(filled: filled)
             }
         }
         .font(.ui(.detail))

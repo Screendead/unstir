@@ -39,7 +39,7 @@ shot archive-large "The same at accessibility type (accessibility3): a list of d
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4 OWNED=lens ARCHIVE=1 ARCHIVED=$archived TYPESIZE=accessibility3
 shot archive-day "The daily from five days ago, opened from the archive: its own tank, and its way out reads archive." \
   MODE=archive DAY=5 OWNED=lens
-shot menu-tried "Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row." BESTS=plughole:$upto13 TRIED=L14
+shot menu-tried "Plughole 01 to 13 solved and 14 tried: three hollow marks on 14's row." BESTS=plughole:$upto13 TRIED=L14
 shot menu-no-dock "Plughole 01 to 08 solved: no pack dock yet." BESTS=plughole:00000000
 shot menu-landing "A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best." \
   BESTS=plughole:$upto13
