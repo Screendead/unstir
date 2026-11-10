@@ -68,6 +68,17 @@ the pitch's picks. Not started: design changes 2 to 5, the catalog's chrome half
 records (ESCBOOK's J3 to J8 closed, PERF's section to history, ARCH's stale split lines), and this branch's PR. Check
 the nightly's StoreTests on #154 (their first run).
 
+**Resumed 2026-11-10 (finish-and-pitch).** The list, against master at #170. **Decided**, in this order on one
+chain: #165 brought up to master, reviewed and merged; design changes 2 (five text tones), 3 (one button, three
+emphases), 4 (results as dots) and 5 (the menu and result card), a PR each as #169 was; the catalog's chrome half;
+the store media retaken (`screens`, `preview`, `social`; `sound` switches the Mac's output, so it is Jack's to run).
+Beside the chain: the records (ESCBOOK's J3, J5, J7 and J8 closed, PERF's section to history, ARCH's stale split
+lines); the nightly's StoreTests on #154, dispatched on master; `r17-ci-probe`'s finding checked as recorded; the
+owed shots attached if Chrome connects; the merged lanes' worktrees removed. **Undecided**, unpicked on the page and
+each already built: lens-art (#157), sound-layers (#158), ask-to-buy-date, ask-to-buy-wait, f14-checking, duo-probe,
+ci-private, codeql-private; new from #169: whether "unstirred." scales with the type. Nothing is built on their
+recommendations. **Waiting on a launch fact**: as above; the Lens shader weight is not in the phone bench's output.
+
 ### Open work (finish-and-pitch, 2026-11-02)
 
 Closed: moved word for word to `docs/history.md`.
