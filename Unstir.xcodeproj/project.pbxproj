@@ -26,6 +26,7 @@
 		3DEE134C24C7718D40F962C3 /* Lessons.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE2B06B8CFB2F3BB5B6CF7F /* Lessons.swift */; };
 		3F40391B2B57058C26788864 /* Loom.metal in Sources */ = {isa = PBXBuildFile; fileRef = 536CF149EF97D4429DC2751F /* Loom.metal */; };
 		402763F337DF9C5673C03A9A /* UnstirApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9BF77535C50E24D360E2ED /* UnstirApp.swift */; };
+		4A8B8FE5A31BF37933714A99 /* ToneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1D22B8050E976E3D264E88 /* ToneTests.swift */; };
 		4B90EE14EB243B161D6EBD17 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8958A26903CC2506CCC43FBF /* Analytics.swift */; };
 		4C24D2DED659D4353BEA9998 /* Brim.metal in Sources */ = {isa = PBXBuildFile; fileRef = D322AA44C06018F3A665792F /* Brim.metal */; };
 		500060DF38B729F0EB090EBA /* Brim.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6499D4977A88A7764419D373 /* Brim.swift */; };
@@ -60,6 +61,7 @@
 		A4810ECE2020837953FD00AF /* Power.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97D4F0C0BBFEBFFFB3BA8313 /* Power.swift */; };
 		A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE72E9F1CCE362B73E2FA79 /* Solver.swift */; };
 		AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */; };
+		AE9A1261C5C6915EACA3371B /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E2F5EACFB0A4F616F37323F /* Tone.swift */; };
 		B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB4A9DE240F63330597A189 /* LensTests.swift */; };
 		B53F675881F4530F0753B7CC /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708EF54666A7750097BCDFEC /* Game.swift */; };
 		BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */ = {isa = PBXBuildFile; fileRef = D1F91870B1E87E24EFC084E0 /* Glass.metal */; };
@@ -128,6 +130,7 @@
 		36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirRescue.swift; sourceTree = "<group>"; };
 		39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3CB4A9DE240F63330597A189 /* LensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensTests.swift; sourceTree = "<group>"; };
+		3E2F5EACFB0A4F616F37323F /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		42AC3DE97359E1AB3D8F6FAF /* Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Taps.swift; sourceTree = "<group>"; };
 		440714978B35CD68A9F562DA /* EscapementViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementViews.swift; sourceTree = "<group>"; };
 		4C0CD5709FED7976550A2E52 /* TankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankView.swift; sourceTree = "<group>"; };
@@ -163,6 +166,7 @@
 		944137441C4619E684D8CC15 /* LivePictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePictures.swift; sourceTree = "<group>"; };
 		965EC2AB5B15FD9B3CA462DE /* Twist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Twist.swift; sourceTree = "<group>"; };
 		97D4F0C0BBFEBFFFB3BA8313 /* Power.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Power.swift; sourceTree = "<group>"; };
+		9C1D22B8050E976E3D264E88 /* ToneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneTests.swift; sourceTree = "<group>"; };
 		A96E4651A2353A1299E6FE49 /* Unstir.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Unstir.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA12B7B59978B3DF2619B7B0 /* Rods.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rods.swift; sourceTree = "<group>"; };
 		AA44B6DE028AB83D502C8EC5 /* Engraving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Engraving.swift; sourceTree = "<group>"; };
@@ -243,6 +247,7 @@
 				63E173CE4887FF0DF1142C19 /* SyncTests.swift */,
 				8235408DE6DD3E0A6017F00E /* TapLawTests.swift */,
 				FCE8CF37570EED1B144E5201 /* TapsTests.swift */,
+				9C1D22B8050E976E3D264E88 /* ToneTests.swift */,
 				29729248161A1B61CE6D4E36 /* UnstirTests.swift */,
 			);
 			path = UnstirTests;
@@ -329,6 +334,7 @@
 				4C0CD5709FED7976550A2E52 /* TankView.swift */,
 				5A3E166CF7D5345846B794E8 /* TapLaw.swift */,
 				42AC3DE97359E1AB3D8F6FAF /* Taps.swift */,
+				3E2F5EACFB0A4F616F37323F /* Tone.swift */,
 				965EC2AB5B15FD9B3CA462DE /* Twist.swift */,
 				6BCC0A4E08C966E2AD0FA13B /* Type.swift */,
 				63330CD5793ABE158F314B89 /* Unstir.metal */,
@@ -498,6 +504,7 @@
 				D4E985813E9409D13DA4E0D9 /* TankView.swift in Sources */,
 				DDC10BD09FEBD9AE2335CDA4 /* TapLaw.swift in Sources */,
 				D0654BDBD70012A601A0F74C /* Taps.swift in Sources */,
+				AE9A1261C5C6915EACA3371B /* Tone.swift in Sources */,
 				3AF71E90327FDCA2406F3BDB /* Twist.swift in Sources */,
 				D10CAA173CBE682652375AB2 /* Type.swift in Sources */,
 				9F25E1385928C5125BE5CD40 /* Unstir.metal in Sources */,
@@ -532,6 +539,7 @@
 				CF32D986479C27075E2862EF /* SyncTests.swift in Sources */,
 				DE428BEF42CED2D968A33849 /* TapLawTests.swift in Sources */,
 				D19E907E79657C7B9EBEFD28 /* TapsTests.swift in Sources */,
+				4A8B8FE5A31BF37933714A99 /* ToneTests.swift in Sources */,
 				8BFF4453C3E95A10C25C1E85 /* UnstirTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

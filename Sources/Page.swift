@@ -27,6 +27,8 @@ struct Page: Equatable, Sendable {
     var stop: Color { paper ? .plateVermilion : .amber }
     /// Lime, amber and magenta words don't read on bone, and the plate has one accent: on paper they are ink.
     func signal(_ colour: Color) -> Color { paper ? .ink : colour }
+    /// Ink at 0.56 reads at 3.8:1 on bone, under the floor for words, so on paper `text3` is `text2`.
+    func tone(_ tone: TextTone) -> TextTone { paper && tone == .text3 ? .text2 : tone }
     /// Neon glows; paper has none.
     func glow(_ colour: Color) -> Color { paper ? .clear : colour }
     /// The text of the line under the tank: the stipulation, set in a serif on paper.

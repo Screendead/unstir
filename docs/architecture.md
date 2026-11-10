@@ -208,13 +208,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **TankView.swift**, **Game.swift**, **Shader.swift**, **Lessons.swift**, **Rods.swift**, **ResultCard.swift** and
   **EscapementViews.swift** hold the play screen, split by type (Jack's call ARCH = A), and this one entry covers all
   seven. TankView.swift keeps `LevelView` whole, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
-  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints, and the app's colours (its type
-  is Type.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
+  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints (the app's colours are Tone.swift's
+  and its type Type.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
   `LensLesson`, `RimLesson` and `GhostFinger`; Rods.swift `RodView`; ResultCard.swift `ResultCard`, `TierUp`,
   `Completion`, `Review` and Escapement's `LostCard`; EscapementViews.swift `ClockHint`, `RatchetView`, `FlipCounter`,
   `LostStamp` and `StopLook`. `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
   endless's brim, which the rim shows (the header shows moves, and the title the tank). The header's count flashes red
-  on a push, and otherwise reads amber at par and magenta past it (`LevelView.parTone`; VoiceOver adds "at par" or
+  on a push, and otherwise reads `text2` under par, amber at par and magenta past it (`LevelView.parTone`; VoiceOver adds "at par" or
   "over par"), and an over-par solve veils its picture under the card by 0.05 a move over, to 0.2 at most
   (`LevelView.haze`; Jack's call C11, round 13). `Game.commit` takes a physical
   knob and commits to the slot under it. Endless has no par, undo or reset: each red flash (a `.pushed` commit) adds a
@@ -338,7 +338,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
   demonstration's commits (Jack's call C3, round 13). A level with a best counts as started for `Game.firstTry`, so a
   best iCloud (`Sync`) brings without its level's started flag still makes a try there no first. A level's note shows at full strength for its first 4 s of play, then at
-  0.55, as every caption rests. Plughole 01's first open hangs one line under it, at 0.55, pointing at the settings
+  `text2`, as every caption rests. Plughole 01's first open hangs one line under it, at `text3`, pointing at the settings
   ("sound, haptics, colour letters: ⚙ on the menu", `LevelView.pointer`, Jack's call F3, round 14; it fits the SE's
   width with little to spare), and announces it to VoiceOver as the opening ends, when `Best.pointedAtSettings` is
   stored; the line stays the visit out. Beside the menu, where the gear is in sight, it neither shows nor announces,
@@ -587,6 +587,18 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   its size), which `PlayLayout.Chrome` and the caption's two lines use. The game's own text stays fixed (`Font.game`):
   a knob's letters, a turn's count, "unstirred.", "spilled.", First Stir's film lines, with Escapement's flip counters
   and serif stamp and badge.
+- **Tone.swift** holds the colours round the game (Jack's call DESIGN5 = A, the design pass's second change): the
+  accents, and five tones of `text` in place of thirteen opacities, `TextTone` and its `alpha`: `text` (18.3:1 on black),
+  `text2` 0.72 (9.3:1: details that carry meaning, notes, the count under par, a fact's value), `text3` 0.56 (5.8:1:
+  keys, progress, small print, explanations, the floor for anything that means something), `text4` 0.40 (3.3:1,
+  inactive only, beside a lock or a state; also `line`, a control's stroke) and `rule` 0.14, never text. `Color.text2`
+  and the rest set a colour; `View.tone` sets the alpha over whatever ink is inherited, so on Escapement's paper the
+  ink takes it, and `Page.tone` raises `text3` to `text2` there, as ink at 0.56 reads 3.8:1 on bone. `surface`
+  (#15171E) is the settings sheet's, the one lifted colour, and `scrim` (black at 0.6) is under the consent card.
+  `Tier.ink` and `Offer.ink` are each tier's and pack's colour for words ("next ›", the gate's line, a pack's numbers):
+  vortex's teal and maelstrom's red, as vortex's glow reads 4.1:1, and Prism's `text`; `glow` stays the shadows'.
+  `ToneTests` pins each tone's ratio and every ink at 4.5:1 or more. The game's own colours (the picture, tank,
+  bezel, knobs, rings, the ghost finger, flip counters and what is drawn over the picture) keep theirs.
 - **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
   `min(width, height - reserve) / 1.045`, as on every iPhone, `reserve` 290 pt at the default type size and as much
