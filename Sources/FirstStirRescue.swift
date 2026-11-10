@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's chapter 2, The Rescue: scenes 6 to 10 of the outline, from 4:45 back to 2:30 am, in rescue amber. The
@@ -1142,3 +1143,4 @@ enum LighthouseDoor {
         }
     }
 }
+#endif

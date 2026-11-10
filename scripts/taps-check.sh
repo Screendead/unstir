@@ -35,28 +35,11 @@ vars() {
 }
 level='"UNSTIR_UNLOCK":"1","UNSTIR_TIER":"whirlpool","UNSTIR_LEVEL":"27"'
 log=$(mktemp)
-pull() {
-  if [[ -n $sim ]]; then
-    cp "$(xcrun simctl get_app_container "$sim" com.screendead.Unstir data)/Library/unstir-log.txt" "$log" 2>/dev/null || true
-  else
-    scripts/pull-log.sh "$log" >/dev/null 2>&1 || true
-  fi
-}
-finished() { pull; grep -c 'tapdrag done' "$log" || true; }
-launch() {
-  if [[ -n $sim ]]; then
-    local args=()
-    while IFS= read -r pair; do args+=("SIMCTL_CHILD_$pair"); done < <(echo "{$1}" | python3 -c \
-      'import json, sys; [print(f"{k}={v}") for k, v in json.load(sys.stdin).items()]')
-    env "${args[@]}" xcrun simctl launch --terminate-running-process "$sim" com.screendead.Unstir >/dev/null
-  else
-    xcrun devicectl device process launch --device "${UNSTIR_DEVICE:?set UNSTIR_DEVICE to a UDID from xcrun devicectl list devices}" \
-      --terminate-existing --environment-variables "{$1}" com.screendead.Unstir >/dev/null
-  fi
-}
+source scripts/harness.sh
+finished() { harness_pull "$sim" "$log"; grep -c 'tapdrag done' "$log" || true; }
 for run in "${runs[@]}"; do
   before=$(finished)
-  launch "$level,$(vars "$run")"
+  harness_launch "$sim" "$level,$(vars "$run")"
   for _ in $(seq 40); do
     sleep 3
     (( $(finished) > before )) && break

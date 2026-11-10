@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 import XCTest
 import simd
@@ -470,3 +471,4 @@ final class FirstStirTests: XCTestCase {
         }
     }
 }
+#endif

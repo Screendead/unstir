@@ -167,6 +167,7 @@ final class StoreTests: XCTestCase {
     override func setUp() async throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["UNSTIR_STORE_TESTS"] == "1",
                           "StoreKit test sessions need a host app signed with get-task-allow: run scripts/test-store.sh")
+        forgetRequests()
         session = try SKTestSession(configurationFileNamed: "Unstir")
         session.resetToDefaultState()
         session.disableDialogs = true
@@ -182,6 +183,13 @@ final class StoreTests: XCTestCase {
     override func tearDown() async throws {
         session?.clearTransactions()
         session = nil
+        forgetRequests()
+    }
+
+    /// A purchase under Ask to Buy saves its request, and a request saved within the day waits again on every later
+    /// launch's read, so one left by an earlier test would hold the next test's card at pending.
+    private func forgetRequests() {
+        for id in Pack.productIDs { Asked.remove(id) }
     }
 
     /// StoreKit's reads lag a purchase by up to a second or so on the simulator.

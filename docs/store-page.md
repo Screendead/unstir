@@ -287,3 +287,6 @@ the fallback if App Review reads them otherwise. Either way the privacy policy s
    set, the preview and the social clips again in one run.
 3. The Prism lines describe its design; check them against the pack as it ships.
 4. In App Store Connect's availability, exclude the EU/EEA storefronts (EU1 = B); the EU is out at launch.
+5. "Every stir in this tank has an exact inverse." left the menu for this page (Jack's call D1 = A, round 13). Which
+   field carries it, the description's rule paragraph or a later promotional text, is not yet decided, so the chosen
+   texts above are as Jack approved them.

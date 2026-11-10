@@ -222,9 +222,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - GPU bench: `scripts/gpu-bench.sh [sim]` launches the app with `UNSTIR_GPUBENCH=1` (`GPUBench.swift`), which runs
   Unstir.metal's own shader bodies (`benchUnstir`, over `unstirBody` and `unstirChannelsBody`, the templates the
-  stitchables call) off screen at the largest phone's 1284 px and prints a plain stack entry's cost, then each Prism
-  specimen's per-channel cost in entries against `Unstirred.channelCost`'s assumption, and the slowest against a 120 Hz
-  frame, then quits. The simulator has no GPU clock, so there it times the wall clock round each command buffer.
+  stitchables call) off screen and prints a plain stack entry's cost with four taps and with two at 1137, 1284 and
+  1471 px, the glass's fill (`benchGlass` in Glass.metal) and whirlpool 27's whole frame, fill and stack, at 28 and 36
+  entries at 1137 and 1471, then at 1284 each Prism specimen's per-channel cost in entries against
+  `Unstirred.channelCost`'s assumption, and the slowest against a 120 Hz frame, then quits. The simulator has no GPU clock, so there it times the wall clock round each command buffer.
   `scripts/gpu-bench.sh phone` is Jack's: it installs Release through `run-ios.sh` with the bench on, waits, and pulls
   the lines from the log.
 - The four-tap budget on the phone: `scripts/taps-check.sh [--sim udid] [runs...]` plays whirlpool 27 on the phone
@@ -233,7 +234,13 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `stall` (`watch:n`, `UNSTIR_TAPSTALL`) showed on the 13 Pro Max that a late frame's main-thread CPU time can't tell
   the GPU's misses from the main thread's, hence `TapCuts.unattributed`; `adapt`, `prior`, `edge` and `edgestall` run
   the law. `--sim` is a dry run of the plumbing: the simulator's
-  frames say nothing of a phone's GPU.
+  frames say nothing of a phone's GPU. `scripts/duo-feel.sh [--sim udid] [drags] [budgets...]` does the same for the
+  deepest levels, each dealt and at 36, at each budget pinned (42 and the Duo upright's 23 unset), on the device's own
+  glass; its header says what the display link can't see. Both launch through `scripts/harness.sh`.
+- TestFlight play: `tools/tf-poll.py [--report|--dry-run|--force|--app-id <bundle id>]` polls App Store Connect's
+  sessions per tester into a CSV outside the repo, the raw responses beside it, and prints day-2 return (Jack's call
+  TFREAD = D); a date keeps its first poll unless `--force`. Setup, the two-day check and the survey draft are in
+  `docs/testflight.md`. `python3 tools/tf-poll-test.py` checks it without a key.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
   the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs

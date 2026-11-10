@@ -1,0 +1,757 @@
+menu.png  Menu before plughole 01 is solved, where backing out of it lands (a fresh install's first launch opens 01; in a build with analytics, the question answered): plughole's list with no line over it, only level 01 unlocked, no daily or endless row, no pack dock.
+menu-unlocked.png  Menu with every row unlocked (UNSTIR_UNLOCK).
+menu-whirlpool-locked.png  Menu before plughole 01 is solved, looking at whirlpool: locked, its rows dimmed, no plughole tick lit.
+menu-whirlpool-open.png  Menu on whirlpool, opened by every plughole level at par: its level 01 playable, vortex still locked.
+menu-vortex-locked.png  Menu looking at vortex, 17 of whirlpool's 27 at par: ticks 01 to 20 lit but 05, 12 and 18 (over par), and under them short: 05 · 12 · 18 · 21–27, each opening its level (21 the first not played).
+menu-vortex-open.png  Menu on vortex, opened by every whirlpool level at par: its level 01 playable, maelstrom still locked.
+menu-maelstrom-locked.png  Menu looking at maelstrom, vortex 01 at par and 02 over: one of vortex's 27 ticks lit.
+menu-maelstrom.png  Menu on maelstrom with every row unlocked (UNSTIR_UNLOCK).
+menu-mid-switch.png  Menu mid-switch: whirlpool's list unstirring into place, held 0.4 turns short and a third faded (UNSTIR_TIERSPIN).
+first-launch.png  A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings.
+first-launch-pointer.png  The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both.
+menu-after-01.png  Menu with 01 solved: next: 02 · Drip over the list.
+menu-modes-new.png  Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01.
+menu-daily-run.png  The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more.
+menu-archive-locked.png  The same, nothing bought: the archive's row under the daily, dimmed with a lock, saying it comes with any pack.
+menu-archive-open.png  The same with Lens owned: the archive's row open, 30 past dailies and how many are at par.
+archive.png  The archive's calendar, Lens owned: the 30 days before today a month to a block, the three days before today solved on their day at par, others from the archive clean, par, +2, +1 or tried, today's number marked today.
+archive-large.png  The same at accessibility type (accessibility3): a list of days in place of the week grid.
+archive-day.png  The daily from five days ago, opened from the archive: its own tank, and its way out reads archive.
+menu-tried.png  Plughole 01 to 13 solved and 14 tried: tried, faint, on 14's row.
+menu-no-dock.png  Plughole 01 to 08 solved: no pack dock yet.
+menu-landing.png  A cold launch with plughole 01 to 13 solved: the list centred on 14, the first level without a best.
+menu-list-end.png  A cold launch with plughole 01 to 26 solved: the list centred on 27, its last, and under it the sandbox's row under anything goes (Debug; Release has neither).
+menu-locktap.png  Plughole 01 to 13 solved, 15 tapped though locked: it shakes and says solve 14 to open for two seconds (held by UNSTIR_LOCKTAP); 14, the frontier, keeps its hairline lit.
+menu-back-left.png  Back from plughole 12 left mid-level, a replay with 01 to 20 solved: the list centred on 12.
+back-swipe.png  Plughole 05 held 40% into an edge swipe back: the level sliding right over the menu, centred on 05, 01 to 04 solved.
+menu-back-swiped.png  Back from plughole 12 by the edge swipe: the list centred on 12.
+menu-back-solved.png  Back from plughole 14's result card after a solve: the list centred on 15, the row next › opens.
+menu-mid-switch-scrolled.png  The list launched onto 14 (01 to 13 solved) and held a little way into a stir: the stirred copy shows the rows on screen, 10 to 19, not the list's top, and 14's hairline in the margin.
+menu-switch-landing.png  Plughole all at par, swiped to whirlpool (UNSTIR_TIERDEMO), 01 to 20 played: the list landed centred on 21, scrolled under the stir.
+menu-switch-locked.png  Plughole all at par, swiped to whirlpool and on to vortex (UNSTIR_TIERDEMO), 17 of whirlpool's 27 at par: vortex is locked, so the list landed on its header, over the gate and its short list.
+menu-back-up.png  Up a notch from plughole 27 into whirlpool 01, then back: the menu on whirlpool, not plughole.
+card-back-solved.png  Back from Lens 02's result card after a solve, Lens's card up (UNSTIR_CARD): the card centred on 03, the row next › opens.
+grid-d1.png  grid, depth-1 scramble 0:+4 (rod:steps, 30 degrees per step, bottom first).
+grid-d2.png  grid, depth-2 scramble 1:+5,2:-4 (rod:steps, 30 degrees per step, bottom first).
+grid-d3.png  grid, depth-3 scramble 0:-6,1:+4,2:-5 (rod:steps, 30 degrees per step, bottom first).
+grid-d4.png  grid, depth-4 scramble 0:+5,2:-6,1:+3,0:-4 (rod:steps, 30 degrees per step, bottom first).
+grid-d5.png  grid, depth-5 scramble 2:-5,0:+4,1:-7,2:+3,0:-6 (rod:steps, 30 degrees per step, bottom first).
+grid-d2-right-half.png  grid depth 2 (1:+5,2:-4), mid-drag: top rod 2 turned back +2 of its 4 steps.
+grid-d2-right-almost.png  grid depth 2 (1:+5,2:-4), mid-drag: top rod 2 turned back +3.6 of 4 steps.
+grid-d2-probe.png  grid depth 2 (1:+5,2:-4), mid-drag: rod 2 turned +0.4 steps. A dim hairline, its start mark and a short trace: letting go here commits nothing.
+grid-d2-wrong-rod.png  grid depth 2 (1:+5,2:-4), mid-drag: rod 1 turned -2.5 steps out of order (its undo is right, but only after rod 2).
+quad-probe.png  Level 12 (square), mid-drag: rod 1 turned +0.3 steps. A dim hairline, its start mark and a short trace: letting go here commits nothing.
+quad-commit.png  Level 12 (square), mid-drag: rod 1 turned +2 steps. The hairline at full tone, two dashes: letting go here commits.
+count-tri-plus3.png  Level 01 (tri), finger down at the top of rod 0 and carried +3 steps round to its right: three dashes clockwise from the start mark, +3 to the left.
+count-quad-minus2.png  Level 12 (square), finger down below rod 1 and carried -2 steps round: two dashes anticlockwise from the start mark, -2 up and left, off the finger.
+count-let-go.png  Level 12 (square), rod 1 just let go at -2: its stir is still open, so the hairline, its dashes and the count stay, faint.
+count-regrab.png  Level 12 (square), rod 1 let go at -2, grabbed again and turned -1 more: the dashes and count carry on to -3 from where the stir began.
+grab-grid.png  Level 12 (square), a finger just down deep in rod 0, not yet moved: its knob lit, its disc a dim hairline.
+grab-overlap-grid.png  Level 12 (square), a finger just down where rods 0 and 1 overlap, nearer rod 0's centre: rod 0's knob lit and its disc a dim hairline at once, rod 1 not.
+level01.png  Level 01 with its full scramble and its note.
+level04.png  Level 04 with its full scramble and its note.
+level07.png  Level 07 with its full scramble and its note.
+level08.png  Level 08 with its full scramble and its note.
+level09.png  Level 09 with its full scramble and its note.
+level13.png  Level 13 with its full scramble and its note.
+level14.png  Level 14 with its full scramble and its note.
+level18.png  Level 18 with its full scramble and its note.
+level19.png  Level 19 with its full scramble and its note.
+level22.png  Level 22 with its full scramble and its note.
+level23.png  Level 23 with its full scramble and its note.
+level27.png  Level 27 with its full scramble and its note.
+level05.png  Level 05 with its full scramble and its note.
+level11.png  Level 11 with its full scramble and its note.
+level15.png  Level 15 with its full scramble and its note.
+level06.png  Level 06 with its full scramble and its note.
+level10.png  Level 10 with its full scramble and its note.
+level16.png  Level 16 with its full scramble and its note.
+inversion-L12.png  Level 12 part-solved: 0:-2 sits on 3:+7, quieter than the twist it covers.
+inversion-L27.png  Level 27 part-solved at its first inversion: 4:-7 sits on 3:+7.
+daily.png  Today's daily.
+endless.png  Endless, first tank of the run seeded 7: the brim empty, its ticks engraved on the bare steel of the bezel, no glint or glow at six, the brim pin at twelve; the tank's number beside the title.
+endless-brim.png  Endless, first tank, opened with 5 of the brim's 8 notches: the picture's own colours in the bezel up to the fifth tick on both sides, glowing onto the black; the tank where moves and par were, no undo or reset.
+endless-brim-7.png  Endless opened at 7 notches, one from spilling, held 0.38 s into the brim pin's pulse, at its peak: the filled arc's bloom at its strongest, fading out on the black.
+endless-notch.png  Endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 arriving, held 0.2 s in, its colour spreading out across the bezel behind a glint.
+endless-notch-surge.png  The same, 0.5 s in: the new arc filled, its light running on past the rim onto the black.
+endless-heal.png  Endless opened at 5 notches, then rod 0 turned +3, which heals the tank's top stir: the level settling to the fourth tick, held 0.35 s in, a wet film where it stood.
+endless-cleared.png  Endless, first tank opened at 5 notches and cleared by the harness after two wasted stirs (2 notches) and five heals: the card shows the brim at 2.
+endless-spill-crest.png  Endless opened at 7 notches, then rod 1 turned +1, a push: the brim spills. Held 0.7 s in: the fronts have met at the brim pin, and a crest swells over the lip at twelve, the pin on top of it.
+endless-spill-pour.png  The same, 1.1 s in: the crest has broken and the liquid pours down the outside of the rim either way, a wave behind a bead at each head; the picture starts to stir together.
+endless-spill-drip.png  The same, 2 s in: the runs have slowed just past three and nine o'clock and a drop falls from each head onto the black.
+endless-spilled.png  The same, 6 s in: the picture stirred together, its finest lines mixed rather than glittering, the caps still on it, the rim still brimful in its own colours, spilled. over the tank, and the card with tanks cleared and the best.
+undo-refill.png  Level 12 opened on a new day with 6 undos banked: the bank refills to 8, and a +2 shows over the count, held 1 s after the opening (none here: a still launch).
+reset-armed.png  Level 12 with two moves played, reset tapped once: it reads reset? tap again.
+level-resumed.png  Level 12 reopened mid-try, its saved line replayed (rod 2 healed, a wasted stir on rod 0 undone, rod 1 healed): four entries left, moves 2 / par 6, the undo already spent from the bank, and no opening.
+menu-endless-continue.png  The menu with an endless run saved on tank 6, brim 3, best 9 tanks: the endless row reads continue · tank 6 · brim 3 · best 9, with new run on its title's line in place of the best.
+sandbox.png  The sandbox as it opens: picture: grid and rods: 3 in the header, and the caption Stir anything. Undo is free here.
+sandbox-full.png  The sandbox with a full stack of 36, then rod 2 turned a step: the knob shakes, and the caption says the tank is full: undo or reset.
+sandbox-chainmail.png  The sandbox on chainmail and pent: the header's controls in full where they fit.
+knob-lesson.png  Level 01 left untouched 4 s (no opening: a still launch): the ghost finger halfway out knob 0's disc, held mid-rock.
+result.png  Level 05 result card after a harness solve through the real commit path: two wasted stirs taken back, then the inverse word (+2 over par).
+level-at-par.png  Level 11 after three heals, a partial and a push, the stack not empty: moves 5 / par 5 in amber.
+level-over-par.png  The same a push later: moves 6 / par 5 in magenta.
+result-veil.png  Level 11 solved in 9, four over par: the picture under the card veiled at 0.2, its most.
+result-clean.png  Level 06 (city) result card after a harness solve with nothing wasted.
+result-again-best.png  Level 05 result card over par against a stored best of +6: the line new best, was +6, and again beside next.
+result-fullest.png  Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows.
+result-pack-complete.png  Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels in Lens's magenta, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's).
+result-every-tier.png  Maelstrom 27 solved, every other free level at par: every tier unstirred in maelstrom's red, and a quiet try Lens (First Stir owned, as Release doesn't sell it).
+result-ladder-end.png  Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it).
+tier-up.png  Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing.
+tier-up-locked.png  The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate.
+tier-up-midway.png  Plughole 05 solved at par, the last plughole level to reach it: its card goes up a notch to WHIRLPOOL, though 05 is not the tier's last.
+tier-up-gate-landing.png  Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over).
+daily-result.png  Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and a share button, and next daily in 7 h under them (UNSTIR_NOW=17:00).
+daily-practice.png  Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h.
+daily-share-sheet.png  The same, with the system share sheet open on its share line (UNSTIR_SHARESHEET: the sheet its share button opens, opened without a tap).
+daily-share-supporter.png  The share sheet over the daily's card with a pack owned: the share line's name carries the supporter mark, Unstir 2026-11-02 ✦.
+wave-0.4.png  Level 13 solved through the real commit path, solve wave held at radius 0.4 from the last-turned rod.
+wave-0.8.png  Level 13 solved through the real commit path, solve wave held at radius 0.8 from the last-turned rod.
+wave-1.2.png  Level 13 solved through the real commit path, solve wave held at radius 1.2 from the last-turned rod.
+open-L03.png  Level 03 about a second into its opening replay (clean picture first, then each twist plays forward).
+open-L12-1.png  Level 12 opening, 0.9s after launch: clean picture, then every twist growing together.
+open-L12-2.png  Level 12 opening, 1.6s after launch: clean picture, then every twist growing together.
+open-L12-3.png  Level 12 opening, 2.0s after launch: clean picture, then every twist growing together.
+open-L12-4.png  Level 12 opening, 3.2s after launch: clean picture, then every twist growing together.
+menu-whirlpool.png  Menu on whirlpool with every row unlocked.
+whirlpool01.png  Whirlpool level 01 with its full scramble.
+whirlpool09.png  Whirlpool level 09 with its full scramble.
+whirlpool14.png  Whirlpool level 14 with its full scramble.
+whirlpool19.png  Whirlpool level 19 with its full scramble.
+whirlpool23.png  Whirlpool level 23 with its full scramble.
+whirlpool27.png  Whirlpool level 27 with its full scramble.
+whirlpool-probe-short.png  Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back +3 of its 4 steps, one detent short of the heal.
+whirlpool-probe-heal.png  Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back all 4 steps, so its seam heals.
+whirlpool-probe-over.png  Whirlpool level 12 (square) on the glass, mid-drag: top rod 3 turned back 5 steps, one detent past the heal.
+whirlpool27-probe-1.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 1 steps; it heals at 2.
+whirlpool27-probe-2.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 2 steps; it heals at 2.
+whirlpool27-probe-3.png  Whirlpool level 27 (hex, par 28), mid-drag: top rod 2 turned back 3 steps; it heals at 2.
+whirlpool-grab-neurons.png  Whirlpool 20 (pentagon, neurons), a finger just down deep in rod 0: its knob lit, its disc a dim hairline over the web.
+whirlpool-grab-overlap-neurons.png  Whirlpool 20 (pentagon, neurons), a finger just down where rods 0 and 1 overlap, nearer rod 1's centre: rod 1's knob lit, its disc a dim hairline.
+whirlpool-grab-marbling.png  Whirlpool 25 (hex, marbling), a finger just down deep in rod 1: its knob lit, its disc a dim hairline.
+whirlpool-grab-overlap-marbling.png  Whirlpool 25 (hex, marbling), a finger just down where rods 1 and 2 overlap, clear of the hub, nearer rod 2's centre: rod 2's knob lit, its disc a dim hairline.
+whirlpool-count-marbling.png  Whirlpool 22 (pentagon, marbling), finger down below rod 2 and carried +4 steps round: four dashes, +4 off the finger.
+whirlpool-count-hex-below.png  Whirlpool 25 (hex, marbling), finger down to the lower right of rod 4 and carried +2 steps round to just under it: +2 swung off the hub's knob straight above.
+whirlpool-result.png  Whirlpool level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par).
+whirlpool24-chainmail.png  Whirlpool level 24 (chainmail) with its full scramble.
+whirlpool16-coral.png  Whirlpool level 16 (coral) with its full scramble.
+whirlpool20-neurons.png  Whirlpool level 20 (neurons) with its full scramble.
+whirlpool25-marbling.png  Whirlpool level 25 (marbling) with its full scramble.
+maelstrom27-glass.png  Maelstrom level 27 (glass twin) with its full scramble.
+maelstrom22-chainmail.png  Maelstrom level 22 (chainmail twin) with its full scramble.
+maelstrom8-coral.png  Maelstrom level 8 (coral twin) with its full scramble.
+maelstrom18-neurons.png  Maelstrom level 18 (neurons twin) with its full scramble.
+maelstrom24-marbling.png  Maelstrom level 24 (marbling twin) with its full scramble.
+seized-m01-home.png  Maelstrom 01 (square, coral twin) with knob 1 seized, tank at home.
+seized-m01-turned.png  Maelstrom 01 (square) with knob 1 seized, tank turned one step (90 degrees clockwise): the seams around knob 1 now ring knob 2.
+seized-m09-home.png  Maelstrom 09 (pentagon, marbling twin) with knobs 0 and 4 seized, tank at home.
+seized-m09-turned.png  Maelstrom 09 (pentagon) with knobs 0 and 4 seized, tank turned one step (72 degrees clockwise): each seam moves one knob on.
+seized-m23-home.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, tank at home.
+seized-m23-turned.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, tank turned one step (60 degrees clockwise): each ring seam moves one knob on, the hub's stays.
+seized-m23-half.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, mid-drag on the rim: the tank held half a step (30 degrees) round.
+seized-m23-count.png  Maelstrom 23 (hex) with knobs 2 and 5 seized, finger down on the rim at lower left and carried two tank steps (120 degrees) round: two dashes inside the rim's hairline, +2 off the finger.
+lesson-quad-grid.png  Level 12 (square, grid) with knob 1 seized, the tank never turned: the rim's two-headed arc and ghost finger.
+lesson-hex-marbling.png  Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: the rim's arc and ghost finger over a live picture.
+lesson-shake.png  Level 12 (square) with knob 1 seized, a finger just down on it, 0.15 s in: the knob turned a few degrees, the rim's arc swollen.
+lesson-shake-turned.png  The same once the player has turned the tank before: no ghost, the arc back only for the pulse.
+lesson-turned.png  Level 12 (square) with knob 1 seized, the tank turned before: no arc, no ghost, only the knurled bezel.
+lesson-count.png  Whirlpool 25 (hex, marbling) with knobs 2 and 5 seized, the tank never turned: rod 1 at the top turned +1 by a finger just below its knob, its count swung off the rim's arc.
+lesson-maelstrom01.png  Maelstrom 01 (square, coral twin) as the game loads it, the tank never turned: knob 1 seized, the rim's arc and ghost finger, and the note to turn the tank.
+seized-ring3-finished.png  Hex twin glass, 14 entries (1:+4,0:-3,2:+5,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3), none on rod 3: its ring is finished.
+seized-ring3-buried.png  The same with 3:+2 buried fourth from the bottom (1:+4,0:-3,2:+5,3:+2,6:-4,4:+3,0:+5,5:-3,1:-5,2:-3,6:+4,0:-4,4:-5,5:+4,1:+3): rod 3's ring is not finished.
+seized-hub-finished.png  Hex twin glass, 14 entries (2:+4,3:-3,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4), none on the hub: its ring is finished.
+seized-hub-buried.png  The same with 0:+2 buried third from the bottom (2:+4,3:-3,0:+2,5:+5,1:-4,4:+3,6:-5,2:-3,3:+5,1:+4,6:+3,4:-4,5:-3,2:+5,3:-4): the hub's ring is not finished.
+menu-vortex.png  Menu on vortex with every row unlocked.
+vortex01.png  Vortex level 01 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex02.png  Vortex level 02 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex03.png  Vortex level 03 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex04.png  Vortex level 04 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex05.png  Vortex level 05 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex06.png  Vortex level 06 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex07.png  Vortex level 07 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex08.png  Vortex level 08 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex09.png  Vortex level 09 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex10.png  Vortex level 10 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex11.png  Vortex level 11 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex12.png  Vortex level 12 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex13.png  Vortex level 13 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex14.png  Vortex level 14 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex15.png  Vortex level 15 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex16.png  Vortex level 16 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex17.png  Vortex level 17 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex18.png  Vortex level 18 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex19.png  Vortex level 19 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex20.png  Vortex level 20 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex21.png  Vortex level 21 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex22.png  Vortex level 22 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex23.png  Vortex level 23 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex24.png  Vortex level 24 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex25.png  Vortex level 25 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex26.png  Vortex level 26 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex27.png  Vortex level 27 with its full scramble, the swirl never stirred: the swirl's cyan lesson inside the glass at the bottom.
+vortex01-swirled.png  Vortex 01 once the player has stirred with the swirl before: no lesson.
+vortex01-both.png  Vortex 01 with knob 1 seized (UNSTIR_SEIZED), neither ever used: the tank's amber lesson outside the bezel at the top, the swirl's cyan one inside the glass at the bottom.
+vortex21-both.png  Vortex 21 (hex) with knobs 2 and 5 seized, neither ever used: both lessons, the amber outside the bezel, the cyan inside the glass.
+vortex-result.png  Vortex level 05 result card after a harness solve: two wasted stirs taken back, then the inverse word (+2 over par), next in vortex's blue.
+vortex-plughole-01.png  Vortex level 01 with its full scramble on plughole's grid, the swirl never stirred.
+vortex-plughole-14.png  Vortex level 14 with its full scramble on plughole's grid, the swirl never stirred.
+vortex-plughole-27.png  Vortex level 27 with its full scramble on plughole's grid, the swirl never stirred.
+vortex-family-isobars-clean.png  Vortex's isobars, clean: the sandbox's square with a swirl, nothing stirred.
+vortex-family-ephemeris-clean.png  Vortex's ephemeris, clean: the sandbox's square with a swirl, nothing stirred.
+vortex-family-cords-clean.png  Vortex's cords, clean: the sandbox's square with a swirl, nothing stirred.
+vortex-family-isobars-01.png  Vortex level 01 with its full scramble on its own isobars, its lesson learnt.
+vortex-family-isobars-14.png  Vortex level 14 with its full scramble on its own isobars, its lesson learnt.
+vortex-family-isobars-27.png  Vortex level 27 with its full scramble on its own isobars, its lesson learnt.
+vortex-family-ephemeris-02.png  Vortex level 02 with its full scramble on its own ephemeris, its lesson learnt.
+vortex-family-ephemeris-13.png  Vortex level 13 with its full scramble on its own ephemeris, its lesson learnt.
+vortex-family-ephemeris-22.png  Vortex level 22 with its full scramble on its own ephemeris, its lesson learnt.
+vortex-family-cords-03.png  Vortex level 03 with its full scramble on its own cords, its lesson learnt.
+vortex-family-cords-16.png  Vortex level 16 with its full scramble on its own cords, its lesson learnt.
+vortex-family-cords-26.png  Vortex level 26 with its full scramble on its own cords, its lesson learnt.
+rim-swirl.png  Rim: vortex 01, the swirl alone, its lesson learnt.
+rim-swirl-lesson.png  Rim: vortex 01, the swirl never stirred: its cyan lesson too, inside the glass.
+rim-swirl-held.png  Rim: vortex 01, the swirl held from the rim, 1.5 steps clockwise.
+rim-seized.png  Rim: maelstrom 01, the glass's turn alone (knob 1 seized), its lesson learnt.
+rim-seized-lesson.png  Rim: maelstrom 01, the tank never turned: its amber lesson too.
+rim-both.png  Rim: vortex 01 with knob 1 seized, both lessons learnt.
+rim-both-lesson.png  Rim: vortex 01 with knob 1 seized, neither ever used: both lessons too, each on its own ring.
+rim-both-swirl-held.png  Rim: vortex 01 with knob 1 seized, the swirl held from the glass's edge, 1.5 steps clockwise.
+rim-both-tank-held.png  Rim: vortex 01 with knob 1 seized, the tank held from the bezel, 30 degrees round.
+rim-swirl-held-low.png  Rim: vortex 01, the swirl held from the rim at six and carried 1.5 steps counterclockwise: -2 on the far side from the finger, inside the dashes.
+rim-swirl-turned.png  Rim: vortex 01, the swirl just let go 2 steps clockwise, its stir still open: +2 faint inside the dashes at twelve.
+breath-01.png  Breath: vortex 01 at rest, the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass.
+breath-14.png  Breath: vortex 14 at rest, the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass.
+breath-21.png  Breath: vortex 21 at rest, the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass.
+breath-both.png  Breath: vortex 01 with knob 1 seized, the tank's lesson learnt and the swirl never stirred, 0.4 s into its first slosh, its cyan lesson inside the glass: the knurl for the glass's turn beside it.
+swirl-quad-one.png  Square with a swirl, one stir of it alone (4:+3): the glass's edge turned 90 degrees, sheared all the way in to the centre, which stays still.
+swirl-quad.png  Square with a swirl (rod 4), 0:+3,4:+2,2:-4,1:+3,4:-3,3:+5.
+swirl-quad-live.png  The same held mid-drag from the rim, the swirl 1.5 steps clockwise.
+swirl-quad-seized.png  The same with knob 1 seized and the tank turned one step (90 degrees clockwise).
+swirl-tri.png  Triangle with a swirl (rod 3), 0:+3,3:+2,1:-4,3:-3.
+swirl-eye.png  Eye with a swirl (rod 4), 0:+3,4:+2,2:-4,4:-3.
+swirl-pent.png  Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3.
+swirl-hex.png  Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3.
+lens-plus.png  Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies.
+lens-minus.png  Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim.
+lens-01.png  Lens 01 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-02.png  Lens 02 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-03.png  Lens 03 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-04.png  Lens 04 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-05.png  Lens 05 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-06.png  Lens 06 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-07.png  Lens 07 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-08.png  Lens 08 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-09.png  Lens 09 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-10.png  Lens 10 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-11.png  Lens 11 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-12.png  Lens 12 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-13.png  Lens 13 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-14.png  Lens 14 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-15.png  Lens 15 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-16.png  Lens 16 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-17.png  Lens 17 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-18.png  Lens 18 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-19.png  Lens 19 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-20.png  Lens 20 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-21.png  Lens 21 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-22.png  Lens 22 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-23.png  Lens 23 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-24.png  Lens 24 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-25.png  Lens 25 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
+lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens.
+lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
+lens-live.png  Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger.
+lens-lesson.png  Lens 01 as the tank becomes the player's: a ghost finger on the lens's knob halfway through its ride down, a lens step's travel, beside the track's rail, faint, on the right.
+lens-lesson-copied.png  Lens 01 held mid-drag where its lesson rides: landed on the knob's left edge and dragged two steps down, the count's -2 dashes on the lesson's rail.
+lens-glitter-big-1.png  Lens on tri rod 0 at +1, still.
+lens-glitter-big-1-drag.png  Lens on tri rod 0 held at +0.5, mid-drag up.
+lens-glitter-big-1-twist.png  Lens on tri rod 0 at +1, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-big-2.png  Lens on tri rod 0 at +2, still.
+lens-glitter-big-2-drag.png  Lens on tri rod 0 held at +1.5, mid-drag up.
+lens-glitter-big-2-twist.png  Lens on tri rod 0 at +2, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-big-3.png  Lens on tri rod 0 at +3, still.
+lens-glitter-big-3-drag.png  Lens on tri rod 0 held at +2.5, mid-drag up.
+lens-glitter-big-3-twist.png  Lens on tri rod 0 at +3, rod 1 held 1.5 steps into a twist over it.
+lens-flip-big-zoom-00.png  Lens on tri rod 0 held at +2 and 0.0 steps.
+lens-flip-big-twist-00.png  Lens on tri rod 0 at +3, rod 1 held 0.0 steps into a twist.
+lens-flip-big-zoom-01.png  Lens on tri rod 0 held at +2 and 0.1 steps.
+lens-flip-big-twist-01.png  Lens on tri rod 0 at +3, rod 1 held 0.1 steps into a twist.
+lens-flip-big-zoom-02.png  Lens on tri rod 0 held at +2 and 0.2 steps.
+lens-flip-big-twist-02.png  Lens on tri rod 0 at +3, rod 1 held 0.2 steps into a twist.
+lens-flip-big-zoom-03.png  Lens on tri rod 0 held at +2 and 0.3 steps.
+lens-flip-big-twist-03.png  Lens on tri rod 0 at +3, rod 1 held 0.3 steps into a twist.
+lens-flip-big-zoom-04.png  Lens on tri rod 0 held at +2 and 0.4 steps.
+lens-flip-big-twist-04.png  Lens on tri rod 0 at +3, rod 1 held 0.4 steps into a twist.
+lens-flip-big-zoom-05.png  Lens on tri rod 0 held at +2 and 0.5 steps.
+lens-flip-big-twist-05.png  Lens on tri rod 0 at +3, rod 1 held 0.5 steps into a twist.
+lens-flip-big-zoom-06.png  Lens on tri rod 0 held at +2 and 0.6 steps.
+lens-flip-big-twist-06.png  Lens on tri rod 0 at +3, rod 1 held 0.6 steps into a twist.
+lens-flip-big-zoom-07.png  Lens on tri rod 0 held at +2 and 0.7 steps.
+lens-flip-big-twist-07.png  Lens on tri rod 0 at +3, rod 1 held 0.7 steps into a twist.
+lens-flip-big-zoom-08.png  Lens on tri rod 0 held at +2 and 0.8 steps.
+lens-flip-big-twist-08.png  Lens on tri rod 0 at +3, rod 1 held 0.8 steps into a twist.
+lens-flip-big-zoom-09.png  Lens on tri rod 0 held at +2 and 0.9 steps.
+lens-flip-big-twist-09.png  Lens on tri rod 0 at +3, rod 1 held 0.9 steps into a twist.
+lens-flip-big-zoom-10.png  Lens on tri rod 0 held at +2 and 1.0 steps.
+lens-flip-big-twist-10.png  Lens on tri rod 0 at +3, rod 1 held 1.0 steps into a twist.
+lens-order-big-over-1.png  Lens on tri rod 0, 1:+1,0:+2: the lens newest.
+lens-order-big-under-1.png  Lens on tri rod 0, 0:+2,1:+1: the twist newest.
+lens-order-big-over-3.png  Lens on tri rod 0, 1:+3,0:+2: the lens newest.
+lens-order-big-under-3.png  Lens on tri rod 0, 0:+2,1:+3: the twist newest.
+lens-glitter-mid-1.png  Lens on quad rod 0 at +1, still.
+lens-glitter-mid-1-drag.png  Lens on quad rod 0 held at +0.5, mid-drag up.
+lens-glitter-mid-1-twist.png  Lens on quad rod 0 at +1, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-mid-2.png  Lens on quad rod 0 at +2, still.
+lens-glitter-mid-2-drag.png  Lens on quad rod 0 held at +1.5, mid-drag up.
+lens-glitter-mid-2-twist.png  Lens on quad rod 0 at +2, rod 1 held 1.5 steps into a twist over it.
+lens-glitter-mid-3.png  Lens on quad rod 0 at +3, still.
+lens-glitter-mid-3-drag.png  Lens on quad rod 0 held at +2.5, mid-drag up.
+lens-glitter-mid-3-twist.png  Lens on quad rod 0 at +3, rod 1 held 1.5 steps into a twist over it.
+lens-flip-mid-zoom-00.png  Lens on quad rod 0 held at +2 and 0.0 steps.
+lens-flip-mid-twist-00.png  Lens on quad rod 0 at +3, rod 1 held 0.0 steps into a twist.
+lens-flip-mid-zoom-01.png  Lens on quad rod 0 held at +2 and 0.1 steps.
+lens-flip-mid-twist-01.png  Lens on quad rod 0 at +3, rod 1 held 0.1 steps into a twist.
+lens-flip-mid-zoom-02.png  Lens on quad rod 0 held at +2 and 0.2 steps.
+lens-flip-mid-twist-02.png  Lens on quad rod 0 at +3, rod 1 held 0.2 steps into a twist.
+lens-flip-mid-zoom-03.png  Lens on quad rod 0 held at +2 and 0.3 steps.
+lens-flip-mid-twist-03.png  Lens on quad rod 0 at +3, rod 1 held 0.3 steps into a twist.
+lens-flip-mid-zoom-04.png  Lens on quad rod 0 held at +2 and 0.4 steps.
+lens-flip-mid-twist-04.png  Lens on quad rod 0 at +3, rod 1 held 0.4 steps into a twist.
+lens-flip-mid-zoom-05.png  Lens on quad rod 0 held at +2 and 0.5 steps.
+lens-flip-mid-twist-05.png  Lens on quad rod 0 at +3, rod 1 held 0.5 steps into a twist.
+lens-flip-mid-zoom-06.png  Lens on quad rod 0 held at +2 and 0.6 steps.
+lens-flip-mid-twist-06.png  Lens on quad rod 0 at +3, rod 1 held 0.6 steps into a twist.
+lens-flip-mid-zoom-07.png  Lens on quad rod 0 held at +2 and 0.7 steps.
+lens-flip-mid-twist-07.png  Lens on quad rod 0 at +3, rod 1 held 0.7 steps into a twist.
+lens-flip-mid-zoom-08.png  Lens on quad rod 0 held at +2 and 0.8 steps.
+lens-flip-mid-twist-08.png  Lens on quad rod 0 at +3, rod 1 held 0.8 steps into a twist.
+lens-flip-mid-zoom-09.png  Lens on quad rod 0 held at +2 and 0.9 steps.
+lens-flip-mid-twist-09.png  Lens on quad rod 0 at +3, rod 1 held 0.9 steps into a twist.
+lens-flip-mid-zoom-10.png  Lens on quad rod 0 held at +2 and 1.0 steps.
+lens-flip-mid-twist-10.png  Lens on quad rod 0 at +3, rod 1 held 1.0 steps into a twist.
+lens-order-mid-over-1.png  Lens on quad rod 0, 1:+1,0:+2: the lens newest.
+lens-order-mid-under-1.png  Lens on quad rod 0, 0:+2,1:+1: the twist newest.
+lens-order-mid-over-3.png  Lens on quad rod 0, 1:+3,0:+2: the lens newest.
+lens-order-mid-under-3.png  Lens on quad rod 0, 0:+2,1:+3: the twist newest.
+lens-glitter-small-1.png  Lens on eye rod 2 at +1, still.
+lens-glitter-small-1-drag.png  Lens on eye rod 2 held at +0.5, mid-drag up.
+lens-glitter-small-1-twist.png  Lens on eye rod 2 at +1, rod 0 held 1.5 steps into a twist over it.
+lens-glitter-small-2.png  Lens on eye rod 2 at +2, still.
+lens-glitter-small-2-drag.png  Lens on eye rod 2 held at +1.5, mid-drag up.
+lens-glitter-small-2-twist.png  Lens on eye rod 2 at +2, rod 0 held 1.5 steps into a twist over it.
+lens-glitter-small-3.png  Lens on eye rod 2 at +3, still.
+lens-glitter-small-3-drag.png  Lens on eye rod 2 held at +2.5, mid-drag up.
+lens-glitter-small-3-twist.png  Lens on eye rod 2 at +3, rod 0 held 1.5 steps into a twist over it.
+lens-flip-small-zoom-00.png  Lens on eye rod 2 held at +2 and 0.0 steps.
+lens-flip-small-twist-00.png  Lens on eye rod 2 at +3, rod 0 held 0.0 steps into a twist.
+lens-flip-small-zoom-01.png  Lens on eye rod 2 held at +2 and 0.1 steps.
+lens-flip-small-twist-01.png  Lens on eye rod 2 at +3, rod 0 held 0.1 steps into a twist.
+lens-flip-small-zoom-02.png  Lens on eye rod 2 held at +2 and 0.2 steps.
+lens-flip-small-twist-02.png  Lens on eye rod 2 at +3, rod 0 held 0.2 steps into a twist.
+lens-flip-small-zoom-03.png  Lens on eye rod 2 held at +2 and 0.3 steps.
+lens-flip-small-twist-03.png  Lens on eye rod 2 at +3, rod 0 held 0.3 steps into a twist.
+lens-flip-small-zoom-04.png  Lens on eye rod 2 held at +2 and 0.4 steps.
+lens-flip-small-twist-04.png  Lens on eye rod 2 at +3, rod 0 held 0.4 steps into a twist.
+lens-flip-small-zoom-05.png  Lens on eye rod 2 held at +2 and 0.5 steps.
+lens-flip-small-twist-05.png  Lens on eye rod 2 at +3, rod 0 held 0.5 steps into a twist.
+lens-flip-small-zoom-06.png  Lens on eye rod 2 held at +2 and 0.6 steps.
+lens-flip-small-twist-06.png  Lens on eye rod 2 at +3, rod 0 held 0.6 steps into a twist.
+lens-flip-small-zoom-07.png  Lens on eye rod 2 held at +2 and 0.7 steps.
+lens-flip-small-twist-07.png  Lens on eye rod 2 at +3, rod 0 held 0.7 steps into a twist.
+lens-flip-small-zoom-08.png  Lens on eye rod 2 held at +2 and 0.8 steps.
+lens-flip-small-twist-08.png  Lens on eye rod 2 at +3, rod 0 held 0.8 steps into a twist.
+lens-flip-small-zoom-09.png  Lens on eye rod 2 held at +2 and 0.9 steps.
+lens-flip-small-twist-09.png  Lens on eye rod 2 at +3, rod 0 held 0.9 steps into a twist.
+lens-flip-small-zoom-10.png  Lens on eye rod 2 held at +2 and 1.0 steps.
+lens-flip-small-twist-10.png  Lens on eye rod 2 at +3, rod 0 held 1.0 steps into a twist.
+lens-order-small-over-1.png  Lens on eye rod 2, 0:+1,2:+2: the lens newest.
+lens-order-small-under-1.png  Lens on eye rod 2, 2:+2,0:+1: the twist newest.
+lens-order-small-over-3.png  Lens on eye rod 2, 0:+3,2:+2: the lens newest.
+lens-order-small-under-3.png  Lens on eye rod 2, 2:+2,0:+3: the twist newest.
+icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
+icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
+icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.
+promo-lens.png  Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, its knobs as the game draws them, inside the bezel on black.
+promo-escapement.png  Escapement's promoted-purchase image: its dock cover, problem 2 on its engraved plate as dealt, its ratchet, dial and knobs, inside the bezel on black.
+promo-prism.png  Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, its tinted knobs, inside the bezel on black.
+promo-complete.png  Triptych's promoted-purchase image: a wedge of each of its three packs' covers with their knobs, inside the bezel on black.
+promoted-menu.png  A purchase of Lens started on its App Store page (UNSTIR_PROMOTED), the menu up: a second in, Lens's card opens over it and buys, landing in the harness's states as owned.
+promoted-level.png  The same from inside plughole 05: the level gives way to the menu with Lens's card over it, owned.
+firststir-01.png  First Stir 1 as dealt: every core turned, the time under the tank.
+firststir-01-held.png  First Stir 1 drawn unstirred, held back. Sunrise: the lantern boarded, a gull on the rail; the boat bailed, mast stepped; the cottage door shut, its window lit; the sun on the sea, smoke from the neighbour's chimney.
+firststir-01-played.png  First Stir 1 drawn unstirred, every vignette played: a neighbour on a stepladder nailing the first plank; the father bailing; a neighbour sweeping out the door; the sun under the sea, no smoke.
+firststir-02.png  First Stir 2 as dealt: every core turned, the time under the tank.
+firststir-02-held.png  First Stir 2 drawn unstirred, held back. The gallery: a neighbour measuring the smashed panes with a rule; three gulls on the rail; smoke from three chimneys.
+firststir-02-played.png  First Stir 2 drawn unstirred, every vignette played: the gallery empty, shards on the deck; spray over the bare rail; no smoke, one window lit by a candle.
+firststir-03.png  First Stir 3 as dealt: every core turned, the time under the tank.
+firststir-03-held.png  First Stir 3 drawn unstirred, held back. The rock pool: the lighthouse door shut, rope coiled on its hook; the child kneeling at the pool, holding up the float; the dog sitting.
+firststir-03-played.png  First Stir 3 drawn unstirred, every vignette played: the door open, the rope trailing over the rocks; the float alone in the pool; the dog sniffing.
+firststir-04.png  First Stir 4 as dealt: every core turned, the time under the tank.
+firststir-04-held.png  First Stir 4 drawn unstirred, held back. Righting the boat: three townsfolk, the rope slack, one waving; the boat upright on the sand; gulls coming back.
+firststir-04-played.png  First Stir 4 drawn unstirred, every vignette played: the three leaning back, hauling; the boat keel up, dark; the last stars, a gull asleep on the beacon.
+firststir-05.png  First Stir 5 as dealt: every core turned, the time under the tank.
+firststir-05-held.png  First Stir 5 drawn unstirred, held back. Tea on the quay: the lifeboat moored, crew gone, lamp out; the three on the bench under one blanket, the child asleep; three cups steaming on a crate.
+firststir-05-played.png  First Stir 5 drawn unstirred, every vignette played: a crewman coiling rope, the searchlight on; the child standing on the bench, pointing; a neighbour pouring from a flask.
+firststir-06.png  First Stir 6 as dealt: every core turned, the time under the tank.
+firststir-06-held.png  First Stir 6 drawn unstirred, held back. Home light, 4:45 under the dawn's last sky: the lifeboat just inside the harbour mouth, the torch left on the sill, a neighbour holding out blankets at the steps; light rain.
+firststir-06-played.png  First Stir 6 drawn unstirred, every vignette played: the lifeboat outside on a swell, searchlight out; the child at the window with the torch and the dog; two neighbours carrying blankets out of the lifeboat house; the low cloud lit, heavier rain.
+firststir-07.png  First Stir 7 as dealt: every core turned, the time under the tank.
+firststir-07-held.png  First Stir 7 drawn unstirred, held back. Off the breakwater: the steps empty, a rope hanging, surf over the lower steps; the lifeboat alongside their foot, two crew reaching up them; the lighthouse dark.
+firststir-07-played.png  First Stir 7 drawn unstirred, every vignette played: the father helping the grandmother down the steps; the lifeboat further off, bow high on a wave; a glow at the lighthouse's stair window; heavier rain.
+firststir-08.png  First Stir 8 as dealt: every core turned, the time under the tank.
+firststir-08-held.png  First Stir 8 drawn unstirred, held back. The lantern chain: the lifeboat house open on an empty slip; the chain of lights reaching the lighthouse door; four bearers with lanterns held high.
+firststir-08-played.png  First Stir 8 drawn unstirred, every vignette played: the crew pushing the lifeboat out of the house and down the slip; the chain ending short of the lighthouse, one light at the door; two bearers, two more running up unlit; heavier rain.
+firststir-09.png  First Stir 9 as dealt: every core turned, the time under the tank.
+firststir-09-held.png  First Stir 9 drawn unstirred, held back. The stair: the hand-lamp burning on the stair's turn; the lantern chain's lights far below the window; the storm lantern on the bottom step by the open door.
+firststir-09-played.png  First Stir 9 drawn unstirred, every vignette played: the grandmother sitting at the turn, her ankle bound, the lamp beside her; the window dark; the father at the foot, lantern raised, looking up; heavier rain at the window and door.
+firststir-10.png  First Stir 10 as dealt: every core turned, the time under the tank.
+firststir-10-held.png  First Stir 10 drawn unstirred, held back. The lighthouse door: the gallery window dark; the rope tied off on its ring along the path; the door open on the lit stair.
+firststir-10-played.png  First Stir 10 drawn unstirred, every vignette played: the hand-lamp signalling from the gallery window; the father out on the path, the coil on his shoulder, bent into the spray; the door shut, a wave over its step; the night's heaviest rain.
+firststir-11.png  First Stir 11 as dealt: every core turned, the time under the tank.
+firststir-11-held.png  First Stir 11 drawn unstirred, held back. The breakwater path, 2:30 under the Rescue's last sky: the rope hitched to its ring on the quay end; the father halfway out, crouched into a wave; the hand-lamp in the gallery window.
+firststir-11-played.png  First Stir 11 drawn unstirred, every vignette played: the father kneeling at the ring, tying the rope; the path bare; the gallery window dark; the flood's deep blue sky, thicker rain.
+firststir-12.png  First Stir 12 as dealt: every core turned, the time under the tank.
+firststir-12-held.png  First Stir 12 drawn unstirred, held back. High street under water: the town clock at 2:05; the street lamp drowned to its crossbar, dark; the father and a neighbour rowing the dinghy down the street, a coil of rope aboard.
+firststir-12-played.png  First Stir 12 drawn unstirred, every vignette played: the clock at 1:40; the water at the lamp's foot, the lamp still lit and sparking; the dinghy tied to the drainpipe, empty.
+firststir-13.png  First Stir 13 as dealt: every core turned, the time under the tank.
+firststir-13-held.png  First Stir 13 drawn unstirred, held back. The upstairs window: the child and the dog at it, the torch shining out; the weathervane bent, pointing down; the door open, the water at its knocker, the float drifting out.
+firststir-13-played.png  First Stir 13 drawn unstirred, every vignette played: the window dark, a curtain blowing in; the weathervane upright, spinning; the water down at the step, the float on the threshold.
+firststir-14.png  First Stir 14 as dealt: every core turned, the time under the tank.
+firststir-14-held.png  First Stir 14 drawn unstirred, held back. The kitchen, flooded: the table sunk under the water, the cup floating off it on its saucer; the water up the stair, the child's boots on a step; the float drifting to the open door.
+firststir-14-played.png  First Stir 14 drawn unstirred, every vignette played: the table standing clear, the water at its legs, the cup on it with its spoon; the child carrying the dog up the stair; the float caught on the chair's leg.
+firststir-15.png  First Stir 15 as dealt: every core turned, the time under the tank.
+firststir-15-held.png  First Stir 15 drawn unstirred, held back. Over the quay: the boat capsized and awash; only the dropped lantern's bail ring on the stones; a wave breaking white over the wall.
+firststir-15-played.png  First Stir 15 drawn unstirred, every vignette played: the boat keel up, high in the water; the lantern on its side, its glass out; the sea a hand below the wall's top, slopping; the sky leaning to the storm's indigo, the rain at its thickest.
+firststir-16.png  First Stir 16 as dealt: every core turned, the time under the tank.
+firststir-16-held.png  First Stir 16 drawn unstirred, held back. The harbour, 12:30 am at the storm's peak: the lantern smashed and dark, shards falling past the gallery; the boat capsized, its rope snapped, the oar adrift; the cottage door flung open, the window dark, the lantern dropped on the quay; far lightning, driving rain.
+firststir-16-played.png  First Stir 16 drawn unstirred, every vignette played: the lantern whole and lit; the boat moored upright, its lamps lit; the father in the lit doorway holding the lantern up and out; 11:40 pm, the lightning fading, the rain thinner.
+firststir-17.png  First Stir 17 as dealt: every core turned, the time under the tank.
+firststir-17-held.png  First Stir 17 drawn unstirred, held back. Lightning: a fork of lightning to the sea in the bay window; a candle lit on the small window's sill, the ceiling lamp dark; the child in her father's arms.
+firststir-17-played.png  First Stir 17 drawn unstirred, every vignette played: the lighthouse beam sweeping in, no lightning; the ceiling lamp lit, the candle out; the child kneeling on the window seat beside the dog, both looking out.
+firststir-18.png  First Stir 18 as dealt: every core turned, the time under the tank.
+firststir-18-held.png  First Stir 18 drawn unstirred, held back. The bell buoy: spray up the lighthouse to its gallery; the buoy heeled hard over, its bell swinging; the hut's shutter torn off and hanging.
+firststir-18-played.png  First Stir 18 drawn unstirred, every vignette played: the lighthouse beam out, no spray; the buoy upright; the harbourmaster pulling the shutter to.
+firststir-19.png  First Stir 19 as dealt: every core turned, the time under the tank.
+firststir-19-held.png  First Stir 19 drawn unstirred, held back. High street, rain: the café's awning torn to strips; the bicycle blown over in the gutter, a wheel spinning; the cobbler's sign hanging by one chain.
+firststir-19-played.png  First Stir 19 drawn unstirred, every vignette played: the awning whole, the café's owner winding it in; the bicycle leaning on the lamp post; the sign hanging by two chains.
+firststir-20.png  First Stir 20 as dealt: every core turned, the time under the tank.
+firststir-20-held.png  First Stir 20 drawn unstirred, held back. Washing: the line snapped, a shirt flying off over the roofs; the neighbour's shutters shut and barred; the kennel's chain lying empty.
+firststir-20-played.png  First Stir 20 drawn unstirred, every vignette played: shirts pegged on the line, streaming hard; the neighbour leaning out to pull the shutters to; the child unclipping the dog; 9:30 pm, the sky at dusk's night blue, the rain gone.
+firststir-21.png  First Stir 21 as dealt: every core turned, the time under the tank.
+firststir-21-held.png  First Stir 21 drawn unstirred, held back. Lighting the lamp, 9:30 pm, night blue, a cloud bank low on the sea: the lantern lit, its first beam out; gulls flocking inland; four of the town's windows lit.
+firststir-21-played.png  First Stir 21 drawn unstirred, every vignette played: the lantern dark, the grandmother reaching a taper to the lamp; the evening star; one window lit; the cloud bank sunk, the afterglow rising.
+firststir-22.png  First Stir 22 as dealt: every core turned, the time under the tank.
+firststir-22-held.png  First Stir 22 drawn unstirred, held back. The path to the light: the grandmother at the lighthouse door, lantern raised; the child at the quay rail, waving; a thin moon beside the evening star.
+firststir-22-played.png  First Stir 22 drawn unstirred, every vignette played: the grandmother just out on the path, lantern swinging, shawl blowing; the child running along the quay, arm up; the afterglow alone.
+firststir-23.png  First Stir 23 as dealt: every core turned, the time under the tank.
+firststir-23-held.png  First Stir 23 drawn unstirred, held back. Doubling the lines: the boat's two lines out, its lamps lit, nobody aboard; the barometer's needle on the storm glyph; the float in the cottage window, the lamp lit.
+firststir-23-played.png  First Stir 23 drawn unstirred, every vignette played: the father in the stern tying the second line; the needle on the sun glyph; the window dark, the float still hanging.
+firststir-24.png  First Stir 24 as dealt: every core turned, the time under the tank.
+firststir-24-held.png  First Stir 24 drawn unstirred, held back. The float, the kitchen at sunset: the float hanging in the window, lit teal; the oilskin gone, the door ajar on the sunset; the child reaching up to the window, hands empty.
+firststir-24-played.png  First Stir 24 drawn unstirred, every vignette played: the hook bare; the oilskin and hat on their pegs, boots below, the door shut; the grandmother holding the float out to the child.
+firststir-25.png  First Stir 25 as dealt: every core turned, the time under the tank.
+firststir-25-held.png  First Stir 25 drawn unstirred, held back. First stir, the kitchen at golden dusk: the sun touching the sea, a small cloud over it; the clock at 7:55; the tea still and steaming, the spoon in the saucer.
+firststir-25-played.png  First Stir 25 drawn unstirred, every vignette played: the sun a hand above the sea, clear; the clock at 7:40; the child's hand stirring, the tea's swirl.
+firststir-01-healed-1.png  First Stir 01 after the first heal (1:-2): no vignette, the clock at 6:34 am.
+firststir-01-healed-2.png  First Stir 01 after the second heal (0:-3): the neighbour nailing the first plank in a still core, the clock at 6:28 am.
+firststir-ending-02.png  The night forwards 1 s in: scene 25 played, the tea stirring at 7:40 pm, the time under the glass.
+firststir-ending-05.png  The night forwards 7 s in: scene 25 at its end, the tea still, crossfading to scene 24 at 7:55 pm.
+firststir-ending-60.png  The night forwards 83 s in: the Flood's upstairs window, 1:39 am, the water rising.
+firststir-ending-end.png  The night forwards' last frame: scene 1 held back, the town at sunrise as the pack opened, 6:40 am.
+shelf-menu.png  Menu with the pack dock, plughole 01 to 09 solved (a Debug build, which shows First Stir too): First Stir, Lens, Escapement, Prism and Triptych, nothing bought.
+shelf-menu-stirred.png  The dock 2.8 s into its loop, each cover its clip's level on its own picture, out of step: First Stir and Triptych (a wedge of each pack's) fully stirred, Lens's halftone unstirring, Escapement's engraved plate clean on bone, Prism's fern just stirring in.
+shelf-menu-clean.png  The dock at the top of its loop: First Stir and Triptych clean, Lens stirring in, Escapement and Prism unstirring.
+shelf-menu-states.png  The dock with Lens owned and Escapement waiting on Ask to Buy: a lime check and an amber hourglass.
+shelf-new.png  Plughole all solved: Lens and Prism marked new on the dock, Escapement not (maelstrom is shut), nor First Stir.
+shelf-taste-count.png  Plughole 01 to 09 solved and Lens 01 and 02: 2/3 free under Lens.
+shelf-new-levels.png  Lens owned, its card last opened with 20 levels: new under Lens beside the check.
+shelf-approved.png  The menu after Lens's Ask to Buy approval landed: Lens is yours in the dock's header.
+card-lens-unowned.png  Lens's card, unowned: Triptych's line saves $2.98 on its three packs.
+card-lens-owned.png  Lens's card, owned.
+card-lens-pending.png  Lens's card, pending: Triptych's line saves $2.98 on its three packs.
+card-lens-failed.png  Lens's card, failed: Triptych's line saves $2.98 on its three packs.
+card-lens-revoked.png  Lens's card, revoked: Triptych's line saves $2.98 on its three packs.
+card-prism-no-complete.png  Prism's card with Lens and First Stir owned (First Stir is outside the bundle): no Triptych line, since $5.99 is more than the two packs left.
+shelf-menu-lens-owned.png  The dock with Lens and First Stir owned: no Triptych cover, since it costs more than the two packs left.
+card-first-stir.png  First Stir's card, unowned.
+card-escapement.png  Escapement's card, unowned.
+card-prism.png  Prism's card, unowned: the fern printed off register in red, green and blue, its clip, letters for colour-blind play, in settings, and its 30 specimens under five tray headings.
+card-prism-levels.png  Prism's card, owned, scrolled to its specimens under the five trays.
+card-complete.png  Triptych's card, unowned: save $2.98 on the packs you don't have.
+card-complete-saves-nothing.png  UNSTIR_CARD=complete with Lens and First Stir owned: Triptych saves nothing on the two left, so no card opens, as none does going back to it, and the dock has no Triptych cover.
+clip-first-stir-still.png  First Stir's clip on its still: level 1 with two vignettes played, its time 11:57 pm.
+clip-first-stir-1.4.png  First Stir's clip 1.4 s in.
+clip-first-stir-2.1.png  First Stir's clip 2.1 s in.
+clip-first-stir-3.3.png  First Stir's clip 3.3 s in.
+clip-first-stir-5.4.png  First Stir's clip 5.4 s in.
+clip-first-stir-6.2.png  First Stir's clip 6.2 s in.
+clip-lens-still.png  Lens's clip on its still: level 3 as dealt, the lens newest, its rim whole through both twists.
+clip-lens-2.4.png  Lens's clip 2.4 s in, the lens dragged down and back up.
+clip-lens-3.2.png  Lens's clip 3.2 s in, the lens dragged down and back up.
+clip-lens-4.3.png  Lens's clip 4.3 s in, the lens dragged down and back up.
+clip-escapement-still.png  Escapement's clip on its still: rod 2 +4 let go, its tick landed, the ratchet a tooth on.
+clip-escapement-1.6.png  Escapement's clip 1.6 s in.
+clip-escapement-2.2.png  Escapement's clip 2.2 s in.
+clip-escapement-3.6.png  Escapement's clip 3.6 s in.
+clip-escapement-5.1.png  Escapement's clip 5.1 s in.
+clip-escapement-5.9.png  Escapement's clip 5.9 s in.
+clip-prism-still.png  Prism's clip on its still: specimen 1 as dealt, red ghosts round the red rod and cyan round the cyan.
+clip-prism-1.4.png  Prism's clip 1.4 s in: the buried red stir off first, then the cyan, then the white.
+clip-prism-2.4.png  Prism's clip 2.4 s in: the buried red stir off first, then the cyan, then the white.
+clip-prism-3.6.png  Prism's clip 3.6 s in: the buried red stir off first, then the cyan, then the white.
+clip-prism-5.0.png  Prism's clip 5.0 s in: the buried red stir off first, then the cyan, then the white.
+card-lens-complete-failed.png  Lens's card after Triptych, bought from it, failed: the line under Triptych's button says so.
+card-complete-owned.png  Triptych's card, owned: BUNDLE, no taste or restore, each pack's name opening its card, playing on in Lens.
+card-lens-complete-pending.png  Lens's card while Triptych waits on Ask to Buy: Triptych is waiting, buy Lens alone, Triptych's line disabled.
+card-lens-asked-offline.png  Lens's card after asking again offline: still waiting for approval, asked, no connection under it.
+card-lens-progress.png  Lens's card, owned, 01 to 05 played and 04 one over: PACK, done 4/25 at par, continue 06, no restore.
+card-lens-tried.png  Lens's card, owned, 01 solved and 02 tried: tried, faint, on 02's row, ‹ menu pinned over the scroll.
+shelf-menu-owned.png  The dock with every pack owned, the three through Triptych and First Stir (outside it) on its own: PACKS alone, no taste line, Triptych's cover gone.
+card-lens-noprice.png  Lens's card before the App Store answers: buy, price loading, and no Triptych line until the prices say what it saves.
+card-lens-unreachable.png  Lens's card after the price fetch failed: buy, App Store unreachable, the pill still live, no Triptych line.
+shelf-menu-unreachable.png  The dock after the price fetch failed, nothing bought: Triptych's cover stays, since with none of its packs owned it holds them all for less, so a card's fetch never moves it while none is owned.
+card-lens-unshared.png  Lens's card after a family stopped sharing it: no longer shared with you, your progress is kept, in grey.
+card-lens-offline.png  Lens's card after a purchase failed offline: no connection, try again when you're online.
+card-lens-nopay.png  Lens's card with in-app purchases turned off on the iPhone: no buy and no Triptych, try free kept.
+card-lens-restored.png  Lens's card, owned, after a restore found it: restored Lens.
+card-lens-restored-none.png  Lens's card after a restore found nothing: nothing to restore on this Apple ID.
+card-lens-levels.png  Lens's card, unowned, scrolled to its levels under the four chapter headings: 04 on locked, ‹ menu still pinned at the top.
+card-lens-levels-owned.png  The same, owned: every level open.
+card-gate.png  Lens's level 5, unowned, opened (UNSTIR_PACK): its card shows in the level's place, scrolled to buying under the free three's note, ‹ menu pinned over the scroll.
+card-gate-ax.png  The same at accessibility3: the Triptych line under buy wraps only before · save.
+card-gate-fewer.png  Lens's level 5, unowned, opened with only 03 solved (01 and 02 skipped): scrolled to buying under The first three are free. 22 more in Lens.
+card-gate-refunded.png  Lens's level 5 opened by a refunded owner, the free three at par: no free-three line, the revocation's own grey line in its place, buy again.
+card-lens-taste-end.png  Lens 03 solved, unowned: the result card's button says more in Lens, in Lens's magenta.
+card-lens-taste-end-owned.png  The same, owned: next again, still in Lens's magenta.
+card-lens-replay.png  Lens's card, unowned, the taste played: replay 01-03 in try free's place.
+shelf-menu-ax.png  The dock at the largest accessibility text size (UNSTIR_TYPESIZE=accessibility5).
+card-lens-ax.png  Lens's card at the largest accessibility text size, its facts stacked.
+card-lens-xxxl.png  Lens's card at xxxLarge, the largest size short of the accessibility ones: each key whole beside its fact.
+consent-ask.png  First launch: the analytics question over the dimmed menu, one line and a link to what it sends, which waits for yes or no.
+consent-sends.png  First launch: the analytics question with its link opened, the full list of what it sends under the link that hides it again.
+consent-gear.png  Menu with the settings gear beside the title, analytics answered yes.
+consent-settings-on.png  The gear's sheet: music, sounds, haptics and colour letters, the analytics switch on, report a problem and privacy policy.
+consent-settings-off.png  The gear's sheet: music, sounds, haptics and colour letters, the analytics switch off, report a problem and privacy policy.
+settings.png  Settings: music, sounds and haptics on, colour letters, restore purchases, report a problem, privacy policy, the version.
+settings-quiet.png  Settings with music and haptics off.
+settings-restored.png  The gear's sheet after a restore found nothing: nothing to restore on this Apple ID.
+settings-supporter.png  The gear's sheet with a pack owned: a supporter mark switch, on, under colour letters.
+menu-supporter.png  Menu with a pack owned: the supporter mark, a hairline four-pointed glint in plughole's sweep, after the title.
+menu-supporter-off.png  The same with the settings' supporter mark switched off: the title alone, as before any purchase.
+menu-no-supporter.png  The same with nothing owned: no mark.
+settings-editors.png  The editors' build's settings: open every tier, every level and pack too, without buying, under colour letters, off.
+escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
+escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
+escapement-book-03.png  Escapement 3 as dealt: quad, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
+escapement-book-04.png  Escapement 4 as dealt: quad, clocks 0+, scramble 0:-1,3:+2,0:-2,2:-4,1:-3,0:-1,2:-2.
+escapement-book-05.png  Escapement 5 as dealt: eye, clocks 2+, scramble 2:-2,3:-2,1:-4,2:-2,3:-3,1:+3,2:-1,3:-5.
+escapement-book-06.png  Escapement 6 as dealt: hex, clocks 1+, scramble 1:-3,4:-2,3:-4,6:+3,1:-2,5:+3,2:-3,1:-1,3:+2.
+escapement-book-07.png  Escapement 7 as dealt: quad, clocks 0+, scramble 0:-2,2:+3,1:-2,0:-1.
+escapement-book-08.png  Escapement 8 as dealt: pent, clocks 0+, scramble 0:-1,1:+4,0:-3,2:-4,3:-3,4:-5,0:-1.
+escapement-book-09.png  Escapement 9 as dealt: eye, clocks 2+, scramble 2:-3,0:+3,2:-2,3:+4,0:-3,2:-1,3:+3.
+escapement-book-10.png  Escapement 10 as dealt: pent, clocks 0+, scramble 0:-3,3:+3,2:-3,1:-2,0:-2,1:-4,0:-1,2:+3.
+escapement-book-11.png  Escapement 11 as dealt: pent, clocks 0+, scramble 0:-3,1:+2,0:-2,2:+3,4:+5,0:-2,3:+2,4:-3,0:-1,3:-2.
+escapement-book-12.png  Escapement 12 as dealt: hex, clocks 1+, scramble 1:-2,5:+4,2:+5,1:-2,3:+3,2:-3,1:-2,3:-4,0:-5,1:-1.
+escapement-book-13.png  Escapement 13 as dealt: quad, clocks 0+,2+, scramble 0:-1,2:-2,1:+3,0:-1,2:-1,3:+2.
+escapement-book-14.png  Escapement 14 as dealt: quad, clocks 0+,2+, scramble 0:-1,1:+3,0:-1,3:+3,2:-2,0:-2,3:-3.
+escapement-book-15.png  Escapement 15 as dealt: pent, clocks 0+,2+, scramble 2:-1,3:-4,2:-4,4:-5,0:-2,4:+2,0:-1,4:-5.
+escapement-book-16.png  Escapement 16 as dealt: hex, clocks 1+,4+, scramble 4:-2,2:+5,5:-3,4:-3,6:+4,1:-3,5:+2,4:-1,3:+2.
+escapement-book-17.png  Escapement 17 as dealt: pent, clocks 0+,1+, scramble 1:-3,3:+4,4:-3,0:-1,3:-5,1:-1,0:-1,4:+2,1:-1,0:-1,3:+5.
+escapement-book-18.png  Escapement 18 as dealt: hex, clocks 1+,2+, scramble 2:-2,6:+2,3:-4,2:-2,4:-2,1:-1,5:+2,2:-1,1:-1,4:+4,2:-1,1:-1,5:-4.
+escapement-book-19.png  Escapement 19 as dealt: tri, clocks 0-, scramble 0:+1,1:-3,0:+2,2:+4.
+escapement-book-20.png  Escapement 20 as dealt: quad, clocks 0+,2-, scramble 2:+1,1:+3,2:+1,1:-3,2:+1,0:-1,1:-4,2:+2,0:-2,1:+5.
+escapement-book-21.png  Escapement 21 as dealt: pent, clocks 0-,2+, scramble 0:+2,3:+2,4:+5,0:+2,3:+3,2:-2,4:-3,0:+2,3:-4,2:-1.
+escapement-book-22.png  Escapement 22 as dealt: hex, clocks 1+,4-, scramble 4:+2,2:-2,5:+3,4:+2,6:-5,1:-2,3:-2,4:+3,6:-5,1:-2,5:+3.
+escapement-book-23.png  Escapement 23 as dealt: pent, clocks 0-, scramble 0:+2,3:-5,4:-5,0:+3,2:-2,3:+4,4:-3,0:+1,3:-4.
+escapement-book-24.png  Escapement 24 as dealt: hex, clocks 1-, scramble 1:+3,4:-2,5:+4,2:+2,1:+2,3:+3,2:-5,1:+2,3:+2,6:-2.
+escapement-book-25.png  Escapement 25 as dealt: hex, clocks 1+,3+,5+, scramble 1:-2,3:-1,5:-3,0:+3.
+escapement-book-26.png  Escapement 26 as dealt: pent, clocks 0+,2+, scramble 2:-2,4:-3,3:+2,2:-2,4:+3,3:+5,2:-3,0:-2,4:+2,0:-2,3:+3,2:-1,1:+2.
+escapement-book-27.png  Escapement 27 as dealt: pent, clocks 0+, scramble 0:-3,3:-4,2:-5,1:-5,0:-2,1:+2,0:-1,1:+2,0:-2,2:+5,1:-2,0:-1,2:+2.
+escapement-book-28.png  Escapement 28 as dealt: hex, clocks 1+, scramble 1:-2,0:+5,1:-3,4:-5,3:+3,6:+4,1:-2,5:-4,2:+3,1:-2,4:+5,2:+4.
+escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3.
+escapement-book-30.png  Escapement 30 as dealt: hex, clocks 1+,3+, scramble 1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2.
+escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's five chapter headings.
+escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02.
+escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
+escapement-dead-tick.png  Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again.
+escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
+escapement-2-lost-resumed.png  Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out.
+escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
+escapement-2-drag.png  Escapement 2 mid-drag on paper: rod 2 turned +2.6, its disc's hairline, dashes and +3 count in ink.
+escapement-2-wave.png  Escapement 2 solved in 3, its solve wave an ink ring held at radius 0.6 from the last-turned rod.
+escapement-2-back-swipe.png  Escapement 2 held 40% into an edge swipe back: the paper page sliding right over the menu on black, the status bar's glyphs dark across the whole width, the menu's side too.
+escapement-budget-16-dealt.png  Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6.
+escapement-budget-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left.
+escapement-budget-16-late.png  Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: 01 tick left, clock 4's last.
+escapement-hubs-16-dealt.png  Escapement 16 as dealt: hubs 3 and 6, header 09.
+escapement-hubs-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait: clock 1 run out, grey at 0; clock 4 at 3; header 03.
+escapement-hubs-16-wrong.png  Escapement 16 after 3:-2, 5:-2 and a wrong 6:-4: clock 1's last tick pushed, grey at 0 over its +1; clock 4 at 3; header 03.
+escapement-hubs-16-out.png  Escapement 16, the wrong 6:-4 then three waits: both hubs grey at 0, header 00, out of ticks.
+escapement-hubs-22-dealt.png  Escapement 22 as dealt: clock 1 at 4, wound-back clock 4 at 7, its digit unmirrored; header 11.
+escapement-stopped-3-stamp.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look stamp.
+escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look stamp.
+escapement-stopped-3-left.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look left.
+escapement-stopped-17-left.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look left.
+escapement-stopped-3-rings.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look rings.
+escapement-stopped-17-rings.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look rings.
+prism-dealt.png  Prism specimen 1 as dealt: red ghosts in the top core, cyan in the left, both over the white bottom stir's shear; the knobs tinted red, cyan and white.
+prism-solved.png  Prism specimen 1 drawn unstirred: the engraving in pure white lines, every channel in register.
+prism-live.png  Prism specimen 1 held mid-drag, the cyan rod 1 turned back +1.5 of its 3: its green and blue ghosts swing towards the red.
+prism-mixed.png  Prism on tri, magenta, yellow and cyan rods, 0:+3,1:-2,2:+2: one channel left behind where each moved, red, green and blue ghosts and their pairs.
+prism-hex.png  Prism on hex, every rod a different mask (white hub), 1:+3,4:-4,2:+2,5:-3: the fern's lines in every core.
+prism-specimen-2.png  Prism specimen 2 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-3.png  Prism specimen 3 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-4.png  Prism specimen 4 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-5.png  Prism specimen 5 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-6.png  Prism specimen 6 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-7.png  Prism specimen 7 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-8.png  Prism specimen 8 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-9.png  Prism specimen 9 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-10.png  Prism specimen 10 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-11.png  Prism specimen 11 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-12.png  Prism specimen 12 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-13.png  Prism specimen 13 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-14.png  Prism specimen 14 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-15.png  Prism specimen 15 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-16.png  Prism specimen 16 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-17.png  Prism specimen 17 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-18.png  Prism specimen 18 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-19.png  Prism specimen 19 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-20.png  Prism specimen 20 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-21.png  Prism specimen 21 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-22.png  Prism specimen 22 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-23.png  Prism specimen 23 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-24.png  Prism specimen 24 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-25.png  Prism specimen 25 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-26.png  Prism specimen 26 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-27.png  Prism specimen 27 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-28.png  Prism specimen 28 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-29.png  Prism specimen 29 as dealt (docs/prism-design.md), on its tray's plate.
+prism-specimen-30.png  Prism specimen 30 as dealt (docs/prism-design.md), on its tray's plate.
+prism-bare-quad.png  Prism's fern under quad's knobs, unstirred: some line in every core.
+prism-bare-eye.png  Prism's fern under eye's knobs, unstirred: some line in every core.
+prism-bare-pent.png  Prism's fern under pent's knobs, unstirred: some line in every core.
+prism-bare-hex.png  Prism's fern under hex's knobs, unstirred: some line in every core.
+prism-swatch-r.png  Prism specimen 8 with the r swatch held: that channel's lines alone, in its own colour, the others hidden.
+prism-swatch-g.png  Prism specimen 8 with the g swatch held: that channel's lines alone, in its own colour, the others hidden.
+prism-swatch-b.png  Prism specimen 8 with the b swatch held: that channel's lines alone, in its own colour, the others hidden.
+prism-swatch-white-r.png  Prism specimen 8 with the r swatch held under Differentiate Without Colour: that channel's lines alone in white, the knobs lettered.
+prism-swatch-white-b.png  Prism specimen 8 with the b swatch held under Differentiate Without Colour: that channel's lines alone in white, the knobs lettered.
+prism-letters-8.png  Prism specimen 8 with its knobs' channels spelt out (Differentiate Without Colour): R, G, B and RGB.
+prism-letters-chosen.png  Prism 01 with colour letters switched on in settings, Differentiate Without Colour off: the letters under the knobs and the swatches.
+prism-letters-14.png  Prism specimen 14 with its knobs' channels spelt out: the inks as GB, RB and RG.
+prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
+prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
+prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
+prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.
+clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
+clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
+clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
+clean-prism-01.png  Prism 01 on the fern, rod 0 held mid-turn, drawn clean: no tinted knobs, swatches or caption.
+store-01-marbling.png  Store 1: whirlpool 25 (hex, marbling) with its full scramble.
+store-02-count.png  Store 2: plughole 12, rod 1 carried -2 steps round, its dashes and count off the finger.
+store-03-wave.png  Store 3: plughole 13 solved, the solve wave at radius 0.8.
+store-04-vortex.png  Store 4: vortex 14, Monsoon (pent, isobars), with its full scramble, its lesson learnt.
+store-05-maelstrom.png  Store 5: maelstrom 23 (hex), knobs 2 and 5 seized, the tank held half a step round from the rim.
+store-06-daily.png  Store 6: today's daily, its result card, share and next daily in 7 h.
+store-07-endless.png  Store 7: endless's first tank with 5 of the brim's 8 notches.
+store-08-prism.png  Store 8: Prism 01, the red stir healed and the cyan held halfway back, its ghosts closing on the white line.
+store-09-lens.png  Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 steps of the 3 it heals at.
+store-10-escapement.png  Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left.
+duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, its header and title above it and its note and controls below, the menu in the trailing half.
+duo-open-result.png  Duo open: plughole 06 solved clean, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played.
+duo-open-fullest.png  Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole over the menu in the trailing half.
+duo-open-escapement.png  Duo open: Escapement 02 a move in, the ticks' counter over the tank, the leading half on paper and the trailing half the menu's black from the fold, the glass 9 pt smaller for the counter and the serif note.
+duo-open-prism.png  Duo open: Prism 01 with the colour letters, the swatches between the note and the controls under the tank, the glass 30 pt smaller for them.
+duo-open-endless.png  Duo open: endless at three notches, the brim round the tank between the title and the note, the menu beside it.
+duo-open-daily-result.png  Duo open: today's daily solved two over par, the card's again, share and next daily beside the tank, over the menu.
+duo-open-upright.png  Duo open and turned upright (669 x 951 pt): today's column, its glass stopped at 1471 px (490 pt; duocap2 = D).
+duo-open-upright-whirlpool-27.png  Duo upright at 1471 px: whirlpool 27, Estuary, its 28 stirs as dealt on the glass, two taps here where a phone runs four: with the glass's fill the work is 32.
+duo-open-upright-maelstrom-27.png  Duo upright at 1471 px: maelstrom 27, its 26 stirs as dealt on the marbling's twin, two taps here.
+duo-open-upright-endless.png  Duo upright at 1471 px: endless's tank 20, 28 stirs deep, with 5 of the brim's 8 notches: the column keeps the brim to the screen's edges, the glass at the cap.
+duo-phone-whirlpool-27.png  A phone, for comparison: whirlpool 27 as dealt in the Pro Max's 1171 px column, four taps: 28 stirs and the glass's fill of 4 make 32, within 40.
+duo-folded-book.png  Duo half open like a book: the split clear of the fold's band either side, the tank and its chrome wholly in the leading half, the menu in the trailing half.
+duo-tabletop.png  Duo upright and folded on a table: header, note and controls in the upright half, the tank filling the half lying flat.
+duo-tabletop-result.png  Duo tabletop: plughole 06 solved clean, the card and unstirred. in the upright half, above the fold.
+duo-tabletop-daily-result.png  Duo tabletop: today's daily two over par, its card's again, share and next daily all above the fold.
+duo-tabletop-fullest.png  Duo tabletop: plughole 27 over par against a best of +6, the fullest card a tier level shows (new best, again, up a notch locked): the caption risen so the card ends above unstirred., clear of the fold.
+duo-tabletop-pack-complete.png  Duo tabletop: Lens 25 solved, Lens complete and its pointer under the card, all above unstirred. and the fold.
+duo-tabletop-escapement.png  Duo tabletop: Escapement 02 a move in, the ticks' counter in the upright half.
+duo-tabletop-prism.png  Duo tabletop: Prism 01 with the colour letters, the swatches under the note in the upright half.
+duo-folded-spill.png  Duo half open like a book, endless spilling 1.1 s in: the brim's pour, glow and drops whole inside the leading half, the glass smaller than other levels' so the brim clears the fold, the menu beside it.
+duo-tabletop-brim.png  Duo tabletop: endless at seven notches, the pin's pulse at its peak, the brim's bloom whole in the lower half, clear of the fold.
+duo-tabletop-lesson.png  Duo tabletop: maelstrom 01, the tank never turned: the rim lesson's arc and ghost finger over twelve, below the fold, the glass sat on the half's foot to make room.
+duo-tabletop-lesson-count.png  Duo tabletop: whirlpool 25 with knobs 2 and 5 seized, rod 1 at the top turned +1: its count beside the lesson's arc, both below the fold.
+duo-tabletop-lens-long.png  Duo tabletop: Lens 01's top lens held turned nine steps up (UNSTIR_LIVE, a held turn, not a drag), past the pane's top: the lens stops at +7, the last step its track shows inside the pane (d3-lenscap = B), its count and dashes clear of the fold.
+duo-phone-lens-long.png  A phone, for comparison: the same held turn of nine steps up in the column, which caps nothing, so the lens zooms all nine.
+duo-tabletop-ending.png  Duo tabletop: the night forwards 1 s in, its lines (the beat, the time, tap to skip) at the foot of the upright half, where unstirred. stands, as the glass fills the lower half.
+duo-tabletop-ladder-end-ax5.png  Duo tabletop at the largest accessibility text size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole above unstirred. and the fold.
+duo-open-menu.png  Duo open: the menu with plughole 01 to 09 at par, the list and its dock at a phone's width in the leading half, the trailing half empty until a card opens.
+duo-open-card.png  Duo open: Prism's card from the dock, in the trailing half beside the list, which stays live, the dock's covers still turning; its way out reads ✕ close, as the menu is in sight (d4-menuback = B).
+duo-open-card-gate.png  Duo open: Lens 04 opened past the taste, its card beside the list, scrolled to buying under you've played the free three.
+duo-open-card-owned.png  Duo open: Lens owned, its card home beside the list: done 3/25 at par, play 04, the levels.
+duo-open-archive.png  Duo open: the archive's calendar beside the list, Lens owned.
+duo-open-card-over-archive.png  Duo open: the archive beside the list, Lens's card opened from the dock 4.5 s in and closed again (UNSTIR_SHELFDEMO): the trailing half empty, as the card closed the archive rather than lying over it.
+duo-open-mid-switch.png  Duo open: the menu mid-switch, whirlpool's list unstirring into place inside the leading half (UNSTIR_TIERSPIN).
+duo-folded-book-menu.png  Duo half open like a book: the list in the leading half and Escapement's card in the trailing half, each clear of the fold's band.
+duo-open-upright-menu.png  Duo open and turned upright (669 x 951 pt): today's menu, Prism's card over it, its way out ‹ menu as on a phone.
+duo-tabletop-menu.png  Duo tabletop: the title, strip and list in the upright half, ending 16 pt above the fold, and the dock at the foot of the half lying flat.
+duo-folding-menu.png  Duo open with Prism's card beside the list, half folded a second in: the list and the card each drew back clear of the fold's band.
+duo-opened-menu.png  Duo closed with Prism's card over the menu, opened a second in: the card moved beside the list, the list where it was.
+duo-opened-card-scrolled.png  Duo closed with Prism's card over the menu scrolled to its specimens, opened a second in: the card beside the list, still on its specimens.
+duo-closed-card-scrolled.png  Duo open with Prism's card beside the list scrolled to its specimens, closed a second in: the card over the menu, still on its specimens.
+duo-opened.png  Duo closed (466 x 678 pt), opened a second in: the same game glided into the split, its five moves kept, the menu faded in beside it.
+duo-opened-mid-drag.png  Duo closed with rod 1 held two steps round, opened 1.5 s in: the turn let go as a lift would (moves 1), nothing held, the menu beside.
+duo-folded-to-tabletop.png  Duo upright, folded a second in: the tank glided down into the lower half.
+duo-beside-level.png  Duo open: plughole 11 five moves in beside the menu: header and title over the tank, note and controls under it at stage 1's glass, the menu in the trailing half under its title and gear, the list centred on 11, its hairline at full and playing in place of its rods and par, 10's frontier hairline above it, and the dock held still.
+duo-beside-opened-from-menu.png  Duo open: the menu, plughole 05 picked 1.5 s in (UNSTIR_PICK): the list glided to the trailing half with its title and gear, 05's tank and chrome in the leading half.
+duo-beside-pick.png  Duo open: plughole 11 beside the menu, row 07 tapped 1.5 s in (UNSTIR_PICK): 11 left through its own way out, 07 in the tank, the list following it.
+duo-beside-back.png  Duo open: plughole 11 beside the menu, left by its back a second in: the list back in the leading half under its title and gear, the trailing half empty.
+duo-beside-result.png  Duo open: plughole 06 solved clean beside the menu: the result card headed by unstirred. over the menu in the trailing half, centred on the tank, the list gone under it.
+duo-beside-card.png  Duo open: plughole 11 beside the menu, Lens's card opened from the dock 4.5 s in (UNSTIR_SHELFDEMO) over the whole trailing half, its way out ‹ menu, the tank and its chrome playing on.
+duo-beside-gate.png  Duo open: Lens 03 solved, Lens 04 picked past the taste: the gate's card over 03's result card in the trailing half on buying, its way out ✕ close (s5b-back = B), Lens 03 still in the tank.
+duo-beside-archive.png  Duo open: whirlpool 11 beside the menu, the archive opened 1.5 s in as its row opens it (UNSTIR_PICK=archive), over the trailing half, Lens owned.
+duo-beside-live-solve.png  Duo open: plughole 19 solved live at par (UNSTIR_MOVES), whirlpool's up a notch on the card over the menu.
+duo-beside-ax3.png  Duo open at accessibility3: plughole 27's fullest card over the menu at that size, the chrome round the tank fixed in size.
+duo-beside-ax5.png  Duo open at the largest accessibility size: maelstrom 27 over par, its more puzzles in the packs line at that size, the card whole over the menu, the chrome round the tank as at every size.
+duo-beside-pack-complete.png  Duo open: Lens 25 solved, Lens complete and its pointer on the card over the menu.
+duo-beside-lost.png  Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass.
+duo-beside-pointer.png  Duo open: a fresh install's first screen, plughole 01 beside the menu, its note at rest and no settings line under it: the gear is beside the menu's title.
+duo-beside-lesson.png  Duo open: maelstrom 01, the tank never turned: the rim lesson's arc between the title and the glass, 5 pt smaller for it.
+duo-beside-over-result.png  Duo open: Lens 25 solved beside the menu, Lens's card opened 4.5 s in (UNSTIR_SHELFDEMO) over the result card, which covers the menu: its way out ✕ close (s5b-back = B).
+duo-beside-over-result-closed.png  Duo open: the same, the card closed again 7.2 s later by ✕ close: the result card back over the menu.
+duo-beside-lens-long.png  Duo open: Lens 01's top lens held turned nine steps up beside the menu: all nine fit its track, which ends between the title and the rim, clear of both.
+duo-beside-lens-wrong.png  Duo open: Lens 08's top lens held fourteen steps up, the wrong way, beside the menu: capped at +9, where its track meets the title, clear of moves / par.
+duo-beside-prism-letters.png  Duo open: Prism 01 read by its colour letters beside the menu: the R G B swatches under the note, the glass 30 pt smaller for them.
+duo-beside-opened.png  Duo closed with plughole 11 five moves in, opened a second in: the tank and its chrome glided into the leading half and the menu faded in beside them.
+duo-beside-opened-card.png  Duo closed with Lens's card left under Lens 01 as its try free left it, opened a second in: the card put away, the list in sight beside the level; it comes back as the level leaves.
+duo-beside-closed.png  Duo open with plughole 11 beside the menu, closed a second in: today's column, the menu gone with the window's split.
+duo-beside-folding.png  Duo open with plughole 11 beside the menu, half folded a second in: the tank, its chrome and the list drew back clear of the fold's band.
+duo-tabletop-menu-card.png  Duo tabletop: Prism's card in the half lying flat over the dock, ✕ close, the list above the fold.
+calm-glass.png  Reduce Motion: the sandbox on glass, stirred twice, held on its still frame (Picture.rest).
+calm-chainmail.png  Reduce Motion: the sandbox on chainmail, stirred twice, held on its still frame (Picture.rest).
+calm-coral.png  Reduce Motion: the sandbox on coral, stirred twice, held on its still frame (Picture.rest).
+calm-neurons.png  Reduce Motion: the sandbox on neurons, stirred twice, held on its still frame (Picture.rest).
+calm-marbling.png  Reduce Motion: the sandbox on marbling, stirred twice, held on its still frame (Picture.rest).
+calm-glassTwin.png  Reduce Motion: the sandbox on glassTwin, stirred twice, held on its still frame (Picture.rest).
+calm-chainmailTwin.png  Reduce Motion: the sandbox on chainmailTwin, stirred twice, held on its still frame (Picture.rest).
+calm-coralTwin.png  Reduce Motion: the sandbox on coralTwin, stirred twice, held on its still frame (Picture.rest).
+calm-neuronsTwin.png  Reduce Motion: the sandbox on neuronsTwin, stirred twice, held on its still frame (Picture.rest).
+calm-marblingTwin.png  Reduce Motion: the sandbox on marblingTwin, stirred twice, held on its still frame (Picture.rest).
+calm-isobars.png  Reduce Motion: the sandbox on isobars, stirred twice, held on its still frame (Picture.rest).
+calm-ephemeris.png  Reduce Motion: the sandbox on ephemeris, stirred twice, held on its still frame (Picture.rest).
+calm-cords.png  Reduce Motion: the sandbox on cords, stirred twice, held on its still frame (Picture.rest).
+calm-chainmailTwin-later.png  Reduce Motion: the same, 9 s in: the same frame, the heartbeat at rest between beats.
+calm-endless-brim-7.png  Reduce Motion: endless opened at 7 notches, one from spilling: the rim still, no bob or tremble, the pin's pulse held lit.
+calm-endless-notch.png  Reduce Motion: endless opened at 4 notches, then rod 1 turned +1, a push: notch 5 in place at once, settled, no slosh or surge.
+calm-endless-spilled.png  Reduce Motion: endless opened at 7 notches, then a push spills it: cut straight to the end, the picture stirred together, the rim brimful and still, spilled. over the tank, and the card, up at once rather than 2 s after the spill (R-spill).
+type-menu-xxxl.png  Menu on whirlpool at xxxLarge type, the daily run four days and endless beside it: rows at body size, numbers, details and results scaled with them.
+type-menu-ax3.png  The same at accessibility3: each row's result under its title, so the title keeps the row's width.
+type-level-xxxl.png  Level 01 at xxxLarge type: the header, title, note and controls grown, the tank still the screen's width.
+type-level-ax5.png  Level 01 at accessibility5: the play screen capped at xxxLarge, the same frame as type-level-xxxl.
+type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a stored best of +6: its lines and buttons at the larger size.
+type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, whose foot runs under the screen's edge on a Pro Max (the card's rebuild, the pass's fifth change, makes up a notch its one button).
+type-lost-xxxl.png  Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size.
+type-settings-ax3.png  Settings at accessibility3: the title, rows and details scaled, the sheet scrolling.

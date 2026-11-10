@@ -11,6 +11,11 @@ settings:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
+  configs:
+    # FIRST_STIR compiles First Stir in. Release never sets it: the pack is out of v1 (Jack, FS17), and code a shipped
+    # build holds but withholds risks guideline 2.5.19. Debug, which the tests, shots and films build, keeps it.
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG FIRST_STIR
 targets:
   Unstir:
     type: application
