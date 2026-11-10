@@ -51,7 +51,7 @@ struct ConsentCard: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.78).ignoresSafeArea()
+            Color.scrim.ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture {}
                 .accessibilityHidden(true)
@@ -66,15 +66,15 @@ struct ConsentCard: View {
 
     private var card: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(ConsentWords.title).font(.mono(15, .semibold))
+            Text(ConsentWords.title).font(.ui(.title))
                 .accessibilityAddTraits(.isHeader)
             Text(ConsentWords.body)
-                .font(.mono(12)).opacity(0.6).lineSpacing(3)
+                .font(.ui(.label)).foregroundStyle(Color.text2).lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
             Button {
                 withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) { sends.toggle() }
             } label: {
-                Text(sends ? ConsentWords.hideLink : ConsentWords.sendsLink).font(.mono(12))
+                Text(sends ? ConsentWords.hideLink : ConsentWords.sendsLink).font(.ui(.label))
                     .foregroundStyle(Color.neonCyan)
                     .frame(minHeight: 44, alignment: .leading)
                     .contentShape(Rectangle())
@@ -83,7 +83,7 @@ struct ConsentCard: View {
             .accessibilityValue(sends ? "shown" : "hidden")
             if sends {
                 Text(ConsentWords.sends)
-                    .font(.mono(12)).opacity(0.6).lineSpacing(3)
+                    .font(.ui(.label)).foregroundStyle(Color.text2).lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
                     .transition(.opacity)
             }
@@ -104,9 +104,9 @@ struct ConsentCard: View {
 
     private func answer(_ word: String, _ yes: Bool) -> some View {
         Button { Analytics.shared.decide(yes) } label: {
-            Text(word).font(.mono(15, .medium))
+            Text(word).font(.ui(.button))
                 .frame(maxWidth: .infinity, minHeight: 44)
-                .overlay(Capsule().strokeBorder(Color.text.opacity(0.4), lineWidth: 1))
+                .overlay(Capsule().strokeBorder(Color.line, lineWidth: 1))
                 .contentShape(Capsule())
         }
         .buttonStyle(Sounding())
@@ -136,8 +136,8 @@ struct NeonToggle: ToggleStyle {
         var body: some View {
             ZStack(alignment: on ? .trailing : .leading) {
                 Capsule().fill(on ? Color.neonCyan.opacity(0.18) : .clear)
-                Capsule().strokeBorder(on ? Color.neonCyan : Color.text.opacity(0.4), lineWidth: 1)
-                Circle().fill(on ? Color.neonCyan : Color.text.opacity(0.5)).padding(4)
+                Capsule().strokeBorder(on ? Color.neonCyan : Color.line, lineWidth: 1)
+                Circle().fill(on ? Color.neonCyan : Color.text3).padding(4)
                     .shadow(color: on ? .neonCyan : .clear, radius: 5)
             }
             .frame(width: 50, height: 28)
@@ -147,7 +147,7 @@ struct NeonToggle: ToggleStyle {
 }
 
 /// The gear's sheet: music, sounds, haptics, the colour letters, the supporter mark once a pack is owned, the analytics
-/// switch where the build has analytics, restore, a report of a problem and the privacy policy, and the version under them, black, sized to what it holds.
+/// switch where the build has analytics, restore, a report of a problem and the privacy policy, and the version under them, on `surface`, sized to what it holds.
 struct SettingsSheet: View {
     /// The presenting window's height, which in Split View or on a folding phone's displays is not the screen's.
     let window: CGFloat
@@ -187,7 +187,7 @@ struct SettingsSheet: View {
         // Scrolls, with a large detent, only where large type outgrows the screen.
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                Text(ConsentWords.settings).font(.mono(11, .semibold)).opacity(0.5).padding(.top, 26)
+                Text(ConsentWords.settings).font(.ui(.title)).padding(.top, 26)
                     .accessibilityAddTraits(.isHeader)
                 VStack(alignment: .leading, spacing: 0) {
                     switchRow(ConsentWords.music, ConsentWords.musicDetail, $music) {
@@ -249,7 +249,7 @@ struct SettingsSheet: View {
                         .buttonStyle(Sounding())
                         .sheet(isPresented: $reading) { SafariSheet(url: SettingsSheet.policy).ignoresSafeArea() }
                 }
-                Text(SettingsSheet.version).font(.mono(11)).opacity(0.3).padding(.top, 6)
+                Text(SettingsSheet.version).font(.ui(.detail)).foregroundStyle(Color.text3).padding(.top, 6)
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 12)
@@ -261,7 +261,7 @@ struct SettingsSheet: View {
         .frame(maxHeight: .infinity, alignment: .top)
         .presentationDetents(Self.detents(content: height, window: window, room: room))
         .presentationDragIndicator(.visible)
-        .presentationBackground(Color(0x0B0C10))
+        .presentationBackground(Color.surface)
         .presentationCornerRadius(24)
     }
 
@@ -278,7 +278,7 @@ struct SettingsSheet: View {
         return Build.editors ? build + " editors" : build
     }
 
-    private var rule: some View { Rectangle().fill(Color.text.opacity(0.12)).frame(height: 1) }
+    private var rule: some View { Rectangle().fill(Color.rule).frame(height: 1) }
 
     /// A stored switch: `store` keeps the choice and acts on it, the mirror moves the knob.
     private func switchRow(_ name: String, _ detail: String, _ mirror: Binding<Bool>,
@@ -302,7 +302,7 @@ struct SettingsSheet: View {
         HStack(alignment: .center, spacing: 12) {
             row(name, detail)
             Spacer(minLength: 8)
-            Text("\u{2197}").font(.mono(15, .medium)).foregroundStyle(Color.amber)
+            Text("\u{2197}").font(.ui(.button)).foregroundStyle(Color.amber)
                 .shadow(color: .amber, radius: 4)
                 .accessibilityHidden(true)
         }
@@ -312,8 +312,8 @@ struct SettingsSheet: View {
 
     private func row(_ name: String, _ detail: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(name).font(.mono(14))
-            Text(detail).font(.mono(11)).opacity(0.4)
+            Text(name).font(.ui(.body))
+            Text(detail).font(.ui(.detail)).foregroundStyle(Color.text3)
         }
     }
 }

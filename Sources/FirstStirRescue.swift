@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's chapter 2, The Rescue: scenes 6 to 10 of the outline, from 4:45 back to 2:30 am, in rescue amber. The
@@ -24,7 +25,13 @@ enum Rescue: Int, CaseIterable, Sendable {
     static let ink = Color(0xB7CEFF)
 
     var title: String {
-        ["Home light", "Off the breakwater", "The lantern chain", "The stair", "The lighthouse door"][rawValue - 6]
+        [
+            String(localized: "Home light", comment: "First Stir scene title"),
+            String(localized: "Off the breakwater", comment: "First Stir scene title"),
+            String(localized: "The lantern chain", comment: "First Stir scene title"),
+            String(localized: "The stair", comment: "First Stir scene title"),
+            String(localized: "The lighthouse door", comment: "First Stir scene title"),
+        ][rawValue - 6]
     }
 
     var layout: Layout { [.pent, .eye, .quad, .tri, .pent][rawValue - 6] }
@@ -1142,3 +1149,4 @@ enum LighthouseDoor {
         }
     }
 }
+#endif

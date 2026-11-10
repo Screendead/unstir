@@ -23,7 +23,8 @@ if [[ ! -x "$out/lab" ]] || [[ -n "$(find "${sources[@]}" -newer "$out/lab")" ]]
   for f in FirstStirDawn FirstStirRescue FirstStirFlood; do
     awk '/^extension Level \{/{skip=1} !skip{print} skip&&/^}/{skip=0}' "Sources/$f.swift" > "$out/$f.swift"
   done
-  swiftc -O -swift-version 5 -o "$out/lab" Sources/Twist.swift "$out/SplitMix64.swift" "$out/Shim.swift" "$out/FirstStirDawn.swift" \
+  # The chapters compile only under FIRST_STIR, as Release leaves them out.
+  swiftc -O -swift-version 5 -D FIRST_STIR -o "$out/lab" Sources/Twist.swift "$out/SplitMix64.swift" "$out/Shim.swift" "$out/FirstStirDawn.swift" \
     "$out/FirstStirRescue.swift" "$out/FirstStirFlood.swift" scripts/first-stir-lab/main.swift
 fi
 "$out/lab" "$@"

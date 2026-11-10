@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's chapter 3, The Flood: scenes 11 to 15 of the outline, from 2:30 back to 12:30 am, in flood teal. The
@@ -27,7 +28,13 @@ enum Flood: Int, CaseIterable, Sendable {
     static let float = Color(0x3FE0B0)
 
     var title: String {
-        ["The breakwater path", "High street under water", "The upstairs window", "The kitchen, flooded", "Over the quay"][rawValue - 11]
+        [
+            String(localized: "The breakwater path", comment: "First Stir scene title"),
+            String(localized: "High street under water", comment: "First Stir scene title"),
+            String(localized: "The upstairs window", comment: "First Stir scene title"),
+            String(localized: "The kitchen, flooded", comment: "First Stir scene title"),
+            String(localized: "Over the quay", comment: "First Stir scene title"),
+        ][rawValue - 11]
     }
 
     var layout: Layout { [.eye, .pent, .quad, .eye, .pent][rawValue - 11] }
@@ -973,3 +980,4 @@ enum OverTheQuay {
         pen.lit(Rescue.tight) { $0.stroke(wash, Flood.sea, 0.9) }
     }
 }
+#endif

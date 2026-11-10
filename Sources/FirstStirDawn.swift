@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's chapter 1, Dawn After: scenes 1 to 5, 6:40 back to 4:45 am, in dawn pewter. Each is drawn in code in
@@ -1115,3 +1116,4 @@ extension Dawn {
         }
     }
 }
+#endif
