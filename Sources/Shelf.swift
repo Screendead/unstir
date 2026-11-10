@@ -558,15 +558,25 @@ struct PackCard: View {
                                         .fixedSize(horizontal: false, vertical: true)
                                         .accessibilityFocused($spoken, equals: .note)
                                 }
-                                status(state).id(state)
-                                    .transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
-                                action(state).padding(.top, 14)
+                                // Before the launch's first read, an owner's card would offer buy: a promoted
+                                // purchase at a cold launch can open it then.
+                                if store.ready {
+                                    status(state).id(state)
+                                        .transition(reduceMotion ? .identity : .move(edge: .leading).combined(with: .opacity))
+                                    action(state).padding(.top, 14)
+                                } else {
+                                    HStack(spacing: 8) {
+                                        PulsingDot(colour: .text)
+                                        Text("checking purchases\u{2026}").font(.ui(.headline)).foregroundStyle(Color.text2)
+                                    }
+                                    .accessibilityElement(children: .combine)
+                                }
                             }
                             // Half inside the anchor, so a scroll to it leaves a margin above the note.
                             .padding(.top, levels.isEmpty ? 0 : 16)
                             .id("buy")
                             .padding(.top, levels.isEmpty ? 0 : 16)
-                            if offer.pack != nil, state != .owned, store.canPay, let saving = store.saving,
+                            if store.ready, offer.pack != nil, state != .owned, store.canPay, let saving = store.saving,
                                Offer.shelf().contains(.complete) {
                                 completeLine(saving).padding(.top, 14)
                             }

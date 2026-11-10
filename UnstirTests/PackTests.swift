@@ -754,6 +754,20 @@ final class PackTests: XCTestCase {
         XCTAssertFalse(PackCard.lands(.unowned, .pending, ready: true))
     }
 
+    /// Until the launch's first read of the entitlements ends, a card says "checking purchases…" in place of buy, so
+    /// an owner never sees a price on a pack they own; the harness holds that read unended.
+    @MainActor func testTheHarnessCanHoldTheFirstReadUnended() {
+        let h = Harness(["UNSTIR_STORE": "lens:unowned,unread"])
+        XCTAssertTrue(h.unread)
+        XCTAssertEqual(h.purchases?.state(.lens), .unowned)
+        XCTAssertFalse(Harness(["UNSTIR_STORE": "lens:owned"]).unread)
+        let store = Store()
+        store.pretend(Ledger(), ready: false)
+        XCTAssertFalse(store.ready)
+        store.pretend(Ledger())
+        XCTAssertTrue(store.ready)
+    }
+
     @MainActor func testHarnessSetsTheCardsMessages() {
         let h = Harness(["UNSTIR_CARD": "lens", "UNSTIR_STORE": "lens:failed", "UNSTIR_FAILED": "offline",
                          "UNSTIR_PRICES": "unreachable", "UNSTIR_PAYMENTS": "0", "UNSTIR_RESTORED": "lens,prism"])

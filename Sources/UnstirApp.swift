@@ -197,6 +197,8 @@ struct Harness {
     let restored: Restored?
     /// UNSTIR_APPROVED=lens (or complete): with the store's states set, that offer's Ask to Buy approval waits to be said.
     let approved: [Offer]
+    /// UNSTIR_STORE=...,unread: with the store's states set, the launch's first read of the entitlements never ends.
+    let unread: Bool
 
     /// UNSTIR_STOPLOOK=left: what an Escapement tank lost to its last clock stopping shows (`StopLook`), stamp unset.
     let stopLook: StopLook?
@@ -317,6 +319,7 @@ struct Harness {
         case let names?: .found(Set(names.split(separator: ",").compactMap { Pack(rawValue: String($0)) }))
         }
         approved = env["UNSTIR_APPROVED"]?.split(separator: ",").compactMap { Offer(name: String($0)) } ?? []
+        unread = env["UNSTIR_STORE"]?.split(separator: ",").contains("unread") ?? false
         // UNSTIR_SEENLEVELS=lens:20: that pack's card last opened when the pack had 20 levels, for this launch only.
         for part in env["UNSTIR_SEENLEVELS"]?.split(separator: ",") ?? [] {
             let f = part.split(separator: ":")
@@ -650,7 +653,7 @@ struct RootView: View {
         Sync.shared.plays = Sync.plays(built: Sync.built, harnessed: h.harnessed, env: env)
         if let purchases = h.purchases {
             Store.shared.pretend(purchases, prices: h.prices, amounts: h.amounts, pricing: h.pricing, failure: h.failure, canPay: h.canPay,
-                                 restored: h.restored, approved: h.approved)
+                                 restored: h.restored, approved: h.approved, ready: !h.unread)
         }
         let gate = h.screen == "menu" ? nil : Store.shared.card(for: h.level)
         // The test host is a plain launch, but must open on nothing that stores.

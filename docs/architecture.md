@@ -794,8 +794,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
-  entitlements is no landing (`PackCard.lands`): an owner's card opened before `Store.ready` reads unowned, then owned,
-  without a chime or an announcement. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  entitlements is no landing (`PackCard.lands`): a card opened before `Store.ready` says "checking purchases…" (`text2`, Jack's call F14 = B) in place of its
+  status, buy and Triptych's line, so an owner never sees a price on a pack they own, then reads as owned or not,
+  without a chime or an announcement. Offline the read still ends, as the entitlements are kept on the device, and the
+  card shows its state with "App Store unreachable" where the price goes, as before. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
   card (`Store.forgetFailures`) and as a level opens, and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from the level
   before it (a locked row scrolls to buying instead). The last taste level's result card says where its next goes
@@ -1100,7 +1102,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. `UNSTIR_CLEAN=1` draws a level as its glass and picture in the bezel alone, for App Store art that may show no interface (the Today card's video): the header, title, caption and notes, controls, swatches and cards are kept in the layout but not drawn, so the tank stays where `film.sh` crops it, and nothing else over the glass is drawn (knobs, dials, dashes, counts, rings, lessons, the knurl, the brim, the stamps and the drawn fingertip), nor the status bar or home indicator; the picture still turns, winds and waves as played. `UNSTIR_ENDING=s` with `UNSTIR_SCREEN=clean` opens First Stir's last scene solved with the night forwards held s seconds in (-1 runs it). In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
   best or started flag (`Level.keepsProgress`); Prism's is tri on the fern, rod 0 red and rod 1 cyan, dealt
   `2:+3,0:+4,1:-3`, as specimen 1 is. And
-  `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` (or `lens:unshared`, revoked as a family's share) set the store's states for the launch
+  `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` (or `lens:unshared`, revoked as a family's share; `unread` holds the launch's first read of the entitlements unended, `Store.ready` false) set the store's states for the launch
   in place of StoreKit's, never stored, with the StoreKit file's prices, in dollars (none with `UNSTIR_PRICES=0`, as while they load, or `UNSTIR_PRICES=unreachable`, as after a failed fetch);
   `UNSTIR_FAILED=offline` (`storefront`, `refused`) says why a failed product failed, or a pending one's ask again, `UNSTIR_PAYMENTS=0` turns
   purchases off, and `UNSTIR_RESTORED=lens,prism` (`none`, `failed`) sets what the last restore found;
