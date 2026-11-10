@@ -372,7 +372,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the chime wait for that tick, `tickBeat` and more after the lift, and the result card follows the wave by its usual
   1.4 s (`LevelView.landSolve`, `solveDelay`; Jack's call tk-finish = B, round 16). One clock stopping while another runs loses nothing.
   A full stack refuses a move whose tick it would refuse. Undo is the pack's, the stack and the clocks as the move found
-  them, and works on a tank out of ticks; reset deals the counts afresh. The result card says "solved in N moves", as a solve always spends the budget. The header shows the budget, not moves against
+  them, and works on a tank out of ticks; reset deals the counts afresh. The result card says "clean" or "solved" over "moves N", never the ticks, as a solve always spends the budget. The header shows the budget, not moves against
   par: "ticks" and a split-flap numeral (`FlipCounter`), driven by the ticks' own keyframes, whose old digit's top half
   falls over the hinge as each clock's tick starts to turn, one flap per tick in turn; Reduce Motion swaps without the
   fall; it goes vermilion at 00 and stays up over the card. The view draws

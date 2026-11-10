@@ -504,7 +504,7 @@ struct MenuView: View {
                 .accessibilityLabel("Settings")
             }
             .padding(.leading, 20).padding(.trailing, 10).padding(.top, 16)
-            // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
+            // The strip keeps the picked chip in view itself, so a sideways drag on it is the switcher's, as on the list.
             // 16 under the title to the chips as drawn: each stands 4 inside its 44 pt target.
             tiers.padding(.top, 12).scrollDisabled(true).simultaneousGesture(swipe)
             ScrollViewReader { proxy in
