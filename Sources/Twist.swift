@@ -24,7 +24,7 @@ struct Channels: OptionSet, Hashable, Sendable {
 
     /// One of r, g, b, c, m, y or w, either case.
     init?(letter: Character) {
-        guard let found = Self.letters.first(where: { $0.0 == Character(letter.lowercased()) }) else { return nil }
+        guard let found = Self.letters.first(where: { $0.0 == Character(letter.lowercased()) }) else { return nil } // loc: verbatim a mask letter parsed, never shown
         self = found.1
     }
 

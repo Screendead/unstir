@@ -5,13 +5,14 @@
 # With an order (comma-separated problem numbers, e.g. 25,26,27,28,30,29), only those, in one row, as
 # shots/escapement-order-<order>.png.
 import os
+import re
 import sys
 from PIL import Image, ImageDraw, ImageFont
 
 os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 rows = [line.rstrip("\n").split("\t") for line in open("scripts/escapement/problems.tsv")]
-pars = {int(n): p for n, p in [line.split() for line in os.popen(
-    "grep -oE 'problem\\([0-9]+, .*par: [0-9]+' Sources/Pack.swift | sed -E 's/problem\\(([0-9]+),.*par: ([0-9]+)/\\1 \\2/'")]}
+# A problem's row wraps, its par lines below its number.
+pars = {int(n): p for n, p in re.findall(r"problem\((\d+),.*?par: (\d+)", open("Sources/Pack.swift").read(), re.S)}
 chapters = ["The Clock", "The Waiting Move", "Two Clocks", "Wound Back", "Grand Complication"]
 cell, gap, head, foot = 420, 14, 56, 64
 font = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 26)

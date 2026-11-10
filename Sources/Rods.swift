@@ -52,7 +52,7 @@ struct RodView: View {
         .overlay(alignment: .bottom) {
             // Upright, off the turning cap.
             if letters, let channels {
-                Text(channels.letters).font(.game(9, .semibold)).foregroundStyle(.white)
+                Text(verbatim: channels.letters).font(.game(9, .semibold)).foregroundStyle(.white)
                     .padding(.horizontal, 3).background(Capsule().fill(Color.black.opacity(0.75)))
                     .fixedSize().offset(y: 12).accessibilityHidden(true)
             }

@@ -49,12 +49,16 @@ enum Share {
         let name = (number(day, from: firstDay).map { "Unstir #\($0)" }
             ?? String(format: "Unstir %04d-%02d-%02d", day / 10000, day / 100 % 100, day % 100))
             + (supporter ? " \(Self.supporter)" : "")
+        // The words follow the device (Jack's call CAT5 = A); the name and the grid never change.
         var head = [name]
-        if !firstTry { head.append("practice") }
-        head.append("\(moves) \(moves == 1 ? "move" : "moves") (par \(par))")
-        if clean { head.append("clean") }
-        if undos > 0 { head.append("\(undos) \(undos == 1 ? "undo" : "undos")") }
-        if resets > 0 { head.append("\(resets) \(resets == 1 ? "reset" : "resets")") }
+        if !firstTry { head.append(String(localized: "practice",
+                                          comment: "Share line: a daily played after its first try")) }
+        let moved = String(localized: "\(moves) moves", comment: "Moves played")
+        head.append(String(localized: "\(moved) (par \(par))",
+                           comment: "Share line: moves played, then the daily's par"))
+        if clean { head.append(String(localized: "clean", comment: "Share line: solved with nothing wasted")) }
+        if undos > 0 { head.append(String(localized: "\(undos) undos", comment: "Share line: undos taken")) }
+        if resets > 0 { head.append(String(localized: "\(resets) resets", comment: "Share line: resets taken")) }
         var lines = [head.joined(separator: " \u{00B7} ")]
         lines += stride(from: 0, to: marks.count, by: 10).map { marks[$0..<min($0 + 10, marks.count)].map(\.glyph).joined() }
         if !url.isEmpty { lines.append(url) }
