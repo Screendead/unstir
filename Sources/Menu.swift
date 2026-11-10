@@ -500,7 +500,7 @@ struct MenuView: View {
                     Image(systemName: "gearshape").font(.system(.body, weight: .light)).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .frame(width: 44, height: 44).contentShape(Rectangle())
                 }
-                .buttonStyle(Sounding()).opacity(0.5)
+                .buttonStyle(Sounding()).foregroundStyle(Color.text2)
                 .accessibilityLabel("Settings")
             }
             .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
@@ -601,8 +601,8 @@ struct MenuView: View {
                 }
             if lead.sandbox {
                 HStack(spacing: 10) {
-                    Text("anything goes").font(.ui(.detail, .semibold)).opacity(0.55)
-                    Rectangle().frame(height: 1).opacity(0.2)
+                    Text("anything goes").font(.ui(.detail, .semibold)).foregroundStyle(Color.text2)
+                    Rectangle().fill(Color.rule).frame(height: 1)
                 }
                 .padding(.top, 22).padding(.bottom, 8)
                 sandbox
@@ -618,9 +618,9 @@ struct MenuView: View {
         if let next = lead.next {
             Button { pick(next) } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text("next: ").opacity(0.55)
+                    Text("next: ").foregroundStyle(Color.text3)
                     Text(next.label).fontWeight(.semibold).foregroundStyle(next.colour).shadow(color: next.colour, radius: 4)
-                    Text(" \u{00B7} \(next.title) \u{203A}").opacity(0.8)
+                    Text(" \u{00B7} \(next.title) \u{203A}").foregroundStyle(Color.text2)
                 }
                 .font(.ui(.label)).lineLimit(1).hit()
             }
@@ -766,7 +766,7 @@ struct MenuView: View {
                 HStack(alignment: .top, spacing: 0) {
                     ForEach(Tier.allCases, id: \.self) { t in
                         if t != Tier.allCases.first {
-                            Text("\u{00B7}").font(.ui(.chip)).opacity(0.3).padding(.horizontal, 7).frame(height: 36)
+                            Text("\u{00B7}").font(.ui(.chip)).foregroundStyle(Color.text4).padding(.horizontal, 7).frame(height: 36)
                         }
                         // Silent itself: `go` sounds a switch as it starts, however it starts.
                         Button { select(t) } label: { name(t) }
@@ -805,11 +805,11 @@ struct MenuView: View {
             HStack(spacing: 5) {
                 Text(t.rawValue).font(.ui(.chip, isPicked ? .semibold : .regular))
                     .foregroundStyle(isPicked ? AnyShapeStyle(t.sweep)
-                                              : AnyShapeStyle(Color.text.opacity(open ? 0.6 : 0.36)))
+                                              : AnyShapeStyle(open ? Color.text2 : Color.text4))
                     .shadow(color: isPicked ? t.glow.opacity(0.8) : .clear, radius: 7)
                 if !open {
                     Image(systemName: "lock.fill").font(.ui(.detail, .semibold)).imageScale(.small)
-                        .foregroundStyle(isPicked ? t.glow : Color.text.opacity(0.36))
+                        .foregroundStyle(isPicked ? t.ink : Color.text4)
                 }
             }
             .frame(height: 36)
@@ -998,7 +998,7 @@ struct MenuView: View {
             saved = nil
             pick(.endless(Run(seed: .random(in: .min ... .max))), anew: true)
         } label: {
-            Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.ui(.detail)).lineLimit(1).opacity(0.55).hit()
+            Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.ui(.detail)).lineLimit(1).foregroundStyle(Color.text3).hit()
         }
         .buttonStyle(.plain)
         .accessibilityLabel(newRunArmed == nil ? "New run" : "New run, tap again to confirm")
@@ -1109,7 +1109,7 @@ private struct TierList: View, Equatable {
         return HStack(spacing: 10) {
             Text(tier.rawValue).font(.ui(.detail, .semibold)).foregroundStyle(tier.sweep).fixedSize()
             Rectangle().fill(tier.sweep).frame(height: 1).opacity(0.8)
-            Text(open ? "\(par.filter { $0 }.count)/\(par.count) at par" : "locked").font(.ui(.detail)).opacity(0.4)
+            Text(open ? "\(par.filter { $0 }.count)/\(par.count) at par" : "locked").font(.ui(.detail)).foregroundStyle(Color.text3)
         }
         .padding(.top, 14).padding(.bottom, 8)
         .id(Self.heading)
@@ -1125,7 +1125,7 @@ private struct TierList: View, Equatable {
                 Spacer(minLength: 0)
                 Text("\(lit)/\(par.count)").font(.ui(.label, .semibold))
             }
-            .foregroundStyle(tier.glow)
+            .foregroundStyle(tier.ink)
             .shadow(color: tier.glow.opacity(0.5), radius: 5)
             HStack(spacing: 0) {
                 ForEach(Array(zip(below.levels, par).enumerated()), id: \.offset) { i, tick in
@@ -1146,7 +1146,7 @@ private struct TierList: View, Equatable {
         let runs = below.short(), levels = below.levels
         if !runs.isEmpty {
             Flow {
-                Text("short:").font(.ui(.label)).opacity(0.45).frame(minHeight: 36).padding(.trailing, 2)
+                Text("short:").font(.ui(.label)).foregroundStyle(Color.text3).frame(minHeight: 36).padding(.trailing, 2)
                 ForEach(Array(runs.enumerated()), id: \.offset) { i, run in
                     let first = levels[run.lowerBound], last = levels[run.upperBound]
                     // One view with the dot after it, so a wrapped line never starts on a dot.
@@ -1162,7 +1162,7 @@ private struct TierList: View, Equatable {
                                             : "\(below.rawValue) \(first.label) to \(last.label), short of par")
                         .accessibilityHint("Opens \(below.rawValue) \(first.label)")
                         if i < runs.count - 1 {
-                            Text("\u{00B7}").font(.ui(.label)).opacity(0.3).frame(minHeight: 36).accessibilityHidden(true)
+                            Text("\u{00B7}").font(.ui(.label)).foregroundStyle(Color.text4).frame(minHeight: 36).accessibilityHidden(true)
                         }
                     }
                 }
@@ -1222,7 +1222,7 @@ private struct LevelRow: View {
                     .shadow(color: enabled ? level.colour : .clear, radius: 4).opacity(enabled ? 1 : 0.7)
                     .frame(width: large ? nil : numberWidth, alignment: .leading)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(level.title).font(.ui(.body)).multilineTextAlignment(.leading).opacity(enabled ? 1 : 0.38)
+                    Text(level.title).font(.ui(.body)).multilineTextAlignment(.leading).foregroundStyle(enabled ? Color.text : Color.text3)
                     if saying, let opens {
                         Text(opens).font(.ui(.detail)).foregroundStyle(level.colour).transition(.opacity)
                     } else if playing {
@@ -1232,7 +1232,7 @@ private struct LevelRow: View {
                     } else {
                         Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.ui(.detail))
                             // A locked row's own detail is its reason, as on the daily, so it stays readable.
-                            .opacity(enabled || detail != nil ? 0.32 : 0.12).transition(.opacity)
+                            .foregroundStyle(enabled ? Color.text2 : detail != nil ? Color.text3 : Color.text4).transition(.opacity)
                     }
                     if large { mark(result, tried: tried) }
                 }
@@ -1271,18 +1271,13 @@ private struct LevelRow: View {
     private func mark(_ result: Best?, tried: Bool) -> some View {
         Group {
             if let best {
-                best.opacity(0.55)
-            } else if let result, result.clean == true {
-                Text("clean").fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-            } else if let result, result.over == 0 {
-                Text("par").foregroundStyle(Color.amber)
-            } else if let result {
-                Text("+\(result.over)").foregroundStyle(Color.magenta)
-            } else if new {
-                // Plain white, unlike every result's colour.
-                Text("new").opacity(0.8)
-            } else if tried {
-                Text("tried").opacity(0.4)
+                best.foregroundStyle(Color.text3)
+            } else if !enabled {
+                Image(systemName: "lock.fill").imageScale(.small).foregroundStyle(Color.text4)
+            } else if new, result == nil {
+                Text("new").foregroundStyle(Color.text2)
+            } else if let filled = ResultMarks.filled(Archive.Mark(result, started: tried)) {
+                ResultMarks(filled: filled)
             }
         }
         .font(.ui(.detail))
