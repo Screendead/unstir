@@ -89,6 +89,15 @@ Claude is the implementer under Jack's supervision and also the project's adviso
 hard if needed, whenever an idea of his looks wrong. Say so plainly, give the reasons, and propose something better.
 Once Jack has heard the argument and still decides, carry out his decision.
 
+## Calls for Jack
+
+A call goes to Jack as a pitch he can pick from, with the options built and shown. Each wave of calls gets a new
+Artifact page: never add calls to a page he has already been sent; carry an unanswered call over written out in
+full, and leave answered ones off. Write every call so it stands alone, for a busy, technical reader who has read
+none of the repo's notes: no call ids, pick codes, round numbers or branch names, and no pointing at `HANDOFF.md`,
+`docs/decisions.md` or a design doc, which are Claude's working files. What he needs from them goes in the call:
+what exists today, what would change on screen, why it is asked now, each option's cost, and what waits on it.
+
 ## Commands
 
 `project.yml` is the source of truth for the Xcode project; the scripts run `xcodegen generate` before building, so
