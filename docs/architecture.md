@@ -588,8 +588,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   count, the note, a card's facts, a row's number), `detail` 13 (a row's detail, keys, section headers, small print)
   and `eyebrow` 12, so nothing that carries meaning is under 13 and every screen follows Settings › Text Size. The play
   screen caps at `PlayLayout.typeCap` (xxxLarge), as the dock does, since the tank needs its room; the menu, cards,
-  archive, settings and consent scale to the accessibility sizes, where a menu row's result goes under its title. The
-  gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
+  archive, settings and consent scale to the accessibility sizes, where a menu row's result goes under its title.
+  A result or lost card taller than the column leaves under the caption (plughole 27's fullest at xxxLarge on a Pro
+  Max) steps its own type down a size at a time, never below the default, until it fits (`LevelView.card`), so the
+  glass keeps the size it was played at; one still too tall, as the fullest is on the shortest phones at the default
+  size, scrolls. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
   default size, as the title's 18 pt gap holds no more and the way out names the pack; and the menu hands its type size
   to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
   `TypeRole.line` gives a role's line height as `Text` lays it out (a text style's font, whose leading grows faster than

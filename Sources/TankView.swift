@@ -200,6 +200,9 @@ struct LevelView: View {
     @State private var touchStart: CGPoint?
     /// How far the result or lost card reaches below the caption's top, which `PlayStack` makes room for.
     @State private var cardReach: CGFloat = 0
+    /// The card's top in the window, and the type size it has stepped down to where it stood too tall for the column.
+    @State private var cardTop: CGFloat?
+    @State private var cardType: DynamicTypeSize?
     /// The play layout last laid out, so a change of pose glides from it and lets go of what the fingers hold.
     @State private var pose: PlayLayout?
     /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
@@ -634,7 +637,7 @@ struct LevelView: View {
 
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
     /// is an overlay, so the solved tank stays exactly where it was played.
-    private func caption(_ layout: PlayLayout) -> some View {
+    private func caption(_ layout: PlayLayout, foot: CGFloat) -> some View {
         Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
              : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
              : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
@@ -657,27 +660,46 @@ struct LevelView: View {
             .padding(.top, 14)
             .accessibilityHidden(showResult || ending)
             .modifier(SkipButton(on: demoing || shown != nil) { skip() })
-            .overlay(alignment: .top) { if showResult { card(layout) } }
+            .overlay(alignment: .top) { if showResult { card(layout, foot: foot) } }
             .modifier(Unseen(clean))
     }
 
     /// The result or lost card under the caption; in the split, over the menu in the trailing half, centred on the tank
     /// and headed by "unstirred.", as the half round the tank has no room for either. One place in the tree in every
     /// pose, so a change of pose moves the card rather than showing it again.
-    private func card(_ layout: PlayLayout) -> some View {
+    ///
+    /// The column has what is left under the caption, down to `foot`, the safe area's in the window. A card taller than
+    /// that, the fullest at a large Text Size, steps its type down a size at a time, never below the default, so the
+    /// glass keeps its size; one still too tall, on the shortest phones, scrolls.
+    private func card(_ layout: PlayLayout, foot: CGFloat) -> some View {
         let over = layout.kind == .split ? layout.menuPane : nil
-        return VStack(spacing: 0) {
-            if over != nil && game.solved && !clean { unstirred.padding(.bottom, 26) }
-            if game.lost {
-                LostCard(game: game, notice: notice, undo: undo, again: reset)
-            } else {
-                ResultCard(game: game, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
-                    .fixedSize(horizontal: false, vertical: true)
+        let room = layout.kind == .column ? cardTop.map { foot - $0 } : nil
+        let fits = room.map { cardReach <= $0 + 0.5 } ?? true
+        return ScrollView {
+            VStack(spacing: 0) {
+                if over != nil && game.solved && !clean { unstirred.padding(.bottom, 26) }
+                if game.lost {
+                    LostCard(game: game, notice: notice, undo: undo, again: reset)
+                } else {
+                    ResultCard(game: game, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
+            .padding(.top, over == nil ? 14 : 0)
+            .frame(maxWidth: .infinity)
+            .dynamicTypeSize(...(cardType ?? playType))
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
         }
-        .padding(.top, over == nil ? 14 : 0)
-        .frame(width: over?.width)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
+        .scrollBounceBehavior(.basedOnSize)
+        // A card that fits draws its buttons' glow past its own edges.
+        .scrollClipDisabled(fits)
+        .frame(width: over?.width, height: fits ? cardReach : room)
+        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { cardTop = $0 }
+        .onChange(of: [cardReach, room ?? .infinity], initial: true) {
+            let type = cardType ?? playType
+            if !fits, type > .large, let i = DynamicTypeSize.allCases.firstIndex(of: type) { cardType = DynamicTypeSize.allCases[i - 1] }
+        }
+        .onDisappear { cardType = nil }
         .offset(over.map { pane in
             // From the caption's place, under the stage and its ring; a card taller than the pane starts at its top.
             let top = max(pane.minY, min(layout.stage.midY - cardReach / 2, pane.maxY - cardReach))
@@ -767,7 +789,7 @@ struct LevelView: View {
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
                     .modifier(PlayPart.stage(read: 3))
-                caption(layout)
+                caption(layout, foot: geo.frame(in: .global).maxY)
                     // The card hangs from the caption unmeasured, over the controls it hides. In the tabletop the stack
                     // must make room for it, or it runs into "unstirred."; the split's goes over the menu.
                     .frame(minHeight: layout.kind == .tabletop && showResult ? cardReach : nil, alignment: .top)
