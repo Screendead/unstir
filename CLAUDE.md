@@ -89,6 +89,15 @@ Claude is the implementer under Jack's supervision and also the project's adviso
 hard if needed, whenever an idea of his looks wrong. Say so plainly, give the reasons, and propose something better.
 Once Jack has heard the argument and still decides, carry out his decision.
 
+## Calls for Jack
+
+A call goes to Jack as a pitch he can pick from, with the options built and shown. Each wave of calls gets a new
+Artifact page: never add calls to a page he has already been sent; carry an unanswered call over written out in
+full, and leave answered ones off. Write every call so it stands alone, for a busy, technical reader who has read
+none of the repo's notes: no call ids, pick codes, round numbers or branch names, and no pointing at `HANDOFF.md`,
+`docs/decisions.md` or a design doc, which are Claude's working files. What he needs from them goes in the call:
+what exists today, what would change on screen, why it is asked now, each option's cost, and what waits on it.
+
 ## Commands
 
 `project.yml` is the source of truth for the Xcode project; the scripts run `xcodegen generate` before building, so
@@ -231,6 +240,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (2026-10-26) with his answers marked under its open points. `scripts/first-stir-compositions.py` draws plans of three of its scenes (each rod's disc and core,
   the part of a core another disc reaches, where each vignette sits) to `shots/first-stir-composition-*.png` (needs
   Pillow).
+- Strings: `scripts/loc-lint.sh` lists player text that escapes the String Catalog against its baseline
+  (`CatalogTests` runs it too; `--write` rewrites the baseline); `scripts/catalog.py plural` writes a plural key's
+  English forms into `Sources/Localizable.xcstrings`, which no command-line build does, and `fixed` marks keys
+  do-not-translate (`docs/architecture.md`).
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - GPU bench: `scripts/gpu-bench.sh [sim]` launches the app with `UNSTIR_GPUBENCH=1` (`GPUBench.swift`), which runs
   Unstir.metal's own shader bodies (`benchUnstir`, over `unstirBody` and `unstirChannelsBody`, the templates the
@@ -249,6 +262,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   frames say nothing of a phone's GPU. `scripts/duo-feel.sh [--sim udid] [drags] [budgets...]` does the same for the
   deepest levels, each dealt and at 36, at each budget pinned (42 and the Duo upright's 23 unset), on the device's own
   glass; its header says what the display link can't see. Both launch through `scripts/harness.sh`.
+- TestFlight play: `tools/tf-poll.py [--report|--dry-run|--force|--app-id <bundle id>]` polls App Store Connect's
+  sessions per tester into a CSV outside the repo, the raw responses beside it, and prints day-2 return (Jack's call
+  TFREAD = D); a date keeps its first poll unless `--force`. Setup, the two-day check and the survey draft are in
+  `docs/testflight.md`. `python3 tools/tf-poll-test.py` checks it without a key.
 - Device log: `scripts/pull-log.sh [--sim] [dest]` copies `Library/unstir-log.txt`, the flight recorder written by `Log.write`.
   Each touch logs what it holds and where it landed, and each drag one line when it ends: its path in tank units from
   the landing to the lift, with ms since the drag was taken up (usually the landing), thinned by `Trail` (a twist logs

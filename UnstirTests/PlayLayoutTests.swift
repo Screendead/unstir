@@ -45,8 +45,8 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(menu.width, PlayLayout.minPane)
         // The glass and its rim fit the pane, short of the size past which the four-tap limit shrinks.
         XCTAssertLessThanOrEqual(l.side * PlayLayout.rim, l.tankPane.width)
-        XCTAssertLessThanOrEqual(l.chrome.above + PlayStack.gap + l.side * PlayLayout.rim + l.chrome.below, l.tankPane.height)
-        XCTAssertEqual(l.side, 424, accuracy: 1)
+        XCTAssertLessThanOrEqual(l.chrome.above + PlayStack.gap + l.side * PlayLayout.rim + l.chrome.below, l.tankPane.height + 0.001)
+        XCTAssertEqual(l.side, 417, accuracy: 1)
         XCTAssertLessThanOrEqual(l.side * 3, Tank.fourTapsKept)
         XCTAssertEqual(Tank.fourTaps(pixels: l.side * 3), Tank.fourTaps)
     }
@@ -134,7 +134,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertTrue(Unstirred.drawsFourTaps(work: Unstirred.committedWork(stack: thirty, masks: [:], fill: 0, held: 0), budget: 30))
         XCTAssertFalse(Unstirred.drawsFourTaps(work: Unstirred.committedWork(stack: thirty + [Twist(rod: 0, steps: 1)], masks: [:], fill: 0, held: 1),
                                                budget: 30))
-        // Prism: a white entry costs three, and two for a tap's samples.
+        // Prism: a white entry costs three, and three over the stack.
         let level = Level.prism[0]
         XCTAssertEqual(Unstirred.committedWork(stack: level.scramble, masks: level.masks, fill: 0),
                        Unstirred.channelCost(level.scramble.map { Float((level.masks[$0.rod] ?? .white).rawValue) }))
@@ -171,7 +171,8 @@ final class PlayLayoutTests: XCTestCase {
                               scale: 3)
         XCTAssertEqual(l.kind, .split)
         XCTAssertEqual(l.tankPane.width, 951 / 2 - 2 * PlayLayout.margin, accuracy: 0.001)
-        XCTAssertEqual(l.side, 443.5 / PlayLayout.rim, accuracy: 0.001)
+        let c = PlayLayout.Chrome()
+        XCTAssertEqual(l.side, (624 - c.above - c.below - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
     }
 
     // The folds below are in window points, 19 pt across (assumed: no Duo simulator reports one headlessly), as the
@@ -265,24 +266,31 @@ final class PlayLayoutTests: XCTestCase {
             layout(window: open.window, insets: open.insets, halo: PlayLayout.Halo(level),
                    chrome: PlayLayout.Chrome(level, swatches: swatches)).side
         }
-        // Stage 1's glass, the width of the leading half: every tier's level, Lens's, and Prism's read by colour.
+        // Stage 1's glass, as tall as the chrome leaves the leading half: every tier's level, Lens's, and Prism's read by
+        // colour.
+        let plain = PlayLayout.Chrome()
         let stage1 = layout(window: open.window, insets: open.insets).side
-        XCTAssertEqual(stage1, 443.5 / PlayLayout.rim, accuracy: 0.001)
+        XCTAssertEqual(stage1, (624 - plain.above - plain.below - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
+        XCTAssertEqual(stage1, 417, accuracy: 1)
         for level in [Level.plughole[10], Level.whirlpool[0], Level.vortex[0], Level.lens[0], Level.prism[0],
                       Level.daily(.now), Level.plughole[0]] {
             XCTAssertEqual(side(level), stage1, accuracy: 0.001, level.id)
         }
-        // Escapement's taller header and two lines of serif: 9 pt less.
-        XCTAssertEqual(side(Level.escapement[0]), (624 - 70 - 108 - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
-        XCTAssertEqual(stage1 - side(Level.escapement[0]), 9, accuracy: 1)
-        // Maelstrom's rim lesson over twelve, under the title: 5 pt less.
-        XCTAssertEqual(side(Level.maelstrom[0]), (624 - 60 - 106 - RimLesson.overRim) / PlayLayout.rim, accuracy: 0.001)
-        XCTAssertEqual(stage1 - side(Level.maelstrom[0]), 5, accuracy: 1)
-        // Prism read by its letters, the swatches under the caption: 30 pt less.
-        XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - 60 - 140 - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
-        XCTAssertEqual(stage1 - side(Level.prism[0], swatches: true), 30, accuracy: 1)
-        // Endless keeps stage 3's, held by the brim's width.
-        XCTAssertEqual(side(Level.endless(Run(seed: 7))), 348, accuracy: 1)
+        // Escapement's taller header and two lines of serif: 5 pt less.
+        let escapement = PlayLayout.Chrome(Level.escapement[0], swatches: false)
+        XCTAssertEqual(side(Level.escapement[0]), (624 - escapement.above - escapement.below - PlayStack.gap) / PlayLayout.rim,
+                       accuracy: 0.001)
+        XCTAssertEqual(stage1 - side(Level.escapement[0]), 5, accuracy: 1)
+        // Maelstrom's rim lesson over twelve, under the title: 8 pt less.
+        XCTAssertEqual(side(Level.maelstrom[0]), (624 - plain.above - plain.below - RimLesson.overRim) / PlayLayout.rim,
+                       accuracy: 0.001)
+        XCTAssertEqual(stage1 - side(Level.maelstrom[0]), 8, accuracy: 1)
+        // Prism read by its letters, the swatches under the caption: 33 pt less.
+        XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - plain.above - plain.below - 34 - PlayStack.gap) / PlayLayout.rim,
+                       accuracy: 0.001)
+        XCTAssertEqual(stage1 - side(Level.prism[0], swatches: true), 33, accuracy: 1)
+        // Endless's brim reaches round the glass.
+        XCTAssertEqual(side(Level.endless(Run(seed: 7))), 342, accuracy: 1)
         // Every level of a tier or a pack takes one glass, so the tank keeps its size as the list beside it is played on.
         for list in Tier.allCases.map(\.levels) + Pack.allCases.map(\.levels) {
             for swatches in [false, true] {
@@ -294,8 +302,16 @@ final class PlayLayoutTests: XCTestCase {
     @MainActor func testEveryCaptionFitsTheChromesTwoLinesBesideTheMenu() {
         // The caption's room under the tank holds two lines at the open Duo's half: the note, or what stands in for it.
         let width = layout(window: open.window, insets: open.insets).tankPane.width
-        let mono = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
-        let serif = UIFont.systemFont(ofSize: 15).fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: 15) }!
+        XCTAssertEqual(TypeRole.label.points(at: .large), 15, "the label role")
+        for type in [DynamicTypeSize.large, .xxxLarge] {
+            captions(fit: width, type: type)
+        }
+    }
+
+    @MainActor private func captions(fit width: CGFloat, type: DynamicTypeSize, file: StaticString = #filePath, line: UInt = #line) {
+        let size = TypeRole.label.points(at: type)
+        let mono = UIFont.monospacedSystemFont(ofSize: size, weight: .regular)
+        let serif = UIFont.systemFont(ofSize: size).fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: size) }!
         func lines(_ text: String, _ font: UIFont) -> Int {
             let h = (text as NSString).boundingRect(with: CGSize(width: width, height: .greatestFiniteMagnitude),
                                                     options: [.usesLineFragmentOrigin], attributes: [.font: font], context: nil).height
@@ -303,21 +319,21 @@ final class PlayLayoutTests: XCTestCase {
         }
         let levels = Tier.allCases.flatMap(\.levels) + Pack.allCases.flatMap(\.levels) + [Level.daily(.now), Level.endless(Run(seed: 7))]
         for level in levels {
-            XCTAssertLessThanOrEqual(lines(level.note, level.page.paper ? serif : mono), 2, level.id)
+            XCTAssertLessThanOrEqual(lines(level.note, level.page.paper ? serif : mono), 2, "\(level.id) at \(type)", file: file, line: line)
         }
         for text in [LevelView.refills, "Practice: this day's best was set on its day.", "Practice: only the first try counts.",
                      "watch the stir \u{00B7} tap to skip", "the tank is full: undo or reset"] {
-            XCTAssertLessThanOrEqual(lines(text, mono), 2, text)
+            XCTAssertLessThanOrEqual(lines(text, mono), 2, "\(text) at \(type)", file: file, line: line)
         }
         for bank in [0, 1] {
             let words = Game(level: Level.escapement[1], bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
-            XCTAssertLessThanOrEqual(lines(words, serif), 2, words)
+            XCTAssertLessThanOrEqual(lines(words, serif), 2, "\(words) at \(type)", file: file, line: line)
         }
     }
 
     /// Lays `harness`'s level out in the open Duo's window beside the menu, as `UNSTIR_FRAME` does, and returns what its
     /// chrome measures round the tank.
-    @MainActor private func measuredChrome(_ harness: Harness) -> PlayLayout.Chrome? {
+    @MainActor private func measuredChrome(_ harness: Harness, type: DynamicTypeSize = .large) -> PlayLayout.Chrome? {
         // Written by the layout pass, on the main thread, and read here after it.
         final class Box: @unchecked Sendable { var chrome: PlayLayout.Chrome? }
         let box = Box()
@@ -327,6 +343,7 @@ final class PlayLayoutTests: XCTestCase {
         let level = LevelView(level: harness.level, harness: harness, onExit: { _ in }, onNext: { _ in }, onLook: { _ in },
                               onOffer: { _ in }, besideMenu: true)
             .environment(\.chromeMeasured) { box.chrome = $0 }
+            .dynamicTypeSize(type)
         let host = UIHostingController(rootView: HarnessWindow(HarnessWindow.Spec(poses: [pose], then: nil), content: level))
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
         let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
@@ -346,14 +363,35 @@ final class PlayLayoutTests: XCTestCase {
                                 (["UNSTIR_PACK": "escapement", "UNSTIR_LEVEL": "2", "UNSTIR_OWNED": "escapement", "UNSTIR_CLOCK": "1"], false),
                                 (["UNSTIR_PACK": "prism", "UNSTIR_LEVEL": "1", "UNSTIR_OWNED": "prism", "UNSTIR_LETTERS": "1",
                                   "UNSTIR_CLOCK": "1"], true)] {
-            let harness = Harness(env)
-            let budget = PlayLayout.Chrome(harness.level, swatches: swatches)
-            let got = try! XCTUnwrap(measuredChrome(harness), "\(harness.level.id): laid out beside the menu")
-            XCTAssertEqual(got.above, budget.above, accuracy: 1, harness.level.id)
-            // Escapement's note may show one line of its two, or "tap to skip" over the demonstration.
-            XCTAssertLessThanOrEqual(got.below, budget.below + 0.5, harness.level.id)
-            XCTAssertGreaterThanOrEqual(got.below, budget.below - 2.5, harness.level.id)
+            // The largest size plays capped, as xxxLarge does.
+            for type in [DynamicTypeSize.large, .xxxLarge, .accessibility5] {
+                let harness = Harness(env), what = "\(harness.level.id) at \(type)"
+                let budget = PlayLayout.Chrome(harness.level, swatches: swatches, type: type)
+                let got = try! XCTUnwrap(measuredChrome(harness, type: type), "\(what): laid out beside the menu")
+                XCTAssertEqual(got.above, budget.above, accuracy: 1, what)
+                // Escapement's note may show one line of its two, or "tap to skip" over the demonstration.
+                XCTAssertLessThanOrEqual(got.below, budget.below + 1, what)
+                XCTAssertGreaterThanOrEqual(got.below, budget.below - 2.5, what)
+            }
         }
+    }
+
+    func testTheChromeGrowsWithTheTypeSizeUpToItsCap() {
+        let plain = PlayLayout.Chrome(), large = PlayLayout.Chrome(type: .xxxLarge)
+        XCTAssertGreaterThan(large.above, plain.above)
+        XCTAssertGreaterThan(large.below, plain.below)
+        XCTAssertLessThan(PlayLayout.Chrome(type: .small).below, plain.below)
+        XCTAssertEqual(PlayLayout.Chrome(type: .accessibility5), large, "play caps its type at xxxLarge")
+        // The column keeps today's room at the default size, and as much more as the chrome grows.
+        XCTAssertEqual(PlayLayout.reserve(.large), 290, accuracy: 0.001)
+        XCTAssertEqual(PlayLayout.reserve(.xxxLarge), 290 + large.above + large.below - plain.above - plain.below, accuracy: 0.001)
+        XCTAssertEqual(PlayLayout.reserve(.accessibility5), PlayLayout.reserve(.xxxLarge))
+        // An SE's glass gives way to large type rather than the chrome running off the screen.
+        let se = (content: CGSize(width: 343, height: 647), window: CGSize(width: 375, height: 667))
+        let side = { (type: DynamicTypeSize) in PlayLayout.of(content: se.content, window: se.window, type: type, scale: 2).side }
+        XCTAssertEqual(side(.large), 343 / PlayLayout.rim, accuracy: 0.001, "width-bound, as today")
+        XCTAssertEqual(side(.xxxLarge), (647 - PlayLayout.reserve(.xxxLarge)) / PlayLayout.rim, accuracy: 0.001)
+        XCTAssertLessThan(side(.xxxLarge), side(.large))
     }
 
     // Stage 3: what each level draws round its glass, kept inside the tank's pane.
@@ -393,15 +431,14 @@ final class PlayLayoutTests: XCTestCase {
             let l = layout(window: open.window, insets: open.insets, fold: fold, halo: halo)
             XCTAssertEqual(l.kind, .split, pose)
             inside(reach(l), l.tankPane, pose)
-            XCTAssertEqual(reach(l).width, l.tankPane.width, accuracy: 0.001, "\(pose): as large as the brim allows")
         }
         let t = layout(window: CGSize(width: 669, height: 951), insets: (59, 0, 34, 0), fold: table, halo: halo)
         XCTAssertEqual(t.kind, .tabletop)
         inside(reach(t), t.tankPane, "tabletop")
         XCTAssertEqual(reach(t).height, t.tankPane.height, accuracy: 0.001)
         // Smaller than every other level's glass in the same pose, by the brim's reach.
-        XCTAssertEqual(layout(window: open.window, insets: open.insets).side, 424, accuracy: 1)
-        XCTAssertEqual(layout(window: open.window, insets: open.insets, halo: halo).side, 348, accuracy: 1)
+        XCTAssertEqual(layout(window: open.window, insets: open.insets).side, 417, accuracy: 1)
+        XCTAssertEqual(layout(window: open.window, insets: open.insets, halo: halo).side, 342, accuracy: 1)
         XCTAssertEqual(t.side, 326, accuracy: 1)
     }
 
@@ -412,9 +449,9 @@ final class PlayLayoutTests: XCTestCase {
         inside(reach(l), l.tankPane, "tabletop")
         XCTAssertEqual(l.stage.maxY, l.tankPane.maxY, accuracy: 0.001, "sat on the pane's foot")
         XCTAssertEqual(l.stage.minY - l.tankPane.minY, halo.above, accuracy: 0.001, "the lesson's room above, no more")
-        // The split's lesson lies between the title and the glass, held by the folded half's width there.
+        // The split's lesson lies between the title and the glass, which gives it the room over the column's gap.
         let split = layout(window: open.window, insets: open.insets, fold: book, halo: halo)
-        XCTAssertEqual(split.side, layout(window: open.window, insets: open.insets, fold: book).side)
+        XCTAssertLessThanOrEqual(split.side, layout(window: open.window, insets: open.insets, fold: book).side)
         inside(reach(split), split.tankPane, "book")
         for l in [split, layout(window: open.window, insets: open.insets, halo: halo)] {
             XCTAssertGreaterThanOrEqual(l.stage.minY - halo.above, l.tankPane.minY + l.chrome.above - 0.001, "clear of the title")

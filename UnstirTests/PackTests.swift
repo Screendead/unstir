@@ -45,6 +45,7 @@ final class PackTests: XCTestCase {
         let d = UserDefaults.standard, id = "pin-test"
         let keys = ["best.\(id)", "started.\(id)", "tier", "undos.spent", "undos.day", "undos.anchor", "unlock",
                     "tank.turned", "swirled", "endless.tanks", "endless.spilled", "undos.unseen", "undos.shown", "asked.\(Pack.lens.productID)",
+                    "asked.at.\(Pack.lens.productID)",
                     "shelf.fit.\(Pack.lens.rawValue)", "shelf.levels.\(Pack.lens.rawValue)",
                     "letters", "music.off", "sounds.off", "haptics.off",
                     "welcomed", "modes.seen", "review.asked", "resume.\(id)"]
@@ -86,6 +87,7 @@ final class PackTests: XCTestCase {
         XCTAssertTrue(d.bool(forKey: "modes.seen"))
         Asked.add(Pack.lens.productID)
         XCTAssertTrue(d.bool(forKey: "asked.com.screendead.Unstir.pack.lens"))
+        XCTAssertNotNil(d.object(forKey: "asked.at.com.screendead.Unstir.pack.lens") as? Date)
         Marks.seen(.lens, fits: true, store: true)
         XCTAssertTrue(d.bool(forKey: "shelf.fit.lens"))
         XCTAssertEqual(d.integer(forKey: "shelf.levels.lens"), Pack.lens.levels.count)
@@ -405,7 +407,7 @@ final class PackTests: XCTestCase {
     /// owned without asking says nothing; a revocation forgets the request unsaid (Jack's call C21, round 13).
     func testAnApprovalIsSaidOnce() {
         let lens = Pack.lens.productID, prism = Pack.prism.productID
-        let d = UserDefaults.standard, keys = [Asked.key(lens), Asked.key(prism)]
+        let d = UserDefaults.standard, keys = [lens, prism].flatMap { [Asked.key($0), Asked.dateKey($0)] }
         let saved = keys.map { d.object(forKey: $0) }
         defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
         for key in keys { d.removeObject(forKey: key) }
@@ -426,6 +428,43 @@ final class PackTests: XCTestCase {
         XCTAssertEqual(ledger.answers(to: Asked.all).revoked, [prism])
         XCTAssertEqual(Offer.pack(.lens).yours, "Lens is yours")
         XCTAssertEqual(Offer.complete.yours, "\(Offer.bundleName) is yours")
+    }
+
+    /// A request made before a relaunch waits again while its parent can still answer it, a day, and never over what
+    /// StoreKit has said of the product since.
+    func testARequestStillWaitsAfterARelaunch() {
+        let lens = Pack.lens.productID, prism = Pack.prism.productID, escapement = Pack.escapement.productID
+        let bundle = Pack.completeID
+        let d = UserDefaults.standard
+        let keys = [lens, prism, escapement, bundle].flatMap { [Asked.key($0), Asked.dateKey($0)] }
+        let saved = keys.map { d.object(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { d.set(value, forKey: key) } }
+        for key in keys { d.removeObject(forKey: key) }
+
+        let now = Date()
+        Asked.add(lens, at: now.addingTimeInterval(-23 * 3600))
+        Asked.add(prism, at: now.addingTimeInterval(-25 * 3600))
+        Asked.add(escapement, at: now)
+        // Asked before the date was kept.
+        d.set(true, forKey: Asked.key(bundle))
+        XCTAssertEqual(Asked.waiting(at: now), [lens, escapement])
+        // Asked at a time still to come: the clock was set back since, so how long it has waited is unknown.
+        Asked.add(bundle, at: now.addingTimeInterval(3600))
+        XCTAssertEqual(Asked.waiting(at: now), [lens, escapement])
+        d.removeObject(forKey: Asked.dateKey(bundle))
+
+        var ledger = Ledger()
+        ledger.record(escapement, .owned)
+        ledger.wait(on: Asked.waiting(at: now))
+        XCTAssertEqual(ledger.state(.lens), .pending)
+        XCTAssertEqual(ledger.state(.prism), .unowned, "a day on, the request is gone")
+        XCTAssertEqual(ledger.state(.escapement), .owned, "approved while the app was shut")
+
+        ledger.record(lens, .revoked)
+        ledger.wait(on: [lens])
+        XCTAssertEqual(ledger.state(.lens), .revoked)
+        Asked.remove(lens)
+        XCTAssertNil(d.object(forKey: Asked.dateKey(lens)))
     }
 
     /// The store says each approval until it is said, and the harness's last only the launch.

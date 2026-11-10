@@ -53,6 +53,8 @@ enum Log {
     }
     private static let clock = {
         let f = DateFormatter()
+        // The log is read on the Mac: its stamps never take a locale's digits or calendar.
+        f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "MM-dd HH:mm:ss.SSS"
         return f
     }()

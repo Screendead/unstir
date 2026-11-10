@@ -391,6 +391,31 @@ Main calls 2026-11-02 (finish-and-pitch page); follow-up picks 2026-11-03; third
 | r16c-ci-firststir = A | 2026-11-08 | First Stir's two stray tests are skipped on PRs and kept nightly (#147). | HANDOFF, CLAUDE.md |
 | Dock covers draw knobs | 2026-11-08 | In chat: every dock cover draws its knobs so a cover shows how its pack plays (#146); the promoted-purchase images are recorded differently (sources differ). | HANDOFF, architecture |
 
+## Round 17
+
+Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
+
+| Call | Date | Decided | Where |
+|---|---|---|---|
+| DESIGN5 = A | 2026-11-09 | The UI design pass builds all five changes: one Dynamic Type scale (body 17), five text tones, one button in three emphases, results as dots, the menu and result card rebuilt round the next move; after the TankView split. | HANDOFF |
+| CATORDER = D | 2026-11-09 | Split the String Catalog: the table strings (Levels.swift, Pack.swift, the catalog file and lint) now; the five chrome files after the design pass. | HANDOFF |
+| ESCBOOK = A | 2026-11-09 | Close J3 (already D1's, clockwise from twelve), J5, J7 and J8 as built; Jack's phone play of the book (E3) still vetoes any one problem. | HANDOFF |
+| ARCHREST = A | 2026-11-09 | Before v1, architecture items 4 (one undo record), 5 (shader test kit, no default arms in Picture), 7's shots half (shots.sh split by area) and 13 (First Stir compiled out of Release); the rest after v1. | HANDOFF |
+| PERF = A | 2026-11-09 | Close the performance pass at #140; the twist-chain cache is set aside until testers' logs show a kept budget under 40 or a real Duo misses frames. | HANDOFF |
+| TFREAD = D | 2026-11-09 | Read TestFlight play from App Store Connect's per-tester sessions polled daily, testers' sent logs and a short survey; check the poll separates days on Jack's install first, with analytics in TestFlight builds as the fallback. | HANDOFF |
+| DOTS-KEPT = A | 2026-11-10 | Results as dots (#172) stays as merged: the card shows this solve's marks and the best in words, Escapement rows and the archive keep words, the marks scale with the type and land after the card's reveal, the daily row shows marks and its run, pack-card rows show clean. The small-phone check of the taller card is still owed. | HANDOFF |
+| TONES-KEPT = A | 2026-11-10 | The five text tones (#171) stay as merged, with the tones chosen where the proposal was silent. | HANDOFF |
+| BUTTONS = B | 2026-11-10 | One button in three emphases (#173) merges after fixes, shown to Jack again first: at xxxLarge nothing falls off the bottom of the result card (it does on master too), and a paid pack's play screen stops reading the pack's name twice (the back button "‹ Escapement" over the heading "ESCAPEMENT"). The rest is approved. | HANDOFF |
+| STAMP = A | 2026-11-10 | "unstirred." scales with the player's text size (`r17-stamp`); the Duo tabletop's fixed 28 pt for it is checked with it. | HANDOFF |
+| LENSART = B | 2026-11-10 | Lens gets 25 standalone panels, each drawing its level's name, with what is seen through it under the lens; drawn and shown in batches (draft #157 holds the first). | HANDOFF |
+| SOUNDLAYERS = A | 2026-11-10 | The three pack sound layers ship as built (#158), before TestFlight. Jack heard the films as choppy; he has heard the layers already and will listen on the phone. | HANDOFF |
+| ATB-DATE = A | 2026-11-10 | The stored Ask to Buy date (#154) stays. | HANDOFF |
+| ATB-WAIT = A | 2026-11-10 | A pending Ask to Buy shows as waiting for 24 hours after a relaunch, as built. | HANDOFF |
+| F14 = B | 2026-11-10 | A pack card opened before the store's first check reads "checking purchases…" until the check ends (`r17-f14`). | HANDOFF |
+| DUOPROBE = A | 2026-11-10 | The Duo-speed probe stays out of the main branch entirely. | HANDOFF |
+| CIPRIVATE = A | 2026-11-10 | When the repo goes private, CI runs on a self-hosted runner on Jack's Mac, queued behind his builds, the nightly weekly (`r17-ci-private`, not yet run). | HANDOFF |
+| CODEQL-PRIVATE = A | 2026-11-10 | `codeql.yml` is deleted when the repo goes private. | HANDOFF |
+
 ## Dated, no round
 
 | Call | Date | Decided | Where |

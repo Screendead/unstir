@@ -35,22 +35,29 @@ struct PlayLayout: Equatable {
         var above: CGFloat = 0
     }
 
-    /// The split's chrome round the tank, in points, from the level's shape and whether Prism's swatches show: colour
-    /// letters or Differentiate Without Colour turned on or off mid-level resizes Prism's glass by 30 pt, letting go a
-    /// drag as a change of pose does. The play screen's text is fixed in size, so no type size changes it; a result or
-    /// lost card goes over the menu.
-    /// As the parts measure (`testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure`): above, the header's 24 pt
-    /// (Escapement's split-flap ticks 34) and the title's 36; below, the caption's 48 (two lines of the paper's serif
-    /// 50), the swatches' 34 where they show, the column's 12 and the controls' 46.
+    /// The split's chrome round the tank, in points, from the level's shape, whether Prism's swatches show and the type
+    /// size: colour letters or Differentiate Without Colour turned on or off mid-level resizes Prism's glass by 30 pt,
+    /// letting go a drag as a change of pose does, and so does a change of Text Size up to `typeCap`. A result or lost
+    /// card goes over the menu. As the parts measure (`testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure`): above,
+    /// the header's line of the button role and its 8 pt (Escapement's split-flap ticks taller) and the title's line of
+    /// the headline and its 18; below, the caption's two lines of the label role (the paper's serif) and its 14, the
+    /// swatches' 34 where they show, the column's 12 and the controls' line of the button role, their 20 and the 8 under.
     struct Chrome: Equatable {
-        var above: CGFloat = 60
-        var below: CGFloat = 106
+        var above: CGFloat
+        var below: CGFloat
     }
+
+    /// The play screen's text grows no further: the tank needs its room.
+    static let typeCap = DynamicTypeSize.xxxLarge
 
     /// The rim sits outside the glass, 0.045 of the radius on each side.
     static let rim: CGFloat = 1.045
-    /// The column's room for everything above and below the tank.
-    static let reserve: CGFloat = 290
+    /// The column's room for everything above and below the tank, the result card's included: 290 pt at the default
+    /// type size, and as much more as a plain level's chrome grows at `type`.
+    static func reserve(_ type: DynamicTypeSize) -> CGFloat {
+        let grown = Chrome(type: type), plain = Chrome()
+        return 290 + grown.above + grown.below - plain.above - plain.below
+    }
     /// How far "unstirred." stands over the glass's stage, top to top, where there is room for it.
     static let words: CGFloat = 62
     /// The side margin the play screen keeps, and the gap each half keeps from the fold.
@@ -68,23 +75,24 @@ struct PlayLayout: Equatable {
     /// insets round it, and the fold, the system's division region in the reader's own space (nil while the phone lies
     /// flat, or where the system has none). One proxy in one pass, so no offset or earlier layout moves the middle.
     static func of(size: CGSize, insets i: EdgeInsets, fold: CGRect? = nil, halo: Halo = Halo(), chrome: Chrome = Chrome(),
-                   scale: CGFloat) -> PlayLayout {
+                   type: DynamicTypeSize = .large, scale: CGFloat) -> PlayLayout {
         let window = CGSize(width: size.width + i.leading + i.trailing, height: size.height + i.top + i.bottom)
         let middle = window.width / 2 - i.leading - margin
         return of(content: CGSize(width: max(size.width - 2 * margin, 0), height: size.height), window: window,
                   fold: fold?.offsetBy(dx: -margin, dy: 0) ?? CGRect(x: middle, y: 0, width: 0, height: size.height),
-                  halo: halo, chrome: chrome, scale: scale)
+                  halo: halo, chrome: chrome, type: type, scale: scale)
     }
 
     /// `content` is the size inside the side margins; `fold` where the window divides, in the content's space: a band
     /// the system reports, or else a line down the window's middle (the content's own middle if nil); `window` the
     /// whole window's size, safe areas and all; `halo` what the level draws past the rim; `chrome` what the split's
-    /// chrome takes round it; `scale` the display's pixels per point.
+    /// chrome takes round it; `type` the play screen's type size, which the column keeps room for; `scale` the display's
+    /// pixels per point.
     static func of(content: CGSize, window: CGSize, fold: CGRect? = nil, halo h: Halo = Halo(), chrome c: Chrome = Chrome(),
-                   scale: CGFloat) -> PlayLayout {
+                   type: DynamicTypeSize = .large, scale: CGFloat) -> PlayLayout {
         let cap = maxPixels / max(scale, 1)
         let whole = CGRect(origin: .zero, size: content)
-        let column = PlayLayout(kind: .column, side: min(min(content.width, content.height - reserve) / rim, cap),
+        let column = PlayLayout(kind: .column, side: min(min(content.width, content.height - reserve(type)) / rim, cap),
                                 tankPane: whole, chromePane: whole)
         let f = fold ?? CGRect(x: content.width / 2, y: 0, width: 0, height: content.height)
         if f.width > f.height {
@@ -364,11 +372,21 @@ struct Glide: ViewModifier, Animatable {
 }
 
 extension PlayLayout.Chrome {
-    /// What `level`'s chrome takes in the split: Escapement's split-flap ticks and two lines of its serif note, and the
-    /// colour swatches where `swatches` shows them.
-    init(_ level: Level, swatches: Bool) {
-        above = level.ratchets.isEmpty ? 60 : 70
-        below = (level.page.paper ? 50 : 48) + (swatches ? 34 : 0) + PlayStack.gap + 46
+    /// What `level`'s chrome takes in the split at `type`, capped at `typeCap`: Escapement's split-flap ticks and two
+    /// lines of its serif note, and the colour swatches where `swatches` shows them. A plain level's without one.
+    init(_ level: Level? = nil, swatches: Bool = false, type: DynamicTypeSize = .large) {
+        let t = min(type, PlayLayout.typeCap), back = TypeRole.button.line(at: t)
+        var header = back.height
+        if let level, !level.ratchets.isEmpty {
+            // The way out on one baseline with "ticks", which is centred on the split-flap counter.
+            let ticks = TypeRole.label.line(at: t), up = (FlipCounter.standard - ticks.height) / 2 + ticks.ascent
+            header = max(back.ascent, up) + max(back.height - back.ascent, FlipCounter.standard - up)
+        }
+        // Each part laid out on whole pixels, the Duo's three a point.
+        func px(_ v: CGFloat) -> CGFloat { (v * 3).rounded(.up) / 3 }
+        above = 8 + px(header) + 18 + px(TypeRole.headline.line(at: t, .medium).height)
+        below = 14 + px(LevelView.captionLines(paper: level?.page.paper ?? false, type: t)) + (swatches ? 34 : 0) + PlayStack.gap
+            + 20 + px(back.height) + 8
     }
 }
 

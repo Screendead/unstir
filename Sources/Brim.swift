@@ -241,8 +241,8 @@ struct BrimRing: View {
         .frame(width: 2 * r, height: 2 * r)
         .allowsHitTesting(false)
         .accessibilityElement()
-        .accessibilityLabel("brim")
-        .accessibilityValue("\(brim) of \(Run.room)")
+        .accessibilityLabel(Text("brim", comment: "VoiceOver: endless's brim, the gauge round the tank's rim"))
+        .accessibilityValue(Text("\(brim) of \(Run.room)", comment: "VoiceOver: the brim's notches filled, of the notches it holds"))
     }
 }
 
@@ -259,7 +259,7 @@ struct SpillWords: View {
                                          startRadius: 0, endRadius: 0.65 * r))
                 .frame(width: 1.3 * r, height: 1.3 * r)
                 .scaleEffect(x: 1, y: 0.45)
-            Text("spilled.").font(.mono(40, .semibold)).foregroundStyle(Color.text)
+            Text("spilled.", comment: "Stamped over the tank as an endless run spills").font(.game(40, .semibold)).foregroundStyle(Color.text)
                 .shadow(color: .alarm.opacity(0.9), radius: 12)
                 .shadow(color: .white.opacity(0.4), radius: 3)
                 .scaleEffect(1.3 - 0.3 * x)

@@ -141,8 +141,8 @@ final class UnstirTests: XCTestCase {
 
     /// Jack's call C11 (round 13): the header's count turns amber at par and magenta past it.
     func testTheCountWarnsAtPar() {
-        XCTAssertEqual(LevelView.parTone(moves: 0, par: 5), .text)
-        XCTAssertEqual(LevelView.parTone(moves: 4, par: 5), .text)
+        XCTAssertEqual(LevelView.parTone(moves: 0, par: 5), .text2)
+        XCTAssertEqual(LevelView.parTone(moves: 4, par: 5), .text2)
         XCTAssertEqual(LevelView.parTone(moves: 5, par: 5), .amber)
         XCTAssertEqual(LevelView.parTone(moves: 6, par: 5), .magenta)
         XCTAssertEqual(LevelView.parTone(moves: 20, par: 5), .magenta)
@@ -918,6 +918,49 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.moves, 1)
     }
 
+    /// Each undo puts back exactly what its stir began from, the stack, the clock, the heals and the stir left open,
+    /// through every way a stir is made, joined, dropped as nothing and taken back: a pack's knobs and tank, and
+    /// Escapement's moves and waits.
+    @MainActor func testEachUndoPutsBackWhatItsStirBeganFrom() {
+        struct State: Equatable {
+            var entries: [Game.Entry], ticks: [Int: Int], lost: Bool, pushed: Int?, stopped: Int?
+            var heals: Int, open: Twist?, history: [Twist], position: Int
+        }
+        func state(_ g: Game) -> State {
+            State(entries: g.entries, ticks: g.escapement.ticks, lost: g.lost, pushed: g.pushedClock,
+                  stopped: g.lastStopped, heals: g.heals, open: g.openStir, history: g.history, position: g.position)
+        }
+        func check(_ game: Game, _ line: [(Game) -> Void], _ name: String) {
+            var began: [State] = []
+            for move in line {
+                let was = state(game), moves = game.moves
+                move(game)
+                if game.moves > moves { began.append(was) } else if game.moves < moves { began.removeLast() }
+            }
+            XCTAssertEqual(game.moves, began.count, name)
+            XCTAssertGreaterThanOrEqual(began.count, 3, name)
+            while let was = began.popLast() {
+                game.undo()
+                XCTAssertEqual(state(game), was, "\(name) undo to \(began.count) moves")
+            }
+        }
+
+        let pack = Level(id: Pack.lens.id(2), pack: .lens, label: "", title: "", layout: .quad,
+                         scramble: .parse("0:+3,1:+2", in: .quad), seized: [3], motion: .tank, fixedPar: 2)
+        check(Game(level: pack, tankTurned: true, swirled: true, bank: (20, nil)), [
+            { $0.commit(rod: 1, steps: -2) }, { $0.commit(rod: 2, steps: 1) },
+            { $0.commit(rod: 0, steps: -1) }, { $0.commit(rod: 0, steps: -1) }, { $0.commit(rod: 0, steps: 2) },
+            { $0.turnTank(1) }, { $0.turnTank(1) }, { $0.turnTank(2) },
+            { $0.turnTank(-1) }, { $0.commit(rod: 1, steps: 1) }, { $0.commit(rod: 1, steps: 1) }, { $0.turnTank(1) },
+        ], "pack")
+
+        var clocks = Level.escapement[1]
+        clocks.id = "test-undo-clocks"
+        check(Game(level: clocks, tankTurned: true, bank: (20, nil)), [
+            { $0.commit(rod: 2, steps: 4) }, { $0.commit(rod: 2, steps: -4) }, { $0.wait(on: 0) },
+        ], "escapement")
+    }
+
     /// An undone stir is as if never made: the stir it covered is open again if it was open then, so a further turn of
     /// its rod, or of the tank, joins it; one that was shut stays shut.
     @MainActor func testUndoLeavesTheUncoveredStirOpen() {
@@ -1595,7 +1638,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
-    /// The menu's top follows plughole 01 and 23: the tagline, then the way on; the daily and endless only once open.
+    /// The menu's top follows plughole 01 and 23: nothing, then the way on; the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
         func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {
             let ids = Set(Tier.plughole.levels.prefix(tier == .plughole ? n : 27).map(\.id) + tier.levels.prefix(n).map(\.id))
@@ -1603,13 +1646,11 @@ final class UnstirTests: XCTestCase {
         }
         let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
         XCTAssertFalse(fresh.modes)
-        XCTAssertFalse(fresh.played)
-        XCTAssertEqual(fresh.sandbox, .under)
+        XCTAssertTrue(fresh.sandbox)
         XCTAssertNil(fresh.next)
         let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
         XCTAssertFalse(one.modes)
-        XCTAssertTrue(one.played)
-        XCTAssertEqual(one.sandbox, .over)
+        XCTAssertTrue(one.sandbox, "at the list's end whether or not 01 has a best")
         XCTAssertEqual(one.next?.id, Level.plughole[1].id)
         XCTAssertNil(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(1)).next, "a locked tier has no way on")
         XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
@@ -1621,7 +1662,7 @@ final class UnstirTests: XCTestCase {
                        Level.whirlpool[4].id)
         let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
         XCTAssertTrue(unlocked.modes)
-        XCTAssertEqual(unlocked.sandbox, .under)
+        XCTAssertTrue(unlocked.sandbox)
     }
 
     /// The sandbox is out of v1 (Jack's call snd2-sandbox, round 16): a Release build neither lists it nor opens it,
@@ -1634,13 +1675,12 @@ final class UnstirTests: XCTestCase {
         for best in bests {
             let shipped = MenuView.lead(tier: .plughole, unlocked: false, release: true, best: best)
             let debug = MenuView.lead(tier: .plughole, unlocked: false, release: false, best: best)
-            XCTAssertNil(shipped.sandbox)
-            XCTAssertNotNil(debug.sandbox)
+            XCTAssertFalse(shipped.sandbox)
+            XCTAssertTrue(debug.sandbox)
             XCTAssertEqual(shipped.modes, debug.modes)
-            XCTAssertEqual(shipped.played, debug.played)
             XCTAssertEqual(shipped.next?.id, debug.next?.id)
         }
-        XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
+        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
         XCTAssertFalse(Store.shared.opens(.sandbox, release: true))
         XCTAssertTrue(Store.shared.opens(.sandbox, release: false))
         for level in [Level.plughole[0], Level.daily(), .endless(Run(seed: 7)), Level.lens[0]] {
@@ -2096,7 +2136,7 @@ final class UnstirTests: XCTestCase {
         func result(_ best: Best) -> String { Spoken.row(first, result: best, tanks: 0, detail: nil, enabled: true, needs: nil).value }
         XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: true)), "clean")
         XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: false)), "at par")
-        XCTAssertEqual(result(Best(over: 2, seconds: 9)), "2 over par")
+        XCTAssertEqual(result(Best(over: 2, seconds: 9)), "solved, 2 over par")
         let daily = Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[22])
         XCTAssertEqual(daily.label, "Today's daily")
         XCTAssertEqual(daily.value, "locked, solve Plughole level 23 first")
@@ -2106,7 +2146,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Spoken.row(.sandbox, result: nil, tanks: 0, detail: "nothing counts", enabled: true, needs: nil).value, "")
         XCTAssertEqual(Spoken.row(first, result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, started: true).value, "tried")
         XCTAssertEqual(Spoken.row(first, result: Best(over: 1, seconds: 9), tanks: 0, detail: nil, enabled: true, needs: nil,
-                                  started: true).value, "1 over par")
+                                  started: true).value, "solved, 1 over par")
         XCTAssertEqual(Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value, "new")
         XCTAssertEqual(Spoken.row(.endless(Run(seed: 7)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value,
                        "new")
@@ -2360,13 +2400,7 @@ final class UnstirTests: XCTestCase {
     /// 5 x 5 window, on each seed that shows the web (the sandbox's and its levels'), for the web and its twin, whose
     /// lines are checked inflamed and at the heartbeat's peak.
     func testNeuronsStayInTheirRegions() throws {
-        guard let device = MTLCreateSystemDefaultDevice() else { throw XCTSkip("no Metal device") }
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("Sources/Neurons.metal")
-        let source = try String(contentsOf: url, encoding: .utf8)
-            .replacingOccurrences(of: "#include <SwiftUI/SwiftUI_Metal.h>", with: "")
-            .replacingOccurrences(of: "[[ stitchable ]]", with: "") + """
-
+        let kit = try ShaderKit("Neurons.metal", helpersOnly: false, kernels: """
             // x the line, y the glow, z the soma's reach at p: as the shader draws them, or over every node near p.
             static float3 probe(float2 p, float ipx, device const packed_float3 *cells, bool brute, bool twin) {
                 const float wide = 0.1, high = 0.0866025, left = -1.2, top = -1.1258;
@@ -2420,10 +2454,8 @@ final class UnstirTests: XCTestCase {
                 if (abs(s.y - b.y) > 0.01) atomic_fetch_add_explicit(&bad[1], 1u, memory_order_relaxed);
                 if (abs(s.z - b.z) > 0.01) atomic_fetch_add_explicit(&bad[2], 1u, memory_order_relaxed);
             }
-            """
-        let library = try device.makeLibrary(source: source, options: nil)
-        let scan = try device.makeComputePipelineState(function: try XCTUnwrap(library.makeFunction(name: "scan")))
-        let queue = try XCTUnwrap(device.makeCommandQueue())
+            """)
+        let scan = try kit.pipeline("scan")
         var side = Float(2400)
         let seeds = [0, 4, 7, 11, 17, 20], webs = OSAllocatedUnfairLock(initialState: [Int: [Float]]())
         // A debug build takes most of a second over each web, so they build side by side.
@@ -2433,26 +2465,26 @@ final class UnstirTests: XCTestCase {
         }
         for seed in seeds {
             let data = webs.withLock { $0[seed]! }
-            let cells = try XCTUnwrap(device.makeBuffer(bytes: data, length: 4 * data.count))
+            let cells = try kit.buffer(data)
             for var twin: UInt32 in [0, 1] {
-                let bad = try XCTUnwrap(device.makeBuffer(length: 12))
-                memset(bad.contents(), 0, 12)
-                let cb = try XCTUnwrap(queue.makeCommandBuffer()), enc = try XCTUnwrap(cb.makeComputeCommandEncoder())
-                enc.setComputePipelineState(scan)
-                enc.setBuffer(cells, offset: 0, index: 0)
-                enc.setBuffer(bad, offset: 0, index: 1)
-                enc.setBytes(&side, length: 4, index: 2)
-                enc.setBytes(&twin, length: 4, index: 3)
-                enc.dispatchThreads(MTLSize(width: Int(side), height: Int(side), depth: 1),
-                                    threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1))
-                enc.endEncoding()
-                cb.commit()
-                cb.waitUntilCompleted()
-                XCTAssertNil(cb.error)
-                let n = bad.contents().bindMemory(to: UInt32.self, capacity: 3)
-                XCTAssertEqual([n[0], n[1], n[2]], [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(twin == 1 ? " twin" : "")")
+                let bad = try kit.buffer(UInt32.self, count: 3)
+                try kit.run(scan, grid: MTLSize(width: Int(side), height: Int(side), depth: 1),
+                            group: MTLSize(width: 16, height: 16, depth: 1)) { enc in
+                    enc.setBuffer(cells, offset: 0, index: 0)
+                    enc.setBuffer(bad, offset: 0, index: 1)
+                    enc.setBytes(&side, length: 4, index: 2)
+                    enc.setBytes(&twin, length: 4, index: 3)
+                }
+                XCTAssertEqual(kit.read(bad, as: UInt32.self), [0, 0, 0], "line, glow and soma pixels off, seed \(seed)\(twin == 1 ? " twin" : "")")
             }
         }
+    }
+
+    /// `PictureLayer` looks a live picture's shader up in the app's library by the case's name, which no compiler checks.
+    func testEveryLivePictureHasItsShader() throws {
+        guard let device = MTLCreateSystemDefaultDevice() else { throw XCTSkip("no Metal device") }
+        let library = try device.makeDefaultLibrary(bundle: .main)
+        for picture in Picture.allCases where picture.isLive { XCTAssertNotNil(library.makeFunction(name: "\(picture)"), "\(picture)") }
     }
 
     /// The glass turned by `angle` clockwise about the centre, as the shader turns it.

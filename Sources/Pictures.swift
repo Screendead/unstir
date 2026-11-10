@@ -20,7 +20,13 @@ enum Picture: String, CaseIterable {
     /// Escapement's engine-turned plate, ink on paper, baked.
     case engineTurned
 
-    var isLive: Bool { ![.grid, .sunset, .city, .halftone, .engineTurned].contains(self) && plate == nil }
+    var isLive: Bool {
+        switch self {
+        case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,
+             .marblingTwin, .isobars, .ephemeris, .cords: true
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: false
+        }
+    }
 
     /// Prism's plate, where this is one.
     var plate: Engraving.Plate? { Engraving.Plate(rawValue: rawValue) }
@@ -33,7 +39,8 @@ enum Picture: String, CaseIterable {
         case .coral: .coralTwin
         case .neurons: .neuronsTwin
         case .marbling: .marblingTwin
-        default: self
+        case .grid, .sunset, .city, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin, .isobars,
+             .ephemeris, .cords, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: self
         }
     }
 
@@ -49,7 +56,9 @@ enum Picture: String, CaseIterable {
         case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: 60
         // Every planet goes round a whole number of times in it.
         case .ephemeris: 30
-        default: 10
+        case .glass, .marbling, .isobars, .cords: 10
+        // Baked, so nothing uses it.
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: 10
         }
     }
 
@@ -96,7 +105,9 @@ enum Picture: String, CaseIterable {
         case .isobars: Self.gradients(seed: seed, salt: 0x464C_4F57, count: 2)
         case .ephemeris: Self.ephemeris(seed: seed, t: t, period: period)
         case .cords: Self.gradients(seed: seed, salt: 0x4C4F_4F4D, count: 2)
-        default: nil
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: nil
+        // A sibling is never a twin.
+        case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: nil
         }
         return sibling == self ? data : data.map { $0 + Self.delays(t: t) }
     }
@@ -361,8 +372,59 @@ enum Picture: String, CaseIterable {
         case .engineTurned:
             Self.engineTurning(ctx, r: r, scale: scale)
 
-        default:
+        // Drawn by their shaders or `Halftone`, never here.
+        case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,
+             .marblingTwin, .isobars, .ephemeris, .cords, .halftone:
             break
+        }
+    }
+}
+
+/// The names shown for a picture and a layout, the sandbox's controls (R3: a raw value is stored, never shown). Each
+/// reads as its raw value did.
+extension Picture {
+    var display: LocalizedStringResource {
+        switch self {
+        case .grid: LocalizedStringResource("picture.grid", defaultValue: "grid", comment: "A picture's name on the sandbox's control")
+        case .sunset: LocalizedStringResource("picture.sunset", defaultValue: "sunset", comment: "A picture's name on the sandbox's control")
+        case .city: LocalizedStringResource("picture.city", defaultValue: "city", comment: "A picture's name on the sandbox's control")
+        case .glass: LocalizedStringResource("picture.glass", defaultValue: "glass", comment: "A picture's name on the sandbox's control")
+        case .chainmail: LocalizedStringResource("picture.chainmail", defaultValue: "chainmail", comment: "A picture's name on the sandbox's control")
+        case .coral: LocalizedStringResource("picture.coral", defaultValue: "coral", comment: "A picture's name on the sandbox's control")
+        case .neurons: LocalizedStringResource("picture.neurons", defaultValue: "neurons", comment: "A picture's name on the sandbox's control")
+        case .marbling: LocalizedStringResource("picture.marbling", defaultValue: "marbling", comment: "A picture's name on the sandbox's control")
+        case .glassTwin: LocalizedStringResource("picture.glassTwin", defaultValue: "glassTwin", comment: "A picture's name on the sandbox's control")
+        case .chainmailTwin: LocalizedStringResource("picture.chainmailTwin", defaultValue: "chainmailTwin", comment: "A picture's name on the sandbox's control")
+        case .coralTwin: LocalizedStringResource("picture.coralTwin", defaultValue: "coralTwin", comment: "A picture's name on the sandbox's control")
+        case .neuronsTwin: LocalizedStringResource("picture.neuronsTwin", defaultValue: "neuronsTwin", comment: "A picture's name on the sandbox's control")
+        case .marblingTwin: LocalizedStringResource("picture.marblingTwin", defaultValue: "marblingTwin", comment: "A picture's name on the sandbox's control")
+        case .isobars: LocalizedStringResource("picture.isobars", defaultValue: "isobars", comment: "A picture's name on the sandbox's control")
+        case .ephemeris: LocalizedStringResource("picture.ephemeris", defaultValue: "ephemeris", comment: "A picture's name on the sandbox's control")
+        case .cords: LocalizedStringResource("picture.cords", defaultValue: "cords", comment: "A picture's name on the sandbox's control")
+        case .halftone: LocalizedStringResource("picture.halftone", defaultValue: "halftone", comment: "A picture's name on the sandbox's control")
+        case .fern: LocalizedStringResource("picture.fern", defaultValue: "fern", comment: "A picture's name on the sandbox's control")
+        case .seeds: LocalizedStringResource("picture.seeds", defaultValue: "seeds", comment: "A picture's name on the sandbox's control")
+        case .medusae: LocalizedStringResource("picture.medusae", defaultValue: "medusae", comment: "A picture's name on the sandbox's control")
+        case .radiolaria: LocalizedStringResource("picture.radiolaria", defaultValue: "radiolaria", comment: "A picture's name on the sandbox's control")
+        case .nautilus: LocalizedStringResource("picture.nautilus", defaultValue: "nautilus", comment: "A picture's name on the sandbox's control")
+        case .engineTurned: LocalizedStringResource("picture.engineTurned", defaultValue: "engineTurned", comment: "A picture's name on the sandbox's control")
+        }
+    }
+}
+
+extension Layout {
+    var display: LocalizedStringResource {
+        switch self {
+        case .tri: LocalizedStringResource("layout.tri", defaultValue: "tri", comment: "A layout's name on the sandbox's control")
+        case .quad: LocalizedStringResource("layout.quad", defaultValue: "quad", comment: "A layout's name on the sandbox's control")
+        case .eye: LocalizedStringResource("layout.eye", defaultValue: "eye", comment: "A layout's name on the sandbox's control")
+        case .pent: LocalizedStringResource("layout.pent", defaultValue: "pent", comment: "A layout's name on the sandbox's control")
+        case .hex: LocalizedStringResource("layout.hex", defaultValue: "hex", comment: "A layout's name on the sandbox's control")
+        case .triSwirl: LocalizedStringResource("layout.triSwirl", defaultValue: "triSwirl", comment: "A layout's name on the sandbox's control")
+        case .quadSwirl: LocalizedStringResource("layout.quadSwirl", defaultValue: "quadSwirl", comment: "A layout's name on the sandbox's control")
+        case .eyeSwirl: LocalizedStringResource("layout.eyeSwirl", defaultValue: "eyeSwirl", comment: "A layout's name on the sandbox's control")
+        case .pentSwirl: LocalizedStringResource("layout.pentSwirl", defaultValue: "pentSwirl", comment: "A layout's name on the sandbox's control")
+        case .hexSwirl: LocalizedStringResource("layout.hexSwirl", defaultValue: "hexSwirl", comment: "A layout's name on the sandbox's control")
         }
     }
 }

@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's scenes, one per level. Each rod in `vignettes` holds one vignette in its rigid core, drawn in two states:
@@ -42,16 +43,16 @@ extension Level {
     private static let dawn: [Level] = [
         // Tri's rods all overlap, so its stack orders every heal: the cottage's doorway lies in the boat's disc, so the
         // cottage's one entry is the bottom.
-        Level(id: "", pack: .firstStir, label: "", title: "Sunrise", note: "", layout: .tri,
+        Level(id: "", pack: .firstStir, label: "", title: String(localized: "Sunrise", comment: "First Stir scene title"), note: "", layout: .tri,
               scramble: .parse("2:+5,1:-4,0:+3,1:+2", in: .tri), story: .dawn(.sunrise)),
-        Level(id: "", pack: .firstStir, label: "", title: "The gallery", note: "", layout: .quad,
+        Level(id: "", pack: .firstStir, label: "", title: String(localized: "The gallery", comment: "First Stir scene title"), note: "", layout: .quad,
               scramble: .parse("3:+4,0:-3,1:+5,2:-2", in: .quad), story: .dawn(.gallery)),
         // The child kneels in the dog's disc, so the pool's bottom entry lies under both of the dog's.
-        Level(id: "", pack: .firstStir, label: "", title: "The rock pool", note: "", layout: .tri,
+        Level(id: "", pack: .firstStir, label: "", title: String(localized: "The rock pool", comment: "First Stir scene title"), note: "", layout: .tri,
               scramble: .parse("1:+4,2:-3,0:+5,1:-2,2:+3", in: .tri), story: .dawn(.rockPool)),
-        Level(id: "", pack: .firstStir, label: "", title: "Righting the boat", note: "", layout: .eye,
+        Level(id: "", pack: .firstStir, label: "", title: String(localized: "Righting the boat", comment: "First Stir scene title"), note: "", layout: .eye,
               scramble: .parse("0:+3,1:-4,2:+5,3:-2,1:+2", in: .eye), story: .dawn(.righting)),
-        Level(id: "", pack: .firstStir, label: "", title: "Tea on the quay", note: "", layout: .quad,
+        Level(id: "", pack: .firstStir, label: "", title: String(localized: "Tea on the quay", comment: "First Stir scene title"), note: "", layout: .quad,
               scramble: .parse("2:+4,3:-3,1:+5,0:-2,3:+2,2:-5", in: .quad), story: .dawn(.tea)),
     ]
 }
@@ -69,3 +70,4 @@ enum Harbour {
     /// at 3x on the largest phone come to about 51 MB; past this the layers bake at a lower scale.
     static let budget = 64 << 20
 }
+#endif

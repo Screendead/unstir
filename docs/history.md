@@ -3,6 +3,21 @@
 Closed sections moved word for word out of `HANDOFF.md`, which every session reads at its start. Each section keeps its own
 headings; `HANDOFF.md` says where each was. Jack's calls in them are indexed in `docs/decisions.md`.
 
+### Open work (finish-and-pitch, 2026-11-02)
+
+The run's list. **Decided** (Claude does it): #115; LG3's leftovers (Store.swift's two whole-`error` logs, privacy-policy.md's "only thing it talks to" without the age-range check, the undo-bank row's monotonic-clock text, from local `legal-lg3`'s three commits); the Duo's stages 2 to 4; the shots and films owed (#81's indexed shots, `film.sh calm-`, the dock waking, nav-focus's menu shots); the store screenshots and 25 s preview (ST4, ST5); plan step 3's clips; the architecture pass's ranked list; pack sound sketches (to-do 45, ends at Jack's ear). **Unblocked by round 16**: the String Catalog migration (F4 = C, about five days; CAT1 to CAT8 = A), in ORDER's place after the design pass. **Undecided** (to Jack's pitch): the UI design pass (to-do 72); round 16's follow-ups (below). Round 16 answered the rest. **Jack's to-dos**: device checks, the developer account and App Store Connect, Eyes Shut's outreach (Triptych's trademark check is done: clear). **Round 16 answered every call** (the table under round 15's): the work it decides follows ORDER. Follow-ups from the run: the
+preview's "01: Calm" segment snaps to its end when the rim turns (Jack's note, STOREMEDIA; in the strike and cut
+pipeline); `shots.sh` with a pattern rewrote `shots/index.txt` and dropped the two `prism-swatch-white-*` lines though
+the script still defines them (cause found 2026-11-03: the `if` at `scripts/shots.sh:749` skips those two `shot`
+calls when the pattern matches neither, so their index lines are never written on a patterned run; the fix, writing
+those lines outside the `if`, is in no PR, and the lines are put back by hand meanwhile); `FreshDefaults` forgets
+started flags and saved tries but not bests, so a second test run on the same simulator install fails
+`testResetZeroesMovesButCostsClean`, `testALookIsFree` and `ShareTests.testMarksFollowThePlay` on the first run's
+bests (found on stage 5, 2026-11-03; a reinstall clears it; the fix is in no PR); before the repo goes private at launch
+(Jack's note on HISTORY), cost the PR and nightly runs against the Actions allowance, macOS minutes at 10x. Outputs
+kept in the tools folder: the architecture pass's ranked list (`architecture/ranked.md`), the pack sound sketches
+(local branch `sound-packs`), the owed shots and films (`owed-shots/`) and the store media (`store-media/`).
+
 ### Round 16's build (2026-11-02 night)
 
 Merged: #126 (APPSIZE = B, the CI size guard, and pipefail in both Test steps), #127 (ICLOUD = A, bests through iCloud
@@ -1587,3 +1602,46 @@ and each Nightmare row gets its own "+" cell. N+k opens when Nightmare k is at p
 opens one says so and offers it. N+ levels are labelled "+01". Today the "+" reads as part of the word "nightmare+",
 turning nightmare off leaves the "+" on out of sight, and once both tiers share a picture nothing on screen tells them
 apart.
+
+## Next: the performance pass (queued 2026-09-28)
+
+Jack's aim: the app looks and feels exactly as it does, and runs as fast as it can be made to, even if that takes very
+clever work under the hood.
+
+**The bar.** Output stays the same: the shots, films and the live pictures' designs match today's to within float
+noise. Every level's heaviest frame (its deepest stack, the drag, a live picture and Nightmare+'s heartbeat) holds
+120 Hz on the reference phone (iPhone 13 Pro Max) with four taps. Less heat and battery for the same frames.
+
+**Measure first.** Jack has ruled out phone benches before this pass: they are slow, and heat skews them. One series
+of twelve runs with 45 s rests between them reached "serious" by the fourth. None of the tools sees the phone's GPU yet:
+- Instruments in Xcode 26.6 lists the phone (iOS 27) as offline. An Xcode that supports iOS 27 is the first fix, and
+  it is Jack's to install.
+- The harness bench (`UNSTIR_BENCH`) times main-thread intervals only, now with the thermal state. Back-to-back runs
+  seem to heat the phone: in one session, even the cheapest picture dropped about a fifth of its frames after nine
+  minutes of runs, and a picture that dropped frames early on held 120 Hz after a cool-down. Cool down between runs.
+- A GPU clock in the app would settle it without Instruments: an offscreen harness that runs the same Metal source in
+  its own command buffers and reads their GPU start and end times.
+- The background sheet tool (a Mac renderer and benchmark) lives only in a session scratchpad, which the OS can
+  clear. It is worth moving into the repo as a dev tool.
+
+**Candidate ideas (Claude's, untested; each must earn a measured gain on the phone):**
+- **Cache the twist chain.** The stack changes only on a commit, yet every frame on a live picture runs each pixel's
+  four taps through every entry just to find the same sample points. Store the committed chain's per-tap source
+  points in a texture when the stack changes, and each frame only sample the picture there. During a drag, the map is
+  exactly the identity outside the live disc, so only that disc's pixels need the full chain. That turns a deep
+  frame's cost from per-entry to near constant, and could retire `fourTaps` and `fillEntries`. It needs a Metal path
+  of its own (SwiftUI's `layerEffect` keeps no textures between frames) and enough precision in the stored points.
+- **Derive taps from one.** Where the map is locally rigid (every core, and outside every disc), the four taps are the
+  centre tap moved by the map's Jacobian. Carry the Jacobian through the chain for one tap, and run all four only
+  where the stretch says a filament needs them.
+- **Per-frame CPU work off the main thread**: the live pictures' data and the heartbeat's delay grid.
+
+**Measured (2026-11-03, the 13 Pro Max, local `duo-feel`).** A four-tap entry costs 0.2714 ms at 1137 px, 0.3426 at
+1284 and 0.4466 at 1471: 29.4 entries a 120 Hz frame at 1137 px, 16.9 at 1471. A transform between the `Unstirred`
+layer effect and its clip runs the shader over its whole `maxSampleOffset` region, about 7 times the cost: keep the
+circle clip directly on the effect. #140 (off, `ADAPTIVE_TAPS = NO`) steps the four-tap budget down and up to hold 120
+Hz, the look only, never the stack's depth; whirlpool 27 sits over today's limit (wp27-table). Details under Round
+16's build.
+
+**Claude's view.** Cleverness costs maintainability, and the architecture pass comes straight after. Keep each trick in
+one place with its reason stated, and drop any that doesn't pay on the phone.

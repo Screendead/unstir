@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's chapter 4, The Storm: scenes 16 to 20 of the outline, from 12:30 am back to 9:30 pm, in storm indigo
@@ -20,7 +21,14 @@ enum Storm: Int, CaseIterable, Sendable {
     static let rain = Color(0xB7CEFF)
     static let cloud = Color(0x5F59D6)
 
-    var title: String { ["The harbour", "Lightning", "The bell buoy", "High street, rain", "Washing"][rawValue - 16] }
+    var title: String {
+        [
+            String(localized: "The harbour", comment: "First Stir scene title"),
+            String(localized: "Lightning", comment: "First Stir scene title"),
+            String(localized: "The bell buoy", comment: "First Stir scene title"),
+            String(localized: "High street, rain", comment: "First Stir scene title"),
+            String(localized: "Washing", comment: "First Stir scene title"),
+        ][rawValue - 16] }
 
     var layout: Layout { [.tri, .quad, .pent, .eye, .pent][rawValue - 16] }
 
@@ -993,3 +1001,4 @@ enum Washing {
         return pen.poly(pts.map { (x + k * (2 * $0.0 + blown * $0.1), line + k * $0.1) })
     }
 }
+#endif
