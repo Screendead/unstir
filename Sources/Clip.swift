@@ -365,7 +365,7 @@ struct ClipTank: View {
         VStack(spacing: 20) {
             tank(f)
             if reel.level.isStory {
-                Text(f.caption ?? "").font(.ui(.label, .medium)).monospacedDigit().tone(.text2)
+                Text(verbatim: f.caption ?? "").font(.ui(.label, .medium)).monospacedDigit().tone(.text2)
                     .contentTransition(.identity)
             }
         }

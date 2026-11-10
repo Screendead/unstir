@@ -294,6 +294,29 @@ fi
 film editors-lens-03 24 "$whole" PACK=lens LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=0:-3,2:-4,1:+2
 film editors-escapement-02 24 "$whole" PACK=escapement LEVEL=2 OPEN=1 FINGER=1 REST=0.2 MOVES=2:4,0:1,1:-3
 film editors-prism-01 24 "$whole" PACK=prism LEVEL=1 OPEN=1 FINGER=1 REST=0.2 MOVES=0:-4,1:+3,2:-3
+# The packs' layers in play (scripts/layers-film.sh films them with sound): Lens 25, Escapement 29 and Prism 30 each
+# played by a drawn fingertip through its line in sound-src/layers-in-play.tsv, wrong moves and undos and all, its
+# studies halved, to the solve and on under the card, each pack owned. Lens's halftone is baked first, as for
+# editors-lens-03.
+layer() {  # name pack level ratchet
+  wants "$1" || return 0
+  local secs line
+  read -r secs line < <(python3 scripts/layers.py moves sound-src/layers-in-play.tsv "$2" "$4" 0.5)
+  if [[ "$2" == lens ]]; then
+    SIMCTL_CHILD_UNSTIR_PACK=lens SIMCTL_CHILD_UNSTIR_LEVEL="$3" SIMCTL_CHILD_UNSTIR_OWNED=lens \
+      xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
+    local caches
+    caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
+    for _ in $(seq 120); do compgen -G "$caches/halftone-*" >/dev/null && break; sleep 1; done
+    compgen -G "$caches/halftone-*" >/dev/null || { echo "$1: the halftone never baked" >&2; exit 1; }
+    sleep 1
+  fi
+  film "$1" "$secs" "fps=0.25,scale=150:-1,tile=8x5:padding=4" PACK="$2" OWNED="$2" LEVEL="$3" OPEN=1 FINGER=1 UNDOS=10 \
+    MOVES="$line"
+}
+layer layer-lens-25 lens 25 0
+layer layer-escapement-29 escapement 29 1
+layer layer-prism-30 prism 30 0
 # The store preview's opening and unstir (ST5 = A, scripts/store-media.sh): open-L12 long enough to wind in whole, and
 # editors-whirlpool-03 with the interface, as the preview's other segments have it.
 film store-open-L12 10 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=12 OPEN=1

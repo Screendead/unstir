@@ -96,6 +96,31 @@ retake; the small-phone check of the taller result card; a checklist page of the
 the merged lanes' worktrees removed. `r17-ci-private` waits for the day the repo goes private, as does deleting
 `codeql.yml`. Local branches not pushed: `r17-stamp`, `r17-f14`, `r17-ci-private`.
 
+**Evening of 2026-11-10** (a second calls page, twelve calls, none answered yet; its link is in
+`HANDOFF.private.md`). Merged on SOUNDLAYERS = A and F14 = B: #158 (each paid pack's sound layer in play) and
+#179 ("checking purchases…" until the store's first read; its text takes the second tone, a little brighter than
+the picture Jack saw); and #177 (one catalog escape, invisible). **Built, CI green, held for Jack**, each with real
+shots on the page: #173 with BUTTONS's two fixes (a result card too tall for the room steps its own type down,
+never below the default, then scrolls; the scroll-only way is on local `r17-ds3-alt`; the pack heading over the
+level title gone, with the "‹ levels" button on local `r17-ds3-name-b`); #180 (`r17-ds5b`, design change 5, the
+menu and result card, stacked on #173; its fourteen visible changes are in its body; proposal 5.4's lost-card
+buttons and the SE's stamp-for-title not built); #178 (STAMP: "unstirred." grows to about 28 pt at xxxLarge, the
+Duo tabletop's stays fixed; on an SE at the three largest sizes it crosses the title, as master's fixed word
+already touches it; conflicts with #173 in TankView.swift, so whichever merges second takes the other in); #157
+(all 25 Lens panels drawn and wired by level number, the picture still `.halftone`, so no stored value or print
+changes; Telephoto the weakest; the pack's cover, clip and promo image now show level 3's Magnifying glass; each
+panel is cached at 5.5 MB, about 137 MB for all 25, and no bake is timed on a phone); #174 as before. **The
+twelve calls**: the over-par "+n" again, with what the dots mean; which pack name goes; step-down or scroll at
+xxxLarge; change 5 as built, half or neither; the daily row's streak against its dots; a completion line's colour;
+whether "deeper every tank" is said anywhere; tightening three cards that overflow an SE at the default size (the
+tier-end card with a locked next tier, the daily's, an at-par replay with a best line); the stamp on an SE; the 25
+panels and any redraws; the pack's face; the x8 softness. **Not started, waiting**: the catalog's chrome half (120
+escapes left, all in files the held PRs touch: Shelf 41, TankView 18, Menu 18, ResultCard 16, Archive 15, Consent
+12); the store media retake (after the design and the panels land); Lens's first-open bake in the phone bench,
+then the cache cap as a call. **Raise with Jack**: three PR test jobs ran past ten minutes that evening (10:09,
+11:48, 12:11), most of it the simulator's boot and the tests' start. The phone checks owed to Jack are listed on
+the page as to-dos (eleven, Escapement's and Prism's playthroughs first).
+
 ### Open work (finish-and-pitch, 2026-11-02)
 
 Closed: moved word for word to `docs/history.md`.

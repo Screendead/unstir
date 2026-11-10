@@ -794,8 +794,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
-  entitlements is no landing (`PackCard.lands`): an owner's card opened before `Store.ready` reads unowned, then owned,
-  without a chime or an announcement. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  entitlements is no landing (`PackCard.lands`): a card opened before `Store.ready` says "checking purchases…" (`text2`, Jack's call F14 = B) in place of its
+  status, buy and Triptych's line, so an owner never sees a price on a pack they own, then reads as owned or not,
+  without a chime or an announcement. Offline the read still ends, as the entitlements are kept on the device, and the
+  card shows its state with "App Store unreachable" where the price goes, as before. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
   card (`Store.forgetFailures`) and as a level opens, and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from the level
   before it (a locked row scrolls to buying instead). The last taste level's result card says where its next goes
@@ -943,7 +945,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   accessibility label, value or hint or announcement whose argument is not a literal, `verbatim:` or already
   localized, a case change, a hand-made plural, a glyph or a bare number as a key. A line that means it carries
   `// loc: verbatim <why>`. `scripts/loc-lint/baseline.txt` lists the escapes still owed, file and line text; each
-  fix takes its line out, and the test fails on an escape or a fixed line left in. CATORDER = D splits the migration:
+  fix takes its line out, and the test fails on an escape or a fixed line left in. First Stir's time ("6:40 am",
+  `StoryScene.clock`, Jack's call F3) is drawn `verbatim:` under the night forwards' glass and a story clip's tank
+  alike, as its form is fixed in English. CATORDER = D splits the migration:
   the tables (Levels, Pack, First Stir) and the leaf files first, the chrome (Menu, the play screen and its card,
   Shelf, Consent, Archive) after the design pass.
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
@@ -1057,7 +1061,19 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the level cancels plays them, timed from the ticks' landing (`Game.landed`); an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
   landed before the view appeared, stay silent and still. Beds loop under the menu and each tier (`Level.bed`;
   daily, endless, the sandbox and the packs take plughole's), and a new one crossfades in over the old at equal power
-  across two decks. Only a bed that is playing stays decoded, and none in the background.
+  across two decks. Only a bed that is playing stays decoded, and none in the background. A sold pack's level plays
+  its layer over plughole's bed (`Level.layer`, `Sound.Layer`; Jack's call SOUNDSK: Lens B, Escapement B, Prism A),
+  rendered from `sound-src/sketches.csd` at the gain its sketch was heard at: an 8-bar loop at 75 bpm
+  (`layer-<pack>.m4a`, turned to start a quarter beat before its first beat so its wrap falls between onsets) on a deck
+  of its own, coming in with the bed's crossfade from its first beat, from which the layer's beats and eighths count
+  (`firstBeat`). The solve (`LevelView.landSolve`, with the chime) holds the loop to the next beat, then fades it over
+  0.5 s as the resolution (`-end`) plays on that beat; Prism's swell (`-swell`) starts 0.4 s before it, never before the
+  solve. Escapement B's reed plays the motif a note a move on the next eighth, the note the moves before it (an undo
+  takes one back, the demonstration plays none), and lands on D with the solve's chime. The layer follows the music
+  switch and steps aside for another app's music with the bed; another try after a solve, or the next level, brings it
+  back, and leaving for the menu or a tier's level takes it out over the crossfade. Its files decode only while it is
+  wanted. `scripts/sounds.sh layers` renders the same layers under real play off the phone, and
+  `scripts/layers-film.sh` films them in the app.
   `Sounding`, set on `RootView`, is the app's button style: a button taps as
   it acts, and undo and reset have sounds of their own; the undo's body peaks about 0.2 s after the press (Jack,
   SN1). A button that sets its own `.plain` style has none, so every
@@ -1100,7 +1116,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `UNSTIR_BARE=1` draws the picture unstirred, so a story's art shows as the stack has played it. `UNSTIR_CLEAN=1` draws a level as its glass and picture in the bezel alone, for App Store art that may show no interface (the Today card's video): the header, title, caption and notes, controls, swatches and cards are kept in the layout but not drawn, so the tank stays where `film.sh` crops it, and nothing else over the glass is drawn (knobs, dials, dashes, counts, rings, lessons, the knurl, the brim, the stamps and the drawn fingertip), nor the status bar or home indicator; the picture still turns, winds and waves as played. `UNSTIR_ENDING=s` with `UNSTIR_SCREEN=clean` opens First Stir's last scene solved with the night forwards held s seconds in (-1 runs it). In Debug, `UNSTIR_PACK=lens` opens that pack's level `UNSTIR_LEVEL`, or past its levels a placeholder, which keeps no
   best or started flag (`Level.keepsProgress`); Prism's is tri on the fern, rod 0 red and rod 1 cyan, dealt
   `2:+3,0:+4,1:-3`, as specimen 1 is. And
-  `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` (or `lens:unshared`, revoked as a family's share) set the store's states for the launch
+  `UNSTIR_OWNED=lens,complete` and `UNSTIR_STORE=lens:pending,complete:revoked` (or `lens:unshared`, revoked as a family's share; `unread` holds the launch's first read of the entitlements unended, `Store.ready` false) set the store's states for the launch
   in place of StoreKit's, never stored, with the StoreKit file's prices, in dollars (none with `UNSTIR_PRICES=0`, as while they load, or `UNSTIR_PRICES=unreachable`, as after a failed fetch);
   `UNSTIR_FAILED=offline` (`storefront`, `refused`) says why a failed product failed, or a pending one's ask again, `UNSTIR_PAYMENTS=0` turns
   purchases off, and `UNSTIR_RESTORED=lens,prism` (`none`, `failed`) sets what the last restore found;
@@ -1115,7 +1131,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   starts a promoted purchase of it a second in, `UNSTIR_PROMO=lens` shows that offer's promoted-purchase image alone,
   `UNSTIR_SUPPORTER=0` switches the supporter mark off for the launch, and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait); `UNSTIR_PLAYED` commits such a
+  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait), `u` an undo through the control
+  with its sound and `p<s>` a rest of s seconds more before the next (`Harness.Step`); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
   round, for films. `UNSTIR_PAR=n` sets a stack's par. `UNSTIR_CLOCK` also holds the rim,
