@@ -20,6 +20,14 @@ import sys
 # on its way home.
 LEVELS = {
     1: ("keyhole", "Keyhole", "tri", "0", "0:+2"),
+    2: ("peephole", "Peephole", "tri", "0", "0:+1"),
+    3: ("magnifier", "Magnifying glass", "tri", "0", "0:+2"),
+    4: ("monocle", "Monocle", "tri", "1", "1:+2"),
+    5: ("goggles", "Goggles", "eye", "2", "2:+2"),
+    6: ("spyglass", "Spyglass", "eye", "0", "0:+2"),
+    7: ("binoculars", "Binoculars", "tri", "0,1", "0:+2,1:+1"),
+    8: ("spectacles", "Spectacles", "quad", "0,2", "0:+2,2:+2"),
+    9: ("sunglasses", "Sunglasses", "eye", "2,3", "2:+2,3:+2"),
 }
 RODS = {
     "tri": [(0, -0.42, 0.58), (0.3637, 0.21, 0.58), (-0.3637, 0.21, 0.58)],

@@ -65,6 +65,7 @@
 		A9CC4FB30ADDD0C4BF3C5E36 /* Solver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE72E9F1CCE362B73E2FA79 /* Solver.swift */; };
 		AC5D0717C9C1D13971B19A39 /* FirstStirTheStorm.swift in Sources */ = {isa = PBXBuildFile; fileRef = E01C10024A40F6C6354A7B58 /* FirstStirTheStorm.swift */; };
 		AE9A1261C5C6915EACA3371B /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E2F5EACFB0A4F616F37323F /* Tone.swift */; };
+		AF51F461DA88EDCD49AF2B68 /* LensArtCutIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700FE27C8061161204ADB23A /* LensArtCutIn.swift */; };
 		B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB4A9DE240F63330597A189 /* LensTests.swift */; };
 		B53F675881F4530F0753B7CC /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708EF54666A7750097BCDFEC /* Game.swift */; };
 		BB171E46F642C6FCB6ABD8A4 /* Glass.metal in Sources */ = {isa = PBXBuildFile; fileRef = D1F91870B1E87E24EFC084E0 /* Glass.metal */; };
@@ -156,6 +157,7 @@
 		6CDB9648767C314FCCCA618D /* Achievements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievements.swift; sourceTree = "<group>"; };
 		6DC78A03B7B4D5363A8E010A /* AgeRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgeRange.swift; sourceTree = "<group>"; };
 		6EE69789D7FB741D6D04AA1A /* SolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolverTests.swift; sourceTree = "<group>"; };
+		700FE27C8061161204ADB23A /* LensArtCutIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensArtCutIn.swift; sourceTree = "<group>"; };
 		708EF54666A7750097BCDFEC /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
 		7147B0B195AAB46DE31D870D /* Pictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pictures.swift; sourceTree = "<group>"; };
 		7460F8510A57CE405402E04F /* PlayLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayLayoutTests.swift; sourceTree = "<group>"; };
@@ -320,6 +322,7 @@
 				B3380A991210C9195237AA14 /* Info.plist */,
 				9671F664A49B27787D8573AD /* LensArt.swift */,
 				8582290C096A27A793005B80 /* LensArtCloseUp.swift */,
+				700FE27C8061161204ADB23A /* LensArtCutIn.swift */,
 				ABE2B06B8CFB2F3BB5B6CF7F /* Lessons.swift */,
 				BD430ED66CD5CE54E0F67F72 /* Levels.swift */,
 				944137441C4619E684D8CC15 /* LivePictures.swift */,
@@ -496,6 +499,7 @@
 				973A9E11BF631BE4211EAA02 /* Icon.swift in Sources */,
 				D97B6716323430A910684B48 /* LensArt.swift in Sources */,
 				12F08A807458236B1F206C6B /* LensArtCloseUp.swift in Sources */,
+				AF51F461DA88EDCD49AF2B68 /* LensArtCutIn.swift in Sources */,
 				3DEE134C24C7718D40F962C3 /* Lessons.swift in Sources */,
 				98526A3AA7420D378D76C241 /* Levels.swift in Sources */,
 				5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */,

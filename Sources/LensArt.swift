@@ -13,7 +13,8 @@ enum LensArt {
     typealias Tone = SIMD3<Double>
 
     /// The drawn panels by their level's number. A level without one draws the test panel (`Halftone.panel`).
-    static let levels: [Int: Halftone.Panel] = [1: keyhole]
+    static let levels: [Int: Halftone.Panel] = [1: keyhole, 2: peephole, 3: magnifier, 4: monocle, 5: goggles, 6: spyglass,
+                                               7: binoculars, 8: spectacles, 9: sunglasses]
 
     static let bold = 0.008, mid = 0.005, hair = 0.0025
 
