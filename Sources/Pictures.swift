@@ -20,7 +20,13 @@ enum Picture: String, CaseIterable {
     /// Escapement's engine-turned plate, ink on paper, baked.
     case engineTurned
 
-    var isLive: Bool { ![.grid, .sunset, .city, .halftone, .engineTurned].contains(self) && plate == nil }
+    var isLive: Bool {
+        switch self {
+        case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,
+             .marblingTwin, .isobars, .ephemeris, .cords: true
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: false
+        }
+    }
 
     /// Prism's plate, where this is one.
     var plate: Engraving.Plate? { Engraving.Plate(rawValue: rawValue) }
@@ -33,7 +39,8 @@ enum Picture: String, CaseIterable {
         case .coral: .coralTwin
         case .neurons: .neuronsTwin
         case .marbling: .marblingTwin
-        default: self
+        case .grid, .sunset, .city, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin, .isobars,
+             .ephemeris, .cords, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: self
         }
     }
 
@@ -49,7 +56,9 @@ enum Picture: String, CaseIterable {
         case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: 60
         // Every planet goes round a whole number of times in it.
         case .ephemeris: 30
-        default: 10
+        case .glass, .marbling, .isobars, .cords: 10
+        // Baked, so nothing uses it.
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: 10
         }
     }
 
@@ -96,7 +105,9 @@ enum Picture: String, CaseIterable {
         case .isobars: Self.gradients(seed: seed, salt: 0x464C_4F57, count: 2)
         case .ephemeris: Self.ephemeris(seed: seed, t: t, period: period)
         case .cords: Self.gradients(seed: seed, salt: 0x4C4F_4F4D, count: 2)
-        default: nil
+        case .grid, .sunset, .city, .halftone, .fern, .seeds, .medusae, .radiolaria, .nautilus, .engineTurned: nil
+        // A sibling is never a twin.
+        case .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin, .marblingTwin: nil
         }
         return sibling == self ? data : data.map { $0 + Self.delays(t: t) }
     }
@@ -361,7 +372,9 @@ enum Picture: String, CaseIterable {
         case .engineTurned:
             Self.engineTurning(ctx, r: r, scale: scale)
 
-        default:
+        // Drawn by their shaders or `Halftone`, never here.
+        case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,
+             .marblingTwin, .isobars, .ephemeris, .cords, .halftone:
             break
         }
     }

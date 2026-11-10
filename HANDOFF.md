@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-11-03. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-11-09. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -40,20 +40,37 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
 
+### Open work (finish-and-pitch, 2026-11-09)
+
+The run's list, checked against master at #152. **Decided** (Claude does it): FreshDefaults forgets bests too; the
+`shots.sh` index fix for `prism-swatch-white-*` (`scripts/shots.sh:749`); the scrolled pack card under the status bar
+(confirm 5cbd45f's mask, then drop to-do 74's line); to-do 74's remaining plain fixes (F13(f)'s stored "asked" date,
+F14's "checking purchases…" placeholder, the inventory walked against master); the design pass's decided calls
+D1, D2 and D4 (D3's dots wait for the pass's port); ARCH's split of TankView.swift (moves only), then its typed shader
+encoder; the duo-feel bench into the repo; the private-repo CI cost and the test step's slow start (ci-time = B);
+the owed films and shots retaken on master and attached; handoff housekeeping. **Decided, later in ORDER**: the
+String Catalog after the design pass, then the store media retaken. **Decided, waiting on a launch fact**: the Lens
+and Prism shader weights (Jack's phone bench), the iCloud flip (the capability), `Share.firstDay` and `Share.url`.
+**Answered 2026-11-09** (round 17, `docs/decisions.md`): DESIGN5 = A, CATORDER = D, ESCBOOK = A,
+ARCHREST = A, PERF = A, TFREAD = D; their work joins the decided list. **Undecided** (on the page, with what was built):
+Lens's art for v1 (draft #157, one panel per option); the pack sound layers (draft #158, filmed in play); the
+Ask to Buy date kept and its 24 h wait (#154 as built); F14's checking line; the Duo-speed probe; CI and CodeQL once
+the repo goes private (the measured cost is in `HANDOFF.private.md`). **Blocked**: the
+owed shots for merged #81, #83, #84 are taken (`~/development/unstir-tools/r17-shots-out`) but Chrome was not
+connected to attach them; a dock-waking film needs a new harness hook. Pitch page:
+https://claude.ai/artifact/TcJvFtVMBXWgbh589TGYbp, design canvas https://claude.ai/artifact/W99rKP56Wv8Pz1FLvhAqtE. **Jack's to-dos**: the
+Escapement book and round 13 and 16 checks on the phone, the phone GPU bench, the developer account and App Store
+Connect, the ICO registration, Eyes Shut's hosting and outreach, posting the clips.
+
+**Paused 2026-11-10 at Jack's word, after design change 1 merged (#169).** Merged in wave 2: #156, #159 to #164,
+#166 to #169. Open: #165 (String Catalog first half, CI green, not yet reviewed or merged); #157 and #158 wait on
+the pitch's picks. Not started: design changes 2 to 5, the catalog's chrome half, the store media retake, the
+records (ESCBOOK's J3 to J8 closed, PERF's section to history, ARCH's stale split lines), and this branch's PR. Check
+the nightly's StoreTests on #154 (their first run).
+
 ### Open work (finish-and-pitch, 2026-11-02)
 
-The run's list. **Decided** (Claude does it): #115; LG3's leftovers (Store.swift's two whole-`error` logs, privacy-policy.md's "only thing it talks to" without the age-range check, the undo-bank row's monotonic-clock text, from local `legal-lg3`'s three commits); the Duo's stages 2 to 4; the shots and films owed (#81's indexed shots, `film.sh calm-`, the dock waking, nav-focus's menu shots); the store screenshots and 25 s preview (ST4, ST5); plan step 3's clips; the architecture pass's ranked list; pack sound sketches (to-do 45, ends at Jack's ear). **Unblocked by round 16**: the String Catalog migration (F4 = C, about five days; CAT1 to CAT8 = A), in ORDER's place after the design pass. **Undecided** (to Jack's pitch): the UI design pass (to-do 72); round 16's follow-ups (below). Round 16 answered the rest. **Jack's to-dos**: device checks, the developer account and App Store Connect, Eyes Shut's outreach (Triptych's trademark check is done: clear). **Round 16 answered every call** (the table under round 15's): the work it decides follows ORDER. Follow-ups from the run: the
-preview's "01: Calm" segment snaps to its end when the rim turns (Jack's note, STOREMEDIA; in the strike and cut
-pipeline); `shots.sh` with a pattern rewrote `shots/index.txt` and dropped the two `prism-swatch-white-*` lines though
-the script still defines them (cause found 2026-11-03: the `if` at `scripts/shots.sh:749` skips those two `shot`
-calls when the pattern matches neither, so their index lines are never written on a patterned run; the fix, writing
-those lines outside the `if`, is in no PR, and the lines are put back by hand meanwhile); `FreshDefaults` forgets
-started flags and saved tries but not bests, so a second test run on the same simulator install fails
-`testResetZeroesMovesButCostsClean`, `testALookIsFree` and `ShareTests.testMarksFollowThePlay` on the first run's
-bests (found on stage 5, 2026-11-03; a reinstall clears it; the fix is in no PR); before the repo goes private at launch
-(Jack's note on HISTORY), cost the PR and nightly runs against the Actions allowance, macOS minutes at 10x. Outputs
-kept in the tools folder: the architecture pass's ranked list (`architecture/ranked.md`), the pack sound sketches
-(local branch `sound-packs`), the owed shots and films (`owed-shots/`) and the store media (`store-media/`).
+Closed: moved word for word to `docs/history.md`.
 
 ### Round 16's build (2026-11-02 night)
 

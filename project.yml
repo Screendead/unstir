@@ -15,6 +15,11 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_EMIT_LOC_STRINGS: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+  configs:
+    # FIRST_STIR compiles First Stir in. Release never sets it: the pack is out of v1 (Jack, FS17), and code a shipped
+    # build holds but withholds risks guideline 2.5.19. Debug, which the tests, shots and films build, keeps it.
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG FIRST_STIR
 targets:
   Unstir:
     type: application

@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's scenes, one per level. Each rod in `vignettes` holds one vignette in its rigid core, drawn in two states:
@@ -69,3 +70,4 @@ enum Harbour {
     /// at 3x on the largest phone come to about 51 MB; past this the layers bake at a lower scale.
     static let budget = 64 << 20
 }
+#endif

@@ -3,6 +3,21 @@
 Closed sections moved word for word out of `HANDOFF.md`, which every session reads at its start. Each section keeps its own
 headings; `HANDOFF.md` says where each was. Jack's calls in them are indexed in `docs/decisions.md`.
 
+### Open work (finish-and-pitch, 2026-11-02)
+
+The run's list. **Decided** (Claude does it): #115; LG3's leftovers (Store.swift's two whole-`error` logs, privacy-policy.md's "only thing it talks to" without the age-range check, the undo-bank row's monotonic-clock text, from local `legal-lg3`'s three commits); the Duo's stages 2 to 4; the shots and films owed (#81's indexed shots, `film.sh calm-`, the dock waking, nav-focus's menu shots); the store screenshots and 25 s preview (ST4, ST5); plan step 3's clips; the architecture pass's ranked list; pack sound sketches (to-do 45, ends at Jack's ear). **Unblocked by round 16**: the String Catalog migration (F4 = C, about five days; CAT1 to CAT8 = A), in ORDER's place after the design pass. **Undecided** (to Jack's pitch): the UI design pass (to-do 72); round 16's follow-ups (below). Round 16 answered the rest. **Jack's to-dos**: device checks, the developer account and App Store Connect, Eyes Shut's outreach (Triptych's trademark check is done: clear). **Round 16 answered every call** (the table under round 15's): the work it decides follows ORDER. Follow-ups from the run: the
+preview's "01: Calm" segment snaps to its end when the rim turns (Jack's note, STOREMEDIA; in the strike and cut
+pipeline); `shots.sh` with a pattern rewrote `shots/index.txt` and dropped the two `prism-swatch-white-*` lines though
+the script still defines them (cause found 2026-11-03: the `if` at `scripts/shots.sh:749` skips those two `shot`
+calls when the pattern matches neither, so their index lines are never written on a patterned run; the fix, writing
+those lines outside the `if`, is in no PR, and the lines are put back by hand meanwhile); `FreshDefaults` forgets
+started flags and saved tries but not bests, so a second test run on the same simulator install fails
+`testResetZeroesMovesButCostsClean`, `testALookIsFree` and `ShareTests.testMarksFollowThePlay` on the first run's
+bests (found on stage 5, 2026-11-03; a reinstall clears it; the fix is in no PR); before the repo goes private at launch
+(Jack's note on HISTORY), cost the PR and nightly runs against the Actions allowance, macOS minutes at 10x. Outputs
+kept in the tools folder: the architecture pass's ranked list (`architecture/ranked.md`), the pack sound sketches
+(local branch `sound-packs`), the owed shots and films (`owed-shots/`) and the store media (`store-media/`).
+
 ### Round 16's build (2026-11-02 night)
 
 Merged: #126 (APPSIZE = B, the CI size guard, and pipefail in both Test steps), #127 (ICLOUD = A, bests through iCloud

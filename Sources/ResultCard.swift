@@ -99,7 +99,7 @@ struct ResultCard: View {
                             .padding(.top, 4)
                     }
                 }
-                .font(.mono(13))
+                .font(.ui(.label))
                 // Focus lands on the finish itself: an announcement before a focus move is cut short.
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(game.finishSpoken)
@@ -107,11 +107,11 @@ struct ResultCard: View {
                 if let pack = Offer.pointer(after: game.completed) {
                     // Quiet: the card's way on is still next, or up a notch.
                     Button { onOffer(pack) } label: { Text("try \(pack.name) \u{203A}").hit() }
-                        .font(.mono(.caption)).opacity(0.6)
+                        .font(.ui(.detail)).opacity(0.6)
                         .accessibilityLabel("Try \(pack.name)")
                 } else if let pack = packs {
                     Button { onOffer(pack) } label: { Text("more puzzles in the packs \u{203A}").hit() }
-                        .font(.mono(.caption)).opacity(0.6)
+                        .font(.ui(.detail)).opacity(0.6)
                         .accessibilityLabel("More puzzles in the packs")
                 }
             }
@@ -136,11 +136,11 @@ struct ResultCard: View {
                             .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
                     }
                 }
-                .font(.mono(15, .medium))
+                .font(.ui(.button))
             }
             if let day = Share.day(of: game.level.id), !game.level.archived {
                 TimelineView(.everyMinute) { t in
-                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.mono(12)).opacity(0.55)
+                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.ui(.detail)).opacity(0.55)
                         .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
                 }
             }
@@ -193,11 +193,11 @@ private struct TierUp: View {
         Button { open ? onNext(to.levels[0]) : onLook(to) } label: {
             VStack(spacing: 6) {
                 Text(open ? "up a notch" : shortLine)
-                    .font(.mono(11, .semibold)).tracking(open ? 3 : 0.5).textCase(open ? .uppercase : nil).opacity(0.6)
+                    .font(open ? .ui(.eyebrow) : .ui(.detail)).tracking(open ? 2 : 0).textCase(open ? .uppercase : nil).opacity(0.6)
                 HStack(spacing: 10) {
-                    if !open { Image(systemName: "lock.fill").font(.system(size: 16, weight: .semibold)) }
-                    Text(to.name.uppercased()).font(.system(size: 26, weight: .black).width(.expanded)).tracking(5)
-                    Text("\u{203A}").font(.system(size: 26, weight: .black))
+                    if !open { Image(systemName: "lock.fill").font(.ui(.label, .semibold)) }
+                    Text(to.name.uppercased()).font(.ui(.displaySmall)).tracking(4)
+                    Text("\u{203A}").font(.ui(.displaySmall))
                 }
                 .foregroundStyle(to.sweep)
                 .shadow(color: to.glow.opacity(glint ? 0.9 : 0.5), radius: glint ? 16 : 9)
@@ -227,7 +227,7 @@ struct LostCard: View {
 
     var body: some View {
         VStack(spacing: 26) {
-            Text("out of ticks on move \(game.moves)").font(.mono(13))
+            Text("out of ticks on move \(game.moves)").font(.ui(.label))
                 .accessibilityLabel(game.finishSpoken).accessibilityFocused($focused)
             HStack(spacing: 32) {
                 Button(action: undo) { Text("undo \u{00B7} \(game.bank)").hit() }
@@ -238,8 +238,8 @@ struct LostCard: View {
                     .foregroundStyle(page.accent).shadow(color: page.glow(page.accent), radius: 4)
                     .accessibilityLabel("Try again")
             }
-            .font(.mono(15, .medium))
-            if let notice { Text(notice).font(.mono(12)).opacity(0.7).transition(.opacity) }
+            .font(.ui(.button))
+            if let notice { Text(notice).font(.ui(.label)).opacity(0.7).transition(.opacity) }
         }
         .onAppear { focused = true }
     }

@@ -42,8 +42,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `unstirChannelsBody`), so the GPU bench's kernel runs the same code on a texture. It turns the sample point back by the glass's `turn`, then applies
   the stack's inverses to sample the picture. A lens's entry carries a negative radius and its flow's time
   (`steps * Tank.lensRate`) for the angle, and the rim's sharpness comes in as a uniform. The tests reach the Swift copy
-  (`Tank.profile`/`Tank.twist`/`Tank.lens`) and only the shader's `lensFlow`, compiled on its own
-  (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
+  (`Tank.profile`/`Tank.twist`/`Tank.lens`) and, of the shader, only `lensFlow` and the channel chains, compiled
+  on their own through `ShaderKit` (`testLensShaderMatchesSwift`, 12 steps either way), so change the two together. The turn has no Swift copy: only the `seized-*` shots pin its sign against `Layout.behind`.
   Every draw through `unstir` or `unstirChannels` (the level's glass, the dock's covers, the cards' clips, the icon,
   the menu's stir) passes its arguments by name through `TankShader` (Shader.swift, Jack's call ARCH = A), which lists
   them in the signature's order: `testTheTankShaderPassesTheSignaturesOrder` reads both signatures out of Unstir.metal
@@ -134,8 +134,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   body as a kernel for the GPU bench (Unstir.metal, above). The twins' heartbeat lives in their own lines: each
   file's `heartbeat` reads the delay grid `Picture.delays` appended to the twin's data, and the lines swell and brighten
   as the beat passes, so it is stirred with the picture. A swollen line must keep inside its design's limits (neurons'
-  regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself and checks its search
-  against a brute force, the twin at the beat's peak; nothing else tests the shaders.
+  regions, chainmail's early-out). `testNeuronsStayInTheirRegions` compiles Neurons.metal itself (`ShaderKit`) and checks its
+  search against a brute force, the twin at the beat's peak; no other picture's shader has a test of its own.
 - **Brim.swift** and **Brim.metal** draw endless's brim as a measuring jug on the tank's own bezel, ported from the
   mockup Jack approved (2026-09-28) with its constants in its own units (`Brim.unit` to the glass's radius): ticks
   engraved on the steel, a brim pin at twelve, and a liquid in the picture's own colours climbing both sides from six
@@ -211,8 +211,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **TankView.swift**, **Game.swift**, **Shader.swift**, **Lessons.swift**, **Rods.swift**, **ResultCard.swift** and
   **EscapementViews.swift** hold the play screen, split by type (Jack's call ARCH = A), and this one entry covers all
   seven. TankView.swift keeps `LevelView` whole, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
-  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints, and the app's colours and
-  `Font.mono`; Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
+  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints, and the app's colours (its type
+  is Type.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
   `LensLesson`, `RimLesson` and `GhostFinger`; Rods.swift `RodView`; ResultCard.swift `ResultCard`, `TierUp`,
   `Completion`, `Review` and Escapement's `LostCard`; EscapementViews.swift `ClockHint`, `RatchetView`, `FlipCounter`,
   `LostStamp` and `StopLook`. `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
@@ -423,7 +423,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Build.playtest`, what `scripts/run-ios.sh` installs) or in the editors' build (`Build.editors`), and the harness outside Release only.
   First Stir is out of v1, to be reworked (Jack's call FS17), and Prism takes its place (PK1): `Pack.ships` is
   false for First Stir alone, and `Pack.sold()`, the packs a build sells (Lens, Escapement and Prism in Release), leaves it out in Release only, so its code, levels,
-  ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`) still reach them. In Release its every level, taste and all, is `.withheld`, which opens
+  ids and tests stay and Debug and the harness (`UNSTIR_PACK=first-stir`) still reach them. Its code is compiled in only
+  under `FIRST_STIR`, which `project.yml` sets for Debug alone, so a Release build holds none of its scenes, levels or
+  story plumbing (guideline 2.5.19 bars hidden features): the `firstStir` case, its name, ids and shelf copy stay for
+  their stored values, its `levels` are empty, and `Clip.of` and `Clip.cut` stop on it, as no Release shelf shows it.
+  In Release its every level, taste and all, is `.withheld`, which opens
   neither the level (`Store.opens`, checked by `RootView.show`) nor its card (nor `UNSTIR_CARD`), and `Pack.sold()`
   sets what StoreKit is asked for (`Pack.productIDs`) and analytics' snapshot (`testFirstStirIsOutOfV1`). The bundle
   (`Offer.complete`, sold as `Pack.completeID`, its old name Complete kept in its ids) is self-limiting (Jack's call
@@ -492,7 +496,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   deeper than 8 (Jack's call PK1: deeper reads too busy), par the depth (`testPrismLevels`, which pins the table and
   checks each stack keeps four taps under `channelCost`), the solver's optimum (`testPrismParIsTheOptimum`, slow,
   about 4 minutes).
-- **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. A level with a `story` draws it in
+- **FirstStir.swift** holds First Stir's table (`Level.firstStir`) and its scenes. It, the other `FirstStir*.swift`,
+  `StoryScene.swift` and `FirstStirTests.swift` compile only under `FIRST_STIR` (Debug), as does `Level.story`; the
+  shared code reads `Level.isStory` (false without it) and keeps its story branches behind the same condition. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
   (later in the night) and played (earlier). Its titles and the ending's beats are catalog keys marked do-not-translate
   (`scripts/catalog.py fixed`) while the pack is out of v1; the scene's clock stays a hand-built "6:40 am" (Jack, F3),
@@ -527,7 +533,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   same there (`testTheCutInCoresLeaveNoSeam`). Its time is a function of the stack: `Game.wound` counts
   the scramble's entries gone (the player's own pushes move no time; a solve has wound them all), and the scene stands
   that share of the way from `late` to `early`, winding there over `Harbour.rewind`. `Game.caption`, the line under
-  the tank, is that time as a clock on a scene's level ("6:40 am", Jack's F3) and the note elsewhere. `Dawn` is
+  the tank, is that time as a clock on a scene's level (`Game.sceneClock`, "6:40 am", Jack's F3) and the note elsewhere. `Dawn` is
   chapter 1, Dawn After: five scenes, 6:40 back to 4:45 am, in dawn pewter, each scene's `early` the next one's `late`
   (`testTheTable`). `Rescue` is chapter 2, The Rescue: five scenes, 4:45 back to 2:30 am, in rescue amber, its ink the
   rain's B7CEFF at full strength. Its sky (low cloud lit from below, `Rescue.skyTones`) and sea open on Dawn After's
@@ -573,9 +579,27 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   changes), the test past 8 at 512 px; the test is the judge. On the simulator one long cloud bank's flat base row came
   out a level different whichever vignettes had played, which the Mac never showed: keep a cloud bank inside the
   tank's width.
+- **Type.swift** holds the type scale (Jack's call DESIGN5 = A, the design pass's first change): every piece of text
+  round the game is set in a `TypeRole` through `Font.ui`, each a Dynamic Type text style in SF Mono (the two display
+  roles in SF Pro Black Expanded): `display` 34 (the wordmark, a pack's and the archive's name), `displaySmall` 22
+  (TierUp), `title` 20 (the settings sheet's and the consent card's), `headline` 17 (the level's title line, a status
+  line), `body` 17 (a row's title), `button` 17 medium, `chip` 15 medium (the tier strip), `label` 15 (the header's
+  count, the note, a card's facts, a row's number), `detail` 13 (a row's detail, keys, section headers, small print)
+  and `eyebrow` 12, so nothing that carries meaning is under 13 and every screen follows Settings › Text Size. The play
+  screen caps at `PlayLayout.typeCap` (xxxLarge), as the dock does, since the tank needs its room; the menu, cards,
+  archive, settings and consent scale to the accessibility sizes, where a menu row's result goes under its title. The
+  gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
+  default size, as the title's 18 pt gap holds no more and the way out names the pack; and the menu hands its type size
+  to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
+  `TypeRole.line` gives a role's line height as `Text` lays it out (a text style's font, whose leading grows faster than
+  its size), which `PlayLayout.Chrome` and the caption's two lines use. The game's own text stays fixed (`Font.game`):
+  a knob's letters, a turn's count, "unstirred.", "spilled.", First Stir's film lines, with Escapement's flip counters
+  and serif stamp and badge.
 - **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
-  `min(width, height - 290) / 1.045`, as on every iPhone; a wider one (the iPhone Duo opened like a book, whatever the
+  `min(width, height - reserve) / 1.045`, as on every iPhone, `reserve` 290 pt at the default type size and as much
+  more as a plain level's chrome grows at the play screen's (`PlayLayout.reserve`), so on an SE at xxxLarge the glass
+  gives way to the chrome; a wider one (the iPhone Duo opened like a book, whatever the
   portrait lock) splits at the fold, 16 pt clear of it either side: the tank in the leading half with `LevelView`'s
   header and title above it and its caption, swatches and controls below, and the menu in the trailing half (stage 5,
   below). The fold is the system's division region (`GeometryProxy.reservedRegions(kind: .division)`, iOS 27.1, active only while
@@ -632,14 +656,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   Where play splits, a level opens beside the menu (stage 5; Jack's calls D-layout = 3, DUOMENU = B and s5-chrome = B,
   round 16): the tank in the leading half with its chrome round it, the header and title above it and the caption,
   swatches and controls below (`PlayStack.placeRound`), and the menu alone in the trailing half. The glass is as large
-  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape and whether Prism's swatches show, fixed
-  heights that `testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure` holds against the parts as `PlayStack` lays a
-  level out and hands them to `chromeMeasured`; the play screen's text is fixed in size, so no type size changes
-  it), the spare room half
-  over the tank and half over the controls: stage 1's 424 pt for every level of plughole, whirlpool and vortex, the
-  daily, Lens, and Prism read by colour; 5 pt less for maelstrom's rim lesson under the title, 9 less for
-  Escapement's split-flap ticks and two lines of serif, 30 less for Prism's swatches under its colour letters, and
-  endless's 348 as before, so every level of one list takes one glass, but Prism's follows its swatches: colour
+  as that chrome leaves it (`PlayLayout.Chrome`, from the level's shape, whether Prism's swatches show and the
+  type size: fixed paddings round each part's line height (`TypeRole.line`), which
+  `testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure` holds against the parts as `PlayStack` lays a
+  level out and hands them to `chromeMeasured`, at the default type size, xxxLarge and past the cap; its text
+  follows Dynamic Type to `PlayLayout.typeCap`, so a change of Text Size resizes the glass as a change of pose does),
+  the spare room half
+  over the tank and half over the controls: at the default size 417 pt for every level of plughole, whirlpool and
+  vortex, the daily, Lens, and Prism read by colour (424 before the type scale's 17 pt body, when the glass was the
+  half's width); 8 pt less for maelstrom's rim lesson under the title, 5 less for Escapement's split-flap ticks and
+  two lines of serif, 33 less for Prism's swatches under its colour letters, and endless's 342, so every level of one list takes one glass, but Prism's follows its swatches: colour
   letters or Differentiate Without Colour turned on or off mid-level resizes it by 30 pt and lets go a drag, as a
   change of pose does
   (`testTheGlassShrinksBesideTheMenuOnlyWhereTheChromeNeedsIt`; every caption fits its two lines there,
@@ -755,7 +781,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   else, for a player who skipped ahead, "The first three are free. 22 more in Lens." (Jack's call C1A = B, round 16); a
   refunded owner has only the revocation's line. "try 3 free ›" opens the taste's first level without a best, and is "replay 01–03 ›" once all have
   one (`PackCard.taste`); a locked row scrolls to buying and pulses the pill. VoiceOver follows: a locked row moves
-  its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (`Font.mono(_ style:)`; the card scrolls and stacks its facts
+  its focus to the pill, and the gate, once VoiceOver has settled on the screen, to the note (the pill without one). Text follows Dynamic Type (Type.swift's roles; the card scrolls and stacks its facts
   and buttons at accessibility sizes, and its clip is no taller than 0.36 of the screen, so buy is on the first screen
   of an iPhone SE; the dock stops at `xxxLarge` and shows a name large on a long press). VoiceOver
   reads each cover's state or price and each button's price, hides the menu under a card (beside the list in a wide window it leaves the menu readable), and announces a change of
@@ -943,8 +969,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **Pictures.swift** bakes plughole's neon pictures once per size. They are designed so that "up" is readable inside
   every rigid core. Whirlpool's five (glass, chainmail, coral, neurons, marbling) and their twins (maelstrom's) withhold
   it and are drawn live instead: `PictureLayer` hands each shader the clock mod the picture's `period` (a minute for a
-  twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. The glass's cells take the
-  raw clock; the neural web is static per seed, built once off the main actor. The tank redraws a live picture at 60 Hz, 30 while `Power` saves. Vortex's own family (isobars, ephemeris,
+  twin, its heartbeat's loop) and the floats from **LivePictures.swift**, seeded by level. Every switch over
+  `Picture` names each case, with no `default:`, so a new picture fails to compile until it says whether it is live,
+  its period, data, twin and how it is baked, where it would otherwise draw black. `PictureLayer` finds a live
+  picture's stitchable by the case's name, which `testEveryLivePictureHasItsShader` checks in the app's library. The
+  glass's cells take the raw clock; the neural web is static per seed, built once off the main actor. The tank redraws a live picture at 60 Hz, 30 while `Power` saves. Vortex's own family (isobars, ephemeris,
   cords; **VortexPictures.swift**, **Flow.metal**, **Sky.metal**, **Loom.metal**) is drawn live the same way, with no
   twins; the ephemeris's period is 30 s, in which each planet goes round a whole number of times. The sandbox's cycle
   (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's
@@ -1098,6 +1127,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   forgets every level's started flag, saved try and best (`started.`, `resume.` and `best.` keys), since the test host
   shares its defaults with the harness's launches and every earlier run on the same simulator, and a best or flag left
   there makes a test's first try a second.
+- **UnstirTests/ShaderKit.swift** compiles one of Sources' `.metal` files with a test's own kernels after it, and
+  runs them: without SwiftUI's header, cut before the first stitchable (`helpersOnly`, for a file whose stitchables
+  take a layer) or with every stitchable kept as a plain function. A test then dispatches over its buffers and reads
+  them back, so a shader's helper is checked against its Swift copy in a few lines.
 - **UnstirTests/Solver.swift** plays turning-tank levels for the tests and `scripts/solve.sh`; it never ships in the
   app. It has three players, whose moves count as `Game.history` counts them (`Play.count`). The optimum is the fewest
   moves that empty the stack: a breadth-first search over (stack, tank position) that untwists whole seams and turns

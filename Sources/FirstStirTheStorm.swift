@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+#if FIRST_STIR
 import SwiftUI
 
 /// First Stir's chapter 4, The Storm: scenes 16 to 20 of the outline, from 12:30 am back to 9:30 pm, in storm indigo
@@ -1000,3 +1001,4 @@ enum Washing {
         return pen.poly(pts.map { (x + k * (2 * $0.0 + blown * $0.1), line + k * $0.1) })
     }
 }
+#endif
