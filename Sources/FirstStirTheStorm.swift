@@ -21,7 +21,14 @@ enum Storm: Int, CaseIterable, Sendable {
     static let rain = Color(0xB7CEFF)
     static let cloud = Color(0x5F59D6)
 
-    var title: String { ["The harbour", "Lightning", "The bell buoy", "High street, rain", "Washing"][rawValue - 16] }
+    var title: String {
+        [
+            String(localized: "The harbour", comment: "First Stir scene title"),
+            String(localized: "Lightning", comment: "First Stir scene title"),
+            String(localized: "The bell buoy", comment: "First Stir scene title"),
+            String(localized: "High street, rain", comment: "First Stir scene title"),
+            String(localized: "Washing", comment: "First Stir scene title"),
+        ][rawValue - 16] }
 
     var layout: Layout { [.tri, .quad, .pent, .eye, .pent][rawValue - 16] }
 

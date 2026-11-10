@@ -4,26 +4,6 @@ import CoreHaptics
 import SwiftUI
 import simd
 
-extension Color {
-    init(_ hex: UInt32) {
-        self.init(red: Double(hex >> 16 & 0xFF) / 255, green: Double(hex >> 8 & 0xFF) / 255, blue: Double(hex & 0xFF) / 255)
-    }
-
-    static let text = Color(0xEDEFF7)
-    /// SwiftUI already has a `cyan`.
-    static let neonCyan = Color(0x00F0FF)
-    static let magenta = Color(0xFF2BD6)
-    static let amber = Color(0xFFB000)
-    static let lime = Color(0x7CFF4F)
-    static let blood = Color(0xFF1438)
-    static let violet = Color(0x9A2CFF)
-    static let alarm = Color(0xFF3B6B)
-    /// Escapement's clock, from the packs mock-up's plate, lifted to read on black.
-    static let vermilion = Color(0xFF5A36)
-    /// The grid never uses white, so the live ring cannot be mistaken for a line.
-    static let live = Color(0xF2F4FA)
-}
-
 extension CaseIterable where Self: Equatable, AllCases == [Self] {
     /// The first case follows the last.
     var next: Self {
@@ -664,7 +644,7 @@ struct LevelView: View {
             .overlay(alignment: .bottom) {
                 if pointing && !beside {
                     Self.pointer.font(.ui(.detail)).fixedSize()
-                        .opacity(showResult || ending || shown != nil ? 0 : 0.55)
+                        .opacity(showResult || ending || shown != nil ? 0 : page.tone(.text3).alpha)
                         .animation(.easeOut(duration: 0.4), value: shown == nil)
                         .accessibilityLabel(Self.pointerSpoken)
                         .accessibilityHidden(showResult || ending || shown != nil)
@@ -1109,16 +1089,15 @@ struct LevelView: View {
     /// A notice, or Escapement's dead tick, reads above the resting caption.
     private var captionOpacity: Double {
         if showResult || ending { return 0 }
-        if notice != nil || game.deadTick { return 0.9 }
-        return noteLit ? 1 : 0.55
+        return notice != nil || game.deadTick || noteLit ? TextTone.text.alpha : TextTone.text2.alpha
     }
 
     /// Endless has no par to warn of.
-    private var countTone: Color { game.level.run == nil ? Self.parTone(moves: game.moves, par: game.par) : .text }
+    private var countTone: Color { game.level.run == nil ? Self.parTone(moves: game.moves, par: game.par) : .text2 }
 
     /// The header's count: amber at par, so the next move is over it, and magenta past it (Jack's call C11, round 13).
     nonisolated static func parTone(moves: Int, par: Int) -> Color {
-        moves < par ? .text : moves == par ? .amber : .magenta
+        moves < par ? .text2 : moves == par ? .amber : .magenta
     }
 
     /// The solved picture's veil under the card, light enough that an over-par solve still shows what it unstirred

@@ -52,16 +52,15 @@ struct ResultCard: View {
     var body: some View {
         let run = game.level.run
         // A pack level's tier is plughole's by default, so a pack takes its own colour first.
-        let tierAccent: Color = switch game.level.tier {
-        case .plughole: .neonCyan
-        case .vortex: game.level.tier.glow
-        case .whirlpool, .maelstrom: .blood
-        }
-        let accent = game.level.pack.map { Offer.pack($0).glow } ?? tierAccent
+        let accent = game.level.pack.map { Offer.pack($0).ink } ?? game.level.tier.ink
         let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
         VStack(spacing: 26) {
             VStack(spacing: 10) {
                 VStack(spacing: 8) {
+                    // Endless and Escapement have no par, so no marks; nor has the sandbox, where nothing counts.
+                    if run == nil && game.level.ratchets.isEmpty && !game.level.sandbox {
+                        ResultMarks(filled: ResultMarks.filled(clean: game.clean, over: game.over), card: true)
+                    }
                     if let run {
                         Text("moves \(game.moves)")
                         if game.spilled && run.tank > run.best {
@@ -92,7 +91,7 @@ struct ResultCard: View {
                         }
                     }
                     if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
-                        Text(line).opacity(0.6)
+                        Text(line).tone(.text2)
                     }
                     if let done = game.completed {
                         Text(done.line).fontWeight(.semibold).foregroundStyle(accent).shadow(color: page.glow(accent), radius: 3)
@@ -107,11 +106,11 @@ struct ResultCard: View {
                 if let pack = Offer.pointer(after: game.completed) {
                     // Quiet: the card's way on is still next, or up a notch.
                     Button { onOffer(pack) } label: { Text("try \(pack.name) \u{203A}").hit() }
-                        .font(.ui(.detail)).opacity(0.6)
+                        .font(.ui(.detail)).tone(page.tone(.text3))
                         .accessibilityLabel("Try \(pack.name)")
                 } else if let pack = packs {
                     Button { onOffer(pack) } label: { Text("more puzzles in the packs \u{203A}").hit() }
-                        .font(.ui(.detail)).opacity(0.6)
+                        .font(.ui(.detail)).tone(page.tone(.text3))
                         .accessibilityLabel("More puzzles in the packs")
                 }
             }
@@ -140,7 +139,7 @@ struct ResultCard: View {
             }
             if let day = Share.day(of: game.level.id), !game.level.archived {
                 TimelineView(.everyMinute) { t in
-                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.ui(.detail)).opacity(0.55)
+                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.ui(.detail)).tone(page.tone(.text3))
                         .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
                 }
             }
@@ -193,7 +192,7 @@ private struct TierUp: View {
         Button { open ? onNext(to.levels[0]) : onLook(to) } label: {
             VStack(spacing: 6) {
                 Text(open ? "up a notch" : shortLine)
-                    .font(open ? .ui(.eyebrow) : .ui(.detail)).tracking(open ? 2 : 0).textCase(open ? .uppercase : nil).opacity(0.6)
+                    .font(open ? .ui(.eyebrow) : .ui(.detail)).tracking(open ? 2 : 0).textCase(open ? .uppercase : nil).foregroundStyle(Color.text2)
                 HStack(spacing: 10) {
                     if !open { Image(systemName: "lock.fill").font(.ui(.label, .semibold)) }
                     Text(to.name.uppercased()).font(.ui(.displaySmall)).tracking(4)
@@ -239,7 +238,7 @@ struct LostCard: View {
                     .accessibilityLabel("Try again")
             }
             .font(.ui(.button))
-            if let notice { Text(notice).font(.ui(.label)).opacity(0.7).transition(.opacity) }
+            if let notice { Text(notice).font(.ui(.label)).tone(.text2).transition(.opacity) }
         }
         .onAppear { focused = true }
     }
