@@ -61,6 +61,10 @@ struct ResultCard: View {
         VStack(spacing: 26) {
             VStack(spacing: 10) {
                 VStack(spacing: 8) {
+                    // Endless and Escapement have no par, so no marks; nor has the sandbox, where nothing counts.
+                    if run == nil && game.level.ratchets.isEmpty && !game.level.sandbox {
+                        ResultMarks(filled: ResultMarks.filled(clean: game.clean, over: game.over), card: true)
+                    }
                     if let run {
                         Text("moves \(game.moves)")
                         if game.spilled && run.tank > run.best {

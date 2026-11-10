@@ -46,7 +46,6 @@ Menu.swift: Text("\u{00B7}").font(.ui(.label)).foregroundStyle(Color.text4).fram
 Menu.swift: Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(level.colour)
 Menu.swift: Text(opens).font(.ui(.detail)).foregroundStyle(level.colour).transition(.opacity)
 Menu.swift: Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.ui(.detail))
-Menu.swift: Text("+\(result.over)").foregroundStyle(Color.magenta)
 ResultCard.swift: Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
 ResultCard.swift: Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
 ResultCard.swift: Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
@@ -77,7 +76,7 @@ Shelf.swift: return Text(s)
 Shelf.swift: Text(key).font(.ui(.detail)).foregroundStyle(Color.text3)
 Shelf.swift: Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(offer.ink)
 Shelf.swift: Text(best.over == 0 ? atPar : "+\(best.over)").font(.ui(.detail))
-Shelf.swift: .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" }
+Shelf.swift: .accessibilityValue(open ? best.map { noPar ? ($0.over == 0 ? "solved" : "\($0.over) over par") : Spoken.result($0) }
 Shelf.swift: .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
 Shelf.swift: Text(name.lowercased()).font(.ui(.detail, .semibold)).foregroundStyle(offer.gradient).fixedSize()
 Shelf.swift: Text(asked ? "waiting for approval" : "\(Offer.bundleName) is waiting for approval")

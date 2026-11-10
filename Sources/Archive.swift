@@ -32,7 +32,7 @@ enum Archive {
 
     @MainActor static var open: Bool { opens(bought: Store.shared.bought) }
 
-    /// A day's result in the menu's words.
+    /// A level's result: the archive's word for it, and how many marks it fills on a row (`ResultMarks.filled`).
     enum Mark: Equatable {
         case clean, par, over(Int), tried, unplayed
 
