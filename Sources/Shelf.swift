@@ -567,7 +567,7 @@ struct PackCard: View {
                                 } else {
                                     HStack(spacing: 8) {
                                         PulsingDot(colour: .text)
-                                        Text("checking purchases\u{2026}").font(.ui(.headline)).opacity(0.62)
+                                        Text("checking purchases\u{2026}").font(.ui(.headline)).foregroundStyle(Color.text2)
                                     }
                                     .accessibilityElement(children: .combine)
                                 }

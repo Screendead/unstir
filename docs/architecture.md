@@ -794,8 +794,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   owned). A purchase landing on an open card (bought, approved or restored)
   plays the solve's chime and a success haptic, slides the owned line in and dissolves the list's locks one after
   another, the card staying put; under Reduce Motion the state just changes. The launch's first read of the
-  entitlements is no landing (`PackCard.lands`): a card opened before `Store.ready` says "checking purchases…" in place of its status, buy and Triptych's line,
-  then reads as owned or not, without a chime or an announcement. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
+  entitlements is no landing (`PackCard.lands`): a card opened before `Store.ready` says "checking purchases…" (`text2`, Jack's call F14 = B) in place of its
+  status, buy and Triptych's line, so an owner never sees a price on a pack they own, then reads as owned or not,
+  without a chime or an announcement. Offline the read still ends, as the entitlements are kept on the device, and the
+  card shows its state with "App Store unreachable" where the price goes, as before. A failed attempt shows only on the card it was made on: `RootView` forgets every failure on each change of
   card (`Store.forgetFailures`) and as a level opens, and drops one that lands after its card changed. `Store.card(for:)` is the gate: `RootView.show`
   opens a level past its pack's taste that the player doesn't own as its card over the menu instead, from the level
   before it (a locked row scrolls to buying instead). The last taste level's result card says where its next goes

@@ -228,6 +228,17 @@ final class StoreTests: XCTestCase {
         await store.settled()
     }
 
+    /// Offline, the entitlements are still read from the device, so the first read ends and a card's "checking
+    /// purchases…" gives way to its state, its price saying the App Store is unreachable.
+    func testOfflineTheFirstReadStillEnds() async throws {
+        try await session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))), forAPI: .loadProducts)
+        let store = Store()
+        await store.start()
+        XCTAssertTrue(store.ready)
+        XCTAssertEqual(store.pricing, .unreachable)
+        try await session.setSimulatedError(nil, forAPI: .loadProducts)
+    }
+
     func testPurchaseGrantsOnePack() async throws {
         let store = Store()
         await store.start()
