@@ -268,6 +268,22 @@ lens-06-clue.png  Lens 06's panel drawn clean, only its lenses magnified (0:+2):
 lens-07-clue.png  Lens 07's panel drawn clean, only its lenses magnified (0:+2,1:+1): what is seen through each.
 lens-08-clue.png  Lens 08's panel drawn clean, only its lenses magnified (0:+2,2:+2): what is seen through each.
 lens-09-clue.png  Lens 09's panel drawn clean, only its lenses magnified (2:+2,3:+2): what is seen through each.
+lens-10-clue.png  Lens 10's panel drawn clean, only its lenses magnified (2:+2): what is seen through each.
+lens-11-clue.png  Lens 11's panel drawn clean, only its lenses magnified (1:+2,3:+2): what is seen through each.
+lens-12-clue.png  Lens 12's panel drawn clean, only its lenses magnified (0:+2,1:+2): what is seen through each.
+lens-13-clue.png  Lens 13's panel drawn clean, only its lenses magnified (1:+2,4:+2): what is seen through each.
+lens-14-clue.png  Lens 14's panel drawn clean, only its lenses magnified (2:+2,5:+2): what is seen through each.
+lens-15-clue.png  Lens 15's panel drawn clean, only its lenses magnified (2:+2): what is seen through each.
+lens-16-clue.png  Lens 16's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
+lens-17-clue.png  Lens 17's panel drawn clean, only its lenses magnified (1:+2,3:+2,5:+2): what is seen through each.
+lens-18-clue.png  Lens 18's panel drawn clean, only its lenses magnified (0:+2,2:+2): what is seen through each.
+lens-19-clue.png  Lens 19's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
+lens-20-clue.png  Lens 20's panel drawn clean, only its lenses magnified (0:+2,1:+2,4:+2): what is seen through each.
+lens-21-clue.png  Lens 21's panel drawn clean, only its lenses magnified (0:+2,3:+2): what is seen through each.
+lens-22-clue.png  Lens 22's panel drawn clean, only its lenses magnified (0:+2,2:+2,5:+2): what is seen through each.
+lens-23-clue.png  Lens 23's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
+lens-24-clue.png  Lens 24's panel drawn clean, only its lenses magnified (2:+2,3:+2): what is seen through each.
+lens-25-clue.png  Lens 25's panel drawn clean, only its lenses magnified (0:+2,1:+2,3:+2,5:+2): what is seen through each.
 lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
 lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
