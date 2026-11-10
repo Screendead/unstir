@@ -593,8 +593,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
   `TypeRole.line` gives a role's line height as `Text` lays it out (a text style's font, whose leading grows faster than
   its size), which `PlayLayout.Chrome` and the caption's two lines use. The game's own text stays fixed (`Font.game`):
-  a knob's letters, a turn's count, "unstirred.", "spilled.", First Stir's film lines, with Escapement's flip counters
-  and serif stamp and badge.
+  a knob's letters, a turn's count, "spilled.", First Stir's film lines, with Escapement's flip counters
+  and serif stamp and badge. "unstirred." follows the type as the stamp role (`TypeRole.stamp`, title2's 22 pt
+  semibold mono; Jack's call STAMP = A), up to the play screen's cap, where it sets at about 28 pt and still ends above
+  the stage in the column (`PlayLayout.words`); the tabletop keeps it at a fixed 22 pt, as its upright half budgets
+  `PlayLayout.wordsHeight` for it.
 - **Tone.swift** holds the colours round the game (Jack's call DESIGN5 = A, the design pass's second change): the
   accents, and five tones of `text` in place of thirteen opacities, `TextTone` and its `alpha`: `text` (18.3:1 on black),
   `text2` 0.72 (9.3:1: details that carry meaning, notes, the count under par, a fact's value), `text3` 0.56 (5.8:1:

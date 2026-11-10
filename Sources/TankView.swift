@@ -600,7 +600,7 @@ struct LevelView: View {
     /// The tank with what stands over it: the night forwards and "unstirred.". `bounds` is the tank's pane in the glass's
     /// frame and `trackBounds` where a lens's track runs, both nil in the column; `filmFoot` where the night forwards'
     /// lines end, nil under the glass.
-    private func stage(_ side: CGFloat, words: CGFloat?, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
+    private func stage(_ side: CGFloat, words: CGFloat?, tabletop: Bool, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
         tank(side, bounds: bounds, trackBounds: trackBounds)
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
@@ -623,13 +623,14 @@ struct LevelView: View {
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
                 if showResult && game.solved && !clean, let words {
-                    unstirred.offset(y: -words).transition(reveal)
+                    unstirred(fixed: tabletop).offset(y: -words).transition(reveal)
                 }
             }
     }
 
-    private var unstirred: some View {
-        Text("unstirred.").font(.ui(.stamp)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
+    /// Fixed in the tabletop, whose upright half budgets `PlayLayout.wordsHeight` for it.
+    private func unstirred(fixed: Bool = false) -> some View {
+        Text("unstirred.").font(fixed ? .game(22, .semibold) : .ui(.stamp)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
     }
 
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
@@ -667,7 +668,7 @@ struct LevelView: View {
     private func card(_ layout: PlayLayout) -> some View {
         let over = layout.kind == .split ? layout.menuPane : nil
         return VStack(spacing: 0) {
-            if over != nil && game.solved && !clean { unstirred.padding(.bottom, 26) }
+            if over != nil && game.solved && !clean { unstirred().padding(.bottom, 26) }
             if game.lost {
                 LostCard(game: game, notice: notice, undo: undo, again: reset)
             } else {
@@ -761,7 +762,7 @@ struct LevelView: View {
                 header.modifier(PlayPart.chrome(read: 5))
                 titleRow.modifier(PlayPart.chrome(read: 4))
                 Spacer(minLength: 12)
-                stage(layout.side, words: layout.words, bounds: layout.bounds, trackBounds: layout.trackBounds,
+                stage(layout.side, words: layout.words, tabletop: layout.kind == .tabletop, bounds: layout.bounds, trackBounds: layout.trackBounds,
                       filmFoot: layout.filmFoot)
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)

@@ -10,7 +10,7 @@ enum TypeRole {
     case display
     /// 22 pt, SF Pro Black Expanded: TierUp's tier name.
     case displaySmall
-    /// 22 pt semibold: "unstirred." over the solved tank.
+    /// 22 pt semibold: "unstirred." over the solved tank (fixed in the tabletop).
     case stamp
     /// 20 pt semibold: the settings sheet's and the consent card's title.
     case title
@@ -127,7 +127,7 @@ extension Font {
         }
     }
 
-    /// The game's own text, fixed in size as the tank and its rim are: a knob's letters, "spilled.".
+    /// The game's own text, fixed in size as the tank and its rim are: a knob's letters, "spilled.", the tabletop's "unstirred.".
     static func game(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
     }

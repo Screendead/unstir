@@ -232,6 +232,16 @@ final class PlayLayoutTests: XCTestCase {
                      "the title stands over the split's tank, so unstirred. heads the card over the menu")
     }
 
+    func testUnstirredGrowsWithTheTypeAndStillEndsAboveTheRim() {
+        XCTAssertEqual(TypeRole.stamp.points(at: .large), 22)
+        XCTAssertGreaterThan(TypeRole.stamp.points(at: PlayLayout.typeCap), 22)
+        // The widest phone's column at the cap, whose rim reaches furthest above the stage.
+        let l = layout(window: CGSize(width: 440, height: 956), insets: (62, 0, 34, 0),
+                       chrome: PlayLayout.Chrome(type: PlayLayout.typeCap))
+        let words = try! XCTUnwrap(l.words), rim = l.side * (PlayLayout.rim - 1) / 2
+        XCTAssertLessThanOrEqual(TypeRole.stamp.line(at: PlayLayout.typeCap).height + rim, words)
+    }
+
     // Stage 5: the chrome round the tank beside the menu (Jack's call s5-chrome = B, round 16).
 
     func testBesideTheMenuTheChromeGoesRoundTheTankInItsHalf() {
