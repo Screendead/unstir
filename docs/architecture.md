@@ -167,7 +167,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
   (`L1`, `N1`, `V1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
   its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
-  loses it unless the stored keys are remapped. Plughole has 27 levels, 1–18
+  loses it unless the stored keys are remapped. Each table row's title and note is a `String(localized:)` keyed by the
+  level's id (`level.L1.title`, `level.L1.note`), so an English edit keeps its translations; `Level.title`, `note` and
+  `chapter` stay `String`, resolved once as the table is built, as the play screen, menu, shelf and card read them as
+  text. `Tier.name` is translated (Jack's call CAT2 = A); the raw value never shows once the menu's pass lands. Plughole has 27 levels, 1–18
   hand-written and 19–27 dealt by the frozen generator and picked for a gentler curve (`scripts/plughole-levels.sh`),
   all scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would; whirlpool
   deeper variants on live pictures that follow a table, vortex 27 provisional swirl levels (quad, tri, eye, pent,
@@ -409,7 +412,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   prover, its one key pinned,
   `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
-  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
+  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's name is never translated (Jack's call CAT1 = A);
+  its levels' titles, chapters, rules and notes are `String(localized:)` keyed by id (`level.lens-1.title`,
+  `chapter.prism.1`), and Escapement's stipulation is its budget sentence, a key, or on a chapter's opener that
+  sentence and the chapter's rule as one key (`rule.escapement.1`), so a translator sees them together. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
@@ -494,7 +500,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `StoryScene.swift` and `FirstStirTests.swift` compile only under `FIRST_STIR` (Debug), as does `Level.story`; the
   shared code reads `Level.isStory` (false without it) and keeps its story branches behind the same condition. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
-  (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
+  (later in the night) and played (earlier). Its titles and the ending's beats are catalog keys marked do-not-translate
+  (`scripts/catalog.py fixed`) while the pack is out of v1; the scene's clock stays a hand-built "6:40 am" (Jack, F3),
+  as `Date.FormatStyle` reads "6:40 AM" in en-US. `Game` deals each of the scramble's entries on such a rod with that rod in
   its `tags`, and `Game.played` is the story's vignettes less every tag on the stack, so the picture is a function of
   the stack alone: a pop plays what it carried, a vignette waits for every entry on its rod, a win the fine pass calls
   plays the rest, and the pack's undo and a reset bring tags back with their entries. On a story, the heal ring
@@ -904,7 +912,28 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
   VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
-  buttons read as words, not glyphs.
+  buttons read as words, not glyphs. Each phrase is one catalog key, a count's varying by plural ("1 move"), and a
+  phrase inside another is passed in whole ("%@, par %lld"). The row's hint, given the menu's detail line, still turns
+  its " · " into ", ", until the menu's half of the migration passes the data instead.
+- **Localizable.xcstrings** is the String Catalog (Jack's call F4 = C: English at launch, languages a later update;
+  CAT1 to CAT8 = A), development language `en`, the source British English. The build emits every localizable literal
+  (`SWIFT_EMIT_LOC_STRINGS`), but a command-line build writes no keys back into the catalog (checked 2026-11-09;
+  Xcode's own build is documented to), so a key missing from it shows its literal or `defaultValue`, the same
+  English; a plural key is the exception, as without its `one` and `other` forms it reads "1 moves", so each one is
+  written into the catalog by hand (`scripts/catalog.py`) with the code that uses it. The archive row's hint, "%lld
+  past dailies", has no `one` form, as its English said "1 past dailies" before the catalog, and the menu's own line,
+  still hand-built in Archive.swift, says so too. A count in a key is formatted for the locale: from 1000 it reads
+  "1,234" in English, where the strings it replaced read "1234". Xcode's own build or archive is documented to sync
+  every extracted key into the catalog, which would leave this tracked file changed in the checkout; until a check
+  for that drift exists, keep such a sync out of an unrelated commit.
+  `scripts/loc-lint.sh`, and `CatalogTests.testNoPlayerStringEscapesTheCatalog` with the same patterns
+  (`scripts/loc-lint/patterns.txt`), flag each line that would put player text past the catalog: a `Text`,
+  accessibility label, value or hint or announcement whose argument is not a literal, `verbatim:` or already
+  localized, a case change, a hand-made plural, a glyph or a bare number as a key. A line that means it carries
+  `// loc: verbatim <why>`. `scripts/loc-lint/baseline.txt` lists the escapes still owed, file and line text; each
+  fix takes its line out, and the test fails on an escape or a fixed line left in. CATORDER = D splits the migration:
+  the tables (Levels, Pack, First Stir) and the leaf files first, the chrome (Menu, the play screen and its card,
+  Shelf, Consent, Archive) after the design pass.
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
   round 13): until 01 has a best, an empty line over the tier's list (the tank's rule, "Every stir in this tank has
   an exact inverse.", left the menu for the App Store page: Jack's call D1 = A, round 13); then "next: 07 · Sprinkle ›"
@@ -962,7 +991,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's
   halftone; its header's two controls read "picture: grid ›" and "rods: 3 ›", or "grid ›" and "3 rods ›" where the
   width is short (`ViewThatFits`); quad and eye, which share a count, add their name ("rods: 4 · eye ›", short "eye ›",
-  `LevelView.layoutLabel`). The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
+  `LevelView.layoutLabel`). Those labels still read the raw values; `Picture.display` and `Layout.display` are the
+  catalog's names for them (`picture.grid`, `layout.eye`, each reading as its raw value), for the controls to take
+  up when the chrome's half of the migration reaches them. The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
   It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max (unmeasured on a phone), so every build keeps it in

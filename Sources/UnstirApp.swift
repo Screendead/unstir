@@ -283,7 +283,7 @@ struct Harness {
         letters = env["UNSTIR_LETTERS"] == "1"
         if harnessed {
             var held = ["music", "sounds", "haptics", "supporter"].reduce(into: [String: Bool]()) {
-                $0[$1] = env["UNSTIR_\($1.uppercased())"] != "0"
+                $0[$1] = env["UNSTIR_\($1.uppercased())"] != "0" // loc: verbatim an environment key
             }
             if let c = env["UNSTIR_LETTERSCHOICE"], ["0", "1"].contains(c) { held["letters"] = c == "1" }
             switches = held

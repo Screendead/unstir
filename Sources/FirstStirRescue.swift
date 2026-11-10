@@ -25,7 +25,13 @@ enum Rescue: Int, CaseIterable, Sendable {
     static let ink = Color(0xB7CEFF)
 
     var title: String {
-        ["Home light", "Off the breakwater", "The lantern chain", "The stair", "The lighthouse door"][rawValue - 6]
+        [
+            String(localized: "Home light", comment: "First Stir scene title"),
+            String(localized: "Off the breakwater", comment: "First Stir scene title"),
+            String(localized: "The lantern chain", comment: "First Stir scene title"),
+            String(localized: "The stair", comment: "First Stir scene title"),
+            String(localized: "The lighthouse door", comment: "First Stir scene title"),
+        ][rawValue - 6]
     }
 
     var layout: Layout { [.pent, .eye, .quad, .tri, .pent][rawValue - 6] }

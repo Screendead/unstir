@@ -219,6 +219,10 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   (2026-10-26) with his answers marked under its open points. `scripts/first-stir-compositions.py` draws plans of three of its scenes (each rod's disc and core,
   the part of a core another disc reaches, where each vignette sits) to `shots/first-stir-composition-*.png` (needs
   Pillow).
+- Strings: `scripts/loc-lint.sh` lists player text that escapes the String Catalog against its baseline
+  (`CatalogTests` runs it too; `--write` rewrites the baseline); `scripts/catalog.py plural` writes a plural key's
+  English forms into `Sources/Localizable.xcstrings`, which no command-line build does, and `fixed` marks keys
+  do-not-translate (`docs/architecture.md`).
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.
 - GPU bench: `scripts/gpu-bench.sh [sim]` launches the app with `UNSTIR_GPUBENCH=1` (`GPUBench.swift`), which runs
   Unstir.metal's own shader bodies (`benchUnstir`, over `unstirBody` and `unstirChannelsBody`, the templates the
