@@ -62,6 +62,12 @@ https://claude.ai/artifact/TcJvFtVMBXWgbh589TGYbp, design canvas https://claude.
 Escapement book and round 13 and 16 checks on the phone, the phone GPU bench, the developer account and App Store
 Connect, the ICO registration, Eyes Shut's hosting and outreach, posting the clips.
 
+**Paused 2026-11-10 at Jack's word, after design change 1 merged (#169).** Merged in wave 2: #156, #159 to #164,
+#166 to #169. Open: #165 (String Catalog first half, CI green, not yet reviewed or merged); #157 and #158 wait on
+the pitch's picks. Not started: design changes 2 to 5, the catalog's chrome half, the store media retake, the
+records (ESCBOOK's J3 to J8 closed, PERF's section to history, ARCH's stale split lines), and this branch's PR. Check
+the nightly's StoreTests on #154 (their first run).
+
 ### Open work (finish-and-pitch, 2026-11-02)
 
 Closed: moved word for word to `docs/history.md`.
