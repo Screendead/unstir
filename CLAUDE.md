@@ -89,6 +89,15 @@ Claude is the implementer under Jack's supervision and also the project's adviso
 hard if needed, whenever an idea of his looks wrong. Say so plainly, give the reasons, and propose something better.
 Once Jack has heard the argument and still decides, carry out his decision.
 
+## Calls for Jack
+
+A call goes to Jack as a pitch he can pick from, with the options built and shown. Each wave of calls gets a new
+Artifact page: never add calls to a page he has already been sent; carry an unanswered call over written out in
+full, and leave answered ones off. Write every call so it stands alone, for a busy, technical reader who has read
+none of the repo's notes: no call ids, pick codes, round numbers or branch names, and no pointing at `HANDOFF.md`,
+`docs/decisions.md` or a design doc, which are Claude's working files. What he needs from them goes in the call:
+what exists today, what would change on screen, why it is asked now, each option's cost, and what waits on it.
+
 ## Commands
 
 `project.yml` is the source of truth for the Xcode project; the scripts run `xcodegen generate` before building, so
@@ -189,7 +198,19 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   Every source is seeded, so a rerun renders the same samples, but the AAC encoder isn't byte-deterministic, so a
   rerun may rewrite a bed's .m4a with new bytes; restore those rather than commit them. `scripts/sounds.sh listen
   <dir>` writes every effect and bed as m4a to `<dir>`, with a few effects played in turn over a bed, for listening
-  off the phone.
+  off the phone, then renders the packs' sketches (`sound-src/sketches.csd`: two takes each of Lens's, Escapement's
+  and Prism's layers on one motif at 75 bpm, and five of the ratchet's tick, the last three also in Escapement B's
+  layer, for Jack's ear) alone and over plughole's bed, as `sketch-*.m4a`. The main render also renders the kept
+  layers the app plays from it (`layer-*`, `Sound.Layer`).
+  `scripts/sounds.sh layers <dir>` plays each kept layer (Lens B, Escapement B, Prism A) under a real level's line in
+  `sound-src/layers-in-play.tsv`, three to four minutes of moves, undos and the solve with the sounds the game plays for
+  each (`testTheLayerLinesSoundAsTheGamePlaysThem` checks them on a real `Game`): an 8-bar loop of the layer over the
+  menu's bed crossfading to plughole's, its resolution on the beat after the solve, Escapement B's reed a note a move
+  on the next eighth, and the game's effects at their own levels (`scripts/layers.py` times and mixes them), as
+  `<pack>.mp3` and `<pack>-bed-only.mp3` with `layers-in-play.txt` listing each line and its loudness: each render's,
+  the layer's alone over the line and, for Escapement, its sketch's with and without the sketch's ticks and its drums
+  alone (`escBDry`, `escBDrums`), as the game's own tick replaces the sketch's in play. `scripts/layers-film.sh`
+  films those three levels in the app with sound (`film.sh layer-`, BlackHole switched in and back).
 - App icon: `scripts/shots.sh icon-` shoots each candidate (`UNSTIR_ICON=n`, `IconView` in Icon.swift), then
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
