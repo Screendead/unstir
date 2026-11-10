@@ -16,3 +16,7 @@ shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge: the new b
 shot type-lost-xxxl "Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1 TYPESIZE=xxxLarge
 shot type-settings-ax3 "Settings at accessibility3: the title, rows and details scaled, the sheet scrolling." SETTINGS=1 TYPESIZE=accessibility3
+shot stamp-default "Level 05 solved at the default type size: \"unstirred.\" over the tank, the result card under it." \
+  SCREEN=result LEVEL=5 CLOCK=0
+shot stamp-xxxl "The same at xxxLarge, the play screen's cap: whether \"unstirred.\" grew with the card." \
+  SCREEN=result LEVEL=5 CLOCK=0 TYPESIZE=xxxLarge

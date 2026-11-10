@@ -649,7 +649,7 @@ struct LevelView: View {
     }
 
     private var unstirred: some View {
-        Text("unstirred.").font(.game(22, .semibold)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
+        Text("unstirred.").font(.ui(.stamp)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
     }
 
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result

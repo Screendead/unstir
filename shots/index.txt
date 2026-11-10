@@ -755,3 +755,5 @@ type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a sto
 type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, whose foot runs under the screen's edge on a Pro Max (the card's rebuild, the pass's fifth change, makes up a notch its one button).
 type-lost-xxxl.png  Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size.
 type-settings-ax3.png  Settings at accessibility3: the title, rows and details scaled, the sheet scrolling.
+stamp-default.png  Level 05 solved at the default type size: "unstirred." over the tank, the result card under it.
+stamp-xxxl.png  The same at xxxLarge, the play screen's cap: whether "unstirred." grew with the card.
