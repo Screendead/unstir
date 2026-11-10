@@ -10,6 +10,10 @@ struct ResultMarks: View {
     let filled: Int
     /// The result card's: 16 pt discs, landing one after another as the card shows. A row's are 8 pt and still.
     var card = false
+    /// The proposal's 8 and 16 pt at the default size, scaled with the words beside them, as a fixed disc all but
+    /// vanishes next to accessibility-sized text.
+    @ScaledMetric(relativeTo: .footnote) private var rowSide = 8.0
+    @ScaledMetric(relativeTo: .headline) private var cardSide = 16.0
     @State private var landed = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -28,7 +32,7 @@ struct ResultMarks: View {
     static func filled(clean: Bool, over: Int) -> Int { clean ? 3 : over == 0 ? 2 : 1 }
 
     var body: some View {
-        let side: CGFloat = card ? 16 : 8
+        let side = card ? cardSide : rowSide
         HStack(spacing: side / 2) {
             ForEach(0 ..< 3, id: \.self) { i in
                 Group {

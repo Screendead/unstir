@@ -610,7 +610,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A
-  row's are 8 pt with 4 between, at its trailing edge on the title's baseline where the word stood (under the title at
+  row's are 8 pt with 4 between (at the default type size; both sizes scale with the text beside them), at its trailing edge on the title's baseline where the word stood (under the title at
   the accessibility sizes, as the row stacks), from the stored best through `Archive.Mark` (`ResultMarks.filled`); a closed
   menu row shows a small lock there instead, as a pack card's locked row does. The result card's are 16 pt with 8
   between over its words, for this solve (`Game.clean`, `Game.over`), never endless's, Escapement's or the sandbox's,
