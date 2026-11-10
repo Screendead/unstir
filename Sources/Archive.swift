@@ -114,7 +114,7 @@ struct ArchiveRow: View {
                 Spacer(minLength: 8)
                 if known && !open { Image(systemName: "lock").font(.ui(.detail)).foregroundStyle(Color.text4) }
             }
-            .padding(.vertical, 11)
+            .padding(.vertical, 12)
             .contentShape(Rectangle())
             .keyframeAnimator(initialValue: 0.0, trigger: taps) { row, x in
                 row.offset(x: reduceMotion ? 0 : x)

@@ -23,9 +23,9 @@ upto13=0000000000000
 shot first-launch "A fresh install's first screen (UNSTIR_FRESH): plughole 01 once its opening has played, as a plain launch opens it, its note lit and under it, once ever, the line pointing at the settings." FRESH=1 OPEN=1
 hold=9 shot first-launch-pointer "The same, its note at rest after 4 s: the note and the settings line under it at one strength, the knob lesson's ghost finger on knob 0 clear of both." FRESH=1 OPEN=1
 shot menu-after-01 "Menu with 01 solved: next: 02 · Drip over the list." BESTS=plughole:0
-shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear, each marked new, under next: 01." \
+shot menu-modes-new "Menu on whirlpool with every plughole level at par: the daily and endless rows appear under today, one line each, each marked new, under next: 01." \
   TIER=whirlpool BESTS=plughole:$par27
-shot menu-daily-run "The same with today's daily and the three before it solved: 4 days running on the daily row, neither row new any more." \
+shot menu-daily-run "The same with today's daily and the three before it solved: 4 days running at the daily row's right, where its marks would stand, neither row new any more." \
   TIER=whirlpool BESTS=plughole:$par27 DAILIES=4
 shot menu-all-done "Menu with every tier's levels solved, plughole's clean and the rest at par, the daily run four days and endless's best 9: all four tiers open, three marks on every plughole row." \
   BESTS=plughole:ccccccccccccccccccccccccccc,whirlpool:$par27,vortex:$par27,maelstrom:$par27,endless:9 DAILIES=4
