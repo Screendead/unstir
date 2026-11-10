@@ -14,7 +14,9 @@ enum LensArt {
 
     /// The drawn panels by their level's number. A level without one draws the test panel (`Halftone.panel`).
     static let levels: [Int: Halftone.Panel] = [1: keyhole, 2: peephole, 3: magnifier, 4: monocle, 5: goggles, 6: spyglass,
-                                               7: binoculars, 8: spectacles, 9: sunglasses]
+                                               7: binoculars, 8: spectacles, 9: sunglasses,
+                                               10: pinhole, 11: bifocals, 12: glasses3d, 13: porthole, 14: periscope,
+                                               15: telescope, 16: eyepiece, 17: microscope]
 
     static let bold = 0.008, mid = 0.005, hair = 0.0025
 
@@ -86,6 +88,24 @@ enum LensArt {
     /// A point `r` from c at `degrees`, 0 at three o'clock and clockwise on screen.
     static func polar(_ c: P, _ r: Double, _ degrees: Double) -> P {
         c + r * P(cos(degrees * .pi / 180), sin(degrees * .pi / 180))
+    }
+
+    /// A dashed line from a to b in `n` dashes.
+    static func dashes(_ a: P, _ b: P, _ n: Int, _ width: Double = hair) -> [Halftone.Stroke] {
+        (0..<n).map { k in
+            let t0 = Double(k) / Double(n), t1 = (Double(k) + 0.55) / Double(n)
+            return stroke([a + (b - a) * t0, a + (b - a) * t1], width)
+        }
+    }
+
+    /// A rectangle with its corners rounded right off, `rx` by `ry` about c, turned `degrees`.
+    static func squircle(_ c: P, _ rx: Double, _ ry: Double, degrees: Double = 0, _ n: Int = 48) -> [P] {
+        let t = degrees * .pi / 180
+        return (0..<n).map { i in
+            let a = 2 * .pi * Double(i) / Double(n), cs = cos(a), sn = sin(a)
+            let e = P(rx * (cs < 0 ? -1 : 1) * abs(cs).squareRoot(), ry * (sn < 0 ? -1 : 1) * abs(sn).squareRoot())
+            return c + P(e.x * cos(t) - e.y * sin(t), e.x * sin(t) + e.y * cos(t))
+        }
     }
 
     static func distance(_ p: P, _ line: [P]) -> Double {

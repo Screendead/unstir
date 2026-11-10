@@ -28,6 +28,14 @@ LEVELS = {
     7: ("binoculars", "Binoculars", "tri", "0,1", "0:+2,1:+1"),
     8: ("spectacles", "Spectacles", "quad", "0,2", "0:+2,2:+2"),
     9: ("sunglasses", "Sunglasses", "eye", "2,3", "2:+2,3:+2"),
+    10: ("pinhole", "Pinhole", "tri", "2", "2:+2"),
+    11: ("bifocals", "Bifocals", "quad", "1,3", "1:+2,3:+2"),
+    12: ("glasses3d", "3D glasses", "eye", "0,1", "0:+2,1:+2"),
+    13: ("porthole", "Porthole", "hex", "1,4", "1:+2,4:+2"),
+    14: ("periscope", "Periscope", "hex", "2,5", "2:+2,5:+2"),
+    15: ("telescope", "Telescope", "eye", "2", "2:+2"),
+    16: ("eyepiece", "Eyepiece", "tri", "0", "0:+2"),
+    17: ("microscope", "Microscope", "hex", "1,3,5", "1:+2,3:+2,5:+2"),
 }
 RODS = {
     "tri": [(0, -0.42, 0.58), (0.3637, 0.21, 0.58), (-0.3637, 0.21, 0.58)],

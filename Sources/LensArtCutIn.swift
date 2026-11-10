@@ -206,3 +206,218 @@ extension LensArt {
         return panel("sunglasses", fills: fills, strokes: s) { _ in c(0.2) }
     }()
 }
+
+// MARK: - 10: Pinhole
+
+/// Level 10's name: a pinhole camera, a plain box on a tripod, its pinhole in the lower left core (tri's lens on this
+/// level), and in the hole the tree it is aimed at, upside down as a pinhole throws it. Level 10 deals the lens +2 then
+/// +1.
+extension LensArt {
+    static let pinhole: Halftone.Panel = {
+        let hole = P(-0.3637, 0.16), green = Tone(0.5, 0, 0.5)
+        let front = rect(-0.63, -0.06, -0.1, 0.47)
+        let top = [P(-0.63, -0.06), P(-0.1, -0.06), P(-0.2, -0.17), P(-0.73, -0.17)]
+        let side = [P(-0.63, -0.06), P(-0.73, -0.17), P(-0.73, 0.36), P(-0.63, 0.47)]
+        let crown = [(P(0.55, -0.1), 0.26), (P(0.37, 0.04), 0.15), (P(0.73, 0.02), 0.15)]
+        let sun = P(-0.1, -0.64)
+        var fills = [disc(hole, 0.04, .zero), disc(hole, 0.085, y(0.85)), fill(front, m(0.5)), fill(top, m(0.25)), fill(side, m(0.75)),
+                     fill(rect(0.5, 0.1, 0.6, 0.52), m(0.6))]
+        fills += crown.map { disc($0.0, $0.1, green) }
+        fills += [disc(sun, 0.13, y(0.9)), fill(rect(-1, 0.52, 1, 1), Tone(0.3, 0, 0.3))]
+
+        var s: [Halftone.Stroke] = []
+        // The sun, a bird, the ground and its tufts.
+        s.append(stroke(circle(sun, 0.13, 32), mid))
+        for k in 0..<12 { s.append(stroke([polar(sun, 0.16, 30 * Double(k)), polar(sun, k % 2 == 0 ? 0.23 : 0.19, 30 * Double(k))], hair)) }
+        s.append(stroke(curve(P(0.2, -0.7), P(0.26, -0.77), P(0.31, -0.7), 6) + curve(P(0.31, -0.7), P(0.36, -0.77), P(0.42, -0.7), 6), mid))
+        s += runs((0...40).map { P(-1 + 0.05 * Double($0), 0.52) }, mid) { $0.x > 0.02 || $0.x < -0.76 }
+        for (k, x) in [-0.9, 0.1, 0.28, 0.84, -0.05].enumerated() {
+            let foot = P(x, 0.62 + 0.07 * Double(k % 3))
+            for t in [-110.0, -90, -65] { s.append(stroke([foot, polar(foot, 0.05, t)], hair)) }
+        }
+        // The tree: trunk, a knot, the crown's scallops and three apples.
+        s.append(stroke([P(0.5, 0.14), P(0.5, 0.52)], mid))
+        s.append(stroke([P(0.6, 0.12), P(0.6, 0.52)], mid))
+        s.append(stroke(ellipse(P(0.55, 0.34), 0.016, 0.03, 10), hair))
+        s.append(stroke(arc(crown[0].0, 0.26, 150, 395, 28), bold))
+        s.append(stroke(arc(crown[1].0, 0.15, 60, 250, 14), bold))
+        s.append(stroke(arc(crown[2].0, 0.15, -75, 120, 14), bold))
+        for at in [P(0.45, -0.16), P(0.66, -0.2), P(0.58, 0.0)] { s.append(stroke(circle(at, 0.026, 10), mid)) }
+        s.append(stroke(curve(P(0.4, -0.02), P(0.5, 0.06), P(0.62, -0.06), 8), hair))
+        // The light's two rays, from the tree's top and foot, crossing at the pinhole.
+        for from in [P(0.55, -0.36), P(0.55, 0.52)] { s += dashes(from, hole + simd_normalize(from - hole) * 0.09, 14) }
+        // The box, its lid's seam and a carrying strap, on its tripod.
+        s.append(stroke(closed(front), bold))
+        s.append(stroke(Array(top[1...3]) + [side[2], side[3]], bold))
+        s.append(stroke([P(-0.63, 0.02), P(-0.1, 0.02)], hair))
+        s.append(stroke([P(-0.73, -0.09), P(-0.63, 0.02)], hair))
+        s.append(stroke(curve(P(-0.6, -0.17), P(-0.42, -0.34), P(-0.28, -0.17), 12), mid))
+        for (x0, x1) in [(-0.52, -0.78), (-0.36, -0.36), (-0.2, 0.02)] { s.append(stroke(bar(P(x0, 0.47), P(x1, 1.05), 0.035), mid)) }
+        s.append(stroke(closed(rect(-0.56, 0.47, -0.16, 0.52)), mid))
+        // The pinhole in its brass plate, the shutter swung clear of it, and two screws.
+        s.append(stroke(circle(hole, 0.085, 32), bold))
+        s.append(stroke(circle(hole, 0.04, 24), mid))
+        s.append(stroke(closed(bar(hole + P(0.075, -0.075), hole + P(0.19, -0.14), 0.05)), mid))
+        s.append(stroke(circle(hole + P(0.075, -0.075), 0.012, 8), mid))
+        for (at, t) in [(hole + P(-0.062, 0), 30.0), (hole + P(0, 0.064), 100.0)] { s.append(stroke([polar(at, 0.011, t), polar(at, -0.011, t)], mid)) }
+        // Through it: the ground on top, the tree hanging from it, the sun at the bottom.
+        s.append(stroke([hole + P(-0.032, -0.022), hole + P(0.032, -0.022)], 0.0026))
+        s.append(stroke([hole + P(0.006, -0.022), hole + P(0.006, 0.004)], 0.0036))
+        s.append(stroke(circle(hole + P(0.006, 0.012), 0.012, 12), 0.003))
+        s.append(stroke(circle(hole + P(-0.018, 0.018), 0.0045, 8), 0.0024))
+        return panel("pinhole", fills: fills, strokes: s) { _ in c(0.2) }
+    }()
+}
+
+// MARK: - 11: Bifocals
+
+/// Level 11's name: bifocals laid open on the mending, each lens cut across by its reading line. The
+/// lenses lie over the top left and lower right cores (quad's two lenses on this level): under one a needle's eye, the
+/// thread through it, and under the other a button, sewn on with a cross. Level 11 deals each lens +3 in all.
+extension LensArt {
+    static let bifocals: Halftone.Panel = {
+        let a = P(-0.3536, -0.3536), b = P(0.3536, 0.3536), axis = P(0.7071, 0.7071), down = P(-0.7071, 0.7071)
+        func lens(_ c: P, _ k: Double) -> [P] { squircle(c, 0.33 * k, 0.26 * k, degrees: 45) }
+        func reading(_ c: P) -> [P] { lens(c, 1).filter { simd_dot($0 - c, down) > 0.07 } }
+        let reel = P(-0.44, 0.5), eye = a + P(0.034, -0.02), button = b + P(0.022, -0.024), cushion = P(0.44, -0.44)
+        let arms = [bar(a - axis * 0.4 - down * 0.1, a - axis * 0.4 + down * 0.5, 0.055), bar(b + axis * 0.4 - down * 0.1, b + axis * 0.4 + down * 0.5, 0.055)]
+        let bridge = bar(a + axis * 0.3 - down * 0.08, b - axis * 0.3 - down * 0.08, 0.06)
+        var fills: [Fill] = []
+        for c in [a, b] { fills += [fill(reading(c), Tone(0, 0.24, 0.3)), fill(lens(c, 1), m(0.24)), fill(lens(c, 1.14), y(0.85))] }
+        fills += [fill(bridge, y(0.85)), fill(arms[0], y(0.85)), fill(arms[1], y(0.85)), disc(cushion, 0.17, c(0.6)),
+                  fill(rect(reel.x - 0.14, reel.y - 0.17, reel.x + 0.14, reel.y - 0.12), y(0.8)),
+                  fill(rect(reel.x - 0.14, reel.y + 0.12, reel.x + 0.14, reel.y + 0.17), y(0.8)),
+                  fill(rect(reel.x - 0.1, reel.y - 0.12, reel.x + 0.1, reel.y + 0.12), c(0.7)),
+                  fill([P(0.2, 1), P(0.46, 0.74), P(0.6, 0.86), P(0.78, 0.6), P(1, 0.7), P(1, 1)], c(0.4))]
+
+        var s: [Halftone.Stroke] = []
+        // The mending: a hem's stitches, a patch pinked along its edge, and pins.
+        s += dashes(P(-0.96, -0.2), P(-0.5, -0.9), 12, mid)
+        s.append(stroke([P(0.2, 1), P(0.46, 0.74), P(0.6, 0.86), P(0.78, 0.6), P(1, 0.7)], mid))
+        for (at, t) in [(P(-0.1, 0.8), -30.0), (P(0.84, 0.1), 60.0), (P(-0.8, 0.1), 10.0)] {
+            s.append(stroke([at, polar(at, 0.16, t)], hair))
+            s.append(stroke(circle(at, 0.016, 8), mid))
+        }
+        // The reel of thread, wound, its end run off to the needle.
+        s.append(stroke(closed(rect(reel.x - 0.14, reel.y - 0.17, reel.x + 0.14, reel.y - 0.12)), mid))
+        s.append(stroke(closed(rect(reel.x - 0.14, reel.y + 0.12, reel.x + 0.14, reel.y + 0.17)), mid))
+        for k in 0..<7 { s.append(stroke([P(reel.x - 0.1, reel.y - 0.1 + 0.035 * Double(k)), P(reel.x + 0.1, reel.y - 0.085 + 0.035 * Double(k))], hair)) }
+        s.append(stroke([P(reel.x - 0.1, reel.y - 0.12), P(reel.x - 0.1, reel.y + 0.12)], mid))
+        s.append(stroke([P(reel.x + 0.1, reel.y - 0.12), P(reel.x + 0.1, reel.y + 0.12)], mid))
+        let thread = curve(reel + P(0.1, -0.1), P(0.1, 0.3), P(-0.02, -0.1), 20) + curve(P(-0.02, -0.1), P(-0.12, -0.42), eye, 16)
+            + curve(eye, eye + P(0.06, 0.03), eye + P(0.1, -0.06), 10) + curve(eye + P(0.1, -0.06), eye + P(0.14, -0.16), eye + P(0.26, -0.12), 10)
+        s.append(stroke(thread, hair))
+        // A pincushion, ribbed like a tomato, pins in it.
+        s.append(stroke(circle(cushion, 0.17, 32), bold))
+        for k in 0..<6 { s.append(stroke(curve(cushion, polar(cushion, 0.11, 60 * Double(k) + 35), polar(cushion, 0.17, 60 * Double(k) + 10), 8), hair)) }
+        for (t, r) in [(-70.0, 0.26), (-20, 0.3), (40, 0.24), (200, 0.27)] {
+            s.append(stroke([polar(cushion, 0.06, t), polar(cushion, r, t)], hair))
+            s.append(stroke(circle(polar(cushion, r, t), 0.016, 8), mid))
+        }
+        // The arms, open, running off the cloth.
+        for q in arms { s.append(stroke(closed(q), bold)) }
+        s.append(stroke(closed(bridge), bold))
+        // The bifocals: bridge, nose pads, rims and the reading line across each lens.
+        for side in [-1.0, 1.0] { s.append(stroke(ellipse(axis * (side * 0.1) + down * 0.07, 0.025, 0.045, degrees: 45 + side * 25, 12), mid)) }
+        for c in [a, b] {
+            s.append(stroke(closed(lens(c, 1.14)), bold))
+            s.append(stroke(closed(lens(c, 1)), mid))
+            let cut = reading(c)
+            s.append(stroke([cut[0], cut[cut.count - 1]], mid))
+        }
+        // The needle and its eye, the thread through it.
+        let along = P(cos(-0.3), sin(-0.3))
+        s.append(stroke(closed([eye - along * 0.3, eye - along * 0.02 + P(0.004, 0.012), eye + along * 0.03, eye - along * 0.02 - P(0.004, 0.012)]), 0.0026))
+        s.append(stroke(ellipse(eye - along * 0.004, 0.014, 0.0045, degrees: -17, 12), 0.0026))
+        // The button: rim, dish, four holes and the cross of thread.
+        s.append(stroke(circle(button, 0.032, 24), 0.0044))
+        s.append(stroke(circle(button, 0.022, 20), 0.0016))
+        for (dx, dy) in [(-1.0, -1.0), (1, -1), (1, 1), (-1, 1)] { s.append(stroke(circle(button + P(dx, dy) * 0.008, 0.003, 6), 0.003)) }
+        s.append(stroke([button + P(-0.008, -0.008), button + P(0.008, 0.008)], 0.002))
+        s.append(stroke([button + P(0.008, -0.008), button + P(-0.008, 0.008)], 0.002))
+        return panel("bifocals", fills: fills, strokes: s) { _ in m(0.24) }
+    }()
+}
+
+// MARK: - 12: 3D glasses
+
+/// Level 12's name: card 3D glasses, one window magenta and one cyan, over the left and right cores (eye's two big
+/// lenses on this level), a flying saucer in one and a rocket in the other, with the film above and the popcorn below.
+/// Level 12 deals each lens +3 in all.
+extension LensArt {
+    static let glasses3d: Halftone.Panel = {
+        let a = P(-0.4, 0), b = P(0.4, 0)
+        let card = [P(-0.86, -0.3), P(0.86, -0.3), P(0.86, 0.2), P(0.78, 0.3), P(0.13, 0.3), P(0.05, 0.1), P(-0.05, 0.1), P(-0.13, 0.3),
+                    P(-0.78, 0.3), P(-0.86, 0.2)]
+        let arms = [[P(0.86, -0.3), P(1.02, -0.44), P(1.02, -0.22), P(0.86, -0.06)], [P(-0.86, -0.3), P(-1.02, -0.44), P(-1.02, -0.22), P(-0.86, -0.06)]]
+        let film = [P(-1, -0.8), P(1, -0.72), P(1, -0.42), P(-1, -0.5)]
+        let tub = [P(-0.24, 0.5), P(0.24, 0.5), P(0.17, 1.0), P(-0.17, 1.0)]
+        let corn = [P(-0.17, 0.46), P(-0.05, 0.42), P(0.08, 0.45), P(0.18, 0.47), P(-0.1, 0.36), P(0.03, 0.34), P(0.13, 0.38)]
+        var fills = [fill(squircle(a, 0.31, 0.2), m(0.7)), fill(squircle(b, 0.31, 0.2), c(0.7)), fill(card, y(0.8)), fill(arms[0], y(0.45)),
+                     fill(arms[1], y(0.45))]
+        fills += corn.map { disc($0, 0.07, y(0.75)) }
+        for k in 0..<4 {
+            let x0 = -0.24 + 0.12 * Double(k), x1 = -0.17 + 0.085 * Double(k)
+            fills.append(fill([P(x0, 0.5), P(x0 + 0.12, 0.5), P(x1 + 0.085, 1.0), P(x1, 1.0)], k % 2 == 0 ? m(0.75) : y(0.3)))
+        }
+        fills += [fill(film, c(0.45)), fill(rect(-1, -1, -0.66, 1), m(0.4)), fill(rect(0.66, -1, 1, 1), m(0.4))]
+
+        var s: [Halftone.Stroke] = []
+        // The curtains' folds, and the film across the top: its sprocket holes and frames, a shape in each.
+        for (k, x) in [-0.92, -0.8, -0.7, 0.72, 0.83, 0.94].enumerated() { s.append(stroke(curve(P(x, -1), P(x + 0.03 * Double(k % 2 * 2 - 1), 0), P(x, 1), 12), hair)) }
+        s.append(stroke([film[0], film[1]], mid))
+        s.append(stroke([film[3], film[2]], mid))
+        for k in 0..<14 {
+            let x = -0.94 + 0.145 * Double(k), lift = 0.04 * (x + 1)
+            s.append(stroke(closed(rect(x, -0.775 + lift, x + 0.06, -0.735 + lift)), hair))
+            s.append(stroke(closed(rect(x, -0.545 + lift, x + 0.06, -0.505 + lift)), hair))
+        }
+        for k in 0..<6 {
+            let x = -0.86 + 0.36 * Double(k), lift = 0.04 * (x + 1)
+            s.append(stroke([P(x, -0.71 + lift), P(x, -0.57 + lift)], mid))
+            let at = P(x + 0.18, -0.64 + lift + 0.007)
+            switch k % 3 {
+            case 0: s.append(stroke(star(at, 0.05), hair))
+            case 1: s.append(stroke(circle(at, 0.04, 14), hair))
+            default: s.append(stroke(closed([at + P(-0.05, 0.04), at + P(0, -0.05), at + P(0.05, 0.04)]), hair))
+            }
+        }
+        // The popcorn in its striped tub, some of it spilt, and two tickets.
+        for at in corn { s.append(stroke(arc(at, 0.07, 170, 370, 12), mid)) }
+        s.append(stroke(closed(tub), bold))
+        for k in 1..<4 { s.append(stroke([P(-0.24 + 0.12 * Double(k), 0.5), P(-0.17 + 0.085 * Double(k), 1.0)], hair)) }
+        for at in [P(0.36, 0.62), P(0.44, 0.76), P(0.3, 0.84)] { s.append(stroke(arc(at, 0.035, 150, 400, 10), mid)) }
+        for (k, at) in [P(-0.46, 0.6), P(-0.4, 0.74)].enumerated() {
+            let q = bar(polar(at, -0.13, 20 - 30 * Double(k)), polar(at, 0.13, 20 - 30 * Double(k)), 0.11)
+            s.append(stroke(closed(q), mid))
+            s.append(stroke(star(at, 0.03), hair))
+        }
+        // The glasses: the card, its nose cut, the windows and the arms folded back.
+        s.append(stroke(closed(card), bold))
+        for q in arms { s.append(stroke(closed(q), mid)) }
+        for c in [a, b] {
+            s.append(stroke(closed(squircle(c, 0.31, 0.2)), mid))
+            for (k, at) in [P(-0.2, -0.1), P(0.2, 0.08), P(-0.14, 0.1), P(0.18, -0.1), P(0.0, 0.13)].enumerated() {
+                s.append(stroke(star(c + at, 0.014 + 0.006 * Double(k % 2), points: 4, inner: 0.3), hair))
+            }
+        }
+        // In the magenta window, a flying saucer: dome, rim, lights and its beam.
+        let ufo = a + P(0.016, -0.03)
+        s.append(stroke(ellipse(ufo, 0.036, 0.011, 20), 0.004))
+        s.append(stroke(arc(ufo + P(0, -0.006), 0.017, 180, 360, 10), 0.0036))
+        for x in [-0.02, 0.0, 0.02] { s.append(stroke(circle(ufo + P(x, 0.001), 0.002, 6), 0.003)) }
+        s.append(stroke([ufo + P(-0.012, 0.014), ufo + P(-0.03, 0.05)], 0.002))
+        s.append(stroke([ufo + P(0.012, 0.014), ufo + P(0.03, 0.05)], 0.002))
+        // In the cyan, a rocket, climbing: nose, body, window, fins and flame.
+        let rocket = b + P(0.02, -0.028), up = P(sin(0.5), -cos(0.5)), out = P(cos(0.5), sin(0.5))
+        s.append(stroke(closed([rocket + up * 0.04, rocket + up * 0.016 + out * 0.014, rocket - up * 0.024 + out * 0.014,
+                                rocket - up * 0.024 - out * 0.014, rocket + up * 0.016 - out * 0.014]), 0.004))
+        s.append(stroke(circle(rocket + up * 0.006, 0.005, 8), 0.003))
+        for side in [-1.0, 1.0] {
+            s.append(stroke([rocket - up * 0.008 + out * (side * 0.014), rocket - up * 0.034 + out * (side * 0.03), rocket - up * 0.024 + out * (side * 0.014)], 0.003))
+        }
+        s.append(stroke([rocket - up * 0.026 - out * 0.008, rocket - up * 0.046 - out * 0.003, rocket - up * 0.034, rocket - up * 0.052 + out * 0.004,
+                         rocket - up * 0.026 + out * 0.008], 0.002))
+        return panel("glasses3d", fills: fills, strokes: s) { _ in c(0.13) }
+    }()
+}
