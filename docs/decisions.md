@@ -391,6 +391,19 @@ Main calls 2026-11-02 (finish-and-pitch page); follow-up picks 2026-11-03; third
 | r16c-ci-firststir = A | 2026-11-08 | First Stir's two stray tests are skipped on PRs and kept nightly (#147). | HANDOFF, CLAUDE.md |
 | Dock covers draw knobs | 2026-11-08 | In chat: every dock cover draws its knobs so a cover shows how its pack plays (#146); the promoted-purchase images are recorded differently (sources differ). | HANDOFF, architecture |
 
+## Round 17
+
+Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
+
+| Call | Date | Decided | Where |
+|---|---|---|---|
+| DESIGN5 = A | 2026-11-09 | The UI design pass builds all five changes: one Dynamic Type scale (body 17), five text tones, one button in three emphases, results as dots, the menu and result card rebuilt round the next move; after the TankView split. | HANDOFF |
+| CATORDER = D | 2026-11-09 | Split the String Catalog: the table strings (Levels.swift, Pack.swift, the catalog file and lint) now; the five chrome files after the design pass. | HANDOFF |
+| ESCBOOK = A | 2026-11-09 | Close J3 (already D1's, clockwise from twelve), J5, J7 and J8 as built; Jack's phone play of the book (E3) still vetoes any one problem. | HANDOFF |
+| ARCHREST = A | 2026-11-09 | Before v1, architecture items 4 (one undo record), 5 (shader test kit, no default arms in Picture), 7's shots half (shots.sh split by area) and 13 (First Stir compiled out of Release); the rest after v1. | HANDOFF |
+| PERF = A | 2026-11-09 | Close the performance pass at #140; the twist-chain cache is set aside until testers' logs show a kept budget under 40 or a real Duo misses frames. | HANDOFF |
+| TFREAD = D | 2026-11-09 | Read TestFlight play from App Store Connect's per-tester sessions polled daily, testers' sent logs and a short survey; check the poll separates days on Jack's install first, with analytics in TestFlight builds as the fallback. | HANDOFF |
+
 ## Dated, no round
 
 | Call | Date | Decided | Where |
