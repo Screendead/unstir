@@ -607,6 +607,17 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   vortex's teal and maelstrom's red, as vortex's glow reads 4.1:1, and Prism's `text`; `glow` stays the shadows'.
   `ToneTests` pins each tone's ratio and every ink at 4.5:1 or more. The game's own colours (the picture, tank,
   bezel, knobs, rings, the ghost finger, flip counters and what is drawn over the picture) keep theirs.
+- **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
+  A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
+  one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A
+  row's are 8 pt with 4 between, at its trailing edge on the title's baseline where the word stood (under the title at
+  the accessibility sizes, as the row stacks), from the stored best through `Archive.Mark` (`ResultMarks.filled`); a closed
+  menu row shows a small lock there instead, as a pack card's locked row does. The result card's are 16 pt with 8
+  between over its words, for this solve (`Game.clean`, `Game.over`), never endless's, Escapement's or the sandbox's,
+  which have no par; each lands 0.12 s after the last from scale 0.6 and clear on `.easeOut(0.3)`, the first 0.2 s
+  after the card's reveal has landed (`ResultMarks.land`), all three fading in together under Reduce Motion. The marks are
+  hidden from VoiceOver, which reads the row's value (`Spoken.result`: "clean", "at par", "solved, 2 over par") or the
+  card's summary. The archive's calendar keeps its words (`Archive.Mark.text`).
 - **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
   `min(width, height - reserve) / 1.045`, as on every iPhone, `reserve` 290 pt at the default type size and as much
@@ -770,7 +781,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   have settled (`Store.shelved`, or `Store.shelfWait`, 3 s, after the read), then fades in once, so neither changes it in sight,
   but for a fetch that outlasts the wait and returns the packs without the bundle, which takes its cover off in sight;
   the approval's header waits for it too, VoiceOver's announcement with it) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
-  locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
+  locked, each row's result as the menu's marks (`ResultMarks`; Escapement's, which has no par, still in words: solved, +n,
+  tried). An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
   once all are (`PackCard.pickUp`, `continues`); the bundle's owned card plays on in the first of its packs with a level
@@ -903,7 +915,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
   the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
-  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
+  ..."; the daily, endless and the sandbox by name), value (its result, `Spoken.result`: "clean", "at par" or "solved, 2 over par"; "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
   "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, par
   every Plughole level first") and hint (its rods and par), the menu's next button (`Spoken.next`: "Next:
   level 2, Drip"), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
@@ -944,7 +956,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   harnessed `UNSTIR_MODE=sandbox` opens the menu, while Debug and the harness outside Release keep it, its code, tests and
   shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
-  (`Best.started`) and has no best reads tried, faint, as a pack card's list does (Jack's call C3, round 13; endless
+  (`Best.started`) and has no best reads tried, three hollow marks, as a pack card's list does (Jack's call C3, round 13; endless
   and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. With a run saved, endless's row
   continues it, "continue · tank 6 · brim 3 · best 9" in place of its detail, and "new run" on its title's line in
   place of the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s; under VoiceOver until focus
@@ -1103,7 +1115,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   does the harness's level store a best, a started flag or endless's best (`Game.storesProgress`): a solve registers
   its best for that launch only, as `UNSTIR_BESTS` does, so the menu it exits to sees it. So shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
-  many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
+  many over par, `c` clean; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
   tiers through the same calls a finger makes. `UNSTIR_EXIT=left` leaves the harness's level for the menu a second
   after it opens, through `RootView`'s own exit (`=solved` as its result card does after a solve; `=up` opens the next
   tier's first level, as "up a notch" does, then leaves that; `=swipe` leaves through the back swipe's commit).

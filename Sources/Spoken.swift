@@ -89,10 +89,7 @@ enum Spoken {
                     : new ? fresh : notPlayed
             }
         } else if let result {
-            value = result.clean == true ? String(localized: "clean",
-                                                  comment: "VoiceOver: a row's best, solved with nothing wasted")
-                : result.over == 0 ? String(localized: "at par", comment: "VoiceOver: a row's best")
-                : String(localized: "\(result.over) over par", comment: "VoiceOver: a row's best. Moves over par")
+            value = Self.result(result)
         } else {
             value = level.sandbox ? "" : new ? fresh : started ? String(localized: "tried",
                                                                         comment: "VoiceOver: a row started, with no best")
@@ -100,6 +97,15 @@ enum Spoken {
         }
         let hint = detail.map { $0.replacingOccurrences(of: " \u{00B7} ", with: ", ") } ?? shape(level)
         return (label, value, hint)
+    }
+}
+
+extension Spoken {
+    /// A row's best, as its marks show it (`ResultMarks`): three filled clean, two at par, one solved.
+    static func result(_ best: Best) -> String {
+        best.clean == true ? String(localized: "clean", comment: "VoiceOver: a row's best, solved with nothing wasted")
+            : best.over == 0 ? String(localized: "at par", comment: "VoiceOver: a row's best")
+            : String(localized: "solved, \(best.over) over par", comment: "VoiceOver: a row's best. Moves over par")
     }
 }
 

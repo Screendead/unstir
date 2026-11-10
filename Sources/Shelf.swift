@@ -731,8 +731,10 @@ struct PackCard: View {
                             .foregroundStyle(open ? Color.text : Color.text3)
                         Spacer(minLength: 8)
                         if !open {
-                            Image(systemName: "lock.fill").font(.ui(.detail)).foregroundStyle(Color.text4)
+                            Image(systemName: "lock.fill").font(.ui(.detail)).imageScale(.small).foregroundStyle(Color.text4)
                                 .transition(.opacity.combined(with: .scale(scale: 1.8)))
+                        } else if !noPar, let filled = ResultMarks.filled(Archive.Mark(best, started: tried)) {
+                            ResultMarks(filled: filled)
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.ui(.detail))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
@@ -747,7 +749,7 @@ struct PackCard: View {
                 }
                 .buttonStyle(Sounding())
                 .rowHairline(offer.glow, level.id == focus?.id ? lit : 0, inset: 10)
-                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" }
+                .accessibilityValue(open ? best.map { noPar ? ($0.over == 0 ? "solved" : "\($0.over) over par") : Spoken.result($0) }
                                         ?? (tried ? "tried" : "") : "locked, needs the pack")
                 .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
             }
