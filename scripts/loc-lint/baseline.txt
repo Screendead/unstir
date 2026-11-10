@@ -15,7 +15,6 @@ Archive.swift: Text(isToday ? "today" : " ").font(.ui(.detail)).foregroundStyle(
 Archive.swift: .accessibilityLabel(isToday ? "Today. Its daily is on the menu." : "")
 Archive.swift: Text("\(calendar.component(.day, from: date))").font(.ui(.label, mark == .unplayed ? .regular : .medium))
 Archive.swift: Text(date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))).font(.ui(.body))
-Clip.swift: Text(f.caption ?? "").font(.ui(.label, .medium)).monospacedDigit().tone(.text2)
 Consent.swift: Text(ConsentWords.title).font(.ui(.title))
 Consent.swift: Text(ConsentWords.body)
 Consent.swift: Text(sends ? ConsentWords.hideLink : ConsentWords.sendsLink).font(.ui(.label))

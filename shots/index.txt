@@ -473,6 +473,8 @@ card-lens-owned.png  Lens's card, owned.
 card-lens-pending.png  Lens's card, pending: Triptych's line saves $2.98 on its three packs.
 card-lens-failed.png  Lens's card, failed: Triptych's line saves $2.98 on its three packs.
 card-lens-revoked.png  Lens's card, revoked: Triptych's line saves $2.98 on its three packs.
+f14-card.png  Lens's card before the launch's first read of the entitlements ends, as a promoted purchase at a cold launch opens it: "checking purchases…" in place of its status and buy.
+f14-card-offline.png  Lens's card offline once the first read has ended: its state as before, "App Store unreachable" where the price goes.
 card-prism-no-complete.png  Prism's card with Lens and First Stir owned (First Stir is outside the bundle): no Triptych line, since $5.99 is more than the two packs left.
 shelf-menu-lens-owned.png  The dock with Lens and First Stir owned: no Triptych cover, since it costs more than the two packs left.
 card-first-stir.png  First Stir's card, unowned.
