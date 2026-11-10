@@ -46,11 +46,9 @@ Menu.swift: Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(level
 Menu.swift: Text(opens).font(.ui(.detail)).foregroundStyle(level.colour).transition(.opacity)
 Menu.swift: Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.ui(.detail))
 ResultCard.swift: Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
-ResultCard.swift: Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-ResultCard.swift: Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
 ResultCard.swift: Text(line).tone(.text2)
-ResultCard.swift: Text(done.line).fontWeight(.semibold).foregroundStyle(accent).shadow(color: page.glow(accent), radius: 3)
-ResultCard.swift: UnstirButton(nextLeads ? .primary : .secondary, accent: accent) { onNext(next) } label: { Text(label) }
+ResultCard.swift: Text(done.line).tone(page.tone(.text2)).padding(.top, 4)
+ResultCard.swift: UnstirButton(nextLeads ? .primary : .secondary, accent: accent, wide: true) { onNext(next) } label: { Text(label) }
 ResultCard.swift: .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
 ResultCard.swift: Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.ui(.detail)).tone(page.tone(.text3))
 ResultCard.swift: .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
