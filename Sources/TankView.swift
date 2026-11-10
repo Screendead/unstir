@@ -541,7 +541,7 @@ struct LevelView: View {
     /// The play screen's way out and its count: moves against par, Escapement's ticks or the sandbox's controls.
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
-            Button(action: leave) { Text(game.level.back).font(.ui(.button)).hit() }
+            UnstirButton(.quiet, action: leave) { Text(game.level.back).font(.ui(.button)) }
                 .accessibilityLabel(Spoken.back(game.level))
             Spacer()
             if game.level.sandbox {
@@ -711,15 +711,14 @@ struct LevelView: View {
     private var controls: some View {
         HStack {
             // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats too.
-            control(game.level.sandbox ? "undo" : "undo \u{00B7} \(game.bank)") {
+            // An empty bank only says when it refills, so it only taps.
+            UnstirButton(.secondary, effect: spent ? .tap : .undo, dim: game.history.isEmpty || spent) {
                 if settling { undoQueued = true } else { undo() }
+            } label: {
+                if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
             }
                 .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
-                // An empty bank only says when it refills, so it only taps.
-                .buttonStyle(Sounding(effect: spent ? .tap : .undo))
                 .disabled(game.history.isEmpty)
-                // The plain button style does not grey a disabled label.
-                .opacity(game.history.isEmpty || spent ? 0.35 : 1)
                 .overlay(alignment: .topTrailing) { refillBadge }
             Spacer()
             resetControl
@@ -729,7 +728,8 @@ struct LevelView: View {
         .disabled(game.finished || shown != nil || demoing || game.level.run != nil || holding)
         .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
         .accessibilityHidden(game.level.run != nil || showResult || ending)
-        .padding(.bottom, 8)
+        // 4 where the 40 pt capsules had 8, so the taller buttons leave the tank where it was.
+        .padding(.bottom, 4)
         .modifier(Unseen(clean))
     }
 
@@ -1008,9 +1008,11 @@ struct LevelView: View {
 
     /// Out of `body`, whose one long expression an older compiler gives up on.
     private var resetControl: some View {
-        control(armedAt == nil ? "reset" : "reset? tap again", tapReset)
-            // The tap that arms only taps; the one that resets sounds as a reset.
-            .buttonStyle(Sounding(effect: armedAt != nil || game.history.isEmpty ? .reset : .tap))
+        // The tap that arms only taps; the one that resets sounds as a reset.
+        UnstirButton(.secondary, effect: armedAt != nil || game.history.isEmpty ? .reset : .tap, armed: armedAt != nil,
+                     action: tapReset) {
+            if armedAt == nil { Text("reset") } else { Text("reset? tap again") }
+        }
             .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
             .disabled(settling)
             .accessibilityFocused($resetFocused)
@@ -1396,9 +1398,9 @@ struct LevelView: View {
     private func sandboxControls(named: Bool) -> some View {
         let picture = game.level.picture.rawValue
         return HStack(spacing: 8) {
-            control(named ? "picture: \(picture) \u{203A}" : "\(picture) \u{203A}", inset: 14, game.nextPicture)
+            sandboxControl(named ? "picture: \(picture) \u{203A}" : "\(picture) \u{203A}", game.nextPicture)
             // A turn in hand, or snapping to commit, names a rod of the current layout.
-            control(Self.layoutLabel(game.level.layout, named: named), inset: 14) {
+            sandboxControl(Self.layoutLabel(game.level.layout, named: named)) {
                 if liveRod == nil { game.nextLayout() }
             }
         }
@@ -1417,13 +1419,12 @@ struct LevelView: View {
         }
     }
 
-    private func control(_ label: String, inset: CGFloat = 22, _ action: @escaping () -> Void) -> some View {
+    /// Narrower than a secondary's 20 pt sides, so both fit the header beside the way out.
+    private func sandboxControl(_ label: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(label).font(.ui(.button)).padding(.horizontal, inset).padding(.vertical, 10)
-                .background(Capsule().fill((page.paper ? Color.ink : .white).opacity(0.05)))
-                .overlay(Capsule().stroke(page.paper ? Color.ink.opacity(0.3) : .white.opacity(0.18), lineWidth: 1))
-                .hit(3, 0)
+            Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14))
         }
+        .buttonStyle(Sounding(presses: true))
     }
 
     /// The knob shows only the player's own turning, so it can neither give away nor misstate the scramble.
@@ -2656,14 +2657,13 @@ struct ChannelSwatches: View {
     @Binding var isolated: Channels?
 
     var body: some View {
-        HStack(spacing: 18) {
+        HStack(spacing: 12) {
             ForEach(Channels.each, id: \.rawValue) { c in
                 let held = isolated == c
-                Text(c.letters).font(.ui(.detail, .semibold)).foregroundStyle(held ? .black : .white)
-                    .frame(width: 38, height: 30)
-                    .background(Capsule().fill(held ? c.colour : Color.white.opacity(0.06)))
-                    .overlay(Capsule().strokeBorder(c.colour, lineWidth: 1.5))
-                    .contentShape(Capsule())
+                // Secondary buttons in their channel's colour, filled while held.
+                Text(c.letters).font(.ui(.button, .semibold))
+                    .modifier(ButtonFace(emphasis: .secondary, inset: 0, minWidth: ButtonFace.height, edge: c.colour,
+                                         strokeWidth: 1.5, filled: held))
                     .onLongPressGesture(minimumDuration: 0, maximumDistance: 60, perform: {}) { pressing in
                         if pressing { isolated = c } else if isolated == c { isolated = nil }
                     }

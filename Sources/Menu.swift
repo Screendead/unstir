@@ -497,7 +497,7 @@ struct MenuView: View {
                 Spacer(minLength: 8)
                 Button { settings = true } label: {
                     // Grown no further than its 44 pt target holds, as a bar's icons stop.
-                    Image(systemName: "gearshape").font(.system(.body, weight: .light)).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                    Image(systemName: "gearshape").font(.system(.title3, weight: .light)).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         .frame(width: 44, height: 44).contentShape(Rectangle())
                 }
                 .buttonStyle(Sounding()).foregroundStyle(Color.text2)

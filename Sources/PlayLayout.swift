@@ -36,12 +36,13 @@ struct PlayLayout: Equatable {
     }
 
     /// The split's chrome round the tank, in points, from the level's shape, whether Prism's swatches show and the type
-    /// size: colour letters or Differentiate Without Colour turned on or off mid-level resizes Prism's glass by 30 pt,
+    /// size: colour letters or Differentiate Without Colour turned on or off mid-level resizes Prism's glass by 46 pt,
     /// letting go a drag as a change of pose does, and so does a change of Text Size up to `typeCap`. A result or lost
     /// card goes over the menu. As the parts measure (`testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure`): above,
     /// the header's line of the button role and its 8 pt (Escapement's split-flap ticks taller) and the title's line of
     /// the headline and its 18; below, the caption's two lines of the label role (the paper's serif) and its 14, the
-    /// swatches' 34 where they show, the column's 12 and the controls' line of the button role, their 20 and the 8 under.
+    /// swatches and their 4 where they show, the column's 12, the controls and the 4 under; the swatches and controls
+    /// each a button's 44, or its line and 24 where that is taller.
     struct Chrome: Equatable {
         var above: CGFloat
         var below: CGFloat
@@ -385,8 +386,9 @@ extension PlayLayout.Chrome {
         // Each part laid out on whole pixels, the Duo's three a point.
         func px(_ v: CGFloat) -> CGFloat { (v * 3).rounded(.up) / 3 }
         above = 8 + px(header) + 18 + px(TypeRole.headline.line(at: t, .medium).height)
-        below = 14 + px(LevelView.captionLines(paper: level?.page.paper ?? false, type: t)) + (swatches ? 34 : 0) + PlayStack.gap
-            + 20 + px(back.height) + 8
+        let button = max(ButtonFace.height, 24 + px(back.height))
+        below = 14 + px(LevelView.captionLines(paper: level?.page.paper ?? false, type: t)) + (swatches ? 4 + button : 0)
+            + PlayStack.gap + button + 4
     }
 }
 

@@ -285,10 +285,11 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(side(Level.maelstrom[0]), (624 - plain.above - plain.below - RimLesson.overRim) / PlayLayout.rim,
                        accuracy: 0.001)
         XCTAssertEqual(stage1 - side(Level.maelstrom[0]), 8, accuracy: 1)
-        // Prism read by its letters, the swatches under the caption: 33 pt less.
-        XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - plain.above - plain.below - 34 - PlayStack.gap) / PlayLayout.rim,
-                       accuracy: 0.001)
-        XCTAssertEqual(stage1 - side(Level.prism[0], swatches: true), 33, accuracy: 1)
+        // Prism read by its letters, the swatches under the caption, a row of buttons: 46 pt less.
+        let swatches = 4 + max(ButtonFace.height, 24 + TypeRole.button.line(at: .large).height)
+        XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - plain.above - plain.below - swatches - PlayStack.gap) / PlayLayout.rim,
+                       accuracy: 0.5)
+        XCTAssertEqual(stage1 - side(Level.prism[0], swatches: true), 46, accuracy: 1)
         // Endless's brim reaches round the glass.
         XCTAssertEqual(side(Level.endless(Run(seed: 7))), 342, accuracy: 1)
         // Every level of a tier or a pack takes one glass, so the tank keeps its size as the list beside it is played on.

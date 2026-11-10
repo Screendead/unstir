@@ -102,14 +102,11 @@ struct ConsentCard: View {
         .accessibilityAddTraits(.isModal)
     }
 
+    /// Both secondary: a consent must not nudge.
     private func answer(_ word: String, _ yes: Bool) -> some View {
-        Button { Analytics.shared.decide(yes) } label: {
-            Text(word).font(.ui(.button))
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .overlay(Capsule().strokeBorder(Color.line, lineWidth: 1))
-                .contentShape(Capsule())
+        UnstirButton(.secondary) { Analytics.shared.decide(yes) } label: {
+            Text(word).frame(maxWidth: .infinity)
         }
-        .buttonStyle(Sounding())
     }
 }
 
