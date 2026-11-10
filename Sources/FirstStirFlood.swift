@@ -28,7 +28,13 @@ enum Flood: Int, CaseIterable, Sendable {
     static let float = Color(0x3FE0B0)
 
     var title: String {
-        ["The breakwater path", "High street under water", "The upstairs window", "The kitchen, flooded", "Over the quay"][rawValue - 11]
+        [
+            String(localized: "The breakwater path", comment: "First Stir scene title"),
+            String(localized: "High street under water", comment: "First Stir scene title"),
+            String(localized: "The upstairs window", comment: "First Stir scene title"),
+            String(localized: "The kitchen, flooded", comment: "First Stir scene title"),
+            String(localized: "Over the quay", comment: "First Stir scene title"),
+        ][rawValue - 11]
     }
 
     var layout: Layout { [.eye, .pent, .quad, .eye, .pent][rawValue - 11] }

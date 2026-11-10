@@ -18,10 +18,10 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 | Monetisation code | StoreKit 2 for the packs and Complete merged 2026-10-25 (PR #21); the daily share line merged 2026-10-25 (PR #24). Prices are Jack's call (2026-10-25): 2.99 a pack, 5.99 Complete. No ads |
 | Undo bank | Starts at 10 (`Best.undos` in `Sources/Levels.swift`). Jack's call (2026-09-28): everyone gets +2 for each day they play, so a long absence doesn't refill it; Claude assumes the cap stays 10. Built on `help` (2026-09-29, `Best.refill`; merged 2026-09-29, PR #9): the first opening of a level other than the sandbox on a local calendar day later than the last refill's adds 2, up to 10, and a "+2" shows over the undo count once the level's opening ends or is skipped. A fresh install records its first day without a refill; a clock moved back never refills. Jack (2026-09-29): setting the phone's date mustn't game the refill. Closed on `help` (2026-09-29, `Best.trustedNow`): within one boot the day comes from the last time it vouched for plus the uptime since (`CLOCK_MONOTONIC_RAW`, which counts sleep and can't be set), so a clock set ahead refills nothing until real time reaches the next day, give or take 5 min, and the log says `undo refill held: clock ahead Xh`. The anchor follows the wall clock no further ahead than drift explains (a second plus 100 ppm of the uptime since), so creeping the clock ahead a few minutes at a time gains about a second an opening; review found the first version let each step under 5 min carry the anchor along, a day ahead in about 290 steps (fixed 2026-09-29). Still open: a restart between date changes still borrows a refill, since a new boot has nothing to check against. A trusted network clock would close that; Claude recommends against it (a server, and a refill that waits on the network, to guard 2 undos a day). Set aside, unverified: `kern.monotonicclock`, a clock XNU's `clock.c` says nothing can set, which on a Mac runs on across restarts, is a candidate for closing the restart hole. Unchecked on iOS: whether the app may read it, and whether setting the date moves it. The launch's probe of it, and of the uptime, was dropped in PR #78, since the log can leave the phone, so the restart hole stays open; if it is picked back up, probe it on a Debug build only. Unverified: whether iOS lets the app read the boot session (`kern.bootsessionuuid`); an app in macOS's App Sandbox reads it, but `container.sb` leaves it off its sysctl allow list, and iOS's profile is unpublished. The phone's log answers it at launch (`boot session read` or `unread`). Unread, a jump of at least the phone's uptime at the last level opened passes as a possible restart, and a believed jump anchors at the uptime then; so on a phone up less than a day, as after any restart, steps of a day get through one after another until a level opens with the phone up longer than the step. A genuine forward correction of more than 5 min within a boot (a phone that ran slow, set right) is held too, so its refill day turns late by that much until the next restart; one under 5 min is believed, and the anchor takes it in a few seconds a day. A new boot whose clock reads more than 5 min before the anchor's time, as after a clock reset, is believed but leaves the anchor, so setting the clock right later in that boot still counts as a new boot (review found the first version held every refill until the next restart there; fixed 2026-09-29). Not covered: a clock behind at the first opening with no anchor stored (a fresh install, or the first on this build), then set right, makes refills late by that much until a restart. The privacy manifest is written (`Sources/PrivacyInfo.xcprivacy`, merged 2026-10-25, PR #20): UserDefaults with CA92.1 and system boot time with 35F9.1. Apple's required-reason pages (developer.apple.com, "Describing use of required reason API" and the `NSPrivacyAccessedAPIType` page, read 2026-10-25) list `systemUptime` and `mach_absolute_time()` under boot time and no `clock_gettime`-family call or sysctl, so `clock_gettime_nsec_np`, `kern.bootsessionuuid` and `kern.monotonicclock_usecs` are not on the list; 35F9.1 is declared anyway, inferred as harmless and as the nearest fit, since the uptime clock measures elapsed time and never leaves the device |
 | TestFlight | Prep merged 2026-10-25 (PR #23): version 1.0 (1), the export-compliance key, an asset catalog. The icon is candidate 1, the neon grid (Jack, 2026-10-25), already the placeholder in the catalog. No archive script until Jack's developer account is in Xcode |
-| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s, #23 5m36s and #26 5m11s. Jack's calls (2026-10-25): watch it, then cache the build, and the line moves to 7 minutes. The cache merged 2026-10-25 (PR #29): `test.yml` keeps the StoreKit test build (`build/store`) between runs, keyed on the Xcode build and the sources, and stamps each file with a time drawn from its content, so a hit compiles nothing. It saves about 30 s, but the build is not where CI's time goes: the job ran 5m13s cold and 5m18s warm, as the simulator's boot, install and tests vary by about 90 s from run to run. A warm-up build on each merge to `master` (PR #31) was closed on Jack's call (2026-10-25, round 6): the compile runs inside the simulator's boot, so it saves nothing. Jack's call CI1 = A (2026-10-28, round 10): keep and watch, noting each run's time; if two runs in a row pass 7 minutes, build the split (the core tests on PRs, the StoreKit tests and the long pack suites nightly on `master`; a break could show a night late)). **Fired and built (2026-10-29, PR #63):** runs of 7:14, 7:37, 7:59, 8:04 and 9:12 passed 7 minutes. Measured on #63's first run: `testNoVignetteShowsTheNextMove` 129 s, `StoreTests` about 72 s, everything else under 20 s a suite. PRs now skip `StoreTests` and `FirstStirTests`; `nightly.yml` runs all tests but the `UNSTIR_SLOW_TESTS` ones on `master` (they ran past 25 minutes on the runner, so they stay local); PR run 9:12 to 5:12. Jack's call (2026-11-01): the line moves to 10 minutes, the job's timeout, after #79 ran 7:17 alongside #85's build. The Test steps now run with pipefail (`shell: bash`, PR #126, merged 2026-11-02). Before that a failing test left the job green; only a compile error turned it red. The same PR measures the app after the tests in both jobs (`scripts/app-size.sh`, APPSIZE = B) and fails past 100 MB; its push was a cold build, 6m50s, as the workflow files are in the cache key. On 2026-11-03 #140's job ran 10:00 and was cut off once at 10:25, the Test step 270 to 556 s across the day's runs: the ci-time call (recommended B, split build and test), under Round 16's build |
+| CI | Tests every pull request (merged 2026-09-28). First run 4 min 37 s, close to the 5-minute line. `scripts/ci-usage.sh` reports spend. CodeQL (`codeql.yml`, replacing GitHub's default setup, which never built) scans the workflows on every PR, and Swift on merges to `master` and weekly (Jack, 2026-09-28): the Swift build takes about 17.5 min under CodeQL. Free, since the repo is public; if it ever goes private, each Swift scan costs about 190 of the 2,000 minutes. So every PR's CodeQL check reads "1 configuration not found" (master has a Swift scan, a PR doesn't): expected, and it blocks nothing. `actions/checkout` is on v7, since v4's Node 20 is deprecated. Over the line since: #21 ran 5m44s, #23 5m36s and #26 5m11s. Jack's calls (2026-10-25): watch it, then cache the build, and the line moves to 7 minutes. The cache merged 2026-10-25 (PR #29): `test.yml` keeps the StoreKit test build (`build/store`) between runs, keyed on the Xcode build and the sources, and stamps each file with a time drawn from its content, so a hit compiles nothing. It saves about 30 s, but the build is not where CI's time goes: the job ran 5m13s cold and 5m18s warm, as the simulator's boot, install and tests vary by about 90 s from run to run. A warm-up build on each merge to `master` (PR #31) was closed on Jack's call (2026-10-25, round 6): the compile runs inside the simulator's boot, so it saves nothing. Jack's call CI1 = A (2026-10-28, round 10): keep and watch, noting each run's time; if two runs in a row pass 7 minutes, build the split (the core tests on PRs, the StoreKit tests and the long pack suites nightly on `master`; a break could show a night late)). **Fired and built (2026-10-29, PR #63):** runs of 7:14, 7:37, 7:59, 8:04 and 9:12 passed 7 minutes. Measured on #63's first run: `testNoVignetteShowsTheNextMove` 129 s, `StoreTests` about 72 s, everything else under 20 s a suite. PRs now skip `StoreTests` and `FirstStirTests`; `nightly.yml` runs all tests but the `UNSTIR_SLOW_TESTS` ones on `master` (they ran past 25 minutes on the runner, so they stay local); PR run 9:12 to 5:12. Jack's call (2026-11-01): the line moves to 10 minutes, the job's timeout, after #79 ran 7:17 alongside #85's build. The Test steps now run with pipefail (`shell: bash`, PR #126, merged 2026-11-02). Before that a failing test left the job green; only a compile error turned it red. The same PR measures the app after the tests in both jobs (`scripts/app-size.sh`, APPSIZE = B) and fails past 100 MB; its push was a cold build, 6m50s, as the workflow files are in the cache key. On 2026-11-03 #140's job ran 10:00 and was cut off once at 10:25, the Test step 270 to 556 s across the day's runs: the ci-time call (recommended B, split build and test), under Round 16's build. **Probe of the slow test start (`r17-ci-probe`, measured 2026-11-09, Nightly dispatches 42674467014, 42675933640, 42677351967; one runner each, so thin):** per job, boot step / Test step's wait before "Testing started" / tests / boot+Test. PR flow (boot, `bootstatus`, then `test-store.sh test-without-building`), four runs: 101/40/165/308 s, 103/105/97/309, 107/116/97/323, 103/138/126/375. No boot wait, three: 6/218/109/334, 17/110/300/430, 7/152/353/515 (once with Spotlight off: 6/140/105/252). Spotlight off, once: 108/132/113/357. An xctestrun with Spotlight off, once: 93/61/145/301. One small suite run three times on one booted simulator (run 42674467014): about 63, 38 and 31 s before its tests (the third by xctestrun). Reading: the wait before testing starts (40 to 138 s after a full boot) is real and varies run to run; not waiting for the boot only moves it and slowed the tests in two of three runs; Spotlight and an xctestrun showed nothing in one run each; a second launch on the same simulator starts faster, so part of it is first-launch cost. None of it explains or bounds the wait, so CLAUDE.md's "not yet explained" stands. Recommendation (not decided): keep the PR flow as is. The numbers are recorded here, so the probe branch can be dropped. |
 | `master` ruleset | Jack turned off "require code scanning results" and "require code quality results" to unblock PR #2. Claude's view: with Swift scanned only after merges, requiring code scanning on PRs would gate only the workflow files, so leave it off until the server code exists, then scan that on every PR and require it; leave code quality off, as its run fails on GitHub's side ("requested model is not supported") and whether it covers Swift is unchecked. Revisit it with the server code |
 | Difficulty tiers | Backgrounds merged 2026-09-28 (PR #2). Jack chose the turning tank for the top tier, new levels for it, a renamed ladder and an easier switch (2026-09-28); the first slice, the turning tank and seized knobs, merged 2026-09-28 (PR #4); see "Side task" below; vortex, the swirl tier between whirlpool and maelstrom (Jack, 2026-10-24), with 27 provisional levels, merged 2026-10-25 (PR #22); Jack's calls on it (2026-10-25) are in "Vortex (provisional, 2026-10-24)"; vortex's own pictures (isobars, ephemeris, cords) merged 2026-10-25 (PR #28), and breath as the swirl's cue merged 2026-10-25 (PR #30); the swirl shears to its centre (W3, Jack 2026-10-25), on `swirl-map` |
-| Performance pass | Queued after the difficulty tiers (Jack, 2026-09-28); see below |
+| Performance pass | Closed at #140 (PERF = A, 2026-11-09); the twist-chain cache is set aside, R11 |
 | Architecture pass | Queued after the performance pass (Jack, 2026-09-28); see below |
 | Media out of git | Done 2026-09-28: history rewritten, re-signed and force-pushed; `.git` went from 311 MB to 264 KB; see below |
 | README | Merged 2026-09-28 (PR #3), with the four suggested images (Jack's pick); the rename updated it to plughole, whirlpool and maelstrom (PR #7); see below |
@@ -67,6 +67,34 @@ Connect, the ICO registration, Eyes Shut's hosting and outreach, posting the cli
 the pitch's picks. Not started: design changes 2 to 5, the catalog's chrome half, the store media retake, the
 records (ESCBOOK's J3 to J8 closed, PERF's section to history, ARCH's stale split lines), and this branch's PR. Check
 the nightly's StoreTests on #154 (their first run).
+
+**Resumed 2026-11-10 (finish-and-pitch).** The list, against master at #170. **Decided**, in this order on one
+chain: #165 brought up to master, reviewed and merged; design changes 2 (five text tones), 3 (one button, three
+emphases), 4 (results as dots) and 5 (the menu and result card), a PR each as #169 was; the catalog's chrome half;
+the store media retaken (`screens`, `preview`, `social`; `sound` switches the Mac's output, so it is Jack's to run).
+Beside the chain: the records (ESCBOOK's J3, J5, J7 and J8 closed, PERF's section to history, ARCH's stale split
+lines); the nightly's StoreTests on #154, dispatched on master; `r17-ci-probe`'s finding checked as recorded; the
+owed shots attached if Chrome connects; the merged lanes' worktrees removed. **Undecided**, unpicked on the page and
+each already built: lens-art (#157), sound-layers (#158), ask-to-buy-date, ask-to-buy-wait, f14-checking, duo-probe,
+ci-private, codeql-private; new from #169: whether "unstirred." scales with the type. Nothing is built on their
+recommendations. **Waiting on a launch fact**: as above; the Lens shader weight is not in the phone bench's output.
+
+**Answered 2026-11-10** (`docs/decisions.md`; the calls page of that day, 13 calls, each written to stand alone as
+CLAUDE.md's "Calls for Jack" now asks). Merged that day: #165 (the catalog's table strings), #171 (five text tones),
+#172 (results as dots), #175 (the calls rule). #171 and #172 merged before Jack saw them, which he objected to: a
+design PR that changes what the player sees now waits for him with before and after pictures. His picks:
+DOTS-KEPT = A, TONES-KEPT = A, BUTTONS = B, STAMP = A, LENSART = B, SOUNDLAYERS = A, ATB-DATE = A, ATB-WAIT = A,
+F14 = B, DUOPROBE = A, CIPRIVATE = A, CODEQL-PRIVATE = A. **Not picked**: whether an over-par row shows its "+n"
+beside the dots (#174, built, CI green, held). Jack asked instead whether par isn't already perfect on every level;
+the answer owed to him is that three dots mean clean (at par on the first try with no undo or reset), two mean at
+par, one means solved over par, and the call goes to him again on the next page. **Next, decided**: #173's two
+fixes (BUTTONS), shown to Jack before it merges; `r17-stamp` and `r17-f14` brought up to master and opened as PRs
+(both change what the player sees, so each waits for him with its picture unless his pick already covers exactly
+what the picture showed); #158 brought up to master and merged; Lens's 24 remaining panels in batches on #157;
+design change 5 (the menu and result card) stacked on #173; then the catalog's chrome half and the store media
+retake; the small-phone check of the taller result card; a checklist page of the phone feel checks owed to Jack;
+the merged lanes' worktrees removed. `r17-ci-private` waits for the day the repo goes private, as does deleting
+`codeql.yml`. Local branches not pushed: `r17-stamp`, `r17-f14`, `r17-ci-private`.
 
 ### Open work (finish-and-pitch, 2026-11-02)
 
@@ -124,7 +152,8 @@ tools folder's `duo/` (stage2, stage3-review, stage4), not attached to the PRs, 
 
 **The critical path (Claude's reading, Jack's to overrule):** stage 5 → ARCH's TankView split →
 the design pass. ARCH says "after the Duo stages", read as including stage 5, as it rebuilds the same files; ORDER
-scoped the Duo as 2 to 4. The split waits, as starting it would rebase stages 4 and 5 onto renamed files.
+scoped the Duo as 2 to 4. The split waited for that; it merged 2026-11-09 (#156, by type, moves only), and the design
+pass follows.
 
 Jack's d-calls (2026-11-03): d2-cardpos A, d3-lenscap B, d4-one A, d4-empty A, d4-dock A, d4-table A, d4-pose B,
 d4-menuback B.
@@ -439,6 +468,8 @@ Closed: moved word for word to `docs/history.md`.
    - *E3 = A:* searched problems are fine once Jack has played them on the phone and vetoed any that feel random;
      replacements come from the same search (J9 A). He also judges the order of the last two then (J6).
    Still open: J3 and J5 to J8. Left: Jack's play of the book on the phone.
+   *Closed 2026-11-09 (ESCBOOK = A, round 17):* J3 (already D1's, clockwise from twelve), J5, J7 and J8 as built; Jack's
+   play of the book on the phone (E3) still vetoes any one problem.
    Jack's calls (2026-10-28, round 10): J6 = B, the book ends on the two-clock hex and the three-clock hex is 29; ES1 =
    B, a count of twists left, which he found unclear and asked to be workshopped; EB1 = B, change some (a wait's tap
    target on problem 7, and on problem 16 how many ticks are left and that a clock has stopped; problem 27 "naaasty!
@@ -460,7 +491,7 @@ Closed: moved word for word to `docs/history.md`.
    Jack's call J6 = B (round 11): the book ends on the two-clock hex, 30, with the three-clock hex as 29; rows swapped
    and the book re-proved on `escapement-book`. Round 10's question of what a tank lost to its last clock stopping shows
    (`UNSTIR_STOPLOOK`) is superseded by EL1: the budget at 00 is always on screen, so the stamp alone says it; the
-   looks stay in the harness, unpicked. Still open from the book: J3 (built as A, D1), J5, J7 (built as A), J8.
+   looks stay in the harness, unpicked. Still open from the book: J3 (built as A, D1), J5, J7 (built as A), J8. Closed 2026-11-09 (ESCBOOK = A): J3, J5, J7 and J8 as built.
    Jack's round 11 calls, built on `escapement-book` (2026-10-29):
    - ET1 = B: `esc-tap-target` merged: the ratchet sits on a lit plate a tap waits on, and a tap off the plate draws a
      ring closing on it instead of a refusal.
@@ -879,46 +910,7 @@ Closed: moved word for word to `docs/history.md`.
 
 ## Next: the performance pass (queued 2026-09-28)
 
-Jack's aim: the app looks and feels exactly as it does, and runs as fast as it can be made to, even if that takes very
-clever work under the hood.
-
-**The bar.** Output stays the same: the shots, films and the live pictures' designs match today's to within float
-noise. Every level's heaviest frame (its deepest stack, the drag, a live picture and Nightmare+'s heartbeat) holds
-120 Hz on the reference phone (iPhone 13 Pro Max) with four taps. Less heat and battery for the same frames.
-
-**Measure first.** Jack has ruled out phone benches before this pass: they are slow, and heat skews them. One series
-of twelve runs with 45 s rests between them reached "serious" by the fourth. None of the tools sees the phone's GPU yet:
-- Instruments in Xcode 26.6 lists the phone (iOS 27) as offline. An Xcode that supports iOS 27 is the first fix, and
-  it is Jack's to install.
-- The harness bench (`UNSTIR_BENCH`) times main-thread intervals only, now with the thermal state. Back-to-back runs
-  seem to heat the phone: in one session, even the cheapest picture dropped about a fifth of its frames after nine
-  minutes of runs, and a picture that dropped frames early on held 120 Hz after a cool-down. Cool down between runs.
-- A GPU clock in the app would settle it without Instruments: an offscreen harness that runs the same Metal source in
-  its own command buffers and reads their GPU start and end times.
-- The background sheet tool (a Mac renderer and benchmark) lives only in a session scratchpad, which the OS can
-  clear. It is worth moving into the repo as a dev tool.
-
-**Candidate ideas (Claude's, untested; each must earn a measured gain on the phone):**
-- **Cache the twist chain.** The stack changes only on a commit, yet every frame on a live picture runs each pixel's
-  four taps through every entry just to find the same sample points. Store the committed chain's per-tap source
-  points in a texture when the stack changes, and each frame only sample the picture there. During a drag, the map is
-  exactly the identity outside the live disc, so only that disc's pixels need the full chain. That turns a deep
-  frame's cost from per-entry to near constant, and could retire `fourTaps` and `fillEntries`. It needs a Metal path
-  of its own (SwiftUI's `layerEffect` keeps no textures between frames) and enough precision in the stored points.
-- **Derive taps from one.** Where the map is locally rigid (every core, and outside every disc), the four taps are the
-  centre tap moved by the map's Jacobian. Carry the Jacobian through the chain for one tap, and run all four only
-  where the stretch says a filament needs them.
-- **Per-frame CPU work off the main thread**: the live pictures' data and the heartbeat's delay grid.
-
-**Measured (2026-11-03, the 13 Pro Max, local `duo-feel`).** A four-tap entry costs 0.2714 ms at 1137 px, 0.3426 at
-1284 and 0.4466 at 1471: 29.4 entries a 120 Hz frame at 1137 px, 16.9 at 1471. A transform between the `Unstirred`
-layer effect and its clip runs the shader over its whole `maxSampleOffset` region, about 7 times the cost: keep the
-circle clip directly on the effect. #140 (off, `ADAPTIVE_TAPS = NO`) steps the four-tap budget down and up to hold 120
-Hz, the look only, never the stack's depth; whirlpool 27 sits over today's limit (wp27-table). Details under Round
-16's build.
-
-**Claude's view.** Cleverness costs maintainability, and the architecture pass comes straight after. Keep each trick in
-one place with its reason stated, and drop any that doesn't pay on the phone.
+Closed at #140 (PERF = A, 2026-11-09): moved word for word to `docs/history.md`. The twist-chain cache is set aside (R11).
 
 ## After that: the architecture pass (queued 2026-09-28)
 
@@ -929,11 +921,16 @@ new features with Opus 5.5 or later.
 touches, and whether the harness and tests let it check its own work without a person or the phone.
 
 **Starting observations (from the difficulty-tiers work, not yet an audit):**
-- `TankView.swift` holds `Game`, `LevelView`, the shader modifier and the result card in about 830 lines.
+- `TankView.swift` held `Game`, `LevelView`, the shader modifier and the result card in about 830 lines; #156 split it by type (2026-11-09).
 - A new live picture touches six places: `Picture`, a `.metal` file, `LivePictures.swift`, the level table, the tests
   and `shots.sh`.
 - The shaders have no tests except the neural web's clearance scan. Their fidelity checks ran in the scratchpad.
 - The harness is one flat set of `UNSTIR_*` variables in `UnstirApp.swift`.
+
+**Where it stands (ARCHREST = A, 2026-11-09):** before v1, items 4, 5, 7's shots half and 13; the rest waits until after
+v1. Merged 2026-11-09: #156 (TankView.swift split by type), #166 (a typed encoder for the tank shader's arguments),
+#164 (one undo record, item 4), #167 (item 5, the shader test kit and exhaustive Picture switches), #161 (item 7's
+shots half) and #168 (item 13, First Stir compiled out of Release).
 
 **Output:** a ranked list of changes, each with its payoff and cost, for Jack to pick from. Score it against the
 features that are coming: the Nightmare+ mechanic, the way in, the StoreKit unlock and the daily share line.
@@ -1215,3 +1212,10 @@ Jack's calls, round 3 under "Jack's calls on the pitch".
 - **The shelf as a row under the strip, or a place past maelstrom** (B was recommended): Jack chose the dock of live
   covers.
 - **Icon candidates 2 and 3** (3, the whole-tank swirl, was recommended): Jack chose 1, the neon grid.
+
+### R11 — Caching the twist chain (set aside 2026-11-09, PERF = A)
+
+The performance pass closed at #140 (its section is in `docs/history.md`). The cache (store the committed chain's
+per-tap source points in a texture on each commit, so a frame only samples the picture) is not built: it needs a Metal
+path of its own and a texture's precision, and #140's controller already holds 120 Hz by stepping the four-tap budget
+down. Pick it back up when testers' logs show a kept budget under 40, or a real Duo misses frames.

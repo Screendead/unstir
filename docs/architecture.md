@@ -167,7 +167,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   with `UNSTIR_UNLOCK=0` clears it. Each `Level` carries its tier, and its id is the tier's `prefix` and its number
   (`L1`, `N1`, `V1`, `M1`: whirlpool's prefix is from its old name, nightmare; maelstrom's moved off nightmare+'s `N+` when
   its own set replaced those levels, so no old best lands on a new one). Progress is stored by id, so changing a prefix
-  loses it unless the stored keys are remapped. Plughole has 27 levels, 1–18
+  loses it unless the stored keys are remapped. Each table row's title and note is a `String(localized:)` keyed by the
+  level's id (`level.L1.title`, `level.L1.note`), so an English edit keeps its translations; `Level.title`, `note` and
+  `chapter` stay `String`, resolved once as the table is built, as the play screen, menu, shelf and card read them as
+  text. `Tier.name` is translated (Jack's call CAT2 = A); the raw value never shows once the menu's pass lands. Plughole has 27 levels, 1–18
   hand-written and 19–27 dealt by the frozen generator and picked for a gentler curve (`scripts/plughole-levels.sh`),
   all scramble strings like `"2:+3,0:-5"` fed through `parse`, so they merge exactly as play would; whirlpool
   deeper variants on live pictures that follow a table, vortex 27 provisional swirl levels (quad, tri, eye, pent,
@@ -208,13 +211,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **TankView.swift**, **Game.swift**, **Shader.swift**, **Lessons.swift**, **Rods.swift**, **ResultCard.swift** and
   **EscapementViews.swift** hold the play screen, split by type (Jack's call ARCH = A), and this one entry covers all
   seven. TankView.swift keeps `LevelView` whole, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
-  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints, and the app's colours (its type
-  is Type.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
+  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints (the app's colours are Tone.swift's
+  and its type Type.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
   `LensLesson`, `RimLesson` and `GhostFinger`; Rods.swift `RodView`; ResultCard.swift `ResultCard`, `TierUp`,
   `Completion`, `Review` and Escapement's `LostCard`; EscapementViews.swift `ClockHint`, `RatchetView`, `FlipCounter`,
   `LostStamp` and `StopLook`. `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
   endless's brim, which the rim shows (the header shows moves, and the title the tank). The header's count flashes red
-  on a push, and otherwise reads amber at par and magenta past it (`LevelView.parTone`; VoiceOver adds "at par" or
+  on a push, and otherwise reads `text2` under par, amber at par and magenta past it (`LevelView.parTone`; VoiceOver adds "at par" or
   "over par"), and an over-par solve veils its picture under the card by 0.05 a move over, to 0.2 at most
   (`LevelView.haze`; Jack's call C11, round 13). `Game.commit` takes a physical
   knob and commits to the slot under it. Endless has no par, undo or reset: each red flash (a `.pushed` commit) adds a
@@ -338,7 +341,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Game.started`) on its first committed move, a turn, a tank turn or a wait, never on a touch nor on the
   demonstration's commits (Jack's call C3, round 13). A level with a best counts as started for `Game.firstTry`, so a
   best iCloud (`Sync`) brings without its level's started flag still makes a try there no first. A level's note shows at full strength for its first 4 s of play, then at
-  0.55, as every caption rests. Plughole 01's first open hangs one line under it, at 0.55, pointing at the settings
+  `text2`, as every caption rests. Plughole 01's first open hangs one line under it, at `text3`, pointing at the settings
   ("sound, haptics, colour letters: ⚙ on the menu", `LevelView.pointer`, Jack's call F3, round 14; it fits the SE's
   width with little to spare), and announces it to VoiceOver as the opening ends, when `Best.pointedAtSettings` is
   stored; the line stays the visit out. Beside the menu, where the gear is in sight, it neither shows nor announces,
@@ -409,7 +412,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   prover, its one key pinned,
   `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
-  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
+  1 by place under `Pack.id`; a `Level` names its `pack`. A pack's name is never translated (Jack's call CAT1 = A);
+  its levels' titles, chapters, rules and notes are `String(localized:)` keyed by id (`level.lens-1.title`,
+  `chapter.prism.1`), and Escapement's stipulation is its budget sentence, a key, or on a chapter's opener that
+  sentence and the chapter's rule as one key (`rule.escapement.1`), so a translator sees them together. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
@@ -494,7 +500,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `StoryScene.swift` and `FirstStirTests.swift` compile only under `FIRST_STIR` (Debug), as does `Level.story`; the
   shared code reads `Level.isStory` (false without it) and keeps its story branches behind the same condition. A level with a `story` draws it in
   place of its `picture`: `Story.vignettes` names the rods whose rigid cores each hold one vignette, drawn held back
-  (later in the night) and played (earlier). `Game` deals each of the scramble's entries on such a rod with that rod in
+  (later in the night) and played (earlier). Its titles and the ending's beats are catalog keys marked do-not-translate
+  (`scripts/catalog.py fixed`) while the pack is out of v1; the scene's clock stays a hand-built "6:40 am" (Jack, F3),
+  as `Date.FormatStyle` reads "6:40 AM" in en-US. `Game` deals each of the scramble's entries on such a rod with that rod in
   its `tags`, and `Game.played` is the story's vignettes less every tag on the stack, so the picture is a function of
   the stack alone: a pop plays what it carried, a vignette waits for every entry on its rod, a win the fine pass calls
   plays the rest, and the pack's undo and a reset bring tags back with their entries. On a story, the heal ring
@@ -587,6 +595,29 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   its size), which `PlayLayout.Chrome` and the caption's two lines use. The game's own text stays fixed (`Font.game`):
   a knob's letters, a turn's count, "unstirred.", "spilled.", First Stir's film lines, with Escapement's flip counters
   and serif stamp and badge.
+- **Tone.swift** holds the colours round the game (Jack's call DESIGN5 = A, the design pass's second change): the
+  accents, and five tones of `text` in place of thirteen opacities, `TextTone` and its `alpha`: `text` (18.3:1 on black),
+  `text2` 0.72 (9.3:1: details that carry meaning, notes, the count under par, a fact's value), `text3` 0.56 (5.8:1:
+  keys, progress, small print, explanations, the floor for anything that means something), `text4` 0.40 (3.3:1,
+  inactive only, beside a lock or a state; also `line`, a control's stroke) and `rule` 0.14, never text. `Color.text2`
+  and the rest set a colour; `View.tone` sets the alpha over whatever ink is inherited, so on Escapement's paper the
+  ink takes it, and `Page.tone` raises `text3` to `text2` there, as ink at 0.56 reads 3.8:1 on bone. `surface`
+  (#15171E) is the settings sheet's, the one lifted colour, and `scrim` (black at 0.6) is under the consent card.
+  `Tier.ink` and `Offer.ink` are each tier's and pack's colour for words ("next ›", the gate's line, a pack's numbers):
+  vortex's teal and maelstrom's red, as vortex's glow reads 4.1:1, and Prism's `text`; `glow` stays the shadows'.
+  `ToneTests` pins each tone's ratio and every ink at 4.5:1 or more. The game's own colours (the picture, tank,
+  bezel, knobs, rings, the ghost finger, flip counters and what is drawn over the picture) keep theirs.
+- **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
+  A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
+  one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A
+  row's are 8 pt with 4 between (at the default type size; both sizes scale with the text beside them), at its trailing edge on the title's baseline where the word stood (under the title at
+  the accessibility sizes, as the row stacks), from the stored best through `Archive.Mark` (`ResultMarks.filled`); a closed
+  menu row shows a small lock there instead, as a pack card's locked row does. The result card's are 16 pt with 8
+  between over its words, for this solve (`Game.clean`, `Game.over`), never endless's, Escapement's or the sandbox's,
+  which have no par; each lands 0.12 s after the last from scale 0.6 and clear on `.easeOut(0.3)`, the first 0.2 s
+  after the card's reveal has landed (`ResultMarks.land`), all three fading in together under Reduce Motion. The marks are
+  hidden from VoiceOver, which reads the row's value (`Spoken.result`: "clean", "at par", "solved, 2 over par") or the
+  card's summary. The archive's calendar keeps its words (`Archive.Mark.text`).
 - **PlayLayout.swift** decides where the play screen puts the tank (`PlayLayout.of`, a pure function the tests pin):
   any window taller than wide keeps the column, header, tank, caption and controls stacked, with the glass at
   `min(width, height - reserve) / 1.045`, as on every iPhone, `reserve` 290 pt at the default type size and as much
@@ -750,7 +781,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   have settled (`Store.shelved`, or `Store.shelfWait`, 3 s, after the read), then fades in once, so neither changes it in sight,
   but for a fetch that outlasts the wait and returns the packs without the bundle, which takes its cover off in sight;
   the approval's header waits for it too, VoiceOver's announcement with it) (Jack's call C7, round 13) (its own failure said under it, never as the pack's), restore, then the pack's levels, those past the taste
-  locked. An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
+  locked, each row's result as the menu's marks (`ResultMarks`; Escapement's, which has no par, still in words: solved, +n,
+  tried). An owner's card is home, not a shop: no "PAID ADD-ON" or free taste, the pack's progress ("done 4/25 at
   par") for what it holds, restore only while something sold is unowned, and the pill "play 04 ›" until a level past
   the taste is solved, then "continue 06 ›", from the first level without a best, then the first not at par, and none
   once all are (`PackCard.pickUp`, `continues`); the bundle's owned card plays on in the first of its packs with a level
@@ -883,7 +915,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   error, answering 200, an event over a day old or one whose session began over 7 days ago.
 - **Spoken.swift** holds what VoiceOver says where the screen shows glyphs, short counts or colour, as pure functions
   the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
-  ..."; the daily, endless and the sandbox by name), value (its result, "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
+  ..."; the daily, endless and the sandbox by name), value (its result, `Spoken.result`: "clean", "at par" or "solved, 2 over par"; "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
   "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, par
   every Plughole level first") and hint (its rods and par), the menu's next button (`Spoken.next`: "Next:
   level 2, Drip"), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
@@ -892,7 +924,28 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
   VoiceOver user plays it by sight; full play without sight is Eyes Shut's, after v1. The opening's caption is the skip
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
-  buttons read as words, not glyphs.
+  buttons read as words, not glyphs. Each phrase is one catalog key, a count's varying by plural ("1 move"), and a
+  phrase inside another is passed in whole ("%@, par %lld"). The row's hint, given the menu's detail line, still turns
+  its " · " into ", ", until the menu's half of the migration passes the data instead.
+- **Localizable.xcstrings** is the String Catalog (Jack's call F4 = C: English at launch, languages a later update;
+  CAT1 to CAT8 = A), development language `en`, the source British English. The build emits every localizable literal
+  (`SWIFT_EMIT_LOC_STRINGS`), but a command-line build writes no keys back into the catalog (checked 2026-11-09;
+  Xcode's own build is documented to), so a key missing from it shows its literal or `defaultValue`, the same
+  English; a plural key is the exception, as without its `one` and `other` forms it reads "1 moves", so each one is
+  written into the catalog by hand (`scripts/catalog.py`) with the code that uses it. The archive row's hint, "%lld
+  past dailies", has no `one` form, as its English said "1 past dailies" before the catalog, and the menu's own line,
+  still hand-built in Archive.swift, says so too. A count in a key is formatted for the locale: from 1000 it reads
+  "1,234" in English, where the strings it replaced read "1234". Xcode's own build or archive is documented to sync
+  every extracted key into the catalog, which would leave this tracked file changed in the checkout; until a check
+  for that drift exists, keep such a sync out of an unrelated commit.
+  `scripts/loc-lint.sh`, and `CatalogTests.testNoPlayerStringEscapesTheCatalog` with the same patterns
+  (`scripts/loc-lint/patterns.txt`), flag each line that would put player text past the catalog: a `Text`,
+  accessibility label, value or hint or announcement whose argument is not a literal, `verbatim:` or already
+  localized, a case change, a hand-made plural, a glyph or a bare number as a key. A line that means it carries
+  `// loc: verbatim <why>`. `scripts/loc-lint/baseline.txt` lists the escapes still owed, file and line text; each
+  fix takes its line out, and the test fails on an escape or a fixed line left in. CATORDER = D splits the migration:
+  the tables (Levels, Pack, First Stir) and the leaf files first, the chrome (Menu, the play screen and its card,
+  Shelf, Consent, Archive) after the design pass.
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
   round 13): until 01 has a best, an empty line over the tier's list (the tank's rule, "Every stir in this tank has
   an exact inverse.", left the menu for the App Store page: Jack's call D1 = A, round 13); then "next: 07 · Sprinkle ›"
@@ -903,7 +956,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   harnessed `UNSTIR_MODE=sandbox` opens the menu, while Debug and the harness outside Release keep it, its code, tests and
   shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
-  (`Best.started`) and has no best reads tried, faint, as a pack card's list does (Jack's call C3, round 13; endless
+  (`Best.started`) and has no best reads tried, three hollow marks, as a pack card's list does (Jack's call C3, round 13; endless
   and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. With a run saved, endless's row
   continues it, "continue · tank 6 · brim 3 · best 9" in place of its detail, and "new run" on its title's line in
   place of the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s; under VoiceOver until focus
@@ -950,7 +1003,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Picture.next`) takes plughole's pictures, whirlpool's and then vortex's family, and skips the twins and Lens's
   halftone; its header's two controls read "picture: grid ›" and "rods: 3 ›", or "grid ›" and "3 rods ›" where the
   width is short (`ViewThatFits`); quad and eye, which share a count, add their name ("rods: 4 · eye ›", short "eye ›",
-  `LevelView.layoutLabel`). The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
+  `LevelView.layoutLabel`). Those labels still read the raw values; `Picture.display` and `Layout.display` are the
+  catalog's names for them (`picture.grid`, `layout.eye`, each reading as its raw value), for the controls to take
+  up when the chrome's half of the migration reaches them. The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
   It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max (unmeasured on a phone), so every build keeps it in
@@ -1060,7 +1115,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   does the harness's level store a best, a started flag or endless's best (`Game.storesProgress`): a solve registers
   its best for that launch only, as `UNSTIR_BESTS` does, so the menu it exits to sees it. So shot order never
   matters. For the menu, `UNSTIR_BESTS=plughole:0001,...` registers bests for that launch only (a digit per level, that
-  many over par; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
+  many over par, `c` clean; `-` for none), `UNSTIR_TIERSPIN=angle:fade` holds the list mid-stir and `UNSTIR_TIERDEMO` switches
   tiers through the same calls a finger makes. `UNSTIR_EXIT=left` leaves the harness's level for the menu a second
   after it opens, through `RootView`'s own exit (`=solved` as its result card does after a solve; `=up` opens the next
   tier's first level, as "up a notch" does, then leaves that; `=swipe` leaves through the back swipe's commit).

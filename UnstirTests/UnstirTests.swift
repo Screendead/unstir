@@ -141,8 +141,8 @@ final class UnstirTests: XCTestCase {
 
     /// Jack's call C11 (round 13): the header's count turns amber at par and magenta past it.
     func testTheCountWarnsAtPar() {
-        XCTAssertEqual(LevelView.parTone(moves: 0, par: 5), .text)
-        XCTAssertEqual(LevelView.parTone(moves: 4, par: 5), .text)
+        XCTAssertEqual(LevelView.parTone(moves: 0, par: 5), .text2)
+        XCTAssertEqual(LevelView.parTone(moves: 4, par: 5), .text2)
         XCTAssertEqual(LevelView.parTone(moves: 5, par: 5), .amber)
         XCTAssertEqual(LevelView.parTone(moves: 6, par: 5), .magenta)
         XCTAssertEqual(LevelView.parTone(moves: 20, par: 5), .magenta)
@@ -2136,7 +2136,7 @@ final class UnstirTests: XCTestCase {
         func result(_ best: Best) -> String { Spoken.row(first, result: best, tanks: 0, detail: nil, enabled: true, needs: nil).value }
         XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: true)), "clean")
         XCTAssertEqual(result(Best(over: 0, seconds: 9, clean: false)), "at par")
-        XCTAssertEqual(result(Best(over: 2, seconds: 9)), "2 over par")
+        XCTAssertEqual(result(Best(over: 2, seconds: 9)), "solved, 2 over par")
         let daily = Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[22])
         XCTAssertEqual(daily.label, "Today's daily")
         XCTAssertEqual(daily.value, "locked, solve Plughole level 23 first")
@@ -2146,7 +2146,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(Spoken.row(.sandbox, result: nil, tanks: 0, detail: "nothing counts", enabled: true, needs: nil).value, "")
         XCTAssertEqual(Spoken.row(first, result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, started: true).value, "tried")
         XCTAssertEqual(Spoken.row(first, result: Best(over: 1, seconds: 9), tanks: 0, detail: nil, enabled: true, needs: nil,
-                                  started: true).value, "1 over par")
+                                  started: true).value, "solved, 1 over par")
         XCTAssertEqual(Spoken.row(.daily(), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value, "new")
         XCTAssertEqual(Spoken.row(.endless(Run(seed: 7)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil, new: true).value,
                        "new")

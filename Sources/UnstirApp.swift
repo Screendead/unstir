@@ -240,7 +240,7 @@ struct Harness {
         if harnessed || env["UNSTIR_UNLOCK"] != nil { Best.unlocked = env["UNSTIR_UNLOCK"] == "1" }
         menuTier = harnessed ? tier : nil
         // UNSTIR_BESTS=plughole:00-1,whirlpool:0,lens:000: a best for each of a tier's or a pack's levels from 01, one
-        // character each: a digit is that many over par, - is none. For this launch only.
+        // character each: a digit is that many over par, c clean, - is none. For this launch only.
         for part in env["UNSTIR_BESTS"]?.split(separator: ",") ?? [] {
             let f = part.split(separator: ":")
             // endless:9: the run's best, 9 tanks.
@@ -248,6 +248,7 @@ struct Harness {
             guard f.count == 2, let levels = Tier(rawValue: String(f[0]))?.levels ?? Pack(rawValue: String(f[0]))?.levels
             else { continue }
             for (level, c) in zip(levels, f[1]) {
+                if c == "c" { Best(over: 0, seconds: 60, clean: true).fake(level.id) }
                 if let over = c.wholeNumberValue { Best(over: over, seconds: 60).fake(level.id) }
             }
         }
@@ -285,7 +286,7 @@ struct Harness {
         letters = env["UNSTIR_LETTERS"] == "1"
         if harnessed {
             var held = ["music", "sounds", "haptics", "supporter"].reduce(into: [String: Bool]()) {
-                $0[$1] = env["UNSTIR_\($1.uppercased())"] != "0"
+                $0[$1] = env["UNSTIR_\($1.uppercased())"] != "0" // loc: verbatim an environment key
             }
             if let c = env["UNSTIR_LETTERSCHOICE"], ["0", "1"].contains(c) { held["letters"] = c == "1" }
             switches = held

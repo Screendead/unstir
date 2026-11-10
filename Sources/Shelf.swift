@@ -258,7 +258,7 @@ extension Purchase {
         case .owned: ("owned", .lime)
         case .pending: ("waiting for approval", .amber)
         case .failed: ("purchase failed", .magenta)
-        case .revoked: (unshared ? "no longer shared with you" : "no longer on this Apple ID", Color.text.opacity(0.6))
+        case .revoked: (unshared ? "no longer shared with you" : "no longer on this Apple ID", Color.text2)
         }
     }
 }
@@ -505,7 +505,7 @@ struct PackCard: View {
             // Padded below by all of hit()'s reach, as the scroll, laid over it, would take the rest of its target.
             let back = Self.back(to: backTo, beside: beside || closes)
             Button(action: onBack) { Text(back.text).font(.ui(.button)).hit() }
-                .buttonStyle(Sounding()).padding(.top, 18).padding(.bottom, 14).opacity(0.8)
+                .buttonStyle(Sounding()).padding(.top, 18).padding(.bottom, 14)
                 .padding(.horizontal, 24)
                 .accessibilityLabel(back.spoken)
             GeometryReader { g in
@@ -513,12 +513,12 @@ struct PackCard: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
                             Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
-                                .font(.ui(.eyebrow)).tracking(2).opacity(0.42)
+                                .font(.ui(.eyebrow)).tracking(2).foregroundStyle(Color.text3)
                                 .padding(.top, 12)
                             Text(offer.name).font(.ui(.display)).tracking(2)
                                 .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
                                 .accessibilityAddTraits(.isHeader)
-                            Text(offer.pitch).font(.ui(.label)).opacity(0.62).padding(.top, 4)
+                            Text(offer.pitch).font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4)
                             // Bounded by the height too, so buy is still on the first screen of the smallest phone.
                             PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48,
                                                              g.size.height * 0.36), held: clock)
@@ -547,14 +547,14 @@ struct PackCard: View {
                             .padding(.top, 32)
                             if let note = offer.note { detail(note).padding(.top, 12) }
                             if offer.arriving {
-                                Text("More levels arrive in an update.").font(.ui(.detail)).opacity(0.62).padding(.top, 12)
+                                Text("More levels arrive in an update.").font(.ui(.detail)).foregroundStyle(Color.text3).padding(.top, 12)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                             // Buying comes before the list, so it is on the first screen whatever the pack holds.
                             if levels.isEmpty { Spacer(minLength: 24) }
                             VStack(alignment: .leading, spacing: 0) {
                                 if arrived, let note = Self.arrival(offer, levels, state: state) {
-                                    Text(note).font(.ui(.label)).opacity(0.85).padding(.bottom, 14)
+                                    Text(note).font(.ui(.label)).foregroundStyle(Color.text2).padding(.bottom, 14)
                                         .fixedSize(horizontal: false, vertical: true)
                                         .accessibilityFocused($spoken, equals: .note)
                                 }
@@ -701,9 +701,9 @@ struct PackCard: View {
         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 0))
         layout {
-            Text(key).font(.ui(.detail)).opacity(0.38)
+            Text(key).font(.ui(.detail)).foregroundStyle(Color.text3)
                 .frame(width: typeSize.isAccessibilitySize ? nil : keyWidth, alignment: .leading)
-            value.font(.ui(.label)).opacity(0.85).fixedSize(horizontal: false, vertical: true)
+            value.font(.ui(.label)).fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
         .tint(Color.text)
@@ -735,19 +735,21 @@ struct PackCard: View {
                     spoken = .buy
                 } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(offer.glow)
+                        Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(offer.ink)
                             .opacity(open ? 1 : 0.5).frame(minWidth: 30, alignment: .leading)
                         Text(level.title).font(.ui(.body)).multilineTextAlignment(.leading)
-                            .opacity(open ? 1 : 0.38)
+                            .foregroundStyle(open ? Color.text : Color.text3)
                         Spacer(minLength: 8)
                         if !open {
-                            Image(systemName: "lock.fill").font(.ui(.detail)).opacity(0.4)
+                            Image(systemName: "lock.fill").font(.ui(.detail)).imageScale(.small).foregroundStyle(Color.text4)
                                 .transition(.opacity.combined(with: .scale(scale: 1.8)))
+                        } else if !noPar, let filled = ResultMarks.filled(Archive.Mark(best, started: tried)) {
+                            ResultMarks(filled: filled)
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.ui(.detail))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
                         } else if tried {
-                            Text("tried").font(.ui(.detail)).opacity(0.4)
+                            Text("tried").font(.ui(.detail)).foregroundStyle(Color.text3)
                         }
                     }
                     .padding(.vertical, 9)
@@ -757,7 +759,7 @@ struct PackCard: View {
                 }
                 .buttonStyle(Sounding())
                 .rowHairline(offer.glow, level.id == focus?.id ? lit : 0, inset: 10)
-                .accessibilityValue(open ? best.map { $0.over == 0 ? (noPar ? "solved" : "at par") : "\($0.over) over par" }
+                .accessibilityValue(open ? best.map { noPar ? ($0.over == 0 ? "solved" : "\($0.over) over par") : Spoken.result($0) }
                                         ?? (tried ? "tried" : "") : "locked, needs the pack")
                 .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
             }
@@ -776,7 +778,7 @@ struct PackCard: View {
             if !chapter.isEmpty {
                 Text("\(chapter.filter { Best.load($0.id)?.over == 0 }.count)/\(chapter.count) \(noPar ? "solved" : "at par")")
                     .font(.ui(.detail))
-                    .opacity(0.4)
+                    .foregroundStyle(Color.text3)
             }
         }
         .padding(.bottom, 4)
@@ -805,7 +807,7 @@ struct PackCard: View {
                 } else {
                     Text(asked ? "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again."
                          : "Ask to Buy: \(offer.name) opens here once \(Offer.bundleName) is approved.")
-                        .font(.ui(.detail)).opacity(0.5)
+                        .font(.ui(.detail)).foregroundStyle(Color.text2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -819,12 +821,12 @@ struct PackCard: View {
         case .revoked:
             // A refund or a family's share ended: said plainly, never as an alarm.
             line((unshared ? "\(offer.name) is no longer shared with you" : "\(offer.name) isn't on this Apple ID any more")
-                 + " \u{00B7} your progress is kept", Color.text.opacity(0.6), glow: false)
+                 + " \u{00B7} your progress is kept", Color.text2, glow: false)
         }
     }
 
     private func detail(_ s: String) -> some View {
-        Text(s).font(.ui(.detail)).opacity(0.5).fixedSize(horizontal: false, vertical: true)
+        Text(s).font(.ui(.detail)).foregroundStyle(Color.text3).fixedSize(horizontal: false, vertical: true)
     }
 
     private var unshared: Bool { offer.pack.map(store.unshared) ?? false }
@@ -953,14 +955,14 @@ struct PackCard: View {
     /// Complete's failure stays off the pack's own status, so it is said here, beside the button that tried.
     private func completeLine(_ saving: String) -> some View {
         let complete = store.price(Pack.completeID) ?? ""
-        let quiet = Color.text.opacity(0.55)
+        let quiet = Color.text3
         // Non-breaking within each part, so a narrow phone or a large size wraps the line only before "· save".
         func joined(_ s: String) -> String { s.replacingOccurrences(of: " ", with: "\u{00A0}") }
         return VStack(alignment: .leading, spacing: 6) {
             Button { buy(.complete) } label: {
                 let all = Text("or all \(Offer.countWord(Pack.bundled.count)) in \(Offer.bundleName)\u{00A0}\u{00B7}\u{00A0}").foregroundStyle(quiet)
                 let save = Text(joined("\u{00B7} save \(saving) \u{203A}")).foregroundStyle(quiet)
-                Text("\(all)\(Text(joined(complete)).foregroundStyle(Color.text.opacity(0.75))) \(save)")
+                Text("\(all)\(Text(joined(complete)).foregroundStyle(Color.text2)) \(save)")
                 .font(.ui(.detail))
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -984,7 +986,7 @@ struct PackCard: View {
         Button { Task { await store.restoreAndAnnounce() } } label: {
             let words = restoreWords
             Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
-                .font(.ui(.detail)).opacity(0.4).underline(pattern: .dot)
+                .font(.ui(.detail)).foregroundStyle(Color.text3).underline(pattern: .dot)
                 .fixedSize(horizontal: false, vertical: true).hit(16)
         }
         .buttonStyle(Sounding())
@@ -1083,11 +1085,11 @@ struct PackDock: View, Equatable {
                         .shadow(color: yours.glow.opacity(0.6), radius: 4).transition(.opacity)
                 } else {
                     Text(owned.isEmpty ? "PACKS \u{00B7} PAID ADD-ONS" : "PACKS").font(.ui(.detail, .semibold)).tracking(2)
-                        .opacity(0.38).transition(.opacity)
+                        .foregroundStyle(Color.text2).transition(.opacity)
                 }
                 Spacer()
                 if typeSize < .xxLarge, owned.count < Pack.sold().count {
-                    Text("first 3 levels of each free").font(.ui(.detail)).opacity(0.3)
+                    Text("first 3 levels of each free").font(.ui(.detail)).foregroundStyle(Color.text3)
                 }
             }
             .padding(.horizontal, 20)
@@ -1124,7 +1126,7 @@ struct PackDock: View, Equatable {
                                         .lineLimit(offer.name.split(separator: " ").count)
                                 }
                                 .font(.system(size: nameSize(shelf), design: .monospaced))
-                                .opacity(0.7).multilineTextAlignment(.center)
+                                .foregroundStyle(Color.text2).multilineTextAlignment(.center)
                                 // A glyph, so the state reads without its colour; a revocation is the card's to say.
                                 if store.ready, let mark = state.mark {
                                     Image(systemName: mark).font(.system(size: 8, weight: .bold)).foregroundStyle(state.tag()?.colour ?? .text)
@@ -1135,7 +1137,7 @@ struct PackDock: View, Equatable {
                             // Its room kept without one, so a mark clearing never moves the dock.
                             let new = line?.words == "new"
                             Text(line?.words ?? " ").font(.ui(.detail, new ? .semibold : .regular))
-                                .foregroundStyle(new ? offer.glow : Color.text.opacity(0.45))
+                                .foregroundStyle(new ? offer.ink : Color.text3)
                                 .shadow(color: new ? offer.glow.opacity(0.6) : .clear, radius: 3)
                                 .padding(.top, -4)
                         }
@@ -1180,7 +1182,7 @@ struct PackDock: View, Equatable {
             .ignoresSafeArea(edges: .bottom)
         }
         .overlay(alignment: .top) {
-            Rectangle().fill(Offer.complete.gradient).frame(height: 0.5).opacity(0.45).padding(.horizontal, 20)
+            Rectangle().fill(Color.rule).frame(height: 1).padding(.horizontal, 20)
         }
     }
 
