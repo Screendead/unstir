@@ -464,6 +464,9 @@ final class PlayLayoutTests: XCTestCase {
     @MainActor private func measuredCard(_ env: [String: String], _ phone: Phone, type: DynamicTypeSize)
         -> (card: CGFloat, room: CGFloat, fit: PlayLayout.Finished, times: Int)? {
         final class Box: @unchecked Sendable { var last: (CGFloat, CGFloat, PlayLayout.Finished)?; var times = 0 }
+        // A harness solve marks its level started for the launch, as registered defaults, which no later test may see.
+        let registered = UserDefaults.standard.volatileDomain(forName: UserDefaults.registrationDomain)
+        defer { UserDefaults.standard.setVolatileDomain(registered, forName: UserDefaults.registrationDomain) }
         let box = Box(), harness = Harness(env)
         let level = LevelView(level: harness.level, harness: harness, onExit: { _ in }, onNext: { _ in }, onLook: { _ in },
                               onOffer: { _ in })
