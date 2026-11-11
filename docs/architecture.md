@@ -603,7 +603,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   a knob's letters, a turn's count, "spilled.", First Stir's film lines, with Escapement's flip counters
   and serif stamp and badge. "unstirred." follows the type as the stamp role (`TypeRole.stamp`, title2's 22 pt
   semibold mono; Jack's call STAMP = A), up to the play screen's cap, where it sets at about 28 pt and still ends above
-  the stage in the column (`PlayLayout.words`); the tabletop keeps it at a fixed 22 pt, as its upright half budgets
+  the stage in the column (`PlayLayout.words`). Where the column's room between the title row's foot and the glass
+  is shorter than that, as on an SE at the largest sizes, the word stands lower, centred between the title row and the rim,
+  and shrinks only if that room can't hold its line (`PlayLayout.columnWords`); the room is measured, the spacer under
+  the title, as the note may run past the two lines the chrome budgets. The tabletop keeps it at a fixed 22 pt, as its upright half budgets
   `PlayLayout.wordsHeight` for it.
 - **Tone.swift** holds the colours round the game (Jack's call DESIGN5 = A, the design pass's second change): the
   accents, and five tones of `text` in place of thirteen opacities, `TextTone` and its `alpha`: `text` (18.3:1 on black),

@@ -165,6 +165,17 @@ struct PlayLayout: Equatable {
 
     /// The height "unstirred." takes, 22 pt mono, give or take its line's leading.
     static let wordsHeight: CGFloat = 28
+
+    /// In the column, where "unstirred." stands over a glass `side` across whose top lies `over` under the title line's
+    /// foot: `words` over it, top to top, where that clears the title, else centred between the title and the rim, and
+    /// shrunk by `scale` only as far as that room needs. `over` is measured, as the note under the tank may run to
+    /// more lines than the chrome budgets.
+    static func columnWords(over: CGFloat, side: CGFloat, type: DynamicTypeSize) -> (words: CGFloat, scale: CGFloat) {
+        guard over < words else { return (words, 1) }
+        let room = max(over - side * (rim - 1) / 2, 0), line = TypeRole.stamp.line(at: min(type, typeCap)).height
+        let scale = min(1, room / line)
+        return (over - (room - line * scale) / 2, scale)
+    }
 }
 
 extension PlayLayout {
