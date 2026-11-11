@@ -450,6 +450,19 @@ Calls 2026-11-11 (the page of built options after Jack's playthrough of the paid
 | ESCNOTES = keep | 2026-11-11 | Escapement's per-move notes start again each level, as built. | HANDOFF |
 | VOICENEXT = keep | 2026-11-11 | VoiceOver's "next, not played" stays, as built. | HANDOFF |
 
+## Round 19
+
+Calls 2026-11-11, night (the second follow-up page, six calls, all answered).
+
+| Call | Date | Decided | Where |
+|---|---|---|---|
+| Chapter 2's name | 2026-11-11 | Escapement's second chapter is "Tempo", and level 7's line stays "Unstir in 3 ticks. No move is spare.", both as they stood. | HANDOFF |
+| Level 7's name | 2026-11-11 | Escapement's level 7 is named "Counterweight" and keeps its picture of two weights; its id doesn't change. The pause-mark picture is set aside. | HANDOFF |
+| Snooze and Standstill | 2026-11-11 | Escapement's levels 8 and 12 keep their names. | HANDOFF |
+| Prism's held rod | 2026-11-11 | While a Prism rod is held, the colours it moves are drawn alone in their own colour, and white fades in near the count. Jack: "This is a fantastic solution to the problem. Well done." It goes on his phone before it merges. | HANDOFF |
+| The curtain call as built | 2026-11-11 | Change it first and show it again before merging. Jack: "I want the text within the glass. You spaced the text below the glass far too close to it anyway, so it looks shoddy - but yeah I'm left wondering why you chose to build it differently to what I decided? It looks good in the glass. I agree with your decision to shrink the glass and put the curtain call below on small screens." | HANDOFF |
+| The credit | 2026-11-11 | The game's one credit reads "made by screendead · thank you for playing". | HANDOFF |
+
 ## Dated, no round
 
 | Call | Date | Decided | Where |
