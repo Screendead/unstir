@@ -487,12 +487,24 @@ extension EscapementArt {
         plate.line(arc(pivot, 0.012), medium)
         for a in [-0.35, 0.0, 0.35] { plate.line([polar(P(-0.4, 0.25), 0.035, .pi + a), polar(P(-0.4, 0.25), 0.065, .pi + a)], fine) }
 
-        // The sound, through the gaps to the right and below.
+        // The sound, out through the gap to the right.
         for (k, r) in [0.48, 0.55, 0.62, 0.69].enumerated() {
             let reach = (13.0 - 1.5 * Double(k)) * deg
-            plate.line(arc(P(0, 0.02), r, from: 18 * deg - reach, to: 18 * deg + reach), k == 0 ? medium : fine)
-            plate.line(arc(P(0, 0.02), r, from: 90 * deg - reach, to: 90 * deg + reach), k == 0 ? medium : fine)
+            plate.line(arc(P(0, 0.02), r, from: 18 * deg - reach, to: 18 * deg + reach), k < 2 ? medium : fine)
         }
+
+        // The pin barrel that lifts the hammers' tails in their order, a track of pins to a bell, and its wheel edge on.
+        cut(&plate, bar(P(-0.36, 0.735), P(0.36, 0.735), 0.03), fine)
+        let barrel = box(P(-0.25, 0.64), P(0.25, 0.83))
+        plate.fill(barrel)
+        plate.lines(hatch([box(P(-0.25, 0.775), P(0.25, 0.83))], angle: 0, gap: 0.011) + hatch([box(P(-0.25, 0.64), P(0.25, 0.662))], angle: 0, gap: 0.011), fine)
+        plate.line(barrel, heavy)
+        for track in 0..<8 {
+            let x = -0.21 + 0.06 * Double(track)
+            plate.lines(dashed([P(x, 0.64), P(x, 0.83)], on: 0.012, off: 0.03), fine)
+            for pin in 0..<3 { plate.line(arc(P(x, 0.66 + 0.15 * rnd(17, 3 * track + pin)), 0.008), heavy) }
+        }
+        shaded(&plate, box(P(0.27, 0.655), P(0.305, 0.815)), angle: 0, gap: 0.016, outline: heavy)
 
         callout(&plate, "A", from: P(0.17, -0.06), to: P(0.3, -0.42))
         callout(&plate, "B", from: head + P(-0.01, 0.07), to: P(-0.58, 0.44))
@@ -633,7 +645,7 @@ extension EscapementArt {
         plate.line(ellipse(P(0.19, 0.66), 0.075, 0.02), medium)
         plate.fill(arrow([P(0.02, 0.9), P(0.02, 0.68)], width: 0.022, head: 0.07), .black)
         plate.fill(arc(o, 0.6))
-        plate.lines(hatch(rings, angle: 0.5, gap: 0.034), fine)
+        plate.lines(hatch(Array(rings.dropFirst()), angle: 0.5, gap: 0.034), fine)
         plate.marks += works.marks
 
         // The ratchet on the barrel's arbor, the click that holds it and the click's spring.
