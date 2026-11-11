@@ -1044,8 +1044,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   across and off its centre, and a lens's frame changes along its length (the spectacles' tortoiseshell, the night
   sight's dashes), since a neighbour's twist slides a rim along itself and a plain ring hides that.
   `scripts/lens-art-sheet.py read` measures it, weakest level first: the share of each dealt twist rod's disc whose
-  light, blurred over two pitches so dots and hairlines average away, a step changes; the weakest step is always one
-  step, and no drawn rod is under 0.06 (17's rod 2; 13 and 20 follow at 0.08). `scripts/lens-panels.sh read` also
+  light, blurred over two pitches so dots and hairlines average away, its weakest step changes (one step, on every
+  rod looked at); the panels under 0.06 were redrawn, a cut-off of Claude's, and 17's rod 2 at 0.06 and 13 and 20 at
+  0.08 are the weakest left. The drawing does not mend the order read on the four-rod glass: with the same two
+  entries dealt either way round, a lens under a neighbour's twist and over it look all but alike on 8, 11 and 18,
+  before and after (Mac renders at the phone's size), as the neighbour reaches too little of the rim. `scripts/lens-panels.sh read` also
   prints, for each lens under a neighbour's disc, the share of the rim's band that three steps of the twist change.
   A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
   `scripts/lens-panels.sh` draws, times and checks a panel on the Mac, and `scripts/lens-art-sheet.py` lays the drawn
