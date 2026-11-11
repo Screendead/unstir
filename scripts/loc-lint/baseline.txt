@@ -1,46 +1,5 @@
 # Player text that escapes the String Catalog today, one flagged line each (scripts/loc-lint.sh). Each fix
 # takes its line out; the migration ends with this file deleted.
-Shelf.swift: if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
-Shelf.swift: UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) }
-Shelf.swift: .accessibilityLabel(back.spoken)
-Shelf.swift: Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
-Shelf.swift: Text(offer.name).font(.ui(.display)).tracking(2)
-Shelf.swift: Text(offer.pitch).font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4)
-Shelf.swift: fact("for", Text(offer.assumes))
-Shelf.swift: if state != .owned { fact("free", Text(offer.free)) }
-Shelf.swift: Text(note).font(.ui(.label)).foregroundStyle(Color.text2).padding(.bottom, 14)
-Shelf.swift: guard offer.pack == nil else { return Text(offer.holds) }
-Shelf.swift: return Text(s)
-Shelf.swift: Text(key).font(.ui(.detail)).foregroundStyle(Color.text3)
-Shelf.swift: Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(offer.ink)
-Shelf.swift: Text(best.over == 0 ? atPar : "+\(best.over)").font(.ui(.detail))
-Shelf.swift: .accessibilityValue(open ? best.map { noPar ? ($0.over == 0 ? "solved" : "\($0.over) over par") : Spoken.result($0) }
-Shelf.swift: .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
-Shelf.swift: Text(name.lowercased()).font(.ui(.detail, .semibold)).foregroundStyle(offer.gradient).fixedSize()
-Shelf.swift: Text(asked ? "waiting for approval" : "\(Offer.bundleName) is waiting for approval")
-Shelf.swift: Text(asked ? "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again."
-Shelf.swift: Text(s).font(.ui(.detail)).foregroundStyle(Color.text3).fixedSize(horizontal: false, vertical: true)
-Shelf.swift: Text(s).font(.ui(.headline)).foregroundStyle(colour).shadow(color: colour.opacity(glow ? 0.6 : 0), radius: 4)
-Shelf.swift: .accessibilityLabel("\(verb.capitalized) \(pack?.name ?? offer.name), level \(level.label)")
-Shelf.swift: .accessibilityLabel(state == .pending && asked && !buying ? "Ask again for \(offer.name)"
-Shelf.swift: : "\(label.capitalized) \(offer.name)")
-Shelf.swift: .accessibilityValue(price ?? store.pricing.words ?? "")
-Shelf.swift: Text(replay ? "replay 01\u{2013}\(String(format: "%02d", n)) \u{203A}" : "try \(n) free \u{203A}")
-Shelf.swift: .accessibilityLabel(replay ? "Replay the \(n) free levels" : "Try the first \(n) levels free")
-Shelf.swift: Text(title)
-Shelf.swift: if let trailing { Text(trailing).font(dim ? .ui(.detail) : .ui(.button)).opacity(dim ? 0.45 : 1) }
-Shelf.swift: let save = Text(joined("\u{00B7} save \(saving) \u{203A}")).foregroundStyle(quiet)
-Shelf.swift: Text("\(all)\(Text(joined(complete)).foregroundStyle(Color.text2)) \(save)")
-Shelf.swift: Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
-Shelf.swift: Text(yours.yours).font(.ui(.detail, .semibold)).tracking(1).foregroundStyle(yours.glow)
-Shelf.swift: Text(owned.isEmpty ? "PACKS \u{00B7} PAID ADD-ONS" : "PACKS").font(.ui(.detail, .semibold)).tracking(2)
-Shelf.swift: if announced.insert(offer).inserted { AccessibilityNotification.Announcement(offer.yours).post() }
-Shelf.swift: Text(offer.name).lineLimit(1)
-Shelf.swift: Text(offer.name.replacingOccurrences(of: " ", with: "\n"))
-Shelf.swift: Text(line?.words ?? " ").font(.ui(.detail, new ? .semibold : .regular))
-Shelf.swift: .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
-Shelf.swift: .accessibilityHint(offer.pitch)
-Shelf.swift: Text(offer.name)
 TankView.swift: UnstirButton(.quiet, action: leave) { Text(game.level.back).font(.ui(.button)) }
 TankView.swift: Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
 TankView.swift: Text(game.level.label).fontWeight(.semibold).foregroundStyle(game.level.colour)

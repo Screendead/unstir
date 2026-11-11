@@ -54,16 +54,6 @@ enum Pack: String, CaseIterable, Sendable {
                       comment: "Packs named in a list. Every name but the last, then the last")
     }
 
-    /// What its levels are, as its card and a completion say them.
-    var noun: String {
-        switch self {
-        case .firstStir: "scenes"
-        case .lens: "panels"
-        case .escapement: "problems"
-        case .prism: "specimens"
-        }
-    }
-
     /// Its levels counted by what they are, as its card and a completion say them.
     func counted(_ n: Int) -> String {
         switch self {
