@@ -10,6 +10,8 @@ struct ResultMarks: View {
     let filled: Int
     /// The result card's: 16 pt discs, landing one after another as the card shows. A row's are 8 pt and still.
     var card = false
+    /// A row's "+n" before the dots, in the magenta it had as words: the dots alone can't say how far over par.
+    var margin: String? = nil
     /// The proposal's 8 and 16 pt at the default size, scaled with the words beside them, as a fixed disc all but
     /// vanishes next to accessibility-sized text.
     @ScaledMetric(relativeTo: .footnote) private var rowSide = 8.0
@@ -28,12 +30,20 @@ struct ResultMarks: View {
         }
     }
 
+    /// The "+n" a row shows beside its marks: only over par, as par and clean are what the marks already say.
+    static func margin(_ mark: Archive.Mark) -> String? {
+        if case .over = mark { mark.word } else { nil }
+    }
+
     /// This solve's on the result card.
     static func filled(clean: Bool, over: Int) -> Int { clean ? 3 : over == 0 ? 2 : 1 }
 
     var body: some View {
         let side = card ? cardSide : rowSide
-        HStack(spacing: side / 2) {
+        HStack(alignment: .center, spacing: side / 2) {
+            if let margin {
+                Text(verbatim: margin).font(.ui(.detail)).foregroundStyle(Color.magenta).padding(.trailing, side / 2)
+            }
             ForEach(0 ..< 3, id: \.self) { i in
                 Group {
                     if i < filled {

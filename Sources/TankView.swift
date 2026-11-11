@@ -1568,12 +1568,12 @@ struct LevelView: View {
                         } else {
                             PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                                          clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
-                                         onStrike: { struck = true })
+                                         panel: game.level.panel, onStrike: { struck = true })
                         }
                         #else
                         PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                                      clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
-                                     onStrike: { struck = true })
+                                     panel: game.level.panel, onStrike: { struck = true })
                         #endif
                     }
                         .keyframeAnimator(initialValue: -1.0, trigger: waved) { picture, w in

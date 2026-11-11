@@ -234,31 +234,56 @@ swirl-pent.png  Pentagon with a swirl (rod 5), 0:+3,5:+2,2:-4,5:-3.
 swirl-hex.png  Hex with a swirl (rod 7), 1:+3,7:+2,4:-4,7:-3.
 lens-plus.png  Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 at its centre inside a crisp rim, its dots swollen against the screen's pitch outside; the knob carries an iris. Pins the sign: a positive step, a drag up, magnifies.
 lens-minus.png  Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim.
-lens-01.png  Lens 01 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-02.png  Lens 02 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-03.png  Lens 03 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-04.png  Lens 04 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-05.png  Lens 05 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-06.png  Lens 06 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-07.png  Lens 07 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-08.png  Lens 08 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-09.png  Lens 09 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-10.png  Lens 10 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-11.png  Lens 11 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-12.png  Lens 12 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-13.png  Lens 13 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-14.png  Lens 14 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-15.png  Lens 15 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-16.png  Lens 16 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-17.png  Lens 17 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-18.png  Lens 18 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-19.png  Lens 19 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-20.png  Lens 20 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-21.png  Lens 21 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-22.png  Lens 22 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-23.png  Lens 23 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-24.png  Lens 24 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
-lens-25.png  Lens 25 as dealt, on the halftone (docs/lens-tables.md), the pack owned.
+lens-01.png  Lens 01 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-02.png  Lens 02 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-03.png  Lens 03 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-04.png  Lens 04 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-05.png  Lens 05 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-06.png  Lens 06 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-07.png  Lens 07 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-08.png  Lens 08 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-09.png  Lens 09 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-10.png  Lens 10 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-11.png  Lens 11 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-12.png  Lens 12 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-13.png  Lens 13 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-14.png  Lens 14 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-15.png  Lens 15 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-16.png  Lens 16 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-17.png  Lens 17 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-18.png  Lens 18 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-19.png  Lens 19 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-20.png  Lens 20 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-21.png  Lens 21 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-22.png  Lens 22 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-23.png  Lens 23 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-24.png  Lens 24 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-25.png  Lens 25 as dealt, on its halftone panel (docs/lens-tables.md), the pack owned.
+lens-01-clue.png  Lens 01's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
+lens-02-clue.png  Lens 02's panel drawn clean, only its lenses magnified (0:+1): what is seen through each.
+lens-03-clue.png  Lens 03's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
+lens-04-clue.png  Lens 04's panel drawn clean, only its lenses magnified (1:+2): what is seen through each.
+lens-05-clue.png  Lens 05's panel drawn clean, only its lenses magnified (2:+2): what is seen through each.
+lens-06-clue.png  Lens 06's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
+lens-07-clue.png  Lens 07's panel drawn clean, only its lenses magnified (0:+2,1:+1): what is seen through each.
+lens-08-clue.png  Lens 08's panel drawn clean, only its lenses magnified (0:+2,2:+2): what is seen through each.
+lens-09-clue.png  Lens 09's panel drawn clean, only its lenses magnified (2:+2,3:+2): what is seen through each.
+lens-10-clue.png  Lens 10's panel drawn clean, only its lenses magnified (2:+2): what is seen through each.
+lens-11-clue.png  Lens 11's panel drawn clean, only its lenses magnified (1:+2,3:+2): what is seen through each.
+lens-12-clue.png  Lens 12's panel drawn clean, only its lenses magnified (0:+2,1:+2): what is seen through each.
+lens-13-clue.png  Lens 13's panel drawn clean, only its lenses magnified (1:+2,4:+2): what is seen through each.
+lens-14-clue.png  Lens 14's panel drawn clean, only its lenses magnified (2:+2,5:+2): what is seen through each.
+lens-15-clue.png  Lens 15's panel drawn clean, only its lenses magnified (2:+2): what is seen through each.
+lens-16-clue.png  Lens 16's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
+lens-17-clue.png  Lens 17's panel drawn clean, only its lenses magnified (1:+2,3:+2,5:+2): what is seen through each.
+lens-18-clue.png  Lens 18's panel drawn clean, only its lenses magnified (0:+2,2:+2): what is seen through each.
+lens-19-clue.png  Lens 19's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
+lens-20-clue.png  Lens 20's panel drawn clean, only its lenses magnified (0:+2,1:+2,4:+2): what is seen through each.
+lens-21-clue.png  Lens 21's panel drawn clean, only its lenses magnified (0:+2,3:+2): what is seen through each.
+lens-22-clue.png  Lens 22's panel drawn clean, only its lenses magnified (0:+2,2:+2,5:+2): what is seen through each.
+lens-23-clue.png  Lens 23's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
+lens-24-clue.png  Lens 24's panel drawn clean, only its lenses magnified (2:+2,3:+2): what is seen through each.
+lens-25-clue.png  Lens 25's panel drawn clean, only its lenses magnified (0:+2,1:+2,3:+2,5:+2): what is seen through each.
 lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
 lens-result.png  Lens 02's result card over par: in the pack's magenta, the way out reading ‹ Lens, the one place the pack is named.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.

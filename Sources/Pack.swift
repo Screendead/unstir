@@ -145,7 +145,8 @@ enum Pack: String, CaseIterable, Sendable {
 }
 
 extension Level {
-    /// Lens's 25 panels on the halftone test panel, `docs/lens-tables.md`'s table A: the draft table with lenses on rods
+    /// Lens's 25 panels, each on its own halftone panel once that is drawn (`panel`, `LensArt.levels`) and on the test
+    /// panel until then, `docs/lens-tables.md`'s table A: the draft table with lenses on rods
     /// of every size. A rod is a lens or a twist for the whole level; every dealt lens entry magnifies by 1 to 3 steps
     /// and each lens nets at most +3. No entry merges as it is dealt, and par is the depth (`testLensLevels`), the
     /// solver's optimum (`testLensParIsTheOptimum`).
@@ -232,6 +233,9 @@ extension Level {
                      picture: .halftone, layout: layout, scramble: .parse(scramble, in: layout, lenses: lenses),
                      chapter: lensChapters[min(i / 6, 3)], lenses: lenses)
     }
+
+    /// The halftone panel the level draws (`Halftone.panel`): a Lens level's number, and 0, the test panel, anywhere else.
+    var panel: Int { pack == .lens ? Int(label) ?? 0 : 0 }
 
     /// Lens's chapters (Jack's call N1b, round 13): six levels each, the last seven.
     static let lensChapters = [

@@ -5,6 +5,9 @@ Built 2026-10-27 for Jack's open question from the first phone session: lenses o
 `lens-levels-big`). Each is a complete 25-level set on `master`'s machinery, on the halftone test panel; the panels'
 art (`docs/lens-design.md` section 1) is not drawn. Neither is decided.
 
+Since then table A is the pack's (`Level.lens`), and each level has its own panel, its name drawn (`LensArt*.swift`,
+Jack's call LENSART = B, 2026-11-10) in place of section 1's story.
+
 Both tables follow `docs/lens-design.md` section 2's rules and teaching curve: four issues of six and a splash page,
 the free taste (1 to 3) on tri as `master` has it, depth climbing from 1 to 12. A positive step magnifies and is a
 drag up, as on `master` and in the draft, so the draft's strings keep their sign: a dealt lens is undone dragging down.
