@@ -62,7 +62,8 @@ struct Payoff: Equatable {
     /// The payoff `game`'s solve earned: its tier's (`Game.tierDone`), or its pack's, on the solve that completes the
     /// pack (`Game.completed`).
     @MainActor init?(_ game: Game, still: Bool = false) {
-        let pack = game.completed?.pack
+        // Not First Stir's, whose last level ends on the night forwards.
+        let pack = game.completed?.pack.flatMap { $0.ships ? $0 : nil }
         guard let option = Self.option, game.tierDone != nil || pack != nil else { return nil }
         self.still = still
         self.option = option

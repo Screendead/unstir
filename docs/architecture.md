@@ -441,8 +441,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`Payoff.option`, set in `RootView.init`): unset, as on every plain launch, `Game.tierDone` is never set, `Payoff`
   never made, and nothing draws, sounds or is said. With it set, the solve that gives the last of a tier's levels a
   best (`Game.tierDone`, read either side of the save as `completed` is, so once; maelstrom's is the game's, the same
-  solve as `Completion.free`; no daily or run), or that completes a paid pack (`Game.completed`'s `.pack`, so Lens,
-  Escapement and Prism at their planned count), earns one, a pack's as a tier's in the pack's own name and colours
+  solve as `Completion.free`; no daily or run), or that completes a paid pack (`Game.completed`'s `.pack` where the pack ships, so Lens,
+  Escapement and Prism at their planned count, never First Stir, whose last level ends on the night forwards), earns one, a pack's as a tier's in the pack's own name and colours
   (`Payoff.parts`, `Offer.sweep` and `glow`; its tally "18 of 25 clean" under the completion's line, its curtain
   "25 panels unstirred"). On Escapement's paper (`Payoff.paper`) nothing glows: a's halo is two rings in the plate's
   vermilion with no second wave, as the shader's would turn the bone white, b's segments are vermilion for clean and
