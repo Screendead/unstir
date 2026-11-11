@@ -750,8 +750,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`zIndex`) with only its own column black; the dock
   holds still (`PackDock.paused`) and a tier switch cuts to the new list without the stir (`MenuView.go`), so nothing
   of the menu takes GPU time from the tank. Back closes the level and the list returns to its half, the row left lit
-  once however often it is left (`MenuView.followPlaying`, on the level leaving, not on a change of focus). A row, the
-  menu's "next:" line, an archive day or a card's level picked beside play is decided before anything leaves
+  once however often it is left (`MenuView.followPlaying`, on the level leaving, not on a change of focus). A row, an
+  archive day or a card's level picked beside play is decided before anything leaves
   (`RootView.besidePick`): one that opens leaves the playing level through its own way out (`LevelView.switching`: a
   finger let go, its quit sent and its try saved, as `leave` does), then opens in the tank; a gate's or a withheld
   level leaves the playing level untouched, sending nothing, the gate's card over the trailing half (before the store
@@ -965,8 +965,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the tests read (`testRowsSpeakTheirNameResultAndShape`, `testTheFinishIsSpoken`): each menu row's label ("Level 1,
   ..."; the daily, endless and the sandbox by name), value (its result, `Spoken.result`: "clean", "at par" or "solved, 2 over par"; "not played", "tried" (started, no best), "run in progress" (endless with a run saved),
   "new" (the daily and endless until either opens), "locked, solve level 6 first", or in a closed tier "locked, par
-  every Plughole level first") and hint (its rods and par), the menu's next button (`Spoken.next`: "Next:
-  level 2, Drip"), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
+  every Plughole level first") and hint (its rods and par), a lit hairline's reason first (`Spoken.marked`:
+  "playing" on the level in the tank, "next" on the tier's frontier), the header's "3 moves, par 7", the tank's value (`tankSpoken`: the same, with endless's brim, "brim 3 of 8", or Escapement's ticks left), and
   the finish ("Unstirred. 7 moves, par 7. Clean.", "Out of ticks on move 9.", "Spilled. 6 tanks cleared.", a completion after it in words: "Lens complete, 25 panels."), which
   labels the result or lost card's summary, where VoiceOver's focus lands as the card shows, so no announcement is cut
   short by a focus move. The pack clip is labelled with its pack's pitch. The tank is one element that allows direct interaction, so a
@@ -996,12 +996,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   alike, as its form is fixed in English. CATORDER = D splits the migration:
   the tables (Levels, Pack, First Stir) and the leaf files first, the chrome (Menu, the play screen and its card,
   Shelf, Consent, Archive) after the design pass.
-- **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
-  round 13): until 01 has a best, an empty line over the tier's list (the tank's rule, "Every stir in this tank has
-  an exact inverse.", left the menu for the App Store page: Jack's call D1 = A, round 13); then "next: 07 · Sprinkle ›"
-  on that line, a button opening the shown tier's frontier (none once it has none), 16 pt under the chips as drawn,
-  as they are under the title, with a section's 32 to whichever header follows, "today" or the tier's (Jack's call
-  MENUCARD = A: the lines under the chips wanted air). The sandbox's row sits at the
+- **Menu.swift** holds `MenuView`. What it leads with follows plughole 23 (`MenuView.lead`, Jack's call C4,
+  round 13). The tank's rule, "Every stir in this tank has an exact inverse.", left the menu for the App Store page
+  (Jack's call D1 = A, round 13), and the "next: 07 · Sprinkle ›" line that took its place went too (Jack,
+  2026-11-11), so the first header, "today" or the tier's, stands 24 pt under the chips as drawn, with no gap kept
+  for it. The way on is the frontier's row: its hairline stays lit, VoiceOver says "next" on it (`Spoken.marked`),
+  and the list opens on it. The sandbox's row sits at the
   list's end under its own header, "anything goes", so the list leads with 01 (Jack's call D2 = A, round 13). The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
   rethinking, so that a pack's mechanics join it once the pack is owned), as First Stir is: `Level.playsSandbox` is false
   in Release, so there the lead has no sandbox (`Lead.sandbox` false), the menu no row or header, `Store.opens` refuses it and a
@@ -1039,7 +1039,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the first short of par, else the top). Landing on a row (`land(on:)`, on opening, at a swap and on a tap of the
   picked tier) leaves the list at its top where the row's words are in sight from there, over the dock (`inSight`,
   from `Seats`, where the list and each row lie as laid out), and centres any other: centring a row that stands a
-  little under the middle scrolled the list those few points and cut the way on off under the chips, so what leads
+  little under the middle scrolled the list those few points and cut what leads it off under the chips, so what leads
   the list is whole or well away. It reads the rows as they lie when it lands: on a cold launch the archive's row
   says what it comes with only once the store has read, and a row that line then pushes under the dock stays there.
   The daily, endless and the sandbox leave it at the top, though the sandbox's row is at the end. That row's hairline,

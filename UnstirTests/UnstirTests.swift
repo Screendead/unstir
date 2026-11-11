@@ -1638,28 +1638,21 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
-    /// The menu's top follows plughole 01 and 23: nothing, then the way on; the daily and endless only once open.
+    /// The menu's top follows plughole 23: the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
-        func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {
-            let ids = Set(Tier.plughole.levels.prefix(tier == .plughole ? n : 27).map(\.id) + tier.levels.prefix(n).map(\.id))
+        func solved(_ n: Int) -> (String) -> Best? {
+            let ids = Set(Tier.plughole.levels.prefix(n).map(\.id))
             return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
         }
         let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
         XCTAssertFalse(fresh.modes)
         XCTAssertTrue(fresh.sandbox)
-        XCTAssertNil(fresh.next)
         let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
         XCTAssertFalse(one.modes)
         XCTAssertTrue(one.sandbox, "at the list's end whether or not 01 has a best")
-        XCTAssertEqual(one.next?.id, Level.plughole[1].id)
-        XCTAssertNil(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(1)).next, "a locked tier has no way on")
         XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
         let modes = MenuView.lead(tier: .plughole, unlocked: false, best: solved(23))
         XCTAssertTrue(modes.modes)
-        XCTAssertEqual(modes.next?.id, Level.plughole[23].id)
-        XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: false, best: solved(27)).next, "every level has a best")
-        XCTAssertEqual(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(4, of: .whirlpool)).next?.id,
-                       Level.whirlpool[4].id)
         let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
         XCTAssertTrue(unlocked.modes)
         XCTAssertTrue(unlocked.sandbox)
@@ -1678,7 +1671,6 @@ final class UnstirTests: XCTestCase {
             XCTAssertFalse(shipped.sandbox)
             XCTAssertTrue(debug.sandbox)
             XCTAssertEqual(shipped.modes, debug.modes)
-            XCTAssertEqual(shipped.next?.id, debug.next?.id)
         }
         XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
         XCTAssertFalse(Store.shared.opens(.sandbox, release: true))
@@ -2128,6 +2120,9 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(open.label, "Level 1, \(first.title).")
         XCTAssertEqual(open.value, "not played")
         XCTAssertEqual(open.hint, "\(Spoken.rods(first.layout)), par \(first.par)")
+        XCTAssertEqual(Spoken.marked(open, playing: false, frontier: true).value, "next, not played", "the way on, as its hairline")
+        XCTAssertEqual(Spoken.marked(open, playing: true, frontier: true).value, "playing, not played")
+        XCTAssertEqual(Spoken.marked(open, playing: false).value, "not played")
         XCTAssertEqual(Spoken.row(seventh, result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[5]).value,
                        "locked, solve level 6 first")
         XCTAssertEqual(Spoken.row(Level.vortex[0], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil).value, "locked")
@@ -2156,7 +2151,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual([continued.value, continued.hint], ["run in progress, best 9 tanks", "continue, tank 6, brim 3, best 9"])
         XCTAssertEqual(Spoken.row(.endless(Run(seed: 7, tank: 5)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil,
                                   started: true).value, "run in progress")
-        XCTAssertEqual(Spoken.next(seventh), "Next: level 7, \(seventh.title)")
         XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
         XCTAssertEqual(Spoken.back(first), "Back to levels")
         XCTAssertEqual(Spoken.back(Pack.lens.levels[0]), "Back to Lens")
