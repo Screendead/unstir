@@ -1,2 +1,0 @@
-# Player text that escapes the String Catalog today, one flagged line each (scripts/loc-lint.sh). Each fix
-# takes its line out; the migration ends with this file deleted.
