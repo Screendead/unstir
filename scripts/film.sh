@@ -181,12 +181,13 @@ film firststir-ending 168 "$tank,fps=0.2,scale=160:-1,tile=8x4:padding=4" PACK=f
 # frees, then the cyan, then the white bottom stir; specimen 5 on pent heals the solver's line, red and cyan words
 # interleaved, the white last, owned since it is past the taste.
 # Reading Prism's picture under a held rod (UNSTIR_PRISMREAD): each of shots/prism.sh's `reads` moves swept slowly by
-# the fingertip, 0.7 s a step, through its count to a step past it, as the game draws it today and under each trial.
+# the fingertip, 0.7 s a step, through its count to a step past it, as the game draws it today and under each trial
+# PRISMREAD_OPTIONS names (a, b and c unset).
 # scripts/prism-read-films.sh cuts and joins them.
 sweep() {  # name level played rod steps
   local v d
   d=$(awk -v n="${5#[-+]}" 'BEGIN { print 0.7 * n + 5.5 }')
-  for v in today a b c; do
+  for v in today ${PRISMREAD_OPTIONS:-a b c}; do
     film "prism-read-$v-$1" "$d" "$tank,fps=2,scale=200:-1,tile=9x2:padding=4" PACK=prism OWNED=prism LEVEL=$2 \
       ${3:+PLAYED=$3} FINGER=1 REST=1.5 TURN=0.7 MOVES=$4:$5 $([[ $v == today ]] || echo PRISMREAD=$v)
   done
