@@ -34,7 +34,8 @@ struct Unstirred: ViewModifier, Animatable {
     var whiteIsolate = false
     /// Prism, the harness's trial (`PrismRead`): how the glass is drawn for reading a held rod's turn.
     var read: (mode: PrismRead, held: Channels?)?
-    /// How far a trial that eases (`PrismRead.eases`) is drawn over the game's glass, 1 with the rod in hand.
+    /// How far a trial that eases (`PrismRead.eases`) is drawn over the game's glass, 1 with the rod in hand. Stepped by
+    /// the caller, never animated: an animation started with the grab would take the turn's own with it.
     var readMix = 1.0
     /// The committed work drawn with four taps, nil for the glass's static limit (`Tank.fourTaps(pixels:)`). Never
     /// animated: only `Taps` moves it, at a still moment.
@@ -45,12 +46,11 @@ struct Unstirred: ViewModifier, Animatable {
     var crisp = 0.0
     @Environment(\.displayScale) private var scale
 
-    nonisolated var animatableData: AnimatablePair<AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>>, AnimatablePair<Double, Double>> {
-        get { AnimatablePair(AnimatablePair(AnimatablePair(liveAngle, wind), AnimatablePair(haze, turn)), AnimatablePair(crisp, readMix)) }
+    nonisolated var animatableData: AnimatablePair<AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>>, Double> {
+        get { AnimatablePair(AnimatablePair(AnimatablePair(liveAngle, wind), AnimatablePair(haze, turn)), crisp) }
         set {
             let four = newValue.first
-            (liveAngle, wind, haze, turn) = (four.first.first, four.first.second, four.second.first, four.second.second)
-            (crisp, readMix) = (newValue.second.first, newValue.second.second)
+            (liveAngle, wind, haze, turn, crisp) = (four.first.first, four.first.second, four.second.first, four.second.second, newValue.second)
         }
     }
 
@@ -305,8 +305,9 @@ enum PrismRead: String {
     /// What the held rod moves is drawn in its own colour, a dark one lifted, and each other channel only where it
     /// falls on those lines: one colour unwinding off the count, white where the picture is in register.
     case own = "d"
-    /// As `own`, but another channel shows only where it and a held one draw the same point of the plate: lines
-    /// that merely cross stay the held colour. It reads the stack's maps, never the count.
+    /// As `own`, but another channel is drawn by how nearly it and a held one show the same point of the plate: its
+    /// lines fade in beside the held colour's as the turn nears register, and lines that merely cross stay the held
+    /// colour. It reads the stack's maps, never the count.
     case registered = "e"
 
     /// The other channels' share of their light on the screen while a rod is held.

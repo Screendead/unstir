@@ -104,6 +104,7 @@ struct LevelView: View {
     /// Prism's read on trial: the mask of the rod held last, kept through the fade its let-go starts, and how far in.
     @State private var readHeld: Channels?
     @State private var readMix = 0.0
+    @State private var readFade: Task<Void, Never>?
     /// The column's room between the title line's foot and the glass's top, as laid out.
     @State private var titleGap: CGFloat?
     /// Prism: the channel whose swatch is held, drawn alone.
@@ -946,7 +947,15 @@ struct LevelView: View {
         .onChange(of: liveRod) {
             guard prismRead?.eases == true else { return }
             if let liveRod { readHeld = game.level.masks[game.slot(of: liveRod)] ?? .white }
-            withAnimation(.easeOut(duration: liveRod == nil ? 0.25 : 0.15)) { readMix = liveRod == nil ? 0 : 1 }
+            // In over 0.15 s, out over 0.25, a frame at a time: `Unstirred.readMix`.
+            let from = readMix, to = liveRod == nil ? 0.0 : 1.0, frames = liveRod == nil ? 15 : 9
+            readFade?.cancel()
+            readFade = Task {
+                for i in 1...frames {
+                    guard (try? await Task.sleep(for: .milliseconds(16))) != nil else { return }
+                    readMix = from + (to - from) * Double(i) / Double(frames)
+                }
+            }
         }
         .onChange(of: touching) {
             awake += 1

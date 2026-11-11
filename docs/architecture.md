@@ -1153,10 +1153,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   alone in white, an equal share a channel, and `c` dims every line by how far its channels are out of register, held
   or not; the shader's `read` and `gain`. `d` draws what the held rod moves in its own colour, a dark one lifted
   (blue's lines take 0.41 of red and green), and each other channel only where a held one is lit at the same tap, so
-  lines in register are white and so are chance crossings; `e` is `d` with a channel meeting a held one only where
-  both draw the same point of the plate (within 0.004 of the glass's radius), which reads the stack's maps, never the
-  count, and leaves crossings the held colour. Both ease in over 0.15 s on the grab and out over 0.25 s on the let-go
-  (`Unstirred.readMix`), glass-wide; neither shows the count of a rod stirred twice, as today's glass doesn't. `shots.sh prism-read-` holds six moves at rest, short of the count, on it
+  lines in register are white and so are chance crossings; `e` draws each other channel instead by how nearly it and a held one show
+  the same point of the plate, fading in from 0.03 of the glass's radius apart to whole within 0.003, which reads the
+  stack's maps, never the count: its lines appear beside the held colour's as the turn nears register, and crossings
+  stay the held colour. Both ease in over 0.15 s on the grab and out over 0.25 s on the let-go
+  (`Unstirred.readMix`), glass-wide; stepped a frame at a time, as an animation
+  started with the grab would take the turn's own with it. On a rod stirred twice both go white at the sum of its
+  stirs and show nothing on its count, as today's glass does. `shots.sh prism-read-` holds six moves at rest, short of the count, on it
   and past it under each (`scripts/prism-read-sheet.py` lays a move out, `scripts/prism-read-measure.py` prints the
   white share of the held disc at each hold), and `film.sh prism-read-` sweeps each slowly through its count
   (`UNSTIR_TURN`, the fingertip's seconds a step), which `scripts/prism-read-films.sh` joins four-up; `PRISMREAD_OPTIONS`
