@@ -284,6 +284,31 @@ lens-22-clue.png  Lens 22's panel drawn clean, only its lenses magnified (0:+2,2
 lens-23-clue.png  Lens 23's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
 lens-24-clue.png  Lens 24's panel drawn clean, only its lenses magnified (2:+2,3:+2): what is seen through each.
 lens-25-clue.png  Lens 25's panel drawn clean, only its lenses magnified (0:+2,1:+2,3:+2,5:+2): what is seen through each.
+lens-01-last.png  Lens 01 one move from solved: only 0:+2 left on its panel.
+lens-02-last.png  Lens 02 one move from solved: only 0:+1 left on its panel.
+lens-03-last.png  Lens 03 one move from solved: only 1:-2 left on its panel.
+lens-04-last.png  Lens 04 one move from solved: only 0:+3 left on its panel.
+lens-05-last.png  Lens 05 one move from solved: only 0:-4 left on its panel.
+lens-06-last.png  Lens 06 one move from solved: only 2:+3 left on its panel.
+lens-07-last.png  Lens 07 one move from solved: only 2:+4 left on its panel.
+lens-08-last.png  Lens 08 one move from solved: only 1:+4 left on its panel.
+lens-09-last.png  Lens 09 one move from solved: only 0:+3 left on its panel.
+lens-10-last.png  Lens 10 one move from solved: only 0:+3 left on its panel.
+lens-11-last.png  Lens 11 one move from solved: only 0:+3 left on its panel.
+lens-12-last.png  Lens 12 one move from solved: only 2:+3 left on its panel.
+lens-13-last.png  Lens 13 one move from solved: only 0:+3 left on its panel.
+lens-14-last.png  Lens 14 one move from solved: only 3:-3 left on its panel.
+lens-15-last.png  Lens 15 one move from solved: only 1:+4 left on its panel.
+lens-16-last.png  Lens 16 one move from solved: only 1:+3 left on its panel.
+lens-17-last.png  Lens 17 one move from solved: only 0:+2 left on its panel.
+lens-18-last.png  Lens 18 one move from solved: only 1:+3 left on its panel.
+lens-19-last.png  Lens 19 one move from solved: only 1:+3 left on its panel.
+lens-20-last.png  Lens 20 one move from solved: only 2:+3 left on its panel.
+lens-21-last.png  Lens 21 one move from solved: only 2:+4 left on its panel.
+lens-22-last.png  Lens 22 one move from solved: only 1:+3 left on its panel.
+lens-23-last.png  Lens 23 one move from solved: only 3:+4 left on its panel.
+lens-24-last.png  Lens 24 one move from solved: only 0:+4 left on its panel.
+lens-25-last.png  Lens 25 one move from solved: only 2:+3 left on its panel.
 lens-over.png  Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it.
 lens-result.png  Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens.
 lens-under.png  Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl.
@@ -782,8 +807,8 @@ type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a sto
 type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, whose foot runs under the screen's edge on a Pro Max (the card's rebuild, the pass's fifth change, makes up a notch its one button).
 type-lost-xxxl.png  Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size.
 type-settings-ax3.png  Settings at accessibility3: the title, rows and details scaled, the sheet scrolling.
-marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, three hollow on 08, a lock on 09 onwards.
-marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title.
-marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2, 04 clean, 05 tried.
+marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, 04's +2 in magenta before its one, three hollow on 08, a lock on 09 onwards.
+marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title, the +2 before its disc.
+marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2 (the +2 in magenta before one disc), 04 clean, 05 tried.
 marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards.
 marks-result-par.png  Level 06 solved at par on a replay: two discs filled over at par, clean counts on the first try.

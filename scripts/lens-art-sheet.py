@@ -10,6 +10,11 @@ Usage: scripts/lens-art-sheet.py proof <out dir> <level>...   each level's panel
                                                               its lenses magnified (scripts/shots.sh lens-NN),
                                                               over the level's name
        scripts/lens-art-sheet.py clues                        NN=stack for each drawn level, for scripts/shots/lens.sh
+       scripts/lens-art-sheet.py lasts                        NN=the entry dealt first on each level, all that is left
+                                                              one move from solved (docs/lens-tables.md's table A)
+       scripts/lens-art-sheet.py read [level...]              scripts/lens-panels.sh read, each level's dealt twist rods on
+                                                              its panel: the share of the weakest rod's disc that its
+                                                              weakest step changes in coarse light, weakest level first
        scripts/lens-art-sheet.py check [level...]             scripts/lens-panels.sh check, each drawn panel on its level"""
 import os
 import subprocess
@@ -53,6 +58,17 @@ RODS = {
             (-0.485, 0.28, 0.44), (-0.485, -0.28, 0.44)],
 }
 PLATEAU = 0.6
+
+
+def dealt():
+    """Each level's layout, lens rods and scramble, from table A of docs/lens-tables.md."""
+    table = open(os.path.join(os.path.dirname(__file__), "../docs/lens-tables.md")).read().split("## Table A")[1].split("## Table B")[0]
+    rows = {}
+    for line in table.splitlines():
+        cells = [c.strip() for c in line.split("|")]
+        if len(cells) > 6 and cells[1].isdigit():
+            rows[int(cells[1])] = (cells[3], cells[4].replace(" ", ""), cells[5].strip("`"))
+    return rows
 
 
 def bake(panel, path, side, *stirred):
@@ -143,6 +159,20 @@ def main():
     mode, args = (sys.argv[1] if len(sys.argv) > 1 else ""), sys.argv[2:]
     if mode == "clues":
         print(" ".join(f"{n:02d}={LEVELS[n][4]}" for n in sorted(LEVELS)))
+    elif mode == "lasts":
+        print(" ".join(f"{n:02d}={row[2].split(',')[0]}" for n, row in sorted(dealt().items())))
+    elif mode == "read":
+        rows, scores = dealt(), []
+        for n in [int(a) for a in args] or sorted(LEVELS):
+            layout, lenses, scramble = rows[n]
+            out = subprocess.run(["scripts/lens-panels.sh", "read", LEVELS[n][0], layout, lenses, scramble],
+                                 capture_output=True, text=True, check=True).stdout.strip().splitlines()
+            rods = [(min(map(float, line.split(": ")[1].split())), line.split()[1]) for line in out if line.startswith("rod")]
+            if not rods:  # level 1 deals only its lens
+                continue
+            scores.append((min(rods)[0], n, layout, " ".join(f"{k}:{share:.2f}" for share, k in rods)))
+        for score, n, layout, rods in sorted(scores):
+            print(f"{score:.2f}  {n:02d} {LEVELS[n][1]:<17}{layout:<5}{rods}")
     elif mode == "check":
         failed = False
         for n in [int(a) for a in args] or sorted(LEVELS):
