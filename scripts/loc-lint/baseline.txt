@@ -1,20 +1,2 @@
 # Player text that escapes the String Catalog today, one flagged line each (scripts/loc-lint.sh). Each fix
 # takes its line out; the migration ends with this file deleted.
-TankView.swift: UnstirButton(.quiet, action: leave) { Text(game.level.back).font(.ui(.button)) }
-TankView.swift: Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
-TankView.swift: Text(game.level.label).fontWeight(.semibold).foregroundStyle(game.level.colour)
-TankView.swift: Text(game.level.title + (game.level.run.map { ", tank \($0.tank + 1)" } ?? ""))
-TankView.swift: Text(pack.name.uppercased()).font(.ui(.eyebrow)).tracking(2).dynamicTypeSize(.large)
-TankView.swift: Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
-TankView.swift: .accessibilityLabel(Self.pointerSpoken)
-TankView.swift: .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
-TankView.swift: if !beside { AccessibilityNotification.Announcement(Self.pointerSpoken).post() }
-TankView.swift: .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
-TankView.swift: AccessibilityNotification.Announcement(text).post()
-TankView.swift: Text(game.firstRefill ? "+\(badge) undos" : "+\(badge)").font(.ui(.detail)).foregroundStyle(page.signal(.lime))
-TankView.swift: Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14))
-TankView.swift: .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(game.deadTickWords).post() } }
-TankView.swift: Text(text).font(.system(size: 20, weight: .bold, design: .serif))
-TankView.swift: Text(steps > 0 ? "+\(steps)" : "\u{2212}\(-steps)").font(.game(13, .semibold)).foregroundStyle(page.live)
-TankView.swift: Text(c.letters).font(.ui(.button, .semibold))
-TankView.swift: .accessibilityValue(held ? "on" : "off")
