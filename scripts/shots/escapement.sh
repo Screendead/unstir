@@ -56,19 +56,25 @@ for look in stamp left rings; do
   shot "escapement-stopped-17-$look" "Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look $look." \
     PACK=escapement OWNED=escapement LEVEL=17 PLAYED=3:-5,4:-2,3:5,4:3,0:1 STOPLOOK=$look
 done
-# The plate sketches (UNSTIR_ESCART, Sources/EscapementArt.swift), three directions for Jack to pick from: a, a plate a
-# problem drawn as its name; b, six grounds varied by seed and second ink; c, a chapter's ground and ink under the
-# problem's emblem and number. Pendulum, Cogwheel, Hourglass and Moon phase, each as dealt and as its line leaves it.
-for art in a b c; do
-  while read -r n line; do
-    shot "escapement-art-$art-$n-dealt" "Escapement $n as dealt on direction $art's plate sketch." \
-      PACK=escapement OWNED=escapement LEVEL="$n" ESCART=$art
-    shot "escapement-art-$art-$n-solved" "Escapement $n solved on direction $art's plate sketch, the solve's ink ring run out." \
-      PACK=escapement OWNED=escapement LEVEL="$n" ESCART=$art PLAYED="$line" WAVE=1.85
-  done <<'ART'
+# Each problem's own plate (Sources/EscapementArt.swift), as dealt and as its line leaves it, a row a problem: its
+# number and its line. scripts/escapement-art-sheet.py shots lays them out.
+while read -r n line; do
+  # Problem 1 opens on its demonstration, so its plate lands later.
+  [[ $n == 1 ]] && hold=7
+  shot "escapement-plate-$n-dealt" "Escapement $n as dealt on its own plate." \
+    PACK=escapement OWNED=escapement LEVEL="$n"
+  shot "escapement-plate-$n-solved" "Escapement $n solved on its own plate, the solve's ink ring run out." \
+    PACK=escapement OWNED=escapement LEVEL="$n" PLAYED="$line" WAVE=1.85
+  unset hold
+done <<'PLATES'
+1 2:4,1:-3
 2 2:4,0:1,1:-3
+3 2:4,1:-3
 4 2:2,1:3,2:4,3:-2
+5 3:5,1:-3,3:3,1:4,3:2
+6 3:-2,2:3,5:-3,6:-3,3:4,4:2
+7 0:1,1:2,2:-3
+8 0:1,4:5,3:3,2:4,1:-4
 9 3:-3,0:3,3:-4,0:-3,3:-4,3:4
-25 0:-3,1:1,1:1
-ART
-done
+10 2:-3,1:4,0:1,1:2,2:3,3:-3
+PLATES

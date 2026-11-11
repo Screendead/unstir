@@ -44,16 +44,16 @@ extension EscapementArt {
 
     private static func deg(_ a: Double) -> Double { a * .pi / 180 }
 
-    /// A wheel in elevation over whatever lies under it, its windows open: crossings from `turn`, the rim `rim` wide
-    /// inside the teeth, a hub of radius `hub`.
+    /// A wheel in elevation over whatever lies under it: crossings from `turn`, the rim `rim` wide inside the teeth, a
+    /// hub of radius `hub`, and its windows open unless `blind`, for a small wheel over a busy ground.
     private static func crossed(_ plate: inout Plate, _ c: P, _ r: Double, teeth: Int, spokes: Int, turn: Double,
                                 phase: Double = 0, rim width: Double? = nil, hub: Double? = nil, spoke: Double? = nil,
-                                escape: Bool = false) {
+                                escape: Bool = false, blind: Bool = false) {
         let m = 2 * r / Double(teeth), root = escape ? 0.8 * r : r - 1.2 * m, band = escape ? root : root - 0.015
         let rim = band - (width ?? 0.09 * r), boss = hub ?? max(0.2 * r, 0.04)
         let outline = escape ? escapeWheel(c, r, teeth: teeth, phase: phase) : gear(c, r, teeth: teeth, phase: phase)
         let holes = windows(c, hub: boss, rim: rim, spokes: spokes, width: spoke ?? 0.07 * r + 0.006, phase: turn)
-        cut(&plate, outline, holes: holes)
+        cut(&plate, outline, holes: blind ? [] : holes)
         plate.line(outline, medium)
         if !escape { plate.line(arc(c, band), fine) }
         plate.lines(hatch([arc(c, band), arc(c, rim)], angle: phase + 0.9, gap: 0.016), fine)
@@ -267,19 +267,19 @@ extension EscapementArt {
         // The bow: one piece, a pierced wing each side of the shank.
         var bow: [P] = [], piercings: [[P]] = []
         for side in [1.0, -1.0] {
-            let wing = curve(at(1.3, side * 0.03), at(1.3, side * 0.3), at(1.47, side * 0.37), 14) + curve(at(1.47, side * 0.37), at(1.68, side * 0.42), at(1.66, side * 0.2), 14)
-                + curve(at(1.66, side * 0.2), at(1.64, side * 0.04), at(1.52, 0), 14)
+            let wing = curve(at(1.33, side * 0.03), at(1.33, side * 0.27), at(1.5, side * 0.33), 14) + curve(at(1.5, side * 0.33), at(1.71, side * 0.38), at(1.69, side * 0.18), 14)
+                + curve(at(1.69, side * 0.18), at(1.67, side * 0.04), at(1.55, 0), 14)
             bow += side > 0 ? wing : wing.reversed()
-            piercings.append(ellipse(at(1.5, side * 0.2), 0.075, 0.095, turned: -.pi / 4 + side * 0.5))
+            piercings.append(ellipse(at(1.53, side * 0.18), 0.07, 0.085, turned: -.pi / 4 + side * 0.5))
         }
         bow.append(bow[0])
         cut(&plate, bow, holes: piercings)
         plate.lines(hatch([bow] + piercings, angle: 0.3, gap: 0.013), fine)
-        plate.lines(hatch([bow] + piercings.map { $0.map { p in p + 0.02 * along } }, angle: -0.9, gap: 0.02).filter { simd_dot($0[0] - end, along) > 1.5 }, fine)
+        plate.lines(hatch([bow] + piercings.map { $0.map { p in p + 0.02 * along } }, angle: -0.9, gap: 0.02).filter { simd_dot($0[0] - end, along) > 1.53 }, fine)
         plate.line(bow, heavy)
         plate.lines(piercings, medium)
         // The shank and its knop, the collars, then the pipe with its square hole in hidden lines.
-        let shank = turning(0.55, 1.36, 0.045, 0.034)
+        let shank = turning(0.55, 1.39, 0.045, 0.034)
         cut(&plate, shank)
         plate.lines(hatch([shank], angle: -.pi / 4, gap: 0.011).filter { simd_dot($0[0] - end, across) > 0.008 }, fine)
         plate.line(shank, medium)
@@ -287,7 +287,7 @@ extension EscapementArt {
         cut(&plate, knop)
         plate.lines(hatch([knop], angle: .pi / 4, gap: 0.012), fine)
         plate.line(knop, medium)
-        for (u0, u1, w) in [(0.46, 0.5, 0.098), (0.5, 0.535, 0.062), (0.535, 0.575, 0.086), (1.22, 1.26, 0.07), (0.82, 0.84, 0.056), (0.96, 0.98, 0.054)] {
+        for (u0, u1, w) in [(0.46, 0.5, 0.098), (0.5, 0.535, 0.062), (0.535, 0.575, 0.086), (1.25, 1.29, 0.07), (0.82, 0.84, 0.056), (0.96, 0.98, 0.054)] {
             let collar = turning(u0, u1, w, w)
             cut(&plate, collar)
             plate.lines(hatch([collar], angle: .pi / 4, gap: 0.011), fine)
@@ -330,7 +330,7 @@ extension EscapementArt {
         plate.lines(dashed([view + P(-0.21, 0), view + P(0.21, 0)], on: 0.05, off: 0.02), fine)
         plate.lines(dashed([view + P(0, -0.21), view + P(0, 0.21)], on: 0.05, off: 0.02), fine)
 
-        letter(&plate, "A", from: at(1.56, 0.33), at: P(0.86, -0.04))
+        letter(&plate, "A", from: at(1.6, 0.3), at: P(0.86, -0.04))
         letter(&plate, "B", from: at(0.25, -0.075), at: P(-0.74, 0.3))
         letter(&plate, "C", from: ratchet + P(-0.12, 0.12), at: P(-0.74, -0.2))
         letter(&plate, "D", from: view + P(-0.1, 0.11), at: P(0.28, 0.78))
@@ -348,9 +348,8 @@ extension EscapementArt {
 
         crossed(&plate, great, 0.523, teeth: 64, spokes: 6, turn: deg(30), phase: mesh(bearing(great, centre), teeth: 64), rim: 0.045, hub: 0.1, spoke: 0.034)
         pinion(&plate, centre, 0.123, leaves: 15, phase: mesh(bearing(centre, great), teeth: 15, gap: true))
-        crossed(&plate, centre, 0.501, teeth: 60, spokes: 6, turn: deg(30), phase: mesh(bearing(centre, scape), teeth: 60), rim: 0.045, hub: 0.085, spoke: 0.032)
-        pinion(&plate, scape, 0.0585, leaves: 7, phase: mesh(bearing(scape, centre), teeth: 7, gap: true))
-        crossed(&plate, scape, 0.2, teeth: 15, spokes: 4, turn: 0.5, phase: 0.15, hub: 0.04, escape: true)
+        crossed(&plate, centre, 0.501, teeth: 60, spokes: 6, turn: deg(30), phase: 0.02, rim: 0.045, hub: 0.085, spoke: 0.032)
+        crossed(&plate, scape, 0.2, teeth: 15, spokes: 4, turn: 0.5, phase: 0.15, hub: 0.045, escape: true, blind: true)
 
         // The anchor out to the left, between two knobs, a pallet on the teeth each side.
         let out = P(-1, 0), side = P(0, 1), arbor = scape + 0.3 * out
@@ -527,15 +526,15 @@ extension EscapementArt {
             figure.lines(hatch([pillar], angle: 1.1, gap: 0.012), fine)
             figure.line(pillar, medium)
         }
-        // Sand above in ink, drawing down to the waist; the thread and the heap below in the second ink.
-        let upper = sand(top: -0.3, floor: 0, peak: -0.12, bulb)
-        let lower = sand(top: 0.42, floor: 0.64, peak: 0.14) { min(bulb($0), 0.05 + ($0 - 0.42) * 2.2) }
+        // Sand above in ink, drawing down to the waist and falling in a thread; the heap below in the second ink.
+        let upper = sand(top: -0.26, floor: 0, peak: -0.1, bulb)
+        let lower = sand(top: 0.34, floor: 0.64, peak: 0.1) { min(bulb($0), 0.04 + ($0 - 0.34) * 1.6) }
         for (grains, ink) in [(upper, Ink.black), (lower, Ink.second)] {
-            figure.lines(hatch([grains], angle: 0.5, gap: 0.014), fine, ink)
+            figure.lines(hatch([grains], angle: 0.5, gap: ink == .black ? 0.014 : 0.019), fine, ink)
             figure.lines(hatch([grains], angle: -0.9, gap: 0.03).flatMap { dashed($0, on: 0.02, off: 0.02) }, fine, ink)
             figure.line(grains + [grains[0]], fine, ink)
         }
-        figure.line([P(0, 0), P(0, 0.29)], medium, .second)
+        figure.line([P(0, 0), P(0, 0.25)], medium)
         // The glass: its empty parts lightly ruled, form lines down each bulb, the outline last.
         figure.lines(hatch([bulbs, upper + [upper[0]], lower + [lower[0]]], angle: -1.0, gap: 0.045).flatMap { dashed($0, on: 0.05, off: 0.025) }, fine)
         for f in [-0.9, 0.62, 0.84] {

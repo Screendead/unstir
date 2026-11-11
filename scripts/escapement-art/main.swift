@@ -39,7 +39,9 @@ func rgb(_ hex: UInt32) -> CGColor {
     CGColor(srgbRed: Double(hex >> 16 & 0xFF) / 255, green: Double(hex >> 8 & 0xFF) / 255, blue: Double(hex & 0xFF) / 255, alpha: 1)
 }
 
-func raster(_ plate: EscapementArt.Plate, side w: Int) -> (CGContext, [UInt8]) {
+/// `hairline` is the thinnest a line is drawn, in pixels: the game's 2.2, which the default scales to this side as
+/// against a Pro Max's glass, so a render looks as play does whatever its size.
+func raster(_ plate: EscapementArt.Plate, side w: Int, hairline: Double? = nil) -> (CGContext, [UInt8]) {
     let ctx = CGContext(data: nil, width: w, height: w, bitsPerComponent: 8, bytesPerRow: 4 * w,
                         space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
     let r = Double(w) / 2
@@ -57,7 +59,7 @@ func raster(_ plate: EscapementArt.Plate, side w: Int) -> (CGContext, [UInt8]) {
             ctx.fillPath()
         } else {
             ctx.setStrokeColor(colour)
-            ctx.setLineWidth(max(mark.width * r, 2.2 * Double(w) / 1284))
+            ctx.setLineWidth(max(mark.width * r, hairline ?? 2.2 * Double(w) / 1284))
             ctx.strokePath()
         }
     }
@@ -82,8 +84,8 @@ func overlay(_ ctx: CGContext, _ layout: Layout, side w: Int) {
 }
 
 /// The second ink's share of the glass's pixels, and the radius of the circle about its marks' middle that holds them.
-func second(_ plate: EscapementArt.Plate) -> (share: Double, reach: Double) {
-    let w = 512, (_, px) = raster(plate, side: w), r = Double(w) / 2
+func second(_ plate: EscapementArt.Plate, hairline: Double? = nil) -> (share: Double, reach: Double) {
+    let w = 512, (_, px) = raster(plate, side: w, hairline: hairline), r = Double(w) / 2
     var inside = 0, red = 0
     for j in 0..<w {
         for i in 0..<w where (Double(i) - r) * (Double(i) - r) + (Double(j) - r) * (Double(j) - r) < r * r {
@@ -99,12 +101,12 @@ func second(_ plate: EscapementArt.Plate) -> (share: Double, reach: Double) {
     return (Double(red) / Double(inside), points.map { simd_distance($0, middle) }.max() ?? 0)
 }
 
-/// `testThePlateIsInkOnBoneAndShowsAStepInEveryCore`'s measure, read off green so a red line counts as ink: in each
-/// rod's core, the share inked and the share of that ink a 30° step moves onto paper.
-func check(_ plate: EscapementArt.Plate, _ layout: Layout) -> [(on: Double, moved: Double)] {
-    let w = 512, (_, px) = raster(plate, side: w), r = Double(w) / 2
+/// The plates' tests' measure, read off green so a red line counts as ink: in each rod's core, the share inked and the
+/// share of that ink a 30° step moves onto paper.
+func check(_ plate: EscapementArt.Plate, _ layout: Layout, hairline: Double? = nil) -> [(on: Double, moved: Double)] {
+    let w = 512, (_, px) = raster(plate, side: w, hairline: hairline), r = Double(w) / 2
     func inked(_ x: Double, _ y: Double) -> Bool {
-        let i = Int(r + x * r), j = Int(r - y * r)
+        let i = Int(r + x * r), j = Int(r + y * r)
         return i >= 0 && j >= 0 && i < w && j < w && px[4 * (j * w + i) + 1] < 0x87
     }
     return layout.rods.map { rod in
@@ -133,10 +135,13 @@ case "render" where args.count >= 4:
     CGImageDestinationAddImage(out, ctx.makeImage()!, nil)
     CGImageDestinationFinalize(out)
 case "check" where args.count >= 4:
-    let p = plate(args[2]), rods = check(p, Layout(rawValue: args[3])!), ink = second(p)
-    for (k, rod) in rods.enumerated() { print(String(format: "rod %d  inked %.2f  moved %.2f", k, rod.on, rod.moved)) }
+    // The test bakes at an SE's glass, 686 px, the smallest phone's, where the hairline is heaviest against the picture.
+    let p = plate(args[2]), layout = Layout(rawValue: args[3])!, rods = check(p, layout, hairline: 2.2 * 512 / 686), play = check(p, layout), ink = second(p, hairline: 2.2 * 512 / 686)
+    for (k, rod) in rods.enumerated() {
+        print(String(format: "rod %d  inked %.2f  moved %.2f  (at a Pro Max's weights %.2f and %.2f)", k, rod.on, rod.moved, play[k].on, play[k].moved))
+    }
     print(String(format: "worst  inked %.2f  moved %.2f  (the test asks over 0.10 and 0.50)", rods.map(\.on).min()!, rods.map(\.moved).min()!))
-    print(String(format: "second ink  share %.3f  reach %.2f  (the test asks under 0.03 and 0.35)", ink.share, ink.reach))
+    print(String(format: "second ink  share %.3f  reach %.2f  (the test asks under 0.03 and 0.40)", ink.share, ink.reach))
 case "bench" where args.count >= 3:
     var build = 0.0, draw = 0.0, marks = 0, points = 0
     for _ in 0..<5 {

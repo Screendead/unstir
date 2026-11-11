@@ -623,30 +623,26 @@ escapement-stopped-3-left.png  Escapement 3 after a wait and 1:-3: the clock sto
 escapement-stopped-17-left.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look left.
 escapement-stopped-3-rings.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look rings.
 escapement-stopped-17-rings.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look rings.
-escapement-art-a-2-dealt.png  Escapement 2 as dealt on direction a's plate sketch.
-escapement-art-a-2-solved.png  Escapement 2 solved on direction a's plate sketch, the solve's ink ring run out.
-escapement-art-a-4-dealt.png  Escapement 4 as dealt on direction a's plate sketch.
-escapement-art-a-4-solved.png  Escapement 4 solved on direction a's plate sketch, the solve's ink ring run out.
-escapement-art-a-9-dealt.png  Escapement 9 as dealt on direction a's plate sketch.
-escapement-art-a-9-solved.png  Escapement 9 solved on direction a's plate sketch, the solve's ink ring run out.
-escapement-art-a-25-dealt.png  Escapement 25 as dealt on direction a's plate sketch.
-escapement-art-a-25-solved.png  Escapement 25 solved on direction a's plate sketch, the solve's ink ring run out.
-escapement-art-b-2-dealt.png  Escapement 2 as dealt on direction b's plate sketch.
-escapement-art-b-2-solved.png  Escapement 2 solved on direction b's plate sketch, the solve's ink ring run out.
-escapement-art-b-4-dealt.png  Escapement 4 as dealt on direction b's plate sketch.
-escapement-art-b-4-solved.png  Escapement 4 solved on direction b's plate sketch, the solve's ink ring run out.
-escapement-art-b-9-dealt.png  Escapement 9 as dealt on direction b's plate sketch.
-escapement-art-b-9-solved.png  Escapement 9 solved on direction b's plate sketch, the solve's ink ring run out.
-escapement-art-b-25-dealt.png  Escapement 25 as dealt on direction b's plate sketch.
-escapement-art-b-25-solved.png  Escapement 25 solved on direction b's plate sketch, the solve's ink ring run out.
-escapement-art-c-2-dealt.png  Escapement 2 as dealt on direction c's plate sketch.
-escapement-art-c-2-solved.png  Escapement 2 solved on direction c's plate sketch, the solve's ink ring run out.
-escapement-art-c-4-dealt.png  Escapement 4 as dealt on direction c's plate sketch.
-escapement-art-c-4-solved.png  Escapement 4 solved on direction c's plate sketch, the solve's ink ring run out.
-escapement-art-c-9-dealt.png  Escapement 9 as dealt on direction c's plate sketch.
-escapement-art-c-9-solved.png  Escapement 9 solved on direction c's plate sketch, the solve's ink ring run out.
-escapement-art-c-25-dealt.png  Escapement 25 as dealt on direction c's plate sketch.
-escapement-art-c-25-solved.png  Escapement 25 solved on direction c's plate sketch, the solve's ink ring run out.
+escapement-plate-1-dealt.png  Escapement 1 as dealt on its own plate.
+escapement-plate-1-solved.png  Escapement 1 solved on its own plate, the solve's ink ring run out.
+escapement-plate-2-dealt.png  Escapement 2 as dealt on its own plate.
+escapement-plate-2-solved.png  Escapement 2 solved on its own plate, the solve's ink ring run out.
+escapement-plate-3-dealt.png  Escapement 3 as dealt on its own plate.
+escapement-plate-3-solved.png  Escapement 3 solved on its own plate, the solve's ink ring run out.
+escapement-plate-4-dealt.png  Escapement 4 as dealt on its own plate.
+escapement-plate-4-solved.png  Escapement 4 solved on its own plate, the solve's ink ring run out.
+escapement-plate-5-dealt.png  Escapement 5 as dealt on its own plate.
+escapement-plate-5-solved.png  Escapement 5 solved on its own plate, the solve's ink ring run out.
+escapement-plate-6-dealt.png  Escapement 6 as dealt on its own plate.
+escapement-plate-6-solved.png  Escapement 6 solved on its own plate, the solve's ink ring run out.
+escapement-plate-7-dealt.png  Escapement 7 as dealt on its own plate.
+escapement-plate-7-solved.png  Escapement 7 solved on its own plate, the solve's ink ring run out.
+escapement-plate-8-dealt.png  Escapement 8 as dealt on its own plate.
+escapement-plate-8-solved.png  Escapement 8 solved on its own plate, the solve's ink ring run out.
+escapement-plate-9-dealt.png  Escapement 9 as dealt on its own plate.
+escapement-plate-9-solved.png  Escapement 9 solved on its own plate, the solve's ink ring run out.
+escapement-plate-10-dealt.png  Escapement 10 as dealt on its own plate.
+escapement-plate-10-solved.png  Escapement 10 solved on its own plate, the solve's ink ring run out.
 prism-dealt.png  Prism specimen 1 as dealt: red ghosts in the top core, cyan in the left, both over the white bottom stir's shear; the knobs tinted red, cyan and white.
 prism-solved.png  Prism specimen 1 drawn unstirred: the engraving in pure white lines, every channel in register.
 prism-live.png  Prism specimen 1 held mid-drag, the cyan rod 1 turned back +1.5 of its 3: its green and blue ghosts swing towards the red.
@@ -806,8 +802,8 @@ type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a sto
 type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, whose foot runs under the screen's edge on a Pro Max (the card's rebuild, the pass's fifth change, makes up a notch its one button).
 type-lost-xxxl.png  Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size.
 type-settings-ax3.png  Settings at accessibility3: the title, rows and details scaled, the sheet scrolling.
-marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, three hollow on 08, a lock on 09 onwards.
-marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title.
-marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2, 04 clean, 05 tried.
+marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, 04's +2 in magenta before its one, three hollow on 08, a lock on 09 onwards.
+marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title, the +2 before its disc.
+marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2 (the +2 in magenta before one disc), 04 clean, 05 tried.
 marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards.
 marks-result-par.png  Level 06 solved at par on a replay: two discs filled over at par, clean counts on the first try.
