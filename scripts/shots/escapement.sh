@@ -21,15 +21,18 @@ shot escapement-2-out "Escapement 2, then rod 1 -3 and a wait: the last tick spe
 shot escapement-2-lost-resumed "Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out." \
   PACK=escapement LEVEL=2 RESUME=2:4,1:-3,0:1
 # The wait named in the play row on every level with clocks, between undo and reset; problem 2, the first whose par needs
-# a wait, says so in its note. After 2:+4 only a wait works; reset armed takes the row, so the wait steps aside.
+# a wait, says so in its note. After 2:+4 only a wait works; reset armed takes the row, so the wait steps aside. Where
+# the row can't hold all three on a line each (an SE at the largest type) the wait has a row of its own and stays.
 shot escapement-2-wait-dealt "Escapement 2 as dealt: the row under the tank reads undo, wait and reset, and the note says Unstir in 3 ticks. Tap wait: the clock ticks, nothing turns." \
   PACK=escapement LEVEL=2
 shot escapement-2-wait-waiting "Escapement 2 after 2:+4: the clock owes 1 tick and only a wait unstirs at par, the wait control live between undo and reset." \
   PACK=escapement LEVEL=2 PLAYED=2:4
-shot escapement-2-wait-armed "Escapement 2 after 2:+4 with reset armed: reset? tap again takes the row and the wait control steps aside." \
+shot escapement-2-wait-armed "Escapement 2 after 2:+4 with reset armed: reset? tap again on one line, the wait stepped aside, and undo too where the row can't hold it beside the armed reset (an SE)." \
   PACK=escapement LEVEL=2 PLAYED=2:4 RESETARMED=1
-shot escapement-2-wait-large "Escapement 2 as dealt at the largest play type: undo, wait and reset on one row." \
-  PACK=escapement LEVEL=2 TYPESIZE=xxxLarge
+shot escapement-2-wait-largest "Escapement 2 after 2:+4 at the largest text size, where the play screen's type stops at xxxLarge: undo, wait and reset, the wait on its own row where one row can't hold them." \
+  PACK=escapement LEVEL=2 PLAYED=2:4 TYPESIZE=accessibility5
+shot escapement-2-wait-largest-armed "The same with reset armed: reset? tap again on one line, undo stepped aside, the wait still on its own row where it has one." \
+  PACK=escapement LEVEL=2 PLAYED=2:4 TYPESIZE=accessibility5 RESETARMED=1
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
 # The bone-paper page (Jack's call ESC-PAPER = B, round 16): the turn's hairlines, dashes and count in ink, and the solve
 # wave an ink ring, as the shader's band would run the paper white.

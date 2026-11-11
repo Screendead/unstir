@@ -269,12 +269,15 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   ratchet `.ratchet`, which holds nothing: a tap on the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit)
   waits (`Game.wait`), a tap elsewhere on its disc sends a ring from the finger closing on the plate, and a drag shakes
   it with a thud. The plate stays a shortcut (Jack's call ET1 = B) beside the play row's labelled "wait" control
-  (`LevelView.waitControl`), shown on every level with clocks, between undo and reset, and gone while reset is armed,
-  as "reset? tap again" needs the row on an SE. Both make the same move through `LevelView.waitMove`, which thuds a
+  (`LevelView.waitControl`, a secondary `UnstirButton`), shown on every level with clocks: between undo and reset where
+  the row holds all three on a line each, stepping aside while reset is armed, as "reset? tap again" needs the row;
+  and on a row of its own over them where it can't (`PlayLayout.waitTakesARow`, measured on the labels at the play
+  type: an SE at xxxLarge), where it stays through an armed reset, so no label wraps or shrinks for it and
+  `PlayLayout.Chrome` counts the row (`testTheWaitTakesARowWhereTheRowCantHoldAllThree`). Both make the same move through `LevelView.waitMove`, which thuds a
   wait no clock can take as the plate always has; whichever is used, the control inverts (ink capsule, bone label) and
   the waited clock's plate lights for `waitShown`, so each teaches the other. The control greys, as undo does, while
-  `Game.canWait` is false (finished, or no clock can tick) and through the opening and the demonstration; it plays no
-  sound of its own, the ticks being the wait's, and is VoiceOver's way to wait, as the tank is played by sight. A touch landing within 20 pt of the screen's left edge waits for its first 10 pt: rightward and
+  `Game.canWait` is false (finished, or no clock can tick) and through the opening and the demonstration; it taps as
+  every button does, the ticks following, and is VoiceOver's way to wait, as the tank is played by sight. A touch landing within 20 pt of the screen's left edge waits for its first 10 pt: rightward and
   mostly sideways, it is the back swipe (`BackSwipe`; Jack's call C19, round 13), which slides the level off over the
   menu, dimmed 0.4 at the start and less as it uncovers, and past a third of the width, or heading past half, leaves as
   ‹ levels does, else (or flicked back left, as iOS's own) springs back; otherwise the tank takes it up from where it landed (a vertical one a rim turn,
@@ -370,7 +373,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   launch's level saves (`storesResume`), and a harnessed launch reads none but `UNSTIR_RESUME`'s. `Level.print` is
   spelt out, never through a description, and pinned (`testThePrintNeverChanges`): a change drops every save. With moves played, the play screen's reset takes a second tap: the first only taps and
   arms it, "reset? tap again", for 2 s (`ResetArm`; under VoiceOver until focus leaves it), and any move, undo or
-  finish disarms it; the cards' "again" resets
+  finish disarms it; where the row can't hold undo beside the armed label on a line each (`PlayLayout.rowHolds`: an
+  SE, or the widest phone at the largest play type) undo steps aside while it is armed, so the label never wraps and
+  the row, and the tank over it, never move; the cards' "again" resets
   at once (Jack's call C12, round 13). The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started

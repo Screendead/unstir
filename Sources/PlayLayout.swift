@@ -435,10 +435,32 @@ struct Lift: ViewModifier, Animatable {
     }
 }
 
+extension PlayLayout {
+    /// The least the play row keeps between two of its controls.
+    static let controlGap: CGFloat = 12
+
+    /// Whether a row `width` wide holds buttons of these labels on one line each, `controlGap` apart, at `type`.
+    static func rowHolds(_ labels: [String], width: CGFloat, type: DynamicTypeSize) -> Bool {
+        let t = min(type, typeCap)
+        let row = labels.reduce(0) { $0 + TypeRole.button.width(of: $1, at: t) + 2 * ButtonFace.side }
+        return row + controlGap * CGFloat(labels.count - 1) <= width
+    }
+
+    /// Escapement's wait takes a row of its own over undo and reset where a row `width` wide can't hold all three on
+    /// one line each at `type`, so no label wraps or shrinks, as on an SE at the largest play type. Measured on a
+    /// two-digit bank's undo, so the row doesn't move as the bank is spent.
+    static func waitTakesARow(_ level: Level?, width: CGFloat, type: DynamicTypeSize) -> Bool {
+        guard let level, !level.ratchets.isEmpty else { return false }
+        return !rowHolds([String(localized: "undo \u{00B7} \(10)"), String(localized: "wait"), String(localized: "reset")],
+                         width: width, type: type)
+    }
+}
+
 extension PlayLayout.Chrome {
     /// What `level`'s chrome takes in the split at `type`, capped at `typeCap`: Escapement's split-flap ticks and two
-    /// lines of its serif note, and the colour swatches where `swatches` shows them. A plain level's without one.
-    init(_ level: Level? = nil, swatches: Bool = false, type: DynamicTypeSize = .large) {
+    /// lines of its serif note, its wait's own row where a pane `width` wide gives it one (`waitTakesARow`), and the
+    /// colour swatches where `swatches` shows them. A plain level's without one.
+    init(_ level: Level? = nil, swatches: Bool = false, type: DynamicTypeSize = .large, width: CGFloat = .infinity) {
         let t = min(type, PlayLayout.typeCap), back = TypeRole.button.line(at: t)
         var header = back.height
         if let level, !level.ratchets.isEmpty {
@@ -452,6 +474,7 @@ extension PlayLayout.Chrome {
         let button = max(ButtonFace.height, 24 + px(back.height))
         below = 14 + px(LevelView.captionLines(paper: level?.page.paper ?? false, type: t)) + (swatches ? 4 + button : 0)
             + PlayStack.gap + button + 4
+            + (PlayLayout.waitTakesARow(level, width: width, type: t) ? button + LevelView.controlRows : 0)
     }
 }
 

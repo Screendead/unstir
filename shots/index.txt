@@ -608,8 +608,9 @@ escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spen
 escapement-2-lost-resumed.png  Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out.
 escapement-2-wait-dealt.png  Escapement 2 as dealt: the row under the tank reads undo, wait and reset, and the note says Unstir in 3 ticks. Tap wait: the clock ticks, nothing turns.
 escapement-2-wait-waiting.png  Escapement 2 after 2:+4: the clock owes 1 tick and only a wait unstirs at par, the wait control live between undo and reset.
-escapement-2-wait-armed.png  Escapement 2 after 2:+4 with reset armed: reset? tap again takes the row and the wait control steps aside.
-escapement-2-wait-large.png  Escapement 2 as dealt at the largest play type: undo, wait and reset on one row.
+escapement-2-wait-armed.png  Escapement 2 after 2:+4 with reset armed: reset? tap again on one line, the wait stepped aside, and undo too where the row can't hold it beside the armed reset (an SE).
+escapement-2-wait-largest.png  Escapement 2 after 2:+4 at the largest text size, where the play screen's type stops at xxxLarge: undo, wait and reset, the wait on its own row where one row can't hold them.
+escapement-2-wait-largest-armed.png  The same with reset armed: reset? tap again on one line, undo stepped aside, the wait still on its own row where it has one.
 escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
 escapement-2-drag.png  Escapement 2 mid-drag on paper: rod 2 turned +2.6, its disc's hairline, dashes and +3 count in ink.
 escapement-2-wave.png  Escapement 2 solved in 3, its solve wave an ink ring held at radius 0.6 from the last-turned rod.

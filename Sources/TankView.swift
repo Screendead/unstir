@@ -744,21 +744,41 @@ struct LevelView: View {
         }
     }
 
-    private var controls: some View {
-        HStack {
-            // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats too.
-            // An empty bank only says when it refills, so it only taps.
-            UnstirButton(.secondary, effect: spent ? .tap : .undo, dim: game.history.isEmpty || spent) {
-                if settling { undoQueued = true } else { undo() }
-            } label: {
-                if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
+    /// The gap between the wait's own row and the row under it.
+    nonisolated static let controlRows: CGFloat = 8
+
+    /// Undo and reset, and on Escapement the wait: between them where the row holds all three on a line each, stepping
+    /// aside while reset is armed, as "reset? tap again" needs the room; else on a row of its own over them
+    /// (`PlayLayout.waitTakesARow`), where it stays. Where the row can't hold undo beside an armed reset on a line
+    /// each, undo steps aside too until the reset is made or lapses, so no label wraps and the row keeps its height.
+    private func controls(_ layout: PlayLayout) -> some View {
+        let clocks = !game.level.ratchets.isEmpty, width = layout.chromePane.width
+        let waitRow = PlayLayout.waitTakesARow(game.level, width: width, type: playType)
+        let undoLabel = game.level.sandbox ? String(localized: "undo") : String(localized: "undo \u{00B7} \(game.bank)")
+        let alone = armedAt != nil
+            && !PlayLayout.rowHolds([undoLabel, String(localized: "reset? tap again")], width: width, type: playType)
+        return VStack(spacing: Self.controlRows) {
+            if waitRow { waitControl }
+            HStack {
+                if !alone {
+                    // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats
+                    // too. An empty bank only says when it refills, so it only taps.
+                    UnstirButton(.secondary, effect: spent ? .tap : .undo, dim: game.history.isEmpty || spent) {
+                        if settling { undoQueued = true } else { undo() }
+                    } label: {
+                        if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
+                    }
+                        .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
+                        .disabled(game.history.isEmpty)
+                        .overlay(alignment: .topTrailing) { refillBadge }
+                }
+                Spacer()
+                if clocks && !waitRow && armedAt == nil {
+                    waitControl
+                    Spacer()
+                }
+                resetControl
             }
-                .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
-                .disabled(game.history.isEmpty)
-                .overlay(alignment: .topTrailing) { refillBadge }
-            Spacer()
-            waitControl
-            resetControl
         }
         .task(id: waits) {
             guard waits > 0 else { return }
@@ -780,9 +800,14 @@ struct LevelView: View {
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
     /// window's middle where the window is wide.
     private func playLayout(_ geo: GeometryProxy) -> PlayLayout {
-        PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold),
-                      halo: PlayLayout.Halo(game.level), chrome: PlayLayout.Chrome(game.level, swatches: swatched, type: playType),
-                      type: playType, scale: scale)
+        func layout(width: CGFloat) -> PlayLayout {
+            PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: harnessFold),
+                          halo: PlayLayout.Halo(game.level),
+                          chrome: PlayLayout.Chrome(game.level, swatches: swatched, type: playType, width: width),
+                          type: playType, scale: scale)
+        }
+        // The chrome's pane doesn't turn on the chrome's height, so its width says whether the wait takes a row.
+        return layout(width: layout(width: .infinity).chromePane.width)
     }
 
     /// Beside the menu the trailing half is the menu's, black from the fold to the window's edge on Escapement's paper
@@ -836,7 +861,7 @@ struct LevelView: View {
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
-                controls.modifier(PlayPart.chrome(read: 0))
+                controls(layout).modifier(PlayPart.chrome(read: 0))
                 if besideMenu && layout.kind == .split {
                     Color.clear.accessibilityHidden(true)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(RootView.space)) } action: { onMenu($0) }
@@ -1083,6 +1108,8 @@ struct LevelView: View {
                      action: tapReset) {
             if armedAt == nil { Text("reset") } else { Text("reset? tap again") }
         }
+            // Its row never holds less than its one line: an armed reset has the row where undo can't share it.
+            .fixedSize()
             .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
             .disabled(settling)
             .accessibilityFocused($resetFocused)
@@ -1098,36 +1125,33 @@ struct LevelView: View {
             .onChange(of: resetFocused) { if !resetFocused && voiceOver { armedAt = nil } }
     }
 
-    /// Escapement's wait, the move a tap on a clock's plate makes, named in the row so no player has to find the plate.
-    /// Gone while reset is armed, as "reset? tap again" needs the room on an SE.
-    @ViewBuilder private var waitControl: some View {
-        if !game.level.ratchets.isEmpty && armedAt == nil {
-            let lit = waitHeld || waitLit
-            let live = game.canWait && !demoing && shown == nil && !holding
-            let label = Text("wait", comment: "Escapement's play control: a move that only ticks the clocks")
-            UnstirButton(.secondary, dim: !(live || lit)) {
-                if let k = waitRod { waitMove(on: k) }
-            } label: {
-                label
-            }
-            // Lit, the control inverts: an ink capsule under a label in the page's ground.
-            .overlay {
-                label.font(.ui(.button)).foregroundStyle(page.ground)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Capsule().fill(page.ink))
-                    .opacity(lit ? 1 : 0)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
-            }
-            .scaleEffect(waitHeld ? 0.94 : 1)
-            .animation(.easeOut(duration: 0.15), value: lit)
-            .animation(.easeOut(duration: 0.12), value: waitHeld)
-            .accessibilityLabel(String(localized: "Wait", comment: "VoiceOver: Escapement's wait control"))
-            .accessibilityHint(String(localized: "The clocks tick and nothing turns.",
-                                      comment: "VoiceOver: what Escapement's wait control does"))
-            .disabled(!game.canWait)
-            Spacer()
+    /// Escapement's wait, the move a tap on a clock's plate makes, named under the tank so no player has to find the
+    /// plate.
+    private var waitControl: some View {
+        let lit = waitHeld || waitLit
+        let live = game.canWait && !demoing && shown == nil && !holding
+        let label = Text("wait", comment: "Escapement's play control: a move that only ticks the clocks")
+        return UnstirButton(.secondary, dim: !(live || lit)) {
+            if let k = waitRod { waitMove(on: k) }
+        } label: {
+            label
         }
+        // Lit, the control inverts: an ink capsule under a label in the page's ground.
+        .overlay {
+            label.font(.ui(.button)).foregroundStyle(page.ground)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Capsule().fill(page.ink))
+                .opacity(lit ? 1 : 0)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+        .scaleEffect(waitHeld ? 0.94 : 1)
+        .animation(.easeOut(duration: 0.15), value: lit)
+        .animation(.easeOut(duration: 0.12), value: waitHeld)
+        .accessibilityLabel(String(localized: "Wait", comment: "VoiceOver: Escapement's wait control"))
+        .accessibilityHint(String(localized: "The clocks tick and nothing turns.",
+                                  comment: "VoiceOver: what Escapement's wait control does"))
+        .disabled(!game.canWait)
     }
 
     /// The clock a wait from the control is made on: any ratchet waits, so the first that can still tick.
