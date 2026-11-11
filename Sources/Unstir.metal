@@ -272,7 +272,7 @@ struct BenchLayer {
 };
 
 struct BenchArgs {
-    float radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge;
+    float radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge, held, hold;
     int count, maskCount, channels, fineCount;
 };
 
@@ -289,7 +289,8 @@ kernel void benchUnstir(texture2d<half> picture [[texture(0)]], texture2d<half, 
                          a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, atlas, fine, a.fineCount)
         : a.channels != 0
         ? unstirChannelsBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost, a.fourTaps,
-                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0, float3(1), 0.0, 0.0)
+                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0, float3(1), a.held,
+                             a.hold)
         : unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
                      a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0);
     out.write(c, gid);
