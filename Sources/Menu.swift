@@ -563,10 +563,11 @@ struct MenuView: View {
                 heading(Text("today")).padding(.top, 16)
                 // Marked until either is first opened.
                 let new = !Best.modesSeen, (day, run) = daily
-                // One line each: what a mode is its own note says, and a run of days takes the result's place.
+                // One line each: what a mode is its own note says. A run of days goes under the title, leaving the
+                // result where every row has it.
                 LevelRow(level: day, detail: run < 2 ? nil
                              : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
-                         best: run < 2 ? nil : Text("\(run) days running"), enabled: true, new: new, brief: true,
+                         under: run < 2 ? nil : Text("\(run) days running"), enabled: true, new: new, brief: true,
                          playing: playing?.id == day.id, pick: pick, refuse: refuse)
                 // Unsaid until the store has read what the player owns, so an owner never meets the lock.
                 ArchiveRow(open: Store.shared.ready ? Archive.open : nil, days: past.days.count, atPar: past.atPar,
@@ -1190,6 +1191,8 @@ private struct LevelRow: View {
     let level: Level
     var detail: String?
     var best: Text?
+    /// A line under the title, in the result's style, on a brief row.
+    var under: Text?
     let enabled: Bool
     /// What opens a locked row, said for a moment when it is tapped.
     var opens: String?
@@ -1233,7 +1236,7 @@ private struct LevelRow: View {
         return Button { enabled ? pick(level) : tapped() } label: {
             Group {
                 if brief, best != nil, !large {
-                    // A run of days beside a long date: under the title where one line won't hold both.
+                    // A best beside a long title: under the title where one line won't hold both.
                     ViewThatFits(in: .horizontal) {
                         face(stacked: false, result: result, tried: tried, saying: saying)
                         face(stacked: true, result: result, tried: tried, saying: saying)
@@ -1285,6 +1288,7 @@ private struct LevelRow: View {
                         // A locked row's own detail is its reason, as on the daily, so it stays readable.
                         .foregroundStyle(enabled ? Color.text2 : detail != nil ? Color.text3 : Color.text4).transition(.opacity)
                 }
+                if let under { under.font(.ui(.detail)).foregroundStyle(Color.text3) }
                 if stacked { mark(result, tried: tried) }
             }
             .animation(.easeOut(duration: 0.2), value: saying)
