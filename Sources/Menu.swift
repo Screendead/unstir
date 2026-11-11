@@ -1224,7 +1224,7 @@ private struct LevelRow: View {
     let level: Level
     var detail: String?
     var best: Text?
-    /// A line under the title, in the result's style, on a brief row.
+    /// A line under the title on a brief row, as a row's detail is.
     var under: Text?
     let enabled: Bool
     /// What opens a locked row, said for a moment when it is tapped.
@@ -1323,7 +1323,7 @@ private struct LevelRow: View {
                         // A locked row's own detail is its reason, as on the daily, so it stays readable.
                         .foregroundStyle(enabled ? Color.text2 : detail != nil ? Color.text3 : Color.text4).transition(.opacity)
                 }
-                if let under { under.font(.ui(.detail)).foregroundStyle(Color.text3) }
+                if let under { under.font(.ui(.detail)).foregroundStyle(Color.text2) }
                 if stacked { mark(result, tried: tried) }
             }
             .animation(.easeOut(duration: 0.2), value: saying)
