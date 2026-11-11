@@ -177,11 +177,26 @@ count as pips on the knob against a dial mark or a re-deal (`prism-aid`, no PR; 
 colour-letters check); the payoff as the glass stirring itself with a halo and a credit line (draft #198,
 `UNSTIR_PAYOFF=a`, against a counting bezel or a curtain call; it also holds a fix to the rating prompt's and
 Game Center's timing that can be lifted out); the VoiceOver wording (keep); Escapement's per-move notes starting
-again each level (keep); Escapement's 30 plates (#196, with `esc-plates-2` and `-3` being merged into it; the dock
-cover, shop clip and promo image keep the shared plate; Pause and Hourglass have alternates drawn). An option that
+again each level (keep); Escapement's 30 plates (#196, below). An option that
 adds player text (the wait button, the payoff's credit, Prism's aid) needs its String Catalog keys when picked.
-**Still open**: the two StoreKit tests on an iOS 27.2 simulator (`store-ios27`, no result); the store media retake,
-which waits on the plates, wait and payoff picks; the PR test job reached 10 minutes again on one run.
+**Still open**: the store media retake, which waits on the plates, wait and payoff picks.
+
+**2026-11-12, later.** **Plates**: all 30 are on #196 (both batches merged in, CI green, not merged, Jack's to
+pick). Changed on the way: Calendar's red ring is a red numeral between two rules; Moon phase's stars and
+Anticlockwise's tail are black; Eleventh hour's hatching is wider. Alternates of Pause and Hourglass sit behind
+`UNSTIR_ESCALT=1`, unregistered. Pause reads as "pause" in neither version (recommended: take the 30, redraw
+Pause). The dock cover, shop clip and promo image still draw the shared plate. The PR's test job took about 10
+minutes. **Phone bench** on the merged build, thermal fair: Prism's measured over assumed cost has median 0.90 and
+max 1.01, the slowest specimen 24 at 5.911 of 8.333 ms, so `Unstirred.channelCost` stays; Lens 25 as dealt takes
+4.861 ms with the detail (3.643 without); a panel bakes cold in 75 to 227 ms, its detail in 8 to 20 ms, 129 MB
+cached for all 25; 36 entries at four taps take 9.2 to 9.7 ms at 1137 px. Owed by eye: a lens's sharpness at x8,
+the colour match, a Kaleidoscope drag. **StoreKit on iOS 27.2**: the two failures did not reproduce; on a fresh
+27.2 simulator the first `SKTestSession` purchase leaves the test session for the sandbox sign-in and never
+returns (storekitd's and appstored's logs), so the fault is the simulator's or StoreKitTest's, not Store.swift's.
+No 26.5 control ran. `store-ios27` adds a nightly StoreTests job on the Xcode 27 runner, with no PR, as it would
+hang every night until this is understood. Next: read that job's log, try `storeKitConfiguration` in the scheme's
+test section of `project.yml`, the 26.5 control, then a sandbox refund and an Ask to Buy decline on a real phone.
+**The open calls** above are on one pitch page (link in `HANDOFF.private.md`).
 
 ### Open work (finish-and-pitch, 2026-11-02)
 
