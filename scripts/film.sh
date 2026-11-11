@@ -333,7 +333,7 @@ film store-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 OPEN=1 FINGER=1 REST=
 # autoplayed, every other level holding a best (clean, par, and in maelstrom a few over), so this solve is the one that
 # finishes the tier: a, the glass stirs itself and keeps a halo; b, the bezel counts the tier's tanks; c, a curtain
 # call. Each strip starts as the level's last stir lands, and each take's last screen is kept as <name>-end.png. Then
-# each option's game under Reduce Motion.
+# each option's game, and option a's pack, under Reduce Motion.
 pay="trim=start=1.5,setpts=PTS-STARTPTS,crop=iw:ih*0.86:0:ih*0.05,fps=3,scale=180:-1"
 pay_tier=(LEVEL=27 STACK=0:+3,1:-4 AUTOPLAY=1 BESTS=plughole:cc0c0cc0cc0ccc0c0ccc0c0c0c-)
 pay_game=(TIER=maelstrom LEVEL=27 STACK=0:+3,1:-4 PAR=2 AUTOPLAY=1 OWNED=first-stir
@@ -346,10 +346,19 @@ FILM_END=1 film payoff-b-tier 10 "$pay,tile=9x3:padding=4" "${pay_tier[@]}" PAYO
 FILM_END=1 film payoff-b-game 12 "$pay,tile=8x4:padding=4" "${pay_game[@]}" PAYOFF=b
 FILM_END=1 film payoff-c-tier 11 "$pay,tile=10x3:padding=4" "${pay_tier[@]}" PAYOFF=c
 FILM_END=1 film payoff-c-game 17 "$pay,tile=10x5:padding=4" "${pay_game[@]}" PAYOFF=c
-if wants calm-payoff-a-game || wants calm-payoff-b-game || wants calm-payoff-c-game; then
+# The same for a paid pack: Lens 25, the pack's last unfinished level, on a two-stir stand-in (a twist and a lens's
+# step), every other panel holding a best, its halftone baked first as for lens-08-solve.
+pay_pack=(PACK=lens LEVEL=25 OWNED=first-stir,lens STACK=2:+3,0:+1 PAR=2 AUTOPLAY=1 PACE=1.2 BESTS=lens:cc0c0cc0cc0ccc0c0ccc0c0c-)
+if wants payoff-today-pack || wants payoff-a-pack || wants payoff-b-pack || wants payoff-c-pack || wants calm-payoff-a-pack; then warm 25; fi
+FILM_END=1 film payoff-today-pack 10 "$pay,tile=9x3:padding=4" "${pay_pack[@]}"
+FILM_END=1 film payoff-a-pack 12 "$pay,tile=8x4:padding=4" "${pay_pack[@]}" PAYOFF=a
+FILM_END=1 film payoff-b-pack 12 "$pay,tile=8x4:padding=4" "${pay_pack[@]}" PAYOFF=b
+FILM_END=1 film payoff-c-pack 13 "$pay,tile=9x4:padding=4" "${pay_pack[@]}" PAYOFF=c
+if wants calm-payoff-a-game || wants calm-payoff-b-game || wants calm-payoff-c-game || wants calm-payoff-a-pack; then
   calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
   trap 'calm false' EXIT
   calm true
+  FILM_END=1 film calm-payoff-a-pack 10 "$pay,tile=9x3:padding=4" "${pay_pack[@]}" PAYOFF=a
   FILM_END=1 film calm-payoff-a-game 8 "$pay,tile=10x2:padding=4" "${pay_game[@]}" PAYOFF=a
   FILM_END=1 film calm-payoff-b-game 8 "$pay,tile=10x2:padding=4" "${pay_game[@]}" PAYOFF=b
   FILM_END=1 film calm-payoff-c-game 13 "$pay,tile=9x4:padding=4" "${pay_game[@]}" PAYOFF=c
