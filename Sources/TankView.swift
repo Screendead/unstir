@@ -93,7 +93,8 @@ enum Grab: Equatable {
     case rim
     /// A seized knob's disc, or a socket's: it holds nothing, and the knob shakes.
     case seized(Int)
-    /// A ratchet's disc: it holds nothing, and a tap waits.
+    /// A ratchet's disc: it holds nothing; where the level has the waiting move a tap waits, and elsewhere the
+    /// ratchet shakes as a seized knob does.
     case ratchet(Int)
     case nothing
 }
@@ -769,19 +770,27 @@ struct LevelView: View {
         }
     }
 
-    private var controls: some View {
-        HStack {
-            // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats too.
-            // An empty bank only says when it refills, so it only taps.
-            UnstirButton(.secondary, effect: spent ? .tap : .undo, dim: game.history.isEmpty || spent) {
-                if settling { undoQueued = true } else { undo() }
-            } label: {
-                if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
+    /// Undo and reset. Where the row can't hold undo beside "reset? tap again" on a line each, undo steps aside while
+    /// reset is armed, until the reset is made or lapses, so no label wraps and the row keeps its height.
+    private func controls(_ layout: PlayLayout) -> some View {
+        let undoLabel = game.level.sandbox ? String(localized: "undo") : String(localized: "undo \u{00B7} \(game.bank)")
+        let alone = armedAt != nil
+            && !PlayLayout.rowHolds([undoLabel, String(localized: "reset? tap again")], width: layout.chromePane.width,
+                                    type: playType)
+        return HStack {
+            if !alone {
+                // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats
+                // too. An empty bank only says when it refills, so it only taps.
+                UnstirButton(.secondary, effect: spent ? .tap : .undo, dim: game.history.isEmpty || spent) {
+                    if settling { undoQueued = true } else { undo() }
+                } label: {
+                    if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
+                }
+                    .accessibilityLabel(game.level.sandbox ? Text("Undo", comment: "VoiceOver: the undo button") // loc: verbatim each a key
+                                        : Text("Undo, \(game.bank) left", comment: "VoiceOver: the undo button. Undos left"))
+                    .disabled(game.history.isEmpty)
+                    .overlay(alignment: .topTrailing) { refillBadge }
             }
-                .accessibilityLabel(game.level.sandbox ? Text("Undo", comment: "VoiceOver: the undo button") // loc: verbatim each a key
-                                    : Text("Undo, \(game.bank) left", comment: "VoiceOver: the undo button. Undos left"))
-                .disabled(game.history.isEmpty)
-                .overlay(alignment: .topTrailing) { refillBadge }
             Spacer()
             resetControl
         }
@@ -857,7 +866,7 @@ struct LevelView: View {
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
-                controls.modifier(PlayPart.chrome(read: 0))
+                controls(layout).modifier(PlayPart.chrome(read: 0))
                 if besideMenu && layout.kind == .split {
                     Color.clear.accessibilityHidden(true)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(RootView.space)) } action: { onMenu($0) }
@@ -1119,6 +1128,8 @@ struct LevelView: View {
                      action: tapReset) {
             if armedAt == nil { Text("reset") } else { Text("reset? tap again") }
         }
+            // Its row never holds less than its one line: an armed reset has the row where undo can't share it.
+            .fixedSize()
             .accessibilityLabel(armedAt == nil ? Text("Reset", comment: "VoiceOver: the reset button") // loc: verbatim each a key
                                 : Text("Reset, tap again to confirm", comment: "VoiceOver: the reset button, armed"))
             .disabled(settling)
@@ -1497,7 +1508,7 @@ struct LevelView: View {
             withAnimation(.easeOut(duration: 0.12)) { ghost = (at, centre(m.rod), false, false) }
             finger = at
             guard await pause(0.45) else { return false }
-            pressing = m.rod
+            if level.waits { pressing = m.rod } else { refuse(m.rod) }
             guard await pause(0.18) else { return false }
             tapped(m.rod, from: at, to: at)
             // Gone before the tick lands, or the fingertip hides the ratchet turning.
@@ -1530,8 +1541,8 @@ struct LevelView: View {
     }
 
     /// Escapement, before the first stir: a fingertip shows the clock working on the level's demonstration stack. Each
-    /// heal hands the clock its seam and it ticks; a tap on the ratchet waits, and it ticks again. Then the tank dips to
-    /// black and the problem winds in. A tap skips it.
+    /// heal hands the clock its seam and it ticks; where the level has the waiting move a tap on the ratchet waits, and
+    /// it ticks again. Then the tank dips to black and the problem winds in. A tap skips it.
     private func clockDemo() async {
         guard let e = game.level.clocks.first?.rod else { return }
         demoing = true
@@ -1545,7 +1556,8 @@ struct LevelView: View {
             on = await fingertip(t, while: going)
             if on { on = await pause(0.9) }
         }
-        if on, await fingertip(Twist(rod: e, steps: 1), while: going) { _ = await pause(1.6) }
+        if on, game.level.waits, await fingertip(Twist(rod: e, steps: 1), while: going) { on = await pause(0.7) }
+        if on { _ = await pause(0.9) }
         while settling { try? await Task.sleep(for: .seconds(0.05)) }
         withAnimation(.easeOut(duration: 0.2)) { ghost = nil }
         drag = nil; liveRod = nil; liveAngle = 0; pressing = nil; counted = nil
@@ -2081,7 +2093,7 @@ struct LevelView: View {
                          core: CGFloat, plate: CGFloat) -> RatchetView {
         let owed = game.owed(k), started = i.map { v > Double($0) }
         return RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                           size: Self.ratchetSize(core), plate: plate, pawl: pawl, lit: pressing == k,
+                           size: Self.ratchetSize(core), plate: plate, waits: game.level.waits, pawl: pawl, lit: pressing == k,
                            stopped: !game.canTick(k) && f >= 1 && shown == nil && !demoing, back: back,
                            owed: started == false ? owed + 1 : owed, was: started == true ? owed + 1 : nil,
                            fall: started == true ? min(v - Double(i!), 1) : 1, still: reduceMotion)
@@ -2432,13 +2444,10 @@ struct LevelView: View {
     /// Takes up what the drag holds, its angle counted from `point`, where the finger is when the drag is taken up. A
     /// seized knob refuses it.
     private func hold(from point: SIMD2<Double>) {
-        if case .seized(let k)? = drag?.grab {
-            jammed = k
-            jams += 1
-            Knock.thud.play()
-            Sound.shared.play(.seized)
+        if case .seized(let k)? = drag?.grab { refuse(k) }
+        if case .ratchet(let k)? = drag?.grab {
+            if game.level.waits { pressing = k; grabs += 1 } else { refuse(k) }
         }
-        if case .ratchet(let k)? = drag?.grab { pressing = k; grabs += 1 }
         guard let g = drag, let pivot = pivot(g.grab) else { return }
         let d = point - pivot
         drag!.last = lensHeld(g.grab) ? point.y : atan2(d.y, d.x)
@@ -2447,6 +2456,14 @@ struct LevelView: View {
         } else {
             liveTurn = 0; counted = Game.tank; detent = Detent(step: game.level.layout.tankStep)
         }
+    }
+
+    /// A touch on a knob that can't be turned, a seized one or a clock without the waiting move: it shakes, with a thud.
+    private func refuse(_ k: Int) {
+        jammed = k
+        jams += 1
+        Knock.thud.play()
+        Sound.shared.play(.seized)
     }
 
     /// What a finger landing at `point` (tank units) holds, settled there so the rod that lights is the rod that turns.
@@ -2488,6 +2505,8 @@ struct LevelView: View {
     /// finger to the plate, and a drag is refused.
     private func tapped(_ k: Int, from start: SIMD2<Double>, to end: SIMD2<Double>) {
         pressing = nil
+        // Without the waiting move the touch was refused as it landed.
+        guard game.level.waits else { return }
         if Self.waits(from: start, to: end, centre: centre(k)) {
             // A wait no clock can take thuds, as a seized knob does; a full stack's refusal says so itself.
             let refusals = game.refusals

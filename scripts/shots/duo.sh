@@ -14,7 +14,7 @@ hold=10 shot duo-open-result "Duo open: plughole 06 solved clean, the card heade
 hold=10 shot duo-open-fullest "Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole over the menu in the trailing half." \
   "${duo[@]}" SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
 hold=10 shot duo-open-escapement "Duo open: Escapement 02 a move in, the ticks' counter over the tank, the leading half on paper and the trailing half the menu's black from the fold, the glass 9 pt smaller for the counter and the serif note." \
-  "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=2:4
+  "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=1:-3
 hold=10 shot duo-open-prism "Duo open: Prism 01 with the colour letters, the swatches between the note and the controls under the tank, the glass 30 pt smaller for them." \
   "${duo[@]}" PACK=prism OWNED=prism LEVEL=1 LETTERS=1
 hold=10 shot duo-open-endless "Duo open: endless at three notches, the brim round the tank between the title and the note, the menu beside it." \
@@ -53,7 +53,7 @@ shot duo-tabletop-fullest "Duo tabletop: plughole 27 over par against a best of 
 shot duo-tabletop-pack-complete "Duo tabletop: Lens 25 solved, Lens complete and its pointer under the card, all above unstirred. and the fold." \
   "${table[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 shot duo-tabletop-escapement "Duo tabletop: Escapement 02 a move in, the ticks' counter in the upright half." \
-  "${table[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=2:4
+  "${table[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=1:-3
 shot duo-tabletop-prism "Duo tabletop: Prism 01 with the colour letters, the swatches under the note in the upright half." \
   "${table[@]}" PACK=prism OWNED=prism LEVEL=1 LETTERS=1
 # Stage 3: what each level draws round its glass (the brim, the rim lesson, counts, the night forwards) kept inside
@@ -140,7 +140,7 @@ hold=8 shot duo-beside-ax5 "Duo open at the largest accessibility size: maelstro
 hold=10 shot duo-beside-pack-complete "Duo open: Lens 25 solved, Lens complete and its pointer on the card over the menu." \
   "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
 hold=10 shot duo-beside-lost "Duo open: Escapement 02 out of ticks beside the menu: the lost card over the trailing half on the level's paper, the stamp on the glass." \
-  "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=0:1,0:1,0:1 CLOCK=1
+  "${duo[@]}" PACK=escapement OWNED=escapement LEVEL=2 PLAYED=1:-3,1:2,1:1 CLOCK=1
 # A fresh install opened like a book (s5b-title = B): no settings line beside the menu, its gear in sight (r16c-pointer = C).
 hold=9 shot duo-beside-pointer "Duo open: a fresh install's first screen, plughole 01 beside the menu, its note at rest and no settings line under it: the gear is beside the menu's title." \
   "${duo[@]}" FRESH=1 OPEN=1
@@ -153,8 +153,8 @@ hold=20 shot duo-beside-over-result-closed "Duo open: the same, the card closed 
   "${duo[@]}" PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=plughole:$nine,lens:000000000000000000000000- SHELFDEMO=1 CLOCK=0
 hold=12 shot duo-beside-lens-long "Duo open: Lens 01's top lens held turned nine steps up beside the menu: all nine fit its track, which ends between the title and the rim, clear of both." \
   "${duo[@]}" PACK=lens LEVEL=1 LIVE=0:+9 TOUCH=0,-0.42 OWNED=lens
-hold=12 shot duo-beside-lens-wrong "Duo open: Lens 08's top lens held fourteen steps up, the wrong way, beside the menu: capped at +9, where its track meets the title, clear of moves / par." \
-  "${duo[@]}" PACK=lens LEVEL=8 LIVE=0:+14 TOUCH=0.25,-0.354 OWNED=lens
+hold=12 shot duo-beside-lens-wrong "Duo open: a lens on the four-rod glass's top right rod (Lens 01's panel) held fourteen steps up, the wrong way, beside the menu: capped at +9, where its track meets the title, clear of moves / par." \
+  "${duo[@]}" PACK=lens LEVEL=1 BESTS=lens:0 LAYOUT=quad LENSES=0,2 STACK=1:+4,0:+2 LIVE=0:+14 TOUCH=0.25,-0.354 OWNED=lens
 hold=10 shot duo-beside-prism-letters "Duo open: Prism 01 read by its colour letters beside the menu: the R G B swatches under the note, the glass 30 pt smaller for them." \
   "${duo[@]}" PACK=prism LEVEL=1 OWNED=prism LETTERS=1 CLOCK=1
 hold=6 shot duo-beside-opened "Duo closed with plughole 11 five moves in, opened a second in: the tank and its chrome glided into the leading half and the menu faded in beside them." \

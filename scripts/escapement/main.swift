@@ -28,6 +28,8 @@ struct Problem {
     /// In the order they tick.
     var clocks: [Clock]
     var rule: Rule
+    /// False plays without the waiting move: only a turn of a working knob ticks the clocks.
+    var waits = waitsAllowed
 
     func isClock(_ rod: Int) -> Bool { clocks.contains { $0.rod == rod } }
     func running(_ s: [Twist]) -> Bool { clocks.contains { c in s.contains { $0.rod == c.rod } } }
@@ -57,7 +59,7 @@ struct Problem {
 
     /// Waits and whole heals: turns that land on one entry and pop it.
     func cleanMoves(_ s: [Twist], after last: Move?) -> [Move] {
-        var moves: [Move] = running(s) ? [.wait] : []
+        var moves: [Move] = waits && running(s) ? [.wait] : []
         var seen = Set<Move>()
         for i in s.indices where !isClock(s[i].rod) {
             let t = s[i]
@@ -71,7 +73,7 @@ struct Problem {
 
     /// Every turn of every working knob up to `span` steps either way, and the wait.
     func allMoves(_ s: [Twist], after last: Move?, span: Int) -> [Move] {
-        var moves: [Move] = running(s) ? [.wait] : []
+        var moves: [Move] = waits && running(s) ? [.wait] : []
         for r in layout.rods.indices where !isClock(r) {
             if rule == .lab, last?.rod == r { continue }
             for n in -span...span where n != 0 { moves.append(.turn(r, n)) }
@@ -79,6 +81,9 @@ struct Problem {
         return moves
     }
 }
+
+/// ESC_WAIT=0 plays without the waiting move, the no-wait rule, where a clock can't be touched.
+let waitsAllowed = ProcessInfo.processInfo.environment["ESC_WAIT"] != "0"
 
 /// ESC_PUSHED=1 plays on past a tick that pushes, to check that no such line ever empties the stack.
 let keepsPushed = ProcessInfo.processInfo.environment["ESC_PUSHED"] == "1"
@@ -203,11 +208,17 @@ func parseClocks(_ s: String) -> [Clock] {
 func report(_ p: Problem, span: Int, quick: Bool) {
     let clean = Counter(p, span: nil)
     let owed = p.owed(p.stack)
+    print("stack \(describe(p.stack))  clocks \(p.clocks.map { "\($0.rod)\($0.dir > 0 ? "+" : "-")" }.joined(separator: ","))  rule \(p.rule.rawValue)\(p.waits ? "" : ", no wait")")
     guard let par = clean.optimum(limit: owed + 12) else {
-        print("unsolvable in clean moves")
+        print("owed \(owed)  unsolvable in clean moves")
+        // No line outlasts what the clocks owe: the last clock's last tick solves or loses.
+        if !quick {
+            let full = Counter(p, span: span), n = full.count(p.stack, last: nil, left: owed)
+            for l in full.lines(p.stack, last: nil, left: owed, keep: 30) { print("    " + l.map(\.description).joined(separator: " ")) }
+            print("lines at \(owed) over turns of up to \(span): \(n)\(n >= full.cap ? "+" : "")")
+        }
         return
     }
-    print("stack \(describe(p.stack))  clocks \(p.clocks.map { "\($0.rod)\($0.dir > 0 ? "+" : "-")" }.joined(separator: ","))  rule \(p.rule.rawValue)")
     print("owed \(owed)  clean optimum \(par)")
     let bound = p.bound(p.stack)
     var proof = par == bound ? "none shorter, absolute: par is the bound (ticks owed \(owed), rods to turn)" : "unproved"
@@ -282,6 +293,45 @@ func score(_ p: Problem, seed: UInt64) {
     fflush(stdout)
 }
 
+/// The par lines over turns of up to `span` steps as the knobs they turn in order, a wait as -1, whatever the counts:
+/// a seam taken off in two turns is one shape however it is split. Capped at `cap` shapes.
+func shapes(_ p: Problem, span: Int, par: Int, cap: Int = 200) -> Set<[Int]> {
+    let full = Counter(p, span: span)
+    var memo: [Key: Set<[Int]>] = [:]
+    func go(_ s: [Twist], _ last: Move?, _ left: Int) -> Set<[Int]> {
+        if s.isEmpty { return [[]] }
+        guard full.count(s, last: last, left: left) > 0 else { return [] }
+        let k = Key(s: s, last: last, left: left, rule: p.rule)
+        if let c = memo[k] { return c }
+        var out = Set<[Int]>()
+        for m in p.allMoves(s, after: last, span: span) where out.count < cap {
+            guard let t = p.play(s, m) else { continue }
+            for rest in go(t, m, left - 1) { out.insert([m.rod ?? -1] + rest) }
+        }
+        memo[k] = out
+        return out
+    }
+    return go(p.stack, nil, par)
+}
+
+/// One dealt problem under the no-wait rule, if no line of whole heals solves it but one with a spare turn does: seed,
+/// owed, entries, lines over turns of up to `span`, their shapes, the knobs a par line can open on, the stack and a
+/// line.
+func stallScore(_ p: Problem, seed: UInt64, span: Int = 6) {
+    var q = p
+    q.waits = false
+    let o = q.owed(q.stack)
+    guard Counter(q, span: nil).count(q.stack, last: nil, left: o) == 0 else { return }
+    let full = Counter(q, span: span), n = full.count(q.stack, last: nil, left: o)
+    guard n > 0 else { return }
+    let all = shapes(q, span: span, par: o)
+    print([String(seed), String(o), String(q.stack.count), "\(n)\(n >= full.cap ? "+" : "")", String(all.count),
+           String(Set(all.map { $0[0] }).count), describe(q.stack),
+           full.lines(q.stack, last: nil, left: o, keep: 1)[0].map(\.description).joined(separator: " ")]
+        .joined(separator: "\t"))
+    fflush(stdout)
+}
+
 /// Deals problems backwards from a line of `n` moves: each step back unticks every clock still running at that move,
 /// then pushes the inverse of a heal (or nothing, for a wait), so the line plays forward to an empty stack. ESC_INSIDE is
 /// the share of heals on rods that cross a clock's disc.
@@ -308,7 +358,9 @@ func build(_ layout: Layout, clocks: [Clock], n: Int, waits: ClosedRange<Int>, s
             }
         }
         guard ok else { continue }
-        score(Problem(layout: layout, stack: s, clocks: clocks, rule: rule), seed: seed)
+        let p = Problem(layout: layout, stack: s, clocks: clocks, rule: rule)
+        // A line dealt with waits has no wait to play under the no-wait rule: it stands only by a spare turn.
+        if !waitsAllowed, w > 0 { stallScore(p, seed: seed) } else { score(p, seed: seed) }
     }
 }
 
@@ -335,6 +387,54 @@ func search(_ layout: Layout, clocks: [Clock], heals: ClosedRange<Int>, owed: Cl
         for e in entries { stack.commit(e, in: layout) }
         guard stack.count == entries.count else { continue }
         score(Problem(layout: layout, stack: stack, clocks: clocks, rule: rule), seed: seed)
+        fflush(stdout)
+    }
+}
+
+/// Along `line`, the moves no other turn of up to `span` steps (or wait) could replace with `left` still in reach.
+func forced(_ p: Problem, line: [Move], span: Int, full: Counter) -> Int {
+    var s = p.stack, last: Move? = nil, n = 0
+    for (i, m) in line.enumerated() {
+        let also = p.allMoves(s, after: last, span: span).filter { o in
+            o != m && (p.play(s, o).map { full.count($0, last: o, left: line.count - i - 1) > 0 } ?? false)
+        }
+        if also.isEmpty { n += 1 }
+        s = p.play(s, m)!
+        last = m
+    }
+    return n
+}
+
+/// One row per problem of a book under both rules: number, layout, clocks, what the clocks owe; with the wait, the
+/// waits on its line, its lines at par over turns of up to `span` and its bits; without it, the lines of whole heals,
+/// the lines over turns of up to `span`, the keys, the forced moves along the first line, the bits, the outcome and
+/// the first line. No line outlasts what the clocks owe under either rule, so par is that or nothing.
+func table(_ path: String, span: Int) {
+    for row in try! String(contentsOfFile: path, encoding: .utf8).split(separator: "\n") {
+        let f = row.split(separator: "\t").map(String.init)
+        let layout = Layout(rawValue: f[1])!
+        var p = Problem(layout: layout, stack: .parse(f[3], in: layout), clocks: parseClocks(f[2]), rule: rule)
+        p.waits = true
+        let owed = p.owed(p.stack)
+        let with = Counter(p, span: nil), withFull = Counter(p, span: span)
+        let line = with.lines(p.stack, last: nil, left: owed, keep: 1).first ?? []
+        let c = chance(p, par: owed)
+        var q = p
+        q.waits = false
+        let clean = Counter(q, span: nil), full = Counter(q, span: span)
+        let heals = clean.count(q.stack, last: nil, left: owed), all = full.count(q.stack, last: nil, left: owed)
+        let first = (heals > 0 ? clean : full).lines(q.stack, last: nil, left: owed, keep: 1).first
+        let keys = q.allMoves(q.stack, after: nil, span: span).filter { m in
+            q.play(q.stack, m).map { full.count($0, last: m, left: owed - 1) > 0 } ?? false
+        }
+        let d = heals > 0 ? chance(q, par: owed) : 0
+        let outcome = all == 0 ? "breaks" : heals == 0 ? "stall" : line.contains(.wait) ? "other line" : "same line"
+        print([f[0], f[1], f[2], String(owed), String(line.filter { $0 == .wait }.count),
+               String(withFull.count(p.stack, last: nil, left: owed)), String(format: "%.1f", c > 0 ? abs(log2(c)) : 99),
+               String(heals), "\(all)\(all >= full.cap ? "+" : "")", String(keys.count),
+               first.map { "\(forced(q, line: $0, span: span, full: full))/\(owed)" } ?? "-",
+               d > 0 ? String(format: "%.1f", abs(log2(d))) : "-", outcome,
+               first.map { $0.map(\.description).joined(separator: " ") } ?? "-"].joined(separator: "\t"))
         fflush(stdout)
     }
 }
@@ -374,6 +474,8 @@ case "book" where args.count == 2:
             .joined(separator: "\t"))
         fflush(stdout)
     }
+case "table" where args.count >= 2:
+    table(args[1], span: args.count > 2 ? Int(args[2])! : 6)
 case "build" where args.count == 7:
     let f = args[4].split(separator: "-").map { Int($0)! }
     build(Layout(rawValue: args[1])!, clocks: parseClocks(args[2]), n: Int(args[3])!, waits: f[0]...(f.count > 1 ? f[1] : f[0]),
@@ -384,7 +486,8 @@ default:
            scripts/escapement.sh search <layout> <clocks> <heals a-b> <owed a-b> <from seed> <to seed> -
            scripts/escapement.sh build <layout> <clocks> <moves> <waits a-b> <from seed> <to seed>
            scripts/escapement.sh book scripts/escapement/problems.tsv
-    clocks: rods in tick order, each + or - (wound back), e.g. 0+ or 1+,3-.  ESC_RULE=final|lab
+           scripts/escapement.sh table scripts/escapement/problems.tsv [span]
+    clocks: rods in tick order, each + or - (wound back), e.g. 0+ or 1+,3-.  ESC_RULE=final|lab  ESC_WAIT=0
     """)
     exit(2)
 }

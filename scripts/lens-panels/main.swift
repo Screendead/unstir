@@ -170,11 +170,88 @@ case "check" where args.count >= 3:
     }
     print(String(format: "worst %.2f (the test panel's test asks more than 0.15)", worst))
     exit(worst > 0.15 ? 0 : 1)
+case "read" where args.count >= 5:
+    // How much of each twist rod's disc changes in coarse light under each step: the clean bake at 400 px, blurred
+    // over two dot pitches so the screens' dots and every hairline average away, then compared with itself turned,
+    // counting points whose gamma-encoded light moves more than 0.2 in a channel. A rod scores its weakest step.
+    let p = panel(args[1])
+    guard let layout = Layout(rawValue: args[2]) else { fatalError("no layout \(args[2])") }
+    let lenses = Set(args[3].split(separator: ",").compactMap { Int($0) })
+    let stack = [Twist].parse(args[4], in: layout, lenses: lenses)
+    let n = 400, reach = Int((Halftone.pitch * Double(n) / 2).rounded())
+    var coarse = p.pixels(n).enumerated().filter { $0.offset % 4 != 3 }.map { Double($0.element) / 255 }
+    for _ in 0..<2 {
+        for horizontal in [true, false] {
+            var out = coarse
+            for j in 0..<n {
+                for i in 0..<n {
+                    for c in 0..<3 {
+                        var sum = 0.0
+                        for d in -reach...reach {
+                            let ii = min(max(horizontal ? i + d : i, 0), n - 1), jj = min(max(horizontal ? j : j + d, 0), n - 1)
+                            sum += coarse[3 * (jj * n + ii) + c]
+                        }
+                        out[3 * (j * n + i) + c] = sum / Double(2 * reach + 1)
+                    }
+                }
+            }
+            coarse = out
+        }
+    }
+    func at(_ q: SIMD2<Double>) -> SIMD3<Double> {
+        let i = min(max(Int((q.x + 1) / 2 * Double(n)), 0), n - 1), j = min(max(Int((q.y + 1) / 2 * Double(n)), 0), n - 1)
+        return SIMD3(coarse[3 * (j * n + i)], coarse[3 * (j * n + i) + 1], coarse[3 * (j * n + i) + 2])
+    }
+    var worst = 1.0
+    for (k, rod) in layout.rods.enumerated() where !lenses.contains(k) && stack.contains(where: { $0.rod == k }) {
+        let c = SIMD2(rod.x, rod.y), spacing = 1.0 / 100
+        var points: [SIMD2<Double>] = []
+        for y in stride(from: -rod.z, through: rod.z, by: spacing) {
+            for x in stride(from: -rod.z, through: rod.z, by: spacing) where x * x + y * y < rod.z * rod.z && simd_length(c + SIMD2(x, y)) < 1 {
+                points.append(c + SIMD2(x, y))
+            }
+        }
+        let shares = (1...11).map { s -> Double in
+            let moved = points.filter { q in
+                let d = simd_abs(at(Tank.twist(q, rod: rod, angle: -Double(s) * Tank.step)) - at(q))
+                return max(d.x, d.y, d.z) > 0.2
+            }
+            return Double(moved.count) / Double(points.count)
+        }
+        worst = min(worst, shares.min()!)
+        print("rod \(k) twist 1..11: " + shares.map { String(format: "%.2f", $0) }.joined(separator: " "))
+    }
+    print(String(format: "weakest %.2f", worst))
+    // The order read: a twist over a lens shows where it drags the lens's rim, so for each lens and each twist rod
+    // whose disc reaches its core, the share that three steps of the twist change of the band two dot pitches either
+    // side of the rim, inside the twist's disc, and that band's size as a share of the whole rim's.
+    for (l, lens) in layout.rods.enumerated() where lenses.contains(l) {
+        let lc = SIMD2(lens.x, lens.y), rim = Tank.plateau * lens.z, band = 2 * Halftone.pitch
+        for (k, rod) in layout.rods.enumerated() where !lenses.contains(k) && stack.contains(where: { $0.rod == k }) {
+            let kc = SIMD2(rod.x, rod.y)
+            guard simd_distance(lc, kc) < rod.z + rim else { continue }
+            var inside = 0, all = 0, moved = 0
+            for y in stride(from: -rim - band, through: rim + band, by: 1.0 / 200) {
+                for x in stride(from: -rim - band, through: rim + band, by: 1.0 / 200) {
+                    let q = lc + SIMD2(x, y)
+                    guard abs(simd_length(SIMD2(x, y)) - rim) < band, simd_length(q) < 1 else { continue }
+                    all += 1
+                    guard simd_distance(q, kc) < rod.z else { continue }
+                    inside += 1
+                    let d = [-3.0, 3].map { simd_abs(at(Tank.twist(q, rod: rod, angle: -$0 * Tank.step)) - at(q)) }.map { max($0.x, $0.y, $0.z) }
+                    if d.min()! > 0.2 { moved += 1 }
+                }
+            }
+            print(String(format: "lens %d under %d: %.2f of the rim's band reached, %.2f of that changed, %.3f of the band",
+                         l, k, Double(inside) / Double(all), Double(moved) / Double(max(inside, 1)), Double(moved) / Double(all)))
+        }
+    }
 default:
     print("""
     usage: scripts/lens-panels.sh render <panel> <out.png> [side px] [layout lenses stack]
            scripts/lens-panels.sh time [side px] [panel...]
            scripts/lens-panels.sh check <panel> <layout> [lens slots]
+           scripts/lens-panels.sh read <panel> <layout> <lens slots> <scramble>
     panels: \(Halftone.panels.map(\.name).joined(separator: " "))
     """)
     exit(2)

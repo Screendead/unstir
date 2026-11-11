@@ -541,13 +541,15 @@ extension Solver {
     typealias Clocks = [(rod: Int, dir: Int)]
 
     /// Escapement's moves and their ticks, played on a stack: after every move each clock that still holds an entry as
-    /// its turn comes ticks its step, in `clocks`' order, as `Game` plays them. A move is a wait or one commit to a
-    /// working slot; every let-go is final, so the same slot stirred again is another move (Jack's call E1).
+    /// its turn comes ticks its step, in `clocks`' order, as `Game` plays them. A move is one commit to a working slot
+    /// or, under `waits`, a wait; every let-go is final, so the same slot stirred again is another move (Jack's call E1).
     struct Clockwork {
         let layout: Layout
         let lenses: Set<Int>
         let clocks: Clocks
         let steps: [Int]
+        /// `Level.waits`.
+        var waits = false
 
         func isClock(_ rod: Int) -> Bool { clocks.contains { $0.rod == rod } }
         func running(_ s: [Twist]) -> Bool { clocks.contains { c in s.contains { $0.rod == c.rod } } }
@@ -573,7 +575,7 @@ extension Solver {
             var s = s
             if case let .stir(_, slot, n) = m {
                 guard !isClock(slot), s.commit(rod: slot, steps: n, in: layout, lenses: lenses) != .refused else { return nil }
-            } else if !running(s) {
+            } else if !waits || !running(s) {
                 return nil
             }
             for c in clocks where s.contains(where: { $0.rod == c.rod }) {
@@ -589,7 +591,7 @@ extension Solver {
             var out: [Move] = [], seen = Set<Move>()
             func add(_ m: Move) { if seen.insert(m).inserted { out.append(m) } }
             for t in s.reversed() where !isClock(t.rod) { add(.stir(knob: t.rod, slot: t.rod, steps: -t.steps)) }
-            if running(s) { add(.wait) }
+            if waits, running(s) { add(.wait) }
             for slot in layout.rods.indices where !isClock(slot) {
                 for k in steps { add(.stir(knob: slot, slot: slot, steps: k)) }
             }
@@ -603,8 +605,8 @@ extension Solver {
     /// clocks owe, no line of any counts is shorter. Every move counts, as every let-go is final: `moves.count`, never
     /// `Play.count`, which joins commits to one slot in a row. Nil past `limit`, with the stacks that failed in `seen`.
     func escapement(_ stack: [Twist], clocks: Clocks, limit: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] },
-                    seen: inout Int) -> Play? {
-        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps)
+                    waits: Bool = false, seen: inout Int) -> Play? {
+        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps, waits: waits)
         var failed = Set<Key>()
         defer { seen = failed.count }
         guard !stack.isEmpty else { return Play() }
@@ -615,9 +617,9 @@ extension Solver {
     }
 
     /// Escapement: every first move from `stack` after which a line empties it in `par` moves in all, under `clocks`.
-    func escapementKeys(_ stack: [Twist], clocks: Clocks, par: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] })
-        -> [Move] {
-        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps)
+    func escapementKeys(_ stack: [Twist], clocks: Clocks, par: Int, steps: [Int] = (1...11).flatMap { [$0, -$0] },
+                        waits: Bool = false) -> [Move] {
+        let work = Clockwork(layout: layout, lenses: lenses, clocks: clocks, steps: steps, waits: waits)
         var failed = Set<Key>()
         return work.moves(stack).filter { m in
             guard let t = work.play(stack, m) else { return false }

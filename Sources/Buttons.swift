@@ -28,7 +28,7 @@ struct ButtonFace: ViewModifier {
     /// Waiting on an answer, as a purchase: the whole button at 0.6.
     var pending = false
     /// The label's side padding; a swatch's letter keeps none inside its 44 pt.
-    var inset: CGFloat = 20
+    var inset: CGFloat = ButtonFace.side
     var minWidth: CGFloat = 0
     /// Takes the width it is given: a card's lone button, or its share of a `ButtonRow`.
     var wide = false
@@ -38,6 +38,7 @@ struct ButtonFace: ViewModifier {
     var filled = false
 
     static let height: CGFloat = 44
+    static let side: CGFloat = 20
     /// TierUp's, the one taller button.
     static let tall: CGFloat = 56
     /// What a fill takes of its accent.

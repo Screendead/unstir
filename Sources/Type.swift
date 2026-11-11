@@ -63,11 +63,20 @@ extension TypeRole {
     /// style's font, whose leading grows faster than its size.
     func line(at size: DynamicTypeSize, _ weight: Font.Weight? = nil,
               design: UIFontDescriptor.SystemDesign = .monospaced) -> (height: CGFloat, ascent: CGFloat) {
+        let font = font(at: size, weight, design: design)
+        return (font.lineHeight, font.ascender)
+    }
+
+    /// The width of `text` on one line of the role at `size`.
+    func width(of text: String, at size: DynamicTypeSize) -> CGFloat {
+        (text as NSString).size(withAttributes: [.font: font(at: size, nil, design: .monospaced)]).width
+    }
+
+    private func font(at size: DynamicTypeSize, _ weight: Font.Weight?, design: UIFontDescriptor.SystemDesign) -> UIFont {
         let styled = UIFontDescriptor.preferredFontDescriptor(withTextStyle: style.ui, compatibleWith:
             UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(size)))
         let weighted = styled.addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: (weight ?? self.weight).ui]])
-        let font = UIFont(descriptor: weighted.withDesign(design) ?? weighted, size: 0)
-        return (font.lineHeight, font.ascender)
+        return UIFont(descriptor: weighted.withDesign(design) ?? weighted, size: 0)
     }
 
     /// The text style's size at the default Dynamic Type size.

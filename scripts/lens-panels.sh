@@ -3,9 +3,11 @@
 # Usage: scripts/lens-panels.sh render <panel> <out.png> [side px] [layout lenses stack]
 #        scripts/lens-panels.sh time [side px] [panel...]
 #        scripts/lens-panels.sh check <panel> <layout> [lens slots, comma-separated]
+#        scripts/lens-panels.sh read <panel> <layout> <lens slots> <scramble>
 # Draws one of Lens's halftone panels (Halftone.swift, LensArt.swift) on the Mac as the app bakes it, stirred by a stack
 # if given; times each panel's bake at a size; or checks that every step of every rod of a layout changes what shows
-# in its core, as testEveryStepMovesContrastingPixelsOnTheHalftone does for the test panel.
+# in its core, as testEveryStepMovesContrastingPixelsOnTheHalftone does for the test panel; or measures how much of each
+# dealt twist rod's disc changes at each step once the dots and hairlines are blurred away, the read left to weak eyes.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/lens-panels
