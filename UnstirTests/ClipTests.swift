@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import simd
 import XCTest
 @testable import Unstir
 
@@ -9,13 +10,16 @@ import XCTest
                                            ("complete", .complete), ("every pack", Clip.cut(of: Pack.allCases))]
 
     /// Each reel's stacks are the ones a `Game` shows after the same moves, under an id of no pack level so a win keeps
-    /// no best.
+    /// no best. A reel that opens partway through its level opens where top-first moves leave the game.
     func testEveryReelPlaysAsTheGameDoes() {
         for (name, clip) in clips {
             for reel in clip.reels {
                 var level = reel.level
                 level.id = "test-clip"
                 let g = Game(level: level, tankTurned: true, bank: (3, nil))
+                for case .turn(let k, let keys) in Reel.solve(level, moves: level.scramble.count - reel.opening.count) {
+                    g.commit(rod: k, steps: Int(keys.last!.steps))
+                }
                 XCTAssertEqual(g.stack, reel.opening.map(\.twist), name)
                 for b in reel.beats {
                     switch b.gesture {
@@ -38,6 +42,20 @@ import XCTest
         let lens = Clip.lens.reels[0]
         XCTAssertEqual(lens.beats.last!.after.map(\.twist), lens.opening.map(\.twist))
         XCTAssertNil(lens.beats[0].result, "the drag lets go where it took the lens, so nothing commits")
+        // The lens it drags is the newest entry and that rod's only one, so the drag down takes it to clean, and a twist
+        // lies under it on each rod beside it, for its rim to run whole through.
+        let level = lens.level, newest = lens.opening.last!.twist, rods = level.layout.rods
+        XCTAssertEqual(level.id, Level.lens[24].id, "Kaleidoscope, the pack's face")
+        XCTAssertEqual(lens.opening.map(\.twist), Array(level.scramble.prefix(Reel.lensOpening)))
+        XCTAssertEqual(lens.beats[0].gesture.knob, newest.rod)
+        XCTAssertTrue(level.lenses.contains(newest.rod))
+        XCTAssertEqual(lens.opening.filter { $0.twist.rod == newest.rod }.count, 1)
+        XCTAssertEqual(lens.frame(at: lens.beats[0].start + 1.5).live!.angle / Tank.step, Double(-newest.steps), accuracy: 1e-9)
+        let beside = lens.opening.map(\.twist.rod).filter { k in
+            k != newest.rod && !level.lenses.contains(k)
+                && simd_distance(SIMD2(rods[k].x, rods[k].y), SIMD2(rods[newest.rod].x, rods[newest.rod].y)) < rods[k].z + rods[newest.rod].z
+        }
+        XCTAssertEqual(Set(beside).count, 2)
         // Escapement ticks after each of its three moves, the last stopping the clock.
         XCTAssertEqual(Clip.escapement.reels[0].beats.map(\.ticked), [true, true, true])
         XCTAssertEqual(Clip.escapement.reels[0].beats.map(\.stops), [false, false, true])
@@ -96,7 +114,7 @@ import XCTest
 
     /// A lens follows the finger up and down, down zooming out: the fingertip falls a pitch a step.
     func testTheLensFingerRidesUpAndDown() {
-        let reel = Clip.lens.reels[0], b = reel.beats[0], k = reel.level.lenses.min()!
+        let reel = Clip.lens.reels[0], b = reel.beats[0], k = b.gesture.knob
         let f = reel.frame(at: b.start + 0.65)
         let steps = f.live!.angle / Tank.step
         XCTAssertLessThan(steps, -0.5)
@@ -108,12 +126,17 @@ import XCTest
     /// The dock's covers stir what the cards' clips play, on pictures baked once rather than redrawn each frame, and their
     /// loop runs from clean to clean and holds the dealt stack between.
     func testEveryCoverStirsItsClipsLevel() {
-        XCTAssertEqual(Offer.pack(.lens).covers.map(\.id), [Level.lens[2].id])
-        XCTAssertEqual(Offer.pack(.escapement).covers.map(\.id), [Level.escapement[1].id])
-        XCTAssertEqual(Offer.pack(.prism).covers.map(\.id), [Level.prism[0].id])
-        XCTAssertEqual(Offer.complete.covers.map(\.pack), Pack.bundled)
+        XCTAssertEqual(Offer.pack(.lens).covers.map(\.level.id), [Level.lens[24].id])
+        XCTAssertEqual(Offer.pack(.escapement).covers.map(\.level.id), [Level.escapement[1].id])
+        XCTAssertEqual(Offer.pack(.prism).covers.map(\.level.id), [Level.prism[0].id])
+        XCTAssertEqual(Offer.complete.covers.map(\.level.pack), Pack.bundled)
         for offer in Offer.all {
-            for level in offer.covers { XCTAssertFalse(level.picture.isLive, "\(offer.name) cover: \(level.id)") }
+            for (level, stack) in offer.covers {
+                XCTAssertFalse(level.picture.isLive, "\(offer.name) cover: \(level.id)")
+                // Lens's is Kaleidoscope as its clip opens, partway down its par line; every other is its level as dealt.
+                let entries = level.pack == .lens ? Reel.lensOpening : level.scramble.count
+                XCTAssertEqual(stack.map(\.twist), Array(level.scramble.prefix(entries)), "\(offer.name) cover: \(level.id)")
+            }
         }
         for m in [3, 4, 7] {
             XCTAssertEqual(PackTank.wind(m, at: 0), Array(repeating: 0, count: m))

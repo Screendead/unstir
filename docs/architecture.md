@@ -793,10 +793,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
   draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's engraved plate, the fern; the bundle a wedge of
   each of its packs', cut from the centre, `testEveryCoverStirsItsClipsLevel`), stirred and unstirred by `Unstirred` on
-  the level's dealt stack, an entry at a time (`Unstirred.shares`), its knobs drawn over it as the game draws them,
+  the stack its clip opens on (the level's deal, but for Lens's: below), an entry at a time (`Unstirred.shares`), its knobs drawn over it as the game draws them,
   each turned by its rod's share of the stack and a clock's ratchet counting what it owes, so a cover shows how its pack
   plays (Jack, round 16; the bundle's wedges each turned to hold its key knob, `PackTank.turn`; the promoted-purchase
-  images draw them too, Jack's call promo-knobs, round 16), on a 7 s loop, each out of step, held as dealt under
+  images draw them too, Jack's call promo-knobs, round 16), on a 7 s loop, each out of step, held stirred under
   Reduce Motion, at 30 Hz, paused where it stands under a card, the settings sheet or a level a back swipe slides off, while `Power` saves
   (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
   gesture recognizer on the window that fails at once, and from a drag on the list), each carrying on from the frame
@@ -864,8 +864,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`PackClip.seen`), carrying on from the frame it held. A reel that dips is black at both ends, so the
   seam never jumps. First Stir: level 1, the sunrise, healed top first, the time under the tank stepping back with each
   heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
-  Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
-  no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves, its hub counting 3 down to 0. Prism: specimen 1
+  Lens: level 25, Kaleidoscope, the pack's face (Jack, 2026-11-11: "Kaleidoscope wins"; `Level.lensFace`), opened where seven
+  top-first moves of its par line leave it, on the first five entries of its deal (`Reel.lensOpening`), the newest of
+  them a lens's only entry, x8, with a twist on the rod either side: that lens dragged down to clean and back up, let
+  go where it began, so it loops with no dip on the order read (Jack, CL1, whose clip played level 3 as dealt). A
+  cover stirs the stack its clip opens on (`Offer.covers`), so Lens's dock cover, its promoted-purchase image and the
+  bundle's wedge show that position too, not the whole deal; every other pack's opens on its deal. Escapement: problem 2, the mock-up's, in its three moves, its hub counting 3 down to 0. Prism: specimen 1
   in its par of three, the red stir buried under the cyan one first. The bundle (`Clip.cut(of:)`): each of its packs' first beat in turn, the zoom, the tick and
   Prism's red stir coming off, about 8 s, in every build (Jack, CL2; a cut can also take First Stir's vignette, the
   sunrise from just after its first heal, which plays nothing, through its second). Every reel stays drawn,
@@ -1062,7 +1066,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   up when the chrome's half of the migration reaches them. The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
-  It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max (unmeasured on a phone), so every build keeps it in
+  It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max, so every build keeps it in
   Caches, per panel and size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
   time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
   the flicker; only one that never lands lets it go on, after 30 s. A panel is a `Halftone.Panel` (tones and white
@@ -1070,9 +1074,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   25 standalone panels, each its level's name drawn, with what is seen through the thing in a lens's core): the picture
   stays `.halftone` on all 25, so nothing stored changes, and `Level.panel`, a Lens level's number and 0 anywhere else,
   goes through `PictureLayer` to `Halftone.panel`, which gives the level's panel from `LensArt.levels` once it is drawn
-  and `Halftone.test`, the test panel, until then, as for 0 (`testEachLensLevelDrawsItsOwnPanel`). So Lens 03's panel
-  is also its dock cover, its card's clip and its promoted-purchase image. Caches keeps every panel a build has baked,
-  5.5 MB each at a Pro Max's tank. The GPU bench times the first-open bake on the device (below). **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
+  and `Halftone.test`, the test panel, until then, as for 0 (`testEachLensLevelDrawsItsOwnPanel`). So Kaleidoscope's panel
+  is also the pack's dock cover, its card's clip and its promoted-purchase image. Caches keeps the bakes of the four
+  panels opened last (`PanelCache.kept`; Jack, 2026-11-11), at every size, a read counting as an open; the cover's
+  panel is kept whatever its turn, as the menu draws it at launch, and counts as one of the four. A panel is 5.2 MB
+  at a Pro Max's tank, 129 MB for all 25, against a cold bake of 70 to 227 ms on a 13 Pro Max; only the cover's and
+  the open level's are ever in sight together, so none on screen loses its bake
+  (`testCachesKeepsTheFourPanelsOpenedLast`). The GPU bench times the first-open bake on the device (below). **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
   and ovals, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
   panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
   enough to read at x8, where the bake is soft; every rod's core on its level holds tone and linework that each step
@@ -1111,18 +1119,26 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the level cancels plays them, timed from the ticks' landing (`Game.landed`); an undo or a reset silences the ticks still to come, and a resumed try's last ticks,
   landed before the view appeared, stay silent and still. Beds loop under the menu and each tier (`Level.bed`;
   daily, endless, the sandbox and the packs take plughole's), and a new one crossfades in over the old at equal power
-  across two decks. Only a bed that is playing stays decoded, and none in the background. A sold pack's level plays
+  across two decks. The next level of the same tier wants the same bed, which plays on untouched. A bed faded out runs
+  on unheard for `Sound.hold` (15 s) before its deck stops, so back to the list and into another level within that
+  takes it up where it had got to, not from its start (Jack, 2026-11-11). Only a bed a deck is playing, or the wanted
+  one, stays decoded, and none in the background. A sold pack's level plays
   its layer over plughole's bed (`Level.layer`, `Sound.Layer`; Jack's call SOUNDSK: Lens B, Escapement B, Prism A),
   rendered from `sound-src/sketches.csd` at the gain its sketch was heard at: an 8-bar loop at 75 bpm
   (`layer-<pack>.m4a`, turned to start a quarter beat before its first beat so its wrap falls between onsets) on a deck
   of its own, coming in with the bed's crossfade from its first beat, from which the layer's beats and eighths count
-  (`firstBeat`). The solve (`LevelView.landSolve`, with the chime) holds the loop to the next beat, then fades it over
-  0.5 s as the resolution (`-end`) plays on that beat; Prism's swell (`-swell`) starts 0.4 s before it, never before the
-  solve. Escapement B's reed plays the motif a note a move on the next eighth, the note the moves before it (an undo
+  (`firstBeat`). One loop runs through every level of its pack, never restarted by the next level (Jack, 2026-11-11):
+  `Sound.LayerTrack` holds the deck's course apart from the engine, so `SoundTests` drive it, and only another pack's
+  loop starts the deck again. The solve (`LevelView.landSolve`, with the chime) holds the loop to the next beat, then
+  ducks it over 0.5 s as the resolution (`-end`) plays on that beat; it runs on unheard and comes back over the
+  crossfade from the first bar line after the resolution has rung out (`returning`), and plays on into the next level.
+  Prism's swell (`-swell`) starts 0.4 s before the resolution's beat, never before the solve. Escapement B's reed plays the motif a note a move on the next eighth, the note the moves before it (an undo
   takes one back, the demonstration plays none), and lands on D with the solve's chime. The layer follows the music
-  switch and steps aside for another app's music with the bed; another try after a solve, or the next level, brings it
-  back, and leaving for the menu or a tier's level takes it out over the crossfade. Its files decode only while it is
-  wanted. `scripts/sounds.sh layers` renders the same layers under real play off the phone, and
+  switch and steps aside for another app's music with the bed; leaving for the menu or a tier's level takes it out
+  over the crossfade, and like a bed it runs on unheard for `Sound.hold` first, so a quick return through the pack's
+  list takes it up in place. Its one-shots decode only while it is wanted, its loop while it is wanted or still
+  playing. The reed's motif counts the level's own moves, so it starts on its first note in every level, over the
+  loop wherever it has got to. `scripts/sounds.sh layers` renders the same layers under real play off the phone, and
   `scripts/layers-film.sh` films them in the app.
   `Sounding`, set on `RootView`, is the app's button style: a button taps as
   it acts, and undo and reset have sounds of their own; the undo's body peaks about 0.2 s after the press (Jack,
