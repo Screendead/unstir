@@ -232,6 +232,37 @@ final class PlayLayoutTests: XCTestCase {
                      "the title stands over the split's tank, so unstirred. heads the card over the menu")
     }
 
+    func testUnstirredGrowsWithTheTypeAndStillEndsAboveTheRim() {
+        XCTAssertEqual(TypeRole.stamp.points(at: .large), 22)
+        XCTAssertGreaterThan(TypeRole.stamp.points(at: PlayLayout.typeCap), 22)
+        // The widest phone's column at the cap, whose rim reaches furthest above the stage.
+        let l = layout(window: CGSize(width: 440, height: 956), insets: (62, 0, 34, 0),
+                       chrome: PlayLayout.Chrome(type: PlayLayout.typeCap))
+        let words = try! XCTUnwrap(l.words), rim = l.side * (PlayLayout.rim - 1) / 2
+        XCTAssertLessThanOrEqual(TypeRole.stamp.line(at: PlayLayout.typeCap).height + rim, words)
+        // Where the word clears the title at the stage's top, it stays there: every phone's column at the default size,
+        // and the Pro Max's at the cap.
+        XCTAssertEqual(PlayLayout.columnWords(over: PlayLayout.words, side: l.side, type: PlayLayout.typeCap).words, words)
+        // The SE's column at the cap leaves less over the glass than that (level 05 lays out 49.2 pt), so the
+        // word stands lower, wholly below the title line's foot and above the rim, and always at its full size: where
+        // the room can't hold its line, however many lines the note takes, the finished tank's top comes down for it.
+        let se = PlayLayout.of(content: CGSize(width: 343, height: 647), window: CGSize(width: 375, height: 667),
+                               chrome: PlayLayout.Chrome(type: PlayLayout.typeCap), type: PlayLayout.typeCap, scale: 2)
+        let seRim = se.side * (PlayLayout.rim - 1) / 2, line = TypeRole.stamp.line(at: PlayLayout.typeCap).height
+        for over in Array(stride(from: PlayStack.gap, to: PlayLayout.words, by: 0.5)) + [49.2] {
+            let (seWords, drop) = PlayLayout.columnWords(over: over, side: se.side, type: PlayLayout.typeCap)
+            XCTAssertLessThanOrEqual(seWords, over + 0.001, "\(over): below the title line")
+            XCTAssertGreaterThanOrEqual(seWords + drop, line + seRim - 0.001, "\(over): above the rim, once the tank has come down")
+            XCTAssertEqual(drop, max(line + seRim - over, 0).rounded(.up), "\(over): the tank gives the word only what it lacks")
+            // The tank shrunk for its card too keeps its top there, so the word stays clear of the rim.
+            let stage = se.side * PlayLayout.rim, fit = PlayLayout.finished(card: 300, room: 200, stage: stage, drop: drop)
+            XCTAssertEqual(fit.drop, drop)
+            XCTAssertEqual(fit.scale, (stage - fit.lift - drop) / stage, accuracy: 0.001, "\(over): the tank between the word and the card")
+            XCTAssertGreaterThanOrEqual(fit.scale, PlayLayout.leastFinished)
+        }
+        XCTAssertEqual(PlayLayout.columnWords(over: 49.2, side: se.side, type: PlayLayout.typeCap).drop, 0)
+    }
+
     // Stage 5: the chrome round the tank beside the menu (Jack's call s5-chrome = B, round 16).
 
     func testBesideTheMenuTheChromeGoesRoundTheTankInItsHalf() {
@@ -285,10 +316,11 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(side(Level.maelstrom[0]), (624 - plain.above - plain.below - RimLesson.overRim) / PlayLayout.rim,
                        accuracy: 0.001)
         XCTAssertEqual(stage1 - side(Level.maelstrom[0]), 8, accuracy: 1)
-        // Prism read by its letters, the swatches under the caption: 33 pt less.
-        XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - plain.above - plain.below - 34 - PlayStack.gap) / PlayLayout.rim,
-                       accuracy: 0.001)
-        XCTAssertEqual(stage1 - side(Level.prism[0], swatches: true), 33, accuracy: 1)
+        // Prism read by its letters, the swatches under the caption, a row of buttons: 46 pt less.
+        let swatches = 4 + max(ButtonFace.height, 24 + TypeRole.button.line(at: .large).height)
+        XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - plain.above - plain.below - swatches - PlayStack.gap) / PlayLayout.rim,
+                       accuracy: 0.5)
+        XCTAssertEqual(stage1 - side(Level.prism[0], swatches: true), 46, accuracy: 1)
         // Endless's brim reaches round the glass.
         XCTAssertEqual(side(Level.endless(Run(seed: 7))), 342, accuracy: 1)
         // Every level of a tier or a pack takes one glass, so the tank keeps its size as the list beside it is played on.
@@ -332,28 +364,33 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertLessThanOrEqual(lines(LevelView.demoWait, serif), 2, "\(LevelView.demoWait) at \(type)", file: file, line: line)
     }
 
-    /// Lays `harness`'s level out in the open Duo's window beside the menu, as `UNSTIR_FRAME` does, and returns what its
-    /// chrome measures round the tank.
+    /// Lays `content` out in a window of `size` with `insets` as its safe area, as `UNSTIR_FRAME` does, for `seconds`.
+    @MainActor private func host(_ content: some View, window size: CGSize,
+                                 insets i: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat), seconds: Double = 0.5) {
+        let pose = HarnessWindow.Pose(size: size, insets: EdgeInsets(top: i.top, leading: i.leading, bottom: i.bottom, trailing: i.trailing),
+                                      fold: nil)
+        let host = UIHostingController(rootView: HarnessWindow(HarnessWindow.Spec(poses: [pose], then: nil), content: content))
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+        window.frame = CGRect(origin: .zero, size: size)
+        window.rootViewController = host
+        window.isHidden = false
+        host.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: seconds))
+        window.isHidden = true
+    }
+
+    /// Lays `harness`'s level out in the open Duo's window beside the menu and returns what its chrome measures round
+    /// the tank.
     @MainActor private func measuredChrome(_ harness: Harness, type: DynamicTypeSize = .large) -> PlayLayout.Chrome? {
         // Written by the layout pass, on the main thread, and read here after it.
         final class Box: @unchecked Sendable { var chrome: PlayLayout.Chrome? }
         let box = Box()
-        let pose = HarnessWindow.Pose(size: open.window, insets: EdgeInsets(top: open.insets.top, leading: open.insets.leading,
-                                                                             bottom: open.insets.bottom, trailing: open.insets.trailing),
-                                      fold: nil)
         let level = LevelView(level: harness.level, harness: harness, onExit: { _ in }, onNext: { _ in }, onLook: { _ in },
                               onOffer: { _ in }, besideMenu: true)
             .environment(\.chromeMeasured) { box.chrome = $0 }
             .dynamicTypeSize(type)
-        let host = UIHostingController(rootView: HarnessWindow(HarnessWindow.Spec(poses: [pose], then: nil), content: level))
-        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
-        let window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
-        window.frame = CGRect(origin: .zero, size: open.window)
-        window.rootViewController = host
-        window.isHidden = false
-        host.view.layoutIfNeeded()
-        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.5))
-        window.isHidden = true
+        host(level, window: open.window, insets: open.insets)
         return box.chrome
     }
 
@@ -393,6 +430,107 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(side(.large), 343 / PlayLayout.rim, accuracy: 0.001, "width-bound, as today")
         XCTAssertEqual(side(.xxxLarge), (647 - PlayLayout.reserve(.xxxLarge)) / PlayLayout.rim, accuracy: 0.001)
         XCTAssertLessThan(side(.xxxLarge), side(.large))
+    }
+
+    // The card's room: once a level is finished the tank shrinks for its card, and the text never does (Jack, 2026-11-11).
+
+    func testAFinishedTankGivesItsCardExactlyWhatItLacks() {
+        let stage: CGFloat = 343, foot = PlayLayout.cardFoot
+        for card in [0, 100, 200 - foot] as [CGFloat] {
+            let fit = PlayLayout.finished(card: card, room: 200, stage: stage)
+            XCTAssertEqual(fit.scale, 1, "\(card): a card with room leaves the tank as it was played")
+            XCTAssertEqual(fit.lift, 0)
+            XCTAssertEqual(fit.height, card)
+            XCTAssertFalse(fit.scrolls)
+        }
+        let fit = PlayLayout.finished(card: 250.4, room: 200, stage: stage)
+        XCTAssertEqual(fit.lift, (250.4 - 200 + foot).rounded(.up), "what the card lacks, to the next whole point")
+        XCTAssertEqual(fit.scale, (stage - fit.lift) / stage, "the tank's foot rises as far as the card does")
+        XCTAssertEqual(fit.height, 250.4, "the card whole")
+        XCTAssertFalse(fit.scrolls)
+        let tall = PlayLayout.finished(card: 500, room: 200, stage: stage)
+        XCTAssertGreaterThanOrEqual(tall.scale, PlayLayout.leastFinished, "never under its least")
+        XCTAssertEqual(tall.scale, PlayLayout.leastFinished, accuracy: 1 / stage)
+        XCTAssertEqual(tall.height, 200 - foot + tall.lift, "the card scrolls in the room the tank's least leaves")
+        XCTAssertTrue(tall.scrolls)
+    }
+
+    private typealias Phone = (window: CGSize, insets: (top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat))
+    private let se: Phone = (CGSize(width: 375, height: 667), (20, 0, 0, 0))
+    private let proMax: Phone = (CGSize(width: 440, height: 956), (62, 0, 34, 0))
+
+    /// Lays the harness's level out in `phone`'s window at `type` and returns what its finished column measured, last,
+    /// and how many times: the card's height, its room under the tank as played and how the column gives it room. Nil
+    /// where no card came up.
+    @MainActor private func measuredCard(_ env: [String: String], _ phone: Phone, type: DynamicTypeSize)
+        -> (card: CGFloat, room: CGFloat, fit: PlayLayout.Finished, times: Int)? {
+        final class Box: @unchecked Sendable { var last: (CGFloat, CGFloat, PlayLayout.Finished)?; var times = 0 }
+        // A harness solve marks its level started for the launch, as registered defaults, which no later test may see.
+        let registered = UserDefaults.standard.volatileDomain(forName: UserDefaults.registrationDomain)
+        defer { UserDefaults.standard.setVolatileDomain(registered, forName: UserDefaults.registrationDomain) }
+        let box = Box(), harness = Harness(env)
+        let level = LevelView(level: harness.level, harness: harness, onExit: { _ in }, onNext: { _ in }, onLook: { _ in },
+                              onOffer: { _ in })
+            .environment(\.finishedMeasured) { box.last = ($0, $1, $2); box.times += 1 }
+            .dynamicTypeSize(type)
+        // Past the card's arrival, which the shrink keeps time with.
+        host(level, window: phone.window, insets: phone.insets, seconds: 1)
+        return box.last.map { ($0.0, $0.1, $0.2, box.times) }
+    }
+
+    /// The fullest card a tier level shows: plughole 27 over par against a best of +6, every other plughole level at par,
+    /// so the next tier is a level short.
+    private func storeTheFullestCard() {
+        for level in Tier.plughole.levels.dropLast() { Best(over: 0, seconds: 60).save(level.id) }
+        Best(over: 6, seconds: 60).save(Tier.plughole.levels.last!.id)
+    }
+    private let fullest = ["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"]
+
+    @MainActor func testTheTankShrinksUntilTheWholeCardStandsOverTheFoot() {
+        // The cards that ran past the foot: the fullest at xxxLarge on the largest phone, and on the shortest at the
+        // default size a tier's last level with the next tier locked, the daily's with its next daily, and a replay at
+        // par with its best.
+        let cases: [(String, [String: String], Phone, DynamicTypeSize, () -> Void)] = [
+            ("the fullest card at xxxLarge on a Pro Max", fullest, proMax, .xxxLarge, storeTheFullestCard),
+            ("the fullest card on an SE", fullest, se, .large, storeTheFullestCard),
+            ("the daily's card on an SE", ["UNSTIR_SCREEN": "result", "UNSTIR_MODE": "daily", "UNSTIR_NOW": "17:00"], se, .large, {}),
+            ("a replay at par on an SE", ["UNSTIR_SCREEN": "clean", "UNSTIR_LEVEL": "6"], se, .large,
+             { for level in Tier.plughole.levels.prefix(6) { Best(over: 0, seconds: 60).save(level.id) } }),
+        ]
+        for (what, env, phone, type, store) in cases {
+            store()
+            let m = try! XCTUnwrap(measuredCard(env, phone, type: type), what)
+            print("card fit: \(what): card \(m.card) room \(m.room) lift \(m.fit.lift) scale \(m.fit.scale)")
+            XCTAssertFalse(m.fit.scrolls, "\(what): whole on screen, nothing to scroll")
+            XCTAssertEqual(m.fit.height, m.card, what)
+            XCTAssertLessThanOrEqual(m.card, m.room - PlayLayout.cardFoot + m.fit.lift, "\(what): the card ends over the foot")
+            XCTAssertEqual(m.fit.lift, max(m.card - m.room + PlayLayout.cardFoot, 0).rounded(.up), "\(what): the tank gives up no more than the card lacks")
+            XCTAssertGreaterThanOrEqual(m.fit.scale, PlayLayout.leastFinished, what)
+            // The room is measured with the tank as played: one that moved with the shrink would never settle.
+            XCTAssertLessThan(m.times, 6, "\(what): settles")
+        }
+    }
+
+    @MainActor func testTheFullestCardAtTheLargestTypeOnTheShortestPhoneScrollsUnderTheTanksLeast() {
+        storeTheFullestCard()
+        let m = try! XCTUnwrap(measuredCard(fullest, se, type: .xxxLarge))
+        print("card fit: the fullest card at xxxLarge on an SE: card \(m.card) room \(m.room) lift \(m.fit.lift) scale \(m.fit.scale)")
+        XCTAssertTrue(m.fit.scrolls, "more than the tank's least can give")
+        XCTAssertGreaterThanOrEqual(m.fit.scale, PlayLayout.leastFinished)
+        XCTAssertEqual(m.fit.height, m.room - PlayLayout.cardFoot + m.fit.lift, "the card takes all the room there is")
+        XCTAssertLessThan(m.times, 6)
+    }
+
+    @MainActor func testACardWithRoomAndATankInPlayLeaveTheTankAsItIs() {
+        // A plain card on the largest phone at the default size, as every card there is.
+        let plain = try! XCTUnwrap(measuredCard(["UNSTIR_SCREEN": "result", "UNSTIR_LEVEL": "5"], proMax, type: .large))
+        XCTAssertEqual(plain.fit.scale, 1)
+        XCTAssertEqual(plain.fit.lift, 0)
+        XCTAssertFalse(plain.fit.scrolls)
+        // In play nothing is measured for a card, so the tank is the layout's, on the shortest phone at the largest type too.
+        for (phone, type) in [(se, DynamicTypeSize.large), (se, .xxxLarge), (proMax, .xxxLarge)] {
+            XCTAssertNil(measuredCard(["UNSTIR_LEVEL": "27", "UNSTIR_CLOCK": "0"], phone, type: type)?.fit, "\(phone.window) at \(type)")
+        }
     }
 
     // Stage 3: what each level draws round its glass, kept inside the tank's pane.

@@ -308,80 +308,128 @@ extension LensArt {
 
 // MARK: - 24: Telephoto
 
-/// Level 24's name: a long lens from behind the camera, aimed at an eagle far off on a dead branch, over the top core,
-/// and the same eagle near on the camera's screen, over the bottom one (eye's two small lenses on this level). Level 24
-/// deals each lens +3 in all.
+/// Level 24's name: a photographer in profile behind a long lens on a monopod, the barrel across the glass from the
+/// camera at the right to its hood at the left, aimed at an eagle far off on a crag, small at the rim. What the lens
+/// makes of it is called out in a frame over the top core, the eagle's head filling it, and by the monopod's foot,
+/// over the bottom core, a snail goes by unseen (eye's two small lenses on this level). Level 24 deals each lens +3 in
+/// all.
 extension LensArt {
     static let telephoto: Halftone.Panel = {
-        let far = P(0.012, -0.585), near = P(0.012, 0.535)
-        let back = squircle(P(0, 0.6), 0.5, 0.3), screen = rect(-0.22, 0.42, 0.22, 0.72)
-        let barrel = [P(-0.15, 0.3), P(0.15, 0.3), P(0.2, -0.12), P(-0.2, -0.12)]
-        let hood = [P(-0.21, -0.12), P(0.21, -0.12)] + curve(P(0.225, -0.36), P(0, -0.42), P(-0.225, -0.36), 10)
-        // A band round the barrel at `at`, `deep` down it, bowed as a ring seen from behind and below is.
-        func band(_ at: Double, _ deep: Double) -> [P] {
-            let w0 = 0.15 + 0.05 * (0.3 - at) / 0.42, w1 = 0.15 + 0.05 * (0.3 - at - deep) / 0.42
-            return curve(P(-w0, at), P(0, at - 0.05), P(w0, at), 10) + curve(P(w1, at + deep), P(0, at + deep - 0.05), P(-w1, at + deep), 10)
-        }
-        let hills = [curve(P(-1, 0.2), P(-0.5, -0.12), P(-0.05, 0.2), 12), curve(P(0.1, 0.2), P(0.6, -0.04), P(1, 0.2), 12)]
-        var fills = [fill(screen, c(0.25)), fill(rect(-0.1, 0.24, 0.1, 0.32), m(0.8)), disc(P(0.36, 0.56), 0.07, y(0.6)), fill(back, m(0.6)),
-                     fill(band(-0.06, 0.03), m(0.9)), fill(band(0.2, -0.12), y(0.7)), fill(hood, m(0.8)),
-                     fill(barrel, y(0.3))]
-        fills += hills.map { fill($0, m(0.36)) }
-        fills.append(fill(rect(-1, 0.2, 1, 1), Tone(0.3, 0, 0.34)))
+        let near = P(0.012, -0.585), far = P(-0.845, -0.185), snail = P(-0.012, 0.588)
+        // The lens's axis, from its mount to the hood's mouth: `at` is a point `d` along it and `w` above it.
+        let mount = P(0.31, 0.03), mouth = P(-0.69, -0.1), length = simd_distance(mount, mouth)
+        let u = (mouth - mount) / length, n = P(-u.y, u.x)
+        func at(_ d: Double, _ w: Double) -> P { mount + d * u + w * n }
+        func tube(_ d0: Double, _ w0: Double, _ d1: Double, _ w1: Double) -> [P] { [at(d0, w0), at(d1, w1), at(d1, -w1), at(d0, -w0)] }
+        let neck = tube(0, 0.07, 0.07, 0.07), rear = tube(0.07, 0.088, 0.19, 0.088), collar = tube(0.19, 0.108, 0.26, 0.108)
+        let ring = tube(0.26, 0.098, 0.53, 0.108), front = tube(0.53, 0.105, 0.74, 0.134), red = tube(0.74, 0.142, 0.775, 0.142)
+        let hood = tube(0.775, 0.146, length, 0.17)
+        let foot = [at(0.18, -0.108), at(0.27, -0.108), at(0.255, -0.18), at(0.195, -0.18)]
+        let pole = at(0.225, -0.18), top = bar(pole, P(pole.x, 0.37), 0.056), leg = bar(P(pole.x, 0.37), P(pole.x, 1), 0.036)
+        let body = [at(-0.25, 0.12), at(0, 0.12), at(0, -0.13), at(-0.05, -0.21), at(-0.25, -0.21)]
+        let prism = [at(-0.2, 0.12), at(-0.17, 0.19), at(-0.08, 0.19), at(-0.05, 0.12)]
+        let finder = [at(-0.285, 0.15), at(-0.25, 0.15), at(-0.25, 0.05), at(-0.285, 0.05)]
+        let head = at(-0.44, 0.12), hand = at(-0.14, -0.17)
+        let cap = closed(arc(head, 0.166, 196, 352, 20)), brim = bar(polar(head, 0.15, -10), polar(head, 0.15, -10) + P(0.15, 0.04), 0.036)
+        let nose = [head + P(-0.15, -0.03), head + P(-0.2, 0.03), head + P(-0.15, 0.045)]
+        let torso = [head + P(-0.1, 0.14), head + P(0.14, 0.12), P(1, 0.3), P(1, 1), P(0.5, 1), P(0.54, 0.5)]
+        let arm = bar(head + P(0.08, 0.36), hand + P(0.03, 0.02), 0.11)
+        let frame = rect(-0.27, -0.78, 0.27, -0.4)
+        let crag = curve(P(-1, 0.1), P(-0.86, 0.02), P(-0.52, 0.42), 12) + [P(-1, 0.42)]
+        let hills = [curve(P(-0.7, 0.42), P(-0.3, 0.2), P(0.05, 0.42), 12), curve(P(-0.15, 0.42), P(0.3, 0.24), P(0.75, 0.42), 12)]
+        let sun = P(-0.52, -0.6)
+        var fills = [fill(frame, c(0.5)),
+                     disc(hand, 0.06, y(0.5)), fill(red, m(0.95)), fill(hood, m(0.8)), fill(collar, m(0.9)), fill(ring, y(0.75)),
+                     fill(neck, m(0.9)), fill(rear, y(0.4)), fill(front, y(0.4)), fill(foot, m(0.9)),
+                     fill(prism, m(0.85)), fill(finder, m(0.9)), fill(body, m(0.6)),
+                     fill(arm, c(0.85)), fill(cap, m(0.75)), fill(brim, m(0.75)), disc(head, 0.16, y(0.5)), fill(nose, y(0.5)),
+                     fill(torso, c(0.55)),
+                     fill(top, y(0.7)), fill(leg, y(0.7)), disc(sun, 0.085, y(0.75)), fill(crag, m(0.55))]
+        fills += hills.map { fill($0, m(0.3)) }
+        fills.append(fill(rect(-1, 0.42, 1, 1), Tone(0.3, 0, 0.34)))
 
         var s: [Halftone.Stroke] = []
-        // The hills, a sun low between them, grass, and the dead branch in from the right.
+        // The land: two far hills, the crag, a sun low beside it, grass, and birds over the hills.
         for q in hills { s.append(stroke(q, mid)) }
-        s.append(stroke(arc(P(-0.56, 0.02), 0.1, 200, 340, 10), hair))
-        for (k, x) in [-0.84, -0.66, 0.6, 0.78, 0.9].enumerated() {
-            let foot = P(x, 0.4 + 0.12 * Double(k % 3))
-            for t in [-112.0, -90, -64] { s.append(stroke([foot, polar(foot, 0.06, t)], hair)) }
+        s.append(stroke(Array(crag.dropLast()), mid))
+        s.append(stroke(circle(sun, 0.085, 20), mid))
+        for k in 0..<10 where k != 3 { s.append(stroke([polar(sun, 0.11, 36 * Double(k) + 8), polar(sun, k % 2 == 0 ? 0.15 : 0.135, 36 * Double(k) + 8)], hair)) }
+        // The dead tree on it, the eagle's perch.
+        s.append(stroke([P(-0.875, 0.06), P(-0.862, -0.06), far + P(-0.004, 0.058)], mid))
+        s.append(stroke([P(-0.862, -0.06), P(-0.92, -0.13), P(-0.925, -0.18)], hair))
+        s.append(stroke([P(-0.868, -0.01), P(-0.8, -0.07), P(-0.775, -0.12)], hair))
+        for (k, x) in [-0.5, -0.32, 0.3, 0.42, -0.16].enumerated() {
+            let root = P(x, 0.56 + 0.13 * Double(k % 3))
+            for t in [-112.0, -90, -64] { s.append(stroke([root, polar(root, 0.06, t)], hair)) }
         }
-        let branch = curve(P(1, -0.24), P(0.5, -0.4), far + P(-0.1, 0.07), 16)
-        s.append(stroke(branch, bold))
-        s.append(stroke(curve(branch[6], P(0.56, -0.62), P(0.5, -0.76), 8), mid))
-        s.append(stroke(curve(branch[11], P(0.3, -0.3), P(0.22, -0.2), 6), mid))
-        // The eagle, far: body, head and hooked beak, wing's edge, tail, feet on the branch.
-        s.append(stroke(ellipse(far + P(0, 0.016), 0.02, 0.036, degrees: 8, 18), 0.0036))
-        s.append(stroke(circle(far + P(-0.006, -0.03), 0.012, 10), 0.0036))
-        s.append(stroke([far + P(-0.017, -0.032), far + P(-0.03, -0.027), far + P(-0.026, -0.018)], 0.003))
-        s.append(stroke(circle(far + P(-0.009, -0.033), 0.0014, 5), 0.002))
-        s.append(stroke(curve(far + P(0.012, -0.012), far + P(0.022, 0.02), far + P(0.012, 0.05), 6), 0.002))
-        s.append(stroke([far + P(0.006, 0.05), far + P(0.014, 0.078), far + P(0.022, 0.05)], 0.003))
-        for x in [-0.01, 0.004] { s.append(stroke([far + P(x, 0.05), far + P(x - 0.002, 0.062)], 0.003)) }
-        // The lens from behind: the barrel widening to its hood, the hood's mouth, the focus ring and the red one.
-        s.append(stroke([barrel[0], barrel[3]], bold))
-        s.append(stroke([barrel[1], barrel[2]], bold))
-        s.append(stroke(Array(hood[1...]) + [hood[0]], bold))
-        for x in [-0.12, -0.04, 0.04, 0.12] { s.append(stroke([P(x, -0.17 + x * x), P(x * 1.07, -0.38 + x * x)], hair)) }
-        s.append(stroke(curve(P(-0.2, -0.12), P(0, -0.17), P(0.2, -0.12), 10), mid))
-        for q in [band(-0.06, 0.03), band(0.2, -0.12)] {
-            s.append(stroke(Array(q.prefix(11)), mid))
-            s.append(stroke(Array(q.suffix(11)), mid))
+        for at in [P(-0.2, -0.32), P(-0.08, -0.27), P(0.6, -0.62)] {
+            s.append(stroke(curve(at + P(-0.04, 0), at + P(-0.02, -0.03), at, 5) + curve(at, at + P(0.02, -0.03), at + P(0.04, 0), 5), hair))
         }
-        for k in 0..<9 {
-            let x = -0.14 + 0.035 * Double(k)
-            s.append(stroke([P(x, 0.185 - 0.05 * (1 - (x / 0.16) * (x / 0.16))), P(x * 1.08, 0.095 - 0.05 * (1 - (x / 0.17) * (x / 0.17)))], hair))
+        // The eagle, far: body, head and hooked beak, wing's edge, tail, feet on the crag.
+        s.append(stroke(ellipse(far + P(0, 0.016), 0.02, 0.036, degrees: -8, 18), 0.0036))
+        s.append(stroke(circle(far + P(0.006, -0.03), 0.012, 10), 0.0036))
+        s.append(stroke([far + P(0.017, -0.032), far + P(0.03, -0.027), far + P(0.026, -0.018)], 0.003))
+        s.append(stroke(curve(far + P(-0.012, -0.012), far + P(-0.022, 0.02), far + P(-0.012, 0.05), 6), 0.002))
+        s.append(stroke([far + P(-0.006, 0.05), far + P(-0.014, 0.078), far + P(-0.022, 0.05)], 0.003))
+        for x in [0.01, -0.004] { s.append(stroke([far + P(x, 0.05), far + P(x + 0.002, 0.062)], 0.003)) }
+        // The lens: each length of the barrel, the hood's flutes, the ring's ribs, the scale's window and the switches.
+        for q in [neck, rear, collar, ring, front, red, hood] { s.append(stroke(closed(q), q == hood || q == collar ? bold : mid)) }
+        for w in [-0.1, -0.03, 0.05, 0.115] { s.append(stroke([at(0.795, w * 0.88), at(length - 0.02, w)], hair)) }
+        for k in 0..<13 {
+            let d = 0.28 + 0.019 * Double(k)
+            s.append(stroke([at(d, 0.096), at(d + 0.004, -0.096)], hair))
         }
-        // The camera's back: body, finder, screen, the dial and its buttons, and the thumbs holding it.
-        s.append(stroke(closed(back), bold))
-        s.append(stroke(closed(rect(-0.1, 0.24, 0.1, 0.32)), mid))
-        s.append(stroke(closed(screen), bold))
-        s.append(stroke(circle(P(0.36, 0.56), 0.07, 20), mid))
-        s.append(stroke(circle(P(0.36, 0.56), 0.03, 12), hair))
-        for (k, at) in [P(-0.36, 0.46), P(-0.36, 0.58), P(-0.36, 0.7), P(0.36, 0.74)].enumerated() { s.append(stroke(circle(at, k == 3 ? 0.03 : 0.024, 10), mid)) }
-        for side in [-1.0, 1.0] { s.append(stroke(arc(P(side * 0.56, 0.84), 0.12, side < 0 ? 250 : 190, side < 0 ? 350 : 290, 10), bold)) }
-        // On the screen: the eagle near. Its head, the brow over the eye, the beak, and the focus marks round it.
+        s.append(stroke(closed([at(0.57, 0.085), at(0.68, 0.095), at(0.68, 0.04), at(0.57, 0.035)]), hair))
+        for d in [0.595, 0.625, 0.655] { s.append(stroke([at(d, 0.085), at(d, 0.06)], hair)) }
+        for w in [0.035, -0.02] { s.append(stroke(closed([at(0.09, w + 0.014), at(0.17, w + 0.014), at(0.17, w - 0.014), at(0.09, w - 0.014)]), hair)) }
+        s.append(stroke([at(0.57, -0.07), at(0.72, -0.09)], hair))
+        // Its foot on the monopod, the pole's two lengths and their clamp.
+        s.append(stroke(closed(foot), mid))
+        s.append(stroke(closed(top), mid))
+        s.append(stroke(closed(leg), mid))
+        s.append(stroke(closed(rect(pole.x - 0.04, 0.3, pole.x + 0.04, 0.39)), mid))
+        s.append(stroke([P(pole.x + 0.04, 0.345), P(pole.x + 0.09, 0.32)], mid))
+        s.append(stroke([P(pole.x - 0.008, 0.45), P(pole.x - 0.008, 0.9)], hair))
+        // The camera, and the photographer behind it: cap on backwards, an eye shut, a hand round the grip.
+        s.append(stroke(closed(body), bold))
+        s.append(stroke(Array(prism), mid))
+        s.append(stroke(closed(finder), mid))
+        s.append(stroke(circle(at(-0.14, 0.04), 0.03, 12), hair))
+        s.append(stroke([at(-0.23, -0.04), at(-0.03, -0.04)], hair))
+        s.append(stroke(arc(head, 0.16, -8, 196, 24), bold))
+        s.append(stroke(cap, mid))
+        s.append(stroke(closed(brim), mid))
+        s.append(stroke([nose[0], nose[1], nose[2]], mid))
+        s.append(stroke(curve(head + P(-0.12, 0.01), head + P(-0.09, 0.04), head + P(-0.06, 0.01), 6), mid))
+        s.append(stroke(arc(head + P(0.04, 0.04), 0.035, -70, 110, 8), mid))
+        s.append(stroke([head + P(-0.1, 0.09), head + P(-0.05, 0.1)], hair))
+        s.append(stroke([torso[0], torso[5], torso[4]], bold))
+        s.append(stroke([torso[1], torso[2]], bold))
+        s.append(stroke([arm[0], arm[1]], bold))
+        s.append(stroke([arm[3], arm[2]], bold))
+        s.append(stroke(circle(hand, 0.06, 16), mid))
+        for k in 0..<3 { s.append(stroke([hand + P(-0.045, -0.02 + 0.022 * Double(k)), hand + P(-0.005, -0.026 + 0.022 * Double(k))], hair)) }
+        // The frame, called out from the finder: the eagle near, its head, the brow over the eye, the beak, its
+        // shoulders, the crag's edge under it, and the focus marks round it.
+        s.append(stroke(closed(frame), bold))
+        s += dashes(at(-0.27, 0.15), frame[2], 9)
+        s += dashes(at(-0.27, 0.15), frame[3], 12)
         for (sx, sy) in [(-1.0, -1.0), (1, -1), (1, 1), (-1, 1)] {
-            let at = P(sx * 0.16, 0.57 + sy * 0.1)
-            s.append(stroke([at + P(-sx * 0.03, 0), at, at + P(0, -sy * 0.03)], hair))
+            let corner = P(sx * 0.17, -0.59 + sy * 0.11)
+            s.append(stroke([corner + P(-sx * 0.035, 0), corner, corner + P(0, -sy * 0.035)], hair))
         }
-        s.append(stroke(arc(near + P(0.01, 0.0), 0.04, 150, 400, 20), 0.004))
-        s.append(stroke([near + P(-0.024, -0.02), near + P(-0.062, -0.006), near + P(-0.066, 0.022), near + P(-0.05, 0.012), near + P(-0.026, 0.016)], 0.004))
-        s.append(stroke([near + P(-0.03, -0.022), near + P(0.014, -0.02)], 0.004))
-        s.append(stroke(circle(near + P(-0.006, -0.008), 0.007, 8), 0.003))
-        s.append(stroke(circle(near + P(-0.006, -0.008), 0.0016, 5), 0.003))
-        for k in 0..<4 { s.append(stroke(arc(near + P(0.006 + 0.016 * Double(k % 2), 0.05 + 0.012 * Double(k / 2)), 0.01, 20, 160, 4), 0.0016)) }
+        s.append(stroke(arc(near + P(-0.01, 0.0), 0.04, 140, -220, 20), 0.004))
+        s.append(stroke([near + P(0.024, -0.02), near + P(0.062, -0.006), near + P(0.066, 0.022), near + P(0.05, 0.012), near + P(0.026, 0.016)], 0.004))
+        s.append(stroke([near + P(0.03, -0.022), near + P(-0.014, -0.02)], 0.004))
+        s.append(stroke(circle(near + P(0.006, -0.008), 0.007, 8), 0.003))
+        s.append(stroke(circle(near + P(0.006, -0.008), 0.0016, 5), 0.003))
+        for k in 0..<4 { s.append(stroke(arc(near + P(-0.006 - 0.016 * Double(k % 2), 0.05 + 0.012 * Double(k / 2)), 0.01, 20, 160, 4), 0.0016)) }
+        s.append(stroke(curve(near + P(-0.04, 0.03), near + P(-0.1, 0.07), near + P(-0.11, 0.185), 8), mid))
+        s.append(stroke(curve(near + P(0.02, 0.04), near + P(0.07, 0.09), near + P(0.06, 0.185), 8), mid))
+        // The snail by the monopod's foot.
+        s.append(stroke(spiral(snail, 0.002, grow: 0.0011, turn: 40, 16), 0.003))
+        s.append(stroke([snail + P(0.018, 0.012), snail + P(-0.035, 0.014), snail + P(-0.045, 0.0)], 0.003))
+        for x in [-0.04, -0.05] { s.append(stroke([snail + P(-0.043, 0.002), snail + P(x - 0.004, -0.016)], 0.002)) }
         return panel("telephoto", fills: fills, strokes: s) { _ in c(0.2) }
     }()
 }

@@ -6,7 +6,8 @@ import simd
 /// Lens's panels, a level each, drawn the test panel's way (`Halftone.Panel`: tones in three dot screens under white
 /// strokes). Each draws its level's name, a thing to look through, with what is seen through it in the core of one of
 /// the level's lenses, in hairline white finer than the screen, since a tone region under one pitch prints no dot, and
-/// off the core's centre, which the lens's knob covers, and bold enough to read at x8, where the bake is soft. Every
+/// off the core's centre, which the lens's knob covers, and bold enough to read at x8 from the bake alone, which is
+/// soft there: the level's glass draws it finer (`Halftone.Detail`), a cover or a clip does not. Every
 /// rod's core holds tone and linework that no turn of 30 degrees leaves as it was, so each step shows
 /// (`testEveryLensPanelShowsEachStepOnItsLevel`). Hex's hub is the trap: the screens are square and centred on it, so a
 /// flat tone there looks the same after a quarter turn, and a panel whose hub turns keeps something off-centre on it.

@@ -908,7 +908,7 @@ struct RootView: View {
     }
 
     /// A card or the archive put away while a level beside the menu played comes back as `level` leaves only if it
-    /// opened that level, whose way out names it ("‹ Lens", "‹ archive"), as on a phone.
+    /// opened that level, whose way out leads back to it, as on a phone.
     static func returns(to parked: (card: Offer?, archive: Bool), from level: Level) -> Bool {
         if parked.archive { return level.archived }
         guard let pack = level.pack, let card = parked.card else { return false }

@@ -140,6 +140,21 @@ STREAK's row and the spacing under the chips; #178 with `r17-stamp-below`; each 
 Lens: Kaleidoscope as the face (cover, clip, promo image), Telephoto redrawn, the finer lens core. A louder
 payoff on finishing a pack or the game is Jack's ask and wants options shown.
 
+**Night of 2026-11-11.** Jack played all 90 paid levels and answered a third page (six calls, all A; rows above
+LENSSOFT's in `docs/decisions.md`; link in `HANDOFF.private.md`). Merged since: #183 (the rod's tick back), #184
+(the first read's 5 s limit and the offline test), #186 (a pack's loop carries into the next level), #188 (the
+share line's dots), #185 (Lens's face). His playthrough notes, each with a lane building options to show him:
+**Lens 8, 11, 18** (the three quad levels) are too fine to read: #190 redraws nine panels so a twist reads, held;
+the lens-or-twist order stays unreadable on quad, so `lens-offquad` moves the three to other glass as the option.
+**Escapement**: the wait (a tap on a clock) is undiscoverable; he would rather the clocks tick only with a rod's
+turn, or the wait made unmistakable: `esc-nowait` and `esc-wait-clear` build both. Its one shared picture is
+dull: plates for all 30 on `esc-plates-1` (wiring and 1 to 10), `-2`, `-3`. **Prism**: a rod stirred twice shows
+the sum of its stirs in its core (nothing, or a wrong count), on 25 of 30 specimens, so no plate fix works (#189,
+tools only): `prism-notches-redeal` (no rod stirred twice, par falls) against `prism-aid` (a mark on the drag's
+dial, or pips on the knob). **Music**: the layer must play straight through a solve (`music-through`). Also open:
+two StoreKit tests fail on an iOS 27.2 simulator (`store-ios27`); a louder payoff on finishing a pack; the six
+Prism cost weights the phone bench read over their assumption (prism-25, 27 to 30, 20 and 21 marginal).
+
 ### Open work (finish-and-pitch, 2026-11-02)
 
 Closed: moved word for word to `docs/history.md`.
