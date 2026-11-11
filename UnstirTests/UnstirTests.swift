@@ -131,11 +131,12 @@ final class UnstirTests: XCTestCase {
         let escapement = Level.escapement[0]
         let clock = Game(level: escapement, tankTurned: true, bank: (10, nil))
         clock.demo(escapement.demo)
+        clock.commit(rod: 2, steps: 3)
         clock.commit(rod: 1, steps: -2)
-        XCTAssertTrue(clock.wait(on: 0))
+        XCTAssertEqual(clock.stack, .parse("0:-1", in: .tri))
         XCTAssertFalse(Best.started(escapement.id), "the demonstration's moves are not the player's")
         clock.endDemo()
-        XCTAssertTrue(clock.wait(on: 0))
+        clock.commit(rod: 2, steps: 4)
         XCTAssertTrue(Best.started(escapement.id))
     }
 
@@ -954,7 +955,7 @@ final class UnstirTests: XCTestCase {
             { $0.turnTank(-1) }, { $0.commit(rod: 1, steps: 1) }, { $0.commit(rod: 1, steps: 1) }, { $0.turnTank(1) },
         ], "pack")
 
-        var clocks = Level.escapement[1]
+        var clocks = Level.mockUp
         clocks.id = "test-undo-clocks"
         check(Game(level: clocks, tankTurned: true, bank: (20, nil)), [
             { $0.commit(rod: 2, steps: 4) }, { $0.commit(rod: 2, steps: -4) }, { $0.wait(on: 0) },
@@ -1638,29 +1639,22 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
-    /// The menu's top follows plughole 01 and 23: nothing, then the way on; the daily and endless only once open.
+    /// The menu's top follows plughole 23: the daily and endless only once open.
     @MainActor func testTheMenuLeadsWithLevelOne() {
-        func solved(_ n: Int, of tier: Tier = .plughole) -> (String) -> Best? {
-            let ids = Set(Tier.plughole.levels.prefix(tier == .plughole ? n : 27).map(\.id) + tier.levels.prefix(n).map(\.id))
+        func solved(_ n: Int) -> (String) -> Best? {
+            let ids = Set(Tier.plughole.levels.prefix(n).map(\.id))
             return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
         }
-        let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
+        let fresh = MenuView.lead(unlocked: false, best: solved(0))
         XCTAssertFalse(fresh.modes)
         XCTAssertTrue(fresh.sandbox)
-        XCTAssertNil(fresh.next)
-        let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
+        let one = MenuView.lead(unlocked: false, best: solved(1))
         XCTAssertFalse(one.modes)
         XCTAssertTrue(one.sandbox, "at the list's end whether or not 01 has a best")
-        XCTAssertEqual(one.next?.id, Level.plughole[1].id)
-        XCTAssertNil(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(1)).next, "a locked tier has no way on")
-        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
-        let modes = MenuView.lead(tier: .plughole, unlocked: false, best: solved(23))
+        XCTAssertFalse(MenuView.lead(unlocked: false, best: solved(22)).modes)
+        let modes = MenuView.lead(unlocked: false, best: solved(23))
         XCTAssertTrue(modes.modes)
-        XCTAssertEqual(modes.next?.id, Level.plughole[23].id)
-        XCTAssertNil(MenuView.lead(tier: .plughole, unlocked: false, best: solved(27)).next, "every level has a best")
-        XCTAssertEqual(MenuView.lead(tier: .whirlpool, unlocked: false, best: solved(4, of: .whirlpool)).next?.id,
-                       Level.whirlpool[4].id)
-        let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
+        let unlocked = MenuView.lead(unlocked: true, best: solved(0))
         XCTAssertTrue(unlocked.modes)
         XCTAssertTrue(unlocked.sandbox)
     }
@@ -1673,14 +1667,13 @@ final class UnstirTests: XCTestCase {
         let one: (String) -> Best? = { $0 == Level.plughole[0].id ? Best(over: 0, seconds: 9) : nil }
         let bests: [(String) -> Best?] = [{ _ in nil }, one]
         for best in bests {
-            let shipped = MenuView.lead(tier: .plughole, unlocked: false, release: true, best: best)
-            let debug = MenuView.lead(tier: .plughole, unlocked: false, release: false, best: best)
+            let shipped = MenuView.lead(unlocked: false, release: true, best: best)
+            let debug = MenuView.lead(unlocked: false, release: false, best: best)
             XCTAssertFalse(shipped.sandbox)
             XCTAssertTrue(debug.sandbox)
             XCTAssertEqual(shipped.modes, debug.modes)
-            XCTAssertEqual(shipped.next?.id, debug.next?.id)
         }
-        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
+        XCTAssertFalse(MenuView.lead(unlocked: true, release: true, best: { _ in nil }).sandbox)
         XCTAssertFalse(Store.shared.opens(.sandbox, release: true))
         XCTAssertTrue(Store.shared.opens(.sandbox, release: false))
         for level in [Level.plughole[0], Level.daily(), .endless(Run(seed: 7)), Level.lens[0]] {
@@ -1962,7 +1955,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(LevelView.grab(.quad, motion: .none, kind: kinds([0: .ratchet]), at: a), .ratchet(0))
         XCTAssertEqual(LevelView.grab(.quad, motion: .none, kind: kinds([1: .ratchet]), at: a), .rod(0))
         let level = Level(id: "test-kinds", label: "", title: "", layout: .quad,
-                          scramble: .parse("0:+3,1:+2,2:-4", in: .quad), sockets: [1], ratchets: [2])
+                          scramble: .parse("0:+3,1:+2,2:-4", in: .quad), sockets: [1], ratchets: [2], waits: true)
         XCTAssertEqual((0..<4).map(level.kind(of:)), [.working, .socket, .ratchet, .working])
         let game = Game(level: level, tankTurned: true, swirled: true)
         game.commit(rod: 2, steps: 4)
@@ -1970,7 +1963,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack, level.scramble)
         XCTAssertEqual(game.moves, 0)
         XCTAssertNil(game.reachable)
-        // A tap on the ratchet is a move of its own: the clock ticks its 2:-4 on to 2:-3.
+        // Under the waiting move a tap on the ratchet is a move of its own: the clock ticks its 2:-4 on to 2:-3.
         game.wait(on: 2)
         XCTAssertEqual(game.moves, 1)
         XCTAssertEqual(game.stack, .parse("0:+3,1:+2,2:-3", in: .quad))
@@ -2128,6 +2121,9 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(open.label, "Level 1, \(first.title).")
         XCTAssertEqual(open.value, "not played")
         XCTAssertEqual(open.hint, "\(Spoken.rods(first.layout)), par \(first.par)")
+        XCTAssertEqual(Spoken.marked(open, playing: false, frontier: true).value, "next, not played", "the way on, as its hairline")
+        XCTAssertEqual(Spoken.marked(open, playing: true, frontier: true).value, "playing, not played")
+        XCTAssertEqual(Spoken.marked(open, playing: false).value, "not played")
         XCTAssertEqual(Spoken.row(seventh, result: nil, tanks: 0, detail: nil, enabled: false, needs: Level.plughole[5]).value,
                        "locked, solve level 6 first")
         XCTAssertEqual(Spoken.row(Level.vortex[0], result: nil, tanks: 0, detail: nil, enabled: false, needs: nil).value, "locked")
@@ -2156,7 +2152,6 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual([continued.value, continued.hint], ["run in progress, best 9 tanks", "continue, tank 6, brim 3, best 9"])
         XCTAssertEqual(Spoken.row(.endless(Run(seed: 7, tank: 5)), result: nil, tanks: 0, detail: nil, enabled: true, needs: nil,
                                   started: true).value, "run in progress")
-        XCTAssertEqual(Spoken.next(seventh), "Next: level 7, \(seventh.title)")
         XCTAssertEqual(Spoken.rods(.quadSwirl), "4 rods and a swirl")
         XCTAssertEqual(Spoken.back(first), "Back to levels")
         XCTAssertEqual(Spoken.back(Pack.lens.levels[0]), "Back to Lens")

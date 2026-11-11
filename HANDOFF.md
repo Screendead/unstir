@@ -1,6 +1,6 @@
 # Handoff — Unstir
 
-*Updated 2026-11-09. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
+*Updated 2026-11-11. Audience: the next agent, or Jack. This file holds the current task: the plan, where it stands,
 open thoughts, and the options set aside. Update it when a step closes or a call is made. Git holds the history. The repo is public: personal and account
 details go in `HANDOFF.private.md`, which is gitignored.*
 
@@ -40,105 +40,77 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
 
+### Open work (finish-and-pitch, 2026-11-11 night, after Jack's answers)
+
+Jack answered all six calls of the second follow-up page. His notes, verbatim. On the curtain call (he picked
+"change something first"): "I want the text within the glass. You spaced the text below the glass far too close to
+it anyway, so it looks shoddy - but yeah I'm left wondering why you chose to build it differently to what I decided?
+It looks good in the glass. I agree with your decision to shrink the glass and put the curtain call below on small
+screens." On Prism: "This is a fantastic solution to the problem. Well done." On the credit: "made by screendead ·
+thank you for playing".
+
+**Decided, to do this run**
+
+1. Record the six answers (round 19). Done here.
+2. Level 7 is named "Counterweight": the shown name only, its id and picture as they are (#203). The pause-mark
+   picture is set aside.
+3. Curtain call (#201): the credit back inside the glass wherever the lines fit at full text size, as Jack saw it
+   when he picked; where they don't fit, the glass shrinks and the words stand under it, with more room between
+   glass and words than #201 gave. The credit's words change. Shown to Jack again before it merges: his pick said
+   so. The sounds, the shorter hold and Escapement's smaller title size stand, as his note names only the text.
+4. Prism: the fade-in treatment goes from `prism-read`'s harness switch into the game (shader and Swift copy
+   together), its per-pixel cost timed. The PR opens and waits: his option was "on your phone before it is merged",
+   and the phone needs him to unlock it.
+5. Owed from before: `docs/escapement-problems.md` without the wait (done here); Escapement 29's layer rendered
+   again on its new deal (done, `scripts/sounds.sh layers`, nothing tracked changed); the loc-lint baseline removed
+   (#203); one more try at the StoreKit tests on the iOS 27.2 simulator.
+
+**Undecided, to pitch**
+
+- The curtain call again, with the text inside the glass.
+- The PR test job: 6 of the last 18 PR runs passed 10 minutes and #201's last took 14:21, 39 s under the hard stop.
+  Measured options go to Jack.
+
+**Waiting**
+
+- The store screenshot, editors' reel and promo image showing Escapement 2 are retaken once, after the curtain call
+  merges. `shots/` is untracked, so a retake now would only be redone.
+- Stopwatch (Escapement 11) still rests on one proved line; the whole-book prover run stalls on it.
+
+### Open work (2026-11-11, after Jack's calls on Escapement, Lens, Prism and the payoff)
+
+**Merged on master**: #194 (Escapement's clocks can't be touched; the twenty levels that needed a wait are dealt
+again), #195 (Lens's Spectacles, Bifocals and Night vision redrawn and on the three-rod glass; it carried #190),
+#196 (Escapement's thirty pictures) and #200 (undo steps aside while reset is armed and the row cannot hold both
+labels on a line each). #191 (the labelled wait button) is closed. Jack's calls on them are in round 18 of
+`docs/decisions.md`. Escapement's per-move notes starting again each level, and VoiceOver's "next, not played", stay
+as built.
+
+**Open**: PR #201, the curtain call (Jack picked it: "I just don't like how A re-stirs to reward you for unstirring.
+Curtain call looks cleanest to me."), finished and waiting for Jack, as it differs from what he saw: the credit sits
+under the glass, the glass shrinks for long lines, the sounds are quieter, the hold is shorter, Escapement's name is
+in the smaller size. Its decision row lands with it. Local and unpushed: `prism-read`, three treatments for reading
+the picture while a rod turns (dim the other rods; the rod's colours in white; dim what is out of register) behind a
+harness switch, untested. Jack on Prism: "The issue with reading was not reading the knobs. It was with reading the
+picture itself while turning the rod. I think you investigated the wrong problem here." `store-ios27`: StoreKit
+tests hang at the first purchase on the iOS 27.2 simulator, locally and on the runner; next, a StoreKit
+configuration set at the scheme level.
+
+**Answered by Jack, 2026-11-11 night** (round 19 of `docs/decisions.md`; the section above has the work they start):
+chapter 2 stays "Tempo" with its rule line; level 7 becomes "Counterweight" on its picture; Snooze and Standstill
+stay; Prism takes its held rod in its own colour with white fading in near the count; the curtain call is to change
+before it merges (the text inside the glass); the credit reads "made by screendead · thank you for playing".
+
+**Owed**: retake the store screenshot, editors' reel and promo image showing Escapement 2; Stopwatch (11) rests
+on one proved line; the PR test job ran about 12 minutes on #201, over Jack's 10-minute line, to raise with him with
+a proposal; remove the empty `scripts/loc-lint/baseline.txt` and its test's read of it.
+
+The earlier record of this run, "Open work (finish-and-pitch, 2026-11-09)", is closed: moved word for word to
+`docs/history.md`.
+
 ### Open work (finish-and-pitch, 2026-11-09)
 
-The run's list, checked against master at #152. **Decided** (Claude does it): FreshDefaults forgets bests too; the
-`shots.sh` index fix for `prism-swatch-white-*` (`scripts/shots.sh:749`); the scrolled pack card under the status bar
-(confirm 5cbd45f's mask, then drop to-do 74's line); to-do 74's remaining plain fixes (F13(f)'s stored "asked" date,
-F14's "checking purchases…" placeholder, the inventory walked against master); the design pass's decided calls
-D1, D2 and D4 (D3's dots wait for the pass's port); ARCH's split of TankView.swift (moves only), then its typed shader
-encoder; the duo-feel bench into the repo; the private-repo CI cost and the test step's slow start (ci-time = B);
-the owed films and shots retaken on master and attached; handoff housekeeping. **Decided, later in ORDER**: the
-String Catalog after the design pass, then the store media retaken. **Decided, waiting on a launch fact**: the Lens
-and Prism shader weights (Jack's phone bench), the iCloud flip (the capability), `Share.firstDay` and `Share.url`.
-**Answered 2026-11-09** (round 17, `docs/decisions.md`): DESIGN5 = A, CATORDER = D, ESCBOOK = A,
-ARCHREST = A, PERF = A, TFREAD = D; their work joins the decided list. **Undecided** (on the page, with what was built):
-Lens's art for v1 (draft #157, one panel per option); the pack sound layers (draft #158, filmed in play); the
-Ask to Buy date kept and its 24 h wait (#154 as built); F14's checking line; the Duo-speed probe; CI and CodeQL once
-the repo goes private (the measured cost is in `HANDOFF.private.md`). **Blocked**: the
-owed shots for merged #81, #83, #84 are taken (`~/development/unstir-tools/r17-shots-out`) but Chrome was not
-connected to attach them; a dock-waking film needs a new harness hook. Pitch page:
-https://claude.ai/artifact/TcJvFtVMBXWgbh589TGYbp, design canvas https://claude.ai/artifact/W99rKP56Wv8Pz1FLvhAqtE. **Jack's to-dos**: the
-Escapement book and round 13 and 16 checks on the phone, the phone GPU bench, the developer account and App Store
-Connect, the ICO registration, Eyes Shut's hosting and outreach, posting the clips.
-
-**Paused 2026-11-10 at Jack's word, after design change 1 merged (#169).** Merged in wave 2: #156, #159 to #164,
-#166 to #169. Open: #165 (String Catalog first half, CI green, not yet reviewed or merged); #157 and #158 wait on
-the pitch's picks. Not started: design changes 2 to 5, the catalog's chrome half, the store media retake, the
-records (ESCBOOK's J3 to J8 closed, PERF's section to history, ARCH's stale split lines), and this branch's PR. Check
-the nightly's StoreTests on #154 (their first run).
-
-**Resumed 2026-11-10 (finish-and-pitch).** The list, against master at #170. **Decided**, in this order on one
-chain: #165 brought up to master, reviewed and merged; design changes 2 (five text tones), 3 (one button, three
-emphases), 4 (results as dots) and 5 (the menu and result card), a PR each as #169 was; the catalog's chrome half;
-the store media retaken (`screens`, `preview`, `social`; `sound` switches the Mac's output, so it is Jack's to run).
-Beside the chain: the records (ESCBOOK's J3, J5, J7 and J8 closed, PERF's section to history, ARCH's stale split
-lines); the nightly's StoreTests on #154, dispatched on master; `r17-ci-probe`'s finding checked as recorded; the
-owed shots attached if Chrome connects; the merged lanes' worktrees removed. **Undecided**, unpicked on the page and
-each already built: lens-art (#157), sound-layers (#158), ask-to-buy-date, ask-to-buy-wait, f14-checking, duo-probe,
-ci-private, codeql-private; new from #169: whether "unstirred." scales with the type. Nothing is built on their
-recommendations. **Waiting on a launch fact**: as above; the Lens shader weight is not in the phone bench's output.
-
-**Answered 2026-11-10** (`docs/decisions.md`; the calls page of that day, 13 calls, each written to stand alone as
-CLAUDE.md's "Calls for Jack" now asks). Merged that day: #165 (the catalog's table strings), #171 (five text tones),
-#172 (results as dots), #175 (the calls rule). #171 and #172 merged before Jack saw them, which he objected to: a
-design PR that changes what the player sees now waits for him with before and after pictures. His picks:
-DOTS-KEPT = A, TONES-KEPT = A, BUTTONS = B, STAMP = A, LENSART = B, SOUNDLAYERS = A, ATB-DATE = A, ATB-WAIT = A,
-F14 = B, DUOPROBE = A, CIPRIVATE = A, CODEQL-PRIVATE = A. **Not picked**: whether an over-par row shows its "+n"
-beside the dots (#174, built, CI green, held). Jack asked instead whether par isn't already perfect on every level;
-the answer owed to him is that three dots mean clean (at par on the first try with no undo or reset), two mean at
-par, one means solved over par, and the call goes to him again on the next page. **Next, decided**: #173's two
-fixes (BUTTONS), shown to Jack before it merges; `r17-stamp` and `r17-f14` brought up to master and opened as PRs
-(both change what the player sees, so each waits for him with its picture unless his pick already covers exactly
-what the picture showed); #158 brought up to master and merged; Lens's 24 remaining panels in batches on #157;
-design change 5 (the menu and result card) stacked on #173; then the catalog's chrome half and the store media
-retake; the small-phone check of the taller result card; a checklist page of the phone feel checks owed to Jack;
-the merged lanes' worktrees removed. `r17-ci-private` waits for the day the repo goes private, as does deleting
-`codeql.yml`. Local branches not pushed: `r17-stamp`, `r17-f14`, `r17-ci-private`.
-
-**Evening of 2026-11-10** (a second calls page, twelve calls, none answered yet; its link is in
-`HANDOFF.private.md`). Merged on SOUNDLAYERS = A and F14 = B: #158 (each paid pack's sound layer in play) and
-#179 ("checking purchases…" until the store's first read; its text takes the second tone, a little brighter than
-the picture Jack saw); and #177 (one catalog escape, invisible). **Built, CI green, held for Jack**, each with real
-shots on the page: #173 with BUTTONS's two fixes (a result card too tall for the room steps its own type down,
-never below the default, then scrolls; the scroll-only way is on local `r17-ds3-alt`; the pack heading over the
-level title gone, with the "‹ levels" button on local `r17-ds3-name-b`); #180 (`r17-ds5b`, design change 5, the
-menu and result card, stacked on #173; its fourteen visible changes are in its body; proposal 5.4's lost-card
-buttons and the SE's stamp-for-title not built); #178 (STAMP: "unstirred." grows to about 28 pt at xxxLarge, the
-Duo tabletop's stays fixed; on an SE at the three largest sizes it crosses the title, as master's fixed word
-already touches it; conflicts with #173 in TankView.swift, so whichever merges second takes the other in); #157
-(all 25 Lens panels drawn and wired by level number, the picture still `.halftone`, so no stored value or print
-changes; Telephoto the weakest; the pack's cover, clip and promo image now show level 3's Magnifying glass; each
-panel is cached at 5.5 MB, about 137 MB for all 25, and no bake is timed on a phone); #174 as before. **The
-twelve calls**: the over-par "+n" again, with what the dots mean; which pack name goes; step-down or scroll at
-xxxLarge; change 5 as built, half or neither; the daily row's streak against its dots; a completion line's colour;
-whether "deeper every tank" is said anywhere; tightening three cards that overflow an SE at the default size (the
-tier-end card with a locked next tier, the daily's, an at-par replay with a best line); the stamp on an SE; the 25
-panels and any redraws; the pack's face; the x8 softness. **Not started, waiting**: the catalog's chrome half (120
-escapes left, all in files the held PRs touch: Shelf 41, TankView 18, Menu 18, ResultCard 16, Archive 15, Consent
-12); the store media retake (after the design and the panels land); Lens's first-open bake in the phone bench,
-then the cache cap as a call. **Raise with Jack**: three PR test jobs ran past ten minutes that evening (10:09,
-11:48, 12:11), most of it the simulator's boot and the tests' start. The phone checks owed to Jack are listed on
-the page as to-dos (eleven, Escapement's and Prism's playthroughs first). Later that night all five held PRs
-took master in and passed CI again. Two more options were built for the page, each on a local, unpushed branch:
-`r17-ds5b-streak` (the daily keeps its dots and the streak goes under its title; the taller row then pushes the
-menu's "next:" line under the chips as the menu opens, to fix when it is swapped in) and `r17-stamp-below` (on a
-short screen whose measured gap under the title is less than 62 pt the word centres between the title and the rim,
-shrinking only if it must). #157's bench now bakes three Lens panels cold and prints their times and a panel's
-bytes (`scripts/gpu-bench.sh`), so the cache call waits on a phone run of that branch. #179 has no timeout: if the
-store's first read never ended, a pack's card would say "checking purchases…" with no buy button. The nightly
-was dispatched on master for #179's StoreKit test.
-
-**Answered 2026-11-11** (the evening page's twelve; rows in `docs/decisions.md`). Merged on them: #174 and #157.
-The nightly dispatched above failed on #179's new `testOfflineTheFirstReadStillEnds`; a fix branch
-(`fix-offline-store-test`) also gives the first read a 5 s limit. The phone bench ran on the 13 Pro Max (thermal
-serious): Prism's measured over assumed cost has median 0.89 and max 1.11, the slowest specimen 6.48 of 8.33 ms;
-a Lens panel bakes cold in 70 to 227 ms at 1137 px, 5.2 MB cached, 129 MB for all 25, so the cache can be capped
-(a call still to put). **Next, decided**: on #173, PACKNAME's button and, in place of the type step-down, the
-tank shrinking once a level is solved when the card would not fit (TEXT-NEVER-SHRINKS), on every phone; on #180,
-STREAK's row and the spacing under the chips; #178 with `r17-stamp-below`; each shown to Jack before it merges.
-Lens: Kaleidoscope as the face (cover, clip, promo image), Telephoto redrawn, the finer lens core. A louder
-payoff on finishing a pack or the game is Jack's ask and wants options shown.
+Closed: moved word for word to `docs/history.md`.
 
 ### Open work (finish-and-pitch, 2026-11-02)
 

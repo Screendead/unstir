@@ -146,12 +146,12 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
 - Escapement's prover: `scripts/escapement.sh check <layout> <scramble> <clocks> [span] [quick]` (clocks as rods in tick
   order, each `+` or `-` for wound back, e.g. `hex <scramble> 1+,4-`) plays the pack's rule on `Array.commit`: every move
   (a turn, or `wait`) ticks each running clock one step, and a tick that pushes loses, as does the last clock stopping
-  with twists still on the picture (Jack, round 9), so no line takes more moves than the clocks owe. It prints the
-  optimum and its proof, which is absolute when par is what the clocks owe, the lines and keys at par over turns of up
+  with twists left (Jack, round 9), so no line takes more moves than the clocks owe. It prints the
+  optimum and its proof, absolute when par is what the clocks owe, the lines and keys at par over turns of up
   to `span` steps, and each move of the line with the alternatives that would lose. `build` deals problems backwards from a line,
-  and `book scripts/escapement/problems.tsv` proves the draft book (`docs/escapement-problems.md`, about eight
-  minutes). `ESC_RULE=lab` plays the lab's re-grab instead of the final tick, and `ESC_PUSHED=1` plays on past a pushed
-  tick. It compiles `build/escapement/prove` from Twist.swift and `SplitMix64`, as `solve.sh` does.
+  and `ESC_WAIT=0 ... book scripts/escapement/problems-nowait.tsv` proves the book
+  (`docs/escapement-problems.md`; it stalls on 11). `ESC_RULE=lab` plays the lab's re-grab instead of the final tick, `ESC_PUSHED=1` plays on past a pushed
+  tick, and `ESC_WAIT=0` plays without the wait, the app's rule. It builds `build/escapement/prove` as `solve.sh` does.
 - Vortex's levels: `scripts/vortex-levels/pools.sh <dir>` deals seeded scrambles on the swirl layouts with the frozen
   generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
   Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py
@@ -228,26 +228,28 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   optimum, what is free under the masks and read white, blocked knobs, right moves per step, the shader's assumed cost,
   and the shares of the glass showing ghosts and three-way splits, the readability limits); `check <layout> <masks>
   <scramble>` measures one and `search <layout> <depth> <palette> <from> <to>` deals seeded ones over a white bottom rod,
-  keeping those at par. `scripts/prism-levels/pick.py <pool dir>` picks the trays from the pools.
+  keeping those at par; `read` prints whether each move's count shows in its rod's core (a rod stirred twice shows
+  the sum). `scripts/prism-levels/pick.py <pool dir>` picks the trays from the pools.
   `scripts/prism-plates.sh render <plate> <out.png> [side] [layout]` draws a plate on the Mac, and `check` prints each
-  core's lit share and how much of it a 30° step moves, as the test measures.
+  core's lit share and how much of it a 30° step moves, as the test measures. `deal <plate> <layout> <masks>
+  <scramble> <out.png>` draws a deal.
 - Lens's tables: `scripts/lens-table.py [docs/lens-design.md] [--pitches 4] [--solve]` reads the level rows of
   a doc (`docs/lens-tables.md` holds the built ones) and checks each against the hard lens's rules with no app code (a lens moves only its core, so
   overlap decides commutation): depth after the parse, dealt lens steps and nets, and how far each twist dealt over a
   lens drags its rim, in dot pitches; `--solve` also runs `scripts/solve.sh` on each row and breaks one whose
   optimum or the app's parse is not its depth. It exits non-zero on a break.
 - Lens's panels: `scripts/lens-panels.sh render <panel> <out.png> [side] [layout lenses stack]` bakes a halftone panel
-  (`Halftone.panels`) on the Mac as the app does, stirred if given; `time [side]` times each bake, a pixel at a time
+  as the app does, stirred if given; `time [side]` times each bake, a pixel at a time
   and as vectors; `check <panel> <layout> [lenses]` runs the contrast test's measure on one layout.
-  `scripts/lens-art-sheet.py proof <dir> <level>...` bakes each drawn level's panel clean and through its lenses for
-  looking at, `check` measures each on its own level, and `sheet <out.png> <level>...` lays the Mac's bake over the
-  game's shots of it (`shots.sh lens-NN`); its table names each drawn level's panel (needs Pillow).
+  `scripts/lens-art-sheet.py proof <dir> <level>...` bakes each drawn level's panel clean and through its lenses,
+  `check` measures each on its own level, `read` ranks levels by the shapes a twist turns, and `sheet <out.png> <level>...` lays the Mac's bake over the
+  game's shots (`shots.sh lens-NN`); its table names each level's panel (needs Pillow).
 - First Stir's outline: `docs/first-stir-outline.md` is the pack's story, scene table and art spec, approved by Jack
   (2026-10-26) with his answers marked under its open points. `scripts/first-stir-compositions.py` draws plans of three of its scenes (each rod's disc and core,
   the part of a core another disc reaches, where each vignette sits) to `shots/first-stir-composition-*.png` (needs
   Pillow).
-- Strings: `scripts/loc-lint.sh` lists player text that escapes the String Catalog against its baseline
-  (`CatalogTests` runs it too; `--write` rewrites the baseline); `scripts/catalog.py plural` writes a plural key's
+- Strings: `scripts/loc-lint.sh` lists player text that escapes the String Catalog and fails on any
+  (`CatalogTests` runs it too); `scripts/catalog.py plural` writes a plural key's
   English forms into `Sources/Localizable.xcstrings`, which no command-line build does, and `fixed` marks keys
   do-not-translate (`docs/architecture.md`).
 - Workflows: `actionlint .github/workflows/*.yml` (Homebrew's `actionlint`) before pushing a change to one.

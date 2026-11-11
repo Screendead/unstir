@@ -1,16 +1,25 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import simd
 import XCTest
 @testable import Unstir
 
-/// Escapement's clocks, played on a real `Game` through the calls a finger makes: most on the second problem, the packs
-/// mock-up's, and the book's 30 against its table.
+/// Escapement's clocks, played on a real `Game` through the calls a finger makes: most on the packs mock-up's problem
+/// under the waiting move, and the book's 30 against its table.
 @MainActor final class EscapementTests: XCTestCase {
-    /// The second problem under an id of no pack level, so a win keeps no best.
+    private static let mockUp = "0:-1,1:+3,0:-2,2:-4"
+    /// The book's 16 while it had the waiting move: hex, clocks 1 and 4 owing 3 and 6, its third move a wait.
+    private static let metronome = "4:-2,2:+5,5:-3,4:-3,6:+4,1:-3,5:+2,4:-1,3:+2"
+    private static let twinDials = "0:-1,2:-2,1:+3,0:-1,2:-1,3:+2"
+
+    /// The mock-up's problem under the waiting move, under an id of no pack level, so a win keeps no best.
     private func level(_ scramble: String? = nil) -> Level {
-        var level = Level.escapement[1]
+        waiting(2, scramble ?? Self.mockUp)
+    }
+
+    private func waiting(_ n: Int, _ scramble: String) -> Level {
+        var level = Level.waiting(n, scramble)
         level.id = "test-escapement"
-        if let scramble { level.scramble = tri(scramble) }
         return level
     }
     private func game(_ scramble: String? = nil, bank: Int = 3) -> Game {
@@ -30,11 +39,25 @@ import XCTest
         XCTAssertEqual(level.par, 2)
         XCTAssertEqual(level.budget, 2)
         XCTAssertEqual(level.note, "Unstir in 2 ticks. A clock ticks after every move. Each let-go is a move.")
-        XCTAssertEqual(level.demo, tri("0:-3,1:+2"))
+        XCTAssertEqual(level.demo, tri("0:-2,1:+2,0:-1,2:-3"))
         XCTAssertTrue(Level.escapement.dropFirst().allSatisfy(\.demo.isEmpty))
     }
 
-    /// A wait no clock can take is refused, so the view can thud; one a clock takes is a move.
+    /// No problem has the waiting move: a clock ticks only after a knob's turn, so a wait is refused and no move.
+    func testNoProblemWaits() {
+        XCTAssertTrue(Level.escapement.allSatisfy { !$0.waits })
+        for n in [2, 7, 13, 25] {
+            var level = Level.escapement[n - 1]
+            level.id = "test-escapement"
+            let g = Game(level: level, tankTurned: true, bank: (3, nil))
+            XCTAssertFalse(g.wait(on: level.clocks[0].rod), level.title)
+            XCTAssertEqual(g.moves, 0, level.title)
+            XCTAssertEqual(g.stack, level.scramble, level.title)
+            XCTAssertEqual(g.budget, level.budget, level.title)
+        }
+    }
+
+    /// Under the waiting move, a wait no clock can take is refused, so the view can thud; one a clock takes is a move.
     func testAWaitNoClockCanTakeIsRefused() {
         let idle = game("1:+3,2:-4")
         XCTAssertFalse(idle.wait(on: 0))
@@ -42,11 +65,11 @@ import XCTest
         XCTAssertTrue(game().wait(on: 0))
     }
 
-    func testTheSecondProblemIsTheMockUps() {
+    func testTheSecondProblem() {
         let level = Level.escapement[1]
         XCTAssertEqual(level.id, "escapement-2")
         XCTAssertEqual(level.title, "Pendulum")
-        XCTAssertEqual(level.scramble, tri("0:-1,1:+3,0:-2,2:-4"))
+        XCTAssertEqual(level.scramble, tri("0:-1,2:+4,0:-1,2:+2,0:-1,1:+3"))
         XCTAssertEqual(level.clocks.map(\.rod), [0])
         XCTAssertEqual(level.kind(of: 0), .ratchet)
         XCTAssertEqual(level.motion, .none)
@@ -272,14 +295,16 @@ import XCTest
         var first = Level.escapement[0]
         first.id = "test-escapement"
         let g = Game(level: first, tankTurned: true, bank: (3, nil))
-        XCTAssertEqual(g.level.demo, tri("0:-3,1:+2"))
+        XCTAssertEqual(g.level.demo, tri("0:-2,1:+2,0:-1,2:-3"))
         g.demo(g.level.demo)
         XCTAssertEqual(g.budget, 3)
+        XCTAssertEqual(g.reachable, Twist(rod: 2, steps: 3))
+        g.commit(rod: 2, steps: 3)
+        XCTAssertEqual(g.stack, tri("0:-2,1:+2"))
         XCTAssertEqual(g.reachable, Twist(rod: 1, steps: -2))
         g.commit(rod: 1, steps: -2)
-        XCTAssertEqual(g.stack, tri("0:-2"))
-        g.wait(on: 0)
         XCTAssertEqual(g.stack, tri("0:-1"))
+        XCTAssertNil(g.reachable)
         XCTAssertFalse(g.finished)
         g.endDemo()
         XCTAssertEqual(g.stack, tri("0:-1,1:+3,0:-1,2:-4"))
@@ -308,19 +333,19 @@ import XCTest
 
     // MARK: - The book
 
-    /// The book's table (docs/escapement-problems.md, "The book at a glance"): layout, clocks in the order they tick
-    /// (+ forward, - wound back), par and the one first move that reaches it.
+    /// The book's table (scripts/escapement/problems-nowait.tsv): layout, clocks in the order they tick (+ forward,
+    /// - wound back), par and the one first move that reaches it.
     private static let book: [(layout: Layout, clocks: String, par: Int, key: String)] = [
-        (.tri, "0+", 2, "2:+4"), (.tri, "0+", 3, "2:+4"), (.quad, "0+", 2, "2:+4"), (.quad, "0+", 4, "2:+2"),
-        (.eye, "2+", 5, "3:+5"), (.hex, "1+", 6, "3:-2"),
-        (.quad, "0+", 3, "wait"), (.pent, "0+", 5, "wait"), (.eye, "2+", 6, "3:-3"), (.pent, "0+", 6, "2:-3"),
-        (.pent, "0+", 8, "3:+2"), (.hex, "1+", 7, "wait"),
-        (.quad, "0+,2+", 3, "3:-2"), (.quad, "0+,2+", 4, "3:+3"), (.pent, "0+,2+", 5, "4:+5"), (.hex, "1+,4+", 6, "3:-2"),
-        (.pent, "0+,1+", 5, "3:-5"), (.hex, "1+,2+", 6, "5:+4"),
-        (.tri, "0-", 3, "2:-4"), (.quad, "0+,2-", 5, "1:-5"), (.pent, "0-,2+", 6, "wait"), (.hex, "1+,4-", 7, "5:-3"),
-        (.pent, "0-", 6, "3:+4"), (.hex, "1-", 7, "6:+2"),
-        (.hex, "1+,3+,5+", 3, "0:-3"), (.pent, "0+,2+", 8, "1:-2"), (.pent, "0+", 9, "2:-2"), (.hex, "1+", 9, "2:-4"),
-        (.hex, "1+,3+,5+", 8, "4:-3"), (.hex, "1+,3+", 8, "0:-2"),
+        (.tri, "0+", 2, "2:+4"), (.tri, "0+", 3, "1:-3"), (.quad, "0+", 2, "2:+4"),
+        (.quad, "0+", 4, "2:+2"), (.eye, "2+", 5, "3:+5"), (.hex, "1+", 6, "3:-2"),
+        (.quad, "0+", 3, "3:+3"), (.pent, "0+", 5, "1:+4"), (.eye, "2+", 6, "0:-3"),
+        (.pent, "0+", 6, "4:-3"), (.pent, "0+", 8, "4:-5"), (.hex, "1+", 7, "0:-2"),
+        (.quad, "0+,2+", 3, "1:+5"), (.quad, "0+,2+", 4, "3:-5"), (.pent, "0+,2+", 5, "1:-5"),
+        (.hex, "1+,4+", 6, "0:+3"), (.pent, "0+,1+", 5, "3:-5"), (.hex, "1+,2+", 6, "5:+4"),
+        (.tri, "0-", 3, "1:-3"), (.quad, "0+,2-", 5, "3:-3"), (.pent, "0-,2+", 6, "1:+3"),
+        (.hex, "1+,4-", 7, "0:-5"), (.pent, "0-", 6, "3:+4"), (.hex, "1-", 7, "6:+2"),
+        (.hex, "1+,3+,5+", 3, "6:+5"), (.pent, "0+,2+", 8, "4:-5"), (.pent, "0+", 9, "4:-3"),
+        (.hex, "1+", 9, "5:-5"), (.hex, "1+,3+,5+", 8, "0:-5"), (.hex, "1+,3+", 8, "0:-2"),
     ]
 
     private func clocks(_ level: Level) -> String {
@@ -342,12 +367,12 @@ import XCTest
         XCTAssertEqual(levels.map(\.id), (1...30).map { "escapement-\($0)" })
         XCTAssertEqual(levels.map(\.label), (1...30).map { String(format: "%02d", $0) })
         XCTAssertEqual(levels.compactMap(\.chapter), (0..<30).map { Level.escapementChapters[$0 / 6] })
-        XCTAssertEqual(Level.escapementChapters, ["The Clock", "The Waiting Move", "Two Clocks", "Wound Back", "Grand Complication"])
-        let rules = [1: " A clock ticks after every move. Each let-go is a move.", 7: " Sometimes the first move is to wait.",
+        XCTAssertEqual(Level.escapementChapters, ["The Clock", "Tempo", "Two Clocks", "Wound Back", "Grand Complication"])
+        let rules = [1: " A clock ticks after every move. Each let-go is a move.", 7: " No move is spare.",
                      13: " Two clocks tick in turn.", 19: " A wound-back clock ticks the other way.", 25: " Three clocks."]
         XCTAssertEqual(levels.map(\.title), [
             "Mainspring", "Pendulum", "Clock face", "Cogwheel", "Winding key", "Clockwork",
-            "Pause", "Snooze", "Hourglass", "Egg timer", "Stopwatch", "Standstill",
+            "Counterweight", "Snooze", "Hourglass", "Egg timer", "Stopwatch", "Standstill",
             "Twin dials", "Hour hand", "Minute hand", "Metronome", "Chime", "Cuckoo clock",
             "Rewind", "Fall back", "Mirror dial", "Anticlockwise", "Overwound", "Reverse",
             "Moon phase", "Calendar", "Time zones", "Leap year", "Eleventh hour", "Midnight",
@@ -366,8 +391,8 @@ import XCTest
     /// The app's table is the book's, scramble for scramble, where the book's table can be read.
     func testTheLevelsMatchTheBooksTable() throws {
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("scripts/escapement/problems.tsv")
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { throw XCTSkip("no problems.tsv at \(url.path)") }
+            .appendingPathComponent("scripts/escapement/problems-nowait.tsv")
+        guard let text = try? String(contentsOf: url, encoding: .utf8) else { throw XCTSkip("no problems-nowait.tsv at \(url.path)") }
         let rows = text.split(separator: "\n").map { $0.split(separator: "\t").map(String.init) }
         XCTAssertEqual(rows.count, 30)
         for (level, row) in zip(Level.escapement, rows) {
@@ -379,8 +404,7 @@ import XCTest
     }
 
     /// Every problem ships proved: its par is what its clocks owe, so no line is shorter, and the prover finds a line at
-    /// par in whole heals and waits (every turn of ±1 to ±11 too, under UNSTIR_SLOW_TESTS), which wins on a real `Game`
-    /// at par.
+    /// par in whole heals (every turn of ±1 to ±11 too, under UNSTIR_SLOW_TESTS), which wins on a real `Game` at par.
     func testEveryProblemsParIsTheProversOptimum() throws {
         let slow = ProcessInfo.processInfo.environment["UNSTIR_SLOW_TESTS"] == "1"
         for level in Level.escapement {
@@ -399,7 +423,7 @@ import XCTest
             for move in play.moves {
                 switch move {
                 case let .stir(knob, _, steps): g.commit(rod: knob, steps: steps)
-                case .wait: g.wait(on: clocks[0].rod)
+                case .wait: XCTFail("no problem waits: \(level.id)")
                 case .turn: XCTFail("a clock's tank never turns: \(level.id)")
                 }
                 XCTAssertFalse(g.lost, level.id)
@@ -427,7 +451,7 @@ import XCTest
                 let running = clocks.filter { g.running($0.rod) }.map(\.rod), was = g.budget
                 switch move {
                 case let .stir(knob, _, steps): g.commit(rod: knob, steps: steps)
-                case .wait: g.wait(on: clocks[0].rod)
+                case .wait: XCTFail("no problem waits: \(level.id)")
                 case .turn: XCTFail("a clock's tank never turns: \(level.id)")
                 }
                 let at = "\(level.id) move \(i + 1)"
@@ -446,16 +470,12 @@ import XCTest
     /// A move with k clocks running takes k: three dials (25) spend three a move, and 16's two clocks two, then one
     /// once clock 1 has stopped.
     func testAMoveWithKRunningClocksTakesK() {
-        var three = Level.escapement[24]
-        three.id = "test-escapement"
-        let g = Game(level: three, tankTurned: true, bank: (0, nil))
+        let g = Game(level: waiting(25, "1:-2,3:-1,5:-3,0:+3"), tankTurned: true, bank: (0, nil))
         let start = g.budget
         g.commit(rod: 0, steps: -3)
         XCTAssertEqual(g.tick.map(\.rod), [1, 3, 5])
         XCTAssertEqual(start - g.budget, 3)
-        var two = Level.escapement[15]
-        two.id = "test-escapement"
-        let h = Game(level: two, tankTurned: true, bank: (0, nil))
+        let h = Game(level: waiting(16, Self.metronome), tankTurned: true, bank: (0, nil))
         XCTAssertEqual(h.budget, 9)
         var spent: [Int] = []
         for move in [(3, -2), (5, -2), nil, (6, -4), (5, 3), (2, -5)] as [(Int, Int)?] {
@@ -473,9 +493,7 @@ import XCTest
             XCTAssertEqual(level.clocks.map { Game(level: level, tankTurned: true, bank: (0, nil)).owed($0.rod) }.max(), level.par,
                            level.id)
         }
-        var level = Level.escapement[15]
-        level.id = "test-escapement"
-        let g = Game(level: level, tankTurned: true, bank: (0, nil))
+        let g = Game(level: waiting(16, Self.metronome), tankTurned: true, bank: (0, nil))
         XCTAssertEqual([g.owed(1), g.owed(4)], [3, 6])
         let line: [(Int, Int)?] = [(3, -2), (5, -2), nil, (6, -4), (5, 3), (2, -5)]
         let owed = [[2, 5], [1, 4], [0, 3], [0, 2], [0, 1], [0, 0]]
@@ -487,7 +505,7 @@ import XCTest
         XCTAssertTrue(g.solved)
     }
 
-    /// Every problem has one key: among whole heals and waits, exactly one first move reaches par, and it is the book's.
+    /// Every problem has one key: among whole heals, exactly one first move reaches par, and it is the book's.
     func testEveryProblemHasOneKey() {
         for (level, row) in zip(Level.escapement, Self.book) {
             let keys = Solver(level.layout).escapementKeys(level.scramble, clocks: level.clocks, par: level.par, steps: [])
@@ -519,12 +537,10 @@ import XCTest
         XCTAssertEqual(order(.eye, [0, 1, 2, 3]), [2, 1, 3, 0])
     }
 
-    /// Twin dials (13): clock 0 stops after the second move with twists still on the picture, and that loses nothing while
-    /// clock 2 runs; a tap on the stopped clock's ratchet still waits, and its tick finishes.
+    /// On quad's two clocks under the waiting move: clock 0 stops after the second move with twists still on the picture,
+    /// and that loses nothing while clock 2 runs; a tap on the stopped clock's ratchet still waits, and its tick finishes.
     func testOneClockStoppingWhileAnotherRunsLosesNothing() {
-        var level = Level.escapement[12]
-        level.id = "test-escapement"
-        let g = Game(level: level, tankTurned: true, bank: (0, nil))
+        let g = Game(level: waiting(13, Self.twinDials), tankTurned: true, bank: (0, nil))
         g.commit(rod: 3, steps: -2)
         XCTAssertEqual(g.tick.map(\.rod), [0, 2])
         g.commit(rod: 1, steps: -3)
@@ -553,9 +569,7 @@ import XCTest
 
     /// A tick that pushes no longer ends the turn (Jack's call EL1, round 11): every clock after it ticks and spends one.
     func testAPushedTickLeavesTheTurnTicking() {
-        var level = Level.escapement[12]
-        level.id = "test-escapement"
-        let g = Game(level: level, tankTurned: true, bank: (1, nil))
+        let g = Game(level: waiting(13, Self.twinDials), tankTurned: true, bank: (1, nil))
         XCTAssertEqual(g.budget, 5)
         // Knob 3's seam lies over both clocks.
         g.wait(on: 2)
@@ -566,10 +580,9 @@ import XCTest
         XCTAssertEqual(g.overdue(0), 1)
     }
 
-    /// Rewind (19): a wound-back clock ticks -1 over seams stirred clockwise, and a pushed tick of its own is a -1.
+    /// A wound-back clock ticks -1 over seams stirred clockwise, and a pushed tick of its own is a -1.
     func testAWoundBackClockTicksBack() {
-        var level = Level.escapement[18]
-        level.id = "test-escapement"
+        let level = waiting(19, "0:+1,1:-3,0:+2,2:+4")
         XCTAssertEqual(level.clocks.map(\.dir), [-1])
         let g = Game(level: level, tankTurned: true, bank: (1, nil))
         g.commit(rod: 2, steps: -4)
@@ -589,8 +602,7 @@ import XCTest
 
     /// Jack's call D1 (round 9): a move whose tick a full stack would refuse, as the 37th entry, is refused, the wait too.
     func testAMoveAFullStackWouldRefuseTheTickOfIsRefused() {
-        var level = Level.escapement[1]
-        level.id = "test-escapement"
+        var level = level()
         level.scramble = [Twist(rod: 0, steps: -1)] + (0..<35).map { Twist(rod: 1 + $0 % 2, steps: 1) }
         XCTAssertEqual(level.scramble.count, Tank.maxStack)
         let g = Game(level: level, tankTurned: true, bank: (1, nil))
@@ -608,10 +620,12 @@ import XCTest
     func testTheProverDropsLostLines() {
         var seen = 0
         let solver = Solver(.tri), clock: Solver.Clocks = [(0, 1)]
-        XCTAssertNil(solver.escapement(tri("0:-1,1:+3,0:-2,2:-4"), clocks: clock, limit: 2, seen: &seen))
-        XCTAssertEqual(solver.escapement(tri("0:-1,1:+3,0:-2,2:-4"), clocks: clock, limit: 3, seen: &seen)?.moves.count, 3)
-        XCTAssertEqual(solver.escapement(tri("0:-1,1:+3"), clocks: clock, limit: 4, seen: &seen)?.moves.count, 1)
-        XCTAssertNil(solver.escapement(tri("1:+3,0:-1"), clocks: clock, limit: 4, seen: &seen))
+        XCTAssertNil(solver.escapement(tri(Self.mockUp), clocks: clock, limit: 2, waits: true, seen: &seen))
+        XCTAssertEqual(solver.escapement(tri(Self.mockUp), clocks: clock, limit: 3, waits: true, seen: &seen)?.moves.count, 3)
+        // Without the waiting move nothing passes the tick the clock's second step owes.
+        XCTAssertNil(solver.escapement(tri(Self.mockUp), clocks: clock, limit: 3, seen: &seen))
+        XCTAssertEqual(solver.escapement(tri("0:-1,1:+3"), clocks: clock, limit: 4, waits: true, seen: &seen)?.moves.count, 1)
+        XCTAssertNil(solver.escapement(tri("1:+3,0:-1"), clocks: clock, limit: 4, waits: true, seen: &seen))
     }
 
     /// Why a pushed tick dooms a tank to run out of ticks: once a tick pushes, the clock holds a positive entry that no
@@ -698,7 +712,7 @@ import XCTest
             func make(_ move: Move, on g: Game) {
                 switch move {
                 case let .stir(knob, _, steps): g.commit(rod: knob, steps: steps)
-                case .wait: g.wait(on: clocks[0])
+                case .wait: XCTFail("no problem waits: \(level.id)")
                 case .turn: XCTFail("a clock's tank never turns: \(level.id)")
                 }
             }
@@ -759,9 +773,7 @@ import XCTest
     /// A clock whose count is spent stops though its rod still holds a pushed tick's entry, and ticks no more, while the
     /// other clock runs on; once neither can tick with twists left, the tank is out of ticks.
     func testAClockAtZeroNoLongerTicks() {
-        var level = Level.escapement[12]
-        level.id = "test-escapement"
-        level.scramble = .parse("0:-1,1:+2,2:-3", in: level.layout)
+        let level = waiting(13, "0:-1,1:+2,2:-3")
         XCTAssertEqual(level.clocks.map(\.rod), [0, 2])
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         XCTAssertEqual(g.budget, 4)
@@ -807,10 +819,9 @@ import XCTest
         XCTAssertFalse(sequence(first: Picture.grid, next: \.next).prefix(Picture.allCases.count).contains(.engineTurned))
     }
 
-    /// The plate is ink on bone, and reads up in every core: a 30-degree step of any core of every layout moves most of
-    /// its ink, so a turned core never looks as plausible as the clean one.
-    func testThePlateIsInkOnBoneAndShowsAStepInEveryCore() async throws {
-        let rendered = await Picture.engineTurned.render(side: 512, scale: 1)
+    /// A plate's bake, a problem's own or with 0 the shared one, as RGBX rows from the top.
+    private func baked(_ problem: Int, side: CGFloat = 512, scale: CGFloat = 1) async throws -> (px: [UInt8], w: Int) {
+        let rendered = await Picture.engineTurned.render(side: side, scale: scale, panel: problem)
         let image = try XCTUnwrap(rendered?.cgImage)
         let w = image.width
         var px = [UInt8](repeating: 0, count: 4 * w * w)
@@ -818,39 +829,114 @@ import XCTest
                                           space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                           bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
         ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: w))
-        let r = Double(w) / 2
+        return (px, w)
+    }
+
+    /// A plate reads up in every core of `layout`: over a tenth of each is inked, and a 30-degree step moves most of
+    /// that ink onto paper, so a turned core never looks as plausible as the clean one. Ink is read off green, which
+    /// the second ink darkens too.
+    private func assertAStepShows(_ plate: (px: [UInt8], w: Int), in layout: Layout, _ name: String) {
+        let w = plate.w, r = Double(w) / 2
         func inked(_ x: Double, _ y: Double) -> Bool {
             let i = Int(r + x * r), j = Int(r + y * r)
-            return i >= 0 && j >= 0 && i < w && j < w && px[4 * (j * w + i)] < 0x87
+            return i >= 0 && j >= 0 && i < w && j < w && plate.px[4 * (j * w + i) + 1] < 0x87
         }
+        for (k, rod) in layout.rods.enumerated() {
+            let core = rod.z * Tank.plateau, step = 2 / Double(w)
+            var inside = 0, on = 0, moved = 0
+            for y in stride(from: -core, through: core, by: step) {
+                for x in stride(from: -core, through: core, by: step) where x * x + y * y <= core * core {
+                    inside += 1
+                    guard inked(rod.x + x, rod.y + y) else { continue }
+                    on += 1
+                    let c = cos(Tank.step), s = sin(Tank.step)
+                    if !inked(rod.x + c * x - s * y, rod.y + s * x + c * y) { moved += 1 }
+                }
+            }
+            let at = "\(name) \(layout.rawValue) rod \(k)"
+            XCTAssertGreaterThan(Double(on) / Double(inside), 0.1, at)
+            XCTAssertGreaterThan(Double(moved) / Double(max(on, 1)), 0.5, at)
+        }
+    }
+
+    /// The shared plate is ink on bone, and reads up in every core of every layout.
+    func testThePlateIsInkOnBoneAndShowsAStepInEveryCore() async throws {
+        let plate = try await baked(0)
         // Every pixel is bone, ink or a mix of the two, and some are ink: a grey or vermilion stroke fails.
         XCTAssertFalse(Self.boneToInk(0xD8, 0x40, 0x2A))
         XCTAssertFalse(Self.boneToInk(0x80, 0x80, 0x80))
         var darkest = 0xFF
-        for i in stride(from: 0, to: px.count, by: 4 * 97) {
-            let (red, green, blue) = (Int(px[i]), Int(px[i + 1]), Int(px[i + 2]))
+        for i in stride(from: 0, to: plate.px.count, by: 4 * 97) {
+            let (red, green, blue) = (Int(plate.px[i]), Int(plate.px[i + 1]), Int(plate.px[i + 2]))
             XCTAssert(Self.boneToInk(red, green, blue), "\(red) \(green) \(blue)")
             darkest = min(darkest, red)
         }
         XCTAssertLessThan(darkest, 0x30)
-        for layout in Layout.allCases {
-            for (k, rod) in layout.rods.enumerated() {
-                let core = rod.z * Tank.plateau, step = 2 / Double(w)
-                var inside = 0, on = 0, moved = 0
-                for y in stride(from: -core, through: core, by: step) {
-                    for x in stride(from: -core, through: core, by: step) where x * x + y * y <= core * core {
-                        inside += 1
-                        guard inked(rod.x + x, rod.y + y) else { continue }
-                        on += 1
-                        let c = cos(Tank.step), s = sin(Tank.step)
-                        if !inked(rod.x + c * x - s * y, rod.y + s * x + c * y) { moved += 1 }
-                    }
-                }
-                let at = "\(layout.rawValue) rod \(k)"
-                XCTAssertGreaterThan(Double(on) / Double(inside), 0.1, at)
-                XCTAssertGreaterThan(Double(moved) / Double(max(on, 1)), 0.5, at)
-            }
+        for layout in Layout.allCases { assertAStepShows(plate, in: layout, "shared") }
+    }
+
+    /// Jack's call (2026-11-11): each problem plays on a plate of its own, drawn as its name. The play screen alone
+    /// asks for it, by the problem's number; a problem with none drawn yet keeps the shared plate, as every miniature
+    /// does.
+    func testEachProblemAsksForItsOwnPlate() {
+        for (i, level) in Level.escapement.enumerated() {
+            XCTAssertEqual(level.plate, i + 1, level.id)
+            XCTAssertEqual(level.panel, 0, level.id)
         }
+        XCTAssertEqual((-1...99).filter { EscapementArt.plate($0) != nil }, Array(1...Level.escapement.count))
+        for level in Pack.lens.levels + Tier.allCases.flatMap(\.levels) { XCTAssertEqual(level.plate, level.panel, level.id) }
+    }
+
+    /// Each plate drawn is ink on bone but for one small part in the second ink, whose marks a circle 0.4 of the tank
+    /// across its middle holds and which colours under 3% of the glass, so the clocks' vermilion still reads; and it
+    /// reads up in every core of its own problem's layout. Baked as an SE draws its glass at default type, 328 pt at
+    /// 2x (`testEveryIPhoneKeepsTodaysColumn`'s sizes), where the 2.2 px hairline is heavier against the picture than
+    /// on any other phone and close hatching soonest runs solid; the shared plate's 512 px at 1x is heavier than any.
+    func testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk() async throws {
+        XCTAssertLessThan(Self.offPlate(0xD8, 0x40, 0x2A).off, 1)
+        XCTAssertGreaterThan(Self.offPlate(0x80, 0x80, 0x80).off, 6)
+        XCTAssertGreaterThan(Self.offPlate(0x23, 0x46, 0x6B).off, 6)
+        for level in Level.escapement {
+            guard let drawn = EscapementArt.plate(level.plate) else { continue }
+            XCTAssertEqual(drawn.second, EscapementArt.vermilion, level.id)
+            let second = drawn.marks.filter { $0.ink == .second }.flatMap(\.points)
+            if let first = second.first {
+                let low = second.reduce(first) { simd_min($0, $1) }, high = second.reduce(first) { simd_max($0, $1) }
+                XCTAssertLessThan(second.map { simd_distance($0, (low + high) / 2) }.max() ?? 0, 0.4, level.id)
+            }
+            let plate = try await baked(level.plate, side: 328, scale: 2), w = plate.w, r = Double(w) / 2
+            var darkest = 0xFF, glass = 0, coloured = 0, worst = 0.0
+            for j in 0..<w {
+                for i in 0..<w where (Double(i) - r) * (Double(i) - r) + (Double(j) - r) * (Double(j) - r) < r * r {
+                    let k = 4 * (j * w + i), (red, green, blue) = (Int(plate.px[k]), Int(plate.px[k + 1]), Int(plate.px[k + 2]))
+                    let mix = Self.offPlate(red, green, blue)
+                    worst = max(worst, mix.off)
+                    darkest = min(darkest, red)
+                    glass += 1
+                    if mix.second > 0.5 { coloured += 1 }
+                }
+            }
+            XCTAssertLessThan(darkest, 0x30, level.id)
+            // An edge where ink crosses the second ink lies up to 8 off their mixes; a neutral grey lies 12.7 off.
+            XCTAssertLessThanOrEqual(worst, 9, level.id)
+            XCTAssertLessThan(Double(coloured) / Double(glass), 0.03, level.id)
+            assertAStepShows(plate, in: level.layout, level.id)
+        }
+    }
+
+    /// How far a pixel lies, in levels of 255, from the nearest mix of bone, ink and the second ink, and the second
+    /// ink's share of that mix.
+    static func offPlate(_ red: Int, _ green: Int, _ blue: Int) -> (off: Double, second: Double) {
+        let bone = SIMD3(243.0, 234, 216), ink = SIMD3(26.0, 26, 26) - bone
+        let second = SIMD3(Double(EscapementArt.vermilion >> 16 & 0xFF), Double(EscapementArt.vermilion >> 8 & 0xFF), Double(EscapementArt.vermilion & 0xFF)) - bone
+        let p = SIMD3(Double(red), Double(green), Double(blue)) - bone
+        // The least-squares shares of ink and second ink, then held to the triangle.
+        let (aa, ab, bb) = (simd_dot(ink, ink), simd_dot(ink, second), simd_dot(second, second))
+        let det = aa * bb - ab * ab
+        var s = (simd_dot(p, ink) * bb - simd_dot(p, second) * ab) / det, t = (simd_dot(p, second) * aa - simd_dot(p, ink) * ab) / det
+        (s, t) = (max(s, 0), max(t, 0))
+        if s + t > 1 { (s, t) = (s / (s + t), t / (s + t)) }
+        return (simd_length(p - s * ink - t * second), t)
     }
 
     /// How far a pixel lies from the line between bone and ink, in levels of 255: its mix is read off red, the widest
@@ -864,4 +950,20 @@ import XCTest
 
     /// The bake's antialiasing lies within 3.1 of the line at 512 px; a neutral grey lies 12.7 off it.
     static func boneToInk(_ red: Int, _ green: Int, _ blue: Int) -> Bool { offBoneToInk(red, green, blue) <= 6 }
+}
+
+extension Level {
+    /// Escapement's problem `n`, its layout and clocks, over `scramble` and under the waiting move (`Level.waits`), which
+    /// no problem of the book has.
+    static func waiting(_ n: Int, _ scramble: String) -> Level {
+        var level = Level.escapement[n - 1]
+        level.waits = true
+        level.scramble = .parse(scramble, in: level.layout)
+        return level
+    }
+
+    /// The packs mock-up's problem, the book's second while it had the waiting move: 2:+4, a wait, 1:-3.
+    static var mockUp: Level { waiting(2, "0:-1,1:+3,0:-2,2:-4") }
+    /// The book's 13 while it had the waiting move, quad's clocks 0 and 2: 3:-2, 1:-3, a wait.
+    static var twinDials: Level { waiting(13, "0:-1,2:-2,1:+3,0:-1,2:-1,3:+2") }
 }

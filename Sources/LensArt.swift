@@ -6,7 +6,8 @@ import simd
 /// Lens's panels, a level each, drawn the test panel's way (`Halftone.Panel`: tones in three dot screens under white
 /// strokes). Each draws its level's name, a thing to look through, with what is seen through it in the core of one of
 /// the level's lenses, in hairline white finer than the screen, since a tone region under one pitch prints no dot, and
-/// off the core's centre, which the lens's knob covers, and bold enough to read at x8, where the bake is soft. Every
+/// off the core's centre, which the lens's knob covers, and bold enough to read at x8 from the bake alone, which is
+/// soft there: the level's glass draws it finer (`Halftone.Detail`), a cover or a clip does not. Every
 /// rod's core holds tone and linework that no turn of 30 degrees leaves as it was, so each step shows
 /// (`testEveryLensPanelShowsEachStepOnItsLevel`). Hex's hub is the trap: the screens are square and centred on it, so a
 /// flat tone there looks the same after a quarter turn, and a panel whose hub turns keeps something off-centre on it.
@@ -144,11 +145,16 @@ enum LensArt {
         var polygon: [P] = []
         var centre = P(0, 0)
         var radii: P?
+        /// The share of an ellipse's radii left empty at its middle, which makes it a ring.
+        var hole = 0.0
         var lo: P, hi: P
 
         func holds(_ p: P) -> Bool {
             guard p.x >= lo.x, p.y >= lo.y, p.x <= hi.x, p.y <= hi.y else { return false }
-            if let radii { return simd_length_squared((p - centre) / radii) < 1 }
+            if let radii {
+                let d = simd_length_squared((p - centre) / radii)
+                return d < 1 && d >= hole * hole
+            }
             return Halftone.inside(p, polygon)
         }
     }
@@ -161,6 +167,17 @@ enum LensArt {
 
     static func oval(_ c: P, _ rx: Double, _ ry: Double, _ tone: Tone) -> Fill {
         Fill(tone: tone, centre: c, radii: P(rx, ry), lo: c - P(rx, ry), hi: c + P(rx, ry))
+    }
+
+    /// The part of a ring about c between a0 and a1 degrees, as a polygon.
+    static func sector(_ c: P, _ inner: Double, _ outer: Double, _ a0: Double, _ a1: Double) -> [P] {
+        arc(c, outer, a0, a1, 12) + arc(c, inner, a1, a0, 12)
+    }
+
+    static func ring(_ c: P, _ inner: Double, _ outer: Double, _ tone: Tone) -> Fill {
+        var f = disc(c, outer, tone)
+        f.hole = inner / outer
+        return f
     }
 
     /// A panel of fills, the first that holds a point giving its tone, over `ground`.

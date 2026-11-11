@@ -14,8 +14,13 @@ for clue in $(scripts/lens-art-sheet.py clues); do
   hold=5 shot "lens-${clue%%=*}-clue" "Lens ${clue%%=*}'s panel drawn clean, only its lenses magnified (${clue#*=}): what is seen through each." \
     PACK=lens LEVEL=${clue%%=*} OWNED=lens BESTS=lens:0 STACK=${clue#*=} CLEAN=1
 done
+# Each level one move from solved: only the entry dealt first left on its panel, the last read a solve makes.
+for last in $(scripts/lens-art-sheet.py lasts); do
+  hold=5 shot "lens-${last%%=*}-last" "Lens ${last%%=*} one move from solved: only ${last#*=} left on its panel." \
+    PACK=lens LEVEL=${last%%=*} OWNED=lens BESTS=lens:0 STACK=${last#*=}
+done
 hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 BESTS=lens:0 STACK=1:+2,0:+2
-hold=5 shot lens-result "Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens." \
+hold=5 shot lens-result "Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ levels." \
   PACK=lens LEVEL=2 SCREEN=result CLOCK=0
 hold=5 shot lens-under "Lens: 0:+2,1:+2, the twist newest: the lens's rim dragged into rod 1's swirl." PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:+2,1:+2
 hold=5 shot lens-live "Lens 1 held mid-drag, the lens dragged up 1.4 steps: its count reads the zoom's steps (+1), a dash a step up a short track beside the knob, away from the finger." \

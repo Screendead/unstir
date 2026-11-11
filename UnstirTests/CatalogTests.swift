@@ -4,8 +4,7 @@ import XCTest
 @testable import Unstir
 
 final class CatalogTests: XCTestCase {
-    /// `scripts/loc-lint.sh` in the suite: every line of Sources/ that scripts/loc-lint/patterns.txt flags is in
-    /// scripts/loc-lint/baseline.txt, and every baseline line is still flagged, so a fix takes its line out.
+    /// `scripts/loc-lint.sh` in the suite: no line of Sources/ is flagged by scripts/loc-lint/patterns.txt.
     func testNoPlayerStringEscapesTheCatalog() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         let lint = root.appending(path: "scripts/loc-lint")
@@ -35,15 +34,7 @@ final class CatalogTests: XCTestCase {
             }
         }
 
-        var left: [String: Int] = [:]
-        for line in try String(contentsOf: lint.appending(path: "baseline.txt"), encoding: .utf8).split(separator: "\n")
-        where !line.hasPrefix("#") {
-            left[String(line), default: 0] += 1
-        }
-        for line in found {
-            if let n = left[line], n > 0 { left[line] = n - 1 } else { XCTFail("escape: \(line)") }
-        }
-        for (line, n) in left where n > 0 { XCTFail("fixed, take it out of the baseline: \(line)") }
+        for line in found { XCTFail("escape: \(line)") }
         XCTAssertGreaterThan(files.count, 40)
     }
 
@@ -53,6 +44,28 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(Spoken.row(endless, result: nil, tanks: 1, detail: nil, enabled: true, needs: nil).value, "best 1 tank")
         XCTAssertEqual(Spoken.row(endless, result: nil, tanks: 1, detail: nil, enabled: true, needs: nil, started: true).value,
                        "run in progress, best 1 tank")
+        XCTAssertEqual(String(localized: "\(1) \(Tier.plughole.word) levels short of par", comment: "Short of par"),
+                       "1 plughole level short of par")
+        XCTAssertEqual(String(localized: "\(2) \(Tier.plughole.word) levels short of par", comment: "Short of par"),
+                       "2 plughole levels short of par")
+    }
+
+    /// The chrome's words read as the hand-built English they replaced.
+    func testChromeReadsItsEnglish() {
+        for tier in Tier.allCases { XCTAssertEqual(tier.word, tier.rawValue) }
+        XCTAssertEqual(ConsentWords.sends, "If you say yes, the game tells us how you play: which puzzles you finish, how many "
+            + "moves and undos they take, which days you play, which packs you buy, and roughly which country you're in. "
+            + "It never sends your name, your Apple ID, or anything that tells us who you are. You can change your mind "
+            + "any time in settings.")
+        XCTAssertEqual(String(localized: ConsentWords.letters), "colour letters")
+        XCTAssertEqual(ConsentWords.letters.key, "colour letters")
+        XCTAssertEqual(Level.endless(Run(seed: 7)).back, "\u{2039} levels")
+        XCTAssertEqual(Offer.pack(.lens).holds, "25 panels in four issues")
+        XCTAssertEqual(Offer.countWord(3), "three")
+        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: true).text, "\u{2715} close")
+        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: false).text, "\u{2039} menu")
+        XCTAssertEqual(Purchase.revoked.tag(unshared: true)?.word, "no longer shared with you")
+        XCTAssertEqual(LevelView.layoutLabel(.quad, named: true), "rods: 4 \u{00B7} quad \u{203A}")
     }
 
     /// A table's id-keyed string reads its English default, which the catalog may not hold.

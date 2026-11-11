@@ -428,6 +428,40 @@ Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
 | LENSSOFT = B | 2026-11-11 | A lens's core is drawn finer so x8 is crisp. Jack: "It's a paid pack. Laziness for expediency is unacceptable. I respect my future players." | HANDOFF |
 | SND1 taken back | 2026-11-11 | Jack: "i kinda miss the sound that went with the rod-turning haptics...can you quickly put that back in?" A rod's drag ticks at each step again, under its haptic; SND1 = B (2026-11-02) no longer holds. The tank's clunk stays silent (snd1-clunk = B). | architecture |
 | SHAREDOTS | 2026-11-11 | The daily's share line shows the three result dots after its name, in place of a square per move (Jack: "the coloured squares? idk what they're for"; then "dots"). The link stays on its own last line once it exists (M2 = A). | Share.swift |
+| GLASSSHRINKS = A | 2026-11-11 | The stack merges as built: a card that does not fit shrinks the tank from its top (never below 55%, then it scrolls), "‹ levels" on a paid pack's way out, the rebuilt menu and card, "unstirred." growing and sitting under the title on short screens (#173, #180, #178). | HANDOFF |
+| NEXTLINE = A | 2026-11-11 | The menu's "next:" line under the tier chips goes; the list's marker bar shows the next level. | HANDOFF |
+| LENSFACE = A | 2026-11-11 | Lens's cover, clip, promo image and the bundle's wedge show Kaleidoscope seven moves into its line (#185). | HANDOFF |
+| TELEPHOTO = A | 2026-11-11 | The redrawn Telephoto stands (#185). | HANDOFF |
+| CRISP = A | 2026-11-11 | The finer lens core merges and goes on the phone to check (#187). Jack: "How exciting. This looks lovely." | HANDOFF |
+| ESCPICTURES = A | 2026-11-11 | Escapement gets a plate per problem, drawn as its name. | HANDOFF |
+| MUSIC-THROUGH | 2026-11-11 | Jack, on the packs' layers: "i don't want the packs' foreground to fade when the level is solved then come back in the same spot on the next level; i want it to keep playing all the way through". | HANDOFF |
+
+## Round 18
+
+Calls 2026-11-11 (the page of built options after Jack's playthrough of the paid packs).
+
+| Call | Date | Decided | Where |
+|---|---|---|---|
+| ESCWAIT = untouchable clocks | 2026-11-11 | Escapement's clocks can never be touched; the twenty levels that needed a wait are dealt again (#194). Chosen against Claude's recommendation, a labelled wait button (#191, closed). | HANDOFF |
+| UNDOASIDE = keep | 2026-11-11 | While reset is armed and the row cannot hold both labels on a line each, undo steps aside (#200). | HANDOFF |
+| ESCPLATES = take all | 2026-11-11 | Escapement takes all thirty per-level pictures (#196); the Pause picture is to be redrawn after. The redraw is on hold: with the wait gone, level 7's name is back with Jack. | HANDOFF |
+| LENSQUAD = move | 2026-11-11 | Lens's Spectacles, Bifocals and Night vision are redrawn and moved to the three-rod glass (#195, which carried #190). | HANDOFF |
+| PRISMAID = leave | 2026-11-11 | No aid for reading a count from the knobs. Jack: "The issue with reading was not reading the knobs. It was with reading the picture itself while turning the rod. I think you investigated the wrong problem here." | HANDOFF |
+| ESCNOTES = keep | 2026-11-11 | Escapement's per-move notes start again each level, as built. | HANDOFF |
+| VOICENEXT = keep | 2026-11-11 | VoiceOver's "next, not played" stays, as built. | HANDOFF |
+
+## Round 19
+
+Calls 2026-11-11, night (the second follow-up page, six calls, all answered).
+
+| Call | Date | Decided | Where |
+|---|---|---|---|
+| Chapter 2's name | 2026-11-11 | Escapement's second chapter is "Tempo", and level 7's line stays "Unstir in 3 ticks. No move is spare.", both as they stood. | HANDOFF |
+| Level 7's name | 2026-11-11 | Escapement's level 7 is named "Counterweight" and keeps its picture of two weights; its id doesn't change. The pause-mark picture is set aside. | HANDOFF |
+| Snooze and Standstill | 2026-11-11 | Escapement's levels 8 and 12 keep their names. | HANDOFF |
+| Prism's held rod | 2026-11-11 | While a Prism rod is held, the colours it moves are drawn alone in their own colour, and white fades in near the count. Jack: "This is a fantastic solution to the problem. Well done." It goes on his phone before it merges. | HANDOFF |
+| The curtain call as built | 2026-11-11 | Change it first and show it again before merging. Jack: "I want the text within the glass. You spaced the text below the glass far too close to it anyway, so it looks shoddy - but yeah I'm left wondering why you chose to build it differently to what I decided? It looks good in the glass. I agree with your decision to shrink the glass and put the curtain call below on small screens." | HANDOFF |
+| The credit | 2026-11-11 | The game's one credit reads "made by screendead · thank you for playing". | HANDOFF |
 
 ## Dated, no round
 

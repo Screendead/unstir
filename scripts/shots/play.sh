@@ -92,13 +92,13 @@ shot result-again-best "Level 05 result card over par against a stored best of +
   SCREEN=result LEVEL=5 BESTS=plughole:00006
 shot result-fullest "Plughole 27 over par against a stored best of +6, every other plughole level at par: the new best's line, again, and up a notch locked with 1 plughole level short of par, the fullest card a tier level shows." \
   SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0
-shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels in Lens's magenta, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's)." \
+shot result-pack-complete "Lens 25 solved, Lens 01 to 24 solved before: Lens complete · 25 panels under the facts, and under it a quiet try Escapement (First Stir and Lens owned, so the first unowned pack on a Debug shelf is Escapement, as on Release's)." \
   PACK=lens LEVEL=25 SCREEN=clean OWNED=first-stir,lens BESTS=lens:000000000000000000000000- CLOCK=0
-shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred in maelstrom's red, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
+shot result-every-tier "Maelstrom 27 solved, every other free level at par: every tier unstirred under the facts, and a quiet try Lens (First Stir owned, as Release doesn't sell it)." \
   SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir BESTS=plughole:000000000000000000000000000,whirlpool:000000000000000000000000000,vortex:000000000000000000000000000,maelstrom:00000000000000000000000000- CLOCK=0
 shot result-ladder-end "Maelstrom 27 solved, the rest of the ladder short: no completion, and once, a quiet more puzzles in the packs, opening Lens's card (First Stir owned, as Release doesn't sell it)." \
   SCREEN=clean TIER=maelstrom LEVEL=27 OWNED=first-stir CLOCK=0
-shot tier-up "Vortex 27 result card, maelstrom open: under the row, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
+shot tier-up "Vortex 27 result card, maelstrom open: the card's one button, its whole width, up a notch to MAELSTROM in maelstrom's sweep, glowing." \
   SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0
 shot tier-up-locked "The same with maelstrom still closed: as bright, with a lock, saying how many vortex levels are short of par; it opens the menu on maelstrom's gate." \
   SCREEN=clean TIER=vortex LEVEL=27 CLOCK=0
@@ -106,7 +106,7 @@ shot tier-up-midway "Plughole 05 solved at par, the last plughole level to reach
   SCREEN=clean LEVEL=5 BESTS=plughole:0000-0000000000000000000000 CLOCK=0
 shot tier-up-gate-landing "Where that button lands: the menu on maelstrom's gate, every vortex level played, 24 of 27 at par (04, 11 and 22 over)." \
   TIER=maelstrom BESTS=plughole:$par27,whirlpool:$par27,vortex:000100000010000000000200000
-shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and a share button, and next daily in 7 h under them (UNSTIR_NOW=17:00)." \
+shot daily-result "Today's daily, result card after a harness solve: two wasted stirs taken back, then the inverse word; again and share, sharing the card's width, and next daily in 7 h under them (UNSTIR_NOW=17:00)." \
   SCREEN=result MODE=daily NOW=17:00
 shot daily-practice "Today's daily solved at par as practice, as again on its card plays it (Jack's call P1 = B; UNSTIR_TRIED stands in for the first try): clean counts on the first try, no best line, again, share and next daily in 7 h." \
   SCREEN=clean MODE=daily NOW=17:00 TRIED=daily-$(date +%Y%m%d)

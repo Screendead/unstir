@@ -129,7 +129,10 @@ extension LensArt {
         let sun = P(0.56, -0.5), green = Tone(0.32, 0, 0.36)
         var fills = [disc(balloon, 0.15, m(0.7)), fill([balloon + P(-0.1, 0.11), balloon + P(0.1, 0.11), basket + P(0.02, -0.03), basket + P(-0.02, -0.03)], m(0.7)),
                      disc(sun, 0.12, y(0.9))]
-        fills += peaks.map { fill($0, m(0.4)) }
+        // A cloud across the top rod's disc, off its centre, so its twist shows without the linework.
+        let cloud = [disc(P(-0.3, -0.6), 0.09, c(0.85)), disc(P(-0.17, -0.68), 0.13, c(0.85)), disc(P(-0.02, -0.62), 0.1, c(0.85)),
+                     fill(rect(-0.36, -0.62, 0.06, -0.53), c(0.85))]
+        fills += cloud + peaks.map { fill($0, m(0.4)) }
         fills += [fill(curve(P(-1, 0.3), P(0, 0.22), P(1, 0.3), 12) + [P(1, 0.42), P(-1, 0.42)], green), fill(rect(-1, 0.3, 1, 1), c(0.55))]
 
         var s: [Halftone.Stroke] = []
@@ -199,7 +202,9 @@ extension LensArt {
                 }
             }
         }
-        fills += [fill(wall(-1), m(0.5)), fill(wall(1), c(0.5)), fill([far, P(-0.5, 1.1), P(0.5, 1.1)], c(0.3)),
+        // The sky between the roofs: a low sun and a bar of cloud, off the top rod's centre, so its twist shows.
+        fills += [fill(wall(-1), m(0.5)), fill(wall(1), c(0.5)), oval(P(0.1, -0.4), 0.2, 0.05, c(0.6)), disc(P(-0.1, -0.74), 0.13, y(0.95)),
+                  fill([far, P(-0.5, 1.1), P(0.5, 1.1)], c(0.3)),
                   fill([far, P(-1.1, 0.72), P(-1.1, 1.1), P(1.1, 1.1), P(1.1, 0.72)], m(0.22))]
 
         var s: [Halftone.Stroke] = []
@@ -272,7 +277,9 @@ extension LensArt {
         let fills = [disc(eye, 0.095, .zero), disc(eye, 0.18, c(0.5)), disc(eye, 0.225, y(0.9)), fill(fin, y(0.8)),
                      fill(head.filter { _ in true }.map { $0 }, y(0.5))]
         let stripes = [band(0.26, 0.2), band(0.72, 0.4)]
-        let striped = stripes.map { fill($0, m(0.7)) }
+        // The cheek's bar, a band of the body's colour round under the eye and through the lower left rod's disc.
+        let cheek = sector(eye, 0.36, 0.47, 95, 200)
+        let striped = (stripes + [cheek]).map { fill($0, m(0.7)) }
         let all = Array(fills.prefix(4)) + striped + [fills[4]]
 
         var s: [Halftone.Stroke] = []
@@ -283,6 +290,7 @@ extension LensArt {
         s.append(stroke(curve(P(-0.72, 0.14), P(-0.6, 0.18), P(-0.52, 0.3), 8), mid))
         s.append(stroke(curve(P(0.2, -0.62), P(0.5, 0.0), P(0.16, 0.7), 20), bold))
         for q in stripes { s += runs(q + [q[0]], mid) { Halftone.inside($0, head) } }
+        s.append(stroke(closed(cheek), mid))
         s.append(stroke(closed(fin), bold))
         for k in 1..<5 { s.append(stroke([fin[0] + (fin[3] - fin[0]) * (Double(k) / 5), fin[1] + (fin[2] - fin[1]) * (Double(k) / 5)], hair)) }
         for (k, at) in [P(-0.4, -0.3), P(-0.56, -0.12), P(-0.3, 0.42), P(-0.1, 0.5), P(-0.46, 0.5), P(-0.2, -0.46)].enumerated() {

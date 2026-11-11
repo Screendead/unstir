@@ -7,6 +7,11 @@
 # read white, blocked knobs, right moves per step, forced steps, shader cost, ghost and triple shares, scramble. `search`
 # deals seeded scrambles over one white bottom rod, every other rod a mask from the palette's letters (or the masks
 # given, slot:letter pairs), and keeps those whose optimum is their depth. See scripts/prism-levels/main.swift.
+#        scripts/prism-levels.sh read                               how each move of every specimen's untwist reads
+# `read` prints a line per move: the rod, its mask, the turn that lifts its newest stir, how many entries the rod holds
+# and their sum, and over the rod's core the share where the mask's channels lie together (whole), the share the right
+# turn brings into register with a channel the mask leaves alone (read; near 0 means the count can't be seen), and the
+# wrong turn that registers the most, with its share (decoy).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/prism-levels
@@ -15,11 +20,11 @@ if [[ ! -x "$out/measure" ]] || [[ -n "$(find Sources/Twist.swift Sources/Levels
   awk '/^struct SplitMix64/,/^}/' Sources/Levels.swift > "$out/SplitMix64.swift"
   swiftc -O -o "$out/measure" Sources/Twist.swift "$out/SplitMix64.swift" UnstirTests/Solver.swift scripts/prism-levels/main.swift
 fi
-if [[ "${1:-}" == table ]]; then
+if [[ "${1:-}" == table || "${1:-}" == read ]]; then
   # The table's rows, from `static let prism` to the end of its array: (layout, "masks", "scramble").
   awk '/static let prism: \[Level\]/,/\]\.enumerated/' Sources/Pack.swift |
     grep -oE '\(\.?[A-Za-z.]*[a-z]+, "[^"]*", "[^"]*"' |
-    sed -E 's/^\((Layout)?\.([a-z]+), "([^"]*)", "([^"]*)"/\2 \3 \4/' | "$out/measure" table
+    sed -E 's/^\((Layout)?\.([a-z]+), "([^"]*)", "([^"]*)"/\2 \3 \4/' | "$out/measure" "$1"
 else
   "$out/measure" "$@"
 fi

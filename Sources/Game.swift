@@ -159,7 +159,10 @@ final class Game {
     /// an undo takes it back or the ticks run out (Jack's call C14, round 13).
     var deadTick: Bool { !finished && level.clocks.contains { overdue($0.rod) > 0 } }
     /// With the bank empty undo can't take the tick back, so the words point only at reset (Jack's call, round 13).
-    var deadTickWords: String { bank == 0 ? "That tick can't come back. Reset." : "That tick can't come back. Undo, or again." }
+    var deadTickWords: String {
+        bank == 0 ? String(localized: "That tick can't come back. Reset.", comment: "Escapement: a pushed tick, no undo left")
+            : String(localized: "That tick can't come back. Undo, or again.", comment: "Escapement: a pushed tick")
+    }
     /// The line under the tank: Escapement's word on a pushed tick, a scene's time, else the level's note.
     var caption: String {
         if deadTick { return deadTickWords }
@@ -406,10 +409,10 @@ final class Game {
         settle(healed: healed > 0)
     }
 
-    /// Escapement's waiting move, a tap on any ratchet: it only ticks the clocks. Once every clock has stopped there is
-    /// nothing to wait for. False when refused.
+    /// Escapement's waiting move where the level has it (`Level.waits`), a tap on any ratchet: it only ticks the
+    /// clocks. Once every clock has stopped there is nothing to wait for. False when refused.
     @discardableResult func wait(on ratchet: Int) -> Bool {
-        guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return false }
+        guard level.waits, !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return false }
         guard !ticksRefused(entries) else { log("wait refused"); refuse(ratchet); return false }
         started()
         stirs.append(Stir(twist: Twist(rod: slot(of: ratchet), steps: 1), entries: entries, clock: escapement, heals: heals,

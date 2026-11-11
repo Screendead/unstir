@@ -10,6 +10,8 @@ enum TypeRole {
     case display
     /// 22 pt, SF Pro Black Expanded: TierUp's tier name.
     case displaySmall
+    /// 22 pt semibold: "unstirred." over the solved tank (fixed in the tabletop).
+    case stamp
     /// 20 pt semibold: the settings sheet's and the consent card's title.
     case title
     /// 17 pt semibold: the level's title line, a status line, the result's verdict.
@@ -30,7 +32,7 @@ enum TypeRole {
     var style: Font.TextStyle {
         switch self {
         case .display: .largeTitle
-        case .displaySmall: .title2
+        case .displaySmall, .stamp: .title2
         case .title: .title3
         case .headline: .headline
         case .body, .button: .body
@@ -43,7 +45,7 @@ enum TypeRole {
     var weight: Font.Weight {
         switch self {
         case .display, .displaySmall: .black
-        case .title, .headline, .eyebrow: .semibold
+        case .title, .stamp, .headline, .eyebrow: .semibold
         case .button, .chip: .medium
         case .body, .label, .detail: .regular
         }
@@ -61,18 +63,27 @@ extension TypeRole {
     /// style's font, whose leading grows faster than its size.
     func line(at size: DynamicTypeSize, _ weight: Font.Weight? = nil,
               design: UIFontDescriptor.SystemDesign = .monospaced) -> (height: CGFloat, ascent: CGFloat) {
+        let font = font(at: size, weight, design: design)
+        return (font.lineHeight, font.ascender)
+    }
+
+    /// The width of `text` on one line of the role at `size`.
+    func width(of text: String, at size: DynamicTypeSize) -> CGFloat {
+        (text as NSString).size(withAttributes: [.font: font(at: size, nil, design: .monospaced)]).width
+    }
+
+    private func font(at size: DynamicTypeSize, _ weight: Font.Weight?, design: UIFontDescriptor.SystemDesign) -> UIFont {
         let styled = UIFontDescriptor.preferredFontDescriptor(withTextStyle: style.ui, compatibleWith:
             UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(size)))
         let weighted = styled.addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: (weight ?? self.weight).ui]])
-        let font = UIFont(descriptor: weighted.withDesign(design) ?? weighted, size: 0)
-        return (font.lineHeight, font.ascender)
+        return UIFont(descriptor: weighted.withDesign(design) ?? weighted, size: 0)
     }
 
     /// The text style's size at the default Dynamic Type size.
     private var base: CGFloat {
         switch self {
         case .display: 34
-        case .displaySmall: 22
+        case .displaySmall, .stamp: 22
         case .title: 20
         case .headline, .body, .button: 17
         case .chip, .label: 15
@@ -125,7 +136,7 @@ extension Font {
         }
     }
 
-    /// The game's own text, fixed in size as the tank and its rim are: a knob's letters, "unstirred.", "spilled.".
+    /// The game's own text, fixed in size as the tank and its rim are: a knob's letters, "spilled.", the tabletop's "unstirred.".
     static func game(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
     }
