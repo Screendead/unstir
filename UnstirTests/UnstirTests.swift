@@ -1644,16 +1644,16 @@ final class UnstirTests: XCTestCase {
             let ids = Set(Tier.plughole.levels.prefix(n).map(\.id))
             return { ids.contains($0) ? Best(over: 0, seconds: 9) : nil }
         }
-        let fresh = MenuView.lead(tier: .plughole, unlocked: false, best: solved(0))
+        let fresh = MenuView.lead(unlocked: false, best: solved(0))
         XCTAssertFalse(fresh.modes)
         XCTAssertTrue(fresh.sandbox)
-        let one = MenuView.lead(tier: .plughole, unlocked: false, best: solved(1))
+        let one = MenuView.lead(unlocked: false, best: solved(1))
         XCTAssertFalse(one.modes)
         XCTAssertTrue(one.sandbox, "at the list's end whether or not 01 has a best")
-        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: false, best: solved(22)).modes)
-        let modes = MenuView.lead(tier: .plughole, unlocked: false, best: solved(23))
+        XCTAssertFalse(MenuView.lead(unlocked: false, best: solved(22)).modes)
+        let modes = MenuView.lead(unlocked: false, best: solved(23))
         XCTAssertTrue(modes.modes)
-        let unlocked = MenuView.lead(tier: .plughole, unlocked: true, best: solved(0))
+        let unlocked = MenuView.lead(unlocked: true, best: solved(0))
         XCTAssertTrue(unlocked.modes)
         XCTAssertTrue(unlocked.sandbox)
     }
@@ -1666,13 +1666,13 @@ final class UnstirTests: XCTestCase {
         let one: (String) -> Best? = { $0 == Level.plughole[0].id ? Best(over: 0, seconds: 9) : nil }
         let bests: [(String) -> Best?] = [{ _ in nil }, one]
         for best in bests {
-            let shipped = MenuView.lead(tier: .plughole, unlocked: false, release: true, best: best)
-            let debug = MenuView.lead(tier: .plughole, unlocked: false, release: false, best: best)
+            let shipped = MenuView.lead(unlocked: false, release: true, best: best)
+            let debug = MenuView.lead(unlocked: false, release: false, best: best)
             XCTAssertFalse(shipped.sandbox)
             XCTAssertTrue(debug.sandbox)
             XCTAssertEqual(shipped.modes, debug.modes)
         }
-        XCTAssertFalse(MenuView.lead(tier: .plughole, unlocked: true, release: true, best: { _ in nil }).sandbox)
+        XCTAssertFalse(MenuView.lead(unlocked: true, release: true, best: { _ in nil }).sandbox)
         XCTAssertFalse(Store.shared.opens(.sandbox, release: true))
         XCTAssertTrue(Store.shared.opens(.sandbox, release: false))
         for level in [Level.plughole[0], Level.daily(), .endless(Run(seed: 7)), Level.lens[0]] {
