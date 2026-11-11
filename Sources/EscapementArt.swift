@@ -36,7 +36,17 @@ enum EscapementArt {
         case 19: plate19()
         case 20: plate20()
 
-        // Problems 21 to 30.
+        // Problems 21 to 30 (EscapementArtPlates3.swift; 25 is in EscapementArtPlates.swift).
+        case 21: plate21()
+        case 22: plate22()
+        case 23: plate23()
+        case 24: plate24()
+        case 25: moonPhase()
+        case 26: plate26()
+        case 27: plate27()
+        case 28: plate28()
+        case 29: plate29()
+        case 30: plate30()
 
         default: nil
         }
