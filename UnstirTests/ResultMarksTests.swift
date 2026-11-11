@@ -25,6 +25,11 @@ final class ResultMarksTests: XCTestCase {
             XCTAssertEqual(got.filled, filled, spoken)
             XCTAssertEqual(got.spoken, spoken)
         }
+        // Over par, the row keeps the margin it showed before the marks; par, clean and tried show marks alone.
+        XCTAssertEqual(ResultMarks.margin(Archive.Mark(Best(over: 2, seconds: 9), started: true)), "+2")
+        for best in [Best(over: 0, seconds: 9, clean: true), Best(over: 0, seconds: 9), nil] {
+            XCTAssertNil(ResultMarks.margin(Archive.Mark(best, started: true)))
+        }
         // An archived daily's best fills as the day's own would.
         XCTAssertEqual(ResultMarks.filled(Archive.Mark(Best(over: 0, seconds: 9, clean: true, archived: true), started: true)), 3)
     }

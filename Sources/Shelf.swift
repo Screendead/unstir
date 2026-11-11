@@ -743,8 +743,8 @@ struct PackCard: View {
                         if !open {
                             Image(systemName: "lock.fill").font(.ui(.detail)).imageScale(.small).foregroundStyle(Color.text4)
                                 .transition(.opacity.combined(with: .scale(scale: 1.8)))
-                        } else if !noPar, let filled = ResultMarks.filled(Archive.Mark(best, started: tried)) {
-                            ResultMarks(filled: filled)
+                        } else if !noPar, case let mark = Archive.Mark(best, started: tried), let filled = ResultMarks.filled(mark) {
+                            ResultMarks(filled: filled, margin: ResultMarks.margin(mark))
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.ui(.detail))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
