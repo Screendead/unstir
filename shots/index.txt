@@ -398,7 +398,7 @@ lens-order-small-under-3.png  Lens on eye rod 2, 2:+2,0:+3: the twist newest.
 icon-1.png  App icon candidate 1: plughole's grid, zoomed in, under one rod's swirl, a knob at its centre.
 icon-2.png  App icon candidate 2: maelstrom's marbling twin mid-heartbeat under one knob's swirl.
 icon-3.png  App icon candidate 3: the sunset wound into one whole-tank swirl inside the bezel, a knob at its centre.
-promo-lens.png  Lens's promoted-purchase image: its dock cover, level 3 on the halftone as dealt, its knobs as the game draws them, inside the bezel on black.
+promo-lens.png  Lens's promoted-purchase image: its dock cover, Kaleidoscope (level 25) on its halftone panel as its clip opens, five entries of its deal left, its knobs as the game draws them, inside the bezel on black.
 promo-escapement.png  Escapement's promoted-purchase image: its dock cover, problem 2 on its engraved plate as dealt, its ratchet, dial and knobs, inside the bezel on black.
 promo-prism.png  Prism's promoted-purchase image: its dock cover, specimen 1 on the fern as dealt, its tinted knobs, inside the bezel on black.
 promo-complete.png  Triptych's promoted-purchase image: a wedge of each of its three packs' covers with their knobs, inside the bezel on black.
@@ -514,7 +514,7 @@ clip-first-stir-2.1.png  First Stir's clip 2.1 s in.
 clip-first-stir-3.3.png  First Stir's clip 3.3 s in.
 clip-first-stir-5.4.png  First Stir's clip 5.4 s in.
 clip-first-stir-6.2.png  First Stir's clip 6.2 s in.
-clip-lens-still.png  Lens's clip on its still: level 3 as dealt, the lens newest, its rim whole through both twists.
+clip-lens-still.png  Lens's clip on its still: Kaleidoscope (level 25) seven moves down its par line, the lens newest, its rim whole through both twists.
 clip-lens-2.4.png  Lens's clip 2.4 s in, the lens dragged down and back up.
 clip-lens-3.2.png  Lens's clip 3.2 s in, the lens dragged down and back up.
 clip-lens-4.3.png  Lens's clip 4.3 s in, the lens dragged down and back up.
