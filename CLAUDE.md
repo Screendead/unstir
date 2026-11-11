@@ -228,9 +228,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   optimum, what is free under the masks and read white, blocked knobs, right moves per step, the shader's assumed cost,
   and the shares of the glass showing ghosts and three-way splits, the readability limits); `check <layout> <masks>
   <scramble>` measures one and `search <layout> <depth> <palette> <from> <to>` deals seeded ones over a white bottom rod,
-  keeping those at par. `scripts/prism-levels/pick.py <pool dir>` picks the trays from the pools.
+  keeping those at par; `read` prints whether each move's count shows in its rod's core (a rod stirred twice shows
+  the sum). `scripts/prism-levels/pick.py <pool dir>` picks the trays from the pools.
   `scripts/prism-plates.sh render <plate> <out.png> [side] [layout]` draws a plate on the Mac, and `check` prints each
-  core's lit share and how much of it a 30° step moves, as the test measures.
+  core's lit share and how much of it a 30° step moves, as the test measures. `deal <plate> <layout> <masks>
+  <scramble> <out.png>` draws a deal.
 - Lens's tables: `scripts/lens-table.py [docs/lens-design.md] [--pitches 4] [--solve]` reads the level rows of
   a doc (`docs/lens-tables.md` holds the built ones) and checks each against the hard lens's rules with no app code (a lens moves only its core, so
   overlap decides commutation): depth after the parse, dealt lens steps and nets, and how far each twist dealt over a

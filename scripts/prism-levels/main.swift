@@ -53,6 +53,52 @@ func split(_ stack: [Twist], _ layout: Layout, _ masks: [Int: Channels]) -> (gho
     return (Double(ghost) / Double(n), Double(triple) / Double(n))
 }
 
+/// The plate's point each channel shows at the glass's `p` under `stack`, as the shader samples it: the newest entry's
+/// inverse first.
+func words(_ p: SIMD2<Double>, _ stack: [Twist], _ layout: Layout, _ masks: [Int: Channels]) -> [SIMD2<Double>] {
+    Channels.each.map { c in
+        stack.reversed().filter { (masks[$0.rod] ?? .white).contains(c) }
+            .reduce(p) { Tank.twist($0, rod: layout.rods[$1.rod], angle: -Double($1.steps) * Tank.step) }
+    }
+}
+
+/// How one untwist line reads, a move a line: what the core of the rod to turn shows the player before the move.
+///   whole: the share of the core where the mask's channels lie together, so its ghost is one colour, not two.
+///   read: the share where the right turn brings one of the mask's channels onto one the mask leaves alone, the
+///     register the eye turns the ghost into. A white rod has no channel left alone: "-".
+///   decoy: the wrong turn that registers the most of the core that way, and its share.
+///   net: each of the mask's channels' own turn about this rod, summed over the rod's entries, against the move.
+func read(_ name: String, _ layout: Layout, _ masks: [Int: Channels], _ dealt: [Twist]) {
+    var stack = dealt
+    let apart = 2 / 568.0
+    while !stack.isEmpty {
+        guard let i = layout.removable(stack, masks: masks).last else { return }
+        let e = stack[i], mask = masks[e.rod] ?? .white, rod = layout.rods[e.rod], k = rod.z * Tank.plateau
+        let core = Tank.grid(160).filter { simd_distance($0, SIMD2(rod.x, rod.y)) <= k }
+        let inside = Channels.each.indices.filter { mask.contains(Channels.each[$0]) }
+        let outside = Channels.each.indices.filter { !mask.contains(Channels.each[$0]) }
+        let before = core.map { words($0, stack, layout, masks) }
+        let whole = before.filter { q in inside.allSatisfy { simd_distance(q[$0], q[inside[0]]) <= apart } }.count
+        var shares: [Int: Double] = [:]
+        for turn in -5...6 where turn != 0 && !outside.isEmpty {
+            let after = core.map { words($0, stack + [Twist(rod: e.rod, steps: turn)], layout, masks) }
+            shares[turn] = inside.flatMap { c in outside.map { d in
+                Double(after.filter { simd_distance($0[c], $0[d]) <= apart }.count) / Double(core.count)
+            } }.max()!
+        }
+        let right = -e.steps
+        let decoy = shares.filter { $0.key != right && $0.key != right + 12 && $0.key != right - 12 }.max { $0.value < $1.value }
+        let net = stack.filter { $0.rod == e.rod }.map(\.steps).reduce(0, +)
+        let times = stack.filter { $0.rod == e.rod }.count
+        print([name, "\(e.rod)", String(mask.letter!), signed(right), "\(times)", signed(net),
+               String(format: "%.2f", Double(whole) / Double(core.count)),
+               shares[right].map { String(format: "%.2f", $0) } ?? "-",
+               decoy.map { "\(signed($0.key)) \(String(format: "%.2f", $0.value))" } ?? "-",
+               string(stack)].joined(separator: "\t"))
+        stack.remove(at: i)
+    }
+}
+
 struct Row {
     var line: String
     /// Par is the depth, the solver's optimum, and untwisting reaches it; nothing merges as it is dealt.
@@ -125,6 +171,15 @@ case "table":
         guard f.count == 3, let layout = Layout(rawValue: f[0]), let masks = Channels.masks(f[1]) else { continue }
         print(row("prism-\(n)", layout, masks, .parse(f[2], in: layout, masks: masks)).line)
         fflush(stdout)
+    }
+case "read":
+    print(["level", "rod", "mask", "turn", "entries on rod", "rod's net", "whole", "read", "decoy", "stack before"].joined(separator: "\t"))
+    var n = 0
+    while let line = readLine() {
+        let f = line.split(separator: " ").map(String.init)
+        n += 1
+        guard f.count == 3, let layout = Layout(rawValue: f[0]), let masks = Channels.masks(f[1]) else { continue }
+        read("prism-\(n)", layout, masks, .parse(f[2], in: layout, masks: masks))
     }
 case "check" where args.count == 4:
     guard let layout = Layout(rawValue: args[1]), let masks = Channels.masks(args[2]) else { exit(2) }
