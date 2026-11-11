@@ -1105,7 +1105,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   second ink keeps to one small part, never a dashed circle, which reads as a clock's disc
   (`testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk`: every pixel a mix of bone, ink and vermilion,
   the second ink's marks within a circle 0.4 of the tank across and under 3% of the glass, and the step measure in
-  every core of the problem's own layout). `scripts/escapement-art.sh` renders a plate on the Mac, with a layout
+  every core of the problem's own layout, baked as an SE draws its glass at default type, 328 pt at 2x, not at the
+  shared plate's 512 px at 1x, where the 2.2 px hairline is heavier than on any phone and close hatching runs solid). `scripts/escapement-art.sh` renders a plate on the Mac, with a layout
   marking each rod's knob and hub, measures it as the tests do and times it; `scripts/escapement-art-sheet.py plates`
   lays those renders out and `shots` the game's (`shots.sh escapement-plate-`, each problem as dealt and solved).
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of

@@ -880,8 +880,9 @@ import XCTest
 
     /// Each plate drawn is ink on bone but for one small part in the second ink, whose marks a circle 0.4 of the tank
     /// across its middle holds and which colours under 3% of the glass, so the clocks' vermilion still reads; and it
-    /// reads up in every core of its own problem's layout. Baked as an SE draws its glass, the smallest phone's, where
-    /// the 2.2 px hairline is heaviest against the picture and close hatching soonest runs solid.
+    /// reads up in every core of its own problem's layout. Baked as an SE draws its glass at default type, 328 pt at
+    /// 2x (`testEveryIPhoneKeepsTodaysColumn`'s sizes), where the 2.2 px hairline is heavier against the picture than
+    /// on any other phone and close hatching soonest runs solid; the shared plate's 512 px at 1x is heavier than any.
     func testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk() async throws {
         XCTAssertLessThan(Self.offPlate(0xD8, 0x40, 0x2A).off, 1)
         XCTAssertGreaterThan(Self.offPlate(0x80, 0x80, 0x80).off, 6)
@@ -894,7 +895,7 @@ import XCTest
                 let low = second.reduce(first) { simd_min($0, $1) }, high = second.reduce(first) { simd_max($0, $1) }
                 XCTAssertLessThan(second.map { simd_distance($0, (low + high) / 2) }.max() ?? 0, 0.4, level.id)
             }
-            let plate = try await baked(level.plate, side: 343, scale: 2), w = plate.w, r = Double(w) / 2
+            let plate = try await baked(level.plate, side: 328, scale: 2), w = plate.w, r = Double(w) / 2
             var darkest = 0xFF, glass = 0, coloured = 0, worst = 0.0
             for j in 0..<w {
                 for i in 0..<w where (Double(i) - r) * (Double(i) - r) + (Double(j) - r) * (Double(j) - r) < r * r {

@@ -135,8 +135,9 @@ case "render" where args.count >= 4:
     CGImageDestinationAddImage(out, ctx.makeImage()!, nil)
     CGImageDestinationFinalize(out)
 case "check" where args.count >= 4:
-    // The test bakes at an SE's glass, 686 px, the smallest phone's, where the hairline is heaviest against the picture.
-    let p = plate(args[2]), layout = Layout(rawValue: args[3])!, rods = check(p, layout, hairline: 2.2 * 512 / 686), play = check(p, layout), ink = second(p, hairline: 2.2 * 512 / 686)
+    // The test bakes at an SE's glass at default type, 328 pt at 2x, where the hairline is heaviest against the picture
+    // of any phone's (PlayLayoutTests' sizes).
+    let p = plate(args[2]), layout = Layout(rawValue: args[3])!, rods = check(p, layout, hairline: 2.2 * 512 / 656), play = check(p, layout), ink = second(p, hairline: 2.2 * 512 / 656)
     for (k, rod) in rods.enumerated() {
         print(String(format: "rod %d  inked %.2f  moved %.2f  (at a Pro Max's weights %.2f and %.2f)", k, rod.on, rod.moved, play[k].on, play[k].moved))
     }
