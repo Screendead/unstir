@@ -77,7 +77,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`chains`) and checks it against the model's cut words on hex's swirl. Its cost against the four-tap limit
   (`Unstirred.channelCost`) is a map per channel each entry holds, plus three for the stack. The phone bench
   (`scripts/gpu-bench.sh phone`, 2026-11-09, thermal fair) put each specimen at a median 0.95 of the old constant of
-  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none.
+  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none. Last, on the CPU,
+  it bakes Lens's panels cold at the play screen's glass for a Lens level (`PlayLayout.of` in `GPUBenchView`) straight
+  through `Halftone.Panel.pixels`, so no cached bake is read, replaced or removed: all 25 at an eighth of the side to
+  rank them, then the cheapest, Keyhole and the dearest at the full side, each in wall-clock ms, and a panel's bytes in
+  Caches, for the call on capping that cache. In the simulator that is the Mac's CPU running unoptimised Debug code.
 - **TapLaw.swift** and **Taps.swift** hold the adaptive four-tap budget (Jack, round 16: step the graphics down where
   performance degrades, to keep 120 Hz). Only the look adapts: `Tank.maxStack`, what a level deals and "the tank is
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
@@ -1022,7 +1026,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   goes through `PictureLayer` to `Halftone.panel`, which gives the level's panel from `LensArt.levels` once it is drawn
   and `Halftone.test`, the test panel, until then, as for 0 (`testEachLensLevelDrawsItsOwnPanel`). So Lens 03's panel
   is also its dock cover, its card's clip and its promoted-purchase image. Caches keeps every panel a build has baked,
-  5.5 MB each at a Pro Max's tank. **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
+  5.5 MB each at a Pro Max's tank. The GPU bench times the first-open bake on the device (below). **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
   and ovals, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
   panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
   enough to read at x8, where the bake is soft; every rod's core on its level holds tone and linework that each step
