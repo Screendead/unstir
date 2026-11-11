@@ -25,7 +25,6 @@ mkdir -p shots
 : > shots/index.txt
 caches="$(xcrun simctl get_app_container "$udid" "$bundle" data)/Library/Caches"
 launched=shots/.launched
-lensbaked=""
 settle=6  # the first launch on a fresh install is slow
 shot() {  # name description KEY=VALUE...
   local name=$1 desc=$2 vars=()
@@ -36,14 +35,14 @@ shot() {  # name description KEY=VALUE...
   touch "$launched"
   env ${vars[@]+"${vars[@]}"} xcrun simctl launch --terminate-running-process "$udid" "$bundle" >/dev/null
   local wait=${hold:-$settle}
-  # A Lens level bakes its own halftone panel the first time a Debug install draws it, for half a minute, or two on a
-  # busy Mac; its later shots read it from Caches. So a level's first shot waits for a bake to land.
+  # A Lens level bakes its own halftone panel when a Debug install draws it, for half a minute, or two on a busy Mac,
+  # and Caches keeps only the four panels opened last, so every Lens shot waits for its bake to land or be read, which
+  # marks its file too. Past 1 MB, so the tank's, not the dock cover's under it.
   if [[ " $* " == *" PACK=lens "* ]]; then
-    local level; level=$(sed -nE 's/.* LEVEL=0*([0-9]+) .*/\1/p' <<< " $* ")
-    if [[ " $lensbaked " != *" ${level:-1} "* ]]; then
-      lensbaked+=" ${level:-1}"
-      for _ in $(seq 240); do [[ -n "$(find "$caches" -name 'halftone-*' -newer "$launched" 2>/dev/null)" ]] && break; sleep 1; done
-    fi
+    for _ in $(seq 240); do
+      [[ -n "$(find "$caches" -name 'halftone-*' -size +1000k -newer "$launched" 2>/dev/null)" ]] && break
+      sleep 1
+    done
   fi
   # A harness solve's card lands its result marks one by one, the last some 1.5 s after the card shows.
   if [[ " $* " == *" SCREEN=result "* || " $* " == *" SCREEN=clean "* ]] && ((wait < 5)); then wait=5; fi

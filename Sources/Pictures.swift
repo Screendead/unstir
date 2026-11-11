@@ -143,27 +143,21 @@ enum Picture: String, CaseIterable {
         return UIImage(cgImage: image, scale: scale, orientation: .up)
     }
 
-    /// A panel's pixels, kept in Caches so only its first open at each size pays for the bake: some 20 s
-    /// unoptimised, 0.9 s optimised on an M2 Max, longer on an older phone. Keyed on the panel, the build's number and its
-    /// executable's timestamp, which a rebuild changes, so an edit to the panel never shows a stale bake; an older key
-    /// is removed.
+    /// A panel's pixels, kept in Caches (`PanelCache`) so a panel opened lately pays for no bake: some 20 s unoptimised,
+    /// 0.9 s optimised on an M2 Max, 70 to 227 ms on a 13 Pro Max. Keyed on the panel, the build's number and its
+    /// executable's timestamp, which a rebuild changes, so an edit to the panel never shows a stale bake.
     nonisolated private static func halftonePixels(_ n: Int, panel: Halftone.Panel) -> Data {
         let built = Bundle.main.executableURL.flatMap { try? $0.resourceValues(forKeys: [.contentModificationDateKey]) }?
             .contentModificationDate?.timeIntervalSince1970 ?? 0
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
-        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        let key = "-\(build)-\(Int(built)).rgba"
-        let file = caches.appendingPathComponent("halftone-\(panel.name)-\(n)\(key)")
-        if let data = try? Data(contentsOf: file), data.count == 4 * n * n { return data }
+        let cache = PanelCache(folder: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0],
+                               key: "-\(build)-\(Int(built)).rgba")
+        if let data = cache.read(panel.name, n) { return data }
         let start = Date.now
         let data = Data(panel.pixels(n))
         let ms = Int(Date.now.timeIntervalSince(start) * 1000)
         Task { @MainActor in Log.write("halftone \(panel.name) \(n) px baked in \(ms) ms") }
-        for old in (try? FileManager.default.contentsOfDirectory(atPath: caches.path)) ?? []
-            where old.hasPrefix("halftone-") && !old.hasSuffix(key) {
-            try? FileManager.default.removeItem(at: caches.appendingPathComponent(old))
-        }
-        try? data.write(to: file)
+        cache.write(data, panel.name, n, keeping: [Halftone.panel(Level.lensFace.panel).name])
         return data
     }
 
@@ -468,4 +462,52 @@ func oklchLinear(_ L: Double, _ C: Double, _ h: Double) -> SIMD3<Double> {
         if v.min() >= 0 && v.max() <= 1 { lo = mid } else { hi = mid }
     }
     return rgb(lo)
+}
+
+/// The halftone's bakes on disk, a file a panel and size under one build's `key`. A panel at a Pro Max's tank is 5.2 MB,
+/// 129 MB for all 25, against a bake of 70 to 227 ms on a 13 Pro Max, so the folder holds only the panels opened last.
+struct PanelCache {
+    /// The panels kept, the newest opened first in line (Jack, 2026-11-11). The one a bake is written for is the
+    /// newest, and the Lens cover's, which the menu draws at launch, is kept whatever its turn and counts as one of
+    /// them. Only the cover's and the open level's are ever on screen together, so none in sight loses its bake.
+    static let kept = 4
+
+    let folder: URL
+    let key: String
+
+    func file(_ panel: String, _ n: Int) -> URL { folder.appendingPathComponent("halftone-\(panel)-\(n)\(key)") }
+
+    /// The panel a bake's file holds. No panel's name has a hyphen (`testEachLensLevelDrawsItsOwnPanel`).
+    static func panel(of file: String) -> String? {
+        file.hasPrefix("halftone-") ? file.dropFirst("halftone-".count).split(separator: "-").first.map(String.init) : nil
+    }
+
+    /// A panel's bake at `n` pixels a side, if kept, marked as opened now.
+    func read(_ panel: String, _ n: Int, now: Date = .now) -> Data? {
+        let file = file(panel, n)
+        guard let data = try? Data(contentsOf: file), data.count == 4 * n * n else { return nil }
+        try? FileManager.default.setAttributes([.modificationDate: now], ofItemAtPath: file.path)
+        return data
+    }
+
+    /// Keeps a new bake, then removes every other build's bakes and every panel's past the `kept` opened last, at all
+    /// their sizes; `keeping`'s panels stay whatever their turn. Another bake may be removing the same files meanwhile,
+    /// so a file already gone is no failure.
+    func write(_ data: Data, _ panel: String, _ n: Int, keeping: Set<String>, now: Date = .now) {
+        try? data.write(to: file(panel, n))
+        try? FileManager.default.setAttributes([.modificationDate: now], ofItemAtPath: file(panel, n).path)
+        let files = ((try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []).compactMap { name in
+            Self.panel(of: name).map { panel in
+                let opened = (try? FileManager.default.attributesOfItem(atPath: folder.appendingPathComponent(name).path))?[.modificationDate]
+                return (name: name, panel: panel, opened: opened as? Date ?? .distantPast)
+            }
+        }
+        var opened: [String: Date] = [:]
+        for f in files where f.name.hasSuffix(key) { opened[f.panel] = max(opened[f.panel] ?? .distantPast, f.opened) }
+        var stay = keeping.union([panel])
+        for (name, _) in opened.sorted(by: { $0.value > $1.value }) where stay.count < Self.kept { stay.insert(name) }
+        for f in files where !f.name.hasSuffix(key) || !stay.contains(f.panel) {
+            try? FileManager.default.removeItem(at: folder.appendingPathComponent(f.name))
+        }
+    }
 }
