@@ -3,7 +3,7 @@
 import Foundation
 import simd
 
-/// Problems 1 to 10 (and 25's sketch), each composed round its layout: no knob, and no hub a clock on any rod would
+/// Problems 1 to 10 and 25, and the alternates, each composed round its layout: no knob, and no hub a clock on any rod would
 /// wear, sits on the part the plate is named for. A ruled tint, section hatching, centre lines and lettered callouts,
 /// the second ink on one small part so the clocks' vermilion still reads.
 extension EscapementArt {
@@ -411,6 +411,34 @@ extension EscapementArt {
         return plate
     }
 
+    /// Problem 7's alternate, quad: a dial with its hands taken off and a pause mark, two upright bars in the second
+    /// ink, standing on the arbor between the four knobs.
+    static func pauseMark() -> Plate {
+        var plate = Plate()
+        let bars = [-0.11, 0.11].map { box(P($0 - 0.06, -0.25), P($0 + 0.06, 0.25)) }
+        let ring = [arc(P(0, 0), 0.97), arc(P(0, 0), 0.78)]
+        tint(&plate, angle: 0.5, around: ring + bars)
+        // The chapter ring: minutes, and a baton an hour.
+        for r in [0.97, 0.93, 0.78] { plate.line(arc(P(0, 0), r), r == 0.93 ? fine : medium) }
+        for m in 0..<60 { plate.line([polar(P(0, 0), 0.93, deg(6 * Double(m))), polar(P(0, 0), 0.97, deg(6 * Double(m)))], fine) }
+        for h in 0..<12 {
+            let a = deg(30 * Double(h)), baton = strip(polar(P(0, 0), 0.805, a), polar(P(0, 0), 0.905, a), h % 3 == 0 ? 0.05 : 0.026)
+            plate.lines(hatch([baton], angle: a + 0.8, gap: 0.009), fine)
+            plate.line(baton + [baton[0]], medium)
+        }
+        // The arbor with no hand on it, and the centre lines.
+        plate.fill(arc(P(0, 0), 0.03))
+        plate.line(arc(P(0, 0), 0.03), medium)
+        plate.lines(dashed([P(0, -0.74), P(0, 0.74)], on: 0.07, off: 0.02), fine)
+        for bar in bars {
+            plate.lines(hatch([bar], angle: 0.8, gap: 0.018), fine, .second)
+            plate.line(bar, heavy, .second)
+        }
+        letter(&plate, "A", from: P(0.15, -0.2), at: P(0.62, -0.02))
+        letter(&plate, "B", from: polar(P(0, 0), 0.855, deg(200)), at: P(-0.62, -0.02))
+        return plate
+    }
+
     /// Problem 8, pent: an alarm clock, a bell in each gap beside the top knob, its alarm hand in the second ink, asleep.
     static func snooze() -> Plate {
         var plate = Plate(), figures = Plate()
@@ -484,10 +512,10 @@ extension EscapementArt {
         return plate
     }
 
-    /// Half the hourglass's width at `y` from the waist, out to the caps at 0.64.
-    private static func bulb(_ y: Double) -> Double {
-        let t = min(abs(y) / 0.64, 1)
-        return 0.03 + 0.33 * pow(sin(.pi * t), 0.7) + 0.1 * t * t
+    /// Half the hourglass's width at `y` from the waist, out to the caps at `reach`.
+    private static func bulb(_ y: Double, reach: Double = 0.64) -> Double {
+        let t = min(abs(y) / reach, 1), k = reach / 0.64
+        return 0.03 + k * (0.33 * pow(sin(.pi * t), 0.7) + 0.1 * t * t)
     }
 
     /// A glass of two bulbs as one ring about the waist at the origin, `half` its half-width at each height to `reach`.
@@ -507,15 +535,19 @@ extension EscapementArt {
     }
 
     /// Problem 9, eye: a sand-glass in its turned frame, leaning, half run: a knob in the open each side of the waist.
-    static func hourglass() -> Plate {
+    /// `reach` is the glass's half-height: at 0.38 it ends inside the top and bottom rods, the frame's pillars `pillar`
+    /// out, past the side rods' hubs.
+    static func hourglass(reach: Double = 0.64, pillar: Double = 0.52) -> Plate {
         var plate = Plate(), figure = Plate()
-        let lean = deg(5), bulbs = glassware(reach: 0.64, bulb)
+        let k = reach / 0.64
+        func bulb(_ y: Double) -> Double { Self.bulb(y, reach: reach) }
+        let lean = deg(5), bulbs = glassware(reach: reach, bulb)
         func place(_ points: [P]) -> [P] { turned(points, by: lean) }
-        let caps = [box(P(-0.585, -0.71), P(0.585, -0.64)), box(P(-0.585, 0.64), P(0.585, 0.71))]
-        let pillars = [-0.52, 0.52].map { x -> [P] in
-            let ys = stride(from: -0.64, through: 0.64, by: 0.01).map { $0 }
-            func half(_ y: Double) -> Double { 0.014 + 0.016 * abs(sin(3 * .pi * (y + 0.64) / 1.28)) }
-            return ys.map { P(x + half($0), $0) } + ys.reversed().map { P(x - half($0), $0) } + [P(x + half(-0.64), -0.64)]
+        let caps = [box(P(-pillar - 0.065, -reach - 0.07), P(pillar + 0.065, -reach)), box(P(-pillar - 0.065, reach), P(pillar + 0.065, reach + 0.07))]
+        let pillars = [-pillar, pillar].map { x -> [P] in
+            let ys = stride(from: -reach, through: reach, by: 0.01).map { $0 }
+            func half(_ y: Double) -> Double { 0.014 + 0.016 * abs(sin(3 * .pi * (y + reach) / (2 * reach))) }
+            return ys.map { P(x + half($0), $0) } + ys.reversed().map { P(x - half($0), $0) } + [P(x + half(-reach), -reach)]
         }
         tint(&plate, angle: -0.35, around: ([bulbs] + caps + pillars).map(place))
 
@@ -528,27 +560,27 @@ extension EscapementArt {
             figure.line(pillar, medium)
         }
         // Sand above in ink, drawing down to the waist and falling in a thread; the heap below in the second ink.
-        let upper = sand(top: -0.26, floor: 0, peak: -0.1, bulb)
-        let lower = sand(top: 0.34, floor: 0.64, peak: 0.1) { min(bulb($0), 0.04 + ($0 - 0.34) * 1.6) }
+        let upper = sand(top: -0.26 * k, floor: 0, peak: -0.1 * k, bulb)
+        let lower = sand(top: 0.34 * k, floor: reach, peak: 0.1 * k) { min(bulb($0), 0.04 + ($0 - 0.34 * k) * 1.6 / k) }
         for (grains, ink) in [(upper, Ink.black), (lower, Ink.second)] {
             figure.lines(hatch([grains], angle: 0.5, gap: ink == .black ? 0.014 : 0.019), fine, ink)
             figure.lines(hatch([grains], angle: -0.9, gap: 0.03).flatMap { dashed($0, on: 0.02, off: 0.02) }, fine, ink)
             figure.line(grains + [grains[0]], fine, ink)
         }
-        figure.line([P(0, 0), P(0, 0.25)], medium)
+        figure.line([P(0, 0), P(0, 0.25 * k)], medium)
         // The glass: its empty parts lightly ruled, form lines down each bulb, the outline last.
         figure.lines(hatch([bulbs, upper + [upper[0]], lower + [lower[0]]], angle: -1.0, gap: 0.045).flatMap { dashed($0, on: 0.05, off: 0.025) }, fine)
         for f in [-0.9, 0.62, 0.84] {
-            let ys = stride(from: -0.6, through: 0.6, by: 0.01).map { $0 }
+            let ys = stride(from: -0.6 * k, through: 0.6 * k, by: 0.01).map { $0 }
             figure.lines(dashed(ys.map { P(f * bulb($0), $0) }, on: 0.09, off: 0.03), fine)
         }
         figure.line(bulbs, heavy)
         for mark in figure.marks { plate.marks.append(Mark(points: place(mark.points), width: mark.width, ink: mark.ink)) }
 
-        letter(&plate, "A", from: place([P(0.12, -0.16)])[0], at: P(0.74, -0.42))
+        letter(&plate, "A", from: place([P(0.12, -0.16 * k)])[0], at: P(0.74, -0.42))
         letter(&plate, "B", from: place([P(0.03, 0.0)])[0], at: P(0.22, 0.04))
-        letter(&plate, "C", from: place([P(-0.52, 0.3)])[0], at: P(-0.8, 0.36))
-        letter(&plate, "D", from: place([P(0.22, 0.58)])[0], at: P(0.76, 0.42))
+        letter(&plate, "C", from: place([P(-pillar, 0.3 * k)])[0], at: P(-0.8, 0.36))
+        letter(&plate, "D", from: place([P(0.22 * k, 0.58 * k)])[0], at: P(0.76, 0.42))
         return plate
     }
 

@@ -11,7 +11,10 @@ enum EscapementArt {
 
     /// A problem's plate by its number, a line a problem; nil for a problem with none.
     static func plate(_ problem: Int) -> Plate? {
-        switch problem {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["UNSTIR_ESCALT"] == "1", let alternate = alternate(problem) { return alternate }
+        #endif
+        return switch problem {
         // Problems 1 to 10 (EscapementArtPlates.swift).
         case 1: mainspring()
         case 2: pendulum()
@@ -48,6 +51,16 @@ enum EscapementArt {
         case 29: plate29()
         case 30: plate30()
 
+        default: nil
+        }
+    }
+
+    /// Plates drawn for Jack to choose between, registered for no problem: `UNSTIR_ESCALT=1` draws them in a debug
+    /// build, and scripts/escapement-art.sh by a problem's number and `alt`.
+    static func alternate(_ problem: Int) -> Plate? {
+        switch problem {
+        case 7: pauseMark()
+        case 9: hourglass(reach: 0.38, pillar: 0.6)
         default: nil
         }
     }

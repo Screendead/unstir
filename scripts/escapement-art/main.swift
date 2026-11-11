@@ -28,6 +28,7 @@ func today() -> EscapementArt.Plate {
 
 func plate(_ which: String) -> EscapementArt.Plate {
     if which == "today" { return today() }
+    if which.hasSuffix("alt"), let alternate = Int(which.dropLast(3)).flatMap(EscapementArt.alternate) { return alternate }
     guard let plate = Int(which).flatMap(EscapementArt.plate) else {
         print("no plate for problem \(which)")
         exit(2)

@@ -439,6 +439,8 @@ extension EscapementArt {
                 leaf.lines(hatch([box], angle: -0.8, gap: 0.016), fine)
                 continue
             }
+            let wide = roman(day).reduce(0.0) { $0 + ($1 == "I" ? 0.62 : 0.86) * 0.07 }
+            // The marked day is a red numeral ruled under, never ringed: a red circle is a clock's.
             if day == marked {
                 for d in [0.058, 0.074] { leaf.line([P(mid.x - 0.07, mid.y + d), P(mid.x + 0.07, mid.y + d)], medium, .second) }
             }
