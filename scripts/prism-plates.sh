@@ -2,8 +2,10 @@
 # Copyright © 2026 Jack Lusher. All rights reserved.
 # Usage: scripts/prism-plates.sh render <plate> <out.png> [side px] [layout]
 #        scripts/prism-plates.sh check [plate...]
+#        scripts/prism-plates.sh deal <plate> <layout> <masks> <scramble, or - for none> <out.png> [side px]
 # Draws one of Prism's engravings (Engraving.swift) white on black on the Mac, with a layout's cores if given, or checks
-# every plate against every layout: the share of each core lit, and the share of that light a 30° step moves.
+# every plate against every layout: the share of each core lit, and the share of that light a 30° step moves. `deal`
+# sketches a plate as the glass shows it under a stack and its masks, each channel through its own word.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/prism-plates

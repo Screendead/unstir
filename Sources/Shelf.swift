@@ -8,7 +8,14 @@ enum Offer: Hashable, Sendable {
     static let bundleName = "Triptych I"
 
     /// A count of packs in words.
-    static func countWord(_ n: Int) -> String { n < 2 || n > 6 ? "\(n)" : ["two", "three", "four", "five", "six"][n - 2] }
+    static func countWord(_ n: Int) -> String {
+        guard n >= 2, n <= 6 else { return "\(n)" }
+        return [String(localized: "two", comment: "A count of packs or levels, in words"),
+                String(localized: "three", comment: "A count of packs or levels, in words"),
+                String(localized: "four", comment: "A count of packs or levels, in words"),
+                String(localized: "five", comment: "A count of packs or levels, in words"),
+                String(localized: "six", comment: "A count of packs or levels, in words")][n - 2]
+    }
 
     case pack(Pack)
     case complete
@@ -101,44 +108,54 @@ enum Offer: Hashable, Sendable {
 
     var pitch: String {
         switch self {
-        case .pack(.firstStir): "a story told backwards"
-        case .pack(.lens): "some rods zoom instead of turning"
-        case .pack(.escapement): "clocks tick after every move, on a budget of ticks"
-        case .pack(.prism): "each rod stirs only some colours"
-        case .complete: "three packs, for less"
+        case .pack(.firstStir): String(localized: "a story told backwards", comment: "First Stir's pitch, on its card")
+        case .pack(.lens): String(localized: "some rods zoom instead of turning", comment: "Lens's pitch, on its card")
+        case .pack(.escapement): String(localized: "clocks tick after every move, on a budget of ticks",
+                                        comment: "Escapement's pitch, on its card")
+        case .pack(.prism): String(localized: "each rod stirs only some colours", comment: "Prism's pitch, on its card")
+        case .complete: String(localized: "three packs, for less", comment: "The bundle's pitch, on its card")
         }
     }
 
     /// What the pack assumes of the player, as its card says it.
     var assumes: String {
         switch self {
-        case .pack(.firstStir): "anyone \u{00B7} an evening, not a challenge"
-        case .pack(.lens): "after plughole"
-        case .pack(.escapement): "hard \u{00B7} composed problems"
-        case .pack(.prism): "after plughole \u{00B7} reading by colour"
-        case .complete: "after plughole, then harder"
+        case .pack(.firstStir): String(localized: "anyone \u{00B7} an evening, not a challenge", comment: "Who First Stir is for")
+        case .pack(.lens): String(localized: "after plughole", comment: "Who Lens is for. The first tier, in lower case")
+        case .pack(.escapement): String(localized: "hard \u{00B7} composed problems", comment: "Who Escapement is for")
+        case .pack(.prism): String(localized: "after plughole \u{00B7} reading by colour",
+                                   comment: "Who Prism is for. The first tier, in lower case")
+        case .complete: String(localized: "after plughole, then harder",
+                               comment: "Who the bundle is for. The first tier, in lower case")
         }
     }
 
     var holds: String {
         switch self {
-        case .pack(.firstStir): "\(Pack.firstStir.planned) \(Pack.firstStir.noun) in five chapters"
-        case .pack(.lens): "\(Pack.lens.planned) \(Pack.lens.noun) in four issues"
-        case .pack(.escapement): "\(Pack.escapement.planned) \(Pack.escapement.noun) in five chapters"
-        case .pack(.prism): "\(Pack.prism.planned) \(Pack.prism.noun) in five trays"
-        case .complete: "\(Pack.named(Pack.bundled)) \u{00B7} \(Pack.bundled.map(\.planned).reduce(0, +)) levels"
+        case .pack(.firstStir): String(localized: "\(Pack.firstStir.counted(Pack.firstStir.planned)) in five chapters",
+                                       comment: "What First Stir holds. Its levels counted")
+        case .pack(.lens): String(localized: "\(Pack.lens.counted(Pack.lens.planned)) in four issues",
+                                  comment: "What Lens holds. Its levels counted")
+        case .pack(.escapement): String(localized: "\(Pack.escapement.counted(Pack.escapement.planned)) in five chapters",
+                                        comment: "What Escapement holds. Its levels counted")
+        case .pack(.prism): String(localized: "\(Pack.prism.counted(Pack.prism.planned)) in five trays",
+                                   comment: "What Prism holds. Its levels counted")
+        case .complete: String(localized: "\(Pack.named(Pack.bundled)) \u{00B7} \(Pack.bundled.map(\.planned).reduce(0, +)) levels",
+                               comment: "What the bundle holds. Its packs, then their levels")
         }
     }
 
     /// The dock's header once its Ask to Buy is approved.
-    var yours: String { "\(name) is yours" }
+    var yours: String { String(localized: "\(name) is yours", comment: "The dock's header once an Ask to Buy is approved") }
     /// A line under the facts, owned or not.
-    var note: String? { self == .pack(.prism) ? "letters for colour-blind play, in settings" : nil }
+    var note: String? {
+        self == .pack(.prism) ? String(localized: "letters for colour-blind play, in settings", comment: "Prism's card, under its facts") : nil
+    }
 
     var free: String {
         switch self {
-        case .pack(let p): "levels 1\u{2013}\(p.taste) free, no purchase"
-        case .complete: "each pack's first 3 levels"
+        case .pack(let p): String(localized: "levels 1\u{2013}\(p.taste) free, no purchase", comment: "A pack's card: its free levels")
+        case .complete: String(localized: "each pack's first 3 levels", comment: "The bundle's card: what is free")
         }
     }
 
@@ -202,16 +219,17 @@ extension Store {
     /// A restore that finds nothing changes no state, so VoiceOver hears what it came to here.
     func restoreAndAnnounce() async {
         await restore()
-        if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
+        if let note = restoreNote { AccessibilityNotification.Announcement(note).post() } // loc: verbatim localized by restoreNote
     }
 
     /// What the last restore came to, on a card and in settings; nil before one.
     var restoreNote: String? {
-        if restoring { return "restoring\u{2026}" }
+        if restoring { return String(localized: "restoring\u{2026}", comment: "Restore purchases, running") }
         return switch restored {
-        case .found(let packs): "restored \(Pack.named(Pack.sold().filter(packs.contains)))"
-        case .nothing: "nothing to restore on this Apple ID"
-        case .failed: "couldn't reach the App Store"
+        case .found(let packs): String(localized: "restored \(Pack.named(Pack.sold().filter(packs.contains)))",
+                                       comment: "Restore purchases, done. The packs it found")
+        case .nothing: String(localized: "nothing to restore on this Apple ID", comment: "Restore purchases, nothing found")
+        case .failed: String(localized: "couldn't reach the App Store", comment: "Restore purchases, failed")
         case nil: nil
         }
     }
@@ -221,9 +239,10 @@ extension Failure {
     /// Said under the failed purchase; nil where "the purchase didn't go through" is all there is to say.
     var words: String? {
         switch self {
-        case .offline: "No connection. Try again when you're online."
-        case .storefront: "Not sold in your country's App Store."
-        case .refused: "In-app purchases are turned off on this iPhone."
+        case .offline: String(localized: "No connection. Try again when you're online.", comment: "A purchase failed, offline")
+        case .storefront: String(localized: "Not sold in your country's App Store.", comment: "A purchase failed: not sold here")
+        case .refused: String(localized: "In-app purchases are turned off on this iPhone.",
+                              comment: "Purchases are barred on this phone")
         case .cancelled, .other: nil
         }
     }
@@ -233,8 +252,8 @@ extension Pricing {
     /// In a price's place on the buy pill while there is none.
     var words: String? {
         switch self {
-        case .fetching: "price loading"
-        case .unreachable: "App Store unreachable"
+        case .fetching: String(localized: "price loading", comment: "The buy pill, in the price's place while it loads")
+        case .unreachable: String(localized: "App Store unreachable", comment: "The buy pill, in the price's place, no App Store")
         case .fetched: nil
         }
     }
@@ -255,10 +274,11 @@ extension Purchase {
     func tag(unshared: Bool = false) -> (word: String, colour: Color)? {
         switch self {
         case .unowned: nil
-        case .owned: ("owned", .lime)
-        case .pending: ("waiting for approval", .amber)
-        case .failed: ("purchase failed", .magenta)
-        case .revoked: (unshared ? "no longer shared with you" : "no longer on this Apple ID", Color.text2)
+        case .owned: (String(localized: "owned", comment: "A pack's state"), .lime)
+        case .pending: (String(localized: "waiting for approval", comment: "A pack's state: an Ask to Buy sent"), .amber)
+        case .failed: (String(localized: "purchase failed", comment: "A pack's state"), .magenta)
+        case .revoked: (unshared ? String(localized: "no longer shared with you", comment: "A pack's state: a family's share ended")
+                        : String(localized: "no longer on this Apple ID", comment: "A pack's state: refunded"), Color.text2)
         }
     }
 }
@@ -286,10 +306,15 @@ enum Marks {
     }
 
     /// The line under a cover's name: "new", else how many of an unowned pack's free levels are solved, else nothing.
-    static func line(_ pack: Pack, owned: Bool, fits: Bool, played: Int?) -> (words: String, spoken: String)? {
-        if new(pack, fits: fits) { return ("new", "new") }
+    static func line(_ pack: Pack, owned: Bool, fits: Bool, played: Int?) -> (words: String, spoken: String, new: Bool)? {
+        if new(pack, fits: fits) {
+            let new = String(localized: "new", comment: "Under a pack's cover, until its card opens")
+            return (new, new, true)
+        }
         guard !owned, let played else { return nil }
-        return ("\(played)/\(pack.taste) free", "\(played) of \(pack.taste) free levels solved")
+        return (String(localized: "\(played)/\(pack.taste) free", comment: "Under a pack's cover: its free levels solved, of all"),
+                String(localized: "\(played) of \(pack.taste) free levels solved",
+                       comment: "VoiceOver: a pack's cover. Its free levels solved, of all"), false)
     }
 }
 
@@ -446,7 +471,10 @@ struct PackClip: View {
         ClipPlayer(clip: .of(offer), side: side, held: held, paused: !seen)
             .onGeometryChange(for: Bool.self) { Self.seen($0.size, in: $0.bounds(of: .scrollView)) } action: { seen = $0 }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(offer.name): \(offer.pitch). " + (offer.pack == nil ? "A level from each pack, played." : "A level played."))
+            .accessibilityLabel(offer.pack == nil // loc: verbatim each a key
+                ? Text("\(offer.name): \(offer.pitch). A level from each pack, played.",
+                       comment: "VoiceOver: the bundle's clip. Its name, then its pitch")
+                : Text("\(offer.name): \(offer.pitch). A level played.", comment: "VoiceOver: a pack's clip. Its name, then its pitch"))
             .accessibilityAddTraits(.isImage)
     }
 
@@ -505,33 +533,44 @@ struct PackCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Padded below by all of hit()'s reach, as the scroll, laid over it, would take the rest of its target.
             let back = Self.back(to: backTo, beside: beside || closes)
-            UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) }
+            UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) } // loc: verbatim localized by back
                 .padding(.top, 18).padding(.bottom, 14)
                 .padding(.horizontal, 24)
-                .accessibilityLabel(back.spoken)
+                .accessibilityLabel(back.spoken) // loc: verbatim localized by back
             GeometryReader { g in
                 ScrollViewReader { reader in
                     ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
-                            Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
+                            (offer.pack == nil
+                                ? state == .owned ? Text("BUNDLE", comment: "The bundle's card, over its name, owned")
+                                    : Text("BUNDLE \u{00B7} PAID ADD-ON", comment: "The bundle's card, over its name")
+                                : state == .owned ? Text("PACK", comment: "A pack's card, over its name, owned")
+                                    : Text("PACK \u{00B7} PAID ADD-ON", comment: "A pack's card, over its name"))
                                 .font(.ui(.eyebrow)).tracking(2).foregroundStyle(Color.text3)
                                 .padding(.top, 12)
-                            Text(offer.name).font(.ui(.display)).tracking(2)
+                            Text(verbatim: offer.name).font(.ui(.display)).tracking(2)
                                 .foregroundStyle(offer.gradient).shadow(color: offer.glow.opacity(0.55), radius: 10).padding(.top, 6)
                                 .accessibilityAddTraits(.isHeader)
-                            Text(offer.pitch).font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4)
+                            Text(offer.pitch).font(.ui(.label)).foregroundStyle(Color.text2).padding(.top, 4) // loc: verbatim localized by Offer
                             // Bounded by the height too, so buy is still on the first screen of the smallest phone.
                             PackClip(offer: offer, side: min(typeSize.isAccessibilitySize ? 200 : 320, g.size.width - 48,
                                                              g.size.height * 0.36), held: clock)
                                 .frame(maxWidth: .infinity).padding(.top, 28)
                             // An owner's card is home, not a shop: no taste to offer, and the pack's progress for what it holds.
                             VStack(alignment: .leading, spacing: 9) {
-                                fact("for", Text(offer.assumes))
-                                if state != .owned { fact("free", Text(offer.free)) }
+                                fact(String(localized: "for", comment: "A pack's card: the key beside who it is for"),
+                                     Text(offer.assumes)) // loc: verbatim localized by Offer
+                                if state != .owned {
+                                    fact(String(localized: "free", comment: "A pack's card: the key beside its free levels"),
+                                         Text(offer.free)) // loc: verbatim localized by Offer
+                                }
                                 if state == .owned, offer.pack != nil, !levels.isEmpty {
-                                    fact("done", Text("\(levels.filter { Best.load($0.id)?.over == 0 }.count)/\(levels.count) \(noPar ? "solved" : "at par")"))
+                                    let par = levels.filter { Best.load($0.id)?.over == 0 }.count
+                                    fact(String(localized: "done", comment: "An owned pack's card: the key beside its progress"),
+                                         noPar ? Text("\(par)/\(levels.count) solved", comment: "Escapement's progress. Levels solved, of all")
+                                             : Text("\(par)/\(levels.count) at par", comment: "A pack's progress. Levels at par, of all"))
                                 } else {
-                                    fact("holds", holds)
+                                    fact(String(localized: "holds", comment: "A pack's card: the key beside what it holds"), holds)
                                         .accessibilityActions {
                                             // The names' links, which a combined element may not offer VoiceOver.
                                             if offer.pack == nil {
@@ -542,7 +581,8 @@ struct PackCard: View {
                                         }
                                 }
                                 if offer.pack == nil, state != .owned, let saving = store.saving {
-                                    fact("save", Text("\(saving) on the packs you don't have"))
+                                    fact(String(localized: "save", comment: "The bundle's card: the key beside what it saves"),
+                                         Text("\(saving) on the packs you don't have", comment: "The bundle's saving. A price"))
                                 }
                             }
                             .padding(.top, 32)
@@ -555,7 +595,7 @@ struct PackCard: View {
                             if levels.isEmpty { Spacer(minLength: 24) }
                             VStack(alignment: .leading, spacing: 0) {
                                 if arrived, let note = Self.arrival(offer, levels, state: state) {
-                                    Text(note).font(.ui(.label)).foregroundStyle(Color.text2).padding(.bottom, 14)
+                                    Text(note).font(.ui(.label)).foregroundStyle(Color.text2).padding(.bottom, 14) // loc: verbatim localized by arrival
                                         .fixedSize(horizontal: false, vertical: true)
                                         .accessibilityFocused($spoken, equals: .note)
                                 }
@@ -651,7 +691,7 @@ struct PackCard: View {
             // Until the launch's first read has finished, an owned pack reads as unowned: that read is no change, even
             // when it lands past `Store.readLimit`.
             guard old.ready, new.state != old.state else { return }
-            if let tag = new.state.tag(unshared: unshared) { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
+            if let tag = new.state.tag(unshared: unshared) { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() } // loc: verbatim a name, then a word localized by Purchase
             // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
             if Self.lands(old.state, new.state, ready: old.ready) {
                 landings += 1
@@ -664,12 +704,15 @@ struct PackCard: View {
         .haptic(.success, trigger: landings)
     }
 
-    static let menu = "menu"
+    static var menu: String { String(localized: "menu", comment: "A pack's card: its back button, to the menu") }
 
     /// The way out's words and VoiceOver's. Beside the list the menu is already in sight, so going back to it closes
     /// the card (Jack's call d4-menuback = B, round 16); back to Complete's card reads as ever.
     static func back(to: String, beside: Bool) -> (text: String, spoken: String) {
-        beside && to == menu ? ("\u{2715} close", "Close") : ("\u{2039} \(to)", "Back")
+        beside && to == menu
+            ? ("\u{2715} " + String(localized: "close", comment: "A pack's card beside the menu: closes it"),
+               String(localized: "Close", comment: "VoiceOver: a pack's card beside the menu, its close button"))
+            : ("\u{2039} \(to)", String(localized: "Back", comment: "VoiceOver: a pack's card, its back button"))
     }
 
     private struct Reading: Equatable {
@@ -685,25 +728,22 @@ struct PackCard: View {
 
     /// The bundle's names each pack, each opening that pack's card, so its taste is a tap away.
     private var holds: Text {
-        guard offer.pack == nil else { return Text(offer.holds) }
-        let sold = Pack.bundled
-        var s = AttributedString()
-        for (i, pack) in sold.enumerated() {
-            if i > 0 { s += AttributedString(i == sold.count - 1 ? " and " : ", ") }
-            var name = AttributedString(pack.name)
-            name.link = URL(string: "unstir-pack:\(pack.rawValue)")
-            name.underlineStyle = Text.LineStyle(pattern: .dot)
-            s += name
+        guard offer.pack == nil else { return Text(offer.holds) } // loc: verbatim localized by Offer
+        // Pack names never translate, so each is found in the localized line.
+        var s = AttributedString(offer.holds)
+        for pack in Pack.bundled {
+            guard let name = s.range(of: pack.name) else { continue }
+            s[name].link = URL(string: "unstir-pack:\(pack.rawValue)")
+            s[name].underlineStyle = Text.LineStyle(pattern: .dot)
         }
-        s += AttributedString(" \u{00B7} \(sold.map(\.planned).reduce(0, +)) levels")
-        return Text(s)
+        return Text(s) // loc: verbatim localized by Offer
     }
 
     @ViewBuilder private func fact(_ key: String, _ value: Text) -> some View {
         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 0))
         layout {
-            Text(key).font(.ui(.detail)).foregroundStyle(Color.text3)
+            Text(key).font(.ui(.detail)).foregroundStyle(Color.text3) // loc: verbatim localized by the caller
                 .frame(width: typeSize.isAccessibilitySize ? nil : keyWidth, alignment: .leading)
             value.font(.ui(.label)).fixedSize(horizontal: false, vertical: true)
         }
@@ -722,7 +762,9 @@ struct PackCard: View {
     /// pack has chapters, as the menu heads each tier.
     private func list(_ reader: ScrollViewProxy) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            if levels.first?.chapter == nil { heading("levels", of: []) }
+            if levels.first?.chapter == nil {
+                heading(String(localized: "levels", comment: "A pack's card: its list's heading, where it has no chapters"), of: [])
+            }
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
                 if let chapter = level.chapter, i == 0 || levels[i - 1].chapter != chapter {
                     heading(chapter, of: levels.filter { $0.chapter == chapter }).padding(.top, i == 0 ? 0 : 18)
@@ -737,7 +779,7 @@ struct PackCard: View {
                     spoken = .buy
                 } label: {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(offer.ink)
+                        Text(verbatim: level.label).font(.ui(.label, .semibold)).foregroundStyle(offer.ink)
                             .opacity(open ? 1 : 0.5).frame(minWidth: 30, alignment: .leading)
                         Text(level.title).font(.ui(.body)).multilineTextAlignment(.leading)
                             .foregroundStyle(open ? Color.text : Color.text3)
@@ -748,7 +790,7 @@ struct PackCard: View {
                         } else if !noPar, case let mark = Archive.Mark(best, started: tried), let filled = ResultMarks.filled(mark) {
                             ResultMarks(filled: filled, margin: ResultMarks.margin(mark))
                         } else if let best {
-                            Text(best.over == 0 ? atPar : "+\(best.over)").font(.ui(.detail))
+                            Text(best.over == 0 ? atPar : "+\(best.over)").font(.ui(.detail)) // loc: verbatim localized by atPar, or a number
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
                         } else if tried {
                             Text("tried").font(.ui(.detail)).foregroundStyle(Color.text3)
@@ -761,24 +803,34 @@ struct PackCard: View {
                 }
                 .buttonStyle(Sounding())
                 .rowHairline(offer.glow, level.id == focus?.id ? lit : 0, inset: 10)
-                .accessibilityValue(open ? best.map { noPar ? ($0.over == 0 ? "solved" : "\($0.over) over par") : Spoken.result($0) }
-                                        ?? (tried ? "tried" : "") : "locked, needs the pack")
-                .accessibilityHint(open ? "" : "Shows where to buy \(offer.name)")
+                .accessibilityValue(open ? best.map { // loc: verbatim each localized
+                    noPar ? ($0.over == 0 ? String(localized: "solved", comment: "VoiceOver: Escapement's best, solved")
+                             : String(localized: "\($0.over) over par", comment: "VoiceOver: an archive day's best. Moves over par"))
+                        : Spoken.result($0)
+                } ?? (tried ? String(localized: "tried", comment: "VoiceOver: a row started, with no best") : "")
+                    : String(localized: "locked, needs the pack", comment: "VoiceOver: a pack's row past its free levels, unowned"))
+                .accessibilityHint(open ? Text(verbatim: "") // loc: verbatim each a key
+                                   : Text("Shows where to buy \(offer.name)", comment: "VoiceOver: a pack's locked row. The pack"))
             }
         }
     }
 
     /// Escapement has no par (Jack's call EL1, round 11): its best is a solve, which spends the budget to the last tick.
     private var noPar: Bool { offer.pack == .escapement }
-    private var atPar: String { noPar ? "solved" : "par" }
+    private var atPar: String {
+        noPar ? String(localized: "solved", comment: "A pack's row: Escapement's best")
+            : String(localized: "par", comment: "A pack's row: its best, at par")
+    }
 
     /// A chapter's name and rule, with how many of its levels are at par, or solved.
     private func heading(_ name: String, of chapter: [Level]) -> some View {
         HStack(spacing: 10) {
-            Text(name.lowercased()).font(.ui(.detail, .semibold)).foregroundStyle(offer.gradient).fixedSize()
+            Text(name.localizedLowercase).font(.ui(.detail, .semibold)).foregroundStyle(offer.gradient).fixedSize() // loc: verbatim localized by the pack's table
             Rectangle().fill(offer.gradient).frame(height: 1).opacity(0.8)
             if !chapter.isEmpty {
-                Text("\(chapter.filter { Best.load($0.id)?.over == 0 }.count)/\(chapter.count) \(noPar ? "solved" : "at par")")
+                let par = chapter.filter { Best.load($0.id)?.over == 0 }.count
+                (noPar ? Text("\(par)/\(chapter.count) solved", comment: "Escapement's chapter. Levels solved, of all")
+                    : Text("\(par)/\(chapter.count) at par", comment: "A pack's chapter. Levels at par, of all"))
                     .font(.ui(.detail))
                     .foregroundStyle(Color.text3)
             }
@@ -792,14 +844,18 @@ struct PackCard: View {
         switch state {
         case .unowned: EmptyView()
         case .owned:
-            line(offer.pack == nil ? "\u{2713} owned \u{00B7} all \(Offer.countWord(Pack.bundled.count)) packs open" : "\u{2713} owned \u{00B7} every level open", .lime)
+            line(offer.pack == nil
+                 ? String(localized: "\u{2713} owned \u{00B7} all \(Offer.countWord(Pack.bundled.count)) packs open",
+                          comment: "The bundle's card, owned. Its packs, counted in words")
+                 : String(localized: "\u{2713} owned \u{00B7} every level open", comment: "A pack's card, owned"), .lime)
         case .pending:
             // A pack can wait on Complete's request alone, which only Complete's card asks again.
             let asked = store.asked(offer)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     PulsingDot(colour: .amber)
-                    Text(asked ? "waiting for approval" : "\(Offer.bundleName) is waiting for approval")
+                    (asked ? Text("waiting for approval", comment: "A pack's card: its Ask to Buy sent")
+                        : Text("\(Offer.bundleName) is waiting for approval", comment: "A pack's card: the bundle's Ask to Buy sent"))
                         .font(.ui(.headline)).foregroundStyle(Color.amber)
                 }
                 // Asking again failed, and the first request is still with the parent: the failure stands in for
@@ -807,8 +863,10 @@ struct PackCard: View {
                 if let why = store.failures[offer.productID]?.words {
                     detail(why)
                 } else {
-                    Text(asked ? "Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again."
-                         : "Ask to Buy: \(offer.name) opens here once \(Offer.bundleName) is approved.")
+                    (asked ? Text("Ask to Buy: the pack opens here once it's approved \u{00B7} tap asked to send it again.",
+                                  comment: "A pack's card: its Ask to Buy sent. Asked is the buy pill's word")
+                        : Text("Ask to Buy: \(offer.name) opens here once \(Offer.bundleName) is approved.",
+                               comment: "A pack's card: the bundle's Ask to Buy sent. The pack, then the bundle"))
                         .font(.ui(.detail)).foregroundStyle(Color.text2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -816,25 +874,27 @@ struct PackCard: View {
             .accessibilityElement(children: .combine)
         case .failed:
             VStack(alignment: .leading, spacing: 4) {
-                line("the purchase didn't go through", .magenta)
+                line(String(localized: "the purchase didn't go through", comment: "A pack's card: its purchase failed"), .magenta)
                 if let why = store.failures[offer.productID]?.words { detail(why) }
             }
             .accessibilityElement(children: .combine)
         case .revoked:
             // A refund or a family's share ended: said plainly, never as an alarm.
-            line((unshared ? "\(offer.name) is no longer shared with you" : "\(offer.name) isn't on this Apple ID any more")
-                 + " \u{00B7} your progress is kept", Color.text2, glow: false)
+            line(unshared ? String(localized: "\(offer.name) is no longer shared with you \u{00B7} your progress is kept",
+                                   comment: "A pack's card: a family's share ended. The pack")
+                 : String(localized: "\(offer.name) isn't on this Apple ID any more \u{00B7} your progress is kept",
+                          comment: "A pack's card: refunded. The pack"), Color.text2, glow: false)
         }
     }
 
     private func detail(_ s: String) -> some View {
-        Text(s).font(.ui(.detail)).foregroundStyle(Color.text3).fixedSize(horizontal: false, vertical: true)
+        Text(s).font(.ui(.detail)).foregroundStyle(Color.text3).fixedSize(horizontal: false, vertical: true) // loc: verbatim localized by the caller
     }
 
     private var unshared: Bool { offer.pack.map(store.unshared) ?? false }
 
     private func line(_ s: String, _ colour: Color, glow: Bool = true) -> some View {
-        Text(s).font(.ui(.headline)).foregroundStyle(colour).shadow(color: colour.opacity(glow ? 0.6 : 0), radius: 4)
+        Text(s).font(.ui(.headline)).foregroundStyle(colour).shadow(color: colour.opacity(glow ? 0.6 : 0), radius: 4) // loc: verbatim localized by the caller
             .fixedSize(horizontal: false, vertical: true)
     }
 
@@ -844,21 +904,41 @@ struct PackCard: View {
             // The bundle has no levels of its own: its owner goes on in the first pack with a level left to play.
             let pack = offer.pack == nil ? Pack.bundled.first(where: { Self.pickUp($0.levels) != nil }) : nil
             if let level = pack.flatMap({ Self.pickUp($0.levels) }) ?? next {
-                let verb = Self.continues(pack?.levels ?? levels) ? "continue" : "play"
-                let name = pack.map { $0.name + " " } ?? ""
-                pill("\(verb) \(name)\(level.label) \u{203A}", trailing: nil, colour: .lime) { onPlay(level) }
-                    .accessibilityLabel("\(verb.capitalized) \(pack?.name ?? offer.name), level \(level.label)")
+                let continues = Self.continues(pack?.levels ?? levels), name = pack?.name ?? offer.name
+                let title = switch (continues, pack) {
+                case (true, let pack?): String(localized: "continue \(pack.name) \(level.label) \u{203A}",
+                                               comment: "The bundle's card, owned: plays on. The pack, then the level number")
+                case (true, nil): String(localized: "continue \(level.label) \u{203A}", comment: "An owned pack's card: plays on. The level number")
+                case (false, let pack?): String(localized: "play \(pack.name) \(level.label) \u{203A}",
+                                                comment: "The bundle's card, owned: plays. The pack, then the level number")
+                case (false, nil): String(localized: "play \(level.label) \u{203A}", comment: "An owned pack's card: plays. The level number")
+                }
+                pill(title, trailing: nil, colour: .lime) { onPlay(level) }
+                    .accessibilityLabel(continues // loc: verbatim each a key
+                        ? Text("Continue \(name), level \(level.label)", comment: "VoiceOver: an owned card's play button. The pack, the level number")
+                        : Text("Play \(name), level \(level.label)", comment: "VoiceOver: an owned card's play button. The pack, the level number"))
             }
         } else {
             // A declined Ask to Buy sends no transaction, so an asked pill stays live: tapping it sends a new request.
             // A pack waiting only on Complete's request is bought alone.
             let asked = store.asked(offer)
             let label = switch state {
-            case _ where buying: "buying\u{2026}"
-            case .failed: "try again"
-            case .revoked: unshared ? "buy" : "buy again"
-            case .pending where asked: "asked"
-            default: "buy"
+            case _ where buying: String(localized: "buying\u{2026}", comment: "The buy pill, a purchase running")
+            case .failed: String(localized: "try again", comment: "The buy pill, a purchase failed")
+            case .revoked: unshared ? String(localized: "buy", comment: "The buy pill")
+                : String(localized: "buy again", comment: "The buy pill, refunded")
+            case .pending where asked: String(localized: "asked", comment: "The buy pill, an Ask to Buy sent: tapped, sends it again")
+            default: String(localized: "buy", comment: "The buy pill")
+            }
+            // As the pill says it, its words capitalized.
+            let spoken = switch state {
+            case _ where buying: String(localized: "Buying\u{2026} \(offer.name)", comment: "VoiceOver: the buy pill, a purchase running. The pack")
+            case .failed: String(localized: "Try Again \(offer.name)", comment: "VoiceOver: the buy pill, a purchase failed. The pack")
+            case .revoked: unshared ? String(localized: "Buy \(offer.name)", comment: "VoiceOver: the buy pill. The pack")
+                : String(localized: "Buy Again \(offer.name)", comment: "VoiceOver: the buy pill, refunded. The pack")
+            case .pending where asked: String(localized: "Ask again for \(offer.name)",
+                                              comment: "VoiceOver: the buy pill, an Ask to Buy sent. The pack")
+            default: String(localized: "Buy \(offer.name)", comment: "VoiceOver: the buy pill. The pack")
             }
             let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14))
                 : AnyLayout(HStackLayout(spacing: 14))
@@ -876,18 +956,20 @@ struct PackCard: View {
                             CubicKeyframe(1.08, duration: 0.14)
                             CubicKeyframe(1.0, duration: 0.3)
                         }
-                        .accessibilityLabel(state == .pending && asked && !buying ? "Ask again for \(offer.name)"
-                                            : "\(label.capitalized) \(offer.name)")
-                        .accessibilityValue(price ?? store.pricing.words ?? "")
+                        .accessibilityLabel(spoken) // loc: verbatim localized here
+                        .accessibilityValue(price ?? store.pricing.words ?? "") // loc: verbatim the App Store's price, or localized by Pricing
                         .accessibilityFocused($spoken, equals: .buy)
                 }
                 if let taste = Self.taste(levels) ?? Self.placeholder(offer).map({ (level: $0, replay: false) }) {
                     let (level, replay) = taste
                     let n = offer.pack?.taste ?? 3
                     UnstirButton(.secondary) { onPlay(level) } label: {
-                        Text(replay ? "replay 01\u{2013}\(String(format: "%02d", n)) \u{203A}" : "try \(n) free \u{203A}")
+                        replay ? Text("replay 01\u{2013}\(String(format: "%02d", n)) \u{203A}",
+                                      comment: "A pack's card: replays its free levels. The last's number")
+                            : Text("try \(n) free \u{203A}", comment: "A pack's card: plays its free levels. How many")
                     }
-                    .accessibilityLabel(replay ? "Replay the \(n) free levels" : "Try the first \(n) levels free")
+                    .accessibilityLabel(replay ? Text("Replay the \(n) free levels", comment: "VoiceOver: a pack's card. How many") // loc: verbatim each a key
+                                        : Text("Try the first \(n) levels free", comment: "VoiceOver: a pack's card. How many"))
                 }
             }
             // Under the pill, as a failure is said, since it wraps inside the pill on the smallest phone.
@@ -917,9 +999,14 @@ struct PackCard: View {
     static func arrival(_ offer: Offer, _ levels: [Level], state: Purchase,
                         best: (String) -> Best? = Best.load) -> String? {
         guard let pack = offer.pack, levels.count > pack.taste, state != .owned, state != .revoked else { return nil }
-        let free = Offer.countWord(pack.taste), more = "\(levels.count - pack.taste) more in \(pack.name)."
-        return taste(levels, best: best)?.replay == true ? "You've played the free \(free). \(more)"
-            : "The first \(free) are free. \(more)"
+        let free = Offer.countWord(pack.taste)
+        let more = String(localized: "\(levels.count - pack.taste) more in \(pack.name).",
+                          comment: "A pack's card, over buying: the levels past the free ones. How many, then the pack")
+        return taste(levels, best: best)?.replay == true
+            ? String(localized: "You've played the free \(free). \(more)",
+                     comment: "A pack's card, over buying. The free levels counted in words, then the levels past them")
+            : String(localized: "The first \(free) are free. \(more)",
+                     comment: "A pack's card, over buying. The free levels counted in words, then the levels past them")
     }
 
     /// Play, until a level past the taste has been solved: then the owner continues.
@@ -943,9 +1030,9 @@ struct PackCard: View {
                       _ tap: @escaping () -> Void) -> some View {
         UnstirButton(.primary, accent: colour, pending: pending, action: tap) {
             HStack(spacing: 14) {
-                Text(title)
+                Text(title) // loc: verbatim localized by the caller
                 // No price yet: what stands in for it is smaller and fainter.
-                if let trailing { Text(trailing).font(dim ? .ui(.detail) : .ui(.button)).opacity(dim ? 0.45 : 1) }
+                if let trailing { Text(trailing).font(dim ? .ui(.detail) : .ui(.button)).opacity(dim ? 0.45 : 1) } // loc: verbatim the App Store's price, or localized by Pricing
             }
         }
     }
@@ -958,9 +1045,11 @@ struct PackCard: View {
         func joined(_ s: String) -> String { s.replacingOccurrences(of: " ", with: "\u{00A0}") }
         return VStack(alignment: .leading, spacing: 6) {
             Button { buy(.complete) } label: {
-                let all = Text("or all \(Offer.countWord(Pack.bundled.count)) in \(Offer.bundleName)\u{00A0}\u{00B7}\u{00A0}").foregroundStyle(quiet)
-                let save = Text(joined("\u{00B7} save \(saving) \u{203A}")).foregroundStyle(quiet)
-                Text("\(all)\(Text(joined(complete)).foregroundStyle(Color.text2)) \(save)")
+                let all = Text("or all \(Offer.countWord(Pack.bundled.count)) in \(Offer.bundleName)\u{00A0}\u{00B7}\u{00A0}",
+                               comment: "A pack's card: buys the bundle instead. Its packs counted in words, then its name").foregroundStyle(quiet)
+                let save = Text(joined(String(localized: "\u{00B7} save \(saving) \u{203A}", comment: "A pack's card: what the bundle saves. A price"))) // loc: verbatim localized here
+                    .foregroundStyle(quiet)
+                (all + Text(verbatim: joined(complete)).foregroundStyle(Color.text2) + Text(verbatim: " ") + save)
                 .font(.ui(.detail))
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -983,7 +1072,7 @@ struct PackCard: View {
     private var restore: some View {
         Button { Task { await store.restoreAndAnnounce() } } label: {
             let words = restoreWords
-            Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
+            Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words) // loc: verbatim localized by Store and ConsentWords
                 .font(.ui(.detail)).foregroundStyle(Color.text3)
                 .fixedSize(horizontal: false, vertical: true).hit(16)
         }
@@ -1079,10 +1168,11 @@ struct PackDock: View, Equatable {
             let shelf = Offer.shelf().filter { $0 != .complete || store.offersComplete }
             HStack {
                 if let yours = store.approved.first {
-                    Text(yours.yours).font(.ui(.detail, .semibold)).tracking(1).foregroundStyle(yours.glow)
+                    Text(yours.yours).font(.ui(.detail, .semibold)).tracking(1).foregroundStyle(yours.glow) // loc: verbatim localized by Offer
                         .shadow(color: yours.glow.opacity(0.6), radius: 4).transition(.opacity)
                 } else {
-                    Text(owned.isEmpty ? "PACKS \u{00B7} PAID ADD-ONS" : "PACKS").font(.ui(.detail, .semibold)).tracking(2)
+                    (owned.isEmpty ? Text("PACKS \u{00B7} PAID ADD-ONS", comment: "The dock's header, nothing owned")
+                        : Text("PACKS", comment: "The dock's header")).font(.ui(.detail, .semibold)).tracking(2)
                         .foregroundStyle(Color.text2).transition(.opacity)
                 }
                 Spacer()
@@ -1098,7 +1188,7 @@ struct PackDock: View, Equatable {
                              covered: covered || !store.shelved)) {
                 // Held under UNSTIR_CLOCK, for its shot.
                 guard let offer = Self.saying(store.approved.first, covered: covered, shelved: store.shelved) else { return }
-                if announced.insert(offer).inserted { AccessibilityNotification.Announcement(offer.yours).post() }
+                if announced.insert(offer).inserted { AccessibilityNotification.Announcement(offer.yours).post() } // loc: verbatim localized by Offer
                 // Five seconds in sight: covered, it waits.
                 guard held == nil else { return }
                 try? await Task.sleep(for: .seconds(5))
@@ -1119,8 +1209,8 @@ struct PackDock: View, Equatable {
                                 // A name breaks only between its words, each on a line of its own, at the row's
                                 // one size, which shrinks until every word fits its cover rather than hyphenate.
                                 ViewThatFits(in: .horizontal) {
-                                    Text(offer.name).lineLimit(1)
-                                    Text(offer.name.replacingOccurrences(of: " ", with: "\n"))
+                                    Text(verbatim: offer.name).lineLimit(1)
+                                    Text(verbatim: offer.name.replacingOccurrences(of: " ", with: "\n"))
                                         .lineLimit(offer.name.split(separator: " ").count)
                                 }
                                 .font(.system(size: nameSize(shelf), design: .monospaced))
@@ -1133,8 +1223,8 @@ struct PackDock: View, Equatable {
                                 }
                             }
                             // Its room kept without one, so a mark clearing never moves the dock.
-                            let new = line?.words == "new"
-                            Text(line?.words ?? " ").font(.ui(.detail, new ? .semibold : .regular))
+                            let new = line?.new == true
+                            Text(line?.words ?? " ").font(.ui(.detail, new ? .semibold : .regular)) // loc: verbatim localized by Marks
                                 .foregroundStyle(new ? offer.ink : Color.text3)
                                 .shadow(color: new ? offer.glow.opacity(0.6) : .clear, radius: 3)
                                 .padding(.top, -4)
@@ -1143,12 +1233,14 @@ struct PackDock: View, Equatable {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(Sounding())
-                    .accessibilityLabel("\(offer.name), \(offer.pack == nil ? Pack.named(Pack.bundled) : "pack")")
-                    .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
+                    .accessibilityLabel(offer.pack == nil // loc: verbatim names alone, or a key
+                        ? Text(verbatim: "\(offer.name), \(Pack.named(Pack.bundled))")
+                        : Text("\(offer.name), pack", comment: "VoiceOver: a pack's cover. Its name"))
+                    .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil) // loc: verbatim localized by Purchase and Marks
                                          ?? store.price(offer.productID), line?.spoken].compactMap { $0 }.joined(separator: ", "))
-                    .accessibilityHint(offer.pitch)
+                    .accessibilityHint(offer.pitch) // loc: verbatim localized by Offer
                     .accessibilityShowsLargeContentViewer {
-                        Text(offer.name)
+                        Text(verbatim: offer.name)
                     }
                     .transition(.opacity)
                 }

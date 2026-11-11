@@ -19,6 +19,9 @@ allow [\w.]+, (?:format|style):
 allow Spoken\.
 allow (?:game\.)?level\.(?:title|note)\)
 allow (?:game\.)?(?:moves|tank|finish)Spoken\)
+allow ConsentWords\.
 any \.(?:uppercased\(\)|lowercased\(\)|capitalized\b)
 any == 1 \? "
 any \bText\("(?:[^A-Za-z"\\]|\\u\{\w+\}|\\\([^)]*\))*"\)
+# An announcement takes a String alone, so even a literal passes it untranslated.
+any \bAnnouncement\("

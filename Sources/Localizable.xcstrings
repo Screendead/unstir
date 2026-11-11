@@ -1,6 +1,29 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld %@ levels short of par" : {
+      "comment" : "The card's way up, the next tier shut. Levels short of par, then their tier",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld %@ level short of par"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld %@ levels short of par"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld moves" : {
       "comment" : "Moves played",
       "localizations" : {
@@ -562,6 +585,10 @@
         }
       }
     },
+    "every level and pack too, without buying" : {
+      "comment" : "Editors' build words",
+      "shouldTranslate" : false
+    },
     "next daily in %lld hours" : {
       "comment" : "VoiceOver: the daily's card. Hours to the next",
       "localizations" : {
@@ -607,6 +634,10 @@
           }
         }
       }
+    },
+    "open every tier" : {
+      "comment" : "Editors' build words",
+      "shouldTranslate" : false
     },
     "run in progress, best %lld tanks" : {
       "comment" : "VoiceOver: the endless row, a run saved. Its best",

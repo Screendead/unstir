@@ -29,6 +29,16 @@ enum Tier: String, CaseIterable {
         }
     }
 
+    /// The tier's name in lower case, as the menu's chips and lines show it.
+    var word: String {
+        switch self {
+        case .plughole: String(localized: "plughole", comment: "Tier name in lower case, on the menu: the easiest")
+        case .whirlpool: String(localized: "whirlpool", comment: "Tier name in lower case, on the menu: the second")
+        case .vortex: String(localized: "vortex", comment: "Tier name in lower case, on the menu: the third")
+        case .maelstrom: String(localized: "maelstrom", comment: "Tier name in lower case, on the menu: the hardest")
+        }
+    }
+
     /// Starts each of the tier's level ids. Progress is stored by id, so changing a prefix loses it unless the stored
     /// keys are remapped. Whirlpool's is from its old name, nightmare; maelstrom's levels replaced nightmare+'s, so
     /// its N+ became M and their bests never land on the new levels.
@@ -603,7 +613,7 @@ struct Level: Hashable, Sendable {
         let depth = 10 + rng.below(5)
         // The id keys the day's stored best, so it stays yyyymmdd; only the title follows the locale.
         let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        return Level(id: dailyID(date), label: "day",
+        return Level(id: dailyID(date), label: String(localized: "day", comment: "The daily's row, in a level number's place"),
                      title: String(localized: "Daily \u{00B7} \(day)", comment: "The daily's title. Its date, short"),
                      layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng), archived: archived)
     }
@@ -631,7 +641,7 @@ struct Level: Hashable, Sendable {
         return level
     }
 
-    static let sandbox = Level(id: "sandbox", label: "box", title: String(localized: "Sandbox",
+    static let sandbox = Level(id: "sandbox", label: String(localized: "box", comment: "The sandbox's row, in a level number's place"), title: String(localized: "Sandbox",
                                                                           comment: "The sandbox's title"),
                                note: String(localized: "Stir anything. Undo is free here.",
                                             comment: "The sandbox's line under the tank"),
