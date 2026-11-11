@@ -435,6 +435,40 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   brightens what is lit, which on bone runs white, so the band is off and an ink ring runs out over it (`Page.wave`).
   The ratchet's dark plate, steel wheel and split-flap cards stay as they are. The clip and the bundle's cut draw on
   the same page.
+- **Payoff.swift** and **PayoffViews.swift** hold three payoffs for finishing a tier or the whole free game, options
+  for Jack to choose between after his call COMPLETION, each only behind the harness's `UNSTIR_PAYOFF=a|b|c`
+  (`Payoff.option`, set in `RootView.init`): unset, as on every plain launch, `Game.tierDone` is never set, `Payoff`
+  never made, and nothing draws, sounds or is said. With it set, the solve that gives the last of a tier's levels a
+  best (`Game.tierDone`, read either side of the save as `completed` is, so once; maelstrom's is the game's, the same
+  solve as `Completion.free`; no pack, daily or run) earns one. `LevelView` plays it between the solve's wave and the
+  card: `Payoff.lead` (1.1 s) after the solve it takes the screen for `length`, its sounds at their times from the
+  set the game has (`cues`: the tier switch's, the heal's notes, the tick, the solve's chime), and the card follows;
+  a tap anywhere ends it (`skipPayoff`), and a reset forgets it. Everything it draws is a pure function of the seconds
+  in, endless once it has played, so what it leaves standing is what a level opened solved shows.
+  **a, the glass stirs itself**: `entries` gives three discs about the tank's centre, each inside the last one's rigid
+  core, wound together through two whole turns and let go, as raw entries over the stack (`Unstirred.extra`, so the
+  shader and its signature are untouched); no rod is the tank's size on a layout without a swirl, the swirl holds the
+  rim and not the centre, and no stir in play passes a turn. The knobs and lines leave for it (`clearsGlass`), a second
+  wave runs out from the centre as it lets go (`wave`), and a halo in the tier's colours stays lit behind the bezel
+  (`PayoffRim`, under the card too). The game's clears the chrome as `UNSTIR_CLEAN` does (`clearsChrome`) and whirls
+  four times, each letting go on the next tier's last picture (`relay`, `PayoffRelay`: plughole 27's, whirlpool 27's
+  and vortex 27's drawn over the solved one inside what the shader samples, mounted from the solve so they have baked
+  and struck before they show, the halo wearing each tier's colours as it passes) and the last on the solved picture,
+  the halo then in all four tiers' colours.
+  **b, the bezel counts**: a segment of the bezel for each of the tier's levels lights clockwise from twelve, 0.06 s
+  apart with a tick each, in its best's colour as the card names it (clean lime, par amber, solved white), then a
+  wave from the centre; the card adds "27 tanks unstirred · 18 clean" (`tally`). The game's ring holds all 108, a
+  quarter a tier under an arc in the tier's glow, and its card carries the one credit line (`Payoff.credit`, its
+  wording Jack's to set) under everything else.
+  **c, a curtain call**: the chrome leaves, the glass dims under a veil and turns once about its centre, ending
+  upright (`turn`), and `PayoffCurtain` stands the tier's name over it in the display role and its sweep, with
+  "unstirred."; the game's names each tier in turn, then "every tier unstirred" and the credit, then lifts, and the
+  card is today's.
+  Under Reduce Motion (`still`) nothing winds, counts or turns: a's halo and b's whole ring fade on, c's lines come
+  up together over a glass that doesn't turn, and the card follows. VoiceOver hears the payoff's sentence as it
+  starts and again after the level's own on the card (`spoken`, `Game.finishSpoken`). `UNSTIR_PAYOFFAT=s` holds it s
+  seconds in on a level opened solved, for stills, and `UNSTIR_PAYOFFSKIP=s` ends it s seconds in as a tap does; `scripts/film.sh payoff-` films each option for plughole's finish
+  and the game's beside today's, and each option's game under Reduce Motion (`PayoffTests`).
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
   25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
