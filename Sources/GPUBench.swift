@@ -35,6 +35,8 @@ enum GPUBench {
         var lenses: Set<Int> = []
         /// The Lens level whose halftone panel the stack samples, in place of `picture`.
         var panel: Int?
+        /// Drawn through `unstirLens` with the panel's detail, in place of `unstir`.
+        var fine = false
         var channels = false
         var side = Int(points * scale)
         var fourTaps = Float(Tank.fourTaps)
@@ -43,7 +45,7 @@ enum GPUBench {
 
     struct Args {
         var radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge: Float
-        var count, maskCount, channels: Int32
+        var count, maskCount, channels, fineCount: Int32
     }
 
     struct GlassArgs {
@@ -88,14 +90,18 @@ enum GPUBench {
         }
         // Lens's first level and its deepest, the only one with four lenses, each on its own panel.
         let lensLevels = [Level.lens[0], Level.lens[24]]
-        var panels: [Int: MTLTexture] = [:]
+        var panels: [Int: MTLTexture] = [:], atlases: [Int: MTLTexture] = [:], tables: [Int: [Float]] = [:]
+        func texture(_ pixels: [UInt8], _ width: Int, _ height: Int) -> MTLTexture? {
+            let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: width, height: height, mipmapped: false)
+            let t = device.makeTexture(descriptor: desc)
+            t?.replace(region: MTLRegionMake2D(0, 0, width, height), mipmapLevel: 0, withBytes: pixels, bytesPerRow: 4 * width)
+            return t
+        }
         for level in lensLevels {
-            let panel = Halftone.panel(level.panel)
-            let pixels = await Task.detached(priority: .userInitiated) { panel.pixels(side) }.value
-            let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: side, height: side, mipmapped: false)
-            guard let t = device.makeTexture(descriptor: desc) else { return }
-            t.replace(region: MTLRegionMake2D(0, 0, side, side), mipmapLevel: 0, withBytes: pixels, bytesPerRow: 4 * side)
-            panels[level.panel] = t
+            let panel = Halftone.panel(level.panel), rods = level.lenses.sorted().map { level.layout.rods[$0] }
+            let (pixels, detail) = await Task.detached(priority: .userInitiated) { (panel.pixels(side), panel.detail(side, lenses: rods)) }.value
+            guard let t = texture(pixels, side, side), let atlas = texture(detail.pixels, detail.width, detail.height) else { return }
+            (panels[level.panel], atlases[level.panel], tables[level.panel]) = (t, atlas, detail.table)
         }
         var outs: [Int: MTLTexture] = [:], fills: [Int: MTLTexture] = [:]
         for s in sides {
@@ -144,8 +150,10 @@ enum GPUBench {
             // Every lens zoomed to the deal's limit over the level's twists: the most of the glass a lens magnifies.
             let x8 = level.scramble.filter { !level.lenses.contains($0.rod) } + level.lenses.sorted().map { Twist(rod: $0, steps: 3) }
             for (name, stack) in [(level.id, level.scramble), ("\(level.id)-x8", x8)] {
-                cases.append(Case(name: name, picture: level.picture, layout: level.layout, stack: stack, lenses: level.lenses,
-                                  panel: level.panel))
+                for fine in [false, true] {
+                    cases.append(Case(name: name + (fine ? "-fine" : ""), picture: level.picture, layout: level.layout, stack: stack,
+                                      lenses: level.lenses, panel: level.panel, fine: fine))
+                }
             }
         }
 
@@ -161,7 +169,12 @@ enum GPUBench {
             var args = Args(radius: Float(radius), scale: Float(scale), n: Float(n), fourTaps: c.fourTaps,
                             cost: Float(cost), plateau: Float(Tank.plateau), swirlPlateau: Float(Tank.swirlPlateau),
                             lensEdge: Float(Tank.lensEdge), count: Int32(floats.count), maskCount: Int32(masks.count),
-                            channels: c.channels ? 1 : 0)
+                            channels: c.channels ? 1 : 0, fineCount: 0)
+            // Every case binds an atlas and a table, which only `unstirLens` reads.
+            let table = c.fine ? tables[c.panel!]! : [0]
+            if c.fine { args.fineCount = Int32(table.count) }
+            let fineBuffer = device.makeBuffer(bytes: table, length: 4 * table.count)!
+            let atlas = atlases[c.panel ?? lensLevels[0].panel]
             let twists = device.makeBuffer(bytes: floats, length: 4 * floats.count)!
             let maskBuffer = device.makeBuffer(bytes: masks, length: 4 * masks.count)!
             let cells: [Float] = c.kind == .unstir ? [0] : c.picture.data(seed: 27, clock: 0) ?? [0]
@@ -184,6 +197,8 @@ enum GPUBench {
                         enc.setComputePipelineState(pipeline)
                         enc.setTexture(picture, index: 0)
                         enc.setTexture(outs[c.side], index: 1)
+                        enc.setTexture(atlas, index: 2)
+                        enc.setBuffer(fineBuffer, offset: 0, index: 3)
                         enc.setBuffer(twists, offset: 0, index: 0)
                         enc.setBuffer(maskBuffer, offset: 0, index: 1)
                         enc.setBytes(&args, length: MemoryLayout<Args>.stride, index: 2)
@@ -241,12 +256,15 @@ enum GPUBench {
                    drift[drift.count / 2], drift.last!, worst.name, worst.ms,
                    heat()))
 
+        // Each Lens frame through the plain shader, as every glass drew before the detail, and through `unstirLens`.
         for level in lensLevels {
             let n = level.scramble.count, lenses = level.lenses.count
-            say(String(format: "GPUBENCH %@ %d px: as dealt %d entries %.3f ms, %.1f plain entries' work; its %d lenses at x8 %d entries %.3f ms, %.1f; of %.3f ms at 120 Hz",
-                       level.id, side, n, ms[level.id]!, (ms[level.id]! - base) / entry, lenses,
-                       n - level.scramble.filter { level.lenses.contains($0.rod) }.count + lenses, ms["\(level.id)-x8"]!,
-                       (ms["\(level.id)-x8"]! - base) / entry, frame))
+            for (shader, tail) in [("unstir", ""), ("unstirLens", "-fine")] {
+                let dealt = ms[level.id + tail]!, x8 = ms["\(level.id)-x8\(tail)"]!
+                say(String(format: "GPUBENCH %@ %d px %@: as dealt %d entries %.3f ms, %.1f plain entries' work; its %d lenses at x8 %d entries %.3f ms, %.1f; of %.3f ms at 120 Hz",
+                           level.id, side, shader, n, dealt, (dealt - base) / entry, lenses,
+                           n - level.scramble.filter { level.lenses.contains($0.rod) }.count + lenses, x8, (x8 - base) / entry, frame))
+            }
         }
 
         // Lens's first-open bake, cold: straight from the panel, so no player's cached bake is read, replaced or removed.
@@ -272,6 +290,16 @@ enum GPUBench {
             let rank = ranked.firstIndex { $0.level == level }! + 1
             say(String(format: "GPUBENCH lens %@ %@ baked cold at %d px: %.0f ms wall clock, %@ build; %d of 25 cheapest at %d px",
                        level.label, level.title, glass, await bake(level, glass), build, rank, quick))
+        }
+        for level in lensLevels {
+            let panel = Halftone.panel(level.panel), rods = level.lenses.sorted().map { level.layout.rods[$0] }
+            let (detail, took) = await Task.detached(priority: .userInitiated) {
+                let start = CACurrentMediaTime()
+                let detail = panel.detail(glass, lenses: rods)
+                return (detail, (CACurrentMediaTime() - start) * 1000)
+            }.value
+            say(String(format: "GPUBENCH lens %@ %@ detail baked at %d px, every open: %.0f ms wall clock, %@ build; %d x %d atlas, %d bytes",
+                       level.label, level.title, glass, took, build, detail.width, detail.height, detail.pixels.count))
         }
         say("GPUBENCH lens cache: a panel at \(glass) px takes \(4 * glass * glass) bytes, all 25 \(25 * 4 * glass * glass / 1_000_000) MB; thermal \(heat())")
     }
