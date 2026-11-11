@@ -3,7 +3,7 @@
 # Usage: scripts/prism-read-films.sh <out dir>
 # Joins `scripts/film.sh prism-read-`'s takes, one film a move: today's glass and the three trials of reading it under
 # a held rod (UNSTIR_PRISMREAD), the same slow sweep in each, cut from just before the fingertip lands to just before
-# it lifts and captioned (Pillow, as this ffmpeg has no drawtext). Each is kept under 1.5 MB (needs ffmpeg).
+# it lifts (a take film.sh shrank is scaled back up first) and captioned (Pillow, as this ffmpeg has no drawtext). Each is kept under 1.5 MB (needs ffmpeg).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=$1
@@ -23,9 +23,13 @@ join() {  # move steps file-name
   len=$(awk -v n="$n" 'BEGIN { print 1 + 0.45 + 0.7 * n + 0.2 }')
   for v in today a b c; do
     local take="shots/film/prism-read-$v-$move.mp4" from
-    from=$(awk -v s="$(scripts/strike.sh "$take")" 'BEGIN { print s + 0.7 }')
+    # recordVideo writes no frame while the picture rests, so the frame after the longest gap following the strike
+    # is the fingertip landing: the takes are lined up on it, a second of rest kept before.
+    from=$(ffprobe -v error -fflags +igndts -select_streams v -show_entries frame=pts_time -of csv=p=0 "$take" |
+      awk -F, -v s="$(scripts/strike.sh "$take")" '$1 > s && $1 < s + 4 && last != "" && $1 - last > gap { gap = $1 - last; at = $1 }
+        { last = $1 } END { print at - 1 }')
     inputs+=(-fflags +igndts -i "$take")
-    graph+="[$i:v]fps=30,trim=start=$from:duration=$len,setpts=PTS-STARTPTS,crop=1200:1200:60:820,scale=540:540[v$i];"
+    graph+="[$i:v]fps=30,trim=start=$from:duration=$len,setpts=PTS-STARTPTS,scale=1320:-2,crop=1200:1200:60:820,scale=540:540[v$i];"
     i=$((i + 1))
   done
   local crf

@@ -738,6 +738,42 @@ prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
 prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
 prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.
+prism-read-today-01-cyan-rest.png  Prism's read, today: Frond's cyan rod, its first move, held at 0 of +3.
+prism-read-today-01-cyan-short10.png  Prism's read, today: Frond's cyan rod, its first move, held at +2.0 of +3.
+prism-read-today-01-cyan-short5.png  Prism's read, today: Frond's cyan rod, its first move, held at +2.5 of +3.
+prism-read-today-01-cyan-on.png  Prism's read, today: Frond's cyan rod, its first move, held at +3.0 of +3.
+prism-read-today-01-cyan-past5.png  Prism's read, today: Frond's cyan rod, its first move, held at +3.5 of +3.
+prism-read-today-01-cyan-past10.png  Prism's read, today: Frond's cyan rod, its first move, held at +4.0 of +3.
+prism-read-today-01-red-rest.png  Prism's read, today: Frond's red rod, its second move, held at 0 of -4.
+prism-read-today-01-red-short10.png  Prism's read, today: Frond's red rod, its second move, held at -3.0 of -4.
+prism-read-today-01-red-short5.png  Prism's read, today: Frond's red rod, its second move, held at -3.5 of -4.
+prism-read-today-01-red-on.png  Prism's read, today: Frond's red rod, its second move, held at -4.0 of -4.
+prism-read-today-01-red-past5.png  Prism's read, today: Frond's red rod, its second move, held at -4.5 of -4.
+prism-read-today-01-red-past10.png  Prism's read, today: Frond's red rod, its second move, held at -5.0 of -4.
+prism-read-today-01-white-rest.png  Prism's read, today: Frond's white rod, its last move, held at 0 of -3.
+prism-read-today-01-white-short10.png  Prism's read, today: Frond's white rod, its last move, held at -2.0 of -3.
+prism-read-today-01-white-short5.png  Prism's read, today: Frond's white rod, its last move, held at -2.5 of -3.
+prism-read-today-01-white-on.png  Prism's read, today: Frond's white rod, its last move, held at -3.0 of -3.
+prism-read-today-01-white-past5.png  Prism's read, today: Frond's white rod, its last move, held at -3.5 of -3.
+prism-read-today-01-white-past10.png  Prism's read, today: Frond's white rod, its last move, held at -4.0 of -3.
+prism-read-today-08-blue-rest.png  Prism's read, today: Thistle's blue rod, its third move, held at 0 of -4.
+prism-read-today-08-blue-short10.png  Prism's read, today: Thistle's blue rod, its third move, held at -3.0 of -4.
+prism-read-today-08-blue-short5.png  Prism's read, today: Thistle's blue rod, its third move, held at -3.5 of -4.
+prism-read-today-08-blue-on.png  Prism's read, today: Thistle's blue rod, its third move, held at -4.0 of -4.
+prism-read-today-08-blue-past5.png  Prism's read, today: Thistle's blue rod, its third move, held at -4.5 of -4.
+prism-read-today-08-blue-past10.png  Prism's read, today: Thistle's blue rod, its third move, held at -5.0 of -4.
+prism-read-today-15-magenta-rest.png  Prism's read, today: Sea nettle's magenta rod, stirred twice, its first move, held at 0 of -5.
+prism-read-today-15-magenta-short10.png  Prism's read, today: Sea nettle's magenta rod, stirred twice, its first move, held at -4.0 of -5.
+prism-read-today-15-magenta-short5.png  Prism's read, today: Sea nettle's magenta rod, stirred twice, its first move, held at -4.5 of -5.
+prism-read-today-15-magenta-on.png  Prism's read, today: Sea nettle's magenta rod, stirred twice, its first move, held at -5.0 of -5.
+prism-read-today-15-magenta-past5.png  Prism's read, today: Sea nettle's magenta rod, stirred twice, its first move, held at -5.5 of -5.
+prism-read-today-15-magenta-past10.png  Prism's read, today: Sea nettle's magenta rod, stirred twice, its first move, held at -6.0 of -5.
+prism-read-today-30-yellow-rest.png  Prism's read, today: the last specimen's yellow rod, stirred twice, its first move, held at 0 of +2.
+prism-read-today-30-yellow-short10.png  Prism's read, today: the last specimen's yellow rod, stirred twice, its first move, held at +1.0 of +2.
+prism-read-today-30-yellow-short5.png  Prism's read, today: the last specimen's yellow rod, stirred twice, its first move, held at +1.5 of +2.
+prism-read-today-30-yellow-on.png  Prism's read, today: the last specimen's yellow rod, stirred twice, its first move, held at +2.0 of +2.
+prism-read-today-30-yellow-past5.png  Prism's read, today: the last specimen's yellow rod, stirred twice, its first move, held at +2.5 of +2.
+prism-read-today-30-yellow-past10.png  Prism's read, today: the last specimen's yellow rod, stirred twice, its first move, held at +3.0 of +2.
 clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
@@ -857,8 +893,8 @@ stamp-xxxl.png  The same at xxxLarge, the play screen's cap: "unstirred." grown 
 stamp-ax5.png  The same at accessibility5: the play screen capped at xxxLarge, the same frame as stamp-xxxl.
 stamp-tabletop-xxxl.png  Duo tabletop at xxxLarge: plughole 06 solved clean, "unstirred." kept at its fixed 22 pt above the fold.
 stamp-split-xxxl.png  Duo open at xxxLarge: plughole 06 solved clean, the card over the menu headed by "unstirred." at the larger size.
-marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, three hollow on 08, a lock on 09 onwards.
-marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title.
-marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2, 04 clean, 05 tried.
+marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, 04's +2 in magenta before its one, three hollow on 08, a lock on 09 onwards.
+marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title, the +2 before its disc.
+marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2 (the +2 in magenta before one disc), 04 clean, 05 tried.
 marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards.
 marks-result-par.png  Level 06 solved at par on a replay: two discs filled over at par, clean counts on the first try.
