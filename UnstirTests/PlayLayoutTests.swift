@@ -326,7 +326,7 @@ final class PlayLayoutTests: XCTestCase {
             XCTAssertLessThanOrEqual(lines(text, mono), 2, "\(text) at \(type)", file: file, line: line)
         }
         for bank in [0, 1] {
-            let words = Game(level: Level.escapement[1], bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
+            let words = Game(level: Level.mockUp, bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
             XCTAssertLessThanOrEqual(lines(words, serif), 2, "\(words) at \(type)", file: file, line: line)
         }
     }
@@ -422,7 +422,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(PlayLayout.Halo(Level.maelstrom[0]), PlayLayout.Halo(ring: 0, above: RimLesson.overRim), "the rim lesson's arc")
         XCTAssertEqual(PlayLayout.Halo(Level.plughole[10]), PlayLayout.Halo(), "drawn wholly on the glass and rim")
         XCTAssertEqual(PlayLayout.Halo(Level.lens[0]), PlayLayout.Halo())
-        XCTAssertEqual(PlayLayout.Halo(Level.escapement[1]), PlayLayout.Halo())
+        XCTAssertEqual(PlayLayout.Halo(Level.mockUp), PlayLayout.Halo())
     }
 
     func testEndlesssBrimStaysInsideTheTanksPaneInEveryPose() {
