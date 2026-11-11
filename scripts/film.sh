@@ -326,3 +326,27 @@ layer layer-prism-30 prism 30 0
 # editors-whirlpool-03 with the interface, as the preview's other segments have it.
 film store-open-L12 10 "$tank,fps=6,scale=240:-1,tile=6x5:padding=4" LEVEL=12 OPEN=1
 film store-whirlpool-03 24 "$whole" TIER=whirlpool LEVEL=3 OPEN=1 FINGER=1 REST=0.2 MOVES=1:-4,0:+4,2:-3,1:+6
+# The curtain call (`Payoff`), which the solve that finishes a tier, a paid pack or the free game plays before its
+# card: plughole 27, maelstrom 27, Lens 25 (its halftone baked first, as for lens-08-solve) and Escapement 30, each
+# on a two-stir stand-in for its scramble, autoplayed, every other level of its tier or pack holding a best. Each
+# strip starts as the level's last stir lands. Then the game's and a tier's under Reduce Motion.
+pay="trim=start=1.5,setpts=PTS-STARTPTS,crop=iw:ih*0.86:0:ih*0.05,fps=3,scale=180:-1"
+pay_tier=(LEVEL=27 STACK=0:+3,1:-4 AUTOPLAY=1 BESTS=plughole:cc0c0cc0cc0ccc0c0ccc0c0c0c-)
+pay_game=(TIER=maelstrom LEVEL=27 STACK=0:+3,1:-4 PAR=2 AUTOPLAY=1 OWNED=first-stir
+  BESTS=plughole:ccccc0ccccccc0cccccccc0cccc,whirlpool:cc0c0cc0cc0ccc0c0ccc0c0c0cc,vortex:c00c0c00cc0c0c000c0cc000c0c,maelstrom:0c00102c0010c00020c0100c00-)
+film payoff-tier 10 "$pay,tile=9x3:padding=4" "${pay_tier[@]}"
+film payoff-game 14 "$pay,tile=10x4:padding=4" "${pay_game[@]}"
+if wants payoff-lens; then warm 25; fi
+film payoff-lens 12 "$pay,tile=8x4:padding=4" PACK=lens LEVEL=25 OWNED=first-stir,lens STACK=2:+3,0:+1 PAR=2 AUTOPLAY=1 PACE=1.2 \
+  BESTS=lens:cc0c0cc0cc0ccc0c0ccc0c0c-
+film payoff-escapement 11 "$pay,tile=10x3:padding=4" PACK=escapement LEVEL=30 OWNED=escapement STACK=0:+3 AUTOPLAY=1 PACE=1.2 \
+  BESTS=escapement:ccccccccccccccccccccccccccccc-
+if wants calm-payoff-game || wants calm-payoff-tier; then
+  calm() { xcrun simctl spawn "$udid" defaults write com.apple.Accessibility ReduceMotionEnabled -bool "$1"; }
+  trap 'calm false' EXIT
+  calm true
+  film calm-payoff-tier 9 "$pay,tile=9x3:padding=4" "${pay_tier[@]}"
+  film calm-payoff-game 12 "$pay,tile=9x4:padding=4" "${pay_game[@]}"
+  calm false
+  trap - EXIT
+fi
