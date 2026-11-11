@@ -69,34 +69,34 @@ while read -r n line; do
   unset hold
 done <<'PLATES'
 1 2:4,1:-3
-2 2:4,0:1,1:-3
+2 1:-3,2:-2,2:-4
 3 2:4,1:-3
 4 2:2,1:3,2:4,3:-2
 5 3:5,1:-3,3:3,1:4,3:2
 6 3:-2,2:3,5:-3,6:-3,3:4,4:2
-7 0:1,1:2,2:-3
-8 0:1,4:5,3:3,2:4,1:-4
-9 3:-3,0:3,3:-4,0:-3,3:-4,3:4
-10 2:-3,1:4,0:1,1:2,2:3,3:-3
-11 3:2,4:3,3:-2,4:-5,2:-3,1:-2,0:1,0:1
-12 1:1,0:5,3:4,2:3,3:-3,2:-5,5:-4
-13 3:-2,1:-3,2:1
-14 3:3,0:1,3:-3,1:-3
-15 4:5,4:-2,0:1,4:5,3:4
-16 3:-2,5:-2,1:1,6:-4,5:3,2:-5
+7 3:3,1:-2,2:-3
+8 1:4,3:2,4:5,3:-2,2:-3
+9 0:-3,3:5,1:2,3:-4,1:-5,3:3
+10 4:-3,2:-3,1:-4,2:3,3:-2,2:-3
+11 4:-5,2:-3,1:-3,2:3,3:-4,2:2,3:-4,2:-2
+12 0:-2,4:-3,3:-5,2:-5,5:2,6:-3,3:3
+13 1:5,3:-3,1:-5
+14 3:-5,1:5,1:-4,1:-5
+15 1:-5,3:-5,4:4,4:-5,4:-2
+16 0:3,6:-5,3:4,6:-2,5:-4,2:2
 17 3:-5,4:-2,3:5,4:3,3:-4
 18 5:4,4:-4,5:-2,4:2,3:4,6:-2
-19 2:-4,0:1,1:3
-20 1:-5,0:1,1:4,1:3,1:-3
-21 0:1,3:4,4:3,3:-3,4:-5,3:-2
-22 5:-3,1:1,6:5,3:2,6:5,5:-3,2:2
+19 1:-3,2:-2,2:-4
+20 3:-3,3:-5,1:5,1:-4,1:-5
+21 1:3,4:3,4:5,4:3,3:3,4:-2
+22 0:-5,5:-5,5:2,2:-4,2:-4,3:-4,6:-5
 23 3:4,4:3,3:-4,2:2,4:5,3:5
 24 6:2,3:-2,2:5,3:-3,2:-2,5:-4,4:2
-25 0:-3,1:1,1:1
-26 1:-2,3:-3,4:-2,2:1,3:-5,4:-3,3:-2,4:3
-27 2:-2,1:2,2:-5,1:-2,1:-2,0:1,1:5,2:5,3:4
-28 2:-4,4:-5,2:-3,5:4,6:-4,3:-3,4:5,0:-5,1:1
-29 4:-3,1:1,2:-2,1:1,2:-4,0:5,2:-3,4:-3
+25 6:5,4:-2,2:-4
+26 4:-5,4:3,4:4,4:-3,3:-5,1:5,4:-3,3:4
+27 4:-3,1:4,1:-3,2:-2,1:2,2:2,3:2,2:4,3:2
+28 5:-5,6:-5,5:3,6:2,3:2,2:-3,5:3,4:4,2:3
+29 0:-5,4:3,6:-3,2:-3,4:-5,2:-5,0:5,2:3
 30 0:-2,5:3,4:-5,5:4,6:4,5:-3,4:-2,5:-2
 PLATES
 # The alternates drawn for Jack to choose between (EscapementArt.alternate), which no problem draws unless
@@ -104,8 +104,8 @@ PLATES
 shot escapement-plate-alt-7-dealt "Escapement 7 as dealt on Pause's alternate plate, a pause mark on a dial without hands." \
   PACK=escapement OWNED=escapement LEVEL=7 ESCALT=1
 shot escapement-plate-alt-7-solved "Escapement 7 solved on Pause's alternate plate." \
-  PACK=escapement OWNED=escapement LEVEL=7 PLAYED=0:1,1:2,2:-3 WAVE=1.85 ESCALT=1
+  PACK=escapement OWNED=escapement LEVEL=7 PLAYED=3:3,1:-2,2:-3 WAVE=1.85 ESCALT=1
 shot escapement-plate-alt-9-dealt "Escapement 9 as dealt on Hourglass's alternate plate, the glass ending inside the top and bottom rods." \
   PACK=escapement OWNED=escapement LEVEL=9 ESCALT=1
 shot escapement-plate-alt-9-solved "Escapement 9 solved on Hourglass's alternate plate." \
-  PACK=escapement OWNED=escapement LEVEL=9 PLAYED=3:-3,0:3,3:-4,0:-3,3:-4,3:4 WAVE=1.85 ESCALT=1
+  PACK=escapement OWNED=escapement LEVEL=9 PLAYED=0:-3,3:5,1:2,3:-4,1:-5,3:3 WAVE=1.85 ESCALT=1
