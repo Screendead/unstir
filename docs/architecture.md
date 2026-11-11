@@ -1148,6 +1148,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   a wrong count elsewhere (Sea nettle's magenta, 2 for 5), whatever the plate holds. `scripts/prism-levels.sh read`
   prints it a move at a time (25 of the 30 specimens have such a move, every one deeper than its rods are many), and
   `scripts/prism-plates.sh deal` sketches a deal on the Mac, each channel through its own word as the shader samples it.
+  Reading the picture under a held rod is on trial (`PrismRead`, `UNSTIR_PRISMREAD=a`, `b` or `c`, the harness's
+  only, none of them the game's): `a` dims the channels the held rod leaves alone to 0.3, `b` draws what it moves
+  alone in white, an equal share a channel, and `c` dims every line by how far its channels are out of register, held
+  or not; the shader's `read` and `gain`. `shots.sh prism-read-` holds six moves at rest, short of the count, on it
+  and past it under each (`scripts/prism-read-sheet.py` lays a move out, `scripts/prism-read-measure.py` prints the
+  white share of the held disc at each hold), and `film.sh prism-read-` sweeps each slowly through its count
+  (`UNSTIR_TURN`, the fingertip's seconds a step), which `scripts/prism-read-films.sh` joins four-up.
   Escapement's plate (`Picture.engineTurned`, drawn by `Picture.engineTurning` in Page.swift) is the packs mock-up's
   engine-turning in ink on bone: ninety straight rays fanned from a point off the glass's lower left, whose cone just
   holds the glass, over barleycorn, upward chevrons on a 0.08 lattice, with no glow and no concentric figure. Its lines
