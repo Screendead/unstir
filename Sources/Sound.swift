@@ -170,8 +170,6 @@ final class Sound: @unchecked Sendable {
     /// The layers' tempo, 75 bpm. The loop's first beat sits `lead` into its file, as scripts/sounds.sh turns it.
     static let beat = 0.8
     private static let lead = 0.2
-    /// The loop gives way to its resolution over this, from the beat after the solve.
-    private static let resolveFade: Float = 0.5
     /// A bed or loop no longer wanted runs on unheard this long, so a quick return, as through a pack's or tier's list
     /// into its next level, takes it up where it has got to rather than from its start.
     static let hold = 15.0
@@ -192,7 +190,7 @@ final class Sound: @unchecked Sendable {
     }
 
     /// The layer deck's course apart from the engine, in host seconds: which loop plays, how loud, and the beats it
-    /// counts. One loop runs on through every level of its pack, the solve only ducking it under the resolution.
+    /// counts. One loop runs on through every level of its pack at its full level, the solve and all (Jack, 2026-11-11).
     struct LayerTrack {
         enum Action: Equatable {
             case none
@@ -206,10 +204,6 @@ final class Sound: @unchecked Sendable {
         private(set) var level: Float = 0
         /// The playing loop's first beat, from which its beats and eighths count.
         private(set) var firstBeat: Double?
-        /// The resolution's beat: the loop holds until then, and fades under it over `resolveFade`.
-        private(set) var resolving: Double?
-        /// The first bar line after the resolution has rung out, where the loop comes back over the crossfade.
-        private(set) var returning: Double?
         /// When the loop fell silent, unwanted.
         private var quiet: Double?
 
@@ -219,16 +213,8 @@ final class Sound: @unchecked Sendable {
             return first + (max(time - first, 0) / step - 1e-9).rounded(.up) * step
         }
 
-        /// The solve at `now`, its resolution `ringing` seconds long: the resolution's beat, nil while no loop plays.
-        mutating func resolve(at now: Double, ringing: Double) -> Double? {
-            guard playing != nil, let beat = next(Sound.beat, after: now) else { return nil }
-            resolving = beat
-            returning = next(4 * Sound.beat, after: beat + ringing)
-            return beat
-        }
-
         func settled(wanted: Layer?) -> Bool {
-            playing == wanted && (wanted == nil || level == 1) && resolving == nil && quiet == nil
+            playing == wanted && (wanted == nil || level == 1) && quiet == nil
         }
 
         /// One 20 ms step of the fader at `now`, with `wanted` the loop that should sound. Only another pack's loop
@@ -242,22 +228,12 @@ final class Sound: @unchecked Sendable {
                 action = .start(wanted, at: start)
             }
             guard playing != nil else { return action }
-            let ducked = resolving.map { now >= $0 } == true && returning.map { now < $0 } == true
-            let up = playing == wanted && !ducked
-            // Left before the resolution's beat, the loop holds to it.
-            if !up, playing != wanted, let r = resolving, now < r { return action }
-            let rate = 0.02 / (!up && resolving != nil ? Sound.resolveFade : Sound.crossfade)
+            let up = playing == wanted, rate = 0.02 / Sound.crossfade
             level = up ? min(level + rate, 1) : max(level - rate, 0)
-            if up, level == 1, let back = returning, now >= back {
-                resolving = nil
-                returning = nil
-            }
-            guard level == 0, playing != wanted else {
+            guard level == 0, !up else {
                 quiet = nil
                 return action
             }
-            resolving = nil
-            returning = nil
             let since = quiet ?? now
             quiet = since
             guard now - since >= Sound.hold else { return action }
@@ -437,24 +413,20 @@ final class Sound: @unchecked Sendable {
         }
     }
 
-    /// The solve: the loop holds to the next beat and gives way to its resolution there, over `resolveFade`, running on
-    /// unheard and coming back on the bar after the resolution has rung out. Escapement's reed lands on D at once, with
-    /// the chime. Nothing while no loop plays.
+    /// The solve: the resolution plays on the loop's next beat, over the loop, which plays on through it at its level.
+    /// Escapement's reed lands on D at once, with the chime. Nothing while no loop plays.
     func resolve() {
         queue.async {
             guard let layer = self.layer, !self.resolved else { return }
             self.resolved = true
-            let now = Self.now(), end = self.layerBuffers[layer.part("end")]
-            let ringing = end.map { Double($0.frameLength) / self.format.sampleRate } ?? 0
-            guard self.track.playing == layer, self.wantedLayer == layer,
-                  let beat = self.track.resolve(at: now, ringing: ringing)
+            let now = Self.now()
+            guard self.track.playing == layer, self.wantedLayer == layer, let beat = self.track.next(Self.beat, after: now)
             else { return }
             if layer == .escapement { self.shoot(layer.part("d4"), at: nil) }
             self.shoot(layer.part("end"), at: beat)
             if layer == .prism {
                 self.shoot(layer.part("swell"), at: beat > now + Self.swell ? beat - Self.swell : nil)
             }
-            self.fade()
         }
     }
 
@@ -689,8 +661,7 @@ final class Sound: @unchecked Sendable {
         if wanted == nil && track.playing == nil { rest() }
     }
 
-    /// The layer's share of a fader step: its loop in from its first beat over the crossfade, ducked under a
-    /// resolution, or out, over the crossfade or, from the resolution's beat, over `resolveFade`.
+    /// The layer's share of a fader step: its loop in from its first beat over the crossfade, or out over it.
     private func stepLayer() {
         let wanted = wantedLayer
         if let wanted, wanted != track.playing, !run() { return }
