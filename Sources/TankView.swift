@@ -202,8 +202,11 @@ struct LevelView: View {
     @State private var touchStart: CGPoint?
     /// How far the result or lost card reaches below the caption's top, which `PlayStack` makes room for.
     @State private var cardReach: CGFloat = 0
-    /// The caption's top in the window, where the card hangs from, with the tank at the size it was played at.
+    /// The caption's top in the play screen's own space (`column`), where the card hangs from, with the tank at the
+    /// size it was played at.
     @State private var captionTop: CGFloat?
+    /// The play screen's safe area, in its own points whatever scales the window (the harness's poses).
+    private static let column = "play"
     /// The play layout last laid out, so a change of pose glides from it and lets go of what the fingers hold.
     @State private var pose: PlayLayout?
     /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
@@ -774,7 +777,7 @@ struct LevelView: View {
     }
 
 
-    /// How the column gives a card its room, down to `foot`, the safe area's in the window: nil during play, so the
+    /// How the column gives a card its room, down to `foot`, the safe area's: nil during play, so the
     /// tank is never other than the layout's; in the split and the tabletop, whose cards have their own places; and
     /// until the card and the caption's place are measured.
     /// `drop` is what "unstirred." needs of the tank's top, where it stands.
@@ -789,7 +792,7 @@ struct LevelView: View {
             let layout = playLayout(geo)
             let words: (words: CGFloat?, drop: CGFloat) = layout.kind == .column
                 ? PlayLayout.columnWords(over: titleGap ?? .infinity, side: layout.side, type: playType) : (layout.words, 0)
-            let foot = geo.frame(in: .global).maxY, fit = finished(layout, foot: foot, drop: words.drop)
+            let foot = geo.size.height, fit = finished(layout, foot: foot, drop: words.drop)
             let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout, measured: chromeMeasured))
             stack {
                 header.modifier(PlayPart.chrome(read: 5))
@@ -809,7 +812,7 @@ struct LevelView: View {
                     .frame(minHeight: layout.kind == .tabletop && showResult ? cardReach : nil, alignment: .top)
                     // Drawn higher, not laid out higher: the stack, and so the top measured here, stay as played.
                     .animation(shrinking) { $0.modifier(Lift(by: fit?.lift ?? 0)) }
-                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { captionTop = $0 }
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.column)).minY } action: { captionTop = $0 }
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
@@ -843,6 +846,7 @@ struct LevelView: View {
                                              pixels: Double(layout.side * scale)),
                                motion: [liveAngle, liveTurn ?? 0, lastSpin]))
             .padding(.horizontal, PlayLayout.margin)
+            .coordinateSpace(.named(Self.column))
             .background(alignment: .topLeading) { menuGround(layout, geo) }
         }
         .foregroundStyle(page.ink)
