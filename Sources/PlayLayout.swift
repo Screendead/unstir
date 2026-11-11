@@ -167,6 +167,18 @@ struct PlayLayout: Equatable {
     /// The height "unstirred." takes, 22 pt mono, give or take its line's leading.
     static let wordsHeight: CGFloat = 28
 
+    /// In the column, where "unstirred." stands over a glass `side` across whose top lies `over` under the title line's
+    /// foot: `words` over it, top to top, where that clears the title, else centred between the title and the rim. The
+    /// word never shrinks: where that room is less than its line, it stands under the title and the finished tank
+    /// comes down by `drop` to clear it (Jack, 2026-11-11: "If necessary, the tank scales"). `over` is measured, as the
+    /// note under the tank may run to more lines than the chrome budgets.
+    static func columnWords(over: CGFloat, side: CGFloat, type: DynamicTypeSize) -> (words: CGFloat, drop: CGFloat) {
+        guard over < words else { return (words, 0) }
+        let room = max(over - side * (rim - 1) / 2, 0), line = TypeRole.stamp.line(at: min(type, typeCap)).height
+        guard room < line else { return (over - (room - line) / 2, 0) }
+        return (over, (line - room).rounded(.up))
+    }
+
     /// The least a finished column's tank shrinks to for its card, as a share of the size it was played at: under it the
     /// picture is too small to be the reward, so the card scrolls instead.
     static let leastFinished: CGFloat = 0.55
@@ -176,10 +188,12 @@ struct PlayLayout: Equatable {
     /// The column once a level is finished and its card is up. The text never shrinks, so where the card at the
     /// player's Text Size is taller than the room under the tank, the tank does (Jack, 2026-11-11), about its top: the
     /// header, the title and "unstirred." stay where they were played, and the caption's place, which the card hangs
-    /// from, rises by what the tank gives up.
+    /// from, rises by what the tank gives up. Where the word has no room over the rim, the tank's top comes down too.
     struct Finished: Equatable {
         /// The tank's scale, rim and all, about the stage's top.
         let scale: CGFloat
+        /// How far the tank's top comes down for "unstirred." (`columnWords`).
+        let drop: CGFloat
         /// How far the card rises with the tank's foot.
         let lift: CGFloat
         /// The card's height on screen: its own, or less where it scrolls.
@@ -190,12 +204,14 @@ struct PlayLayout: Equatable {
     }
 
     /// `card`: the card's height from the stage's foot, where the caption starts; `room`: from there to the safe area's
-    /// foot, with the tank at the size it was played at; `stage`: the tank's height there, rim and all. The tank gives
-    /// up exactly what the card lacks, to the next whole point, so the card's text stays on the pixels it was laid out on.
-    static func finished(card: CGFloat, room: CGFloat, stage: CGFloat) -> Finished {
-        let room = room - cardFoot
-        let lift = min(max(card - room, 0).rounded(.up), (stage * (1 - leastFinished)).rounded(.down))
-        return Finished(scale: stage > 0 ? (stage - lift) / stage : 1, lift: lift, height: min(card, max(room + lift, 0)), card: card)
+    /// foot, with the tank at the size it was played at; `stage`: the tank's height there, rim and all; `drop`: what
+    /// "unstirred." needs of the tank's top, which comes first. The tank gives up exactly what the card lacks, to the
+    /// next whole point, so the card's text stays on the pixels it was laid out on.
+    static func finished(card: CGFloat, room: CGFloat, stage: CGFloat, drop: CGFloat = 0) -> Finished {
+        let room = room - cardFoot, most = (stage * (1 - leastFinished)).rounded(.down)
+        let drop = min(drop, most), lift = min(max(card - room, 0).rounded(.up), most - drop)
+        return Finished(scale: stage > 0 ? (stage - lift - drop) / stage : 1, drop: drop, lift: lift,
+                        height: min(card, max(room + lift, 0)), card: card)
     }
 }
 

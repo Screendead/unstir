@@ -232,6 +232,37 @@ final class PlayLayoutTests: XCTestCase {
                      "the title stands over the split's tank, so unstirred. heads the card over the menu")
     }
 
+    func testUnstirredGrowsWithTheTypeAndStillEndsAboveTheRim() {
+        XCTAssertEqual(TypeRole.stamp.points(at: .large), 22)
+        XCTAssertGreaterThan(TypeRole.stamp.points(at: PlayLayout.typeCap), 22)
+        // The widest phone's column at the cap, whose rim reaches furthest above the stage.
+        let l = layout(window: CGSize(width: 440, height: 956), insets: (62, 0, 34, 0),
+                       chrome: PlayLayout.Chrome(type: PlayLayout.typeCap))
+        let words = try! XCTUnwrap(l.words), rim = l.side * (PlayLayout.rim - 1) / 2
+        XCTAssertLessThanOrEqual(TypeRole.stamp.line(at: PlayLayout.typeCap).height + rim, words)
+        // Where the word clears the title at the stage's top, it stays there: every phone's column at the default size,
+        // and the Pro Max's at the cap.
+        XCTAssertEqual(PlayLayout.columnWords(over: PlayLayout.words, side: l.side, type: PlayLayout.typeCap).words, words)
+        // The SE's column at the cap leaves less over the glass than that (level 05 lays out 49.2 pt), so the
+        // word stands lower, wholly below the title line's foot and above the rim, and always at its full size: where
+        // the room can't hold its line, however many lines the note takes, the finished tank's top comes down for it.
+        let se = PlayLayout.of(content: CGSize(width: 343, height: 647), window: CGSize(width: 375, height: 667),
+                               chrome: PlayLayout.Chrome(type: PlayLayout.typeCap), type: PlayLayout.typeCap, scale: 2)
+        let seRim = se.side * (PlayLayout.rim - 1) / 2, line = TypeRole.stamp.line(at: PlayLayout.typeCap).height
+        for over in Array(stride(from: PlayStack.gap, to: PlayLayout.words, by: 0.5)) + [49.2] {
+            let (seWords, drop) = PlayLayout.columnWords(over: over, side: se.side, type: PlayLayout.typeCap)
+            XCTAssertLessThanOrEqual(seWords, over + 0.001, "\(over): below the title line")
+            XCTAssertGreaterThanOrEqual(seWords + drop, line + seRim - 0.001, "\(over): above the rim, once the tank has come down")
+            XCTAssertEqual(drop, max(line + seRim - over, 0).rounded(.up), "\(over): the tank gives the word only what it lacks")
+            // The tank shrunk for its card too keeps its top there, so the word stays clear of the rim.
+            let stage = se.side * PlayLayout.rim, fit = PlayLayout.finished(card: 300, room: 200, stage: stage, drop: drop)
+            XCTAssertEqual(fit.drop, drop)
+            XCTAssertEqual(fit.scale, (stage - fit.lift - drop) / stage, accuracy: 0.001, "\(over): the tank between the word and the card")
+            XCTAssertGreaterThanOrEqual(fit.scale, PlayLayout.leastFinished)
+        }
+        XCTAssertEqual(PlayLayout.columnWords(over: 49.2, side: se.side, type: PlayLayout.typeCap).drop, 0)
+    }
+
     // Stage 5: the chrome round the tank beside the menu (Jack's call s5-chrome = B, round 16).
 
     func testBesideTheMenuTheChromeGoesRoundTheTankInItsHalf() {

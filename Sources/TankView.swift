@@ -101,6 +101,8 @@ enum Grab: Equatable {
 struct LevelView: View {
     @State private var game: Game
     @State private var liveRod: Int?
+    /// The column's room between the title line's foot and the glass's top, as laid out.
+    @State private var titleGap: CGFloat?
     /// Prism: the channel whose swatch is held, drawn alone.
     @State private var isolated: Channels?
     private let letters: Bool
@@ -613,12 +615,12 @@ struct LevelView: View {
     private var shrinking: Animation? { reduceMotion ? nil : Self.arrival }
 
     /// The tank with what stands over it: the night forwards and "unstirred.". `shrink` scales the tank alone, picture,
-    /// knobs and rim as one, about its top, for a card the column has no room for; `bounds` is the tank's pane in the
-    /// glass's frame and `trackBounds` where a lens's track runs, both nil in the column; `filmFoot` where the night
-    /// forwards' lines end, nil under the glass.
-    private func stage(_ side: CGFloat, shrink: CGFloat, words: CGFloat?, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
+    /// knobs and rim as one, about its top, for a card the column has no room for, and `drop` brings its top down for
+    /// the word; `bounds` is the tank's pane in the glass's frame and `trackBounds` where a lens's track runs, both nil
+    /// in the column; `filmFoot` where the night forwards' lines end, nil under the glass.
+    private func stage(_ side: CGFloat, shrink: CGFloat, drop: CGFloat, words: CGFloat?, tabletop: Bool, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
         tank(side, bounds: bounds, trackBounds: trackBounds)
-            .animation(shrinking) { $0.scaleEffect(shrink, anchor: .top) }
+            .animation(shrinking) { $0.scaleEffect(shrink, anchor: .top).offset(y: drop) }
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
@@ -640,13 +642,14 @@ struct LevelView: View {
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
                 if showResult && game.solved && !clean, let words {
-                    unstirred.offset(y: -words).transition(reveal)
+                    unstirred(fixed: tabletop).offset(y: -words).transition(reveal)
                 }
             }
     }
 
-    private var unstirred: some View {
-        Text("unstirred.").font(.game(22, .semibold)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
+    /// Fixed in the tabletop, whose upright half budgets `PlayLayout.wordsHeight` for it.
+    private func unstirred(fixed: Bool = false) -> some View {
+        Text("unstirred.").font(fixed ? .game(22, .semibold) : .ui(.stamp)).shadow(color: page.glow(.white.opacity(0.5)), radius: 6)
     }
 
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
@@ -688,7 +691,7 @@ struct LevelView: View {
         let over = layout.kind == .split ? layout.menuPane : nil
         return ScrollView {
             VStack(spacing: 0) {
-                if over != nil && game.solved && !clean { unstirred.padding(.bottom, 26) }
+                if over != nil && game.solved && !clean { unstirred().padding(.bottom, 26) }
                 if game.lost {
                     LostCard(game: game, notice: notice, undo: undo, again: reset)
                 } else {
@@ -782,22 +785,28 @@ struct LevelView: View {
     /// How the column gives a card its room, down to `foot`, the safe area's: nil during play, so the
     /// tank is never other than the layout's; in the split and the tabletop, whose cards have their own places; and
     /// until the card and the caption's place are measured.
-    private func finished(_ layout: PlayLayout, foot: CGFloat) -> PlayLayout.Finished? {
+    /// `drop` is what "unstirred." needs of the tank's top, where it stands.
+    private func finished(_ layout: PlayLayout, foot: CGFloat, drop: CGFloat) -> PlayLayout.Finished? {
         guard showResult, !clean, layout.kind == .column, let captionTop, cardReach > 0 else { return nil }
-        return PlayLayout.finished(card: cardReach, room: foot - captionTop, stage: layout.side * PlayLayout.rim)
+        return PlayLayout.finished(card: cardReach, room: foot - captionTop, stage: layout.side * PlayLayout.rim,
+                                   drop: game.solved ? drop : 0)
     }
 
     private var screen: some View {
         GeometryReader { geo in
             let layout = playLayout(geo)
-            let foot = geo.size.height, fit = finished(layout, foot: foot)
+            let words: (words: CGFloat?, drop: CGFloat) = layout.kind == .column
+                ? PlayLayout.columnWords(over: titleGap ?? .infinity, side: layout.side, type: playType) : (layout.words, 0)
+            let foot = geo.size.height, fit = finished(layout, foot: foot, drop: words.drop)
             let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout, measured: chromeMeasured))
             stack {
                 header.modifier(PlayPart.chrome(read: 5))
                 titleRow.modifier(PlayPart.chrome(read: 4))
                 Spacer(minLength: 12)
-                stage(layout.side, shrink: fit?.scale ?? 1, words: layout.words, bounds: layout.bounds,
-                      trackBounds: layout.trackBounds, filmFoot: layout.filmFoot)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { titleGap = $0 }
+                stage(layout.side, shrink: fit?.scale ?? 1, drop: fit?.drop ?? 0, words: words.words,
+                      tabletop: layout.kind == .tabletop, bounds: layout.bounds, trackBounds: layout.trackBounds,
+                      filmFoot: layout.filmFoot)
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
