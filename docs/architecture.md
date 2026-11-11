@@ -453,21 +453,24 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `length` a veil dims the glass, which turns once about its centre and ends upright (`turn`, added to the shader's
   own), while `PayoffCurtain` stands the name in the display role and its own sweep (`Payoff.parts`: `Tier.colours`,
   or `Offer.sweep` and `glow`) over its stamp, "unstirred." or "25 panels unstirred"; the game's names each tier in
-  turn, 0.6 s apart in the smaller display role, then "every tier unstirred" and, under the rim, the credit. Then
+  turn, 0.6 s apart in the smaller display role, then "every tier unstirred" and the credit, "made by screendead ·
+  thank you for playing" (`Payoff.Credit`, Jack's words), in the same block, broken after its dot, as on one line it
+  is wider than the glass's chord at the block's foot on every phone. Then
   the curtain lifts and the card is the one it always was. A tier's or a pack's holds the screen 3.2 s and the game's
   7.4 s (2.6 s and 5 s under Reduce Motion), so the card comes 4.3 s or 8.5 s after the solve where it came at 1.4 s
   (`testTheCurtainIsShortTurnsOnceAndLetsGo` pins them); a tap anywhere ends it (`skipPayoff`), a reset forgets it,
   and leaving the level cancels what is left of it (`finishing`), its sounds too. On Escapement's paper
   (`Payoff.paper`) nothing glows: the veil is bone, the name the plate's vermilion, at the large-text contrast it has
   on bone, and the rest ink.
-  The credit's words are not decided: `Payoff.CreditPlaceholder` holds the placeholder, shown and spoken, and is the
-  one place to set them.
   **The words never shrink** (Jack, 2026-11-11). They take the column's width; a name that would run within 0.14 of
   the radius of the rim at the display role is set in the smaller one, which is a choice of role, not a scale
   (Escapement's, on every phone). Each line reports its place, and `Payoff.fits` asks whether every line lies inside
-  0.94 of the glass's radius with the block centred on it. Where one doesn't (the game's on the smallest phone, most
-  at the play screen's largest type), the words stand under the glass instead with no veil, as nothing is over the
-  picture, and the glass scales about its top to leave them room (`Payoff.scale`, `LevelView.curtained`), down to
+  0.94 of the glass's radius with the block centred on it, the credit a line of it (Jack: "I want the text within
+  the glass"). The game's fits over the glass at the default type on every phone, at xLarge on those 402 pt wide or
+  more (17, 17 Pro, Air, Pro Max), at xxLarge on the Pro Max alone, and at xxxLarge on none (measured in the
+  simulator, 2026-11-11). Where it doesn't, the words stand under the glass instead with no veil, as nothing is over
+  the picture, `Payoff.gap` (34 pt, the clearance "unstirred." keeps over the glass) under the rim, and the glass
+  scales about its top to leave them room (`Payoff.scale`, `LevelView.curtained`), down to
   `Payoff.least` (0.45, under a card's 0.55, as a curtain can't scroll), at once under Reduce Motion, and hands its
   scale straight to the card's own fit. Only the column does this: the split's and the tabletop's words stand over
   the glass whatever their size. The curtain is in the tree from the solve, unseen, so it is measured before it shows.
