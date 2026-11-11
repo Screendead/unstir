@@ -164,7 +164,7 @@ sketch-escapement-b-tick-e escBtickE 20 2102 = sketch-escapement-b
 fi
 # layers <dir>: each kept pack layer (Jack's call SOUNDSK: Lens B, Escapement B, Prism A) under its line in
 # sound-src/layers-in-play.tsv, a real level played for three to four minutes: the menu's bed crossfading to plughole's
-# as the level opens, the layer's loop entering with it and giving way to its resolution on the beat after the solve,
+# as the level opens, the layer's loop entering with it and playing on under its resolution on the beat after the solve,
 # and the game's effects at their own levels, as <pack>.mp3 at 160 kb/s; <pack>-bed-only.mp3 is the same without the
 # layer, and layers-in-play.txt lists each line and each render's loudness. A layer plays at the gain its 20 s sketch
 # takes in listen, so it sits where Jack heard it. The motif's whole cycles fill an 8-bar loop (Lens B's bowed glass
@@ -193,8 +193,8 @@ if [ "${1:-}" = layers ]; then
         echo "a playtest's flight recorder (1.2 to 3.9 s commit to commit), between authored studies of 20 to 45 s; at that"
         echo "pace alone such a level takes about 30 s. Times are from the row's tap to when the game sounds each action (a"
         echo "knob's commit, 0.25 s after the lift, 0.3 on Escapement). The layer's loop is 8 bars (25.6 s) of the motif"
-        echo "at 75 bpm, entering with the bed's crossfade; on the beat after the solve it fades over 0.5 s as its"
-        echo "resolution plays, and the bed carries on under the card. Loudness is ffmpeg's EBU R128 meter on each mp3: I"
+        echo "at 75 bpm, entering with the bed's crossfade; on the beat after the solve its resolution plays over it,"
+        echo "and loop and bed carry on under the card. Loudness is ffmpeg's EBU R128 meter on each mp3: I"
         echo "integrated, M the loudest 400 ms, TP true peak."
         echo
     } >"$LIST"
