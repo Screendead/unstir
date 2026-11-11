@@ -82,8 +82,9 @@ template <typename L>
 static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius, device const float *twists, int count,
                                 device const float *masks, int maskCount, float n, float cost, float fourTaps,
                                 float plateau, float swirlPlateau, float lensEdge, float scale, float haze, float3 wave,
-                                float turn, float isolate, float3 tint) {
+                                float turn, float isolate, float3 tint, float read, float3 gain) {
     int stride = cost > fourTaps ? 3 : 1;
+    int reading = int(read);
     int alone = int(isolate);
     float ct = cos(turn), st = sin(turn);
     float3 acc = 0;
@@ -95,6 +96,9 @@ static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius
         float3 s = float3(layer.sample(centre + qr * radius).r, layer.sample(centre + qg * radius).g,
                           layer.sample(centre + qb * radius).b);
         if (alone != 0) s = (alone == 1 ? s.r : alone == 2 ? s.g : s.b) * tint;
+        else if (reading == 1) s *= gain;
+        else if (reading == 2) s = float3(dot(s, gain));
+        else if (reading == 3) s = 0.62 * s + 0.38 * min(s.r, min(s.g, s.b));
         acc += lit(s, p, wave);
     }
     return finish(acc, stride, haze);
@@ -219,14 +223,16 @@ static half4 unstirLensBody(float2 pos, L layer, float2 centre, float radius, de
 // Prism's: each of red, green and blue sampled through its own word, the entries whose mask (masks[i], a Channels raw
 // value) holds it. cost is the work in entries, against fourTaps as n is above. isolate, a single channel's raw value or
 // 0, draws that channel alone in tint and hides the others: the held swatch, in its own colour, or white under
-// Differentiate Without Colour, where it reads without telling colours apart.
+// Differentiate Without Colour, where it reads without telling colours apart. read is the harness's trial of reading
+// the picture under a held rod (UNSTIR_PRISMREAD), 0 for the game's: 1 scales each channel by gain, 2 draws the
+// channels' sum weighted by gain in white, 3 dims every line by how far its channels are out of register.
 [[ stitchable ]] half4 unstirChannels(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
                                       device const float *twists, int count, device const float *masks, int maskCount,
                                       float n, float cost, float fourTaps, float plateau, float swirlPlateau,
                                       float lensEdge, float scale, float haze, float3 wave, float turn, float isolate,
-                                      float3 tint) {
+                                      float3 tint, float read, float3 gain) {
     return unstirChannelsBody(pos, layer, centre, radius, twists, count, masks, maskCount, n, cost, fourTaps, plateau,
-                              swirlPlateau, lensEdge, scale, haze, wave, turn, isolate, tint);
+                              swirlPlateau, lensEdge, scale, haze, wave, turn, isolate, tint, read, gain);
 }
 
 // A Lens level's glass once its detail is baked: atlas and fine are Halftone.Detail's pixels and table.
@@ -267,7 +273,8 @@ kernel void benchUnstir(texture2d<half> picture [[texture(0)]], texture2d<half, 
                          a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, atlas, fine, a.fineCount)
         : a.channels != 0
         ? unstirChannelsBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost, a.fourTaps,
-                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0, float3(1))
+                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0, float3(1), 0.0,
+                             float3(1))
         : unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
                      a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0);
     out.write(c, gid);

@@ -32,6 +32,8 @@ struct Unstirred: ViewModifier, Animatable {
     /// Differentiate Without Colour (`whiteIsolate`).
     var isolate: Channels?
     var whiteIsolate = false
+    /// Prism, the harness's trial (`PrismRead`): how the glass is drawn for reading a held rod's turn.
+    var read: (mode: PrismRead, held: Channels?)?
     /// The committed work drawn with four taps, nil for the glass's static limit (`Tank.fourTaps(pixels:)`). Never
     /// animated: only `Taps` moves it, at a still moment.
     var budget: Int?
@@ -69,6 +71,7 @@ struct Unstirred: ViewModifier, Animatable {
         if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
             shader.prism = TankShader.Prism(masks: channels, cost: cost, isolate: isolate, tint: tint)
+            if let read { (shader.prism!.read, shader.prism!.gain) = read.mode.drawn(held: read.held) }
         } else if let fine, crisp > 0, !lenses.isEmpty {
             shader.fine = fine
             shader.fine?.table[Fine.share] = Float(min(crisp, 1))
@@ -104,6 +107,8 @@ struct TankShader {
         var cost: Int
         var isolate: Channels?
         var tint: SIMD3<Float>
+        var read: Float = 0
+        var gain = SIMD3<Float>(1, 1, 1)
     }
 
     var name: String { prism != nil ? "unstirChannels" : fine != nil ? "unstirLens" : "unstir" }
@@ -122,7 +127,8 @@ struct TankShader {
         if let fine, prism == nil { list += [("atlas", .image(fine.atlas)), ("fine", .floatArray(fine.table))] }
         if let prism {
             list += [("isolate", .float(Float(prism.isolate?.rawValue ?? 0))),
-                     ("tint", .float3(prism.tint.x, prism.tint.y, prism.tint.z))]
+                     ("tint", .float3(prism.tint.x, prism.tint.y, prism.tint.z)), ("read", .float(prism.read)),
+                     ("gain", .float3(prism.gain.x, prism.gain.y, prism.gain.z))]
         }
         return list
     }
@@ -280,6 +286,34 @@ struct PictureLayer: View {
             // The halftone's detached bake runs on when a change of pose cancels it, and may land after the new one.
             guard !Task.isCancelled else { return }
             image = baked
+        }
+    }
+}
+
+/// UNSTIR_PRISMREAD: three trials of reading Prism's picture while a rod is held, none of them the game's yet.
+enum PrismRead: String {
+    /// The channels the held rod leaves alone dim, so what it moves reads over them.
+    case dim = "a"
+    /// What the held rod moves is drawn alone in white, each of its channels an equal share: lines its channels
+    /// share are full white, a line only one holds a half or a third.
+    case ink = "b"
+    /// Held or not, a line dims by how far its channels are out of register, so a white line is the brightest.
+    case register = "c"
+
+    /// The other channels' share of their light on the screen while a rod is held.
+    static let dimmed: Float = 0.3
+
+    /// `unstirChannels`' `read` and `gain` with a rod of mask `held` in hand, nil at rest.
+    func drawn(held: Channels?) -> (read: Float, gain: SIMD3<Float>) {
+        let bits = Int(held?.rawValue ?? 0), on = [1, 2, 4].map { bits & $0 != 0 }
+        switch self {
+        case .register: return (3, SIMD3(1, 1, 1))
+        case .dim where held != nil:
+            return (1, SIMD3(on[0] ? 1 : Self.dimmed, on[1] ? 1 : Self.dimmed, on[2] ? 1 : Self.dimmed))
+        case .ink where held != nil:
+            let share = 1 / Float(on.filter { $0 }.count)
+            return (2, SIMD3(on[0] ? share : 0, on[1] ? share : 0, on[2] ? share : 0))
+        default: return (0, SIMD3(1, 1, 1))
         }
     }
 }

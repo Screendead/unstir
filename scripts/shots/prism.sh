@@ -46,3 +46,25 @@ hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt o
 for plate in seeds medusae radiolaria nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1
 done
+# Reading the picture while a rod turns: each move's rod held at rest, short of its count, on it and past it, so the
+# frame on the count can be set beside its neighbours. UNSTIR_PRISMREAD draws an option over the same holds.
+reads() {  # name level played rod count description
+  local name=$1 level=$2 played=$3 rod=$4 count=$5 desc=$6 x v
+  for v in today ${PRISMREAD_OPTIONS:-}; do
+    for x in 0 -1 -0.5 +0 +0.5 +1; do
+      local at=0 tag=rest
+      if [[ $x != 0 ]]; then
+        at=$(awk -v c="$count" -v x="$x" 'BEGIN { s = c < 0 ? -1 : 1; printf "%+.1f", c + s * x }')
+        case $x in -1) tag=short10;; -0.5) tag=short5;; +0) tag=on;; +0.5) tag=past5;; +1) tag=past10;; esac
+      fi
+      hold=4 shot "prism-read-$v-$name-$tag" "Prism's read, $v: $desc, held at $at of $count." PACK=prism OWNED=prism \
+        LEVEL=$level ${played:+PLAYED=$played} LIVE=$rod:$at $([[ $v == today ]] || echo PRISMREAD=$v)
+    done
+  done
+}
+reads 01-cyan 1 "" 1 +3 "Frond's cyan rod, its first move"
+reads 01-red 1 1:+3 0 -4 "Frond's red rod, its second move"
+reads 01-white 1 1:+3,0:-4 2 -3 "Frond's white rod, its last move"
+reads 08-blue 8 2:+2,4:+4 0 -4 "Thistle's blue rod, its third move"
+reads 15-magenta 15 "" 2 -5 "Sea nettle's magenta rod, stirred twice, its first move"
+reads 30-yellow 30 "" 0 +2 "the last specimen's yellow rod, stirred twice, its first move"
