@@ -15,7 +15,11 @@ Usage: scripts/lens-art-sheet.py proof <out dir> <level>...   each level's panel
        scripts/lens-art-sheet.py read [level...]              scripts/lens-panels.sh read, each level's dealt twist rods on
                                                               its panel: the share of the weakest rod's disc that its
                                                               weakest step changes in coarse light, weakest level first
-       scripts/lens-art-sheet.py check [level...]             scripts/lens-panels.sh check, each drawn panel on its level"""
+       scripts/lens-art-sheet.py check [level...]             scripts/lens-panels.sh check, each drawn panel on its level
+       scripts/lens-art-sheet.py order <out.png> <level>...   the order read: a row for each lens of each level and each
+                                                              rod dealt a twist that reaches it, the first entry dealt on
+                                                              each, the two alone on the panel, lens on top then twist on
+                                                              top, as the Mac bakes them at a phone's 430 px, unscaled"""
 import os
 import subprocess
 import sys
@@ -155,6 +159,41 @@ def sheet(out, levels):
     image.save(out)
 
 
+def order(out, levels):
+    from PIL import Image, ImageDraw
+    side, cell, pad, head = 430, 240, 6, 18
+    rows, table = [], dealt()
+    os.makedirs("build/lens-art", exist_ok=True)
+    for n in levels:
+        layout, lenses, scramble = table[n]
+        lenses = [int(k) for k in lenses.split(",")]
+        entries = [(int(e.split(":")[0]), e) for e in scramble.split(",")]
+        for lens in lenses:
+            at = next(i for i, (k, _) in enumerate(entries) if k == lens)
+            lx, ly, lr = RODS[layout][lens]
+            for rod, (tx, ty, tr) in enumerate(RODS[layout]):
+                dealt_twists = [e for k, e in entries if k == rod]
+                if rod in lenses or not dealt_twists or ((tx - lx) ** 2 + (ty - ly) ** 2) ** 0.5 >= tr + PLATEAU * lr:
+                    continue
+                twist = dealt_twists[0]
+                cx, cy = (lx + 0.25 * (tx - lx) + 1) * side / 2, (ly + 0.25 * (ty - ly) + 1) * side / 2
+                box = (int(cx - cell / 2), int(cy - cell / 2), int(cx + cell / 2), int(cy + cell / 2))
+                crops = []
+                for label, stack in (("lens on top", f"{twist},{entries[at][1]}"), ("twist on top", f"{entries[at][1]},{twist}")):
+                    path = f"build/lens-art/order-{n:02d}-{lens}-{rod}-{label.split()[0]}.png"
+                    bake(LEVELS[n][0], path, side, layout, ",".join(map(str, lenses)), stack)
+                    crops.append((f"{n} {layout} {stack}: {label}", Image.open(path).convert("RGB").crop(box)))
+                rows.append(crops)
+    image = Image.new("RGB", (2 * (cell + pad) + pad, len(rows) * (cell + head + pad) + pad), "black")
+    draw = ImageDraw.Draw(image)
+    for r, crops in enumerate(rows):
+        for c, (label, crop) in enumerate(crops):
+            x, y = pad + c * (cell + pad), pad + r * (cell + head + pad)
+            draw.text((x, y), label, fill="white", font=font(11))
+            image.paste(crop, (x, y + head))
+    image.save(out)
+
+
 def main():
     mode, args = (sys.argv[1] if len(sys.argv) > 1 else ""), sys.argv[2:]
     if mode == "clues":
@@ -181,6 +220,8 @@ def main():
             print(f"{n:02d} {panel}: {done.stdout.strip().splitlines()[-1]}")
             failed = failed or done.returncode != 0
         sys.exit(1 if failed else 0)
+    elif mode == "order" and len(args) > 1:
+        order(args[0], [int(a) for a in args[1:]])
     elif mode == "proof" and len(args) > 1:
         proof(args[0], [int(a) for a in args[1:]])
     elif mode == "sheet" and len(args) > 1:
