@@ -28,5 +28,5 @@ hold=5 shot store-08-prism "Store 8: Prism 01, the red stir healed and the cyan 
   PACK=prism LEVEL=1 PLAYED=0:-4 LIVE=1:+1.5
 hold=5 shot store-09-lens "Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 steps of the 3 it heals at." \
   PACK=lens LEVEL=3 LIVE=0:-1.4 TOUCH=0,-0.8
-hold=5 shot store-10-escapement "Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left." \
-  PACK=escapement LEVEL=2 PLAYED=2:4
+hold=5 shot store-10-escapement "Store 10: Escapement 02 after rod 1 -3: its tick landed, the ratchet a tooth on, 02 ticks left." \
+  PACK=escapement LEVEL=2 PLAYED=1:-3

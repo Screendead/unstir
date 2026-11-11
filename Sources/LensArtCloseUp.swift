@@ -238,8 +238,11 @@ extension LensArt {
         let crown = rect(-0.62, -1.2, 0.62, -0.5), band = rect(-0.62, -0.66, 0.62, -0.5)
         let whisker = [curve(P(0, 0.7), P(-0.3, 0.86), P(-0.62, 0.62), 16) + curve(P(-0.62, 0.62), P(-0.36, 0.7), P(0, 0.62), 16),
                        curve(P(0, 0.7), P(0.3, 0.86), P(0.62, 0.62), 16) + curve(P(0.62, 0.62), P(0.36, 0.7), P(0, 0.62), 16)]
+        // A heavy brow and a flushed cheek on the bare side, so the left rod's twist shows without the eye's lines.
+        let brow = bar(P(-0.6, 0.0), P(-0.2, -0.09), 0.07)
         let fills = [disc(glass, 0.265, c(0.1)), disc(glass, 0.305, y(0.85)), fill(whisker[0], m(0.75)), fill(whisker[1], m(0.75)),
                      fill(band, m(0.7)), fill(crown, c(0.5)), oval(P(0, -0.46), 0.98, 0.1, c(0.75)),
+                     fill(brow, m(0.75)), disc(P(-0.52, 0.45), 0.11, Tone(0, 0.5, 0.3)),
                      oval(P(0, 0.3), 0.8, 1.0, y(0.3))]
 
         var s: [Halftone.Stroke] = []

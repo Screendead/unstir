@@ -234,7 +234,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   uptime is the boot's instant. A `Level` has a `motion`, what the rim holds to carry the knobs round without a stir
   (`.none`; `.tank`, maelstrom's; `.crank`, charybdis's planets, not built), and a kind per knob (`kind(of:)`, from its `seized`, `sockets` and `ratchets`): a working knob stirs, a seized
   one or a socket refuses touch, and a ratchet is one of Escapement's clocks (`Level.clocks`, in tick order: clockwise from twelve by
-  `Layout.clockwise`, each +1, or -1 if in `woundBack`), with a
+  `Layout.clockwise`, each +1, or -1 if in `woundBack`), which under `waits` takes a tap as a waiting move, a rule
+  switch no problem of the book has on, with a
   `demo` stack for the demonstration before the first stir. Every level today turns its tank exactly where a
   knob is seized (`testTheRimKeysOnMotionAndADiscOnItsKind`), and `UNSTIR_SEIZED` sets both. `par` is `fixedPar`, else
   `scramble.count`.
@@ -266,7 +267,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `Game.turnTank`), drawing the picture through the `Unstirred` shader modifier, and shows the result card. `LevelView.grab`, a pure function, decides what
   a finger holds where it lands, never by its motion: the rim first, else the disc whose centre is nearest in its own
   radius, overlapped or not, never the swirl; a seized winner or a socket is `.seized`, which holds nothing, and a
-  ratchet `.ratchet`, which holds nothing: a tap on the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit)
+  ratchet `.ratchet`, which holds nothing: a touch shakes it with a thud, as a seized knob's does (`LevelView.refuse`),
+  since the book's clocks tick only after a knob's turn. Where a level has the waiting move (`Level.waits`), a tap on
+  the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit)
   waits (`Game.wait`), a tap elsewhere on its disc sends a ring from the finger closing on the plate, and a drag shakes
   it with a thud. A touch landing within 20 pt of the screen's left edge waits for its first 10 pt: rightward and
   mostly sideways, it is the back swipe (`BackSwipe`; Jack's call C19, round 13), which slides the level off over the
@@ -364,7 +367,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   launch's level saves (`storesResume`), and a harnessed launch reads none but `UNSTIR_RESUME`'s. `Level.print` is
   spelt out, never through a description, and pinned (`testThePrintNeverChanges`): a change drops every save. With moves played, the play screen's reset takes a second tap: the first only taps and
   arms it, "reset? tap again", for 2 s (`ResetArm`; under VoiceOver until focus leaves it), and any move, undo or
-  finish disarms it; the cards' "again" resets
+  finish disarms it; where the row can't hold undo beside the armed label on a line each (`PlayLayout.rowHolds`: an
+  SE, or the widest phone at the largest play type) undo steps aside while it is armed, so the label never wraps and
+  the row, and the tank over it, never move (`testAnArmedResetHasTheRowWhereUndoCantShareIt`); the cards' "again" resets
   at once (Jack's call C12, round 13). The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
@@ -380,8 +385,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   Escapement's clocks live in `Game` too (`Game.Clock`, `escapement`). After every move each clock that holds an entry
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
   one clock's tick can uncover the next's seam on the same move (the book's 17 and 18 need it), and the stack's last
-  tick solves on the spot; a clock that can't tick (`canTick`) has stopped, and once all have there is nothing to wait for, and a tap that would wait thuds. A
-  move is one working knob's stir or a wait, a tap on any ratchet. Every
+  tick solves on the spot; a clock that can't tick (`canTick`) has stopped. A
+  move is one working knob's stir; a level with `waits` on also takes a wait, a tap on any ratchet (`Game.wait`, refused
+  everywhere else), and once every clock has stopped there is nothing to wait for, and a tap that would wait thuds. Every
   let-go is a move of its own and final (Jack's call E1, round 9): its tick lands with it, nothing joins it, and the
   same knob grabbed again is the next move with its own tick, so a stir's dial always counts from zero. Escapement has
   no par (Jack's calls EL1, round 11, which replaced round 9's E1/E2 loss rule, and ES2, round 12): each clock has its
@@ -423,7 +429,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   header's "‹ levels" stays on screen above either, and the edge swipe leaves too, both through `leave`. A clock stopping sends a ring out in the plate's vermilion as its last tick lands. A level with a
   `demo` plays it before the problem opens until the problem has been solved (always in the harness, unless it holds the
   tank still), and after a reset of a tank with nothing played, which replays the opening: a drawn fingertip
-  heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the picture fades to the bone paper
+  heals the demo stack through the real rules, twice, the clock ticking after each (and under `waits` taps the ratchet), and the picture fades to the bone paper
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
   Escapement plays on paper (Jack's call ESC-PAPER = B, round 16; **Page.swift**): `Level.page` is `.book` for its
   levels alone and `.night`, the play screen's own colours, for every other (`testOnlyEscapementPlaysOnPaper`).
@@ -439,7 +445,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
   25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the
   card's list heads, counting solved levels: each par, never shown, what its slowest clock owes and reached by the
-  prover, its one key pinned,
+  prover in whole heals with no wait (`scripts/escapement/problems-nowait.tsv`, dealt by `nowait-book.py`; `problems.tsv` is the book as it was under the waiting move), its one key pinned,
   `EscapementTests`; the full ±11 key search is slow; Prism 30 in five trays, First Stir's replacement in v1, PK1):
   `Pack.levels` reads `Level.firstStir`, `Level.lens`, `Level.escapement` and `Level.prism`, numbered from
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's name is never translated (Jack's call CAT1 = A);
@@ -904,7 +910,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   them a lens's only entry, x8, with a twist on the rod either side: that lens dragged down to clean and back up, let
   go where it began, so it loops with no dip on the order read (Jack, CL1, whose clip played level 3 as dealt). A
   cover stirs the stack its clip opens on (`Offer.covers`), so Lens's dock cover, its promoted-purchase image and the
-  bundle's wedge show that position too, not the whole deal; every other pack's opens on its deal. Escapement: problem 2, the mock-up's, in its three moves, its hub counting 3 down to 0. Prism: specimen 1
+  bundle's wedge show that position too, not the whole deal; every other pack's opens on its deal. Escapement: problem 2 in its three moves, its hub counting 3 down to 0. Prism: specimen 1
   in its par of three, the red stir buried under the cyan one first. The bundle (`Clip.cut(of:)`): each of its packs' first beat in turn, the zoom, the tick and
   Prism's red stir coming off, about 8 s, in every build (Jack, CL2; a cut can also take First Stir's vignette, the
   sunrise from just after its first heal, which plays nothing, through its second). Every reel stays drawn,
@@ -1129,14 +1135,30 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   lens's core, since at any zoom a lens magnifies both ways only fluid from within 0.58 of its core's radius, and a
   neighbour's twist reaches no nearer than 0.41. `LevelView` bakes it off the main actor at every open and keeps it
   in memory only (no cache: 7 ms for Keyhole and 17 for Lens 25's four lenses on an M2 Max, optimised, against 80
-  for Keyhole's panel; 3.3 MB and 7.8 MB at a Pro Max's glass), and logs each bake. **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
-  and ovals, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
+  for Keyhole's panel; 3.3 MB and 7.8 MB at a Pro Max's glass), and logs each bake. **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons,
+  ovals and rings, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
   panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
   enough to read at x8 from the bake alone, as every draw but the level's glass shows it; every rod's core on its level holds tone and linework that each step
   moves (`testEveryLensPanelShowsEachStepOnItsLevel`, slow; `scripts/lens-art-sheet.py check` runs the same measure
-  on the Mac). A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
+  on the Mac). A twist must also read without the linework, which is too fine for weak eyes (Jack, from the phone,
+  2026-11-11, of levels 8, 11 and 18): every rod a level twists turns broad shapes of tone, at least two dot pitches
+  across and off its centre, and a lens's frame changes along its length (the spectacles' tortoiseshell, the night
+  sight's dashes), since a neighbour's twist slides a rim along itself and a plain ring hides that.
+  `scripts/lens-art-sheet.py read` measures it, weakest level first: the share of each dealt twist rod's disc whose
+  light, blurred over two pitches so dots and hairlines average away, its weakest step changes (one step, on every
+  rod looked at); the panels under 0.06 were redrawn, a cut-off of Claude's, and 17's rod 2 at 0.06 and 13 and 20 at
+  0.08 are the weakest left. Drawing did not mend the order read on the four-rod glass, where 8, 11 and 18 were dealt: with the same two
+  entries dealt either way round, a lens under a neighbour's twist and over it looked all but alike
+  (Mac renders at the phone's size), as a quad neighbour reaches 16% of the band round the rim. So those three are
+  dealt on tri (29%), no Lens level is on quad, and their lens cores are a flat tone unlike the
+  ground round them (cyan on the page, cyan over magenta cloth, yellow in the dark wood), so a twist dealt over a
+  lens pulls a tail of that tone out of it; `scripts/lens-art-sheet.py order` renders each lens and twist of a level
+  both ways round to look at. `scripts/lens-panels.sh read` also
+  prints, for each lens under a neighbour's disc, the share of the rim's band that three steps of the twist change.
+  A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
   `scripts/lens-panels.sh` draws, times and checks a panel on the Mac, and `scripts/lens-art-sheet.py` lays the drawn
-  ones out, as baked and as the game shows them (`shots.sh lens-NN`, `lens-NN-clue`). Prism's plates
+  ones out, as baked and as the game shows them (`shots.sh lens-NN`, `lens-NN-clue`, and `lens-NN-last`, one move from
+  solved). Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white
@@ -1291,7 +1313,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   starts a promoted purchase of it a second in, `UNSTIR_PROMO=lens` shows that offer's promoted-purchase image alone,
   `UNSTIR_SUPPORTER=0` switches the supporter mark off for the launch, and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait), `u` an undo through the control
+  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (refused, or a wait under `Level.waits`), `u` an undo through the control
   with its sound and `p<s>` a rest of s seconds more before the next (`Harness.Step`); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn
@@ -1370,11 +1392,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   most moves over its ties is the optimum under both parkings; its planning gap is no lookahead minus the optimum.
   `home:` asks for the tank back at 0, the old end rule. Several tests replay plays on a real `Game`, which must empty
   the stack in the moves the play counts. Escapement's prover (`Solver.escapement`) is a breadth-first search over
-  stacks where a move is a wait or one commit to a working slot, by ±1 to ±11 or an entry's exact inverse, then the
+  stacks where a move is one commit to a working slot (or, with `waits`, a wait), by ±1 to ±11 or an entry's exact inverse, then the
   clock's forced tick, a line dropped where that tick pushes or stops the clock with twists left (lines that can only run
   out of ticks); the same slot may be
   stirred twice running, as every let-go is final. So its first line is a fewest, and no shorter line exists among
-  those counts: the proof each problem ships with. `Move.wait` is its tap.
+  those counts: the proof each problem ships with. `Move.wait` is the tap, under `waits`.
 
 Many tests are regressions from real play (e.g. `testWhirlpool11UnstirsToEmpty`, `testVisibleSmudgeIsNotSolved`).
 Others check the level tables against the design tables (par, inversion counts, whirlpool's and vortex's pictures).

@@ -22,7 +22,7 @@ shot type-daily-result-xxxl "Today's daily's result card at xxxLarge, two over p
 shot type-menu-marks-xxxl "Plughole 01 to 07 solved and 08 tried at xxxLarge: each row's marks at its right." \
   BESTS=plughole:c0c2c00 TRIED=L8 CONSENT=yes TYPESIZE=xxxLarge
 shot type-lost-xxxl "Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size." \
-  PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1 TYPESIZE=xxxLarge
+  PACK=escapement LEVEL=2 PLAYED=1:-3,1:2,1:1 TYPESIZE=xxxLarge
 shot type-settings-ax3 "Settings at accessibility3: the title, rows and details scaled, the sheet scrolling." SETTINGS=1 TYPESIZE=accessibility3
 shot stamp-default "Level 05 solved at the default type size: \"unstirred.\" over the tank, the result card under it." \
   SCREEN=result LEVEL=5 CLOCK=0

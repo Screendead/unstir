@@ -358,7 +358,7 @@ final class PlayLayoutTests: XCTestCase {
             XCTAssertLessThanOrEqual(lines(text, mono), 2, "\(text) at \(type)", file: file, line: line)
         }
         for bank in [0, 1] {
-            let words = Game(level: Level.escapement[1], bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
+            let words = Game(level: Level.mockUp, bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
             XCTAssertLessThanOrEqual(lines(words, serif), 2, "\(words) at \(type)", file: file, line: line)
         }
     }
@@ -411,6 +411,23 @@ final class PlayLayoutTests: XCTestCase {
                 XCTAssertGreaterThanOrEqual(got.below, budget.below - 2.5, what)
             }
         }
+    }
+
+    /// An armed reset has the row to itself where undo can't share it on a line each, so "reset? tap again" never wraps
+    /// and the row never grows: an SE (343 pt inside its margins) at every size, the widest phone (408) at the largest.
+    func testAnArmedResetHasTheRowWhereUndoCantShareIt() {
+        let armed = ["undo \u{00B7} 10", "reset? tap again"]
+        XCTAssertFalse(PlayLayout.rowHolds(armed, width: 343, type: .large))
+        XCTAssertTrue(PlayLayout.rowHolds(armed, width: 408, type: .large))
+        XCTAssertFalse(PlayLayout.rowHolds(armed, width: 408, type: .xxxLarge))
+        XCTAssertEqual(PlayLayout.rowHolds(armed, width: 408, type: .accessibility5),
+                       PlayLayout.rowHolds(armed, width: 408, type: .xxxLarge), "play caps its type at xxxLarge")
+        XCTAssertTrue(PlayLayout.rowHolds(["reset? tap again"], width: 343, type: .accessibility5), "alone it fits an SE")
+        // The row is measured on its labels as the buttons set them: each a line of the button role and its sides.
+        let row = armed.reduce(0) { $0 + TypeRole.button.width(of: $1, at: .large) + 2 * ButtonFace.side }
+            + PlayLayout.controlGap
+        XCTAssertTrue(PlayLayout.rowHolds(armed, width: row, type: .large))
+        XCTAssertFalse(PlayLayout.rowHolds(armed, width: row - 1, type: .large))
     }
 
     func testTheChromeGrowsWithTheTypeSizeUpToItsCap() {
@@ -560,7 +577,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(PlayLayout.Halo(Level.maelstrom[0]), PlayLayout.Halo(ring: 0, above: RimLesson.overRim), "the rim lesson's arc")
         XCTAssertEqual(PlayLayout.Halo(Level.plughole[10]), PlayLayout.Halo(), "drawn wholly on the glass and rim")
         XCTAssertEqual(PlayLayout.Halo(Level.lens[0]), PlayLayout.Halo())
-        XCTAssertEqual(PlayLayout.Halo(Level.escapement[1]), PlayLayout.Halo())
+        XCTAssertEqual(PlayLayout.Halo(Level.mockUp), PlayLayout.Halo())
     }
 
     func testEndlesssBrimStaysInsideTheTanksPaneInEveryPose() {

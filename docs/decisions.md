@@ -436,6 +436,20 @@ Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
 | ESCPICTURES = A | 2026-11-11 | Escapement gets a plate per problem, drawn as its name. | HANDOFF |
 | MUSIC-THROUGH | 2026-11-11 | Jack, on the packs' layers: "i don't want the packs' foreground to fade when the level is solved then come back in the same spot on the next level; i want it to keep playing all the way through". | HANDOFF |
 
+## Round 18
+
+Calls 2026-11-11 (the page of built options after Jack's playthrough of the paid packs).
+
+| Call | Date | Decided | Where |
+|---|---|---|---|
+| ESCWAIT = untouchable clocks | 2026-11-11 | Escapement's clocks can never be touched; the twenty levels that needed a wait are dealt again (#194). Chosen against Claude's recommendation, a labelled wait button (#191, closed). | HANDOFF |
+| UNDOASIDE = keep | 2026-11-11 | While reset is armed and the row cannot hold both labels on a line each, undo steps aside (#200). | HANDOFF |
+| ESCPLATES = take all | 2026-11-11 | Escapement takes all thirty per-level pictures (#196); the Pause picture is to be redrawn after. The redraw is on hold: with the wait gone, level 7's name is back with Jack. | HANDOFF |
+| LENSQUAD = move | 2026-11-11 | Lens's Spectacles, Bifocals and Night vision are redrawn and moved to the three-rod glass (#195, which carried #190). | HANDOFF |
+| PRISMAID = leave | 2026-11-11 | No aid for reading a count from the knobs. Jack: "The issue with reading was not reading the knobs. It was with reading the picture itself while turning the rod. I think you investigated the wrong problem here." | HANDOFF |
+| ESCNOTES = keep | 2026-11-11 | Escapement's per-move notes start again each level, as built. | HANDOFF |
+| VOICENEXT = keep | 2026-11-11 | VoiceOver's "next, not played" stays, as built. | HANDOFF |
+
 ## Dated, no round
 
 | Call | Date | Decided | Where |
