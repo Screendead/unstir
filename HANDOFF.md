@@ -155,6 +155,49 @@ dial, or pips on the knob). **Music**: the layer must play straight through a so
 two StoreKit tests fail on an iOS 27.2 simulator (`store-ios27`); a louder payoff on finishing a pack; the six
 Prism cost weights the phone bench read over their assumption (prism-25, 27 to 30, 20 and 21 marginal).
 
+**Overnight to 2026-11-12 (finish-and-pitch).** Merged: #187 (the finer lens core, CRISP); #192 (records); #193
+(a pack's loop plays through the solve, the card and into the next level with no duck, MUSIC-THROUGH); #173, #180
+and #178 (the buttons, the rebuilt menu and card without the "next:" line, the growing "unstirred.", the glass
+shrinking under a card that does not fit); #189 (Prism's measuring tools); #197 (the String Catalog's chrome half:
+`scripts/loc-lint.sh`'s baseline is empty, so the file and its test's read of it can go). **Side effects, each a
+call not yet made**: with the "next:" line gone the frontier row speaks "next, not played" to VoiceOver
+(`Spoken.marked`), rode in with #180; the consent strings are now translatable keys (nothing is translated; whether
+legal text is translated at all is open); #191's small-phone fix makes undo step aside while reset is armed on
+every level. **By ear, Jack's**: does each layer's resolution still land as an arrival over a loop that no longer
+drops (Escapement's sits about 3.6 LU under its loop and may be buried; Lens's is long, over the motif); leaving
+straight after a solve fades over 1.5 s. **Phone**: the merged build was installed but could not launch (phone
+locked), so the bench and the crisp core's four checks (detail on, colours, a Kaleidoscope drag, bake time) are
+owed; #189 and #197 are not on it. Prism's cost weights stay as they are: `Unstirred.channelCost` is a formula and
+the six over-readings came off a hot phone, so re-measure cool first. **Open calls, each built and on the new
+page (link in `HANDOFF.private.md`), Claude's recommendation first, none decided**: Escapement's wait as a
+labelled button (draft #191) against untouchable clocks (draft #194, 18 of the twenty re-dealt, planning falls) or
+a spare turn (`scripts/escapement/problems-spare-turn.tsv`, unwired); undo stepping aside (keep); Lens's nine
+redraws with the three quad levels moved to tri (#195, on #190) against redrawn in place (#190); Prism's turn
+count as pips on the knob against a dial mark or a re-deal (`prism-aid`, no PR; lacks VoiceOver and the
+colour-letters check); the payoff as the glass stirring itself with a halo and a credit line (draft #198,
+`UNSTIR_PAYOFF=a`, against a counting bezel or a curtain call; it also holds a fix to the rating prompt's and
+Game Center's timing that can be lifted out); the VoiceOver wording (keep); Escapement's per-move notes starting
+again each level (keep); Escapement's 30 plates (#196, below). An option that
+adds player text (the wait button, the payoff's credit, Prism's aid) needs its String Catalog keys when picked.
+**Still open**: the store media retake, which waits on the plates, wait and payoff picks.
+
+**2026-11-12, later.** **Plates**: all 30 are on #196 (both batches merged in, CI green, not merged, Jack's to
+pick). Changed on the way: Calendar's red ring is a red numeral between two rules; Moon phase's stars and
+Anticlockwise's tail are black; Eleventh hour's hatching is wider. Alternates of Pause and Hourglass sit behind
+`UNSTIR_ESCALT=1`, unregistered. Pause reads as "pause" in neither version (recommended: take the 30, redraw
+Pause). The dock cover, shop clip and promo image still draw the shared plate. The PR's test job took about 10
+minutes. **Phone bench** on the merged build, thermal fair: Prism's measured over assumed cost has median 0.90 and
+max 1.01, the slowest specimen 24 at 5.911 of 8.333 ms, so `Unstirred.channelCost` stays; Lens 25 as dealt takes
+4.861 ms with the detail (3.643 without); a panel bakes cold in 75 to 227 ms, its detail in 8 to 20 ms, 129 MB
+cached for all 25; 36 entries at four taps take 9.2 to 9.7 ms at 1137 px. Owed by eye: a lens's sharpness at x8,
+the colour match, a Kaleidoscope drag. **StoreKit on iOS 27.2**: the two failures did not reproduce; on a fresh
+27.2 simulator the first `SKTestSession` purchase leaves the test session for the sandbox sign-in and never
+returns (storekitd's and appstored's logs), so the fault is the simulator's or StoreKitTest's, not Store.swift's.
+No 26.5 control ran. `store-ios27` adds a nightly StoreTests job on the Xcode 27 runner, with no PR, as it would
+hang every night until this is understood. Next: read that job's log, try `storeKitConfiguration` in the scheme's
+test section of `project.yml`, the 26.5 control, then a sandbox refund and an Ask to Buy decline on a real phone.
+**The open calls** above are on one pitch page (link in `HANDOFF.private.md`).
+
 ### Open work (finish-and-pitch, 2026-11-02)
 
 Closed: moved word for word to `docs/history.md`.
