@@ -30,6 +30,8 @@ struct ButtonFace: ViewModifier {
     /// The label's side padding; a swatch's letter keeps none inside its 44 pt.
     var inset: CGFloat = 20
     var minWidth: CGFloat = 0
+    /// Takes the width it is given: a card's lone button, or its share of a `ButtonRow`.
+    var wide = false
     /// A secondary's stroke of its own, as a swatch's channel, and its fill while `filled`, as a held swatch's.
     var edge: Color? = nil
     var strokeWidth: CGFloat = 1
@@ -51,7 +53,7 @@ struct ButtonFace: ViewModifier {
                 let colour = colour
                 content.font(.ui(.button)).foregroundStyle(label)
                     .padding(.horizontal, inset).padding(.vertical, 12)
-                    .frame(minWidth: minWidth, minHeight: Self.height)
+                    .frame(minWidth: minWidth, maxWidth: wide ? .infinity : nil, minHeight: Self.height)
                     .background {
                         if emphasis == .primary || filled { Capsule().fill((edge ?? colour).opacity(Self.fill)) }
                     }
@@ -110,8 +112,8 @@ struct UnstirButton<Label: View>: View {
     let label: Label
 
     init(_ emphasis: Emphasis, accent: Color? = nil, effect: Sound.Effect = .tap, armed: Bool = false, dim: Bool = false,
-         pending: Bool = false, action: @escaping () -> Void, @ViewBuilder label: () -> Label) {
-        face = ButtonFace(emphasis: emphasis, accent: accent, armed: armed, dim: dim, pending: pending)
+         pending: Bool = false, wide: Bool = false, action: @escaping () -> Void, @ViewBuilder label: () -> Label) {
+        face = ButtonFace(emphasis: emphasis, accent: accent, armed: armed, dim: dim, pending: pending, wide: wide)
         self.effect = effect
         self.action = action
         self.label = label()
@@ -119,5 +121,52 @@ struct UnstirButton<Label: View>: View {
 
     var body: some View {
         Button(action: action) { label.modifier(face) }.buttonStyle(Sounding(effect: effect, presses: true))
+    }
+}
+
+/// A card's buttons, sharing its width equally, `gap` apart, so a lone one fills it. Where the longest label can't
+/// have an equal share each keeps its own width and they share what is left; where they can't share a line they
+/// stack, each the card's width.
+struct ButtonRow: SwiftUI.Layout {
+    static let gap: CGFloat = 12
+
+    private func widths(_ subviews: Subviews, in width: CGFloat) -> [CGFloat]? {
+        let ideal = subviews.map { $0.sizeThatFits(.unspecified).width }
+        let room = width - Self.gap * CGFloat(subviews.count - 1), count = CGFloat(subviews.count)
+        if (ideal.max() ?? 0) * count <= room { return ideal.map { _ in room / count } }
+        let spare = room - ideal.reduce(0, +)
+        return spare >= 0 ? ideal.map { $0 + spare / count } : nil
+    }
+
+    /// Each button's frame in a row `width` wide, from the row's top leading corner.
+    private func frames(_ subviews: Subviews, in width: CGFloat) -> [CGRect] {
+        guard !subviews.isEmpty else { return [] }
+        if let widths = widths(subviews, in: width) {
+            let height = zip(subviews, widths).map { $0.sizeThatFits(ProposedViewSize(width: $1, height: nil)).height }.max() ?? 0
+            var x: CGFloat = 0
+            return widths.map { w in
+                defer { x += w + Self.gap }
+                return CGRect(x: x, y: 0, width: w, height: height)
+            }
+        }
+        var y: CGFloat = 0
+        return subviews.map { view in
+            let h = view.sizeThatFits(ProposedViewSize(width: width, height: nil)).height
+            defer { y += h + Self.gap }
+            return CGRect(x: 0, y: y, width: width, height: h)
+        }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let ideal = subviews.map { $0.sizeThatFits(.unspecified).width }
+        let width = proposal.width ?? ideal.reduce(Self.gap * CGFloat(max(subviews.count - 1, 0)), +)
+        return CGSize(width: width, height: frames(subviews, in: width).map(\.maxY).max() ?? 0)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for (view, frame) in zip(subviews, frames(subviews, in: bounds.width)) {
+            view.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                       proposal: ProposedViewSize(frame.size))
+        }
     }
 }

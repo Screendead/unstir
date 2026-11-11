@@ -198,6 +198,8 @@ struct MenuView: View {
     @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
     @State private var list = CGRect.zero
+    /// Where the list and its rows lie at rest, read as the list lands on a row.
+    @State private var seats = Seats()
     @State private var scroller: ScrollViewProxy?
     /// The list has opened on its focus.
     @State private var centred = false
@@ -227,7 +229,7 @@ struct MenuView: View {
     /// The archive's days dealt, and how many are at par, with the daily: dealing thirty tanks is too slow for every
     /// frame of a swipe.
     @State private var past: (days: [(date: Date, level: Level)], atPar: Int)
-    /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
+    /// `lead`, read again when a best or the editors' switch could change it rather than on every frame of a swipe.
     @State private var leading: Lead
     /// Endless's saved run, which its row continues (Jack's call C2, round 13).
     @State private var saved: Resume?
@@ -280,7 +282,7 @@ struct MenuView: View {
         _today = State(initialValue: now)
         _daily = State(initialValue: Self.daily(now))
         _past = State(initialValue: Self.past(now))
-        _leading = State(initialValue: Self.lead(tier: tier))
+        _leading = State(initialValue: Self.lead())
         if let frozen {
             _spin = State(initialValue: frozen.spin)
             _fade = State(initialValue: frozen.fade)
@@ -290,12 +292,11 @@ struct MenuView: View {
 
     /// What the menu leads with (Jack's call C4, round 13). `modes`: the daily and endless, which draw on every layout, so
     /// they open, and show, after the first hex level. `sandbox`: the build has it (`Level.playsSandbox`), its row at the
-    /// list's end. `next`: once plughole 01 has a best, the tier's frontier, if it has one.
-    typealias Lead = (modes: Bool, sandbox: Bool, next: Level?)
-    static func lead(tier: Tier, unlocked: Bool = Best.unlocked, release: Bool = Build.release,
+    /// list's end.
+    typealias Lead = (modes: Bool, sandbox: Bool)
+    static func lead(unlocked: Bool = Best.unlocked, release: Bool = Build.release,
                      best: (String) -> Best? = Best.load) -> Lead {
-        (unlocked || best(Level.plughole[22].id) != nil, Level.playsSandbox(release: release),
-         best(Level.plughole[0].id) != nil ? tier.frontier(unlocked: unlocked, best) : nil)
+        (unlocked || best(Level.plughole[22].id) != nil, Level.playsSandbox(release: release))
     }
 
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
@@ -322,7 +323,7 @@ struct MenuView: View {
         // it leaving.
         .onChange(of: card == nil && !archive && !settings && playing == nil) { Power.shared.touched() }
         // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
-        .onChange(of: settings) { if !settings { leading = Self.lead(tier: shown) } }
+        .onChange(of: settings) { if !settings { leading = Self.lead() } }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it. Beside play there
             // is no stir, and the square would show on Escapement's paper.
@@ -350,7 +351,7 @@ struct MenuView: View {
         .onChange(of: Sync.revision.count) {
             daily = Self.daily(today)
             past = Self.past(today)
-            leading = Self.lead(tier: shown)
+            leading = Self.lead()
         }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
             today = .now
@@ -410,7 +411,7 @@ struct MenuView: View {
         guard layout.wide else { return }
         daily = Self.daily(today)
         past = Self.past(today)
-        leading = Self.lead(tier: shown)
+        leading = Self.lead()
         saved = run
     }
 
@@ -504,9 +505,10 @@ struct MenuView: View {
                 .buttonStyle(Sounding()).foregroundStyle(Color.text2)
                 .accessibilityLabel("Settings")
             }
-            .padding(.leading, 20).padding(.trailing, 10).padding(.top, 28)
-            // The strip keeps the picked name in view itself, so a sideways drag on it is the switcher's, as on the list.
-            tiers.padding(.top, 6).scrollDisabled(true).simultaneousGesture(swipe)
+            .padding(.leading, 20).padding(.trailing, 10).padding(.top, 16)
+            // The strip keeps the picked chip in view itself, so a sideways drag on it is the switcher's, as on the list.
+            // 16 under the title to the chips as drawn: each stands 4 inside its 44 pt target.
+            tiers.padding(.top, 12).scrollDisabled(true).simultaneousGesture(swipe)
             ScrollViewReader { proxy in
                 ScrollView { rows(leading) }
                 .onAppear {
@@ -551,47 +553,51 @@ struct MenuView: View {
         }
     }
 
-    /// The way on; the modes once open; then the tier's rule and rows, and where the build has the sandbox, its row at
+    /// The modes once open; then the tier's rule and rows, and where the build has the sandbox, its row at
     /// the end under "anything goes" (Jack's call D2 = A, round 13), so the list leads with 01.
     private func rows(_ lead: Lead) -> some View {
         let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                                pick: pick, refuse: refuse)
         return VStack(alignment: .leading, spacing: 0) {
-            wayOn(lead).padding(.top, 10).id(Self.top)
-            VStack(alignment: .leading, spacing: 0) {
-                if lead.modes {
-                    // Marked until either is first opened.
-                    let new = !Best.modesSeen, (day, run) = daily
-                    LevelRow(level: day, detail: run < 2 ? nil
-                                 : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
-                             enabled: true, new: new, playing: playing?.id == day.id, pick: pick, refuse: refuse)
-                    // Unsaid until the store has read what the player owns, so an owner never meets the lock.
-                    ArchiveRow(open: Store.shared.ready ? Archive.open : nil, days: past.days.count, atPar: past.atPar,
-                               pick: openArchive, refuse: refuse)
-                    let kept = saved?.run
-                    LevelRow(level: .endless(kept ?? Run(seed: .random(in: .min ... .max))),
-                             detail: kept.map {
-                                 "continue \u{00B7} tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)"
-                                     + (Best.tanks > 0 ? " \u{00B7} best \(Best.tanks)" : "")
-                             } ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
-                             best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true,
-                             new: new && kept == nil, continues: kept != nil, playing: playing?.run != nil, pick: pick,
-                             refuse: refuse)
-                        // On the title's line, where every row's mark sits and "Endless" leaves room.
-                        .overlay(alignment: Alignment(horizontal: .trailing, vertical: .firstTextBaseline)) {
-                            if kept != nil { newRun }
-                        }
-                }
+            Color.clear.frame(height: 0).id(Self.top)
+            if lead.modes {
+                // 24 under the chips as drawn, each 4 inside its target.
+                heading(Text("today")).padding(.top, 20)
+                // Marked until either is first opened.
+                let new = !Best.modesSeen, (day, run) = daily
+                // One line each: what a mode is its own note says. A run of days goes under the title, leaving the
+                // result where every row has it.
+                LevelRow(level: day, detail: run < 2 ? nil
+                             : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
+                         under: run < 2 ? nil : Text("\(run) days running"), enabled: true, new: new, brief: true,
+                         playing: playing?.id == day.id, pick: pick, refuse: refuse)
+                // Unsaid until the store has read what the player owns, so an owner never meets the lock.
+                ArchiveRow(open: Store.shared.ready ? Archive.open : nil, days: past.days.count, atPar: past.atPar,
+                           pick: openArchive, refuse: refuse)
+                let kept = saved?.run
+                LevelRow(level: .endless(kept ?? Run(seed: .random(in: .min ... .max))),
+                         detail: kept.map {
+                             "continue \u{00B7} tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)"
+                                 + (Best.tanks > 0 ? " \u{00B7} best \(Best.tanks)" : "")
+                         } ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
+                         best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true,
+                         new: new && kept == nil, continues: kept != nil, brief: kept == nil, playing: playing?.run != nil,
+                         pick: pick, refuse: refuse)
+                    // On the title's line, where every row's mark sits and "Endless" leaves room.
+                    .overlay(alignment: Alignment(horizontal: .trailing, vertical: .firstTextBaseline)) {
+                        if kept != nil { newRun }
+                    }
             }
-            .padding(.top, lead.modes ? 22 : 8)
-            TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held, playing: playing?.id,
-                     revision: revision).equatable()
+            TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held, seats: seats,
+                     playing: playing?.id, revision: revision).equatable()
                 .overlay(alignment: .topLeading) {
                     Color.clear.frame(width: 1, height: mark?.height ?? 1).id(Self.mark)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { _ in
                             guard arriving else { return }
                             arriving = false
-                            scroller?.scrollTo(Self.mark, anchor: .center)
+                            // As `land(on:)` a row.
+                            let top = mark.map(inSight) == true
+                            scroller?.scrollTo(top ? Self.top : Self.mark, anchor: top ? .top : .center)
                         }
                         .padding(.top, mark?.minY ?? 0)
                 }
@@ -600,38 +606,26 @@ struct MenuView: View {
                     list = $0
                     arrive()
                 }
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.rows)).minY } action: { seats.top = $0 }
+                // With the header's own 14, a section's 32 under the modes; with none, 24 under the chips as drawn.
+                .padding(.top, lead.modes ? 18 : 6)
             if lead.sandbox {
-                HStack(spacing: 10) {
-                    Text("anything goes").font(.ui(.detail, .semibold)).foregroundStyle(Color.text2)
-                    Rectangle().fill(Color.rule).frame(height: 1)
-                }
-                .padding(.top, 22).padding(.bottom, 8)
+                heading(Text("anything goes")).padding(.top, 32)
                 sandbox
             }
         }
+        .coordinateSpace(.named(Self.rows))
         .padding(.horizontal, 20)
         .padding(.bottom, 28)
     }
 
-    /// The shown tier's frontier, a tap away, once plughole 01 has a best; until then an empty line (Jack's call D1 = A,
-    /// round 13: the tank's rule left the menu for the App Store page).
-    @ViewBuilder private func wayOn(_ lead: Lead) -> some View {
-        if let next = lead.next {
-            Button { pick(next) } label: {
-                HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text("next: ").foregroundStyle(Color.text3)
-                    Text(next.label).fontWeight(.semibold).foregroundStyle(next.colour).shadow(color: next.colour, radius: 4)
-                    Text(" \u{00B7} \(next.title) \u{203A}").foregroundStyle(Color.text2)
-                }
-                .font(.ui(.label)).lineLimit(1).hit()
-            }
-            // Plain: `pick` taps, as a row does.
-            .buttonStyle(.plain)
-            .accessibilityLabel(Spoken.next(next))
-        } else {
-            // A line's height still, so a tier swap, or 01's first best, moves nothing below it.
-            Text(" ").font(.ui(.label)).hidden()
+    /// A section's name and rule, where the section is no tier's: the modes' and the sandbox's.
+    private func heading(_ name: Text) -> some View {
+        HStack(spacing: 10) {
+            name.font(.ui(.detail, .semibold)).foregroundStyle(Color.text2)
+            Rectangle().fill(Color.rule).frame(height: 1)
         }
+        .padding(.bottom, TierList.headerFoot)
     }
 
     /// The card grows out of its cover, or fades in under Reduce Motion; `beside` the list, it comes in from the
@@ -759,31 +753,33 @@ struct MenuView: View {
         .accessibilityLabel(supporter ? "Unstir, supporter" : "Unstir").accessibilityAddTraits(.isHeader)
     }
 
-    /// Every tier by name. A strip wider than the screen moves only to keep the picked name in view, so a sideways drag
-    /// on it is the switcher's.
+    /// Every tier as a chip. A strip wider than the screen moves only to keep the picked chip in view, so a sideways
+    /// drag on it is the switcher's.
     private var tiers: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal) {
-                HStack(alignment: .top, spacing: 0) {
+                HStack(spacing: 8) {
                     ForEach(Tier.allCases, id: \.self) { t in
-                        if t != Tier.allCases.first {
-                            Text("\u{00B7}").font(.ui(.chip)).foregroundStyle(Color.text4).padding(.horizontal, 7).frame(height: 36)
-                        }
                         // Silent itself: `go` sounds a switch as it starts, however it starts.
-                        Button { select(t) } label: { name(t) }
+                        Button { select(t) } label: { chip(t) }
                             .buttonStyle(.plain)
                             .id(t)
                     }
                 }
                 .padding(.leading, 20)
-                // Past the trailing fade, so the last name reads whole once scrolled to.
+                // Past the trailing fade, so the last chip reads whole once scrolled to.
                 .padding(.trailing, 40)
             }
             .scrollIndicators(.hidden)
-            // Names run out into the black at the edges, so a strip wider than the screen reads as running on past them.
-            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.04),
-                                         .init(color: .black, location: 0.9), .init(color: .clear, location: 1)],
-                                 startPoint: .leading, endPoint: .trailing))
+            // Chips run out into the black at the edges, so a strip wider than the screen reads as running on past
+            // them: the leading fade lies inside the gutter, clear of a chip at rest there.
+            .mask {
+                HStack(spacing: 0) {
+                    LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing).frame(width: 16)
+                    Color.black
+                    LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing).frame(width: 24)
+                }
+            }
             .onChange(of: picked) { withAnimation { proxy.scrollTo(picked, anchor: .center) } }
             .onAppear { proxy.scrollTo(picked, anchor: .center) }
         }
@@ -800,30 +796,30 @@ struct MenuView: View {
         }
     }
 
-    private func name(_ t: Tier) -> some View {
+    /// Picked, the tier's sweep round its glow at 0.12; open, a `line` stroke; locked, a `rule` stroke and a lock.
+    private func chip(_ t: Tier) -> some View {
         let isPicked = t == picked, open = t.isOpen()
-        return VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 5) {
-                Text(t.rawValue).font(.ui(.chip, isPicked ? .semibold : .regular))
-                    .foregroundStyle(isPicked ? AnyShapeStyle(t.sweep)
-                                              : AnyShapeStyle(open ? Color.text2 : Color.text4))
-                    .shadow(color: isPicked ? t.glow.opacity(0.8) : .clear, radius: 7)
-                if !open {
-                    Image(systemName: "lock.fill").font(.ui(.detail, .semibold)).imageScale(.small)
-                        .foregroundStyle(isPicked ? t.ink : Color.text4)
-                }
-            }
-            .frame(height: 36)
-            // The underline slides to the picked name as soon as it is picked; the list follows once it has stirred
-            // away.
-            if isPicked {
-                Capsule().fill(t.sweep).frame(height: 2).shadow(color: t.glow, radius: 4)
-                    .matchedGeometryEffect(id: "underline", in: strip)
-            } else {
-                Color.clear.frame(height: 2)
+        return HStack(spacing: 5) {
+            Text(t.rawValue).font(.ui(.chip))
+                .foregroundStyle(isPicked ? Color.text : open ? Color.text2 : Color.text4)
+            if !open {
+                Image(systemName: "lock.fill").font(.ui(.detail, .semibold)).imageScale(.small)
+                    .foregroundStyle(isPicked ? t.ink : Color.text4)
             }
         }
-        .padding(.bottom, 6)
+        .padding(.horizontal, 14).padding(.vertical, 8).frame(minHeight: 36)
+        .background {
+            if isPicked {
+                // The picked face moves to the chip as soon as it is picked; the list follows once it has stirred away.
+                Capsule().fill(t.glow.opacity(0.12))
+                    .overlay { Capsule().strokeBorder(t.sweep, lineWidth: 1).shadow(color: t.glow.opacity(0.5), radius: 5) }
+                    .matchedGeometryEffect(id: "picked", in: strip)
+            } else {
+                Capsule().strokeBorder(open ? Color.line : Color.rule, lineWidth: 1)
+            }
+        }
+        // The chip's target, 4 past it above and below.
+        .padding(.vertical, 4)
         .contentShape(Rectangle())
     }
 
@@ -849,7 +845,6 @@ struct MenuView: View {
             withAnimation(.snappy(duration: 0.35)) { picked = t }
             shown = t
             listed = t
-            leading = Self.lead(tier: t)
             DispatchQueue.main.async { land(on: t) }
             return
         }
@@ -860,7 +855,6 @@ struct MenuView: View {
             fade = dim
         } completion: {
             shown = t
-            leading = Self.lead(tier: t)
             // Under the stir's peak, so the jump never shows: a landing row scrolls in once the copy has measured it.
             mark = nil
             if !t.isOpen() {
@@ -879,7 +873,23 @@ struct MenuView: View {
         }
     }
 
-    private static let top = "top", mark = "mark"
+    private static let top = "top", mark = "mark", rows = "rows"
+
+    /// Whether a row at `frame` in the list's own space has its words in sight, over the dock, with the list at its top.
+    private func inSight(_ frame: CGRect) -> Bool {
+        seats.top + frame.maxY - LevelRow.pad <= viewport - (layout.dock == nil ? dock + bottom : 0)
+    }
+
+    /// Lands the list on `id`'s row: left at its top where the row is in sight from there, else centred on it. Centring
+    /// a row that stands a little under the middle would scroll the list those few points, and cut what leads it off
+    /// under the chips: so the list's top is whole or well away.
+    private func land(on id: String) {
+        if seats.rows[id].map(inSight) == true {
+            scroller?.scrollTo(Self.top, anchor: .top)
+        } else {
+            scroller?.scrollTo(id, anchor: .center)
+        }
+    }
 
     /// Unanimated, under the dip that brings the menu in, once the rows are laid out and the scroll view's reader is in
     /// hand, whichever comes last.
@@ -888,19 +898,19 @@ struct MenuView: View {
         centred = true
         DispatchQueue.main.async {
             if let focus = playing ?? focus, listed.levels.contains(where: { $0.id == focus.id }) {
-                scroller.scrollTo(focus.id, anchor: .center)
+                land(on: focus.id)
             }
             flashing = nil
         }
     }
 
-    /// The tier's landing row centred, or beside play the playing level's; a locked tier's header, over its gate, at the
-    /// top; else the top.
+    /// The tier's landing row, or beside play the playing level's (`land(on:)` a row); a locked tier's header, over its
+    /// gate, at the top; else the top.
     private func land(on t: Tier) {
         if let p = playing, t.levels.contains(where: { $0.id == p.id }) {
-            scroller?.scrollTo(p.id, anchor: .center)
+            land(on: p.id)
         } else if let row = t.landing() {
-            scroller?.scrollTo(row.id, anchor: .center)
+            land(on: row.id)
         } else {
             scroller?.scrollTo(t.isOpen() ? Self.top : TierList.heading, anchor: .top)
         }
@@ -1055,6 +1065,13 @@ private struct Refreshed: ViewModifier {
     }
 }
 
+/// Where the menu's list stands under what leads it, and each of its rows in the list's own space, as laid out. A
+/// class, as it is read only as the list lands and nothing is drawn from it.
+@MainActor private final class Seats {
+    var top: CGFloat = 0
+    var rows: [String: CGRect] = [:]
+}
+
 /// A tier's rule and rows, and a locked tier's gate. Compared by what changes its rows (the tier, the unlock, the row
 /// playing beside it, the menu's revision and the row lit), never by a frame of a drag or a stir, so neither rebuilds it.
 private struct TierList: View, Equatable {
@@ -1067,6 +1084,8 @@ private struct TierList: View, Equatable {
     var held: String?
     /// Given the landing row's frame in the list's own space, once laid out.
     var report: ((CGRect) -> Void)?
+    /// The scroll view's own list keeps every row's frame here.
+    var seats: Seats?
     /// The level playing beside the menu: its hairline stays lit.
     var playing: String?
     /// The menu's, so a menu that stays up beside play redraws the rows' results as levels finish.
@@ -1082,6 +1101,8 @@ private struct TierList: View, Equatable {
     /// The header's id: the same on every tier, so mid-switch the outgoing list's header stands where the incoming one's
     /// will.
     static let heading = "heading"
+    /// Under a section's header to its first row, whose own 12 follows.
+    static let headerFoot: CGFloat = 4
 
     var body: some View {
         let open = tier.isOpen()
@@ -1098,6 +1119,7 @@ private struct TierList: View, Equatable {
                          gate: open ? nil : tier.below, playing: level.id == playing, pick: pick, refuse: refuse)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
                         if level.id == landing?.id { report?(frame) }
+                        seats?.rows[level.id] = frame
                     }
             }
         }
@@ -1112,7 +1134,8 @@ private struct TierList: View, Equatable {
             Rectangle().fill(tier.sweep).frame(height: 1).opacity(0.8)
             Text(open ? "\(par.filter { $0 }.count)/\(par.count) at par" : "locked").font(.ui(.detail)).foregroundStyle(Color.text3)
         }
-        .padding(.top, 14).padding(.bottom, 8)
+        // Its own, so a locked tier's header scrolled to the top stands clear of the chips.
+        .padding(.top, 14).padding(.bottom, Self.headerFoot)
         .id(Self.heading)
     }
 
@@ -1177,6 +1200,8 @@ private struct LevelRow: View {
     let level: Level
     var detail: String?
     var best: Text?
+    /// A line under the title on a brief row, as a row's detail is.
+    var under: Text?
     let enabled: Bool
     /// What opens a locked row, said for a moment when it is tapped.
     var opens: String?
@@ -1193,6 +1218,8 @@ private struct LevelRow: View {
     var new = false
     /// Endless's row while a run is saved.
     var continues = false
+    /// One line: the detail is VoiceOver's alone, as the level's own note says what the row left out.
+    var brief = false
     /// Playing beside the menu: its hairline stays lit at full, and it says so under its title.
     var playing = false
     let pick: (Level) -> Void
@@ -1205,6 +1232,8 @@ private struct LevelRow: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// Room for a four-letter label ("past") at the label's size.
     @ScaledMetric(relativeTo: .subheadline) private var numberWidth = 40.0
+    /// Over and under a row's words.
+    static let pad: CGFloat = 12
 
     var body: some View {
         let result = Best.load(level.id)
@@ -1214,34 +1243,20 @@ private struct LevelRow: View {
         // Started and no best yet: endless and the sandbox have none; a daily left on its first visit stays tried all day,
         // as practice saves no best.
         let tried = result == nil && level.run == nil && !level.sandbox && Best.started(level.id)
-        let rods = level.layout.base.map { "\($0.rods.count) rods + swirl" } ?? "\(level.layout.rods.count) rods"
         let saying = (said || held) && opens != nil
         return Button { enabled ? pick(level) : tapped() } label: {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
-                // A locked number stays bright enough that the hue walk still reads on first launch.
-                Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(level.colour)
-                    .shadow(color: enabled ? level.colour : .clear, radius: 4).opacity(enabled ? 1 : 0.7)
-                    .frame(width: large ? nil : numberWidth, alignment: .leading)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(level.title).font(.ui(.body)).multilineTextAlignment(.leading).foregroundStyle(enabled ? Color.text : Color.text3)
-                    if saying, let opens {
-                        Text(opens).font(.ui(.detail)).foregroundStyle(level.colour).transition(.opacity)
-                    } else if playing {
-                        // In place of its rods and par, which the level's header shows: the frontier's hairline is
-                        // lit too, so the hairline alone can't say which row is in the tank.
-                        Text("playing").font(.ui(.detail)).foregroundStyle(level.colour)
-                    } else {
-                        Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.ui(.detail))
-                            // A locked row's own detail is its reason, as on the daily, so it stays readable.
-                            .foregroundStyle(enabled ? Color.text2 : detail != nil ? Color.text3 : Color.text4).transition(.opacity)
+            Group {
+                if brief, best != nil, !large {
+                    // A best beside a long title: under the title where one line won't hold both.
+                    ViewThatFits(in: .horizontal) {
+                        face(stacked: false, result: result, tried: tried, saying: saying)
+                        face(stacked: true, result: result, tried: tried, saying: saying)
                     }
-                    if large { mark(result, tried: tried) }
+                } else {
+                    face(stacked: large, result: result, tried: tried, saying: saying)
                 }
-                .animation(.easeOut(duration: 0.2), value: saying)
-                Spacer(minLength: 8)
-                if !large { mark(result, tried: tried) }
             }
-            .padding(.vertical, 11)
+            .padding(.vertical, Self.pad)
             .contentShape(Rectangle())
             .keyframeAnimator(initialValue: 0.0, trigger: taps) { row, x in
                 row.offset(x: reduceMotion ? 0 : x)
@@ -1254,18 +1269,43 @@ private struct LevelRow: View {
         }
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
-        .modifier(Speech(Self.spoken(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled,
-                                                needs: needs, gate: gate, started: tried || continues, new: new),
-                                    playing: playing)))
+        .modifier(Speech(Spoken.marked(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled,
+                                                  needs: needs, gate: gate, started: tried || continues, new: new),
+                                      playing: playing, frontier: frontier)))
         .rowHairline(level.colour, max(lit, playing ? 1 : frontier ? 0.75 : 0))
         .onAppear { if flash { light() } }
         // A menu that stays up wide flashes the row left without appearing anew.
         .onChange(of: flash) { if flash { light() } }
     }
 
-    /// The playing level's row says so first, as its lit hairline shows it.
-    static func spoken(_ s: (label: String, value: String, hint: String), playing: Bool) -> (label: String, value: String, hint: String) {
-        playing ? (s.label, ["playing", s.value].filter { !$0.isEmpty }.joined(separator: ", "), s.hint) : s
+    /// The number, the title over its detail, and the result at the trailing edge, or `stacked` under the title.
+    private func face(stacked: Bool, result: Best?, tried: Bool, saying: Bool) -> some View {
+        let rods = level.layout.base.map { "\($0.rods.count) rods + swirl" } ?? "\(level.layout.rods.count) rods"
+        return HStack(alignment: .firstTextBaseline, spacing: 12) {
+            // A locked number stays bright enough that the hue walk still reads on first launch.
+            Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(level.colour)
+                .shadow(color: enabled ? level.colour : .clear, radius: 4).opacity(enabled ? 1 : 0.7)
+                .frame(width: typeSize.isAccessibilitySize ? nil : numberWidth, alignment: .leading)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(level.title).font(.ui(.body)).multilineTextAlignment(.leading).foregroundStyle(enabled ? Color.text : Color.text3)
+                if saying, let opens {
+                    Text(opens).font(.ui(.detail)).foregroundStyle(level.colour).transition(.opacity)
+                } else if playing {
+                    // In place of its rods and par, which the level's header shows: the frontier's hairline is
+                    // lit too, so the hairline alone can't say which row is in the tank.
+                    Text("playing").font(.ui(.detail)).foregroundStyle(level.colour)
+                } else if !brief {
+                    Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.ui(.detail))
+                        // A locked row's own detail is its reason, as on the daily, so it stays readable.
+                        .foregroundStyle(enabled ? Color.text2 : detail != nil ? Color.text3 : Color.text4).transition(.opacity)
+                }
+                if let under { under.font(.ui(.detail)).foregroundStyle(Color.text2) }
+                if stacked { mark(result, tried: tried) }
+            }
+            .animation(.easeOut(duration: 0.2), value: saying)
+            Spacer(minLength: 8)
+            if !stacked { mark(result, tried: tried) }
+        }
     }
 
     /// The row's result, or what stands for one.

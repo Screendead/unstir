@@ -58,48 +58,60 @@ struct ResultCard: View {
         // One primary: an open TierUp's, else next's, else share's; "again" never is.
         let upLeads = up?.isOpen() == true
         let nextLeads = next != nil && !upLeads
-        VStack(spacing: 26) {
+        // Marks, the verdict, the facts and what they need said, then the way on: the lines 4 apart, 16 between things.
+        VStack(spacing: 16) {
             VStack(spacing: 10) {
-                VStack(spacing: 8) {
-                    // Endless and Escapement have no par, so no marks; nor has the sandbox, where nothing counts.
-                    if run == nil && game.level.ratchets.isEmpty && !game.level.sandbox {
-                        ResultMarks(filled: ResultMarks.filled(clean: game.clean, over: game.over), card: true)
-                    }
+                VStack(spacing: 4) {
                     if let run {
-                        Text("moves \(game.moves)")
-                        if game.spilled && run.tank > run.best {
-                            Text("tanks cleared \(run.tank) \u{00B7} ") + Text("new best").foregroundStyle(Color.lime)
-                        } else {
-                            Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
-                                 : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                        Group {
+                            Text("moves \(game.moves)")
+                            if game.spilled && run.tank > run.best {
+                                Text("tanks cleared \(run.tank) \u{00B7} ") + Text("new best").foregroundStyle(Color.lime)
+                            } else {
+                                Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
+                                     : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                            }
                         }
-                    } else if !game.level.ratchets.isEmpty {
-                        // Escapement has no par: a solve always spends the budget to the last tick (Jack's call EL1, round
-                        // 11), so the ticks say nothing.
-                        Text("solved in \(game.moves) moves")
-                        if game.clean {
-                            Text("clean").fontWeight(.semibold).foregroundStyle(page.signal(.lime)).shadow(color: page.glow(.lime), radius: 3)
-                        } else {
-                            Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-                                .foregroundStyle(page.signal(.amber))
-                        }
+                        // The words' colour, not the line's opacity, so "new best" keeps its lime whole.
+                        .foregroundStyle(Color.text2)
                     } else {
-                        Text("moves \(game.moves) \u{00B7} par \(game.par)")
-                        if game.clean {
-                            Text("clean").fontWeight(.semibold).foregroundStyle(page.signal(.lime)).shadow(color: page.glow(.lime), radius: 3)
-                        } else if game.over > 0 {
-                            Text("+\(game.over) over par").foregroundStyle(page.signal(.magenta))
+                        // Escapement has no par, so no marks; nor has the sandbox, where nothing counts.
+                        let par = game.level.ratchets.isEmpty
+                        if par && !game.level.sandbox {
+                            ResultMarks(filled: ResultMarks.filled(clean: game.clean, over: game.over), card: true)
+                                .padding(.bottom, 4)
+                        }
+                        Group {
+                            if game.clean {
+                                Text("clean").foregroundStyle(page.signal(.lime)).shadow(color: page.glow(.lime), radius: 6)
+                            } else if par && game.over == 0 {
+                                Text("at par").foregroundStyle(page.signal(.amber))
+                            } else {
+                                Text("solved")
+                            }
+                        }
+                        .font(.ui(.headline))
+                        // Escapement's ticks say nothing: a solve there always spends the budget to the last (Jack's
+                        // call EL1, round 11). The tone is on the words, not the line, so the margin keeps its magenta
+                        // whole (C11).
+                        let quiet = page.ink.opacity(page.tone(.text2).alpha)
+                        let facts = par ? Text("moves \(game.moves) \u{00B7} par \(game.par)") : Text("moves \(game.moves)")
+                        if par && game.over > 0 {
+                            facts.foregroundStyle(quiet) + Text(verbatim: " \u{00B7} ").foregroundStyle(quiet)
+                                + Text(verbatim: "+\(game.over)").foregroundStyle(page.signal(.magenta))
                         } else {
-                            Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-                                .foregroundStyle(page.signal(.amber))
+                            facts.foregroundStyle(quiet)
+                        }
+                        if !game.clean && (!par || game.over == 0) {
+                            (game.firstTry ? Text("clean needs no undo or reset") : Text("clean counts on the first try"))
+                                .font(.ui(.detail)).tone(page.tone(.text3))
                         }
                     }
                     if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
                         Text(line).tone(.text2)
                     }
                     if let done = game.completed {
-                        Text(done.line).fontWeight(.semibold).foregroundStyle(accent).shadow(color: page.glow(accent), radius: 3)
-                            .padding(.top, 4)
+                        Text(done.line).tone(page.tone(.text2)).padding(.top, 4)
                     }
                 }
                 .font(.ui(.label))
@@ -120,14 +132,14 @@ struct ResultCard: View {
             }
             // Wrapped, so a card with none, a clean solve of a list's last level, keeps no gap for the row.
             if game.offersAgain || game.shareText != nil || next != nil {
-                HStack(spacing: 32) {
+                ButtonRow {
                     if game.offersAgain {
-                        UnstirButton(.secondary, effect: .reset, action: again) { Text("again \u{21BA}") }
+                        UnstirButton(.secondary, effect: .reset, wide: true, action: again) { Text("again \u{21BA}") }
                             .accessibilityLabel("Again")
                     }
                     if let share = game.shareText {
                         // ShareButton's sheet, through the button's own face.
-                        UnstirButton(nextLeads || upLeads ? .secondary : .primary, accent: .amber) {
+                        UnstirButton(nextLeads || upLeads ? .secondary : .primary, accent: .amber, wide: true) {
                             ShareSheet.present([share])
                         } label: { Text("share \u{2197}") }
                             .accessibilityLabel("Share result")
@@ -136,7 +148,7 @@ struct ResultCard: View {
                         // Past a pack's free taste, unowned, next opens its card: the button says so.
                         let gate = Store.shared.card(for: next)
                         let label = game.spilled ? "new run \u{203A}" : gate.map { "more in \($0.name) \u{203A}" } ?? "next \u{203A}"
-                        UnstirButton(nextLeads ? .primary : .secondary, accent: accent) { onNext(next) } label: { Text(label) }
+                        UnstirButton(nextLeads ? .primary : .secondary, accent: accent, wide: true) { onNext(next) } label: { Text(label) }
                             .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
                     }
                 }
@@ -151,6 +163,8 @@ struct ResultCard: View {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
+        // With the play column's own 16, the gutter's 20.
+        .padding(.horizontal, 4)
         .onAppear {
             focused = true
             guard packs == nil, let pack = Offer.ladderEnd(game.level, completed: game.completed, shown: Best.packsPointed)
@@ -206,7 +220,7 @@ private struct TierUp: View {
                 .foregroundStyle(to.sweep)
                 .shadow(color: to.glow.opacity(glint ? 0.9 : 0.5), radius: glint ? 16 : 9)
             }
-            .padding(.horizontal, 20).padding(.vertical, 6).frame(minHeight: ButtonFace.tall)
+            .padding(.horizontal, 20).padding(.vertical, 6).frame(maxWidth: .infinity, minHeight: ButtonFace.tall)
             .background { if open { Capsule().fill(to.glow.opacity(ButtonFace.fill)) } }
             .overlay {
                 Capsule().strokeBorder(to.sweep, lineWidth: 1).shadow(color: open ? to.glow : .clear, radius: glint ? 10 : 5)
