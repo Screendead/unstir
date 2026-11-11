@@ -106,7 +106,11 @@ struct PayoffCurtain: View {
         Text(part.name.localizedUppercase) // loc: verbatim localized by Tier, and a pack's name is never translated
             .font(.ui(role)).tracking(tracking).lineLimit(1).fixedSize()
             .foregroundStyle(LinearGradient(colors: payoff.paper ? [.plateVermilion] : part.colours, startPoint: .leading, endPoint: .trailing))
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { lines[line] = $0 }
+            // Its place from the block, its size its own: the frame in the block shrinks while the name scales up.
+            .onGeometryChange(for: CGRect.self) { proxy in
+                let frame = proxy.frame(in: .named(Self.space)), size = proxy.size
+                return CGRect(x: frame.midX - size.width / 2, y: frame.midY - size.height / 2, width: size.width, height: size.height)
+            } action: { lines[line] = $0 }
             .shadow(color: payoff.paper ? .clear : part.glow.opacity(0.9), radius: 14)
     }
 
