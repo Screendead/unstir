@@ -205,24 +205,24 @@ extension EscapementArt {
     }
 
     /// Problem 25, hex: the moon through five phases over a night sky, the lunation's scale above and the waxing moon
-    /// large below.
+    /// large below. The phases stand round the rim, past where a clock's hub at twelve reaches.
     static func moonPhase() -> Plate {
         var plate = Plate()
-        let sweep = P(0, 0.95), moon = P(-0.06, 0.4), radius = 0.43
-        let phases = (-2...2).map { k in (c: polar(sweep, 1.45, -.pi / 2 + Double(k) * 14 * .pi / 180), lit: Double(k + 2) / 4) }
+        let sweep = P(0, 0), moon = P(-0.06, 0.4), radius = 0.43
+        let phases = (-2...2).map { k in (c: polar(sweep, 0.82, -.pi / 2 + Double(k) * 20 * .pi / 180), lit: Double(k + 2) / 4) }
         let stars = (0..<70).compactMap { k -> [P]? in
             let c = P(1.9 * rnd(25, 2 * k) - 0.95, 1.9 * rnd(25, 2 * k + 1) - 0.95)
-            guard simd_distance(c, moon) > radius + 0.07, abs(simd_distance(c, sweep) - 1.5) > 0.22, simd_length(c) < 0.93 else { return nil }
+            guard simd_distance(c, moon) > radius + 0.07, simd_length(c) < 0.67 || c.y > -0.3, simd_length(c) < 0.93 else { return nil }
             return star(c, 0.028 + 0.02 * rnd(25, 100 + k), turn: rnd(25, 200 + k))
         }
         plate.lines(hatch([Array(glass), arc(moon, radius)] + phases.map { arc($0.c, 0.115) } + stars, angle: 0.1, gap: 0.03), fine)
         for s in stars { plate.line(s, fine, .second) }
 
         // The lunation's scale: 29 days and a half, numbered by fives.
-        for r in [1.62, 1.66] { plate.line(arc(sweep, r, from: -.pi / 2 - 0.62, to: -.pi / 2 + 0.62), fine) }
+        for r in [0.962, 0.984] { plate.line(arc(sweep, r, from: -.pi / 2 - 0.92, to: -.pi / 2 + 0.92), fine) }
         for k in 0...59 {
-            let a = -.pi / 2 - 0.59 + 1.18 * Double(k) / 59
-            plate.line([polar(sweep, 1.62, a), polar(sweep, k % 10 == 0 ? 1.71 : k % 2 == 0 ? 1.66 : 1.64, a)], fine)
+            let a = -.pi / 2 - 0.9 + 1.8 * Double(k) / 59
+            plate.line([polar(sweep, k % 10 == 0 ? 0.948 : 0.962, a), polar(sweep, k % 2 == 0 ? 0.984 : 0.973, a)], fine)
         }
         for phase in phases {
             if phase.lit < 1 {
@@ -261,7 +261,7 @@ extension EscapementArt {
 
         callout(&plate, "A", from: moon + P(-0.33, -0.12), to: P(-0.66, 0.02))
         callout(&plate, "B", from: moon + P(0.22, 0.02), to: P(0.62, 0.3))
-        callout(&plate, "C", from: polar(sweep, 1.62, -.pi / 2 + 0.45), to: P(0.82, -0.3))
+        callout(&plate, "C", from: polar(sweep, 0.962, -.pi / 2 + 0.84), to: P(0.84, -0.36))
         return plate
     }
 }
