@@ -940,7 +940,8 @@ struct LevelView: View {
             }
         }
         .onChange(of: beside && showResult, initial: true) { onCover($1) }
-        .onChange(of: showResult) { if showResult { Carded.shown() } }
+        // From the start too: a level opened on its card, as the harness solves one, has shown it.
+        .onChange(of: showResult, initial: true) { if showResult { Carded.shown() } }
         .task(id: noteLit) {
             guard noteLit, (try? await Task.sleep(for: .seconds(4))) != nil else { return }
             withAnimation(.easeOut(duration: 0.6)) { noteLit = false }
