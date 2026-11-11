@@ -1020,7 +1020,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   up when the chrome's half of the migration reaches them. The halftone (**Halftone.swift**) is pure geometry baked a pixel at a time off the main actor: three dot
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
-  It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max (unmeasured on a phone), so every build keeps it in
+  It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max, so every build keeps it in
   Caches, per panel and size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
   time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
   the flicker; only one that never lands lets it go on, after 30 s. A panel is a `Halftone.Panel` (tones and white
@@ -1028,9 +1028,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   25 standalone panels, each its level's name drawn, with what is seen through the thing in a lens's core): the picture
   stays `.halftone` on all 25, so nothing stored changes, and `Level.panel`, a Lens level's number and 0 anywhere else,
   goes through `PictureLayer` to `Halftone.panel`, which gives the level's panel from `LensArt.levels` once it is drawn
-  and `Halftone.test`, the test panel, until then, as for 0 (`testEachLensLevelDrawsItsOwnPanel`). So Lens 03's panel
-  is also its dock cover, its card's clip and its promoted-purchase image. Caches keeps every panel a build has baked,
-  5.5 MB each at a Pro Max's tank. The GPU bench times the first-open bake on the device (below). **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
+  and `Halftone.test`, the test panel, until then, as for 0 (`testEachLensLevelDrawsItsOwnPanel`). So Kaleidoscope's panel
+  is also the pack's dock cover, its card's clip and its promoted-purchase image. Caches keeps the bakes of the four
+  panels opened last (`PanelCache.kept`; Jack, 2026-11-11), at every size, a read counting as an open; the cover's
+  panel is kept whatever its turn, as the menu draws it at launch, and counts as one of the four. A panel is 5.2 MB
+  at a Pro Max's tank, 129 MB for all 25, against a cold bake of 70 to 227 ms on a 13 Pro Max; only the cover's and
+  the open level's are ever in sight together, so none on screen loses its bake
+  (`testCachesKeepsTheFourPanelsOpenedLast`). The GPU bench times the first-open bake on the device (below). **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
   and ovals, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
   panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
   enough to read at x8, where the bake is soft; every rod's core on its level holds tone and linework that each step
