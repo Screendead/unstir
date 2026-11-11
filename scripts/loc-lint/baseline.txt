@@ -1,20 +1,5 @@
 # Player text that escapes the String Catalog today, one flagged line each (scripts/loc-lint.sh). Each fix
 # takes its line out; the migration ends with this file deleted.
-Archive.swift: case .clean: Text(word).fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-Archive.swift: case .par: Text(word).foregroundStyle(Color.amber)
-Archive.swift: case .over: Text(word).foregroundStyle(Color.magenta)
-Archive.swift: case .tried: Text(word).foregroundStyle(Color.text3)
-Archive.swift: case .unplayed: Text(" ")
-Archive.swift: Text(!known ? "\(days) past dailies" : open ? "\(days) past dailies \u{00B7} \(atPar) at par"
-Archive.swift: UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) }
-Archive.swift: .accessibilityLabel(back.spoken)
-Archive.swift: Text(month.formatted(Date.FormatStyle(calendar: calendar).month(.wide).year()).uppercased())
-Archive.swift: Text(symbols[(k + calendar.firstWeekday - 1) % 7]).font(.ui(.detail)).foregroundStyle(Color.text3)
-Archive.swift: Text("\(d)").font(.ui(.label)).foregroundStyle(isToday ? Color.text3 : Color.text4)
-Archive.swift: Text(isToday ? "today" : " ").font(.ui(.detail)).foregroundStyle(Color.amber).opacity(0.5)
-Archive.swift: .accessibilityLabel(isToday ? "Today. Its daily is on the menu." : "")
-Archive.swift: Text("\(calendar.component(.day, from: date))").font(.ui(.label, mark == .unplayed ? .regular : .medium))
-Archive.swift: Text(date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))).font(.ui(.body))
 Consent.swift: Text(ConsentWords.title).font(.ui(.title))
 Consent.swift: Text(ConsentWords.body)
 Consent.swift: Text(sends ? ConsentWords.hideLink : ConsentWords.sendsLink).font(.ui(.label))
