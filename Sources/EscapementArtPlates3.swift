@@ -231,7 +231,8 @@ extension EscapementArt {
         }
         // Free of the barrel it runs up the rim in loops, as a spring let go does.
         let out = free[free.count - 1], along = 32 * Double.pi / 180
-        func loop(_ t: Double) -> P { polar(polar(origin, 0.8 - 0.02 * t, along - 1.62 * t), 0.1 + 0.02 * t, 2.1 - 10.6 * .pi * t) }
+        // It ends on the outside of its last loop, past the edge of twelve's disc, where a clock's dashes never run.
+        func loop(_ t: Double) -> P { polar(polar(origin, 0.8 + 0.04 * t, along - 1.5 * t), 0.1, 2.1 - 11.5 * .pi * t) }
         free += curve(out, P(0.52, 0.36), loop(0), 20).dropFirst()
         free += (1...340).map { loop(Double($0) / 340) }
         let strip = ribbon(free, 0.024), tail = Array(free.suffix(34))
