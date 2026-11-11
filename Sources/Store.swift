@@ -149,6 +149,9 @@ final class Store {
     /// The offer a purchase started on the App Store's product page is buying (a promoted purchase): `RootView` opens its
     /// card, and the card buys it as its own buy does, which takes it.
     var promoted: Offer?
+    /// Asks the App Store for the products, replaced only by a test, as a simulated error doesn't stop every
+    /// simulator runtime's test session serving them.
+    @ObservationIgnored var loadProducts: @Sendable ([String]) async throws -> [Product] = { try await Product.products(for: $0) }
     @ObservationIgnored private var first: Task<Void, Never>?
     @ObservationIgnored private var products: [String: Product] = [:]
     @ObservationIgnored private var updates: Task<Void, Never>?
@@ -391,7 +394,7 @@ final class Store {
     }
 
     private func fetch() async throws {
-        let found = try await Product.products(for: Pack.productIDs)
+        let found = try await loadProducts(Pack.productIDs)
         // A product the App Store doesn't return is no error: the count is the only trace of it.
         Log.write("products: \(found.count) of \(Pack.productIDs.count)")
         for p in found {
