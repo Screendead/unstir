@@ -155,6 +155,34 @@ dial, or pips on the knob). **Music**: the layer must play straight through a so
 two StoreKit tests fail on an iOS 27.2 simulator (`store-ios27`); a louder payoff on finishing a pack; the six
 Prism cost weights the phone bench read over their assumption (prism-25, 27 to 30, 20 and 21 marginal).
 
+**Overnight to 2026-11-12 (finish-and-pitch).** Merged: #187 (the finer lens core, CRISP); #192 (records); #193
+(a pack's loop plays through the solve, the card and into the next level with no duck, MUSIC-THROUGH); #173, #180
+and #178 (the buttons, the rebuilt menu and card without the "next:" line, the growing "unstirred.", the glass
+shrinking under a card that does not fit); #189 (Prism's measuring tools); #197 (the String Catalog's chrome half:
+`scripts/loc-lint.sh`'s baseline is empty, so the file and its test's read of it can go). **Side effects, each a
+call not yet made**: with the "next:" line gone the frontier row speaks "next, not played" to VoiceOver
+(`Spoken.marked`), rode in with #180; the consent strings are now translatable keys (nothing is translated; whether
+legal text is translated at all is open); #191's small-phone fix makes undo step aside while reset is armed on
+every level. **By ear, Jack's**: does each layer's resolution still land as an arrival over a loop that no longer
+drops (Escapement's sits about 3.6 LU under its loop and may be buried; Lens's is long, over the motif); leaving
+straight after a solve fades over 1.5 s. **Phone**: the merged build was installed but could not launch (phone
+locked), so the bench and the crisp core's four checks (detail on, colours, a Kaleidoscope drag, bake time) are
+owed; #189 and #197 are not on it. Prism's cost weights stay as they are: `Unstirred.channelCost` is a formula and
+the six over-readings came off a hot phone, so re-measure cool first. **Open calls, each built and on the new
+page (link in `HANDOFF.private.md`), Claude's recommendation first, none decided**: Escapement's wait as a
+labelled button (draft #191) against untouchable clocks (draft #194, 18 of the twenty re-dealt, planning falls) or
+a spare turn (`scripts/escapement/problems-spare-turn.tsv`, unwired); undo stepping aside (keep); Lens's nine
+redraws with the three quad levels moved to tri (#195, on #190) against redrawn in place (#190); Prism's turn
+count as pips on the knob against a dial mark or a re-deal (`prism-aid`, no PR; lacks VoiceOver and the
+colour-letters check); the payoff as the glass stirring itself with a halo and a credit line (draft #198,
+`UNSTIR_PAYOFF=a`, against a counting bezel or a curtain call; it also holds a fix to the rating prompt's and
+Game Center's timing that can be lifted out); the VoiceOver wording (keep); Escapement's per-move notes starting
+again each level (keep); Escapement's 30 plates (#196, with `esc-plates-2` and `-3` being merged into it; the dock
+cover, shop clip and promo image keep the shared plate; Pause and Hourglass have alternates drawn). An option that
+adds player text (the wait button, the payoff's credit, Prism's aid) needs its String Catalog keys when picked.
+**Still open**: the two StoreKit tests on an iOS 27.2 simulator (`store-ios27`, no result); the store media retake,
+which waits on the plates, wait and payoff picks; the PR test job reached 10 minutes again on one run.
+
 ### Open work (finish-and-pitch, 2026-11-02)
 
 Closed: moved word for word to `docs/history.md`.
