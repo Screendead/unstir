@@ -440,12 +440,10 @@ extension EscapementArt {
                 continue
             }
             if day == marked {
-                leaf.lines(hatch([box], angle: 0.8, gap: 0.013), fine, .second)
-                leaf.fill(arc(mid, 0.078))
-                leaf.line(arc(mid, 0.078), medium, .second)
+                for d in [0.058, 0.074] { leaf.line([P(mid.x - 0.07, mid.y + d), P(mid.x + 0.07, mid.y + d)], medium, .second) }
             }
-            let wide = roman(day).reduce(0.0) { $0 + ($1 == "I" ? 0.62 : 0.86) * 0.07 }
-            leaf.lines(numeral(roman(day), at: mid, height: 0.07, squeeze: min(0.72, 0.158 / wide)), 0.009)
+            leaf.lines(numeral(roman(day), at: mid, height: 0.07, squeeze: min(0.72, 0.158 / wide)), day == marked ? 0.012 : 0.009,
+                       day == marked ? .second : .black)
         }
         // The table's rules, doubled, a heavier one under the signs.
         for k in 1..<7 {
