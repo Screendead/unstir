@@ -601,7 +601,7 @@ struct LevelView: View {
             // In the gap above the title, so a pack level's tank sits where every other level's does.
             if let pack = game.level.pack {
                 // The size the title's 18 pt gap holds.
-                Text(verbatim: pack.name.uppercased()).font(.ui(.eyebrow)) // loc: verbatim a pack's name, never translated.tracking(2).dynamicTypeSize(.large)
+                Text(verbatim: pack.name.uppercased()).font(.ui(.eyebrow)).tracking(2).dynamicTypeSize(.large) // loc: verbatim a pack's name, never translated
                     .foregroundStyle(game.level.colour).opacity(0.75)
                     .offset(y: -TypeRole.eyebrow.line(at: .large).height - 2)
                     .accessibilityHidden(true)
