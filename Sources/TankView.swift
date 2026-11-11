@@ -1806,6 +1806,7 @@ struct LevelView: View {
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
         .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .haptic(.selection, trigger: ticks)
+        .onChange(of: ticks) { Sound.shared.play(.tick) }
         .haptic(.selection, trigger: misses)
         .onChange(of: tankTicks) { Knock.clunk.play() }
         .haptic(.impact(weight: .heavy), trigger: game.cancels)

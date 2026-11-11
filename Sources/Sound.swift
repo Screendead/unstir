@@ -123,6 +123,8 @@ final class Sound: @unchecked Sendable {
 
     enum Effect: Equatable, Sendable {
         case push, seized, solve, spilled, tap, undo, reset, tier
+        /// A rod's drag passing a step, under its haptic (Jack, 2026-11-11, taking back SND1 = B).
+        case tick
         /// Escapement's clock ticking a tooth, the steel pawl on its ratchet wheel (Jack's call soundsk2 = D, round 16).
         case ratchet
         /// The nth heal since the level opened or was reset.
@@ -133,6 +135,7 @@ final class Sound: @unchecked Sendable {
     static func file(_ effect: Effect, _ n: Int) -> String {
         switch effect {
         case .tap: "tap-\(n % 4 + 1)"
+        case .tick: "tick-\(n % 4 + 1)"
         case .ratchet: "ratchet-\(n % 4 + 1)"
         case .push: "push"
         case .seized: "seized"
@@ -194,6 +197,7 @@ final class Sound: @unchecked Sendable {
     private var beds: [String: AVAudioPCMBuffer] = [:]
     private var taps = 0
     private var ratchets = 0
+    private var ticks = 0
     private var bed: Bed?
     /// The wanted layer, kept through its resolution so its one-shots stay decoded.
     private var layer: Layer?
@@ -292,8 +296,9 @@ final class Sound: @unchecked Sendable {
     }
 
     @MainActor func play(_ effect: Effect) {
-        // A sound switched off never plays.
-        if Settings.sounds { Log.write("sound \(effect)") }
+        // A drag ticks up to ten times a second, which would crowd the recorder's lines, and a sound switched off
+        // never plays.
+        if effect != .tick, Settings.sounds { Log.write("sound \(effect)") }
         queue.async { self.start(effect) }
     }
 
@@ -388,7 +393,8 @@ final class Sound: @unchecked Sendable {
 
     private func start(_ effect: Effect) {
         guard soundsOn else { return }
-        let name = Self.file(effect, effect == .ratchet ? ratchets : taps)
+        let name = Self.file(effect, effect == .ratchet ? ratchets : effect == .tick ? ticks : taps)
+        if effect == .tick { ticks += 1 }
         if effect == .tap { taps += 1 }
         if effect == .ratchet { ratchets += 1 }
         guard !suspended, let buffer = buffers[name], run(),
