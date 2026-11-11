@@ -198,6 +198,8 @@ struct MenuView: View {
     @State private var dock: CGFloat = 0
     /// The tier's list in the scroll view's space.
     @State private var list = CGRect.zero
+    /// Where the list and its rows lie at rest, read as the list lands on a row.
+    @State private var seats = Seats()
     @State private var scroller: ScrollViewProxy?
     /// The list has opened on its focus.
     @State private var centred = false
@@ -586,14 +588,16 @@ struct MenuView: View {
                         if kept != nil { newRun }
                     }
             }
-            TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held, playing: playing?.id,
-                     revision: revision).equatable()
+            TierList(tier: listed, pick: pick, refuse: refuse, flash: flashing, held: held, seats: seats,
+                     playing: playing?.id, revision: revision).equatable()
                 .overlay(alignment: .topLeading) {
                     Color.clear.frame(width: 1, height: mark?.height ?? 1).id(Self.mark)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .scrollView) } action: { _ in
                             guard arriving else { return }
                             arriving = false
-                            scroller?.scrollTo(Self.mark, anchor: .center)
+                            // As `land(on:)` a row.
+                            let top = mark.map(inSight) == true
+                            scroller?.scrollTo(top ? Self.top : Self.mark, anchor: top ? .top : .center)
                         }
                         .padding(.top, mark?.minY ?? 0)
                 }
@@ -602,6 +606,7 @@ struct MenuView: View {
                     list = $0
                     arrive()
                 }
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.rows)).minY } action: { seats.top = $0 }
                 // With the header's own 14, a section's 32 under the modes; with none, the list starts under the way on.
                 .padding(.top, lead.modes ? 18 : 8)
             if lead.sandbox {
@@ -609,6 +614,7 @@ struct MenuView: View {
                 sandbox
             }
         }
+        .coordinateSpace(.named(Self.rows))
         .padding(.horizontal, 20)
         .padding(.bottom, 28)
     }
@@ -890,7 +896,23 @@ struct MenuView: View {
         }
     }
 
-    private static let top = "top", mark = "mark"
+    private static let top = "top", mark = "mark", rows = "rows"
+
+    /// Whether a row at `frame` in the list's own space has its words in sight, over the dock, with the list at its top.
+    private func inSight(_ frame: CGRect) -> Bool {
+        seats.top + frame.maxY - LevelRow.pad <= viewport - (layout.dock == nil ? dock + bottom : 0)
+    }
+
+    /// Lands the list on `id`'s row: left at its top where the row is in sight from there, else centred on it. Centring
+    /// a row that stands a little under the middle would scroll the list those few points, and cut what leads it, the
+    /// way on, off under the chips: so the list's top is whole or well away.
+    private func land(on id: String) {
+        if seats.rows[id].map(inSight) == true {
+            scroller?.scrollTo(Self.top, anchor: .top)
+        } else {
+            scroller?.scrollTo(id, anchor: .center)
+        }
+    }
 
     /// Unanimated, under the dip that brings the menu in, once the rows are laid out and the scroll view's reader is in
     /// hand, whichever comes last.
@@ -899,19 +921,19 @@ struct MenuView: View {
         centred = true
         DispatchQueue.main.async {
             if let focus = playing ?? focus, listed.levels.contains(where: { $0.id == focus.id }) {
-                scroller.scrollTo(focus.id, anchor: .center)
+                land(on: focus.id)
             }
             flashing = nil
         }
     }
 
-    /// The tier's landing row centred, or beside play the playing level's; a locked tier's header, over its gate, at the
-    /// top; else the top.
+    /// The tier's landing row, or beside play the playing level's (`land(on:)` a row); a locked tier's header, over its
+    /// gate, at the top; else the top.
     private func land(on t: Tier) {
         if let p = playing, t.levels.contains(where: { $0.id == p.id }) {
-            scroller?.scrollTo(p.id, anchor: .center)
+            land(on: p.id)
         } else if let row = t.landing() {
-            scroller?.scrollTo(row.id, anchor: .center)
+            land(on: row.id)
         } else {
             scroller?.scrollTo(t.isOpen() ? Self.top : TierList.heading, anchor: .top)
         }
@@ -1066,6 +1088,13 @@ private struct Refreshed: ViewModifier {
     }
 }
 
+/// Where the menu's list stands under what leads it, and each of its rows in the list's own space, as laid out. A
+/// class, as it is read only as the list lands and nothing is drawn from it.
+@MainActor private final class Seats {
+    var top: CGFloat = 0
+    var rows: [String: CGRect] = [:]
+}
+
 /// A tier's rule and rows, and a locked tier's gate. Compared by what changes its rows (the tier, the unlock, the row
 /// playing beside it, the menu's revision and the row lit), never by a frame of a drag or a stir, so neither rebuilds it.
 private struct TierList: View, Equatable {
@@ -1078,6 +1107,8 @@ private struct TierList: View, Equatable {
     var held: String?
     /// Given the landing row's frame in the list's own space, once laid out.
     var report: ((CGRect) -> Void)?
+    /// The scroll view's own list keeps every row's frame here.
+    var seats: Seats?
     /// The level playing beside the menu: its hairline stays lit.
     var playing: String?
     /// The menu's, so a menu that stays up beside play redraws the rows' results as levels finish.
@@ -1111,6 +1142,7 @@ private struct TierList: View, Equatable {
                          gate: open ? nil : tier.below, playing: level.id == playing, pick: pick, refuse: refuse)
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
                         if level.id == landing?.id { report?(frame) }
+                        seats?.rows[level.id] = frame
                     }
             }
         }
@@ -1223,6 +1255,8 @@ private struct LevelRow: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     /// Room for a four-letter label ("past") at the label's size.
     @ScaledMetric(relativeTo: .subheadline) private var numberWidth = 40.0
+    /// Over and under a row's words.
+    static let pad: CGFloat = 12
 
     var body: some View {
         let result = Best.load(level.id)
@@ -1245,7 +1279,7 @@ private struct LevelRow: View {
                     face(stacked: large, result: result, tried: tried, saying: saying)
                 }
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, Self.pad)
             .contentShape(Rectangle())
             .keyframeAnimator(initialValue: 0.0, trigger: taps) { row, x in
                 row.offset(x: reduceMotion ? 0 : x)

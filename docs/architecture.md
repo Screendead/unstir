@@ -1016,7 +1016,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`MenuLayout`), or over the trailing half beside a playing level, as the archive does. The list opens centred, unanimated under
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
   `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
-  the first short of par, else the top). The daily, endless and the sandbox leave it at the top, though the sandbox's row is at the end. That row's hairline,
+  the first short of par, else the top). Landing on a row (`land(on:)`, on opening, at a swap and on a tap of the
+  picked tier) leaves the list at its top where the row's words are in sight from there, over the dock (`inSight`,
+  from `Seats`, where the list and each row lie as laid out), and centres any other: centring a row that stands a
+  little under the middle scrolled the list those few points and cut the way on off under the chips, so what leads
+  the list is whole or well away. It reads the rows as they lie when it lands: on a cold launch the archive's row
+  says what it comes with only once the store has read, and a row that line then pushes under the dock stays there.
+  The daily, endless and the sandbox leave it at the top, though the sandbox's row is at the end. That row's hairline,
   in the list's left margin, lights once and fades (not under Reduce Motion). The menu opens on the tier of a level
   of a tier left, and a tier's level opening stores its tier (`Tier.store`, so only an open one), so "up a notch" then
   back lands on the new tier, and so does a launch after the app dies in it. Back from a pack's level, the card over
