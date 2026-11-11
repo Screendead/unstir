@@ -126,6 +126,14 @@ struct LevelView: View {
     @State private var eased: Bool
     /// The solve's wave, swell and success haptic have landed: at the win, or on Escapement at its solving tick.
     @State private var waved: Bool
+    /// The curtain call this solve earned (`Payoff`), when it began, and whether it has played out.
+    @State private var payoff: Payoff?
+    @State private var payoffAt: Date?
+    @State private var paid = false
+    /// Whether its lines fit over the glass, and the height they take under it; nil until they are measured.
+    @State private var curtainFit: (over: Bool, height: CGFloat)?
+    /// The solve's wait for its card, the curtain's sounds in it, which leaving the level ends.
+    @State private var finishing: Task<Void, Never>?
     /// Scales every committed angle; the open winds it 0 to 1, all rods at once, so it shows nothing about order.
     @State private var wind = 1.0
     /// The touch it belongs to, what it holds, and the finger's last angle about that.
@@ -409,6 +417,12 @@ struct LevelView: View {
                             && (!game.spilled || (harness?.clock ?? 0) >= Brim.card(still: harness?.clock == nil && UIAccessibility.isReduceMotionEnabled)))
         _eased = State(initialValue: game.solved)
         _waved = State(initialValue: game.solved)
+        // A harness launch that opens solved is past its curtain, or with UNSTIR_PAYOFFAT part way through it.
+        if game.solved, Payoff.frozen != nil, let earned = Payoff(game, still: UIAccessibility.isReduceMotionEnabled) {
+            _payoff = State(initialValue: earned)
+            _payoffAt = State(initialValue: .now)
+            _showResult = State(initialValue: false)
+        }
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
         pace = harness?.pace ?? 0.3
@@ -583,7 +597,7 @@ struct LevelView: View {
         }
         .font(.ui(.label))
         .padding(.top, 8)
-        .modifier(Unseen(clean))
+        .modifier(Unseen(staged))
     }
 
     private var titleRow: some View {
@@ -608,20 +622,23 @@ struct LevelView: View {
             }
         }
         .padding(.top, 18)
-        .modifier(Unseen(clean))
+        .modifier(Unseen(staged))
     }
 
     /// How a card arrives, and the tank's shrink for it with it.
     private static let arrival = Animation.easeOut(duration: 0.4).delay(0.3)
     private var reveal: AnyTransition { .opacity.animation(Self.arrival) }
     /// Under Reduce Motion the tank takes its size for the card at once.
-    private var shrinking: Animation? { reduceMotion ? nil : Self.arrival }
+    /// The curtain's words come up as it starts, so the glass makes their room without the card's beat of delay.
+    private var shrinking: Animation? { reduceMotion ? nil : paying != nil ? .easeOut(duration: 0.4) : Self.arrival }
 
     /// The tank with what stands over it: the night forwards and "unstirred.". `shrink` scales the tank alone, picture,
     /// knobs and rim as one, about its top, for a card the column has no room for, and `drop` brings its top down for
     /// the word; `bounds` is the tank's pane in the glass's frame and `trackBounds` where a lens's track runs, both nil
     /// in the column; `filmFoot` where the night forwards' lines end, nil under the glass.
-    private func stage(_ side: CGFloat, shrink: CGFloat, drop: CGFloat, words: CGFloat?, tabletop: Bool, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
+    /// `width` is what the curtain's words may take, and `under` where they stand once the glass has given them room.
+    private func stage(_ side: CGFloat, shrink: CGFloat, drop: CGFloat, words: CGFloat?, tabletop: Bool, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?,
+                       width: CGFloat, under: CGFloat?) -> some View {
         tank(side, bounds: bounds, trackBounds: trackBounds)
             .animation(shrinking) { $0.scaleEffect(shrink, anchor: .top).offset(y: drop) }
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
@@ -641,6 +658,14 @@ struct LevelView: View {
                     .transition(.opacity)
                 }
                 #endif
+            }
+            .overlay { curtainLayer(side, width: width, under: under) }
+            .overlay {
+                // A tap anywhere ends the curtain; VoiceOver's way is the curtain's own action.
+                if paying != nil {
+                    Color.clear.frame(width: 4000, height: 4000).contentShape(Rectangle()).onTapGesture { skipPayoff() }
+                        .accessibilityHidden(true)
+                }
             }
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
@@ -685,7 +710,7 @@ struct LevelView: View {
             .accessibilityHidden(showResult || ending)
             .modifier(SkipButton(on: demoing || shown != nil) { skip() })
             .overlay(alignment: .top) { if showResult { card(layout, fit) } }
-            .modifier(Unseen(clean))
+            .modifier(Unseen(staged))
     }
 
     /// The result or lost card under the caption; in the split, over the menu in the trailing half, centred on the tank
@@ -740,7 +765,7 @@ struct LevelView: View {
             ChannelSwatches(isolated: $isolated)
                 .opacity(showResult || ending || shown != nil ? 0 : 1)
                 .allowsHitTesting(!showResult && shown == nil)
-                .modifier(Unseen(clean))
+                .modifier(Unseen(staged))
         }
     }
 
@@ -767,7 +792,7 @@ struct LevelView: View {
         .accessibilityHidden(game.level.run != nil || showResult || ending)
         // 4 where the 40 pt capsules had 8, so the taller buttons leave the tank where it was.
         .padding(.bottom, 4)
-        .modifier(Unseen(clean))
+        .modifier(Unseen(staged))
     }
 
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
@@ -806,15 +831,18 @@ struct LevelView: View {
             let words: (words: CGFloat?, drop: CGFloat) = layout.kind == .column
                 ? PlayLayout.columnWords(over: titleGap ?? .infinity, side: layout.side, type: playType) : (layout.words, 0)
             let foot = geo.size.height, fit = finished(layout, foot: foot, drop: words.drop)
+            let curtain = fit == nil ? curtained(layout, foot: foot) : nil
             let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout, measured: chromeMeasured))
             stack {
                 header.modifier(PlayPart.chrome(read: 5))
                 titleRow.modifier(PlayPart.chrome(read: 4))
                 Spacer(minLength: 12)
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { titleGap = $0 }
-                stage(layout.side, shrink: fit?.scale ?? 1, drop: fit?.drop ?? 0, words: words.words,
+                stage(layout.side, shrink: fit?.scale ?? curtain ?? 1, drop: fit?.drop ?? 0, words: words.words,
                       tabletop: layout.kind == .tabletop, bounds: layout.bounds, trackBounds: layout.trackBounds,
-                      filmFoot: layout.filmFoot)
+                      filmFoot: layout.filmFoot,
+                      width: layout.kind == .column ? geo.size.width - 2 * PlayLayout.margin : layout.side * PlayLayout.rim,
+                      under: curtain.map { $0 * layout.side * PlayLayout.rim + Payoff.gap })
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
@@ -1004,7 +1032,11 @@ struct LevelView: View {
         }
         .onChange(of: game.finished) {
             // An undo or reset from the lost card.
-            guard game.finished else { showResult = false; waved = false; return }
+            guard game.finished else {
+                showResult = false; waved = false
+                payoff = nil; payoffAt = nil; paid = false; curtainFit = nil
+                return
+            }
             onFinish()
             // The fine pass can call the win ~0.1 s after the commit: a finger down in that gap would hold its turn frozen
             // over the win, then have the commit refused on lift.
@@ -1013,9 +1045,14 @@ struct LevelView: View {
             // A spill's card waits for the pour and the word; a lost clock's for its stamp; a solve's for its wave.
             let wait = game.spilled ? Brim.card(still: reduceMotion) : game.lost ? 0.7 : 1.4 + solveDelay
             if game.solved && solveDelay == 0 { landSolve(chime: true) }
-            Task {
-                try? await Task.sleep(for: .seconds(wait))
-                guard game.finished else { return }
+            let earned = game.solved ? Payoff(game, still: reduceMotion) : nil
+            payoff = earned
+            finishing = Task {
+                // The curtain takes the screen once the solve's wave has run out, and the card follows it.
+                try? await Task.sleep(for: .seconds(earned == nil ? wait : Payoff.lead + solveDelay))
+                guard game.finished, !Task.isCancelled else { return }
+                if let earned { await pay(earned) }
+                guard game.finished, !Task.isCancelled else { return }
                 if game.solved && game.level.endsFirstStir {
                     ending = true
                     Log.write("night forwards")
@@ -1068,7 +1105,8 @@ struct LevelView: View {
             endPath(); endTwist()
             if knocks { Knock.rest() }
             Awake.hold(awakeID, false)
-            // A level left before its card showed.
+            // A level left before its card showed: nothing of its curtain sounds over the menu.
+            finishing?.cancel()
             Carded.shown()
             Log.write("level \(game.level.id) exits \(state)")
         }
@@ -1124,6 +1162,72 @@ struct LevelView: View {
         // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
         // centre among them.
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true }
+    }
+
+    /// The curtain on the screen: begun, and not yet played out.
+    private var paying: Payoff? { payoffAt != nil && !paid ? payoff : nil }
+    /// The chrome leaves for the curtain and comes back for the card; the knobs and lines leave with it and stay away,
+    /// as the card hides them anyway.
+    private var staged: Bool { clean || paying != nil }
+    private var bareGlass: Bool { clean || payoffAt != nil && payoff != nil }
+
+    /// Seconds into the curtain at `date`; nil before it begins and once it has played.
+    private func payoffTime(_ date: Date) -> Double? {
+        guard payoff != nil, !paid, let payoffAt else { return nil }
+        return Payoff.frozen ?? date.timeIntervalSince(payoffAt)
+    }
+
+    /// Plays the curtain a solve earned, its sounds at their times, until its length is up or a tap has ended it.
+    private func pay(_ earned: Payoff) async {
+        withAnimation(.easeOut(duration: 0.4)) { payoffAt = .now }
+        Log.write("payoff \(earned.label) begins\(earned.still ? " still" : "")\(curtainFit?.over == false ? " under the glass" : "")")
+        // Best effort: the card's label, where focus lands next, says it again (`Game.finishSpoken`).
+        if voiceOver { AccessibilityNotification.Announcement(earned.spoken).post() } // loc: verbatim localized by Payoff
+        if let skips = Payoff.skips {
+            Task {
+                try? await Task.sleep(for: .seconds(skips))
+                if paying != nil { skipPayoff() }
+            }
+        }
+        let start = ContinuousClock.now
+        for cue in earned.cues.sorted(by: { $0.at < $1.at }) {
+            try? await Task.sleep(until: start + .seconds(cue.at), clock: .continuous)
+            guard !paid, game.finished, !Task.isCancelled else { return }
+            Sound.shared.play(cue.effect)
+        }
+        try? await Task.sleep(until: start + .seconds(earned.length), clock: .continuous)
+        guard !paid, !Task.isCancelled else { return }
+        withAnimation(.easeOut(duration: 0.4)) { paid = true }
+        Log.write("payoff ends")
+    }
+
+    /// A tap during the curtain ends it, and the card comes.
+    private func skipPayoff() {
+        guard paying != nil else { return }
+        withAnimation(.easeOut(duration: 0.3)) { paid = true; showResult = true }
+        Log.write("payoff skipped")
+    }
+
+    /// The glass's scale while the curtain's words stand under it: nil where they fit over it, out of the column,
+    /// whose poses give the tank no room to spare, and once the card's own fit has taken the glass over.
+    private func curtained(_ layout: PlayLayout, foot: CGFloat) -> CGFloat? {
+        guard payoff != nil, payoffAt != nil, layout.kind == .column, let curtainFit, !curtainFit.over, let captionTop,
+              !paid || showResult && !clean else { return nil }
+        return Payoff.scale(block: curtainFit.height, room: foot - captionTop - PlayLayout.cardFoot, stage: layout.side * PlayLayout.rim)
+    }
+
+    /// The curtain over the stage, in the tree from the solve so that its lines are measured before they show.
+    @ViewBuilder private func curtainLayer(_ side: CGFloat, width: CGFloat, under: CGFloat?) -> some View {
+        if let payoff, !paid {
+            TimelineView(.animation(paused: payoffAt == nil || Payoff.frozen != nil)) { timeline in
+                PayoffCurtain(payoff: payoff, r: side / 2, width: width, t: payoffTime(timeline.date) ?? -1,
+                              place: under.map { .under($0) } ?? .over,
+                              measured: { over, height in
+                                  if curtainFit?.over != over || curtainFit?.height != height { curtainFit = (over, height) }
+                              }, skip: skipPayoff)
+            }
+            .accessibilityHidden(paying == nil)
+        }
     }
 
     private func reset() {
@@ -1617,6 +1721,7 @@ struct LevelView: View {
         // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
         // breathes. Under Reduce Motion a live picture and a spill hold still.
         let moving = !reduceMotion && (game.level.picture.isLive || spillAt != nil && brimMoving) || breathing
+            || paying != nil && Payoff.frozen == nil
         let tickNow = game.tick, clocks = game.level.clocks, playable = shown == nil, page = page
         return ZStack {
             TimelineView(.animation(minimumInterval: 1.0 / (Power.shared.saving ? 30 : 60), paused: !moving || frozenClock != nil)) { timeline in
@@ -1625,6 +1730,7 @@ struct LevelView: View {
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
+                let payoffNow = payoffTime(timeline.date)
                 KeyframeAnimator(initialValue: Self.ticksDone, trigger: game.tickEvents) { p in
                     Group {
                         #if FIRST_STIR
@@ -1649,6 +1755,7 @@ struct LevelView: View {
                             let calm = reduceMotion && frozenWave == nil, swells = calm && !page.paper
                             u.wave = SIMD3(Float(source.x), Float(source.y), calm || page.paper ? -1 : Float(frozenWave ?? w))
                             u.breath = swirlBreath
+                            if let payoff, let payoffNow { u.turn += payoff.turn(at: payoffNow) }
                             // Escapement: the move's ticks in turn, the one in flight turned part way on the stack it changed.
                             if p < Double(tickNow.count), playable {
                                 let i = Int(max(p, 0)), t = tickNow[i]
@@ -1696,7 +1803,7 @@ struct LevelView: View {
                 .allowsHitTesting(false)
             }
             // The bezel stays: it is the tank's steel, which no touch or state changes, so not interface.
-            if clean {
+            if bareGlass {
                 Bezel(r: r)
             } else {
                 if !game.finished {

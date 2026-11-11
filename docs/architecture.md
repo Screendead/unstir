@@ -435,6 +435,51 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   brightens what is lit, which on bone runs white, so the band is off and an ink ring runs out over it (`Page.wave`).
   The ratchet's dark plate, steel wheel and split-flap cards stay as they are. The clip and the bundle's cut draw on
   the same page.
+- **Payoff.swift** and **PayoffViews.swift** are the curtain call (Jack's call PAYOFF = C: "Curtain call looks
+  cleanest to me"; he did not want a reward that stirs the glass again): what the solve that finishes a tier, the
+  whole free game or a paid pack plays between its wave and its card, on every launch. The solve that gives the last
+  of a tier's levels a best earns it (`Game.tierDone`, read either side of the save as `completed` is, so once;
+  maelstrom's is the game's, the same solve as `Completion.free`; no daily or run), as does the one that completes a
+  paid pack (`Game.completed`'s `.pack` where the pack ships, so Lens, Escapement and Prism at their planned count,
+  never First Stir, whose last level ends on the night forwards). A tier is finished when every level holds a best,
+  at par or not, so the card after it can still show the next tier locked. `LevelView` plays it: `Payoff.lead`
+  (1.1 s) after the solve the header, title, caption and controls leave (`staged`), the knobs with them, and for
+  `length` a veil dims the glass, which turns once about its centre and ends upright (`turn`, added to the shader's
+  own), while `PayoffCurtain` stands the name in the display role and its own sweep (`Payoff.parts`: `Tier.colours`,
+  or `Offer.sweep` and `glow`) over its stamp, "unstirred." or "25 panels unstirred"; the game's names each tier in
+  turn, 0.6 s apart in the smaller display role, then "every tier unstirred" and, under the rim, the credit. Then
+  the curtain lifts and the card is the one it always was. A tier's or a pack's holds the screen 3.2 s and the game's
+  7.4 s (2.6 s and 5 s under Reduce Motion), so the card comes 4.3 s or 8.5 s after the solve where it came at 1.4 s
+  (`testTheCurtainIsShortTurnsOnceAndLetsGo` pins them); a tap anywhere ends it (`skipPayoff`), a reset forgets it,
+  and leaving the level cancels what is left of it (`finishing`), its sounds too. On Escapement's paper
+  (`Payoff.paper`) nothing glows: the veil is bone, the name the plate's vermilion, at the large-text contrast it has
+  on bone, and the rest ink.
+  The credit's words are not decided: `Payoff.CreditPlaceholder` holds the placeholder, shown and spoken, and is the
+  one place to set them.
+  **The words never shrink** (Jack, 2026-11-11). They take the column's width; a name that would run within 0.14 of
+  the radius of the rim at the display role is set in the smaller one, which is a choice of role, not a scale
+  (Escapement's, on every phone). Each line reports its place, and `Payoff.fits` asks whether every line lies inside
+  0.94 of the glass's radius with the block centred on it. Where one doesn't (the game's on the smallest phone, most
+  at the play screen's largest type), the words stand under the glass instead with no veil, as nothing is over the
+  picture, and the glass scales about its top to leave them room (`Payoff.scale`, `LevelView.curtained`), down to
+  `Payoff.least` (0.45, under a card's 0.55, as a curtain can't scroll), at once under Reduce Motion, and hands its
+  scale straight to the card's own fit. Only the column does this: the split's and the tabletop's words stand over
+  the glass whatever their size. The curtain is in the tree from the solve, unseen, so it is measured before it shows.
+  **Reduce Motion** (`still`): the glass holds still and the lines come up together. **VoiceOver**: the curtain is
+  one element that says what it shows (`spoken`: "Whirlpool, unstirred.", "Lens: 25 panels unstirred.", the game's
+  four names, "Every tier unstirred." and the credit), announced as it starts, and activating it goes on to the
+  card; the card's label, where focus lands next and which an announcement can't be cut off from, ends with what the
+  card doesn't already say (`carded`, `Game.finishSpoken`: a tier's sentence, or the credit; a pack's and the game's
+  completion lines are the card's own). **Sound** (`cues`): only the game's effects at their own levels, all in D
+  as the beds and the packs' layers are. A tier's or a pack's name comes up on the tier switch's sound and its stamp
+  on two of the heal's notes, A5 then D6; the game's names climb the heal's scale (D5, G5, A5, D6) and its stamp
+  lands on the solve's chime, 4 s after the solve's own, which is 3.3 s long. A pack's loop plays on under it and
+  its resolution over it, as after any solve. Mixed from the files after a level's last heal and chime, each
+  curtain's loudest 0.4 s reads -20.5 to -19.7 LUFS against -21.5 for that solve alone and -20.0 for three heals
+  0.3 s apart in play; not yet heard on a phone. `UNSTIR_PAYOFFAT=s` holds it s seconds in on a level opened solved
+  (`UNSTIR_PLAYED`), for stills, and `UNSTIR_PAYOFFSKIP=s` ends it s seconds in as a tap does; `scripts/film.sh
+  payoff-` films plughole's, the game's, Lens's and Escapement's, and a tier's and the game's under Reduce Motion
+  (`PayoffTests`).
 - **Pack.swift** and **Store.swift** hold the paid packs, outside the tier ladder: `Pack` (First Stir, Lens,
   Escapement, Prism) has a name, a level-id prefix (its raw value: `lens-1`), a product id, a free taste of 3 and its levels (First Stir has
   25, five chapters; Lens 25 in four chapters of six, the last seven (`Level.lensChapters`); Escapement the problem book's 30 in its order and five chapters, `Level.chapter`, which the

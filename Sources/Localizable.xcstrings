@@ -1,6 +1,15 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ unstirred" : {
+      "comment" : "The curtain after a pack's last level, under the pack's name: its levels counted"
+    },
+    "%@, unstirred." : {
+      "comment" : "VoiceOver: the curtain after a tier's last level. The tier"
+    },
+    "%@: %@ unstirred." : {
+      "comment" : "VoiceOver: the curtain after a pack's last level. The pack, then its levels counted"
+    },
     "%lld %@ levels short of par" : {
       "comment" : "The card's way up, the next tier shut. Levels short of par, then their tier",
       "localizations" : {
@@ -203,6 +212,9 @@
       "comment" : "First Stir ending beat",
       "shouldTranslate" : false
     },
+    "Goes on to the result." : {
+      "comment" : "VoiceOver: the curtain call's hint, as activating it skips to the result card"
+    },
     "Grandmother gives her the float." : {
       "comment" : "First Stir ending beat",
       "shouldTranslate" : false
@@ -246,6 +258,9 @@
     "Lightning forks into the sea." : {
       "comment" : "First Stir ending beat",
       "shouldTranslate" : false
+    },
+    "Made by Jack. Thank you for playing." : {
+      "comment" : "PLACEHOLDER wording. VoiceOver: the credit after the last free level"
     },
     "Off the breakwater" : {
       "comment" : "First Stir scene title",
@@ -588,6 +603,9 @@
     "every level and pack too, without buying" : {
       "comment" : "Editors' build words",
       "shouldTranslate" : false
+    },
+    "made by Jack · thank you for playing" : {
+      "comment" : "PLACEHOLDER wording. The credit after the last free level"
     },
     "next daily in %lld hours" : {
       "comment" : "VoiceOver: the daily's card. Hours to the next",
