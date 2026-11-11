@@ -57,6 +57,24 @@ instr v_swell
   gaBus += p5 * as
 endin
 
+; ------------------------------------------------------------------ tick
+; One 30° detent (variant p4, 0 to 3): a tiny glass bead at D7 with a little body near D5, 50 ms.
+instr tick
+  iv = p4
+  ip[] fillarray 1.0, 1.028, 0.974, 1.012
+  isp[] fillarray 1.0, 0.97, 1.03, 1.0
+  ifq = Hz(98) * ip[iv]
+  a1 Mode ifq, 0.006, 1
+  a2 Mode ifq * 1.62 * isp[iv], 0.0035, 0.45, 1
+  a3 Mode ifq * 2.41, 0.0022, 0.25 * isp[iv], 2
+  a4 Mode Hz(74) * ip[iv] * (1 + 0.02 * iv), 0.0045, 0.55
+  anv expon 1, 20 * 0.0007, exp(-20)
+  anz Noise
+  a5 RBJ anz * anv, 1, 2500
+  aramp cosseg 0, 0.00025, 1
+  Out (a1 + a2 + a3 + a4 + 0.2 * a5) * aramp, p3
+endin
+
 ; ------------------------------------------------------------------ push
 ; A wrong stir: an Eb4-E4-F4 cluster, out of key, in murky FM that clears (each carrier modulated at half its own
 ; frequency), sagging 3.5%, lowpassed at 1.3 kHz, with a low bubble "blup" and a short room.

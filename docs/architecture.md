@@ -303,7 +303,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
   (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: a rod's a selection
-  haptic and no sound (Jack's call SND1 = B, round 16: the haptic and the dashes carry the steps), the tank's its clunk,
+  haptic with its tick (Jack, 2026-11-11, taking back SND1 = B: he missed the sound), the tank's its clunk,
   a haptic and no sound either, a two-finger spin's and the lift's last step too (Jack's call snd1-clunk = B, round
   16). While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
@@ -445,8 +445,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   once: `Asked`, `Ledger.answers`, read after the launch's entitlements and each update; with it `asked.at.<product>`,
   when it was asked, so a relaunch within 24 hours, the time Apple gives a parent to answer, finds the request
   waiting for approval again, as it was, unless StoreKit has said more of it since, and a date still to come, the clock set back, waits no longer: `Ledger.wait`, `Asked.waiting`; `StoreTests` forgets every request before and after each test, as its Ask to Buy purchases save them): entitlements from `Transaction.currentEntitlements` at
-  launch (`Store.ready` once that first read has finished: until then `RootView.show` waits on it, `Store.settled`,
-  before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
+  launch (`Store.ready` once that first read has finished, or at the latest once `Store.readLimit`, 5 s, has passed, so
+  a stalled read never leaves a card at "checking purchases…" with no buy: until then `RootView.show` waits on it, `Store.settled`,
+  before it gates a pack's level, and the dock shows no state; a read past the limit carries on and its states show as
+  they land, the card taking them as no landing, with no chime or announcement, as it keys on `Store.firstReadDone`), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`), and a `PurchaseIntent.intents` listener: a purchase started on the App
   Store's product page (a promoted purchase) sets `Store.promoted` to the offer this build sells (`Offer.promoted`),
   keeping its product, `RootView` opens that card over the menu, closing the settings sheet (an open level leaves
@@ -468,7 +470,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and the bundle as family-shareable non-consumables at
   2.99 a pack and 5.99 for the bundle (Jack, 2026-10-25, when it held three packs, as it does again); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice` (and `amounts` its `price`, written in its
-  `priceFormatStyle` for the bundle's saving, `Store.saving`), fetched at launch and again when a card
+  `priceFormatStyle` for the bundle's saving, `Store.saving`), fetched (`Store.loadProducts`, which `StoreTests` replaces to
+  fail offline, as the runner's test session served the products under a simulated `.loadProducts` error) at launch and again when a card
   opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" under it once the fetch
   has failed (`Store.pricing`; beside it, the SE wrapped it inside the pill), the pill still live, since the App Store's sheet shows the price.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
@@ -593,10 +596,21 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   and `eyebrow` 12, so nothing that carries meaning is under 13 and every screen follows Settings › Text Size. The play
   screen caps at `PlayLayout.typeCap` (xxxLarge), as the dock does, since the tank needs its room; the menu, cards,
   archive, settings and consent scale to the accessibility sizes, where a menu row's result goes under its title.
-  A result or lost card taller than the column leaves under the caption (plughole 27's fullest at xxxLarge on a Pro
-  Max) steps its own type down a size at a time, never below the default, until it fits (`LevelView.card`), so the
-  glass keeps the size it was played at; one still too tall, as the fullest is on the shortest phones at the default
-  size, scrolls. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
+  The text never shrinks (Jack, 2026-11-11: "If the user wants big text, they get big text. To fit it, the tank itself
+  must shrink once a level is completed, if the whole content wouldn't fit on-screen all at once"; on small phones
+  "the tank scales; text and UI does not"). So once a level is finished, a result or lost card taller than the column
+  leaves under the tank shrinks the tank (`PlayLayout.finished`, from the card's and the caption's measured places):
+  by exactly what the card lacks, to the next whole point, down to the safe area's foot less the 4 pt the controls it
+  covers keep (`cardFoot`). The tank is scaled as one, picture, knobs and rim, about its top (`LevelView.stage`), drawn
+  for the size it was played at, so no picture is baked again and no glass size is learned; the header, the title and
+  "unstirred." stay where they were, and the caption's place, with the card hung from it, is drawn that much higher
+  (`Lift`, stepped frame by frame so the arriving card rides up with the tank's foot), not laid out higher, so the
+  room is always measured with the tank as played. It keeps time with the card's arrival
+  (`LevelView.arrival`), at once under Reduce Motion, and the tank is its own size again once the card leaves; in play
+  there is no card and nothing to measure, so the tank is the layout's. The tank never goes under 55% of the size it
+  was played at (`leastFinished`): past that the card scrolls in the room there is, which only the fullest card at
+  xxxLarge on the shortest phone reaches (`testTheFullestCardAtTheLargestTypeOnTheShortestPhoneScrollsUnderTheTanksLeast`).
+  The split's card goes over the menu and the tabletop's stack makes room for its own, so neither shrinks. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
   default size, as the title's 18 pt gap holds no more; and the menu hands its type size
   to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
   `TypeRole.line` gives a role's line height as `Text` lays it out (a text style's font, whose leading grows faster than

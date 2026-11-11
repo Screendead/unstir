@@ -780,7 +780,7 @@ type-menu-ax3.png  The same at accessibility3: each row's result under its title
 type-level-xxxl.png  Level 01 at xxxLarge type: the header, title, note and controls grown, the tank still the screen's width.
 type-level-ax5.png  Level 01 at accessibility5: the play screen capped at xxxLarge, the same frame as type-level-xxxl.
 type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a stored best of +6: its lines and buttons at the larger size.
-type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, the card's type stepped down a size at a time until it stands whole over the screen's foot, the glass the size it was played at.
+type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot.
 type-result-clean-xxxl.png  Level 06's clean result card at xxxLarge.
 type-result-par-xxxl.png  Level 06 solved at par on a replay, at xxxLarge.
 type-tier-up-xxxl.png  Vortex 27's result card at xxxLarge, maelstrom open: up a notch to MAELSTROM.
