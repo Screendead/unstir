@@ -165,8 +165,10 @@ final class PrismTests: XCTestCase {
             .appendingPathComponent("Sources/Unstir.metal")
         let source = try String(contentsOf: url, encoding: .utf8)
         var shader = TankShader(centre: .zero, radius: 1, twists: [0, 0, 0.5, 1], fourTaps: 40, scale: 3)
-        for prism in [nil, TankShader.Prism(masks: [1], cost: 3, isolate: .red, tint: SIMD3(1, 0, 0))] {
-            shader.prism = prism
+        let fine = try XCTUnwrap(Fine(Halftone.test.detail(64, lenses: [])))
+        let prism = TankShader.Prism(masks: [1], cost: 3, isolate: .red, tint: SIMD3(1, 0, 0))
+        for (prism, fine) in [(nil, nil), (prism, nil), (nil, fine)] {
+            (shader.prism, shader.fine) = (prism, fine)
             let head = try XCTUnwrap(source.range(of: "[[ stitchable ]] half4 \(shader.name)("), shader.name)
             let declared = source[head.upperBound...].prefix { $0 != ")" }.split(separator: ",")
                 .map { $0.split(whereSeparator: \.isWhitespace) }

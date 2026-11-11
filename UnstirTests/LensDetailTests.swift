@@ -156,7 +156,8 @@ final class LensDetailTests: XCTestCase {
         // The middle of the inset, where the keyhole and its eye are: a wider bake only takes longer.
         let inner = 0.3 * Tank.plateau * rod.z
         let baked = bake(panel, around: centre, reach: inner)
-        let detail = panel.detail(n, lenses: [rod])
+        // Keyhole's inset the second of two, so its corner in the atlas is not the first's.
+        let detail = panel.detail(n, lenses: [level.layout.rods[1], rod])
         var table = detail.table
         // No footprint is long enough to fade the detail out.
         (table[6], table[7]) = (2, 3)
