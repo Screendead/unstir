@@ -266,7 +266,7 @@ lens-04-clue.png  Lens 04's panel drawn clean, only its lenses magnified (1:+2):
 lens-05-clue.png  Lens 05's panel drawn clean, only its lenses magnified (2:+2): what is seen through each.
 lens-06-clue.png  Lens 06's panel drawn clean, only its lenses magnified (0:+2): what is seen through each.
 lens-07-clue.png  Lens 07's panel drawn clean, only its lenses magnified (0:+2,1:+1): what is seen through each.
-lens-08-clue.png  Lens 08's panel drawn clean, only its lenses magnified (1:+2): what is seen through each.
+lens-08-clue.png  Lens 08's panel drawn clean, only its lenses magnified (0:+2,2:+2): what is seen through each.
 lens-09-clue.png  Lens 09's panel drawn clean, only its lenses magnified (2:+2,3:+2): what is seen through each.
 lens-10-clue.png  Lens 10's panel drawn clean, only its lenses magnified (2:+2): what is seen through each.
 lens-11-clue.png  Lens 11's panel drawn clean, only its lenses magnified (1:+2,2:+2): what is seen through each.
@@ -291,7 +291,7 @@ lens-04-last.png  Lens 04 one move from solved: only 0:+3 left on its panel.
 lens-05-last.png  Lens 05 one move from solved: only 0:-4 left on its panel.
 lens-06-last.png  Lens 06 one move from solved: only 2:+3 left on its panel.
 lens-07-last.png  Lens 07 one move from solved: only 2:+4 left on its panel.
-lens-08-last.png  Lens 08 one move from solved: only 0:+4 left on its panel.
+lens-08-last.png  Lens 08 one move from solved: only 1:+4 left on its panel.
 lens-09-last.png  Lens 09 one move from solved: only 0:+3 left on its panel.
 lens-10-last.png  Lens 10 one move from solved: only 0:+3 left on its panel.
 lens-11-last.png  Lens 11 one move from solved: only 0:+3 left on its panel.
