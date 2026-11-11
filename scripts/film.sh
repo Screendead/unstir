@@ -248,6 +248,11 @@ for size in "big tri 0 1" "mid quad 0 1" "small eye 2 0"; do
   film "lens-glitter-$name" 15 "$tank,fps=3,scale=220:-1,tile=9x5:padding=4" PACK=lens LEVEL=1 LAYOUT=$layout LENSES=$lens \
     STACK=$twist:+4 FINGER=1 REST=1 MOVES=$lens:+1,$lens:+1,$lens:+1,$twist:+2,$twist:-2,$lens:-3,$twist:-4
 done
+# Keyhole's lens zoomed out from x8 a step at a time, drawn clean so no knob covers it: its detail, drawn at the
+# screen's pitch where it magnifies (`unstirLens`), crosses over to the bake as the dots shrink to the panel's own
+# size, with no step between.
+film lens-zoom 11 "$tank,fps=4,scale=220:-1,tile=9x5:padding=4" PACK=lens LEVEL=1 OWNED=lens BESTS=lens:0 STACK=0:+3 CLEAN=1 FINGER=1 \
+  REST=1 MOVES=0:-1,0:-1,0:-1
 # Two Lens levels solved by a drawn fingertip at par, the order read off the rims: 08 on quad, its lenses on small rods
 # (radius 0.48), and 12 on eye, both big rods (0.58) lenses. A lens's move rides up and down; dealt lenses come out
 # dragging down.
