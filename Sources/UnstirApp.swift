@@ -638,6 +638,12 @@ struct RootView: View {
         harnessed = h.harnessed
         harnessSave = h.resume
         Marks.stored = !h.harnessed
+        // UNSTIR_PAYOFF=a, b or c: the solve that finishes a tier, or the free game, plays that option's payoff, and
+        // UNSTIR_PAYOFFAT=s holds it s seconds in on a level opened solved, and UNSTIR_PAYOFFSKIP=s ends it s seconds in,
+        // as a tap does. Unset, as on a plain launch, there is none.
+        Payoff.option = env["UNSTIR_PAYOFF"].flatMap(Payoff.Option.init(rawValue:))
+        Payoff.frozen = env["UNSTIR_PAYOFFAT"].flatMap(Double.init)
+        Payoff.skips = env["UNSTIR_PAYOFFSKIP"].flatMap(Double.init)
         #if DEBUG
         // UNSTIR_EDITORS=1: settings shows the editors' switch, for its shot.
         Build.editorsSwitch = Build.editors || h.harnessed && env["UNSTIR_EDITORS"] == "1"

@@ -137,9 +137,12 @@ extension Game {
 
     /// The card's account of how the level ended, where VoiceOver lands as it shows.
     var finishSpoken: String {
-        guard let completed else { return ended }
-        return String(localized: "\(ended) \(completed.spoken)",
-                      comment: "VoiceOver: the result card. How the level ended, then what it completed")
+        let said = completed.map {
+            String(localized: "\(ended) \($0.spoken)",
+                   comment: "VoiceOver: the result card. How the level ended, then what it completed")
+        } ?? ended
+        // A payoff's own sentence, only where one is switched on.
+        return Payoff(self).map { said + " " + $0.spoken } ?? said
     }
 
     private var ended: String {

@@ -113,6 +113,9 @@ struct ResultCard: View {
                     if let done = game.completed {
                         Text(done.line).tone(page.tone(.text2)).padding(.top, 4)
                     }
+                    if let payoff = Payoff(game), payoff.option == .b {
+                        Text(payoff.tally).tone(page.tone(.text2)).padding(.top, game.completed == nil ? 4 : 0) // loc: verbatim localized by Payoff
+                    }
                 }
                 .font(.ui(.label))
                 // Focus lands on the finish itself: an announcement before a focus move is cut short.
@@ -161,6 +164,9 @@ struct ResultCard: View {
             }
             if let up {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
+            }
+            if Payoff(game)?.creditsOnCard == true {
+                Text(Payoff.credit).font(.ui(.detail)).tone(page.tone(.text3)).multilineTextAlignment(.center) // loc: verbatim localized by Payoff
             }
         }
         // With the play column's own 16, the gutter's 20.

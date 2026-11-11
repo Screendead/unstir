@@ -39,6 +39,8 @@ struct Unstirred: ViewModifier, Animatable {
     /// while the layer is not yet the lit panel, as the detail is drawn past the layer and would not strike with it.
     var fine: Fine?
     var crisp = 0.0
+    /// A payoff's own entries, four floats each as the shader reads them, over everything else (`Payoff.entries`).
+    var extra: [Float] = []
     @Environment(\.displayScale) private var scale
 
     nonisolated var animatableData: AnimatablePair<AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>>, Double> {
@@ -64,7 +66,7 @@ struct Unstirred: ViewModifier, Animatable {
         // drop to two taps at the budget's edge rather than run one more.
         let taps = budget.map { $0 - fillEntries } ?? Self.taps(side: side, scale: scale, fill: fillEntries)
         let weight = Self.weigh(channels, inFlight: n - stack.count)
-        var shader = TankShader(centre: CGPoint(x: r, y: r), radius: r, twists: twists, fourTaps: Float(taps + weight.rides),
+        var shader = TankShader(centre: CGPoint(x: r, y: r), radius: r, twists: twists + extra, fourTaps: Float(taps + weight.rides),
                                 scale: scale, haze: haze, wave: wave, turn: turn)
         if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))

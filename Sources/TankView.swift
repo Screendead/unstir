@@ -126,6 +126,11 @@ struct LevelView: View {
     @State private var eased: Bool
     /// The solve's wave, swell and success haptic have landed: at the win, or on Escapement at its solving tick.
     @State private var waved: Bool
+    /// What this solve earned (`Payoff`, only with UNSTIR_PAYOFF), when it began, and whether it has played out, after
+    /// which what it leaves standing stays under the card.
+    @State private var payoff: Payoff?
+    @State private var payoffAt: Date?
+    @State private var paid = false
     /// Scales every committed angle; the open winds it 0 to 1, all rods at once, so it shows nothing about order.
     @State private var wind = 1.0
     /// The touch it belongs to, what it holds, and the finger's last angle about that.
@@ -409,6 +414,12 @@ struct LevelView: View {
                             && (!game.spilled || (harness?.clock ?? 0) >= Brim.card(still: harness?.clock == nil && UIAccessibility.isReduceMotionEnabled)))
         _eased = State(initialValue: game.solved)
         _waved = State(initialValue: game.solved)
+        // A harness launch that opens solved stands on what the payoff leaves, or with UNSTIR_PAYOFFAT part way in.
+        let earned = game.solved ? Payoff(game, still: UIAccessibility.isReduceMotionEnabled) : nil
+        _payoff = State(initialValue: earned)
+        _payoffAt = State(initialValue: earned == nil ? nil : .now)
+        _paid = State(initialValue: earned != nil && Payoff.frozen == nil)
+        if earned != nil && Payoff.frozen != nil { _showResult = State(initialValue: false) }
         still = harness?.still ?? false
         autoplay = harness?.autoplay ?? false
         pace = harness?.pace ?? 0.3
@@ -582,7 +593,7 @@ struct LevelView: View {
         }
         .font(.ui(.label))
         .padding(.top, 8)
-        .modifier(Unseen(clean))
+        .modifier(Unseen(staged))
     }
 
     private var titleRow: some View {
@@ -605,7 +616,7 @@ struct LevelView: View {
             }
         }
         .padding(.top, 18)
-        .modifier(Unseen(clean))
+        .modifier(Unseen(staged))
     }
 
     /// How a card arrives, and the tank's shrink for it with it.
@@ -620,6 +631,8 @@ struct LevelView: View {
     /// in the column; `filmFoot` where the night forwards' lines end, nil under the glass.
     private func stage(_ side: CGFloat, shrink: CGFloat, drop: CGFloat, words: CGFloat?, tabletop: Bool, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
         tank(side, bounds: bounds, trackBounds: trackBounds)
+            .background { payoffLayer(side, .a) }
+            .overlay { payoffLayer(side, .b) }
             .animation(shrinking) { $0.scaleEffect(shrink, anchor: .top).offset(y: drop) }
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
@@ -638,6 +651,13 @@ struct LevelView: View {
                     .transition(.opacity)
                 }
                 #endif
+            }
+            .overlay { payoffLayer(side, .c) }
+            .overlay {
+                if paying != nil {
+                    Color.clear.frame(width: 4000, height: 4000).contentShape(Rectangle()).onTapGesture { skipPayoff() }
+                        .accessibilityHidden(true)
+                }
             }
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
@@ -678,7 +698,7 @@ struct LevelView: View {
             .accessibilityHidden(showResult || ending)
             .modifier(SkipButton(on: demoing || shown != nil) { skip() })
             .overlay(alignment: .top) { if showResult { card(layout, fit) } }
-            .modifier(Unseen(clean))
+            .modifier(Unseen(staged))
     }
 
     /// The result or lost card under the caption; in the split, over the menu in the trailing half, centred on the tank
@@ -733,7 +753,7 @@ struct LevelView: View {
             ChannelSwatches(isolated: $isolated)
                 .opacity(showResult || ending || shown != nil ? 0 : 1)
                 .allowsHitTesting(!showResult && shown == nil)
-                .modifier(Unseen(clean))
+                .modifier(Unseen(staged))
         }
     }
 
@@ -759,7 +779,7 @@ struct LevelView: View {
         .accessibilityHidden(game.level.run != nil || showResult || ending)
         // 4 where the 40 pt capsules had 8, so the taller buttons leave the tank where it was.
         .padding(.bottom, 4)
-        .modifier(Unseen(clean))
+        .modifier(Unseen(staged))
     }
 
     /// The play layout for the safe area `geo` measures: split at the fold where the system reports one, else at the
@@ -993,7 +1013,7 @@ struct LevelView: View {
         }
         .onChange(of: game.finished) {
             // An undo or reset from the lost card.
-            guard game.finished else { showResult = false; waved = false; return }
+            guard game.finished else { showResult = false; waved = false; payoff = nil; payoffAt = nil; paid = false; return }
             onFinish()
             // The fine pass can call the win ~0.1 s after the commit: a finger down in that gap would hold its turn frozen
             // over the win, then have the commit refused on lift.
@@ -1002,8 +1022,13 @@ struct LevelView: View {
             // A spill's card waits for the pour and the word; a lost clock's for its stamp; a solve's for its wave.
             let wait = game.spilled ? Brim.card(still: reduceMotion) : game.lost ? 0.7 : 1.4 + solveDelay
             if game.solved && solveDelay == 0 { landSolve(chime: true) }
+            let earned = game.solved ? Payoff(game, still: reduceMotion) : nil
+            payoff = earned
             Task {
-                try? await Task.sleep(for: .seconds(wait))
+                // A payoff takes the screen once the solve's wave has run out, and the card follows it.
+                try? await Task.sleep(for: .seconds(earned == nil ? wait : Payoff.lead + solveDelay))
+                guard game.finished else { return }
+                if let earned { await pay(earned) }
                 guard game.finished else { return }
                 if game.solved && game.level.endsFirstStir {
                     ending = true
@@ -1110,6 +1135,59 @@ struct LevelView: View {
         // Its own transaction: an animated one also glides every shader argument that changed with the win, the wave's
         // centre among them.
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true }
+    }
+
+    /// The payoff on the screen: begun, and not yet played out.
+    private var paying: Payoff? { payoffAt != nil && !paid ? payoff : nil }
+    /// The chrome leaves for a payoff that takes the screen, and comes back for the card; the knobs and lines leave for
+    /// one that takes the glass, and stay away, as the card hides them anyway.
+    private var staged: Bool { clean || paying?.clearsChrome == true }
+    private var bareGlass: Bool { clean || payoffAt != nil && payoff?.clearsGlass == true }
+
+    /// Seconds into the payoff at `date`, endless once it has played; nil before it begins.
+    private func payoffTime(_ date: Date) -> Double? {
+        guard payoff != nil, let payoffAt else { return nil }
+        return Payoff.frozen ?? (paid ? .infinity : date.timeIntervalSince(payoffAt))
+    }
+
+    /// Plays the payoff a solve earned, its sounds at their times, until its length is up or a tap has ended it.
+    private func pay(_ earned: Payoff) async {
+        withAnimation(.easeOut(duration: 0.4)) { payoffAt = .now }
+        Log.write("payoff \(earned.option.rawValue) \(earned.whole ? "game" : earned.tier.rawValue) begins")
+        if voiceOver { AccessibilityNotification.Announcement(earned.spoken).post() } // loc: verbatim localized by Payoff
+        if let skips = Payoff.skips {
+            Task {
+                try? await Task.sleep(for: .seconds(skips))
+                if paying != nil { skipPayoff() }
+            }
+        }
+        let start = ContinuousClock.now
+        for cue in earned.cues.sorted(by: { $0.at < $1.at }) {
+            try? await Task.sleep(until: start + .seconds(cue.at), clock: .continuous)
+            guard !paid, game.finished else { return }
+            Sound.shared.play(cue.effect)
+        }
+        try? await Task.sleep(until: start + .seconds(earned.length), clock: .continuous)
+        guard !paid else { return }
+        withAnimation(.easeOut(duration: 0.4)) { paid = true }
+        Log.write("payoff ends")
+    }
+
+    /// A tap during a payoff ends it: what it leaves stands, and the card comes.
+    private func skipPayoff() {
+        withAnimation(.easeOut(duration: 0.3)) { paid = true; showResult = true }
+        Log.write("payoff skipped")
+    }
+
+    /// What a payoff draws with the tank: option a's halo behind it and option b's tally over its bezel, both scaled
+    /// with it and left standing, or option c's curtain over it while it plays.
+    @ViewBuilder private func payoffLayer(_ side: CGFloat, _ option: Payoff.Option) -> some View {
+        if let payoff, payoffAt != nil, payoff.option == option, option != .c || !paid {
+            TimelineView(.animation(paused: paid || Payoff.frozen != nil)) { timeline in
+                let t = payoffTime(timeline.date) ?? -1
+                if option == .c { PayoffCurtain(payoff: payoff, r: side / 2, t: t) } else { PayoffRim(payoff: payoff, r: side / 2, t: t) }
+            }
+        }
     }
 
     private func reset() {
@@ -1595,6 +1673,7 @@ struct LevelView: View {
         // Every other picture pauses the timeline, so nothing ticks, except while a spill stirs it together or the swirl
         // breathes. Under Reduce Motion a live picture and a spill hold still.
         let moving = !reduceMotion && (game.level.picture.isLive || spillAt != nil && brimMoving) || breathing
+            || paying != nil && Payoff.frozen == nil
         let tickNow = game.tick, clocks = game.level.clocks, playable = shown == nil, page = page
         return ZStack {
             TimelineView(.animation(minimumInterval: 1.0 / (Power.shared.saving ? 30 : 60), paused: !moving || frozenClock != nil)) { timeline in
@@ -1603,6 +1682,7 @@ struct LevelView: View {
                     return since > 0 ? Brim.murk(game.level.layout, seed: game.level.run?.seed ?? 0, at: since) : nil
                 } ?? []
                 let swirlBreath = game.level.layout.swirl.map { (rod: game.slot(of: $0), angle: breathAngle) }
+                let payoffNow = payoffTime(timeline.date)
                 KeyframeAnimator(initialValue: Self.ticksDone, trigger: game.tickEvents) { p in
                     Group {
                         #if FIRST_STIR
@@ -1620,6 +1700,7 @@ struct LevelView: View {
                                      panel: game.level.panel, onStrike: { struck = true })
                         #endif
                     }
+                        .overlay { if let payoff, !paid, !payoff.relay.isEmpty { PayoffRelay(payoff: payoff, side: side, t: payoffNow ?? -1) } }
                         .keyframeAnimator(initialValue: -1.0, trigger: waved) { picture, w in
                             var u = unstirred
                             // Under Reduce Motion the light swells where it stands instead of running out as a wave, but not on
@@ -1627,6 +1708,7 @@ struct LevelView: View {
                             let calm = reduceMotion && frozenWave == nil, swells = calm && !page.paper
                             u.wave = SIMD3(Float(source.x), Float(source.y), calm || page.paper ? -1 : Float(frozenWave ?? w))
                             u.breath = swirlBreath
+                            if let payoffNow { payoff?.dress(&u, at: payoffNow) }
                             // Escapement: the move's ticks in turn, the one in flight turned part way on the stack it changed.
                             if p < Double(tickNow.count), playable {
                                 let i = Int(max(p, 0)), t = tickNow[i]
@@ -1674,7 +1756,7 @@ struct LevelView: View {
                 .allowsHitTesting(false)
             }
             // The bezel stays: it is the tank's steel, which no touch or state changes, so not interface.
-            if clean {
+            if bareGlass {
                 Bezel(r: r)
             } else {
                 if !game.finished {

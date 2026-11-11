@@ -79,6 +79,9 @@ final class Game {
     private(set) var opened: Tier?
     /// What this solve completed, the one that gave the last of a pack's levels, or of the last tier's, a best.
     private(set) var completed: Completion?
+    /// The tier this solve finished, the one that gave the last of its levels a best, while a payoff is switched on
+    /// (`Payoff.option`); nil on a plain launch.
+    private(set) var tierDone: Tier?
     /// The level's best before this solve and this solve's own, for the card's line; nil where nothing is saved.
     private(set) var bests: (was: Best?, now: Best)?
     /// Starts when the opening ends or is skipped; a reset's replay does not restart it. Nil while the app is away, with
@@ -707,6 +710,13 @@ final class Game {
         return done
     }
 
+    /// Every level of this level's tier has a best.
+    private var wholeTier: Tier? {
+        guard Payoff.option != nil, level.pack == nil, level.tier.levels.contains(where: { $0.id == level.id }),
+              level.tier.levels.allSatisfy({ Best.load($0.id) != nil }) else { return nil }
+        return level.tier
+    }
+
     private func finish(healed: Bool) {
         if healed && !finished { heals += 1 }
         guard finished else { return }
@@ -723,7 +733,7 @@ final class Game {
             let up = level.pack == nil ? level.tier.step(1) : nil, shut = up.map { !$0.isOpen() } ?? false
             let best = Best(over: over, seconds: seconds, clean: clean, archived: level.archived ? true : nil)
             bests = (Best.load(level.id), best)
-            let done = completion
+            let done = completion, whole = wholeTier
             best.save(level.id, store: storesProgress)
             if storesProgress { Sync.shared.saved() }
             if shut, let up, up.isOpen() {
@@ -731,6 +741,7 @@ final class Game {
                 if up == .whirlpool { Review.shared.pending = true }
             }
             completed = done == nil ? completion : nil
+            tierDone = whole == nil ? wholeTier : nil
         }
         // A replay passes through a lost tank its line then undid; `resumed` closes one that ends solved or spilled.
         guard !replaying else { return }
