@@ -338,7 +338,7 @@ extension EscapementArt {
             plate.line(arc(jewel, 0.03), heavy)
             plate.line(arc(jewel, 0.008), medium)
         }
-        for (k, screw) in [at(0.33, 11), at(0.8, 9.9), at(0.8, 2.25), at(0.78, 3.5), at(0.33, 5), at(0.82, 4.5), at(0.5, 9)].enumerated() {
+        for (k, screw) in [at(0.8, 9.9), at(0.8, 2.25), at(0.78, 3.5), at(0.33, 5), at(0.82, 4.5), at(0.5, 9)].enumerated() {
             plate.fill(arc(screw, 0.04))
             plate.line(arc(screw, 0.04), heavy)
             plate.line(band(polar(screw, 0.04, Double(k) * 1.1), polar(screw, 0.04, Double(k) * 1.1 + .pi), 0.012), fine)
@@ -380,10 +380,10 @@ extension EscapementArt {
         plate.line(arc(dial, 0.135), medium)
         plate.marks += small.marks
         plate.line(arc(front, 0.2), heavy)
-        let turn = arc(front, 0.265, from: -0.75, to: 0.55)
-        plate.fill(ribbon(turn, 0.05))
+        let turn = curve(front + P(0.075, 0.2), P(-0.31, -0.25), P(-0.17, -0.27))
+        plate.fill(ribbon(turn + [P(-0.1, -0.27)], 0.07))
         plate.line(turn, heavy)
-        plate.fill(barb(polar(front, 0.265, 0.72), toward: 0.72 + .pi / 2, size: 0.1), .black)
+        plate.fill(barb(P(-0.1, -0.272), toward: 0, size: 0.1), .black)
 
         callout(&plate, "A", from: balance + P(0.1, 0.13), to: at(0.86, 6.35))
         callout(&plate, "B", from: ratchet + P(0.12, 0.1), to: at(0.8, 2.9))
@@ -548,12 +548,21 @@ extension EscapementArt {
 
         let window = box(P(0.565, -0.092), P(0.948, 0.092))
         let pivot = polar(origin, 0.79, clock(10.9)), reach = clock(1)
-        let arm = ribbon(arc(origin, 0.79, from: clock(10.9) - 2 * .pi, to: reach + 0.02), 0.055)
+        let arm = ribbon(arc(origin, 0.79, from: clock(10.9) - 2 * .pi, to: reach + 0.02), 0.07)
         let beak = [polar(origin, 0.82, reach - 0.055), polar(origin, 0.82, reach + 0.06), polar(origin, 0.47, reach + 0.035), polar(origin, 0.343, reach), polar(origin, 0.47, reach - 0.035), polar(origin, 0.82, reach - 0.055)]
-        let dateWheel = P(-0.75, 0.0)
-        var rings = wheel(&figures, dateWheel, 0.18, teeth: 31, spokes: 5, phase: 0.2)
+        let dateWheel = P(-0.735, 0.0)
+        var rings = wheel(&figures, dateWheel, 0.125, teeth: 12, spokes: 4, phase: 0.26)
+        // The date ring: thirty-one teeth inside the rim, a day each.
+        var ring: [P] = []
+        for k in 0..<31 {
+            let a = Double(k) * 2 * .pi / 31
+            ring += [polar(origin, 0.925, a), polar(origin, 0.875, a + 0.5 * .pi / 31), polar(origin, 0.925, a + 1.4 * .pi / 31)]
+        }
+        ring.append(ring[0])
         rings += [cam, window, arm, beak, arc(pivot, 0.06)]
-        ruling(&plate, angle: 0.75, around: rings)
+        plate.lines(hatch([ring] + rings, angle: 0.75, gap: 0.034), fine)
+        plate.lines(hatch([Array(glass), ring], angle: -0.75, gap: 0.011), fine)
+        plate.line(ring, medium)
         plate.marks += figures.marks
 
         // The cam: its face ruled, the years lettered, the fourth cross-hatched.
@@ -573,13 +582,12 @@ extension EscapementArt {
         plate.line(cam, heavy)
 
         // The feeler: its arm over the top, its beak in the notch.
-        solid(&plate, arm, angle: 0.3, gap: 0.013)
-        solid(&plate, beak, angle: 0.3, gap: 0.013)
+        solid(&plate, arm, angle: 1.3, gap: 0.009)
+        solid(&plate, beak, angle: 1.3, gap: 0.009)
         plate.fill(arc(pivot, 0.06))
         plate.line(arc(pivot, 0.06), heavy)
         plate.line(arc(pivot, 0.03), medium)
         plate.line([pivot + P(-0.02, 0.02), pivot + P(0.02, -0.02)], medium)
-        plate.line(curve(polar(origin, 0.83, clock(11.6)), polar(origin, 1.0, clock(0.2)), polar(origin, 0.94, clock(1.1))), medium)
 
         // The date's window.
         plate.fill(window)
@@ -590,7 +598,7 @@ extension EscapementArt {
         callout(&plate, "A", from: polar(origin, 0.36, clock(7)), to: polar(origin, 0.66, clock(7)))
         callout(&plate, "B", from: polar(origin, 0.6, reach) + P(0.02, 0.012), to: polar(origin, 0.33, clock(3)) + P(0.03, -0.1))
         callout(&plate, "C", from: P(0.76, 0.092), to: P(0.74, 0.3))
-        callout(&plate, "D", from: dateWheel + P(0.05, 0.12), to: polar(origin, 0.8, clock(7.9)))
+        callout(&plate, "D", from: dateWheel + P(-0.03, -0.09), to: P(-0.7, -0.27))
         return plate
     }
 
