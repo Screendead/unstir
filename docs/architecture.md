@@ -755,10 +755,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
   draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's engraved plate, the fern; the bundle a wedge of
   each of its packs', cut from the centre, `testEveryCoverStirsItsClipsLevel`), stirred and unstirred by `Unstirred` on
-  the level's dealt stack, an entry at a time (`Unstirred.shares`), its knobs drawn over it as the game draws them,
+  the stack its clip opens on (the level's deal, but for Lens's: below), an entry at a time (`Unstirred.shares`), its knobs drawn over it as the game draws them,
   each turned by its rod's share of the stack and a clock's ratchet counting what it owes, so a cover shows how its pack
   plays (Jack, round 16; the bundle's wedges each turned to hold its key knob, `PackTank.turn`; the promoted-purchase
-  images draw them too, Jack's call promo-knobs, round 16), on a 7 s loop, each out of step, held as dealt under
+  images draw them too, Jack's call promo-knobs, round 16), on a 7 s loop, each out of step, held stirred under
   Reduce Motion, at 30 Hz, paused where it stands under a card, the settings sheet or a level a back swipe slides off, while `Power` saves
   (Low Power Mode, or a thermal state of serious or worse) and once no finger has landed for 20 s (`Power.idle`, from a
   gesture recognizer on the window that fails at once, and from a drag on the list), each carrying on from the frame
@@ -826,8 +826,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`PackClip.seen`), carrying on from the frame it held. A reel that dips is black at both ends, so the
   seam never jumps. First Stir: level 1, the sunrise, healed top first, the time under the tank stepping back with each
   heal (F3) from 6:40 to 6:15 am and a vignette playing with each heal but the first, which leaves rod 1 an entry.
-  Lens: level 3 as dealt, its lens newest, dragged down to clean and back up, let go where it began, so it loops with
-  no dip on the order read (Jack, CL1). Escapement: problem 2, the mock-up's, in its three moves, its hub counting 3 down to 0. Prism: specimen 1
+  Lens: level 25, Kaleidoscope, the pack's face (Jack, 2026-11-11: "Kaleidoscope wins"; `Level.lensFace`), opened where seven
+  top-first moves of its par line leave it, on the first five entries of its deal (`Reel.lensOpening`), the newest of
+  them a lens's only entry, x8, with a twist on the rod either side: that lens dragged down to clean and back up, let
+  go where it began, so it loops with no dip on the order read (Jack, CL1, whose clip played level 3 as dealt). A
+  cover stirs the stack its clip opens on (`Offer.covers`), so Lens's dock cover, its promoted-purchase image and the
+  bundle's wedge show that position too, not the whole deal; every other pack's opens on its deal. Escapement: problem 2, the mock-up's, in its three moves, its hub counting 3 down to 0. Prism: specimen 1
   in its par of three, the red stir buried under the cyan one first. The bundle (`Clip.cut(of:)`): each of its packs' first beat in turn, the zoom, the tick and
   Prism's red stir coming off, about 8 s, in every build (Jack, CL2; a cut can also take First Stir's vignette, the
   sunrise from just after its first heal, which plays nothing, through its second). Every reel stays drawn,
