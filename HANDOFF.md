@@ -63,13 +63,19 @@ thank you for playing".
    and the phone needs him to unlock it.
 5. Owed from before: `docs/escapement-problems.md` without the wait (done here); Escapement 29's layer rendered
    again on its new deal (done, `scripts/sounds.sh layers`, nothing tracked changed); the loc-lint baseline removed
-   (#203); one more try at the StoreKit tests on the iOS 27.2 simulator.
+   (#203); one more try at the StoreKit tests on the iOS 27.2 simulator: done on `store-ios27` (local,
+   unpushed). Giving the scheme's test action the StoreKit configuration (xcodegen writes it only to run, so a
+   `postGenCommand` adds it) ends the hang, but `testAskToBuyDeclinedGrantsNothing` (lens owned after a declined
+   ask) and `testRefundRevokesThePack` (no complete-pack transaction) fail on 27.2 alone; next, those two.
 
-**Undecided, to pitch**
+**Undecided, pitched 2026-11-11 night** (https://claude.ai/artifact/Q4p5NRvFtmJyRSHAw6U3v7; picks in its `picks`
+collection):
 
-- The curtain call again, with the text inside the glass.
+- The curtain call again, with the text inside the glass (#201 pushed): Jack's credit is wider than the glass on
+  every phone and breaks after the dot; the recommendation drops the dot when it breaks. Prism (#205) waits on
+  his phone, a to-do on the page.
 - The PR test job: 6 of the last 18 PR runs passed 10 minutes and #201's last took 14:21, 39 s under the hard stop.
-  Measured options go to Jack.
+  Options: catch the stall and trim the start (recommended), a larger runner, or move the line.
 
 **Waiting**
 
