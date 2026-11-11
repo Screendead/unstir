@@ -51,3 +51,25 @@ jobs:
       - name: Slowest tests
         if: always()
         run: scripts/ci-times.sh "$RUNNER_TEMP/test.log"
+  # The StoreKit tests again on the iOS players run now: macos-26 carries only iOS 26 simulators, the xcode-27 image
+  # (a GitHub preview) iOS 27. No cache: its build is another Xcode's.
+  store-ios27:
+    runs-on: xcode-27
+    timeout-minutes: 25
+    if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: |
+          curl -sSL https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+      - name: StoreKit tests on iOS 27.2
+        shell: bash
+        run: |
+          xcodebuild -version
+          udid=$(xcrun simctl list devices available | awk '/^-- /{on = /iOS 27\.2/} on && /iPhone .*Pro Max \(/' | head -1 | grep -oE '[0-9A-F-]{36}' || true)
+          [[ -n "$udid" ]] || { xcrun simctl list devices available; echo "no iOS 27.2 Pro Max simulator" >&2; exit 1; }
+          UNSTIR_SIM=$udid scripts/test-store.sh -only-testing:UnstirTests/StoreTests COMPILER_INDEX_STORE_ENABLE=NO | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)|: error: "
