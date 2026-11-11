@@ -40,6 +40,43 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
 
+### Open work (finish-and-pitch, 2026-11-11 night, after Jack's answers)
+
+Jack answered all six calls of the second follow-up page. His notes, verbatim. On the curtain call (he picked
+"change something first"): "I want the text within the glass. You spaced the text below the glass far too close to
+it anyway, so it looks shoddy - but yeah I'm left wondering why you chose to build it differently to what I decided?
+It looks good in the glass. I agree with your decision to shrink the glass and put the curtain call below on small
+screens." On Prism: "This is a fantastic solution to the problem. Well done." On the credit: "made by screendead ·
+thank you for playing".
+
+**Decided, to do this run**
+
+1. Record the six answers (round 19). Done here.
+2. Level 7 is named "Counterweight": the shown name only, its id and picture as they are (#203). The pause-mark
+   picture is set aside.
+3. Curtain call (#201): the credit back inside the glass wherever the lines fit at full text size, as Jack saw it
+   when he picked; where they don't fit, the glass shrinks and the words stand under it, with more room between
+   glass and words than #201 gave. The credit's words change. Shown to Jack again before it merges: his pick said
+   so. The sounds, the shorter hold and Escapement's smaller title size stand, as his note names only the text.
+4. Prism: the fade-in treatment goes from `prism-read`'s harness switch into the game (shader and Swift copy
+   together), its per-pixel cost timed. The PR opens and waits: his option was "on your phone before it is merged",
+   and the phone needs him to unlock it.
+5. Owed from before: `docs/escapement-problems.md` without the wait (done here); Escapement 29's layer rendered
+   again on its new deal (done, `scripts/sounds.sh layers`, nothing tracked changed); the loc-lint baseline removed
+   (#203); one more try at the StoreKit tests on the iOS 27.2 simulator.
+
+**Undecided, to pitch**
+
+- The curtain call again, with the text inside the glass.
+- The PR test job: 6 of the last 18 PR runs passed 10 minutes and #201's last took 14:21, 39 s under the hard stop.
+  Measured options go to Jack.
+
+**Waiting**
+
+- The store screenshot, editors' reel and promo image showing Escapement 2 are retaken once, after the curtain call
+  merges. `shots/` is untracked, so a retake now would only be redone.
+- Stopwatch (Escapement 11) still rests on one proved line; the whole-book prover run stalls on it.
+
 ### Open work (2026-11-11, after Jack's calls on Escapement, Lens, Prism and the payoff)
 
 **Merged on master**: #194 (Escapement's clocks can't be touched; the twenty levels that needed a wait are dealt
@@ -59,13 +96,12 @@ picture itself while turning the rod. I think you investigated the wrong problem
 tests hang at the first purchase on the iOS 27.2 simulator, locally and on the runner; next, a StoreKit
 configuration set at the scheme level.
 
-**With Jack, undecided (recommendations are only recommendations)**: chapter 2's name (the stand-in "Tempo" and the
-rule line "No move is spare." are on master as stand-ins, not decisions); level 7's name (with the wait gone, the
-Pause picture's redraw is on hold until it is named); Snooze or Standstill; the Prism treatment; the curtain call as
-built; the credit's words.
+**Answered by Jack, 2026-11-11 night** (round 19 of `docs/decisions.md`; the section above has the work they start):
+chapter 2 stays "Tempo" with its rule line; level 7 becomes "Counterweight" on its picture; Snooze and Standstill
+stay; Prism takes its held rod in its own colour with white fading in near the count; the curtain call is to change
+before it merges (the text inside the glass); the credit reads "made by screendead · thank you for playing".
 
-**Owed**: retake the store screenshot, editors' reel and promo image showing Escapement 2; render the sound layer
-for Escapement 29 again; `docs/escapement-problems.md` still describes the book with the wait; Stopwatch (11) rests
+**Owed**: retake the store screenshot, editors' reel and promo image showing Escapement 2; Stopwatch (11) rests
 on one proved line; the PR test job ran about 12 minutes on #201, over Jack's 10-minute line, to raise with him with
 a proposal; remove the empty `scripts/loc-lint/baseline.txt` and its test's read of it.
 
