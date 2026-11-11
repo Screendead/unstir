@@ -560,9 +560,10 @@ struct MenuView: View {
         let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                                pick: pick, refuse: refuse)
         return VStack(alignment: .leading, spacing: 0) {
+            // 16 under the chips as drawn, the title's gap over them, and a section's 32 to whichever header follows.
             wayOn(lead).padding(.top, 12).id(Self.top)
             if lead.modes {
-                heading(Text("today")).padding(.top, 16)
+                heading(Text("today")).padding(.top, 32)
                 // Marked until either is first opened.
                 let new = !Best.modesSeen, (day, run) = daily
                 // One line each: what a mode is its own note says. A run of days goes under the title, leaving the
@@ -607,8 +608,8 @@ struct MenuView: View {
                     arrive()
                 }
                 .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.rows)).minY } action: { seats.top = $0 }
-                // With the header's own 14, a section's 32 under the modes; with none, the list starts under the way on.
-                .padding(.top, lead.modes ? 18 : 8)
+                // With the header's own 14, a section's 32 under the modes, or under the way on.
+                .padding(.top, 18)
             if lead.sandbox {
                 heading(Text("anything goes")).padding(.top, 32)
                 sandbox

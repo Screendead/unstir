@@ -981,7 +981,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
   round 13): until 01 has a best, an empty line over the tier's list (the tank's rule, "Every stir in this tank has
   an exact inverse.", left the menu for the App Store page: Jack's call D1 = A, round 13); then "next: 07 · Sprinkle ›"
-  on that line, a button opening the shown tier's frontier (none once it has none). The sandbox's row sits at the
+  on that line, a button opening the shown tier's frontier (none once it has none), 16 pt under the chips as drawn,
+  as they are under the title, with a section's 32 to whichever header follows, "today" or the tier's (Jack's call
+  MENUCARD = A: the lines under the chips wanted air). The sandbox's row sits at the
   list's end under its own header, "anything goes", so the list leads with 01 (Jack's call D2 = A, round 13). The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
   rethinking, so that a pack's mechanics join it once the pack is owned), as First Stir is: `Level.playsSandbox` is false
   in Release, so there the lead has no sandbox (`Lead.sandbox` false), the menu no row or header, `Store.opens` refuses it and a
