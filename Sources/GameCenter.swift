@@ -6,8 +6,9 @@ import UIKit
 
 /// Game Center's sign-in and achievements (Jack's call F5 = B, round 14), behind the build's GAME_CENTER: NO, v1's
 /// until the sign-in overlay test on an iOS 26.2 phone passes, makes no GameKit call. With it YES, a plain launch signs
-/// in once, the first time the menu is up with nothing over it, and reports what `Achievement.due` finds after every
-/// finish and the first turn of the tank or the swirl. The harness and the test host never sign in, so never report.
+/// in once, the first time the menu is up with nothing over it, and reports what `Achievement.due` finds as every
+/// finish's card shows (`Carded.shown`, so a banner never lands before the card) and on the first turn of the tank or
+/// the swirl. The harness and the test host never sign in, so never report.
 @MainActor
 final class GameCenter {
     static let shared = GameCenter()
@@ -25,6 +26,8 @@ final class GameCenter {
     }
     private var asked = false
     private(set) var signedIn = false
+    /// How many reports were asked for, signed in or not, which the tests read.
+    private(set) var reports = 0
     /// Each achievement's percent as Game Center last had it, so only a rise is sent.
     private var reported: [String: Double] = [:]
     /// The sign-in sheet GameKit handed over while the menu wasn't calm, held until it is.
@@ -71,6 +74,7 @@ final class GameCenter {
 
     /// Reads the stored state afresh, so a call is cheap to repeat and never counts twice.
     func report() {
+        reports += 1
         guard signedIn else { return }
         let due = Achievement.due(.stored(), reported: reported)
         guard !due.isEmpty else { return }

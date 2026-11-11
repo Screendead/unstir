@@ -542,18 +542,31 @@ final class UnstirTests: XCTestCase {
             XCTAssertTrue(game.solved)
             return game
         }
-        // The rating request waits on the launch, not on the card, from the solve that opens whirlpool alone.
-        let pending = Review.shared.pending
-        defer { Review.shared.pending = pending }
-        Review.shared.pending = false
+        // The rating request waits on the launch, not on the card, from the solve that opens whirlpool alone; and its
+        // wait, like Game Center's report, starts as that solve's card shows, never at the solve.
+        let (earned, pending) = (Review.shared.earned, Review.shared.pending)
+        defer { (Review.shared.earned, Review.shared.pending) = (earned, pending) }
+        (Review.shared.earned, Review.shared.pending) = (false, false)
         XCTAssertNil(solve(over: true).opened)
+        XCTAssertFalse(Review.shared.earned)
+        Carded.shown()
         XCTAssertFalse(Review.shared.pending)
         XCTAssertFalse(Tier.whirlpool.isOpen())
+        let reports = GameCenter.shared.reports
         XCTAssertEqual(solve(over: false).opened, .whirlpool)
+        XCTAssertTrue(Review.shared.earned)
+        XCTAssertFalse(Review.shared.pending, "the wait starts with the card")
+        XCTAssertEqual(GameCenter.shared.reports, reports, "a solve reports nothing before its card")
+        Carded.shown()
+        XCTAssertFalse(Review.shared.earned)
         XCTAssertTrue(Review.shared.pending)
+        XCTAssertEqual(GameCenter.shared.reports, reports + 1)
         Review.shared.pending = false
-        XCTAssertNil(solve(over: false).opened)
+        // A second card starts no second wait.
+        Carded.shown()
         XCTAssertFalse(Review.shared.pending)
+        XCTAssertNil(solve(over: false).opened)
+        XCTAssertFalse(Review.shared.earned)
     }
 
     /// The rating request comes once, on the solve that opens whirlpool, and never in the harness or after a purchase

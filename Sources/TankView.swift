@@ -940,6 +940,7 @@ struct LevelView: View {
             }
         }
         .onChange(of: beside && showResult, initial: true) { onCover($1) }
+        .onChange(of: showResult) { if showResult { Carded.shown() } }
         .task(id: noteLit) {
             guard noteLit, (try? await Task.sleep(for: .seconds(4))) != nil else { return }
             withAnimation(.easeOut(duration: 0.6)) { noteLit = false }
@@ -1082,6 +1083,8 @@ struct LevelView: View {
             endPath(); endTwist()
             if knocks { Knock.rest() }
             Awake.hold(awakeID, false)
+            // A level left before its card showed.
+            Carded.shown()
             Log.write("level \(game.level.id) exits \(state)")
         }
     }
