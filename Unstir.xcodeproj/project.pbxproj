@@ -32,6 +32,7 @@
 		4A8B8FE5A31BF37933714A99 /* ToneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1D22B8050E976E3D264E88 /* ToneTests.swift */; };
 		4B90EE14EB243B161D6EBD17 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8958A26903CC2506CCC43FBF /* Analytics.swift */; };
 		4C24D2DED659D4353BEA9998 /* Brim.metal in Sources */ = {isa = PBXBuildFile; fileRef = D322AA44C06018F3A665792F /* Brim.metal */; };
+		4C451DE21520F95F45F2477D /* LensDetailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA986E640AC2EE9B248E1E26 /* LensDetailTests.swift */; };
 		500060DF38B729F0EB090EBA /* Brim.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6499D4977A88A7764419D373 /* Brim.swift */; };
 		50B41DB91ADFEC633FAE5BB8 /* Consent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80A3010678E45A15B0543C3 /* Consent.swift */; };
 		5149A9D99C1F252AF495DA01 /* GPUBench.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882752BC69C1C5819416967C /* GPUBench.swift */; };
@@ -186,6 +187,7 @@
 		A96E4651A2353A1299E6FE49 /* Unstir.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Unstir.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA12B7B59978B3DF2619B7B0 /* Rods.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rods.swift; sourceTree = "<group>"; };
 		AA44B6DE028AB83D502C8EC5 /* Engraving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Engraving.swift; sourceTree = "<group>"; };
+		AA986E640AC2EE9B248E1E26 /* LensDetailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensDetailTests.swift; sourceTree = "<group>"; };
 		ABE2B06B8CFB2F3BB5B6CF7F /* Lessons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lessons.swift; sourceTree = "<group>"; };
 		AEBFE666F4DC4F4EC543A103 /* FreshDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreshDefaults.swift; sourceTree = "<group>"; };
 		B2393BC9A530BA08FB39DD5F /* Halftone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Halftone.swift; sourceTree = "<group>"; };
@@ -252,6 +254,7 @@
 				7FD78B993A35245B095AA159 /* EscapementTests.swift */,
 				59B662DA049B8A76E76E38BF /* FirstStirTests.swift */,
 				AEBFE666F4DC4F4EC543A103 /* FreshDefaults.swift */,
+				AA986E640AC2EE9B248E1E26 /* LensDetailTests.swift */,
 				3CB4A9DE240F63330597A189 /* LensTests.swift */,
 				D692C82FAF648856F00B09E0 /* PackTests.swift */,
 				7460F8510A57CE405402E04F /* PlayLayoutTests.swift */,
@@ -560,6 +563,7 @@
 				730654ACB29B80F0DED02225 /* EscapementTests.swift in Sources */,
 				F09FECAA611D270EE52C8307 /* FirstStirTests.swift in Sources */,
 				0ED25749C2CA58123B100D5E /* FreshDefaults.swift in Sources */,
+				4C451DE21520F95F45F2477D /* LensDetailTests.swift in Sources */,
 				B0284118BF6F0342AFD1ABD7 /* LensTests.swift in Sources */,
 				E61707F0E3EE21F2248E2928 /* PackTests.swift in Sources */,
 				C6A87E52582D8C010F9C77A1 /* PlayLayoutTests.swift in Sources */,

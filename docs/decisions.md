@@ -428,6 +428,13 @@ Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
 | LENSSOFT = B | 2026-11-11 | A lens's core is drawn finer so x8 is crisp. Jack: "It's a paid pack. Laziness for expediency is unacceptable. I respect my future players." | HANDOFF |
 | SND1 taken back | 2026-11-11 | Jack: "i kinda miss the sound that went with the rod-turning haptics...can you quickly put that back in?" A rod's drag ticks at each step again, under its haptic; SND1 = B (2026-11-02) no longer holds. The tank's clunk stays silent (snd1-clunk = B). | architecture |
 | SHAREDOTS | 2026-11-11 | The daily's share line shows the three result dots after its name, in place of a square per move (Jack: "the coloured squares? idk what they're for"; then "dots"). The link stays on its own last line once it exists (M2 = A). | Share.swift |
+| GLASSSHRINKS = A | 2026-11-11 | The stack merges as built: a card that does not fit shrinks the tank from its top (never below 55%, then it scrolls), "‹ levels" on a paid pack's way out, the rebuilt menu and card, "unstirred." growing and sitting under the title on short screens (#173, #180, #178). | HANDOFF |
+| NEXTLINE = A | 2026-11-11 | The menu's "next:" line under the tier chips goes; the list's marker bar shows the next level. | HANDOFF |
+| LENSFACE = A | 2026-11-11 | Lens's cover, clip, promo image and the bundle's wedge show Kaleidoscope seven moves into its line (#185). | HANDOFF |
+| TELEPHOTO = A | 2026-11-11 | The redrawn Telephoto stands (#185). | HANDOFF |
+| CRISP = A | 2026-11-11 | The finer lens core merges and goes on the phone to check (#187). Jack: "How exciting. This looks lovely." | HANDOFF |
+| ESCPICTURES = A | 2026-11-11 | Escapement gets a plate per problem, drawn as its name. | HANDOFF |
+| MUSIC-THROUGH | 2026-11-11 | Jack, on the packs' layers: "i don't want the packs' foreground to fade when the level is solved then come back in the same spot on the next level; i want it to keep playing all the way through". | HANDOFF |
 
 ## Dated, no round
 
