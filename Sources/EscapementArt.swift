@@ -61,6 +61,7 @@ enum EscapementArt {
         case (.plates, 4): cogwheel()
         case (.plates, 9): hourglass()
         case (.plates, 25): moonPhase()
+        case (.chapters, _) where drawn.contains(n): chapterPlate(n)
         default: familyPlate(n)
         }
     }
