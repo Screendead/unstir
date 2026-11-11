@@ -1,19 +1,5 @@
 # Player text that escapes the String Catalog today, one flagged line each (scripts/loc-lint.sh). Each fix
 # takes its line out; the migration ends with this file deleted.
-Menu.swift: .accessibilityLabel(supporter ? "Unstir, supporter" : "Unstir").accessibilityAddTraits(.isHeader)
-Menu.swift: .accessibilityValue(picked.spoken)
-Menu.swift: Text(t.rawValue).font(.ui(.chip))
-Menu.swift: Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.ui(.detail)).lineLimit(1).foregroundStyle(Color.text3).hit()
-Menu.swift: .accessibilityLabel(newRunArmed == nil ? "New run" : "New run, tap again to confirm")
-Menu.swift: Text(tier.rawValue).font(.ui(.detail, .semibold)).foregroundStyle(tier.sweep).fixedSize()
-Menu.swift: Text(open ? "\(par.filter { $0 }.count)/\(par.count) at par" : "locked").font(.ui(.detail)).foregroundStyle(Color.text3)
-Menu.swift: Text("\(lit)/\(par.count)").font(.ui(.label, .semibold))
-Menu.swift: Text(run.count == 1 ? first.label : "\(first.label)\u{2013}\(last.label)")
-Menu.swift: .accessibilityLabel(run.count == 1 ? "\(below.rawValue) \(first.label), short of par"
-Menu.swift: Text("\u{00B7}").font(.ui(.label)).foregroundStyle(Color.text4).frame(minHeight: 36).accessibilityHidden(true)
-Menu.swift: Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(level.colour)
-Menu.swift: Text(opens).font(.ui(.detail)).foregroundStyle(level.colour).transition(.opacity)
-Menu.swift: Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.ui(.detail))
 ResultCard.swift: Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
 ResultCard.swift: Text(line).tone(.text2)
 ResultCard.swift: Text(done.line).tone(page.tone(.text2)).padding(.top, 4)
