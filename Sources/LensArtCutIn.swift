@@ -115,9 +115,14 @@ extension LensArt {
         var s: [Halftone.Stroke] = []
         // The book: cover, pages, the gutter, and the lines of print in each block, parted where a clue sits.
         s.append(stroke(closed(rect(-0.86, -0.9, 0.86, 0.9)), mid))
-        s.append(stroke([P(0, -0.9), P(0, 0.9)], mid))
-        s.append(stroke(curve(P(-0.06, -0.9), P(-0.02, 0), P(-0.06, 0.9), 12), hair))
-        s.append(stroke(curve(P(0.06, -0.9), P(0.02, 0), P(0.06, 0.9), 12), hair))
+        /// A line's runs clear of both glasses, each of its segments cut fine enough to stop at a frame.
+        func clear(_ line: [P], _ width: Double) -> [Halftone.Stroke] {
+            let fine = zip(line, line.dropFirst()).flatMap { span($0, $1, 24) }
+            return runs(fine, width) { simd_distance($0, a) > outer && simd_distance($0, b) > outer }
+        }
+        s += clear([P(0, -0.9), P(0, 0.9)], mid)
+        s += clear(curve(P(-0.06, -0.9), P(-0.02, 0), P(-0.06, 0.9), 12), hair)
+        s += clear(curve(P(0.06, -0.9), P(0.02, 0), P(0.06, 0.9), 12), hair)
         for block in blocks {
             for yy in stride(from: block.1 + 0.03, to: block.3, by: 0.06) {
                 s += runs(span(P(block.0 + 0.02, yy), P(block.2 - 0.02, yy), 44)) {
@@ -125,12 +130,10 @@ extension LensArt {
                 }
             }
         }
-        for edge in [(ribbon[0], ribbon[1]), (ribbon[3], ribbon[2])] {
-            s += runs(span(edge.0, edge.1, 60), mid) { simd_distance($0, a) > outer && simd_distance($0, b) > outer }
-        }
+        for edge in [(ribbon[0], ribbon[1]), (ribbon[3], ribbon[2])] { s += clear([edge.0, edge.1], mid) }
         // The plate on the left page: a hill, a sun.
-        s.append(stroke(closed(picture), mid))
-        s.append(stroke([P(-0.72, -0.2), P(-0.56, -0.44), P(-0.44, -0.3), P(-0.3, -0.46), P(-0.2, -0.2)], hair))
+        s += clear(closed(picture), mid)
+        s += clear([P(-0.72, -0.2), P(-0.56, -0.44), P(-0.44, -0.3), P(-0.3, -0.46), P(-0.2, -0.2)], hair)
         s.append(stroke(circle(P(-0.52, -0.48), 0.075, 16), hair))
         // The spectacles: rims, the bridge, and the arms folded out across the right page.
         s.append(stroke(curve(polar(a, outer, 160), (a + b) / 2 - across * 0.2, polar(b, outer, 260), 16), bold))
