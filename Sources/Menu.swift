@@ -229,7 +229,7 @@ struct MenuView: View {
     /// The archive's days dealt, and how many are at par, with the daily: dealing thirty tanks is too slow for every
     /// frame of a swipe.
     @State private var past: (days: [(date: Date, level: Level)], atPar: Int)
-    /// `lead` for the shown tier, once a tier rather than on every frame of a swipe.
+    /// `lead`, read again when a best or the editors' switch could change it rather than on every frame of a swipe.
     @State private var leading: Lead
     /// Endless's saved run, which its row continues (Jack's call C2, round 13).
     @State private var saved: Resume?
@@ -282,7 +282,7 @@ struct MenuView: View {
         _today = State(initialValue: now)
         _daily = State(initialValue: Self.daily(now))
         _past = State(initialValue: Self.past(now))
-        _leading = State(initialValue: Self.lead(tier: tier))
+        _leading = State(initialValue: Self.lead())
         if let frozen {
             _spin = State(initialValue: frozen.spin)
             _fade = State(initialValue: frozen.fade)
@@ -294,7 +294,7 @@ struct MenuView: View {
     /// they open, and show, after the first hex level. `sandbox`: the build has it (`Level.playsSandbox`), its row at the
     /// list's end.
     typealias Lead = (modes: Bool, sandbox: Bool)
-    static func lead(tier: Tier, unlocked: Bool = Best.unlocked, release: Bool = Build.release,
+    static func lead(unlocked: Bool = Best.unlocked, release: Bool = Build.release,
                      best: (String) -> Best? = Best.load) -> Lead {
         (unlocked || best(Level.plughole[22].id) != nil, Level.playsSandbox(release: release))
     }
@@ -323,7 +323,7 @@ struct MenuView: View {
         // it leaving.
         .onChange(of: card == nil && !archive && !settings && playing == nil) { Power.shared.touched() }
         // The editors' switch changes which rows the lead shows, the daily's and endless's among them.
-        .onChange(of: settings) { if !settings { leading = Self.lead(tier: shown) } }
+        .onChange(of: settings) { if !settings { leading = Self.lead() } }
         .background {
             // Builds the effect's pipeline before the first switch, which would otherwise stall on it. Beside play there
             // is no stir, and the square would show on Escapement's paper.
@@ -351,7 +351,7 @@ struct MenuView: View {
         .onChange(of: Sync.revision.count) {
             daily = Self.daily(today)
             past = Self.past(today)
-            leading = Self.lead(tier: shown)
+            leading = Self.lead()
         }
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
             today = .now
@@ -411,7 +411,7 @@ struct MenuView: View {
         guard layout.wide else { return }
         daily = Self.daily(today)
         past = Self.past(today)
-        leading = Self.lead(tier: shown)
+        leading = Self.lead()
         saved = run
     }
 
@@ -845,7 +845,6 @@ struct MenuView: View {
             withAnimation(.snappy(duration: 0.35)) { picked = t }
             shown = t
             listed = t
-            leading = Self.lead(tier: t)
             DispatchQueue.main.async { land(on: t) }
             return
         }
@@ -856,7 +855,6 @@ struct MenuView: View {
             fade = dim
         } completion: {
             shown = t
-            leading = Self.lead(tier: t)
             // Under the stir's peak, so the jump never shows: a landing row scrolls in once the copy has measured it.
             mark = nil
             if !t.isOpen() {
