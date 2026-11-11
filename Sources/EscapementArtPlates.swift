@@ -652,7 +652,7 @@ extension EscapementArt {
             return star(c, 0.028 + 0.02 * rnd(25, 100 + k), turn: rnd(25, 200 + k))
         }
         plate.lines(hatch([Array(glass), arc(moon, radius)] + phases.map { arc($0.c, 0.115) } + stars, angle: 0.1, gap: 0.03), fine)
-        for s in stars { plate.line(s, fine, .second) }
+        for s in stars { plate.line(s, fine) }
 
         // The lunation's scale: 29 days and a half, numbered by fives.
         for r in [0.962, 0.984] { plate.line(arc(sweep, r, from: -.pi / 2 - 0.92, to: -.pi / 2 + 0.92), fine) }

@@ -195,7 +195,9 @@ extension EscapementArt {
             plate.line(arc(origin, 0.33, from: a, to: b), heavy)
             plate.fill(barb(polar(origin, 0.33, b - 0.1), toward: b - .pi / 2, size: 0.095), .black)
         }
-        solid(&plate, now, angle: 0.9, gap: 0.012, ink: .second)
+        // The tail stays in ink, so the second ink keeps within the test's reach.
+        solid(&plate, now, angle: 0.9, gap: 0.012)
+        solid(&plate, hand(origin, toward: clock(9), length: 0.7, width: 0.05, spade: true), angle: 0.9, gap: 0.012, ink: .second)
         let boss = arc(origin, 0.11)
         solid(&plate, boss, angle: -0.7, gap: 0.012)
 
@@ -628,7 +630,7 @@ extension EscapementArt {
         }
 
         // The hand: a boss of seven petals, the spade on eleven, its counterweight behind.
-        solid(&plate, boss, angle: -0.9, gap: 0.012)
+        solid(&plate, boss, angle: -0.9, gap: 0.022)
         solid(&plate, pointer, angle: 0.9, gap: 0.012)
         solid(&plate, counter, angle: 0.9, gap: 0.012)
         plate.line(arc(origin, 0.05), heavy)
