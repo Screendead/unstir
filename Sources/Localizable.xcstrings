@@ -259,8 +259,8 @@
       "comment" : "First Stir ending beat",
       "shouldTranslate" : false
     },
-    "Made by Jack. Thank you for playing." : {
-      "comment" : "PLACEHOLDER wording. VoiceOver: the credit after the last free level"
+    "Made by screendead. Thank you for playing." : {
+      "comment" : "VoiceOver: the credit after the last free level. screendead is the maker's name, never translated"
     },
     "Off the breakwater" : {
       "comment" : "First Stir scene title",
@@ -604,8 +604,8 @@
       "comment" : "Editors' build words",
       "shouldTranslate" : false
     },
-    "made by Jack · thank you for playing" : {
-      "comment" : "PLACEHOLDER wording. The credit after the last free level"
+    "made by screendead · thank you for playing" : {
+      "comment" : "The credit after the last free level. screendead is the maker's name, never translated"
     },
     "next daily in %lld hours" : {
       "comment" : "VoiceOver: the daily's card. Hours to the next",

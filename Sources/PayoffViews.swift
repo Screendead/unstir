@@ -115,7 +115,7 @@ struct PayoffCurtain: View {
     }
 
     private var credit: some View {
-        Text(Payoff.CreditPlaceholder.shown) // loc: verbatim localized by Payoff
+        Text(Payoff.Credit.shown) // loc: verbatim localized by Payoff
             .font(.ui(.detail)).foregroundStyle(page.ink).tone(page.tone(.text3))
             .multilineTextAlignment(.center)
             .frame(width: width)

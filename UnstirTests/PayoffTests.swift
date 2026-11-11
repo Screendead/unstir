@@ -68,15 +68,17 @@ final class PayoffTests: XCTestCase {
     }
 
     /// The last tier's is the whole game's: every tier's name, the completion's line, and the credit, which the card's
-    /// label carries too. The credit's words are a placeholder until Jack sets them.
+    /// label carries too, in Jack's words.
     func testTheGamesNamesEveryTierAndCredits() {
         let game = Payoff(tier: .maelstrom)
         XCTAssertTrue(game.whole)
         XCTAssertEqual(game.parts.map(\.name), ["Plughole", "Whirlpool", "Vortex", "Maelstrom"])
         XCTAssertEqual(game.stamp, "every tier unstirred")
         XCTAssertTrue(game.spoken.hasPrefix("Plughole, Whirlpool, Vortex"), game.spoken)
-        XCTAssertTrue(game.spoken.hasSuffix("Every tier unstirred. " + Payoff.CreditPlaceholder.spoken), game.spoken)
-        XCTAssertEqual(game.carded, Payoff.CreditPlaceholder.spoken)
+        XCTAssertEqual(Payoff.Credit.shown, "made by screendead \u{00B7} thank you for playing")
+        XCTAssertEqual(Payoff.Credit.spoken, "Made by screendead. Thank you for playing.")
+        XCTAssertTrue(game.spoken.hasSuffix("Every tier unstirred. " + Payoff.Credit.spoken), game.spoken)
+        XCTAssertEqual(game.carded, Payoff.Credit.spoken)
         XCTAssertFalse(Payoff(tier: .vortex).whole)
     }
 
@@ -138,7 +140,7 @@ final class PayoffTests: XCTestCase {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         let data = try Data(contentsOf: root.appending(path: "Sources/Localizable.xcstrings"))
         let strings = try XCTUnwrap((JSONSerialization.jsonObject(with: data) as? [String: Any])?["strings"] as? [String: Any])
-        for key in ["made by Jack \u{00B7} thank you for playing", "Made by Jack. Thank you for playing.", "%@ unstirred",
+        for key in ["made by screendead \u{00B7} thank you for playing", "Made by screendead. Thank you for playing.", "%@ unstirred",
                     "%@: %@ unstirred.", "%@, unstirred.", "Goes on to the result."] {
             XCTAssertNotNil(strings[key], key)
         }

@@ -84,16 +84,15 @@ struct Payoff: Equatable {
 
     // MARK: words
 
-    /// PLACEHOLDER, not final wording: the one credit, shown after the whole free game and said by VoiceOver. Its
-    /// words are Jack's to set, here and nowhere else.
-    enum CreditPlaceholder {
+    /// The one credit, shown after the whole free game and said by VoiceOver, in Jack's words.
+    enum Credit {
         static var shown: String {
-            String(localized: "made by Jack \u{00B7} thank you for playing",
-                   comment: "PLACEHOLDER wording. The credit after the last free level")
+            String(localized: "made by screendead \u{00B7} thank you for playing",
+                   comment: "The credit after the last free level. screendead is the maker's name, never translated")
         }
         static var spoken: String {
-            String(localized: "Made by Jack. Thank you for playing.",
-                   comment: "PLACEHOLDER wording. VoiceOver: the credit after the last free level")
+            String(localized: "Made by screendead. Thank you for playing.",
+                   comment: "VoiceOver: the credit after the last free level. screendead is the maker's name, never translated")
         }
     }
 
@@ -115,7 +114,7 @@ struct Payoff: Equatable {
         }
         guard let tier else { return "" }
         guard whole else { return Self.spoken(tier) }
-        return parts.map(\.name).formatted(.list(type: .and)) + ". " + Completion.free.spoken + " " + CreditPlaceholder.spoken
+        return parts.map(\.name).formatted(.list(type: .and)) + ". " + Completion.free.spoken + " " + Credit.spoken
     }
 
     private static func spoken(_ tier: Tier) -> String {
@@ -124,7 +123,7 @@ struct Payoff: Equatable {
 
     /// What the card's label adds for it, as the card's own lines already say a pack or the game is complete: a tier's
     /// finish, and after the game the credit.
-    var carded: String? { pack != nil ? nil : whole ? CreditPlaceholder.spoken : tier.map(Self.spoken) }
+    var carded: String? { pack != nil ? nil : whole ? Credit.spoken : tier.map(Self.spoken) }
 
     // MARK: sound
 
