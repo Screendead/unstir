@@ -65,7 +65,7 @@ jobs:
         run: |
           udid=$(cat "$RUNNER_TEMP/udid")
           [[ -n "$udid" ]] || { echo "no Pro Max simulator" >&2; exit 1; }
-          UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)"
+          UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)|: error: "
       # Measures the app the build step made, so it costs no build of its own.
       - name: App size
         run: scripts/app-size.sh build/store/Build/Products/Debug-iphonesimulator/Unstir.app
