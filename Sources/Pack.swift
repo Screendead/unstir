@@ -234,6 +234,10 @@ extension Level {
                      chapter: lensChapters[min(i / 6, 3)], lenses: lenses)
     }
 
+    /// Lens's face (Jack, 2026-11-11): Kaleidoscope, which the pack's dock cover, its card's clip, its promoted-purchase
+    /// image and the bundle's wedge all draw, so its bake stays in Caches (`PanelCache`). The taste stays levels 1 to 3.
+    static var lensFace: Level { lens[24] }
+
     /// The halftone panel the level draws (`Halftone.panel`): a Lens level's number, and 0, the test panel, anywhere else,
     /// but for an Escapement problem's number while a Debug launch draws the plate sketches (`EscapementArt.direction`).
     var panel: Int { pack == .lens || pack == .escapement && EscapementArt.direction != nil ? Int(label) ?? 0 : 0 }

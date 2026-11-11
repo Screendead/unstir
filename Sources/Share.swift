@@ -10,18 +10,11 @@ enum Share {
     /// date.
     static let firstDay: Int? = nil
 
-    /// What one move did to the stack, in the colour of the flash it showed.
-    enum Mark: Equatable, Sendable {
-        case healed, pushed, merged, tank
-
-        var glyph: String {
-            switch self {
-            case .healed: "\u{1F7EA}"
-            case .pushed: "\u{1F7E5}"
-            case .merged: "\u{2B1C}"
-            case .tank: "\u{1F504}"
-            }
-        }
+    /// The result as the game's three dots, filled then empty (Jack, 2026-11-11: the move-by-move squares read as
+    /// nothing to a player who had finished every level): one solved, two at par, three clean.
+    static func dots(clean: Bool, over: Int) -> String {
+        let filled = clean ? 3 : over == 0 ? 2 : 1
+        return String(repeating: "\u{25CF}", count: filled) + String(repeating: "\u{25CB}", count: 3 - filled)
     }
 
     /// The daily's number, counted in whole calendar days from `firstDay`, so a clock change never skips or repeats
@@ -45,12 +38,12 @@ enum Share {
     static let supporter = "\u{2726}"
 
     static func text(day: Int, moves: Int, par: Int, firstTry: Bool, clean: Bool, undos: Int, resets: Int,
-                     marks: [Mark], supporter: Bool = false, firstDay: Int? = firstDay) -> String {
+                     supporter: Bool = false, firstDay: Int? = firstDay) -> String {
         let name = (number(day, from: firstDay).map { "Unstir #\($0)" }
             ?? String(format: "Unstir %04d-%02d-%02d", day / 10000, day / 100 % 100, day % 100))
             + (supporter ? " \(Self.supporter)" : "")
-        // The words follow the device (Jack's call CAT5 = A); the name and the grid never change.
-        var head = [name]
+        // The words follow the device (Jack's call CAT5 = A); the name and the dots never change.
+        var head = [name, dots(clean: clean, over: max(moves - par, 0))]
         if !firstTry { head.append(String(localized: "practice",
                                           comment: "Share line: a daily played after its first try")) }
         let moved = String(localized: "\(moves) moves", comment: "Moves played")
@@ -60,7 +53,6 @@ enum Share {
         if undos > 0 { head.append(String(localized: "\(undos) undos", comment: "Share line: undos taken")) }
         if resets > 0 { head.append(String(localized: "\(resets) resets", comment: "Share line: resets taken")) }
         var lines = [head.joined(separator: " \u{00B7} ")]
-        lines += stride(from: 0, to: marks.count, by: 10).map { marks[$0..<min($0 + 10, marks.count)].map(\.glyph).joined() }
         if !url.isEmpty { lines.append(url) }
         return lines.joined(separator: "\n")
     }
