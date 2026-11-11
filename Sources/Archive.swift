@@ -114,7 +114,7 @@ struct ArchiveRow: View {
                 Spacer(minLength: 8)
                 if known && !open { Image(systemName: "lock").font(.ui(.detail)).foregroundStyle(Color.text4) }
             }
-            .padding(.vertical, 11)
+            .padding(.vertical, 12)
             .contentShape(Rectangle())
             .keyframeAnimator(initialValue: 0.0, trigger: taps) { row, x in
                 row.offset(x: reduceMotion ? 0 : x)
@@ -180,8 +180,8 @@ struct ArchiveView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     let back = PackCard.back(to: PackCard.menu, beside: beside)
-                    Button(action: onBack) { Text(back.text).font(.ui(.button)).hit() }
-                        .buttonStyle(Sounding()).padding(.top, 18)
+                    UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) }
+                        .padding(.top, 18)
                         .accessibilityLabel(back.spoken)
                     Text("PAST DAILIES").font(.ui(.eyebrow)).tracking(2).foregroundStyle(Color.text3).padding(.top, 26)
                     Text("Archive").font(.ui(.display)).tracking(2)
