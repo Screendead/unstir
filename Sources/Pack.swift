@@ -234,8 +234,9 @@ extension Level {
                      chapter: lensChapters[min(i / 6, 3)], lenses: lenses)
     }
 
-    /// The halftone panel the level draws (`Halftone.panel`): a Lens level's number, and 0, the test panel, anywhere else.
-    var panel: Int { pack == .lens ? Int(label) ?? 0 : 0 }
+    /// The halftone panel the level draws (`Halftone.panel`): a Lens level's number, and 0, the test panel, anywhere else,
+    /// but for an Escapement problem's number while a Debug launch draws the plate sketches (`EscapementArt.direction`).
+    var panel: Int { pack == .lens || pack == .escapement && EscapementArt.direction != nil ? Int(label) ?? 0 : 0 }
 
     /// Lens's chapters (Jack's call N1b, round 13): six levels each, the last seven.
     static let lensChapters = [

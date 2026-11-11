@@ -1048,7 +1048,14 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   are at least 2.2 px wide, as the shader's four taps average in squared light, which thins dark lines on a light
   ground, so below a 230 px radius (the dock's 66 pt cover) its lattice and rays' spacing grow with the lines, or the
   ink fills the bone. It fades in over paper rather than striking (`Picture.paper`), and the sandbox skips it
-  (`testThePlateIsInkOnBoneAndShowsAStepInEveryCore`).
+  (`testThePlateIsInkOnBoneAndShowsAStepInEveryCore`). A Debug launch with `UNSTIR_ESCART=a`, `b` or `c` draws a problem its
+  own plate instead (**EscapementArt.swift**, sketches of three directions for Jack to pick from, four problems drawn):
+  `Level.panel` then carries the problem's number to `engineTurning`, which draws `EscapementArt.plate`'s marks,
+  polylines and filled outlines in ink, bone and one second ink. A is a plate drawn as the problem's name
+  (EscapementArtPlates.swift), B one of six grounds by the number (EscapementArtFamily.swift), C a chapter's ground and
+  ink under the problem's emblem and Roman number (EscapementArtChapters.swift). `scripts/escapement-art.sh` renders,
+  measures (the test's step measure, read off green so a coloured line counts) and times them on the Mac, and
+  `scripts/escapement-art-sheet.py` lays the shots out. Unset, and in Release, nothing changes.
 - **Sound.swift** plays the glass set on an `AVAudioEngine` that only its own queue touches. Effects take a pool of
   twelve players, so quick ones overlap; a heal (`Game.heals`) climbs a note for each move since the level opened or was
   reset that popped one of the scramble's entries (`Game.Entry.pushed`), so cancelling the player's own push is no heal,
