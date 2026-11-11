@@ -10,16 +10,18 @@ enum Completion: Equatable {
 
     var line: String {
         switch self {
-        case .pack(let p): "\(p.name) complete \u{00B7} \(p.levels.count) \(p.noun)"
-        case .free: "every tier unstirred"
+        case .pack(let p): String(localized: "\(p.name) complete \u{00B7} \(p.counted(p.levels.count))",
+                                  comment: "The card of a pack's last level. The pack, then its levels counted")
+        case .free: String(localized: "every tier unstirred", comment: "The card of the last tier's last level")
         }
     }
 
     /// The line as VoiceOver says it, without the middle dot.
     var spoken: String {
         switch self {
-        case .pack(let p): "\(p.name) complete, \(p.levels.count) \(p.noun)."
-        case .free: "Every tier unstirred."
+        case .pack(let p): String(localized: "\(p.name) complete, \(p.counted(p.levels.count)).",
+                                  comment: "VoiceOver: the card of a pack's last level. The pack, then its levels counted")
+        case .free: String(localized: "Every tier unstirred.", comment: "VoiceOver: the card of the last tier's last level")
         }
     }
 }
@@ -45,8 +47,14 @@ struct ResultCard: View {
     /// (`Best.standing` puts it first). Escapement has no par, so its marks are clean and solved.
     static func bestLine(was: Best?, now: Best, par: Bool) -> String? {
         guard let was, (was.archived == true) == (now.archived == true) else { return nil }
-        func mark(_ b: Best) -> String { b.clean == true ? "clean" : !par ? "solved" : b.over == 0 ? "par" : "+\(b.over)" }
-        return now.standing < was.standing ? "new best \u{00B7} was \(mark(was))" : "best \u{00B7} \(mark(was))"
+        func mark(_ b: Best) -> String {
+            b.clean == true ? String(localized: "clean", comment: "The card's best line: the best before, solved with nothing wasted")
+                : !par ? String(localized: "solved", comment: "The card's best line: Escapement's best before")
+                : b.over == 0 ? String(localized: "par", comment: "The card's best line: the best before, at par") : "+\(b.over)"
+        }
+        return now.standing < was.standing
+            ? String(localized: "new best \u{00B7} was \(mark(was))", comment: "The card: this solve beat the best. The best before")
+            : String(localized: "best \u{00B7} \(mark(was))", comment: "The card: this solve didn't beat the best. The best")
     }
 
     var body: some View {
@@ -68,8 +76,10 @@ struct ResultCard: View {
                             if game.spilled && run.tank > run.best {
                                 Text("tanks cleared \(run.tank) \u{00B7} ") + Text("new best").foregroundStyle(Color.lime)
                             } else {
-                                Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
-                                     : "tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)")
+                                game.spilled ? Text("tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)",
+                                                    comment: "Endless's card, spilled. Tanks cleared, then the best run's")
+                                    : Text("tank \(run.tank + 1) \u{00B7} brim \(game.brim) / \(Run.room)",
+                                           comment: "Endless's card. The tank, then the brim's notches of its room")
                             }
                         }
                         // The words' colour, not the line's opacity, so "new best" keeps its lime whole.
@@ -108,10 +118,10 @@ struct ResultCard: View {
                         }
                     }
                     if let b = game.bests, let line = Self.bestLine(was: b.was, now: b.now, par: game.level.ratchets.isEmpty) {
-                        Text(line).tone(.text2)
+                        Text(line).tone(.text2) // loc: verbatim localized by bestLine
                     }
                     if let done = game.completed {
-                        Text(done.line).tone(page.tone(.text2)).padding(.top, 4)
+                        Text(done.line).tone(page.tone(.text2)).padding(.top, 4) // loc: verbatim localized by Completion
                     }
                 }
                 .font(.ui(.label))
@@ -147,16 +157,20 @@ struct ResultCard: View {
                     if let next {
                         // Past a pack's free taste, unowned, next opens its card: the button says so.
                         let gate = Store.shared.card(for: next)
-                        let label = game.spilled ? "new run \u{203A}" : gate.map { "more in \($0.name) \u{203A}" } ?? "next \u{203A}"
-                        UnstirButton(nextLeads ? .primary : .secondary, accent: accent, wide: true) { onNext(next) } label: { Text(label) }
-                            .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
+                        let label = game.spilled ? String(localized: "new run \u{203A}", comment: "Endless's card, spilled: starts another run")
+                            : gate.map { String(localized: "more in \($0.name) \u{203A}", comment: "The card's next, past a pack's free levels. The pack") }
+                            ?? String(localized: "next \u{203A}", comment: "The card's next level or tank")
+                        UnstirButton(nextLeads ? .primary : .secondary, accent: accent, wide: true) { onNext(next) } label: { Text(label) } // loc: verbatim localized here
+                            .accessibilityLabel(game.spilled ? Text("New run", comment: "VoiceOver: starts a new endless run") // loc: verbatim each a key
+                                                : run != nil ? Text("Next tank", comment: "VoiceOver: endless's card, the next tank")
+                                                : Text("Next level", comment: "VoiceOver: the card's next level"))
                     }
                 }
             }
             if let day = Share.day(of: game.level.id), !game.level.archived {
                 TimelineView(.everyMinute) { t in
-                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.ui(.detail)).tone(page.tone(.text3))
-                        .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
+                    Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.ui(.detail)).tone(page.tone(.text3)) // loc: verbatim localized by Daily
+                        .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true)) // loc: verbatim localized by Daily
                 }
             }
             if let up {
@@ -206,16 +220,17 @@ private struct TierUp: View {
 
     var body: some View {
         let open = to.isOpen(), short = from.atPar().filter { !$0 }.count
-        let shortLine = "\(short) \(from.name.lowercased()) level\(short == 1 ? "" : "s") short of par"
+        let shortLine = String(localized: "\(short) \(from.word) levels short of par",
+                               comment: "The card's way up, the next tier shut. Levels short of par, then their tier")
         // A primary 56 tall in the tier's sweep and glow; closed, unfilled and still.
         Button { open ? onNext(to.levels[0]) : onLook(to) } label: {
             VStack(spacing: 4) {
-                Text(open ? "up a notch" : shortLine)
+                (open ? Text("up a notch", comment: "The card's way up to the next tier") : Text(shortLine)) // loc: verbatim a key, or localized here
                     .font(open ? .ui(.eyebrow) : .ui(.detail)).tracking(open ? 2 : 0).textCase(open ? .uppercase : nil).foregroundStyle(Color.text2)
                 HStack(spacing: 10) {
                     if !open { Image(systemName: "lock.fill").font(.ui(.label, .semibold)) }
-                    Text(to.name.uppercased()).font(.ui(.displaySmall)).tracking(4)
-                    Text("\u{203A}").font(.ui(.displaySmall))
+                    Text(to.name.localizedUppercase).font(.ui(.displaySmall)).tracking(4) // loc: verbatim localized by Tier.name
+                    Text(verbatim: "\u{203A}").font(.ui(.displaySmall))
                 }
                 .foregroundStyle(to.sweep)
                 .shadow(color: to.glow.opacity(glint ? 0.9 : 0.5), radius: glint ? 16 : 9)
@@ -229,8 +244,11 @@ private struct TierUp: View {
             .modifier(Pressed())
         }
         .buttonStyle(Sounding(presses: true))
-        .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. \(shortLine), and par on every one opens it")
-        .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
+        .accessibilityLabel(open ? Text("Up a notch: \(to.name)", comment: "VoiceOver: the card's way up. The next tier") // loc: verbatim each a key
+                            : Text("\(to.name), locked. \(shortLine), and par on every one opens it",
+                                   comment: "VoiceOver: the card's way up, shut. The next tier, then how many levels are short of par"))
+        .accessibilityHint(open ? Text(verbatim: "") // loc: verbatim each a key
+                           : Text("Shows which \(from.name) levels are short of par", comment: "VoiceOver: the card's way up, shut. The tier below"))
         .onAppear {
             guard !reduceMotion, to.isOpen() else { return }
             withAnimation(.easeInOut(duration: 1.1).repeatForever()) { glint = true }
@@ -260,7 +278,7 @@ struct LostCard: View {
                 UnstirButton(.primary, accent: page.accent, effect: .reset, action: again) { Text("again \u{203A}") }
                     .accessibilityLabel("Try again")
             }
-            if let notice { Text(notice).font(.ui(.label)).tone(.text2).transition(.opacity) }
+            if let notice { Text(notice).font(.ui(.label)).tone(.text2).transition(.opacity) } // loc: verbatim localized by TankView
         }
         .onAppear { focused = true }
     }

@@ -1009,28 +1009,35 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   button while it shows (`SkipButton`), VoiceOver's escape leaves a level, and the back, undo, reset, next and share
   buttons read as words, not glyphs. Each phrase is one catalog key, a count's varying by plural ("1 move"), and a
   phrase inside another is passed in whole ("%@, par %lld"). The row's hint, given the menu's detail line, still turns
-  its " · " into ", ", until the menu's half of the migration passes the data instead.
+  its " · " into ", ", until the menu passes the data instead (left by the chrome's half, which moved strings only).
 - **Localizable.xcstrings** is the String Catalog (Jack's call F4 = C: English at launch, languages a later update;
   CAT1 to CAT8 = A), development language `en`, the source British English. The build emits every localizable literal
   (`SWIFT_EMIT_LOC_STRINGS`), but a command-line build writes no keys back into the catalog (checked 2026-11-09;
   Xcode's own build is documented to), so a key missing from it shows its literal or `defaultValue`, the same
   English; a plural key is the exception, as without its `one` and `other` forms it reads "1 moves", so each one is
   written into the catalog by hand (`scripts/catalog.py`) with the code that uses it. The archive row's hint, "%lld
-  past dailies", has no `one` form, as its English said "1 past dailies" before the catalog, and the menu's own line,
-  still hand-built in Archive.swift, says so too. A count in a key is formatted for the locale: from 1000 it reads
-  "1,234" in English, where the strings it replaced read "1234". Xcode's own build or archive is documented to sync
+  past dailies", has no `one` form, as its English said "1 past dailies" before the catalog, and the menu's own line
+  shares the key. The card's "%lld %@ levels short of par" is the chrome's one plural, as its English alone said "1
+  plughole level"; a count its English never put in the singular ("25 panels", "2 days running") has no `one` form.
+  A count in a key is formatted for the locale: from 1000 it reads "1,234" in English, where the strings it replaced
+  read "1234". Xcode's own build or archive is documented to sync
   every extracted key into the catalog, which would leave this tracked file changed in the checkout; until a check
   for that drift exists, keep such a sync out of an unrelated commit.
   `scripts/loc-lint.sh`, and `CatalogTests.testNoPlayerStringEscapesTheCatalog` with the same patterns
   (`scripts/loc-lint/patterns.txt`), flag each line that would put player text past the catalog: a `Text`,
   accessibility label, value or hint or announcement whose argument is not a literal, `verbatim:` or already
   localized, a case change, a hand-made plural, a glyph or a bare number as a key. A line that means it carries
-  `// loc: verbatim <why>`. `scripts/loc-lint/baseline.txt` lists the escapes still owed, file and line text; each
-  fix takes its line out, and the test fails on an escape or a fixed line left in. First Stir's time ("6:40 am",
-  `StoryScene.clock`, Jack's call F3) is drawn `verbatim:` under the night forwards' glass and a story clip's tank
-  alike, as its form is fixed in English. CATORDER = D splits the migration:
-  the tables (Levels, Pack, First Stir) and the leaf files first, the chrome (Menu, the play screen and its card,
-  Shelf, Consent, Archive) after the design pass.
+  `// loc: verbatim <why>`: a number, a glyph, a pack's name (never translated, CAT1), or a String already localized
+  where it is made, "localized by" that maker, as a `Text` of a String draws it as it is. An announcement takes a
+  String alone, so a literal one is flagged too. `scripts/loc-lint/baseline.txt` lists the escapes still owed, file
+  and line text, none since the chrome's half; each fix takes its line out, and the test fails on an escape or a
+  fixed line left in. First Stir's time ("6:40 am", `StoryScene.clock`, Jack's call F3) is drawn `verbatim:` under
+  the night forwards' glass and a story clip's tank alike, as its form is fixed in English. CATORDER = D split the
+  migration: the tables (Levels, Pack, First Stir) and the leaf files first, the chrome (Menu, the play screen and its
+  card, Shelf, Consent, Archive) after the design pass. A tier reads in lower case on the menu (`Tier.word`, a key of its
+  own, as `rawValue` is the stored one), and a translated name is cased for the locale (`localizedUppercase`). The
+  version line is drawn verbatim and the editors' switch's words are do-not-translate keys (CAT7); a switch's name is
+  a `LocalizedStringResource`, so its `settings:` log line keeps the English key.
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 23 (`MenuView.lead`, Jack's call C4,
   round 13). The tank's rule, "Every stir in this tank has an exact inverse.", left the menu for the App Store page
   (Jack's call D1 = A, round 13), and the "next: 07 · Sprinkle ›" line that took its place went too (Jack,

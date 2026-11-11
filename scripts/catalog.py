@@ -6,7 +6,8 @@
       An English plural entry: `one`, and `other` (the key itself unless given), for a key with one count, as
       "%lld moves" with "%lld move". Without it a plural key reads "1 moves".
   scripts/catalog.py fixed <comment>
-      Marks do-not-translate every key in Sources/*.swift whose `String(localized:)` carries exactly this comment."""
+      Marks do-not-translate every key in Sources/*.swift whose `String(localized:)` or `LocalizedStringResource`
+      carries exactly this comment."""
 import json
 import re
 import sys
@@ -39,7 +40,8 @@ def plural(catalog, args):
 def fixed(catalog, args):
     if len(args) != 1:
         sys.exit(__doc__)
-    pattern = re.compile(r'String\(localized: "((?:[^"\\]|\\.)*)",\s*comment: "' + re.escape(args[0]) + '"\\)')
+    pattern = re.compile(r'(?:String\(localized: |LocalizedStringResource\()"((?:[^"\\]|\\.)*)",\s*comment: "'
+                         + re.escape(args[0]) + '"\\)')
     keys = [k for f in sorted((ROOT / "Sources").glob("*.swift")) for k in pattern.findall(f.read_text())]
     if not keys or any("\\" in k for k in keys):
         sys.exit(f"no keys, or a key with an escape, under that comment: {len(keys)}")
