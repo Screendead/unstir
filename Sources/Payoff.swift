@@ -92,8 +92,8 @@ struct Payoff: Equatable {
     }
 
     /// The whirl's entries, as the shader reads them over the stack: three discs about the tank's centre, each inside
-    /// the last one's rigid core, wound together through whole turns. No rod is the tank's size on a layout without a
-    /// swirl, the swirl holds the rim rather than the centre, and no stir in play passes a turn.
+    /// the last one's rigid core, wound together through whole turns: the reverse of the swirl, which turns the glass's
+    /// edge and lets go towards its centre.
     func entries(at t: Double) -> [Float] {
         guard let (k, s) = whirl(at: t) else { return [] }
         let turns = whole ? (k == whirls - 1 ? 2.5 : 1.5) : 2.0

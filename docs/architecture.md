@@ -446,9 +446,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   a tap anywhere ends it (`skipPayoff`), and a reset forgets it. Everything it draws is a pure function of the seconds
   in, endless once it has played, so what it leaves standing is what a level opened solved shows.
   **a, the glass stirs itself**: `entries` gives three discs about the tank's centre, each inside the last one's rigid
-  core, wound together through two whole turns and let go, as raw entries over the stack (`Unstirred.extra`, so the
-  shader and its signature are untouched); no rod is the tank's size on a layout without a swirl, the swirl holds the
-  rim and not the centre, and no stir in play passes a turn. The knobs and lines leave for it (`clearsGlass`), a second
+  core, wound together through whole turns (two for a tier; one and a half for the game's first three and two and a
+  half for its last) and let go, as raw entries over the stack (`Unstirred.extra`, so the shader and its signature
+  are untouched): the reverse of the swirl, which turns the glass's edge and lets go towards its centre, and on a
+  picture already solved. The knobs and lines leave for it (`clearsGlass`), a second
   wave runs out from the centre as it lets go (`wave`), and a halo in the tier's colours stays lit behind the bezel
   (`PayoffRim`, under the card too). The game's clears the chrome as `UNSTIR_CLEAN` does (`clearsChrome`) and whirls
   four times, each letting go on the next tier's last picture (`relay`, `PayoffRelay`: plughole 27's, whirlpool 27's
