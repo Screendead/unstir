@@ -54,6 +54,10 @@ struct ResultCard: View {
         // A pack level's tier is plughole's by default, so a pack takes its own colour first.
         let accent = game.level.pack.map { Offer.pack($0).ink } ?? game.level.tier.ink
         let next = run != nil ? game.nextTank : (game.level.pack?.levels ?? game.level.tier.levels).drop(while: { $0.id != game.level.id }).dropFirst().first
+        let up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil)
+        // One primary: an open TierUp's, else next's, else share's; "again" never is.
+        let upLeads = up?.isOpen() == true
+        let nextLeads = next != nil && !upLeads
         VStack(spacing: 26) {
             VStack(spacing: 10) {
                 VStack(spacing: 8) {
@@ -105,11 +109,11 @@ struct ResultCard: View {
                 .accessibilityFocused($focused)
                 if let pack = Offer.pointer(after: game.completed) {
                     // Quiet: the card's way on is still next, or up a notch.
-                    Button { onOffer(pack) } label: { Text("try \(pack.name) \u{203A}").hit() }
+                    UnstirButton(.quiet) { onOffer(pack) } label: { Text("try \(pack.name) \u{203A}") }
                         .font(.ui(.detail)).tone(page.tone(.text3))
                         .accessibilityLabel("Try \(pack.name)")
                 } else if let pack = packs {
-                    Button { onOffer(pack) } label: { Text("more puzzles in the packs \u{203A}").hit() }
+                    UnstirButton(.quiet) { onOffer(pack) } label: { Text("more puzzles in the packs \u{203A}") }
                         .font(.ui(.detail)).tone(page.tone(.text3))
                         .accessibilityLabel("More puzzles in the packs")
                 }
@@ -118,24 +122,24 @@ struct ResultCard: View {
             if game.offersAgain || game.shareText != nil || next != nil {
                 HStack(spacing: 32) {
                     if game.offersAgain {
-                        Button(action: again) { Text("again \u{21BA}").hit() }.buttonStyle(Sounding(effect: .reset))
+                        UnstirButton(.secondary, effect: .reset, action: again) { Text("again \u{21BA}") }
                             .accessibilityLabel("Again")
                     }
                     if let share = game.shareText {
-                        ShareButton(items: { [share] }) { Text("share \u{2197}").hit() }
-                            .foregroundStyle(page.signal(.amber)).shadow(color: page.glow(.amber), radius: 4)
+                        // ShareButton's sheet, through the button's own face.
+                        UnstirButton(nextLeads || upLeads ? .secondary : .primary, accent: .amber) {
+                            ShareSheet.present([share])
+                        } label: { Text("share \u{2197}") }
                             .accessibilityLabel("Share result")
                     }
                     if let next {
                         // Past a pack's free taste, unowned, next opens its card: the button says so.
                         let gate = Store.shared.card(for: next)
                         let label = game.spilled ? "new run \u{203A}" : gate.map { "more in \($0.name) \u{203A}" } ?? "next \u{203A}"
-                        Button { onNext(next) } label: { Text(label).hit() }
-                            .foregroundStyle(accent).shadow(color: page.glow(accent), radius: 4)
+                        UnstirButton(nextLeads ? .primary : .secondary, accent: accent) { onNext(next) } label: { Text(label) }
                             .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
                     }
                 }
-                .font(.ui(.button))
             }
             if let day = Share.day(of: game.level.id), !game.level.archived {
                 TimelineView(.everyMinute) { t in
@@ -143,7 +147,7 @@ struct ResultCard: View {
                         .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
                 }
             }
-            if let up = game.opened ?? (game.level.id == game.level.tier.levels.last?.id ? game.level.tier.step(1) : nil) {
+            if let up {
                 TierUp(from: game.level.tier, to: up, onNext: onNext, onLook: onLook)
             }
         }
@@ -176,7 +180,7 @@ struct ResultCard: View {
 }
 
 /// The solve that opens the next tier, and the last level of a tier, go on up the ladder, in the next tier's own
-/// colours. A tier still closed keeps its glow behind a lock, says how many levels are short of par and opens the menu
+/// colours. A tier still closed shows its sweep behind a lock, unfilled and still, says how many levels are short of par and opens the menu
 /// on its gate, which shows which.
 private struct TierUp: View {
     let from: Tier
@@ -189,8 +193,9 @@ private struct TierUp: View {
     var body: some View {
         let open = to.isOpen(), short = from.atPar().filter { !$0 }.count
         let shortLine = "\(short) \(from.name.lowercased()) level\(short == 1 ? "" : "s") short of par"
+        // A primary 56 tall in the tier's sweep and glow; closed, unfilled and still.
         Button { open ? onNext(to.levels[0]) : onLook(to) } label: {
-            VStack(spacing: 6) {
+            VStack(spacing: 4) {
                 Text(open ? "up a notch" : shortLine)
                     .font(open ? .ui(.eyebrow) : .ui(.detail)).tracking(open ? 2 : 0).textCase(open ? .uppercase : nil).foregroundStyle(Color.text2)
                 HStack(spacing: 10) {
@@ -201,14 +206,19 @@ private struct TierUp: View {
                 .foregroundStyle(to.sweep)
                 .shadow(color: to.glow.opacity(glint ? 0.9 : 0.5), radius: glint ? 16 : 9)
             }
-            .padding(.horizontal, 26).padding(.vertical, 14)
-            .background { Capsule().strokeBorder(to.sweep, lineWidth: 1.5).shadow(color: to.glow, radius: glint ? 10 : 5) }
+            .padding(.horizontal, 20).padding(.vertical, 6).frame(minHeight: ButtonFace.tall)
+            .background { if open { Capsule().fill(to.glow.opacity(ButtonFace.fill)) } }
+            .overlay {
+                Capsule().strokeBorder(to.sweep, lineWidth: 1).shadow(color: open ? to.glow : .clear, radius: glint ? 10 : 5)
+            }
+            .contentShape(Capsule())
+            .modifier(Pressed())
         }
-        .buttonStyle(Sounding())
+        .buttonStyle(Sounding(presses: true))
         .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. \(shortLine), and par on every one opens it")
         .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion, to.isOpen() else { return }
             withAnimation(.easeInOut(duration: 1.1).repeatForever()) { glint = true }
         }
     }
@@ -229,15 +239,13 @@ struct LostCard: View {
             Text("out of ticks on move \(game.moves)").font(.ui(.label))
                 .accessibilityLabel(game.finishSpoken).accessibilityFocused($focused)
             HStack(spacing: 32) {
-                Button(action: undo) { Text("undo \u{00B7} \(game.bank)").hit() }
-                    .buttonStyle(Sounding(effect: game.bank == 0 ? .tap : .undo))
-                    .opacity(game.bank == 0 ? 0.35 : 1)
+                UnstirButton(.secondary, effect: game.bank == 0 ? .tap : .undo, dim: game.bank == 0, action: undo) {
+                    Text("undo \u{00B7} \(game.bank)")
+                }
                     .accessibilityLabel("Undo, \(game.bank) left")
-                Button(action: again) { Text("again \u{203A}").hit() }.buttonStyle(Sounding(effect: .reset))
-                    .foregroundStyle(page.accent).shadow(color: page.glow(page.accent), radius: 4)
+                UnstirButton(.primary, accent: page.accent, effect: .reset, action: again) { Text("again \u{203A}") }
                     .accessibilityLabel("Try again")
             }
-            .font(.ui(.button))
             if let notice { Text(notice).font(.ui(.label)).tone(.text2).transition(.opacity) }
         }
         .onAppear { focused = true }
