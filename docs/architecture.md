@@ -603,8 +603,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   by exactly what the card lacks, to the next whole point, down to the safe area's foot less the 4 pt the controls it
   covers keep (`cardFoot`). The tank is scaled as one, picture, knobs and rim, about its top (`LevelView.stage`), drawn
   for the size it was played at, so no picture is baked again and no glass size is learned; the header, the title and
-  "unstirred." stay where they were, and the caption's place, with the card hung from it, is drawn that much higher,
-  not laid out higher, so the room is always measured with the tank as played. It keeps time with the card's arrival
+  "unstirred." stay where they were, and the caption's place, with the card hung from it, is drawn that much higher
+  (`Lift`, stepped frame by frame so the arriving card rides up with the tank's foot), not laid out higher, so the
+  room is always measured with the tank as played. It keeps time with the card's arrival
   (`LevelView.arrival`), at once under Reduce Motion, and the tank is its own size again once the card leaves; in play
   there is no card and nothing to measure, so the tank is the layout's. The tank never goes under 55% of the size it
   was played at (`leastFinished`): past that the card scrolls in the room there is, which only the fullest card at

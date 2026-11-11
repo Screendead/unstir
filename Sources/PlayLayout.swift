@@ -403,6 +403,22 @@ struct Glide: ViewModifier, Animatable {
     }
 }
 
+/// The caption and the card hung from it, drawn `by` higher as a finished tank shrinks. Stepped frame by frame, so a
+/// card that came into the tree a frame before the shrink began rides it with the tank's foot rather than standing at
+/// its end from the start.
+struct Lift: ViewModifier, Animatable {
+    var by: CGFloat
+
+    nonisolated var animatableData: CGFloat {
+        get { by }
+        set { by = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        content.offset(y: -by)
+    }
+}
+
 extension PlayLayout.Chrome {
     /// What `level`'s chrome takes in the split at `type`, capped at `typeCap`: Escapement's split-flap ticks and two
     /// lines of its serif note, and the colour swatches where `swatches` shows them. A plain level's without one.

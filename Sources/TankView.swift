@@ -799,7 +799,7 @@ struct LevelView: View {
                     // must make room for it, or it runs into "unstirred."; the split's goes over the menu.
                     .frame(minHeight: layout.kind == .tabletop && showResult ? cardReach : nil, alignment: .top)
                     // Drawn higher, not laid out higher: the stack, and so the top measured here, stay as played.
-                    .animation(shrinking) { $0.offset(y: -(fit?.lift ?? 0)) }
+                    .animation(shrinking) { $0.modifier(Lift(by: fit?.lift ?? 0)) }
                     .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { captionTop = $0 }
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
