@@ -101,6 +101,8 @@ enum Grab: Equatable {
 struct LevelView: View {
     @State private var game: Game
     @State private var liveRod: Int?
+    /// The column's room between the title line's foot and the glass's top, as laid out.
+    @State private var titleGap: CGFloat?
     /// Prism: the channel whose swatch is held, drawn alone.
     @State private var isolated: Channels?
     private let letters: Bool
@@ -600,7 +602,7 @@ struct LevelView: View {
     /// The tank with what stands over it: the night forwards and "unstirred.". `bounds` is the tank's pane in the glass's
     /// frame and `trackBounds` where a lens's track runs, both nil in the column; `filmFoot` where the night forwards'
     /// lines end, nil under the glass.
-    private func stage(_ side: CGFloat, words: CGFloat?, tabletop: Bool, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
+    private func stage(_ side: CGFloat, words: CGFloat?, wordsScale: CGFloat, tabletop: Bool, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
         tank(side, bounds: bounds, trackBounds: trackBounds)
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
@@ -623,7 +625,7 @@ struct LevelView: View {
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
                 if showResult && game.solved && !clean, let words {
-                    unstirred(fixed: tabletop).offset(y: -words).transition(reveal)
+                    unstirred(fixed: tabletop).scaleEffect(wordsScale, anchor: .top).offset(y: -words).transition(reveal)
                 }
             }
     }
@@ -762,7 +764,11 @@ struct LevelView: View {
                 header.modifier(PlayPart.chrome(read: 5))
                 titleRow.modifier(PlayPart.chrome(read: 4))
                 Spacer(minLength: 12)
-                stage(layout.side, words: layout.words, tabletop: layout.kind == .tabletop, bounds: layout.bounds, trackBounds: layout.trackBounds,
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { titleGap = $0 }
+                let words: (words: CGFloat?, scale: CGFloat) = layout.kind == .column
+                    ? PlayLayout.columnWords(over: titleGap ?? .infinity, side: layout.side, type: playType)
+                    : (layout.words, 1)
+                stage(layout.side, words: words.words, wordsScale: words.scale, tabletop: layout.kind == .tabletop, bounds: layout.bounds, trackBounds: layout.trackBounds,
                       filmFoot: layout.filmFoot)
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
