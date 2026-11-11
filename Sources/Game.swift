@@ -162,7 +162,10 @@ final class Game {
     /// an undo takes it back or the ticks run out (Jack's call C14, round 13).
     var deadTick: Bool { !finished && level.clocks.contains { overdue($0.rod) > 0 } }
     /// With the bank empty undo can't take the tick back, so the words point only at reset (Jack's call, round 13).
-    var deadTickWords: String { bank == 0 ? "That tick can't come back. Reset." : "That tick can't come back. Undo, or again." }
+    var deadTickWords: String {
+        bank == 0 ? String(localized: "That tick can't come back. Reset.", comment: "Escapement: a pushed tick, no undo left")
+            : String(localized: "That tick can't come back. Undo, or again.", comment: "Escapement: a pushed tick")
+    }
     /// The line under the tank: Escapement's word on a pushed tick, a scene's time, else the level's note.
     var caption: String {
         if deadTick { return deadTickWords }

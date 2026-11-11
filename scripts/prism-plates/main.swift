@@ -4,6 +4,7 @@ import CoreGraphics
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
+import simd
 
 // Draws Prism's engravings on the Mac without the app, and checks each against every layout's cores: how much of each
 // core is lit, and how much of that light a 30° step of the core moves, so a step reads in every core.
@@ -76,6 +77,29 @@ func check(_ ctx: CGContext, _ layout: Layout) -> [(lit: Double, moved: Double)]
     }
 }
 
+/// A plate as the glass shows it under a stack and its masks: each channel sampled through its own word, the newest
+/// entry's inverse first, as the shader does. A sketch for reading a deal on the Mac; the app draws the real one.
+func dealt(_ plate: CGContext, _ layout: Layout, _ masks: [Int: Channels], _ stack: [Twist], side: Int) -> CGContext {
+    let from = plate.width, src = plate.data!.bindMemory(to: UInt8.self, capacity: from * from)
+    let ctx = CGContext(data: nil, width: side, height: side, bitsPerComponent: 8, bytesPerRow: side * 4,
+                        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+    let out = ctx.data!.bindMemory(to: UInt8.self, capacity: side * side * 4)
+    let words = Channels.each.map { c in Array(stack.reversed().filter { (masks[$0.rod] ?? .white).contains(c) }) }
+    for j in 0..<side {
+        for i in 0..<side {
+            let p = SIMD2((Double(i) + 0.5) / Double(side) * 2 - 1, (Double(j) + 0.5) / Double(side) * 2 - 1)
+            guard simd_length(p) < 1 else { continue }
+            for (c, word) in words.enumerated() {
+                let q = word.reduce(p) { Tank.twist($0, rod: layout.rods[$1.rod], angle: -Double($1.steps) * Tank.step) }
+                // The plate is drawn at twice the size: the mean of four of its pixels.
+                let u = min(max(Int((q.x + 1) / 2 * Double(from)), 0), from - 2), v = min(max(Int((q.y + 1) / 2 * Double(from)), 0), from - 2)
+                out[(j * side + i) * 4 + c] = UInt8((Int(src[v * from + u]) + Int(src[v * from + u + 1]) + Int(src[(v + 1) * from + u]) + Int(src[(v + 1) * from + u + 1])) / 4)
+            }
+        }
+    }
+    return ctx
+}
+
 let args = Array(CommandLine.arguments.dropFirst())
 switch args.first {
 case "render" where args.count >= 3:
@@ -94,7 +118,13 @@ case "check":
                    cores.map { String(format: "%.2f/%.2f", $0.lit, $0.moved) }.joined(separator: " ")].joined(separator: "\t"))
         }
     }
+case "deal" where args.count >= 6:
+    guard let plate = Engraving.Plate(rawValue: args[1]), let layout = Layout(rawValue: args[2]), let masks = Channels.masks(args[3])
+    else { print("deal <plate> <layout> <masks> <scramble, or - for none> <out.png> [side]"); exit(2) }
+    let side = args.count > 6 ? Int(args[6])! : 860
+    let stack: [Twist] = args[4] == "-" ? [] : .parse(args[4], in: layout, masks: masks)
+    png(dealt(bitmap(Engraving.lines(plate), side: side * 2), layout, masks, stack, side: side), args[5], cores: nil)
 default:
-    print("usage: render <plate> <out.png> [side] [layout] | check [plate...]")
+    print("usage: render <plate> <out.png> [side] [layout] | check [plate...] | deal <plate> <layout> <masks> <scramble> <out.png> [side]")
     exit(2)
 }
