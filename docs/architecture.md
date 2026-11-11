@@ -77,7 +77,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`chains`) and checks it against the model's cut words on hex's swirl. Its cost against the four-tap limit
   (`Unstirred.channelCost`) is a map per channel each entry holds, plus three for the stack. The phone bench
   (`scripts/gpu-bench.sh phone`, 2026-11-09, thermal fair) put each specimen at a median 0.95 of the old constant of
-  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none.
+  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none. Last, on the CPU,
+  it bakes Lens's panels cold at the play screen's glass for a Lens level (`PlayLayout.of` in `GPUBenchView`) straight
+  through `Halftone.Panel.pixels`, so no cached bake is read, replaced or removed: all 25 at an eighth of the side to
+  rank them, then the cheapest, Keyhole and the dearest at the full side, each in wall-clock ms, and a panel's bytes in
+  Caches, for the call on capping that cache. In the simulator that is the Mac's CPU running unoptimised Debug code.
 - **TapLaw.swift** and **Taps.swift** hold the adaptive four-tap budget (Jack, round 16: step the graphics down where
   performance degrades, to keep 120 Hz). Only the look adapts: `Tank.maxStack`, what a level deals and "the tank is
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
@@ -299,7 +303,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
   (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: a rod's a selection
-  haptic and no sound (Jack's call SND1 = B, round 16: the haptic and the dashes carry the steps), the tank's its clunk,
+  haptic with its tick (Jack, 2026-11-11, taking back SND1 = B: he missed the sound), the tank's its clunk,
   a haptic and no sound either, a two-finger spin's and the lift's last step too (Jack's call snd1-clunk = B, round
   16). While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
@@ -441,8 +445,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   once: `Asked`, `Ledger.answers`, read after the launch's entitlements and each update; with it `asked.at.<product>`,
   when it was asked, so a relaunch within 24 hours, the time Apple gives a parent to answer, finds the request
   waiting for approval again, as it was, unless StoreKit has said more of it since, and a date still to come, the clock set back, waits no longer: `Ledger.wait`, `Asked.waiting`; `StoreTests` forgets every request before and after each test, as its Ask to Buy purchases save them): entitlements from `Transaction.currentEntitlements` at
-  launch (`Store.ready` once that first read has finished: until then `RootView.show` waits on it, `Store.settled`,
-  before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
+  launch (`Store.ready` once that first read has finished, or at the latest once `Store.readLimit`, 5 s, has passed, so
+  a stalled read never leaves a card at "checking purchases…" with no buy: until then `RootView.show` waits on it, `Store.settled`,
+  before it gates a pack's level, and the dock shows no state; a read past the limit carries on and its states show as
+  they land, the card taking them as no landing, with no chime or announcement, as it keys on `Store.firstReadDone`), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`), and a `PurchaseIntent.intents` listener: a purchase started on the App
   Store's product page (a promoted purchase) sets `Store.promoted` to the offer this build sells (`Offer.promoted`),
   keeping its product, `RootView` opens that card over the menu, closing the settings sheet (an open level leaves
@@ -464,7 +470,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and the bundle as family-shareable non-consumables at
   2.99 a pack and 5.99 for the bundle (Jack, 2026-10-25, when it held three packs, as it does again); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice` (and `amounts` its `price`, written in its
-  `priceFormatStyle` for the bundle's saving, `Store.saving`), fetched at launch and again when a card
+  `priceFormatStyle` for the bundle's saving, `Store.saving`), fetched (`Store.loadProducts`, which `StoreTests` replaces to
+  fail offline, as the runner's test session served the products under a simulated `.loadProducts` error) at launch and again when a card
   opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" under it once the fetch
   has failed (`Store.pricing`; beside it, the SE wrapped it inside the pill), the pill still live, since the App Store's sheet shows the price.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
@@ -1016,9 +1023,23 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
   It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max (unmeasured on a phone), so every build keeps it in
-  Caches, per size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
+  Caches, per panel and size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
   time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
-  the flicker; only one that never lands lets it go on, after 30 s. Prism's plates
+  the flicker; only one that never lands lets it go on, after 30 s. A panel is a `Halftone.Panel` (tones and white
+  strokes of their own widths, keyed in Caches by its name). Each Lens level draws its own (Jack's call LENSART = B:
+  25 standalone panels, each its level's name drawn, with what is seen through the thing in a lens's core): the picture
+  stays `.halftone` on all 25, so nothing stored changes, and `Level.panel`, a Lens level's number and 0 anywhere else,
+  goes through `PictureLayer` to `Halftone.panel`, which gives the level's panel from `LensArt.levels` once it is drawn
+  and `Halftone.test`, the test panel, until then, as for 0 (`testEachLensLevelDrawsItsOwnPanel`). So Lens 03's panel
+  is also its dock cover, its card's clip and its promoted-purchase image. Caches keeps every panel a build has baked,
+  5.5 MB each at a Pro Max's tank. The GPU bench times the first-open bake on the device (below). **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
+  and ovals, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
+  panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
+  enough to read at x8, where the bake is soft; every rod's core on its level holds tone and linework that each step
+  moves (`testEveryLensPanelShowsEachStepOnItsLevel`, slow; `scripts/lens-art-sheet.py check` runs the same measure
+  on the Mac). A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
+  `scripts/lens-panels.sh` draws, times and checks a panel on the Mac, and `scripts/lens-art-sheet.py` lays the drawn
+  ones out, as baked and as the game shows them (`shots.sh lens-NN`, `lens-NN-clue`). Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white

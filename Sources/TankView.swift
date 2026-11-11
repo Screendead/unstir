@@ -1556,12 +1556,12 @@ struct LevelView: View {
                         } else {
                             PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                                          clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
-                                         onStrike: { struck = true })
+                                         panel: game.level.panel, onStrike: { struck = true })
                         }
                         #else
                         PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                                      clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
-                                     onStrike: { struck = true })
+                                     panel: game.level.panel, onStrike: { struck = true })
                         #endif
                     }
                         .keyframeAnimator(initialValue: -1.0, trigger: waved) { picture, w in
@@ -1784,6 +1784,7 @@ struct LevelView: View {
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
         .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .haptic(.selection, trigger: ticks)
+        .onChange(of: ticks) { Sound.shared.play(.tick) }
         .haptic(.selection, trigger: misses)
         .onChange(of: tankTicks) { Knock.clunk.play() }
         .haptic(.impact(weight: .heavy), trigger: game.cancels)

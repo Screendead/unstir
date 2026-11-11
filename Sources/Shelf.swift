@@ -646,8 +646,9 @@ struct PackCard: View {
                 Marks.seen(pack, fits: pack.fits())
             }
         }
-        .onChange(of: Reading(state: state, ready: store.ready)) { old, new in
-            // Until the launch's first read has finished, an owned pack reads as unowned: that read is no change.
+        .onChange(of: Reading(state: state, ready: store.firstReadDone)) { old, new in
+            // Until the launch's first read has finished, an owned pack reads as unowned: that read is no change, even
+            // when it lands past `Store.readLimit`.
             guard old.ready, new.state != old.state else { return }
             if let tag = new.state.tag(unshared: unshared) { AccessibilityNotification.Announcement("\(offer.name) \(tag.word)").post() }
             // A purchase, an approval or a restore landing here: the solve's chime, and the locks dissolve in turn.
@@ -743,8 +744,8 @@ struct PackCard: View {
                         if !open {
                             Image(systemName: "lock.fill").font(.ui(.detail)).imageScale(.small).foregroundStyle(Color.text4)
                                 .transition(.opacity.combined(with: .scale(scale: 1.8)))
-                        } else if !noPar, let filled = ResultMarks.filled(Archive.Mark(best, started: tried)) {
-                            ResultMarks(filled: filled)
+                        } else if !noPar, case let mark = Archive.Mark(best, started: tried), let filled = ResultMarks.filled(mark) {
+                            ResultMarks(filled: filled, margin: ResultMarks.margin(mark))
                         } else if let best {
                             Text(best.over == 0 ? atPar : "+\(best.over)").font(.ui(.detail))
                                 .foregroundStyle(best.over == 0 ? Color.amber : Color.magenta)
