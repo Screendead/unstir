@@ -140,6 +140,115 @@ enum Halftone {
             }
             return out
         }
+
+        /// The panel's detail for a bake `n` pixels a side, with an inset over each of `lenses` (a rod each: x, y and its
+        /// disc's radius).
+        func detail(_ n: Int, lenses: [SIMD3<Double>]) -> Detail {
+            let cells = Detail.cells, side = 2 * cells + 1
+            let px = 2 / Double(n), texel = px / Detail.density, range = Detail.range * px
+            let sides = lenses.map { Int((2 * Detail.reach * Tank.plateau * $0.z / texel).rounded(.up)) }
+            // A texel between insets, so no filter reads across.
+            let width = max(3 * side + Detail.marks.count + inks.count, sides.reduce(0) { $0 + $1 + 1 })
+            let height = side + 1 + (sides.max() ?? 0)
+            var out = [UInt8](repeating: 255, count: 4 * width * height)
+            func set(_ x: Int, _ y: Int, _ r: UInt8, _ g: UInt8, _ b: UInt8) {
+                let k = 4 * (y * width + x)
+                out[k] = r; out[k + 1] = g; out[k + 2] = b
+            }
+            for (k, ink) in inks.enumerated() {
+                let a = ink.degrees * .pi / 180, cs = cos(a), sn = sin(a)
+                for j in -cells...cells {
+                    for i in -cells...cells {
+                        // The cell's centre and its dot's radius as `screen` has them.
+                        let cell = SIMD2(Double(i), Double(j)) * pitch
+                        let t = tones(SIMD2(cell.x * cs - cell.y * sn, cell.x * sn + cell.y * cs))[k]
+                        let v = UInt8(min(max(t / .pi, 0).squareRoot() / Detail.radii, 1) * 255 + 0.5)
+                        set(k * side + cells + i, cells + j, v, v, v)
+                    }
+                }
+                let c = ink.colour
+                set(3 * side + Detail.marks.count + k, 0, UInt8(gamma(c.x) * 255 + 0.5), UInt8(gamma(c.y) * 255 + 0.5),
+                    UInt8(gamma(c.z) * 255 + 0.5))
+            }
+            for (k, v) in Detail.marks.enumerated() { set(3 * side + k, 0, v, v, v) }
+            var table: [Float] = [Float(pitch), Float(cells), Float(Detail.radii), Float(range), Float(1 / texel), 1,
+                                  Float(Detail.crisp), Float(Detail.soft)]
+            for ink in inks { table += [Float(cos(ink.degrees * .pi / 180)), Float(sin(ink.degrees * .pi / 180))] }
+            table += [Float(Detail.fade), 0]
+            var x0 = 0
+            for (lens, s) in zip(lenses, sides) {
+                let half = Detail.reach * Tank.plateau * lens.z, corner = SIMD2(lens.x, lens.y) - SIMD2(repeating: half)
+                // The distance to the nearest stroke's edge, a stroke's segment at a time over the texels it reaches.
+                var edge = [Double](repeating: range, count: s * s)
+                for stroke in strokes {
+                    let reach = stroke.width / 2 + range
+                    for j in 1..<stroke.points.count {
+                        let a = stroke.points[j - 1], b = stroke.points[j]
+                        let lo = (simd_min(a, b) - SIMD2(repeating: reach) - corner) / texel
+                        let hi = (simd_max(a, b) + SIMD2(repeating: reach) - corner) / texel
+                        let x = max(Int(lo.x.rounded(.down)), 0), y = max(Int(lo.y.rounded(.down)), 0)
+                        let x1 = min(Int(hi.x.rounded(.up)), s - 1), y1 = min(Int(hi.y.rounded(.up)), s - 1)
+                        guard x <= x1, y <= y1 else { continue }
+                        for v in y...y1 {
+                            for u in x...x1 {
+                                let p = corner + SIMD2(Double(u) + 0.5, Double(v) + 0.5) * texel
+                                edge[v * s + u] = min(edge[v * s + u], segmentDistance(p, a, b) - stroke.width / 2)
+                            }
+                        }
+                    }
+                }
+                for v in 0..<s {
+                    for u in 0..<s {
+                        let g = UInt8(min(max(0.5 + edge[v * s + u] / (2 * range), 0), 1) * 255 + 0.5)
+                        set(x0 + u, side + 1 + v, g, g, g)
+                    }
+                }
+                table += [Float(lens.x), Float(lens.y), Float(half), Float(x0), Float(side + 1)]
+                x0 += s + 1
+            }
+            return Detail(width: width, height: height, pixels: out, table: table)
+        }
+    }
+
+    /// What a lens draws finer than the bake (`unstirLens` in Unstir.metal): the bake holds one sample a device pixel,
+    /// which a lens at x8 spreads over eight. The dots are geometry, so the shader draws each from its radius, kept here
+    /// a cell of each ink's screen; the white strokes it reads from their distance to the nearest stroke's edge, kept
+    /// finer than the bake over the middle of each lens's core, the only fluid a lens magnifies. All of it is one
+    /// atlas, RGBA8 and grey, as the shader takes one image and a colour match must not cross its channels.
+    struct Detail: Sendable {
+        /// The strokes' texels a bake pixel, each way. A distance is linear, and its linear filter exact, in any texel
+        /// square that lies on one side of a stroke's middle, so a hairline (`LensArt.hair`, about a pixel and a half)
+        /// needs two for its edge to be true along a straight run; three halves what is left where strokes meet, at a
+        /// corner or between the rings of Keyhole's eye (drawn at the panel's own size, a sample in 400 was over 24
+        /// levels from the bake at two, one in 1200 at three: `testTheDetailAtThePanelsOwnSizeIsTheBake`).
+        static let density = 3.0
+        /// The distance the strokes' texels hold either side of an edge, in bake pixels: an eighth of a pixel at x8 is
+        /// a tenth of a level's step.
+        static let range = 1.5
+        /// How far out a lens's inset reaches, in core radii. At any zoom a lens magnifies both ways only the fluid
+        /// from within 0.58 of its core's radius (the limit as the zoom goes to x1); the shader fades the detail out
+        /// over the last `fade` of the inset, so a twist under the lens dragging fluid from outside shows no edge.
+        static let reach = 0.7, fade = 0.12
+        /// A dot's radius, in pitches, at the top of a texel's range: a tone of 1 is 0.564.
+        static let radii = 0.6
+        /// The detail's weight against the bake by a pixel's footprint on the panel, in bake pixels along its longer
+        /// axis: none from `soft` up, so nothing drawn at the panel's own size or smaller changes, and all of it by
+        /// `crisp`.
+        static let crisp = 0.8, soft = 0.97
+        /// Each screen's cells either way of the centre: the tank's corner is √2 out.
+        static let cells = Int((2.0.squareRoot() / pitch).rounded(.up))
+        /// Two greys the shader checks before it trusts the atlas, after the three screens on the top rows.
+        static let marks: [UInt8] = [64, 192]
+
+        let width: Int, height: Int
+        /// The atlas, rows top first: each ink's screen (a cell a texel, its dot's radius), the marks and each ink's
+        /// colour, then under them an inset a lens.
+        let pixels: [UInt8]
+        /// What the shader reads the atlas by: the pitch, `cells`, `radii`, the strokes' range in tank units, their
+        /// texels a tank unit, the detail's share (1; the glass fades it in), `crisp`, `soft`, each screen's cosine
+        /// and sine, `fade` and a pad, then five floats an inset: its centre, its half side in tank units, and its
+        /// corner in texels.
+        let table: [Float]
     }
 
     /// The test panel: the dial, the gem and the linework above.

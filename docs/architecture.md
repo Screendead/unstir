@@ -50,6 +50,29 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   and checks the order, so a new uniform goes into the signature and `TankShader.parameters` together. The entries
   themselves are packed once, `Unstirred.entries`, which the GPU bench and `testTheShadersChannelChainsMatchTheModel`
   call too.
+  A Lens level's glass draws through a third stitchable, `unstirLens` (Jack's call, 2026-11-11: draw each lens's core
+  finer, so x8 is crisp), once its panel's detail is baked (`Halftone.Detail`, below) and the strike has ended
+  (`Unstirred.fine` and `crisp`, the detail's share, which `LevelView` eases in over 0.2 s, as the detail is drawn past
+  the layer and would not flicker with it); every other draw of a Lens panel (dock cover, card, clip, promo image)
+  keeps `unstir`. The layer holds one sample a device pixel of the clean panel, which a lens at x8 spreads over eight,
+  so where a lens magnifies, `unstirLensBody` draws the panel again from its geometry at the final sample point
+  (`fineLight`, `Halftone.Panel.light`'s copy: change the two together): each ink's nearest dot from its radius, and
+  the white strokes from their distance to the nearest stroke's edge, both antialiased over the pixel's own
+  footprint on the panel, which it takes from the four taps' points (with two taps, a third chain inside a lens's
+  inset gives the other axis). So the dots stay the panel's dots magnified, their edges and the linework at the
+  screen's pitch at any zoom, x8 or past it. The detail's weight against the layer goes by the footprint's longer
+  axis in bake pixels: none from 0.97 up and all by 0.8 (`Halftone.Detail.soft`, `crisp`), so the clean panel, a
+  twist (which never shrinks a footprint both ways) and a lens's squeezed rim band draw as `unstirBody` to the bit
+  (`testALensGlassDrawsAsBeforeWhereNothingMagnifies`), and a lens zooming in crosses over as its dots first swell,
+  with no step (`scripts/film.sh lens-zoom`). A lens zoomed out, whose rim band stretches one way only, stays the
+  layer's. The detail is one image argument (SwiftUI takes one), read as written only if its two grey marks do,
+  else nothing of it is drawn; the ink colours come from the atlas too, so they pass through whatever colour match
+  the image does. `testTheDetailAtThePanelsOwnSizeIsTheBake` forces the weight to all on the clean panel and holds
+  the shader's draw to the bake's, and `testALensAtX8DrawsItsPanelAtTheScreensPitch` measures Keyhole at x8 over a
+  twist against the panel's geometry sampled nine times a pixel (mean error 30 levels before, 1.6 after; its
+  steepest edges 16 levels a pixel before, 211 after, of 216). In the simulator (2026-11-11, the Mac's GPU, 1284 px)
+  the GPU bench put it at 1.6 plain entries' work on Lens 01 and 3.8 on Lens 25, the deepest (12 entries, four
+  lenses); unmeasured on a phone, and not counted against the four-tap limit, which Lens's stacks stay far inside.
   The shader's tap count and the `Tank.maxStack` (36) and `Tank.fourTaps` (40) limits are tuned against 120 Hz on an
   iPhone 13 Pro Max's glass, about 1137 px (`Tank.tunedPixels`): on 2026-11-04 the most the game allows, a full stack of 36
   on a fill of 4 with the drag riding over, held 120 Hz there at four taps, checked from the screen's side, and no
@@ -77,11 +100,14 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`chains`) and checks it against the model's cut words on hex's swirl. Its cost against the four-tap limit
   (`Unstirred.channelCost`) is a map per channel each entry holds, plus three for the stack. The phone bench
   (`scripts/gpu-bench.sh phone`, 2026-11-09, thermal fair) put each specimen at a median 0.95 of the old constant of
-  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none. Last, on the CPU,
+  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none. Then, at 1284,
+  Lens 01 and Lens 25 (the deepest, and the only one with four lenses) on their own panels, as dealt and with every
+  lens at x8 over the level's twists, each through `unstir` and through `unstirLens` with the panel's detail, in ms
+  and in plain entries' work. Last, on the CPU,
   it bakes Lens's panels cold at the play screen's glass for a Lens level (`PlayLayout.of` in `GPUBenchView`) straight
   through `Halftone.Panel.pixels`, so no cached bake is read, replaced or removed: all 25 at an eighth of the side to
   rank them, then the cheapest, Keyhole and the dearest at the full side, each in wall-clock ms, and a panel's bytes in
-  Caches, for the call on capping that cache. In the simulator that is the Mac's CPU running unoptimised Debug code.
+  Caches, for the call on capping that cache, and Lens 01's and 25's details, which every open bakes. In the simulator that is the Mac's CPU running unoptimised Debug code.
 - **TapLaw.swift** and **Taps.swift** hold the adaptive four-tap budget (Jack, round 16: step the graphics down where
   performance degrades, to keep 120 Hz). Only the look adapts: `Tank.maxStack`, what a level deals and "the tank is
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
@@ -1037,10 +1063,17 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   panel is kept whatever its turn, as the menu draws it at launch, and counts as one of the four. A panel is 5.2 MB
   at a Pro Max's tank, 129 MB for all 25, against a cold bake of 70 to 227 ms on a 13 Pro Max; only the cover's and
   the open level's are ever in sight together, so none on screen loses its bake
-  (`testCachesKeepsTheFourPanelsOpenedLast`). The GPU bench times the first-open bake on the device (below). **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
+  (`testCachesKeepsTheFourPanelsOpenedLast`). The GPU bench times the first-open bake on the device (below). A panel's
+  `detail` (`Halftone.Detail`) is what `unstirLens` draws finer than the bake: one grey RGBA8 atlas holding each
+  ink's screen a cell a texel (its dot's radius, 97 cells a side), two grey marks and the inks' colours, and an
+  inset a lens, the distance to the nearest stroke's edge at three texels a bake pixel over the middle 0.7 of the
+  lens's core, since at any zoom a lens magnifies both ways only fluid from within 0.58 of its core's radius, and a
+  neighbour's twist reaches no nearer than 0.41. `LevelView` bakes it off the main actor at every open and keeps it
+  in memory only (no cache: 7 ms for Keyhole and 17 for Lens 25's four lenses on an M2 Max, optimised, against 80
+  for Keyhole's panel; 3.3 MB and 7.8 MB at a Pro Max's glass), and logs each bake. **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
   and ovals, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
   panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
-  enough to read at x8, where the bake is soft; every rod's core on its level holds tone and linework that each step
+  enough to read at x8 from the bake alone, as every draw but the level's glass shows it; every rod's core on its level holds tone and linework that each step
   moves (`testEveryLensPanelShowsEachStepOnItsLevel`, slow; `scripts/lens-art-sheet.py check` runs the same measure
   on the Mac). A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
   `scripts/lens-panels.sh` draws, times and checks a panel on the Mac, and `scripts/lens-art-sheet.py` lays the drawn
@@ -1104,9 +1137,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   of its own, coming in with the bed's crossfade from its first beat, from which the layer's beats and eighths count
   (`firstBeat`). One loop runs through every level of its pack, never restarted by the next level (Jack, 2026-11-11):
   `Sound.LayerTrack` holds the deck's course apart from the engine, so `SoundTests` drive it, and only another pack's
-  loop starts the deck again. The solve (`LevelView.landSolve`, with the chime) holds the loop to the next beat, then
-  ducks it over 0.5 s as the resolution (`-end`) plays on that beat; it runs on unheard and comes back over the
-  crossfade from the first bar line after the resolution has rung out (`returning`), and plays on into the next level.
+  loop starts the deck again. The solve (`LevelView.landSolve`, with the chime) leaves the loop alone: the resolution (`-end`) plays over it on
+  its next beat, and the loop plays on at its full level through the card and into the next level, never dipped or
+  faded (Jack, 2026-11-11, taking back its drop under the resolution). The loop, its resolution and one-shots peak at no more
+  than -11.5 dB however they meet, far under the effects' -1.2 dBTP ceiling, so the loop needs no duck
+  (`scripts/layer-sum.py`, which also prints what the bed and the solve's other effects add).
+  A loss (Escapement's last clock stopping) plays `spilled` over both and changes neither.
   Prism's swell (`-swell`) starts 0.4 s before the resolution's beat, never before the solve. Escapement B's reed plays the motif a note a move on the next eighth, the note the moves before it (an undo
   takes one back, the demonstration plays none), and lands on D with the solve's chime. The layer follows the music
   switch and steps aside for another app's music with the bed; leaving for the menu or a tier's level takes it out

@@ -7,7 +7,9 @@
 # The app (GPUBench.swift) runs Unstir.metal's own shader bodies off screen and prints a stack entry's cost with four
 # taps and two at 1137, 1284 and 1471 px, the glass's fill and whirlpool 27's whole frame at 1137 and 1471, then at
 # 1284 each Prism specimen's per-channel cost against what Unstirred.channelCost assumes, and the slowest against the
-# 8.333 ms of a 120 Hz frame. Then it bakes Lens's panels cold on the CPU, bypassing Caches, at the play screen's glass:
+# 8.333 ms of a 120 Hz frame, and Lens 01's and 25's frames on their own panels, as dealt and with every lens at x8,
+# each through the plain shader and through the one that draws a lens's detail.
+# Then it bakes Lens's panels cold on the CPU, bypassing Caches, at the play screen's glass:
 # the cheapest and dearest of a quick pass over all 25, and Keyhole, each in wall-clock ms, and a cached panel's bytes.
 # The simulator's bake runs on the Mac's CPU, unoptimised in Debug: only the phone's numbers mean anything.
 # Let the phone cool between runs: heat skews it, and the last line names the thermal state.
