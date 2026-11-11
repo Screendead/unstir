@@ -413,6 +413,23 @@ final class PlayLayoutTests: XCTestCase {
         }
     }
 
+    /// An armed reset has the row to itself where undo can't share it on a line each, so "reset? tap again" never wraps
+    /// and the row never grows: an SE (343 pt inside its margins) at every size, the widest phone (408) at the largest.
+    func testAnArmedResetHasTheRowWhereUndoCantShareIt() {
+        let armed = ["undo \u{00B7} 10", "reset? tap again"]
+        XCTAssertFalse(PlayLayout.rowHolds(armed, width: 343, type: .large))
+        XCTAssertTrue(PlayLayout.rowHolds(armed, width: 408, type: .large))
+        XCTAssertFalse(PlayLayout.rowHolds(armed, width: 408, type: .xxxLarge))
+        XCTAssertEqual(PlayLayout.rowHolds(armed, width: 408, type: .accessibility5),
+                       PlayLayout.rowHolds(armed, width: 408, type: .xxxLarge), "play caps its type at xxxLarge")
+        XCTAssertTrue(PlayLayout.rowHolds(["reset? tap again"], width: 343, type: .accessibility5), "alone it fits an SE")
+        // The row is measured on its labels as the buttons set them: each a line of the button role and its sides.
+        let row = armed.reduce(0) { $0 + TypeRole.button.width(of: $1, at: .large) + 2 * ButtonFace.side }
+            + PlayLayout.controlGap
+        XCTAssertTrue(PlayLayout.rowHolds(armed, width: row, type: .large))
+        XCTAssertFalse(PlayLayout.rowHolds(armed, width: row - 1, type: .large))
+    }
+
     func testTheChromeGrowsWithTheTypeSizeUpToItsCap() {
         let plain = PlayLayout.Chrome(), large = PlayLayout.Chrome(type: .xxxLarge)
         XCTAssertGreaterThan(large.above, plain.above)
