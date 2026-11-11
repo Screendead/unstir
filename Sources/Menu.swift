@@ -5,7 +5,10 @@ import SwiftUI
 extension Level {
     /// Where leaving goes: a past daily to the archive, a pack's level back to its card, whose name stands over the
     /// level's title, so the way out reads as the free game's does.
-    var back: String { "\u{2039} " + (archived ? "archive" : "levels") }
+    var back: String {
+        "\u{2039} " + (archived ? String(localized: "archive", comment: "The play screen's back button, to the archive")
+            : String(localized: "levels", comment: "The play screen's back button, to the menu"))
+    }
 
     /// A pack's level takes the pack's glow. Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
     /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
@@ -51,9 +54,10 @@ extension Tier {
 
     /// For VoiceOver: the tier, and if it is locked, what opens it.
     var spoken: String {
-        guard let below, !isOpen() else { return rawValue }
+        guard let below, !isOpen() else { return word }
         let par = below.atPar(), lit = par.filter { $0 }.count
-        return "\(rawValue), locked, opens with every \(below.rawValue) level at par, \(lit) of \(par.count)"
+        return String(localized: "\(word), locked, opens with every \(below.word) level at par, \(lit) of \(par.count)",
+                      comment: "VoiceOver: a shut tier. The tier, the tier below, then its levels at par, of all")
     }
 
     /// The first level with no best, on an open tier: where the player is. Every level before it has a best, so it is
@@ -556,7 +560,8 @@ struct MenuView: View {
     /// The modes once open; then the tier's rule and rows, and where the build has the sandbox, its row at
     /// the end under "anything goes" (Jack's call D2 = A, round 13), so the list leads with 01.
     private func rows(_ lead: Lead) -> some View {
-        let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
+        let sandbox = LevelRow(level: .sandbox, detail: String(localized: "any picture, any rods \u{00B7} nothing counts",
+                                                               comment: "The sandbox's row, under its title"), enabled: true,
                                pick: pick, refuse: refuse)
         return VStack(alignment: .leading, spacing: 0) {
             Color.clear.frame(height: 0).id(Self.top)
@@ -568,8 +573,9 @@ struct MenuView: View {
                 // One line each: what a mode is its own note says. A run of days goes under the title, leaving the
                 // result where every row has it.
                 LevelRow(level: day, detail: run < 2 ? nil
-                             : "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
-                         under: run < 2 ? nil : Text("\(run) days running"), enabled: true, new: new, brief: true,
+                             : String(localized: "\(day.layout.rods.count) rods \u{00B7} par \(day.par) \u{00B7} \(run) days running",
+                                      comment: "VoiceOver: the daily's row. Its rods, its par, then the days in a row solved"),
+                         under: run < 2 ? nil : Text("\(run) days running", comment: "The daily's row: the days in a row solved, from two"), enabled: true, new: new, brief: true,
                          playing: playing?.id == day.id, pick: pick, refuse: refuse)
                 // Unsaid until the store has read what the player owns, so an owner never meets the lock.
                 ArchiveRow(open: Store.shared.ready ? Archive.open : nil, days: past.days.count, atPar: past.atPar,
@@ -577,10 +583,15 @@ struct MenuView: View {
                 let kept = saved?.run
                 LevelRow(level: .endless(kept ?? Run(seed: .random(in: .min ... .max))),
                          detail: kept.map {
-                             "continue \u{00B7} tank \($0.tank + 1) \u{00B7} brim \(saved?.brim ?? $0.brim)"
-                                 + (Best.tanks > 0 ? " \u{00B7} best \(Best.tanks)" : "")
-                         } ?? "deeper every tank \u{00B7} eight wrong stirs and it spills",
-                         best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)") : nil, enabled: true,
+                             let tank = $0.tank + 1, brim = saved?.brim ?? $0.brim
+                             return Best.tanks > 0
+                                 ? String(localized: "continue \u{00B7} tank \(tank) \u{00B7} brim \(brim) \u{00B7} best \(Best.tanks)",
+                                          comment: "Endless's row, a run saved: its tank, its brim, then the best run's tanks")
+                                 : String(localized: "continue \u{00B7} tank \(tank) \u{00B7} brim \(brim)",
+                                          comment: "Endless's row, a run saved: its tank, then its brim")
+                         } ?? String(localized: "deeper every tank \u{00B7} eight wrong stirs and it spills",
+                                     comment: "VoiceOver: endless's row. Eight is the brim's room, in words"),
+                         best: kept == nil && Best.tanks > 0 ? Text("best \(Best.tanks)", comment: "Endless's row: the best run's tanks") : nil, enabled: true,
                          new: new && kept == nil, continues: kept != nil, brief: kept == nil, playing: playing?.run != nil,
                          pick: pick, refuse: refuse)
                     // On the title's line, where every row's mark sits and "Endless" leaves room.
@@ -750,7 +761,8 @@ struct MenuView: View {
             if supporter { SupporterMark(sweep: shown.sweep, glow: shown.glow).padding(.top, 3) }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(supporter ? "Unstir, supporter" : "Unstir").accessibilityAddTraits(.isHeader)
+        .accessibilityLabel(supporter ? Text("Unstir, supporter", comment: "VoiceOver: the menu's title, with the supporter mark") // loc: verbatim a key, or the name
+                            : Text(verbatim: "Unstir")).accessibilityAddTraits(.isHeader)
     }
 
     /// Every tier as a chip. A strip wider than the screen moves only to keep the picked chip in view, so a sideways
@@ -785,7 +797,7 @@ struct MenuView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Tier")
-        .accessibilityValue(picked.spoken)
+        .accessibilityValue(picked.spoken) // loc: verbatim localized by Tier.spoken
         .accessibilityAdjustableAction { direction in
             let n = switch direction {
             case .increment: 1
@@ -800,7 +812,7 @@ struct MenuView: View {
     private func chip(_ t: Tier) -> some View {
         let isPicked = t == picked, open = t.isOpen()
         return HStack(spacing: 5) {
-            Text(t.rawValue).font(.ui(.chip))
+            Text(t.word).font(.ui(.chip)) // loc: verbatim localized by Tier.word
                 .foregroundStyle(isPicked ? Color.text : open ? Color.text2 : Color.text4)
             if !open {
                 Image(systemName: "lock.fill").font(.ui(.detail, .semibold)).imageScale(.small)
@@ -1002,17 +1014,20 @@ struct MenuView: View {
             let tap = ResetArm.tap(now: .now, armedAt: newRunArmed, played: true, held: voiceOver)
             newRunArmed = tap.armedAt
             guard tap.reset else {
-                AccessibilityNotification.Announcement("Tap again for a new run").post()
+                AccessibilityNotification.Announcement(String(localized: "Tap again for a new run",
+                                                                comment: "VoiceOver: endless's new run, armed")).post()
                 return Sound.shared.play(.tap)
             }
             Resume.remove("endless")
             saved = nil
             pick(.endless(Run(seed: .random(in: .min ... .max))), anew: true)
         } label: {
-            Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.ui(.detail)).lineLimit(1).foregroundStyle(Color.text3).hit()
+            (newRunArmed == nil ? Text("new run", comment: "Endless's row: drops the saved run")
+                : Text("new run? tap again", comment: "Endless's row: armed, a second tap drops the saved run")).font(.ui(.detail)).lineLimit(1).foregroundStyle(Color.text3).hit()
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(newRunArmed == nil ? "New run" : "New run, tap again to confirm")
+        .accessibilityLabel(newRunArmed == nil ? Text("New run", comment: "VoiceOver: starts a new endless run") // loc: verbatim each a key
+                            : Text("New run, tap again to confirm", comment: "VoiceOver: endless's new run, armed"))
         .accessibilityHint("Drops the saved run and starts another.")
         .accessibilityFocused($newRunFocused)
         .onChange(of: newRunFocused) { if !newRunFocused && voiceOver { newRunArmed = nil } }
@@ -1112,8 +1127,10 @@ private struct TierList: View, Equatable {
             let levels = tier.levels, frontier = tier.frontier(), landing = report == nil ? nil : tier.landing()
             ForEach(Array(levels.enumerated()), id: \.element.id) { i, level in
                 let reached = unlocked || i == 0 || Best.load(levels[i - 1].id) != nil
-                let opens = !open ? tier.below.map { "par every \($0.rawValue) level to open" }
-                    : reached ? nil : "solve \(levels[i - 1].label) to open"
+                let opens = !open ? tier.below.map {
+                    String(localized: "par every \($0.word) level to open", comment: "A shut tier's row, tapped. The tier below")
+                } : reached ? nil : String(localized: "solve \(levels[i - 1].label) to open",
+                                           comment: "A shut row, tapped. The level number before it")
                 LevelRow(level: level, enabled: open && reached, opens: opens, frontier: level.id == frontier?.id,
                          flash: level.id == flash, held: level.id == held, needs: open && !reached ? levels[i - 1] : nil,
                          gate: open ? nil : tier.below, playing: level.id == playing, pick: pick, refuse: refuse)
@@ -1130,9 +1147,10 @@ private struct TierList: View, Equatable {
     private func header(open: Bool) -> some View {
         let par = tier.atPar()
         return HStack(spacing: 10) {
-            Text(tier.rawValue).font(.ui(.detail, .semibold)).foregroundStyle(tier.sweep).fixedSize()
+            Text(tier.word).font(.ui(.detail, .semibold)).foregroundStyle(tier.sweep).fixedSize() // loc: verbatim localized by Tier.word
             Rectangle().fill(tier.sweep).frame(height: 1).opacity(0.8)
-            Text(open ? "\(par.filter { $0 }.count)/\(par.count) at par" : "locked").font(.ui(.detail)).foregroundStyle(Color.text3)
+            (open ? Text("\(par.filter { $0 }.count)/\(par.count) at par", comment: "A tier's header. Levels at par, of all")
+                : Text("locked", comment: "A shut tier's header")).font(.ui(.detail)).foregroundStyle(Color.text3)
         }
         // Its own, so a locked tier's header scrolled to the top stands clear of the chips.
         .padding(.top, 14).padding(.bottom, Self.headerFoot)
@@ -1145,9 +1163,9 @@ private struct TierList: View, Equatable {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "lock.fill").font(.ui(.detail, .semibold))
-                Text("opens with every \(below.rawValue) level at par").font(.ui(.label))
+                Text("opens with every \(below.word) level at par", comment: "A shut tier's gate. The tier below").font(.ui(.label))
                 Spacer(minLength: 0)
-                Text("\(lit)/\(par.count)").font(.ui(.label, .semibold))
+                Text(verbatim: "\(lit)/\(par.count)").font(.ui(.label, .semibold))
             }
             .foregroundStyle(tier.ink)
             .shadow(color: tier.glow.opacity(0.5), radius: 5)
@@ -1160,7 +1178,8 @@ private struct TierList: View, Equatable {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Locked. Opens with every \(below.rawValue) level at par: \(lit) of \(par.count).")
+        .accessibilityLabel(Text("Locked. Opens with every \(below.word) level at par: \(lit) of \(par.count).",
+                                 comment: "VoiceOver: a shut tier's gate. The tier below, its levels at par, of all"))
         .padding(.top, 12)
         shortList(below)
     }
@@ -1176,17 +1195,19 @@ private struct TierList: View, Equatable {
                     // One view with the dot after it, so a wrapped line never starts on a dot.
                     HStack(spacing: 0) {
                         Button { pick(first) } label: {
-                            Text(run.count == 1 ? first.label : "\(first.label)\u{2013}\(last.label)")
+                            Text(verbatim: run.count == 1 ? first.label : "\(first.label)\u{2013}\(last.label)")
                                 .font(.ui(.label, .semibold)).foregroundStyle(first.colour)
                                 .shadow(color: first.colour.opacity(0.6), radius: 3)
                                 .padding(.horizontal, 6).frame(minWidth: 32, minHeight: 36).contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel(run.count == 1 ? "\(below.rawValue) \(first.label), short of par"
-                                            : "\(below.rawValue) \(first.label) to \(last.label), short of par")
-                        .accessibilityHint("Opens \(below.rawValue) \(first.label)")
+                        .accessibilityLabel(run.count == 1 // loc: verbatim each a key
+                            ? Text("\(below.word) \(first.label), short of par", comment: "VoiceOver: a level short of par. Its tier, its number")
+                            : Text("\(below.word) \(first.label) to \(last.label), short of par",
+                                   comment: "VoiceOver: levels short of par. Their tier, the first number, the last"))
+                        .accessibilityHint(Text("Opens \(below.word) \(first.label)", comment: "VoiceOver: a level short of par. Its tier, its number"))
                         if i < runs.count - 1 {
-                            Text("\u{00B7}").font(.ui(.label)).foregroundStyle(Color.text4).frame(minHeight: 36).accessibilityHidden(true)
+                            Text(verbatim: "\u{00B7}").font(.ui(.label)).foregroundStyle(Color.text4).frame(minHeight: 36).accessibilityHidden(true)
                         }
                     }
                 }
@@ -1280,22 +1301,24 @@ private struct LevelRow: View {
 
     /// The number, the title over its detail, and the result at the trailing edge, or `stacked` under the title.
     private func face(stacked: Bool, result: Best?, tried: Bool, saying: Bool) -> some View {
-        let rods = level.layout.base.map { "\($0.rods.count) rods + swirl" } ?? "\(level.layout.rods.count) rods"
+        let rods = level.layout.base.map { String(localized: "\($0.rods.count) rods + swirl", comment: "A swirl layout's knobs, then its swirl") }
+            ?? String(localized: "\(level.layout.rods.count) rods", comment: "VoiceOver: a layout's rods")
         return HStack(alignment: .firstTextBaseline, spacing: 12) {
             // A locked number stays bright enough that the hue walk still reads on first launch.
-            Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(level.colour)
+            Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(level.colour) // loc: verbatim a number, or localized by Level
                 .shadow(color: enabled ? level.colour : .clear, radius: 4).opacity(enabled ? 1 : 0.7)
                 .frame(width: typeSize.isAccessibilitySize ? nil : numberWidth, alignment: .leading)
             VStack(alignment: .leading, spacing: 4) {
                 Text(level.title).font(.ui(.body)).multilineTextAlignment(.leading).foregroundStyle(enabled ? Color.text : Color.text3)
                 if saying, let opens {
-                    Text(opens).font(.ui(.detail)).foregroundStyle(level.colour).transition(.opacity)
+                    Text(opens).font(.ui(.detail)).foregroundStyle(level.colour).transition(.opacity) // loc: verbatim localized by TierList
                 } else if playing {
                     // In place of its rods and par, which the level's header shows: the frontier's hairline is
                     // lit too, so the hairline alone can't say which row is in the tank.
                     Text("playing").font(.ui(.detail)).foregroundStyle(level.colour)
                 } else if !brief {
-                    Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.ui(.detail))
+                    Text(detail ?? String(localized: "\(rods) \u{00B7} par \(level.par)", comment: "A row's rods, then its par")) // loc: verbatim localized by the row's maker and here
+                        .font(.ui(.detail))
                         // A locked row's own detail is its reason, as on the daily, so it stays readable.
                         .foregroundStyle(enabled ? Color.text2 : detail != nil ? Color.text3 : Color.text4).transition(.opacity)
                 }

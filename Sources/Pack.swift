@@ -49,16 +49,18 @@ enum Pack: String, CaseIterable, Sendable {
     /// "Lens and Escapement".
     static func named(_ packs: [Pack]) -> String {
         let names = packs.map(\.name)
-        return names.count < 2 ? names.joined() : names.dropLast().joined(separator: ", ") + " and " + names.last!
+        guard names.count > 1 else { return names.joined() }
+        return String(localized: "\(names.dropLast().joined(separator: ", ")) and \(names.last!)",
+                      comment: "Packs named in a list. Every name but the last, then the last")
     }
 
-    /// What its levels are, as its card and a completion say them.
-    var noun: String {
+    /// Its levels counted by what they are, as its card and a completion say them.
+    func counted(_ n: Int) -> String {
         switch self {
-        case .firstStir: "scenes"
-        case .lens: "panels"
-        case .escapement: "problems"
-        case .prism: "specimens"
+        case .firstStir: String(localized: "\(n) scenes", comment: "First Stir's levels, counted")
+        case .lens: String(localized: "\(n) panels", comment: "Lens's levels, counted")
+        case .escapement: String(localized: "\(n) problems", comment: "Escapement's levels, counted")
+        case .prism: String(localized: "\(n) specimens", comment: "Prism's levels, counted")
         }
     }
 
@@ -240,6 +242,11 @@ extension Level {
 
     /// The halftone panel the level draws (`Halftone.panel`): a Lens level's number, and 0, the test panel, anywhere else.
     var panel: Int { pack == .lens ? Int(label) ?? 0 : 0 }
+
+    /// The numbered picture the play screen bakes: `panel`, or an Escapement problem's number, for its own plate
+    /// (`EscapementArt.plate`). Only the play screen asks: a dock cover, a card's clip and the promoted-purchase image
+    /// draw `panel`, so for now they keep Escapement's shared plate.
+    var plate: Int { pack == .escapement ? Int(label) ?? 0 : panel }
 
     /// Lens's chapters (Jack's call N1b, round 13): six levels each, the last seven.
     static let lensChapters = [

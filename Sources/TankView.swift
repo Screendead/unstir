@@ -554,7 +554,7 @@ struct LevelView: View {
     /// The play screen's way out and its count: moves against par, Escapement's ticks or the sandbox's controls.
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
-            UnstirButton(.quiet, action: leave) { Text(game.level.back).font(.ui(.button)) }
+            UnstirButton(.quiet, action: leave) { Text(game.level.back).font(.ui(.button)) } // loc: verbatim localized by Level.back
                 .accessibilityLabel(Spoken.back(game.level))
             Spacer()
             if game.level.sandbox {
@@ -567,7 +567,8 @@ struct LevelView: View {
                 tickBudget.opacity(showResult && !game.lost ? 0 : 1)
             } else {
                 // Endless has no par; its brim is on the rim.
-                Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
+                (game.level.run == nil ? Text("moves \(game.moves) / par \(game.par)", comment: "The play screen's count. Moves, then par")
+                    : Text("moves \(game.moves)", comment: "The play screen's count, endless. Moves"))
                     // On black the wasted-twist alarm reads at full contrast, whatever the picture shows.
                     .keyframeAnimator(initialValue: 0.0, trigger: game.pushes) { [tone = countTone] text, t in
                         text.foregroundStyle(t > 0.5 ? Color.alarm : tone)
@@ -587,10 +588,12 @@ struct LevelView: View {
 
     private var titleRow: some View {
         HStack(alignment: .firstTextBaseline, spacing: 14) {
-            Text(game.level.label).fontWeight(.semibold).foregroundStyle(game.level.colour)
+            Text(game.level.label).fontWeight(.semibold).foregroundStyle(game.level.colour) // loc: verbatim a number, or localized by Level
                 .shadow(color: page.glow(game.level.colour), radius: 4)
             // Endless's tank beside its name, where it can't read as the brim's count.
-            Text(game.level.title + (game.level.run.map { ", tank \($0.tank + 1)" } ?? ""))
+            Text(game.level.run.map { // loc: verbatim localized by Level and here
+                String(localized: "\(game.level.title), tank \($0.tank + 1)", comment: "Endless's title. Its name, then the tank")
+            } ?? game.level.title)
         }
         .font(.ui(.headline, .medium))
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -598,7 +601,7 @@ struct LevelView: View {
             // In the gap above the title, so a pack level's tank sits where every other level's does.
             if let pack = game.level.pack {
                 // The size the title's 18 pt gap holds.
-                Text(pack.name.uppercased()).font(.ui(.eyebrow)).tracking(2).dynamicTypeSize(.large)
+                Text(verbatim: pack.name.uppercased()).font(.ui(.eyebrow)).tracking(2).dynamicTypeSize(.large) // loc: verbatim a pack's name, never translated
                     .foregroundStyle(game.level.colour).opacity(0.75)
                     .offset(y: -TypeRole.eyebrow.line(at: .large).height - 2)
                     .accessibilityHidden(true)
@@ -655,9 +658,13 @@ struct LevelView: View {
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
     /// is an overlay, so the solved tank stays exactly where it was played.
     private func caption(_ layout: PlayLayout, _ fit: PlayLayout.Finished?) -> some View {
-        Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
-             : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
-             : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
+        let toSkip = String(localized: "tap to skip", comment: "The caption over an opening's stir")
+        let practice = game.level.archived
+            ? String(localized: "Practice: this day's best was set on its day.", comment: "The caption of an archive day replayed")
+            : String(localized: "Practice: only the first try counts.", comment: "The caption of a daily replayed")
+        let opening = game.level.replay
+            ? String(localized: "watch the stir \u{00B7} tap to skip", comment: "The caption over a replay's opening stir") : toSkip
+        return Text(notice ?? (demoing ? toSkip : shown == nil ? game.counts ? game.caption : practice : opening)) // loc: verbatim localized here, by Game and by say
             .font(page.caption).opacity(captionOpacity)
             // Hung under the note rather than stacked, so plughole 01's tank sits where every level's does. Beside the
             // menu the gear is in sight, so there is nothing to point at (Jack's call r16c-pointer = C).
@@ -666,7 +673,7 @@ struct LevelView: View {
                     Self.pointer.font(.ui(.detail)).fixedSize()
                         .opacity(showResult || ending || shown != nil ? 0 : page.tone(.text3).alpha)
                         .animation(.easeOut(duration: 0.4), value: shown == nil)
-                        .accessibilityLabel(Self.pointerSpoken)
+                        .accessibilityLabel(Self.pointerSpoken) // loc: verbatim localized by pointerSpoken
                         .accessibilityHidden(showResult || ending || shown != nil)
                         // A gap below the note's last line.
                         .offset(y: TypeRole.detail.line(at: playType).height + 7)
@@ -746,7 +753,8 @@ struct LevelView: View {
             } label: {
                 if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
             }
-                .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
+                .accessibilityLabel(game.level.sandbox ? Text("Undo", comment: "VoiceOver: the undo button") // loc: verbatim each a key
+                                    : Text("Undo, \(game.bank) left", comment: "VoiceOver: the undo button. Undos left"))
                 .disabled(game.history.isEmpty)
                 .overlay(alignment: .topTrailing) { refillBadge }
             Spacer()
@@ -913,7 +921,7 @@ struct LevelView: View {
                 if pointing && !pointed {
                     pointed = true
                     if storesPointing { Best.pointedAtSettings = true }
-                    if !beside { AccessibilityNotification.Announcement(Self.pointerSpoken).post() }
+                    if !beside { AccessibilityNotification.Announcement(Self.pointerSpoken).post() } // loc: verbatim localized by pointerSpoken
                 }
             } else {
                 lifted = false
@@ -947,7 +955,7 @@ struct LevelView: View {
             jams += 1
             Knock.thud.play()
             Sound.shared.play(.seized)
-            say("the tank is full: undo or reset")
+            say(String(localized: "the tank is full: undo or reset", comment: "Said when a full stack refuses a stir"))
         }
         .task(id: notices) {
             guard notice != nil, (try? await Task.sleep(for: .seconds(3))) != nil else { return }
@@ -956,7 +964,8 @@ struct LevelView: View {
         .onChange(of: badge) {
             guard badge > 0 else { return }
             game.refillSeen()
-            AccessibilityNotification.Announcement("\(badge) undos added, \(game.bank) in the bank").post()
+            AccessibilityNotification.Announcement(String(localized: "\(badge) undos added, \(game.bank) in the bank",
+                                                          comment: "VoiceOver: the day's refill. Undos added, then the bank")).post()
         }
         .task(id: [shown == nil, touching, game.history.isEmpty]) {
             // The first level shows its verb only to a player who has waited on it, and never once it has been solved.
@@ -1068,7 +1077,8 @@ struct LevelView: View {
                      action: tapReset) {
             if armedAt == nil { Text("reset") } else { Text("reset? tap again") }
         }
-            .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
+            .accessibilityLabel(armedAt == nil ? Text("Reset", comment: "VoiceOver: the reset button") // loc: verbatim each a key
+                                : Text("Reset, tap again to confirm", comment: "VoiceOver: the reset button, armed"))
             .disabled(settling)
             .accessibilityFocused($resetFocused)
             .task(id: armedAt) {
@@ -1088,7 +1098,7 @@ struct LevelView: View {
     private func tapReset() {
         let tap = ResetArm.tap(now: .now, armedAt: armedAt, played: !game.history.isEmpty, held: voiceOver)
         armedAt = tap.armedAt
-        if tap.reset { reset() } else { AccessibilityNotification.Announcement("Tap again to reset").post() }
+        if tap.reset { reset() } else { AccessibilityNotification.Announcement(String(localized: "Tap again to reset", comment: "VoiceOver: reset, armed")).post() }
     }
 
     /// Seconds until the newest move's solve lands, at its last tick on Escapement (Jack's call tk-finish = B, round 16):
@@ -1135,11 +1145,16 @@ struct LevelView: View {
         withAnimation(game.history.last?.rod == Game.tank ? .snappy(duration: 0.3) : nil) { game.undo() }
     }
 
-    nonisolated static let refills = "undos refill +2 each day you play"
+    nonisolated static var refills: String {
+        String(localized: "undos refill +2 each day you play", comment: "Said when undo is tapped with none left")
+    }
 
     /// Plughole 01's pointer to the settings sheet, drawn with the menu's own gear.
     static var pointer: Text { Text("sound, haptics, colour letters: \(Image(systemName: "gearshape")) on the menu") }
-    nonisolated static let pointerSpoken = "Sound, haptics and colour letters are in settings, the gear on the menu."
+    nonisolated static var pointerSpoken: String {
+        String(localized: "Sound, haptics and colour letters are in settings, the gear on the menu.",
+               comment: "VoiceOver: plughole 01's pointer to the settings")
+    }
 
     /// Whether this level opens pointing at the settings: plughole 01 until it has, or under the harness UNSTIR_FRESH.
     nonisolated static func points(at level: Level, harnessed: Bool, fresh: Bool, pointed: Bool) -> Bool {
@@ -1167,7 +1182,7 @@ struct LevelView: View {
     private func say(_ text: String) {
         notice = text
         notices += 1
-        AccessibilityNotification.Announcement(text).post()
+        AccessibilityNotification.Announcement(text).post() // loc: verbatim localized by the caller
     }
 
     /// Back to the menu, the only way out short of a finish or the next tank.
@@ -1452,7 +1467,8 @@ struct LevelView: View {
     /// see `badge` change.
     private var refillBadge: some View {
         KeyframeAnimator(initialValue: Self.refillTime, trigger: badge) { s in
-            Text(game.firstRefill ? "+\(badge) undos" : "+\(badge)").font(.ui(.detail)).foregroundStyle(page.signal(.lime))
+            (game.firstRefill ? Text("+\(badge) undos", comment: "Over the undo button: the day's first refill") : Text(verbatim: "+\(badge)"))
+                .font(.ui(.detail)).foregroundStyle(page.signal(.lime))
                 .opacity(badge > 0 ? Self.refillShown(frozenClock ?? s) : 0)
         } keyframes: { _ in
             MoveKeyframe(0.0)
@@ -1474,9 +1490,10 @@ struct LevelView: View {
     }
 
     private func sandboxControls(named: Bool) -> some View {
-        let picture = game.level.picture.rawValue
+        let picture = String(localized: game.level.picture.display)
         return HStack(spacing: 8) {
-            sandboxControl(named ? "picture: \(picture) \u{203A}" : "\(picture) \u{203A}", game.nextPicture)
+            sandboxControl(named ? String(localized: "picture: \(picture) \u{203A}", comment: "The sandbox's picture control. The picture")
+                           : "\(picture) \u{203A}", game.nextPicture)
             // A turn in hand, or snapping to commit, names a rod of the current layout.
             sandboxControl(Self.layoutLabel(game.level.layout, named: named)) {
                 if liveRod == nil { game.nextLayout() }
@@ -1490,17 +1507,18 @@ struct LevelView: View {
         let base = layout.base ?? layout, rods = layout.rods.count
         let shared = Layout.allCases.contains { $0 != base && $0.rods.count == base.rods.count }
         return switch (named, shared) {
-        case (true, false): "rods: \(rods) \u{203A}"
-        case (true, true): "rods: \(rods) \u{00B7} \(base.rawValue) \u{203A}"
-        case (false, false): "\(rods) rods \u{203A}"
-        case (false, true): "\(base.rawValue) \u{203A}"
+        case (true, false): String(localized: "rods: \(rods) \u{203A}", comment: "The sandbox's layout control. Its rods")
+        case (true, true): String(localized: "rods: \(rods) \u{00B7} \(String(localized: base.display)) \u{203A}",
+                                  comment: "The sandbox's layout control. Its rods, then the layout")
+        case (false, false): String(localized: "\(rods) rods \u{203A}", comment: "The sandbox's layout control, short. Its rods")
+        case (false, true): "\(String(localized: base.display)) \u{203A}"
         }
     }
 
     /// Narrower than a secondary's 20 pt sides, so both fit the header beside the way out.
     private func sandboxControl(_ label: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14))
+            Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14)) // loc: verbatim localized by the caller
         }
         .buttonStyle(Sounding(presses: true))
     }
@@ -1612,12 +1630,12 @@ struct LevelView: View {
                         } else {
                             PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                                          clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
-                                         panel: game.level.panel, onStrike: { struck = true })
+                                         panel: game.level.plate, onStrike: { struck = true })
                         }
                         #else
                         PictureLayer(picture: game.level.picture, side: side, seed: Int(game.level.label) ?? 0,
                                      clock: frozenClock ?? game.level.picture.clock(timeline.date.timeIntervalSince(opened), still: reduceMotion),
-                                     panel: game.level.panel, onStrike: { struck = true })
+                                     panel: game.level.plate, onStrike: { struck = true })
                         #endif
                     }
                         .keyframeAnimator(initialValue: -1.0, trigger: waved) { picture, w in
@@ -1939,7 +1957,7 @@ struct LevelView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(game.budget) ticks left")
-        .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(game.deadTickWords).post() } }
+        .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(game.deadTickWords).post() } } // loc: verbatim localized by Game
     }
 
     /// Escapement: the ratchet wheel's width, a knob and a half, so its teeth read.
@@ -2027,7 +2045,7 @@ struct LevelView: View {
     }
 
     private func badge(_ text: String) -> some View {
-        Text(text).font(.system(size: 20, weight: .bold, design: .serif))
+        Text(text).font(.system(size: 20, weight: .bold, design: .serif)) // loc: verbatim localized by the caller, or a number
             .foregroundStyle(page.accent)
             .padding(.horizontal, 7).padding(.vertical, 1)
             .background(Capsule().fill(page.paper ? Color.bone.opacity(0.9) : .black.opacity(0.7)))
@@ -2045,7 +2063,7 @@ struct LevelView: View {
             if stopped && stopLook == .left {
                 let left = game.stack.count
                 Circle().stroke(page.accent, lineWidth: 1.5).frame(width: size + 8, height: size + 8).position(c)
-                badge("\(left) left").position(x: spot.x + 14 * out, y: spot.y - 14)
+                badge(String(localized: "\(left) left", comment: "Escapement's lost tank: twists left on the picture")).position(x: spot.x + 14 * out, y: spot.y - 14)
             }
             if stopped && stopLook == .rings {
                 ForEach(twisted.indices, id: \.self) { i in
@@ -2152,7 +2170,7 @@ struct LevelView: View {
     }
 
     private func countLabel(_ steps: Int) -> some View {
-        Text(steps > 0 ? "+\(steps)" : "\u{2212}\(-steps)").font(.game(13, .semibold)).foregroundStyle(page.live)
+        Text(verbatim: steps > 0 ? "+\(steps)" : "\u{2212}\(-steps)").font(.game(13, .semibold)).foregroundStyle(page.live)
             .padding(.horizontal, 6).padding(.vertical, 2)
             .background(Capsule().fill(page.paper ? Color.bone.opacity(0.85) : .black.opacity(0.6)))
     }
@@ -2728,8 +2746,12 @@ extension Level {
 extension Channels {
     /// The primaries held, in the swatches' letters: "R", "GB", "RGB".
     var letters: String { zip(Channels.each, ["R", "G", "B"]).filter { contains($0.0) }.map(\.1).joined() }
-    /// The primary's name, for VoiceOver.
-    var name: String { self == .red ? "red" : self == .green ? "green" : "blue" }
+    /// What VoiceOver calls the primary's swatch, a whole phrase for each.
+    var alone: String {
+        self == .red ? String(localized: "show red alone", comment: "VoiceOver: Prism's red swatch")
+            : self == .green ? String(localized: "show green alone", comment: "VoiceOver: Prism's green swatch")
+            : String(localized: "show blue alone", comment: "VoiceOver: Prism's blue swatch")
+    }
 }
 
 /// The settings' colour letters, stored as `letters`. Absent until the player chooses, so the letters follow
@@ -2764,15 +2786,16 @@ struct ChannelSwatches: View {
             ForEach(Channels.each, id: \.rawValue) { c in
                 let held = isolated == c
                 // Secondary buttons in their channel's colour, filled while held.
-                Text(c.letters).font(.ui(.button, .semibold))
+                Text(verbatim: c.letters).font(.ui(.button, .semibold))
                     .modifier(ButtonFace(emphasis: .secondary, inset: 0, minWidth: ButtonFace.height, edge: c.colour,
                                          strokeWidth: 1.5, filled: held))
                     .onLongPressGesture(minimumDuration: 0, maximumDistance: 60, perform: {}) { pressing in
                         if pressing { isolated = c } else if isolated == c { isolated = nil }
                     }
                     .accessibilityElement()
-                    .accessibilityLabel("show \(c.name) alone")
-                    .accessibilityValue(held ? "on" : "off")
+                    .accessibilityLabel(c.alone) // loc: verbatim localized by Channels
+                    .accessibilityValue(held ? Text("on", comment: "VoiceOver: a switch, on") // loc: verbatim each a key
+                                        : Text("off", comment: "VoiceOver: a switch, off"))
                     .accessibilityAddTraits(.isButton)
                     .accessibilityAction { isolated = held ? nil : c }
             }
