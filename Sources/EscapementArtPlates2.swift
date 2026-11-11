@@ -125,11 +125,11 @@ extension EscapementArt {
         plate.line(place([sub, polar(sub, 0.105, -20 * deg)]), medium)
         cut(&plate, place(arc(sub, 0.016)))
 
-        // The sweep hand, stopped, with its counterpoise.
+        // The sweep hand, stopped: the needle in the second ink, its tail and counterpoise in black.
         let d = polar(o, 1, 126 * deg), n = P(-d.y, d.x)
-        let needle = [-0.2 * d + 0.009 * n, 0.018 * n, 0.69 * d + 0.004 * n, 0.69 * d - 0.004 * n, -0.018 * n, -0.2 * d - 0.009 * n]
-        plate.fill(place(needle), .second)
-        plate.fill(place(arc(-0.15 * d, 0.04)), .second)
+        plate.fill(place([-0.2 * d + 0.009 * n, 0.018 * n, -0.018 * n, -0.2 * d - 0.009 * n]), .black)
+        plate.fill(place(arc(-0.15 * d, 0.04)), .black)
+        plate.fill(place([0.018 * n, 0.69 * d + 0.004 * n, 0.69 * d - 0.004 * n, -0.018 * n]), .second)
         cut(&plate, place(arc(o, 0.042)))
         plate.line(place(arc(o, 0.014)), medium)
 
@@ -166,7 +166,7 @@ extension EscapementArt {
             plate.line(curve(P(left, top + 0.02), P(hub.x, top + 0.04), P(right, top - 0.03)), fine)
             for spoke in spokes { plate.line([hub, polar(hub, spoke.reach, spoke.a)], fine) }
             for j in 1...turns {
-                let r = 0.026 + 0.021 * Double(j)
+                let r = 0.026 + 0.025 * Double(j)
                 for k in 0..<count where rnd(seed + 1, j * count + k) > 0.07 {
                     let p = spokes[k], q = spokes[(k + 1) % count], qa = q.a + (k == count - 1 ? 2 * .pi : 0)
                     guard r < p.reach, r < q.reach else { continue }
@@ -175,8 +175,8 @@ extension EscapementArt {
             }
         }
         let hub = P(0, -0.28)
-        web(hub, left: cord, right: x - 0.011, top: -0.775, floor: -0.085, seed: 12, turns: 15)
-        web(P(-0.6, 0.0), left: -0.80, right: -x - 0.045, top: -0.2, floor: 0.2, seed: 31, turns: 8)
+        web(hub, left: cord, right: x - 0.011, top: -0.775, floor: -0.085, seed: 12, turns: 13)
+        web(P(-0.6, 0.0), left: -0.80, right: -x - 0.045, top: -0.2, floor: 0.2, seed: 31, turns: 7)
         // Threads hung in the case's corner.
         for (k, end) in [P(0.80, -0.42), P(0.80, -0.56), P(0.52, -0.775)].enumerated() {
             plate.line(curve(P(0.35 + 0.1 * Double(k), -0.775), P(0.56, -0.6 + 0.04 * Double(k)), end, 10), fine)
@@ -378,7 +378,7 @@ extension EscapementArt {
         }
         let point = [P(0.03, 0.19), P(0.02, 0.06), P(0.075, -0.075), P(0.13, 0.06), P(0.12, 0.19)].map { $0 + at }
         plate.fill(point)
-        plate.lines(hatch([point], angle: -0.5, gap: 0.014), fine, .second)
+        plate.lines(hatch([point], angle: -0.5, gap: 0.014), fine)
         plate.line(point, heavy)
         plate.line(arc(at, radius), heavy)
 
@@ -591,8 +591,8 @@ extension EscapementArt {
         plate.fill(door)
         plate.lines(hatch([door], angle: 0.8, gap: 0.009) + hatch([door], angle: -0.8, gap: 0.009), fine)
         plate.line(door + [door[0]], medium)
-        plate.fill(arc(P(ax + 0.01, -0.5), 0.03), .second)
-        plate.fill([P(ax + 0.03, -0.515), P(ax + 0.085, -0.5), P(ax + 0.03, -0.49)], .second)
+        cut(&plate, arc(P(ax + 0.01, -0.5), 0.03))
+        cut(&plate, [P(ax + 0.03, -0.515), P(ax + 0.085, -0.5), P(ax + 0.03, -0.49)])
         plate.line([P(ax - 0.065, -0.44), P(ax + 0.1, -0.44)], heavy)
 
         // The dial, at three.
