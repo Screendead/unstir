@@ -337,5 +337,44 @@ final class LensTests: XCTestCase {
         XCTAssertEqual(LensArt.levels.keys.sorted(), Array(1...25))
         XCTAssertEqual(Halftone.panel(26).name, "test")
         XCTAssertEqual(Set(Halftone.panels.map(\.name)).count, Halftone.panels.count)
+        XCTAssertTrue(Halftone.panels.allSatisfy { !$0.name.contains("-") }, "a bake's file name is cut at its hyphens")
+    }
+
+    /// Caches keeps the bakes of the four panels opened last, at every size, a read counting as an open, and the
+    /// cover's, the oldest or not, as one of the four; another build's bakes go, and nothing else in the folder does.
+    func testCachesKeepsTheFourPanelsOpenedLast() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("panel-cache-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let cache = PanelCache(folder: folder, key: "-7-100.rgba"), older = PanelCache(folder: folder, key: "-6-90.rgba")
+        let cover = Halftone.panel(Level.lensFace.panel).name, start = Date(timeIntervalSince1970: 1_000_000)
+        XCTAssertEqual(cover, "kaleidoscope")
+        XCTAssertEqual(PanelCache.kept, 4)
+        func bake(_ n: Int) -> Data { Data(repeating: 1, count: 4 * n * n) }
+        func kept() throws -> Set<String> {
+            Set(try FileManager.default.contentsOfDirectory(atPath: folder.path).map { $0.replacingOccurrences(of: "-7-100.rgba", with: "") })
+        }
+        try Data([1]).write(to: folder.appendingPathComponent("unstir-log.txt"))
+        older.write(bake(2), "keyhole", 2, keeping: [cover], now: start)
+        cache.write(bake(2), cover, 2, keeping: [cover], now: start + 1)
+        XCTAssertEqual(try kept(), ["unstir-log.txt", "halftone-kaleidoscope-2"], "a new build's first bake clears the last build's")
+        for (i, panel) in ["keyhole", "peephole", "magnifier"].enumerated() {
+            cache.write(bake(2), panel, 2, keeping: [cover], now: start + 2 + Double(i))
+        }
+        cache.write(bake(3), "keyhole", 3, keeping: [cover], now: start + 5)
+        XCTAssertEqual(try kept(), ["unstir-log.txt", "halftone-kaleidoscope-2", "halftone-keyhole-2", "halftone-keyhole-3",
+                                    "halftone-peephole-2", "halftone-magnifier-2"])
+        XCTAssertNil(cache.read("monocle", 2), "never baked")
+        XCTAssertNil(cache.read("peephole", 3), "not at this size")
+        // Magnifier is read after peephole was baked, so the fifth panel takes peephole's place, not its own.
+        XCTAssertEqual(cache.read("magnifier", 2, now: start + 6), bake(2))
+        cache.write(bake(2), "monocle", 2, keeping: [cover], now: start + 7)
+        XCTAssertEqual(try kept(), ["unstir-log.txt", "halftone-kaleidoscope-2", "halftone-keyhole-2", "halftone-keyhole-3",
+                                    "halftone-magnifier-2", "halftone-monocle-2"])
+        // The cover's, opened longest ago, stays; keyhole goes at both its sizes.
+        cache.write(bake(2), "goggles", 2, keeping: [cover], now: start + 8)
+        XCTAssertEqual(try kept(), ["unstir-log.txt", "halftone-kaleidoscope-2", "halftone-magnifier-2", "halftone-monocle-2",
+                                    "halftone-goggles-2"])
+        XCTAssertEqual(cache.read(cover, 2), bake(2))
     }
 }
