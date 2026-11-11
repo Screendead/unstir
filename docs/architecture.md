@@ -1085,7 +1085,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   0.08 are the weakest left. Drawing did not mend the order read on the four-rod glass, where 8, 11 and 18 were dealt: with the same two
   entries dealt either way round, a lens under a neighbour's twist and over it looked all but alike
   (Mac renders at the phone's size), as a quad neighbour reaches 16% of the band round the rim. So those three are
-  dealt on eye and tri (18 to 22% and 29%), no Lens level is on quad, and their lens cores are a flat tone unlike the
+  dealt on tri (29%), no Lens level is on quad, and their lens cores are a flat tone unlike the
   ground round them (cyan on the page, cyan over magenta cloth, yellow in the dark wood), so a twist dealt over a
   lens pulls a tail of that tone out of it; `scripts/lens-art-sheet.py order` renders each lens and twist of a level
   both ways round to look at. `scripts/lens-panels.sh read` also

@@ -81,20 +81,20 @@ extension LensArt {
 
 // MARK: - 8: Spectacles
 
-/// Level 8's name: round spectacles laid across an open book, tilted, one glass over the right core (eye's right big
-/// rod, the level's one lens), flat cyan, a bookworm in it, and the other, tinted, off the left rod's centre. The print
-/// is set in blocks of tone, a paragraph each, ragged at its ends, and a ribbon lies down the gutter, so the three rods
-/// that twist turn shapes broad enough to read without the lines; the frames are tortoiseshell, so a twist that
-/// drags one shows along it, and the lens's flat tone shows as a tail wherever a twist dealt over it pulls its edge
-/// out across the page. Level 8 deals the lens +3 in all.
+/// Level 8's name: round spectacles laid across an open book, their glasses over the top and lower left cores (tri's
+/// two lenses on this level), flat cyan, a bookworm in one and a pressed clover in the other. The print is set in
+/// blocks of tone, a paragraph each, ragged at its ends, and a ribbon lies down the right page, so the rod that twists
+/// turns shapes broad enough to read without the lines; the frames are tortoiseshell, so a twist that drags one shows
+/// along it, and a lens's flat tone shows whole and round when it was dealt last, and bitten, its edge pulled out
+/// across the page, under a twist. Level 8 deals each lens +3 in all.
 extension LensArt {
     static let spectacles: Halftone.Panel = {
-        // The glasses touch: b is 0.8 from a, the pair tilted 20 degrees, so the plain one sits off its rod's centre.
-        let a = P(0.4, 0), b = P(-0.352, 0.274), inner = 0.352, outer = 0.395
+        // Each glass fills its core, so the frames, a core apart less than their width, run into each other at the bridge.
+        let a = P(0, -0.42), b = P(-0.3637, 0.21), inner = 0.348, outer = 0.385
         let along = simd_normalize(a - b), across = P(-along.y, along.x)
-        let worm = a + P(0.03, -0.04)
+        let worm = a + P(0.03, -0.04), clover = b + P(-0.026, -0.04)
         let picture = rect(-0.72, -0.62, -0.2, -0.2)
-        let ribbon = bar(P(-0.03, -0.5), P(-0.1, 0.96), 0.08)
+        let ribbon = bar(P(0.03, -0.9), P(0.22, 0.96), 0.08)
         // The print's blocks, as (x0, y0, x1, y1): a heading and the plate's caption on the left page, paragraphs on both.
         let blocks = [(-0.72, -0.82, -0.36, -0.72), (-0.6, -0.14, -0.3, -0.06), (-0.78, 0.02, -0.12, 0.2), (-0.78, 0.2, -0.4, 0.26),
                       (-0.7, 0.36, -0.12, 0.42), (-0.78, 0.42, -0.12, 0.62), (-0.78, 0.74, -0.3, 0.84),
@@ -121,7 +121,7 @@ extension LensArt {
         for block in blocks {
             for yy in stride(from: block.1 + 0.03, to: block.3, by: 0.06) {
                 s += runs(span(P(block.0 + 0.02, yy), P(block.2 - 0.02, yy), 44)) {
-                    simd_distance($0, a) > outer && !inside($0, ribbon)
+                    simd_distance($0, a) > outer && simd_distance($0, b) > outer && !inside($0, ribbon)
                 }
             }
         }
@@ -133,7 +133,7 @@ extension LensArt {
         s.append(stroke([P(-0.72, -0.2), P(-0.56, -0.44), P(-0.44, -0.3), P(-0.3, -0.46), P(-0.2, -0.2)], hair))
         s.append(stroke(circle(P(-0.52, -0.48), 0.075, 16), hair))
         // The spectacles: rims, the bridge, and the arms folded out across the right page.
-        s.append(stroke(curve(polar(a, outer, 200), (a + b) / 2 - across * 0.2, polar(b, outer, 300), 16), bold))
+        s.append(stroke(curve(polar(a, outer, 160), (a + b) / 2 - across * 0.2, polar(b, outer, 260), 16), bold))
         s.append(stroke(curve(a + along * outer, a + along * (outer + 0.1) + across * 0.3, a + along * outer + across * 0.75, 20), bold))
         s.append(stroke(curve(b - along * outer, b - along * (outer + 0.1) + across * 0.3, b - along * outer + across * 0.7, 20), bold))
         for c in [a, b] {
@@ -147,19 +147,15 @@ extension LensArt {
         s.append(stroke(circle(worm + P(0.016, 0.003), 0.006, 10), 0.005))
         s.append(stroke([worm + P(0.019, -0.004), worm + P(0.026, -0.013)], 0.0018))
         s.append(stroke([worm + P(0.014, -0.004), worm + P(0.014, -0.014)], 0.0018))
+        for k in 0..<4 { s.append(stroke(circle(polar(clover, 0.012, 90 * Double(k) + 20), 0.009, 10), 0.003)) }
+        s.append(stroke(curve(clover, clover + P(0.012, 0.02), clover + P(0.004, 0.04), 8), 0.003))
         let under = fills
         return Halftone.Panel(name: "spectacles", tones: { p in
             for f in frames where f.holds(p) { return f.tone }
-            // The lens is flat cyan, so its edge shows against the page wherever a twist drags it; the plain glass is
-            // tinted, the page and its print through it with cyan added.
-            if simd_distance(p, a) < inner { return c(0.75) }
-            var tone = c(0.26)
-            for f in under where f.holds(p) {
-                tone = f.tone
-                break
-            }
-            if simd_distance(p, b) < inner { tone.x = 0.5 }
-            return tone
+            // Each lens is flat cyan, so its edge shows against the page wherever a twist drags it.
+            if simd_distance(p, a) < inner || simd_distance(p, b) < inner { return c(0.75) }
+            for f in under where f.holds(p) { return f.tone }
+            return c(0.26)
         }, strokes: s)
     }()
 }

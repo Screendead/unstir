@@ -253,12 +253,12 @@ done
 # size, with no step between.
 film lens-zoom 11 "$tank,fps=4,scale=220:-1,tile=9x5:padding=4" PACK=lens LEVEL=1 OWNED=lens BESTS=lens:0 STACK=0:+3 CLEAN=1 FINGER=1 \
   REST=1 MOVES=0:-1,0:-1,0:-1
-# Two Lens levels solved by a drawn fingertip at par, the order read off the rims: 08 on eye, its right big rod the
-# lens under all three twists, and 12 on eye, both big rods (0.58) lenses. A lens's move rides up and down; dealt lenses come out
+# Two Lens levels solved by a drawn fingertip at par, the order read off the rims: 08 on tri, two lenses under its
+# one twist rod, and 12 on eye, both big rods (0.58) lenses. A lens's move rides up and down; dealt lenses come out
 # dragging down.
 if wants lens-08-solve; then warm 8; fi
 film lens-08-solve 19 "$tank,fps=1.5,scale=220:-1,tile=7x4:padding=4" PACK=lens LEVEL=8 OWNED=lens FINGER=1 REST=2.5 \
-  MOVES=0:+5,1:-1,3:-3,2:+3,1:-2,0:-4
+  MOVES=0:-1,1:+5,2:-3,1:+3,0:-2,1:-4
 if wants lens-12-solve; then warm 12; fi
 film lens-12-solve 21 "$tank,fps=1.5,scale=220:-1,tile=8x4:padding=4" PACK=lens LEVEL=12 OWNED=lens FINGER=1 REST=2.5 \
   MOVES=3:-5,0:-1,2:+2,1:-3,3:+4,0:-2,2:-3

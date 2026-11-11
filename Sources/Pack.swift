@@ -172,7 +172,7 @@ extension Level {
         (.tri, [0, 1], "2:+4,0:+2,1:+1",
          String(localized: "level.lens-7.title", defaultValue: "Binoculars",
                 comment: "Lens level title, a lens or a way of seeing")),
-        (.eye, [1], "0:+4,1:+2,2:-3,3:+3,1:+1,0:-5",
+        (.tri, [0, 2], "1:+4,0:+2,1:-3,2:+3,1:-5,0:+1",
          String(localized: "level.lens-8.title", defaultValue: "Spectacles",
                 comment: "Lens level title, a lens or a way of seeing")),
         (.eye, [2, 3], "0:+3,2:+2,1:-4,3:+3,0:+2,2:+1",

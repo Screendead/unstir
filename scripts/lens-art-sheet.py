@@ -35,7 +35,7 @@ LEVELS = {
     5: ("goggles", "Goggles", "eye", "2", "2:+2"),
     6: ("spyglass", "Spyglass", "eye", "0", "0:+2"),
     7: ("binoculars", "Binoculars", "tri", "0,1", "0:+2,1:+1"),
-    8: ("spectacles", "Spectacles", "eye", "1", "1:+2"),
+    8: ("spectacles", "Spectacles", "tri", "0,2", "0:+2,2:+2"),
     9: ("sunglasses", "Sunglasses", "eye", "2,3", "2:+2,3:+2"),
     10: ("pinhole", "Pinhole", "tri", "2", "2:+2"),
     11: ("bifocals", "Bifocals", "tri", "1,2", "1:+2,2:+2"),
