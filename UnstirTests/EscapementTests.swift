@@ -872,9 +872,7 @@ import XCTest
             XCTAssertEqual(level.plate, i + 1, level.id)
             XCTAssertEqual(level.panel, 0, level.id)
         }
-        let drawn = (-1...99).filter { EscapementArt.plate($0) != nil }
-        XCTAssertFalse(drawn.isEmpty)
-        XCTAssert(drawn.allSatisfy((1...Level.escapement.count).contains), "\(drawn)")
+        XCTAssertEqual((-1...99).filter { EscapementArt.plate($0) != nil }, Array(1...Level.escapement.count))
         for level in Pack.lens.levels + Tier.allCases.flatMap(\.levels) { XCTAssertEqual(level.plate, level.panel, level.id) }
     }
 
