@@ -239,11 +239,11 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   lens drags its rim, in dot pitches; `--solve` also runs `scripts/solve.sh` on each row and breaks one whose
   optimum or the app's parse is not its depth. It exits non-zero on a break.
 - Lens's panels: `scripts/lens-panels.sh render <panel> <out.png> [side] [layout lenses stack]` bakes a halftone panel
-  (`Halftone.panels`) on the Mac as the app does, stirred if given; `time [side]` times each bake, a pixel at a time
+  as the app does, stirred if given; `time [side]` times each bake, a pixel at a time
   and as vectors; `check <panel> <layout> [lenses]` runs the contrast test's measure on one layout.
-  `scripts/lens-art-sheet.py proof <dir> <level>...` bakes each drawn level's panel clean and through its lenses for
-  looking at, `check` measures each on its own level, `read` ranks the levels by the coarse shapes a twist turns, and `sheet <out.png> <level>...` lays the Mac's bake over the
-  game's shots of it (`shots.sh lens-NN`); its table names each drawn level's panel (needs Pillow).
+  `scripts/lens-art-sheet.py proof <dir> <level>...` bakes each drawn level's panel clean and through its lenses,
+  `check` measures each on its own level, `read` ranks levels by the shapes a twist turns, and `sheet <out.png> <level>...` lays the Mac's bake over the
+  game's shots (`shots.sh lens-NN`); its table names each level's panel (needs Pillow).
 - First Stir's outline: `docs/first-stir-outline.md` is the pack's story, scene table and art spec, approved by Jack
   (2026-10-26) with his answers marked under its open points. `scripts/first-stir-compositions.py` draws plans of three of its scenes (each rod's disc and core,
   the part of a core another disc reaches, where each vignette sits) to `shots/first-stir-composition-*.png` (needs
