@@ -445,8 +445,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   once: `Asked`, `Ledger.answers`, read after the launch's entitlements and each update; with it `asked.at.<product>`,
   when it was asked, so a relaunch within 24 hours, the time Apple gives a parent to answer, finds the request
   waiting for approval again, as it was, unless StoreKit has said more of it since, and a date still to come, the clock set back, waits no longer: `Ledger.wait`, `Asked.waiting`; `StoreTests` forgets every request before and after each test, as its Ask to Buy purchases save them): entitlements from `Transaction.currentEntitlements` at
-  launch (`Store.ready` once that first read has finished: until then `RootView.show` waits on it, `Store.settled`,
-  before it gates a pack's level, and the dock shows no state), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
+  launch (`Store.ready` once that first read has finished, or at the latest once `Store.readLimit`, 5 s, has passed, so
+  a stalled read never leaves a card at "checking purchases…" with no buy: until then `RootView.show` waits on it, `Store.settled`,
+  before it gates a pack's level, and the dock shows no state; a read past the limit carries on and its states show as
+  they land, the card taking them as no landing, with no chime or announcement, as it keys on `Store.firstReadDone`), a `Transaction.updates` listener (Ask to Buy approvals, refunds, other devices, Family Sharing),
   `purchase` and `restore` (`AppStore.sync`), and a `PurchaseIntent.intents` listener: a purchase started on the App
   Store's product page (a promoted purchase) sets `Store.promoted` to the offer this build sells (`Offer.promoted`),
   keeping its product, `RootView` opens that card over the menu, closing the settings sheet (an open level leaves
@@ -468,7 +470,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   card again. `StoreKit/Unstir.storekit` sells each pack (First Stir too, since `StoreTests` run outside Release, where it is sold) and the bundle as family-shareable non-consumables at
   2.99 a pack and 5.99 for the bundle (Jack, 2026-10-25, when it held three packs, as it does again); the scheme's run action and `StoreTests` use it. Prices are
   never the app's own: `Store.prices` holds each product's `displayPrice` (and `amounts` its `price`, written in its
-  `priceFormatStyle` for the bundle's saving, `Store.saving`), fetched at launch and again when a card
+  `priceFormatStyle` for the bundle's saving, `Store.saving`), fetched (`Store.loadProducts`, which `StoreTests` replaces to
+  fail offline, as the runner's test session served the products under a simulated `.loadProducts` error) at launch and again when a card
   opens without one, and a card with none says "price loading" beside buy, or "App Store unreachable" under it once the fetch
   has failed (`Store.pricing`; beside it, the SE wrapped it inside the pill), the pill still live, since the App Store's sheet shows the price.
   `Level.lens` holds the pack's 25 levels, table A of `docs/lens-tables.md` (lenses on rods of every size; table B, big
