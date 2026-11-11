@@ -89,10 +89,15 @@ extension LensArt {
         let hull = [ship + P(-0.2, 0.05), ship + P(0.22, 0.05), ship + P(0.17, 0.11), ship + P(-0.16, 0.11)]
         let house = rect(ship.x - 0.1, ship.y + 0.0, ship.x + 0.1, ship.y + 0.05)
         let bottle = bar(P(-0.14, 0.1), P(0.08, -0.03), 0.1), fin = [P(0.4, 0.36), P(0.5, 0.16), P(0.58, 0.36)]
+        // Two swells breaking white, broad enough that a twist of the sea's rods shows without the wave lines.
+        let swells = [(P(-0.3, 0.5), P(0.3, 0.34), P(1, 0.52)), (P(-0.3, 0.84), P(0.2, 0.66), P(0.9, 0.86))].map {
+            curve($0.0, $0.1, $0.2, 16) + curve($0.2 + P(0, 0.11), $0.1 + P(0, 0.13), $0.0 + P(0, 0.09), 16)
+        }
         var fills = [disc(eye, 0.085, c(0.25)), disc(eye, 0.115, y(0.85)), fill(head, m(0.6)), fill(mast, m(0.45)), fill(hull, m(0.75)),
                      fill(house, y(0.6))]
         for x in [-0.05, 0.03] { fills.append(fill(rect(ship.x + x, ship.y - 0.07, ship.x + x + 0.04, ship.y), m(0.7))) }
-        fills += [fill(bottle, y(0.7)), fill(fin, m(0.6)), disc(P(-0.5, -0.62), 0.12, y(0.9)), fill(rect(-1, horizon, 1, 1), c(0.5))]
+        fills += [fill(bottle, y(0.7)), fill(fin, m(0.6)), disc(P(-0.5, -0.62), 0.12, y(0.9))]
+        fills += swells.map { fill($0, Tone(0.9, 0.55, 0.55)) } + [fill(rect(-1, horizon, 1, 1), c(0.5))]
 
         var s: [Halftone.Stroke] = []
         // The sky: sun, cloud, two gulls; and the skyline.
@@ -162,10 +167,13 @@ extension LensArt {
         let pivot = foot + aim * 0.36
         let hill = curve(P(-1, 0.86), P(-0.2, 0.56), P(1, 0.9), 24) + [P(1, 1), P(-1, 1)]
         let dome = arc(P(0.6, 0.78), 0.17, 180, 360, 16)
+        // The Milky Way, a broad paler band down the sky through the right rod's disc, and the moon lit, so that rod's
+        // twist shows without the stars.
+        let moon = P(0.58, -0.42), way = bar(P(0.06, -1), P(1, 0.56), 0.17)
         var fills = [fill(cap, y(0.85)), fill(ocular, y(0.85)), fill(finder, y(0.6)), fill(tube, m(0.6)),
-                     fill(dome, c(0.6)), fill(rect(0.43, 0.78, 0.77, 0.9), c(0.4))]
+                     fill(dome, c(0.6)), fill(rect(0.43, 0.78, 0.77, 0.9), c(0.4)), disc(moon + P(0.07, 0), 0.085, c(0.15)), disc(moon, 0.11, y(0.9))]
         for end in [P(-0.62, 1.0), P(-0.26, 1.0), P(-0.04, 0.98)] { fills.append(fill(bar(pivot + P(0, 0.06), end, 0.045), y(0.5))) }
-        fills.append(fill(hill, m(0.42)))
+        fills += [fill(hill, m(0.42)), fill(way, c(0.5))]
 
         var s: [Halftone.Stroke] = []
         // The stars, a few with rays, the Plough joined up, and the moon's crescent.
@@ -176,7 +184,6 @@ extension LensArt {
         let plough = [P(0.2, -0.26), P(0.32, -0.16), P(0.44, -0.14), P(0.54, -0.04), P(0.52, 0.12), P(0.7, 0.14), P(0.72, -0.02)]
         s.append(stroke(plough + [plough[3]], hair))
         for at in plough { s.append(stroke(circle(at, 0.012, 8), mid)) }
-        let moon = P(0.58, -0.42)
         s.append(stroke(arc(moon, 0.11, 60, 300, 24) + arc(moon + P(0.07, 0), 0.085, 240, 120, 20), bold))
         // The hill, the observatory on it, its slit open.
         s.append(stroke(Array(hill.prefix(25)), bold))
