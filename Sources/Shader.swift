@@ -216,7 +216,8 @@ struct PictureLayer: View {
     /// A live picture: the level's seed and its clock in seconds.
     var seed = 0
     var clock = 0.0
-    /// The halftone's panel: a Lens level's number (`Level.panel`), 0 for the test panel.
+    /// The halftone's panel, a Lens level's number (`Level.panel`), 0 for the test panel; or on the play screen an
+    /// Escapement problem's number (`Level.plate`).
     var panel = 0
     /// When the picture lands and starts to strike, for whatever strikes with it.
     var onStrike: () -> Void = {}

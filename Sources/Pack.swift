@@ -243,6 +243,11 @@ extension Level {
     /// The halftone panel the level draws (`Halftone.panel`): a Lens level's number, and 0, the test panel, anywhere else.
     var panel: Int { pack == .lens ? Int(label) ?? 0 : 0 }
 
+    /// The numbered picture the play screen bakes: `panel`, or an Escapement problem's number, for its own plate
+    /// (`EscapementArt.plate`). Only the play screen asks: a dock cover, a card's clip and the promoted-purchase image
+    /// draw `panel`, so for now they keep Escapement's shared plate.
+    var plate: Int { pack == .escapement ? Int(label) ?? 0 : panel }
+
     /// Lens's chapters (Jack's call N1b, round 13): six levels each, the last seven.
     static let lensChapters = [
         String(localized: "chapter.lens.1", defaultValue: "Close-up",

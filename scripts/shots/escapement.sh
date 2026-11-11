@@ -56,3 +56,55 @@ for look in stamp left rings; do
   shot "escapement-stopped-17-$look" "Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look $look." \
     PACK=escapement OWNED=escapement LEVEL=17 PLAYED=3:-5,4:-2,3:5,4:3,0:1 STOPLOOK=$look
 done
+# Each problem's own plate (Sources/EscapementArt.swift), as dealt and as its line leaves it, a row a problem: its
+# number and its line. scripts/escapement-art-sheet.py shots lays them out.
+while read -r n line; do
+  # Problem 1 opens on its demonstration, so its plate lands later.
+  [[ $n == 1 ]] && hold=7
+  shot "escapement-plate-$n-dealt" "Escapement $n as dealt on its own plate." \
+    PACK=escapement OWNED=escapement LEVEL="$n"
+  shot "escapement-plate-$n-solved" "Escapement $n solved on its own plate, the solve's ink ring run out." \
+    PACK=escapement OWNED=escapement LEVEL="$n" PLAYED="$line" WAVE=1.85
+  unset hold
+done <<'PLATES'
+1 2:4,1:-3
+2 2:4,0:1,1:-3
+3 2:4,1:-3
+4 2:2,1:3,2:4,3:-2
+5 3:5,1:-3,3:3,1:4,3:2
+6 3:-2,2:3,5:-3,6:-3,3:4,4:2
+7 0:1,1:2,2:-3
+8 0:1,4:5,3:3,2:4,1:-4
+9 3:-3,0:3,3:-4,0:-3,3:-4,3:4
+10 2:-3,1:4,0:1,1:2,2:3,3:-3
+11 3:2,4:3,3:-2,4:-5,2:-3,1:-2,0:1,0:1
+12 1:1,0:5,3:4,2:3,3:-3,2:-5,5:-4
+13 3:-2,1:-3,2:1
+14 3:3,0:1,3:-3,1:-3
+15 4:5,4:-2,0:1,4:5,3:4
+16 3:-2,5:-2,1:1,6:-4,5:3,2:-5
+17 3:-5,4:-2,3:5,4:3,3:-4
+18 5:4,4:-4,5:-2,4:2,3:4,6:-2
+19 2:-4,0:1,1:3
+20 1:-5,0:1,1:4,1:3,1:-3
+21 0:1,3:4,4:3,3:-3,4:-5,3:-2
+22 5:-3,1:1,6:5,3:2,6:5,5:-3,2:2
+23 3:4,4:3,3:-4,2:2,4:5,3:5
+24 6:2,3:-2,2:5,3:-3,2:-2,5:-4,4:2
+25 0:-3,1:1,1:1
+26 1:-2,3:-3,4:-2,2:1,3:-5,4:-3,3:-2,4:3
+27 2:-2,1:2,2:-5,1:-2,1:-2,0:1,1:5,2:5,3:4
+28 2:-4,4:-5,2:-3,5:4,6:-4,3:-3,4:5,0:-5,1:1
+29 4:-3,1:1,2:-2,1:1,2:-4,0:5,2:-3,4:-3
+30 0:-2,5:3,4:-5,5:4,6:4,5:-3,4:-2,5:-2
+PLATES
+# The alternates drawn for Jack to choose between (EscapementArt.alternate), which no problem draws unless
+# UNSTIR_ESCALT=1: Pause as a pause mark on a dial, and Hourglass with its glass inside the top and bottom rods.
+shot escapement-plate-alt-7-dealt "Escapement 7 as dealt on Pause's alternate plate, a pause mark on a dial without hands." \
+  PACK=escapement OWNED=escapement LEVEL=7 ESCALT=1
+shot escapement-plate-alt-7-solved "Escapement 7 solved on Pause's alternate plate." \
+  PACK=escapement OWNED=escapement LEVEL=7 PLAYED=0:1,1:2,2:-3 WAVE=1.85 ESCALT=1
+shot escapement-plate-alt-9-dealt "Escapement 9 as dealt on Hourglass's alternate plate, the glass ending inside the top and bottom rods." \
+  PACK=escapement OWNED=escapement LEVEL=9 ESCALT=1
+shot escapement-plate-alt-9-solved "Escapement 9 solved on Hourglass's alternate plate." \
+  PACK=escapement OWNED=escapement LEVEL=9 PLAYED=3:-3,0:3,3:-4,0:-3,3:-4,3:4 WAVE=1.85 ESCALT=1

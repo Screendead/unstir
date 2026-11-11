@@ -11,6 +11,7 @@
 		05395D2553EA2900A671C0C3 /* ResultCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF89A22FA453FA2BDC8747E0 /* ResultCard.swift */; };
 		06E7FF49A92360354807D7A3 /* CatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E7B4754B893A8AD4AC3AD4 /* CatalogTests.swift */; };
 		0A5B1A538A3B8B2471462015 /* Neurons.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7898E0AEAFE90492DC3EB64C /* Neurons.metal */; };
+		0A6DEA91F79707B833C82ACA /* EscapementArtPlates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BBB36CAD79FB810C40F7003 /* EscapementArtPlates.swift */; };
 		0ED25749C2CA58123B100D5E /* FreshDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEBFE666F4DC4F4EC543A103 /* FreshDefaults.swift */; };
 		12F08A807458236B1F206C6B /* LensArtCloseUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8582290C096A27A793005B80 /* LensArtCloseUp.swift */; };
 		18F4207A2B3955DA16ECDC18 /* ShaderKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 254553325D43A8E887B3C94D /* ShaderKit.swift */; };
@@ -40,6 +41,7 @@
 		5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944137441C4619E684D8CC15 /* LivePictures.swift */; };
 		6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */; };
 		62E9EDC60BA3BB59B13DD2B8 /* Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CD3AE9E7D3D1186321F8E8 /* Buttons.swift */; };
+		64226C2831BE05FB2104354C /* EscapementArtPlates2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F984B99ADC6983C898614F1 /* EscapementArtPlates2.swift */; };
 		64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */; };
 		650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B80E0606D266BF05C66786E /* FirstStir.swift */; };
 		652A1046F612B40F05EC8A23 /* Resume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D9845C51771ED7A1D7776C /* Resume.swift */; };
@@ -58,6 +60,7 @@
 		949BBA29683D9F40A62C2798 /* GameCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1482D797341825629413BA25 /* GameCenter.swift */; };
 		95CA45984CCD8D546AB8947E /* ResultMarksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2354CA664A9CF0FD0C4750A /* ResultMarksTests.swift */; };
 		973A9E11BF631BE4211EAA02 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45CEE9950106BAFE3A297A1 /* Icon.swift */; };
+		9836F078D8CD7F667D44B4BC /* EscapementArtPlates3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17636929C2246F5CE34FBFB3 /* EscapementArtPlates3.swift */; };
 		98526A3AA7420D378D76C241 /* Levels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD430ED66CD5CE54E0F67F72 /* Levels.swift */; };
 		9D7E172AE1903B5595EF8A96 /* AgeRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC78A03B7B4D5363A8E010A /* AgeRange.swift */; };
 		9F25E1385928C5125BE5CD40 /* Unstir.metal in Sources */ = {isa = PBXBuildFile; fileRef = 63330CD5793ABE158F314B89 /* Unstir.metal */; };
@@ -76,6 +79,7 @@
 		BD8503AA80BACF958F3E6355 /* ArchiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64C2CE0EF090746C7B6799A /* ArchiveTests.swift */; };
 		C3596BB291D30EF520836782 /* Chainmail.metal in Sources */ = {isa = PBXBuildFile; fileRef = E302013539F573E3F8C8FBC5 /* Chainmail.metal */; };
 		C3C4473B9FBF9AF8C1B2082D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E92A6862096D73E5F52E0DC3 /* Localizable.xcstrings */; };
+		C3E3E666E927EB704CFA941D /* EscapementArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE1236B8C3FCA3EA697DF254 /* EscapementArt.swift */; };
 		C6759CD4F33AD9A639A6742C /* Sync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112F826A2BEC3C22065DD94A /* Sync.swift */; };
 		C6A87E52582D8C010F9C77A1 /* PlayLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7460F8510A57CE405402E04F /* PlayLayoutTests.swift */; };
 		C940A6344D7C3951F53F1746 /* LensArtBigPicture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B4B009E49499F923115A97B /* LensArtBigPicture.swift */; };
@@ -129,6 +133,7 @@
 		11D9845C51771ED7A1D7776C /* Resume.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resume.swift; sourceTree = "<group>"; };
 		12E8193F7A9FB37B678695D2 /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
 		1482D797341825629413BA25 /* GameCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenter.swift; sourceTree = "<group>"; };
+		17636929C2246F5CE34FBFB3 /* EscapementArtPlates3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementArtPlates3.swift; sourceTree = "<group>"; };
 		254553325D43A8E887B3C94D /* ShaderKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShaderKit.swift; sourceTree = "<group>"; };
 		25930862609F89911BFB5015 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = SOURCE_ROOT; };
 		27E5962A6708954A5E564099 /* Coral.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Coral.metal; sourceTree = "<group>"; };
@@ -140,6 +145,7 @@
 		31807869E592C189FDCC0657 /* UnstirTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = UnstirTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirRescue.swift; sourceTree = "<group>"; };
 		39871826221A4144696D6FB7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		3BBB36CAD79FB810C40F7003 /* EscapementArtPlates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementArtPlates.swift; sourceTree = "<group>"; };
 		3CB4A9DE240F63330597A189 /* LensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensTests.swift; sourceTree = "<group>"; };
 		3E2F5EACFB0A4F616F37323F /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		42AC3DE97359E1AB3D8F6FAF /* Taps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Taps.swift; sourceTree = "<group>"; };
@@ -176,6 +182,7 @@
 		882752BC69C1C5819416967C /* GPUBench.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPUBench.swift; sourceTree = "<group>"; };
 		8958A26903CC2506CCC43FBF /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		8C424A58661F8E2D8F67C740 /* VortexPictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VortexPictures.swift; sourceTree = "<group>"; };
+		8F984B99ADC6983C898614F1 /* EscapementArtPlates2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementArtPlates2.swift; sourceTree = "<group>"; };
 		90F14A8BD3536DD66979D13A /* Clip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clip.swift; sourceTree = "<group>"; };
 		92B7FCEFE279BF018CABD288 /* Unstir.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Unstir.xcconfig; sourceTree = "<group>"; };
 		944137441C4619E684D8CC15 /* LivePictures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePictures.swift; sourceTree = "<group>"; };
@@ -197,6 +204,7 @@
 		BABEC41CC980BB057133BC8D /* AgeCheckTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgeCheckTests.swift; sourceTree = "<group>"; };
 		BD430ED66CD5CE54E0F67F72 /* Levels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Levels.swift; sourceTree = "<group>"; };
 		BD9BF77535C50E24D360E2ED /* UnstirApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnstirApp.swift; sourceTree = "<group>"; };
+		BE1236B8C3FCA3EA697DF254 /* EscapementArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscapementArt.swift; sourceTree = "<group>"; };
 		C22F2052D681E2C63BE5D832 /* PrismTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrismTests.swift; sourceTree = "<group>"; };
 		C45CEE9950106BAFE3A297A1 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		C894A517DFF2C4F5F12AFC3B /* ResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeTests.swift; sourceTree = "<group>"; };
@@ -314,6 +322,10 @@
 				D80A3010678E45A15B0543C3 /* Consent.swift */,
 				27E5962A6708954A5E564099 /* Coral.metal */,
 				AA44B6DE028AB83D502C8EC5 /* Engraving.swift */,
+				BE1236B8C3FCA3EA697DF254 /* EscapementArt.swift */,
+				3BBB36CAD79FB810C40F7003 /* EscapementArtPlates.swift */,
+				8F984B99ADC6983C898614F1 /* EscapementArtPlates2.swift */,
+				17636929C2246F5CE34FBFB3 /* EscapementArtPlates3.swift */,
 				440714978B35CD68A9F562DA /* EscapementViews.swift */,
 				0B80E0606D266BF05C66786E /* FirstStir.swift */,
 				D7BB3D044BF3A8169E655531 /* FirstStirDawn.swift */,
@@ -495,6 +507,10 @@
 				50B41DB91ADFEC633FAE5BB8 /* Consent.swift in Sources */,
 				F1D5DFB747CEEE7F2DC62166 /* Coral.metal in Sources */,
 				7387F87E72AA8B35A9B1C115 /* Engraving.swift in Sources */,
+				C3E3E666E927EB704CFA941D /* EscapementArt.swift in Sources */,
+				0A6DEA91F79707B833C82ACA /* EscapementArtPlates.swift in Sources */,
+				64226C2831BE05FB2104354C /* EscapementArtPlates2.swift in Sources */,
+				9836F078D8CD7F667D44B4BC /* EscapementArtPlates3.swift in Sources */,
 				30C53B2E5E74BD66185048B9 /* EscapementViews.swift in Sources */,
 				650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */,
 				2E38B1B5B55BE8B14D6D3B09 /* FirstStirDawn.swift in Sources */,
