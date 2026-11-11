@@ -34,6 +34,8 @@ struct Unstirred: ViewModifier, Animatable {
     var whiteIsolate = false
     /// Prism, the harness's trial (`PrismRead`): how the glass is drawn for reading a held rod's turn.
     var read: (mode: PrismRead, held: Channels?)?
+    /// How far a trial that eases (`PrismRead.eases`) is drawn over the game's glass, 1 with the rod in hand.
+    var readMix = 1.0
     /// The committed work drawn with four taps, nil for the glass's static limit (`Tank.fourTaps(pixels:)`). Never
     /// animated: only `Taps` moves it, at a still moment.
     var budget: Int?
@@ -43,11 +45,12 @@ struct Unstirred: ViewModifier, Animatable {
     var crisp = 0.0
     @Environment(\.displayScale) private var scale
 
-    nonisolated var animatableData: AnimatablePair<AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>>, Double> {
-        get { AnimatablePair(AnimatablePair(AnimatablePair(liveAngle, wind), AnimatablePair(haze, turn)), crisp) }
+    nonisolated var animatableData: AnimatablePair<AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>>, AnimatablePair<Double, Double>> {
+        get { AnimatablePair(AnimatablePair(AnimatablePair(liveAngle, wind), AnimatablePair(haze, turn)), AnimatablePair(crisp, readMix)) }
         set {
             let four = newValue.first
-            (liveAngle, wind, haze, turn, crisp) = (four.first.first, four.first.second, four.second.first, four.second.second, newValue.second)
+            (liveAngle, wind, haze, turn) = (four.first.first, four.first.second, four.second.first, four.second.second)
+            (crisp, readMix) = (newValue.second.first, newValue.second.second)
         }
     }
 
@@ -71,7 +74,7 @@ struct Unstirred: ViewModifier, Animatable {
         if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
             shader.prism = TankShader.Prism(masks: channels, cost: cost, isolate: isolate, tint: tint)
-            if let read { (shader.prism!.read, shader.prism!.gain) = read.mode.drawn(held: read.held) }
+            if let read { (shader.prism!.read, shader.prism!.gain) = read.mode.drawn(held: read.held, mix: Float(readMix)) }
         } else if let fine, crisp > 0, !lenses.isEmpty {
             shader.fine = fine
             shader.fine?.table[Fine.share] = Float(min(crisp, 1))
@@ -290,7 +293,7 @@ struct PictureLayer: View {
     }
 }
 
-/// UNSTIR_PRISMREAD: three trials of reading Prism's picture while a rod is held, none of them the game's yet.
+/// UNSTIR_PRISMREAD: trials of reading Prism's picture while a rod is held, none of them the game's yet.
 enum PrismRead: String {
     /// The channels the held rod leaves alone dim, so what it moves reads over them.
     case dim = "a"
@@ -299,12 +302,20 @@ enum PrismRead: String {
     case ink = "b"
     /// Held or not, a line dims by how far its channels are out of register, so a white line is the brightest.
     case register = "c"
+    /// What the held rod moves is drawn in its own colour, a dark one lifted, and each other channel only where it
+    /// falls on those lines: one colour unwinding off the count, white where the picture is in register.
+    case own = "d"
+    /// As `own`, but another channel shows only where it and a held one draw the same point of the plate: lines
+    /// that merely cross stay the held colour. It reads the stack's maps, never the count.
+    case registered = "e"
 
     /// The other channels' share of their light on the screen while a rod is held.
     static let dimmed: Float = 0.3
+    /// The trial fades in on the grab and out on the let-go, so the caller keeps the let-go's mask through the fade.
+    var eases: Bool { self == .own || self == .registered }
 
-    /// `unstirChannels`' `read` and `gain` with a rod of mask `held` in hand, nil at rest.
-    func drawn(held: Channels?) -> (read: Float, gain: SIMD3<Float>) {
+    /// `unstirChannels`' `read` and `gain` with a rod of mask `held` in hand, nil at rest, `mix` of the way in.
+    func drawn(held: Channels?, mix: Float = 1) -> (read: Float, gain: SIMD3<Float>) {
         let bits = Int(held?.rawValue ?? 0), on = [1, 2, 4].map { bits & $0 != 0 }
         switch self {
         case .register: return (3, SIMD3(1, 1, 1))
@@ -313,6 +324,8 @@ enum PrismRead: String {
         case .ink where held != nil:
             let share = 1 / Float(on.filter { $0 }.count)
             return (2, SIMD3(on[0] ? share : 0, on[1] ? share : 0, on[2] ? share : 0))
+        case .own where held != nil && mix > 0, .registered where held != nil && mix > 0:
+            return ((self == .own ? 3 : 4) + min(mix, 1), SIMD3(on[0] ? 1 : 0, on[1] ? 1 : 0, on[2] ? 1 : 0))
         default: return (0, SIMD3(1, 1, 1))
         }
     }

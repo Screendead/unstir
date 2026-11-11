@@ -101,6 +101,9 @@ enum Grab: Equatable {
 struct LevelView: View {
     @State private var game: Game
     @State private var liveRod: Int?
+    /// Prism's read on trial: the mask of the rod held last, kept through the fade its let-go starts, and how far in.
+    @State private var readHeld: Channels?
+    @State private var readMix = 0.0
     /// The column's room between the title line's foot and the glass's top, as laid out.
     @State private var titleGap: CGFloat?
     /// Prism: the channel whose swatch is held, drawn alone.
@@ -382,6 +385,8 @@ struct LevelView: View {
         _game = State(initialValue: game)
         let live = harness?.live, angle = (live?.steps ?? 0) * Tank.step, turn = harness?.tankLive.map { $0 * .pi / 180 }
         _liveRod = State(initialValue: live?.rod)
+        _readHeld = State(initialValue: live.map { level.masks[game.slot(of: $0.rod)] ?? .white })
+        _readMix = State(initialValue: live == nil ? 0 : 1)
         _liveAngle = State(initialValue: angle)
         _liveTurn = State(initialValue: turn)
         _counted = State(initialValue: harness?.turned?.rod)
@@ -938,6 +943,11 @@ struct LevelView: View {
         }
         // A tap anywhere skips the opening, as the caption says.
         .simultaneousGesture(TapGesture().onEnded { _ = skip() })
+        .onChange(of: liveRod) {
+            guard prismRead?.eases == true else { return }
+            if let liveRod { readHeld = game.level.masks[game.slot(of: liveRod)] ?? .white }
+            withAnimation(.easeOut(duration: liveRod == nil ? 0.25 : 0.15)) { readMix = liveRod == nil ? 0 : 1 }
+        }
         .onChange(of: touching) {
             awake += 1
             if touching && shown == nil { lifted = true }
@@ -1565,7 +1575,8 @@ struct LevelView: View {
                                   wind: wind, side: side, haze: showResult ? Self.haze(over: game.over) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries, isolate: isolated,
                                   whiteIsolate: differentiate,
-                                  read: prismRead.map { ($0, liveRod.map { game.level.masks[game.slot(of: $0)] ?? .white }) },
+                                  read: prismRead.map { ($0, $0.eases ? readHeld : liveRod.map { game.level.masks[game.slot(of: $0)] ?? .white }) },
+                                  readMix: readMix,
                                   budget: Taps.shared.budget(pixels: Double(side * scale)),
                                   fine: fine, crisp: crisp)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.

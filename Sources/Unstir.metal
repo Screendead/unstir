@@ -98,7 +98,24 @@ static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius
         if (alone != 0) s = (alone == 1 ? s.r : alone == 2 ? s.g : s.b) * tint;
         else if (reading == 1) s *= gain;
         else if (reading == 2) s = float3(dot(s, gain));
-        else if (reading == 3) s = 0.62 * s + 0.38 * min(s.r, min(s.g, s.b));
+        else if (read == 3.0) s = 0.62 * s + 0.38 * min(s.r, min(s.g, s.b));
+        else if (read > 3.0) {
+            bool strict = read > 4.0;
+            float3 held = step(0.99, gain);
+            float m = max(s.r * held.r, max(s.g * held.g, s.b * held.b));
+            // A dark colour's lines take some of the other channels, short of the measure's white (0.6 of the brightest).
+            float lift = saturate(0.55 - 1.2 * dot(held, float3(0.299, 0.587, 0.114)));
+            float3 met = float3(m);
+            if (strict) {
+                // Two px of a 1200 px glass: channels count as meeting only where they show the same point of the plate.
+                float3 hs = s * held;
+                float rg = 1.0 - smoothstep(0.002, 0.004, distance(qr, qg));
+                float gb = 1.0 - smoothstep(0.002, 0.004, distance(qg, qb));
+                float br = 1.0 - smoothstep(0.002, 0.004, distance(qb, qr));
+                met = float3(max(hs.g * rg, hs.b * br), max(hs.r * rg, hs.b * gb), max(hs.r * br, hs.g * gb));
+            }
+            s = mix(s, mix(max(min(s, met), lift * m), s, held), strict ? read - 4.0 : read - 3.0);
+        }
         acc += lit(s, p, wave);
     }
     return finish(acc, stride, haze);
@@ -225,7 +242,11 @@ static half4 unstirLensBody(float2 pos, L layer, float2 centre, float radius, de
 // 0, draws that channel alone in tint and hides the others: the held swatch, in its own colour, or white under
 // Differentiate Without Colour, where it reads without telling colours apart. read is the harness's trial of reading
 // the picture under a held rod (UNSTIR_PRISMREAD), 0 for the game's: 1 scales each channel by gain, 2 draws the
-// channels' sum weighted by gain in white, 3 dims every line by how far its channels are out of register.
+// channels' sum weighted by gain in white, 3 dims every line by how far its channels are out of register. Past 3, by
+// read - 3 of the way from the game's: the held rod's channels (gain 1) in their own colour, a dark one lifted, and each
+// other channel only where a held one is lit at the same tap, so a line in register is white. Past 4, by read - 4, the
+// same, but a channel meets a held one only where both show the same point of the plate, so lines that merely cross
+// stay the held colour.
 [[ stitchable ]] half4 unstirChannels(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
                                       device const float *twists, int count, device const float *masks, int maskCount,
                                       float n, float cost, float fourTaps, float plateau, float swirlPlateau,
