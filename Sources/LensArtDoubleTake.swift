@@ -346,15 +346,16 @@ extension LensArt {
 // MARK: - 18: Night vision
 
 /// Level 18's name: the wood at night through a night sight, all in its green, and what the dark was hiding over the
-/// top right and lower left cores (quad's two lenses on this level): an owl on its branch, eyes wide, and a hedgehog in
-/// the grass. The wood is drawn in silhouette, a far treeline across the middle, firs standing up through both twisting
-/// rods' discs, a broad moon, and the sight's mark round each find, a ring of bright dashes, so a twist turns black
-/// and bright shapes against the green that read without the linework. Level 18 deals each lens +3 in all.
+/// top and lower left cores (tri's two lenses on this level): an owl on its branch, eyes wide, and a hedgehog in
+/// the grass, each in a field turned up to yellow inside the sight's mark, a ring of bright dashes. The wood is drawn
+/// in silhouette, a far treeline across the middle, a fir, two trunks and a rock in the twisting rod's disc, and a
+/// broad moon, so its twist turns black and bright shapes against the green that read without the linework, and pulls
+/// each yellow field out into the dark. Level 18 deals the top lens +3 in all and the other three entries of +1.
 extension LensArt {
     static let nightVision: Halftone.Panel = {
-        let a = P(0.3536, -0.3536), b = P(-0.3536, 0.3536)
-        let lit = Tone(0.55, 0, 0.55), bright = Tone(0.85, 0, 0.85)
-        let owl = a + P(0.0, -0.01), hog = b + P(0.004, -0.024), moon = P(-0.5, -0.54)
+        let a = P(0, -0.42), b = P(-0.3637, 0.21), core = 0.348
+        let lit = Tone(0.55, 0, 0.55), bright = Tone(0.85, 0, 0.85), seen = Tone(0.2, 0, 0.9)
+        let owl = a + P(0.0, -0.01), hog = b + P(0.004, -0.024), moon = P(-0.62, -0.56)
         let trunks = [rect(0.62, -1, 0.8, 1), rect(-0.06, 0.0, 0.08, 1), rect(-0.9, -1, -0.76, 1)]
         /// A fir in silhouette, three tiers from its tip down to `base`, `half` wide at the foot.
         func fir(_ tip: P, base: Double, half: Double) -> [P] {
@@ -366,16 +367,18 @@ extension LensArt {
         let line = 0.1, far = [(-0.82, 0.14, 0.07), (-0.6, 0.2, 0.08), (-0.34, 0.26, 0.09), (-0.12, 0.12, 0.06), (0.2, 0.16, 0.07),
                                (0.38, 0.27, 0.09), (0.56, 0.14, 0.07), (0.92, 0.18, 0.07)]
         let treeline = [P(-1, 0.24), P(-1, line)] + far.flatMap { [P($0.0 - $0.2, line), P($0.0, line - $0.1), P($0.0 + $0.2, line)] } + [P(1, line), P(1, 0.24)]
-        let firs = [fir(P(0.01, -0.8), base: 0.02, half: 0.25), fir(P(-0.66, -0.3), base: 0.6, half: 0.17)]
+        let firs = [fir(P(0.44, -0.62), base: 0.14, half: 0.2), fir(P(-0.74, -0.2), base: 0.6, half: 0.15)]
         let rock = curve(P(0.2, 0.7), P(0.4, 0.42), P(0.58, 0.7), 12)
         // The sight's mark round each find: a ring of bright dashes, which a twist that slides the lens's rim along itself
         // carries round.
-        let marks = [a, b].flatMap { c in (0..<8).map { sector(c, 0.3, 0.365, 45 * Double($0) + 6, 45 * Double($0) + 32) } }
+        let marks = [a, b].flatMap { c in (0..<8).map { sector(c, 0.37, 0.415, 45 * Double($0) + 6, 45 * Double($0) + 32) } }
+        let branch = bar(P(0.62, -0.25), P(-0.2, -0.3), 0.035)
         var fills = marks.map { fill($0, bright) }
-        fills += [oval(owl + P(0, 0.03), 0.06, 0.085, .zero), disc(moon + P(0.09, 0), 0.14, Tone(0.28, 0, 0.3)), disc(moon, 0.17, bright),
-                     oval(hog + P(-0.006, 0.004), 0.042, 0.024, .zero)]
+        // Inside each mark the sight is turned up: the find black on bright green, the wood round it dim.
+        fills += [oval(owl + P(0, 0.03), 0.06, 0.085, .zero), fill(branch, .zero), oval(hog + P(-0.006, 0.004), 0.042, 0.024, .zero),
+                  disc(a, core, seen), disc(b, core, seen),
+                  disc(moon + P(0.09, 0), 0.14, Tone(0.28, 0, 0.3)), disc(moon, 0.17, bright)]
         fills += trunks.map { fill($0, .zero) }
-        fills.append(fill(bar(P(0.62, -0.2), P(0.1, -0.25), 0.035), .zero))
         fills += firs.map { fill($0, .zero) } + [fill(rock, .zero), fill(treeline, .zero)]
         fills.append(fill(curve(P(-1, 0.56), P(0, 0.42), P(1, 0.6), 16) + [P(1, 1), P(-1, 1)], lit))
 
@@ -390,8 +393,8 @@ extension LensArt {
         for f in firs { s.append(stroke(closed(f), mid)) }
         for q in marks { s.append(stroke(closed(q), hair)) }
         s.append(stroke(rock, mid))
-        s.append(stroke(curve(P(0.62, -0.2), P(0.4, -0.3), P(0.1, -0.24), 12), bold))
-        s.append(stroke(curve(P(0.3, -0.27), P(0.2, -0.38), P(0.12, -0.42), 6), mid))
+        s.append(stroke([branch[0], branch[1]], mid))
+        s.append(stroke(curve(P(0.5, -0.27), P(0.42, -0.36), P(0.4, -0.44), 6), mid))
         s.append(stroke(curve(P(-1, 0.56), P(0, 0.42), P(1, 0.6), 24), mid))
         for (k, x) in [-0.7, -0.52, -0.2, 0.26, 0.44, 0.9, -0.3].enumerated() {
             let foot = P(x, 0.62 + 0.09 * Double(k % 3))

@@ -1046,9 +1046,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   `scripts/lens-art-sheet.py read` measures it, weakest level first: the share of each dealt twist rod's disc whose
   light, blurred over two pitches so dots and hairlines average away, its weakest step changes (one step, on every
   rod looked at); the panels under 0.06 were redrawn, a cut-off of Claude's, and 17's rod 2 at 0.06 and 13 and 20 at
-  0.08 are the weakest left. The drawing does not mend the order read on the four-rod glass: with the same two
-  entries dealt either way round, a lens under a neighbour's twist and over it look all but alike on 8, 11 and 18,
-  before and after (Mac renders at the phone's size), as the neighbour reaches too little of the rim. `scripts/lens-panels.sh read` also
+  0.08 are the weakest left. Drawing did not mend the order read on the four-rod glass, where 8, 11 and 18 were dealt: with the same two
+  entries dealt either way round, a lens under a neighbour's twist and over it looked all but alike
+  (Mac renders at the phone's size), as a quad neighbour reaches 16% of the band round the rim. So those three are
+  dealt on eye and tri (18 to 22% and 29%), no Lens level is on quad, and their lens cores are a flat tone unlike the
+  ground round them (cyan on the page, cyan over magenta cloth, yellow in the dark wood), so a twist dealt over a
+  lens pulls a tail of that tone out of it; `scripts/lens-art-sheet.py order` renders each lens and twist of a level
+  both ways round to look at. `scripts/lens-panels.sh read` also
   prints, for each lens under a neighbour's disc, the share of the rim's band that three steps of the twist change.
   A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
   `scripts/lens-panels.sh` draws, times and checks a panel on the Mac, and `scripts/lens-art-sheet.py` lays the drawn

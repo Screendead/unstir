@@ -775,7 +775,7 @@ duo-beside-lesson.png  Duo open: maelstrom 01, the tank never turned: the rim le
 duo-beside-over-result.png  Duo open: Lens 25 solved beside the menu, Lens's card opened 4.5 s in (UNSTIR_SHELFDEMO) over the result card, which covers the menu: its way out ✕ close (s5b-back = B).
 duo-beside-over-result-closed.png  Duo open: the same, the card closed again 7.2 s later by ✕ close: the result card back over the menu.
 duo-beside-lens-long.png  Duo open: Lens 01's top lens held turned nine steps up beside the menu: all nine fit its track, which ends between the title and the rim, clear of both.
-duo-beside-lens-wrong.png  Duo open: Lens 08's top lens held fourteen steps up, the wrong way, beside the menu: capped at +9, where its track meets the title, clear of moves / par.
+duo-beside-lens-wrong.png  Duo open: a lens on the four-rod glass's top right rod (Lens 01's panel) held fourteen steps up, the wrong way, beside the menu: capped at +9, where its track meets the title, clear of moves / par.
 duo-beside-prism-letters.png  Duo open: Prism 01 read by its colour letters beside the menu: the R G B swatches under the note, the glass 30 pt smaller for them.
 duo-beside-opened.png  Duo closed with plughole 11 five moves in, opened a second in: the tank and its chrome glided into the leading half and the menu faded in beside them.
 duo-beside-opened-card.png  Duo closed with Lens's card left under Lens 01 as its try free left it, opened a second in: the card put away, the list in sight beside the level; it comes back as the level leaves.
