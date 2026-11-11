@@ -59,6 +59,24 @@ final class CatalogTests: XCTestCase {
                        "2 plughole levels short of par")
     }
 
+    /// The chrome's words read as the hand-built English they replaced.
+    func testChromeReadsItsEnglish() {
+        for tier in Tier.allCases { XCTAssertEqual(tier.word, tier.rawValue) }
+        XCTAssertEqual(ConsentWords.sends, "If you say yes, the game tells us how you play: which puzzles you finish, how many "
+            + "moves and undos they take, which days you play, which packs you buy, and roughly which country you're in. "
+            + "It never sends your name, your Apple ID, or anything that tells us who you are. You can change your mind "
+            + "any time in settings.")
+        XCTAssertEqual(String(localized: ConsentWords.letters), "colour letters")
+        XCTAssertEqual(ConsentWords.letters.key, "colour letters")
+        XCTAssertEqual(Level.endless(Run(seed: 7)).back, "\u{2039} levels")
+        XCTAssertEqual(Offer.pack(.lens).holds, "25 panels in four issues")
+        XCTAssertEqual(Offer.countWord(3), "three")
+        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: true).text, "\u{2715} close")
+        XCTAssertEqual(PackCard.back(to: PackCard.menu, beside: false).text, "\u{2039} menu")
+        XCTAssertEqual(Purchase.revoked.tag(unshared: true)?.word, "no longer shared with you")
+        XCTAssertEqual(LevelView.layoutLabel(.quad, named: true), "rods: 4 \u{00B7} quad \u{203A}")
+    }
+
     /// A table's id-keyed string reads its English default, which the catalog may not hold.
     func testTablesReadTheirEnglish() {
         XCTAssertEqual(Level.plughole[0].title, "Drop")
