@@ -644,6 +644,50 @@ escapement-plate-9-dealt.png  Escapement 9 as dealt on its own plate.
 escapement-plate-9-solved.png  Escapement 9 solved on its own plate, the solve's ink ring run out.
 escapement-plate-10-dealt.png  Escapement 10 as dealt on its own plate.
 escapement-plate-10-solved.png  Escapement 10 solved on its own plate, the solve's ink ring run out.
+escapement-plate-11-dealt.png  Escapement 11 as dealt on its own plate.
+escapement-plate-11-solved.png  Escapement 11 solved on its own plate, the solve's ink ring run out.
+escapement-plate-12-dealt.png  Escapement 12 as dealt on its own plate.
+escapement-plate-12-solved.png  Escapement 12 solved on its own plate, the solve's ink ring run out.
+escapement-plate-13-dealt.png  Escapement 13 as dealt on its own plate.
+escapement-plate-13-solved.png  Escapement 13 solved on its own plate, the solve's ink ring run out.
+escapement-plate-14-dealt.png  Escapement 14 as dealt on its own plate.
+escapement-plate-14-solved.png  Escapement 14 solved on its own plate, the solve's ink ring run out.
+escapement-plate-15-dealt.png  Escapement 15 as dealt on its own plate.
+escapement-plate-15-solved.png  Escapement 15 solved on its own plate, the solve's ink ring run out.
+escapement-plate-16-dealt.png  Escapement 16 as dealt on its own plate.
+escapement-plate-16-solved.png  Escapement 16 solved on its own plate, the solve's ink ring run out.
+escapement-plate-17-dealt.png  Escapement 17 as dealt on its own plate.
+escapement-plate-17-solved.png  Escapement 17 solved on its own plate, the solve's ink ring run out.
+escapement-plate-18-dealt.png  Escapement 18 as dealt on its own plate.
+escapement-plate-18-solved.png  Escapement 18 solved on its own plate, the solve's ink ring run out.
+escapement-plate-19-dealt.png  Escapement 19 as dealt on its own plate.
+escapement-plate-19-solved.png  Escapement 19 solved on its own plate, the solve's ink ring run out.
+escapement-plate-20-dealt.png  Escapement 20 as dealt on its own plate.
+escapement-plate-20-solved.png  Escapement 20 solved on its own plate, the solve's ink ring run out.
+escapement-plate-21-dealt.png  Escapement 21 as dealt on its own plate.
+escapement-plate-21-solved.png  Escapement 21 solved on its own plate, the solve's ink ring run out.
+escapement-plate-22-dealt.png  Escapement 22 as dealt on its own plate.
+escapement-plate-22-solved.png  Escapement 22 solved on its own plate, the solve's ink ring run out.
+escapement-plate-23-dealt.png  Escapement 23 as dealt on its own plate.
+escapement-plate-23-solved.png  Escapement 23 solved on its own plate, the solve's ink ring run out.
+escapement-plate-24-dealt.png  Escapement 24 as dealt on its own plate.
+escapement-plate-24-solved.png  Escapement 24 solved on its own plate, the solve's ink ring run out.
+escapement-plate-25-dealt.png  Escapement 25 as dealt on its own plate.
+escapement-plate-25-solved.png  Escapement 25 solved on its own plate, the solve's ink ring run out.
+escapement-plate-26-dealt.png  Escapement 26 as dealt on its own plate.
+escapement-plate-26-solved.png  Escapement 26 solved on its own plate, the solve's ink ring run out.
+escapement-plate-27-dealt.png  Escapement 27 as dealt on its own plate.
+escapement-plate-27-solved.png  Escapement 27 solved on its own plate, the solve's ink ring run out.
+escapement-plate-28-dealt.png  Escapement 28 as dealt on its own plate.
+escapement-plate-28-solved.png  Escapement 28 solved on its own plate, the solve's ink ring run out.
+escapement-plate-29-dealt.png  Escapement 29 as dealt on its own plate.
+escapement-plate-29-solved.png  Escapement 29 solved on its own plate, the solve's ink ring run out.
+escapement-plate-30-dealt.png  Escapement 30 as dealt on its own plate.
+escapement-plate-30-solved.png  Escapement 30 solved on its own plate, the solve's ink ring run out.
+escapement-plate-alt-7-dealt.png  Escapement 7 as dealt on Pause's alternate plate, a pause mark on a dial without hands.
+escapement-plate-alt-7-solved.png  Escapement 7 solved on Pause's alternate plate.
+escapement-plate-alt-9-dealt.png  Escapement 9 as dealt on Hourglass's alternate plate, the glass ending inside the top and bottom rods.
+escapement-plate-alt-9-solved.png  Escapement 9 solved on Hourglass's alternate plate.
 prism-dealt.png  Prism specimen 1 as dealt: red ghosts in the top core, cyan in the left, both over the white bottom stir's shear; the knobs tinted red, cyan and white.
 prism-solved.png  Prism specimen 1 drawn unstirred: the engraving in pure white lines, every channel in register.
 prism-live.png  Prism specimen 1 held mid-drag, the cyan rod 1 turned back +1.5 of its 3: its green and blue ghosts swing towards the red.
