@@ -202,11 +202,14 @@ struct LevelView: View {
     @State private var touchStart: CGPoint?
     /// How far the result or lost card reaches below the caption's top, which `PlayStack` makes room for.
     @State private var cardReach: CGFloat = 0
+    /// The caption's top in the window, where the card hangs from, with the tank at the size it was played at.
+    @State private var captionTop: CGFloat?
     /// The play layout last laid out, so a change of pose glides from it and lets go of what the fingers hold.
     @State private var pose: PlayLayout?
     /// UNSTIR_FOLD: the fold the harness window draws, in its own points.
     @Environment(\.harnessFold) private var harnessFold
     @Environment(\.chromeMeasured) private var chromeMeasured
+    @Environment(\.finishedMeasured) private var finishedMeasured
     /// The type size round the level, which its own text sees capped at `PlayLayout.typeCap`.
     @Environment(\.dynamicTypeSize) private var typeSize
     /// The level's note at full strength for its first seconds of play.
@@ -543,7 +546,7 @@ struct LevelView: View {
     /// The play screen's way out and its count: moves against par, Escapement's ticks or the sandbox's controls.
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
-            Button(action: leave) { Text(game.level.back).font(.ui(.button)).hit() }
+            UnstirButton(.quiet, action: leave) { Text(game.level.back).font(.ui(.button)) }
                 .accessibilityLabel(Spoken.back(game.level))
             Spacer()
             if game.level.sandbox {
@@ -586,7 +589,7 @@ struct LevelView: View {
         .overlay(alignment: .topLeading) {
             // In the gap above the title, so a pack level's tank sits where every other level's does.
             if let pack = game.level.pack {
-                // The way out already names the pack, so this stays the size the title's 18 pt gap holds.
+                // The size the title's 18 pt gap holds.
                 Text(pack.name.uppercased()).font(.ui(.eyebrow)).tracking(2).dynamicTypeSize(.large)
                     .foregroundStyle(game.level.colour).opacity(0.75)
                     .offset(y: -TypeRole.eyebrow.line(at: .large).height - 2)
@@ -597,13 +600,19 @@ struct LevelView: View {
         .modifier(Unseen(clean))
     }
 
-    private var reveal: AnyTransition { .opacity.animation(.easeOut(duration: 0.4).delay(0.3)) }
+    /// How a card arrives, and the tank's shrink for it with it.
+    private static let arrival = Animation.easeOut(duration: 0.4).delay(0.3)
+    private var reveal: AnyTransition { .opacity.animation(Self.arrival) }
+    /// Under Reduce Motion the tank takes its size for the card at once.
+    private var shrinking: Animation? { reduceMotion ? nil : Self.arrival }
 
-    /// The tank with what stands over it: the night forwards and "unstirred.". `bounds` is the tank's pane in the glass's
-    /// frame and `trackBounds` where a lens's track runs, both nil in the column; `filmFoot` where the night forwards'
-    /// lines end, nil under the glass.
-    private func stage(_ side: CGFloat, words: CGFloat?, wordsScale: CGFloat, tabletop: Bool, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
+    /// The tank with what stands over it: the night forwards and "unstirred.". `shrink` scales the tank alone, picture,
+    /// knobs and rim as one, about its top, for a card the column has no room for, and `drop` brings its top down for
+    /// the word; `bounds` is the tank's pane in the glass's frame and `trackBounds` where a lens's track runs, both nil
+    /// in the column; `filmFoot` where the night forwards' lines end, nil under the glass.
+    private func stage(_ side: CGFloat, shrink: CGFloat, drop: CGFloat, words: CGFloat?, tabletop: Bool, bounds: CGRect?, trackBounds: CGRect?, filmFoot: CGFloat?) -> some View {
         tank(side, bounds: bounds, trackBounds: trackBounds)
+            .animation(shrinking) { $0.scaleEffect(shrink, anchor: .top).offset(y: drop) }
             // Seen, not heard, as the tank is played by sight: direct touch lets a VoiceOver user drag on it.
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Puzzle tank, \(Spoken.rods(game.level.layout))")
@@ -625,7 +634,7 @@ struct LevelView: View {
             .overlay(alignment: .top) {
                 // A spill says so over the tank itself.
                 if showResult && game.solved && !clean, let words {
-                    unstirred(fixed: tabletop).scaleEffect(wordsScale, anchor: .top).offset(y: -words).transition(reveal)
+                    unstirred(fixed: tabletop).offset(y: -words).transition(reveal)
                 }
             }
     }
@@ -637,7 +646,7 @@ struct LevelView: View {
 
     /// The caption, which the result and lost cards hang from: the play controls fade rather than leave, and the result
     /// is an overlay, so the solved tank stays exactly where it was played.
-    private func caption(_ layout: PlayLayout) -> some View {
+    private func caption(_ layout: PlayLayout, _ fit: PlayLayout.Finished?) -> some View {
         Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
              : game.level.archived ? "Practice: this day's best was set on its day." : "Practice: only the first try counts."
              : game.level.replay ? "watch the stir \u{00B7} tap to skip" : "tap to skip"))
@@ -660,27 +669,36 @@ struct LevelView: View {
             .padding(.top, 14)
             .accessibilityHidden(showResult || ending)
             .modifier(SkipButton(on: demoing || shown != nil) { skip() })
-            .overlay(alignment: .top) { if showResult { card(layout) } }
+            .overlay(alignment: .top) { if showResult { card(layout, fit) } }
             .modifier(Unseen(clean))
     }
 
     /// The result or lost card under the caption; in the split, over the menu in the trailing half, centred on the tank
     /// and headed by "unstirred.", as the half round the tank has no room for either. One place in the tree in every
     /// pose, so a change of pose moves the card rather than showing it again.
-    private func card(_ layout: PlayLayout) -> some View {
+    ///
+    /// The column's card keeps the player's Text Size: where it is taller than the room under the tank, the tank shrinks
+    /// for it (`fit`), and only past the tank's least does the card scroll.
+    private func card(_ layout: PlayLayout, _ fit: PlayLayout.Finished?) -> some View {
         let over = layout.kind == .split ? layout.menuPane : nil
-        return VStack(spacing: 0) {
-            if over != nil && game.solved && !clean { unstirred().padding(.bottom, 26) }
-            if game.lost {
-                LostCard(game: game, notice: notice, undo: undo, again: reset)
-            } else {
-                ResultCard(game: game, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
-                    .fixedSize(horizontal: false, vertical: true)
+        return ScrollView {
+            VStack(spacing: 0) {
+                if over != nil && game.solved && !clean { unstirred().padding(.bottom, 26) }
+                if game.lost {
+                    LostCard(game: game, notice: notice, undo: undo, again: reset)
+                } else {
+                    ResultCard(game: game, onNext: onNext, onLook: look, again: reset, now: now, onOffer: offer)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
+            .padding(.top, over == nil ? 14 : 0)
+            .frame(maxWidth: .infinity)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
         }
-        .padding(.top, over == nil ? 14 : 0)
-        .frame(width: over?.width)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { cardReach = $0 }
+        .scrollBounceBehavior(.basedOnSize)
+        // A card that fits draws its buttons' glow past its own edges.
+        .scrollClipDisabled(fit?.scrolls != true)
+        .frame(width: over?.width, height: fit?.height ?? cardReach)
         .offset(over.map { pane in
             // From the caption's place, under the stage and its ring; a card taller than the pane starts at its top.
             let top = max(pane.minY, min(layout.stage.midY - cardReach / 2, pane.maxY - cardReach))
@@ -714,15 +732,14 @@ struct LevelView: View {
     private var controls: some View {
         HStack {
             // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats too.
-            control(game.level.sandbox ? "undo" : "undo \u{00B7} \(game.bank)") {
+            // An empty bank only says when it refills, so it only taps.
+            UnstirButton(.secondary, effect: spent ? .tap : .undo, dim: game.history.isEmpty || spent) {
                 if settling { undoQueued = true } else { undo() }
+            } label: {
+                if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
             }
                 .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")
-                // An empty bank only says when it refills, so it only taps.
-                .buttonStyle(Sounding(effect: spent ? .tap : .undo))
                 .disabled(game.history.isEmpty)
-                // The plain button style does not grey a disabled label.
-                .opacity(game.history.isEmpty || spent ? 0.35 : 1)
                 .overlay(alignment: .topTrailing) { refillBadge }
             Spacer()
             resetControl
@@ -732,7 +749,8 @@ struct LevelView: View {
         .disabled(game.finished || shown != nil || demoing || game.level.run != nil || holding)
         .opacity(showResult || ending || game.level.run != nil ? 0 : 1)
         .accessibilityHidden(game.level.run != nil || showResult || ending)
-        .padding(.bottom, 8)
+        // 4 where the 40 pt capsules had 8, so the taller buttons leave the tank where it was.
+        .padding(.bottom, 4)
         .modifier(Unseen(clean))
     }
 
@@ -756,28 +774,42 @@ struct LevelView: View {
     }
 
 
+    /// How the column gives a card its room, down to `foot`, the safe area's in the window: nil during play, so the
+    /// tank is never other than the layout's; in the split and the tabletop, whose cards have their own places; and
+    /// until the card and the caption's place are measured.
+    /// `drop` is what "unstirred." needs of the tank's top, where it stands.
+    private func finished(_ layout: PlayLayout, foot: CGFloat, drop: CGFloat) -> PlayLayout.Finished? {
+        guard showResult, !clean, layout.kind == .column, let captionTop, cardReach > 0 else { return nil }
+        return PlayLayout.finished(card: cardReach, room: foot - captionTop, stage: layout.side * PlayLayout.rim,
+                                   drop: game.solved ? drop : 0)
+    }
+
     private var screen: some View {
         GeometryReader { geo in
             let layout = playLayout(geo)
+            let words: (words: CGFloat?, drop: CGFloat) = layout.kind == .column
+                ? PlayLayout.columnWords(over: titleGap ?? .infinity, side: layout.side, type: playType) : (layout.words, 0)
+            let foot = geo.frame(in: .global).maxY, fit = finished(layout, foot: foot, drop: words.drop)
             let stack = layout.kind == .column ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(PlayStack(layout: layout, measured: chromeMeasured))
             stack {
                 header.modifier(PlayPart.chrome(read: 5))
                 titleRow.modifier(PlayPart.chrome(read: 4))
                 Spacer(minLength: 12)
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { titleGap = $0 }
-                let words: (words: CGFloat?, scale: CGFloat) = layout.kind == .column
-                    ? PlayLayout.columnWords(over: titleGap ?? .infinity, side: layout.side, type: playType)
-                    : (layout.words, 1)
-                stage(layout.side, words: words.words, wordsScale: words.scale, tabletop: layout.kind == .tabletop, bounds: layout.bounds, trackBounds: layout.trackBounds,
+                stage(layout.side, shrink: fit?.scale ?? 1, drop: fit?.drop ?? 0, words: words.words,
+                      tabletop: layout.kind == .tabletop, bounds: layout.bounds, trackBounds: layout.trackBounds,
                       filmFoot: layout.filmFoot)
                     // Drawn at its new size at once; only the glide scales it there.
                     .animation(nil, value: layout)
                     .modifier(Glide(side: layout.side))
                     .modifier(PlayPart.stage(read: 3))
-                caption(layout)
+                caption(layout, fit)
                     // The card hangs from the caption unmeasured, over the controls it hides. In the tabletop the stack
                     // must make room for it, or it runs into "unstirred."; the split's goes over the menu.
                     .frame(minHeight: layout.kind == .tabletop && showResult ? cardReach : nil, alignment: .top)
+                    // Drawn higher, not laid out higher: the stack, and so the top measured here, stay as played.
+                    .animation(shrinking) { $0.modifier(Lift(by: fit?.lift ?? 0)) }
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { captionTop = $0 }
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
@@ -799,6 +831,13 @@ struct LevelView: View {
                     letGoOnResize()
                 }
                 pose = now
+            }
+            .onChange(of: fit, initial: true) {
+                guard let fit, let captionTop else { return }
+                finishedMeasured?(cardReach, foot - captionTop, fit)
+                if fit.lift > 0 {
+                    Log.write("card \(Int(cardReach)) over \(Int(foot - captionTop)): tank at \(Int((fit.scale * 100).rounded()))%\(fit.scrolls ? ", card scrolls" : "")")
+                }
             }
             .modifier(TapHooks(moment: .init(window: tapWindow(side: layout.side), history: game.history,
                                              pixels: Double(layout.side * scale)),
@@ -1015,9 +1054,11 @@ struct LevelView: View {
 
     /// Out of `body`, whose one long expression an older compiler gives up on.
     private var resetControl: some View {
-        control(armedAt == nil ? "reset" : "reset? tap again", tapReset)
-            // The tap that arms only taps; the one that resets sounds as a reset.
-            .buttonStyle(Sounding(effect: armedAt != nil || game.history.isEmpty ? .reset : .tap))
+        // The tap that arms only taps; the one that resets sounds as a reset.
+        UnstirButton(.secondary, effect: armedAt != nil || game.history.isEmpty ? .reset : .tap, armed: armedAt != nil,
+                     action: tapReset) {
+            if armedAt == nil { Text("reset") } else { Text("reset? tap again") }
+        }
             .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
             .disabled(settling)
             .accessibilityFocused($resetFocused)
@@ -1426,9 +1467,9 @@ struct LevelView: View {
     private func sandboxControls(named: Bool) -> some View {
         let picture = game.level.picture.rawValue
         return HStack(spacing: 8) {
-            control(named ? "picture: \(picture) \u{203A}" : "\(picture) \u{203A}", inset: 14, game.nextPicture)
+            sandboxControl(named ? "picture: \(picture) \u{203A}" : "\(picture) \u{203A}", game.nextPicture)
             // A turn in hand, or snapping to commit, names a rod of the current layout.
-            control(Self.layoutLabel(game.level.layout, named: named), inset: 14) {
+            sandboxControl(Self.layoutLabel(game.level.layout, named: named)) {
                 if liveRod == nil { game.nextLayout() }
             }
         }
@@ -1447,13 +1488,12 @@ struct LevelView: View {
         }
     }
 
-    private func control(_ label: String, inset: CGFloat = 22, _ action: @escaping () -> Void) -> some View {
+    /// Narrower than a secondary's 20 pt sides, so both fit the header beside the way out.
+    private func sandboxControl(_ label: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(label).font(.ui(.button)).padding(.horizontal, inset).padding(.vertical, 10)
-                .background(Capsule().fill((page.paper ? Color.ink : .white).opacity(0.05)))
-                .overlay(Capsule().stroke(page.paper ? Color.ink.opacity(0.3) : .white.opacity(0.18), lineWidth: 1))
-                .hit(3, 0)
+            Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14))
         }
+        .buttonStyle(Sounding(presses: true))
     }
 
     /// The knob shows only the player's own turning, so it can neither give away nor misstate the scramble.
@@ -2693,14 +2733,13 @@ struct ChannelSwatches: View {
     @Binding var isolated: Channels?
 
     var body: some View {
-        HStack(spacing: 18) {
+        HStack(spacing: 12) {
             ForEach(Channels.each, id: \.rawValue) { c in
                 let held = isolated == c
-                Text(c.letters).font(.ui(.detail, .semibold)).foregroundStyle(held ? .black : .white)
-                    .frame(width: 38, height: 30)
-                    .background(Capsule().fill(held ? c.colour : Color.white.opacity(0.06)))
-                    .overlay(Capsule().strokeBorder(c.colour, lineWidth: 1.5))
-                    .contentShape(Capsule())
+                // Secondary buttons in their channel's colour, filled while held.
+                Text(c.letters).font(.ui(.button, .semibold))
+                    .modifier(ButtonFace(emphasis: .secondary, inset: 0, minWidth: ButtonFace.height, edge: c.colour,
+                                         strokeWidth: 1.5, filled: held))
                     .onLongPressGesture(minimumDuration: 0, maximumDistance: 60, perform: {}) { pressing in
                         if pressing { isolated = c } else if isolated == c { isolated = nil }
                     }

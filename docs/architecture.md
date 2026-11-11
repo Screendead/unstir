@@ -215,8 +215,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **TankView.swift**, **Game.swift**, **Shader.swift**, **Lessons.swift**, **Rods.swift**, **ResultCard.swift** and
   **EscapementViews.swift** hold the play screen, split by type (Jack's call ARCH = A), and this one entry covers all
   seven. TankView.swift keeps `LevelView` whole, with `BackSwipe`, `Grab`, `ResetArm`, `Breath`, `Detent`, `Awake`,
-  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints (the app's colours are Tone.swift's
-  and its type Type.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
+  `Knock`, `Bezel`, `Knurl`, Prism's `ChannelSwatches`, `Letters` and channel tints (the app's colours are Tone.swift's,
+  its type Type.swift's and its buttons Buttons.swift's); Game.swift holds `Game`; Shader.swift `Unstirred`, `TankShader` and `PictureLayer`; Lessons.swift `KnobLesson`,
   `LensLesson`, `RimLesson` and `GhostFinger`; Rods.swift `RodView`; ResultCard.swift `ResultCard`, `TierUp`,
   `Completion`, `Review` and Escapement's `LostCard`; EscapementViews.swift `ClockHint`, `RatchetView`, `FlipCounter`,
   `LostStamp` and `StopLook`. `Game` is the per-level state: stirs, moves against par, undo, clean-solve rules and
@@ -231,7 +231,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   magenta ring and heavy tap, which in every mode mark only a commit that pops one of the scramble's entries (Jack's call SND2 = A, round 16; Escapement's the move's own commit, not its ticks, and the sandbox, with no scramble, never rings); a win the fine pass calls also settles one, as the tank's
   last heal, while one of the scramble's entries is left and unless its move healed one. `Game.nextTank` carries it to
   the next tank. `Game.turnTank` is a move that pushes no entry: turns in a row join, and one netting a whole turn
-  drops. The result card of a tier's last level, and of the solve that opens the next tier wherever it stands (`Game.opened`, read either side of the best's save), goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or, while that tier is closed, as bright behind a lock with how many levels are short of par, opening the menu on that tier's gate. Any solve that isn't clean, but endless's (`Game.offersAgain`), offers "again ↺" on the card, a reset (the glass no longer eased home); on the daily, which counts only its first try's solve, it plays as practice, as a later visit does (`Game.firstTry` goes false, so `counts` saves no best and no streak day, and the caption, card and share line say practice; Jack's call P1 = B, round 13), and every solve that saves a best over an earlier one says how it stands: "new best · was +2" when what the card names improves (`Best.standing`), else "best · par". A best ranks by clean, then over par, never by time, a tie keeping the older (Jack's call C10, round 13), after a daily's best kept on its day first, over one the archive saved, whatever either's result, so `Daily.run` counts a day played on its day that another time zone or iCloud had already given an archive best (`Best.standing`, the one rank `save`, `Sync.beats` and the card read; the card says nothing of such an archive best, as on a first solve); the card shows no time, which only the log keeps. A run carries the best as it began (`Run.best`), so its spill card says "new best" in lime when it beat it. The solve that gives the last of a pack's levels a best, or of maelstrom's, says so under the best line in the card's colour, once (`Game.completed`, read either side of the save: "Lens complete · 25 panels", `Pack.noun`, or "every tier unstirred"; never a pack short of `Pack.planned`), and under it a quiet "try Escapement ›" opens the card of the first pack on the shelf the player doesn't own but the one completed (`Offer.pointer`, `LevelView.onOffer`), none once all are owned (Jack's call C8, round 13). Maelstrom 27's card, the end of the free ladder, says "more puzzles in the packs ›" once (`Best.packsPointed`, set as the card shows it, never by the harness) where no completion's pointer already does, opening the first pack on the shelf the player doesn't own, none once all are (`Offer.ladderEnd`; Jack's call M6, round 14). The solve that opens whirlpool asks for a rating once, 2 s after its card shows (`Review`, `requestReview`; Jack's call C20, round 13), and stores that it has (`Best.reviewAsked`): `RootView` makes the request (`Review.pending`), so a tap off the card within the wait doesn't lose it, and only while the app is in front, waiting again on its return; never in a harnessed launch or the test host, nor in one where a purchase landed on a card (`Store.landed`), which, as that solve comes once, never asks. The daily's card, practice too, says under its buttons when the next daily comes, at the local midnight that ends the card's own daily, read off its id (`Daily.untilNext`: "next daily in 7 h", minutes under an hour, and "next daily is out" once that midnight has passed; VoiceOver hears hours and minutes). `Game.history` holds rod stirs by slot and
+  drops. The result card of a tier's last level, and of the solve that opens the next tier wherever it stands (`Game.opened`, read either side of the best's save), goes up a notch (`TierUp`): the next tier's name in its own sweep, glowing, opening its first level, or, while that tier is closed, in its sweep behind a lock, unfilled and still, with how many levels are short of par, opening the menu on that tier's gate. Any solve that isn't clean, but endless's (`Game.offersAgain`), offers "again ↺" on the card, a reset (the glass no longer eased home); on the daily, which counts only its first try's solve, it plays as practice, as a later visit does (`Game.firstTry` goes false, so `counts` saves no best and no streak day, and the caption, card and share line say practice; Jack's call P1 = B, round 13), and every solve that saves a best over an earlier one says how it stands: "new best · was +2" when what the card names improves (`Best.standing`), else "best · par". A best ranks by clean, then over par, never by time, a tie keeping the older (Jack's call C10, round 13), after a daily's best kept on its day first, over one the archive saved, whatever either's result, so `Daily.run` counts a day played on its day that another time zone or iCloud had already given an archive best (`Best.standing`, the one rank `save`, `Sync.beats` and the card read; the card says nothing of such an archive best, as on a first solve); the card shows no time, which only the log keeps. A run carries the best as it began (`Run.best`), so its spill card says "new best" in lime when it beat it. The solve that gives the last of a pack's levels a best, or of maelstrom's, says so under the best line, once (`Game.completed`, read either side of the save: "Lens complete · 25 panels", `Pack.noun`, or "every tier unstirred"; never a pack short of `Pack.planned`), and under it a quiet "try Escapement ›" opens the card of the first pack on the shelf the player doesn't own but the one completed (`Offer.pointer`, `LevelView.onOffer`), none once all are owned (Jack's call C8, round 13). Maelstrom 27's card, the end of the free ladder, says "more puzzles in the packs ›" once (`Best.packsPointed`, set as the card shows it, never by the harness) where no completion's pointer already does, opening the first pack on the shelf the player doesn't own, none once all are (`Offer.ladderEnd`; Jack's call M6, round 14). The solve that opens whirlpool asks for a rating once, 2 s after its card shows (`Review`, `requestReview`; Jack's call C20, round 13), and stores that it has (`Best.reviewAsked`): `RootView` makes the request (`Review.pending`), so a tap off the card within the wait doesn't lose it, and only while the app is in front, waiting again on its return; never in a harnessed launch or the test host, nor in one where a purchase landed on a card (`Store.landed`), which, as that solve comes once, never asks. The card reads top down, built round the way on (Jack's call DESIGN5 = A, the design pass's fifth change): the marks; the verdict in the headline role, "clean" in lime, "at par" in amber or "solved"; the facts in `text2`, "moves 9 · par 7 · +2", the margin in magenta (Escapement's "moves 7" alone, as its ticks say nothing, and endless's two lines as they were); only where the solve is not clean and not over par, what clean takes, in the detail role ("clean needs no undo or reset" on a first try, else "clean counts on the first try"); then the best line and a completion's; and 16 pt under them its buttons in a `ButtonRow`, a lone one the card's width and two sharing it, with TierUp the card's width under them. The daily's card, practice too, says under its buttons when the next daily comes, at the local midnight that ends the card's own daily, read off its id (`Daily.untilNext`: "next daily in 7 h", minutes under an hour, and "next daily is out" once that midnight has passed; VoiceOver hears hours and minutes). `Game.history` holds rod stirs by slot and
   tank stirs as rod `Game.tank` (-1), so an entry is not always a rod index. It is read off one record per stir
   (`Game.Stir`): its twist, and what its undo puts back as it began (the stack and clock, the heals, and whether the
   stir before it was open), so a stir is made, joined, dropped and taken back in one place and no part of one stir's
@@ -376,7 +376,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the chime wait for that tick, `tickBeat` and more after the lift, and the result card follows the wave by its usual
   1.4 s (`LevelView.landSolve`, `solveDelay`; Jack's call tk-finish = B, round 16). One clock stopping while another runs loses nothing.
   A full stack refuses a move whose tick it would refuse. Undo is the pack's, the stack and the clocks as the move found
-  them, and works on a tank out of ticks; reset deals the counts afresh. The result card says "solved in N moves", as a solve always spends the budget. The header shows the budget, not moves against
+  them, and works on a tank out of ticks; reset deals the counts afresh. The result card says "clean" or "solved" over "moves N", never the ticks, as a solve always spends the budget. The header shows the budget, not moves against
   par: "ticks" and a split-flap numeral (`FlipCounter`), driven by the ticks' own keyframes, whose old digit's top half
   falls over the hinge as each clock's tick starts to turn, one flap per tick in turn; Reduce Motion swaps without the
   fall; it goes vermilion at 00 and stays up over the card. The view draws
@@ -419,7 +419,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's name is never translated (Jack's call CAT1 = A);
   its levels' titles, chapters, rules and notes are `String(localized:)` keyed by id (`level.lens-1.title`,
   `chapter.prism.1`), and Escapement's stipulation is its budget sentence, a key, or on a chapter's opener that
-  sentence and the chapter's rule as one key (`rule.escapement.1`), so a translator sees them together. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
+  sentence and the chapter's rule as one key (`rule.escapement.1`), so a translator sees them together. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, the one place the play screen names it (Jack, 2026-11-10: the way out naming it too read as doubled), so its way out reads "‹ levels" (`Level.back`) as the free game's does, VoiceOver still saying "Back to Lens" (`Spoken.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
@@ -483,7 +483,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   ticks, pointer and a jewel at the cap's centre. Under the settings' colour letters, which follow Differentiate
   Without Colour until chosen (`Letters`, stored as `letters`, absent until then; Jack's call C16, round 13), or
   `UNSTIR_LETTERS=1`, Prism reads without colour: each knob spells out the primaries it holds under its cap (`Channels.letters`: R, GB, RGB),
-  and `ChannelSwatches` (R, G and B) sit under the caption; holding one draws that channel alone in its own
+  and `ChannelSwatches` (R, G and B, secondary buttons 44 pt square in their channel's stroke, filled at 0.14 while
+  held) sit under the caption; holding one draws that channel alone in its own
   colour (`Channels.tint`, its knob's; Jack, round 15) and hides the others (`Unstirred.isolate`, the `unstirChannels`
   shader's `isolate` and `tint`), in white instead under the system's Differentiate Without Colour, whatever the
   letters' choice (`Unstirred.whiteIsolate`), and VoiceOver toggles it. Neither shows
@@ -594,9 +595,23 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   count, the note, a card's facts, a row's number), `detail` 13 (a row's detail, keys, section headers, small print)
   and `eyebrow` 12, so nothing that carries meaning is under 13 and every screen follows Settings › Text Size. The play
   screen caps at `PlayLayout.typeCap` (xxxLarge), as the dock does, since the tank needs its room; the menu, cards,
-  archive, settings and consent scale to the accessibility sizes, where a menu row's result goes under its title. The
-  gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
-  default size, as the title's 18 pt gap holds no more and the way out names the pack; and the menu hands its type size
+  archive, settings and consent scale to the accessibility sizes, where a menu row's result goes under its title.
+  The text never shrinks (Jack, 2026-11-11: "If the user wants big text, they get big text. To fit it, the tank itself
+  must shrink once a level is completed, if the whole content wouldn't fit on-screen all at once"; on small phones
+  "the tank scales; text and UI does not"). So once a level is finished, a result or lost card taller than the column
+  leaves under the tank shrinks the tank (`PlayLayout.finished`, from the card's and the caption's measured places):
+  by exactly what the card lacks, to the next whole point, down to the safe area's foot less the 4 pt the controls it
+  covers keep (`cardFoot`). The tank is scaled as one, picture, knobs and rim, about its top (`LevelView.stage`), drawn
+  for the size it was played at, so no picture is baked again and no glass size is learned; the header, the title and
+  "unstirred." stay where they were, and the caption's place, with the card hung from it, is drawn that much higher
+  (`Lift`, stepped frame by frame so the arriving card rides up with the tank's foot), not laid out higher, so the
+  room is always measured with the tank as played. It keeps time with the card's arrival
+  (`LevelView.arrival`), at once under Reduce Motion, and the tank is its own size again once the card leaves; in play
+  there is no card and nothing to measure, so the tank is the layout's. The tank never goes under 55% of the size it
+  was played at (`leastFinished`): past that the card scrolls in the room there is, which only the fullest card at
+  xxxLarge on the shortest phone reaches (`testTheFullestCardAtTheLargestTypeOnTheShortestPhoneScrollsUnderTheTanksLeast`).
+  The split's card goes over the menu and the tabletop's stack makes room for its own, so neither shrinks. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
+  default size, as the title's 18 pt gap holds no more; and the menu hands its type size
   to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
   `TypeRole.line` gives a role's line height as `Text` lays it out (a text style's font, whose leading grows faster than
   its size), which `PlayLayout.Chrome` and the caption's two lines use. The game's own text stays fixed (`Font.game`):
@@ -605,7 +620,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   semibold mono; Jack's call STAMP = A), up to the play screen's cap, where it sets at about 28 pt and still ends above
   the stage in the column (`PlayLayout.words`). Where the column's room between the title row's foot and the glass
   is shorter than that, as on an SE at the largest sizes, the word stands lower, centred between the title row and the rim,
-  and shrinks only if that room can't hold its line (`PlayLayout.columnWords`); the room is measured, the spacer under
+  and never shrinks: where that room can't hold its line, the word stands under the title row and the finished tank's
+  top comes down by what it lacks (`PlayLayout.columnWords`' `drop`, Jack's call STAMP-SMALL = B: "If necessary, the
+  tank scales"), the same shrink that gives a card its room (`PlayLayout.finished`), so the word is clear of the title
+  and the rim whatever the card takes; the room is measured, the spacer under
   the title, as the note may run past the two lines the chrome budgets. The tabletop keeps it at a fixed 22 pt, as its upright half budgets
   `PlayLayout.wordsHeight` for it.
 - **Tone.swift** holds the colours round the game (Jack's call DESIGN5 = A, the design pass's second change): the
@@ -620,6 +638,26 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   vortex's teal and maelstrom's red, as vortex's glow reads 4.1:1, and Prism's `text`; `glow` stays the shadows'.
   `ToneTests` pins each tone's ratio and every ink at 4.5:1 or more. The game's own colours (the picture, tank,
   bezel, knobs, rings, the ghost finger, flip counters and what is drawn over the picture) keep theirs.
+- **Buttons.swift** holds the one button (Jack's call DESIGN5 = A, the design pass's third change), in three
+  emphases (`Emphasis`): primary, the one thing to do next, a 1 pt stroke, a fill at 0.14 and the label in its accent,
+  the stroke glowing at 6 (next in the tier's or pack's ink, share in amber, buy in the pack's ink, play in lime, the
+  lost card's again in vermilion); secondary, a `line` stroke round the label in the ink (undo, reset, the result
+  card's again ↺, try free, the consent answers, Prism's swatches with their channel's stroke at 1.5, held filled at
+  0.14); quiet, the label alone as the caller sets it, its 44 pt target drawn nowhere (`hit()`: the back controls and
+  the small print). One primary per screen: on the result card an open TierUp leads, then next, then share, and
+  whichever loses is secondary; "again" never leads. `ButtonFace` is the look on a label, so a share button and the
+  swatches, which hold rather than tap, wear it too; `UnstirButton` is a `Button` in it, sounding through
+  `Sounding(presses: true)`, whose inner style hands the press to the label (`\.buttonPressed`) for a 0.97 scale on
+  `.snappy(0.2)`, none under Reduce Motion. A primary or secondary is 44 pt, or its line and 12 above and below where
+  that is taller (`testEveryButtonIsFortyFourTall`), with 20 pt sides. It hugs its label unless `wide`, which takes the width it is given: `ButtonRow`, a card's row, gives each of its buttons an equal share of the card's width, 12 pt apart, so a lone one fills it; where the longest label can't have an equal share each keeps its own width and they share the rest, and where they can't share a line they stack. Dimmed (0.4: undo at an empty bank) and
+  pending (0.6: "buying…") are the caller's to say, never read from `isEnabled`, as the play screen disables its
+  controls through an opening or a settle without looking it and undo at an empty bank stays live to say when it
+  refills. Armed (reset's second tap, C12) strokes and labels it in `Page.stop`, amber, crossfading over 0.15 s. On
+  Escapement's paper every label is ink, as the plate's vermilion reads under 4.5:1 for words on bone, the accent
+  staying on the stroke and fill, and a secondary's stroke takes `Page.line`, ink at `text3`'s alpha, as `line`'s
+  0.40 reads 2.4:1 there. TierUp is a primary 56 pt tall (`ButtonFace.tall`) in its tier's sweep with its glow's fill
+  and breathing glow; closed, it is unfilled and still. `ToneTests` reads each primary's label over its own fill
+  (Escapement's plate vermilion is 4.3:1, Jack's to settle) and the strokes at 3:1.
 - **ResultMarks.swift** holds `ResultMarks`, a level's result as three discs (Jack's calls C9 = B and D3 = A, round 13; DESIGN5 =
   A's fourth change): none filled tried, one solved over par, two at par, three clean, a filled disc `text` and a hollow
   one a 1 pt ring in `line`, so the count carries the result and Differentiate Without Colour needs nothing more. A
@@ -700,9 +738,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   the spare room half
   over the tank and half over the controls: at the default size 417 pt for every level of plughole, whirlpool and
   vortex, the daily, Lens, and Prism read by colour (424 before the type scale's 17 pt body, when the glass was the
-  half's width); 8 pt less for maelstrom's rim lesson under the title, 5 less for Escapement's split-flap ticks and
-  two lines of serif, 33 less for Prism's swatches under its colour letters, and endless's 342, so every level of one list takes one glass, but Prism's follows its swatches: colour
-  letters or Differentiate Without Colour turned on or off mid-level resizes it by 30 pt and lets go a drag, as a
+  half's width; the 44 pt buttons kept it, taking 4 pt of the 8 under them); 8 pt less for maelstrom's rim lesson under the title, 5 less for Escapement's split-flap ticks and
+  two lines of serif, 46 less for Prism's swatches, a row of 44 pt buttons, under its colour letters, and endless's 342, so every level of one list takes one glass, but Prism's follows its swatches: colour
+  letters or Differentiate Without Colour turned on or off mid-level resizes it by 46 pt and lets go a drag, as a
   change of pose does
   (`testTheGlassShrinksBesideTheMenuOnlyWhereTheChromeNeedsIt`; every caption fits its two lines there,
   `testEveryCaptionFitsTheChromesTwoLinesBesideTheMenu`). A result or lost card goes over the menu in the trailing
@@ -966,7 +1004,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
 - **Menu.swift** holds `MenuView`. What it leads with follows plughole 01 and 23 (`MenuView.lead`, Jack's call C4,
   round 13): until 01 has a best, an empty line over the tier's list (the tank's rule, "Every stir in this tank has
   an exact inverse.", left the menu for the App Store page: Jack's call D1 = A, round 13); then "next: 07 · Sprinkle ›"
-  on that line, a button opening the shown tier's frontier (none once it has none). The sandbox's row sits at the
+  on that line, a button opening the shown tier's frontier (none once it has none), 16 pt under the chips as drawn,
+  as they are under the title, with a section's 32 to whichever header follows, "today" or the tier's (Jack's call
+  MENUCARD = A: the lines under the chips wanted air). The sandbox's row sits at the
   list's end under its own header, "anything goes", so the list leads with 01 (Jack's call D2 = A, round 13). The sandbox is out of v1 (Jack's call snd2-sandbox, round 16: it needs
   rethinking, so that a pack's mechanics join it once the pack is owned), as First Stir is: `Level.playsSandbox` is false
   in Release, so there the lead has no sandbox (`Lead.sandbox` false), the menu no row or header, `Store.opens` refuses it and a
@@ -974,11 +1014,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   shots with it (`testTheSandboxIsOutOfV1`). The daily and endless rows show only once open, each marked new, in plain
   white, until either is first opened (`Best.modesSeen`, `RootView.seesModes`). A row whose level is started
   (`Best.started`) and has no best reads tried, three hollow marks, as a pack card's list does (Jack's call C3, round 13; endless
-  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's adds "4 days running" (`Daily.run`) to its detail from two. With a run saved, endless's row
+  and the sandbox have none, and a daily left on its first visit stays tried all day, as practice saves no best); the daily's says "4 days running" (`Daily.run`) from two. The daily, the archive and endless stand under their own header, "today", the modes in one place over the tier's list (Jack's call DESIGN5 = A, the design pass's fifth change). The daily's and endless's rows are one line (`LevelRow.brief`): what a mode is its level's own note says, the detail left to VoiceOver, and at the trailing edge the daily keeps today's marks, as every row does, its run of days a line under its title in a detail's tone (`LevelRow.under`; Jack's call STREAK = B), and endless shows its best, under its title where one line won't hold both (`ViewThatFits`). With a run saved, endless's row
   continues it, "continue · tank 6 · brim 3 · best 9" in place of its detail, and "new run" on its title's line in
   place of the best: a first tap arms it, "new run? tap again", for 2 s (`ResetArm`'s; under VoiceOver until focus
-  leaves, as reset), the second drops the run and starts another, and a touch that ends a stir does neither. Under the title, a strip names every tier, dimmed with a lock while locked, and
-  keeps the picked name in view itself; VoiceOver reads it as one adjustable element. Tapping a name, or dragging the
+  leaves, as reset), the second drops the run and starts another, and a touch that ends a stir does neither. Under the title, a strip holds every tier as a chip, 36 pt tall in a 44 pt target: the picked one stroked in its tier's sweep over its glow at 0.12, an open one in `line`, a locked one in `rule` with a lock after its dimmed name; the picked face moves to its chip as it is picked (`matchedGeometryEffect`), ahead of the list. The strip
+  keeps the picked chip in view itself, fading out at its edges; VoiceOver reads it as one adjustable element. Tapping a chip, or dragging the
   list, the strip or the title sideways, stirs the list away round the middle of its visible part with the tank's own shader
   (`Stirred`, one rod, a low plateau), then unstirs the next tier's into place; the title cuts to the new tier's sweep
   at the swap. A drag is the switcher's only if its first 15 points run at least twice as far sideways as up or down
@@ -1001,7 +1041,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`MenuLayout`), or over the trailing half beside a playing level, as the archive does. The list opens centred, unanimated under
   the dip, on `RootView.focus`: the row just left, or after a solve the one after it (`Level.focus(solved:)`, which
   `LevelView`'s exit feeds), and on a launch the tier's landing (`Tier.landing`: the first level without a best, else
-  the first short of par, else the top). The daily, endless and the sandbox leave it at the top, though the sandbox's row is at the end. That row's hairline,
+  the first short of par, else the top). Landing on a row (`land(on:)`, on opening, at a swap and on a tap of the
+  picked tier) leaves the list at its top where the row's words are in sight from there, over the dock (`inSight`,
+  from `Seats`, where the list and each row lie as laid out), and centres any other: centring a row that stands a
+  little under the middle scrolled the list those few points and cut the way on off under the chips, so what leads
+  the list is whole or well away. It reads the rows as they lie when it lands: on a cold launch the archive's row
+  says what it comes with only once the store has read, and a row that line then pushes under the dock stays there.
+  The daily, endless and the sandbox leave it at the top, though the sandbox's row is at the end. That row's hairline,
   in the list's left margin, lights once and fades (not under Reduce Motion). The menu opens on the tier of a level
   of a tier left, and a tier's level opening stores its tier (`Tier.store`, so only an open one), so "up a notch" then
   back lands on the new tier, and so does a launch after the app dies in it. Back from a pack's level, the card over
@@ -1091,8 +1137,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   it acts, and undo and reset have sounds of their own; the undo's body peaks about 0.2 s after the press (Jack,
   SN1). A button that sets its own `.plain` style has none, so every
   such button that acts takes `Sounding` instead: the gear, the consent card's answers and its link, the settings
-  sheet's switch and log, the pack cards' and the dock's buttons and the tier-up. The share buttons (the daily card's,
-  settings' log without Mail) are `ShareButton`s, which tap and present the system share sheet themselves over
+  sheet's switch and log, the pack cards' and the dock's buttons and the tier-up; `UnstirButton` takes
+  `Sounding(presses: true)`, which hands the press to its face. The share buttons (settings' log without Mail; the
+  daily card's share is an `UnstirButton` that presents the sheet itself) are `ShareButton`s, which tap and present the system share sheet themselves over
   whatever is in front (`ShareSheet`), as a ShareLink's tap went unheard on a device (Jack's call SND3 = B, round 16).
   The menu's tier names and rows
   stay plain: `go` plays `switch` once as a switch starts, by tap or drag (never as the list follows a level beside it), and a row taps only when it opens, never as

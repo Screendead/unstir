@@ -74,4 +74,48 @@ final class ToneTests: XCTestCase {
         }
         XCTAssertLessThan(ratio(Tier.vortex.glow, on: .black), 4.5)
     }
+
+    /// `accent` at a primary's fill over `ground`, as the screen shows it.
+    private func fill(_ accent: Color, on ground: Color) -> Color {
+        let c = over(accent.opacity(ButtonFace.fill), ground)
+        return Color(red: c.r, green: c.g, blue: c.b)
+    }
+
+    /// Each emphasis's label reads at 4.5:1 over what is behind it, and its stroke edges it at 3:1, on black and on
+    /// Escapement's paper, where every label is ink.
+    func testEveryButtonsLabelReads() {
+        var primaries = Tier.allCases.map { ($0.rawValue, $0.ink) } + [("amber", .amber), ("lime", .lime), ("vermilion", .vermilion)]
+        primaries += ([Offer.complete] + Pack.allCases.map(Offer.pack)).filter { $0 != .pack(.escapement) }.map { ($0.name, $0.ink) }
+        for (name, accent) in primaries {
+            XCTAssertGreaterThanOrEqual(ratio(accent, on: fill(accent, on: .black)), 4.5, name)
+        }
+        // The plate's vermilion reads 4.7:1 on black but 4.3:1 over its own fill: its buy button is Jack's to settle.
+        XCTAssertGreaterThanOrEqual(ratio(Offer.pack(.escapement).ink, on: fill(Offer.pack(.escapement).ink, on: .black)), 4.2)
+        XCTAssertGreaterThanOrEqual(ratio(Page.night.line, on: .black), 3)
+        XCTAssertGreaterThanOrEqual(ratio(Page.night.ink, on: .black), 4.5)
+        XCTAssertGreaterThanOrEqual(ratio(Page.night.stop, on: .black), 4.5, "armed")
+        // Paper: ink over the plate's fill, and a stroke lifted to read.
+        XCTAssertGreaterThanOrEqual(ratio(Color.ink, on: fill(Page.book.accent, on: .bone)), 4.5)
+        XCTAssertGreaterThanOrEqual(ratio(Page.book.line, on: .bone), 3)
+        XCTAssertGreaterThanOrEqual(ratio(Page.book.stop, on: .bone), 3, "armed stroke")
+        XCTAssertLessThan(ratio(Color.ink.opacity(TextTone.text4.alpha), on: .bone), 3, "why paper lifts its line")
+    }
+
+    /// Every button is 44 pt tall at the smallest type size too, where padding alone falls short.
+    @MainActor func testEveryButtonIsFortyFourTall() {
+        for size in [DynamicTypeSize.xSmall, .large, .xxxLarge] {
+            for emphasis in [Emphasis.primary, .secondary] {
+                let host = UIHostingController(rootView: Text("undo").modifier(ButtonFace(emphasis: emphasis)).dynamicTypeSize(size))
+                let fitted = host.sizeThatFits(in: CGSize(width: 400, height: 400))
+                XCTAssertGreaterThanOrEqual(fitted.height, ButtonFace.height, "\(emphasis) at \(size)")
+            }
+            let swatch = UIHostingController(rootView: Text("R").modifier(ButtonFace(emphasis: .secondary, inset: 0,
+                                                                                     minWidth: ButtonFace.height)).dynamicTypeSize(size))
+            let fitted = swatch.sizeThatFits(in: CGSize(width: 400, height: 400))
+            XCTAssertGreaterThanOrEqual(min(fitted.width, fitted.height), ButtonFace.height, "a swatch at \(size)")
+        }
+        // The default size lands on 44, as the proposal draws it, not a few points over.
+        let host = UIHostingController(rootView: Text("undo").modifier(ButtonFace(emphasis: .secondary)))
+        XCTAssertEqual(host.sizeThatFits(in: CGSize(width: 400, height: 400)).height, ButtonFace.height, accuracy: 1)
+    }
 }

@@ -38,6 +38,7 @@
 		52972B0C126203096364F0AF /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E8193F7A9FB37B678695D2 /* Menu.swift */; };
 		5B70174D5A29E66A030C35C2 /* LivePictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944137441C4619E684D8CC15 /* LivePictures.swift */; };
 		6244FD941083B1C27AFEA24D /* AnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF47CB49C9FED12F9D801FF3 /* AnalyticsTests.swift */; };
+		62E9EDC60BA3BB59B13DD2B8 /* Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CD3AE9E7D3D1186321F8E8 /* Buttons.swift */; };
 		64FEEC3C606B817B4307236C /* FirstStirRescue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36AEC02911D39C4B6171D9D4 /* FirstStirRescue.swift */; };
 		650FE16BD33AD1DF24C6A829 /* FirstStir.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B80E0606D266BF05C66786E /* FirstStir.swift */; };
 		652A1046F612B40F05EC8A23 /* Resume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D9845C51771ED7A1D7776C /* Resume.swift */; };
@@ -214,6 +215,7 @@
 		E9DE31F264F1D40389BD4802 /* Archive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Archive.swift; sourceTree = "<group>"; };
 		EE2A395ECE04C279A4392F19 /* FirstStirDuskBefore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirDuskBefore.swift; sourceTree = "<group>"; };
 		EF6EA3056D083FAF9C8E4EF8 /* FirstStirFlood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstStirFlood.swift; sourceTree = "<group>"; };
+		F1CD3AE9E7D3D1186321F8E8 /* Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Buttons.swift; sourceTree = "<group>"; };
 		F935F37F140F0E82EFAD71CA /* PlayLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayLayout.swift; sourceTree = "<group>"; };
 		FCE8CF37570EED1B144E5201 /* TapsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsTests.swift; sourceTree = "<group>"; };
 		FED6B7A35E47B3475841C4DC /* ClipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipTests.swift; sourceTree = "<group>"; };
@@ -303,6 +305,7 @@
 				059E21DBCF779B91F994E8E5 /* Assets.xcassets */,
 				D322AA44C06018F3A665792F /* Brim.metal */,
 				6499D4977A88A7764419D373 /* Brim.swift */,
+				F1CD3AE9E7D3D1186321F8E8 /* Buttons.swift */,
 				E302013539F573E3F8C8FBC5 /* Chainmail.metal */,
 				90F14A8BD3536DD66979D13A /* Clip.swift */,
 				D80A3010678E45A15B0543C3 /* Consent.swift */,
@@ -483,6 +486,7 @@
 				CB8FCA0E33DA80181C177486 /* Archive.swift in Sources */,
 				4C24D2DED659D4353BEA9998 /* Brim.metal in Sources */,
 				500060DF38B729F0EB090EBA /* Brim.swift in Sources */,
+				62E9EDC60BA3BB59B13DD2B8 /* Buttons.swift in Sources */,
 				C3596BB291D30EF520836782 /* Chainmail.metal in Sources */,
 				3A65E8F7E58F1DA384BE5ABC /* Clip.swift in Sources */,
 				50B41DB91ADFEC633FAE5BB8 /* Consent.swift in Sources */,

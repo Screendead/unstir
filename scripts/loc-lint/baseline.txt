@@ -6,7 +6,7 @@ Archive.swift: case .over: Text(word).foregroundStyle(Color.magenta)
 Archive.swift: case .tried: Text(word).foregroundStyle(Color.text3)
 Archive.swift: case .unplayed: Text(" ")
 Archive.swift: Text(!known ? "\(days) past dailies" : open ? "\(days) past dailies \u{00B7} \(atPar) at par"
-Archive.swift: Button(action: onBack) { Text(back.text).font(.ui(.button)).hit() }
+Archive.swift: UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) }
 Archive.swift: .accessibilityLabel(back.spoken)
 Archive.swift: Text(month.formatted(Date.FormatStyle(calendar: calendar).month(.wide).year()).uppercased())
 Archive.swift: Text(symbols[(k + calendar.firstWeekday - 1) % 7]).font(.ui(.detail)).foregroundStyle(Color.text3)
@@ -20,7 +20,7 @@ Consent.swift: Text(ConsentWords.body)
 Consent.swift: Text(sends ? ConsentWords.hideLink : ConsentWords.sendsLink).font(.ui(.label))
 Consent.swift: .accessibilityValue(sends ? "shown" : "hidden")
 Consent.swift: Text(ConsentWords.sends)
-Consent.swift: Text(word).font(.ui(.button))
+Consent.swift: Text(word).frame(maxWidth: .infinity)
 Consent.swift: .accessibilityValue(configuration.isOn ? "on" : "off")
 Consent.swift: Text(ConsentWords.settings).font(.ui(.title)).padding(.top, 26)
 Consent.swift: Text(SettingsSheet.version).font(.ui(.detail)).foregroundStyle(Color.text3).padding(.top, 6)
@@ -31,9 +31,8 @@ Menu.swift: Text(next.label).fontWeight(.semibold).foregroundStyle(next.colour).
 Menu.swift: Text(" \u{00B7} \(next.title) \u{203A}").foregroundStyle(Color.text2)
 Menu.swift: Text(" ").font(.ui(.label)).hidden()
 Menu.swift: .accessibilityLabel(supporter ? "Unstir, supporter" : "Unstir").accessibilityAddTraits(.isHeader)
-Menu.swift: Text("\u{00B7}").font(.ui(.chip)).foregroundStyle(Color.text4).padding(.horizontal, 7).frame(height: 36)
 Menu.swift: .accessibilityValue(picked.spoken)
-Menu.swift: Text(t.rawValue).font(.ui(.chip, isPicked ? .semibold : .regular))
+Menu.swift: Text(t.rawValue).font(.ui(.chip))
 Menu.swift: Text(newRunArmed == nil ? "new run" : "new run? tap again").font(.ui(.detail)).lineLimit(1).foregroundStyle(Color.text3).hit()
 Menu.swift: .accessibilityLabel(newRunArmed == nil ? "New run" : "New run, tap again to confirm")
 Menu.swift: Text(tier.rawValue).font(.ui(.detail, .semibold)).foregroundStyle(tier.sweep).fixedSize()
@@ -46,11 +45,9 @@ Menu.swift: Text(level.label).font(.ui(.label, .semibold)).foregroundStyle(level
 Menu.swift: Text(opens).font(.ui(.detail)).foregroundStyle(level.colour).transition(.opacity)
 Menu.swift: Text(detail ?? rods + " \u{00B7} par \(level.par)").font(.ui(.detail))
 ResultCard.swift: Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
-ResultCard.swift: Text(game.firstTry ? "solved \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
-ResultCard.swift: Text(game.firstTry ? "at par \u{00B7} clean needs no reset or undo" : "clean counts on the first try")
 ResultCard.swift: Text(line).tone(.text2)
-ResultCard.swift: Text(done.line).fontWeight(.semibold).foregroundStyle(accent).shadow(color: page.glow(accent), radius: 3)
-ResultCard.swift: Button { onNext(next) } label: { Text(label).hit() }
+ResultCard.swift: Text(done.line).tone(page.tone(.text2)).padding(.top, 4)
+ResultCard.swift: UnstirButton(nextLeads ? .primary : .secondary, accent: accent, wide: true) { onNext(next) } label: { Text(label) }
 ResultCard.swift: .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
 ResultCard.swift: Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.ui(.detail)).tone(page.tone(.text3))
 ResultCard.swift: .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
@@ -62,7 +59,7 @@ ResultCard.swift: .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.na
 ResultCard.swift: .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
 ResultCard.swift: if let notice { Text(notice).font(.ui(.label)).tone(.text2).transition(.opacity) }
 Shelf.swift: if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
-Shelf.swift: Button(action: onBack) { Text(back.text).font(.ui(.button)).hit() }
+Shelf.swift: UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) }
 Shelf.swift: .accessibilityLabel(back.spoken)
 Shelf.swift: Text((offer.pack == nil ? "BUNDLE" : "PACK") + (state == .owned ? "" : " \u{00B7} PAID ADD-ON"))
 Shelf.swift: Text(offer.name).font(.ui(.display)).tracking(2)
@@ -88,8 +85,8 @@ Shelf.swift: : "\(label.capitalized) \(offer.name)")
 Shelf.swift: .accessibilityValue(price ?? store.pricing.words ?? "")
 Shelf.swift: Text(replay ? "replay 01\u{2013}\(String(format: "%02d", n)) \u{203A}" : "try \(n) free \u{203A}")
 Shelf.swift: .accessibilityLabel(replay ? "Replay the \(n) free levels" : "Try the first \(n) levels free")
-Shelf.swift: Text(title).font(.ui(.button, .semibold))
-Shelf.swift: if let trailing { Text(trailing).font(dim ? .ui(.detail) : .ui(.button)).opacity(dim ? 0.45 : 0.75) }
+Shelf.swift: Text(title)
+Shelf.swift: if let trailing { Text(trailing).font(dim ? .ui(.detail) : .ui(.button)).opacity(dim ? 0.45 : 1) }
 Shelf.swift: let save = Text(joined("\u{00B7} save \(saving) \u{203A}")).foregroundStyle(quiet)
 Shelf.swift: Text("\(all)\(Text(joined(complete)).foregroundStyle(Color.text2)) \(save)")
 Shelf.swift: Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
@@ -102,7 +99,7 @@ Shelf.swift: Text(line?.words ?? " ").font(.ui(.detail, new ? .semibold : .regul
 Shelf.swift: .accessibilityValue([(store.ready ? state.tag(unshared: offer.pack.map(store.unshared) ?? false)?.word : nil)
 Shelf.swift: .accessibilityHint(offer.pitch)
 Shelf.swift: Text(offer.name)
-TankView.swift: Button(action: leave) { Text(game.level.back).font(.ui(.button)).hit() }
+TankView.swift: UnstirButton(.quiet, action: leave) { Text(game.level.back).font(.ui(.button)) }
 TankView.swift: Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
 TankView.swift: Text(game.level.label).fontWeight(.semibold).foregroundStyle(game.level.colour)
 TankView.swift: Text(game.level.title + (game.level.run.map { ", tank \($0.tank + 1)" } ?? ""))
@@ -114,9 +111,9 @@ TankView.swift: if !beside { AccessibilityNotification.Announcement(Self.pointer
 TankView.swift: .accessibilityLabel(armedAt == nil ? "Reset" : "Reset, tap again to confirm")
 TankView.swift: AccessibilityNotification.Announcement(text).post()
 TankView.swift: Text(game.firstRefill ? "+\(badge) undos" : "+\(badge)").font(.ui(.detail)).foregroundStyle(page.signal(.lime))
-TankView.swift: Text(label).font(.ui(.button)).padding(.horizontal, inset).padding(.vertical, 10)
+TankView.swift: Text(label).modifier(ButtonFace(emphasis: .secondary, inset: 14))
 TankView.swift: .onChange(of: game.tickPushes) { if game.deadTick { AccessibilityNotification.Announcement(game.deadTickWords).post() } }
 TankView.swift: Text(text).font(.system(size: 20, weight: .bold, design: .serif))
 TankView.swift: Text(steps > 0 ? "+\(steps)" : "\u{2212}\(-steps)").font(.game(13, .semibold)).foregroundStyle(page.live)
-TankView.swift: Text(c.letters).font(.ui(.detail, .semibold)).foregroundStyle(held ? .black : .white)
+TankView.swift: Text(c.letters).font(.ui(.button, .semibold))
 TankView.swift: .accessibilityValue(held ? "on" : "off")

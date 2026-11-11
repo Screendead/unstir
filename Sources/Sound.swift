@@ -23,16 +23,24 @@ extension Level {
 /// menu's tier names and rows stay plain and sound from their actions.
 struct Sounding: PrimitiveButtonStyle {
     var effect = Sound.Effect.tap
+    /// Hands the press to the label (`\.buttonPressed`), for `ButtonFace`'s 0.97; rows and links stay plain.
+    var presses = false
 
-    func makeBody(configuration: Configuration) -> some View {
+    @ViewBuilder func makeBody(configuration: Configuration) -> some View {
         // A style of its own, or the button would take this one from the environment and build itself again.
-        Button(role: configuration.role) {
+        let button = Button(role: configuration.role) {
             Sound.shared.play(effect)
             configuration.trigger()
         } label: {
             configuration.label
         }
-        .buttonStyle(.plain)
+        if presses { button.buttonStyle(Pressing()) } else { button.buttonStyle(.plain) }
+    }
+
+    private struct Pressing: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label.environment(\.buttonPressed, configuration.isPressed)
+        }
     }
 }
 
