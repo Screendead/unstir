@@ -261,6 +261,10 @@ PHONE="$PHONE,highpass=f=250:width_type=q:width=0.89998,highpass=f=250:width_typ
 # them, the tap under the heal. The ratchet sits where its ticks sat in the run Jack heard (-27 to -32), under the tap,
 # as a move can land three.
 EFFECTS="
+tick-1 tick 0 0.05 101 -34 no
+tick-2 tick 1 0.05 102 -34 no
+tick-3 tick 2 0.05 103 -34 no
+tick-4 tick 3 0.05 104 -34 no
 push push 0 0.9 200 -23 yes
 heal-1 heal 1 4.2 301 -20 yes
 heal-2 heal 2 4.2 302 -20 yes

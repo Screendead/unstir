@@ -276,6 +276,11 @@ struct LevelView: View {
     @State private var brimMoving = false
     /// The picture has landed and struck.
     @State private var struck = false
+    /// Lens: the panel's detail for the glass's size (`Halftone.Detail`), once baked, and whether the strike has ended.
+    /// The detail is drawn past the layer, so it would not flicker with it: `crisp`, its share, rises only after.
+    @State private var fine: Fine?
+    @State private var lit = false
+    @State private var crisp = 0.0
     private let brimDemo: Bool
     /// Escapement: what a tank lost to its last clock stopping shows, while Jack decides (UNSTIR_STOPLOOK).
     private let stopLook: StopLook
@@ -1486,7 +1491,8 @@ struct LevelView: View {
         let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? Self.haze(over: game.over) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries, isolate: isolated,
-                                  whiteIsolate: differentiate, budget: Taps.shared.budget(pixels: Double(side * scale)))
+                                  whiteIsolate: differentiate, budget: Taps.shared.budget(pixels: Double(side * scale)),
+                                  fine: fine, crisp: crisp)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
         let source = game.history.last.map { $0.rod == Game.tank ? .zero : centre(game.knob(over: $0.rod)) } ?? centre(0)
         let frozenWave = frozenWave
@@ -1589,6 +1595,23 @@ struct LevelView: View {
             }
             .clipShape(Circle())
             .opacity((1 - demoDip) * (1 - curtain))
+            .task(id: [game.level.id, "\(side)", "\(scale)"]) {
+                guard game.level.picture == .halftone, !game.level.lenses.isEmpty else { return }
+                let n = Int((side * scale).rounded()), panel = Halftone.panel(game.level.panel)
+                let lenses = game.level.lenses.sorted().map { rods[$0] }
+                let start = Date.now
+                let detail = await Task.detached(priority: .userInitiated) { panel.detail(n, lenses: lenses) }.value
+                // A detail baked for another size still draws true, a little coarser or finer, until this one lands.
+                guard !Task.isCancelled, let made = Fine(detail) else { return }
+                Log.write("halftone \(panel.name) \(n) px detail baked in \(Int(Date.now.timeIntervalSince(start) * 1000)) ms, \(made.bytes) bytes")
+                fine = made
+            }
+            .task(id: struck) {
+                let strike = PictureLayer.strikeLength(calm: reduceMotion || dimFlashing || game.level.picture.paper)
+                guard struck, (try? await Task.sleep(for: .seconds(strike))) != nil else { return }
+                lit = true
+            }
+            .onChange(of: lit && fine != nil) { _, ready in withAnimation(.easeOut(duration: 0.2)) { crisp = ready ? 1 : 0 } }
             if page.paper && !(reduceMotion && frozenWave == nil) {
                 Color.clear.keyframeAnimator(initialValue: -1.0, trigger: waved) { v, w in
                     v.overlay { page.wave(frozenWave ?? w, at: CGPoint(x: r + source.x * r, y: r + source.y * r), r: r) }
@@ -1783,6 +1806,7 @@ struct LevelView: View {
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
         .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .haptic(.selection, trigger: ticks)
+        .onChange(of: ticks) { Sound.shared.play(.tick) }
         .haptic(.selection, trigger: misses)
         .onChange(of: tankTicks) { Knock.clunk.play() }
         .haptic(.impact(weight: .heavy), trigger: game.cancels)
@@ -1792,7 +1816,7 @@ struct LevelView: View {
         .onChange(of: game.moves) { was, now in
             if now > was, game.level.layer == .escapement, !game.solved, !game.demoing { Sound.shared.reed(was) }
         }
-        // Another try after a solve brings the layer back.
+        // Another try after a solve wants the layer afresh, for its reed and its next resolution.
         .onChange(of: game.solved) { if !game.solved { Sound.shared.layer(game.level.layer) } }
         .haptic(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.

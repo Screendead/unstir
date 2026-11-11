@@ -415,6 +415,26 @@ Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
 | DUOPROBE = A | 2026-11-10 | The Duo-speed probe stays out of the main branch entirely. | HANDOFF |
 | CIPRIVATE = A | 2026-11-10 | When the repo goes private, CI runs on a self-hosted runner on Jack's Mac, queued behind his builds, the nightly weekly (`r17-ci-private`, not yet run). | HANDOFF |
 | CODEQL-PRIVATE = A | 2026-11-10 | `codeql.yml` is deleted when the repo goes private. | HANDOFF |
+| OVERPAR = A | 2026-11-11 | A row solved over par shows its "+n" beside its dots again (#174). | HANDOFF |
+| PACKNAME = B | 2026-11-11 | In a paid pack the back button reads "‹ levels" and the pack's heading stays. | HANDOFF |
+| TEXT-NEVER-SHRINKS | 2026-11-11 | Jack: "The text never shrinks. If the user wants big text, they get big text. To fit it, the tank itself must shrink once a level is completed, if the whole content wouldn't fit on-screen all at once." On small phones too: "the tank scales; text and UI does not." | HANDOFF |
+| MENUCARD = A | 2026-11-11 | Design change 5 goes in as built (#180), but the text under the tier chips ("next:", the streak) is poorly spaced and must be fixed; Jack asks whether it needs to be there. | HANDOFF |
+| STREAK = B | 2026-11-11 | The daily's row keeps its dots; the streak goes under its title. | HANDOFF |
+| COMPLETION = A | 2026-11-11 | A completion line keeps its colour and glow. Jack: "The payoff should actually be significantly more rewarding and exciting", and wonders about credits. | HANDOFF |
+| ENDLESSLINE = A | 2026-11-11 | "deeper every tank" is left unsaid. | HANDOFF |
+| STAMP-SMALL = B | 2026-11-11 | On a short screen "unstirred." sits below the title; "If necessary, the tank scales." | HANDOFF |
+| LENSPANELS = B | 2026-11-11 | The 25 panels ship (#157 merged), Telephoto is redrawn, and Jack plays them on the phone to confirm. | HANDOFF |
+| LENSCOVER = B | 2026-11-11 | Lens's face is Kaleidoscope: "Kaleidoscope wins." | HANDOFF |
+| LENSSOFT = B | 2026-11-11 | A lens's core is drawn finer so x8 is crisp. Jack: "It's a paid pack. Laziness for expediency is unacceptable. I respect my future players." | HANDOFF |
+| SND1 taken back | 2026-11-11 | Jack: "i kinda miss the sound that went with the rod-turning haptics...can you quickly put that back in?" A rod's drag ticks at each step again, under its haptic; SND1 = B (2026-11-02) no longer holds. The tank's clunk stays silent (snd1-clunk = B). | architecture |
+| SHAREDOTS | 2026-11-11 | The daily's share line shows the three result dots after its name, in place of a square per move (Jack: "the coloured squares? idk what they're for"; then "dots"). The link stays on its own last line once it exists (M2 = A). | Share.swift |
+| GLASSSHRINKS = A | 2026-11-11 | The stack merges as built: a card that does not fit shrinks the tank from its top (never below 55%, then it scrolls), "‹ levels" on a paid pack's way out, the rebuilt menu and card, "unstirred." growing and sitting under the title on short screens (#173, #180, #178). | HANDOFF |
+| NEXTLINE = A | 2026-11-11 | The menu's "next:" line under the tier chips goes; the list's marker bar shows the next level. | HANDOFF |
+| LENSFACE = A | 2026-11-11 | Lens's cover, clip, promo image and the bundle's wedge show Kaleidoscope seven moves into its line (#185). | HANDOFF |
+| TELEPHOTO = A | 2026-11-11 | The redrawn Telephoto stands (#185). | HANDOFF |
+| CRISP = A | 2026-11-11 | The finer lens core merges and goes on the phone to check (#187). Jack: "How exciting. This looks lovely." | HANDOFF |
+| ESCPICTURES = A | 2026-11-11 | Escapement gets a plate per problem, drawn as its name. | HANDOFF |
+| MUSIC-THROUGH | 2026-11-11 | Jack, on the packs' layers: "i don't want the packs' foreground to fade when the level is solved then come back in the same spot on the next level; i want it to keep playing all the way through". | HANDOFF |
 
 ## Dated, no round
 

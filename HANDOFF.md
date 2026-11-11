@@ -119,7 +119,41 @@ escapes left, all in files the held PRs touch: Shelf 41, TankView 18, Menu 18, R
 12); the store media retake (after the design and the panels land); Lens's first-open bake in the phone bench,
 then the cache cap as a call. **Raise with Jack**: three PR test jobs ran past ten minutes that evening (10:09,
 11:48, 12:11), most of it the simulator's boot and the tests' start. The phone checks owed to Jack are listed on
-the page as to-dos (eleven, Escapement's and Prism's playthroughs first).
+the page as to-dos (eleven, Escapement's and Prism's playthroughs first). Later that night all five held PRs
+took master in and passed CI again. Two more options were built for the page, each on a local, unpushed branch:
+`r17-ds5b-streak` (the daily keeps its dots and the streak goes under its title; the taller row then pushes the
+menu's "next:" line under the chips as the menu opens, to fix when it is swapped in) and `r17-stamp-below` (on a
+short screen whose measured gap under the title is less than 62 pt the word centres between the title and the rim,
+shrinking only if it must). #157's bench now bakes three Lens panels cold and prints their times and a panel's
+bytes (`scripts/gpu-bench.sh`), so the cache call waits on a phone run of that branch. #179 has no timeout: if the
+store's first read never ended, a pack's card would say "checking purchases…" with no buy button. The nightly
+was dispatched on master for #179's StoreKit test.
+
+**Answered 2026-11-11** (the evening page's twelve; rows in `docs/decisions.md`). Merged on them: #174 and #157.
+The nightly dispatched above failed on #179's new `testOfflineTheFirstReadStillEnds`; a fix branch
+(`fix-offline-store-test`) also gives the first read a 5 s limit. The phone bench ran on the 13 Pro Max (thermal
+serious): Prism's measured over assumed cost has median 0.89 and max 1.11, the slowest specimen 6.48 of 8.33 ms;
+a Lens panel bakes cold in 70 to 227 ms at 1137 px, 5.2 MB cached, 129 MB for all 25, so the cache can be capped
+(a call still to put). **Next, decided**: on #173, PACKNAME's button and, in place of the type step-down, the
+tank shrinking once a level is solved when the card would not fit (TEXT-NEVER-SHRINKS), on every phone; on #180,
+STREAK's row and the spacing under the chips; #178 with `r17-stamp-below`; each shown to Jack before it merges.
+Lens: Kaleidoscope as the face (cover, clip, promo image), Telephoto redrawn, the finer lens core. A louder
+payoff on finishing a pack or the game is Jack's ask and wants options shown.
+
+**Night of 2026-11-11.** Jack played all 90 paid levels and answered a third page (six calls, all A; rows above
+LENSSOFT's in `docs/decisions.md`; link in `HANDOFF.private.md`). Merged since: #183 (the rod's tick back), #184
+(the first read's 5 s limit and the offline test), #186 (a pack's loop carries into the next level), #188 (the
+share line's dots), #185 (Lens's face). His playthrough notes, each with a lane building options to show him:
+**Lens 8, 11, 18** (the three quad levels) are too fine to read: #190 redraws nine panels so a twist reads, held;
+the lens-or-twist order stays unreadable on quad, so `lens-offquad` moves the three to other glass as the option.
+**Escapement**: the wait (a tap on a clock) is undiscoverable; he would rather the clocks tick only with a rod's
+turn, or the wait made unmistakable: `esc-nowait` and `esc-wait-clear` build both. Its one shared picture is
+dull: plates for all 30 on `esc-plates-1` (wiring and 1 to 10), `-2`, `-3`. **Prism**: a rod stirred twice shows
+the sum of its stirs in its core (nothing, or a wrong count), on 25 of 30 specimens, so no plate fix works (#189,
+tools only): `prism-notches-redeal` (no rod stirred twice, par falls) against `prism-aid` (a mark on the drag's
+dial, or pips on the knob). **Music**: the layer must play straight through a solve (`music-through`). Also open:
+two StoreKit tests fail on an iOS 27.2 simulator (`store-ios27`); a louder payoff on finishing a pack; the six
+Prism cost weights the phone bench read over their assumption (prism-25, 27 to 30, 20 and 21 marginal).
 
 ### Open work (finish-and-pitch, 2026-11-02)
 
