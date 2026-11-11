@@ -18,18 +18,18 @@ final class ShareTests: XCTestCase {
 
     func testUntilLaunchDayIsSetTheLineNamesTheDate() {
         XCTAssertNil(Share.number(2026_10_25, from: nil))
-        XCTAssertEqual(Share.text(day: 2026_10_25, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0, marks: [], firstDay: nil),
-                       "Unstir 2026-10-25 \u{00B7} 3 moves (par 3) \u{00B7} clean")
+        XCTAssertEqual(Share.text(day: 2026_10_25, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0, firstDay: nil),
+                       "Unstir 2026-10-25 \u{00B7} \u{25CF}\u{25CF}\u{25CF} \u{00B7} 3 moves (par 3) \u{00B7} clean")
     }
 
     /// A player who owns a pack carries the supporter mark after the daily's name.
     func testTheSupporterMarkFollowsTheName() {
-        XCTAssertEqual(Share.text(day: 2026_10_25, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0, marks: [],
+        XCTAssertEqual(Share.text(day: 2026_10_25, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0,
                                   supporter: true, firstDay: nil),
-                       "Unstir 2026-10-25 \u{2726} \u{00B7} 3 moves (par 3) \u{00B7} clean")
-        XCTAssertEqual(Share.text(day: 2026_11_04, moves: 1, par: 1, firstTry: false, clean: false, undos: 0, resets: 0, marks: [],
+                       "Unstir 2026-10-25 \u{2726} \u{00B7} \u{25CF}\u{25CF}\u{25CF} \u{00B7} 3 moves (par 3) \u{00B7} clean")
+        XCTAssertEqual(Share.text(day: 2026_11_04, moves: 1, par: 1, firstTry: false, clean: false, undos: 0, resets: 0,
                                   supporter: true, firstDay: 2026_10_25),
-                       "Unstir #11 \u{2726} \u{00B7} practice \u{00B7} 1 move (par 1)")
+                       "Unstir #11 \u{2726} \u{00B7} \u{25CF}\u{25CF}\u{25CB} \u{00B7} practice \u{00B7} 1 move (par 1)")
     }
 
     func testTheNumberFollowsTheDailysOwnDay() throws {
@@ -44,57 +44,38 @@ final class ShareTests: XCTestCase {
     }
 
     func testTheLineSaysMovesAgainstParAndHowItWent() {
-        let row: [Share.Mark] = [.healed, .healed, .pushed, .healed, .merged, .healed, .healed]
-        XCTAssertEqual(Share.text(day: 2026_10_25, moves: 7, par: 6, firstTry: true, clean: false, undos: 0, resets: 0, marks: row, firstDay: first),
-                       "Unstir #1 \u{00B7} 7 moves (par 6)\n\u{1F7EA}\u{1F7EA}\u{1F7E5}\u{1F7EA}\u{2B1C}\u{1F7EA}\u{1F7EA}")
-        XCTAssertEqual(Share.text(day: 2026_11_04, moves: 1, par: 1, firstTry: true, clean: true, undos: 0, resets: 0, marks: [.healed], firstDay: first),
-                       "Unstir #11 \u{00B7} 1 move (par 1) \u{00B7} clean\n\u{1F7EA}")
-        XCTAssertEqual(Share.text(day: 2026_10_26, moves: 6, par: 6, firstTry: true, clean: false, undos: 2, resets: 1, marks: [], firstDay: first),
-                       "Unstir #2 \u{00B7} 6 moves (par 6) \u{00B7} 2 undos \u{00B7} 1 reset")
+        XCTAssertEqual(Share.text(day: 2026_10_25, moves: 7, par: 6, firstTry: true, clean: false, undos: 0, resets: 0, firstDay: first),
+                       "Unstir #1 \u{00B7} \u{25CF}\u{25CB}\u{25CB} \u{00B7} 7 moves (par 6)")
+        XCTAssertEqual(Share.text(day: 2026_11_04, moves: 1, par: 1, firstTry: true, clean: true, undos: 0, resets: 0, firstDay: first),
+                       "Unstir #11 \u{00B7} \u{25CF}\u{25CF}\u{25CF} \u{00B7} 1 move (par 1) \u{00B7} clean")
+        XCTAssertEqual(Share.text(day: 2026_10_26, moves: 6, par: 6, firstTry: true, clean: false, undos: 2, resets: 1, firstDay: first),
+                       "Unstir #2 \u{00B7} \u{25CF}\u{25CF}\u{25CB} \u{00B7} 6 moves (par 6) \u{00B7} 2 undos \u{00B7} 1 reset")
     }
 
     func testPracticeSaysSo() {
-        XCTAssertEqual(Share.text(day: 2026_10_27, moves: 6, par: 6, firstTry: false, clean: false, undos: 1, resets: 0, marks: [], firstDay: first),
-                       "Unstir #3 \u{00B7} practice \u{00B7} 6 moves (par 6) \u{00B7} 1 undo")
+        XCTAssertEqual(Share.text(day: 2026_10_27, moves: 6, par: 6, firstTry: false, clean: false, undos: 1, resets: 0, firstDay: first),
+                       "Unstir #3 \u{00B7} \u{25CF}\u{25CF}\u{25CB} \u{00B7} practice \u{00B7} 6 moves (par 6) \u{00B7} 1 undo")
     }
 
     func testBeforeTheFirstDayTheLineNamesTheDate() {
-        XCTAssertEqual(Share.text(day: 2026_09_28, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0, marks: [], firstDay: first),
-                       "Unstir 2026-09-28 \u{00B7} 3 moves (par 3) \u{00B7} clean")
+        XCTAssertEqual(Share.text(day: 2026_09_28, moves: 3, par: 3, firstTry: true, clean: true, undos: 0, resets: 0, firstDay: first),
+                       "Unstir 2026-09-28 \u{00B7} \u{25CF}\u{25CF}\u{25CF} \u{00B7} 3 moves (par 3) \u{00B7} clean")
     }
 
-    func testLongRowsWrapAtTen() {
-        let text = Share.text(day: 2026_10_25, moves: 23, par: 20, firstTry: true, clean: false, undos: 0, resets: 0,
-                              marks: Array(repeating: .healed, count: 23), firstDay: first)
-        XCTAssertEqual(text.split(separator: "\n").dropFirst().map(\.count), [10, 10, 3])
-    }
-
-    /// Each move's mark is what the whole stir did to the stack, and an undone move leaves the row.
-    @MainActor func testMarksFollowThePlay() {
+    @MainActor func testADailysSolveSharesItsDots() {
         let game = Game(level: Level(id: "daily-20261101", label: "", title: "", layout: .tri, scramble: .parse("2:+3,0:-5", in: .tri)),
                         tankTurned: true, bank: (10, nil))
         game.commit(rod: 2, steps: +1)
-        XCTAssertEqual(game.marks, [.pushed])
         game.undo()
-        XCTAssertEqual(game.marks, [])
         game.commit(rod: 0, steps: +2)
         // Turned back to nothing, rod 1's stir leaves no mark and shuts rod 0's, so its next turn is a stir of its own.
         game.commit(rod: 1, steps: +1)
         game.commit(rod: 1, steps: -1)
-        XCTAssertEqual(game.marks, [.merged])
         game.commit(rod: 0, steps: +3)
         game.commit(rod: 2, steps: -3)
         XCTAssertTrue(game.solved)
-        XCTAssertEqual(game.marks, [.merged, .healed, .healed])
-        XCTAssertEqual(game.shareText, "Unstir 2026-11-01 \u{00B7} 3 moves (par 2) \u{00B7} 1 undo\n\u{2B1C}\u{1F7EA}\u{1F7EA}")
+        XCTAssertEqual(game.shareText, "Unstir 2026-11-01 \u{00B7} \u{25CF}\u{25CB}\u{25CB} \u{00B7} 3 moves (par 2) \u{00B7} 1 undo")
         XCTAssertNil(Game(level: Level.plughole[0]).shareText)
-    }
-
-    @MainActor func testATurnOfTheTankHasItsOwnMark() {
-        let game = Game(level: Level(id: "test", label: "", title: "", layout: .quad, scramble: .parse("0:+3", in: .quad)),
-                        tankTurned: true, bank: (10, nil))
-        game.turnTank(1)
-        XCTAssertEqual(game.marks, [.tank])
     }
 
     @MainActor func testAReplayedDailySharesAsPractice() {
@@ -106,7 +87,7 @@ final class ShareTests: XCTestCase {
         game.commit(rod: 0, steps: -4)
         XCTAssertTrue(game.solved)
         XCTAssertFalse(game.counts)
-        XCTAssertEqual(game.shareText, "Unstir 2026-11-02 \u{00B7} practice \u{00B7} 1 move (par 1)\n\u{1F7EA}")
+        XCTAssertEqual(game.shareText, "Unstir 2026-11-02 \u{00B7} \u{25CF}\u{25CF}\u{25CB} \u{00B7} practice \u{00B7} 1 move (par 1)")
     }
 
     /// "again" on the daily's card plays it as practice: it saves no best, so the first try's stands, and no streak
@@ -137,7 +118,7 @@ final class ShareTests: XCTestCase {
         XCTAssertNil(game.bests)
         XCTAssertEqual(Daily.run(today: day), 1)
         XCTAssertTrue(Best.started(id))
-        XCTAssertEqual(game.shareText, "Unstir 2026-11-03 \u{00B7} practice \u{00B7} 1 move (par 1) \u{00B7} 1 reset\n\u{1F7EA}")
+        XCTAssertEqual(game.shareText, "Unstir 2026-11-03 \u{00B7} \u{25CF}\u{25CF}\u{25CB} \u{00B7} practice \u{00B7} 1 move (par 1) \u{00B7} 1 reset")
     }
 
     /// Only "again" after a daily's solve makes practice: a reset mid-try, or another level's again, keeps the first try.

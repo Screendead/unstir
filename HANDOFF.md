@@ -119,7 +119,26 @@ escapes left, all in files the held PRs touch: Shelf 41, TankView 18, Menu 18, R
 12); the store media retake (after the design and the panels land); Lens's first-open bake in the phone bench,
 then the cache cap as a call. **Raise with Jack**: three PR test jobs ran past ten minutes that evening (10:09,
 11:48, 12:11), most of it the simulator's boot and the tests' start. The phone checks owed to Jack are listed on
-the page as to-dos (eleven, Escapement's and Prism's playthroughs first).
+the page as to-dos (eleven, Escapement's and Prism's playthroughs first). Later that night all five held PRs
+took master in and passed CI again. Two more options were built for the page, each on a local, unpushed branch:
+`r17-ds5b-streak` (the daily keeps its dots and the streak goes under its title; the taller row then pushes the
+menu's "next:" line under the chips as the menu opens, to fix when it is swapped in) and `r17-stamp-below` (on a
+short screen whose measured gap under the title is less than 62 pt the word centres between the title and the rim,
+shrinking only if it must). #157's bench now bakes three Lens panels cold and prints their times and a panel's
+bytes (`scripts/gpu-bench.sh`), so the cache call waits on a phone run of that branch. #179 has no timeout: if the
+store's first read never ended, a pack's card would say "checking purchases…" with no buy button. The nightly
+was dispatched on master for #179's StoreKit test.
+
+**Answered 2026-11-11** (the evening page's twelve; rows in `docs/decisions.md`). Merged on them: #174 and #157.
+The nightly dispatched above failed on #179's new `testOfflineTheFirstReadStillEnds`; a fix branch
+(`fix-offline-store-test`) also gives the first read a 5 s limit. The phone bench ran on the 13 Pro Max (thermal
+serious): Prism's measured over assumed cost has median 0.89 and max 1.11, the slowest specimen 6.48 of 8.33 ms;
+a Lens panel bakes cold in 70 to 227 ms at 1137 px, 5.2 MB cached, 129 MB for all 25, so the cache can be capped
+(a call still to put). **Next, decided**: on #173, PACKNAME's button and, in place of the type step-down, the
+tank shrinking once a level is solved when the card would not fit (TEXT-NEVER-SHRINKS), on every phone; on #180,
+STREAK's row and the spacing under the chips; #178 with `r17-stamp-below`; each shown to Jack before it merges.
+Lens: Kaleidoscope as the face (cover, clip, promo image), Telephoto redrawn, the finer lens core. A louder
+payoff on finishing a pack or the game is Jack's ask and wants options shown.
 
 ### Open work (finish-and-pitch, 2026-11-02)
 

@@ -1783,6 +1783,7 @@ struct LevelView: View {
         .simultaneousGesture(spinGesture, including: game.level.motion == .none ? .subviews : .all)
         .haptic(.impact(weight: .light, intensity: 0.7), trigger: grabs)
         .haptic(.selection, trigger: ticks)
+        .onChange(of: ticks) { Sound.shared.play(.tick) }
         .haptic(.selection, trigger: misses)
         .onChange(of: tankTicks) { Knock.clunk.play() }
         .haptic(.impact(weight: .heavy), trigger: game.cancels)
@@ -1792,7 +1793,7 @@ struct LevelView: View {
         .onChange(of: game.moves) { was, now in
             if now > was, game.level.layer == .escapement, !game.solved, !game.demoing { Sound.shared.reed(was) }
         }
-        // Another try after a solve brings the layer back.
+        // Another try after a solve wants the layer afresh, for its reed and its next resolution.
         .onChange(of: game.solved) { if !game.solved { Sound.shared.layer(game.level.layer) } }
         .haptic(.warning, trigger: game.pushes)
         // A push that spills a run sounds only as the spill.
