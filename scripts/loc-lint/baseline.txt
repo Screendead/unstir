@@ -1,19 +1,5 @@
 # Player text that escapes the String Catalog today, one flagged line each (scripts/loc-lint.sh). Each fix
 # takes its line out; the migration ends with this file deleted.
-ResultCard.swift: Text(game.spilled ? "tanks cleared \(run.tank) \u{00B7} best \(Best.tanks)"
-ResultCard.swift: Text(line).tone(.text2)
-ResultCard.swift: Text(done.line).tone(page.tone(.text2)).padding(.top, 4)
-ResultCard.swift: UnstirButton(nextLeads ? .primary : .secondary, accent: accent, wide: true) { onNext(next) } label: { Text(label) }
-ResultCard.swift: .accessibilityLabel(game.spilled ? "New run" : run != nil ? "Next tank" : "Next level")
-ResultCard.swift: Text(Daily.untilNext(day: day, now: now ?? t.date)).font(.ui(.detail)).tone(page.tone(.text3))
-ResultCard.swift: .accessibilityLabel(Daily.untilNext(day: day, now: now ?? t.date, spoken: true))
-ResultCard.swift: let shortLine = "\(short) \(from.name.lowercased()) level\(short == 1 ? "" : "s") short of par"
-ResultCard.swift: Text(open ? "up a notch" : shortLine)
-ResultCard.swift: Text(to.name.uppercased()).font(.ui(.displaySmall)).tracking(4)
-ResultCard.swift: Text("\u{203A}").font(.ui(.displaySmall))
-ResultCard.swift: .accessibilityLabel(open ? "Up a notch: \(to.name)" : "\(to.name), locked. \(shortLine), and par on every one opens it")
-ResultCard.swift: .accessibilityHint(open ? "" : "Shows which \(from.name) levels are short of par")
-ResultCard.swift: if let notice { Text(notice).font(.ui(.label)).tone(.text2).transition(.opacity) }
 Shelf.swift: if let note = restoreNote { AccessibilityNotification.Announcement(note).post() }
 Shelf.swift: UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) }
 Shelf.swift: .accessibilityLabel(back.spoken)

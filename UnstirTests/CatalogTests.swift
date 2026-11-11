@@ -53,6 +53,10 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(Spoken.row(endless, result: nil, tanks: 1, detail: nil, enabled: true, needs: nil).value, "best 1 tank")
         XCTAssertEqual(Spoken.row(endless, result: nil, tanks: 1, detail: nil, enabled: true, needs: nil, started: true).value,
                        "run in progress, best 1 tank")
+        XCTAssertEqual(String(localized: "\(1) \(Tier.plughole.word) levels short of par", comment: "Short of par"),
+                       "1 plughole level short of par")
+        XCTAssertEqual(String(localized: "\(2) \(Tier.plughole.word) levels short of par", comment: "Short of par"),
+                       "2 plughole levels short of par")
     }
 
     /// A table's id-keyed string reads its English default, which the catalog may not hold.

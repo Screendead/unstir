@@ -1,6 +1,29 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld %@ levels short of par" : {
+      "comment" : "The card's way up, the next tier shut. Levels short of par, then their tier",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld %@ level short of par"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld %@ levels short of par"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld moves" : {
       "comment" : "Moves played",
       "localizations" : {
