@@ -1135,6 +1135,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   lines only, so a channel out of register shows as its colour and an aligned line is white
   (`testEveryPlateIsWhiteLinesOnBlack`). Each fills the glass and breaks every rotation a core could fall on, so a step
   moves most of the light in every core of every layout (`testEveryPlateShowsAStepInEveryCore`); the sandbox skips them.
+  A core shows a stir's count only where the channels its mask moves come back into register with one it leaves
+  alone once the stir is lifted. A rod stirred twice, which takes a stir between them on a rod overlapping it and
+  sharing a channel, shows the sum of its stirs instead: nothing where they cancel (Jellyfish's cyan rod, +5 under −5),
+  a wrong count elsewhere (Sea nettle's magenta, 2 for 5), whatever the plate holds. `scripts/prism-levels.sh read`
+  prints it a move at a time (25 of the 30 specimens have such a move, every one deeper than its rods are many), and
+  `scripts/prism-plates.sh deal` sketches a deal on the Mac, each channel through its own word as the shader samples it.
   Escapement's plate (`Picture.engineTurned`, drawn by `Picture.engineTurning` in Page.swift) is the packs mock-up's
   engine-turning in ink on bone: ninety straight rays fanned from a point off the glass's lower left, whose cone just
   holds the glass, over barleycorn, upward chevrons on a 0.08 lattice, with no glow and no concentric figure. Its lines
