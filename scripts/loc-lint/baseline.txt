@@ -1,17 +1,5 @@
 # Player text that escapes the String Catalog today, one flagged line each (scripts/loc-lint.sh). Each fix
 # takes its line out; the migration ends with this file deleted.
-Consent.swift: Text(ConsentWords.title).font(.ui(.title))
-Consent.swift: Text(ConsentWords.body)
-Consent.swift: Text(sends ? ConsentWords.hideLink : ConsentWords.sendsLink).font(.ui(.label))
-Consent.swift: .accessibilityValue(sends ? "shown" : "hidden")
-Consent.swift: Text(ConsentWords.sends)
-Consent.swift: Text(word).frame(maxWidth: .infinity)
-Consent.swift: .accessibilityValue(configuration.isOn ? "on" : "off")
-Consent.swift: Text(ConsentWords.settings).font(.ui(.title)).padding(.top, 26)
-Consent.swift: Text(SettingsSheet.version).font(.ui(.detail)).foregroundStyle(Color.text3).padding(.top, 6)
-Consent.swift: Text("\u{2197}").font(.ui(.button)).foregroundStyle(Color.amber)
-Consent.swift: Text(name).font(.ui(.body))
-Consent.swift: Text(detail).font(.ui(.detail)).foregroundStyle(Color.text3)
 Menu.swift: .accessibilityLabel(supporter ? "Unstir, supporter" : "Unstir").accessibilityAddTraits(.isHeader)
 Menu.swift: .accessibilityValue(picked.spoken)
 Menu.swift: Text(t.rawValue).font(.ui(.chip))
