@@ -64,7 +64,8 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(Level.lens[0].title, "Keyhole")
         XCTAssertEqual(Level.lens[0].chapter, "Close-up")
         XCTAssertEqual(Level.escapement[0].note, "Unstir in \(Level.escapement[0].budget) ticks. A clock ticks after every move. Each let-go is a move.")
-        XCTAssertEqual(Level.escapement[1].note, "Unstir in \(Level.escapement[1].budget) ticks.")
+        XCTAssertEqual(Level.escapement[1].note, "Unstir in \(Level.escapement[1].budget) ticks. Tap wait: the clock ticks, nothing turns.")
+        XCTAssertEqual(Level.escapement[2].note, "Unstir in \(Level.escapement[2].budget) ticks.")
         XCTAssertEqual(Level.prism[0].chapter, "Two Colours")
         XCTAssertEqual(Level.prism[0].note, "Each rod stirs only its knob's colours.")
     }

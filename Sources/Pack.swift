@@ -387,8 +387,10 @@ extension Level {
                           chapter: escapementChapters[(n - 1) / 6],
                           // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
                           demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)
-        level.note = (n - 1) % 6 == 0
-            ? escapementOpener((n - 1) / 6, budget: level.budget)
+        // Problem 2 is the first whose par needs a wait, so its stipulation names the control.
+        level.note = (n - 1) % 6 == 0 ? escapementOpener((n - 1) / 6, budget: level.budget)
+            : n == 2 ? String(localized: "rule.escapement.wait", defaultValue: "Unstir in \(level.budget) ticks. Tap wait: the clock ticks, nothing turns.",
+                              comment: "Escapement's note under the tank on problem 2, the first that needs a wait: the tick budget, then what the wait control does")
             : String(localized: "Unstir in \(level.budget) ticks.",
                      comment: "Escapement's stipulation under the tank: the tick budget")
         return level

@@ -52,7 +52,27 @@ import XCTest
         XCTAssertEqual(level.motion, .none)
         XCTAssertEqual(level.par, 3)
         XCTAssertEqual(level.budget, 3)
-        XCTAssertEqual(level.note, "Unstir in 3 ticks.")
+        // The first problem whose par needs a wait names the control.
+        XCTAssertEqual(level.note, "Unstir in 3 ticks. Tap wait: the clock ticks, nothing turns.")
+    }
+
+    /// The wait control is live exactly while `wait(on:)` would make a move, bar a full stack's refusal: never off
+    /// Escapement, nor with no clock entry dealt, all along the composed line, and never once it is solved.
+    func testTheWaitControlIsLiveExactlyWhileAWaitIsAMove() {
+        XCTAssertFalse(Game(level: Tier.plughole.levels[0], tankTurned: true, bank: (3, nil)).canWait)
+        let idle = game("1:+3,2:-4")
+        XCTAssertFalse(idle.canWait)
+        XCTAssertFalse(idle.wait(on: 0))
+        let g = game()
+        XCTAssertTrue(g.canWait)
+        g.commit(rod: 2, steps: 4)
+        XCTAssertTrue(g.canWait)
+        XCTAssertTrue(g.wait(on: 0))
+        XCTAssertTrue(g.canWait)
+        g.commit(rod: 1, steps: -3)
+        XCTAssertTrue(g.solved)
+        XCTAssertFalse(g.canWait)
+        XCTAssertFalse(g.wait(on: 0))
     }
 
     func testTheComposedLineWinsInThree() {
@@ -344,7 +364,8 @@ import XCTest
         XCTAssertEqual(levels.compactMap(\.chapter), (0..<30).map { Level.escapementChapters[$0 / 6] })
         XCTAssertEqual(Level.escapementChapters, ["The Clock", "The Waiting Move", "Two Clocks", "Wound Back", "Grand Complication"])
         let rules = [1: " A clock ticks after every move. Each let-go is a move.", 7: " Sometimes the first move is to wait.",
-                     13: " Two clocks tick in turn.", 19: " A wound-back clock ticks the other way.", 25: " Three clocks."]
+                     13: " Two clocks tick in turn.", 19: " A wound-back clock ticks the other way.", 25: " Three clocks.",
+                     2: " Tap wait: the clock ticks, nothing turns."]
         XCTAssertEqual(levels.map(\.title), [
             "Mainspring", "Pendulum", "Clock face", "Cogwheel", "Winding key", "Clockwork",
             "Pause", "Snooze", "Hourglass", "Egg timer", "Stopwatch", "Standstill",

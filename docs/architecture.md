@@ -242,7 +242,13 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   radius, overlapped or not, never the swirl; a seized winner or a socket is `.seized`, which holds nothing, and a
   ratchet `.ratchet`, which holds nothing: a tap on the ratchet's plate (a dark disc of radius `ratchetReach`, edge lit)
   waits (`Game.wait`), a tap elsewhere on its disc sends a ring from the finger closing on the plate, and a drag shakes
-  it with a thud. A touch landing within 20 pt of the screen's left edge waits for its first 10 pt: rightward and
+  it with a thud. The plate stays a shortcut (Jack's call ET1 = B) beside the play row's labelled "wait" control
+  (`LevelView.waitControl`), shown on every level with clocks, between undo and reset, and gone while reset is armed,
+  as "reset? tap again" needs the row on an SE. Both make the same move through `LevelView.waitMove`, which thuds a
+  wait no clock can take as the plate always has; whichever is used, the control inverts (ink capsule, bone label) and
+  the waited clock's plate lights for `waitShown`, so each teaches the other. The control greys, as undo does, while
+  `Game.canWait` is false (finished, or no clock can tick) and through the opening and the demonstration; it plays no
+  sound of its own, the ticks being the wait's, and is VoiceOver's way to wait, as the tank is played by sight. A touch landing within 20 pt of the screen's left edge waits for its first 10 pt: rightward and
   mostly sideways, it is the back swipe (`BackSwipe`; Jack's call C19, round 13), which slides the level off over the
   menu, dimmed 0.4 at the start and less as it uncovers, and past a third of the width, or heading past half, leaves as
   ‹ levels does, else (or flicked back left, as iOS's own) springs back; otherwise the tank takes it up from where it landed (a vertical one a rim turn,
@@ -355,14 +361,15 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   as its turn comes ticks its step through the ordinary commit, in `Level.clocks`' order (Jack's call D1, round 9), so
   one clock's tick can uncover the next's seam on the same move (the book's 17 and 18 need it), and the stack's last
   tick solves on the spot; a clock that can't tick (`canTick`) has stopped, and once all have there is nothing to wait for, and a tap that would wait thuds. A
-  move is one working knob's stir or a wait, a tap on any ratchet. Every
+  move is one working knob's stir or a wait, a tap on any ratchet or the wait control. Every
   let-go is a move of its own and final (Jack's call E1, round 9): its tick lands with it, nothing joins it, and the
   same knob grabbed again is the next move with its own tick, so a stir's dial always counts from zero. Escapement has
   no par (Jack's calls EL1, round 11, which replaced round 9's E1/E2 loss rule, and ES2, round 12): each clock has its
   own count, what it owes on the stack (`Game.owed(_:)`, `Level.owed`), and each of its ticks spends one of it; the
   header's budget is every clock's together (`Game.budget`, `Level.budget(on:)`; `Level.budget` as dealt, which the note
   states: "Unstir in 9 ticks.", each chapter's opener adding its rule, problem 1's that a clock ticks after every move
-  and each let-go is a move), so a move with three running clocks spends three. Only a clock's own ticks change its
+  and each let-go is a move, and problem 2, the first whose par needs a wait, naming the control: "Tap wait: the clock
+  ticks, nothing turns."), so a move with three running clocks spends three. Only a clock's own ticks change its
   rod's steps, each by one whether it merges or pushes, so the counts are read off the stack and nothing stores them.
   A clock ticks while its rod holds an entry and its count is above 0 (`canTick`); at 0 it stops. A tick that pushes
   buries a clock entry of the wrong sign, `overdue(_:)`, that no continuation pops (`testAPushedTickNeverPops`), and
@@ -397,7 +404,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   header's "‹ levels" stays on screen above either, and the edge swipe leaves too, both through `leave`. A clock stopping sends a ring out in the plate's vermilion as its last tick lands. A level with a
   `demo` plays it before the problem opens until the problem has been solved (always in the harness, unless it holds the
   tank still), and after a reset of a tank with nothing played, which replays the opening: a drawn fingertip
-  heals the demo stack through the real rules, so the clock ticks, then taps the ratchet, and the picture fades to the bone paper
+  heals the demo stack through the real rules, so the clock ticks, then the caption says "wait: the clock ticks,
+  nothing turns" (a notice, `LevelView.demoWait`) and the wait control presses (`pressWait`, the only control lit in
+  the greyed row), its plate lighting with it, so the clock ticks again, and the picture fades to the bone paper
   and the problem winds in on `dealt(level)`; a tap skips it. Clock commits take the level's `lenses` like any other.
   Escapement plays on paper (Jack's call ESC-PAPER = B, round 16; **Page.swift**): `Level.page` is `.book` for its
   levels alone and `.night`, the play screen's own colours, for every other (`testOnlyEscapementPlaysOnPaper`).
@@ -1138,7 +1147,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   starts a promoted purchase of it a second in, `UNSTIR_PROMO=lens` shows that offer's promoted-purchase image alone,
   `UNSTIR_SUPPORTER=0` switches the supporter mark off for the launch, and
   `UNSTIR_TYPESIZE=accessibility5` sets Dynamic Type (a `DynamicTypeSize` case). `UNSTIR_MOVES=-1:-1,1:-8` plays a line of moves at autoplay's pace, each a knob's turn or the
-  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait), `u` an undo through the control
+  tank's (rod -1) in `parse`'s rod:steps form, a ratchet's turn a tap on it (a wait), `w` a wait through the wait control, pressed a beat first, `u` an undo through the control
   with its sound and `p<s>` a rest of s seconds more before the next (`Harness.Step`); `UNSTIR_PLAYED` commits such a
   line through the real path as the level opens, for stills; with `UNSTIR_FINGER=1` it rests `UNSTIR_REST` seconds (2 when unset), then plays at a hand's
   pace, each move by a drawn fingertip that lands where `grab` gives it the move's rod or the rim and rides the turn

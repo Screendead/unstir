@@ -158,6 +158,13 @@ struct LevelView: View {
     /// Escapement: the clock tapped last off its plate, and how far off, in tank units; every such tap.
     @State private var missed: (k: Int, by: Double)?
     @State private var misses = 0
+    /// Escapement: every wait made, by a clock's plate or the wait control, so both light whichever was used: the
+    /// control and the waited clock's plate (`waitedOn`) while `waitLit`. `waitHeld` presses the control ahead of the
+    /// demonstration's or the harness's wait, as a finger would.
+    @State private var waits = 0
+    @State private var waitLit = false
+    @State private var waitedOn: Int?
+    @State private var waitHeld = false
     /// Escapement: the demonstration of the clock is playing, before the problem winds in.
     @State private var demoing = false
     /// Escapement: the tank dips to black between the demonstration and the problem, so the problem's clean opening
@@ -722,7 +729,15 @@ struct LevelView: View {
                 .opacity(game.history.isEmpty || spent ? 0.35 : 1)
                 .overlay(alignment: .topTrailing) { refillBadge }
             Spacer()
+            waitControl
             resetControl
+        }
+        .task(id: waits) {
+            guard waits > 0 else { return }
+            waitLit = true
+            guard (try? await Task.sleep(for: .seconds(Self.waitShown))) != nil else { return }
+            waitLit = false
+            waitedOn = nil
         }
         // Endless has neither (`Game.undo`, `Game.reset`); hidden rather than gone, so its tank sits where every
         // other level's does.
@@ -1026,6 +1041,61 @@ struct LevelView: View {
             .onChange(of: resetFocused) { if !resetFocused && voiceOver { armedAt = nil } }
     }
 
+    /// Escapement's wait, the move a tap on a clock's plate makes, named in the row so no player has to find the plate.
+    /// Gone while reset is armed, as "reset? tap again" needs the room on an SE.
+    @ViewBuilder private var waitControl: some View {
+        if !game.level.ratchets.isEmpty && armedAt == nil {
+            let lit = waitHeld || waitLit
+            let live = game.canWait && !demoing && shown == nil && !holding
+            control(String(localized: "wait", comment: "Escapement's play control: a move that only ticks the clocks"), inset: 14) {
+                if let k = waitRod { waitMove(on: k) }
+            }
+            // Its sound is the ticks', as a tap on the plate's is.
+            .buttonStyle(.plain)
+            .background(Capsule().fill(page.ink).opacity(lit ? 1 : 0))
+            .foregroundStyle(lit ? page.ground : page.ink)
+            .scaleEffect(waitHeld ? 0.94 : 1)
+            .animation(.easeOut(duration: 0.15), value: lit)
+            .animation(.easeOut(duration: 0.12), value: waitHeld)
+            .accessibilityLabel(String(localized: "Wait", comment: "VoiceOver: Escapement's wait control"))
+            .accessibilityHint(String(localized: "The clocks tick and nothing turns.",
+                                      comment: "VoiceOver: what Escapement's wait control does"))
+            .disabled(!game.canWait)
+            .opacity(live || lit ? 1 : 0.35)
+            Spacer()
+        }
+    }
+
+    /// The clock a wait from the control is made on: any ratchet waits, so the first that can still tick.
+    private var waitRod: Int? {
+        (game.level.clocks.first { game.canTick($0.rod) } ?? game.level.clocks.first)?.rod
+    }
+
+    /// Seconds the control and the plate stay lit after a wait.
+    nonisolated static let waitShown = 0.6
+
+    /// A wait on clock `k`, by its plate or the control. A wait no clock can take thuds, as a seized knob does; a full
+    /// stack's refusal says so itself.
+    private func waitMove(on k: Int) {
+        let refusals = game.refusals
+        if game.wait(on: k) {
+            waitedOn = k
+            waits += 1
+        } else if !game.finished && game.refusals == refusals {
+            jammed = k; jams += 1; Knock.thud.play()
+        }
+    }
+
+    /// The harness's and the demonstration's wait through the control: pressed a beat, as a finger would, then made.
+    private func pressWait(while going: @escaping () -> Bool = { true }) async -> Bool {
+        guard let k = waitRod else { return false }
+        waitHeld = true
+        let on = (try? await Task.sleep(for: .seconds(0.35))) != nil && going()
+        waitHeld = false
+        if on { waitMove(on: k) }
+        return on
+    }
+
     /// The play screen's reset asks for a second tap; the cards' "again" resets at once, as a finished tank has nothing
     /// a slip could lose.
     private func tapReset() {
@@ -1265,7 +1335,7 @@ struct LevelView: View {
                 continue
             }
             if game.level.kind(of: m.rod) == .ratchet {
-                game.wait(on: m.rod)
+                waitMove(on: m.rod)
                 continue
             }
             if m.rod == Game.tank {
@@ -1294,7 +1364,8 @@ struct LevelView: View {
         }
     }
 
-    /// UNSTIR_MOVES's other steps: an undo through the control, with its sound, or a rest. False once the wait is cut.
+    /// UNSTIR_MOVES's other steps: an undo through the control, with its sound, a wait through the wait control, or a
+    /// rest. False once the wait is cut.
     private func harnessed(_ step: Harness.Step) async -> Bool {
         switch step {
         case .twist: return true
@@ -1302,6 +1373,9 @@ struct LevelView: View {
         case .undo:
             Sound.shared.play(spent ? .tap : .undo)
             undo()
+            return (try? await Task.sleep(for: .seconds(1.0))) != nil
+        case .wait:
+            guard await pressWait() else { return false }
             return (try? await Task.sleep(for: .seconds(1.0))) != nil
         }
     }
@@ -1350,10 +1424,10 @@ struct LevelView: View {
     }
 
     /// Escapement, before the first stir: a fingertip shows the clock working on the level's demonstration stack. Each
-    /// heal hands the clock its seam and it ticks; a tap on the ratchet waits, and it ticks again. Then the tank dips to
-    /// black and the problem winds in. A tap skips it.
+    /// heal hands the clock its seam and it ticks; the wait control presses, its plate lighting with it, and it ticks
+    /// again. Then the tank dips to black and the problem winds in. A tap skips it.
     private func clockDemo() async {
-        guard let e = game.level.clocks.first?.rod else { return }
+        guard !game.level.clocks.isEmpty else { return }
         demoing = true
         shown = nil
         game.demo(game.level.demo)
@@ -1365,8 +1439,13 @@ struct LevelView: View {
             on = await fingertip(t, while: going)
             if on { on = await pause(0.9) }
         }
-        if on, await fingertip(Twist(rod: e, steps: 1), while: going) { _ = await pause(1.6) }
+        // The wait is made on the control, which a player sees named, not on the plate.
+        if on {
+            say(Self.demoWait)
+            if await pause(0.6), await pressWait(while: going) { _ = await pause(1.6) }
+        }
         while settling { try? await Task.sleep(for: .seconds(0.05)) }
+        notice = nil
         withAnimation(.easeOut(duration: 0.2)) { ghost = nil }
         drag = nil; liveRod = nil; liveAngle = 0; pressing = nil; counted = nil
         withAnimation(.easeIn(duration: 0.35)) { demoDip = 1 }
@@ -1375,6 +1454,10 @@ struct LevelView: View {
         demoing = false
         Log.write("demo ends \(state)")
     }
+
+    /// The demonstration's caption as it waits on the control.
+    nonisolated static let demoWait = String(localized: "wait: the clock ticks, nothing turns",
+                                             comment: "Escapement's demonstration, as the wait control is pressed: a wait ticks the clock and turns no rod")
 
     /// UNSTIR_BRIMDEMO: the approved film's run of the brim, through the same path as a finger: two heals, then pushes
     /// until it spills, each let go at the film's time (plus a second for the picture to land).
@@ -1878,7 +1961,7 @@ struct LevelView: View {
                          core: CGFloat, plate: CGFloat) -> RatchetView {
         let owed = game.owed(k), started = i.map { v > Double($0) }
         return RatchetView(angle: (Double(game.escapement.ticks[k] ?? 0) - (1 - f)) * Tank.step + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
-                           size: Self.ratchetSize(core), plate: plate, pawl: pawl, lit: pressing == k,
+                           size: Self.ratchetSize(core), plate: plate, pawl: pawl, lit: pressing == k || waitedOn == k,
                            stopped: !game.canTick(k) && f >= 1 && shown == nil && !demoing, back: back,
                            owed: started == false ? owed + 1 : owed, was: started == true ? owed + 1 : nil,
                            fall: started == true ? min(v - Double(i!), 1) : 1, still: reduceMotion)
@@ -2286,9 +2369,7 @@ struct LevelView: View {
     private func tapped(_ k: Int, from start: SIMD2<Double>, to end: SIMD2<Double>) {
         pressing = nil
         if Self.waits(from: start, to: end, centre: centre(k)) {
-            // A wait no clock can take thuds, as a seized knob does; a full stack's refusal says so itself.
-            let refusals = game.refusals
-            if !game.wait(on: k) && !game.finished && game.refusals == refusals { jammed = k; jams += 1; Knock.thud.play() }
+            waitMove(on: k)
         } else if simd_distance(start, end) < 0.06 {
             missed = (k, simd_distance(start, centre(k))); misses += 1
         } else {

@@ -415,10 +415,13 @@ final class Game {
         settle(healed: healed > 0)
     }
 
-    /// Escapement's waiting move, a tap on any ratchet: it only ticks the clocks. Once every clock has stopped there is
-    /// nothing to wait for. False when refused.
+    /// Escapement: some clock can still tick, so a wait is a move. A full stack may still refuse its tick.
+    var canWait: Bool { !finished && level.clocks.contains { canTick($0.rod) } }
+
+    /// Escapement's waiting move, a tap on any ratchet or the wait control: it only ticks the clocks. Once every clock
+    /// has stopped there is nothing to wait for. False when refused.
     @discardableResult func wait(on ratchet: Int) -> Bool {
-        guard !finished, level.kind(of: ratchet) == .ratchet, level.clocks.contains(where: { canTick($0.rod) }) else { return false }
+        guard canWait, level.kind(of: ratchet) == .ratchet else { return false }
         guard !ticksRefused(entries) else { log("wait refused"); refuse(ratchet); return false }
         started()
         stirs.append(Stir(twist: Twist(rod: slot(of: ratchet), steps: 1), entries: entries, clock: escapement, heals: heals,

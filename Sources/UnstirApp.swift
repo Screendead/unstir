@@ -86,9 +86,10 @@ struct Harness {
     /// UNSTIR_MOVES=-1:-1,1:-8: these moves played in order, each a knob's turn or the tank's (rod -1, as `Game.history`
     /// names it), as solve.sh prints a line. A ratchet's turn is a tap on it, a wait; with UNSTIR_FINGER, any turn of it
     /// but 1 taps halfway out the clock's disc instead. A turn of the open stir's knob takes it up again. `u` is an undo
-    /// through the control, with its sound, and `p<s>` rests s seconds more before the next step.
+    /// through the control, with its sound, `w` a wait through Escapement's wait control, and `p<s>` rests s seconds more
+    /// before the next step.
     let moves: [Step]?
-    enum Step: Equatable { case twist(Twist), undo, rest(Double) }
+    enum Step: Equatable { case twist(Twist), undo, wait, rest(Double) }
     /// UNSTIR_PLAYED=2:4,0:1: a line in UNSTIR_MOVES's form, committed through the real path as the level opens, so a
     /// still shows the tank part way through it.
     let played: [Twist]
@@ -432,6 +433,7 @@ struct Harness {
         moves = env["UNSTIR_MOVES"].map { line in
             line.split(separator: ",").compactMap { step -> Step? in
                 if step == "u" { return .undo }
+                if step == "w" { return .wait }
                 if step.first == "p" { return Double(step.dropFirst()).map(Step.rest) }
                 let f = step.split(separator: ":").compactMap { Int($0) }
                 return f.count == 2 && f[1] != 0 ? .twist(Twist(rod: f[0], steps: f[1])) : nil

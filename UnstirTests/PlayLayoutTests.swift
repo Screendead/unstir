@@ -329,6 +329,7 @@ final class PlayLayoutTests: XCTestCase {
             let words = Game(level: Level.escapement[1], bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
             XCTAssertLessThanOrEqual(lines(words, serif), 2, "\(words) at \(type)", file: file, line: line)
         }
+        XCTAssertLessThanOrEqual(lines(LevelView.demoWait, serif), 2, "\(LevelView.demoWait) at \(type)", file: file, line: line)
     }
 
     /// Lays `harness`'s level out in the open Duo's window beside the menu, as `UNSTIR_FRAME` does, and returns what its
