@@ -77,7 +77,11 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`chains`) and checks it against the model's cut words on hex's swirl. Its cost against the four-tap limit
   (`Unstirred.channelCost`) is a map per channel each entry holds, plus three for the stack. The phone bench
   (`scripts/gpu-bench.sh phone`, 2026-11-09, thermal fair) put each specimen at a median 0.95 of the old constant of
-  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none.
+  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none. Last, on the CPU,
+  it bakes Lens's panels cold at the play screen's glass for a Lens level (`PlayLayout.of` in `GPUBenchView`) straight
+  through `Halftone.Panel.pixels`, so no cached bake is read, replaced or removed: all 25 at an eighth of the side to
+  rank them, then the cheapest, Keyhole and the dearest at the full side, each in wall-clock ms, and a panel's bytes in
+  Caches, for the call on capping that cache. In the simulator that is the Mac's CPU running unoptimised Debug code.
 - **TapLaw.swift** and **Taps.swift** hold the adaptive four-tap budget (Jack, round 16: step the graphics down where
   performance degrades, to keep 120 Hz). Only the look adapts: `Tank.maxStack`, what a level deals and "the tank is
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
@@ -415,7 +419,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's name is never translated (Jack's call CAT1 = A);
   its levels' titles, chapters, rules and notes are `String(localized:)` keyed by id (`level.lens-1.title`,
   `chapter.prism.1`), and Escapement's stipulation is its budget sentence, a key, or on a chapter's opener that
-  sentence and the chapter's rule as one key (`rule.escapement.1`), so a translator sees them together. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) and its way out names the pack, the one place the play screen does (Jack, 2026-11-10: the name over the title too read as doubled): it reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
+  sentence and the chapter's rule as one key (`rule.escapement.1`), so a translator sees them together. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, the one place the play screen names it (Jack, 2026-11-10: the way out naming it too read as doubled), so its way out reads "‹ levels" (`Level.back`) as the free game's does, VoiceOver still saying "Back to Lens" (`Spoken.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
@@ -592,7 +596,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   A result or lost card taller than the column leaves under the caption (plughole 27's fullest at xxxLarge on a Pro
   Max) steps its own type down a size at a time, never below the default, until it fits (`LevelView.card`), so the
   glass keeps the size it was played at; one still too tall, as the fullest is on the shortest phones at the default
-  size, scrolls. The gear stops at xxxLarge, where its 44 pt target still holds it; and the menu hands its type size
+  size, scrolls. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
+  default size, as the title's 18 pt gap holds no more; and the menu hands its type size
   to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
   `TypeRole.line` gives a role's line height as `Text` lays it out (a text style's font, whose leading grows faster than
   its size), which `PlayLayout.Chrome` and the caption's two lines use. The game's own text stays fixed (`Font.game`):
@@ -1036,9 +1041,23 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   screens at one pitch (0.03 tank units) in clean-picture coordinates, so a lens's swollen dots read against the pitch
   outside, and white linework that keeps every core asymmetric (`testEveryStepMovesContrastingPixelsOnTheHalftone`, slow).
   It takes some 20 s unoptimised and 0.9 s optimised on an M2 Max (unmeasured on a phone), so every build keeps it in
-  Caches, per size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
+  Caches, per panel and size, under the build's number and its executable's timestamp, removing older keys, and logs each bake's
   time. The opening waits for a picture to strike and settle, so a slow bake never winds in over black or through
-  the flicker; only one that never lands lets it go on, after 30 s. Prism's plates
+  the flicker; only one that never lands lets it go on, after 30 s. A panel is a `Halftone.Panel` (tones and white
+  strokes of their own widths, keyed in Caches by its name). Each Lens level draws its own (Jack's call LENSART = B:
+  25 standalone panels, each its level's name drawn, with what is seen through the thing in a lens's core): the picture
+  stays `.halftone` on all 25, so nothing stored changes, and `Level.panel`, a Lens level's number and 0 anywhere else,
+  goes through `PictureLayer` to `Halftone.panel`, which gives the level's panel from `LensArt.levels` once it is drawn
+  and `Halftone.test`, the test panel, until then, as for 0 (`testEachLensLevelDrawsItsOwnPanel`). So Lens 03's panel
+  is also its dock cover, its card's clip and its promoted-purchase image. Caches keeps every panel a build has baked,
+  5.5 MB each at a Pro Max's tank. The GPU bench times the first-open bake on the device (below). **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
+  and ovals, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
+  panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
+  enough to read at x8, where the bake is soft; every rod's core on its level holds tone and linework that each step
+  moves (`testEveryLensPanelShowsEachStepOnItsLevel`, slow; `scripts/lens-art-sheet.py check` runs the same measure
+  on the Mac). A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
+  `scripts/lens-panels.sh` draws, times and checks a panel on the Mac, and `scripts/lens-art-sheet.py` lays the drawn
+  ones out, as baked and as the game shows them (`shots.sh lens-NN`, `lens-NN-clue`). Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white

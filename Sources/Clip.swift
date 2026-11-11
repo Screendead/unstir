@@ -462,10 +462,10 @@ struct LevelPicture: View {
         if let scene = level.story?.scene {
             SceneLayer(scene: scene, played: played, wound: wound, count: level.scramble.count, side: side)
         } else {
-            PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock)
+            PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock, panel: level.panel)
         }
         #else
-        PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock)
+        PictureLayer(picture: level.picture, side: side, seed: Int(level.label) ?? 0, clock: clock, panel: level.panel)
         #endif
     }
 }

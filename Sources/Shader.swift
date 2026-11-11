@@ -180,6 +180,8 @@ struct PictureLayer: View {
     /// A live picture: the level's seed and its clock in seconds.
     var seed = 0
     var clock = 0.0
+    /// The halftone's panel: a Lens level's number (`Level.panel`), 0 for the test panel.
+    var panel = 0
     /// When the picture lands and starts to strike, for whatever strikes with it.
     var onStrike: () -> Void = {}
     @Environment(\.displayScale) private var scale
@@ -235,9 +237,9 @@ struct PictureLayer: View {
         .background { if picture.paper { Color.bone } }
         .onChange(of: image != nil) { if image != nil { onStrike() } }
         // A live picture bakes nothing: the empty image only strikes the tube, once its data is ready.
-        .task(id: [picture.rawValue, "\(seed)", "\(side)", "\(scale)"]) {
+        .task(id: [picture.rawValue, "\(seed)", "\(side)", "\(scale)", "\(panel)"]) {
             if picture.isLive { await picture.prepare(seed: seed) }
-            let baked = picture.isLive ? UIImage() : await picture.render(side: side, scale: scale)
+            let baked = picture.isLive ? UIImage() : await picture.render(side: side, scale: scale, panel: panel)
             // The halftone's detached bake runs on when a change of pose cancels it, and may land after the new one.
             guard !Task.isCancelled else { return }
             image = baked

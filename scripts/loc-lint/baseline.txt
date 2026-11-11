@@ -103,6 +103,7 @@ TankView.swift: UnstirButton(.quiet, action: leave) { Text(game.level.back).font
 TankView.swift: Text(game.level.run == nil ? "moves \(game.moves) / par \(game.par)" : "moves \(game.moves)")
 TankView.swift: Text(game.level.label).fontWeight(.semibold).foregroundStyle(game.level.colour)
 TankView.swift: Text(game.level.title + (game.level.run.map { ", tank \($0.tank + 1)" } ?? ""))
+TankView.swift: Text(pack.name.uppercased()).font(.ui(.eyebrow)).tracking(2).dynamicTypeSize(.large)
 TankView.swift: Text(notice ?? (demoing ? "tap to skip" : shown == nil ? game.counts ? game.caption
 TankView.swift: .accessibilityLabel(Self.pointerSpoken)
 TankView.swift: .accessibilityLabel(game.level.sandbox ? "Undo" : "Undo, \(game.bank) left")

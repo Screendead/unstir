@@ -11,7 +11,7 @@ import SwiftUI
 /// taps and with two, on glasses of 1137 px (the iPhone 13 Pro Max's), 1284 and 1471 (the open Duo's upright one); the
 /// glass's own fill (`benchGlass` in Glass.metal) and whirlpool 27's whole frame, that fill under its stack, at 1137 and
 /// 1471; then, at 1284, a plain stack at 0 and 24 entries and every Prism specimen as dealt through the per-channel
-/// shader and, for comparison, the same stack read white through the plain one.
+/// shader and, for comparison, the same stack read white through the plain one. Last, Lens's first-open bake on the CPU.
 enum GPUBench {
     static var wanted: Bool { ProcessInfo.processInfo.environment["UNSTIR_GPUBENCH"] == "1" }
 
@@ -46,7 +46,8 @@ enum GPUBench {
         var radius, px, scale, t: Float
     }
 
-    @MainActor static func run() async {
+    /// `glass` is the play screen's glass on this display, in pixels, at which Lens's panels bake.
+    @MainActor static func run(glass: Int) async {
         @MainActor func say(_ line: String) {
             print(line)
             Log.write(line)
@@ -216,19 +217,52 @@ enum GPUBench {
         say(String(format: "GPUBENCH measured / assumed cost: median %.2f, max %.2f; slowest %@ at %.3f ms of the 8.333 ms a 120 Hz frame has; thermal %@",
                    drift[drift.count / 2], drift.last!, worst.name, worst.ms,
                    heat()))
+
+        // Lens's first-open bake, cold: straight from the panel, so no player's cached bake is read, replaced or removed.
+        func bake(_ level: Level, _ n: Int) async -> Double {
+            let panel = Halftone.panel(level.panel)
+            return await Task.detached(priority: .userInitiated) {
+                let start = CACurrentMediaTime()
+                _ = panel.pixels(n)
+                return (CACurrentMediaTime() - start) * 1000
+            }.value
+        }
+        let quick = glass / 8
+        var ranked: [(level: Level, ms: Double)] = []
+        for level in Level.lens { ranked.append((level, await bake(level, quick))) }
+        ranked.sort { $0.ms < $1.ms }
+        #if DEBUG
+        let build = "Debug, unoptimised"
+        #else
+        let build = "Release"
+        #endif
+        let picked = [ranked.first!.level, Level.lens[0], ranked.last!.level]
+        for level in picked.reduce(into: [Level]()) { if !$0.contains($1) { $0.append($1) } } {
+            let rank = ranked.firstIndex { $0.level == level }! + 1
+            say(String(format: "GPUBENCH lens %@ %@ baked cold at %d px: %.0f ms wall clock, %@ build; %d of 25 cheapest at %d px",
+                       level.label, level.title, glass, await bake(level, glass), build, rank, quick))
+        }
+        say("GPUBENCH lens cache: a panel at \(glass) px takes \(4 * glass * glass) bytes, all 25 \(25 * 4 * glass * glass / 1_000_000) MB; thermal \(heat())")
     }
 }
 
 /// What a GPU bench launch shows while it runs: nothing to touch.
 struct GPUBenchView: View {
+    @Environment(\.displayScale) private var scale
+
     var body: some View {
-        Text(verbatim: "timing the shader…").font(.ui(.detail)).foregroundStyle(.white)
-            .frame(maxWidth: .infinity, maxHeight: .infinity).background(.black)
-            .task {
-                // Past the launch's own work, so it lands in no number.
-                try? await Task.sleep(for: .seconds(1))
-                await GPUBench.run()
-                exit(0)
-            }
+        GeometryReader { geo in
+            Text(verbatim: "timing the shader…").font(.ui(.detail)).foregroundStyle(.white)
+                .frame(maxWidth: .infinity, maxHeight: .infinity).background(.black)
+                .task {
+                    let lens = Level.lens[0]
+                    let side = PlayLayout.of(size: geo.size, insets: geo.safeAreaInsets, fold: PlayLayout.fold(geo, harness: nil),
+                                             halo: PlayLayout.Halo(lens), chrome: PlayLayout.Chrome(lens), scale: scale).side
+                    // Past the launch's own work, so it lands in no number.
+                    try? await Task.sleep(for: .seconds(1))
+                    await GPUBench.run(glass: Int((side * scale).rounded()))
+                    exit(0)
+                }
+        }
     }
 }

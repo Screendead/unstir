@@ -3,8 +3,9 @@
 import SwiftUI
 
 extension Level {
-    /// Where leaving goes: a pack's level back to its card, a past daily to the archive.
-    var back: String { "\u{2039} " + (pack?.name ?? (archived ? "archive" : "levels")) }
+    /// Where leaving goes: a past daily to the archive, a pack's level back to its card, whose name stands over the
+    /// level's title, so the way out reads as the free game's does.
+    var back: String { "\u{2039} " + (archived ? "archive" : "levels") }
 
     /// A pack's level takes the pack's glow. Every twelve levels walk the grid's whole hue sweep, so the first screen shows all of it; whirlpool walks blood
     /// red through magenta to violet, vortex on from violet through blue to teal, maelstrom crimson down to bile. The daily is amber, endless cyan, the sandbox
@@ -1306,8 +1307,8 @@ private struct LevelRow: View {
                 Image(systemName: "lock.fill").imageScale(.small).foregroundStyle(Color.text4)
             } else if new, result == nil {
                 Text("new").foregroundStyle(Color.text2)
-            } else if let filled = ResultMarks.filled(Archive.Mark(result, started: tried)) {
-                ResultMarks(filled: filled)
+            } else if case let mark = Archive.Mark(result, started: tried), let filled = ResultMarks.filled(mark) {
+                ResultMarks(filled: filled, margin: ResultMarks.margin(mark))
             }
         }
         .font(.ui(.detail))

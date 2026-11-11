@@ -7,7 +7,10 @@
 # The app (GPUBench.swift) runs Unstir.metal's own shader bodies off screen and prints a stack entry's cost with four
 # taps and two at 1137, 1284 and 1471 px, the glass's fill and whirlpool 27's whole frame at 1137 and 1471, then at
 # 1284 each Prism specimen's per-channel cost against what Unstirred.channelCost assumes, and the slowest against the
-# 8.333 ms of a 120 Hz frame. Let the phone cool between runs: heat skews it, and the last line names the thermal state.
+# 8.333 ms of a 120 Hz frame. Then it bakes Lens's panels cold on the CPU, bypassing Caches, at the play screen's glass:
+# the cheapest and dearest of a quick pass over all 25, and Keyhole, each in wall-clock ms, and a cached panel's bytes.
+# The simulator's bake runs on the Mac's CPU, unoptimised in Debug: only the phone's numbers mean anything.
+# Let the phone cool between runs: heat skews it, and the last line names the thermal state.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 bundle=com.screendead.Unstir
@@ -23,13 +26,13 @@ case "${1:-sim}" in
     ;;
   phone)
     UNSTIR_GPUBENCH=1 scripts/run-ios.sh Release
-    # The bench takes about a minute and quits when done: pull the log until its last line is there, for up to 5 minutes.
+    # The bench takes a minute or two and quits when done: pull the log until its last line is there, for up to 5 minutes.
     log=$(mktemp)
     for _ in $(seq 30); do
       sleep 10
       scripts/pull-log.sh "$log" >/dev/null 2>&1 || continue
       started=$(grep -n 'GPUBENCH start' "$log" | tail -1 | cut -d: -f1)
-      [[ -n "$started" ]] && tail -n +"$started" "$log" | grep -qE 'measured / assumed|GPUBENCH no' && break
+      [[ -n "$started" ]] && tail -n +"$started" "$log" | grep -qE 'GPUBENCH lens cache|GPUBENCH no' && break
     done
     started=$(grep -n 'GPUBENCH start' "$log" | tail -1 | cut -d: -f1)
     [[ -n "$started" ]] || { echo "no bench in the phone's log"; exit 1; }
