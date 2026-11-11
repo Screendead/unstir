@@ -28,7 +28,7 @@ shot escapement-2-wait-waiting "Escapement 2 after 2:+4: the clock owes 1 tick a
   PACK=escapement LEVEL=2 PLAYED=2:4
 shot escapement-2-wait-armed "Escapement 2 after 2:+4 with reset armed: reset? tap again takes the row and the wait control steps aside." \
   PACK=escapement LEVEL=2 PLAYED=2:4 RESETARMED=1
-shot escapement-2-wait-se-large "Escapement 2 as dealt at the largest play type: undo, wait and reset on one row." \
+shot escapement-2-wait-large "Escapement 2 as dealt at the largest play type: undo, wait and reset on one row." \
   PACK=escapement LEVEL=2 TYPESIZE=xxxLarge
 shot escapement-2-won "Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack." PACK=escapement LEVEL=2 PLAYED=2:4,0:1,1:-3
 # The bone-paper page (Jack's call ESC-PAPER = B, round 16): the turn's hairlines, dashes and count in ink, and the solve
