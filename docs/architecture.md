@@ -77,7 +77,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   (`chains`) and checks it against the model's cut words on hex's swirl. Its cost against the four-tap limit
   (`Unstirred.channelCost`) is a map per channel each entry holds, plus three for the stack. The phone bench
   (`scripts/gpu-bench.sh phone`, 2026-11-09, thermal fair) put each specimen at a median 0.95 of the old constant of
-  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none. Last, on the CPU,
+  two, 1.07 at most, five of them over; three covers every one measured, rounded up, and lowers none. Then, at 1284,
+  Lens 01 and Lens 25 (the deepest, and the only one with four lenses) on their own panels, as dealt and with every
+  lens at x8 over the level's twists, each in ms and in plain entries' work. Last, on the CPU,
   it bakes Lens's panels cold at the play screen's glass for a Lens level (`PlayLayout.of` in `GPUBenchView`) straight
   through `Halftone.Panel.pixels`, so no cached bake is read, replaced or removed: all 25 at an eighth of the side to
   rank them, then the cheapest, Keyhole and the dearest at the full side, each in wall-clock ms, and a panel's bytes in

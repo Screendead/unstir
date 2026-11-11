@@ -11,7 +11,8 @@ import SwiftUI
 /// taps and with two, on glasses of 1137 px (the iPhone 13 Pro Max's), 1284 and 1471 (the open Duo's upright one); the
 /// glass's own fill (`benchGlass` in Glass.metal) and whirlpool 27's whole frame, that fill under its stack, at 1137 and
 /// 1471; then, at 1284, a plain stack at 0 and 24 entries and every Prism specimen as dealt through the per-channel
-/// shader and, for comparison, the same stack read white through the plain one. Last, Lens's first-open bake on the CPU.
+/// shader and, for comparison, the same stack read white through the plain one; then Lens 01 and 25 on their own panels,
+/// as dealt and with every lens at x8. Last, Lens's first-open bake on the CPU.
 enum GPUBench {
     static var wanted: Bool { ProcessInfo.processInfo.environment["UNSTIR_GPUBENCH"] == "1" }
 
@@ -31,6 +32,9 @@ enum GPUBench {
         var layout: Layout
         var stack: [Twist]
         var masks: [Int: Channels] = [:]
+        var lenses: Set<Int> = []
+        /// The Lens level whose halftone panel the stack samples, in place of `picture`.
+        var panel: Int?
         var channels = false
         var side = Int(points * scale)
         var fourTaps = Float(Tank.fourTaps)
@@ -82,6 +86,17 @@ enum GPUBench {
             }
             textures[key] = t
         }
+        // Lens's first level and its deepest, the only one with four lenses, each on its own panel.
+        let lensLevels = [Level.lens[0], Level.lens[24]]
+        var panels: [Int: MTLTexture] = [:]
+        for level in lensLevels {
+            let panel = Halftone.panel(level.panel)
+            let pixels = await Task.detached(priority: .userInitiated) { panel.pixels(side) }.value
+            let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: side, height: side, mipmapped: false)
+            guard let t = device.makeTexture(descriptor: desc) else { return }
+            t.replace(region: MTLRegionMake2D(0, 0, side, side), mipmapLevel: 0, withBytes: pixels, bytesPerRow: 4 * side)
+            panels[level.panel] = t
+        }
         var outs: [Int: MTLTexture] = [:], fills: [Int: MTLTexture] = [:]
         for s in sides {
             let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: s, height: s, mipmapped: false)
@@ -125,12 +140,20 @@ enum GPUBench {
                               masks: level.masks, channels: true))
             cases.append(Case(name: "\(level.id)-white", picture: level.picture, layout: level.layout, stack: level.scramble))
         }
+        for level in lensLevels {
+            // Every lens zoomed to the deal's limit over the level's twists: the most of the glass a lens magnifies.
+            let x8 = level.scramble.filter { !level.lenses.contains($0.rod) } + level.lenses.sorted().map { Twist(rod: $0, steps: 3) }
+            for (name, stack) in [(level.id, level.scramble), ("\(level.id)-x8", x8)] {
+                cases.append(Case(name: name, picture: level.picture, layout: level.layout, stack: stack, lenses: level.lenses,
+                                  panel: level.panel))
+            }
+        }
 
         var wallClock = false
         /// GPU seconds per frame of `c`: the median over 15 command buffers of 10 dispatches each, after a warm-up.
         func time(_ c: Case) -> Double {
             var (floats, masks) = Unstirred.entries(c.stack.map { ($0.rod, Double($0.steps) * Tank.step) }, layout: c.layout,
-                                                    lenses: [], masks: c.masks)
+                                                    lenses: c.lenses, masks: c.masks)
             let n = floats.count / 4
             if floats.isEmpty { floats = [0, 0, 0, 0]; masks = [7] }
             let cost = Unstirred.channelCost(masks) ?? n
@@ -145,7 +168,7 @@ enum GPUBench {
             let cellBuffer = device.makeBuffer(bytes: cells, length: 4 * cells.count)!
             var glassArgs = GlassArgs(radius: Float(radius), px: Float(2 / (2 * radius * scale)), scale: Float(scale), t: 0)
             let grid = MTLSize(width: c.side, height: c.side, depth: 1), group = MTLSize(width: 16, height: 16, depth: 1)
-            let picture = c.kind == .unstir ? textures[Key(picture: c.picture, side: c.side)] : fills[c.side]
+            let picture = c.panel.map { panels[$0] } ?? (c.kind == .unstir ? textures[Key(picture: c.picture, side: c.side)] : fills[c.side])
             func buffer(_ reps: Int) -> Double {
                 let cb = queue.makeCommandBuffer()!, enc = cb.makeComputeCommandEncoder()!
                 for _ in 0..<reps {
@@ -217,6 +240,14 @@ enum GPUBench {
         say(String(format: "GPUBENCH measured / assumed cost: median %.2f, max %.2f; slowest %@ at %.3f ms of the 8.333 ms a 120 Hz frame has; thermal %@",
                    drift[drift.count / 2], drift.last!, worst.name, worst.ms,
                    heat()))
+
+        for level in lensLevels {
+            let n = level.scramble.count, lenses = level.lenses.count
+            say(String(format: "GPUBENCH %@ %d px: as dealt %d entries %.3f ms, %.1f plain entries' work; its %d lenses at x8 %d entries %.3f ms, %.1f; of %.3f ms at 120 Hz",
+                       level.id, side, n, ms[level.id]!, (ms[level.id]! - base) / entry, lenses,
+                       n - level.scramble.filter { level.lenses.contains($0.rod) }.count + lenses, ms["\(level.id)-x8"]!,
+                       (ms["\(level.id)-x8"]! - base) / entry, frame))
+        }
 
         // Lens's first-open bake, cold: straight from the panel, so no player's cached bake is read, replaced or removed.
         func bake(_ level: Level, _ n: Int) async -> Double {
