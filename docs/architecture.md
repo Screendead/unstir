@@ -435,12 +435,19 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   brightens what is lit, which on bone runs white, so the band is off and an ink ring runs out over it (`Page.wave`).
   The ratchet's dark plate, steel wheel and split-flap cards stay as they are. The clip and the bundle's cut draw on
   the same page.
-- **Payoff.swift** and **PayoffViews.swift** hold three payoffs for finishing a tier or the whole free game, options
+- **Payoff.swift** and **PayoffViews.swift** hold three payoffs for finishing a tier, the whole free game or a paid
+  pack, options
   for Jack to choose between after his call COMPLETION, each only behind the harness's `UNSTIR_PAYOFF=a|b|c`
   (`Payoff.option`, set in `RootView.init`): unset, as on every plain launch, `Game.tierDone` is never set, `Payoff`
   never made, and nothing draws, sounds or is said. With it set, the solve that gives the last of a tier's levels a
   best (`Game.tierDone`, read either side of the save as `completed` is, so once; maelstrom's is the game's, the same
-  solve as `Completion.free`; no pack, daily or run) earns one. `LevelView` plays it between the solve's wave and the
+  solve as `Completion.free`; no daily or run), or that completes a paid pack (`Game.completed`'s `.pack`, so Lens,
+  Escapement and Prism at their planned count), earns one, a pack's as a tier's in the pack's own name and colours
+  (`Payoff.parts`, `Offer.sweep` and `glow`; its tally "18 of 25 clean" under the completion's line, its curtain
+  "25 panels unstirred"). On Escapement's paper (`Payoff.paper`) nothing glows: a's halo is two rings in the plate's
+  vermilion with no second wave, as the shader's would turn the bone white, b's segments are vermilion for clean and
+  ink for solved, and c's veil is bone under a vermilion name and ink. A solved stack is empty, so Prism's glass and
+  Escapement's draw through the plain shader and the whirl's entries need no mask. `LevelView` plays it between the solve's wave and the
   card: `Payoff.lead` (1.1 s) after the solve it takes the screen for `length`, its sounds at their times from the
   set the game has (`cues`: the tier switch's, the heal's notes, the tick, the solve's chime), and the card follows;
   a tap anywhere ends it (`skipPayoff`), and a reset forgets it. Everything it draws is a pure function of the seconds
