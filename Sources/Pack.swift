@@ -287,7 +287,7 @@ extension Level {
                           comment: "Escapement level title, a part of a clock or a word for time"),
                 .hex, "1:-3,4:-2,3:-4,6:+3,1:-2,5:+3,2:-3,1:-1,3:+2", clocks: [1], par: 6),
         // Tempo.
-        problem(7, String(localized: "level.escapement-7.title", defaultValue: "Pause",
+        problem(7, String(localized: "level.escapement-7.title", defaultValue: "Counterweight",
                           comment: "Escapement level title, a part of a clock or a word for time"),
                 .quad, "0:-2,2:+3,1:+2,0:-1,3:-3", clocks: [0], par: 3),
         problem(8, String(localized: "level.escapement-8.title", defaultValue: "Snooze",

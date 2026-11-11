@@ -372,7 +372,7 @@ import XCTest
                      13: " Two clocks tick in turn.", 19: " A wound-back clock ticks the other way.", 25: " Three clocks."]
         XCTAssertEqual(levels.map(\.title), [
             "Mainspring", "Pendulum", "Clock face", "Cogwheel", "Winding key", "Clockwork",
-            "Pause", "Snooze", "Hourglass", "Egg timer", "Stopwatch", "Standstill",
+            "Counterweight", "Snooze", "Hourglass", "Egg timer", "Stopwatch", "Standstill",
             "Twin dials", "Hour hand", "Minute hand", "Metronome", "Chime", "Cuckoo clock",
             "Rewind", "Fall back", "Mirror dial", "Anticlockwise", "Overwound", "Reverse",
             "Moon phase", "Calendar", "Time zones", "Leap year", "Eleventh hour", "Midnight",
