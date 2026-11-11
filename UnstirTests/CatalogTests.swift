@@ -4,8 +4,7 @@ import XCTest
 @testable import Unstir
 
 final class CatalogTests: XCTestCase {
-    /// `scripts/loc-lint.sh` in the suite: every line of Sources/ that scripts/loc-lint/patterns.txt flags is in
-    /// scripts/loc-lint/baseline.txt, and every baseline line is still flagged, so a fix takes its line out.
+    /// `scripts/loc-lint.sh` in the suite: no line of Sources/ is flagged by scripts/loc-lint/patterns.txt.
     func testNoPlayerStringEscapesTheCatalog() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         let lint = root.appending(path: "scripts/loc-lint")
@@ -35,15 +34,7 @@ final class CatalogTests: XCTestCase {
             }
         }
 
-        var left: [String: Int] = [:]
-        for line in try String(contentsOf: lint.appending(path: "baseline.txt"), encoding: .utf8).split(separator: "\n")
-        where !line.hasPrefix("#") {
-            left[String(line), default: 0] += 1
-        }
-        for line in found {
-            if let n = left[line], n > 0 { left[line] = n - 1 } else { XCTFail("escape: \(line)") }
-        }
-        for (line, n) in left where n > 0 { XCTFail("fixed, take it out of the baseline: \(line)") }
+        for line in found { XCTFail("escape: \(line)") }
         XCTAssertGreaterThan(files.count, 40)
     }
 

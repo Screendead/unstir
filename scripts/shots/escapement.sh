@@ -100,10 +100,10 @@ done <<'PLATES'
 30 0:-2,5:3,4:-5,5:4,6:4,5:-3,4:-2,5:-2
 PLATES
 # The alternates drawn for Jack to choose between (EscapementArt.alternate), which no problem draws unless
-# UNSTIR_ESCALT=1: Pause as a pause mark on a dial, and Hourglass with its glass inside the top and bottom rods.
-shot escapement-plate-alt-7-dealt "Escapement 7 as dealt on Pause's alternate plate, a pause mark on a dial without hands." \
+# UNSTIR_ESCALT=1: level 7 as a pause mark on a dial, and Hourglass with its glass inside the top and bottom rods.
+shot escapement-plate-alt-7-dealt "Escapement 7 as dealt on level 7's alternate plate, a pause mark on a dial without hands." \
   PACK=escapement OWNED=escapement LEVEL=7 ESCALT=1
-shot escapement-plate-alt-7-solved "Escapement 7 solved on Pause's alternate plate." \
+shot escapement-plate-alt-7-solved "Escapement 7 solved on level 7's alternate plate." \
   PACK=escapement OWNED=escapement LEVEL=7 PLAYED=3:3,1:-2,2:-3 WAVE=1.85 ESCALT=1
 shot escapement-plate-alt-9-dealt "Escapement 9 as dealt on Hourglass's alternate plate, the glass ending inside the top and bottom rods." \
   PACK=escapement OWNED=escapement LEVEL=9 ESCALT=1

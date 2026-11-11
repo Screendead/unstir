@@ -1035,9 +1035,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   localized, a case change, a hand-made plural, a glyph or a bare number as a key. A line that means it carries
   `// loc: verbatim <why>`: a number, a glyph, a pack's name (never translated, CAT1), or a String already localized
   where it is made, "localized by" that maker, as a `Text` of a String draws it as it is. An announcement takes a
-  String alone, so a literal one is flagged too. `scripts/loc-lint/baseline.txt` lists the escapes still owed, file
-  and line text, none since the chrome's half; each fix takes its line out, and the test fails on an escape or a
-  fixed line left in. First Stir's time ("6:40 am", `StoryScene.clock`, Jack's call F3) is drawn `verbatim:` under
+  String alone, so a literal one is flagged too. No escape is owed since the chrome's half, so the lint and its test keep no
+  baseline and fail on any flagged line. First Stir's time ("6:40 am", `StoryScene.clock`, Jack's call F3) is drawn `verbatim:` under
   the night forwards' glass and a story clip's tank alike, as its form is fixed in English. CATORDER = D split the
   migration: the tables (Levels, Pack, First Stir) and the leaf files first, the chrome (Menu, the play screen and its
   card, Shelf, Consent, Archive) after the design pass. A tier reads in lower case on the menu (`Tier.word`, a key of its
