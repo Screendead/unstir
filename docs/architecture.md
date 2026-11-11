@@ -1131,9 +1131,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   of its own, coming in with the bed's crossfade from its first beat, from which the layer's beats and eighths count
   (`firstBeat`). One loop runs through every level of its pack, never restarted by the next level (Jack, 2026-11-11):
   `Sound.LayerTrack` holds the deck's course apart from the engine, so `SoundTests` drive it, and only another pack's
-  loop starts the deck again. The solve (`LevelView.landSolve`, with the chime) holds the loop to the next beat, then
-  ducks it over 0.5 s as the resolution (`-end`) plays on that beat; it runs on unheard and comes back over the
-  crossfade from the first bar line after the resolution has rung out (`returning`), and plays on into the next level.
+  loop starts the deck again. The solve (`LevelView.landSolve`, with the chime) leaves the loop alone: the resolution (`-end`) plays over it on
+  its next beat, and the loop plays on at its full level through the card and into the next level, never dipped or
+  faded (Jack, 2026-11-11, taking back its drop under the resolution). The loop, its resolution and one-shots peak at no more
+  than -11.5 dB however they meet, far under the effects' -1.2 dBTP ceiling, so the loop needs no duck
+  (`scripts/layer-sum.py`, which also prints what the bed and the solve's other effects add).
+  A loss (Escapement's last clock stopping) plays `spilled` over both and changes neither.
   Prism's swell (`-swell`) starts 0.4 s before the resolution's beat, never before the solve. Escapement B's reed plays the motif a note a move on the next eighth, the note the moves before it (an undo
   takes one back, the demonstration plays none), and lands on D with the solve's chime. The layer follows the music
   switch and steps aside for another app's music with the bed; leaving for the menu or a tier's level takes it out
