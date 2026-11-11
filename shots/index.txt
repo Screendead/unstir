@@ -570,59 +570,59 @@ menu-supporter-off.png  The same with the settings' supporter mark switched off:
 menu-no-supporter.png  The same with nothing owned: no mark.
 settings-editors.png  The editors' build's settings: open every tier, every level and pack too, without buying, under colour letters, off.
 escapement-book-01.png  Escapement 1 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
-escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,1:+3,0:-2,2:-4.
+escapement-book-02.png  Escapement 2 as dealt: tri, clocks 0+, scramble 0:-1,2:+4,0:-1,2:+2,0:-1,1:+3.
 escapement-book-03.png  Escapement 3 as dealt: quad, clocks 0+, scramble 0:-1,1:+3,0:-1,2:-4.
 escapement-book-04.png  Escapement 4 as dealt: quad, clocks 0+, scramble 0:-1,3:+2,0:-2,2:-4,1:-3,0:-1,2:-2.
 escapement-book-05.png  Escapement 5 as dealt: eye, clocks 2+, scramble 2:-2,3:-2,1:-4,2:-2,3:-3,1:+3,2:-1,3:-5.
 escapement-book-06.png  Escapement 6 as dealt: hex, clocks 1+, scramble 1:-3,4:-2,3:-4,6:+3,1:-2,5:+3,2:-3,1:-1,3:+2.
-escapement-book-07.png  Escapement 7 as dealt: quad, clocks 0+, scramble 0:-2,2:+3,1:-2,0:-1.
-escapement-book-08.png  Escapement 8 as dealt: pent, clocks 0+, scramble 0:-1,1:+4,0:-3,2:-4,3:-3,4:-5,0:-1.
-escapement-book-09.png  Escapement 9 as dealt: eye, clocks 2+, scramble 2:-3,0:+3,2:-2,3:+4,0:-3,2:-1,3:+3.
-escapement-book-10.png  Escapement 10 as dealt: pent, clocks 0+, scramble 0:-3,3:+3,2:-3,1:-2,0:-2,1:-4,0:-1,2:+3.
-escapement-book-11.png  Escapement 11 as dealt: pent, clocks 0+, scramble 0:-3,1:+2,0:-2,2:+3,4:+5,0:-2,3:+2,4:-3,0:-1,3:-2.
-escapement-book-12.png  Escapement 12 as dealt: hex, clocks 1+, scramble 1:-2,5:+4,2:+5,1:-2,3:+3,2:-3,1:-2,3:-4,0:-5,1:-1.
-escapement-book-13.png  Escapement 13 as dealt: quad, clocks 0+,2+, scramble 0:-1,2:-2,1:+3,0:-1,2:-1,3:+2.
-escapement-book-14.png  Escapement 14 as dealt: quad, clocks 0+,2+, scramble 0:-1,1:+3,0:-1,3:+3,2:-2,0:-2,3:-3.
-escapement-book-15.png  Escapement 15 as dealt: pent, clocks 0+,2+, scramble 2:-1,3:-4,2:-4,4:-5,0:-2,4:+2,0:-1,4:-5.
-escapement-book-16.png  Escapement 16 as dealt: hex, clocks 1+,4+, scramble 4:-2,2:+5,5:-3,4:-3,6:+4,1:-3,5:+2,4:-1,3:+2.
+escapement-book-07.png  Escapement 7 as dealt: quad, clocks 0+, scramble 0:-2,2:+3,1:+2,0:-1,3:-3.
+escapement-book-08.png  Escapement 8 as dealt: pent, clocks 0+, scramble 0:-3,2:+3,3:+2,4:-5,0:-2,3:-2,1:-4.
+escapement-book-09.png  Escapement 9 as dealt: eye, clocks 2+, scramble 2:-2,3:-3,1:+5,2:-2,3:+4,1:-2,2:-2,3:-5,0:+3.
+escapement-book-10.png  Escapement 10 as dealt: pent, clocks 0+, scramble 0:-4,2:+3,3:+2,2:-3,1:+4,0:-2,2:+3,4:+3.
+escapement-book-11.png  Escapement 11 as dealt: pent, clocks 0+, scramble 0:-6,2:+2,3:+4,2:-2,3:+4,2:-3,1:+3,0:-2,2:+3,4:+5.
+escapement-book-12.png  Escapement 12 as dealt: hex, clocks 1+, scramble 1:-2,3:-3,6:+3,1:-2,5:-2,2:+5,1:-3,3:+5,4:+3,0:+2.
+escapement-book-13.png  Escapement 13 as dealt: quad, clocks 0+,2+, scramble 0:-1,1:+5,2:-1,0:-1,3:+3,2:-1,0:-1,1:-5.
+escapement-book-14.png  Escapement 14 as dealt: quad, clocks 0+,2+, scramble 2:-1,1:+5,2:-1,1:+4,2:-1,0:-1,1:-5,2:-1,0:-1,3:+5.
+escapement-book-15.png  Escapement 15 as dealt: pent, clocks 0+,2+, scramble 2:-4,4:+2,0:-1,4:+5,0:-1,4:-4,0:-2,3:+5,2:-1,1:+5.
+escapement-book-16.png  Escapement 16 as dealt: hex, clocks 1+,4+, scramble 4:-2,2:-2,5:+4,4:-2,6:+2,1:-2,3:-4,4:-2,6:+5,1:-1,0:-3.
 escapement-book-17.png  Escapement 17 as dealt: pent, clocks 0+,1+, scramble 1:-3,3:+4,4:-3,0:-1,3:-5,1:-1,0:-1,4:+2,1:-1,0:-1,3:+5.
 escapement-book-18.png  Escapement 18 as dealt: hex, clocks 1+,2+, scramble 2:-2,6:+2,3:-4,2:-2,4:-2,1:-1,5:+2,2:-1,1:-1,4:+4,2:-1,1:-1,5:-4.
-escapement-book-19.png  Escapement 19 as dealt: tri, clocks 0-, scramble 0:+1,1:-3,0:+2,2:+4.
-escapement-book-20.png  Escapement 20 as dealt: quad, clocks 0+,2-, scramble 2:+1,1:+3,2:+1,1:-3,2:+1,0:-1,1:-4,2:+2,0:-2,1:+5.
-escapement-book-21.png  Escapement 21 as dealt: pent, clocks 0-,2+, scramble 0:+2,3:+2,4:+5,0:+2,3:+3,2:-2,4:-3,0:+2,3:-4,2:-1.
-escapement-book-22.png  Escapement 22 as dealt: hex, clocks 1+,4-, scramble 4:+2,2:-2,5:+3,4:+2,6:-5,1:-2,3:-2,4:+3,6:-5,1:-2,5:+3.
+escapement-book-19.png  Escapement 19 as dealt: tri, clocks 0-, scramble 0:+1,2:+4,0:+1,2:+2,0:+1,1:+3.
+escapement-book-20.png  Escapement 20 as dealt: quad, clocks 0+,2-, scramble 2:+1,1:+5,2:+1,1:+4,2:+1,0:-1,1:-5,2:+1,0:-1,3:+5,2:+1,0:-1,3:+3.
+escapement-book-21.png  Escapement 21 as dealt: pent, clocks 0-,2+, scramble 2:-2,4:+2,3:-3,2:-4,4:-3,0:+1,4:-5,0:+1,4:-3,0:+1,1:-3.
+escapement-book-22.png  Escapement 22 as dealt: hex, clocks 1+,4-, scramble 4:+2,6:+5,3:+4,4:+3,2:+4,1:-1,2:+4,1:-3,5:-2,4:+1,5:+5,4:+1,0:+5.
 escapement-book-23.png  Escapement 23 as dealt: pent, clocks 0-, scramble 0:+2,3:-5,4:-5,0:+3,2:-2,3:+4,4:-3,0:+1,3:-4.
 escapement-book-24.png  Escapement 24 as dealt: hex, clocks 1-, scramble 1:+3,4:-2,5:+4,2:+2,1:+2,3:+3,2:-5,1:+2,3:+2,6:-2.
-escapement-book-25.png  Escapement 25 as dealt: hex, clocks 1+,3+,5+, scramble 1:-2,3:-1,5:-3,0:+3.
-escapement-book-26.png  Escapement 26 as dealt: pent, clocks 0+,2+, scramble 2:-2,4:-3,3:+2,2:-2,4:+3,3:+5,2:-3,0:-2,4:+2,0:-2,3:+3,2:-1,1:+2.
-escapement-book-27.png  Escapement 27 as dealt: pent, clocks 0+, scramble 0:-3,3:-4,2:-5,1:-5,0:-2,1:+2,0:-1,1:+2,0:-2,2:+5,1:-2,0:-1,2:+2.
-escapement-book-28.png  Escapement 28 as dealt: hex, clocks 1+, scramble 1:-2,0:+5,1:-3,4:-5,3:+3,6:+4,1:-2,5:-4,2:+3,1:-2,4:+5,2:+4.
-escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3.
+escapement-book-25.png  Escapement 25 as dealt: hex, clocks 1+,3+,5+, scramble 5:-2,2:+4,3:-1,1:-2,4:+2,5:-1,3:-1,6:-5.
+escapement-book-26.png  Escapement 26 as dealt: pent, clocks 0+,2+, scramble 0:-2,3:-4,4:+3,0:-1,1:-5,0:-2,3:+5,2:-4,4:+3,0:-1,4:-4,0:-1,4:-3,0:-1,4:+5.
+escapement-book-27.png  Escapement 27 as dealt: pent, clocks 0+, scramble 0:-5,3:-2,2:-4,3:-2,2:-2,1:-2,0:-2,2:+2,1:+3,0:-1,1:-4,0:-1,4:+3.
+escapement-book-28.png  Escapement 28 as dealt: hex, clocks 1+, scramble 1:-1,2:-3,1:-3,4:-4,5:-3,2:+3,1:-2,3:-2,6:-2,1:-2,5:-3,6:+5,1:-1,5:+5.
+escapement-book-29.png  Escapement 29 as dealt: hex, clocks 1+,3+,5+, scramble 5:-2,2:-3,0:-5,5:-2,2:+5,4:+5,5:-2,3:-1,1:-1,2:+3,3:-2,1:-1,6:+3,5:-1,1:-2,4:-3,5:-1,3:-1,0:+5.
 escapement-book-30.png  Escapement 30 as dealt: hex, clocks 1+,3+, scramble 1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2.
 escapement-card.png  Escapement's card, owned, scrolled to its levels under the book's five chapter headings.
-escapement-2-ticked.png  Escapement 2 after rod 2 +4 heals: its tick has taken the clock's upper seam from -2 to -1, one tooth on, and the budget's flaps read 02.
-escapement-2-pushed.png  Escapement 2, then rod 1 -3: its tick finds no seam and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
+escapement-2-ticked.png  Escapement 2 after rod 1 -3 heals: its tick has taken the clock's top seam, one tooth on, and the budget's flaps read 02.
+escapement-2-pushed.png  Escapement 2, then a wrong rod 1 +2 over the clock's seam: its tick finds the seam covered and pushes, the vermilion +1, and the tank plays on with 01 tick left, the caption saying That tick can't come back. Undo, or again.
 escapement-dead-tick.png  Escapement 04 after 1:+1, whose tick pushed: +1 stands vermilion and the caption says That tick can't come back. Undo, or again.
-escapement-2-out.png  Escapement 2, then rod 1 -3 and a wait: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
-escapement-2-lost-resumed.png  Escapement 2 reopened on the line that ran it out of ticks (2:+4, 1:-3, a wait): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out.
-escapement-2-won.png  Escapement 2 won in 3: 2:+4, a wait, 1:-3, the last tick emptying the stack.
+escapement-2-out.png  Escapement 2, then rod 1 +2 and rod 1 +1: the last tick spent with twists left, out of ticks. stamped by the clock, the budget's flaps vermilion at 00, the card's undo and again.
+escapement-2-lost-resumed.png  Escapement 2 reopened on the line that ran it out of ticks (1:-3, 1:+2, 1:+1): straight onto the lost card, out of ticks on move 3 with undo and again, the clock's +2 and out of ticks. stamped by it, the budget at 00, no opening or demonstration: the same frame as escapement-2-out.
+escapement-2-won.png  Escapement 2 won in 3: 1:-3, 2:-2, 2:-4, the last tick emptying the stack.
 escapement-2-drag.png  Escapement 2 mid-drag on paper: rod 2 turned +2.6, its disc's hairline, dashes and +3 count in ink.
 escapement-2-wave.png  Escapement 2 solved in 3, its solve wave an ink ring held at radius 0.6 from the last-turned rod.
 escapement-2-back-swipe.png  Escapement 2 held 40% into an edge swipe back: the paper page sliding right over the menu on black, the status bar's glyphs dark across the whole width, the menu's side too.
 escapement-budget-16-dealt.png  Escapement 16 as dealt: 09 ticks, clock 1 owing 3 and clock 4 owing 6.
-escapement-budget-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait, two ticks a move: clock 1 stopped, 03 ticks left.
-escapement-budget-16-late.png  Escapement 16 after 3:-2, 5:-2, a wait, 6:-4 and 5:+3: 01 tick left, clock 4's last.
+escapement-budget-16-mid.png  Escapement 16 after 0:+3, 6:-5 and 3:+4, two ticks a move: clock 1 stopped, 03 ticks left.
+escapement-budget-16-late.png  Escapement 16 after 0:+3, 6:-5, 3:+4, 6:-2 and 5:-4: 01 tick left, clock 4's last.
 escapement-hubs-16-dealt.png  Escapement 16 as dealt: hubs 3 and 6, header 09.
-escapement-hubs-16-mid.png  Escapement 16 after 3:-2, 5:-2 and a wait: clock 1 run out, grey at 0; clock 4 at 3; header 03.
-escapement-hubs-16-wrong.png  Escapement 16 after 3:-2, 5:-2 and a wrong 6:-4: clock 1's last tick pushed, grey at 0 over its +1; clock 4 at 3; header 03.
-escapement-hubs-16-out.png  Escapement 16, the wrong 6:-4 then three waits: both hubs grey at 0, header 00, out of ticks.
+escapement-hubs-16-mid.png  Escapement 16 after 0:+3, 6:-5 and 3:+4: clock 1 run out, grey at 0; clock 4 at 3; header 03.
+escapement-hubs-16-wrong.png  Escapement 16 after 0:+3, 6:-5 and a wrong 2:+1: both ticks pushed, clock 1's its last, grey at 0 over its +1, clock 4 at 3 over its own; header 03.
+escapement-hubs-16-out.png  Escapement 16, the wrong 2:+1 then three more steps of knob 2: both hubs grey at 0, header 00, out of ticks.
 escapement-hubs-22-dealt.png  Escapement 22 as dealt: clock 1 at 4, wound-back clock 4 at 7, its digit unmirrored; header 11.
-escapement-stopped-3-stamp.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look stamp.
-escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look stamp.
-escapement-stopped-3-left.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look left.
-escapement-stopped-17-left.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look left.
-escapement-stopped-3-rings.png  Escapement 3 after a wait and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look rings.
-escapement-stopped-17-rings.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and a wait: both clocks stopped with knob 3's twist left, out of ticks; look rings.
+escapement-stopped-3-stamp.png  Escapement 3 after 2:+1 and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look stamp.
+escapement-stopped-17-stamp.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and 3:-2: both clocks stopped with knob 3's twist left, out of ticks; look stamp.
+escapement-stopped-3-left.png  Escapement 3 after 2:+1 and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look left.
+escapement-stopped-17-left.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and 3:-2: both clocks stopped with knob 3's twist left, out of ticks; look left.
+escapement-stopped-3-rings.png  Escapement 3 after 2:+1 and 1:-3: the clock stopped with knob 1's push and knob 2's seam still on the picture, out of ticks; look rings.
+escapement-stopped-17-rings.png  Escapement 17 after 3:-5, 4:-2, 3:+5, 4:+3 and 3:-2: both clocks stopped with knob 3's twist left, out of ticks; look rings.
 prism-dealt.png  Prism specimen 1 as dealt: red ghosts in the top core, cyan in the left, both over the white bottom stir's shear; the knobs tinted red, cyan and white.
 prism-solved.png  Prism specimen 1 drawn unstirred: the engraving in pure white lines, every channel in register.
 prism-live.png  Prism specimen 1 held mid-drag, the cyan rod 1 turned back +1.5 of its 3: its green and blue ghosts swing towards the red.
@@ -686,7 +686,7 @@ store-06-daily.png  Store 6: today's daily, its result card, share and next dail
 store-07-endless.png  Store 7: endless's first tank with 5 of the brim's 8 notches.
 store-08-prism.png  Store 8: Prism 01, the red stir healed and the cyan held halfway back, its ghosts closing on the white line.
 store-09-lens.png  Store 9: Lens 03, its lens held mid-zoom, dragged down 1.4 steps of the 3 it heals at.
-store-10-escapement.png  Store 10: Escapement 02 after rod 2 +4: its tick landed, the ratchet a tooth on, 02 ticks left.
+store-10-escapement.png  Store 10: Escapement 02 after rod 1 -3: its tick landed, the ratchet a tooth on, 02 ticks left.
 duo-open-level.png  Duo open: plughole 11 five moves in, the tank wholly in the leading half, its header and title above it and its note and controls below, the menu in the trailing half.
 duo-open-result.png  Duo open: plughole 06 solved clean, the card headed by unstirred. over the menu in the trailing half, centred on the tank where it was played.
 duo-open-fullest.png  Duo open: plughole 27's fullest card (new best, again, up a notch locked) whole over the menu in the trailing half.

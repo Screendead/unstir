@@ -14,5 +14,5 @@ shot type-result-xxxl "Level 05's result card at xxxLarge, over par against a st
 shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, whose foot runs under the screen's edge on a Pro Max (the card's rebuild, the pass's fifth change, makes up a notch its one button)." \
   SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0 TYPESIZE=xxxLarge
 shot type-lost-xxxl "Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size." \
-  PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1 TYPESIZE=xxxLarge
+  PACK=escapement LEVEL=2 PLAYED=1:-3,1:2,1:1 TYPESIZE=xxxLarge
 shot type-settings-ax3 "Settings at accessibility3: the title, rows and details scaled, the sheet scrolling." SETTINGS=1 TYPESIZE=accessibility3
