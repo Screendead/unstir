@@ -1129,14 +1129,30 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   lens's core, since at any zoom a lens magnifies both ways only fluid from within 0.58 of its core's radius, and a
   neighbour's twist reaches no nearer than 0.41. `LevelView` bakes it off the main actor at every open and keeps it
   in memory only (no cache: 7 ms for Keyhole and 17 for Lens 25's four lenses on an M2 Max, optimised, against 80
-  for Keyhole's panel; 3.3 MB and 7.8 MB at a Pro Max's glass), and logs each bake. **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons
-  and ovals, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
+  for Keyhole's panel; 3.3 MB and 7.8 MB at a Pro Max's glass), and logs each bake. **LensArt.swift** holds the drawing helpers (`Fill`, `panel`: flat tones in polygons,
+  ovals and rings, the first that holds a point winning) and the table, and **LensArtCloseUp.swift** and its siblings the
   panels, a chapter a file. A panel's clue sits off its lens core's centre, which the knob covers, and is drawn bold
   enough to read at x8 from the bake alone, as every draw but the level's glass shows it; every rod's core on its level holds tone and linework that each step
   moves (`testEveryLensPanelShowsEachStepOnItsLevel`, slow; `scripts/lens-art-sheet.py check` runs the same measure
-  on the Mac). A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
+  on the Mac). A twist must also read without the linework, which is too fine for weak eyes (Jack, from the phone,
+  2026-11-11, of levels 8, 11 and 18): every rod a level twists turns broad shapes of tone, at least two dot pitches
+  across and off its centre, and a lens's frame changes along its length (the spectacles' tortoiseshell, the night
+  sight's dashes), since a neighbour's twist slides a rim along itself and a plain ring hides that.
+  `scripts/lens-art-sheet.py read` measures it, weakest level first: the share of each dealt twist rod's disc whose
+  light, blurred over two pitches so dots and hairlines average away, its weakest step changes (one step, on every
+  rod looked at); the panels under 0.06 were redrawn, a cut-off of Claude's, and 17's rod 2 at 0.06 and 13 and 20 at
+  0.08 are the weakest left. Drawing did not mend the order read on the four-rod glass, where 8, 11 and 18 were dealt: with the same two
+  entries dealt either way round, a lens under a neighbour's twist and over it looked all but alike
+  (Mac renders at the phone's size), as a quad neighbour reaches 16% of the band round the rim. So those three are
+  dealt on tri (29%), no Lens level is on quad, and their lens cores are a flat tone unlike the
+  ground round them (cyan on the page, cyan over magenta cloth, yellow in the dark wood), so a twist dealt over a
+  lens pulls a tail of that tone out of it; `scripts/lens-art-sheet.py order` renders each lens and twist of a level
+  both ways round to look at. `scripts/lens-panels.sh read` also
+  prints, for each lens under a neighbour's disc, the share of the rim's band that three steps of the twist change.
+  A Debug build's harness can name one panel for every level (`UNSTIR_PANEL`).
   `scripts/lens-panels.sh` draws, times and checks a panel on the Mac, and `scripts/lens-art-sheet.py` lays the drawn
-  ones out, as baked and as the game shows them (`shots.sh lens-NN`, `lens-NN-clue`). Prism's plates
+  ones out, as baked and as the game shows them (`shots.sh lens-NN`, `lens-NN-clue`, and `lens-NN-last`, one move from
+  solved). Prism's plates
   (**Engraving.swift**, `Engraving.Plate`: the fern, seed heads, Haeckel's medusae, Haeckel's radiolarians and a
   nautilus, each a `Picture` of its name) are polylines in tank units, baked through `draw` as plughole's are, in white
   lines only, so a channel out of register shows as its colour and an aligned line is white

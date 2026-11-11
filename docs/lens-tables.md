@@ -23,9 +23,14 @@ optimum, row by row; `testLensLevels` pins the table on its own branch and repla
 
 ## Table A: lenses on every rod size (`lens-levels-all`)
 
-The draft table of `docs/lens-design.md` section 2 unchanged: every row already met the rules at x2, and the solver's
-optimum is the depth on all 25. Its lenses sit on tri and eye's big rods (0.58), quad's (0.48), and eye's small rods
-and every hex rod (0.44).
+The draft table of `docs/lens-design.md` section 2, every row of which already met the rules at x2, but for rows 8, 11
+and 18: the draft dealt them on quad (`1:+4,0:+2,3:-3,2:+3,1:-5,0:+1` with lenses 0 and 2, `0:+3,1:+3,2:-4,3:+2,0:-3,3:+1,2:+5`
+with 1 and 3, `1:+3,0:+1,3:-4,2:+2,1:+5,0:+2,3:+3,2:+1,1:-4` with 0 and 2), where a neighbour's disc reaches too little of
+a lens's rim for the order to read (16% of the band round it, against 18 to 22% on eye and 29% on tri). All three are
+on tri at the same depths: 8 keeps its entries, its two twisting rods folded into rod 1 (table B's row 8, on eye, opens
+on a big twist over a lens at +1, which read weakly), and 11 and 18 take table B's rows. The solver's optimum is the
+depth on all 25. Its lenses sit on
+tri and eye's big rods (0.58), and eye's small rods and every hex rod (0.44); no level is on quad.
 
 | # | Issue | Layout | Lens rods | Scramble | Depth | Free | What it adds | Par |
 |---|---|---|---|---|---|---|---|---|
@@ -36,17 +41,17 @@ and every hex rod (0.44).
 | 5 | Close-up | eye | 2 | `0:-4,2:+2,1:+5,3:-3` | 4 | 1 | Mixed sizes; a twist whose disc misses the lens | 4 |
 | 6 | Close-up | eye | 0 | `2:+3,0:+2,1:-4,3:+5,0:+1` | 5 | 1 | A big lens under both kinds of neighbour | 5 |
 | 7 | Cut-in | tri | 0, 1 | `2:+4,0:+2,1:+1` | 3 | 2 | Two whole rims at once: lenses never meet, so either first | 3 |
-| 8 | Cut-in | quad | 0, 2 | `1:+4,0:+2,3:-3,2:+3,1:-5,0:+1` | 6 | 1 | Quad's grazing discs, with twists of 3 or more over each lens | 6 |
+| 8 | Cut-in | tri | 0, 2 | `1:+4,0:+2,1:-3,2:+3,1:-5,0:+1` | 6 | 1 | Two lenses under tri's one twist rod, a faint +1 dealt last over it | 6 |
 | 9 | Cut-in | eye | 2, 3 | `0:+3,2:+2,1:-4,3:+3,0:+2,2:+1` | 6 | 1 | Two small lenses under the big twists | 6 |
 | 10 | Cut-in | tri | 2 | `0:+3,2:+2,1:-5,0:-2,2:+1,1:+4` | 6 | 1 | A long tri, one lens netting +3 | 6 |
-| 11 | Cut-in | quad | 1, 3 | `0:+3,1:+3,2:-4,3:+2,0:-3,3:+1,2:+5` | 7 | 1 |  | 7 |
+| 11 | Cut-in | tri | 1, 2 | `0:+3,1:+2,2:+1,0:-4,2:+2,1:+1,0:+5` | 7 | 1 | Two lenses on tri, one twist rod between them | 7 |
 | 12 | Cut-in | eye | 0, 1 | `2:+3,0:+2,3:-4,1:+3,2:-2,0:+1,3:+5` | 7 | 1 | Both big discs lenses, read only through the small twists | 7 |
 | 13 | Double-take | hex | 1, 4 | `0:+3,1:+2,2:-4,4:+3,6:+2,0:-2,5:+4` | 7 | 1 | Hex: the hub twist reaches every lens | 7 |
 | 14 | Double-take | hex | 2, 5 | `3:-3,2:+2,0:+4,5:+1,6:-3,2:+1,4:+5,5:+2` | 8 | 2 |  | 8 |
 | 15 | Double-take | eye | 2 | `1:+4,2:+1,0:-5,3:+3,2:+2,1:-3,0:+4,3:-2` | 8 | 1 |  | 8 |
 | 16 | Double-take | tri | 0 | `1:+3,0:+1,2:-4,1:-2,0:+1,2:+5,1:+4,0:+1` | 8 | 1 | One lens in three entries of +1, each read from the faintest step | 8 |
 | 17 | Double-take | hex | 1, 3, 5 | `0:+2,1:+3,2:-4,3:+2,4:+3,5:+1,6:-5,0:+4,5:+2` | 9 | 1 | Every other ring rod a lens | 9 |
-| 18 | Double-take | quad | 0, 2 | `1:+3,0:+1,3:-4,2:+2,1:+5,0:+2,3:+3,2:+1,1:-4` | 9 | 1 |  | 9 |
+| 18 | Double-take | tri | 0, 2 | `1:+3,0:+2,2:+1,1:-4,2:+1,1:+2,0:+1,1:-5,2:+1` | 9 | 1 | Two lenses on tri, five lens entries | 9 |
 | 19 | Splash | hex | 0 | `1:+3,0:+2,4:-3,2:+4,0:+1,5:-3,3:+2,6:+4` | 8 | 2 | The hub a lens: every ring twist breaks its rim | 8 |
 | 20 | Splash | hex | 0, 1, 4 | `2:+3,0:+2,1:+3,5:-4,4:+2,3:+4,0:+1,6:-3,2:-2` | 9 | 2 | Hub and ring lenses together | 9 |
 | 21 | Splash | eye | 0, 3 | `2:+4,0:+2,1:-5,3:+2,2:-3,0:+1,1:+4,3:+1,2:+3` | 9 | 2 |  | 9 |

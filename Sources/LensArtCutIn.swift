@@ -81,61 +81,85 @@ extension LensArt {
 
 // MARK: - 8: Spectacles
 
-/// Level 8's name: round spectacles laid across an open book, their lenses over the top right and lower left cores
-/// (quad's two lenses on this level), and under them in the print a bookworm and a pressed clover. Level 8
-/// deals each lens +3 in all.
+/// Level 8's name: round spectacles laid across an open book, their glasses over the top and lower left cores (tri's
+/// two lenses on this level), flat cyan, a bookworm in one and a pressed clover in the other. The print is set in
+/// blocks of tone, a paragraph each, ragged at its ends, and a ribbon lies down the right page, so the rod that twists
+/// turns shapes broad enough to read without the lines; the frames are tortoiseshell, so a twist that drags one shows
+/// along it, and a lens's flat tone shows whole and round when it was dealt last, and bitten, its edge pulled out
+/// across the page, under a twist. Level 8 deals each lens +3 in all.
 extension LensArt {
     static let spectacles: Halftone.Panel = {
-        let a = P(0.3536, -0.3536), b = P(-0.3536, 0.3536)
-        let worm = a + P(0.024, -0.03), clover = b + P(-0.026, -0.03)
+        // Each glass fills its core, so the frames, a core apart less than their width, run into each other at the bridge.
+        let a = P(0, -0.42), b = P(-0.3637, 0.21), inner = 0.348, outer = 0.385
+        let along = simd_normalize(a - b), across = P(-along.y, along.x)
+        let worm = a + P(0.03, -0.04), clover = b + P(-0.026, -0.04)
         let picture = rect(-0.72, -0.62, -0.2, -0.2)
-        var fills = [disc(P(-0.36, -0.36), 0.07, y(0.8)), fill([P(-0.72, -0.2), P(-0.56, -0.44), P(-0.44, -0.3), P(-0.34, -0.4), P(-0.2, -0.2)], c(0.5)),
-                     fill(picture, c(0.2))]
-        for c in [a, b] { fills += [disc(c, 0.3, y(0.14)), disc(c, 0.335, m(0.75))] }
+        let ribbon = bar(P(0.03, -0.9), P(0.22, 0.96), 0.08)
+        // The print's blocks, as (x0, y0, x1, y1): a heading and the plate's caption on the left page, paragraphs on both.
+        let blocks = [(-0.72, -0.82, -0.36, -0.72), (-0.6, -0.14, -0.3, -0.06), (-0.78, 0.02, -0.12, 0.2), (-0.78, 0.2, -0.4, 0.26),
+                      (-0.7, 0.36, -0.12, 0.42), (-0.78, 0.42, -0.12, 0.62), (-0.78, 0.74, -0.3, 0.84),
+                      (0.12, -0.82, 0.78, -0.64), (0.12, -0.64, 0.5, -0.58), (0.2, -0.46, 0.78, -0.4), (0.12, -0.4, 0.78, -0.16),
+                      (0.12, 0.02, 0.78, 0.22), (0.12, 0.22, 0.42, 0.28), (0.2, 0.4, 0.78, 0.46), (0.12, 0.46, 0.78, 0.62),
+                      (0.12, 0.74, 0.56, 0.84)]
+        var fills = [disc(P(-0.52, -0.48), 0.075, y(0.85)), fill([P(-0.72, -0.2), P(-0.56, -0.44), P(-0.44, -0.3), P(-0.3, -0.46), P(-0.2, -0.2)], c(0.8)),
+                     fill(picture, c(0.3))]
+        // The frames are tortoiseshell, yellow let into the magenta an eighth of the way round at a time: a twist slides
+        // a rim along itself, which only a rim that changes along its length shows.
+        let frames = [a, b].flatMap { c in
+            (0..<4).map { fill(sector(c, inner, outer, 90 * Double($0) + 20, 90 * Double($0) + 65), y(0.9)) } + [ring(c, inner, outer, m(0.8))]
+        }
+        fills += [fill(ribbon, Tone(0, 0.45, 0.9))]
+        fills += blocks.map { fill(rect($0.0, $0.1, $0.2, $0.3), m(0.6)) }
         fills += [fill(rect(-0.86, -0.9, 0.86, 0.9), y(0.14)), fill(rect(-0.93, -0.96, 0.93, 0.96), m(0.4))]
 
         var s: [Halftone.Stroke] = []
-        // The book: cover, pages, the gutter, and the lines of print, parted where a clue sits and short at a paragraph's end.
+        // The book: cover, pages, the gutter, and the lines of print in each block, parted where a clue sits.
         s.append(stroke(closed(rect(-0.86, -0.9, 0.86, 0.9)), mid))
-        s.append(stroke([P(0, -0.9), P(0, 0.9)], mid))
-        s.append(stroke(curve(P(-0.06, -0.9), P(-0.02, 0), P(-0.06, 0.9), 12), hair))
-        s.append(stroke(curve(P(0.06, -0.9), P(0.02, 0), P(0.06, 0.9), 12), hair))
-        for row in 0..<27 {
-            let yy = -0.8 + 0.06 * Double(row)
-            for side in [-1.0, 1.0] {
-                if side < 0, yy > -0.68, yy < -0.14 { continue }
-                let short = (row + (side < 0 ? 3 : 0)) % 7 == 6, indent = (row + (side < 0 ? 3 : 0)) % 7 == 0
-                let x0 = side < 0 ? -0.78 : 0.12, x1 = side < 0 ? -0.12 : 0.78
-                let line = span(P(x0, yy), P(x1, yy), 44).filter {
-                    (!short || $0.x < x0 + 0.3) && (!indent || $0.x > x0 + 0.06)
+        /// A line's runs clear of both glasses, each of its segments cut fine enough to stop at a frame.
+        func clear(_ line: [P], _ width: Double) -> [Halftone.Stroke] {
+            let fine = zip(line, line.dropFirst()).flatMap { span($0, $1, 24) }
+            return runs(fine, width) { simd_distance($0, a) > outer && simd_distance($0, b) > outer }
+        }
+        s += clear([P(0, -0.9), P(0, 0.9)], mid)
+        s += clear(curve(P(-0.06, -0.9), P(-0.02, 0), P(-0.06, 0.9), 12), hair)
+        s += clear(curve(P(0.06, -0.9), P(0.02, 0), P(0.06, 0.9), 12), hair)
+        for block in blocks {
+            for yy in stride(from: block.1 + 0.03, to: block.3, by: 0.06) {
+                s += runs(span(P(block.0 + 0.02, yy), P(block.2 - 0.02, yy), 44)) {
+                    simd_distance($0, a) > outer && simd_distance($0, b) > outer && !inside($0, ribbon)
                 }
-                s += runs(line) { simd_distance($0, worm) > 0.05 && simd_distance($0, clover) > 0.05 }
             }
         }
+        for edge in [(ribbon[0], ribbon[1]), (ribbon[3], ribbon[2])] { s += clear([edge.0, edge.1], mid) }
         // The plate on the left page: a hill, a sun.
-        s.append(stroke(closed(picture), mid))
-        s.append(stroke([P(-0.72, -0.2), P(-0.56, -0.44), P(-0.44, -0.3), P(-0.34, -0.4), P(-0.2, -0.2)], hair))
-        s.append(stroke(circle(P(-0.36, -0.5), 0.05, 16), hair))
+        s += clear(closed(picture), mid)
+        s += clear([P(-0.72, -0.2), P(-0.56, -0.44), P(-0.44, -0.3), P(-0.3, -0.46), P(-0.2, -0.2)], hair)
+        s.append(stroke(circle(P(-0.52, -0.48), 0.075, 16), hair))
         // The spectacles: rims, the bridge, and the arms folded out across the right page.
-        s.append(stroke(curve(polar(a, 0.335, 160), P(-0.12, -0.12), polar(b, 0.335, -70), 16), bold))
-        s.append(stroke(curve(polar(a, 0.335, -20), P(0.98, -0.1), P(0.9, 0.42), 20), bold))
-        s.append(stroke(curve(polar(b, 0.335, 110), P(-0.1, 0.98), P(0.42, 0.9), 20), bold))
-        s.append(stroke(arc(P(0.84, 0.42), 0.06, 0, 150, 8), bold))
-        s.append(stroke(arc(P(0.42, 0.84), 0.06, 90, -60, 8), bold))
+        s.append(stroke(curve(polar(a, outer, 160), (a + b) / 2 - across * 0.2, polar(b, outer, 260), 16), bold))
+        s.append(stroke(curve(a + along * outer, a + along * (outer + 0.1) + across * 0.3, a + along * outer + across * 0.75, 20), bold))
+        s.append(stroke(curve(b - along * outer, b - along * (outer + 0.1) + across * 0.3, b - along * outer + across * 0.7, 20), bold))
         for c in [a, b] {
-            s.append(stroke(circle(c, 0.335, 64), bold))
-            s.append(stroke(circle(c, 0.3, 64), mid))
-            s.append(stroke(arc(c, 0.26, 200, 240, 10), mid))
+            s.append(stroke(circle(c, outer, 64), bold))
+            s.append(stroke(circle(c, inner, 64), mid))
+            s.append(stroke(arc(c, 0.3, 200, 240, 10), mid))
         }
         // The bookworm, arched along a line of print, and the clover, four leaves and a stalk.
-        s.append(stroke([worm + P(-0.04, 0.012), worm + P(0.04, 0.012)], 0.002))
+        s.append(stroke([worm + P(-0.09, 0.012), worm + P(0.09, 0.012)], 0.002))
         s.append(stroke(arc(worm + P(-0.006, 0.008), 0.014, 180, 360, 10), 0.006))
         s.append(stroke(circle(worm + P(0.016, 0.003), 0.006, 10), 0.005))
         s.append(stroke([worm + P(0.019, -0.004), worm + P(0.026, -0.013)], 0.0018))
         s.append(stroke([worm + P(0.014, -0.004), worm + P(0.014, -0.014)], 0.0018))
         for k in 0..<4 { s.append(stroke(circle(polar(clover, 0.012, 90 * Double(k) + 20), 0.009, 10), 0.003)) }
         s.append(stroke(curve(clover, clover + P(0.012, 0.02), clover + P(0.004, 0.04), 8), 0.003))
-        return panel("spectacles", fills: fills, strokes: s) { _ in c(0.26) }
+        let under = fills
+        return Halftone.Panel(name: "spectacles", tones: { p in
+            for f in frames where f.holds(p) { return f.tone }
+            // Each lens is flat cyan, so its edge shows against the page wherever a twist drags it.
+            if simd_distance(p, a) < inner || simd_distance(p, b) < inner { return c(0.75) }
+            for f in under where f.holds(p) { return f.tone }
+            return c(0.26)
+        }, strokes: s)
     }()
 }
 
@@ -271,30 +295,39 @@ extension LensArt {
 
 // MARK: - 11: Bifocals
 
-/// Level 11's name: bifocals laid open on the mending, each lens cut across by its reading line. The
-/// lenses lie over the top left and lower right cores (quad's two lenses on this level): under one a needle's eye, the
-/// thread through it, and under the other a button, sewn on with a cross. Level 11 deals each lens +3 in all.
+/// Level 11's name: bifocals laid open on the mending, each lens cut across by its reading line. The cloth is a
+/// ticking, broad stripes that run under the glass, where they show tinted cyan, and across every rim, and the
+/// pincushion sits well off the top rod's centre, so its twist turns shapes that read without the pins and the thread,
+/// and drags each glass's cyan out over the magenta cloth. The lenses lie side by side over the lower left and lower
+/// right cores (tri's two lenses on this level): under one a needle's eye, the thread through it, and under the other
+/// a button, sewn on with a cross. Level 11 deals each lens +3 in all.
 extension LensArt {
     static let bifocals: Halftone.Panel = {
-        let a = P(-0.3536, -0.3536), b = P(0.3536, 0.3536), axis = P(0.7071, 0.7071), down = P(-0.7071, 0.7071)
-        func lens(_ c: P, _ k: Double) -> [P] { squircle(c, 0.33 * k, 0.26 * k, degrees: 45) }
-        func reading(_ c: P) -> [P] { lens(c, 1).filter { simd_dot($0 - c, down) > 0.07 } }
-        let reel = P(-0.44, 0.5), eye = a + P(0.034, -0.02), button = b + P(0.022, -0.024), cushion = P(0.44, -0.44)
+        let a = P(-0.3637, 0.21), b = P(0.3637, 0.21), axis = P(1, 0), down = P(0, 1)
+        func lens(_ c: P, _ k: Double) -> [P] { squircle(c, 0.32 * k, 0.28 * k) }
+        func reading(_ c: P) -> [P] { lens(c, 1).filter { simd_dot($0 - c, down) > 0.09 } }
+        let reel = P(-0.36, -0.56), eye = a + P(0.034, -0.03), button = b + P(0.022, -0.03), cushion = P(0.2, -0.6)
         let arms = [bar(a - axis * 0.4 - down * 0.1, a - axis * 0.4 + down * 0.5, 0.055), bar(b + axis * 0.4 - down * 0.1, b + axis * 0.4 + down * 0.5, 0.055)]
         let bridge = bar(a + axis * 0.3 - down * 0.08, b - axis * 0.3 - down * 0.08, 0.06)
         var fills: [Fill] = []
-        for c in [a, b] { fills += [fill(reading(c), Tone(0, 0.24, 0.3)), fill(lens(c, 1), m(0.24)), fill(lens(c, 1.14), y(0.85))] }
+        for c in [a, b] { fills.append(fill(lens(c, 1.13), y(0.85))) }
+        let readings = [a, b].map { fill(reading($0), Tone(0.8, 0, 0.3)) }, glass = [a, b].map { fill(lens($0, 1), .zero) }
+        // The ticking: a dark stripe 0.13 wide every 0.3, tilted off the level.
+        let cloth: @Sendable (P) -> Tone = { p in
+            let v = (p.y * 0.94 - p.x * 0.34 + 2) / 0.3
+            return m(v - v.rounded(.down) < 0.43 ? 0.66 : 0.2)
+        }
         fills += [fill(bridge, y(0.85)), fill(arms[0], y(0.85)), fill(arms[1], y(0.85)), disc(cushion, 0.17, c(0.6)),
                   fill(rect(reel.x - 0.14, reel.y - 0.17, reel.x + 0.14, reel.y - 0.12), y(0.8)),
                   fill(rect(reel.x - 0.14, reel.y + 0.12, reel.x + 0.14, reel.y + 0.17), y(0.8)),
                   fill(rect(reel.x - 0.1, reel.y - 0.12, reel.x + 0.1, reel.y + 0.12), c(0.7)),
-                  fill([P(0.2, 1), P(0.46, 0.74), P(0.6, 0.86), P(0.78, 0.6), P(1, 0.7), P(1, 1)], c(0.4))]
+                  fill([P(-0.2, 1), P(-0.1, 0.66), P(0.06, 0.78), P(0.2, 0.62), P(0.34, 1)], c(0.4))]
 
         var s: [Halftone.Stroke] = []
         // The mending: a hem's stitches, a patch pinked along its edge, and pins.
-        s += dashes(P(-0.96, -0.2), P(-0.5, -0.9), 12, mid)
-        s.append(stroke([P(0.2, 1), P(0.46, 0.74), P(0.6, 0.86), P(0.78, 0.6), P(1, 0.7)], mid))
-        for (at, t) in [(P(-0.1, 0.8), -30.0), (P(0.84, 0.1), 60.0), (P(-0.8, 0.1), 10.0)] {
+        s += dashes(P(0.96, -0.2), P(0.5, -0.9), 12, mid)
+        s.append(stroke([P(-0.2, 1), P(-0.1, 0.66), P(0.06, 0.78), P(0.2, 0.62), P(0.34, 1)], mid))
+        for (at, t) in [(P(0.02, 0.86), -30.0), (P(0.66, -0.36), 60.0), (P(-0.8, -0.28), 10.0)] {
             s.append(stroke([at, polar(at, 0.16, t)], hair))
             s.append(stroke(circle(at, 0.016, 8), mid))
         }
@@ -304,13 +337,13 @@ extension LensArt {
         for k in 0..<7 { s.append(stroke([P(reel.x - 0.1, reel.y - 0.1 + 0.035 * Double(k)), P(reel.x + 0.1, reel.y - 0.085 + 0.035 * Double(k))], hair)) }
         s.append(stroke([P(reel.x - 0.1, reel.y - 0.12), P(reel.x - 0.1, reel.y + 0.12)], mid))
         s.append(stroke([P(reel.x + 0.1, reel.y - 0.12), P(reel.x + 0.1, reel.y + 0.12)], mid))
-        let thread = curve(reel + P(0.1, -0.1), P(0.1, 0.3), P(-0.02, -0.1), 20) + curve(P(-0.02, -0.1), P(-0.12, -0.42), eye, 16)
+        let thread = curve(reel + P(0.1, -0.1), P(0.1, -0.5), P(-0.04, -0.2), 20) + curve(P(-0.04, -0.2), P(-0.2, 0.06), eye, 16)
             + curve(eye, eye + P(0.06, 0.03), eye + P(0.1, -0.06), 10) + curve(eye + P(0.1, -0.06), eye + P(0.14, -0.16), eye + P(0.26, -0.12), 10)
         s.append(stroke(thread, hair))
         // A pincushion, ribbed like a tomato, pins in it.
         s.append(stroke(circle(cushion, 0.17, 32), bold))
         for k in 0..<6 { s.append(stroke(curve(cushion, polar(cushion, 0.11, 60 * Double(k) + 35), polar(cushion, 0.17, 60 * Double(k) + 10), 8), hair)) }
-        for (t, r) in [(-70.0, 0.26), (-20, 0.3), (40, 0.24), (200, 0.27)] {
+        for (t, r) in [(-100.0, 0.24), (-30, 0.26), (70, 0.26), (170, 0.27)] {
             s.append(stroke([polar(cushion, 0.06, t), polar(cushion, r, t)], hair))
             s.append(stroke(circle(polar(cushion, r, t), 0.016, 8), mid))
         }
@@ -318,7 +351,7 @@ extension LensArt {
         for q in arms { s.append(stroke(closed(q), bold)) }
         s.append(stroke(closed(bridge), bold))
         // The bifocals: bridge, nose pads, rims and the reading line across each lens.
-        for side in [-1.0, 1.0] { s.append(stroke(ellipse(axis * (side * 0.1) + down * 0.07, 0.025, 0.045, degrees: 45 + side * 25, 12), mid)) }
+        for side in [-1.0, 1.0] { s.append(stroke(ellipse(P(side * 0.05, 0.36), 0.02, 0.04, degrees: side * 25, 12), mid)) }
         for c in [a, b] {
             s.append(stroke(closed(lens(c, 1.14)), bold))
             s.append(stroke(closed(lens(c, 1)), mid))
@@ -335,7 +368,15 @@ extension LensArt {
         for (dx, dy) in [(-1.0, -1.0), (1, -1), (1, 1), (-1, 1)] { s.append(stroke(circle(button + P(dx, dy) * 0.008, 0.003, 6), 0.003)) }
         s.append(stroke([button + P(-0.008, -0.008), button + P(0.008, 0.008)], 0.002))
         s.append(stroke([button + P(0.008, -0.008), button + P(-0.008, 0.008)], 0.002))
-        return panel("bifocals", fills: fills, strokes: s) { _ in m(0.24) }
+        let under = fills
+        return Halftone.Panel(name: "bifocals", tones: { p in
+            // The reading segments first, then the cloth through the rest of each glass, tinted cyan, under which no
+            // frame shows.
+            for f in readings where f.holds(p) { return f.tone }
+            for f in glass where f.holds(p) { return cloth(p) + c(0.5) }
+            for f in under where f.holds(p) { return f.tone }
+            return cloth(p)
+        }, strokes: s)
     }()
 }
 

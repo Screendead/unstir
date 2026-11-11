@@ -145,11 +145,16 @@ enum LensArt {
         var polygon: [P] = []
         var centre = P(0, 0)
         var radii: P?
+        /// The share of an ellipse's radii left empty at its middle, which makes it a ring.
+        var hole = 0.0
         var lo: P, hi: P
 
         func holds(_ p: P) -> Bool {
             guard p.x >= lo.x, p.y >= lo.y, p.x <= hi.x, p.y <= hi.y else { return false }
-            if let radii { return simd_length_squared((p - centre) / radii) < 1 }
+            if let radii {
+                let d = simd_length_squared((p - centre) / radii)
+                return d < 1 && d >= hole * hole
+            }
             return Halftone.inside(p, polygon)
         }
     }
@@ -162,6 +167,17 @@ enum LensArt {
 
     static func oval(_ c: P, _ rx: Double, _ ry: Double, _ tone: Tone) -> Fill {
         Fill(tone: tone, centre: c, radii: P(rx, ry), lo: c - P(rx, ry), hi: c + P(rx, ry))
+    }
+
+    /// The part of a ring about c between a0 and a1 degrees, as a polygon.
+    static func sector(_ c: P, _ inner: Double, _ outer: Double, _ a0: Double, _ a1: Double) -> [P] {
+        arc(c, outer, a0, a1, 12) + arc(c, inner, a1, a0, 12)
+    }
+
+    static func ring(_ c: P, _ inner: Double, _ outer: Double, _ tone: Tone) -> Fill {
+        var f = disc(c, outer, tone)
+        f.hole = inner / outer
+        return f
     }
 
     /// A panel of fills, the first that holds a point giving its tone, over `ground`.

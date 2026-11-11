@@ -10,7 +10,16 @@ Usage: scripts/lens-art-sheet.py proof <out dir> <level>...   each level's panel
                                                               its lenses magnified (scripts/shots.sh lens-NN),
                                                               over the level's name
        scripts/lens-art-sheet.py clues                        NN=stack for each drawn level, for scripts/shots/lens.sh
-       scripts/lens-art-sheet.py check [level...]             scripts/lens-panels.sh check, each drawn panel on its level"""
+       scripts/lens-art-sheet.py lasts                        NN=the entry dealt first on each level, all that is left
+                                                              one move from solved (docs/lens-tables.md's table A)
+       scripts/lens-art-sheet.py read [level...]              scripts/lens-panels.sh read, each level's dealt twist rods on
+                                                              its panel: the share of the weakest rod's disc that its
+                                                              weakest step changes in coarse light, weakest level first
+       scripts/lens-art-sheet.py check [level...]             scripts/lens-panels.sh check, each drawn panel on its level
+       scripts/lens-art-sheet.py order <out.png> <level>...   the order read: a row for each lens of each level and each
+                                                              rod dealt a twist that reaches it, the first entry dealt on
+                                                              each, the two alone on the panel, lens on top then twist on
+                                                              top, as the Mac bakes them at a phone's 430 px, unscaled"""
 import os
 import subprocess
 import sys
@@ -26,17 +35,17 @@ LEVELS = {
     5: ("goggles", "Goggles", "eye", "2", "2:+2"),
     6: ("spyglass", "Spyglass", "eye", "0", "0:+2"),
     7: ("binoculars", "Binoculars", "tri", "0,1", "0:+2,1:+1"),
-    8: ("spectacles", "Spectacles", "quad", "0,2", "0:+2,2:+2"),
+    8: ("spectacles", "Spectacles", "tri", "0,2", "0:+2,2:+2"),
     9: ("sunglasses", "Sunglasses", "eye", "2,3", "2:+2,3:+2"),
     10: ("pinhole", "Pinhole", "tri", "2", "2:+2"),
-    11: ("bifocals", "Bifocals", "quad", "1,3", "1:+2,3:+2"),
+    11: ("bifocals", "Bifocals", "tri", "1,2", "1:+2,2:+2"),
     12: ("glasses3d", "3D glasses", "eye", "0,1", "0:+2,1:+2"),
     13: ("porthole", "Porthole", "hex", "1,4", "1:+2,4:+2"),
     14: ("periscope", "Periscope", "hex", "2,5", "2:+2,5:+2"),
     15: ("telescope", "Telescope", "eye", "2", "2:+2"),
     16: ("eyepiece", "Eyepiece", "tri", "0", "0:+2"),
     17: ("microscope", "Microscope", "hex", "1,3,5", "1:+2,3:+2,5:+2"),
-    18: ("nightvision", "Night vision", "quad", "0,2", "0:+2,2:+2"),
+    18: ("nightvision", "Night vision", "tri", "0,2", "0:+2,2:+2"),
     19: ("camera", "Camera", "hex", "0", "0:+2"),
     20: ("shutter", "Shutter", "hex", "0,1,4", "0:+2,1:+2,4:+2"),
     21: ("viewfinder", "Viewfinder", "eye", "0,3", "0:+2,3:+2"),
@@ -53,6 +62,17 @@ RODS = {
             (-0.485, 0.28, 0.44), (-0.485, -0.28, 0.44)],
 }
 PLATEAU = 0.6
+
+
+def dealt():
+    """Each level's layout, lens rods and scramble, from table A of docs/lens-tables.md."""
+    table = open(os.path.join(os.path.dirname(__file__), "../docs/lens-tables.md")).read().split("## Table A")[1].split("## Table B")[0]
+    rows = {}
+    for line in table.splitlines():
+        cells = [c.strip() for c in line.split("|")]
+        if len(cells) > 6 and cells[1].isdigit():
+            rows[int(cells[1])] = (cells[3], cells[4].replace(" ", ""), cells[5].strip("`"))
+    return rows
 
 
 def bake(panel, path, side, *stirred):
@@ -139,10 +159,59 @@ def sheet(out, levels):
     image.save(out)
 
 
+def order(out, levels):
+    from PIL import Image, ImageDraw
+    side, cell, pad, head = 430, 240, 6, 18
+    rows, table = [], dealt()
+    os.makedirs("build/lens-art", exist_ok=True)
+    for n in levels:
+        layout, lenses, scramble = table[n]
+        lenses = [int(k) for k in lenses.split(",")]
+        entries = [(int(e.split(":")[0]), e) for e in scramble.split(",")]
+        for lens in lenses:
+            at = next(i for i, (k, _) in enumerate(entries) if k == lens)
+            lx, ly, lr = RODS[layout][lens]
+            for rod, (tx, ty, tr) in enumerate(RODS[layout]):
+                dealt_twists = [e for k, e in entries if k == rod]
+                if rod in lenses or not dealt_twists or ((tx - lx) ** 2 + (ty - ly) ** 2) ** 0.5 >= tr + PLATEAU * lr:
+                    continue
+                twist = dealt_twists[0]
+                cx, cy = (lx + 0.25 * (tx - lx) + 1) * side / 2, (ly + 0.25 * (ty - ly) + 1) * side / 2
+                box = (int(cx - cell / 2), int(cy - cell / 2), int(cx + cell / 2), int(cy + cell / 2))
+                crops = []
+                for label, stack in (("lens on top", f"{twist},{entries[at][1]}"), ("twist on top", f"{entries[at][1]},{twist}")):
+                    path = f"build/lens-art/order-{n:02d}-{lens}-{rod}-{label.split()[0]}.png"
+                    bake(LEVELS[n][0], path, side, layout, ",".join(map(str, lenses)), stack)
+                    crops.append((f"{n} {layout} {stack}: {label}", Image.open(path).convert("RGB").crop(box)))
+                rows.append(crops)
+    image = Image.new("RGB", (2 * (cell + pad) + pad, len(rows) * (cell + head + pad) + pad), "black")
+    draw = ImageDraw.Draw(image)
+    for r, crops in enumerate(rows):
+        for c, (label, crop) in enumerate(crops):
+            x, y = pad + c * (cell + pad), pad + r * (cell + head + pad)
+            draw.text((x, y), label, fill="white", font=font(11))
+            image.paste(crop, (x, y + head))
+    image.save(out)
+
+
 def main():
     mode, args = (sys.argv[1] if len(sys.argv) > 1 else ""), sys.argv[2:]
     if mode == "clues":
         print(" ".join(f"{n:02d}={LEVELS[n][4]}" for n in sorted(LEVELS)))
+    elif mode == "lasts":
+        print(" ".join(f"{n:02d}={row[2].split(',')[0]}" for n, row in sorted(dealt().items())))
+    elif mode == "read":
+        rows, scores = dealt(), []
+        for n in [int(a) for a in args] or sorted(LEVELS):
+            layout, lenses, scramble = rows[n]
+            out = subprocess.run(["scripts/lens-panels.sh", "read", LEVELS[n][0], layout, lenses, scramble],
+                                 capture_output=True, text=True, check=True).stdout.strip().splitlines()
+            rods = [(min(map(float, line.split(": ")[1].split())), line.split()[1]) for line in out if line.startswith("rod")]
+            if not rods:  # level 1 deals only its lens
+                continue
+            scores.append((min(rods)[0], n, layout, " ".join(f"{k}:{share:.2f}" for share, k in rods)))
+        for score, n, layout, rods in sorted(scores):
+            print(f"{score:.2f}  {n:02d} {LEVELS[n][1]:<17}{layout:<5}{rods}")
     elif mode == "check":
         failed = False
         for n in [int(a) for a in args] or sorted(LEVELS):
@@ -151,6 +220,8 @@ def main():
             print(f"{n:02d} {panel}: {done.stdout.strip().splitlines()[-1]}")
             failed = failed or done.returncode != 0
         sys.exit(1 if failed else 0)
+    elif mode == "order" and len(args) > 1:
+        order(args[0], [int(a) for a in args[1:]])
     elif mode == "proof" and len(args) > 1:
         proof(args[0], [int(a) for a in args[1:]])
     elif mode == "sheet" and len(args) > 1:

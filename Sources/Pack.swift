@@ -149,7 +149,7 @@ enum Pack: String, CaseIterable, Sendable {
 extension Level {
     /// Lens's 25 panels, each on its own halftone panel once that is drawn (`panel`, `LensArt.levels`) and on the test
     /// panel until then, `docs/lens-tables.md`'s table A: the draft table with lenses on rods
-    /// of every size. A rod is a lens or a twist for the whole level; every dealt lens entry magnifies by 1 to 3 steps
+    /// of every size, but for 8, 11 and 18, moved off the four-rod glass. A rod is a lens or a twist for the whole level; every dealt lens entry magnifies by 1 to 3 steps
     /// and each lens nets at most +3. No entry merges as it is dealt, and par is the depth (`testLensLevels`), the
     /// solver's optimum (`testLensParIsTheOptimum`).
     static let lens: [Level] = [
@@ -174,7 +174,7 @@ extension Level {
         (.tri, [0, 1], "2:+4,0:+2,1:+1",
          String(localized: "level.lens-7.title", defaultValue: "Binoculars",
                 comment: "Lens level title, a lens or a way of seeing")),
-        (.quad, [0, 2], "1:+4,0:+2,3:-3,2:+3,1:-5,0:+1",
+        (.tri, [0, 2], "1:+4,0:+2,1:-3,2:+3,1:-5,0:+1",
          String(localized: "level.lens-8.title", defaultValue: "Spectacles",
                 comment: "Lens level title, a lens or a way of seeing")),
         (.eye, [2, 3], "0:+3,2:+2,1:-4,3:+3,0:+2,2:+1",
@@ -183,7 +183,7 @@ extension Level {
         (.tri, [2], "0:+3,2:+2,1:-5,0:-2,2:+1,1:+4",
          String(localized: "level.lens-10.title", defaultValue: "Pinhole",
                 comment: "Lens level title, a lens or a way of seeing")),
-        (.quad, [1, 3], "0:+3,1:+3,2:-4,3:+2,0:-3,3:+1,2:+5",
+        (.tri, [1, 2], "0:+3,1:+2,2:+1,0:-4,2:+2,1:+1,0:+5",
          String(localized: "level.lens-11.title", defaultValue: "Bifocals",
                 comment: "Lens level title, a lens or a way of seeing")),
         (.eye, [0, 1], "2:+3,0:+2,3:-4,1:+3,2:-2,0:+1,3:+5",
@@ -204,7 +204,7 @@ extension Level {
         (.hex, [1, 3, 5], "0:+2,1:+3,2:-4,3:+2,4:+3,5:+1,6:-5,0:+4,5:+2",
          String(localized: "level.lens-17.title", defaultValue: "Microscope",
                 comment: "Lens level title, a lens or a way of seeing")),
-        (.quad, [0, 2], "1:+3,0:+1,3:-4,2:+2,1:+5,0:+2,3:+3,2:+1,1:-4",
+        (.tri, [0, 2], "1:+3,0:+2,2:+1,1:-4,2:+1,1:+2,0:+1,1:-5,2:+1",
          String(localized: "level.lens-18.title", defaultValue: "Night vision",
                 comment: "Lens level title, a lens or a way of seeing")),
         (.hex, [0], "1:+3,0:+2,4:-3,2:+4,0:+1,5:-3,3:+2,6:+4",
