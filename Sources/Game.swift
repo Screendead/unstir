@@ -731,7 +731,7 @@ final class Game {
             if storesProgress { Sync.shared.saved() }
             if shut, let up, up.isOpen() {
                 opened = up
-                if up == .whirlpool { Review.shared.pending = true }
+                if up == .whirlpool { Review.shared.earned = true }
             }
             completed = done == nil ? completion : nil
         }
@@ -739,7 +739,6 @@ final class Game {
         guard !replaying else { return }
         close()
         Analytics.shared.finished(self)
-        GameCenter.shared.report()
     }
 
     /// A solve or a spill clears the try's save. A tank out of ticks keeps it, its losing move too, which `record` passed

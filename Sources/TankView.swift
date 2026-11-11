@@ -928,6 +928,8 @@ struct LevelView: View {
             }
         }
         .onChange(of: beside && showResult, initial: true) { onCover($1) }
+        // From the start too: a level opened on its card, as the harness solves one, has shown it.
+        .onChange(of: showResult, initial: true) { if showResult { Carded.shown() } }
         .task(id: noteLit) {
             guard noteLit, (try? await Task.sleep(for: .seconds(4))) != nil else { return }
             withAnimation(.easeOut(duration: 0.6)) { noteLit = false }
@@ -1066,6 +1068,8 @@ struct LevelView: View {
             endPath(); endTwist()
             if knocks { Knock.rest() }
             Awake.hold(awakeID, false)
+            // A level left before its card showed.
+            Carded.shown()
             Log.write("level \(game.level.id) exits \(state)")
         }
     }
