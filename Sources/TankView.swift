@@ -584,6 +584,16 @@ struct LevelView: View {
         }
         .font(.ui(.headline, .medium))
         .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .topLeading) {
+            // In the gap above the title, so a pack level's tank sits where every other level's does.
+            if let pack = game.level.pack {
+                // The way out already names the pack, so this stays the size the title's 18 pt gap holds.
+                Text(pack.name.uppercased()).font(.ui(.eyebrow)).tracking(2).dynamicTypeSize(.large)
+                    .foregroundStyle(game.level.colour).opacity(0.75)
+                    .offset(y: -TypeRole.eyebrow.line(at: .large).height - 2)
+                    .accessibilityHidden(true)
+            }
+        }
         .padding(.top, 18)
         .modifier(Unseen(clean))
     }

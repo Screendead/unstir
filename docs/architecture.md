@@ -419,7 +419,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   1 by place under `Pack.id`; a `Level` names its `pack`. A pack's name is never translated (Jack's call CAT1 = A);
   its levels' titles, chapters, rules and notes are `String(localized:)` keyed by id (`level.lens-1.title`,
   `chapter.prism.1`), and Escapement's stipulation is its budget sentence, a key, or on a chapter's opener that
-  sentence and the chapter's rule as one key (`rule.escapement.1`), so a translator sees them together. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) and its way out names the pack, the one place the play screen does (Jack, 2026-11-10: the name over the title too read as doubled): it reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
+  sentence and the chapter's rule as one key (`rule.escapement.1`), so a translator sees them together. A pack's level plays in its pack's glow (`Level.colour`, the result card's accent) with the pack's name small above its title, and its way out reads "‹ Lens" (`Level.back`), as it goes back to the card, whose own reads "‹ menu" ("✕ close" beside the list in a wide window, or over a result card beside the menu), or "‹ Triptych" when the bundle's card opened it (`PackCard.backTo`), pinned over the card's scroll so it shows at every scroll position (Jack's call C1B = A, round 16). A pack's undo spends the shared bank like any other, but
   puts back the stack as the move found it, marks and tags and all, from `Game`'s snapshot of the stack as each stir
   began; the free tiers' commits the stir's negation (`testAPackUndoPutsTheStackBackWhole`). No pack best ever opens a tier. `PackTests` pins every stored
   level id, product id and storage key as literals, so never rename one. `Pack.access` says whether a level plays: the taste
@@ -596,7 +596,8 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   A result or lost card taller than the column leaves under the caption (plughole 27's fullest at xxxLarge on a Pro
   Max) steps its own type down a size at a time, never below the default, until it fits (`LevelView.card`), so the
   glass keeps the size it was played at; one still too tall, as the fullest is on the shortest phones at the default
-  size, scrolls. The gear stops at xxxLarge, where its 44 pt target still holds it; and the menu hands its type size
+  size, scrolls. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
+  default size, as the title's 18 pt gap holds no more and the way out names the pack; and the menu hands its type size
   to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
   `TypeRole.line` gives a role's line height as `Text` lays it out (a text style's font, whose leading grows faster than
   its size), which `PlayLayout.Chrome` and the caption's two lines use. The game's own text stays fixed (`Font.game`):
