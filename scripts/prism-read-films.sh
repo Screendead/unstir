@@ -16,7 +16,7 @@ python3 - "${trials[@]}" <<'PY'
 import sys
 from PIL import Image, ImageDraw, ImageFont
 words = {"today": "today", "a": "the other colours dim", "b": "white only", "c": "out of register dims",
-         "d": "own colour, white on overlap", "e": "own colour, white in register"}
+         "d": "own colour, white on overlap", "e": "own colour, white fades in near"}
 font = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 26)
 im = Image.new("RGBA", (1080, 1080), (0, 0, 0, 0))
 d = ImageDraw.Draw(im)

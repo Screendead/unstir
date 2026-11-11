@@ -18,7 +18,7 @@ out, move, variants = args[0], args[1], args[2:] or ["today"]
 tags = ["rest", "short10", "short5", "on", "past5", "past10"]
 holds = ["in hand, unturned", "1 short", "half short", "on the count", "half past", "1 past"]
 words = {"today": "today", "a": "the other colours dim", "b": "white only", "c": "out of register dims",
-         "d": "own colour, white on overlap", "e": "own colour, white in register"}
+         "d": "own colour, white on overlap", "e": "own colour, white fades in near"}
 font = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 15)
 side, gap = 400, 6
 sheet = Image.new("RGB", (len(tags) * (side + gap) - gap, len(variants) * (side + gap) - gap), (40, 40, 40))
