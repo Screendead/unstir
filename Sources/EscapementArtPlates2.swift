@@ -334,7 +334,7 @@ extension EscapementArt {
     }
 
     /// Problem 15, pent: the minute hand, long and slight, from its boss at the foot of the plate between the rods to
-    /// the minute track at three minutes past, the hour hand in outline beside it.
+    /// the minute track at three minutes past, the hour hand in outline beside it and its point on the track drawn large.
     static func plate15() -> Plate {
         var plate = Plate(), works = Plate()
         let o = P(0, 0.80), up = -Double.pi / 2, heading = up + 18 * deg
@@ -365,10 +365,26 @@ extension EscapementArt {
         plate.line(arc(o, 0.055), fine)
         plate.line(turned(box(P(-0.024, -0.024), P(0.024, 0.024)), by: 0.3).map { $0 + o }, medium)
 
+        // The lance's point on the track, large: twelve's mark, four minutes after it and the point on the third.
+        let at = P(-0.47, -0.62), radius = 0.23, tip = polar(o, 1.63, heading)
+        plate.line(arc(tip, 0.075), fine)
+        plate.line([tip + 0.075 * simd_normalize(at - tip), at + radius * simd_normalize(tip - at)], fine)
+        plate.fill(arc(at, radius))
+        plate.lines(hatch([arc(at, radius)], angle: -1.0, gap: 0.045).flatMap { dashed($0, on: 0.05, off: 0.025) }, fine)
+        cut(&plate, [P(-0.185, -0.135), P(0.185, -0.135), P(0.228, -0.02), P(-0.228, -0.02)].map { $0 + at }, medium)
+        for k in 0...4 {
+            let x = -0.15 + 0.075 * Double(k)
+            plate.line([at + P(x, -0.135), at + P(x, k == 0 ? -0.02 : -0.055)], k == 0 ? heavy : medium)
+        }
+        let point = [P(0.03, 0.19), P(0.02, 0.06), P(0.075, -0.075), P(0.13, 0.06), P(0.12, 0.19)].map { $0 + at }
+        plate.fill(point)
+        plate.lines(hatch([point], angle: -0.5, gap: 0.014), fine, .second)
+        plate.line(point, heavy)
+        plate.line(arc(at, radius), heavy)
+
         callout(&plate, "A", from: polar(o, 0.62, heading) + P(0.02, 0.005), to: P(0.62, 0.18))
         callout(&plate, "B", from: P(-0.1, -0.08), to: P(-0.5, 0.12))
-        callout(&plate, "C", from: P(-0.35, -0.745), to: P(-0.3, -0.44))
-        callout(&plate, "D", from: o + P(0.3, -0.1), to: P(0.62, 0.55))
+        callout(&plate, "C", from: o + P(0.3, -0.1), to: P(0.62, 0.55))
         return plate
     }
 
