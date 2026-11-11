@@ -744,19 +744,27 @@ struct LevelView: View {
         }
     }
 
-    private var controls: some View {
-        HStack {
-            // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats too.
-            // An empty bank only says when it refills, so it only taps.
-            UnstirButton(.secondary, effect: spent ? .tap : .undo, dim: game.history.isEmpty || spent) {
-                if settling { undoQueued = true } else { undo() }
-            } label: {
-                if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
+    /// Undo and reset. Where the row can't hold undo beside "reset? tap again" on a line each, undo steps aside while
+    /// reset is armed, until the reset is made or lapses, so no label wraps and the row keeps its height.
+    private func controls(_ layout: PlayLayout) -> some View {
+        let undoLabel = game.level.sandbox ? String(localized: "undo") : String(localized: "undo \u{00B7} \(game.bank)")
+        let alone = armedAt != nil
+            && !PlayLayout.rowHolds([undoLabel, String(localized: "reset? tap again")], width: layout.chromePane.width,
+                                    type: playType)
+        return HStack {
+            if !alone {
+                // Only a turn of the tank swings back: animated, a rod's undo would glide the stack's shader floats
+                // too. An empty bank only says when it refills, so it only taps.
+                UnstirButton(.secondary, effect: spent ? .tap : .undo, dim: game.history.isEmpty || spent) {
+                    if settling { undoQueued = true } else { undo() }
+                } label: {
+                    if game.level.sandbox { Text("undo") } else { Text("undo \u{00B7} \(game.bank)") }
+                }
+                    .accessibilityLabel(game.level.sandbox ? Text("Undo", comment: "VoiceOver: the undo button") // loc: verbatim each a key
+                                        : Text("Undo, \(game.bank) left", comment: "VoiceOver: the undo button. Undos left"))
+                    .disabled(game.history.isEmpty)
+                    .overlay(alignment: .topTrailing) { refillBadge }
             }
-                .accessibilityLabel(game.level.sandbox ? Text("Undo", comment: "VoiceOver: the undo button") // loc: verbatim each a key
-                                    : Text("Undo, \(game.bank) left", comment: "VoiceOver: the undo button. Undos left"))
-                .disabled(game.history.isEmpty)
-                .overlay(alignment: .topTrailing) { refillBadge }
             Spacer()
             resetControl
         }
@@ -829,7 +837,7 @@ struct LevelView: View {
                     .modifier(PlayPart.chrome(read: 2))
                 swatches.modifier(PlayPart.chrome(read: 1))
                 Spacer(minLength: 12)
-                controls.modifier(PlayPart.chrome(read: 0))
+                controls(layout).modifier(PlayPart.chrome(read: 0))
                 if besideMenu && layout.kind == .split {
                     Color.clear.accessibilityHidden(true)
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(RootView.space)) } action: { onMenu($0) }
@@ -1077,6 +1085,8 @@ struct LevelView: View {
                      action: tapReset) {
             if armedAt == nil { Text("reset") } else { Text("reset? tap again") }
         }
+            // Its row never holds less than its one line: an armed reset has the row where undo can't share it.
+            .fixedSize()
             .accessibilityLabel(armedAt == nil ? Text("Reset", comment: "VoiceOver: the reset button") // loc: verbatim each a key
                                 : Text("Reset, tap again to confirm", comment: "VoiceOver: the reset button, armed"))
             .disabled(settling)

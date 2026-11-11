@@ -364,7 +364,9 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   launch's level saves (`storesResume`), and a harnessed launch reads none but `UNSTIR_RESUME`'s. `Level.print` is
   spelt out, never through a description, and pinned (`testThePrintNeverChanges`): a change drops every save. With moves played, the play screen's reset takes a second tap: the first only taps and
   arms it, "reset? tap again", for 2 s (`ResetArm`; under VoiceOver until focus leaves it), and any move, undo or
-  finish disarms it; the cards' "again" resets
+  finish disarms it; where the row can't hold undo beside the armed label on a line each (`PlayLayout.rowHolds`: an
+  SE, or the widest phone at the largest play type) undo steps aside while it is armed, so the label never wraps and
+  the row, and the tank over it, never move (`testAnArmedResetHasTheRowWhereUndoCantShareIt`); the cards' "again" resets
   at once (Jack's call C12, round 13). The opening (L1 to L3's stirs played forward at 0.2 s a step, then a beat on the
   stirred picture; every other level's wind-in) skips on a tap anywhere; a touch on the tank skips it as it lands and
   takes up what it landed on, and one that skips Escapement's demonstration holds nothing. A level counts as started
