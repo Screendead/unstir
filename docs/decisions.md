@@ -426,6 +426,7 @@ Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
 | LENSPANELS = B | 2026-11-11 | The 25 panels ship (#157 merged), Telephoto is redrawn, and Jack plays them on the phone to confirm. | HANDOFF |
 | LENSCOVER = B | 2026-11-11 | Lens's face is Kaleidoscope: "Kaleidoscope wins." | HANDOFF |
 | LENSSOFT = B | 2026-11-11 | A lens's core is drawn finer so x8 is crisp. Jack: "It's a paid pack. Laziness for expediency is unacceptable. I respect my future players." | HANDOFF |
+| SND1 taken back | 2026-11-11 | Jack: "i kinda miss the sound that went with the rod-turning haptics...can you quickly put that back in?" A rod's drag ticks at each step again, under its haptic; SND1 = B (2026-11-02) no longer holds. The tank's clunk stays silent (snd1-clunk = B). | architecture |
 
 ## Dated, no round
 
