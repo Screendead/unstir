@@ -370,17 +370,18 @@ extension EscapementArt {
         return plate
     }
 
-    /// Problem 7, quad: a clock stopped, its two weights hanging level and still between the knobs: the pause mark.
+    /// Problem 7, quad: a clock stopped, its two weights hanging level and still inside the four knobs, in a pause
+    /// mark's proportions.
     static func pause() -> Plate {
         var plate = Plate()
-        let half = 0.085, top = -0.34, bottom = 0.56, sheave = 0.062
-        let cases = [-0.15, 0.15].map { box(P($0 - half, top), P($0 + half, bottom)) }
-        let pulleys = [-0.15, 0.15].map { P($0, top - 0.17) }
+        let half = 0.1, top = -0.25, bottom = 0.27, sheave = 0.062
+        let cases = [-0.16, 0.16].map { box(P($0 - half, top), P($0 + half, bottom)) }
+        let pulleys = [-0.16, 0.16].map { P($0, top - 0.17) }
         tint(&plate, angle: 0.5, around: cases + pulleys.map { arc($0, sheave) })
-        for (x, pulley) in zip([-0.15, 0.15], pulleys) {
+        for (x, pulley) in zip([-0.16, 0.16], pulleys) {
             // A round case is ruled closer towards its edges.
-            for k in -10...10 {
-                let dx = half * sin(deg(8.4 * Double(k)))
+            for k in -13...13 {
+                let dx = half * sin(deg(6.6 * Double(k)))
                 plate.line([P(x + dx, top), P(x + dx, bottom)], fine)
             }
             plate.line(box(P(x - half, top), P(x + half, bottom)), heavy)
@@ -404,7 +405,7 @@ extension EscapementArt {
         plate.lines(hatch([[P(-0.03, 0.72), P(0.03, 0.72), P(0, 0.8)]], angle: 0.6, gap: 0.009), fine, .second)
         plate.line([P(-0.03, 0.72), P(0.03, 0.72), P(0, 0.8), P(-0.03, 0.72)], medium, .second)
 
-        letter(&plate, "A", from: P(-0.215, 0.1), at: P(-0.68, 0.0))
+        letter(&plate, "A", from: P(-0.26, 0.05), at: P(-0.7, 0.0))
         letter(&plate, "B", from: pulleys[1] + P(0.045, -0.03), at: P(0.62, -0.62))
         letter(&plate, "C", from: P(0.03, 0.75), at: P(0.3, 0.8))
         return plate
