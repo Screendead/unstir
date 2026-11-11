@@ -1,5 +1,6 @@
 // Copyright © 2026 Jack Lusher. All rights reserved.
 
+import simd
 import XCTest
 @testable import Unstir
 
@@ -818,10 +819,9 @@ import XCTest
         XCTAssertFalse(sequence(first: Picture.grid, next: \.next).prefix(Picture.allCases.count).contains(.engineTurned))
     }
 
-    /// The plate is ink on bone, and reads up in every core: a 30-degree step of any core of every layout moves most of
-    /// its ink, so a turned core never looks as plausible as the clean one.
-    func testThePlateIsInkOnBoneAndShowsAStepInEveryCore() async throws {
-        let rendered = await Picture.engineTurned.render(side: 512, scale: 1)
+    /// A plate's bake, a problem's own or with 0 the shared one, as RGBX rows from the top.
+    private func baked(_ problem: Int, side: CGFloat = 512, scale: CGFloat = 1) async throws -> (px: [UInt8], w: Int) {
+        let rendered = await Picture.engineTurned.render(side: side, scale: scale, panel: problem)
         let image = try XCTUnwrap(rendered?.cgImage)
         let w = image.width
         var px = [UInt8](repeating: 0, count: 4 * w * w)
@@ -829,39 +829,114 @@ import XCTest
                                           space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                           bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
         ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: w))
-        let r = Double(w) / 2
+        return (px, w)
+    }
+
+    /// A plate reads up in every core of `layout`: over a tenth of each is inked, and a 30-degree step moves most of
+    /// that ink onto paper, so a turned core never looks as plausible as the clean one. Ink is read off green, which
+    /// the second ink darkens too.
+    private func assertAStepShows(_ plate: (px: [UInt8], w: Int), in layout: Layout, _ name: String) {
+        let w = plate.w, r = Double(w) / 2
         func inked(_ x: Double, _ y: Double) -> Bool {
             let i = Int(r + x * r), j = Int(r + y * r)
-            return i >= 0 && j >= 0 && i < w && j < w && px[4 * (j * w + i)] < 0x87
+            return i >= 0 && j >= 0 && i < w && j < w && plate.px[4 * (j * w + i) + 1] < 0x87
         }
+        for (k, rod) in layout.rods.enumerated() {
+            let core = rod.z * Tank.plateau, step = 2 / Double(w)
+            var inside = 0, on = 0, moved = 0
+            for y in stride(from: -core, through: core, by: step) {
+                for x in stride(from: -core, through: core, by: step) where x * x + y * y <= core * core {
+                    inside += 1
+                    guard inked(rod.x + x, rod.y + y) else { continue }
+                    on += 1
+                    let c = cos(Tank.step), s = sin(Tank.step)
+                    if !inked(rod.x + c * x - s * y, rod.y + s * x + c * y) { moved += 1 }
+                }
+            }
+            let at = "\(name) \(layout.rawValue) rod \(k)"
+            XCTAssertGreaterThan(Double(on) / Double(inside), 0.1, at)
+            XCTAssertGreaterThan(Double(moved) / Double(max(on, 1)), 0.5, at)
+        }
+    }
+
+    /// The shared plate is ink on bone, and reads up in every core of every layout.
+    func testThePlateIsInkOnBoneAndShowsAStepInEveryCore() async throws {
+        let plate = try await baked(0)
         // Every pixel is bone, ink or a mix of the two, and some are ink: a grey or vermilion stroke fails.
         XCTAssertFalse(Self.boneToInk(0xD8, 0x40, 0x2A))
         XCTAssertFalse(Self.boneToInk(0x80, 0x80, 0x80))
         var darkest = 0xFF
-        for i in stride(from: 0, to: px.count, by: 4 * 97) {
-            let (red, green, blue) = (Int(px[i]), Int(px[i + 1]), Int(px[i + 2]))
+        for i in stride(from: 0, to: plate.px.count, by: 4 * 97) {
+            let (red, green, blue) = (Int(plate.px[i]), Int(plate.px[i + 1]), Int(plate.px[i + 2]))
             XCTAssert(Self.boneToInk(red, green, blue), "\(red) \(green) \(blue)")
             darkest = min(darkest, red)
         }
         XCTAssertLessThan(darkest, 0x30)
-        for layout in Layout.allCases {
-            for (k, rod) in layout.rods.enumerated() {
-                let core = rod.z * Tank.plateau, step = 2 / Double(w)
-                var inside = 0, on = 0, moved = 0
-                for y in stride(from: -core, through: core, by: step) {
-                    for x in stride(from: -core, through: core, by: step) where x * x + y * y <= core * core {
-                        inside += 1
-                        guard inked(rod.x + x, rod.y + y) else { continue }
-                        on += 1
-                        let c = cos(Tank.step), s = sin(Tank.step)
-                        if !inked(rod.x + c * x - s * y, rod.y + s * x + c * y) { moved += 1 }
-                    }
-                }
-                let at = "\(layout.rawValue) rod \(k)"
-                XCTAssertGreaterThan(Double(on) / Double(inside), 0.1, at)
-                XCTAssertGreaterThan(Double(moved) / Double(max(on, 1)), 0.5, at)
-            }
+        for layout in Layout.allCases { assertAStepShows(plate, in: layout, "shared") }
+    }
+
+    /// Jack's call (2026-11-11): each problem plays on a plate of its own, drawn as its name. The play screen alone
+    /// asks for it, by the problem's number; a problem with none drawn yet keeps the shared plate, as every miniature
+    /// does.
+    func testEachProblemAsksForItsOwnPlate() {
+        for (i, level) in Level.escapement.enumerated() {
+            XCTAssertEqual(level.plate, i + 1, level.id)
+            XCTAssertEqual(level.panel, 0, level.id)
         }
+        XCTAssertEqual((-1...99).filter { EscapementArt.plate($0) != nil }, Array(1...Level.escapement.count))
+        for level in Pack.lens.levels + Tier.allCases.flatMap(\.levels) { XCTAssertEqual(level.plate, level.panel, level.id) }
+    }
+
+    /// Each plate drawn is ink on bone but for one small part in the second ink, whose marks a circle 0.4 of the tank
+    /// across its middle holds and which colours under 3% of the glass, so the clocks' vermilion still reads; and it
+    /// reads up in every core of its own problem's layout. Baked as an SE draws its glass at default type, 328 pt at
+    /// 2x (`testEveryIPhoneKeepsTodaysColumn`'s sizes), where the 2.2 px hairline is heavier against the picture than
+    /// on any other phone and close hatching soonest runs solid; the shared plate's 512 px at 1x is heavier than any.
+    func testEveryProblemsPlateIsInkOnBoneWithOneSmallPartInTheSecondInk() async throws {
+        XCTAssertLessThan(Self.offPlate(0xD8, 0x40, 0x2A).off, 1)
+        XCTAssertGreaterThan(Self.offPlate(0x80, 0x80, 0x80).off, 6)
+        XCTAssertGreaterThan(Self.offPlate(0x23, 0x46, 0x6B).off, 6)
+        for level in Level.escapement {
+            guard let drawn = EscapementArt.plate(level.plate) else { continue }
+            XCTAssertEqual(drawn.second, EscapementArt.vermilion, level.id)
+            let second = drawn.marks.filter { $0.ink == .second }.flatMap(\.points)
+            if let first = second.first {
+                let low = second.reduce(first) { simd_min($0, $1) }, high = second.reduce(first) { simd_max($0, $1) }
+                XCTAssertLessThan(second.map { simd_distance($0, (low + high) / 2) }.max() ?? 0, 0.4, level.id)
+            }
+            let plate = try await baked(level.plate, side: 328, scale: 2), w = plate.w, r = Double(w) / 2
+            var darkest = 0xFF, glass = 0, coloured = 0, worst = 0.0
+            for j in 0..<w {
+                for i in 0..<w where (Double(i) - r) * (Double(i) - r) + (Double(j) - r) * (Double(j) - r) < r * r {
+                    let k = 4 * (j * w + i), (red, green, blue) = (Int(plate.px[k]), Int(plate.px[k + 1]), Int(plate.px[k + 2]))
+                    let mix = Self.offPlate(red, green, blue)
+                    worst = max(worst, mix.off)
+                    darkest = min(darkest, red)
+                    glass += 1
+                    if mix.second > 0.5 { coloured += 1 }
+                }
+            }
+            XCTAssertLessThan(darkest, 0x30, level.id)
+            // An edge where ink crosses the second ink lies up to 8 off their mixes; a neutral grey lies 12.7 off.
+            XCTAssertLessThanOrEqual(worst, 9, level.id)
+            XCTAssertLessThan(Double(coloured) / Double(glass), 0.03, level.id)
+            assertAStepShows(plate, in: level.layout, level.id)
+        }
+    }
+
+    /// How far a pixel lies, in levels of 255, from the nearest mix of bone, ink and the second ink, and the second
+    /// ink's share of that mix.
+    static func offPlate(_ red: Int, _ green: Int, _ blue: Int) -> (off: Double, second: Double) {
+        let bone = SIMD3(243.0, 234, 216), ink = SIMD3(26.0, 26, 26) - bone
+        let second = SIMD3(Double(EscapementArt.vermilion >> 16 & 0xFF), Double(EscapementArt.vermilion >> 8 & 0xFF), Double(EscapementArt.vermilion & 0xFF)) - bone
+        let p = SIMD3(Double(red), Double(green), Double(blue)) - bone
+        // The least-squares shares of ink and second ink, then held to the triangle.
+        let (aa, ab, bb) = (simd_dot(ink, ink), simd_dot(ink, second), simd_dot(second, second))
+        let det = aa * bb - ab * ab
+        var s = (simd_dot(p, ink) * bb - simd_dot(p, second) * ab) / det, t = (simd_dot(p, second) * aa - simd_dot(p, ink) * ab) / det
+        (s, t) = (max(s, 0), max(t, 0))
+        if s + t > 1 { (s, t) = (s / (s + t), t / (s + t)) }
+        return (simd_length(p - s * ink - t * second), t)
     }
 
     /// How far a pixel lies from the line between bone and ink, in levels of 255: its mix is read off red, the widest

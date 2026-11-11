@@ -35,11 +35,18 @@ struct Unstirred: ViewModifier, Animatable {
     /// The committed work drawn with four taps, nil for the glass's static limit (`Tank.fourTaps(pixels:)`). Never
     /// animated: only `Taps` moves it, at a still moment.
     var budget: Int?
+    /// Lens: the panel's detail, which `unstirLens` draws where a lens magnifies, and its share against the bake, 0
+    /// while the layer is not yet the lit panel, as the detail is drawn past the layer and would not strike with it.
+    var fine: Fine?
+    var crisp = 0.0
     @Environment(\.displayScale) private var scale
 
-    nonisolated var animatableData: AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>> {
-        get { AnimatablePair(AnimatablePair(liveAngle, wind), AnimatablePair(haze, turn)) }
-        set { (liveAngle, wind, haze, turn) = (newValue.first.first, newValue.first.second, newValue.second.first, newValue.second.second) }
+    nonisolated var animatableData: AnimatablePair<AnimatablePair<AnimatablePair<Double, Double>, AnimatablePair<Double, Double>>, Double> {
+        get { AnimatablePair(AnimatablePair(AnimatablePair(liveAngle, wind), AnimatablePair(haze, turn)), crisp) }
+        set {
+            let four = newValue.first
+            (liveAngle, wind, haze, turn, crisp) = (four.first.first, four.first.second, four.second.first, four.second.second, newValue.second)
+        }
     }
 
     func body(content: Content) -> some View {
@@ -62,6 +69,9 @@ struct Unstirred: ViewModifier, Animatable {
         if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
             shader.prism = TankShader.Prism(masks: channels, cost: cost, isolate: isolate, tint: tint)
+        } else if let fine, crisp > 0, !lenses.isEmpty {
+            shader.fine = fine
+            shader.fine?.table[Fine.share] = Float(min(crisp, 1))
         }
         return content.layerEffect(shader.shader, maxSampleOffset: CGSize(width: side, height: side))
     }
@@ -84,6 +94,8 @@ struct TankShader {
     var wave = SIMD3<Float>(0, 0, -1)
     var turn = 0.0
     var prism: Prism?
+    /// `unstirLens`' own, in place of `unstir`; never with `prism`.
+    var fine: Fine?
 
     /// `unstirChannels`' own: each entry's mask (a `Channels` raw value), the work in entries held against `fourTaps`,
     /// and the channel drawn alone in `tint`.
@@ -94,7 +106,7 @@ struct TankShader {
         var tint: SIMD3<Float>
     }
 
-    var name: String { prism == nil ? "unstir" : "unstirChannels" }
+    var name: String { prism != nil ? "unstirChannels" : fine != nil ? "unstirLens" : "unstir" }
 
     var parameters: [(name: String, argument: Shader.Argument)] {
         // The shader reads min(n, count / 4) entries, so an empty stack's pad reads none.
@@ -107,6 +119,7 @@ struct TankShader {
         list += [("fourTaps", .float(fourTaps)), ("plateau", .float(plateau)), ("swirlPlateau", .float(swirlPlateau)),
                  ("lensEdge", .float(lensEdge)), ("scale", .float(scale)), ("haze", .float(haze)),
                  ("wave", .float3(wave.x, wave.y, wave.z)), ("turn", .float(turn))]
+        if let fine, prism == nil { list += [("atlas", .image(fine.atlas)), ("fine", .floatArray(fine.table))] }
         if let prism {
             list += [("isolate", .float(Float(prism.isolate?.rawValue ?? 0))),
                      ("tint", .float3(prism.tint.x, prism.tint.y, prism.tint.z))]
@@ -115,6 +128,29 @@ struct TankShader {
     }
 
     var shader: Shader { Shader(function: ShaderFunction(library: .default, name: name), arguments: parameters.map(\.argument)) }
+}
+
+/// A halftone panel's detail (`Halftone.Detail`) as the shader takes it: the atlas as an image, made once, and its
+/// table.
+struct Fine {
+    /// The table's float that scales the detail's weight.
+    static let share = 5
+
+    let atlas: Image
+    var table: [Float]
+    /// The atlas's bytes, for the log.
+    let bytes: Int
+
+    init?(_ detail: Halftone.Detail) {
+        guard let provider = CGDataProvider(data: Data(detail.pixels) as CFData),
+              let image = CGImage(width: detail.width, height: detail.height, bitsPerComponent: 8, bitsPerPixel: 32,
+                                  bytesPerRow: 4 * detail.width, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                  bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
+                                  provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent) else { return nil }
+        atlas = Image(decorative: image, scale: 1)
+        table = detail.table
+        bytes = detail.pixels.count
+    }
 }
 
 extension Unstirred {
@@ -180,7 +216,8 @@ struct PictureLayer: View {
     /// A live picture: the level's seed and its clock in seconds.
     var seed = 0
     var clock = 0.0
-    /// The halftone's panel: a Lens level's number (`Level.panel`), 0 for the test panel.
+    /// The halftone's panel, a Lens level's number (`Level.panel`), 0 for the test panel; or on the play screen an
+    /// Escapement problem's number (`Level.plate`).
     var panel = 0
     /// When the picture lands and starts to strike, for whatever strikes with it.
     var onStrike: () -> Void = {}

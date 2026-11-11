@@ -117,14 +117,15 @@ enum Picture: String, CaseIterable {
         if sibling == .neurons { await Self.buildWeb(seed: seed) }
     }
 
-    /// `panel` is the Lens level whose halftone panel to bake (`Level.panel`), 0 for the test panel.
+    /// `panel` is the Lens level whose halftone panel to bake (`Level.panel`), 0 for the test panel, or the Escapement
+    /// problem whose plate to draw (`Level.plate`), 0 for the shared one.
     @MainActor
     func render(side: CGFloat, scale: CGFloat, panel: Int = 0) async -> UIImage? {
         if self == .halftone {
             let n = Int((side * scale).rounded())
             return await Task.detached(priority: .userInitiated) { Self.halftone(n, scale: scale, panel: panel) }.value
         }
-        let r = ImageRenderer(content: Canvas { ctx, size in draw(ctx, r: size.width / 2, scale: scale) }
+        let r = ImageRenderer(content: Canvas { ctx, size in draw(ctx, r: size.width / 2, scale: scale, panel: panel) }
             .frame(width: side, height: side))
         r.scale = scale
         r.isOpaque = true
@@ -205,7 +206,7 @@ enum Picture: String, CaseIterable {
         return c <= 0.0031308 ? 12.92 * c : 1.055 * pow(c, 1 / 2.4) - 0.055
     }
 
-    private func draw(_ ctx: GraphicsContext, r: CGFloat, scale: CGFloat) {
+    private func draw(_ ctx: GraphicsContext, r: CGFloat, scale: CGFloat, panel: Int) {
         func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r + x * r, y: r + y * r) }
         func rect(_ x0: Double, _ y0: Double, _ x1: Double, _ y1: Double) -> Path {
             Path(CGRect(x: r + x0 * r, y: r + y0 * r, width: (x1 - x0) * r, height: (y1 - y0) * r))
@@ -366,7 +367,7 @@ enum Picture: String, CaseIterable {
             }
 
         case .engineTurned:
-            Self.engineTurning(ctx, r: r, scale: scale)
+            Self.engineTurning(ctx, r: r, scale: scale, problem: panel)
 
         // Drawn by their shaders or `Halftone`, never here.
         case .glass, .chainmail, .coral, .neurons, .marbling, .glassTwin, .chainmailTwin, .coralTwin, .neuronsTwin,

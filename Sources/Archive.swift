@@ -45,21 +45,21 @@ enum Archive {
 
         var word: String {
             switch self {
-            case .clean: "clean"
-            case .par: "par"
+            case .clean: String(localized: "clean", comment: "The archive's mark for a day solved with nothing wasted")
+            case .par: String(localized: "par", comment: "The archive's mark for a day solved at par")
             case let .over(n): "+\(n)"
-            case .tried: "tried"
+            case .tried: String(localized: "tried", comment: "The archive's mark for a day started, with no best")
             case .unplayed: ""
             }
         }
 
         var spoken: String {
             switch self {
-            case .clean: "clean"
-            case .par: "at par"
-            case let .over(n): "\(n) over par"
-            case .tried: "tried"
-            case .unplayed: "not played"
+            case .clean: String(localized: "clean", comment: "VoiceOver: a row's best, solved with nothing wasted")
+            case .par: String(localized: "at par", comment: "VoiceOver: a row's best")
+            case let .over(n): String(localized: "\(n) over par", comment: "VoiceOver: an archive day's best. Moves over par")
+            case .tried: String(localized: "tried", comment: "VoiceOver: a row started, with no best")
+            case .unplayed: String(localized: "not played", comment: "VoiceOver: a menu row with no best")
             }
         }
 
@@ -67,11 +67,11 @@ enum Archive {
 
         @ViewBuilder var text: some View {
             switch self {
-            case .clean: Text(word).fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3)
-            case .par: Text(word).foregroundStyle(Color.amber)
-            case .over: Text(word).foregroundStyle(Color.magenta)
-            case .tried: Text(word).foregroundStyle(Color.text3)
-            case .unplayed: Text(" ")
+            case .clean: Text(word).fontWeight(.semibold).foregroundStyle(Color.lime).shadow(color: .lime, radius: 3) // loc: verbatim localized by word
+            case .par: Text(word).foregroundStyle(Color.amber) // loc: verbatim localized by word
+            case .over: Text(verbatim: word).foregroundStyle(Color.magenta)
+            case .tried: Text(word).foregroundStyle(Color.text3) // loc: verbatim localized by word
+            case .unplayed: Text(verbatim: " ")
             }
         }
     }
@@ -105,8 +105,11 @@ struct ArchiveRow: View {
                     if said {
                         Text("unlocked by purchasing any pack").font(.ui(.detail)).foregroundStyle(Color.amber).transition(.opacity)
                     } else {
-                        Text(!known ? "\(days) past dailies" : open ? "\(days) past dailies \u{00B7} \(atPar) at par"
-                             : "\(days) past dailies \u{00B7} comes with any pack")
+                        (!known ? Text("\(days) past dailies", comment: "The menu's archive row. Past dailies")
+                            : open ? Text("\(days) past dailies \u{00B7} \(atPar) at par",
+                                          comment: "The menu's archive row. Past dailies, then how many are at par")
+                            : Text("\(days) past dailies \u{00B7} comes with any pack",
+                                   comment: "The menu's archive row, shut until a purchase. Past dailies"))
                             .font(.ui(.detail)).foregroundStyle(Color.text2).transition(.opacity)
                     }
                 }
@@ -114,7 +117,7 @@ struct ArchiveRow: View {
                 Spacer(minLength: 8)
                 if known && !open { Image(systemName: "lock").font(.ui(.detail)).foregroundStyle(Color.text4) }
             }
-            .padding(.vertical, 11)
+            .padding(.vertical, 12)
             .contentShape(Rectangle())
             .keyframeAnimator(initialValue: 0.0, trigger: taps) { row, x in
                 row.offset(x: reduceMotion ? 0 : x)
@@ -180,9 +183,9 @@ struct ArchiveView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     let back = PackCard.back(to: PackCard.menu, beside: beside)
-                    Button(action: onBack) { Text(back.text).font(.ui(.button)).hit() }
-                        .buttonStyle(Sounding()).padding(.top, 18)
-                        .accessibilityLabel(back.spoken)
+                    UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) } // loc: verbatim localized by PackCard.back
+                        .padding(.top, 18)
+                        .accessibilityLabel(back.spoken) // loc: verbatim localized by PackCard.back
                     Text("PAST DAILIES").font(.ui(.eyebrow)).tracking(2).foregroundStyle(Color.text3).padding(.top, 26)
                     Text("Archive").font(.ui(.display)).tracking(2)
                         .foregroundStyle(Tier.plughole.sweep).shadow(color: Color.amber.opacity(0.55), radius: 10)
@@ -240,7 +243,7 @@ struct ArchiveView: View {
         let inMonth = days.indices.filter { calendar.isDate(days[$0].date, equalTo: month, toGranularity: .month) }
         VStack(alignment: .leading, spacing: 10) {
             // Named on the Gregorian calendar its days are laid out on, whatever calendar the phone reads dates in.
-            Text(month.formatted(Date.FormatStyle(calendar: calendar).month(.wide).year()).uppercased())
+            Text(verbatim: month.formatted(Date.FormatStyle(calendar: calendar).month(.wide).year()).localizedUppercase)
                 .font(.ui(.detail, .semibold)).tracking(2).foregroundStyle(Color.text3)
                 .accessibilityAddTraits(.isHeader)
             if typeSize.isAccessibilitySize {
@@ -262,7 +265,7 @@ struct ArchiveView: View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
         return LazyVGrid(columns: columns, spacing: 4) {
             ForEach(0 ..< 7, id: \.self) { k in
-                Text(symbols[(k + calendar.firstWeekday - 1) % 7]).font(.ui(.detail)).foregroundStyle(Color.text3)
+                Text(verbatim: symbols[(k + calendar.firstWeekday - 1) % 7]).font(.ui(.detail)).foregroundStyle(Color.text3)
                     .accessibilityHidden(true)
             }
             ForEach(0 ..< lead, id: \.self) { _ in Color.clear.frame(height: 1).accessibilityHidden(true) }
@@ -274,13 +277,13 @@ struct ArchiveView: View {
                     // Outside the archive: today, whose daily is on the menu, or a day it doesn't reach.
                     let isToday = calendar.isDate(date, inSameDayAs: today)
                     VStack(spacing: 3) {
-                        Text("\(d)").font(.ui(.label)).foregroundStyle(isToday ? Color.text3 : Color.text4)
-                        Text(isToday ? "today" : " ").font(.ui(.detail)).foregroundStyle(Color.amber).opacity(0.5)
+                        Text(d, format: .number).font(.ui(.label)).foregroundStyle(isToday ? Color.text3 : Color.text4)
+                        (isToday ? Text("today", comment: "The archive's grid: today, whose daily is on the menu") : Text(verbatim: " ")).font(.ui(.detail)).foregroundStyle(Color.amber).opacity(0.5)
                             .lineLimit(1).minimumScaleFactor(0.6)
                     }
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(isToday ? "Today. Its daily is on the menu." : "")
+                    .accessibilityLabel(Text("Today. Its daily is on the menu.", comment: "VoiceOver: the archive's grid, on today"))
                     .accessibilityHidden(!isToday)
                 }
             }
@@ -288,10 +291,10 @@ struct ArchiveView: View {
     }
 
     private func cell(_ i: Int, mark: Archive.Mark) -> some View {
-        let (date, level) = days[i]
+        let (date, level) = days[i], day = calendar.component(.day, from: date)
         return Button { onPlay(level) } label: {
             VStack(spacing: 3) {
-                Text("\(calendar.component(.day, from: date))").font(.ui(.label, mark == .unplayed ? .regular : .medium))
+                Text(day, format: .number).font(.ui(.label, mark == .unplayed ? .regular : .medium))
                     .opacity(mark == .unplayed ? 0.8 : 1)
                 mark.text.font(.ui(.detail)).lineLimit(1).minimumScaleFactor(0.6)
             }
@@ -312,7 +315,7 @@ struct ArchiveView: View {
         let (date, level) = days[i]
         return Button { onPlay(level) } label: {
             HStack(alignment: .firstTextBaseline) {
-                Text(date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))).font(.ui(.body))
+                Text(date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated)).font(.ui(.body))
                 Spacer(minLength: 8)
                 mark.text.font(.ui(.detail))
             }

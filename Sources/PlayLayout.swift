@@ -36,12 +36,13 @@ struct PlayLayout: Equatable {
     }
 
     /// The split's chrome round the tank, in points, from the level's shape, whether Prism's swatches show and the type
-    /// size: colour letters or Differentiate Without Colour turned on or off mid-level resizes Prism's glass by 30 pt,
+    /// size: colour letters or Differentiate Without Colour turned on or off mid-level resizes Prism's glass by 46 pt,
     /// letting go a drag as a change of pose does, and so does a change of Text Size up to `typeCap`. A result or lost
     /// card goes over the menu. As the parts measure (`testTheChromesRoomBesideTheMenuIsWhatItsPartsMeasure`): above,
     /// the header's line of the button role and its 8 pt (Escapement's split-flap ticks taller) and the title's line of
     /// the headline and its 18; below, the caption's two lines of the label role (the paper's serif) and its 14, the
-    /// swatches' 34 where they show, the column's 12 and the controls' line of the button role, their 20 and the 8 under.
+    /// swatches and their 4 where they show, the column's 12, the controls and the 4 under; the swatches and controls
+    /// each a button's 44, or its line and 24 where that is taller.
     struct Chrome: Equatable {
         var above: CGFloat
         var below: CGFloat
@@ -165,6 +166,53 @@ struct PlayLayout: Equatable {
 
     /// The height "unstirred." takes, 22 pt mono, give or take its line's leading.
     static let wordsHeight: CGFloat = 28
+
+    /// In the column, where "unstirred." stands over a glass `side` across whose top lies `over` under the title line's
+    /// foot: `words` over it, top to top, where that clears the title, else centred between the title and the rim. The
+    /// word never shrinks: where that room is less than its line, it stands under the title and the finished tank
+    /// comes down by `drop` to clear it (Jack, 2026-11-11: "If necessary, the tank scales"). `over` is measured, as the
+    /// note under the tank may run to more lines than the chrome budgets.
+    static func columnWords(over: CGFloat, side: CGFloat, type: DynamicTypeSize) -> (words: CGFloat, drop: CGFloat) {
+        guard over < words else { return (words, 0) }
+        let room = max(over - side * (rim - 1) / 2, 0), line = TypeRole.stamp.line(at: min(type, typeCap)).height
+        guard room < line else { return (over - (room - line) / 2, 0) }
+        return (over, (line - room).rounded(.up))
+    }
+
+    /// The least a finished column's tank shrinks to for its card, as a share of the size it was played at: under it the
+    /// picture is too small to be the reward, so the card scrolls instead.
+    static let leastFinished: CGFloat = 0.55
+    /// What a card keeps clear over the safe area's foot, as the controls it covers do.
+    static let cardFoot: CGFloat = 4
+
+    /// The column once a level is finished and its card is up. The text never shrinks, so where the card at the
+    /// player's Text Size is taller than the room under the tank, the tank does (Jack, 2026-11-11), about its top: the
+    /// header, the title and "unstirred." stay where they were played, and the caption's place, which the card hangs
+    /// from, rises by what the tank gives up. Where the word has no room over the rim, the tank's top comes down too.
+    struct Finished: Equatable {
+        /// The tank's scale, rim and all, about the stage's top.
+        let scale: CGFloat
+        /// How far the tank's top comes down for "unstirred." (`columnWords`).
+        let drop: CGFloat
+        /// How far the card rises with the tank's foot.
+        let lift: CGFloat
+        /// The card's height on screen: its own, or less where it scrolls.
+        let height: CGFloat
+        /// The tank at its least still leaves the card too little, so it scrolls in what there is.
+        var scrolls: Bool { height < card }
+        fileprivate let card: CGFloat
+    }
+
+    /// `card`: the card's height from the stage's foot, where the caption starts; `room`: from there to the safe area's
+    /// foot, with the tank at the size it was played at; `stage`: the tank's height there, rim and all; `drop`: what
+    /// "unstirred." needs of the tank's top, which comes first. The tank gives up exactly what the card lacks, to the
+    /// next whole point, so the card's text stays on the pixels it was laid out on.
+    static func finished(card: CGFloat, room: CGFloat, stage: CGFloat, drop: CGFloat = 0) -> Finished {
+        let room = room - cardFoot, most = (stage * (1 - leastFinished)).rounded(.down)
+        let drop = min(drop, most), lift = min(max(card - room, 0).rounded(.up), most - drop)
+        return Finished(scale: stage > 0 ? (stage - lift - drop) / stage : 1, drop: drop, lift: lift,
+                        height: min(card, max(room + lift, 0)), card: card)
+    }
 }
 
 extension PlayLayout {
@@ -371,6 +419,22 @@ struct Glide: ViewModifier, Animatable {
     }
 }
 
+/// The caption and the card hung from it, drawn `by` higher as a finished tank shrinks. Stepped frame by frame, so a
+/// card that came into the tree a frame before the shrink began rides it with the tank's foot rather than standing at
+/// its end from the start.
+struct Lift: ViewModifier, Animatable {
+    var by: CGFloat
+
+    nonisolated var animatableData: CGFloat {
+        get { by }
+        set { by = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        content.offset(y: -by)
+    }
+}
+
 extension PlayLayout.Chrome {
     /// What `level`'s chrome takes in the split at `type`, capped at `typeCap`: Escapement's split-flap ticks and two
     /// lines of its serif note, and the colour swatches where `swatches` shows them. A plain level's without one.
@@ -385,8 +449,9 @@ extension PlayLayout.Chrome {
         // Each part laid out on whole pixels, the Duo's three a point.
         func px(_ v: CGFloat) -> CGFloat { (v * 3).rounded(.up) / 3 }
         above = 8 + px(header) + 18 + px(TypeRole.headline.line(at: t, .medium).height)
-        below = 14 + px(LevelView.captionLines(paper: level?.page.paper ?? false, type: t)) + (swatches ? 34 : 0) + PlayStack.gap
-            + 20 + px(back.height) + 8
+        let button = max(ButtonFace.height, 24 + px(back.height))
+        below = 14 + px(LevelView.captionLines(paper: level?.page.paper ?? false, type: t)) + (swatches ? 4 + button : 0)
+            + PlayStack.gap + button + 4
     }
 }
 
@@ -402,4 +467,7 @@ extension PlayLayout.Halo {
 extension EnvironmentValues {
     /// Handed to the split's `PlayStack` as `measured`.
     @Entry var chromeMeasured: (@Sendable (PlayLayout.Chrome) -> Void)? = nil
+    /// Handed the card's height, the room it measured under the tank and how the column gives it room, each time they
+    /// change while a card is up.
+    @Entry var finishedMeasured: (@Sendable (_ card: CGFloat, _ room: CGFloat, PlayLayout.Finished) -> Void)? = nil
 }

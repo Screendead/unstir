@@ -28,8 +28,6 @@ BEAT = 0.8
 CROSSFADE = 1.5
 # LevelView's tickBeat and tickTurn: each clock's tick a beat after the commit, then a turn apart.
 TICK_BEAT, TICK_TURN = 0.15, 0.3
-# The layer's loop gives way to its resolution over this, from the beat after the solve.
-LOOP_OUT = 0.5
 # The card stays up this long after the solve before the render fades out over FADE.
 AFTER, FADE = 14.0, 3.0
 
@@ -127,7 +125,7 @@ def mix(tsv, pack, d, gain, layer, out):
         total[: len(menu)] += menu * ramp(len(menu), 0, CROSSFADE, False)
     if layer != "0":
         g = 10 ** (gain / 20)
-        loop = tile(read(f"{d}/{pack}-loop.wav"), n) * ramp(n, 0, CROSSFADE, True) * ramp(n, end(rows), LOOP_OUT, False)
+        loop = tile(read(f"{d}/{pack}-loop.wav"), n) * ramp(n, 0, CROSSFADE, True)
         resolution = read(f"{d}/{pack}-end.wav")[:n]
         total = total + g * loop
         total[: len(resolution)] += g * resolution
@@ -165,8 +163,8 @@ def listing(tsv, pack):
                 k += 1
         print(f"  {int(at // 60)}:{at % 60:05.2f}  {what.get(action, 'knob ' + action):<40} "
               f"{', '.join(sounds) or '-'}{reed}")
-    print(f"  {int(end(rows) // 60)}:{end(rows) % 60:05.2f}  the beat after the solve: the layer's loop gives way to "
-          "its resolution")
+    print(f"  {int(end(rows) // 60)}:{end(rows) % 60:05.2f}  the beat after the solve: the layer's resolution, over "
+          "its loop")
 
 
 # UNSTIR_FINGER's time for each step from its start to the game sounding it, and from there to the next step's start:

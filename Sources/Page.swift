@@ -29,6 +29,8 @@ struct Page: Equatable, Sendable {
     func signal(_ colour: Color) -> Color { paper ? .ink : colour }
     /// Ink at 0.56 reads at 3.8:1 on bone, under the floor for words, so on paper `text3` is `text2`.
     func tone(_ tone: TextTone) -> TextTone { paper && tone == .text3 ? .text2 : tone }
+    /// A control's stroke, at 3:1 or more: ink at `line`'s 0.40 reads 2.4:1 on bone, so on paper it takes `text3`'s.
+    var line: Color { paper ? Color.ink.opacity(TextTone.text3.alpha) : .line }
     /// Neon glows; paper has none.
     func glow(_ colour: Color) -> Color { paper ? .clear : colour }
     /// The text of the line under the tank: the stipulation, set in a serif on paper.
@@ -77,7 +79,12 @@ extension Picture {
     /// Lines are at least 2.2 px wide: the shader's four taps average in squared light, which thins dark lines on a light
     /// ground. No glow. Below a 230 px radius (a dock cover's is 99) the lines would fill a chevron's half-width, so the
     /// lattice and the rays' spacing grow until it holds 1.7 lines: the plate in miniature, not ink.
-    static func engineTurning(_ ctx: GraphicsContext, r: CGFloat, scale: CGFloat) {
+    /// `problem`'s own plate (`EscapementArt.plate`) is drawn instead, if it has one.
+    static func engineTurning(_ ctx: GraphicsContext, r: CGFloat, scale: CGFloat, problem: Int = 0) {
+        if let plate = EscapementArt.plate(problem) {
+            plate.draw(ctx, r: r, scale: scale)
+            return
+        }
         func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r + x * r, y: r + y * r) }
         ctx.fill(Path(CGRect(x: 0, y: 0, width: 2 * r, height: 2 * r)), with: .color(.bone))
         let width = max(0.005 * r, 2.2 / scale)
@@ -103,5 +110,34 @@ extension Picture {
             }
         }
         ctx.stroke(lines, with: .color(.ink), style: StrokeStyle(lineWidth: width, lineCap: .butt, lineJoin: .miter))
+    }
+}
+
+extension EscapementArt.Plate {
+    /// Marks in order, a run of strokes of one width and ink as one path. Lines keep `Picture.engineTurning`'s 2.2 px.
+    func draw(_ ctx: GraphicsContext, r: CGFloat, scale: CGFloat) {
+        func colour(_ ink: EscapementArt.Ink) -> Color { ink == .black ? .ink : ink == .second ? Color(second) : .bone }
+        ctx.fill(Path(CGRect(x: 0, y: 0, width: 2 * r, height: 2 * r)), with: .color(.bone))
+        var run = Path(), width = 0.0, ink = EscapementArt.Ink.black
+        func flush() {
+            guard !run.isEmpty else { return }
+            ctx.stroke(run, with: .color(colour(ink)),
+                       style: StrokeStyle(lineWidth: max(width * r, 2.2 / scale), lineCap: .butt, lineJoin: .round))
+            run = Path()
+        }
+        for mark in marks where mark.points.count > 1 {
+            let points = mark.points.map { CGPoint(x: r + $0.x * r, y: r + $0.y * r) }
+            if mark.width == 0 {
+                flush()
+                var outline = Path()
+                outline.addLines(points)
+                ctx.fill(outline, with: .color(colour(mark.ink)))
+            } else {
+                if mark.width != width || mark.ink != ink { flush() }
+                (width, ink) = (mark.width, mark.ink)
+                run.addLines(points)
+            }
+        }
+        flush()
     }
 }

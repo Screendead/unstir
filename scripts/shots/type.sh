@@ -11,8 +11,26 @@ shot type-level-ax5 "Level 01 at accessibility5: the play screen capped at xxxLa
   LEVEL=1 CLOCK=0 TYPESIZE=accessibility5
 shot type-result-xxxl "Level 05's result card at xxxLarge, over par against a stored best of +6: its lines and buttons at the larger size." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006 TYPESIZE=xxxLarge
-shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, whose foot runs under the screen's edge on a Pro Max (the card's rebuild, the pass's fifth change, makes up a notch its one button)." \
+shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot." \
   SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0 TYPESIZE=xxxLarge
+shot type-result-clean-xxxl "Level 06's clean result card at xxxLarge." SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge
+shot type-result-par-xxxl "Level 06 solved at par on a replay, at xxxLarge." SCREEN=clean LEVEL=6 BESTS=plughole:000000 TYPESIZE=xxxLarge
+shot type-tier-up-xxxl "Vortex 27's result card at xxxLarge, maelstrom open: up a notch to MAELSTROM." \
+  SCREEN=clean TIER=vortex LEVEL=27 UNLOCK=1 CLOCK=0 TYPESIZE=xxxLarge
+shot type-daily-result-xxxl "Today's daily's result card at xxxLarge, two over par: again, share and next daily in 7 h." \
+  SCREEN=result MODE=daily NOW=17:00 TYPESIZE=xxxLarge
+shot type-menu-marks-xxxl "Plughole 01 to 07 solved and 08 tried at xxxLarge: each row's marks at its right." \
+  BESTS=plughole:c0c2c00 TRIED=L8 CONSENT=yes TYPESIZE=xxxLarge
 shot type-lost-xxxl "Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size." \
   PACK=escapement LEVEL=2 PLAYED=1:-3,1:2,1:1 TYPESIZE=xxxLarge
 shot type-settings-ax3 "Settings at accessibility3: the title, rows and details scaled, the sheet scrolling." SETTINGS=1 TYPESIZE=accessibility3
+shot stamp-default "Level 05 solved at the default type size: \"unstirred.\" over the tank, the result card under it." \
+  SCREEN=result LEVEL=5 CLOCK=0
+shot stamp-xxxl "The same at xxxLarge, the play screen's cap: \"unstirred.\" grown with the card, still clear of the rim." \
+  SCREEN=result LEVEL=5 CLOCK=0 TYPESIZE=xxxLarge
+shot stamp-ax5 "The same at accessibility5: the play screen capped at xxxLarge, the same frame as stamp-xxxl." \
+  SCREEN=result LEVEL=5 CLOCK=0 TYPESIZE=accessibility5
+shot stamp-tabletop-xxxl "Duo tabletop at xxxLarge: plughole 06 solved clean, \"unstirred.\" kept at its fixed 22 pt above the fold." \
+  FRAME=669x951 INSETS=59,0,34,0 FOLD=0,466,669,19 SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge
+hold=10 shot stamp-split-xxxl "Duo open at xxxLarge: plughole 06 solved clean, the card over the menu headed by \"unstirred.\" at the larger size." \
+  FRAME=951x669 INSETS=24,0,21,84 SCREEN=clean LEVEL=6 TYPESIZE=xxxLarge
