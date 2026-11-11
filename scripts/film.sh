@@ -180,6 +180,11 @@ film firststir-ending 168 "$tank,fps=0.2,scale=160:-1,tile=8x4:padding=4" PACK=f
 # Prism, played by a drawn fingertip: specimen 1 heals the red rod buried under the cyan one first, which its colour
 # frees, then the cyan, then the white bottom stir; specimen 5 on pent heals the solver's line, red and cyan words
 # interleaved, the white last, owned since it is past the taste.
+# Prism's count aid (UNSTIR_PRISMAID), Jellyfish solved at par by the fingertip: today's, the dial's mark, the knobs' pips.
+for aid in today a b; do
+  film prism-aid-$aid-13 17 "$tank,fps=2,scale=200:-1,tile=9x4:padding=4" PACK=prism LEVEL=13 OWNED=prism FINGER=1 \
+    MOVES=1:+5,0:+4,1:-5,2:+5 $([[ $aid == today ]] || echo PRISMAID=$aid)
+done
 film prism-01-solve 13 "$tank,fps=2,scale=200:-1,tile=9x3:padding=4" PACK=prism LEVEL=1 FINGER=1 MOVES=0:-4,1:+3,2:-3
 film prism-05-solve 24 "$tank,fps=1.5,scale=200:-1,tile=9x4:padding=4" PACK=prism LEVEL=5 OWNED=prism FINGER=1 \
   MOVES=0:+3,1:-2,0:-4,2:-5,3:-4,4:-3,2:+3

@@ -46,3 +46,22 @@ hold=5 shot prism-letters-14 "Prism specimen 14 with its knobs' channels spelt o
 for plate in seeds medusae radiolaria nautilus; do
   hold=5 shot "prism-plate-$plate" "Prism's $plate plate under pent's knobs, unstirred." PACK=prism LAYOUT=pent STACK=0:+1 PICTURE=$plate BARE=1
 done
+# The count aid, two ways (UNSTIR_PRISMAID), on Jellyfish (13: the cyan rod 1 dealt +5 under -5, its core clean, the
+# first move +5) and Sea nettle (15: the magenta rod 2 dealt -3 under +5, its core showing 2, the first move -5), with
+# today's beside them.
+aid() {  # name-suffix description KEY=VALUE...
+  local name=$1 desc=$2
+  shift 2
+  hold=5 shot "prism-aid-today-$name" "Today: $desc" PACK=prism OWNED=prism "$@"
+  hold=5 shot "prism-aid-a-$name" "Aid a, the mark on the held rod's dial: $desc" PACK=prism OWNED=prism PRISMAID=a "$@"
+  hold=5 shot "prism-aid-b-$name" "Aid b, pips round every knob: $desc" PACK=prism OWNED=prism PRISMAID=b "$@"
+}
+aid 13 "Jellyfish as dealt, at rest." LEVEL=13
+aid 13-2 "Jellyfish, the cyan rod held at +2 of its 5." LEVEL=13 LIVE=1:+2
+aid 13-5 "Jellyfish, the cyan rod held at +5, the count that lifts its newest stir." LEVEL=13 LIVE=1:+5
+aid 13-blocked "Jellyfish, the magenta rod held at +2 while the cyan stir over it blocks it." LEVEL=13 LIVE=0:+2
+hold=5 shot prism-aid-a2-13-blocked "Aid a marking blocked rods too: Jellyfish, the magenta rod held at +2, its mark at +4 though the cyan stir over it blocks it." \
+  PACK=prism OWNED=prism PRISMAID=a2 LEVEL=13 LIVE=0:+2
+aid 15 "Sea nettle as dealt, at rest." LEVEL=15
+aid 15-2 "Sea nettle, the magenta rod held at -2 of its 5, where its core reads whole." LEVEL=15 LIVE=2:-2
+aid 15-5 "Sea nettle, the magenta rod held at -5, the count that lifts its newest stir." LEVEL=15 LIVE=2:-5

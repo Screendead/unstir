@@ -1139,7 +1139,12 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   levels on a pack's card while it has none, and `UNSTIR_CARDSCROLL=1` opens it scrolled to its list; `UNSTIR_BESTS`
   takes a pack's prefix as it takes a tier's, and `endless:9` the run's best. A pack level past
   the taste needs `UNSTIR_OWNED` too, or it opens the card. `UNSTIR_STOPLOOK=left` picks how an Escapement tank out of
-  ticks as its last clock stops looks. `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, `UNSTIR_LANDS=s`
+  ticks as its last clock stops looks. `UNSTIR_PRISMAID` draws one of Prism's count aids, built for Jack to choose
+  between and off in a plain launch (`PrismAid`, read from `Lifts`, each rod's newest stir as the stack stands and
+  whether `Layout.removable` frees it): `a` marks, on a held rod's dial, the count that lifts its newest stir, in its
+  mask's colour, once nothing blocks that stir, with a soft haptic and VoiceOver's "On the mark" as the count lands
+  on it; `a2` marks a blocked rod too; `b` shows every rod's newest stir at rest as pips round its knob (`LiftPips`),
+  from the pointer the way the turn runs, the last a ring (`shots.sh prism-aid`, `film.sh prism-aid`). `UNSTIR_SHELFDEMO=1` opens Lens's card from the dock and closes it, `UNSTIR_LANDS=s`
   buys the open card's product s seconds in (with the store's states set), `UNSTIR_PROMOTED=lens` (or `complete`)
   starts a promoted purchase of it a second in, `UNSTIR_PROMO=lens` shows that offer's promoted-purchase image alone,
   `UNSTIR_SUPPORTER=0` switches the supporter mark off for the launch, and

@@ -279,6 +279,9 @@ struct LevelView: View {
     private let brimDemo: Bool
     /// Escapement: what a tank lost to its last clock stopping shows, while Jack decides (UNSTIR_STOPLOOK).
     private let stopLook: StopLook
+    /// Prism: the count aid a harnessed launch asks for (UNSTIR_PRISMAID), on a level with masks only.
+    private let prismAid: PrismAid?
+    @State private var lifts = Lifts()
     private let shareSheet: Bool
     /// UNSTIR_NOW: the clock the daily's card reads the next daily from.
     private let now: Date?
@@ -405,6 +408,7 @@ struct LevelView: View {
         fingered = harness?.finger ?? false
         brimDemo = harness?.brimDemo ?? false
         stopLook = harness?.stopLook ?? .stamp
+        prismAid = level.masks.isEmpty ? nil : harness?.prismAid
         shareSheet = harness?.shareSheet ?? false
         now = harness?.now
         bench = harness?.bench ?? false
@@ -1623,7 +1627,8 @@ struct LevelView: View {
                                   now: Double(c.steps) + (c.live ? liveAngle / Tank.step - Double(Detent.steps(liveAngle, of: Tank.step)) : 0))
                         } else {
                             dial(at(c.k), disc(c.k), inner: dashes(c.k, r), from: turned(c.k) - Double(joined(game.slot(of: c.k))) * Tank.step,
-                                 to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps, step: Tank.step)
+                                 to: turned(c.k) + (c.live ? liveAngle : 0), steps: c.steps, step: Tank.step,
+                                 mark: prismAid?.marks == true ? liftMark(c.k, joined: joined(game.slot(of: c.k))) : nil)
                         }
                     }
                     .opacity(c.live ? (commits ? 1 : Self.idle) : Self.lifted)
@@ -1708,6 +1713,13 @@ struct LevelView: View {
                                     channels: game.level.channels(of: game.slot(of: k)))
                         } keyframes: { _ in Self.jolt }
                             .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
+                            .background {
+                                if prismAid == .knob, let lift = lifts.of(game)[game.slot(of: k)] {
+                                    LiftPips(steps: lift.steps, from: turned(k), reach: core / 2 + 9,
+                                             colour: game.level.tint(of: game.slot(of: k)) ?? .white)
+                                        .position(p)
+                                }
+                            }
                     }
                 }
                 // A spilled tank keeps its caps over the murk, and a lost one its clock.
@@ -1785,6 +1797,10 @@ struct LevelView: View {
         .haptic(.selection, trigger: ticks)
         .onChange(of: ticks) { Sound.shared.play(.tick) }
         .haptic(.selection, trigger: misses)
+        .haptic(.impact(flexibility: .soft), trigger: seated) { _, now in now }
+        .onChange(of: seated) {
+            if seated, voiceOver { AccessibilityNotification.Announcement(Spoken.seated).post() }
+        }
         .onChange(of: tankTicks) { Knock.clunk.play() }
         .haptic(.impact(weight: .heavy), trigger: game.cancels)
         // Only on a new heal: not on a reset's return to 0, nor an undo's step back.
@@ -1996,8 +2012,11 @@ struct LevelView: View {
     /// A turn's own count about `c`, angles clockwise from twelve: a hairline round the circle of `radius` with a long
     /// mark where the stir began, and on the circle of `inner` a dash per step from there the way the turn runs, over a
     /// trace out to `now`, where the turn stands.
+    /// `mark`: Prism's aid, the count that lifts the rod's newest stir, in its mask's colour: that step's dash drawn
+    /// heavy with a stop across its far end, so its shape reads without the colour, and the stop run out to the disc's
+    /// hairline with a halo under the dash while the count stands on it.
     private func dial(_ c: CGPoint, _ radius: CGFloat, inner: CGFloat, from origin: Double, to now: Double, steps: Int,
-                      step: Double) -> some View {
+                      step: Double, mark: (steps: Int, colour: Color)? = nil) -> some View {
         func point(_ a: Double, _ radius: CGFloat) -> CGPoint { CGPoint(x: c.x + radius * sin(a), y: c.y - radius * cos(a)) }
         // Each arc moved to first: an arc appended to a path joins its current point with a line.
         func arc(_ p: inout Path, _ a: Double, _ b: Double) {
@@ -2015,7 +2034,31 @@ struct LevelView: View {
                 .stroke(page.live.opacity(0.6), lineWidth: Self.hairline)
             Path { arc(&$0, origin, now) }.stroke(page.live.opacity(Self.traceTone), lineWidth: Self.trace)
             dashes.stroke(page.live.opacity(Self.dashTone), lineWidth: Self.dash)
+            if let mark {
+                let seated = mark.steps == steps, way = mark.steps > 0 ? 1.0 : -1.0, end = origin + Double(mark.steps) * step
+                let dash = Path { p in if mark.steps != 0 { arc(&p, end - way * (step - gap), end - way * gap) } }
+                let stop = Path { $0.move(to: point(end, inner - 5)); $0.addLine(to: point(end, seated ? radius : inner + 5)) }
+                if seated { dash.stroke(mark.colour.opacity(0.4), style: StrokeStyle(lineWidth: 9, lineCap: .round)) }
+                dash.stroke(Color.black.opacity(0.6), lineWidth: 5.5)
+                stop.stroke(Color.black.opacity(0.6), lineWidth: 3.5)
+                dash.stroke(mark.colour, lineWidth: 4)
+                stop.stroke(mark.colour, lineWidth: 2)
+            }
         }
+    }
+
+    /// Prism's aid on a held rod's dial: the count, from where its open stir began, that lifts the rod's newest stir,
+    /// and its mask's colour. Nil while a stir over it blocks the lift, unless the aid marks every rod, and off Prism.
+    private func liftMark(_ k: Int, joined: Int) -> (steps: Int, colour: Color)? {
+        let slot = game.slot(of: k)
+        guard let lift = lifts.of(game)[slot], lift.free || prismAid == .dialAll, let colour = game.level.tint(of: slot) else { return nil }
+        return (joined + lift.steps, colour)
+    }
+
+    /// Prism's aid: the turn in hand stands on its rod's mark.
+    private var seated: Bool {
+        guard let k = liveRod, shown == nil, let mark = liftMark(k, joined: 0), prismAid?.marks == true else { return false }
+        return mark.steps == Detent.steps(liveAngle, of: Tank.step)
     }
 
     /// How far a lens's track stands off its knob's edge, and its dashes' spacing: a short track, not the finger's travel.
@@ -2641,6 +2684,56 @@ extension Channels {
         let parts: [(Channels, SIMD3<Double>)] = [(.red, SIMD3(0xFF, 0x2A, 0x2A)), (.green, SIMD3(0x2A, 0xFF, 0x5A)),
                                                   (.blue, SIMD3(0x3A, 0x6B, 0xFF))]
         return parts.filter { contains($0.0) }.map(\.1).reduce(SIMD3<Double>(0, 0, 0)) { simd_max($0, $1) } / 255
+    }
+}
+
+/// Prism's count aid, two ways while Jack decides (UNSTIR_PRISMAID): `dial` marks, on a held rod's dial, the count that
+/// lifts its newest stir, once that stir is free; `knob` shows every rod's newest stir at rest, as pips round its knob.
+/// `dialAll` is `dial` on a blocked rod too, so grabbing a rod and finding no mark can't tell the order.
+enum PrismAid: String, Sendable {
+    case dial = "a", dialAll = "a2", knob = "b"
+
+    var marks: Bool { self != .knob }
+}
+
+/// Each rod's newest stir as the stack stands, by slot: the turn that lifts it, and whether nothing over it blocks
+/// that. Kept for the stack it was read from, as the rule can sample the maps and the tank draws every frame of a drag.
+@MainActor final class Lifts {
+    private var stack: [Twist]?
+    private var lifts: [Int: (steps: Int, free: Bool)] = [:]
+
+    func of(_ game: Game) -> [Int: (steps: Int, free: Bool)] {
+        let now = game.stack
+        if now != stack {
+            let level = game.level, free = Set(level.layout.removable(now, lenses: level.lenses, masks: level.masks))
+            lifts = [:]
+            for i in now.indices { lifts[now[i].rod] = (-now[i].steps, free.contains(i)) }
+            stack = now
+        }
+        return lifts
+    }
+}
+
+/// Prism's aid at rest: a pip per step of the turn that lifts a rod's newest stir, round its knob from where the
+/// pointer stands, the way the turn runs; the last a ring, where the pointer comes to rest. Upright, off the cap.
+struct LiftPips: View {
+    let steps: Int
+    let from: Double
+    let reach: CGFloat
+    let colour: Color
+
+    var body: some View {
+        ZStack {
+            ForEach(1...max(abs(steps), 1), id: \.self) { i in
+                let a = from + Double(steps.signum() * i) * Tank.step, last = i == abs(steps)
+                Circle().fill(last ? Color.black.opacity(0.7) : colour)
+                    .overlay(Circle().strokeBorder(last ? colour : Color.black.opacity(0.7), lineWidth: last ? 1.5 : 0.5))
+                    .frame(width: last ? 7 : 4.5, height: last ? 7 : 4.5)
+                    .offset(x: reach * sin(a), y: -reach * cos(a))
+            }
+        }
+        .opacity(steps == 0 ? 0 : 1)
+        .allowsHitTesting(false)
     }
 }
 

@@ -202,6 +202,8 @@ struct Harness {
 
     /// UNSTIR_STOPLOOK=left: what an Escapement tank lost to its last clock stopping shows (`StopLook`), stamp unset.
     let stopLook: StopLook?
+    /// UNSTIR_PRISMAID=a or b: Prism's count aid, while Jack decides (`PrismAid`); none unset.
+    let prismAid: PrismAid?
 
     /// UNSTIR_ICON=n: app-icon candidate n alone on the screen (`IconView`).
     let icon: Int?
@@ -305,6 +307,7 @@ struct Harness {
         backSwipe = env["UNSTIR_BACKSWIPE"].flatMap(Double.init).map { min(max($0, 0), 1) }
         backSwipeRun = env["UNSTIR_BACKSWIPE"] == "run"
         stopLook = env["UNSTIR_STOPLOOK"].flatMap(StopLook.init(rawValue:))
+        prismAid = env["UNSTIR_PRISMAID"].flatMap(PrismAid.init(rawValue:))
         purchases = Harness.purchases(env)
         amounts = ["0", "unreachable"].contains(env["UNSTIR_PRICES"]) ? [:]
             : Dictionary(uniqueKeysWithValues: Pack.productIDs.map { ($0, Decimal(string: $0 == Pack.completeID ? "5.99" : "2.99")!) })

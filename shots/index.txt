@@ -673,6 +673,28 @@ prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
 prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
 prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.
+prism-aid-today-13.png  Today: Jellyfish as dealt, at rest.
+prism-aid-a-13.png  Aid a, the mark on the held rod's dial: Jellyfish as dealt, at rest.
+prism-aid-b-13.png  Aid b, pips round every knob: Jellyfish as dealt, at rest.
+prism-aid-today-13-2.png  Today: Jellyfish, the cyan rod held at +2 of its 5.
+prism-aid-a-13-2.png  Aid a, the mark on the held rod's dial: Jellyfish, the cyan rod held at +2 of its 5.
+prism-aid-b-13-2.png  Aid b, pips round every knob: Jellyfish, the cyan rod held at +2 of its 5.
+prism-aid-today-13-5.png  Today: Jellyfish, the cyan rod held at +5, the count that lifts its newest stir.
+prism-aid-a-13-5.png  Aid a, the mark on the held rod's dial: Jellyfish, the cyan rod held at +5, the count that lifts its newest stir.
+prism-aid-b-13-5.png  Aid b, pips round every knob: Jellyfish, the cyan rod held at +5, the count that lifts its newest stir.
+prism-aid-today-13-blocked.png  Today: Jellyfish, the magenta rod held at +2 while the cyan stir over it blocks it.
+prism-aid-a-13-blocked.png  Aid a, the mark on the held rod's dial: Jellyfish, the magenta rod held at +2 while the cyan stir over it blocks it.
+prism-aid-b-13-blocked.png  Aid b, pips round every knob: Jellyfish, the magenta rod held at +2 while the cyan stir over it blocks it.
+prism-aid-a2-13-blocked.png  Aid a marking blocked rods too: Jellyfish, the magenta rod held at +2, its mark at +4 though the cyan stir over it blocks it.
+prism-aid-today-15.png  Today: Sea nettle as dealt, at rest.
+prism-aid-a-15.png  Aid a, the mark on the held rod's dial: Sea nettle as dealt, at rest.
+prism-aid-b-15.png  Aid b, pips round every knob: Sea nettle as dealt, at rest.
+prism-aid-today-15-2.png  Today: Sea nettle, the magenta rod held at -2 of its 5, where its core reads whole.
+prism-aid-a-15-2.png  Aid a, the mark on the held rod's dial: Sea nettle, the magenta rod held at -2 of its 5, where its core reads whole.
+prism-aid-b-15-2.png  Aid b, pips round every knob: Sea nettle, the magenta rod held at -2 of its 5, where its core reads whole.
+prism-aid-today-15-5.png  Today: Sea nettle, the magenta rod held at -5, the count that lifts its newest stir.
+prism-aid-a-15-5.png  Aid a, the mark on the held rod's dial: Sea nettle, the magenta rod held at -5, the count that lifts its newest stir.
+prism-aid-b-15-5.png  Aid b, pips round every knob: Sea nettle, the magenta rod held at -5, the count that lifts its newest stir.
 clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
@@ -782,8 +804,8 @@ type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a sto
 type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, whose foot runs under the screen's edge on a Pro Max (the card's rebuild, the pass's fifth change, makes up a notch its one button).
 type-lost-xxxl.png  Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size.
 type-settings-ax3.png  Settings at accessibility3: the title, rows and details scaled, the sheet scrolling.
-marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, three hollow on 08, a lock on 09 onwards.
-marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title.
-marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2, 04 clean, 05 tried.
+marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, 04's +2 in magenta before its one, three hollow on 08, a lock on 09 onwards.
+marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title, the +2 before its disc.
+marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2 (the +2 in magenta before one disc), 04 clean, 05 tried.
 marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards.
 marks-result-par.png  Level 06 solved at par on a replay: two discs filled over at par, clean counts on the first try.

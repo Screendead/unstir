@@ -6,6 +6,9 @@ import SwiftUI
 /// phrase to a key; a count's key varies by plural in the catalog.
 enum Spoken {
     /// A layout's rods, the swirl named apart, since it has no knob.
+    /// Prism's aid: the turn in hand has reached the count that lifts its rod's newest stir.
+    static var seated: String { String(localized: "On the mark", comment: "VoiceOver: Prism, the held turn reached its rod's mark") }
+
     static func rods(_ layout: Layout) -> String {
         if let base = layout.base {
             return String(localized: "\(base.rods.count) rods and a swirl",
