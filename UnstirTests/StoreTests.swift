@@ -240,6 +240,25 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(store.pricing, .unreachable)
     }
 
+    /// A first read that stalls holds the cards at "checking purchases…" only until the limit, and carries on past it.
+    func testAStalledFirstReadReadiesTheStoreAtTheLimit() async throws {
+        XCTAssertEqual(Store().readLimit, .seconds(5))
+        let store = Store()
+        store.readLimit = .milliseconds(200)
+        let (stall, release) = AsyncStream<Void>.makeStream()
+        store.firstRead = { store in
+            for await _ in stall {}
+            await store.refresh()
+        }
+        await store.start()
+        XCTAssertTrue(store.ready)
+        XCTAssertFalse(store.firstReadDone)
+        await store.settled()
+        release.finish()
+        try await eventually("the stalled read to land") { store.firstReadDone }
+        XCTAssertTrue(store.ready)
+    }
+
     func testPurchaseGrantsOnePack() async throws {
         let store = Store()
         await store.start()

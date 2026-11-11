@@ -137,8 +137,15 @@ final class Store {
     /// the dock.
     private(set) var approved: [Offer] = []
     @ObservationIgnored private var payments: Bool?
-    /// The launch's first read of the entitlements has finished, so a pack the player owns reads as owned.
+    /// The launch's first read of the entitlements has finished, so a pack the player owns reads as owned, or it has
+    /// outlasted `readLimit`, so a card stops saying "checking purchases…" and offers the pack.
     private(set) var ready = false
+    /// The launch's first read has finished, whenever: what a read that outlasted `readLimit` brings is no landing.
+    private(set) var firstReadDone = false
+    /// How long the cards wait on the launch's first read; the read carries on past it.
+    @ObservationIgnored var readLimit = Duration.seconds(5)
+    /// The launch's first read, replaced only by a test that stalls it.
+    @ObservationIgnored var firstRead: @MainActor (Store) async -> Void = { await $0.refresh() }
     /// The launch's read and its first price fetch have both finished, however the fetch went, or `shelfWait` has
     /// passed since the read: the dock shows from then, so what they bring never changes it in sight, unless a fetch outlasts the wait.
     private(set) var shelved = false
@@ -152,7 +159,7 @@ final class Store {
     /// Asks the App Store for the products, replaced only by a test, as a simulated error doesn't stop every
     /// simulator runtime's test session serving them.
     @ObservationIgnored var loadProducts: @Sendable ([String]) async throws -> [Product] = { try await Product.products(for: $0) }
-    @ObservationIgnored private var first: Task<Void, Never>?
+    @ObservationIgnored private var waiting: [CheckedContinuation<Void, Never>] = []
     @ObservationIgnored private var products: [String: Product] = [:]
     @ObservationIgnored private var updates: Task<Void, Never>?
     @ObservationIgnored private var intents: Task<Void, Never>?
@@ -214,6 +221,7 @@ final class Store {
         payments = canPay
         self.restored = restored
         self.ready = ready
+        firstReadDone = ready
         shelved = true
     }
 
@@ -236,8 +244,19 @@ final class Store {
         if harness == nil { Asked.remove(offer.productID) }
     }
 
-    /// Returns once the first read has finished, or at once before `start`.
-    func settled() async { await first?.value }
+    /// Returns once the store is ready, or at once before `start`.
+    func settled() async {
+        guard updates != nil, !ready else { return }
+        await withCheckedContinuation { waiting.append($0) }
+    }
+
+    private func open(_ why: String) {
+        guard !ready else { return }
+        ready = true
+        Log.write(why)
+        for w in waiting { w.resume() }
+        waiting = []
+    }
 
     /// Listens for purchases made or revoked elsewhere (Ask to Buy approvals, refunds, other devices, Family Sharing) and
     /// for any left unfinished, then reads what the player owns.
@@ -249,13 +268,17 @@ final class Store {
         intents = Task { [weak self] in
             for await intent in PurchaseIntent.intents { self?.promote(intent.product.id, product: intent.product) }
         }
-        let read = Task {
-            await refresh()
-            ready = true
-            Log.write("store ready")
+        Task { [firstRead] in
+            await firstRead(self)
+            firstReadDone = true
+            if ready { Log.write("store read landed past the limit") } else { open("store ready") }
         }
-        first = read
-        await read.value
+        let limit = Task { [weak self, readLimit] in
+            guard (try? await Task.sleep(for: readLimit)) != nil else { return }
+            self?.open("store ready: the read outlasted \(readLimit)")
+        }
+        await settled()
+        limit.cancel()
         let wait = Task { [weak self] in
             guard (try? await Task.sleep(for: .seconds(Self.shelfWait))) != nil else { return }
             self?.shelve("waited")
