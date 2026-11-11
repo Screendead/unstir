@@ -11,7 +11,7 @@ shot type-level-ax5 "Level 01 at accessibility5: the play screen capped at xxxLa
   LEVEL=1 CLOCK=0 TYPESIZE=accessibility5
 shot type-result-xxxl "Level 05's result card at xxxLarge, over par against a stored best of +6: its lines and buttons at the larger size." \
   SCREEN=result LEVEL=5 BESTS=plughole:00006 TYPESIZE=xxxLarge
-shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, the card's type stepped down a size at a time until it stands whole over the screen's foot, the glass the size it was played at." \
+shot type-result-fullest-xxxl "Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, every line at xxxLarge, and the tank shrunk about its top by what the card lacked, so the card stands whole over the screen's foot." \
   SCREEN=result LEVEL=27 BESTS=plughole:000000000000000000000000006 CLOCK=0 TYPESIZE=xxxLarge
 shot type-lost-xxxl "Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size." \
   PACK=escapement LEVEL=2 PLAYED=2:4,1:-3,0:1 TYPESIZE=xxxLarge

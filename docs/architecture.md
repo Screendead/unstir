@@ -593,10 +593,20 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   and `eyebrow` 12, so nothing that carries meaning is under 13 and every screen follows Settings › Text Size. The play
   screen caps at `PlayLayout.typeCap` (xxxLarge), as the dock does, since the tank needs its room; the menu, cards,
   archive, settings and consent scale to the accessibility sizes, where a menu row's result goes under its title.
-  A result or lost card taller than the column leaves under the caption (plughole 27's fullest at xxxLarge on a Pro
-  Max) steps its own type down a size at a time, never below the default, until it fits (`LevelView.card`), so the
-  glass keeps the size it was played at; one still too tall, as the fullest is on the shortest phones at the default
-  size, scrolls. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
+  The text never shrinks (Jack, 2026-11-11: "If the user wants big text, they get big text. To fit it, the tank itself
+  must shrink once a level is completed, if the whole content wouldn't fit on-screen all at once"; on small phones
+  "the tank scales; text and UI does not"). So once a level is finished, a result or lost card taller than the column
+  leaves under the tank shrinks the tank (`PlayLayout.finished`, from the card's and the caption's measured places):
+  by exactly what the card lacks, to the next whole point, down to the safe area's foot less the 4 pt the controls it
+  covers keep (`cardFoot`). The tank is scaled as one, picture, knobs and rim, about its top (`LevelView.stage`), drawn
+  for the size it was played at, so no picture is baked again and no glass size is learned; the header, the title and
+  "unstirred." stay where they were, and the caption's place, with the card hung from it, is drawn that much higher,
+  not laid out higher, so the room is always measured with the tank as played. It keeps time with the card's arrival
+  (`LevelView.arrival`), at once under Reduce Motion, and the tank is its own size again once the card leaves; in play
+  there is no card and nothing to measure, so the tank is the layout's. The tank never goes under 55% of the size it
+  was played at (`leastFinished`): past that the card scrolls in the room there is, which only the fullest card at
+  xxxLarge on the shortest phone reaches (`testTheFullestCardAtTheLargestTypeOnTheShortestPhoneScrollsUnderTheTanksLeast`).
+  The split's card goes over the menu and the tabletop's stack makes room for its own, so neither shrinks. The gear stops at xxxLarge, where its 44 pt target still holds it; a pack level's name over its title stays at the
   default size, as the title's 18 pt gap holds no more; and the menu hands its type size
   to the settings sheet, which otherwise takes the system's, so the harness's `UNSTIR_TYPESIZE` reaches it too.
   `TypeRole.line` gives a role's line height as `Text` lays it out (a text style's font, whose leading grows faster than
