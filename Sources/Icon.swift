@@ -70,7 +70,7 @@ struct IconView: View {
     }
 }
 
-/// UNSTIR_PROMO=lens: an offer's promoted-purchase image, its dock cover stirred as dealt inside a 1024-pixel black
+/// UNSTIR_PROMO=lens: an offer's promoted-purchase image, its dock cover stirred as its clip opens inside a 1024-pixel black
 /// square centred on the screen, for scripts/promo.sh to crop. The App Store frames it, so the tank keeps clear of the
 /// edges.
 struct PromoArt: View {

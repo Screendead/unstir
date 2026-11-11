@@ -44,6 +44,91 @@ import XCTest
         XCTAssertEqual(Sound.reeds.count, 8)
     }
 
+    /// Steps a layer track as the fader does, every 20 ms from `from` to `to` with `wanted` wanted, and gives back every
+    /// action it took, each step's level appended to `levels`.
+    private static func run(_ track: inout Sound.LayerTrack, _ wanted: Sound.Layer?, from: Double, to: Double,
+                            levels: inout [Float]) -> [Sound.LayerTrack.Action] {
+        var actions: [Sound.LayerTrack.Action] = []
+        var t = from
+        while t < to {
+            let a = track.step(wanted: wanted, now: t)
+            if a != .none { actions.append(a) }
+            levels.append(track.level)
+            t += 0.02
+        }
+        return actions
+    }
+
+    /// Jack (2026-11-11): the next level of the same pack carries the loop on in place, never from its start. The solve
+    /// ducks it under the resolution from the resolution's beat, and it comes back on the bar after, its beats counted
+    /// from the same first beat; the next level wants the same layer, and the loop's player is neither stopped nor
+    /// started again.
+    func testTheNextLevelOfAPackCarriesItsLoopOn() throws {
+        var track = Sound.LayerTrack()
+        var levels: [Float] = []
+        XCTAssertEqual(track.step(wanted: .lens, now: 100), .start(.lens, at: 100 + 0.05))
+        XCTAssertEqual(Self.run(&track, .lens, from: 100.02, to: 110, levels: &levels), [])
+        XCTAssertTrue(track.settled(wanted: .lens))
+        let first = try XCTUnwrap(track.firstBeat)
+
+        let beat = try XCTUnwrap(track.resolve(at: 110, ringing: 4.9))
+        XCTAssertEqual((beat - first) / Sound.beat, ((beat - first) / Sound.beat).rounded(), accuracy: 1e-6)
+        XCTAssertGreaterThan(beat, 110)
+        let back = try XCTUnwrap(track.returning)
+        XCTAssertEqual((back - first) / (4 * Sound.beat), ((back - first) / (4 * Sound.beat)).rounded(), accuracy: 1e-6)
+        XCTAssertGreaterThanOrEqual(back, beat + 4.9)
+        levels = []
+        XCTAssertEqual(Self.run(&track, .lens, from: 110, to: beat, levels: &levels), [])
+        XCTAssertEqual(levels.min(), 1, "the loop holds full to the resolution's beat")
+        levels = []
+        XCTAssertEqual(Self.run(&track, .lens, from: beat, to: back, levels: &levels), [])
+        XCTAssertEqual(levels.last, 0, "ducked under the resolution")
+        XCTAssertFalse(track.settled(wanted: .lens))
+        levels = []
+        XCTAssertEqual(Self.run(&track, .lens, from: back, to: back + 3, levels: &levels), [])
+        XCTAssertEqual(levels.last, 1)
+        XCTAssertTrue(track.settled(wanted: .lens))
+        XCTAssertEqual(track.firstBeat, first)
+        XCTAssertEqual(track.playing, .lens)
+    }
+
+    /// Back to the pack's list and into another of its levels within `Sound.hold`: the loop fades out and back in, run
+    /// on unheard in between. Away longer, it stops; another pack's loop starts from its top.
+    func testALoopLeftBrieflyIsTakenUpWhereItHasGotTo() throws {
+        var track = Sound.LayerTrack()
+        var levels: [Float] = []
+        _ = Self.run(&track, .prism, from: 0, to: 5, levels: &levels)
+        let first = try XCTUnwrap(track.firstBeat)
+        levels = []
+        XCTAssertEqual(Self.run(&track, nil, from: 5, to: 5 + Sound.hold - 1, levels: &levels), [])
+        XCTAssertEqual(levels.last, 0)
+        XCTAssertEqual(Self.run(&track, .prism, from: 5 + Sound.hold - 1, to: 25, levels: &levels), [])
+        XCTAssertEqual(track.firstBeat, first)
+        XCTAssertTrue(track.settled(wanted: .prism))
+
+        XCTAssertEqual(Self.run(&track, nil, from: 25, to: 25 + 1.5 + Sound.hold + 1, levels: &levels), [.stop])
+        XCTAssertNil(track.playing)
+        XCTAssertNil(track.firstBeat)
+        _ = Self.run(&track, .prism, from: 50, to: 55, levels: &levels)
+        XCTAssertEqual(Self.run(&track, .escapement, from: 55, to: 56, levels: &levels), [.start(.escapement, at: 55 + 0.05)])
+    }
+
+    /// Left in the beat before the resolution, the loop holds to it, then fades over the resolution's half second and
+    /// runs on unheard.
+    func testALoopLeftJustAfterTheSolveHoldsToTheResolutionsBeat() throws {
+        var track = Sound.LayerTrack()
+        var levels: [Float] = []
+        _ = Self.run(&track, .escapement, from: 0, to: 5, levels: &levels)
+        let beat = try XCTUnwrap(track.resolve(at: 5.01, ringing: 2.5))
+        levels = []
+        _ = Self.run(&track, nil, from: 5.02, to: beat, levels: &levels)
+        XCTAssertEqual(levels.min(), 1)
+        levels = []
+        _ = Self.run(&track, nil, from: beat, to: beat + 0.6, levels: &levels)
+        XCTAssertEqual(levels.last, 0)
+        XCTAssertEqual(track.playing, .escapement)
+    }
+
     /// Jack's calls soundsk2 = D and soundsk-haptic = B (round 16): each clock's tick sounds and lands its haptic as its
     /// core starts to turn, a beat after the lift and then a turn apart, in the order the clocks tick; an undo takes them
     /// back with the move.

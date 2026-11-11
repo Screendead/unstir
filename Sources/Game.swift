@@ -245,21 +245,12 @@ final class Game {
     var finished: Bool { solved || spilled || lost }
     var clean: Bool { over == 0 && resets == 0 && undos == 0 && firstTry }
 
-    /// What each move did to the stack, oldest first: read once the level has settled, since the fine pass may empty the
-    /// stack after the last move.
-    var marks: [Share.Mark] {
-        stirs.indices.map { i in
-            let size = stirs[i].entries.count, after = i + 1 < stirs.count ? stirs[i + 1].entries.count : entries.count
-            return stirs[i].twist.rod == Game.tank ? .tank : after < size ? .healed : after > size ? .pushed : .merged
-        }
-    }
-
     /// The daily's share line, on its day; nil on any other level.
     var shareText: String? {
         guard !level.archived else { return nil }
         return Share.day(of: level.id).map {
             Share.text(day: $0, moves: moves, par: par, firstTry: firstTry, clean: clean, undos: undos, resets: resets,
-                       marks: marks, supporter: Store.shared.bought && Settings.supporter)
+                       supporter: Store.shared.bought && Settings.supporter)
         }
     }
 

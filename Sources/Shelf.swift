@@ -296,13 +296,14 @@ enum Marks {
 // MARK: - Covers
 
 extension Offer {
-    /// The levels its cover stirs: its clip's, so the dock shows what the card plays; the bundle's, each pack it grants.
-    var covers: [Level] { Clip.of(self).reels.map(\.level) }
+    /// The levels its cover stirs, each with the stack it stirs it by: its clip's, as the clip opens, so the dock shows
+    /// what the card plays; the bundle's, each pack it grants.
+    var covers: [(level: Level, stack: [Game.Entry])] { Clip.of(self).reels.map { ($0.level, $0.opening) } }
 }
 
-/// An offer's cover in a tank: its clip's level on its own picture, as the game draws it, stirred by the level's own
-/// dealt stack. `clock` nil holds it as dealt; otherwise the loop at that time: clean, stirred in bottom first, then
-/// unstirred top first a move at a time. Complete's shows a wedge of each pack's, cut from the centre, the first
+/// An offer's cover in a tank: its clip's level on its own picture, as the game draws it, stirred by the stack its clip
+/// opens on, the level's own deal for every pack but Lens (`Reel.lensOpening`). `clock` nil holds it so; otherwise the
+/// loop at that time: clean, stirred in bottom first, then unstirred top first a move at a time. Complete's shows a wedge of each pack's, cut from the centre, the first
 /// centred at the top, each on its own loop. Its knobs are drawn as the game draws them, each turned by its rod's share
 /// of the stack, and a clock's ratchet counts what it owes, so a cover shows how its pack plays (Jack, round 16); a
 /// wedge whose key knob (a clock, else a lens, else a masked rod) falls outside it is turned to bring it in.
@@ -318,7 +319,8 @@ struct PackTank: View {
         ZStack {
             ForEach(levels.indices, id: \.self) { k in
                 let from = start + span * Double(k)
-                tank(levels[k]).rotationEffect(.degrees(levels.count > 1 ? Self.turn(levels[k], into: from + span / 2, span: span) : 0))
+                tank(levels[k].level, levels[k].stack)
+                    .rotationEffect(.degrees(levels.count > 1 ? Self.turn(levels[k].level, into: from + span / 2, span: span) : 0))
                     .clipShape(Wedge(from: from, to: from + span))
             }
             if levels.count > 1 {
@@ -338,15 +340,14 @@ struct PackTank: View {
         .accessibilityHidden(true)
     }
 
-    private func tank(_ level: Level) -> some View {
-        let dealt = Game.dealt(level)
-        let wind = clock.map { Self.wind(dealt.count, at: $0) } ?? Array(repeating: 1, count: dealt.count)
+    private func tank(_ level: Level, _ stack: [Game.Entry]) -> some View {
+        let wind = clock.map { Self.wind(stack.count, at: $0) } ?? Array(repeating: 1, count: stack.count)
         // The entries wound away are the identity, so they leave the shader's stack.
-        let on = zip(dealt, wind).filter { $0.1 > 0 }
+        let on = zip(stack, wind).filter { $0.1 > 0 }
         var stir = Unstirred(stack: on.map(\.0.twist), layout: level.layout, lenses: level.lenses, masks: level.masks,
                              liveRod: nil, liveAngle: 0, side: side, fillEntries: level.picture.fillEntries)
         stir.shares = on.map(\.1)
-        return LevelPicture(level: level, played: Reel.played(level, on.map(\.0)), wound: dealt.count - on.count, side: side)
+        return LevelPicture(level: level, played: Reel.played(level, on.map(\.0)), wound: stack.count - on.count, side: side)
             .modifier(stir)
             .overlay { controls(level, on: on.map { ($0.0.twist, $0.1) }) }
     }

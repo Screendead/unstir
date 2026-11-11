@@ -51,7 +51,7 @@ shot clip-first-stir-still "First Stir's clip on its still: level 1 with two vig
 for t in 1.4 2.1 3.3 5.4 6.2; do
   shot clip-first-stir-$t "First Stir's clip $t s in." CARD=first-stir STORE=lens:unowned CLOCK=$t
 done
-shot clip-lens-still "Lens's clip on its still: level 3 as dealt, the lens newest, its rim whole through both twists." \
+shot clip-lens-still "Lens's clip on its still: Kaleidoscope (level 25) seven moves down its par line, the lens newest, its rim whole through both twists." \
   CARD=lens STORE=lens:unowned CLOCK=0.5
 for t in 2.4 3.2 4.3; do
   shot clip-lens-$t "Lens's clip $t s in, the lens dragged down and back up." CARD=lens STORE=lens:unowned CLOCK=$t

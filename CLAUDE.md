@@ -215,7 +215,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   `scripts/icon.sh [n]` crops them to `shots/icon-n-1024.png` without alpha, lays them out at 1024, 180 and 60 px on a
   dark and a light home screen in `shots/icon-candidates.png` and, with n, makes candidate n the app icon (needs Pillow).
 - Promoted-purchase images: `scripts/promo.sh` shoots each sold offer's (`shots.sh promo-`, `UNSTIR_PROMO`,
-  `PromoArt` in Icon.swift: its dock cover as dealt inside the bezel) and crops each to `shots/promo-<offer>-1024.png`, as App Store Connect asks: 1024 x 1024, RGB without alpha,
+  `PromoArt` in Icon.swift: its dock cover stirred inside the bezel) and crops each to `shots/promo-<offer>-1024.png`, as App Store Connect asks: 1024 x 1024, RGB without alpha,
   square corners, 72 dpi (needs Pillow).
 - Picture lab: `scripts/picture-lab.sh render <picture> <out.png> [seed] [t] [side px] [layout stack]` draws a live
   picture on the Mac's GPU, stirred by a stack if given; `scripts/picture-lab.sh bench <picture>...` times each
