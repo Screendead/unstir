@@ -10,7 +10,7 @@ import XCTest
     /// Every effect, each of its variants, names a file the bundle holds where `Sound.use` loads the effects, and none is
     /// a bed's name, which `use` would take for a bed.
     func testEveryEffectNamesABundledFile() {
-        let effects: [Sound.Effect] = [.push, .seized, .solve, .spilled, .tap, .undo, .reset, .tier, .ratchet]
+        let effects: [Sound.Effect] = [.push, .seized, .solve, .spilled, .tap, .undo, .reset, .tier, .ratchet, .tick]
             + (1...6).map { .heal($0) }
         for effect in effects {
             for n in 0..<4 {

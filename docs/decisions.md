@@ -415,6 +415,7 @@ Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
 | DUOPROBE = A | 2026-11-10 | The Duo-speed probe stays out of the main branch entirely. | HANDOFF |
 | CIPRIVATE = A | 2026-11-10 | When the repo goes private, CI runs on a self-hosted runner on Jack's Mac, queued behind his builds, the nightly weekly (`r17-ci-private`, not yet run). | HANDOFF |
 | CODEQL-PRIVATE = A | 2026-11-10 | `codeql.yml` is deleted when the repo goes private. | HANDOFF |
+| SND1 taken back | 2026-11-11 | Jack: "i kinda miss the sound that went with the rod-turning haptics...can you quickly put that back in?" A rod's drag ticks at each step again, under its haptic; SND1 = B (2026-11-02) no longer holds. The tank's clunk stays silent (snd1-clunk = B). | architecture |
 
 ## Dated, no round
 

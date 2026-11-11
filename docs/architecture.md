@@ -303,7 +303,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   step from there on a circle 14 pt inside the disc (16 pt inside the rim) over a fainter trace out to where the turn
   stands, and a signed count off the finger. The dashes and the count follow what letting go would commit
   (`Detent.steps`, the nearest step). Each change of that, at a half step either way, clicks: a rod's a selection
-  haptic and no sound (Jack's call SND1 = B, round 16: the haptic and the dashes carry the steps), the tank's its clunk,
+  haptic with its tick (Jack, 2026-11-11, taking back SND1 = B: he missed the sound), the tank's its clunk,
   a haptic and no sound either, a two-finger spin's and the lift's last step too (Jack's call snd1-clunk = B, round
   16). While `Game.openStir` is the rod's, the hairline, its dashes and the count stay faint after lift, until another
   rod or the tank is touched; they read only the history, never the stack. Wins run the coarse `looksSolved` pass on the
