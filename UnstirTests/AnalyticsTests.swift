@@ -418,9 +418,9 @@ final class AnalyticsTests: XCTestCase {
         var level = Level.escapement[0]
         level.id = "test-escapement"
         let game = Game(level: level, tankTurned: true, bank: (3, nil))
-        // Its tick pushes, and the wait spends the last of the budget.
+        // Its tick pushes, and the next move's spends the last of the budget.
         game.commit(rod: 1, steps: 1)
-        game.wait(on: 0)
+        game.commit(rod: 1, steps: 1)
         XCTAssertTrue(game.lost)
         a.finished(game)
         a.left(game)

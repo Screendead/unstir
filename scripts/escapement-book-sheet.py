@@ -10,10 +10,10 @@ import sys
 from PIL import Image, ImageDraw, ImageFont
 
 os.chdir(os.path.join(os.path.dirname(__file__), ".."))
-rows = [line.rstrip("\n").split("\t") for line in open("scripts/escapement/problems.tsv")]
+rows = [line.rstrip("\n").split("\t") for line in open("scripts/escapement/problems-nowait.tsv")]
 # A problem's row wraps, its par lines below its number.
 pars = {int(n): p for n, p in re.findall(r"problem\((\d+),.*?par: (\d+)", open("Sources/Pack.swift").read(), re.S)}
-chapters = ["The Clock", "The Waiting Move", "Two Clocks", "Wound Back", "Grand Complication"]
+chapters = ["The Clock", "Tempo", "Two Clocks", "Wound Back", "Grand Complication"]
 cell, gap, head, foot = 420, 14, 56, 64
 font = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 26)
 small = ImageFont.truetype("/System/Library/Fonts/SFNSMono.ttf", 20)

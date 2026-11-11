@@ -49,8 +49,8 @@ struct Clip: Sendable {
     /// took it.
     static let lens = Clip(reels: [.lens()], still: 0.5)
 
-    /// Escapement 1 solved in its par of three: a stir, its tick landing; a wait, and a tick; the last stir, whose tick
-    /// stops the clock on the clean picture.
+    /// Escapement 2 solved in its par of three, each stir's tick landing after it, the last stopping the clock on the
+    /// clean picture.
     static let escapement = Clip(reels: [.escapement()], still: Reel.escapement().beats[0].lift + 0.6)
 
     /// Specimen 1 solved in its par of three, the buried red stir first: it comes off under the cyan one above it, and
@@ -233,10 +233,10 @@ struct Reel: Sendable {
         return Reel(level: level, gestures: Array(line.prefix(moves)), rest: rest, gap: 0.6, tail: tail)
     }
 
-    /// The mock-up's problem, the book's second, in its three moves, the second a wait on the clock.
+    /// The book's second problem in its three moves.
     static func escapement(moves: Int = 3, rest: Double = 0.7, tail: Double = 1.2) -> Reel {
         let level = Level.escapement[1]
-        let line: [Gesture] = [.turn(2, 4), .tap(knob: level.clocks[0].rod), .turn(1, -3)]
+        let line: [Gesture] = [.turn(1, -3), .turn(2, -2), .turn(2, -4)]
         return Reel(level: level, gestures: Array(line.prefix(moves)), rest: rest, gap: 0.9, tail: tail)
     }
 
@@ -417,7 +417,8 @@ struct ClipTank: View {
                     // The stack stands as the move left it until its tick lands, so the card flips off what it owed then.
                     let owed = level.owed(k, on: f.stack)
                     RatchetView(angle: (Double(f.ticks) - (1 - f.ratchetTurn)) * Tank.step,
-                                size: ratchet, plate: LevelView.ratchetReach * r, pawl: f.pawl, lit: f.pressing, stopped: !f.clockRuns,
+                                size: ratchet, plate: LevelView.ratchetReach * r, waits: level.waits, pawl: f.pawl, lit: f.pressing,
+                                stopped: !f.clockRuns,
                                 owed: f.flip == nil ? owed : owed - 1, was: f.flip.map { _ in owed }, fall: f.flip ?? 1)
                         .position(at(k))
                 } else {
