@@ -24,7 +24,17 @@ enum EscapementArt {
         case 9: hourglass()
         case 10: eggTimer()
 
-        // Problems 11 to 20.
+        // Problems 11 to 20 (EscapementArtPlates2.swift).
+        case 11: plate11()
+        case 12: plate12()
+        case 13: plate13()
+        case 14: plate14()
+        case 15: plate15()
+        case 16: plate16()
+        case 17: plate17()
+        case 18: plate18()
+        case 19: plate19()
+        case 20: plate20()
 
         // Problems 21 to 30.
 
