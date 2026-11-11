@@ -709,8 +709,8 @@ escapement-plate-29-dealt.png  Escapement 29 as dealt on its own plate.
 escapement-plate-29-solved.png  Escapement 29 solved on its own plate, the solve's ink ring run out.
 escapement-plate-30-dealt.png  Escapement 30 as dealt on its own plate.
 escapement-plate-30-solved.png  Escapement 30 solved on its own plate, the solve's ink ring run out.
-escapement-plate-alt-7-dealt.png  Escapement 7 as dealt on Pause's alternate plate, a pause mark on a dial without hands.
-escapement-plate-alt-7-solved.png  Escapement 7 solved on Pause's alternate plate.
+escapement-plate-alt-7-dealt.png  Escapement 7 as dealt on level 7's alternate plate, a pause mark on a dial without hands.
+escapement-plate-alt-7-solved.png  Escapement 7 solved on level 7's alternate plate.
 escapement-plate-alt-9-dealt.png  Escapement 9 as dealt on Hourglass's alternate plate, the glass ending inside the top and bottom rods.
 escapement-plate-alt-9-solved.png  Escapement 9 solved on Hourglass's alternate plate.
 prism-dealt.png  Prism specimen 1 as dealt: red ghosts in the top core, cyan in the left, both over the white bottom stir's shear; the knobs tinted red, cyan and white.
