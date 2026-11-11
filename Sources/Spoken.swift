@@ -14,10 +14,13 @@ enum Spoken {
         return String(localized: "\(layout.rods.count) rods", comment: "VoiceOver: a layout's rods")
     }
 
-    /// The menu's way on: the tier's first level without a best.
-    static func next(_ level: Level) -> String {
-        String(localized: "Next: level \(Int(level.label) ?? 0), \(level.title)",
-               comment: "VoiceOver: the menu's next button. Level number, then its title")
+    /// A menu row whose hairline is lit says why first: the level in the tank, or the frontier, which the list lands on.
+    static func marked(_ s: (label: String, value: String, hint: String), playing: Bool,
+                       frontier: Bool = false) -> (label: String, value: String, hint: String) {
+        let lead = playing ? String(localized: "playing", comment: "VoiceOver: the menu row of the level in the tank")
+            : frontier ? String(localized: "next", comment: "VoiceOver: the menu row of the tier's first level without a best")
+            : nil
+        return lead.map { (s.label, [$0, s.value].filter { !$0.isEmpty }.joined(separator: ", "), s.hint) } ?? s
     }
 
     /// Where a level's back button goes: a pack's level returns to its card.

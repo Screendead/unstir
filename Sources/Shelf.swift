@@ -505,8 +505,8 @@ struct PackCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Padded below by all of hit()'s reach, as the scroll, laid over it, would take the rest of its target.
             let back = Self.back(to: backTo, beside: beside || closes)
-            Button(action: onBack) { Text(back.text).font(.ui(.button)).hit() }
-                .buttonStyle(Sounding()).padding(.top, 18).padding(.bottom, 14)
+            UnstirButton(.quiet, action: onBack) { Text(back.text).font(.ui(.button)) }
+                .padding(.top, 18).padding(.bottom, 14)
                 .padding(.horizontal, 24)
                 .accessibilityLabel(back.spoken)
             GeometryReader { g in
@@ -865,8 +865,8 @@ struct PackCard: View {
             if !store.canPay { detail(Failure.refused.words ?? "").padding(.bottom, 12) }
             layout {
                 if store.canPay {
-                    pill(label, trailing: price ?? (unreachable ? nil : store.pricing.words), colour: offer.glow,
-                         dim: price == nil) { buy(offer) }
+                    pill(label, trailing: price ?? (unreachable ? nil : store.pricing.words), colour: offer.ink,
+                         dim: price == nil, pending: buying) { buy(offer) }
                         .disabled(buying)
                         .keyframeAnimator(initialValue: 1.0, trigger: pulses) { pill, scale in
                             pill.scaleEffect(reduceMotion ? 1 : scale)
@@ -884,11 +884,9 @@ struct PackCard: View {
                 if let taste = Self.taste(levels) ?? Self.placeholder(offer).map({ (level: $0, replay: false) }) {
                     let (level, replay) = taste
                     let n = offer.pack?.taste ?? 3
-                    Button { onPlay(level) } label: {
+                    UnstirButton(.secondary) { onPlay(level) } label: {
                         Text(replay ? "replay 01\u{2013}\(String(format: "%02d", n)) \u{203A}" : "try \(n) free \u{203A}")
-                            .font(replay ? .ui(.detail) : .ui(.button)).opacity(replay ? 0.5 : 0.7)
                     }
-                    .buttonStyle(Sounding())
                     .accessibilityLabel(replay ? "Replay the \(n) free levels" : "Try the first \(n) levels free")
                 }
             }
@@ -940,18 +938,16 @@ struct PackCard: View {
         #endif
     }
 
-    private func pill(_ title: String, trailing: String?, colour: Color, dim: Bool = false,
+    /// The card's primary: buy in the pack's ink, the price in the label's colour; play in lime once owned.
+    private func pill(_ title: String, trailing: String?, colour: Color, dim: Bool = false, pending: Bool = false,
                       _ tap: @escaping () -> Void) -> some View {
-        Button(action: tap) {
+        UnstirButton(.primary, accent: colour, pending: pending, action: tap) {
             HStack(spacing: 14) {
-                Text(title).font(.ui(.button, .semibold))
-                if let trailing { Text(trailing).font(dim ? .ui(.detail) : .ui(.button)).opacity(dim ? 0.45 : 0.75) }
+                Text(title)
+                // No price yet: what stands in for it is smaller and fainter.
+                if let trailing { Text(trailing).font(dim ? .ui(.detail) : .ui(.button)).opacity(dim ? 0.45 : 1) }
             }
-            .padding(.horizontal, 22).padding(.vertical, 12).frame(minHeight: 46)
-            .overlay { Capsule().strokeBorder(colour, lineWidth: 1).shadow(color: colour, radius: 5) }
-            .contentShape(Capsule())
         }
-        .buttonStyle(Sounding())
     }
 
     /// Complete's failure stays off the pack's own status, so it is said here, beside the button that tried.
@@ -988,7 +984,7 @@ struct PackCard: View {
         Button { Task { await store.restoreAndAnnounce() } } label: {
             let words = restoreWords
             Text(store.restoring ? store.restoreNote ?? words : store.restoreNote.map { "\($0) \u{00B7} \(words)" } ?? words)
-                .font(.ui(.detail)).foregroundStyle(Color.text3).underline(pattern: .dot)
+                .font(.ui(.detail)).foregroundStyle(Color.text3)
                 .fixedSize(horizontal: false, vertical: true).hit(16)
         }
         .buttonStyle(Sounding())

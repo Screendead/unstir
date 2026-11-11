@@ -29,6 +29,8 @@ struct Page: Equatable, Sendable {
     func signal(_ colour: Color) -> Color { paper ? .ink : colour }
     /// Ink at 0.56 reads at 3.8:1 on bone, under the floor for words, so on paper `text3` is `text2`.
     func tone(_ tone: TextTone) -> TextTone { paper && tone == .text3 ? .text2 : tone }
+    /// A control's stroke, at 3:1 or more: ink at `line`'s 0.40 reads 2.4:1 on bone, so on paper it takes `text3`'s.
+    var line: Color { paper ? Color.ink.opacity(TextTone.text3.alpha) : .line }
     /// Neon glows; paper has none.
     func glow(_ colour: Color) -> Color { paper ? .clear : colour }
     /// The text of the line under the tank: the stipulation, set in a serif on paper.
