@@ -2,8 +2,8 @@
 
 import SwiftUI
 
-/// What the solve that finishes a tier, or with the last tier the whole free game, plays between its wave and its
-/// card. Three options for Jack to choose between, each only behind UNSTIR_PAYOFF, so a plain launch plays none:
+/// What the solve that finishes a tier, with the last tier the whole free game, or a paid pack plays between its wave
+/// and its card. Three options for Jack to choose between, each only behind UNSTIR_PAYOFF, so a plain launch plays none:
 /// `a`, the glass stirs itself; `b`, the bezel counts the tier's tanks; `c`, a curtain call.
 struct Payoff: Equatable {
     enum Option: String { case a, b, c }
@@ -18,11 +18,23 @@ struct Payoff: Equatable {
     @MainActor static var skips: Double?
 
     let option: Option
-    let tier: Tier
-    /// Each level's best in the ladder's order: the tier's, or every tier's for the game.
+    /// What was finished: a tier, the last being the whole free game, or else a paid pack.
+    let tier: Tier?
+    let pack: Pack?
+    /// Each level's best in the ladder's order: the tier's, every tier's for the game, or the pack's.
     let marks: [Mark]
     /// Under Reduce Motion nothing winds, counts or turns: each option lands on what it leaves standing.
     var still = false
+    /// Escapement's paper, where nothing glows: the halo is two rings in the plate's vermilion, the tally and the
+    /// curtain vermilion and ink, and no second wave runs, as the shader's would turn the bone white.
+    var paper = false
+
+    /// A name and its colours: a tier's, or the pack's.
+    struct Part: Equatable {
+        let name: String
+        let colours: [Color]
+        let glow: Color
+    }
 
     struct Cue {
         let at: Double
@@ -30,22 +42,38 @@ struct Payoff: Equatable {
     }
 
     /// The last tier's: the whole free game.
-    var whole: Bool { tier == Tier.allCases.last }
-    var tiers: [Tier] { whole ? Tier.allCases : [tier] }
+    var whole: Bool { tier != nil && tier == Tier.allCases.last }
+    /// The tier's, each tier's for the game, or the pack's.
+    var parts: [Part] {
+        if let pack {
+            let offer = Offer.pack(pack)
+            return [Part(name: pack.name, colours: offer.sweep, glow: offer.glow)]
+        }
+        return (whole ? Tier.allCases : tier.map { [$0] } ?? []).map { Part(name: $0.name, colours: $0.colours, glow: $0.glow) }
+    }
     var cleans: Int { marks.filter { $0 == .clean }.count }
+    /// What the log calls it.
+    var label: String { whole ? "game" : tier?.rawValue ?? pack?.rawValue ?? "" }
 
-    init(option: Option, tier: Tier, marks: [Mark], still: Bool = false) {
-        (self.option, self.tier, self.marks, self.still) = (option, tier, marks, still)
+    init(option: Option, tier: Tier? = nil, pack: Pack? = nil, marks: [Mark], still: Bool = false, paper: Bool = false) {
+        (self.option, self.tier, self.pack, self.marks, self.still, self.paper) = (option, tier, pack, marks, still, paper)
     }
 
+    /// The payoff `game`'s solve earned: its tier's (`Game.tierDone`), or its pack's, on the solve that completes the
+    /// pack (`Game.completed`).
     @MainActor init?(_ game: Game, still: Bool = false) {
-        guard let option = Self.option, let tier = game.tierDone else { return nil }
+        let pack = game.completed?.pack
+        guard let option = Self.option, game.tierDone != nil || pack != nil else { return nil }
         self.still = still
         self.option = option
-        self.tier = tier
-        marks = (tier == Tier.allCases.last ? Tier.allCases : [tier]).flatMap(\.levels).map { level in
+        tier = pack == nil ? game.tierDone : nil
+        self.pack = pack
+        paper = game.level.page.paper
+        let levels = pack?.levels ?? (game.tierDone == Tier.allCases.last ? Tier.allCases : [game.tierDone!]).flatMap(\.levels)
+        marks = levels.map { level in
             guard let best = Best.load(level.id) else { return .none }
-            return best.clean == true ? .clean : best.over == 0 ? .par : .solved
+            // Escapement has no par: its bests are clean or solved.
+            return best.clean == true ? .clean : best.over == 0 && level.ratchets.isEmpty ? .par : .solved
         }
     }
 
@@ -104,7 +132,7 @@ struct Payoff: Equatable {
 
     /// The light that runs out from the centre as a whirl lets go, as the shader's wave: its radius, negative for none.
     func wave(at t: Double) -> Float {
-        if still { return -1 }
+        if still || paper { return -1 }
         switch option {
         case .a:
             // The last whirl has no rest after it but the payoff's own tail.
@@ -136,9 +164,9 @@ struct Payoff: Equatable {
     }
 
     /// The tier whose colours the halo wears while the relay shows its picture, nil for the payoff's own.
-    func passing(at t: Double) -> Tier? {
+    func passing(at t: Double) -> Part? {
         guard whole, option == .a, !still, t >= Self.wound, t < Double(whirls - 1) * Self.whirl + Self.wound else { return nil }
-        return Tier.allCases[min(Int((t - Self.wound) / Self.whirl), Tier.allCases.count - 1)]
+        return parts[min(Int((t - Self.wound) / Self.whirl), parts.count - 1)]
     }
 
     // MARK: b, the bezel counts
@@ -158,7 +186,7 @@ struct Payoff: Equatable {
         return 2 * .pi * x * x * x * (x * (6 * x - 15) + 10)
     }
 
-    /// When each of the curtain's lines comes up: a tier's name, by its place among `tiers`, the stamp and the credit.
+    /// When each of the curtain's lines comes up: a name, by its place among `parts`, the stamp and the credit.
     func rises(_ line: Int) -> Double { still ? 0.2 : whole ? 0.7 + 0.8 * Double(line) : 0.5 + 0.7 * Double(line) }
     /// When the curtain starts to lift.
     var lifts: Double { length - 0.5 }
@@ -172,14 +200,21 @@ struct Payoff: Equatable {
 
     /// What the curtain says under the names: the stamp's word, or the completion's line.
     var stamp: String {
-        whole ? String(localized: "every tier unstirred", comment: "The curtain after the last free level")
+        if let pack {
+            return String(localized: "\(marks.count) \(pack.noun) unstirred",
+                          comment: "The curtain after a pack's last level, under the pack's name: its levels by the pack's own word")
+        }
+        return whole ? String(localized: "every tier unstirred", comment: "The curtain after the last free level")
             : String(localized: "unstirred.", comment: "The curtain after a tier's last level, under the tier's name")
     }
 
     /// The tally's line on the card.
     var tally: String {
-        String(localized: "\(marks.count) tanks unstirred \u{00B7} \(cleans) clean",
-               comment: "Result card, a tier or the whole game finished: its levels, and how many clean")
+        // A pack's card already says how many it holds ("Lens complete · 25 panels").
+        pack != nil ? String(localized: "\(cleans) of \(marks.count) clean",
+                             comment: "Result card, a pack finished: how many of its levels were solved clean")
+            : String(localized: "\(marks.count) tanks unstirred \u{00B7} \(cleans) clean",
+                     comment: "Result card, a tier or the whole game finished: its levels, and how many clean")
     }
 
     /// Whether the card carries the credit; the curtain shows its own.
@@ -187,6 +222,11 @@ struct Payoff: Equatable {
 
     /// What VoiceOver hears of it, after the level's own result.
     var spoken: String {
+        if let pack {
+            return String(localized: "\(pack.name) finished: \(marks.count) \(pack.noun), \(cleans) clean.",
+                          comment: "VoiceOver: the card of a pack's last level")
+        }
+        guard let tier else { return "" }
         let done = whole ? String(localized: "The whole game finished: \(marks.count) tanks unstirred, \(cleans) clean.",
                                   comment: "VoiceOver: the last free level's card")
             : String(localized: "\(tier.name) finished: \(marks.count) tanks unstirred, \(cleans) clean.",
@@ -212,12 +252,12 @@ struct Payoff: Equatable {
         case .b:
             // A tick a segment, or for the game one in three, a heal's note as each tier's arc closes, then the chime.
             let ticks = stride(from: 0, to: marks.count, by: whole ? 3 : 1).map { Cue(at: Double($0) * pip, effect: .tick) }
-            let arcs = tiers.indices.map {
-                Cue(at: Double(($0 + 1) * marks.count / tiers.count) * pip, effect: .heal(whole ? 2 * $0 + 1 : 6))
+            let arcs = parts.indices.map {
+                Cue(at: Double(($0 + 1) * marks.count / parts.count) * pip, effect: .heal(whole ? 2 * $0 + 1 : 6))
             }
             return ticks + arcs + [Cue(at: Double(marks.count) * pip + 0.1, effect: .solve)]
         case .c:
-            return tiers.indices.map { Cue(at: rises($0), effect: .tier) } + [Cue(at: rises(tiers.count), effect: .solve)]
+            return parts.indices.map { Cue(at: rises($0), effect: .tier) } + [Cue(at: rises(parts.count), effect: .solve)]
         }
     }
 }

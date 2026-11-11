@@ -141,8 +141,9 @@ extension Game {
             String(localized: "\(ended) \($0.spoken)",
                    comment: "VoiceOver: the result card. How the level ended, then what it completed")
         } ?? ended
-        // A payoff's own sentence, only where one is switched on.
-        return Payoff(self).map { said + " " + $0.spoken } ?? said
+        // A payoff's own sentence, only where one is switched on; a pack's says what its completion's would.
+        guard let payoff = Payoff(self) else { return said }
+        return (payoff.pack == nil ? said : ended) + " " + payoff.spoken
     }
 
     private var ended: String {

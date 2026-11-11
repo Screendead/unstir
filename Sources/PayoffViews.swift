@@ -27,20 +27,31 @@ struct PayoffRim: View {
         .frame(width: 2 * PlayLayout.rim * r, height: 2 * PlayLayout.rim * r)
     }
 
-    /// The game's halo wears each tier's colours as its picture passes, then all four's.
+    /// The game's halo wears each tier's colours as its picture passes, then all four's. On paper, where nothing
+    /// glows, it is two rings in the plate's vermilion just outside the bezel.
     private var halo: some View {
         ZStack {
-            if let tier = payoff.passing(at: t) { light(tier.colours).opacity(0.8) }
-            light(payoff.tiers.flatMap(\.colours)).opacity(payoff.halo(at: t))
+            if payoff.paper {
+                ZStack {
+                    Circle().stroke(Color.plateVermilion, lineWidth: 2).padding(-7)
+                    Circle().stroke(Color.plateVermilion.opacity(0.55), lineWidth: 1).padding(-13)
+                }
+                .frame(width: 2 * PlayLayout.rim * r, height: 2 * PlayLayout.rim * r)
+                .opacity(payoff.halo(at: t))
+            } else {
+                if let part = payoff.passing(at: t) { light(part.colours).opacity(0.8) }
+                light(payoff.parts.flatMap(\.colours)).opacity(payoff.halo(at: t))
+            }
         }
         .allowsHitTesting(false)
     }
 
-    private static func colour(_ mark: Payoff.Mark) -> Color {
+    /// On paper the card's lime and amber are ink, so clean takes the plate's vermilion and the rest ink.
+    private static func colour(_ mark: Payoff.Mark, paper: Bool) -> Color {
         switch mark {
-        case .clean: .lime
-        case .par: .amber
-        case .solved: .text
+        case .clean: paper ? .plateVermilion : .lime
+        case .par: paper ? .ink : .amber
+        case .solved: paper ? .ink : .text
         case .none: .text4
         }
     }
@@ -49,7 +60,7 @@ struct PayoffRim: View {
     /// clean lime, par amber, solved in the text's own. The game's four tiers take a quarter each, under an arc in
     /// the tier's glow.
     private var tally: some View {
-        let band = (PlayLayout.rim - 1) * r, marks = payoff.marks, tiers = payoff.tiers
+        let band = (PlayLayout.rim - 1) * r, marks = payoff.marks, tiers = payoff.parts, paper = payoff.paper
         let lit = payoff.lit(at: t), each = marks.count / tiers.count
         // The arc a tier's segments share, less a gap either side of it, and each segment's own gap.
         let span = 2 * Double.pi / Double(tiers.count), edge = tiers.count > 1 ? 0.03 : 0.0
@@ -61,16 +72,18 @@ struct PayoffRim: View {
         return Canvas { context, size in
             context.translateBy(x: size.width / 2, y: size.height / 2)
             // The track the count runs along.
-            context.stroke(arc(0, 2 * .pi, at: r + band / 2), with: .color(.black.opacity(0.55 * min(max(t / 0.2, 0), 1))),
+            context.stroke(arc(0, 2 * .pi, at: r + band / 2),
+                           with: .color((paper ? Color.bone : .black).opacity((paper ? 0.9 : 0.55) * min(max(t / 0.2, 0), 1))),
                            lineWidth: band * 0.86)
-            for pass in 0 ..< 2 {
+            // The glow, which paper has none of, then the segments.
+            for pass in (paper ? 1 : 0) ..< 2 {
                 var layer = context
                 if pass == 0 { layer.addFilter(.blur(radius: band * 0.7)) }
                 for i in 0 ..< lit {
                     let from = Double(i / each) * span + edge + Double(i % each) * slot + gap / 2
                     // The newest flashes white as it lights.
                     let fresh = i == lit - 1 && lit < marks.count
-                    layer.stroke(arc(from, from + slot - gap, at: r + band / 2), with: .color(fresh ? .white : Self.colour(marks[i])),
+                    layer.stroke(arc(from, from + slot - gap, at: r + band / 2), with: .color(fresh && !paper ? .white : Self.colour(marks[i], paper: paper)),
                                  lineWidth: band * 0.7)
                 }
                 guard tiers.count > 1 else { continue }
@@ -105,8 +118,9 @@ struct PayoffRelay: View {
     }
 }
 
-/// Option c: the curtain call, over the glass it dims: the tier's name in its own sweep and "unstirred.", or for the
-/// game each tier's name in turn, the completion's line and the credit.
+/// Option c: the curtain call, over the glass it dims: the tier's or the pack's name in its own sweep over its stamp,
+/// or for the game each tier's name in turn, the completion's line and the credit. On paper the veil is bone, the
+/// name the plate's vermilion and the rest ink, with no glow.
 struct PayoffCurtain: View {
     let payoff: Payoff
     let r: CGFloat
@@ -115,19 +129,20 @@ struct PayoffCurtain: View {
     private func up(_ line: Int) -> Double { min(max((t - payoff.rises(line)) / 0.45, 0), 1) }
 
     var body: some View {
-        let tiers = payoff.tiers, whole = payoff.whole
+        let tiers = payoff.parts, whole = payoff.whole, paper = payoff.paper
         let shown = min(max(t / 0.5, 0), 1) * (1 - min(max((t - payoff.lifts) / 0.4, 0), 1))
         ZStack {
-            Circle().fill(Color.black.opacity(0.64)).frame(width: 2 * r, height: 2 * r)
+            Circle().fill(paper ? Color.bone.opacity(0.82) : Color.black.opacity(0.64)).frame(width: 2 * r, height: 2 * r)
             VStack(spacing: whole ? 10 : 8) {
                 ForEach(Array(tiers.enumerated()), id: \.offset) { i, tier in
-                    Text(tier.name.uppercased()) // loc: verbatim localized by Tier
+                    Text(tier.name.uppercased()) // loc: verbatim localized by Tier and Pack
                         .font(.ui(whole ? .displaySmall : .display)).tracking(whole ? 4 : 5)
-                        .foregroundStyle(tier.sweep).shadow(color: tier.glow.opacity(0.9), radius: 14)
+                        .foregroundStyle(LinearGradient(colors: paper ? [.plateVermilion] : tier.colours, startPoint: .leading, endPoint: .trailing))
+                        .shadow(color: paper ? .clear : tier.glow.opacity(0.9), radius: 14)
                         .opacity(up(i)).scaleEffect(payoff.still ? 1 : 0.92 + 0.08 * up(i))
                 }
                 Text(payoff.stamp).font(.ui(.stamp)) // loc: verbatim localized by Payoff
-                    .shadow(color: .white.opacity(0.5), radius: 6)
+                    .shadow(color: paper ? .clear : .white.opacity(0.5), radius: 6)
                     .padding(.top, whole ? 10 : 2).opacity(up(tiers.count))
                 if whole {
                     Text(Payoff.credit) // loc: verbatim localized by Payoff

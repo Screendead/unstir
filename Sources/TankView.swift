@@ -1156,7 +1156,7 @@ struct LevelView: View {
     /// Plays the payoff a solve earned, its sounds at their times, until its length is up or a tap has ended it.
     private func pay(_ earned: Payoff) async {
         withAnimation(.easeOut(duration: 0.4)) { payoffAt = .now }
-        Log.write("payoff \(earned.option.rawValue) \(earned.whole ? "game" : earned.tier.rawValue) begins")
+        Log.write("payoff \(earned.option.rawValue) \(earned.label) begins")
         if voiceOver { AccessibilityNotification.Announcement(earned.spoken).post() } // loc: verbatim localized by Payoff
         if let skips = Payoff.skips {
             Task {

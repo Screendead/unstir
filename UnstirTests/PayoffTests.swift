@@ -40,6 +40,49 @@ final class PayoffTests: XCTestCase {
         XCTAssertNil(solve().tierDone)
     }
 
+    /// The solve that completes a paid pack earns the payoff in the pack's name and colours, with the switch on alone;
+    /// Escapement's has no par mark and no second wave, which would turn its paper white.
+    @MainActor func testAPacksLastLevelEarnsItToo() {
+        let ids = Pack.lens.levels.map(\.id), last = ids.last!
+        let saved = ids.map { UserDefaults.standard.data(forKey: "best.\($0)") }
+        defer {
+            Payoff.option = nil
+            for (id, data) in zip(ids, saved) { UserDefaults.standard.set(data, forKey: "best.\(id)") }
+        }
+        func solve() -> Game {
+            let level = Level(id: last, pack: .lens, label: "", title: "", layout: .tri, scramble: [Twist(rod: 0, steps: 4)])
+            let game = Game(level: level, tankTurned: true, swirled: true, bank: (5, nil))
+            game.commit(rod: 0, steps: -4)
+            XCTAssertTrue(game.solved)
+            return game
+        }
+        for (i, id) in ids.dropLast().enumerated() { Best(over: 0, seconds: 9, clean: i < 7).save(id) }
+        UserDefaults.standard.removeObject(forKey: "best.\(last)")
+        Payoff.option = nil
+        XCTAssertNil(Payoff(solve()))
+
+        UserDefaults.standard.removeObject(forKey: "best.\(last)")
+        Payoff.option = .a
+        let game = solve()
+        XCTAssertEqual(game.completed, .pack(.lens))
+        let payoff = Payoff(game)
+        XCTAssertEqual(payoff?.pack, .lens)
+        XCTAssertNil(payoff?.tier)
+        XCTAssertEqual(payoff?.whole, false)
+        XCTAssertEqual(payoff?.marks.count, Pack.lens.levels.count)
+        XCTAssertEqual(payoff?.cleans, 7)
+        XCTAssertEqual(payoff?.parts.map(\.name), ["Lens"])
+        XCTAssertEqual(payoff?.parts.first?.colours, Offer.pack(.lens).sweep)
+        XCTAssertEqual(payoff?.paper, false)
+        XCTAssertTrue(game.finishSpoken.hasSuffix("Lens finished: 25 panels, 7 clean."), game.finishSpoken)
+        XCTAssertFalse(game.finishSpoken.contains("complete"), game.finishSpoken)
+        XCTAssertNil(Payoff(solve()))
+
+        let paper = Payoff(option: .a, pack: .escapement, marks: [.clean, .solved], paper: true)
+        XCTAssertTrue(stride(from: 0.0, to: paper.length, by: 0.05).allSatisfy { paper.wave(at: $0) == -1 })
+        XCTAssertFalse(stride(from: 0.0, to: paper.length, by: 0.05).allSatisfy { paper.entries(at: $0).isEmpty })
+    }
+
     /// Each option leaves the glass as the solve left it: nothing wound, turned or lit by a wave once its length is up
     /// or it has played, and nothing ever under Reduce Motion, where the tally is whole at once.
     func testEveryOptionLetsGoOfTheGlass() {
