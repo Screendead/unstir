@@ -102,10 +102,11 @@ enum Grab: Equatable {
 struct LevelView: View {
     @State private var game: Game
     @State private var liveRod: Int?
-    /// Prism's read on trial: the mask of the rod held last, kept through the fade its let-go starts, and how far in.
-    @State private var readHeld: Channels?
-    @State private var readMix = 0.0
-    @State private var readFade: Task<Void, Never>?
+    /// Prism: the mask of the rod held last, kept through the fade its let-go starts, and how far its read is drawn
+    /// (`Unstirred.held`).
+    @State private var heldChannels: Channels?
+    @State private var hold = 0.0
+    @State private var holdFade: Task<Void, Never>?
     /// The column's room between the title line's foot and the glass's top, as laid out.
     @State private var titleGap: CGFloat?
     /// Prism: the channel whose swatch is held, drawn alone.
@@ -262,7 +263,6 @@ struct LevelView: View {
     /// UNSTIR_REST: seconds at rest before a drawn fingertip lands.
     private let rest: Double
     private let turnPace: Double
-    private let prismRead: PrismRead?
     /// The game replayed a saved line: the first opening, and Escapement's demonstration, don't play.
     private let resumed: Bool
     /// When a first tap armed the reset control, which then says "reset? tap again" for `ResetArm.window`, or under
@@ -387,8 +387,8 @@ struct LevelView: View {
         _game = State(initialValue: game)
         let live = harness?.live, angle = (live?.steps ?? 0) * Tank.step, turn = harness?.tankLive.map { $0 * .pi / 180 }
         _liveRod = State(initialValue: live?.rod)
-        _readHeld = State(initialValue: live.map { level.masks[game.slot(of: $0.rod)] ?? .white })
-        _readMix = State(initialValue: live == nil ? 0 : 1)
+        _heldChannels = State(initialValue: live.map { level.masks[game.slot(of: $0.rod)] ?? .white })
+        _hold = State(initialValue: live == nil ? 0 : 1)
         _liveAngle = State(initialValue: angle)
         _liveTurn = State(initialValue: turn)
         _counted = State(initialValue: harness?.turned?.rod)
@@ -440,7 +440,6 @@ struct LevelView: View {
         frozenBreath = harness?.breath
         rest = harness?.rest ?? 2
         turnPace = harness?.turn ?? 0.1
-        prismRead = harness?.prismRead
         holdArmed = harness?.resetArmed ?? false
         _armedAt = State(initialValue: holdArmed ? .now : nil)
         demoRetired = harness == nil && Best.load(level.id) != nil
@@ -954,15 +953,19 @@ struct LevelView: View {
         // A tap anywhere skips the opening, as the caption says.
         .simultaneousGesture(TapGesture().onEnded { _ = skip() })
         .onChange(of: liveRod) {
-            guard prismRead?.eases == true else { return }
-            if let liveRod { readHeld = game.level.masks[game.slot(of: liveRod)] ?? .white }
-            // In over 0.15 s, out over 0.25, a frame at a time: `Unstirred.readMix`.
-            let from = readMix, to = liveRod == nil ? 0.0 : 1.0, frames = liveRod == nil ? 15 : 9
-            readFade?.cancel()
-            readFade = Task {
-                for i in 1...frames {
-                    guard (try? await Task.sleep(for: .milliseconds(16))) != nil else { return }
-                    readMix = from + (to - from) * Double(i) / Double(frames)
+            guard !game.level.masks.isEmpty else { return }
+            if let liveRod { heldChannels = game.level.masks[game.slot(of: liveRod)] ?? .white }
+            // In over 0.15 s, out over 0.25, by the clock (`Unstirred.hold`); at once under Reduce Motion.
+            let from = hold, to = liveRod == nil ? 0.0 : 1.0, length = liveRod == nil ? 0.25 : 0.15
+            holdFade?.cancel()
+            guard !reduceMotion else { hold = to; return }
+            holdFade = Task {
+                let start = Date.now
+                var t = 0.0
+                while t < 1 {
+                    guard (try? await Task.sleep(for: .milliseconds(8))) != nil else { return }
+                    t = min(Date.now.timeIntervalSince(start) / length, 1)
+                    hold = t < 1 ? from + (to - from) * t : to
                 }
             }
         }
@@ -1596,8 +1599,7 @@ struct LevelView: View {
                                   wind: wind, side: side, haze: showResult ? Self.haze(over: game.over) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries, isolate: isolated,
                                   whiteIsolate: differentiate,
-                                  read: prismRead.map { ($0, $0.eases ? readHeld : liveRod.map { game.level.masks[game.slot(of: $0)] ?? .white }) },
-                                  readMix: readMix,
+                                  held: heldChannels, hold: hold,
                                   budget: Taps.shared.budget(pixels: Double(side * scale)),
                                   fine: fine, crisp: crisp)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.

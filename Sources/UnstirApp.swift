@@ -97,8 +97,6 @@ struct Harness {
     let finger: Bool
     /// UNSTIR_REST=s: with UNSTIR_FINGER, the seconds at rest before the first fingertip lands (2 when unset).
     let rest: Double
-    /// UNSTIR_PRISMREAD=a, b or c: a trial of reading Prism's picture under a held rod (`PrismRead`).
-    let prismRead: PrismRead?
     /// UNSTIR_TURN=s: with UNSTIR_FINGER, the seconds a knob's turn takes a step (0.1 unset), for reading a slow drag.
     let turn: Double
     /// UNSTIR_BREATH=s: on a layout with a swirl, its breath held s seconds into the tank's first rest. Unset, it runs
@@ -444,7 +442,6 @@ struct Harness {
         played = env["UNSTIR_PLAYED"].map(line) ?? []
         finger = env["UNSTIR_FINGER"] == "1"
         rest = env["UNSTIR_REST"].flatMap(Double.init) ?? 2
-        prismRead = env["UNSTIR_PRISMREAD"].flatMap(PrismRead.init)
         turn = env["UNSTIR_TURN"].flatMap(Double.init) ?? 0.1
         breath = env["UNSTIR_BREATH"].flatMap(Double.init)
         brimDemo = env["UNSTIR_BRIMDEMO"] == "1"

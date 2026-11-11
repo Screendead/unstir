@@ -32,11 +32,11 @@ struct Unstirred: ViewModifier, Animatable {
     /// Differentiate Without Colour (`whiteIsolate`).
     var isolate: Channels?
     var whiteIsolate = false
-    /// Prism, the harness's trial (`PrismRead`): how the glass is drawn for reading a held rod's turn.
-    var read: (mode: PrismRead, held: Channels?)?
-    /// How far a trial that eases (`PrismRead.eases`) is drawn over the game's glass, 1 with the rod in hand. Stepped by
-    /// the caller, never animated: an animation started with the grab would take the turn's own with it.
-    var readMix = 1.0
+    /// Prism: the mask of the rod in the player's hand, whose channels the glass draws alone in their own colour, white
+    /// fading in near the count (`unstirChannels`' `held`), and how far that is drawn over the plain glass, 1 in hand.
+    /// Stepped by the caller, never animated: an animation started with the grab would take the turn's own with it.
+    var held: Channels?
+    var hold = 0.0
     /// The committed work drawn with four taps, nil for the glass's static limit (`Tank.fourTaps(pixels:)`). Never
     /// animated: only `Taps` moves it, at a still moment.
     var budget: Int?
@@ -74,7 +74,7 @@ struct Unstirred: ViewModifier, Animatable {
         if let cost = weight.cost {
             let tint = whiteIsolate ? SIMD3<Float>(1, 1, 1) : SIMD3<Float>(isolate?.tint ?? SIMD3(1, 1, 1))
             shader.prism = TankShader.Prism(masks: channels, cost: cost, isolate: isolate, tint: tint)
-            if let read { (shader.prism!.read, shader.prism!.gain) = read.mode.drawn(held: read.held, mix: Float(readMix)) }
+            if let held, held != .white, hold > 0 { (shader.prism!.held, shader.prism!.hold) = (held, Float(min(hold, 1))) }
         } else if let fine, crisp > 0, !lenses.isEmpty {
             shader.fine = fine
             shader.fine?.table[Fine.share] = Float(min(crisp, 1))
@@ -104,14 +104,14 @@ struct TankShader {
     var fine: Fine?
 
     /// `unstirChannels`' own: each entry's mask (a `Channels` raw value), the work in entries held against `fourTaps`,
-    /// and the channel drawn alone in `tint`.
+    /// the channel drawn alone in `tint`, and the held rod's mask and how far its read is drawn (`Unstirred.held`).
     struct Prism {
         var masks: [Float]
         var cost: Int
         var isolate: Channels?
         var tint: SIMD3<Float>
-        var read: Float = 0
-        var gain = SIMD3<Float>(1, 1, 1)
+        var held: Channels?
+        var hold: Float = 0
     }
 
     var name: String { prism != nil ? "unstirChannels" : fine != nil ? "unstirLens" : "unstir" }
@@ -130,8 +130,8 @@ struct TankShader {
         if let fine, prism == nil { list += [("atlas", .image(fine.atlas)), ("fine", .floatArray(fine.table))] }
         if let prism {
             list += [("isolate", .float(Float(prism.isolate?.rawValue ?? 0))),
-                     ("tint", .float3(prism.tint.x, prism.tint.y, prism.tint.z)), ("read", .float(prism.read)),
-                     ("gain", .float3(prism.gain.x, prism.gain.y, prism.gain.z))]
+                     ("tint", .float3(prism.tint.x, prism.tint.y, prism.tint.z)),
+                     ("held", .float(Float(prism.held?.rawValue ?? 0))), ("hold", .float(prism.hold))]
         }
         return list
     }
@@ -289,45 +289,6 @@ struct PictureLayer: View {
             // The halftone's detached bake runs on when a change of pose cancels it, and may land after the new one.
             guard !Task.isCancelled else { return }
             image = baked
-        }
-    }
-}
-
-/// UNSTIR_PRISMREAD: trials of reading Prism's picture while a rod is held, none of them the game's yet.
-enum PrismRead: String {
-    /// The channels the held rod leaves alone dim, so what it moves reads over them.
-    case dim = "a"
-    /// What the held rod moves is drawn alone in white, each of its channels an equal share: lines its channels
-    /// share are full white, a line only one holds a half or a third.
-    case ink = "b"
-    /// Held or not, a line dims by how far its channels are out of register, so a white line is the brightest.
-    case register = "c"
-    /// What the held rod moves is drawn in its own colour, a dark one lifted, and each other channel only where it
-    /// falls on those lines: one colour unwinding off the count, white where the picture is in register.
-    case own = "d"
-    /// As `own`, but another channel is drawn by how nearly it and a held one show the same point of the plate: its
-    /// lines fade in beside the held colour's as the turn nears register, and lines that merely cross stay the held
-    /// colour. It reads the stack's maps, never the count.
-    case registered = "e"
-
-    /// The other channels' share of their light on the screen while a rod is held.
-    static let dimmed: Float = 0.3
-    /// The trial fades in on the grab and out on the let-go, so the caller keeps the let-go's mask through the fade.
-    var eases: Bool { self == .own || self == .registered }
-
-    /// `unstirChannels`' `read` and `gain` with a rod of mask `held` in hand, nil at rest, `mix` of the way in.
-    func drawn(held: Channels?, mix: Float = 1) -> (read: Float, gain: SIMD3<Float>) {
-        let bits = Int(held?.rawValue ?? 0), on = [1, 2, 4].map { bits & $0 != 0 }
-        switch self {
-        case .register: return (3, SIMD3(1, 1, 1))
-        case .dim where held != nil:
-            return (1, SIMD3(on[0] ? 1 : Self.dimmed, on[1] ? 1 : Self.dimmed, on[2] ? 1 : Self.dimmed))
-        case .ink where held != nil:
-            let share = 1 / Float(on.filter { $0 }.count)
-            return (2, SIMD3(on[0] ? share : 0, on[1] ? share : 0, on[2] ? share : 0))
-        case .own where held != nil && mix > 0, .registered where held != nil && mix > 0:
-            return ((self == .own ? 3 : 4) + min(mix, 1), SIMD3(on[0] ? 1 : 0, on[1] ? 1 : 0, on[2] ? 1 : 0))
-        default: return (0, SIMD3(1, 1, 1))
         }
     }
 }
