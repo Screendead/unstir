@@ -802,8 +802,8 @@ type-result-xxxl.png  Level 05's result card at xxxLarge, over par against a sto
 type-result-fullest-xxxl.png  Plughole 27's fullest card at xxxLarge: the new best's line, again, and up a notch locked, whose foot runs under the screen's edge on a Pro Max (the card's rebuild, the pass's fifth change, makes up a notch its one button).
 type-lost-xxxl.png  Escapement 2 out of ticks at xxxLarge: the lost card's line and buttons at the larger size.
 type-settings-ax3.png  Settings at accessibility3: the title, rows and details scaled, the sheet scrolling.
-marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, 04's +2 in magenta before its one, three hollow on 08, a lock on 09 onwards.
-marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title, the +2 before its disc.
-marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2 (the +2 in magenta before one disc), 04 clean, 05 tried.
+marks-menu.png  Plughole 01 to 07 solved, clean, at par, clean, +2, clean, at par and at par, 08 tried and 09 on locked: three, two or one disc filled at each row's right, three hollow on 08, a lock on 09 onwards.
+marks-menu-ax3.png  The same at accessibility3: each row's marks or lock under its title.
+marks-card-lens.png  Lens's card, owned, scrolled to its levels: 01 clean, 02 at par, 03 +2, 04 clean, 05 tried.
 marks-card-lens-locked.png  Lens's card, unowned, scrolled to its levels: 01 clean and 02 at par, 03 open, a lock on 04 onwards.
 marks-result-par.png  Level 06 solved at par on a replay: two discs filled over at par, clean counts on the first try.
