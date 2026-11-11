@@ -177,27 +177,15 @@ film firststir-ch4-harbour 33 "$tank,fps=1,scale=200:-1,tile=11x3:padding=4" $fs
 film firststir-ch5-stir 34 "$tank,fps=1,scale=200:-1,tile=12x3:padding=4" $fs LEVEL=25 MOVES=1:+3,0:-2,1:-5,0:+3,2:-4
 # The night forwards whole, from First Stir 25 opened solved (UNSTIR_ENDING=-1 runs it from the start).
 film firststir-ending 168 "$tank,fps=0.2,scale=160:-1,tile=8x4:padding=4" PACK=first-stir LEVEL=25 OWNED=first-stir SCREEN=clean ENDING=-1
+# Reading Prism's picture under a held rod: a move of shots/prism.sh's `reads` turned slowly by the fingertip, 0.7 s a
+# step, to its count and let go: Frond's cyan rod, its first move, and the last specimen's yellow rod, its fourth.
+film prism-read-01-cyan 9 "$tank,fps=2,scale=200:-1,tile=9x2:padding=4" PACK=prism OWNED=prism LEVEL=1 FINGER=1 \
+  REST=1.5 TURN=0.7 MOVES=1:+3
+film prism-read-30-yellow 9 "$tank,fps=2,scale=200:-1,tile=9x2:padding=4" PACK=prism OWNED=prism LEVEL=30 \
+  PLAYED=0:+2,1:-2,4:-2 FINGER=1 REST=1.5 TURN=0.7 MOVES=0:-3
 # Prism, played by a drawn fingertip: specimen 1 heals the red rod buried under the cyan one first, which its colour
 # frees, then the cyan, then the white bottom stir; specimen 5 on pent heals the solver's line, red and cyan words
 # interleaved, the white last, owned since it is past the taste.
-# Reading Prism's picture under a held rod (UNSTIR_PRISMREAD): each of shots/prism.sh's `reads` moves swept slowly by
-# the fingertip, 0.7 s a step, through its count to a step past it, as the game draws it today and under each trial
-# PRISMREAD_OPTIONS names (a, b and c unset).
-# scripts/prism-read-films.sh cuts and joins them.
-sweep() {  # name level played rod steps
-  local v d
-  d=$(awk -v n="${5#[-+]}" 'BEGIN { print 0.7 * n + 5.5 }')
-  for v in today ${PRISMREAD_OPTIONS:-a b c}; do
-    film "prism-read-$v-$1" "$d" "$tank,fps=2,scale=200:-1,tile=9x2:padding=4" PACK=prism OWNED=prism LEVEL=$2 \
-      ${3:+PLAYED=$3} FINGER=1 REST=1.5 TURN=0.7 MOVES=$4:$5 $([[ $v == today ]] || echo PRISMREAD=$v)
-  done
-}
-sweep 01-cyan 1 "" 1 +4
-sweep 01-red 1 1:+3 0 -5
-sweep 01-white 1 1:+3,0:-4 2 -4
-sweep 08-blue 8 2:+2,4:+4 0 -5
-sweep 15-magenta 15 "" 2 -6
-sweep 30-yellow 30 "" 0 +3
 film prism-01-solve 13 "$tank,fps=2,scale=200:-1,tile=9x3:padding=4" PACK=prism LEVEL=1 FINGER=1 MOVES=0:-4,1:+3,2:-3
 film prism-05-solve 24 "$tank,fps=1.5,scale=200:-1,tile=9x4:padding=4" PACK=prism LEVEL=5 OWNED=prism FINGER=1 \
   MOVES=0:+3,1:-2,0:-4,2:-5,3:-4,4:-3,2:+3
