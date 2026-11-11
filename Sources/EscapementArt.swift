@@ -57,6 +57,10 @@ enum EscapementArt {
 
     static func plate(_ direction: Direction, problem n: Int) -> Plate {
         switch (direction, n) {
+        case (.plates, 2): pendulum()
+        case (.plates, 4): cogwheel()
+        case (.plates, 9): hourglass()
+        case (.plates, 25): moonPhase()
         default: familyPlate(n)
         }
     }
