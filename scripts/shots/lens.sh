@@ -5,8 +5,14 @@ hold=5 shot lens-plus "Lens: tri, rod 0 a lens, 0:+3: the top core magnified x8 
   PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:+3
 hold=5 shot lens-minus "Lens: the same at 0:-2: the top core shrunk to x0.25, its dots fine and close inside the rim." PACK=lens LEVEL=1 BESTS=lens:0 STACK=0:-2
 for n in $(seq -w 1 25); do
-  hold=5 shot "lens-$n" "Lens $n as dealt, on the halftone (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens \
+  hold=5 shot "lens-$n" "Lens $n as dealt, on its halftone panel (docs/lens-tables.md), the pack owned." PACK=lens LEVEL=$n OWNED=lens \
     $([[ $n == 01 ]] && echo BESTS=lens:0)
+done
+# Each drawn panel's clue (LensArt*.swift): the level's layout drawn clean, only its lenses magnified, each as
+# scripts/lens-art-sheet.py's table holds it. That script lays these out beside lens-NN, the level as dealt.
+for clue in $(scripts/lens-art-sheet.py clues); do
+  hold=5 shot "lens-${clue%%=*}-clue" "Lens ${clue%%=*}'s panel drawn clean, only its lenses magnified (${clue#*=}): what is seen through each." \
+    PACK=lens LEVEL=${clue%%=*} OWNED=lens BESTS=lens:0 STACK=${clue#*=} CLEAN=1
 done
 hold=5 shot lens-over "Lens: 1:+2,0:+2, the lens newest: its rim whole, rod 1's lines cut dead at it." PACK=lens LEVEL=1 BESTS=lens:0 STACK=1:+2,0:+2
 hold=5 shot lens-result "Lens 02's result card over par: in the pack's magenta, LENS small above the title, the way out reading ‹ Lens." \
