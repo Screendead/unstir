@@ -3,19 +3,33 @@
 import Foundation
 import simd
 
-/// Sketches of Escapement's plates for Jack to pick a direction from: polylines and filled outlines in tank units, y
-/// down, in ink and one second ink on bone. Nothing draws them unless a Debug launch names a direction
-/// (`UNSTIR_ESCART`); every other launch draws `Picture.engineTurning`.
+/// Escapement's plates, a problem its own, drawn as its name in an old clockmaker's manual's hand: polylines and filled
+/// outlines in tank units, y down, in ink and one second ink on bone. The play screen draws them (`Level.plate`);
+/// anything smaller, and a problem with no plate, draws the shared `Picture.engineTurning`.
 enum EscapementArt {
     typealias P = SIMD2<Double>
 
-    enum Direction: String, CaseIterable {
-        /// One engraved plate a problem, drawn as its name.
-        case plates = "a"
-        /// Six patterns, varied by seed, scale and second ink.
-        case family = "b"
-        /// A chapter's own ground and ink, the problem's emblem cut into it and its number in Roman.
-        case chapters = "c"
+    /// A problem's plate by its number, a line a problem; nil for a problem with none.
+    static func plate(_ problem: Int) -> Plate? {
+        switch problem {
+        // Problems 1 to 10 (EscapementArtPlates.swift).
+        case 1: mainspring()
+        case 2: pendulum()
+        case 3: clockFace()
+        case 4: cogwheel()
+        case 5: windingKey()
+        case 6: clockwork()
+        case 7: pause()
+        case 8: snooze()
+        case 9: hourglass()
+        case 10: eggTimer()
+
+        // Problems 11 to 20.
+
+        // Problems 21 to 30.
+
+        default: nil
+        }
     }
 
     enum Ink: Equatable { case black, second, bone }
@@ -40,31 +54,8 @@ enum EscapementArt {
         mutating func fill(_ points: [P], _ ink: Ink = .bone) { marks.append(Mark(points: points, width: 0, ink: ink)) }
     }
 
-    static let vermilion: UInt32 = 0xD8402A, prussian: UInt32 = 0x23466B, viridian: UInt32 = 0x2E5E4E
-    static let sepia: UInt32 = 0x7A4A22, oxblood: UInt32 = 0x8E2B1F
+    static let vermilion: UInt32 = 0xD8402A
     static let heavy = 0.010, medium = 0.007, fine = 0.005
-
-    static var direction: Direction? {
-        #if DEBUG
-        ProcessInfo.processInfo.environment["UNSTIR_ESCART"].flatMap(Direction.init(rawValue:))
-        #else
-        nil
-        #endif
-    }
-
-    /// The problems direction A and C have drawn; any other draws the family's plate.
-    static let drawn = [2, 4, 9, 25]
-
-    static func plate(_ direction: Direction, problem n: Int) -> Plate {
-        switch (direction, n) {
-        case (.plates, 2): pendulum()
-        case (.plates, 4): cogwheel()
-        case (.plates, 9): hourglass()
-        case (.plates, 25): moonPhase()
-        case (.chapters, _) where drawn.contains(n): chapterPlate(n)
-        default: familyPlate(n)
-        }
-    }
 
     // MARK: Geometry
 

@@ -77,11 +77,10 @@ extension Picture {
     /// Lines are at least 2.2 px wide: the shader's four taps average in squared light, which thins dark lines on a light
     /// ground. No glow. Below a 230 px radius (a dock cover's is 99) the lines would fill a chevron's half-width, so the
     /// lattice and the rays' spacing grow until it holds 1.7 lines: the plate in miniature, not ink.
-    /// A Debug launch that names a direction (`EscapementArt.direction`) draws `problem`'s sketch instead, at the play
-    /// screen's size: a miniature keeps this plate.
+    /// `problem`'s own plate (`EscapementArt.plate`) is drawn instead, if it has one.
     static func engineTurning(_ ctx: GraphicsContext, r: CGFloat, scale: CGFloat, problem: Int = 0) {
-        if let direction = EscapementArt.direction, problem > 0, r * scale >= 250 {
-            EscapementArt.plate(direction, problem: problem).draw(ctx, r: r, scale: scale)
+        if let plate = EscapementArt.plate(problem) {
+            plate.draw(ctx, r: r, scale: scale)
             return
         }
         func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: r + x * r, y: r + y * r) }

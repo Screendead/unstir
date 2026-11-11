@@ -118,7 +118,7 @@ enum Picture: String, CaseIterable {
     }
 
     /// `panel` is the Lens level whose halftone panel to bake (`Level.panel`), 0 for the test panel, or the Escapement
-    /// problem whose plate sketch to draw.
+    /// problem whose plate to draw (`Level.plate`), 0 for the shared one.
     @MainActor
     func render(side: CGFloat, scale: CGFloat, panel: Int = 0) async -> UIImage? {
         if self == .halftone {
