@@ -205,6 +205,10 @@ film shelf-dock 9 "crop=1320:420:0:2380,fps=2,scale=440:-1,tile=4x4:padding=4" S
 # until the ticks run out. A ratchet's move (0:1) is a tap on it. Screen, so the header's budget shows with the tank.
 film escapement-demo 14 "$tank,fps=3,scale=200:-1,tile=8x6:padding=4" PACK=escapement OPEN=1
 film escapement-won 12 "$tank,fps=3,scale=200:-1,tile=8x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=2:4,0:1,1:-3
+# The wait control: problem 1's demonstration waiting on it, and problem 2 solved with its wait made on it (`w`), the
+# whole screen so the row under the tank is in frame.
+film escapement-demo-wait 14 "fps=3,scale=150:-1,tile=8x6:padding=4" PACK=escapement OPEN=1
+film escapement-won-wait 12 "fps=3,scale=150:-1,tile=8x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=2:4,w,1:-3
 screen=crop=iw:ih*0.75:0:ih*0.05  # the header and the tank, the budget's flaps with the clocks, at either scale
 film escapement-out-of-ticks 15 "$screen,fps=3,scale=150:-1,tile=9x5:padding=4" PACK=escapement LEVEL=2 FINGER=1 REST=1 MOVES=2:4,1:-3,0:1
 # Out of ticks as the clock stops with twists left: on 3, a tap, then knob 1, which pushes under knob 2's seam as the
