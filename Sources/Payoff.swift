@@ -202,8 +202,8 @@ struct Payoff: Equatable {
     /// What the curtain says under the names: the stamp's word, or the completion's line.
     var stamp: String {
         if let pack {
-            return String(localized: "\(marks.count) \(pack.noun) unstirred",
-                          comment: "The curtain after a pack's last level, under the pack's name: its levels by the pack's own word")
+            return String(localized: "\(pack.counted(marks.count)) unstirred",
+                          comment: "The curtain after a pack's last level, under the pack's name: its levels counted")
         }
         return whole ? String(localized: "every tier unstirred", comment: "The curtain after the last free level")
             : String(localized: "unstirred.", comment: "The curtain after a tier's last level, under the tier's name")
@@ -224,8 +224,8 @@ struct Payoff: Equatable {
     /// What VoiceOver hears of it, after the level's own result.
     var spoken: String {
         if let pack {
-            return String(localized: "\(pack.name) finished: \(marks.count) \(pack.noun), \(cleans) clean.",
-                          comment: "VoiceOver: the card of a pack's last level")
+            return String(localized: "\(pack.name) finished: \(pack.counted(marks.count)), \(cleans) clean.",
+                          comment: "VoiceOver: the card of a pack's last level. The pack, its levels counted, how many clean")
         }
         guard let tier else { return "" }
         let done = whole ? String(localized: "The whole game finished: \(marks.count) tanks unstirred, \(cleans) clean.",
