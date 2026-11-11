@@ -435,6 +435,7 @@ Calls 2026-11-09 (finish-and-pitch page); each took the recommendation.
 | CRISP = A | 2026-11-11 | The finer lens core merges and goes on the phone to check (#187). Jack: "How exciting. This looks lovely." | HANDOFF |
 | ESCPICTURES = A | 2026-11-11 | Escapement gets a plate per problem, drawn as its name. | HANDOFF |
 | MUSIC-THROUGH | 2026-11-11 | Jack, on the packs' layers: "i don't want the packs' foreground to fade when the level is solved then come back in the same spot on the next level; i want it to keep playing all the way through". | HANDOFF |
+| PAYOFF = C | 2026-11-11 | Finishing a tier, a paid pack or the free game plays the curtain call, with a credit line after the game. Jack: "I just don't like how A re-stirs to reward you for unstirring. Curtain call looks cleanest to me." The credit's words are not decided. | HANDOFF, architecture |
 
 ## Dated, no round
 
