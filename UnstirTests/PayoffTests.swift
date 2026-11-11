@@ -130,7 +130,8 @@ final class PayoffTests: XCTestCase {
         XCTAssertTrue(Payoff.fits([CGRect(x: 0, y: 150, width: 60, height: 22)], height: 172, r: 100))
 
         XCTAssertEqual(Payoff.scale(block: 100, room: 140, stage: 400), 1)
-        XCTAssertEqual(Payoff.scale(block: 220, room: 140, stage: 400), 0.75, accuracy: 1e-9)
+        XCTAssertEqual(Payoff.gap, 34)
+        XCTAssertEqual(Payoff.scale(block: 206, room: 140, stage: 400), 0.75, accuracy: 1e-9)
         XCTAssertEqual(Payoff.scale(block: 900, room: 140, stage: 400), Payoff.least)
         XCTAssertLessThan(Payoff.least, PlayLayout.leastFinished)
     }

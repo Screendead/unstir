@@ -3,8 +3,7 @@
 import SwiftUI
 
 /// The curtain call, laid over the stage: a veil on the glass and, over it, the tier's or the pack's name in its own
-/// sweep above its stamp, or for the game each tier's name in turn and the completion's line, with the credit under
-/// the rim. On paper the veil is bone, the name the plate's vermilion and the rest ink, with no glow.
+/// sweep above its stamp, or for the game each tier's name in turn, the completion's line and the credit. On paper the veil is bone, the name the plate's vermilion and the rest ink, with no glow.
 ///
 /// The words are never scaled to fit. They take the column's `width`, a name too long at the display role set in the
 /// smaller one, and report whether every line lies inside the glass (`Payoff.fits`): where one doesn't,
@@ -26,11 +25,10 @@ struct PayoffCurtain: View {
     let skip: () -> Void
     @State private var lines: [Int: CGRect] = [:]
     @State private var height: CGFloat = 0
-    @State private var creditHeight: CGFloat = 0
     @Environment(\.page) private var page
 
-    private static let space = "curtain"
-    /// Between the stamp, or the rim, and the credit.
+    nonisolated private static let space = "curtain"
+    /// Between the stamp and the credit.
     private static let creditGap: CGFloat = 14
 
     /// How far from the glass's centre a name runs, as a share of its radius.
@@ -40,7 +38,7 @@ struct PayoffCurtain: View {
 
     private struct Measure: Equatable {
         var lines: [Int: CGRect]
-        var height, credit, r: CGFloat
+        var height, r: CGFloat
     }
 
     var body: some View {
@@ -50,18 +48,7 @@ struct PayoffCurtain: View {
             .opacity(place == .over ? 1 : 0)
             .frame(width: 2 * PlayLayout.rim * r, height: 2 * PlayLayout.rim * r)
             .overlay { if place == .over { words } }
-            .overlay(alignment: .bottom) {
-                if place == .over, whole { credit.alignmentGuide(.bottom) { $0[.top] }.offset(y: Self.creditGap) }
-            }
-            .overlay(alignment: .top) {
-                if case .under(let top) = place {
-                    VStack(spacing: Self.creditGap) {
-                        words
-                        if whole { credit }
-                    }
-                    .offset(y: top)
-                }
-            }
+            .overlay(alignment: .top) { if case .under(let top) = place { words.offset(y: top) } }
             .opacity(shown)
             .allowsHitTesting(false)
             .accessibilityElement(children: .ignore)
@@ -69,14 +56,14 @@ struct PayoffCurtain: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityHint(Text("Goes on to the result.", comment: "VoiceOver: the curtain call's hint, as activating it skips to the result card"))
             .accessibilityAction { skip() }
-            .onChange(of: Measure(lines: lines, height: height, credit: creditHeight, r: r), initial: true) {
-                guard lines.count == payoff.parts.count + 1, height > 0, !whole || creditHeight > 0 else { return }
-                measured(Payoff.fits(Array(lines.values), height: height, r: r),
-                         height + (whole ? Self.creditGap + creditHeight : 0))
+            .onChange(of: Measure(lines: lines, height: height, r: r), initial: true) {
+                guard lines.count == payoff.parts.count + (whole ? 2 : 1), height > 0 else { return }
+                measured(Payoff.fits(Array(lines.values), height: height, r: r), height)
             }
     }
 
-    /// The names and the stamp, each line's place in the block read for the fit.
+    /// The names, the stamp and the game's credit, each line's place in the block read for the fit: one block, over the
+    /// glass or under it.
     private var words: some View {
         let tiers = payoff.parts, whole = payoff.whole, paper = payoff.paper
         return VStack(spacing: whole ? 10 : 8) {
@@ -93,6 +80,7 @@ struct PayoffCurtain: View {
                 .shadow(color: paper ? .clear : .white.opacity(0.5), radius: 6)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { lines[tiers.count] = $0 }
                 .padding(.top, whole ? 10 : 2).opacity(up(tiers.count))
+            if whole { credit.padding(.top, Self.creditGap) }
         }
         .multilineTextAlignment(.center)
         .frame(width: width)
@@ -114,13 +102,12 @@ struct PayoffCurtain: View {
             .shadow(color: payoff.paper ? .clear : part.glow.opacity(0.9), radius: 14)
     }
 
+    /// Broken after its dot: on one line it is wider than the glass's chord at the foot of the block on every phone.
     private var credit: some View {
-        Text(Payoff.Credit.shown) // loc: verbatim localized by Payoff
+        Text(Payoff.Credit.shown.replacingOccurrences(of: " \u{00B7} ", with: " \u{00B7}\n")) // loc: verbatim localized by Payoff
             .font(.ui(.detail)).foregroundStyle(page.ink).tone(page.tone(.text3))
-            .multilineTextAlignment(.center)
-            .frame(width: width)
-            .fixedSize(horizontal: false, vertical: true)
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { creditHeight = $0 }
+            .fixedSize()
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { lines[payoff.parts.count + 1] = $0 }
             .opacity(up(payoff.parts.count + 1))
     }
 }

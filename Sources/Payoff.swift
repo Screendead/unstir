@@ -145,8 +145,9 @@ struct Payoff: Equatable {
 
     /// How far inside the glass's edge the words keep, as a share of its radius.
     static let inset = 0.94
-    /// Between a glass that has given up room and the words under it.
-    static let gap: CGFloat = 20
+    /// Between a glass that has given up room and the words under it: as far as "unstirred." keeps clear over the
+    /// glass (`PlayLayout.words` less its line), where 20 read as crowding the rim (Jack, 2026-11-11).
+    static let gap: CGFloat = PlayLayout.words - PlayLayout.wordsHeight
 
     /// Whether the curtain's lines, each `width` wide and from `top` to `bottom` in a block `height` tall, all lie
     /// inside a glass of radius `r` with the block centred on it.
