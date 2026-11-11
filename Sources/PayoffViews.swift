@@ -82,13 +82,12 @@ struct PayoffCurtain: View {
         return VStack(spacing: whole ? 10 : 8) {
             ForEach(Array(tiers.enumerated()), id: \.offset) { i, tier in
                 ViewThatFits(in: .horizontal) {
-                    if !whole { name(tier, .display, tracking: 5) }
-                    name(tier, .displaySmall, tracking: 4)
+                    if !whole { name(tier, .display, tracking: 5, line: i) }
+                    name(tier, .displaySmall, tracking: 4, line: i)
                 }
                 // A name keeps clear of the rim wherever it stands, so one this wide takes the smaller role on every phone.
                 .frame(maxWidth: min(width, 2 * Self.nameReach * r))
                 .opacity(up(i)).scaleEffect(payoff.still ? 1 : 0.92 + 0.08 * up(i))
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { lines[i] = $0 }
             }
             Text(payoff.stamp).font(.ui(.stamp)).foregroundStyle(page.ink) // loc: verbatim localized by Payoff
                 .shadow(color: paper ? .clear : .white.opacity(0.5), radius: 6)
@@ -102,10 +101,12 @@ struct PayoffCurtain: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
     }
 
-    private func name(_ part: Payoff.Part, _ role: TypeRole, tracking: CGFloat) -> some View {
+    /// The name's own width is read, not the frame that bounds it.
+    private func name(_ part: Payoff.Part, _ role: TypeRole, tracking: CGFloat, line: Int) -> some View {
         Text(part.name.localizedUppercase) // loc: verbatim localized by Tier, and a pack's name is never translated
             .font(.ui(role)).tracking(tracking).lineLimit(1).fixedSize()
             .foregroundStyle(LinearGradient(colors: payoff.paper ? [.plateVermilion] : part.colours, startPoint: .leading, endPoint: .trailing))
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { lines[line] = $0 }
             .shadow(color: payoff.paper ? .clear : part.glow.opacity(0.9), radius: 14)
     }
 
