@@ -43,8 +43,10 @@ struct Clip: Sendable {
     static let firstStir = Clip(reels: [.firstStir()], still: Reel.firstStir().beats[1].lift + 0.25)
     #endif
 
-    /// Level 3 as dealt, the lens newest, so its rim runs whole through both twists beside it: the order read. The finger
-    /// drags it down to clean and back up, so it zooms out and in again, crisp at its rim, and lets go where it took it.
+    /// Level 25, Kaleidoscope, the pack's face (Jack, 2026-11-11), where seven moves of its par line leave it
+    /// (`Reel.lensOpening`): a lens newest, so its rim runs whole through both twists beside it: the order read. The
+    /// finger drags it down to clean and back up, so it zooms out and in again, crisp at its rim, and lets go where it
+    /// took it.
     static let lens = Clip(reels: [.lens()], still: 0.5)
 
     /// Escapement 1 solved in its par of three: a stir, its tick landing; a wait, and a tick; the last stir, whose tick
@@ -213,11 +215,15 @@ struct Reel: Sendable {
 
     static func lens(dips: Bool = false, rest: Double = 1.4, down: Double = 1.3, hold: Double = 0.5, up: Double = 1.3,
                      tail: Double = 1.75) -> Reel {
-        let level = Level.lens[2], lens = level.lenses.min()!
-        let dealt = level.scramble.last { $0.rod == lens }!.steps
-        return Reel(level: level, gestures: [.turn(knob: lens, keys: [(Double(-dealt), down), (Double(-dealt), hold), (0, up)])],
+        let level = Level.lensFace, opening = Array(Game.dealt(level).prefix(lensOpening)), newest = opening.last!.twist
+        return Reel(level: level, opening: opening,
+                    gestures: [.turn(knob: newest.rod, keys: [(Double(-newest.steps), down), (Double(-newest.steps), hold), (0, up)])],
                     rest: rest, gap: 0, tail: tail, dips: dips)
     }
+
+    /// The entries of level 25's deal the lens's reel opens on, bottom first: the newest of them a lens's only entry, x8,
+    /// with a twist dealt on the rod either side of it. Its other seven come off top first on the way there, a move each.
+    static let lensOpening = 5
 
     /// Specimen 1: tri's red rod and cyan one over a white bottom entry, the red stir, buried under the cyan one, healed
     /// first, since they share no channel; then the cyan, then the white.

@@ -292,12 +292,11 @@ struct MenuView: View {
 
     /// What the menu leads with (Jack's call C4, round 13). `modes`: the daily and endless, which draw on every layout, so
     /// they open, and show, after the first hex level. `sandbox`: the build has it (`Level.playsSandbox`), its row at the
-    /// list's end. `next`: once plughole 01 has a best, the tier's frontier, if it has one.
-    typealias Lead = (modes: Bool, sandbox: Bool, next: Level?)
+    /// list's end.
+    typealias Lead = (modes: Bool, sandbox: Bool)
     static func lead(tier: Tier, unlocked: Bool = Best.unlocked, release: Bool = Build.release,
                      best: (String) -> Best? = Best.load) -> Lead {
-        (unlocked || best(Level.plughole[22].id) != nil, Level.playsSandbox(release: release),
-         best(Level.plughole[0].id) != nil ? tier.frontier(unlocked: unlocked, best) : nil)
+        (unlocked || best(Level.plughole[22].id) != nil, Level.playsSandbox(release: release))
     }
 
     private static func daily(_ day: Date) -> (level: Level, run: Int) { (Level.daily(day), Daily.run(today: day)) }
@@ -554,16 +553,16 @@ struct MenuView: View {
         }
     }
 
-    /// The way on; the modes once open; then the tier's rule and rows, and where the build has the sandbox, its row at
+    /// The modes once open; then the tier's rule and rows, and where the build has the sandbox, its row at
     /// the end under "anything goes" (Jack's call D2 = A, round 13), so the list leads with 01.
     private func rows(_ lead: Lead) -> some View {
         let sandbox = LevelRow(level: .sandbox, detail: "any picture, any rods \u{00B7} nothing counts", enabled: true,
                                pick: pick, refuse: refuse)
         return VStack(alignment: .leading, spacing: 0) {
-            // 16 under the chips as drawn, the title's gap over them, and a section's 32 to whichever header follows.
-            wayOn(lead).padding(.top, 12).id(Self.top)
+            Color.clear.frame(height: 0).id(Self.top)
             if lead.modes {
-                heading(Text("today")).padding(.top, 32)
+                // 24 under the chips as drawn, each 4 inside its target.
+                heading(Text("today")).padding(.top, 20)
                 // Marked until either is first opened.
                 let new = !Best.modesSeen, (day, run) = daily
                 // One line each: what a mode is its own note says. A run of days goes under the title, leaving the
@@ -608,8 +607,8 @@ struct MenuView: View {
                     arrive()
                 }
                 .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(Self.rows)).minY } action: { seats.top = $0 }
-                // With the header's own 14, a section's 32 under the modes, or under the way on.
-                .padding(.top, 18)
+                // With the header's own 14, a section's 32 under the modes; with none, 24 under the chips as drawn.
+                .padding(.top, lead.modes ? 18 : 6)
             if lead.sandbox {
                 heading(Text("anything goes")).padding(.top, 32)
                 sandbox
@@ -627,27 +626,6 @@ struct MenuView: View {
             Rectangle().fill(Color.rule).frame(height: 1)
         }
         .padding(.bottom, TierList.headerFoot)
-    }
-
-    /// The shown tier's frontier, a tap away, once plughole 01 has a best; until then an empty line (Jack's call D1 = A,
-    /// round 13: the tank's rule left the menu for the App Store page).
-    @ViewBuilder private func wayOn(_ lead: Lead) -> some View {
-        if let next = lead.next {
-            Button { pick(next) } label: {
-                HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text("next: ").foregroundStyle(Color.text3)
-                    Text(next.label).fontWeight(.semibold).foregroundStyle(next.colour).shadow(color: next.colour, radius: 4)
-                    Text(" \u{00B7} \(next.title) \u{203A}").foregroundStyle(Color.text2)
-                }
-                .font(.ui(.label)).lineLimit(1).hit()
-            }
-            // Plain: `pick` taps, as a row does.
-            .buttonStyle(.plain)
-            .accessibilityLabel(Spoken.next(next))
-        } else {
-            // A line's height still, so a tier swap, or 01's first best, moves nothing below it.
-            Text(" ").font(.ui(.label)).hidden()
-        }
     }
 
     /// The card grows out of its cover, or fades in under Reduce Motion; `beside` the list, it comes in from the
@@ -905,8 +883,8 @@ struct MenuView: View {
     }
 
     /// Lands the list on `id`'s row: left at its top where the row is in sight from there, else centred on it. Centring
-    /// a row that stands a little under the middle would scroll the list those few points, and cut what leads it, the
-    /// way on, off under the chips: so the list's top is whole or well away.
+    /// a row that stands a little under the middle would scroll the list those few points, and cut what leads it off
+    /// under the chips: so the list's top is whole or well away.
     private func land(on id: String) {
         if seats.rows[id].map(inSight) == true {
             scroller?.scrollTo(Self.top, anchor: .top)
@@ -1293,9 +1271,9 @@ private struct LevelRow: View {
         }
         // Plain: `pick` taps, and only when it opens the row.
         .buttonStyle(.plain)
-        .modifier(Speech(Self.spoken(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled,
-                                                needs: needs, gate: gate, started: tried || continues, new: new),
-                                    playing: playing)))
+        .modifier(Speech(Spoken.marked(Spoken.row(level, result: result, tanks: Best.tanks, detail: detail, enabled: enabled,
+                                                  needs: needs, gate: gate, started: tried || continues, new: new),
+                                      playing: playing, frontier: frontier)))
         .rowHairline(level.colour, max(lit, playing ? 1 : frontier ? 0.75 : 0))
         .onAppear { if flash { light() } }
         // A menu that stays up wide flashes the row left without appearing anew.
@@ -1330,11 +1308,6 @@ private struct LevelRow: View {
             Spacer(minLength: 8)
             if !stacked { mark(result, tried: tried) }
         }
-    }
-
-    /// The playing level's row says so first, as its lit hairline shows it.
-    static func spoken(_ s: (label: String, value: String, hint: String), playing: Bool) -> (label: String, value: String, hint: String) {
-        playing ? (s.label, ["playing", s.value].filter { !$0.isEmpty }.joined(separator: ", "), s.hint) : s
     }
 
     /// The row's result, or what stands for one.
