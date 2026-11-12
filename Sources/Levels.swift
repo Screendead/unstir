@@ -109,11 +109,8 @@ struct Level: Hashable, Sendable {
     var seized: Set<Int> = []
     /// Slots with no knob over them, which refuse touch as a seized knob does.
     var sockets: Set<Int> = []
-    /// Escapement's clocks: a knob that can't be turned.
+    /// Escapement's clocks: a knob that can't be turned, and waits on a tap.
     var ratchets: Set<Int> = []
-    /// Escapement's waiting move: a tap on a ratchet is a move that only ticks the clocks. Off, a clock ticks only
-    /// after a knob's turn and refuses touch as a seized knob does.
-    var waits = false
     /// Escapement's clocks wound back: stirred clockwise, each ticks -1. The rest of `ratchets` tick +1.
     var woundBack: Set<Int> = []
     /// A pack's chapter, which the card's list heads where it changes.
