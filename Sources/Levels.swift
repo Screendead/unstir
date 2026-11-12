@@ -605,15 +605,24 @@ struct Level: Hashable, Sendable {
 
     static func dailyID(_ date: Date) -> String { "daily-\(dailyDay(date))" }
 
-    /// Everyone gets the same tank that day: seeded from yyyymmdd. `archived`: dealt from the archive, after its day.
+    /// Everyone gets the same tank that day: seeded from yyyymmdd, then frosted on a frost day (`Frost`), after every
+    /// draw. `archived`: dealt from the archive, after its day.
     static func daily(_ date: Date = .now, archived: Bool = false) -> Level {
         let ymd = dailyDay(date)
         let (layout, scramble) = Layout.daily(ymd)
         // The id keys the day's stored best, so it stays yyyymmdd; only the title follows the locale.
         let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        return Level(id: dailyID(date), label: String(localized: "day", comment: "The daily's row, in a level number's place"),
-                     title: String(localized: "Daily \u{00B7} \(day)", comment: "The daily's title. Its date, short"),
-                     layout: layout, scramble: scramble, archived: archived)
+        var level = Level(id: dailyID(date), label: String(localized: "day", comment: "The daily's row, in a level number's place"),
+                          title: String(localized: "Daily \u{00B7} \(day)", comment: "The daily's title. Its date, short"),
+                          layout: layout, scramble: scramble, archived: archived)
+        if let frost = Frost.days[ymd] {
+            level.seized = Set(frost.knobs)
+            level.motion = .tank
+            level.fixedPar = frost.par
+            level.note = String(localized: "Frost day: two knobs are frozen. Turn the tank. Turns count as moves.",
+                                comment: "A frost day's daily: two knobs seized. One line under the tank")
+        }
+        return level
     }
 
     /// Tank n of a run: 5 + 5n/4 stirs, n/2 of them hidden under louder ones (more where no rod can go louder), up to half

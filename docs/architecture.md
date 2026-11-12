@@ -211,7 +211,16 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   solver's optimum, which the park rule reaches however its ties go (`testMaelstromIsFairAtPar`). Past quad, the park
   rule never goes more than a third of par, plus one, without a turn (`testMaelstromKeepsTheTankTurning`), so the
   seized knobs stay in the way. Daily and endless come from a `SplitMix64`-seeded generator, and count as plughole. The generator is ported draw for draw from an earlier
-  prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. A daily's id and seed are
+  prototype and is frozen: every past daily is its output, and `testDailyVectors` pins them. Its draws are `Layout.daily`, in the extension the scripts cut out. On a frost day (built for
+  Jack's look from films, not yet decided) the daily is drawn as on any other, then seizes two knobs on a turning tank,
+  as maelstrom does, with a `fixedPar` and a line under the tank: the day's row in `Frost.days`, the first pair in
+  `Solver.frostPairs`' order (never hex's hub) that every rule of thumb misses par on, however its ties go, against
+  what untwisting with the tank's turns takes (`Solver.frost`; par is the optimum, below untwisting on four 2029 days,
+  where a detour beats it). The verdict is a table, `scripts/frost-days.sh <from> <days> swift`, from 2026-10-01 to
+  2029-12-31 (164 of 1,188 days), not a solve at launch, though the slowest day takes 0.3 s on the Mac: the solver is
+  the test target's and a bounded search, so a later change to it, or a device's rounding, could give two players
+  different frosts on one day. Like the generator's draws, a shipped row never changes; past `Frost.last` no daily
+  frosts. `testTheFrostTableIsTheSolversVerdict` (slow) checks every day of the table. A daily's id and seed are
   its day's yyyymmdd (`Level.dailyID`), and `Daily.run` counts, once today's has a best, the days in a row ending today
   that have one: a practice try saves none, so only first tries count (Jack's call C18, round 13), and a best the archive
   saved (`Best.archived`) never counts. Endless changes only what

@@ -130,7 +130,7 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   harness's launches on that simulator, so the bundle's principal class (`FreshDefaults`) forgets every started flag
   before each test and after the run. The solver's tests that take seconds, and the
   halftone's contrast test, skip unless `UNSTIR_SLOW_TESTS=1` reaches the runner, which CI never sets: put `TEST_RUNNER_UNSTIR_SLOW_TESTS=1` before
-  `xcodebuild` to run them too (about a minute and a half more).
+  `xcodebuild` to run them too (about 4.5 minutes more).
 - StoreKit tests: `scripts/test-store.sh [test|build-for-testing|test-without-building] [xcodebuild args]` runs the tests with `StoreTests` on, as CI does. They
   skip under `CODE_SIGNING_ALLOWED=NO`, since storekitd refuses a test session for a host app without
   `get-task-allow`; the script signs ad hoc with `StoreKit/Test.entitlements` into `build/store`.
