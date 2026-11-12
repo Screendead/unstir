@@ -361,6 +361,7 @@ final class PlayLayoutTests: XCTestCase {
             let words = Game(level: Level.escapement[1], bank: (undos: bank, refilled: nil), storesProgress: false).deadTickWords
             XCTAssertLessThanOrEqual(lines(words, serif), 2, "\(words) at \(type)", file: file, line: line)
         }
+        XCTAssertLessThanOrEqual(lines(LevelView.demoWait, serif), 2, "\(LevelView.demoWait) at \(type)", file: file, line: line)
     }
 
     /// Lays `content` out in a window of `size` with `insets` as its safe area, as `UNSTIR_FRAME` does, for `seconds`.
@@ -401,9 +402,10 @@ final class PlayLayoutTests: XCTestCase {
                                 (["UNSTIR_PACK": "prism", "UNSTIR_LEVEL": "1", "UNSTIR_OWNED": "prism", "UNSTIR_LETTERS": "1",
                                   "UNSTIR_CLOCK": "1"], true)] {
             // The largest size plays capped, as xxxLarge does.
+            let pane = layout(window: open.window, insets: open.insets).chromePane.width
             for type in [DynamicTypeSize.large, .xxxLarge, .accessibility5] {
                 let harness = Harness(env), what = "\(harness.level.id) at \(type)"
-                let budget = PlayLayout.Chrome(harness.level, swatches: swatches, type: type)
+                let budget = PlayLayout.Chrome(harness.level, swatches: swatches, type: type, width: pane)
                 let got = try! XCTUnwrap(measuredChrome(harness, type: type), "\(what): laid out beside the menu")
                 XCTAssertEqual(got.above, budget.above, accuracy: 1, what)
                 // Escapement's note may show one line of its two, or "tap to skip" over the demonstration.
@@ -411,6 +413,32 @@ final class PlayLayoutTests: XCTestCase {
                 XCTAssertGreaterThanOrEqual(got.below, budget.below - 2.5, what)
             }
         }
+    }
+
+    /// Escapement's wait shares undo and reset's row only where all three fit it on a line each; where they don't it
+    /// takes a row of its own and the chrome's room grows by it, so no label wraps or shrinks. An SE is 343 pt inside
+    /// its margins and the widest phone 408.
+    func testTheWaitTakesARowWhereTheRowCantHoldAllThree() {
+        let clocks = Level.escapement[1], plain = Level.plughole[0]
+        XCTAssertFalse(PlayLayout.waitTakesARow(clocks, width: 343, type: .large))
+        XCTAssertTrue(PlayLayout.waitTakesARow(clocks, width: 343, type: .xxxLarge))
+        XCTAssertEqual(PlayLayout.waitTakesARow(clocks, width: 343, type: .accessibility5),
+                       PlayLayout.waitTakesARow(clocks, width: 343, type: .xxxLarge), "play caps its type at xxxLarge")
+        XCTAssertFalse(PlayLayout.waitTakesARow(clocks, width: 408, type: .xxxLarge))
+        for type in [DynamicTypeSize.large, .xxxLarge] {
+            XCTAssertFalse(PlayLayout.waitTakesARow(plain, width: 100, type: type), "no clock, no wait")
+            XCTAssertFalse(PlayLayout.waitTakesARow(nil, width: 100, type: type))
+            let shared = PlayLayout.Chrome(clocks, type: type, width: 408), own = PlayLayout.Chrome(clocks, type: type, width: 200)
+            let button = max(ButtonFace.height, 24 + TypeRole.button.line(at: type).height)
+            XCTAssertEqual(own.below - shared.below, button + LevelView.controlRows, accuracy: 0.34, "\(type)")
+            XCTAssertEqual(own.above, shared.above)
+            XCTAssertEqual(PlayLayout.Chrome(plain, type: type, width: 200), PlayLayout.Chrome(plain, type: type))
+        }
+        let labels = ["undo \u{00B7} 10", "wait", "reset"]
+        let row = labels.reduce(0) { $0 + TypeRole.button.width(of: $1, at: .large) + 2 * ButtonFace.side }
+            + 2 * PlayLayout.controlGap
+        XCTAssertFalse(PlayLayout.waitTakesARow(clocks, width: row, type: .large))
+        XCTAssertTrue(PlayLayout.waitTakesARow(clocks, width: row - 1, type: .large))
     }
 
     /// An armed reset has the row to itself where undo can't share it on a line each, so "reset? tap again" never wraps
