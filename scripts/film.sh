@@ -143,6 +143,11 @@ film frost-park-over 70 "fps=1,scale=150:-1,tile=10x7:padding=4" MODE=daily DAIL
   MOVES=-1:+1,2:-4,3:+4,-1:+1,2:+8,-1:+1,2:-6,-1:+1,2:-8,3:-2,-1:+2,3:-7,2:+7,3:+3,-1:+1,2:+4,3:-2
 film frost-at-par 70 "fps=1,scale=150:-1,tile=10x7:padding=4" MODE=daily DAILY=20261214 FINGER=1 REST=1 \
   MOVES=3:-2,0:-2,-1:-2,0:+3,1:-5,-1:+1,3:+4,0:-8,1:+7,0:+6,-1:+1,0:-5,3:-2,-1:-1,3:+4,1:+2,0:-3
+# Prototype frozen looks: a few seconds of 20 Nov 2026's frost day, the tank turned a step and back, a rod twisted.
+for look in jammed rime glaze crack; do
+  film frost-look-$look 9 "fps=2,scale=150:-1,tile=9x2:padding=4" MODE=daily DAILY=20261120 FROSTLOOK=$look FINGER=1 \
+    MOVES=-1:+1,2:-4,-1:-1
+done
 # The swirl's push: vortex 01's swirl healed, then stirred again over knob 0's seam, which stacks it (a red ring just
 # inside the glass's edge), turned straight back and knob 0 healed.
 film rim-swirl-push 12 "$rim,scale=220:-1,tile=9x4:padding=4" TIER=vortex LEVEL=1 SWIRLED=1 TANKTURNED=1 FINGER=1 \

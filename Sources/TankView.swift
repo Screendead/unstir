@@ -1956,6 +1956,11 @@ struct LevelView: View {
                             .position(at(c.rod)).opacity(1 - demoDip).allowsHitTesting(false)
                     }
                 }
+                if game.level.frosty, let look = FrostLook.chosen {
+                    ForEach(knobs.filter { game.level.kind(of: $0) == .seized }, id: \.self) { k in
+                        FrostDisc(look: look, radius: disc(k), core: core, k: k).position(at(k)).allowsHitTesting(false)
+                    }
+                }
                 if let k = liveRod, shown != nil {
                     glowRing(.magenta, 2.5, 6, under: page.ground.opacity(0.7))
                         .frame(width: 2 * disc(k), height: 2 * disc(k))
@@ -2050,7 +2055,7 @@ struct LevelView: View {
                             RodView(angle: turned(k) + (probing == k ? liveAngle : 0) + (jammed == k ? Self.shake(frozenShake ?? s) : 0),
                                     size: core, seized: game.level.kind(of: k) != .working, grabbed: probing == k,
                                     lens: game.level.lenses.contains(game.slot(of: k)), tint: game.level.tint(of: game.slot(of: k)),
-                                    channels: game.level.channels(of: game.slot(of: k)))
+                                    channels: game.level.channels(of: game.slot(of: k)), frost: game.level.frosty ? FrostLook.chosen : nil)
                         } keyframes: { _ in Self.jolt }
                             .position(x: (p.x * scale).rounded() / scale, y: (p.y * scale).rounded() / scale)
                     }
