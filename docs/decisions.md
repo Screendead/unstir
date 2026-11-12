@@ -463,6 +463,15 @@ Calls 2026-11-11, night (the second follow-up page, six calls, all answered).
 | The curtain call as built | 2026-11-11 | Change it first and show it again before merging. Jack: "I want the text within the glass. You spaced the text below the glass far too close to it anyway, so it looks shoddy - but yeah I'm left wondering why you chose to build it differently to what I decided? It looks good in the glass. I agree with your decision to shrink the glass and put the curtain call below on small screens." | HANDOFF |
 | The credit | 2026-11-11 | The game's one credit reads "made by screendead · thank you for playing". | HANDOFF |
 
+## Round 20
+
+Said in the session, 2026-11-12, after Claude measured two no-wait rules (clocks that slip, and clocks that tick only
+when the turned knob crosses them): neither brought back choice, as at most moves only one twist can come off at all.
+
+| Call | Date | Decided | Where |
+|---|---|---|---|
+| Escapement's wait, reversed | 2026-11-12 | The waiting move comes back as the labelled wait button (#191, merged into #207), and the game makes clear that a clock can tick with no knob turned. This reverses ESCWAIT (round 18), and the twenty problems dealt again go back to their earlier deals. Jack: "Okay, then I reverse my decision, and choose the tick button to wait and make it clear that the ratchets can move without a rod being manually turned." | HANDOFF |
+
 ## Dated, no round
 
 | Call | Date | Decided | Where |
