@@ -149,9 +149,9 @@ edit `project.yml`, not `Unstir.xcodeproj`. Build products go to `build/` (gitig
   with twists left (Jack, round 9), so no line takes more moves than the clocks owe. It prints the
   optimum and its proof, absolute when par is what the clocks owe, the lines and keys at par over turns of up
   to `span` steps, and each move of the line with the alternatives that would lose. `build` deals problems backwards from a line,
-  and `ESC_WAIT=0 ... book scripts/escapement/problems-nowait.tsv` proves the book
-  (`docs/escapement-problems.md`; it stalls on 11). `ESC_RULE=lab` plays the lab's re-grab instead of the final tick, `ESC_PUSHED=1` plays on past a pushed
-  tick, and `ESC_WAIT=0` plays without the wait, the app's rule. It builds `build/escapement/prove` as `solve.sh` does.
+  and `book scripts/escapement/problems.tsv` proves the book (`docs/escapement-problems.md`, about eight
+  minutes). `ESC_RULE=lab` plays the lab's re-grab instead of the final tick, `ESC_PUSHED=1` plays on past a pushed
+  tick, and `ESC_WAIT=0` plays without the wait. It builds `build/escapement/prove` as `solve.sh` does.
 - Vortex's levels: `scripts/vortex-levels/pools.sh <dir>` deals seeded scrambles on the swirl layouts with the frozen
   generator through `scripts/vortex-levels.sh search` (built like `build/solve`, with the generator cut out of
   Levels.swift too), keeping those whose optimum is their entry count, one TSV per band; `scripts/vortex-levels/pick.py
