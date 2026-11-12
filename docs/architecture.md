@@ -53,8 +53,10 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   A Lens level's glass draws through a third stitchable, `unstirLens` (Jack's call, 2026-11-11: draw each lens's core
   finer, so x8 is crisp), once its panel's detail is baked (`Halftone.Detail`, below) and the strike has ended
   (`Unstirred.fine` and `crisp`, the detail's share, which `LevelView` eases in over 0.2 s, as the detail is drawn past
-  the layer and would not flicker with it); every other draw of a Lens panel (dock cover, card, clip, promo image)
-  keeps `unstir`. The layer holds one sample a device pixel of the clean panel, which a lens at x8 spreads over eight,
+  the layer and would not flicker with it). A dock cover, the bundle's wedge, a card's clip, the bundle's cut and the
+  promoted-purchase image draw the same way through `LevelPicture`, which holds the same three states and bakes the
+  detail for its own size at utility priority: until it lands they draw through `unstir`, so a cut still never waits
+  on a bake. The layer holds one sample a device pixel of the clean panel, which a lens at x8 spreads over eight,
   so where a lens magnifies, `unstirLensBody` draws the panel again from its geometry at the final sample point
   (`fineLight`, `Halftone.Panel.light`'s copy: change the two together): each ink's nearest dot from its radius, and
   the white strokes from their distance to the nearest stroke's edge, both antialiased over the pixel's own
@@ -900,7 +902,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   for, or under the developer unlock (`PackDock.shown`, Jack's call C5, round 13), with a cover per offer on
   `Offer.shelf`: in Release a pack only once it has levels past its taste and the bundle only once every pack it grants is there
   (Jack, 2026-10-26, S1), and never a pack it doesn't sell, so today Lens, Escapement, Prism and the bundle; outside Release every cover (`PackTank`), each its clip's level (`Offer.covers`) on its own picture as the game
-  draws it (`LevelPicture`: the halftone, black until its bake lands, Escapement 2's engraved plate, the fern; the bundle a wedge of
+  draws it (`LevelPicture`: the halftone, black until its bake lands, its lenses' cores drawn finer once their detail bakes, as the glass's are (`unstirLens`), Escapement 2's engraved plate, the fern; the bundle a wedge of
   each of its packs', cut from the centre, `testEveryCoverStirsItsClipsLevel`), stirred and unstirred by `Unstirred` on
   the stack its clip opens on (the level's deal, but for Lens's: below), an entry at a time (`Unstirred.shares`), its knobs drawn over it as the game draws them,
   each turned by its rod's share of the stack and a clock's ratchet counting what it owes, so a cover shows how its pack
