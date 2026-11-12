@@ -40,6 +40,24 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 2026-10-25 overnight: built for Jack. Six PRs (#19 to #24), three prototypes (`lab-firststir`, `lab-lens`, `lab-escapement`, local) and the shelf mock-ups (`shelf-mockups`, local), each recorded against its item under "To do" in "Packs: the catalogue". Also PR #23, outside the list: TestFlight prep (version 1.0 (1), the export-compliance key, an asset catalog with a placeholder icon, three icon candidates; recommended: 3, the whole-tank swirl; no archive script until Jack's developer account is in Xcode). A trial merge of #19 to #24 in number order onto `master` passes all 146 tests; the conflicts are mechanical (CLAUDE.md prose, harness lines, shot lines, the generated project file). All seven PRs (#15, #19 to #24) are merged into `master` (2026-10-25). Jack answered the review page on 2026-10-25: see round 3 under "Jack's calls on the pitch".
 
+### Escapement's wait comes back (2026-11-12)
+
+A side agent flagged that without the wait Escapement's finale (and 18 of 30 problems) measured 0.0 bits. Claude
+measured two rules that keep the wait out (`esc-rule-measure`, pushed, no PR; `scripts/escapement.sh rules`, `local`,
+`avail`): slips (a tick that would push turns nothing, k a level) double the bits of problems that had some (28: 3 to 6)
+but leave the zeros; local ticks (a clock ticks only when the turned knob crosses it) break 23 of the 29 deals and
+fresh deals score 0 in 97 to 99 in 100. The cause: along each line, at most moves only one whole heal is open at all;
+each tick lays a clock seam over the heal beneath. Jack then reversed his call (round 20).
+
+- #207 (`esc-wait-back`): reverts #194's app, book and shots (every deal back byte for byte), merges #191's wait
+  button, keeps "Tempo", "No move is spare." and "Counterweight" as decided. PR test set passes locally (481).
+  Waits for Jack: it changes what the player sees.
+- Open for Jack, pitched: chapter 2's line ("No move is spare." against a chapter that waits), level 7's name
+  (Counterweight against Pause), the button's word ("wait" against "tick").
+- Moot: the longer-finale call (`esc-finale-longer` deleted); the finale is the pre-#194 two-clock hex again.
+- After it merges: Escapement 29's sound layer rendered again on the old deal; the store shots and films showing
+  Escapement 2 retaken (its line waits again).
+
 ### Open work (finish-and-pitch, 2026-11-11 night, after Jack's answers)
 
 Jack answered all six calls of the second follow-up page. His notes, verbatim. On the curtain call (he picked
