@@ -65,7 +65,20 @@ jobs:
         run: |
           udid=$(cat "$RUNNER_TEMP/udid")
           [[ -n "$udid" ]] || { echo "no Pro Max simulator" >&2; exit 1; }
-          UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)|: error: "
+          UNSTIR_SIM=$udid scripts/test-store.sh test-without-building -skip-testing:UnstirTests/StoreTests -skip-testing:UnstirTests/FirstStirTests -skip-testing:UnstirTests/SolverTests/testFirstStirParIsTheOptimum -skip-testing:UnstirTests/PackTests/testFirstStirPlaysInOrderFromTheShelf -resultBundlePath "$RUNNER_TEMP/Test.xcresult" | tee "$RUNNER_TEMP/test.log" | grep --line-buffered -E "^(Test Suite .* (passed|failed)|Test Case .* failed|\*\* TEST|error:)|: error: |xcodebuild\[|Testing|Restarting|never began|Selected tests' started"
+      # The whole test log and the result bundle, whose action log times the install, the launch and the connection to
+      # the test runner: a test start that stalls 200 to 370 s (3 of 20 runs, 2026-11-11) shows nothing in the filtered
+      # log above.
+      - name: Keep the test log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-log
+          path: |
+            ${{ runner.temp }}/test.log
+            ${{ runner.temp }}/Test.xcresult
+          retention-days: 14
+          if-no-files-found: ignore
       # Measures the app the build step made, so it costs no build of its own.
       - name: App size
         run: scripts/app-size.sh build/store/Build/Products/Debug-iphonesimulator/Unstir.app
