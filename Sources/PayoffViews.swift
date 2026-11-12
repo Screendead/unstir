@@ -102,9 +102,10 @@ struct PayoffCurtain: View {
             .shadow(color: payoff.paper ? .clear : part.glow.opacity(0.9), radius: 14)
     }
 
-    /// Broken after its dot: on one line it is wider than the glass's chord at the foot of the block on every phone.
+    /// Broken at its dot, which goes (Jack's call): on one line it is wider than the glass's chord at the foot of the
+    /// block on every phone, and two stacked lines need no separator.
     private var credit: some View {
-        Text(Payoff.Credit.shown.replacingOccurrences(of: " \u{00B7} ", with: " \u{00B7}\n")) // loc: verbatim localized by Payoff
+        Text(Payoff.Credit.shown.replacingOccurrences(of: " \u{00B7} ", with: "\n")) // loc: verbatim localized by Payoff
             .font(.ui(.detail)).foregroundStyle(page.ink).tone(page.tone(.text3))
             .fixedSize()
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { lines[payoff.parts.count + 1] = $0 }

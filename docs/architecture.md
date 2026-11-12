@@ -454,7 +454,7 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   own), while `PayoffCurtain` stands the name in the display role and its own sweep (`Payoff.parts`: `Tier.colours`,
   or `Offer.sweep` and `glow`) over its stamp, "unstirred." or "25 panels unstirred"; the game's names each tier in
   turn, 0.6 s apart in the smaller display role, then "every tier unstirred" and the credit, "made by screendead ·
-  thank you for playing" (`Payoff.Credit`, Jack's words), in the same block, broken after its dot, as on one line it
+  thank you for playing" (`Payoff.Credit`, Jack's words), in the same block, broken at its dot, which goes (Jack, 2026-11-12), as on one line it
   is wider than the glass's chord at the block's foot on every phone. Then
   the curtain lifts and the card is the one it always was. A tier's or a pack's holds the screen 3.2 s and the game's
   7.4 s (2.6 s and 5 s under Reduce Motion), so the card comes 4.3 s or 8.5 s after the solve where it came at 1.4 s
