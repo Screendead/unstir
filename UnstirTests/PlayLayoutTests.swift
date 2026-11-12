@@ -287,6 +287,10 @@ final class PlayLayoutTests: XCTestCase {
         }
     }
 
+    /// A plain daily and a frost day (`Frost.days`), which seizes two knobs and turns the tank.
+    static let plainDay = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 12))!
+    static let frostDay = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: 15, hour: 12))!
+
     func testTheTabletopsSpacersShareWhatTheChromeLeaves() {
         XCTAssertEqual(PlayStack.share(624, used: 200, spacers: 2), 212, "centred round the chrome")
         XCTAssertEqual(PlayStack.share(100, used: 200, spacers: 2), 0, "a tall card: the spacers give way")
@@ -304,7 +308,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(stage1, (624 - plain.above - plain.below - PlayStack.gap) / PlayLayout.rim, accuracy: 0.001)
         XCTAssertEqual(stage1, 417, accuracy: 1)
         for level in [Level.plughole[10], Level.whirlpool[0], Level.vortex[0], Level.lens[0], Level.prism[0],
-                      Level.daily(.now), Level.plughole[0]] {
+                      Level.daily(Self.plainDay), Level.plughole[0]] {
             XCTAssertEqual(side(level), stage1, accuracy: 0.001, level.id)
         }
         // Escapement's taller header and two lines of serif: 5 pt less.
@@ -316,6 +320,7 @@ final class PlayLayoutTests: XCTestCase {
         XCTAssertEqual(side(Level.maelstrom[0]), (624 - plain.above - plain.below - RimLesson.overRim) / PlayLayout.rim,
                        accuracy: 0.001)
         XCTAssertEqual(stage1 - side(Level.maelstrom[0]), 8, accuracy: 1)
+        XCTAssertEqual(side(Level.daily(Self.frostDay)), side(Level.maelstrom[0]), accuracy: 0.001, "a frost day's rim lesson")
         // Prism read by its letters, the swatches under the caption, a row of buttons: 46 pt less.
         let swatches = 4 + max(ButtonFace.height, 24 + TypeRole.button.line(at: .large).height)
         XCTAssertEqual(side(Level.prism[0], swatches: true), (624 - plain.above - plain.below - swatches - PlayStack.gap) / PlayLayout.rim,
@@ -349,7 +354,7 @@ final class PlayLayoutTests: XCTestCase {
                                                     options: [.usesLineFragmentOrigin], attributes: [.font: font], context: nil).height
             return Int((h / font.lineHeight).rounded())
         }
-        let levels = Tier.allCases.flatMap(\.levels) + Pack.allCases.flatMap(\.levels) + [Level.daily(.now), Level.endless(Run(seed: 7))]
+        let levels = Tier.allCases.flatMap(\.levels) + Pack.allCases.flatMap(\.levels) + [Level.daily(Self.plainDay), Level.daily(Self.frostDay), Level.endless(Run(seed: 7))]
         for level in levels {
             XCTAssertLessThanOrEqual(lines(level.note, level.page.paper ? serif : mono), 2, "\(level.id) at \(type)", file: file, line: line)
         }
