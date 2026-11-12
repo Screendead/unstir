@@ -44,11 +44,13 @@ the share line, the privacy manifest and TestFlight prep are merged (2026-10-25)
 
 Jack dropped maelstrom's promise that the park rule reaches par however its ties go: "It's the last free tier; it's
 supposed to be a challenge." Built on `maelstrom-plan`: `scripts/maelstrom-levels.sh` (measure the table, deal
-candidates with the first search's seeds, keeping those where every rule of thumb's best tie misses par, no detour, and
-the park line keeps the tank turning); twelve rows dealt again, M6, M11-M14, M19-M22 and M24-M26, each needing a plan;
+candidates with the first search's seeds, keeping those where every rule of thumb's best tie misses par, no detour, no
+two dealt stirs joined into one move (so the plan is in the turns, not stir order), and the park line keeps the tank
+turning); twelve rows dealt again, M6, M11-M14, M19-M22 and M24-M26, each needing a plan;
 M1-M5, the noted levels (M8, M10, M18), the layouts' openers, M23 (the store's shot) and the finale M27 kept;
 `testMaelstromParIsTheOptimum` pins par and which rows need a plan. Waits for Jack: he sees the rows first (the PR's
-table). Search yield: pent and quad give hundreds a band in 20,000 seeds; hex 12-25 gave about 350 in 60,000. Not
+table). Search yield: pent and quad give hundreds a band in 20,000 seeds; hex picks came from a partial pool (a run stopped
+early, the two-apart 18-25 band never started), random generator only, not the first search's plan-first one. Not
 measured: how they play. Films showing maelstrom 22 (`heartbeat-maelstrom22-chainmail`) show the old deal until
 filmed again.
 

@@ -47,7 +47,7 @@ let header = ["level", "layout", "seized", "spacing", "entries", "hidden", "opti
               "scramble"]
 
 /// One TSV row, or nil when `keep` is set and the stack isn't a keeper: the optimum is what untwisting takes (no
-/// detour), every rule's fewest misses it, and past quad the park line keeps the tank turning.
+/// detour) and every dealt stir plus each turn, every rule's fewest misses it, and past quad the park line keeps the tank turning.
 func row(_ name: String, _ layout: Layout, _ stack: [Twist], _ seized: Set<Int>, keep: Bool) -> String? {
     let solver = Solver(layout)
     let rules = Solver.rules.map { solver.ties(stack, seized: seized, rule: $0) }
@@ -58,10 +58,12 @@ func row(_ name: String, _ layout: Layout, _ stack: [Twist], _ seized: Set<Int>,
     if keep, layout != .quad, park == nil || run > bound { return nil }
     guard let optimal = solver.optimalPlay(stack, seized: seized) else { return nil }
     if keep, optimal.count != untwisting.count { return nil }
+    let turns = optimal.moves.filter { if case .turn = $0 { true } else { false } }.count
+    // A line that joins two dealt stirs into one move could beat the rules on stir order alone, not the tank's turns.
+    if keep, optimal.count != stack.count + turns { return nil }
     let plan = solver.needsPlan(stack, seized: seized, optimum: optimal.count)!
     let decoys = optimal.count == untwisting.count ? solver.decoys(stack, seized: seized, line: untwisting) : nil
     let points = Set(decoys?.map(\.at) ?? []), deep = Set(decoys?.filter { $0.survives >= 3 }.map(\.at) ?? [])
-    let turns = optimal.moves.filter { if case .turn = $0 { true } else { false } }.count
     func span(_ t: (best: Play, worst: Play)?) -> String {
         guard let t else { return "x" }
         return t.best.count == t.worst.count ? "\(t.best.count)" : "\(t.best.count)-\(t.worst.count)"

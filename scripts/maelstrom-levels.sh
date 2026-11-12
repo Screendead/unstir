@@ -6,7 +6,7 @@
 # Prints a TSV line per level: the optimum, what untwisting takes, every rule of thumb's fewest and most moves over its
 # ties, whether it needs a plan, the decoys on the optimal line, the turns, and the park line's longest run without a
 # turn against its bound. `search` deals seeds as the first maelstrom search did and keeps those that need a plan, with
-# no detour, whose park line keeps the tank turning past quad. See scripts/maelstrom-levels/main.swift.
+# no detour and no two stirs joined, whose park line keeps the tank turning past quad. See scripts/maelstrom-levels/main.swift.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 out=build/maelstrom-levels

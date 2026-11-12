@@ -331,7 +331,7 @@ final class SolverTests: XCTestCase {
 
     /// Each maelstrom level's par is the optimum, and the optimal play empties the stack on a real `Game`. The levels
     /// that need a plan miss it by every rule of thumb, however its ties go (Jack, 2026-11-12: maelstrom is the last
-    /// free tier and promises no rule of thumb reaches par).
+    /// free tier and no longer promises that one does).
     @MainActor func testMaelstromParIsTheOptimum() throws {
         try skipUnlessSlow()
         let planned: Set<String> = ["M6", "M11", "M12", "M13", "M14", "M19", "M20", "M21", "M22",
