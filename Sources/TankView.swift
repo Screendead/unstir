@@ -1291,6 +1291,12 @@ struct LevelView: View {
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.9)) { eased = true }
     }
 
+    /// A frost day's pane of ice over its frozen discs, none on any other level.
+    private func frost(_ discs: [FrostLook.Disc]) -> some View {
+        FrostPane(discs: discs, seed: game.level.frostSeed, thaw: waved ? 1 : 0, still: reduceMotion)
+            .animation(thawing, value: waved).allowsHitTesting(false)
+    }
+
     /// A frost day's ice melting off as the solve lands (`waved`).
     private var thawing: Animation { reduceMotion ? .easeOut(duration: FrostLook.dissolve) : .easeInOut(duration: FrostLook.thaw) }
 
@@ -1796,6 +1802,10 @@ struct LevelView: View {
         func disc(_ k: Int) -> CGFloat { min(rods[k].z * r, r - 4) }
         let core = 2 * Tank.coreRadius * r
         let probing = shown == nil ? liveRod : nil
+        let iced: [FrostLook.Disc] = !game.level.frosty ? [] : knobs.filter { game.level.kind(of: $0) == .seized }.map {
+            let c = at($0)
+            return FrostLook.Disc(x: c.x, y: c.y, r: disc($0))
+        }
         // The held rod's dial is fainter while letting go would cost nothing or a full stack would refuse the twist.
         // Only a full stack asks Array.commit's rule, which may sample the map: overlapping rods can commute (hex's hub
         // and its swirl).
@@ -1959,12 +1969,7 @@ struct LevelView: View {
                             .position(at(c.rod)).opacity(1 - demoDip).allowsHitTesting(false)
                     }
                 }
-                if game.level.frosty {
-                    ForEach(knobs.filter { game.level.kind(of: $0) == .seized }, id: \.self) { k in
-                        FrostDisc(radius: disc(k), core: core, knob: k, thaw: waved ? 1 : 0, still: reduceMotion)
-                            .animation(thawing, value: waved).position(at(k)).allowsHitTesting(false)
-                    }
-                }
+                frost(iced)
                 if let k = liveRod, shown != nil {
                     glowRing(.magenta, 2.5, 6, under: page.ground.opacity(0.7))
                         .frame(width: 2 * disc(k), height: 2 * disc(k))

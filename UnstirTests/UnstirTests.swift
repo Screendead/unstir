@@ -1651,7 +1651,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(run(0 ..< 400), 400, "across months, a year and the clocks changing")
     }
 
-    /// Only a frost day's daily is drawn frozen, and a knob's ice is the same crystals every time it is baked, its own.
+    /// Only a frost day's daily is drawn frozen, and a day's ice is the same crystals every time it is baked, its own.
     @MainActor func testAFrostDayIsFrozenAndItsIceIsSeeded() throws {
         func noon(_ day: Int) throws -> Level {
             .daily(try XCTUnwrap(Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: day, hour: 12))))
@@ -1659,10 +1659,11 @@ final class UnstirTests: XCTestCase {
         XCTAssertTrue(try noon(15).frosty)
         XCTAssertFalse(try noon(1).frosty)
         XCTAssertFalse(try XCTUnwrap(Level.maelstrom.first { !$0.seized.isEmpty }).frosty, "maelstrom's stay jammed")
-        func ice(_ knob: Int) -> Data? { FrostLook.bake(radius: 40, core: 12, knob: knob, scale: 2).pngData() }
-        XCTAssertNotNil(ice(0))
-        XCTAssertEqual(ice(0), ice(0))
-        XCTAssertNotEqual(ice(0), ice(1))
+        let discs = [FrostLook.Disc(x: 40, y: 40, r: 36), FrostLook.Disc(x: 80, y: 60, r: 36)]
+        func ice(_ seed: Int) -> Data? { FrostLook.bake(discs, seed: seed, scale: 2).pngData() }
+        XCTAssertNotNil(ice(20261015))
+        XCTAssertEqual(ice(20261015), ice(20261015))
+        XCTAssertNotEqual(ice(20261015), ice(20261016))
     }
 
     /// The daily's row says a frost day under its title, before a run of days, and VoiceOver hears it with the shape.

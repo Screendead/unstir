@@ -144,7 +144,7 @@ film frost-park-over 70 "fps=1,scale=150:-1,tile=10x7:padding=4" MODE=daily DAIL
 film frost-at-par 70 "fps=1,scale=150:-1,tile=10x7:padding=4" MODE=daily DAILY=20261214 FINGER=1 REST=1 \
   MOVES=3:-2,0:-2,-1:-2,0:+3,1:-5,-1:+1,3:+4,0:-8,1:+7,0:+6,-1:+1,0:-5,3:-2,-1:-1,3:+4,1:+2,0:-3
 # The thaw: 14 Dec 2026's frost day played through at par, quickly, and the ice melts off as the solve lands.
-film frost-thaw 16 "fps=5,scale=150:-1,tile=10x8:padding=4" MODE=daily DAILY=20261214 PACE=0.1 \
+film frost-thaw 17 "fps=5,scale=150:-1,tile=10x8:padding=4" MODE=daily DAILY=20261214 PACE=0.1 \
   MOVES=3:-2,0:-2,-1:-2,0:+3,1:-5,-1:+1,3:+4,0:-8,1:+7,0:+6,-1:+1,0:-5,3:-2,-1:-1,3:+4,1:+2,0:-3
 # The swirl's push: vortex 01's swirl healed, then stirred again over knob 0's seam, which stacks it (a red ring just
 # inside the glass's edge), turned straight back and knob 0 healed.
