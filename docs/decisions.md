@@ -474,6 +474,7 @@ when the turned knob crosses them): neither brought back choice, as at most move
 | Escapement's wait, reversed | 2026-11-12 | The waiting move comes back as the labelled wait button (#191, merged into #207), and the game makes clear that a clock can tick with no knob turned. This reverses ESCWAIT (round 18), and the twenty problems dealt again go back to their earlier deals. Jack: "Okay, then I reverse my decision, and choose the tick button to wait and make it clear that the ratchets can move without a rod being manually turned." | HANDOFF |
 | Maelstrom needs plans | 2026-11-12 | Maelstrom's promise that a sensible player (the park rule, however its ties go) always reaches par is removed; levels that need a plan replace some rows. Jack: it "can be broken (well, removed). It's the last free tier; it's supposed to be a challenge." Which rows is open until he sees them. | HANDOFF, architecture |
 | Frost days ship | 2026-11-12 | Frost days ship (#211), and the menu's daily row says "frost day" under its title on one. Jack picked "ship, and mark frost days on the menu". | HANDOFF, architecture |
+| Frost day's ice | 2026-11-12 | A frost day's frozen knobs sit under one pane of frosted glass over their discs: Jack picked the glaze ("a frozen & frosted watch glass kinda feel", clear that the rod's circle is frozen, not overdone), then the lusher feathers over the fine ones. The ice thaws on the solve, and a thawed knob is a plain working knob. | architecture |
 
 ## Dated, no round
 
