@@ -7,10 +7,11 @@ if CommandLine.arguments.dropFirst().first == "escapement" { escapement(CommandL
 let all = CommandLine.arguments.dropFirst().map { $0 }
 let lensArg = all.dropFirst(2).first { $0.hasPrefix("lenses=") }
 let maskArg = all.dropFirst(2).first { $0.hasPrefix("masks=") }
-let args = all.filter { $0 != lensArg && $0 != maskArg }
+let decoysArg = all.dropFirst(2).contains("decoys")
+let args = all.filter { $0 != lensArg && $0 != maskArg && $0 != "decoys" }
 guard (2...3).contains(args.count), let layout = Layout(rawValue: args[0]) else {
     let layouts = (Layout.allCases + Layout.swirls).map(\.rawValue).joined(separator: "|")
-    print("usage: scripts/solve.sh <layout: \(layouts)> <scramble, e.g. 0:+3,2:-4> [seized knobs, e.g. 1,4] [lenses=0,2] [masks=0:r,1:c]")
+    print("usage: scripts/solve.sh <layout: \(layouts)> <scramble, e.g. 0:+3,2:-4> [seized knobs, e.g. 1,4] [lenses=0,2] [masks=0:r,1:c] [decoys]")
     exit(2)
 }
 let seized = Set((args.count > 2 ? args[2] : "").split(separator: ",").compactMap { Int($0) })
@@ -79,6 +80,21 @@ print("needs a plan: " + (!plan ? "no, a rule of thumb reaches the optimum as it
     : untwisting.count > optimum && !solver.needsPlan(stack, seized: seized, optimum: untwisting.count)!
         ? "only for the detour; every rule of thumb's best ties untwisting alone"
         : "yes, every rule of thumb misses the optimum however its ties go"))
+var decoys: [Solver.Decoy]?
+let lookahead = clock.measure { decoys = solver.decoys(stack, seized: seized, line: untwisting) }
+if let decoys, untwisting.count == optimum {
+    let ms = Double(lookahead.components.seconds) * 1e3 + Double(lookahead.components.attoseconds) / 1e15
+    let points = Set(decoys.map(\.at)), deep = Set(decoys.filter { $0.survives >= 3 }.map(\.at))
+    print("decoys: \(deep.count) of \(points.count) choice points need a lookahead of 3 or more moves to refute one"
+          + " (longest \(decoys.map(\.survives).max() ?? 0)), \(String(format: "%.2f", ms)) ms")
+    if decoysArg {
+        for d in decoys.sorted(by: { ($0.at, $0.survives) < ($1.at, $1.survives) }) {
+            print("  instead of move \(d.at + 1): \(d.move), refuted by a lookahead of \(d.survives)")
+        }
+    }
+} else {
+    print("decoys: not counted, as a detour beats untwisting")
+}
 print("optimal moves, one commit or turn each:")
 for (i, move) in optimal.moves.enumerated() { print("  \(i + 1). \(move)") }
 let ms = Double(took.components.seconds) * 1e3 + Double(took.components.attoseconds) / 1e15

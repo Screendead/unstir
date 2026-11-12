@@ -547,6 +547,105 @@ final class Solver {
         }
     }
 
+    /// A move the optimal line could have made instead, which costs par, and how far ahead a player must look to see it.
+    struct Decoy {
+        /// The index in the optimal line's moves of the move it stands in for.
+        var at: Int
+        var move: Move
+        /// The moves, the decoy first, a lookahead must search before the decoy scores worse than the best move.
+        var survives: Int
+    }
+
+    /// The decoys at each state along `line`, an untwisting play from (stack, 0) that empties it at the optimum.
+    ///
+    /// A decoy is a sensible move, an untwist of a whole seam a working knob reaches or, only when none is, a turn to
+    /// where one is, after which the fewest moves left exceed what par leaves. It survives n moves when a lookahead of
+    /// n moves (the decoy first; untwists, a further one of the same slot joining the stir for nothing, and turns, never
+    /// two running) scored at its leaves by the stirs left with every knob working, one more while blocked, rates it no
+    /// worse than the best move. Nil when `line` isn't an untwisting play at the optimum. Memoised by state and depth.
+    func decoys(_ stack: [Twist], seized: Set<Int> = [], line: Play) -> [Decoy]? {
+        let order = layout.order, reach = self.reach(seized)
+        // `open` is the slot whose stir a further untwist joins, -1 after a turn, which no turn follows, -2 at the start.
+        struct State: Hashable { var id: Int, p: Int, open: Int }
+        func untwisting(_ s: State) -> [(move: Move, cost: Int, to: State)] {
+            untwists(s.id).filter { reach[s.p][$0.slot] }.map { u in
+                (.stir(knob: layout.knob(over: u.slot, at: s.p), slot: u.slot, steps: u.steps),
+                 u.slot == s.open ? 0 : 1, State(id: u.to, p: s.p, open: u.slot))
+            }
+        }
+        func turning(_ s: State, where keep: (Int) -> Bool) -> [(move: Move, cost: Int, to: State)] {
+            guard s.open != -1, !stacks[s.id].isEmpty else { return [] }
+            return (0..<order).filter { $0 != s.p && keep($0) }
+                .map { q in (.turn(steps: shortWay(s.p, q), to: q), 1, State(id: s.id, p: q, open: -1)) }
+        }
+        func sensible(_ s: State) -> [(move: Move, cost: Int, to: State)] {
+            let here = untwisting(s)
+            if !here.isEmpty { return here }
+            let whole = untwists(s.id)
+            return turning(s) { q in whole.contains { reach[q][$0.slot] } }
+        }
+        func all(_ s: State) -> [(move: Move, cost: Int, to: State)] { untwisting(s) + turning(s) { _ in true } }
+        // The stack shrinks with each untwist and no turn follows a turn, so these recursions end.
+        var fewest: [State: Int] = [:]
+        func left(_ s: State) -> Int {
+            if stacks[s.id].isEmpty { return 0 }
+            if let known = fewest[s] { return known }
+            let found = all(s).map { $0.cost + left($0.to) }.min() ?? Int.max / 2
+            fewest[s] = found
+            return found
+        }
+        var relaxed: [State: Int] = [:]
+        func stirs(_ id: Int, _ open: Int) -> Int {
+            if stacks[id].isEmpty { return 0 }
+            let key = State(id: id, p: 0, open: open)
+            if let known = relaxed[key] { return known }
+            let found = untwists(id).map { ($0.slot == open ? 0 : 1) + stirs($0.to, $0.slot) }.min() ?? Int.max / 2
+            relaxed[key] = found
+            return found
+        }
+        struct Deep: Hashable { var state: State, depth: Int }
+        var scored: [Deep: Int] = [:]
+        func value(_ s: State, _ depth: Int) -> Int {
+            if stacks[s.id].isEmpty { return 0 }
+            if depth == 0 {
+                return stirs(s.id, s.open) + (untwists(s.id).contains { reach[s.p][$0.slot] } ? 0 : 1)
+            }
+            let key = Deep(state: s, depth: depth)
+            if let known = scored[key] { return known }
+            let found = all(s).map { $0.cost + value($0.to, depth - 1) }.min() ?? Int.max / 2
+            scored[key] = found
+            return found
+        }
+        var s = State(id: id(stack), p: 0, open: -2), made = 0, found: [Decoy] = []
+        let par = left(s)
+        guard line.count == par else { return nil }
+        for (i, move) in line.moves.enumerated() {
+            let options = sensible(s), keeping = all(s).filter { made + $0.cost + left($0.to) == par }
+            for m in options where made + m.cost + left(m.to) > par {
+                // Every lookahead as deep as the moves left sees the true counts, so this ends.
+                var depth = 0
+                while m.cost + value(m.to, depth) <= keeping.map({ $0.cost + value($0.to, depth) }).min() ?? 0 {
+                    depth += 1
+                }
+                found.append(Decoy(at: i, move: m.move, survives: depth + 1))
+            }
+            let next: (cost: Int, to: State)
+            switch move {
+            case let .stir(_, slot, steps):
+                guard let u = untwists(s.id).first(where: { $0.slot == slot && $0.steps == steps && reach[s.p][slot] })
+                else { return nil }
+                next = (slot == s.open ? 0 : 1, State(id: u.to, p: s.p, open: slot))
+            case let .turn(_, to):
+                next = (1, State(id: s.id, p: to, open: -1))
+            case .wait:
+                return nil
+            }
+            made += next.cost
+            s = next.to
+        }
+        return stacks[s.id].isEmpty && made == par ? found : nil
+    }
+
     /// The fewest moves up to `limit` when a move may be any commits to one slot under a working knob, up to `commits`
     /// of them joined, each by a count from `steps` or an entry's exact inverse: pushes and partial merges as well as
     /// untwists. Nil past the limit. Uncached and exponential, to check `optimum` on small cases.
