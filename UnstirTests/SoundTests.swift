@@ -107,7 +107,7 @@ import XCTest
     /// core starts to turn, a beat after the lift and then a turn apart, in the order the clocks tick; an undo takes them
     /// back with the move.
     func testEachClocksTickSoundsAsItsCoreStartsToTurn() {
-        var level = Level.twinDials
+        var level = Level.escapement[12]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         XCTAssertEqual(g.tickCues, [])
@@ -157,7 +157,7 @@ import XCTest
     /// ratchet, the second only its ratchet, both with the error haptic, and its ratchets both flash red, not only the
     /// last clock's.
     func testTwoClocksPushingInOneMoveSoundThePushOnce() {
-        var level = Level.twinDials
+        var level = Level.escapement[12]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (1, nil))
         g.wait(on: 2)
@@ -173,7 +173,7 @@ import XCTest
     /// 02's 1:-3 buries its clock's seam, so the stir pushes at the lift and the clock's tick pushes after it: the tick
     /// sounds only its ratchet, with the error haptic, as the stir had the move's push.
     func testAStirThatPushedKeepsTheMovesPushFromItsTicks() {
-        var level = Level.mockUp
+        var level = Level.escapement[1]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         let pushes = g.pushes
@@ -190,7 +190,7 @@ import XCTest
     /// Jack's call tk-finish = B (round 16): the move that solves sounds its ticks, and the solve's chime and success
     /// haptic land with its last tick, the wave with them; a solve with no tick after its lift lands at the lift.
     func testTheSolveLandsWithTheSolvingTick() {
-        var level = Level.twinDials
+        var level = Level.escapement[12]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         g.commit(rod: 3, steps: -2)
@@ -204,7 +204,7 @@ import XCTest
         XCTAssertEqual(g.tickCues.map(\.solves), [true])
         XCTAssertEqual(g.solveAt ?? -1, LevelView.tickBeat, accuracy: 1e-9)
 
-        var two = Level.mockUp
+        var two = Level.escapement[1]
         two.id = "test-escapement"
         two.scramble = .parse("1:+3", in: .tri)
         let quick = Game(level: two, tankTurned: true, bank: (3, nil))
@@ -216,13 +216,12 @@ import XCTest
 
     /// A solving move that ticks more than one clock: only its last tick solves, with the chime and the success haptic,
     /// and every tick before it is the ratchet with its rigid haptic. The book's lines stop their clocks one at a time,
-    /// so the tank is dealt one step on each clock of the problem with the most, the first to tick on top: under the
-    /// waiting move a wait pops them all in turn.
+    /// so the tank is dealt one step on each clock of the problem with the most, the first to tick on top: a wait pops
+    /// them all in turn.
     func testOnlyTheLastOfASolvingMovesTicksSolves() {
         var level = Level.escapement.max { $0.clocks.count < $1.clocks.count }!
         level.id = "test-escapement"
         level.scramble = level.clocks.reversed().map { Twist(rod: $0.rod, steps: -$0.dir) }
-        level.waits = true
         XCTAssertEqual(level.clocks.count, 3)
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         g.wait(on: level.clocks[0].rod)
@@ -245,7 +244,6 @@ import XCTest
         var level = Level.escapement.max { $0.clocks.count < $1.clocks.count }!
         level.id = "test-escapement"
         level.scramble = level.clocks.reversed().map { Twist(rod: $0.rod, steps: -$0.dir) }
-        level.waits = true
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         g.wait(on: level.clocks[0].rod)
         XCTAssertTrue(g.solved)
@@ -258,7 +256,7 @@ import XCTest
     /// A move that runs the tank out of ticks plays its ticks as any other move does, after the out-of-ticks sound at the
     /// lift, as before the solve's chime moved: the ratchet and its haptic on each, and the move's first push over it.
     func testAMoveThatRunsOutOfTicksPlaysItsTicks() {
-        var two = Level.mockUp
+        var two = Level.escapement[1]
         two.id = "test-escapement"
         two.scramble = .parse("1:+3,0:-1", in: .tri)
         let h = Game(level: two, tankTurned: true, bank: (3, nil))
@@ -278,7 +276,7 @@ import XCTest
         XCTAssertEqual(h.tickCues, [])
 
         // 02's line out of ticks: its stir pushes, its clock's tick pushes after it, and a wait runs it out.
-        var level = Level.mockUp
+        var level = Level.escapement[1]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         g.commit(rod: 2, steps: 4)
@@ -296,7 +294,7 @@ import XCTest
     /// The task the view runs plays every cue in turn, at its time from the ticks' landing, and an undo between two stops
     /// the rest.
     func testSoundTicksLandsEachCueInTurnUntilAnUndo() async {
-        var level = Level.twinDials
+        var level = Level.escapement[12]
         level.id = "test-escapement"
         let g = Game(level: level, tankTurned: true, bank: (3, nil))
         g.commit(rod: 3, steps: -2)

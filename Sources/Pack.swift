@@ -260,10 +260,9 @@ extension Level {
                comment: "Lens chapter, a film-making word: the last seven panels"),
     ]
 
-    /// The problem book without the waiting move (scripts/escapement/problems-nowait.tsv: docs/escapement-problems.md's
-    /// book, each problem whose line waited dealt again on its layout, clocks and par) in its order: five chapters of
-    /// six. Each problem's `par`, never shown, is the moves its
-    /// slowest clock owes, which the prover (`Solver.escapement`) shows a line of whole heals reaches; its note, the stipulation, states
+    /// The problem book (docs/escapement-problems.md, scripts/escapement/problems.tsv) in its order: five chapters of
+    /// six, each opening on a problem that teaches without words. Each problem's `par`, never shown, is the moves its
+    /// slowest clock owes, which the prover (`Solver.escapement`) shows a line reaches; its note, the stipulation, states
     /// the tick budget instead (Jack's call EL1, round 11). The titles are a clock taken apart, not the book's (Jack's
     /// call N1, round 13); problem 1, D1's "The clock" (round 9), is "Mainspring" (N1a).
     static let escapement: [Level] = [
@@ -273,7 +272,7 @@ extension Level {
                 .tri, "0:-1,1:+3,0:-1,2:-4", clocks: [0], par: 2),
         problem(2, String(localized: "level.escapement-2.title", defaultValue: "Pendulum",
                           comment: "Escapement level title, a part of a clock or a word for time"),
-                .tri, "0:-1,2:+4,0:-1,2:+2,0:-1,1:+3", clocks: [0], par: 3),
+                .tri, "0:-1,1:+3,0:-2,2:-4", clocks: [0], par: 3),
         problem(3, String(localized: "level.escapement-3.title", defaultValue: "Clock face",
                           comment: "Escapement level title, a part of a clock or a word for time"),
                 .quad, "0:-1,1:+3,0:-1,2:-4", clocks: [0], par: 2),
@@ -289,35 +288,35 @@ extension Level {
         // Tempo.
         problem(7, String(localized: "level.escapement-7.title", defaultValue: "Counterweight",
                           comment: "Escapement level title, a part of a clock or a word for time"),
-                .quad, "0:-2,2:+3,1:+2,0:-1,3:-3", clocks: [0], par: 3),
+                .quad, "0:-2,2:+3,1:-2,0:-1", clocks: [0], par: 3),
         problem(8, String(localized: "level.escapement-8.title", defaultValue: "Snooze",
                           comment: "Escapement level title, a part of a clock or a word for time"),
-                .pent, "0:-3,2:+3,3:+2,4:-5,0:-2,3:-2,1:-4", clocks: [0], par: 5),
+                .pent, "0:-1,1:+4,0:-3,2:-4,3:-3,4:-5,0:-1", clocks: [0], par: 5),
         problem(9, String(localized: "level.escapement-9.title", defaultValue: "Hourglass",
                           comment: "Escapement level title, a part of a clock or a word for time"),
-                .eye, "2:-2,3:-3,1:+5,2:-2,3:+4,1:-2,2:-2,3:-5,0:+3", clocks: [2], par: 6),
+                .eye, "2:-3,0:+3,2:-2,3:+4,0:-3,2:-1,3:+3", clocks: [2], par: 6),
         problem(10, String(localized: "level.escapement-10.title", defaultValue: "Egg timer",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .pent, "0:-4,2:+3,3:+2,2:-3,1:+4,0:-2,2:+3,4:+3", clocks: [0], par: 6),
+                .pent, "0:-3,3:+3,2:-3,1:-2,0:-2,1:-4,0:-1,2:+3", clocks: [0], par: 6),
         problem(11, String(localized: "level.escapement-11.title", defaultValue: "Stopwatch",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .pent, "0:-6,2:+2,3:+4,2:-2,3:+4,2:-3,1:+3,0:-2,2:+3,4:+5", clocks: [0], par: 8),
+                .pent, "0:-3,1:+2,0:-2,2:+3,4:+5,0:-2,3:+2,4:-3,0:-1,3:-2", clocks: [0], par: 8),
         problem(12, String(localized: "level.escapement-12.title", defaultValue: "Standstill",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .hex, "1:-2,3:-3,6:+3,1:-2,5:-2,2:+5,1:-3,3:+5,4:+3,0:+2", clocks: [1], par: 7),
+                .hex, "1:-2,5:+4,2:+5,1:-2,3:+3,2:-3,1:-2,3:-4,0:-5,1:-1", clocks: [1], par: 7),
         // Two Clocks.
         problem(13, String(localized: "level.escapement-13.title", defaultValue: "Twin dials",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .quad, "0:-1,1:+5,2:-1,0:-1,3:+3,2:-1,0:-1,1:-5", clocks: [0, 2], par: 3),
+                .quad, "0:-1,2:-2,1:+3,0:-1,2:-1,3:+2", clocks: [0, 2], par: 3),
         problem(14, String(localized: "level.escapement-14.title", defaultValue: "Hour hand",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .quad, "2:-1,1:+5,2:-1,1:+4,2:-1,0:-1,1:-5,2:-1,0:-1,3:+5", clocks: [0, 2], par: 4),
+                .quad, "0:-1,1:+3,0:-1,3:+3,2:-2,0:-2,3:-3", clocks: [0, 2], par: 4),
         problem(15, String(localized: "level.escapement-15.title", defaultValue: "Minute hand",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .pent, "2:-4,4:+2,0:-1,4:+5,0:-1,4:-4,0:-2,3:+5,2:-1,1:+5", clocks: [0, 2], par: 5),
+                .pent, "2:-1,3:-4,2:-4,4:-5,0:-2,4:+2,0:-1,4:-5", clocks: [0, 2], par: 5),
         problem(16, String(localized: "level.escapement-16.title", defaultValue: "Metronome",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .hex, "4:-2,2:-2,5:+4,4:-2,6:+2,1:-2,3:-4,4:-2,6:+5,1:-1,0:-3", clocks: [1, 4], par: 6),
+                .hex, "4:-2,2:+5,5:-3,4:-3,6:+4,1:-3,5:+2,4:-1,3:+2", clocks: [1, 4], par: 6),
         problem(17, String(localized: "level.escapement-17.title", defaultValue: "Chime",
                            comment: "Escapement level title, a part of a clock or a word for time"),
                 .pent, "1:-3,3:+4,4:-3,0:-1,3:-5,1:-1,0:-1,4:+2,1:-1,0:-1,3:+5", clocks: [0, 1], par: 5),
@@ -327,16 +326,16 @@ extension Level {
         // Wound Back.
         problem(19, String(localized: "level.escapement-19.title", defaultValue: "Rewind",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .tri, "0:+1,2:+4,0:+1,2:+2,0:+1,1:+3", clocks: [0], back: [0], par: 3),
+                .tri, "0:+1,1:-3,0:+2,2:+4", clocks: [0], back: [0], par: 3),
         problem(20, String(localized: "level.escapement-20.title", defaultValue: "Fall back",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .quad, "2:+1,1:+5,2:+1,1:+4,2:+1,0:-1,1:-5,2:+1,0:-1,3:+5,2:+1,0:-1,3:+3", clocks: [0, 2], back: [2], par: 5),
+                .quad, "2:+1,1:+3,2:+1,1:-3,2:+1,0:-1,1:-4,2:+2,0:-2,1:+5", clocks: [0, 2], back: [2], par: 5),
         problem(21, String(localized: "level.escapement-21.title", defaultValue: "Mirror dial",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .pent, "2:-2,4:+2,3:-3,2:-4,4:-3,0:+1,4:-5,0:+1,4:-3,0:+1,1:-3", clocks: [0, 2], back: [0], par: 6),
+                .pent, "0:+2,3:+2,4:+5,0:+2,3:+3,2:-2,4:-3,0:+2,3:-4,2:-1", clocks: [0, 2], back: [0], par: 6),
         problem(22, String(localized: "level.escapement-22.title", defaultValue: "Anticlockwise",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .hex, "4:+2,6:+5,3:+4,4:+3,2:+4,1:-1,2:+4,1:-3,5:-2,4:+1,5:+5,4:+1,0:+5", clocks: [1, 4], back: [4], par: 7),
+                .hex, "4:+2,2:-2,5:+3,4:+2,6:-5,1:-2,3:-2,4:+3,6:-5,1:-2,5:+3", clocks: [1, 4], back: [4], par: 7),
         problem(23, String(localized: "level.escapement-23.title", defaultValue: "Overwound",
                            comment: "Escapement level title, a part of a clock or a word for time"),
                 .pent, "0:+2,3:-5,4:-5,0:+3,2:-2,3:+4,4:-3,0:+1,3:-4", clocks: [0], back: [0], par: 6),
@@ -346,19 +345,19 @@ extension Level {
         // Grand Complication.
         problem(25, String(localized: "level.escapement-25.title", defaultValue: "Moon phase",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .hex, "5:-2,2:+4,3:-1,1:-2,4:+2,5:-1,3:-1,6:-5", clocks: [1, 3, 5], par: 3),
+                .hex, "1:-2,3:-1,5:-3,0:+3", clocks: [1, 3, 5], par: 3),
         problem(26, String(localized: "level.escapement-26.title", defaultValue: "Calendar",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .pent, "0:-2,3:-4,4:+3,0:-1,1:-5,0:-2,3:+5,2:-4,4:+3,0:-1,4:-4,0:-1,4:-3,0:-1,4:+5", clocks: [0, 2], par: 8),
+                .pent, "2:-2,4:-3,3:+2,2:-2,4:+3,3:+5,2:-3,0:-2,4:+2,0:-2,3:+3,2:-1,1:+2", clocks: [0, 2], par: 8),
         problem(27, String(localized: "level.escapement-27.title", defaultValue: "Time zones",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .pent, "0:-5,3:-2,2:-4,3:-2,2:-2,1:-2,0:-2,2:+2,1:+3,0:-1,1:-4,0:-1,4:+3", clocks: [0], par: 9),
+                .pent, "0:-3,3:-4,2:-5,1:-5,0:-2,1:+2,0:-1,1:+2,0:-2,2:+5,1:-2,0:-1,2:+2", clocks: [0], par: 9),
         problem(28, String(localized: "level.escapement-28.title", defaultValue: "Leap year",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .hex, "1:-1,2:-3,1:-3,4:-4,5:-3,2:+3,1:-2,3:-2,6:-2,1:-2,5:-3,6:+5,1:-1,5:+5", clocks: [1], par: 9),
+                .hex, "1:-2,0:+5,1:-3,4:-5,3:+3,6:+4,1:-2,5:-4,2:+3,1:-2,4:+5,2:+4", clocks: [1], par: 9),
         problem(29, String(localized: "level.escapement-29.title", defaultValue: "Eleventh hour",
                            comment: "Escapement level title, a part of a clock or a word for time"),
-                .hex, "5:-2,2:-3,0:-5,5:-2,2:+5,4:+5,5:-2,3:-1,1:-1,2:+3,3:-2,1:-1,6:+3,5:-1,1:-2,4:-3,5:-1,3:-1,0:+5", clocks: [1, 3, 5], par: 8),
+                .hex, "5:-1,4:+3,5:-2,2:+3,0:-5,5:-5,2:+4,3:-2,1:-2,2:+2,3:-2,1:-2,4:+3", clocks: [1, 3, 5], par: 8),
         problem(30, String(localized: "level.escapement-30.title", defaultValue: "Midnight",
                            comment: "Escapement level title, a part of a clock or a word for time"),
                 .hex, "1:-4,5:+2,4:+2,5:+3,6:-4,3:-2,1:-4,5:-4,4:+5,3:-2,5:-3,0:+2", clocks: [1, 3], par: 8),
@@ -397,8 +396,8 @@ extension Level {
         var level = Level(id: Pack.escapement.id(n), pack: .escapement, label: String(format: "%02d", n), title: title,
                           picture: .engineTurned, layout: layout, scramble: .parse(scramble, in: layout), ratchets: Set(clocks), woundBack: Set(back),
                           chapter: escapementChapters[(n - 1) / 6],
-                          // Each heal hands the clock a seam and it ticks, twice; the clock's last step stays.
-                          demo: n == 1 ? .parse("0:-2,1:+2,0:-1,2:-3", in: .tri) : [], fixedPar: par)
+                          // A heal hands the clock its seam and it ticks; a wait, and it ticks again.
+                          demo: n == 1 ? .parse("0:-3,1:+2", in: .tri) : [], fixedPar: par)
         level.note = (n - 1) % 6 == 0
             ? escapementOpener((n - 1) / 6, budget: level.budget)
             : String(localized: "Unstir in \(level.budget) ticks.",

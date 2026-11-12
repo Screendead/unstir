@@ -131,12 +131,11 @@ final class UnstirTests: XCTestCase {
         let escapement = Level.escapement[0]
         let clock = Game(level: escapement, tankTurned: true, bank: (10, nil))
         clock.demo(escapement.demo)
-        clock.commit(rod: 2, steps: 3)
         clock.commit(rod: 1, steps: -2)
-        XCTAssertEqual(clock.stack, .parse("0:-1", in: .tri))
+        XCTAssertTrue(clock.wait(on: 0))
         XCTAssertFalse(Best.started(escapement.id), "the demonstration's moves are not the player's")
         clock.endDemo()
-        clock.commit(rod: 2, steps: 4)
+        XCTAssertTrue(clock.wait(on: 0))
         XCTAssertTrue(Best.started(escapement.id))
     }
 
@@ -955,7 +954,7 @@ final class UnstirTests: XCTestCase {
             { $0.turnTank(-1) }, { $0.commit(rod: 1, steps: 1) }, { $0.commit(rod: 1, steps: 1) }, { $0.turnTank(1) },
         ], "pack")
 
-        var clocks = Level.mockUp
+        var clocks = Level.escapement[1]
         clocks.id = "test-undo-clocks"
         check(Game(level: clocks, tankTurned: true, bank: (20, nil)), [
             { $0.commit(rod: 2, steps: 4) }, { $0.commit(rod: 2, steps: -4) }, { $0.wait(on: 0) },
@@ -1955,7 +1954,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(LevelView.grab(.quad, motion: .none, kind: kinds([0: .ratchet]), at: a), .ratchet(0))
         XCTAssertEqual(LevelView.grab(.quad, motion: .none, kind: kinds([1: .ratchet]), at: a), .rod(0))
         let level = Level(id: "test-kinds", label: "", title: "", layout: .quad,
-                          scramble: .parse("0:+3,1:+2,2:-4", in: .quad), sockets: [1], ratchets: [2], waits: true)
+                          scramble: .parse("0:+3,1:+2,2:-4", in: .quad), sockets: [1], ratchets: [2])
         XCTAssertEqual((0..<4).map(level.kind(of:)), [.working, .socket, .ratchet, .working])
         let game = Game(level: level, tankTurned: true, swirled: true)
         game.commit(rod: 2, steps: 4)
@@ -1963,7 +1962,7 @@ final class UnstirTests: XCTestCase {
         XCTAssertEqual(game.stack, level.scramble)
         XCTAssertEqual(game.moves, 0)
         XCTAssertNil(game.reachable)
-        // Under the waiting move a tap on the ratchet is a move of its own: the clock ticks its 2:-4 on to 2:-3.
+        // A tap on the ratchet is a move of its own: the clock ticks its 2:-4 on to 2:-3.
         game.wait(on: 2)
         XCTAssertEqual(game.moves, 1)
         XCTAssertEqual(game.stack, .parse("0:+3,1:+2,2:-3", in: .quad))

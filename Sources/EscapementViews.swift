@@ -33,8 +33,6 @@ struct RatchetView: View {
     let size: CGFloat
     /// The radius of the dark plate it sits on, which a tap must land on to wait.
     var plate: CGFloat = 0
-    /// The level has the waiting move, so the plate is ringed as its target.
-    var waits = false
     let pawl: Double
     let lit: Bool
     let stopped: Bool
@@ -75,9 +73,7 @@ struct RatchetView: View {
         return ZStack {
             let backing = max(size + 6, 2 * plate)
             Circle().fill(Color.black.opacity(0.75)).frame(width: backing, height: backing).position(c)
-            if waits {
-                Circle().stroke(Color.live.opacity(lit ? 1 : 0.35), lineWidth: 1).frame(width: backing, height: backing).position(c)
-            }
+            Circle().stroke(Color.live.opacity(lit ? 1 : 0.35), lineWidth: 1).frame(width: backing, height: backing).position(c)
             dial.stroke(stopped ? Color(0x6E7686).opacity(0.6) : Color.vermilion.opacity(0.9), style: StrokeStyle(lineWidth: 1, lineCap: .round))
             ZStack {
                 wheel.fill(RadialGradient(stops: [.init(color: Color(0xE6EAF2), location: 0), .init(color: Color(0x6E7686), location: 0.5),
