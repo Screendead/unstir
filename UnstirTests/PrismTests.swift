@@ -159,6 +159,77 @@ final class PrismTests: XCTestCase {
         XCTAssertGreaterThan(moved, points.count, "the stack moves enough of the tank to test")
     }
 
+    /// Unstir.metal's taps (`tapsThrough`) are the pixel's four points a quarter device pixel off its centre, each
+    /// turned back by the glass's turn and carried through the stack's inverses as the model maps it, on hex's swirl
+    /// too; with two taps the diagonal pair is; and a pixel past the glass's edge runs no entry.
+    func testTheShadersTapsMatchTheModel() throws {
+        let kit = try ShaderKit("Unstir.metal", helpersOnly: true, kernels: """
+            struct TapArgs { float radius, scale, turn, plateau, swirlPlateau, lensEdge; int entries, stride, side; };
+            kernel void taps(device const float *twists [[buffer(0)]], constant TapArgs &a [[buffer(1)]],
+                             device float2 *out [[buffer(2)]], uint2 gid [[thread_position_in_grid]]) {
+                float2 pos = (float2(gid) + 0.5) / a.scale;
+                Taps t = tapsThrough(pos, float2(a.radius), a.radius, twists, a.entries, a.stride, a.plateau,
+                                     a.swirlPlateau, a.lensEdge, a.scale, a.turn);
+                int i = 8 * (gid.y * a.side + gid.x);
+                out[i] = t.p0; out[i + 1] = t.p1; out[i + 2] = t.p2; out[i + 3] = t.p3;
+                out[i + 4] = t.q0; out[i + 5] = t.q1; out[i + 6] = t.q2; out[i + 7] = t.q3;
+            }
+            """)
+        struct Args {
+            var radius, scale, turn, plateau, swirlPlateau, lensEdge: Float
+            var entries, stride, side: Int32
+        }
+        let layout = Layout.hexSwirl, rods = layout.rods
+        var rng = SplitMix64(state: 61)
+        // Shallow and gentle: a deep stack stretches a float's last bit past any tolerance worth holding.
+        let stack = (0..<6).map { _ in Twist(rod: rng.below(rods.count), steps: [-2, -1, 1, 2][rng.below(4)]) }
+        let twists = Unstirred.entries(stack.map { ($0.rod, Double($0.steps) * Tank.step) }, layout: layout, lenses: [],
+                                       masks: [:]).twists
+        // A glass 54 px across in a 64 px square, so its corners lie past the edge.
+        let side = 64, scale = 2.0, radius = 13.5, turn = 0.4
+        for stride in [1, 3] {
+            var args = Args(radius: Float(radius), scale: Float(scale), turn: Float(turn), plateau: Float(Tank.plateau),
+                            swirlPlateau: Float(Tank.swirlPlateau), lensEdge: Float(Tank.lensEdge),
+                            entries: Int32(stack.count), stride: Int32(stride), side: Int32(side))
+            let output = try kit.buffer(SIMD2<Float>.self, count: 8 * side * side)
+            try kit.run(try kit.pipeline("taps"), grid: MTLSize(width: side, height: side, depth: 1),
+                        group: MTLSize(width: 8, height: 8, depth: 1)) { enc in
+                enc.setBuffer(try! kit.buffer(twists), offset: 0, index: 0)
+                enc.setBytes(&args, length: MemoryLayout<Args>.stride, index: 1)
+                enc.setBuffer(output, offset: 0, index: 2)
+            }
+            let got = kit.read(output, as: SIMD2<Float>.self).map { SIMD2<Double>(Double($0.x), Double($0.y)) }
+            var moved = 0, outside = 0
+            for y in 0..<side {
+                for x in 0..<side {
+                    for j in stride == 1 ? [0, 1, 2, 3] : [0, 3] {
+                        let at = SIMD2(Double(x) + 0.5 + (Double(j & 1) - 0.5) * 0.5, Double(y) + 0.5 + (Double(j >> 1) - 0.5) * 0.5)
+                        let p = (at / scale - SIMD2(radius, radius)) / radius
+                        let back = SIMD2(p.x * cos(turn) + p.y * sin(turn), p.y * cos(turn) - p.x * sin(turn))
+                        let want = stack.reversed().reduce(back) { Tank.twist($0, rod: rods[$1.rod], angle: -Double($1.steps) * Tank.step) }
+                        let i = 8 * (y * side + x)
+                        XCTAssertLessThan(simd_distance(got[i + j], p), 1e-5, "tap \(j) of \(x), \(y)")
+                        XCTAssertLessThan(simd_distance(got[i + 4 + j], want), 2e-4, "tap \(j) of \(x), \(y) through the stack")
+                        if simd_distance(want, back) > 0.01 { moved += 1 }
+                        if simd_length(p) > 1.05 { outside += 1 }
+                    }
+                }
+            }
+            XCTAssertGreaterThan(moved, side * side / 2, "the stack moves enough of the glass to test")
+            XCTAssertGreaterThan(outside, side * side / 8, "pixels past the glass's edge are tested")
+        }
+    }
+
+    /// The shader runs no entry for a pixel past the glass's edge (`pastTheGlass`), which holds only while every disc
+    /// lies within the glass: there each entry's map is the identity.
+    func testEveryDiscLiesWithinTheGlass() {
+        for layout in Layout.allCases {
+            for (k, rod) in layout.rods.enumerated() {
+                XCTAssertLessThanOrEqual((rod.x * rod.x + rod.y * rod.y).squareRoot() + rod.z, 1 + 1e-6, "\(layout) rod \(k)")
+            }
+        }
+    }
+
     /// `TankShader` passes each of the tank's stitchables its arguments in the signature's order, SwiftUI giving the
     /// position and layer and each array's count after it.
     func testTheTankShaderPassesTheSignaturesOrder() throws {
