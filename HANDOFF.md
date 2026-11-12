@@ -1030,7 +1030,9 @@ TestFlight is ready, not earlier; that gives the first year the most selling tim
 - Check in with the ICO (LG3 = A): ask whether a home-based sole trader's register entry can show "Address: Withheld",
   then register and pay before the first emailed tester, received log or support email. If the ICO won't withhold the
   address, bring it back to Jack (the fallback was: no fee, send log out, TestFlight's public link only).
-- Turn on the Declared Age Range capability in the app's entitlements once the paid team signs the build.
+- Declared Age Range's entitlement: `AGE_RANGE=YES` signs it in and `scripts/archive-ios.sh` sets it (2026-11-12).
+  Still owed: the first signed archive shows the App ID takes it (the script refuses to export one without it); then
+  decide whether `AGE_RANGE` defaults to YES for phone builds too.
 - Before each paid pack ships, send Apple the significant-change notice Texas requires (a new purchase is one).
 - Once a year, with the ICO renewal (remind Jack): delete Unstir support mail and logs older than 12 months, and
   complaint records older than two years, as the privacy policy promises.
