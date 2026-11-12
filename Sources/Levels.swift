@@ -606,17 +606,24 @@ struct Level: Hashable, Sendable {
 
     static func dailyID(_ date: Date) -> String { "daily-\(dailyDay(date))" }
 
-    /// Everyone gets the same tank that day: seeded from yyyymmdd. `archived`: dealt from the archive, after its day.
+    /// Everyone gets the same tank that day: seeded from yyyymmdd, then frosted on a frost day (`Frost`), after every
+    /// draw. `archived`: dealt from the archive, after its day.
     static func daily(_ date: Date = .now, archived: Bool = false) -> Level {
         let ymd = dailyDay(date)
-        var rng = SplitMix64(state: UInt64(ymd))
-        let layout = generated[rng.below(4)]
-        let depth = 10 + rng.below(5)
+        let (layout, scramble) = Layout.daily(ymd)
         // The id keys the day's stored best, so it stays yyyymmdd; only the title follows the locale.
         let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        return Level(id: dailyID(date), label: String(localized: "day", comment: "The daily's row, in a level number's place"),
-                     title: String(localized: "Daily \u{00B7} \(day)", comment: "The daily's title. Its date, short"),
-                     layout: layout, scramble: layout.scramble(depth: depth, inversions: 3, rng: &rng), archived: archived)
+        var level = Level(id: dailyID(date), label: String(localized: "day", comment: "The daily's row, in a level number's place"),
+                          title: String(localized: "Daily \u{00B7} \(day)", comment: "The daily's title. Its date, short"),
+                          layout: layout, scramble: scramble, archived: archived)
+        if let frost = Frost.days[ymd] {
+            level.seized = Set(frost.knobs)
+            level.motion = .tank
+            level.fixedPar = frost.par
+            level.note = String(localized: "Frost day: two knobs are frozen. Turn the tank. Turns count as moves.",
+                                comment: "A frost day's daily: two knobs seized. One line under the tank")
+        }
+        return level
     }
 
     /// Tank n of a run: 5 + 5n/4 stirs, n/2 of them hidden under louder ones (more where no rod can go louder), up to half
@@ -624,7 +631,7 @@ struct Level: Hashable, Sendable {
     /// brim spills.
     static func endless(_ run: Run) -> Level {
         var level = Level(id: "endless", label: "\u{221E}", title: String(localized: "Endless",
-                                                                          comment: "The endless run's title"), layout: generated[run.tank % 4], scramble: [],
+                                                                          comment: "The endless run's title"), layout: Layout.generated[run.tank % 4], scramble: [],
                           run: run)
         // No deeper than keeps the tank four taps as dealt, or than leaves room under the stack's limit for every push
         // the brim takes before it spills: the stack holds at most the scramble plus the brim's notches, and the push
@@ -651,13 +658,20 @@ struct Level: Hashable, Sendable {
     /// Out of v1 until it offers what the packs a player owns add (Jack's call snd2-sandbox, round 16): a Release build
     /// neither lists nor opens it, while Debug and the harness outside Release keep it.
     static func playsSandbox(release: Bool = Build.release) -> Bool { !release }
-
-    /// The triangle is hand-written: every rod overlaps, so the generator's ordered sizes overshoot there.
-    private static let generated: [Layout] = [.quad, .eye, .pent, .hex]
-
 }
 
 extension Layout {
+    /// The triangle is hand-written: every rod overlaps, so the generator's ordered sizes overshoot there.
+    static let generated: [Layout] = [.quad, .eye, .pent, .hex]
+
+    /// The daily's tank on day `ymd` (yyyymmdd), its seed: frozen with the generator, as every past daily is its output.
+    static func daily(_ ymd: Int) -> (layout: Layout, scramble: [Twist]) {
+        var rng = SplitMix64(state: UInt64(ymd))
+        let layout = generated[rng.below(4)]
+        let depth = 10 + rng.below(5)
+        return (layout, layout.scramble(depth: depth, inversions: 3, rng: &rng))
+    }
+
     /// Push-only scramble of `depth` entries, `inversions` of them no louder than an undo-able twist they cover.
     /// Ported draw for draw from the prototype, so the dailies match it. Every past daily is this function's output, so
     /// it never changes: endless changes only what it asks for, and a new generator goes beside this one.

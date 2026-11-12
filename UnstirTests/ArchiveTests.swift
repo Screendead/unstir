@@ -122,7 +122,7 @@ final class ArchiveTests: XCTestCase {
 
     /// A day tried on its day and left unsolved can be finished from the archive, and saves its best, but never clean.
     @MainActor func testAnArchiveDayTriedOnItsDayIsNeverClean() throws {
-        let day = try date(20261022)
+        let day = try date(20261023)
         let level = Level.daily(day, archived: true)
         defer { for key in ["best.\(level.id)", "started.\(level.id)"] { UserDefaults.standard.removeObject(forKey: key) } }
         Best.start(level.id)

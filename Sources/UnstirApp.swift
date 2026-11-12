@@ -69,6 +69,8 @@ struct Harness {
     let today: String?
     /// UNSTIR_NOW=HH:mm: the daily's result card reads the next daily from that time today.
     let now: Date?
+    /// UNSTIR_DAILY=yyyymmdd: the day the daily is dealt for, the menu's row and UNSTIR_MODE=daily's level, at noon.
+    let day: Date?
     /// Skip the opening so shots land on a settled tank; UNSTIR_OPEN=1 (or v1's UNSTIR_STIR=1) keeps it.
     let still: Bool
     let autoplay: Bool
@@ -332,9 +334,13 @@ struct Harness {
         }
         let opensLevel = bench || ["LEVEL", "MODE", "STACK", "WAVE", "PACK"].contains { env["UNSTIR_\($0)"] != nil }
         screen = env["UNSTIR_SCREEN"] ?? (opensLevel ? "level" : "menu")
+        day = env["UNSTIR_DAILY"].flatMap(Int.init).flatMap {
+            calendar.date(from: DateComponents(year: $0 / 10000, month: $0 / 100 % 100, day: $0 % 100, hour: 12))
+        }
         let n = min(max(Int(env["UNSTIR_LEVEL"] ?? "") ?? 1, 1), tier.levels.count)
         var level = switch env["UNSTIR_MODE"] ?? env["UNSTIR_LEVEL"] {
-        case "daily": Level.daily()
+        // UNSTIR_DAILY=yyyymmdd: that day's daily, as played on its day.
+        case "daily": Level.daily(day ?? .now)
         // UNSTIR_DAY=n: the daily n days back, from the archive; yesterday's when unset.
         case "archive": Level.daily(calendar.date(byAdding: .day, value: -max(Int(env["UNSTIR_DAY"] ?? "") ?? 1, 1),
                                                       to: .now)!, archived: true)
@@ -717,7 +723,7 @@ struct RootView: View {
                 // level, whose ground it leaves uncovered.
                 if level == nil || peeking || beside {
                     MenuView(start: level == nil ? harness?.menuTier ?? look : nil, demo: harness?.tierDemo ?? false,
-                             frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock,
+                             frozen: harness?.tierSpin, settings: $settings, card: $card, archive: $archive, clock: harness?.clock, day: harness?.day,
                              placeholders: placeholders, shelfDemo: harness?.shelfDemo ?? false,
                              cardScroll: harness?.cardScroll ?? false, focus: focus, held: harness?.lockTap, arrived: arrived,
                              run: Self.save("endless", harnessed: harnessed, harnessSave), peeking: level != nil && !beside,

@@ -375,4 +375,61 @@ final class SolverTests: XCTestCase {
         XCTAssertEqual(solver.park(level.scramble, seized: seized, parking: .fewest, tie: .lowest)?.count, 24)
         XCTAssertEqual(solver.park(level.scramble, seized: seized, parking: .all, tie: .lowest)?.count, 27)
     }
+
+    private func noon(_ ymd: Int) -> Date {
+        Calendar(identifier: .gregorian).date(from: DateComponents(year: ymd / 10000, month: ymd / 100 % 100,
+                                                                   day: ymd % 100, hour: 12))!
+    }
+
+    /// A frost day is dealt as any daily, draw for draw, then seizes the first pair in order that needs a plan, its par
+    /// the optimum with the tank's turns; the optimal line empties it on a real `Game`.
+    @MainActor func testAFrostDaySeizesItsPairAfterTheDraws() {
+        let level = Level.daily(noon(20261015))
+        XCTAssertEqual(level.layout, .quad)
+        XCTAssertEqual(level.scramble, [Twist].parse("3:-3,1:+3,0:-4,1:+6,2:-6,1:+7,2:-8,0:+4,1:-8,3:-2,2:+5,0:+2,1:-6,0:+7",
+                                                     in: .quad))
+        XCTAssertEqual(level.seized, [0, 1])
+        XCTAssertEqual(level.motion, .tank)
+        XCTAssertEqual(level.par, 20)
+        XCTAssertFalse(level.note.isEmpty)
+        let solver = Solver(.quad)
+        XCTAssertEqual(solver.frost(level.scramble)?.knobs, [0, 1])
+        for pair in Solver.frostPairs(.quad).prefix { $0 != [0, 1] } {
+            XCTAssertNotEqual(solver.untwistingPlay(level.scramble, seized: Set(pair)).flatMap {
+                solver.needsPlan(level.scramble, seized: Set(pair), optimum: $0.count) }, true, "\(pair)")
+        }
+        assertEmpties(solver.optimalPlay(level.scramble, seized: level.seized), .quad, level.scramble, seized: level.seized)
+    }
+
+    /// A day no pair frosts is the daily as it always was.
+    func testAPlainDayIsUnchanged() {
+        let level = Level.daily(noon(20261001))
+        XCTAssertNil(Solver(level.layout).frost(level.scramble))
+        XCTAssertEqual(level.seized, [])
+        XCTAssertEqual(level.motion, .none)
+        XCTAssertNil(level.fixedPar)
+        XCTAssertEqual(level.par, level.scramble.count)
+        XCTAssertEqual(level.note, "")
+    }
+
+    /// `Frost.days` is the solver's verdict on every day it spans, and frosts no day outside it: about 3 min in a Debug
+    /// simulator build, the slowest day (2028-03-23) 5 s of it.
+    func testTheFrostTableIsTheSolversVerdict() throws {
+        try skipUnlessSlow()
+        let calendar = Calendar(identifier: .gregorian), clock = ContinuousClock()
+        var date = noon(Frost.first), slowest = (ymd: 0, took: Duration.zero)
+        while true {
+            let ymd = Level.dailyDay(date)
+            if ymd > Frost.last { break }
+            let (layout, stack) = Layout.daily(ymd)
+            var frost: (knobs: [Int], par: Int)?
+            let took = clock.measure { frost = Solver(layout).frost(stack) }
+            if took > slowest.took { slowest = (ymd, took) }
+            XCTAssertEqual(frost?.knobs, Frost.days[ymd]?.knobs, "\(ymd)")
+            XCTAssertEqual(frost?.par, Frost.days[ymd]?.par, "\(ymd)")
+            date = calendar.date(byAdding: .day, value: 1, to: date)!
+        }
+        XCTAssertTrue(Frost.days.keys.allSatisfy { (Frost.first...Frost.last).contains($0) })
+        print("frost: slowest verdict \(slowest.ymd), \(slowest.took)")
+    }
 }
