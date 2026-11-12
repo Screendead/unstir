@@ -73,10 +73,12 @@ struct Unstirred: ViewModifier, Animatable {
 
     /// The frame's shader and its arguments on a display of `scale`, which the oracle's bench draws too (`OracleBench`).
     nonisolated func shader(scale: CGFloat) -> TankShader {
+        DragProbe.count(.shader)
         var turns = stack.enumerated().map { i, t in (rod: t.rod, angle: Double(t.steps) * Tank.step * min(shares?[i] ?? wind, 1)) }
         if let tick { turns.append(tick) }
         if let liveRod { turns.append((liveRod, liveAngle)) }
         if let breath, breath.angle != 0 { turns.append(breath) }
+        DragProbe.drew(sum: turns.reduce(0) { $0 + $1.angle }, turn: turn)
         let (twists, channels) = Self.entries(turns, layout: layout, lenses: lenses, masks: masks)
         let n = turns.count
         let r = side / 2
@@ -99,6 +101,34 @@ struct Unstirred: ViewModifier, Animatable {
             shader.fine?.table[Fine.share] = Float(min(crisp, 1))
         }
         return shader
+    }
+}
+
+/// The level's glass with the turn in hand on top of `rest`, read in this modifier's own body, so a frame of a drag
+/// re-evaluates the shader's arguments and nothing above them (`Hand`).
+struct HeldUnstirred: ViewModifier, Equatable {
+    let hand: Hand
+    let rest: Unstirred
+    /// The glass has eased home, where the tank's turn in hand no longer turns it.
+    let eased: Bool
+
+    nonisolated init(hand: Hand, rest: Unstirred, eased: Bool) {
+        (self.hand, self.rest, self.eased) = (hand, rest, eased)
+    }
+
+    /// A live picture's timeline builds this again on every tick; one that draws the same frame builds no arguments.
+    nonisolated static func == (a: HeldUnstirred, b: HeldUnstirred) -> Bool {
+        DragProbe.count(.equal)
+        return a.hand === b.hand && a.eased == b.eased && a.rest.draws(sameAs: b.rest)
+    }
+
+    func body(content: Content) -> some View {
+        let _ = DragProbe.count(.leaf)
+        DragProbe.built(rest, angle: hand.angle, turn: eased ? nil : hand.held)
+        var u = rest
+        u.liveAngle = hand.angle
+        if !eased { u.turn += hand.held ?? 0 }
+        return content.modifier(u)
     }
 }
 
@@ -160,7 +190,7 @@ struct TankShader {
 
 /// A halftone panel's detail (`Halftone.Detail`) as the shader takes it: the atlas as an image, made once, and its
 /// table.
-struct Fine {
+struct Fine: Equatable {
     /// The table's float that scales the detail's weight.
     static let share = 5
 
@@ -182,6 +212,18 @@ struct Fine {
 }
 
 extension Unstirred {
+    /// Whether the two draw the same frame: every stored field but the environment's
+    /// (`testTheGlassComparesEveryField`).
+    nonisolated func draws(sameAs o: Unstirred) -> Bool {
+        let level = stack == o.stack && layout == o.layout && lenses == o.lenses && masks == o.masks && side == o.side
+            && fillEntries == o.fillEntries && budget == o.budget
+        let turns = liveRod == o.liveRod && liveAngle == o.liveAngle && wind == o.wind && shares == o.shares && turn == o.turn
+            && breath?.rod == o.breath?.rod && breath?.angle == o.breath?.angle && tick?.rod == o.tick?.rod && tick?.angle == o.tick?.angle
+        let look = haze == o.haze && wave == o.wave && isolate == o.isolate && whiteIsolate == o.whiteIsolate && held == o.held
+            && hold == o.hold && fine == o.fine && crisp == o.crisp
+        return level && turns && look
+    }
+
     /// The entries both shaders read, bottom of the stack first: four floats each (the rod's x and y, its disc's radius,
     /// the angle), a lens's with a negative radius and its flow's time for the angle, and each one's mask, a `Channels`
     /// raw value, a missing slot white.
@@ -278,6 +320,7 @@ struct PictureLayer: View {
     }
 
     var body: some View {
+        let _ = DragProbe.count(.picture)
         ZStack {
             if picture.isLive, let data = picture.data(seed: seed, clock: clock) {
                 Rectangle().fill(ShaderFunction(library: .default, name: "\(picture)")(

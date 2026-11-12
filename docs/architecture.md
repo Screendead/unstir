@@ -166,6 +166,56 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   phone; `Probes.screen` is the one place the app asks for one, `UNSTIR_NUDGE` reads as nothing without it,
   `scripts/archive-ios.sh` refuses the switch and builds with it off, and `testADefaultBuildHasNoProbes` holds the
   tracked config to NO.
+- **Hand.swift**, **DragProbe.swift** and `scripts/drag-probe.sh`: the turn in hand, kept out of `LevelView`'s own
+  state so a frame of a drag re-evaluates the parts that draw the turn and not the play screen (Jack, 2026-11-12:
+  find a faster way to draw twists, provided it doesn't look worse). `Hand` is an observable reference `LevelView`
+  holds: a rod's turn (`angle`), the tank's (`turn` while `turning`), a twist's on top (`spin` while `spun`) and the
+  finger's point, and beside them, unobserved, the drag's bookkeeping nothing draws (`last`, `detent`, and the
+  drag's and the twist's paths for the log). `LevelView.body`, and all `tank()` works out outside a closure, read
+  only what changes with a count: `steps` and `turnSteps`, told only as they change
+  (`testATurnInHandTellsThePlayScreenOnlyAsACountChanges`), `turning` and `spun`. The parts that draw the turn read
+  it in a body of their own: `HeldUnstirred`, the glass's modifier, which adds the turn to the `Unstirred` the level
+  built without one (a modifier of its own, as the turn must reach `Unstirred.animatableData` for a settle to play),
+  and `InHand` round the held knob, its dial or track, the tank's dial, the knurl, each count's place, the drawn
+  fingertip and `TapHooks`' watch for a frame that moved. A value set to what it is tells no one, as a view's state
+  does. The handlers still read and write `liveAngle`, `liveTurn`, `spun`, `lastSpin`, `finger`, `detent`, `path`
+  and `twist`, now `LevelView`'s computed properties over the hand: **never read one in `body`, or in `tank()`
+  outside an `InHand`**, or every frame of a drag evaluates `LevelView` again; no test sees that, only `DragProbe`'s
+  `level` count a frame (0.05 on a drag that crosses a dozen counts, 1 if a read has crept in), so run
+  `scripts/drag-probe.sh run` after a change to either. The two-finger twist's gesture state is a flag (`spinning`),
+  not its rotation, which changed on every frame and of which only whether it was set was ever read. The drag
+  gesture's handlers are `touchMoved` and `touchEnded`, which `UNSTIR_TAPFINGER=rod` or `rim` also calls, making
+  `UNSTIR_TAPDRAG`'s drags as a finger's touches on a knob or the rim. `HeldUnstirred` is Equatable
+  (`Unstirred.draws(sameAs:)`, every stored field, `testTheGlassComparesEveryField`): a live picture's timeline
+  builds it again on every tick, asks `==` once and builds no arguments at rest (measured).
+  `DragProbe` and `UNSTIR_BROADDRAG` are probes: Debug holds them, a Release build only with `PROBES=YES`, and in a
+  plain Release build each call is an empty function. `UNSTIR_BROADDRAG=1` has `LevelView.body` read the turn as it
+  did when the turn was its state, and `alt` has `UNSTIR_TAPDRAG`'s drags take that in turn (a warm-up, as built,
+  twice so, as built). `DragProbe` (`UNSTIR_DRAGCPU=1`) logs, for each of those drags, the settle after it and three
+  seconds of rest after the last: the frames, the main thread's and the process's CPU time a frame, the
+  instructions the process retired a frame, how often `LevelView.body`, `tank()`, the glass's timeline,
+  `PictureLayer.body`, the shader's arguments and the held parts were evaluated, the most the glass's drawn turns
+  moved between two frames (a let-go's landing leaves their sum as it was, so a frame drawn with the new stack under
+  the old turn, or the old under the new, shows as a whole step), and how often the glass's modifier was built with
+  nothing changed. `scripts/drag-probe.sh build` builds Release with the probes, and `run` plays maelstrom 24,
+  whirlpool 27, plughole 20, Prism 8 and a frost day each way on the twist oracle's simulator, under the GPU
+  timings' lock; `shots <set>` and `film <set>` shoot and film the play screen whole (the oracle's own cases draw
+  the glass alone), `same` holds one build's frames against another's pixel for pixel and `beside` lays their films
+  side by side; `PROBE_APP` and `PROBE_RELEASE` name another checkout's builds.
+  Read the instructions, not the milliseconds: a lighter frame runs on a slower core, at a half to a third of the
+  instructions a millisecond, so the Mac's CPU time falls less than the work does; and a launch's own work runs on
+  under its first drag, which `run` plays as a warm-up.
+  On 2026-11-12, on the Mac (iOS 26.5 simulator, Release), a frame of a finger's drag of a rod on maelstrom 24 took
+  24.1 million instructions and 4.0 ms of the main thread with `UNSTIR_BROADDRAG` and 7.9 million and 3.1 ms without,
+  in one launch, turn about (the rim: 23.9 to 7.5; the harness's own state: 23.8 to 7.5), `LevelView.body` evaluated
+  1.00 and 0.05 times a frame, where the picture's frame at rest takes 3.6 million; a frost day's baked glass went
+  from 21.4 to 5.5 million, and rests at 0.07. Before `HeldUnstirred` was Equatable, 2 of 12 launches of one build
+  built the glass's arguments on every tick of a live picture's timeline with nothing changed. That was never
+  reproduced, so whether the comparison SwiftUI made in `==`'s place caused it is not known; none of the 3 launches on a live picture
+  since showed it. In the first drag after a launch the glass is still built with nothing changed on 0.02 to 0.10
+  of its frames, with `==` or without (not explained; none in the windows after it). No phone was measured, and no
+  iOS 17: the oldest runtime that Mac had was 18.5, where a rod's and the rim's drag turned the glass under the
+  finger and read 0.05 evaluations a frame.
 - **TapLaw.swift** and **Taps.swift** hold the adaptive four-tap budget (Jack, round 16: step the graphics down where
   performance degrades, to keep 120 Hz). Only the look adapts: `Tank.maxStack`, what a level deals and "the tank is
   full" are the same everywhere, and `Tank.fourTaps` stays the rule the tables are dealt to. The budget B is in
