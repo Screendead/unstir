@@ -158,7 +158,7 @@ Two loose seams outside the edge, one free move. Knob 5's seam is loose from the
 which falls due on move 2, so knob 3 goes first. The same choice comes again on move 3, the other way round: knob 5's
 seam now covers knob 6's, due on move 4, and knob 3's second seam doesn't. Difficulty 5 (4.2 bits, 9 seams).
 
-### Chapter 2. The Waiting Move
+### Chapter 2. Tempo
 
 Slack to burn, and each tap is placed where nothing can be taken off (see "A wait is never a choice").
 
