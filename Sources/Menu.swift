@@ -27,15 +27,16 @@ extension Level {
 }
 
 extension Tier {
-    var sweep: LinearGradient {
-        let colours: [Color] = switch self {
+    var colours: [Color] {
+        switch self {
         case .plughole: [.neonCyan, .magenta, .amber]
         case .whirlpool: [.blood, .magenta, .violet]
         case .vortex: [.violet, Color(0x2F6BFF), Color(0x00D2C0)]
         case .maelstrom: [Color(0xFF1A2A), Color(0xD4200C), Color(0xB89A00)]
         }
-        return LinearGradient(colors: colours, startPoint: .leading, endPoint: .trailing)
     }
+
+    var sweep: LinearGradient { LinearGradient(colors: colours, startPoint: .leading, endPoint: .trailing) }
 
     var glow: Color {
         switch self {

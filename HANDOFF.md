@@ -136,6 +136,20 @@ The earlier record of this run, "Open work (finish-and-pitch, 2026-11-09)", is c
 
 Closed: moved word for word to `docs/history.md`.
 
+**The payoff, picked (PAYOFF = C).** Jack took the curtain call over the glass stirring itself and the counting
+bezel: "I just don't like how A re-stirs to reward you for unstirring. Curtain call looks cleanest to me." Built
+on `curtain-call` with no switch, the other two options and draft #198 dropped, the rating prompt's and Game
+Center's timing fix lifted out as its own commit: a tier's or a pack's holds the screen 3.2 s and the game's 7.4 s
+(2.6 s and 5 s under Reduce Motion), a tap ends it, its strings are in the catalog, and where the words would pass
+the glass's edge the glass shrinks and they stand under it. After the game the credit, in Jack's words "made by
+screendead · thank you for playing" (VoiceOver: "Made by screendead. Thank you for playing."), stands inside the glass
+under "every tier unstirred", as in the prototype he picked, broken at its dot onto two lines, the dot dropped (Jack, 2026-11-12), as one line is
+wider than the glass's chord there on every phone; where the lines don't fit (small phones at larger text) they
+stand 34 pt under the shrunk glass (was 20, which Jack found far too close). **Jack's, still open**: whether a tier finished with levels still over par, whose card then shows the next
+tier locked, should get the curtain at all (it does: every level holds a best). **Owed**: its frame rate on the
+phone, and its sounds by ear (the levels are measured from the files, not heard). The split and the tabletop
+stand the words over the glass whatever their size.
+
 ### Open work (finish-and-pitch, 2026-11-02)
 
 Closed: moved word for word to `docs/history.md`.

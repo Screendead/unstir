@@ -5,6 +5,9 @@
   scripts/catalog.py plural <key> <one> [<other>] [--comment <text>]
       An English plural entry: `one`, and `other` (the key itself unless given), for a key with one count, as
       "%lld moves" with "%lld move". Without it a plural key reads "1 moves".
+  scripts/catalog.py key <key> <comment>
+      A plain entry, the key and its comment as Xcode's own build would sync them, for a key that should be in the
+      catalog before such a sync.
   scripts/catalog.py fixed <comment>
       Marks do-not-translate every key in Sources/*.swift whose `String(localized:)` or `LocalizedStringResource`
       carries exactly this comment."""
@@ -37,6 +40,12 @@ def plural(catalog, args):
     entry.setdefault("localizations", {})["en"] = {"variations": {"plural": {"one": unit(one), "other": unit(other)}}}
 
 
+def key(catalog, args):
+    if len(args) != 2:
+        sys.exit(__doc__)
+    catalog["strings"].setdefault(args[0], {})["comment"] = args[1]
+
+
 def fixed(catalog, args):
     if len(args) != 1:
         sys.exit(__doc__)
@@ -53,7 +62,7 @@ def fixed(catalog, args):
 
 
 def main(argv):
-    commands = {"plural": plural, "fixed": fixed}
+    commands = {"plural": plural, "key": key, "fixed": fixed}
     if not argv or argv[0] not in commands:
         sys.exit(__doc__)
     catalog = json.loads(CATALOG.read_text())
