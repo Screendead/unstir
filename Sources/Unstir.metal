@@ -82,9 +82,11 @@ template <typename L>
 static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius, device const float *twists, int count,
                                 device const float *masks, int maskCount, float n, float cost, float fourTaps,
                                 float plateau, float swirlPlateau, float lensEdge, float scale, float haze, float3 wave,
-                                float turn, float isolate, float3 tint) {
+                                float turn, float isolate, float3 tint, float held, float hold) {
     int stride = cost > fourTaps ? 3 : 1;
     int alone = int(isolate);
+    int h = int(held);
+    float3 own = float3(h & 1, (h >> 1) & 1, (h >> 2) & 1);
     float ct = cos(turn), st = sin(turn);
     float3 acc = 0;
     for (int j = 0; j < 4; j += stride) {
@@ -95,6 +97,21 @@ static half4 unstirChannelsBody(float2 pos, L layer, float2 centre, float radius
         float3 s = float3(layer.sample(centre + qr * radius).r, layer.sample(centre + qg * radius).g,
                           layer.sample(centre + qb * radius).b);
         if (alone != 0) s = (alone == 1 ? s.r : alone == 2 ? s.g : s.b) * tint;
+        else if (hold > 0.0) {
+            float m = max(s.r * own.r, max(s.g * own.g, s.b * own.b));
+            // A dark colour's lines take some of the other channels, short of white as the tests measure it (0.6 of
+            // the brightest): blue's 0.41 of red and green.
+            float lift = saturate(0.55 - 1.2 * dot(own, float3(0.299, 0.587, 0.114)));
+            // Another channel is drawn by how nearly it and a held one show the same point of the plate, lit or not:
+            // nothing from 0.03 of the glass's radius apart, some 18 px of a 1200 px glass, whole within 0.003. That
+            // reads the stack's maps, never the count: half a step off it moves a point at the cap's edge (0.12 off
+            // the rod's centre, under its knob) 0.031.
+            float rg = 1.0 - smoothstep(0.003, 0.03, distance(qr, qg));
+            float gb = 1.0 - smoothstep(0.003, 0.03, distance(qg, qb));
+            float br = 1.0 - smoothstep(0.003, 0.03, distance(qb, qr));
+            float3 met = s * float3(max(own.g * rg, own.b * br), max(own.r * rg, own.b * gb), max(own.r * br, own.g * gb));
+            s = mix(s, mix(max(met, lift * m), s, own), hold);
+        }
         acc += lit(s, p, wave);
     }
     return finish(acc, stride, haze);
@@ -204,8 +221,8 @@ static half4 unstirLensBody(float2 pos, L layer, float2 centre, float radius, de
 
 // twists: n entries of (rod centre x, y, disc radius, angle) in tank-normalized units, bottom of the stack first. A
 // lens's entry has a negative radius and its flow's time (steps * Tank.lensRate) for the angle.
-// Tank.profile / Tank.twist / Tank.lens in Twist.swift are the Swift copy the tests check; the tests reach only
-// lensFlow and chains here.
+// Tank.profile / Tank.twist / Tank.lens in Twist.swift are the Swift copy the tests check; the tests reach lensFlow and
+// chains here, and Prism's body over a texture (PrismTests), which has no Swift copy.
 // plateau is a knob's, swirlPlateau a disc's of radius 1 or more (the swirl's, or the breath's through it).
 // turn: the glass's clockwise turn about the centre. The stack names the glass's own rods, so the point turns back
 // first. Swift has no copy of the turn: the seized-* harness shots pin its sign.
@@ -219,14 +236,19 @@ static half4 unstirLensBody(float2 pos, L layer, float2 centre, float radius, de
 // Prism's: each of red, green and blue sampled through its own word, the entries whose mask (masks[i], a Channels raw
 // value) holds it. cost is the work in entries, against fourTaps as n is above. isolate, a single channel's raw value or
 // 0, draws that channel alone in tint and hides the others: the held swatch, in its own colour, or white under
-// Differentiate Without Colour, where it reads without telling colours apart.
+// Differentiate Without Colour, where it reads without telling colours apart. held is the mask of the rod in the
+// player's hand (0 for none, never white), hold how far its read is drawn over the plain glass, 0 to 1: the channels
+// it moves in their own colour, a dark one lifted, and each other channel only where it and a held one show nearly the
+// same point of the plate, so the disc turns one colour off the count and white fades in as the turn nears it. A rod
+// stirred twice goes white at the sum of its stirs, as the plain glass does. At hold 0 this is the plain glass to the
+// bit (testAHeldRodsReadLeavesTheGlassAsItWasWhenLetGo).
 [[ stitchable ]] half4 unstirChannels(float2 pos, SwiftUI::Layer layer, float2 centre, float radius,
                                       device const float *twists, int count, device const float *masks, int maskCount,
                                       float n, float cost, float fourTaps, float plateau, float swirlPlateau,
                                       float lensEdge, float scale, float haze, float3 wave, float turn, float isolate,
-                                      float3 tint) {
+                                      float3 tint, float held, float hold) {
     return unstirChannelsBody(pos, layer, centre, radius, twists, count, masks, maskCount, n, cost, fourTaps, plateau,
-                              swirlPlateau, lensEdge, scale, haze, wave, turn, isolate, tint);
+                              swirlPlateau, lensEdge, scale, haze, wave, turn, isolate, tint, held, hold);
 }
 
 // A Lens level's glass once its detail is baked: atlas and fine are Halftone.Detail's pixels and table.
@@ -250,7 +272,7 @@ struct BenchLayer {
 };
 
 struct BenchArgs {
-    float radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge;
+    float radius, scale, n, fourTaps, cost, plateau, swirlPlateau, lensEdge, held, hold;
     int count, maskCount, channels, fineCount;
 };
 
@@ -267,7 +289,8 @@ kernel void benchUnstir(texture2d<half> picture [[texture(0)]], texture2d<half, 
                          a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, atlas, fine, a.fineCount)
         : a.channels != 0
         ? unstirChannelsBody(pos, layer, centre, a.radius, twists, a.count, masks, a.maskCount, a.n, a.cost, a.fourTaps,
-                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0, float3(1))
+                             a.plateau, a.swirlPlateau, a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0, 0.0, float3(1), a.held,
+                             a.hold)
         : unstirBody(pos, layer, centre, a.radius, twists, a.count, a.n, a.fourTaps, a.plateau, a.swirlPlateau,
                      a.lensEdge, a.scale, 0.0, float3(0, 0, -1), 0.0);
     out.write(c, gid);

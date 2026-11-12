@@ -1225,6 +1225,28 @@ How each part of the code works, moved out of `CLAUDE.md` so it loads only when 
   a wrong count elsewhere (Sea nettle's magenta, 2 for 5), whatever the plate holds. `scripts/prism-levels.sh read`
   prints it a move at a time (25 of the 30 specimens have such a move, every one deeper than its rods are many), and
   `scripts/prism-plates.sh deal` sketches a deal on the Mac, each channel through its own word as the shader samples it.
+  While a rod is in hand the glass reads its turn (Jack, 2026-11-11: picked from five trials, as off the count the
+  plain glass is a tangle of three colours until it snaps white on it): `unstirChannels`' `held`, the rod's mask, and
+  `hold`, how far it is drawn over the plain glass (`Unstirred.held` and `hold`, from `LevelView`'s `heldChannels`).
+  The channels the rod moves are drawn alone in their own colour, a dark one lifted (blue's lines take 0.41 of red
+  and green, a gentler share for red and magenta, none for the rest), and each other channel only by how nearly it and a held
+  one show the same point of the plate: nothing from 0.03 of the glass's radius apart, whole within 0.003. So the
+  disc turns one colour while the rod is off its count, nothing white until about a third of a step from it, and
+  white fades in and closes up on the count, beside the held colour's lines, while lines that merely cross stay that
+  colour. It reads the stack's maps at each point, never the level's answer, so on a rod stirred twice it goes white
+  at the sum of its stirs, as the plain glass does (Jack chose to leave that as deduction). It eases in over 0.15 s
+  on the grab and out over 0.25 s on the let-go, glass-wide, the let-go keeping the rod's mask through the fade;
+  stepped by the clock from `onChange(of: liveRod)`, never animated, as an animation started with the grab would
+  take the turn's own with it, and at once under Reduce Motion. A white rod, and hold 0, skip it, so the glass is
+  then the plain one to the byte (`testAHeldRodsReadLeavesTheGlassAsItWasWhenLetGo`). `testAHeldRodReadsInItsOwnColourUntilNearItsCount`
+  runs the shader's body at 1200 px over four moves of once-stirred coloured rods (Frond's cyan and red, Thistle's
+  blue, specimen 14's yellow), each held a step and half a step either side of its count and on it, and measures the white share of the lit pixels in its
+  rigid disc outside the cap: at most 0.001 off the count, 0.79 to 1.00 on it (2026-11-11). The GPU bench times
+  each specimen with its first move's rod in hand half a step short, four taps forced, the read drawn against not:
+  on the Mac's GPU a median 1.07x, 1.14x at most, 1.2 plain entries' work (1.9 at most) that `channelCost` and the
+  four-tap budget don't count, as the rod in flight rides over them; the phone's number is owed. `shots.sh
+  prism-read-` holds six moves at rest, short of the count, on it and past it, and `film.sh prism-read-` turns
+  two slowly to the count and lets go (`UNSTIR_TURN`, the fingertip's seconds a step).
   Escapement's plate (`Picture.engineTurned`, drawn by `Picture.engineTurning` in Page.swift) is the packs mock-up's
   engine-turning in ink on bone: ninety straight rays fanned from a point off the glass's lower left, whose cone just
   holds the glass, over barleycorn, upward chevrons on a 0.08 lattice, with no glow and no concentric figure. Its lines

@@ -101,6 +101,11 @@ enum Grab: Equatable {
 struct LevelView: View {
     @State private var game: Game
     @State private var liveRod: Int?
+    /// Prism: the mask of the rod held last, kept through the fade its let-go starts, and how far its read is drawn
+    /// (`Unstirred.held`).
+    @State private var heldChannels: Channels?
+    @State private var hold = 0.0
+    @State private var holdFade: Task<Void, Never>?
     /// The column's room between the title line's foot and the glass's top, as laid out.
     @State private var titleGap: CGFloat?
     /// Prism: the channel whose swatch is held, drawn alone.
@@ -271,6 +276,7 @@ struct LevelView: View {
     private let frozenBreath: Double?
     /// UNSTIR_REST: seconds at rest before a drawn fingertip lands.
     private let rest: Double
+    private let turnPace: Double
     /// The game replayed a saved line: the first opening, and Escapement's demonstration, don't play.
     private let resumed: Bool
     /// When a first tap armed the reset control, which then says "reset? tap again" for `ResetArm.window`, or under
@@ -395,6 +401,8 @@ struct LevelView: View {
         _game = State(initialValue: game)
         let live = harness?.live, angle = (live?.steps ?? 0) * Tank.step, turn = harness?.tankLive.map { $0 * .pi / 180 }
         _liveRod = State(initialValue: live?.rod)
+        _heldChannels = State(initialValue: live.map { level.masks[game.slot(of: $0.rod)] ?? .white })
+        _hold = State(initialValue: live == nil ? 0 : 1)
         _liveAngle = State(initialValue: angle)
         _liveTurn = State(initialValue: turn)
         _counted = State(initialValue: harness?.turned?.rod)
@@ -451,6 +459,7 @@ struct LevelView: View {
         today = harness?.today
         frozenBreath = harness?.breath
         rest = harness?.rest ?? 2
+        turnPace = harness?.turn ?? 0.1
         holdArmed = harness?.resetArmed ?? false
         _armedAt = State(initialValue: holdArmed ? .now : nil)
         demoRetired = harness == nil && Best.load(level.id) != nil
@@ -1004,6 +1013,23 @@ struct LevelView: View {
         }
         // A tap anywhere skips the opening, as the caption says.
         .simultaneousGesture(TapGesture().onEnded { _ = skip() })
+        .onChange(of: liveRod) {
+            guard !game.level.masks.isEmpty else { return }
+            if let liveRod { heldChannels = game.level.masks[game.slot(of: liveRod)] ?? .white }
+            // In over 0.15 s, out over 0.25, by the clock (`Unstirred.hold`); at once under Reduce Motion.
+            let from = hold, to = liveRod == nil ? 0.0 : 1.0, length = liveRod == nil ? 0.25 : 0.15
+            holdFade?.cancel()
+            guard !reduceMotion else { hold = to; return }
+            holdFade = Task {
+                let start = Date.now
+                var t = 0.0
+                while t < 1 {
+                    guard (try? await Task.sleep(for: .milliseconds(8))) != nil else { return }
+                    t = min(Date.now.timeIntervalSince(start) / length, 1)
+                    hold = t < 1 ? from + (to - from) * t : to
+                }
+            }
+        }
         .onChange(of: touching) {
             awake += 1
             if touching && shown == nil { lifted = true }
@@ -1620,13 +1646,13 @@ struct LevelView: View {
         withAnimation(.easeOut(duration: 0.12)) { ghost = (at, rim || swirl ? .zero : centre(m.rod), rim, !rim && level.lenses.contains(game.slot(of: m.rod))) }
         finger = at; landed = at
         guard await pause(0.45) else { return false }
-        let d = rim ? 0.45 * Double(abs(m.steps)) + 0.2 : 0.1 * Double(abs(m.steps)) + 0.25
+        let d = rim ? 0.45 * Double(abs(m.steps)) + 0.2 : turnPace * Double(abs(m.steps)) + 0.25
         if rim {
             liveTurn = 0
             withAnimation(.easeInOut(duration: d)) { liveTurn = Double(m.steps) * layout.tankStep }
         } else {
             liveRod = m.rod; counted = m.rod
-            withAnimation(.easeInOut(duration: d)) { liveAngle = Double(m.steps) * Tank.step }
+            withAnimation(turnPace > 0.1 ? .linear(duration: d) : .easeInOut(duration: d)) { liveAngle = Double(m.steps) * Tank.step }
         }
         guard await pause(d + 0.25) else { return false }
         withAnimation(.easeIn(duration: 0.12)) { ghost = nil }
@@ -1782,7 +1808,9 @@ struct LevelView: View {
         let unstirred = Unstirred(stack: bare ? [] : stack, layout: game.level.layout, lenses: game.level.lenses, masks: game.level.masks, liveRod: liveRod.map(game.slot(of:)), liveAngle: liveAngle,
                                   wind: wind, side: side, haze: showResult ? Self.haze(over: game.over) : 0, turn: turn,
                                   fillEntries: game.level.picture.fillEntries, isolate: isolated,
-                                  whiteIsolate: differentiate, budget: Taps.shared.budget(pixels: Double(side * scale)),
+                                  whiteIsolate: differentiate,
+                                  held: heldChannels, hold: hold,
+                                  budget: Taps.shared.budget(pixels: Double(side * scale)),
                                   fine: fine, crisp: crisp)
         // The wave is drawn on the screen, not the glass, so it holds still on the knob while the glass eases home.
         let source = game.history.last.map { $0.rod == Game.tank ? .zero : centre(game.knob(over: $0.rod)) } ?? centre(0)

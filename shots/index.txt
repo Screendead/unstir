@@ -768,6 +768,42 @@ prism-plate-seeds.png  Prism's seeds plate under pent's knobs, unstirred.
 prism-plate-medusae.png  Prism's medusae plate under pent's knobs, unstirred.
 prism-plate-radiolaria.png  Prism's radiolaria plate under pent's knobs, unstirred.
 prism-plate-nautilus.png  Prism's nautilus plate under pent's knobs, unstirred.
+prism-read-01-cyan-rest.png  Prism's read: Frond's cyan rod, its first move, held at 0 of +3.
+prism-read-01-cyan-short10.png  Prism's read: Frond's cyan rod, its first move, held at +2.0 of +3.
+prism-read-01-cyan-short5.png  Prism's read: Frond's cyan rod, its first move, held at +2.5 of +3.
+prism-read-01-cyan-on.png  Prism's read: Frond's cyan rod, its first move, held at +3.0 of +3.
+prism-read-01-cyan-past5.png  Prism's read: Frond's cyan rod, its first move, held at +3.5 of +3.
+prism-read-01-cyan-past10.png  Prism's read: Frond's cyan rod, its first move, held at +4.0 of +3.
+prism-read-01-red-rest.png  Prism's read: Frond's red rod, its second move, held at 0 of -4.
+prism-read-01-red-short10.png  Prism's read: Frond's red rod, its second move, held at -3.0 of -4.
+prism-read-01-red-short5.png  Prism's read: Frond's red rod, its second move, held at -3.5 of -4.
+prism-read-01-red-on.png  Prism's read: Frond's red rod, its second move, held at -4.0 of -4.
+prism-read-01-red-past5.png  Prism's read: Frond's red rod, its second move, held at -4.5 of -4.
+prism-read-01-red-past10.png  Prism's read: Frond's red rod, its second move, held at -5.0 of -4.
+prism-read-08-blue-rest.png  Prism's read: Thistle's blue rod, its third move, held at 0 of -4.
+prism-read-08-blue-short10.png  Prism's read: Thistle's blue rod, its third move, held at -3.0 of -4.
+prism-read-08-blue-short5.png  Prism's read: Thistle's blue rod, its third move, held at -3.5 of -4.
+prism-read-08-blue-on.png  Prism's read: Thistle's blue rod, its third move, held at -4.0 of -4.
+prism-read-08-blue-past5.png  Prism's read: Thistle's blue rod, its third move, held at -4.5 of -4.
+prism-read-08-blue-past10.png  Prism's read: Thistle's blue rod, its third move, held at -5.0 of -4.
+prism-read-14-yellow-rest.png  Prism's read: specimen 14's yellow rod, its second move, held at 0 of +4.
+prism-read-14-yellow-short10.png  Prism's read: specimen 14's yellow rod, its second move, held at +3.0 of +4.
+prism-read-14-yellow-short5.png  Prism's read: specimen 14's yellow rod, its second move, held at +3.5 of +4.
+prism-read-14-yellow-on.png  Prism's read: specimen 14's yellow rod, its second move, held at +4.0 of +4.
+prism-read-14-yellow-past5.png  Prism's read: specimen 14's yellow rod, its second move, held at +4.5 of +4.
+prism-read-14-yellow-past10.png  Prism's read: specimen 14's yellow rod, its second move, held at +5.0 of +4.
+prism-read-30-yellow-rest.png  Prism's read: the last specimen's yellow rod, its fourth move, held at 0 of -3.
+prism-read-30-yellow-short10.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -2.0 of -3.
+prism-read-30-yellow-short5.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -2.5 of -3.
+prism-read-30-yellow-on.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -3.0 of -3.
+prism-read-30-yellow-past5.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -3.5 of -3.
+prism-read-30-yellow-past10.png  Prism's read: the last specimen's yellow rod, its fourth move, held at -4.0 of -3.
+prism-read-15-magenta-rest.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at 0 of -5.
+prism-read-15-magenta-short10.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -4.0 of -5.
+prism-read-15-magenta-short5.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -4.5 of -5.
+prism-read-15-magenta-on.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -5.0 of -5.
+prism-read-15-magenta-past5.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -5.5 of -5.
+prism-read-15-magenta-past10.png  Prism's read: Sea nettle's magenta rod, stirred twice, its first move, held at -6.0 of -5.
 clean-plughole-05.png  Plughole 05 on the sunset, rod 0 held mid-turn, drawn clean (UNSTIR_CLEAN): the glass and picture in the bezel, no header, caption, controls, knobs, dial, count or status bar.
 clean-whirlpool-01.png  Whirlpool 01 on the live glass, rod 0 held mid-turn, drawn clean: nothing but the picture.
 clean-lens-03.png  Lens 03 on the halftone, its lens held mid-zoom, drawn clean: no iris, track or count.
